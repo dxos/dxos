@@ -575,7 +575,7 @@ feat F-8: Presence and Sync Status
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself.
   req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
-  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. Go to opens the object at the graph path the peer's session has it open at, so the navtree shows it where the peer does.
+  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. Go to opens the object at the graph path the peer's session has it open at, so the navtree shows it where the peer does. A peer on the space's Home views the space itself, so Go to opens that Home, and the Members companion lists them under Home.
   req F-8.10: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
   req F-8.11: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
   req F-8.12: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
@@ -1248,42 +1248,51 @@ decision D-44: The viewing message carries the sender's deck in that space as th
 ```
 
 ```mdl
-decision D-45: Follow is one action among a peer's actions, next to Jump and Go to, and follows the peer across the whole space. While someone follows, the leader's location goes out every 100 ms, broadcast over gossip to the whole space, instead of every second. The follower names its leader in its own presence state, and a leader that sees itself named switches to the fast rate.
+decision D-45: A peer on a space's Home attends the space's own key, which names no object. Go to then opens the space's Home, and the Members companion heads their group "Home". Fills in [D-10] and [D-44].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.9, MembersCompanion]
+  why: Loading a key with no entity id as an object fails, which left Go to doing nothing and the group without a heading.
+```
+
+```mdl
+decision D-46: Follow is one action among a peer's actions, next to Jump and Go to, and follows the peer across the whole space. While someone follows, the leader's location goes out every 100 ms, broadcast over gossip to the whole space, instead of every second. The follower names its leader in its own presence state, and a leader that sees itself named switches to the fast rate.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.14, F-8.19, F-8.20]
 ```
 
 ```mdl
-decision D-46: A follower opens the object the leader attends whenever it changes and reveals the leader's anchor through the type's `Locator`. Revealing while following must not take focus or move the follower's caret. On a canvas, follow adopts the leader's zoom.
+decision D-47: A follower opens the object the leader attends whenever it changes and reveals the leader's anchor through the type's `Locator`. Revealing while following must not take focus or move the follower's caret. On a canvas, follow adopts the leader's zoom.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.21]
 ```
 
 ```mdl
-decision D-47: A follow ends when the follower scrolls, types, changes selection, navigates or moves attention to another plank, or presses Escape, and when the leader goes offline, leaves the space or their location goes stale. The leader opening something the follower cannot open pauses the follow. The leader going idle ends nothing.
+decision D-48: A follow ends when the follower scrolls, types, changes selection, navigates or moves attention to another plank, or presses Escape, and when the leader goes offline, leaves the space or their location goes stale. The leader opening something the follower cannot open pauses the follow. The leader going idle ends nothing.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.21, F-8.22]
 ```
 
 ```mdl
-decision D-48: Following shows only in the Members companion. While following, its rail tab shows a dot, and the followed person's row moves to the top of its list, highlighted, with Stop in place of its actions. Stopping puts the row back and clears the dot. The dot widens the deck companion's existing badge rather than adding another.
+decision D-49: Following shows only in the Members companion. While following, its rail tab shows a dot, and the followed person's row moves to the top of its list, highlighted, with Stop in place of its actions. Stopping puts the row back and clears the dot. The dot widens the deck companion's existing badge rather than adding another.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.23]
 ```
 
 ```mdl
-decision D-49: Follow on a person's row follows whichever of their sessions moved most recently, switching as that changes, as Jump does. With the sessions toggle on, each session row has its own Follow, which stays on that session.
+decision D-50: Follow on a person's row follows whichever of their sessions moved most recently, switching as that changes, as Jump does. With the sessions toggle on, each session row has its own Follow, which stays on that session.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.19, FollowTarget]
 ```
 
 ```mdl
-decision D-50: The follower's input ends a follow when it is a pointer press, wheel, touch move or key press inside an element whose attendable id names an object, which covers its planks and their companions; a modifier key alone does not count. Escape ends it from anywhere, and attending an object other than the leader's counts as navigating. A leader whose sessions have attended nothing in the space for five seconds has left, gone offline or gone stale, which also catches their heartbeat lapsing. Fills in [D-47].
+decision D-51: The follower's input ends a follow when it is a pointer press, wheel, touch move or key press inside an element whose attendable id names an object, which covers its planks and their companions; a modifier key alone does not count. Escape ends it from anywhere, and attending an object other than the leader's counts as navigating. A leader whose sessions have attended nothing in the space for five seconds has left, gone offline or gone stale, which also catches their heartbeat lapsing. Fills in [D-48].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -1295,7 +1304,7 @@ decision D-50: The follower's input ends a follow when it is a pointer press, wh
 ```
 
 ```mdl
-decision D-51: A `Locator`'s reveal takes a `follow` flag. With it, markdown scrolls the anchor to the top of the view and leaves the selection and focus alone, and a sheet scrolls the anchor's cell to the top left without moving its focused cell. The follower reveals the top of the leader's viewport, else their selection, and for five seconds after opening an object reveals again every half second so a view that mounts late still lands. No canvas has a `Locator` yet, so adopting the leader's zoom waits for one. Fills in [D-46].
+decision D-52: A `Locator`'s reveal takes a `follow` flag. With it, markdown scrolls the anchor to the top of the view and leaves the selection and focus alone, and a sheet scrolls the anchor's cell to the top left without moving its focused cell. The follower reveals the top of the leader's viewport, else their selection, and for five seconds after opening an object reveals again every half second so a view that mounts late still lands. No canvas has a `Locator` yet, so adopting the leader's zoom waits for one. Fills in [D-47].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -1305,7 +1314,7 @@ decision D-51: A `Locator`'s reveal takes a `follow` flag. With it, markdown scr
 ```
 
 ```mdl
-decision D-52: The follower names `{ identityKey, sessionId? }` in its viewing messages to the leader's space only. The leader keeps its followers by space, identity and session, drops one whose message stops naming it or whose heartbeat lapses, and sends at once when a new one appears so the follower starts from a fresh location. The markdown editor reports its location every 100 ms instead of 250 ms, so the fast rate has moves to send. Fills in [D-45].
+decision D-53: The follower names `{ identityKey, sessionId? }` in its viewing messages to the leader's space only. The leader keeps its followers by space, identity and session, drops one whose message stops naming it or whose heartbeat lapses, and sends at once when a new one appears so the follower starts from a fresh location. The markdown editor reports its location every 100 ms instead of 250 ms, so the fast rate has moves to send. Fills in [D-46].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -1315,7 +1324,7 @@ decision D-52: The follower names `{ identityKey, sessionId? }` in its viewing m
 ```
 
 ```mdl
-decision D-53: Follow is left off the node that is already the followed target. The leader's row at the top of the Members companion lists no sessions even with the toggle on, and reads Paused before Stop while the follow is paused. The companion `badge` atom holds `number | true`, and `true` draws a dot with no text. Fills in [D-48] and [D-49].
+decision D-54: Follow is left off the node that is already the followed target. The leader's row at the top of the Members companion lists no sessions even with the toggle on, and reads Paused before Stop while the follow is paused. The companion `badge` atom holds `number | true`, and `true` draws a dot with no text. Fills in [D-49] and [D-50].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -1325,7 +1334,7 @@ decision D-53: Follow is left off the node that is already the followed target. 
 ```
 
 ```mdl
-decision D-54: A person's group of rows also takes the highlight background while one of its rows is the list's selected value, which is how the viewers list marks the clicked peer and the Members companion marks the leader. Fills in [D-39] and [D-48].
+decision D-55: A person's group of rows also takes the highlight background while one of its rows is the list's selected value, which is how the viewers list marks the clicked peer and the Members companion marks the leader. Fills in [D-39] and [D-49].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -1335,14 +1344,14 @@ decision D-54: A person's group of rows also takes the highlight background whil
 ```
 
 ```mdl
-decision D-55: Following mirrors the leader's whole deck: the planks it holds, how far it is scrolled, and the scroll within each plank. A follower whose own deck is flat navigates by the plank the leader attends.
+decision D-56: Following mirrors the leader's whole deck: the planks it holds, how far it is scrolled, and the scroll within each plank. A follower whose own deck is flat navigates by the plank the leader attends.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.21]
 ```
 
 ```mdl
-decision D-56: The deck's scroll travels as its front plank, the first one not folded with at least half its width in view; a flat deck's front is its current plank. The follower switches to the space's workspace, sets its deck to the leader's planks, and scrolls the front plank to just past its own left pile without focusing it. Every plank's location goes out, not only the attended one's, and each mirrored plank reveals its own. A follower deck wider than the leader's can show more planks, so its own front plank may differ; it shows the leader's. For five seconds after its deck changes the follower sends the scroll and the reveals again on every tick. Attending any plank of the mirrored deck keeps the follow. A leader that sent no deck is followed as a flat deck follows. Stopping leaves the follower's deck as it is. Fills in [D-55].
+decision D-57: The deck's scroll travels as its front plank, the first one not folded with at least half its width in view; a flat deck's front is its current plank. The follower switches to the space's workspace, sets its deck to the leader's planks, and scrolls the front plank to just past its own left pile without focusing it. Every plank's location goes out, not only the attended one's, and each mirrored plank reveals its own. A follower deck wider than the leader's can show more planks, so its own front plank may differ; it shows the leader's. For five seconds after its deck changes the follower sends the scroll and the reveals again on every tick. Attending any plank of the mirrored deck keeps the follow. A leader that sent no deck is followed as a flat deck follows. Stopping leaves the follower's deck as it is. Fills in [D-56].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -1354,7 +1363,7 @@ decision D-56: The deck's scroll travels as its front plank, the first one not f
 ```
 
 ```mdl
-decision D-57: Any navigation by the follower ends the follow, including switching to Settings or another space. Fills in [D-47].
+decision D-58: Any navigation by the follower ends the follow, including switching to Settings or another space. Fills in [D-48].
   date: 2026-11-05
   by: user:wittjosiah
   affects: [F-8.22, QA-5]

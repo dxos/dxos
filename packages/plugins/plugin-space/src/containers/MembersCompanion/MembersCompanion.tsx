@@ -229,8 +229,15 @@ type ObjectGroupProps = {
 
 /** The members attending one object, under the object's label. */
 const ObjectGroup = ({ space, objectKey, members, showSessions }: ObjectGroupProps) => {
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const [label, setLabel] = useState<string>();
   useEffect(() => {
+    // Peers on the space's Home attend the space itself, whose key names no object.
+    if (!EID.getEntityId(objectKey)) {
+      setLabel(t('space-home-node.label'));
+      return;
+    }
+
     let cancelled = false;
     void space.db
       .makeRef(objectKey)
@@ -244,7 +251,7 @@ const ObjectGroup = ({ space, objectKey, members, showSessions }: ObjectGroupPro
     return () => {
       cancelled = true;
     };
-  }, [space, objectKey]);
+  }, [space, objectKey, t]);
 
   return (
     <Listbox.ItemGroup>
