@@ -474,10 +474,10 @@ feat F-7: Click Steps
 
   req F-7.1: `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` reveal their content one click at a time; a hidden element keeps its layout.
   req F-7.2:
-    when: user presses Space or right with steps remaining
+    when: user presses Space or Down with steps remaining
     then: the next step reveals, and only after the last step does the deck advance
   req F-7.3:
-    when: user presses left with steps revealed
+    when: user presses Up with steps revealed
     then: the last step hides; at step 0 the previous slide shows fully revealed
   req F-7.4: Click steps reset on any slide change and are never persisted; only the slide index is view state.
   req F-7.5: Space on a focused button or link activates it and does not advance.
@@ -673,8 +673,8 @@ test QA-4: Slidev subset and click steps
       do: Create a document with a `two-cols` slide containing `::right::` and `<Surface ref="echo:///<id of another document>" />`, followed by a slide with `<v-clicks>` over a three-item list, and a slide with an unknown `layout`.
       expect: the Presenter companion shows the two-cols slide with the other document embedded on the right
     - name: Step clicks
-      do: Open the list slide and press right three times, then once more.
-      expect: each press reveals one item, the fourth moves to the next slide, and left from there lands on the list slide fully revealed
+      do: Open the list slide and press Down three times, then once more.
+      expect: each press reveals one item, the fourth moves to the next slide, and Up from there lands on the list slide fully revealed
     - name: Unknown layout
       do: Go to the slide with the unknown layout.
       expect: it renders as a default slide without an error
@@ -1585,6 +1585,15 @@ decision D-90: A row move from a column the last row does not reach lands on the
   for: user:richburdon
   affects: [F-4.11, F-12.4]
   why: Stopping short of a shorter last row would leave a tile unreachable by Down, and the request named only the brackets.
+```
+
+```mdl
+decision D-91: [F-7.2], [F-7.3] and QA-4 step click steps with Down and Up, as [D-82] set the keys. Fills in [D-82].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2, F-7.3, QA-4]
+  why: Right and Left now move between slides, so QA-4 could not pass as written.
 ```
 
 ---

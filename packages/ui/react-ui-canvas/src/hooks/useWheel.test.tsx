@@ -9,18 +9,6 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { type WheelHandler, useWheel } from './useWheel.ts';
 
-const View = ({ handler, focusRequired }: { handler: WheelHandler; focusRequired?: boolean }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  useWheel(ref, handler, { focusRequired });
-  return <div ref={ref} tabIndex={0} data-testid='view' />;
-};
-
-const wheel = (element: HTMLElement, init: WheelEventInit = {}) => {
-  const event = new WheelEvent('wheel', { deltaY: 10, bubbles: true, cancelable: true, ...init });
-  element.dispatchEvent(event);
-  return event;
-};
-
 describe('useWheel', () => {
   afterEach(cleanup);
 
@@ -59,3 +47,15 @@ describe('useWheel', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 });
+
+const View = ({ handler, focusRequired }: { handler: WheelHandler; focusRequired?: boolean }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useWheel(ref, handler, { focusRequired });
+  return <div ref={ref} tabIndex={0} data-testid='view' />;
+};
+
+const wheel = (element: HTMLElement, init: WheelEventInit = {}) => {
+  const event = new WheelEvent('wheel', { deltaY: 10, bubbles: true, cancelable: true, ...init });
+  element.dispatchEvent(event);
+  return event;
+};
