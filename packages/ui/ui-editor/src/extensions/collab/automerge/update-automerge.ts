@@ -8,6 +8,7 @@ import { next as A, type Heads } from '@automerge/automerge';
 import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
 import { Doc } from '@dxos/echo-doc';
+import { getDeep } from '@dxos/util';
 
 import { type State } from './defs.ts';
 
@@ -45,9 +46,10 @@ export const updateAutomerge = (
     }
 
     // An unset optional string has nothing to splice into, so the first edit creates it.
-    const parent = path.slice(0, -1).reduce<any>((value, key) => value?.[key], doc);
-    if (parent && typeof parent[path[path.length - 1]] !== 'string') {
-      parent[path[path.length - 1]] = '';
+    const key = path[path.length - 1];
+    const parent = getDeep<Record<string | number, unknown>>(doc, path.slice(0, -1));
+    if (parent && typeof parent[key] !== 'string') {
+      parent[key] = '';
     }
 
     // TODO(burdon): Hack to apply in reverse order to properly apply range.

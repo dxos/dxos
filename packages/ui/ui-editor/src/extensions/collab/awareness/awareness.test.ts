@@ -62,7 +62,7 @@ describe('awareness', () => {
 
     view.dispatch({ changes: { from: 2, insert: 'x' }, selection: EditorSelection.cursor(3), userEvent: 'input.type' });
     expect(Doc.getValue(accessor)).toBe('abx\ncd');
-    expect(cursorConverter(accessor).fromCursor(positions.at(-1)!.head!)).toBe(3);
+    expect(cursorConverter(accessor).fromCursor(positions.at(-1)?.head ?? '')).toBe(3);
   });
 });
 
