@@ -29,6 +29,7 @@ import {
   PEER_SEGMENT_PREFIX,
   SESSION_SEGMENT_PREFIX,
   getPeerFocus,
+  getPeerPlankPath,
   getPeerSessionIds,
   getPresenceKeyFromPath,
   getSpacePeers,
@@ -158,11 +159,24 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
           );
         }
 
+        // At the path the session has the object open at, so the navtree shows it where the peer does.
+        const peerPath = getPeerPlankPath(
+          get(ephemeralAtom).peerDecks,
+          spaceId,
+          identityKey,
+          focus.sessionId,
+          focus.key,
+        );
         return Effect.succeed([
           AppGraphNode.makeAction({
             id: 'goTo',
             data: () =>
               Effect.gen(function* () {
+                if (peerPath) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [peerPath] });
+                  return;
+                }
+
                 // A peer on the space's Home attends the space itself, whose key names no object.
                 if (!EID.getEntityId(focus.key)) {
                   yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getSpaceHomePath(spaceId)] });
