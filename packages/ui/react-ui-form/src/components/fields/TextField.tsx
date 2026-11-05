@@ -12,10 +12,10 @@ import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { useFormContext, useFormExtensions } from '../../hooks/index.ts';
+import { useFormExtensions } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
-import { CollaborativeTextEditor } from './CollaborativeTextEditor.tsx';
+import { InputEditor } from './InputEditor.tsx';
 
 export const TextField = ({
   type,
@@ -34,7 +34,6 @@ export const TextField = ({
   onValueChange,
   onRevert,
 }: FormFieldRendererProps<string>) => {
-  const { object } = useFormContext('TextField');
   const extensions = useFormExtensions(
     collaborative && path && jsonPath !== undefined ? { path, jsonPath } : undefined,
   );
@@ -53,11 +52,10 @@ export const TextField = ({
   if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
-  if (collaborative && object && path) {
+  // The string is the binding's, which the form's extensions give the editor.
+  if (collaborative) {
     return (
-      <CollaborativeTextEditor
-        object={object}
-        path={path}
+      <InputEditor
         extensions={extensions}
         placeholder={placeholder}
         readonly={!!readonly}

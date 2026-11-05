@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import React, { useMemo, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { CollaborativeTextEditor } from '@dxos/react-ui-form';
+import { InputEditor } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -17,14 +17,14 @@ import { CodeNamespace } from '../../namespace.ts';
 import * as FeatureAnchor from '../../util/feature-anchor.ts';
 import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 
-/** Extensions for the editor of the feature's string at `path`, such as comments on it. */
+/** Extensions for the editor of the feature's string at `path`: the binding to it, and others such as comments on it. */
 export type RequirementEditorExtensions = (field: { path: readonly (string | number)[] }) => Extension[];
 
 export type RequirementEditorProps = {
   /** The live feature, whose requirement texts the rows edit in place. */
   feature: Feature.Feature;
-  /** Added to each row's editor, by the requirement text's path (the feature form's `extensions`). */
-  extensions?: RequirementEditorExtensions;
+  /** Each row's editor's, by the requirement text's path (the feature form's `extensions`). */
+  extensions: RequirementEditorExtensions;
   /** `plain` rows read as text until a row is focused. */
   variant?: 'default' | 'plain';
   /** Whether the remove and add actions show; the rows stay editable either way. */
@@ -88,7 +88,6 @@ export const RequirementEditor = ({ feature, extensions, variant, actions = true
               }}
             >
               <RequirementText
-                feature={feature}
                 requirementKey={requirement.key}
                 extensions={extensions}
                 placeholder={t('requirement-editor.text.label')}
@@ -117,17 +116,16 @@ export const RequirementEditor = ({ feature, extensions, variant, actions = true
 };
 
 type RequirementTextProps = {
-  feature: Feature.Feature;
   requirementKey: string;
-  extensions?: RequirementEditorExtensions;
+  extensions: RequirementEditorExtensions;
   placeholder?: string;
   variant?: RequirementEditorProps['variant'];
   autoFocus?: boolean;
   testId?: string;
 };
 
-const RequirementText = ({ feature, requirementKey, extensions, ...props }: RequirementTextProps) => {
+const RequirementText = ({ requirementKey, extensions, ...props }: RequirementTextProps) => {
   const path = useMemo(() => FeatureAnchor.getPath({ field: 'requirement', key: requirementKey }), [requirementKey]);
-  const fieldExtensions = useMemo(() => extensions?.({ path }), [extensions, path]);
-  return <CollaborativeTextEditor object={feature} path={path} extensions={fieldExtensions} {...props} />;
+  const fieldExtensions = useMemo(() => extensions({ path }), [extensions, path]);
+  return <InputEditor extensions={fieldExtensions} {...props} />;
 };

@@ -44,6 +44,12 @@ export const updateAutomerge = (
       });
     }
 
+    // An unset optional string has nothing to splice into, so the first edit creates it.
+    const parent = path.slice(0, -1).reduce<any>((value, key) => value?.[key], doc);
+    if (parent && typeof parent[path[path.length - 1]] !== 'string') {
+      parent[path[path.length - 1]] = '';
+    }
+
     // TODO(burdon): Hack to apply in reverse order to properly apply range.
     invertedTransactions.reverse().forEach(({ from, del, insert }) => {
       A.splice(doc, path.slice(), from, del, insert.toString());

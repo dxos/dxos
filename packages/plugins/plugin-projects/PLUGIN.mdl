@@ -345,11 +345,11 @@ test QA-9: Two peers edit a project's notes
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
   given:
-    - host: a booted app with an identity and a space shared with the guest
+    - host: a booted app with an identity, a space shared with the guest, and a project "Launch plan" in it
     - guest: a second browser profile with its own identity, joined to the host's space
   steps:
-    - name: Make the project on the host
-      do: Create "Launch plan" on the host.
+    - name: Open the project on the host
+      do: Open "Launch plan" on the host.
       expect: the host shows the project's Notes
     - name: Open the project on the guest
       do: Open "Launch plan" on the guest.
@@ -2186,11 +2186,11 @@ decision D-206: QA-9 is automated inside the document-caret collaboration test, 
 ```
 
 ```mdl
-decision D-207: QA-9 starts once the peers share the space: the host makes the project after the document check, and the late joiner stays the document's to check. Fills in [D-206].
+decision D-207: QA-9 starts once the peers share the space and both have checked the document: the host makes the project with the document, before the invitation, and each peer then opens it. The late joiner stays the document's to check. Fills in [D-206].
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
   supersedes: D-201
   affects: [QA-9]
-  why: Making the project after the document check leaves the document steps as they were, since the guest's object list and the host's first object do not change.
+  why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
 ```

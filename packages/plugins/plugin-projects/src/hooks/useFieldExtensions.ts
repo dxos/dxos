@@ -11,25 +11,25 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { type FormExtensionsField } from '@dxos/react-ui-form';
 import { isTruthy } from '@dxos/util';
 
-import { usePresenceExtensions } from './usePresenceExtensions.ts';
+import { useDataExtensions } from './useDataExtensions.ts';
 
 /**
- * A form's `extensions` for the collaborative fields of `subject`: what plugins give Markdown, bound to each field, and
- * the other peers' carets.
+ * A form's `extensions` for the collaborative fields of `subject`: the binding to each field's string with the other
+ * peers' carets in it, and what plugins give Markdown, bound to the field.
  */
 export const useFieldExtensions = (
   subject: Obj.Unknown,
 ): ((field: Pick<FormExtensionsField, 'path'>) => Extension[]) => {
   const providers = Hooks.useCapabilities(MarkdownCapabilities.ExtensionProvider);
-  const presence = usePresenceExtensions(subject);
+  const data = useDataExtensions(subject);
   return useCallback(
     (field) => [
+      ...data(field),
       ...providers
         .flat()
         .map((provider) => provider({ subject, binding: { object: subject, path: [...field.path] } }))
         .filter(isTruthy),
-      ...presence(field),
     ],
-    [providers, subject, presence],
+    [providers, subject, data],
   );
 };

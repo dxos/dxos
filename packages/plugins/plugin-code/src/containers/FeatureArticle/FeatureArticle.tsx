@@ -13,7 +13,7 @@ import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
-import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormFieldOverride, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -43,6 +43,12 @@ export type FeatureValues = Pick<Feature.Feature, 'name' | 'description' | 'stat
 export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
   SchemaAST.pick(Type.getSchema(Feature.Feature).ast, ['name', 'description', 'status', 'requirements']),
 );
+
+/** The name and description are bound to the feature's strings through the form's extensions. */
+const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
+  name: { collaborative: true },
+  description: { collaborative: true },
+};
 
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
 const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExtensions): FormFieldMap => {
@@ -156,9 +162,9 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
       db={db}
       schema={FeatureValues}
       values={values}
-      object={subject}
       extensions={extensions}
       fieldMap={fieldMap}
+      fieldOverrides={FIELD_OVERRIDES}
       onValuesChanged={onValuesChanged}
     >
       <Form.Viewport scroll>

@@ -22,7 +22,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 
 import { ProjectCapabilities } from '#types';
 
-import { usePresenceExtensions } from '../../hooks/index.ts';
+import { useDataExtensions } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
@@ -43,8 +43,8 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
     [t('skills.label'), skills],
     [t('context.label'), objects],
   ]);
-  // The other peers' carets in the instructions' text.
-  const presence = usePresenceExtensions(instructions);
+  // The other peers' carets in the instructions' text, which is a `Ref<Text>` its editor binds itself.
+  const presence = useDataExtensions(instructions, { text: false });
 
   return (
     <Form.FieldSet label={t('config.label')} data-testid='projectsPlugin.config'>

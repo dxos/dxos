@@ -398,7 +398,6 @@ export const ProjectArticle = ({
               db={db}
               schema={HeaderValues}
               values={project}
-              object={subject}
               extensions={extensions}
               fieldOverrides={fieldOverrides}
               onValuesChanged={handleValuesChanged}

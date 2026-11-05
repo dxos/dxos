@@ -60,7 +60,10 @@ export type FormFieldOverride = {
   onOpenChange?: (open: boolean) => void;
   /** A button at the end of a text control that sets its value. */
   action?: FormFieldAction;
-  /** Edits the string as collaborative text (see `CollaborativeAnnotation`), for this use of the form. */
+  /**
+   * Edits the string through the binding the form's `extensions` give the field's editor (`createDataExtensions`), so
+   * its edits reach the object directly rather than `onValuesChanged`.
+   */
   collaborative?: boolean;
 };
 
@@ -122,7 +125,7 @@ export type FormFieldRendererProps<T = any> = {
   jsonPath?: string;
   /** Key path of this field within the form values. */
   path?: readonly (string | number)[];
-  /** Bound to the form's live object's string rather than handing back values (see `CollaborativeAnnotation`). */
+  /** Edited through the binding in the form's extensions rather than handing back values (see `FormFieldOverride`). */
   collaborative?: boolean;
   placeholder?: string;
   /** The field's glyph (see `FormFieldOverride.icon`). */
