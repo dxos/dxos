@@ -365,16 +365,20 @@ test QA-9: Two peers edit a project's notes
 ```mdl
 test QA-10: Two peers see each other's carets in every project editor
   desc: |
-    Alice and Bob share a project and each sees the other's named caret in the overview's Notes, the agent's
-    instructions, the spec's prose, and a feature's description inside the spec. Walked by the autocue flow
-    `packages/plugins/plugin-projects/autocue/project-cursors.mjs`, recorded side by side.
+    Alice and Bob share a project and each sees the other's named caret in the project's name and description, the
+    overview's Notes, the agent's instructions, the spec's prose, and a feature's name, description and requirement
+    inside the spec. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/project-cursors.mjs`,
+    recorded side by side.
   actors: human
-  status: passing            # 2026-11-04, recorded by autocue/project-cursors.mjs
+  status: passing            # 2026-11-05, recorded by autocue/project-cursors.mjs
   given:
     - alice: a booted app named "Alice", with plugin-code on and a space holding a "Launch plan" project whose spec has
-      prose and one feature, "Landing page"
+      prose and one feature, "Landing page", with a description and one requirement
     - bob: a second browser profile named "Bob", with plugin-code on, joined to Alice's space with "Launch plan" open
   steps:
+    - name: Project name and description
+      do: Bob types in the project's description, then Alice puts her cursor at the end of its name.
+      expect: Alice's description shows Bob's caret and Bob's name shows Alice's, each with that peer's name
     - name: Notes
       do: Alice types in the overview's Notes, then Bob puts his cursor there.
       expect: each Notes shows the other peer's caret with that peer's name
@@ -384,9 +388,12 @@ test QA-10: Two peers see each other's carets in every project editor
     - name: Spec prose
       do: Both open the Specs tab; Alice puts her cursor at the end of the prose, then Bob types after it.
       expect: each spec shows the other peer's caret with that peer's name
-    - name: Feature description
-      do: Bob puts his cursor in "Landing page"'s description, then Alice types at its end.
-      expect: each description shows the other peer's caret with that peer's name
+    - name: Feature name and description
+      do: Bob puts his cursor at the end of "Landing page"'s name, then Alice types at the end of its description.
+      expect: Alice's feature name shows Bob's caret and Bob's description shows Alice's, each with that peer's name
+    - name: Feature requirement
+      do: Alice types at the end of the feature's requirement, then Bob puts his cursor there.
+      expect: each requirement row shows the other peer's caret with that peer's name
 ```
 
 ## Changelog
@@ -2159,4 +2166,14 @@ decision D-204: The editors with carets are the project's name and description, 
   supersedes: D-200
   affects: [F-4.13, F-5.8]
   why: These are the fields comments anchor into, plus the instructions, which already had carets. The project's name and description and a feature's fields are now collaborative strings edited in place, so they take the carets through the same binding. A spec has no editor for its own name or description, so there is nothing to add there.
+```
+
+```mdl
+decision D-205: QA-10 walks two peers through every editor with carets ([D-204]) in one take, adding the project's name and description and a feature's name and requirement to its steps. The two feature fields are split across peers so each field's caret shows only in that field. Fills in [D-203].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-202
+  affects: [QA-10, F-4.13, F-5.8]
+  why: A recorded walkthrough already covers the editors that need a spec with the Software package; the new caret sites sit in the same views, so they join the same take rather than a separate test.
 ```

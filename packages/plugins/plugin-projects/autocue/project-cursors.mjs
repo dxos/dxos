@@ -3,8 +3,9 @@
 //
 
 /**
- * Alice and Bob share a project and see each other's named carets in every editor it has: the overview's Notes,
- * the agent's instructions, the spec's prose, and a feature's description inside the spec.
+ * Alice and Bob share a project and see each other's named carets in every editor it has: the project's name and
+ * description, the overview's Notes, the agent's instructions, the spec's prose, and a feature's name, description
+ * and requirement inside the spec.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-10
  * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4173 (EDGE signaling)
@@ -28,6 +29,7 @@ const SPEC = 'Launch spec';
 const PROSE = 'Ship the launch site and a press kit before the announcement.';
 const FEATURE = 'Landing page';
 const FEATURE_DESCRIPTION = 'One page that says what Composer is and links the press kit.';
+const REQUIREMENT = 'Links the press kit';
 const TIMEOUT = 60_000;
 // How long a caret stays on screen once it shows, so a viewer can find it.
 const HOLD = 2_500;
@@ -36,6 +38,8 @@ const NOTES = 'Draft the press kit';
 const INSTRUCTIONS = '\nKeep the launch copy short and concrete.';
 const PROSE_ADDITION = ' Bob owns the press kit.';
 const DESCRIPTION_ADDITION = ' It loads in under a second.';
+const PROJECT_DESCRIPTION = 'Everything we ship for the launch.';
+const REQUIREMENT_ADDITION = ' from the header';
 
 const waitFor = async (predicate, { timeout = TIMEOUT, what }) => {
   const deadline = Date.now() + timeout;
@@ -62,12 +66,13 @@ const agent = (page) => plank(page).getByTestId('projectsPlugin.config.agent');
 const instructions = (page) => agent(page).locator('.cm-content').first();
 const specDocument = (page) => plank(page).getByTestId('projectsPlugin.spec.document');
 const specLine = (page, text) => specDocument(page).locator('.cm-line', { hasText: text }).first();
-/** The feature section's description: its only field edited in CodeMirror, since the name is a plain input. */
-const descriptionField = (page) =>
-  specDocument(page)
-    .locator('[data-scope="field"][data-part="root"]', { has: page.locator('[contenteditable="true"]') })
-    .first();
-const featureDescription = (page) => descriptionField(page).locator('[contenteditable="true"]');
+/** A field of the overview's header form, by the JSON path its editor's frame carries as the test id. */
+const projectField = (page, path) => plank(page).getByTestId(path).first();
+/** A field of the feature section in the spec, by the test id its editor's frame carries. */
+const featureField = (page, testId) => specDocument(page).getByTestId(testId).first();
+const editable = (field) => field.locator('[contenteditable="true"]');
+const featureDescription = (page) => editable(featureField(page, 'description'));
+const focusedIn = (locator) => locator.evaluate((element) => element.contains(document.activeElement));
 
 /** A caret drawn for another peer in `scope`, labelled with that peer's name. */
 const caretOf = (scope, name) =>
@@ -275,6 +280,9 @@ export const steps = [
       await featureDescription(page).waitFor({ timeout: TIMEOUT });
       await featureDescription(page).click();
       await page.keyboard.type(FEATURE_DESCRIPTION, { delay: 10 });
+      await specDocument(page).getByTestId('requirement-editor.add').click();
+      await editable(featureField(page, 'requirement-editor.0.text')).waitFor({ timeout: TIMEOUT });
+      await page.keyboard.type(REQUIREMENT, { delay: 10 });
       await plank(page).getByTestId('projectsPlugin.tab.overview').click();
       await notes(page).waitFor({ timeout: TIMEOUT });
     },
@@ -316,8 +324,28 @@ export const steps = [
     },
   },
   {
-    name: "Notes: each sees the other's caret",
+    name: "The project's name and description: each sees the other's caret",
     subtitle: 'plugin-projects QA-10 step 1',
+    run: async ({ peers: { alice, bob } }) => {
+      // An unset description is created when its editor takes focus, which rebinds the editor before typing.
+      const description = (page) => editable(projectField(page, 'description'));
+      await bob.click(description(bob.page));
+      await waitFor(() => focusedIn(description(bob.page)), {
+        timeout: 10_000,
+        what: "Bob's project description to take focus",
+      });
+      await bob.type(PROJECT_DESCRIPTION);
+      await expectCaret(projectField(alice.page, 'description'), 'Bob', "Alice's project description");
+      await hold(alice);
+      await alice.click(editable(projectField(alice.page, 'name')).locator('.cm-line').first());
+      await alice.page.keyboard.press('End');
+      await expectCaret(projectField(bob.page, 'name'), 'Alice', "Bob's project name");
+      await hold(alice);
+    },
+  },
+  {
+    name: "Notes: each sees the other's caret",
+    subtitle: 'plugin-projects QA-10 step 2',
     run: async ({ peers: { alice, bob } }) => {
       await alice.click(notes(alice.page).getByRole('textbox'));
       await alice.type(NOTES);
@@ -331,7 +359,7 @@ export const steps = [
   },
   {
     name: 'Agent instructions: Bob writes, Alice sees his caret',
-    subtitle: 'plugin-projects QA-10 step 2',
+    subtitle: 'plugin-projects QA-10 step 3',
     run: async ({ peers: { alice, bob } }) => {
       await openAgent(alice);
       await openAgent(bob);
@@ -347,7 +375,7 @@ export const steps = [
   },
   {
     name: "Spec: Bob adds to the prose under Alice's caret",
-    subtitle: 'plugin-projects QA-10 step 3',
+    subtitle: 'plugin-projects QA-10 step 4',
     run: async ({ peers: { alice, bob } }) => {
       await openSpec(alice);
       await openSpec(bob);
@@ -363,26 +391,40 @@ export const steps = [
     },
   },
   {
-    name: "A feature's description: Alice edits, Bob sees where",
-    subtitle: 'plugin-projects QA-10 step 4',
+    name: "A feature's name and description: Bob in the name, Alice in the description",
+    subtitle: 'plugin-projects QA-10 step 5',
     run: async ({ peers: { alice, bob } }) => {
-      // The feature card's wrapper takes the pointer first, so the click is forced through to the text's own line.
-      const line = (page) => featureDescription(page).locator('.cm-line').first();
-      await bob.click(line(bob.page), { force: true });
-      await bob.page.keyboard.press('ControlOrMeta+End');
-      await alice.click(line(alice.page), { force: true });
-      await alice.page.keyboard.press('ControlOrMeta+End');
-      await waitFor(
-        () => featureDescription(alice.page).evaluate((element) => element.contains(document.activeElement)),
-        {
-          timeout: 10_000,
-          what: "Alice's description to take focus",
-        },
-      );
-      await alice.type(DESCRIPTION_ADDITION);
-      await expectCaret(descriptionField(bob.page), 'Alice', "Bob's feature description");
+      // The feature card's wrapper takes the pointer first, so clicks are forced through to the text's own line.
+      const line = (page, testId) => editable(featureField(page, testId)).locator('.cm-line').first();
+      await bob.click(line(bob.page, 'name'), { force: true });
+      await bob.page.keyboard.press('End');
+      await expectCaret(featureField(alice.page, 'name'), 'Bob', "Alice's feature name");
       await hold(alice);
-      await expectCaret(descriptionField(alice.page), 'Bob', "Alice's feature description");
+      await alice.click(line(alice.page, 'description'), { force: true });
+      await alice.page.keyboard.press('ControlOrMeta+End');
+      await waitFor(() => focusedIn(featureDescription(alice.page)), {
+        timeout: 10_000,
+        what: "Alice's description to take focus",
+      });
+      await alice.type(DESCRIPTION_ADDITION);
+      await expectCaret(featureField(bob.page, 'description'), 'Alice', "Bob's feature description");
+      await hold(alice);
+    },
+  },
+  {
+    name: "A feature's requirement: each sees the other's caret",
+    subtitle: 'plugin-projects QA-10 step 6',
+    run: async ({ peers: { alice, bob } }) => {
+      const requirement = (page) => featureField(page, 'requirement-editor.0.text');
+      const line = (page) => editable(requirement(page)).locator('.cm-line').first();
+      await alice.click(line(alice.page), { force: true });
+      await alice.page.keyboard.press('End');
+      await alice.type(REQUIREMENT_ADDITION);
+      await expectCaret(requirement(bob.page), 'Alice', "Bob's requirement");
+      await hold(alice);
+      await bob.click(line(bob.page), { force: true });
+      await bob.page.keyboard.press('End');
+      await expectCaret(requirement(alice.page), 'Bob', "Alice's requirement");
       await hold(alice);
     },
   },
