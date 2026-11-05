@@ -90,7 +90,7 @@ feat F-5: A project's overview
              plugin's own. Groups with the same id merge, their fields sorted by each field's order, and a field
              whose `enabled` atom is false is hidden. A field may carry an action, a button at the end of its control
              that sets its value.
-  req F-5.8: The project's name and description, the overview's Notes and the agent's instructions show the carets of
+  req F-5.9: The project's name and description, the overview's Notes and the agent's instructions show the carets of
              the other peers editing them, each with the peer's name.
 ```
 
@@ -2138,7 +2138,7 @@ decision D-200: The overview's empty Notes, Artifacts and Specs sections say wha
 decision D-201: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-4.13, F-5.8]
+  affects: [F-4.13, F-5.9]
 ```
 
 ```mdl
@@ -2146,7 +2146,7 @@ decision D-202: The editors with carets are a spec's text, the feature sections 
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-4.13, F-5.8]
+  affects: [F-4.13, F-5.9]
   why: These are the CodeMirror editors a project's views mount over shared text. A task's description is left out because it commits through `UpdateTask` on blur to write the task's history, which editing in place would bypass.
   rejected:
     - Turning the project's description into a markdown editor so it carries carets, which changes how the field looks and behaves.
@@ -2157,7 +2157,7 @@ decision D-203: QA-9 checks carets in the overview's Notes between two peers, th
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [QA-9, F-5.8]
+  affects: [QA-9, F-5.9]
   why: Notes is on the Overview of a project just made from the Default template, so the test needs no setup beyond creating it, and the late joiner is the case that failed before the awareness fix.
 ```
 
@@ -2166,7 +2166,7 @@ decision D-204: QA-10 walks two peers through every editor with carets ([D-202])
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [QA-10, F-5.8]
+  affects: [QA-10, F-5.9]
   why: QA-9 automates the Notes alone; the instructions, the spec's prose and a feature's description need a spec with the Software package, so they are covered by a recorded walkthrough rather than another e2e test.
 ```
 
@@ -2174,7 +2174,7 @@ decision D-204: QA-10 walks two peers through every editor with carets ([D-202])
 decision D-205: Every collaborative text field in a project that takes comments also shows the other peers' carets.
   date: 2026-11-05
   by: user:wittjosiah
-  affects: [F-4.13, F-5.8]
+  affects: [F-4.13, F-5.9]
 ```
 
 ```mdl
@@ -2183,8 +2183,8 @@ decision D-206: The editors with carets are the project's name and description, 
   by: agent:claude-code
   for: user:wittjosiah
   supersedes: D-202
-  affects: [F-4.13, F-5.8]
-  why: These are the fields comments anchor into, plus the instructions, which already had carets. The project's name and description and a feature's fields are now collaborative strings edited in place, so they take the carets through the same binding. A spec has no editor for its own name or description, so there is nothing to add there.
+  affects: [F-4.13, F-5.9]
+  why: These are the fields comments anchor into, plus the instructions, which already had carets. The project's name and description and a feature's fields are now collaborative strings edited in place, so they take the carets through the same binding. A spec's name and description, which the overview's Specs rows edit, are plain fields that take no comments, so they show no carets.
 ```
 
 ```mdl
@@ -2193,7 +2193,7 @@ decision D-207: QA-10 walks two peers through every editor with carets ([D-206])
   by: agent:claude-code
   for: user:wittjosiah
   supersedes: D-204
-  affects: [QA-10, F-4.13, F-5.8]
+  affects: [QA-10, F-4.13, F-5.9]
   why: A recorded walkthrough already covers the editors that need a spec with the Software package; the new caret sites sit in the same views, so they join the same take rather than a separate test.
 ```
 
