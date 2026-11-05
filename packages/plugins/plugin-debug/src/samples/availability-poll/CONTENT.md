@@ -21,9 +21,9 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 ### Features (`features.ts`)
 
 - The poll spec is the feature map: the project owns it (`Project.specs`), and it holds six features in its features annotation (`FeatureMap.FeaturesAnnotation`), all `planned`, each citing its block (`availability-poll/SPEC.mdl#F-n`) and carrying the block's `req` lines as requirements:
-  - `create` "Create a poll" (F-1), 4 requirements.
-  - `mark` "Mark availability" (F-2), 3 requirements.
-  - `heatmap` "Heat map and best slot" (F-3), 4 requirements.
+  - `create` "Create a poll" (F-1), 6 requirements.
+  - `mark` "Mark availability" (F-2), 5 requirements.
+  - `heatmap` "Heat map and best slot" (F-3), 5 requirements.
   - `zones` "Time zones" (F-4), 3 requirements.
   - `dst` "Daylight-saving time" (F-5), 4 requirements.
   - `flights` "Flight options" (F-6), 1 requirement, owning the "Flight options" spec (`spec`).

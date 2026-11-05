@@ -22,7 +22,7 @@ const embed = (label: string, object: Obj.Unknown) => `![${label}](${EID.make({ 
 const ZONES_MD = `# Time zones and DST
 
 Every slot is stored as a UTC instant. Nothing else in the poll has a time zone: the organizer's zone is only how a
-slot plan is read, and each invitee's zone is only how the grid is drawn and how their ranges are read. Counting who
+slot plan is read, and each respondent's zone is only how the grid is drawn and how their ranges are read. Counting who
 is free for a slot is then a comparison of instants, and it cannot be wrong by an hour.
 
 ## From a plan to instants
@@ -72,7 +72,7 @@ const durableMd = (poll: Drawing.Drawing) => `# One Durable Object per poll
 ${embed('Poll architecture', poll)}
 
 A poll is small, written by a handful of people and read by the same few. One Durable Object per poll gives it a
-single writer without a database: requests to a poll run one at a time in its object, so two invitees saving at once
+single writer without a database: requests to a poll run one at a time in its object, so two respondents saving at once
 cannot lose each other's marks.
 
 ## Ids
@@ -82,7 +82,7 @@ and no index of polls exists to leak. \`idFromName\` would let anyone who guesse
 
 ## Storage
 
-The whole poll is one storage key: title, zone, slots, invitees and marks. A poll of 100 slots and 20 invitees is a
+The whole poll is one storage key: title, zone, slots and marks, keyed by name. A poll of 100 slots and 20 respondents is a
 few kilobytes, so reading and writing it whole is simpler than a key per mark and just as fast. The SQLite-backed
 storage class is the one a new account, and a temporary one, can create; it is declared in the Worker's migrations.
 

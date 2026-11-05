@@ -38,7 +38,7 @@ const FLIGHTS = 'Flight options';
 
 const TIE_BREAK = 'F-3.2';
 const NEW_TIE_BREAK =
-  'The best slot is the one the most invitees are free for; on a tie, the one whose next slot keeps the most of the same invitees free, so the meeting can run over; then the earliest. With no marks there is no best slot.';
+  'The best slot is the one the most respondents are free for; on a tie, the one whose next slot keeps the most of the same respondents free, so the meeting can run over; then the earliest. With no marks there is no best slot.';
 
 const planPrompt = (milestone) => `Plan ${milestone} from the spec.`;
 const REVALIDATE_PROMPT = `I changed ${TIE_BREAK} on "${HEATMAP}". Revalidate it.`;
@@ -603,7 +603,7 @@ export const steps = [
     done: async ({ page }) => allOperational(await snapshot(page), M2.features),
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'Three invitees, three zones, two clock changes',
+        value: 'Three respondents, three zones, two clock changes',
         subtitle: 'Checked against the scenario before it deploys',
         position: 'top',
       });

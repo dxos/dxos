@@ -121,10 +121,10 @@ describe('Availability Poll template', () => {
       expect(features.every((feature) => feature.status === 'planned')).toBe(true);
       expect(features.map(sourcesOf)).toEqual(Object.values(FEATURES).map((block) => [`${SPEC_PATH}#${block}`]));
       // The requirements are the spec's own `req` lines, numbered as the spec numbers them.
-      expect(features.map((feature) => feature.requirements?.length)).toEqual([4, 3, 4, 3, 4, 1]);
+      expect(features.map((feature) => feature.requirements?.length)).toEqual([6, 5, 5, 3, 4, 1]);
       expect(features[2].requirements?.[1]).toEqual({
         id: 'F-3.2',
-        text: 'The best slot is the one the most invitees are free for; on a tie, the earliest. With no marks there is no best slot.',
+        text: 'The best slot is the one the most respondents are free for; on a tie, the earliest. With no marks there is no best slot.',
       });
 
       expect(map?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);

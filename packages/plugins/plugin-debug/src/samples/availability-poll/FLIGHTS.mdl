@@ -4,7 +4,7 @@ name: Flight options
 version: 0.1.0
 ---
 
-Flights overlaid on an availability poll, for invitees who travel to the meeting. The organizer sets a destination, a
+Flights overlaid on an availability poll, for respondents who travel to the meeting. The organizer sets a destination, a
 time window and the limits a flight must meet; each traveler sets where they fly from; the Worker searches Duffel for
 offers and the page shows, on the poll's own grid, when each traveler can arrive. It builds on the poll spec: the best
 slot it plans around is [F-3](com.example.availability-poll#F-3), and every time it shows is read in the
@@ -14,7 +14,7 @@ reader's zone as [F-4](com.example.availability-poll#F-4) and
 ## Dependencies
 
 ```mdl
-uses com.example.availability-poll: The poll these flights are overlaid on — its best slot, its invitees and the zone rules every time here is read by, which this spec does not restate.
+uses com.example.availability-poll: The poll these flights are overlaid on — its best slot, its respondents and the zone rules every time here is read by, which this spec does not restate.
 ```
 
 ## Extensions
@@ -54,9 +54,9 @@ type Trip
 
 ```mdl
 type Traveler
-  desc: An invitee who flies in.
+  desc: A respondent who flies in.
   fields:
-    name: string           # an invitee of the poll
+    name: string           # a respondent of the poll
     origin: string         # IATA airport code
     pick?: string          # id of the offer they chose
 ```
@@ -83,7 +83,7 @@ feat F-1: Trip
   desc: The organizer says where the meeting is and what a flight may cost.
 
   req F-1.1: `PUT /api/polls/:id/trip` with `type:Trip` sets the poll's trip; the page shows it above the grid.
-  req F-1.2: Each invitee who travels sets their origin airport on the page, saved as a `type:Traveler`.
+  req F-1.2: Each respondent who travels sets their origin airport on the page, saved as a `type:Traveler`.
 ```
 
 ```mdl

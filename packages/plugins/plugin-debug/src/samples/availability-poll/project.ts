@@ -78,7 +78,7 @@ namespaces, not components. These names are checked against the published packag
 reading \`node_modules\`. Plain elements are fine inside them for the grid, its cells shaded with an inline \
 \`background\`. \
 \`worker.js\` holds the \`/api\` routes and the \`Poll\` Durable Object, created with \`newUniqueId()\`; it keeps \
-one storage key, \`poll\`: \`{ title, minutes, slots: [{ id, start }], invitees, marks: { [name]: [slotId] } }\`, \
+one storage key, \`poll\`: \`{ title, minutes, slots: [{ id, start }], marks: { [name]: [slotId] } }\`, whose key order is the respondents' order, \
 and \`GET /api/polls/:id\` answers it with each slot's \`free\` names and, once F-3 adds it, \`best\`. \
 \`wrangler.jsonc\` declares \`assets: { directory: './dist', not_found_handling: 'single-page-application', \
 run_worker_first: ['/api/*'] }\`, binds \`Poll\`, and declares it in a migration with \`new_sqlite_classes\`, which \
