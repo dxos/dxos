@@ -25,3 +25,17 @@ tasks:
       outputStyle: stream
       # A backstop above `runTimeoutMinutes` in canary/canary.yml; `test` would stop the run after 10 minutes.
       timeout: 3900
+  mail-canary-profile:
+    extends: test
+    args:
+      - canary/test/export-profile.test.ts
+      - --disableConsoleIntercept
+    env:
+      VITEST_TAGS_FILTER: sync-e2e
+      # Identity recovery logs its device credential at info: info only from the canary.
+      LOG_FILTER: warn,plugin-google/canary:info
+    options:
+      cache: false
+      outputStyle: stream
+      # The export waits for the canary space to replicate to a new device; `test` would stop it after 10 minutes.
+      timeout: 1800

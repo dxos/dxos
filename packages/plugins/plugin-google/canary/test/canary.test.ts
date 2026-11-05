@@ -5,62 +5,31 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
-import * as Schema from 'effect/Schema';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
-import { parse } from 'yaml';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { fixturePath } from '@dxos/fixtures';
-import { SpaceId } from '@dxos/keys';
 
 import { type CheckResult, type FailureClass, check, classifyError } from '../checks.ts';
+import { edgeWaits, loadConfig } from '../config.ts';
 import { FullSync } from '../full-sync.ts';
 import { CanaryError, CanaryMailbox, credentialsFromEnv } from '../mailbox.ts';
 import { type CanaryReport, Nightly, type NightlyReport, parsePool, renderEvents, renderSummary } from '../nightly.ts';
-import { CanarySpace, previewClientLayer, recoverIdentity } from '../space.ts';
+import { PROFILE_EXTENSION, PROFILE_FIXTURE, unpackProfile } from '../profile.ts';
+import { CanarySpace, previewClientLayer, signIn } from '../space.ts';
 
-const Config = Schema.Struct({
-  spaceId: SpaceId,
-  runTimeoutMinutes: Schema.Number,
-  seed: Schema.Struct({ count: Schema.Int }),
-  monitor: Schema.Struct({
-    timeoutMinutes: Schema.Number,
-    pollSeconds: Schema.Number,
-    windowHours: Schema.Number,
-    hungMinutes: Schema.Number,
-  }),
-  fullSync: Schema.Struct({
-    enabled: Schema.Boolean,
-    days: Schema.Int,
-    timeoutMinutes: Schema.Number,
-    pollSeconds: Schema.Number,
-    tokenRefreshMinutes: Schema.Number,
-  }),
-  edge: Schema.Struct({
-    openMinutes: Schema.Number,
-    readMinutes: Schema.Number,
-    triggerMinutes: Schema.Number,
-    deleteMinutes: Schema.Number,
-  }),
-});
-
-const config = Schema.decodeUnknownSync(Config)(
-  parse(readFileSync(join(import.meta.dirname, '../canary.yml'), 'utf8')),
-);
+const config = loadConfig();
 const credentials = credentialsFromEnv();
 const phrase = process.env.DX_CANARY_RECOVERY_PHRASE;
 const pool = config.seed.count > 0 ? fixturePath('enron-pool', { extension: 'mbox' }) : undefined;
+// Without the profile the run recovers the identity, which adds a device every time.
+const profile = fixturePath(PROFILE_FIXTURE, { extension: PROFILE_EXTENSION });
 /** Read by the workflow's report steps. */
 const REPORT_DIR = join(import.meta.dirname, '../out');
 
-const waits = {
-  open: Duration.minutes(config.edge.openMinutes),
-  read: Duration.minutes(config.edge.readMinutes),
-  trigger: Duration.minutes(config.edge.triggerMinutes),
-  delete: Duration.minutes(config.edge.deleteMinutes),
-};
+const waits = edgeWaits(config);
 const hungAfter = Duration.minutes(config.monitor.hungMinutes);
 
 /** A check that could not run, failed as SETUP unless its error names a known cause. */
@@ -84,10 +53,11 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: testTimeout, retry: 0 }, 
       return;
     }
     const startedAt = new Date().toISOString();
+    const dataRoot = profile ? unpackProfile(profile) : undefined;
     const result = await EffectEx.runPromise(
       Effect.gen(function* () {
         const mailbox = yield* CanaryMailbox.connect(credentials);
-        yield* recoverIdentity(phrase);
+        yield* signIn(phrase, { profile: profile !== undefined, wait: waits.open });
         // Each stage that cannot run fails its own check, so the next stage still runs.
         const monitored = yield* CanarySpace.open(config.spaceId, waits).pipe(
           Effect.flatMap((space) =>
@@ -140,10 +110,14 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: testTimeout, retry: 0 }, 
           duration: Duration.minutes(config.runTimeoutMinutes),
           orElse: () => Effect.fail(new CanaryError({ message: `the run passed ${config.runTimeoutMinutes} minutes` })),
         }),
-        Effect.provide(previewClientLayer),
+        Effect.provide(previewClientLayer(dataRoot)),
         Effect.result,
       ),
     );
+    // The unpacked copy holds the device's private key.
+    if (dataRoot) {
+      rmSync(dataRoot, { recursive: true, force: true });
+    }
     const report: CanaryReport = Result.isSuccess(result)
       ? result.success
       : { startedAt, spaceId: config.spaceId, checks: [couldNotRun('RUN', 'The canary ran', result.failure.message)] };
