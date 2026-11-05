@@ -4,8 +4,9 @@
 
 /**
  * Bob follows Alice around a shared space: his deck opens what she opens and keeps her top line at the top of
- * his view, until he presses Escape. Then both decks lay planks side by side, and Bob's deck holds Alice's planks
- * and slides with hers. Recorded side by side.
+ * his view. Then both decks lay planks side by side, and Bob's deck holds Alice's planks and slides with hers.
+ * Along the way it shows each way a follow ends: Escape, Bob scrolling his view, leaving for Settings, scrolling
+ * his deck, selecting a plank he shows in the navtree, and Alice leaving the space. Recorded side by side.
  *
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-5
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-6
@@ -99,9 +100,57 @@ const frontPlank = (page) =>
       })
       ?.getAttribute('data-object-id'),
   );
+/** The workspace path of the layout, e.g. `root/<spaceId>`. */
+const layoutWorkspace = (page) =>
+  page.evaluate(() => {
+    const { manager } = globalThis.composer;
+    const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
+    return manager.registry.get(layout).workspace;
+  });
 const sidebar = (page) => page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
 const membersTab = (page) => page.locator('[id$="trigger-members"]');
 const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.row');
+
+/** Bob clicks Follow on Alice's row, opening the Members companion first if it is closed. */
+const follow = async (bob) => {
+  const page = bob.page;
+  // Clicking the tab of an open companion would close it.
+  if ((await sidebar(page).getAttribute('data-state')) !== 'expanded') {
+    await bob.click(membersTab(page));
+  }
+  const button = presenceRows(page).getByTestId('spacePlugin.presence.follow').first();
+  await button.waitFor({ state: 'attached', timeout: TIMEOUT });
+  await presenceRows(page).first().hover();
+  await bob.click(button);
+  await presenceRows(page).first().getByTestId('spacePlugin.presence.stopFollowing').waitFor();
+};
+
+/** Waits for Bob's follow to end: the Members tab's dot clears. */
+const followEnded = (bob, timeout = 15_000) =>
+  waitFor(async () => (await membersTab(bob.page).getAttribute('data-badge')) === null, {
+    timeout,
+    what: 'the follow to end',
+  });
+
+/** Opens Settings, turns Flatten deck off, and returns to the space. */
+const unflatten = async (peer) => {
+  const { page } = peer;
+  const workspace = await layoutWorkspace(page);
+  await peer.click(page.getByTestId('treeView.appSettings'));
+  await peer.click(page.getByTestId('settings.org.dxos.plugin.deck'));
+  await peer.click(page.getByTestId('flatten'));
+  await peer.click(page.locator(`[data-testid="spacePlugin.space"][data-object-id="${workspace}"]`));
+  await waitFor(
+    () =>
+      page.evaluate((workspace) => {
+        const { manager } = globalThis.composer;
+        const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
+        const { flat, workspace: current } = manager.registry.get(layout);
+        return flat === false && current === workspace;
+      }, workspace),
+    { what: 'the space to open with its deck unflattened' },
+  );
+};
 
 /** Expands a navtree row unless it is already open; a row with no children yet keeps its caret disabled. */
 const expandRow = async (row) => {
@@ -355,46 +404,48 @@ export const steps = [
     pace: 4_000,
   },
   {
-    name: 'Both turn off Flatten deck',
-    subtitle: 'QA-6: each deck now lays its planks side by side (Settings → Deck)',
-    run: async ({ peers: { alice, bob } }) => {
-      for (const peer of [alice, bob]) {
-        const { page } = peer;
-        const workspace = await page.evaluate(() => {
-          const { manager } = globalThis.composer;
-          const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
-          return manager.registry.get(layout).workspace;
-        });
-        await peer.click(page.getByTestId('treeView.appSettings'));
-        await peer.click(page.getByTestId('settings.org.dxos.plugin.deck'));
-        await peer.click(page.getByTestId('flatten'));
-        await peer.click(page.locator(`[data-testid="spacePlugin.space"][data-object-id="${workspace}"]`));
-        await waitFor(
-          () =>
-            page.evaluate((workspace) => {
-              const { manager } = globalThis.composer;
-              const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
-              const { flat, workspace: current } = manager.registry.get(layout);
-              return flat === false && current === workspace;
-            }, workspace),
-          { what: 'the space to open with its deck unflattened' },
-        );
+    name: 'Bob follows again, then scrolls his own view; following stops',
+    subtitle: 'Scrolling, panning or zooming in a plank is his own move, so it ends the follow',
+    run: async ({ peers: { bob }, sleep }) => {
+      await follow(bob);
+      await sleep(1_500);
+      const box = await plank(bob.page).locator('.cm-scroller').boundingBox();
+      await bob.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      for (let tick = 0; tick < 4; tick++) {
+        await bob.page.mouse.wheel(0, 150);
+        await sleep(180);
       }
+      await followEnded(bob);
+    },
+    pace: 3_500,
+  },
+  {
+    name: 'Bob follows again, then leaves for Settings to turn off Flatten deck; following stops',
+    subtitle: 'Leaving the space ends it, and Follow is back on Alice’s row when he returns',
+    run: async ({ peers: { bob }, sleep }) => {
+      await follow(bob);
+      await sleep(1_500);
+      await unflatten(bob);
+      await followEnded(bob);
+      await presenceRows(bob.page).getByTestId('spacePlugin.presence.follow').first().waitFor({
+        state: 'attached',
+        timeout: TIMEOUT,
+      });
+    },
+    pace: 3_000,
+  },
+  {
+    name: 'Alice turns off Flatten deck too',
+    subtitle: 'QA-6: both decks now lay their planks side by side',
+    run: async ({ peers: { alice } }) => {
+      await unflatten(alice);
     },
     pace: 2_500,
   },
   {
     name: 'Bob follows Alice again',
     run: async ({ peers: { bob } }) => {
-      const follow = presenceRows(bob.page).getByTestId('spacePlugin.presence.follow').first();
-      // The Members companion is usually still open from the first follow; clicking its tab then would close it.
-      if ((await sidebar(bob.page).getAttribute('data-state')) !== 'expanded') {
-        await bob.click(membersTab(bob.page));
-      }
-      await follow.waitFor({ state: 'attached', timeout: TIMEOUT });
-      await presenceRows(bob.page).first().hover();
-      await bob.click(follow);
-      await presenceRows(bob.page).first().getByTestId('spacePlugin.presence.stopFollowing').waitFor();
+      await follow(bob);
     },
     pace: 2_500,
   },
@@ -429,14 +480,55 @@ export const steps = [
     pace: 3_500,
   },
   {
-    name: 'Bob presses Escape; following stops',
-    subtitle: 'QA-6 step 4',
-    run: async ({ peers: { bob } }) => {
-      await bob.page.keyboard.press('Escape');
-      await waitFor(async () => (await membersTab(bob.page).getAttribute('data-badge')) === null, {
-        what: 'the dot to clear',
+    name: 'Bob scrolls his deck sideways; following stops',
+    subtitle: 'QA-6 step 4: sliding the deck is his own move',
+    run: async ({ peers: { bob }, sleep }) => {
+      // Between the first two planks when there is a gap, else over the first plank: either scrolls the deck.
+      const point = await bob.page.evaluate(() => {
+        const tiles = [...document.querySelectorAll('[role="listitem"][data-object-id]')].map((tile) =>
+          tile.getBoundingClientRect(),
+        );
+        const [first, second] = tiles;
+        const y = first.top + first.height / 2;
+        return second && second.left - first.right >= 4
+          ? { x: (first.right + second.left) / 2, y }
+          : { x: first.left + first.width / 2, y };
+      });
+      await bob.page.mouse.move(point.x, point.y);
+      for (let tick = 0; tick < 6; tick++) {
+        await bob.page.mouse.wheel(160, 0);
+        await sleep(150);
+      }
+      await followEnded(bob);
+    },
+    pace: 3_500,
+  },
+  {
+    name: 'Bob follows again, then picks the agenda in his navtree; following stops',
+    subtitle: 'QA-6 step 5: selecting a plank he already shows scrolls his deck to it',
+    run: async ({ peers: { alice, bob }, sleep }) => {
+      await follow(bob);
+      const expected = await frontPlank(alice.page);
+      await waitFor(async () => (await frontPlank(bob.page)) === expected, { what: 'Bob’s deck to slide back' });
+      await sleep(1_500);
+      await bob.click(objectLink(bob.page, AGENDA));
+      await followEnded(bob);
+    },
+    pace: 3_500,
+  },
+  {
+    name: 'Bob follows again; Alice leaves for Settings, and after five seconds his follow ends',
+    subtitle: 'A leader who attends nothing in the space for five seconds has left it',
+    run: async ({ peers: { alice, bob } }) => {
+      await follow(bob);
+      const workspace = await layoutWorkspace(alice.page);
+      await alice.click(alice.page.getByTestId('treeView.appSettings'));
+      await followEnded(bob, 20_000);
+      await alice.click(alice.page.locator(`[data-testid="spacePlugin.space"][data-object-id="${workspace}"]`));
+      await waitFor(async () => (await layoutWorkspace(alice.page)) === workspace, {
+        what: 'Alice to return to the space',
       });
     },
-    pace: 3_000,
+    pace: 3_500,
   },
 ];
