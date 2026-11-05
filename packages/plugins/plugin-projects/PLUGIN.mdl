@@ -45,14 +45,16 @@ feat F-4: A project's specs
              level opens as the project's article narrowed to it, through the `ProjectSurface.Level` surface; its
              Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
              level's own spec, or offers Add spec when it has none.
-  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: the spec dropdown, the
-             view toggle and the Extensions menu on the Specs tab; Delegate to agent and the Gantt toggle on the Tasks
+  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: the spec dropdown and
+             the Extensions menu on the Specs tab; Delegate to agent and the Gantt toggle on the Tasks
              tab. The Overview has no tools there. It has no overflow menu and no button to start a session, which is
              the assistant companion's.
-  req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
-             the spec uses, drawn by that plugin's `ProjectSurface.SpecView` surface. A package is a set of dialects a
-             plugin contributes (`ProjectCapabilities.SpecPackage`). The view toggle shows only when a spec has more
-             than one view. The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
+  req F-4.8: The Specs tab shows the spec's text. The spec's other views are in its companion tabs, Structure,
+             Decisions and Review, beside the spec and beside a project with specs: each view a plugin contributes
+             (`ProjectCapabilities.SpecView`) to a tab's group for dialects the spec uses, drawn by that plugin's
+             `ProjectSurface.SpecView` surface. A tab shows a toggle between its views when it has more than one, and
+             the toolbar a plugin draws through `ProjectSurface.SpecToolbar`. A package is a set of dialects a
+             plugin contributes (`ProjectCapabilities.SpecPackage`). The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
              checking one adds its dialects and unchecking removes them.
   req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
               block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
@@ -2212,4 +2214,25 @@ decision D-209: QA-9 starts once the peers share the space and both have checked
   supersedes: D-203
   affects: [QA-9]
   why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
+```
+
+```mdl
+decision D-210: The Specs tab always shows the spec's text. Every other view of a spec moves to its companion, in three tabs this plugin owns: Structure, Decisions and Review. A plugin adds a view to one of them, and the tab switches between its views. Replaces the view toggle of [D-65] and [D-100].
+  date: 2026-11-05
+  by: user:wittjosiah
+  supersedes: D-100
+  affects: [F-4.7, F-4.8]
+  rejected:
+    - Views in both the Specs tab and the companion, which leaves a reader two places to look for the same thing.
+```
+
+```mdl
+decision D-211: `ProjectCapabilities.SpecView` gains `group`, the tab it is one of, and stays the one registry of views. `SpecSession` holds what a spec's editor and its views share: the view each tab shows, the evidence the Review tab opened, the selections, the diff mode, and the open editor, which a view scrolls to an item. A tab's toolbar ends with the `ProjectSurface.SpecToolbar` surface, where the plugin that knows a spec's source draws it, and `ProjectSurface.SpecCompanion` draws a tab for a plank whose subject is not the spec, such as a feature's level. Fills in [D-210].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The editor and the views can be in different plugins and on different planks, so the state they share belongs to the plugin that owns both seams; plugins never import each other's components.
+  rejected:
+    - A registry per tab, which makes a plugin with views in several tabs contribute to several capabilities.
 ```

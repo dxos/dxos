@@ -184,9 +184,9 @@ component FileTree
 ```mdl
 component SpecArticle
   desc: |
-    Article and section surface for a Spec: the MDL editor. A Spec's panel of views is its
-    SpecCompanion; static content (a bundled PLUGIN.mdl), which has no node to be the companion
-    of, shows the SpecPanel beside the editor.
+    Article and section surface for a Spec: the MDL editor. A Spec's views are in its
+    companion tabs, which plugin-projects owns; static content (a bundled PLUGIN.mdl), which has
+    no node to give companions, shows the SpecPanel beside the editor.
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
     reviewed item and links it to its code (F-16). Extensions plugin-projects
@@ -210,29 +210,38 @@ component SpecArticle
 ```
 
 ```mdl
-component SpecPanel
+component SpecViewContent
   desc: |
-    A spec's panel of views: definitions graph, review, code, decisions by person, decision
-    graph, data model and API. It shares a session with the spec's editor, wherever each is
-    shown: a chip in the editor's margin opens its view, and the panel moves the editor to an
-    item. An answer goes through the open editor, else into the spec's text.
+    One of the views this plugin contributes to a spec's companion tabs (`ProjectCapabilities.SpecView`):
+    Definitions, Data model and API in Structure; decisions by person and the decision graph in
+    Decisions; Review and Code in Review. It shares plugin-projects' `SpecSession` with the
+    spec's editor, wherever each is shown: a chip in the editor's margin opens its view's tab,
+    and a view moves the editor to an item. An answer goes through the open editor, else into
+    the spec's text.
   props:
     spec?: Spec
     content?: string
     sourceKey?: string
-  state:
-    view: definitions | review | code | log | decisions | data | api
-    codeTarget?: string         # the github: key open in the code view
-    diff?: base | head          # what the editor compares the spec with
+    view: definitions | data | api | log | decisions | review | code
 ```
 
 ```mdl
-component SpecCompanion
+component SpecSourceToolbar
   desc: |
-    The SpecPanel as a companion: beside a spec's level, and beside a project that owns a
-    spec, for the spec its Specs tab picked.
+    Where a spec comes from, in every companion tab's toolbar through `ProjectSurface.SpecToolbar`:
+    the diff and fold switches, the pull request or branch, the file and the sync state.
   props:
-    companionTo: Spec | Project
+    spec?: Spec
+```
+
+```mdl
+component SpecPanel
+  desc: |
+    Every SpecViewContent in one panel beside the editor, for static content: it shows the view of
+    the group last asked for, with one toggle across all of them and the SpecSourceToolbar.
+  props:
+    content?: string
+    sourceKey?: string
 ```
 
 ```mdl
@@ -1489,7 +1498,7 @@ test QA-5: Switch between a project's specs
     - name: Open the Specs tab
       do: Click the Specs tab and scroll through the document.
       expect: the tab shows "Inbox and agents", its prose and goals with its features embedded under their headings,
-        and the toolbar holds the spec dropdown, the view toggle and Extensions
+        and the toolbar holds the spec dropdown and Extensions
     - name: Turn an idea into a feature
       do: At the end of the line "A morning digest of what agents did overnight", type `/feature`, press Enter and
         type a description.
@@ -1499,19 +1508,20 @@ test QA-5: Switch between a project's specs
       expect: the menu lists "Inbox and agents", checked, "Launch talk" and "Launch video", and ends in Add spec
     - name: Pick the other spec
       do: Click "Launch talk".
-      expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and no view toggle
+      expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and its Structure tab
+        offers no Canvas
     - name: Give it the software package
       do: Open Extensions and check Software.
-      expect: the menu lists Software and Video, and the view toggle appears, offering the spec's text, Canvas and
-        Kanban
+      expect: the menu lists Software and Video, and the Structure tab now offers Canvas and Board beside
+        Definitions
     - name: Give the new spec the video package
       do: Pick "Launch video" from the dropdown, open Extensions and check Video.
-      expect: the document is empty, Video is checked and no view toggle appears
+      expect: the document is empty, Video is checked and the Structure tab offers no Canvas
     - name: Write a scene
       do: At the end of the document, type `/scene` and press Enter.
       expect: a fenced `scene SC-1:` block with empty `duration:` and `goal:` fields, the cursor at its title
     - name: Go back to the feature map
-      do: Pick "Inbox and agents" from the dropdown, then click Canvas.
+      do: Pick "Inbox and agents" from the dropdown, open the Structure tab and click Canvas.
       expect: the canvas shows nine feature cards, the morning digest among them, and no up or home button
     - name: Add a feature on the canvas
       do: Point at an empty cell, click the `+` that shows there, then New feature.
@@ -2272,6 +2282,26 @@ decision D-82: QA-5 finds Create artifact on the overview's Artifacts heading ra
   date: 2026-11-05
   by: user:wittjosiah
   affects: [QA-5]
+```
+
+```mdl
+decision D-83: A spec's views live in plugin-projects' Structure, Decisions and Review companion tabs, and the main area is always the editor. This plugin contributes Definitions, Data model and API to Structure, with the feature map's Canvas and Board for specs using the features dialect; decisions by person and the decision graph to Decisions; Review and Code to Review. The name Definitions stays. Replaces [D-47] ([org.dxos.plugin.projects#D-210]).
+  date: 2026-11-05
+  by: user:wittjosiah
+  supersedes: D-47
+  affects: [SpecArticle, SpecViewContent, SpecPanel, QA-5]
+```
+
+```mdl
+decision D-84: SpecPanel splits into SpecViewContent, one view as a tab draws it, and SpecSourceToolbar, which every tab draws through `ProjectSurface.SpecToolbar`. A margin chip opens its view's tab: a question opens decisions by person, a decision the graph, a verdict Review. Static content keeps one panel beside the editor, holding every view. A spec no project owns opens as the editor too, its canvas zooming in place; beneath a project, the canvas opens each feature's level, and the level has the companion tabs of the spec breaking it down. The feature companion stays until the Definitions graph draws features. Replaces [D-48]; fills in [D-83].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-48
+  affects: [SpecArticle, SpecViewContent, SpecSourceToolbar, SpecPanel, F-22.3]
+  why: A tab draws one view, so each view renders alone; the toolbar's diff and sync controls apply to every view of the spec.
+  rejected:
+    - Removing the feature companion now, which loses editing a feature's fields before the graph can edit them through the spec.
 ```
 
 ## Appendix: Extension Definitions
