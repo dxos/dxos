@@ -239,6 +239,20 @@ const scrollDocumentTo = async (page, text) => {
   }
 };
 
+/** Delegating makes the build chat the project's chat; this gives the project a new, empty one. */
+const freshChat = (page) =>
+  page.evaluate(async (key) => {
+    const space = dxos
+      .spaces()
+      .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
+    const [project] = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project'))).run();
+    await composer.invoke(
+      'org.dxos.operation.assistant.setCurrentChat',
+      { companionTo: project },
+      { spaceId: space.id },
+    );
+  }, TAKE_SPACE);
+
 /** Types `text` into the project's chat, in the plank's Assistant companion, and sends it. */
 const ask = async (demo, page, text) => {
   await openProjectTab(demo, page, 'tasks');
@@ -252,6 +266,10 @@ const ask = async (demo, page, text) => {
   await page.locator(tab).first().waitFor({ state: 'visible', timeout: 15_000 });
   await demo.click({ selector: `${tab} >> nth=0`, label: 'Assistant' });
   await page.locator(PROMPT).first().waitFor({ state: 'visible', timeout: 15_000 });
+  // A build chat reports its deploy's claim URL, a credential; a take that shows one is not published.
+  if (/claim/i.test(await page.locator(DECK_COMPANION).first().innerText())) {
+    throw new Error('The project chat shows a claim URL');
+  }
   await demo.click({ selector: `${PROMPT} >> nth=0`, hud: false });
   await page.keyboard.type(text, { delay: 35 });
   await page.waitForTimeout(BEAT / 2);
@@ -359,10 +377,13 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
 
 /**
  * A person signs off every task of the milestone in review at once, through the operation the status control's Done
- * runs, so the list goes from all in review to all done in one beat.
+ * runs, so the list goes from all in review to all done in one beat. The caption shows once the list is on screen.
  */
-const acceptMilestone = async (demo, page, milestone) => {
+const acceptMilestone = async (demo, page, milestone, caption) => {
   await openProjectTab(demo, page, 'tasks');
+  if (caption) {
+    await demo.caption(caption);
+  }
   const titles = tasksOf(await snapshot(page), milestone)
     .filter((task) => task.status === 'review')
     .map((task) => task.title);
@@ -635,11 +656,10 @@ export const steps = [
     name: 'Accept M-1',
     done: async ({ page }) => tasksOf(await snapshot(page), M1.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
-      await demo.caption({
+      await acceptMilestone(demo, page, M1.id, {
         value: 'Sign off the work',
         subtitle: 'Each delegated task waits in review for its person',
       });
-      await acceptMilestone(demo, page, M1.id);
       await demo.caption({ value: 'Signed off: every M-1 task done' });
       await page.waitForTimeout(BEAT * 2);
     },
@@ -649,11 +669,13 @@ export const steps = [
     done: async ({ page }) => tasksOf(await snapshot(page), M2.id).some((task) => task.assigned),
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Next: lay out both pages' });
+      await freshChat(page);
       await ask(demo, page, planPrompt(M2.id));
-      await demo.caption({ value: 'The agent plans M-2', subtitle: `Sped up ${PLAN_SPEED * 2}x`, position: 'top' });
-      await waitFor(demo, page, planned(M2.id), 10, 'the M-2 plan', PLAN_SPEED * 2);
-      await page.waitForTimeout(BEAT * 2);
+      await page.waitForTimeout(BEAT);
       await closeCompanion(page);
+      await demo.caption({ value: 'The agent plans M-2', subtitle: 'Fast-forwarded', position: 'top' });
+      await waitFor(demo, page, planned(M2.id), 10, 'the M-2 plan');
+      await page.waitForTimeout(BEAT * 2);
       await demo.caption({ value: 'Hand M-2 to the agent' });
       await delegateMilestone(demo, page, M2.id);
     },
@@ -679,8 +701,7 @@ export const steps = [
     name: 'Accept M-2',
     done: async ({ page }) => tasksOf(await snapshot(page), M2.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Sign off M-2' });
-      await acceptMilestone(demo, page, M2.id);
+      await acceptMilestone(demo, page, M2.id, { value: 'Sign off M-2' });
       await demo.caption({ value: 'Signed off: every M-2 task done' });
       await page.waitForTimeout(BEAT * 2);
     },
