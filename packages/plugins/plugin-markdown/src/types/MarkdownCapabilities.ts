@@ -10,7 +10,8 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type { ReactNode } from 'react';
 
 import type * as Operation from '@dxos/compute/Operation';
-import type { Obj } from '@dxos/echo';
+import type { Database, Obj } from '@dxos/echo';
+import type { Doc } from '@dxos/echo-doc';
 import type { ViewModeItem } from '@dxos/react-ui-editor';
 import type * as Theme from '@dxos/react-ui/Theme';
 import type { Text } from '@dxos/schema';
@@ -37,6 +38,17 @@ export const EditorState = MarkdownNamespace.makeSingleton<EditorStateStore>()('
 
 /** Registry of active EditorView instances keyed by attendable ID. */
 export const EditorViews = MarkdownNamespace.makeSingleton<EditorViewRegistry>()('editorViews');
+
+export type ObjectEmbedsOptions = {
+  /** The database the links resolve against. */
+  db?: Database.Database;
+  /** The editor's attendable id; each embed nests under it as `<attendableId>/<object id>`. */
+  attendableId?: string;
+};
+
+/** An editor's object links, chips and embeds, as Markdown documents draw them; for editors of other text, such as a spec's. */
+export const ObjectEmbeds =
+  MarkdownNamespace.makeSingleton<(options: ObjectEmbedsOptions) => Extension>()('objectEmbeds');
 
 // TODO(burdon): Move to ./types (external API)?
 // Multi capability: each contributing plugin provides one batch (array) of extension providers.
@@ -109,6 +121,11 @@ export type MarkdownExtensionProvider = (props: {
    * set — so a contribution that resolves against the object's project (a `#123` reference) can.
    */
   subject?: Obj.Unknown;
+  /**
+   * The string the editor is live-bound to when it is not a markdown document's content: a field of `subject` (a
+   * feature's name), or the text `subject` references (a spec's document). Anchors such as comments resolve against it.
+   */
+  binding?: { object: Obj.Unknown; path: Doc.KeyPath };
   viewMode?: EditorViewMode;
   /** The core branch the editor is currently showing (the branch under review); undefined = main. */
   reviewBranch?: string;

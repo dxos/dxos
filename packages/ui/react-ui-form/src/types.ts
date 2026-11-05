@@ -41,6 +41,10 @@ export type FormFieldOverride = {
   /** Overrides the form's `layout` for this field alone. */
   presentation?: FormPresentation;
   description?: string;
+  /**
+   * An input's or a reference picker's placeholder; for an array of values or owned objects, the text shown in place
+   * of its rows while it has none.
+   */
   placeholder?: string;
   /** The field's glyph, shown where its value has none of its own (an unset tag, an option without an icon). */
   icon?: string;
@@ -60,6 +64,8 @@ export type FormFieldOverride = {
   onOpenChange?: (open: boolean) => void;
   /** A button at the end of a text control that sets its value. */
   action?: FormFieldAction;
+  /** Edits the string as collaborative text (see `CollaborativeAnnotation`), for this use of the form. */
+  collaborative?: boolean;
 };
 
 export type FormFieldAction = {
@@ -118,6 +124,10 @@ export type FormFieldRendererProps<T = any> = {
    * Dotted JSON path of this field within the form values (e.g. `runtime.client.storage.persistent`).
    */
   jsonPath?: string;
+  /** Key path of this field within the form values. */
+  path?: readonly (string | number)[];
+  /** Bound to the form's live object's string rather than handing back values (see `CollaborativeAnnotation`). */
+  collaborative?: boolean;
   placeholder?: string;
   /** The field's glyph (see `FormFieldOverride.icon`). */
   icon?: string;

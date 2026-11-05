@@ -1509,6 +1509,9 @@ catalogs:
     todomvc-common:
       specifier: ^1.0.5
       version: 1.0.5
+    tokenx:
+      specifier: ^1.3.0
+      version: 1.3.0
     tone:
       specifier: ^15.1.22
       version: 15.1.22
@@ -4578,7 +4581,7 @@ importers:
         specifier: 'catalog:'
         version: 1.18.1
       tokenx:
-        specifier: ^1.3.0
+        specifier: 'catalog:'
         version: 1.3.0
     devDependencies:
       '@bufbuild/protobuf':
@@ -8846,6 +8849,9 @@ importers:
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-dnd
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../ui/react-ui-editor
@@ -8864,6 +8870,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../ui/react-ui-task
@@ -8931,9 +8940,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-mosaic
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -10506,6 +10512,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -10590,6 +10599,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-markdown':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-markdown
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -10617,6 +10629,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10636,9 +10651,6 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -12989,6 +13001,9 @@ importers:
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../../core/compute/edge-compute
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -13024,7 +13039,10 @@ importers:
         version: 3.9.15
       vite:
         specifier: '>=8.3.4'
-        version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+        version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
 
   packages/plugins/plugin-graph:
     dependencies:
@@ -16328,6 +16346,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -16428,9 +16449,6 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/plugin-builder':
         specifier: workspace:*
         version: link:../../core/compute/plugin-builder
@@ -16849,6 +16867,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -23738,6 +23759,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      tokenx:
+        specifier: 'catalog:'
+        version: 1.3.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*

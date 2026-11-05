@@ -97,6 +97,8 @@ export const SlideGrid = ({
       items={items}
       tileWidth={TILE_WIDTH[size]}
       value={String(index)}
+      // The keyboard cursor follows the current slide, so a slide changed from outside the listbox leaves no second tile marked.
+      highlightedValue={String(index)}
       onValueChange={select}
       onHighlightChange={select}
       classNames='dx-grow'
@@ -165,7 +167,8 @@ const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: Sl
       data-testid={`presenter.slide-grid.${tile.index}`}
       data-hidden={hidden || undefined}
       {...(contextMenuId ? AppNode.contextMenuProps(contextMenuId) : {})}
-      classNames={mx('text-xs', (isDragging || hidden) && 'opacity-50')}
+      // The current slide is the grid's one outlined tile, so the pointer only tints the tile under it.
+      classNames={mx('text-xs hover:not-aria-selected:outline-none', (isDragging || hidden) && 'opacity-50')}
       onDoubleClick={() => onPresent?.(tile.index)}
     >
       {/* Thumbnails are pictures of the slide; their controls must not take clicks from the grid. */}

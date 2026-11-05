@@ -28,3 +28,11 @@ export const useProgressMonitor = (name: string): Progress.TaskProgress | undefi
   const atom = useMemo(() => registry?.monitorAtom(name) ?? noMonitorAtom, [registry, name]);
   return useAtomValue(atom);
 };
+
+/**
+ * The monitors keyed `<uri>#<suffix>` for the object at `uri`; pass its absolute URI, the form producers key by.
+ */
+export const useObjectProgressMonitors = (uri: string | undefined): readonly Progress.TaskProgress[] => {
+  const monitors = useProgressMonitors();
+  return useMemo(() => (uri ? monitors.filter((monitor) => monitor.name.startsWith(`${uri}#`)) : []), [monitors, uri]);
+};

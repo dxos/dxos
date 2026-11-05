@@ -64,6 +64,19 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
     ),
+    Capability.lazyModule(
+      'ProjectComments',
+      {
+        provides: [
+          AppCapabilities.AnchorResolver,
+          AppCapabilities.AnchorSort,
+          AppCapabilities.CommentConfig,
+          AppCapabilities.CommentScope,
+        ],
+        activatesOn: ProjectsEvents.Start,
+      },
+      () => import('./src/capabilities/project-comments.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.navigationResolver(
       () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
     ),
@@ -72,6 +85,10 @@ const config: Plugin.PluginConfig = Plugin.config({
       {
         activatesOn: ActivationEvents.Idle,
       },
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
+      { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
     ),
     // Bundled so a feature that cites this plugin's spec opens it rendered in the app.
     AppCapability.pluginAsset({

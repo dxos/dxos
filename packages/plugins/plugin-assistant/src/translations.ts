@@ -138,8 +138,10 @@ export const translations: Theme.Resource[] = [
         'no-results.message': 'No results',
 
         'cancel-queued.button': 'Remove from queue',
+        'move-thread.button': 'Move thread',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
+        'thread-menu.button': 'Thread options',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
         'create-chat.label': 'New AI Chat',
@@ -179,7 +181,7 @@ export const translations: Theme.Resource[] = [
         'plugin-url-prompt.button': 'Load plugin',
 
         'search.placeholder': 'Search...',
-        'prompt.placeholder': '/ for skills, @ for content',
+        'prompt.placeholder': ' / for skills, @ for content',
         'add-menu.button': 'Add',
         'add-files.label': 'Add files or photos',
         'add-object.menu': 'Add object…',

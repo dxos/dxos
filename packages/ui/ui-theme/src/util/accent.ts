@@ -32,3 +32,15 @@ export const applyAccent = (element: HTMLElement, hue: AccentHue | undefined): v
     }
   }
 };
+
+/**
+ * Sets the keyboard focus colour for an element's subtree, or clears it back to the stylesheet's default when `hue`
+ * is undefined.
+ */
+export const applyFocusHue = (element: HTMLElement, hue: AccentHue | undefined): void => {
+  if (hue) {
+    element.style.setProperty('--color-focus', `var(--color-${hue}-500)`);
+  } else {
+    element.style.removeProperty('--color-focus');
+  }
+};

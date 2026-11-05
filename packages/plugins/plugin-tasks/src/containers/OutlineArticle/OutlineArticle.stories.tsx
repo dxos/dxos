@@ -5,13 +5,19 @@
 import { EditorSelection } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { PropsWithChildren, useCallback, useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
+import { toCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -23,7 +29,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
-import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { comments, createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
@@ -168,6 +174,37 @@ const SourceView = ({ text }: { text: Text.Text }) => {
   );
 };
 
+/**
+ * Marks `ITEM` with a comment keyed by the outline's URI, as plugin-review's comment sync keys the threads of the
+ * object an editor is bound to.
+ */
+const CommentsPlugin = Plugin.define(
+  Plugin.makeMeta({
+    key: DXN.make('org.dxos.plugin.tasks.story.comments'),
+    name: 'Story Comments',
+  }),
+).pipe(
+  Plugin.addModule({
+    id: 'extensions',
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
+          ({ subject, binding }) => {
+            if (!subject || !binding) {
+              return [];
+            }
+            const accessor = Doc.createAccessor(binding.object, [...binding.path]);
+            const start = Doc.getValue<string>(accessor).indexOf(ITEM);
+            const cursor = `${toCursor(accessor, start)}:${toCursor(accessor, start + ITEM.length)}`;
+            return comments({ id: Obj.getURI(subject), getComments: () => [{ id: 'comment', cursor }] });
+          },
+        ]),
+      ]),
+  }),
+  Plugin.make,
+);
+
 const meta = {
   title: 'plugins/plugin-tasks/containers/OutlineArticle',
   decorators: [
@@ -199,6 +236,17 @@ export const Default: Story = {
 
 export const Empty: Story = {
   render: () => <DefaultStory />,
+};
+
+/** A comment on the outline's text marks the span it anchors to. */
+export const Comments: Story = {
+  render: () => <DefaultStory content={CONTENT} name='Launch plan' />,
+  decorators: [withPluginManager({ plugins: [...CorePlugins.make(), CommentsPlugin()] })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText(ITEM, {}, { timeout: 10_000 });
+    await waitFor(() => expect(canvasElement.querySelector('.cm-comment')?.textContent).toBe(ITEM));
+  },
 };
 
 /**
