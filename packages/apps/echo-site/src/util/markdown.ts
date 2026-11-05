@@ -8,14 +8,21 @@ const attribute = (tag: string, name: string): string | undefined => tag.match(n
 
 /** Drops MDX import lines, keeping the ones a fenced code sample shows to the reader. */
 const stripImports = (body: string): string => {
-  let fenced = false;
+  let opening: string | undefined;
   return body
     .split('\n')
     .filter((line) => {
-      if (line.trimStart().startsWith('```')) {
-        fenced = !fenced;
+      const fence = line.match(/^\s*(`{3,}|~{3,})(.*)$/);
+      if (fence) {
+        const [, marker, rest] = fence;
+        if (!opening) {
+          opening = marker;
+        } else if (marker[0] === opening[0] && marker.length >= opening.length && !rest.trim()) {
+          opening = undefined;
+        }
+        return true;
       }
-      return fenced || !line.startsWith('import ');
+      return opening !== undefined || !line.startsWith('import ');
     })
     .join('\n');
 };
