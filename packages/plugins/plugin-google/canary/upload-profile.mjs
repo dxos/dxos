@@ -33,6 +33,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const CANARY_DIR = dirname(fileURLToPath(import.meta.url));
+const PACKAGE_DIR = resolve(CANARY_DIR, '..');
 const REPO_ROOT = resolve(CANARY_DIR, '../../../..');
 const OUT_DIR = join(CANARY_DIR, 'out');
 
@@ -51,7 +52,8 @@ const removeArchives = () => {
   }
 };
 
-const run = (command, args) => execFileSync(command, args, { cwd: REPO_ROOT, stdio: 'inherit' });
+const run = (command, args, { cwd = REPO_ROOT, env } = {}) =>
+  execFileSync(command, args, { cwd, env: { ...process.env, ...env }, stdio: 'inherit' });
 
 if (!process.env.DX_CANARY_RECOVERY_PHRASE) {
   console.error('set DX_CANARY_RECOVERY_PHRASE, e.g. with `op run --env-file .../canary/canary.env.tpl --`');
@@ -61,7 +63,15 @@ if (!process.env.DX_CANARY_RECOVERY_PHRASE) {
 // An archive left by an earlier export would be uploaded in place of this one.
 removeArchives();
 try {
-  run('moon', ['run', 'plugin-google:mail-canary-profile']);
+  run('pnpm', ['exec', 'vitest', 'run', 'canary/test/export-profile.test.ts', '--disableConsoleIntercept'], {
+    cwd: PACKAGE_DIR,
+    env: {
+      // The export is tagged `sync-e2e`, which a plain test run leaves out.
+      VITEST_TAGS_FILTER: 'sync-e2e',
+      // Identity recovery logs its device credential at info: info only from the canary.
+      LOG_FILTER: 'warn,plugin-google/canary:info',
+    },
+  });
   const [archive] = archives();
   if (!archive) {
     throw new Error('the export wrote no archive');
