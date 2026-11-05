@@ -45,10 +45,10 @@ feat F-4: A project's specs
              level opens as the project's article narrowed to it, through the `ProjectSurface.Level` surface; its
              Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
              level's own spec, or offers Add spec when it has none.
-  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: Create artifact on the
-             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Delegate to agent and
-             the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
-             assistant companion's.
+  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: the spec dropdown, the
+             view toggle and the Extensions menu on the Specs tab; Delegate to agent and the Gantt toggle on the Tasks
+             tab. The Overview has no tools there. It has no overflow menu and no button to start a session, which is
+             the assistant companion's.
   req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
              the spec uses, drawn by that plugin's `ProjectSurface.SpecView` surface. A package is a set of dialects a
              plugin contributes (`ProjectCapabilities.SpecPackage`). The view toggle shows only when a spec has more
@@ -75,11 +75,14 @@ feat F-5: A project's overview
   req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config, with more
              space between two sections than between the rows inside one. Every section's content starts and ends on
              the same left and right edges as its heading.
-  req F-5.3: Artifacts shows at most six, and Show all shows the rest.
+  req F-5.3: Artifacts shows at most six, and Show all shows the rest. Its heading carries the add button, as the
+             Specs heading does.
   req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled, and opens the Tasks tab
              filtered to the tasks under it.
   req F-5.7: The Specs heading carries the add button on its own row, and each spec is a row directly under it at the
              same level of nesting as a Config group.
+  req F-5.8: An empty Notes invites notes, plans and next steps where they are typed, and an empty Artifacts or Specs
+             says the project has none yet.
   req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
              instructions, skills and context), then the groups other plugins declare.
   req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
@@ -2116,14 +2119,30 @@ decision D-198: The spec editor draws object embeds with plugin-markdown's exten
 ```
 
 ```mdl
-decision D-199: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
+decision D-199: Create artifact is the add button on the overview's Artifacts heading, as Add spec is on Specs, and leaves the toolbar, which has no Overview tools. A feature's level shows no Artifacts section, so it offers no Create artifact.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-4.7, F-5.3]
+  supersedes: D-64
+  why: An action reads best beside the list it adds to, and the overview's sections already work that way. Artifacts belong to the project, so a feature's level, which does not list them, would hide whatever it added.
+```
+
+```mdl
+decision D-200: The overview's empty Notes, Artifacts and Specs sections say what goes in them, rather than showing a bare heading. An empty array field in a form shows its override's placeholder in place of its rows, which is how Specs says so.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-5.8]
+```
+
+```mdl
+decision D-201: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-4.13, F-5.8]
 ```
 
 ```mdl
-decision D-200: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-199].
+decision D-202: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-201].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -2134,7 +2153,7 @@ decision D-200: The editors with carets are a spec's text, the feature sections 
 ```
 
 ```mdl
-decision D-201: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-199].
+decision D-203: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-201].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -2143,7 +2162,7 @@ decision D-201: QA-9 checks carets in the overview's Notes between two peers, th
 ```
 
 ```mdl
-decision D-202: QA-10 walks two peers through every editor with carets ([D-200]) in one take, recorded side by side by an autocue flow. Fills in [D-199].
+decision D-204: QA-10 walks two peers through every editor with carets ([D-202]) in one take, recorded side by side by an autocue flow. Fills in [D-201].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -2152,45 +2171,45 @@ decision D-202: QA-10 walks two peers through every editor with carets ([D-200])
 ```
 
 ```mdl
-decision D-203: Every collaborative text field in a project that takes comments also shows the other peers' carets.
+decision D-205: Every collaborative text field in a project that takes comments also shows the other peers' carets.
   date: 2026-11-05
   by: user:wittjosiah
   affects: [F-4.13, F-5.8]
 ```
 
 ```mdl
-decision D-204: The editors with carets are the project's name and description, a spec's text in either of its views, the feature sections embedded in it (the feature's name, description and requirement rows), the overview's Notes and the agent's instructions. Each collaborative string is its own awareness channel, and a spec's two views share one. Fills in [D-199] and [D-203].
+decision D-206: The editors with carets are the project's name and description, a spec's text in either of its views, the feature sections embedded in it (the feature's name, description and requirement rows), the overview's Notes and the agent's instructions. Each collaborative string is its own awareness channel, and a spec's two views share one. Fills in [D-201] and [D-205].
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
-  supersedes: D-200
+  supersedes: D-202
   affects: [F-4.13, F-5.8]
   why: These are the fields comments anchor into, plus the instructions, which already had carets. The project's name and description and a feature's fields are now collaborative strings edited in place, so they take the carets through the same binding. A spec has no editor for its own name or description, so there is nothing to add there.
 ```
 
 ```mdl
-decision D-205: QA-10 walks two peers through every editor with carets ([D-204]) in one take, adding the project's name and description and a feature's name and requirement to its steps. The two feature fields are split across peers so each field's caret shows only in that field. Fills in [D-203].
+decision D-207: QA-10 walks two peers through every editor with carets ([D-206]) in one take, adding the project's name and description and a feature's name and requirement to its steps. The two feature fields are split across peers so each field's caret shows only in that field. Fills in [D-205].
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
-  supersedes: D-202
+  supersedes: D-204
   affects: [QA-10, F-4.13, F-5.8]
   why: A recorded walkthrough already covers the editors that need a spec with the Software package; the new caret sites sit in the same views, so they join the same take rather than a separate test.
 ```
 
 ```mdl
-decision D-206: QA-9 is automated inside the document-caret collaboration test, over its invitation, rather than by a test with an invitation of its own.
+decision D-208: QA-9 is automated inside the document-caret collaboration test, over its invitation, rather than by a test with an invitation of its own.
   date: 2026-11-05
   by: user:wittjosiah
   affects: [QA-9]
 ```
 
 ```mdl
-decision D-207: QA-9 starts once the peers share the space and both have checked the document: the host makes the project with the document, before the invitation, and each peer then opens it. The late joiner stays the document's to check. Fills in [D-206].
+decision D-209: QA-9 starts once the peers share the space and both have checked the document: the host makes the project with the document, before the invitation, and each peer then opens it. The late joiner stays the document's to check. Fills in [D-208].
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
-  supersedes: D-201
+  supersedes: D-203
   affects: [QA-9]
   why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
 ```
