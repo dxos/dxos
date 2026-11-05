@@ -47,16 +47,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceO
       // Only members can open a restricted link, so it carries no invitation.
       const invitation =
         access === 'anyone' ? yield* createDelegatedInvitation(space, { target: Obj.getURI(object) }) : undefined;
-      url.searchParams.set(
-        SpaceOperation.SHARE_PARAM,
-        yield* encodeSharePayload({
-          version: 1,
-          spaceId: space.id,
-          invitation,
-          plugins,
-          objects,
-        }),
-      );
+      const payload = yield* encodeSharePayload({ version: 1, spaceId: space.id, invitation, plugins, objects });
+      // In the fragment, which a browser never sends to a server, so no request log holds the invitation; the app
+      // moves it into the query on load.
+      url.hash = new URLSearchParams({ [SpaceOperation.SHARE_PARAM]: payload }).toString();
       return { url: url.toString(), objects, plugins };
     }),
   ),

@@ -160,6 +160,10 @@ const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: 
   if (deepLinkUrl.search) {
     deepLinkUrl.searchParams.forEach((value, key) => current.searchParams.set(key, value));
   }
+  // A link keeps a parameter out of server requests by carrying it in the fragment (a share link's payload).
+  if (deepLinkUrl.hash.includes('=')) {
+    new URLSearchParams(deepLinkUrl.hash.slice(1)).forEach((value, key) => current.searchParams.set(key, value));
+  }
   current.pathname = fullPath;
   history.replaceState(null, '', current.pathname + current.search);
 

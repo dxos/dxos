@@ -15,7 +15,7 @@ import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvide
 import { getHostPlatform } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants.ts';
-import { redactSharePayload } from './share-redaction.ts';
+import { redactSharePayload } from './share-link.ts';
 
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
@@ -25,8 +25,6 @@ export const PARAM_LOG_LEVEL = 'log';
  * `util/scripted-model.ts`, so the perf flow drives a whole agent loop without a provider.
  */
 export const PARAM_MODEL = 'model';
-/** An object share link's payload; the same name as plugin-space's `SpaceOperation.SHARE_PARAM`, which boot does not import. */
-export const PARAM_SHARE = 'share';
 
 export const setSafeModeUrl = (on: boolean) => {
   const url = new URL(window.location.href);

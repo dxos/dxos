@@ -12,6 +12,7 @@ export * from './log-download.ts';
 export * from './preload-recovery.ts';
 export * from './prespawn-worker.ts';
 export * from './profiler.ts';
+export * from './share-link.ts';
 export * from './storage.ts';
 export * from './translations.ts';
 export * from './url.ts';

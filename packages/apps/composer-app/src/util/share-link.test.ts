@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { redactSharePayload } from './share-redaction.ts';
+import { liftShareFragment, redactSharePayload } from './share-link.ts';
 
 describe('redactSharePayload', () => {
   test('empties the share payload in every URL an event holds, and leaves the rest', ({ expect }) => {
@@ -37,5 +37,25 @@ describe('redactSharePayload', () => {
 
   test('passes a dropped event through', ({ expect }) => {
     expect(redactSharePayload(null)).toBeNull();
+  });
+
+  test('empties a share payload in the fragment', ({ expect }) => {
+    expect(redactSharePayload({ url: 'https://composer.space/doc#share=abc' })).toEqual({
+      url: 'https://composer.space/doc#share=',
+    });
+  });
+});
+
+describe('liftShareFragment', () => {
+  test('moves the payload from the fragment into the query, keeping the rest of both', ({ expect }) => {
+    expect(liftShareFragment('https://composer.space/space/doc+01J?x=1#share=abc&y=2')).toBe(
+      '/space/doc+01J?x=1&share=abc#y=2',
+    );
+    expect(liftShareFragment('https://composer.space/space/doc+01J#share=abc')).toBe('/space/doc+01J?share=abc');
+  });
+
+  test('is undefined for a URL whose fragment carries no payload', ({ expect }) => {
+    expect(liftShareFragment('https://composer.space/space/doc+01J?share=abc')).toBeUndefined();
+    expect(liftShareFragment('https://composer.space/space/doc+01J#section')).toBeUndefined();
   });
 });

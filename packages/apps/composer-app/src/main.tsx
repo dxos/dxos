@@ -60,6 +60,7 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
+  liftShareFragment,
   prespawnWorker,
   readBootAssetFailure,
   registerPreloadErrorHandler,
@@ -260,6 +261,12 @@ const main = async () => {
     // to dodge CORS. Tree-shakes out of prod via the `import.meta.env.DEV`
     // gate above.
     void showDevRssBanner();
+  }
+
+  // Before anything reads the address bar: the handlers read a share link's payload from the query.
+  const liftedShareUrl = liftShareFragment(window.location.href);
+  if (liftedShareUrl) {
+    history.replaceState(history.state, '', liftedShareUrl);
   }
 
   const url = new URL(window.location.href);
