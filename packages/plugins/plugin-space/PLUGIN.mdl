@@ -54,6 +54,13 @@ type ObjectViewerProps
 ```
 
 ```mdl
+type PeerDeck
+  desc: A session's deck in one space, as its viewing message reports it.
+  fields:
+    planks: string[]            # graph paths of the deck's planks in that space, in order
+```
+
+```mdl
 type SessionDevice
   desc: The device a session runs on, from its HALO device profile; the receiver names it.
   fields:
@@ -67,6 +74,7 @@ type SessionDevice
 type PluginState
   fields:
     viewersByObject: Record<EID, Record<IdentityKeyHex, Record<SessionId, ObjectViewerProps>>>
+    peerDecks: Record<SpaceId, Record<IdentityKeyHex, Record<SessionId, PeerDeck>>>  # each session's last reported deck
     spaceNames: Record<string, string>  # cached names for closed/loading spaces
     sdkMigrationRunning: Record<string, boolean>
     navigableCollections: boolean
@@ -556,14 +564,14 @@ feat F-8: Presence and Sync Status
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself.
   req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
-  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise.
+  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. Go to opens the object at the graph path the peer's session has it open at, so the navtree shows it where the peer does.
   req F-8.10: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
   req F-8.11: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
   req F-8.12: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
   req F-8.18: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
   req F-8.15: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.13: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on whichever of those sessions moved its anchor most recently, never on a session attending another object; with none attending the object, the row has no actions. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions while it attends the object; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
-  req F-8.14: The viewing message carries the sender's session id, its device and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
+  req F-8.14: The viewing message carries the sender's session id, its device, each attended object's location and the graph paths of its deck's planks in the space; it is sent with the heartbeat and at most once per second when a location changes.
   req F-8.16: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
   req F-8.17: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
 ```
@@ -1156,6 +1164,16 @@ decision D-43: With the sessions toggle on, a session row in the viewers list ha
   affects: [F-8.13, SpacePresence]
   why: Jump and Go to on such a row would act on the other object, the case [D-42] rules out for the person's row.
   rejected: Drop such sessions from the list, which would hide that the peer still has the object open.
+```
+
+```mdl
+decision D-44: The viewing message carries the sender's deck in that space as the graph paths of its planks, in order. Go to opens the peer's object at the path the peer's session has it open at, and falls back to the object's path under the space's database section when the session sent no deck.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.9, F-8.14, PeerDeck, PluginState]
+  why: Presence keys name an object, not where it sits in the tree. Opening the object's database path expanded the Database section in the follower's navtree, though the peer had opened it from a collection.
+  rejected: Resolve a collection that holds the object on the receiving side, which can pick a different collection than the peer's, or the wrong section entirely.
 ```
 
 ## Appendix: Extension Definitions

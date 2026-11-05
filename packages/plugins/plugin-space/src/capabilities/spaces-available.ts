@@ -35,6 +35,7 @@ import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
   LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
+  applyPeerDeck,
   applyViewingMessage,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
@@ -275,6 +276,7 @@ export default Capability.makeModule(
                 added,
                 removed,
                 locations: getLocations(attended),
+                deck: { planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id) },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -336,6 +338,7 @@ export default Capability.makeModule(
               registry.update(ephemeralAtom, (ephemeral) => ({
                 ...ephemeral,
                 viewersByObject: applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen),
+                peerDecks: applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
               }));
             }
           }),

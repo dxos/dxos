@@ -120,6 +120,11 @@ export type PeerLocation = {
   viewport?: string;
 };
 
+/** A session's deck in one space: the graph paths of its planks there, in order. */
+export type PeerDeck = {
+  planks: string[];
+};
+
 export type ObjectId = string;
 
 export type PluginState = {
