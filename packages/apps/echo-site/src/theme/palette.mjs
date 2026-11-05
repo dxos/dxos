@@ -18,7 +18,14 @@ export const THEMES = {
     accent: '#1f5fe8',
     onAccent: '#ffffff',
     mark: '#96254f',
-    code: { keyword: '#7a1f99', string: '#0d6e47', constant: '#8a5f00', type: '#1d4fc4', fn: '#0a6877' },
+    code: {
+      keyword: '#96254f',
+      string: '#1d4fc4',
+      constant: '#1d4fc4',
+      type: '#6b2fb3',
+      fn: '#6b2fb3',
+      property: '#a34606',
+    },
   },
   dark: {
     bg: '#1d1f20',
@@ -31,6 +38,13 @@ export const THEMES = {
     accent: '#06c5fd',
     onAccent: '#020202',
     mark: '#ffffff',
-    code: { keyword: '#e06bff', string: '#1fd58a', constant: '#f2c14e', type: '#06c5fd', fn: '#1fbfd5' },
+    code: {
+      keyword: '#ff7b8a',
+      string: '#7cc4ff',
+      constant: '#7cc4ff',
+      type: '#c4a1ff',
+      fn: '#c4a1ff',
+      property: '#ffab70',
+    },
   },
 };

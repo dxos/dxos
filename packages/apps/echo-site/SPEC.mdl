@@ -477,8 +477,13 @@ feat F-2: Brand and visual style
 
   req F-2.5:
     when: a code sample renders
-    then: it sits on the tinted surface, colored by a syntax theme built from the brand palette,
-          with a contrast of at least 4.5:1 for every token, and long lines wrap
+    then: it sits on the tinted surface inside a hairline frame, with numbered lines and a rule beside
+          the numbers except in a side-by-side comparison, and a titled sample shows its title as a tab; a syntax theme colors it with a
+          contrast of at least 4.5:1 for every token, and long lines wrap
+
+  req F-2.13:
+    when: a reader is not pointing at a token in a code sample
+    then: the token carries no underline; its compiler hover card shows on hover
 
   req F-2.6:
     when: a table renders
@@ -613,6 +618,34 @@ feat F-9: Diagrams as canvas applications
   req F-9.1:
     when: a page shows a diagram
     then: the diagram is a stand-alone `plugin-canvas` application
+
+feat F-10: Live schema forms
+
+  desc: |
+    A section on Schema shows a live `react-ui-form` form. Planned; the spike does not build it.
+
+  req F-10.1:
+    when: a reader opens the section on Schema
+    then: it shows a live form rendered with `react-ui-form`
+
+feat F-11: Graph visualizations
+
+  desc: |
+    A section on the graph shows visualizations from `react-ui-graph` and `plugin-explorer`.
+    Planned; the spike does not build it.
+
+  req F-11.1:
+    when: a reader opens the section on the graph
+    then: it shows visualizations from `react-ui-graph` and `plugin-explorer`
+
+feat F-12: Real-time editor demo
+
+  desc: |
+    A section on real time shows a `react-ui-editor` demo. Planned; the spike does not build it.
+
+  req F-12.1:
+    when: a reader opens the section on real time
+    then: it shows a demo built with `react-ui-editor`
 ```
 
 ## Acceptance
@@ -917,6 +950,65 @@ decision D-25: Diagrams are stand-alone `plugin-canvas` applications.
   date: 2026-11-04
   by: user:richburdon
   affects: [F-9]
+```
+
+```mdl
+decision D-26: Code blocks use a style similar to the blocks on effect.website.
+  date: 2026-11-04
+  by: user:richburdon
+  source: https://effect.website/blog/module-of-the-week/rcmap
+  affects: [F-2.5]
+```
+
+```mdl
+decision D-27: Take the frame, file tab, numbered gutter, spacing and token color roles; keep DM Mono and no shadow. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5, F-2.2, F-2.4]
+  why: [F-2.2] and [F-2.4] set the type and the flat surfaces, and [D-26] asks for a similar style, not the same one.
+  rejected:
+    - JetBrains Mono: it would add a second code face beside DM Mono.
+    - The frame's drop shadow: [F-2.4] rules out shadows, and on effect.website it is barely visible.
+```
+
+```mdl
+decision D-28: Compiler hover tokens show no underline until a reader points at them. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.13]
+  why: Nearly every token has a hover card, so resting underlines mark most of the sample.
+```
+
+```mdl
+decision D-29: A section on Schema shows a live `react-ui-form` form.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-10]
+```
+
+```mdl
+decision D-30: A section on the graph shows `react-ui-graph` and `plugin-explorer` visualizations.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-11]
+```
+
+```mdl
+decision D-31: A section on real time shows a `react-ui-editor` demo.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-12]
+```
+
+```mdl
+decision D-32: Samples in a side-by-side comparison have no line numbers. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5]
+  why: The gutter takes about a fifth of a comparison column, and the extra wrapping costs more than the numbers give.
 ```
 
 ## Appendix: Extension Definitions

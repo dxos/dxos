@@ -169,21 +169,6 @@ starlight-toc h2 {
   color: var(--c-muted);
 }
 
-/* Code. */
-.expressive-code .frame {
-  border-radius: var(--c-radius);
-  background: var(--c-surface);
-}
-
-.expressive-code .frame pre {
-  border: 0;
-}
-
-.expressive-code .frame .header::before,
-.expressive-code .frame .header::after {
-  display: none;
-}
-
 /* Tables: strict tracks, hairlines only. */
 .sl-markdown-content table {
   display: table;
@@ -322,7 +307,8 @@ a.card:hover {
 /* Anatomy strip: a signature with each part labeled. */
 .anatomy {
   margin-block: 1.5rem;
-  padding: 1.25rem;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--c-hairline);
   border-radius: var(--c-radius);
   background: var(--c-surface);
   overflow-x: auto;
@@ -526,7 +512,12 @@ a.card:hover {
   font-family: var(--sl-font-mono);
 }
 
+/* Every token has a hover card, so a resting underline would mark the whole sample. */
 .expressive-code .twoslash-hover {
+  border-bottom-color: transparent !important;
+}
+
+.expressive-code .twoslash-hover:hover {
   border-bottom-color: var(--c-hairline-strong) !important;
 }
 

@@ -28,6 +28,7 @@
     "sharp": "catalog:"
   },
   "devDependencies": {
+    "@expressive-code/plugin-line-numbers": "catalog:",
     "expressive-code-twoslash": "catalog:",
     "twoslash": "catalog:",
     "typescript": "catalog:"

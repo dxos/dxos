@@ -29,8 +29,8 @@ const theme = (name) => {
         scope: ['entity.name.function', 'support.function', 'meta.function-call entity.name.function'],
         settings: { foreground: code.fn },
       },
-      { scope: ['variable.other.property', 'meta.object-literal.key'], settings: { foreground: fg } },
-      { scope: ['punctuation', 'keyword.operator'], settings: { foreground: muted } },
+      { scope: ['variable.other.property', 'meta.object-literal.key'], settings: { foreground: code.property } },
+      { scope: ['punctuation', 'keyword.operator'], settings: { foreground: fg } },
     ],
   };
 };
