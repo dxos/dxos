@@ -15,7 +15,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Typography from '@dxos/react-ui/Typography';
 import { Text } from '@dxos/schema';
-import { type DataExtensionsPresence, createDataExtensions } from '@dxos/ui-editor';
+import { createDataExtensions } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
@@ -41,7 +41,6 @@ const fieldTheme = EditorView.theme({
  * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
  * (`Format.TypeFormat.Markdown`), edited through the form's values or, when collaborative, in place in the form's
  * object, or a `Ref<Text>`, edited in place through its document; an empty ref offers a button that creates the Text.
- * An editor bound in place shows the other peers' carets when the form has `collaboration`.
  */
 export const MarkdownField = ({
   type,
@@ -55,7 +54,7 @@ export const MarkdownField = ({
   getValue,
   onValueChange,
 }: FormFieldRendererProps) => {
-  const { object, collaboration } = useFormContext('MarkdownField');
+  const { object } = useFormContext('MarkdownField');
   const extensions = useFormExtensions(path && jsonPath !== undefined ? { path, jsonPath } : undefined);
   const value: unknown = getValue();
   const isStatic = presentationFor(presentation).isStatic;
@@ -69,7 +68,6 @@ export const MarkdownField = ({
       ) : (
         <RefMarkdownEditor
           reference={reference}
-          presence={collaboration}
           placeholder={placeholder}
           readonly={!!readonly}
           variant={variant}
@@ -92,7 +90,6 @@ export const MarkdownField = ({
     <CollaborativeMarkdownEditor
       object={object}
       path={path}
-      presence={collaboration}
       placeholder={placeholder}
       readonly={!!readonly}
       variant={variant}
@@ -148,7 +145,6 @@ const MarkdownEditor = ({
 type CollaborativeMarkdownEditorProps = Omit<MarkdownEditorProps, 'value' | 'initialValue' | 'onChange'> & {
   object: Obj.Unknown;
   path: Doc.KeyPath;
-  presence?: DataExtensionsPresence;
 };
 
 /** A markdown string of the form's object, edited in place (see `useCollaborativeText`). */
@@ -157,10 +153,9 @@ const CollaborativeMarkdownEditor = ({
   path,
   extensions,
   readonly,
-  presence,
   ...props
 }: CollaborativeMarkdownEditorProps) => {
-  const binding = useCollaborativeText({ object, path, extensions, readonly, presence });
+  const binding = useCollaborativeText({ object, path, extensions, readonly });
   return (
     <MarkdownEditor
       {...props}
@@ -181,28 +176,17 @@ const RefStaticText = ({ reference }: { reference: Ref.Unknown }) => {
 
 type RefMarkdownEditorProps = Omit<MarkdownEditorProps, 'value' | 'initialValue' | 'onChange'> & {
   reference: Ref.Unknown;
-  presence?: DataExtensionsPresence;
 };
 
-const RefMarkdownEditor = ({ reference, presence, extensions: formExtensions, ...props }: RefMarkdownEditorProps) => {
-  const messenger = presence?.messenger;
-  const identity = presence?.identity;
+const RefMarkdownEditor = ({ reference, extensions: formExtensions, ...props }: RefMarkdownEditorProps) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const text = Obj.instanceOf(Text.Text, target) ? target : undefined;
   const extensions = useMemo(
     () =>
       text
-        ? [
-            createDataExtensions({
-              id: reference.uri,
-              text: Doc.createAccessor(text, ['content']),
-              messenger,
-              identity,
-            }),
-            ...formExtensions,
-          ]
+        ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) }), ...formExtensions]
         : formExtensions,
-    [text, reference, formExtensions, messenger, identity],
+    [text, reference, formExtensions],
   );
   return text ? <MarkdownEditor {...props} extensions={extensions} /> : null;
 };

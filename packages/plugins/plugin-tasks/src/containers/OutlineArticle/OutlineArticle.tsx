@@ -19,6 +19,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Show from '@dxos/react-ui/Show';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
+import { createDataExtensions } from '@dxos/ui-editor';
 
 import { Outline, type OutlineController } from '#components';
 
@@ -47,9 +48,6 @@ export const OutlineArticle = ({
 }: OutlineArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
   const db = Obj.getDatabase(outline);
-  const identity = useIdentity();
-  const space = getSpace(outline);
-  const presence = useMemo(() => ({ messenger: space, identity }), [space, identity]);
 
   // Link the user navigated into; the back button clears it to return to the outline.
   const [selected, setSelected] = useState<URI.URI>();
@@ -84,7 +82,14 @@ export const OutlineArticle = ({
   const text = useResolveRef(outline.content);
   // Comments on the outline anchor into its text.
   const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
-  const extensions = useMarkdownExtensions(outline, binding);
+  const markdownExtensions = useMarkdownExtensions(outline, binding);
+  // The other peers' carets, on the channel of the outline's editor.
+  const identity = useIdentity();
+  const space = getSpace(outline);
+  const extensions = useMemo(
+    () => [...markdownExtensions, createDataExtensions({ id: Obj.getURI(outline), messenger: space, identity })],
+    [markdownExtensions, outline, space, identity],
+  );
 
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
@@ -173,7 +178,6 @@ export const OutlineArticle = ({
           onSelectLink={handleSelectLink}
           resolveLinkLabel={resolveLinkLabel}
           extensions={extensions}
-          presence={presence}
         >
           <Panel.Root role={role}>
             <Show.Show when={toolbar}>

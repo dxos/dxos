@@ -41,7 +41,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const { hasAttention } = useAttention(attendableId);
   const attended = !attendableId || hasAttention;
-  const { collaboration, extensions, onValuesChanged } = useFeatureValues(subject);
+  const { extensions, onValuesChanged } = useFeatureValues(subject);
   // Read through the object, so a block id set by an import shows without a remount.
   const [snapshot] = useObject(subject);
   const blockId = snapshot && Feature.getBlockId(snapshot);
@@ -86,7 +86,6 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
       object={subject}
       extensions={extensions}
       fieldOverrides={fieldOverrides}
-      collaboration={collaboration}
       onValuesChanged={onValuesChanged}
     >
       <Form.Viewport gutter='none'>
@@ -147,7 +146,6 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
                 <RequirementEditor
                   feature={subject}
                   extensions={extensions}
-                  presence={collaboration}
                   variant='plain'
                   actions={attended}
                   inert={inert}

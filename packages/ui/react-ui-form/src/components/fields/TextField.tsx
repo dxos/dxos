@@ -34,7 +34,7 @@ export const TextField = ({
   onValueChange,
   onRevert,
 }: FormFieldRendererProps<string>) => {
-  const { object, collaboration } = useFormContext('TextField');
+  const { object } = useFormContext('TextField');
   const extensions = useFormExtensions(
     collaborative && path && jsonPath !== undefined ? { path, jsonPath } : undefined,
   );
@@ -59,7 +59,6 @@ export const TextField = ({
         object={object}
         path={path}
         extensions={extensions}
-        presence={collaboration}
         placeholder={placeholder}
         readonly={!!readonly}
         {...((presentation === 'title' || presentation === 'plain') && { variant: presentation })}

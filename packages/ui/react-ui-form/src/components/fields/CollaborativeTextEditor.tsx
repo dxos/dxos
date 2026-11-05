@@ -11,7 +11,7 @@ import { type Doc } from '@dxos/echo-doc';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
-import { type DataExtensionsPresence, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { useCollaborativeText } from '../../hooks/index.ts';
 
@@ -43,8 +43,6 @@ export type CollaborativeTextEditorProps = {
   path: Doc.KeyPath;
   /** Added once the editor is bound to the string, such as comments on it. */
   extensions?: Extension[];
-  /** Shows the other peers' carets in the string. */
-  presence?: DataExtensionsPresence;
   /** Multi-line, framed like a text area; otherwise one line, framed like an input. */
   multiline?: boolean;
   placeholder?: string;
@@ -63,7 +61,6 @@ export const CollaborativeTextEditor = ({
   object,
   path,
   extensions: extensionsProp,
-  presence,
   multiline,
   placeholder,
   readonly,
@@ -71,7 +68,7 @@ export const CollaborativeTextEditor = ({
   autoFocus,
   testId,
 }: CollaborativeTextEditorProps) => {
-  const binding = useCollaborativeText({ object, path, extensions: extensionsProp, readonly, presence });
+  const binding = useCollaborativeText({ object, path, extensions: extensionsProp, readonly });
   const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [

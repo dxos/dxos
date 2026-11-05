@@ -9,7 +9,6 @@ import { type Database, type Entity, type Format, type Obj, type Type } from '@d
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { type URI } from '@dxos/keys';
 import { type ProjectionModel } from '@dxos/schema';
-import { type DataExtensionsPresence } from '@dxos/ui-editor';
 import { type Palette } from '@dxos/ui-types';
 
 //
@@ -242,9 +241,6 @@ export type RefFieldDataProps = {
    */
   resolveCreateEntry?: (typename: string) => CreateEntryOverride | undefined;
 };
-
-/** The space and identity with which a form's in-place editors show the other peers' carets. */
-export type FormCollaboration = DataExtensionsPresence;
 
 /**
  * Form-wide field options carried by the form context and threaded down to every field. The

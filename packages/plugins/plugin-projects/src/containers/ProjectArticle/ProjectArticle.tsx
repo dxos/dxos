@@ -23,19 +23,12 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
-import { useIdentity } from '@dxos/halo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as TaskSetView from '@dxos/plugin-tasks/TaskSetView';
 import * as TasksUtil from '@dxos/plugin-tasks/TasksUtil';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import {
-  Form,
-  type FormCollaboration,
-  type FormFieldOverride,
-  type FormUpdateMeta,
-  useCreateObject,
-} from '@dxos/react-ui-form';
+import { Form, type FormFieldOverride, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
 import {
   type ActionGraphProps,
   type ActionGroupBuilderFn,
@@ -297,8 +290,6 @@ export const ProjectArticle = ({
   );
 
   const extensions = useFieldExtensions(subject);
-  const identity = useIdentity();
-  const collaboration = useMemo<FormCollaboration>(() => ({ messenger: space, identity }), [space, identity]);
   const handleCreate = useCreateObject(db);
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
@@ -409,7 +400,6 @@ export const ProjectArticle = ({
               values={project}
               object={subject}
               extensions={extensions}
-              collaboration={collaboration}
               fieldOverrides={fieldOverrides}
               onValuesChanged={handleValuesChanged}
               onCreate={handleCreate}

@@ -290,16 +290,12 @@ export type DataExtensionsIdentity = {
   data?: Record<string, unknown>;
 };
 
-/** What awareness needs to show peers' carets: the space to gossip over and the local identity. */
-export type DataExtensionsPresence = {
-  messenger?: Messenger;
-  identity?: DataExtensionsIdentity | null;
-};
-
 export type DataExtensionsProps<T> = {
   id: string;
   text?: Doc.Accessor<T>;
-} & DataExtensionsPresence;
+  messenger?: Messenger;
+  identity?: DataExtensionsIdentity | null;
+};
 
 /**
  * Wires document sync (automerge) and presence (awareness) for a text accessor.

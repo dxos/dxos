@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import React, { useMemo, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { CollaborativeTextEditor, type FormCollaboration } from '@dxos/react-ui-form';
+import { CollaborativeTextEditor } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -25,8 +25,6 @@ export type RequirementEditorProps = {
   feature: Feature.Feature;
   /** Added to each row's editor, by the requirement text's path (the feature form's `extensions`). */
   extensions?: RequirementEditorExtensions;
-  /** Shows the other peers' carets in the rows. */
-  presence?: FormCollaboration;
   /** `plain` rows read as text until a row is focused. */
   variant?: 'default' | 'plain';
   /** Whether the remove and add actions show; the rows stay editable either way. */
@@ -39,14 +37,7 @@ export type RequirementEditorProps = {
  * action after. Typing edits the requirement in place, so comments on it stay anchored; one that loses focus without
  * text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
-export const RequirementEditor = ({
-  feature,
-  extensions,
-  presence,
-  variant,
-  actions = true,
-  inert,
-}: RequirementEditorProps) => {
+export const RequirementEditor = ({ feature, extensions, variant, actions = true, inert }: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const [snapshot] = useObject(feature);
   const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
@@ -100,7 +91,6 @@ export const RequirementEditor = ({
                 feature={feature}
                 requirementKey={requirement.key}
                 extensions={extensions}
-                presence={presence}
                 placeholder={t('requirement-editor.text.label')}
                 variant={variant}
                 autoFocus={index === focusIndex}
@@ -130,7 +120,6 @@ type RequirementTextProps = {
   feature: Feature.Feature;
   requirementKey: string;
   extensions?: RequirementEditorExtensions;
-  presence?: FormCollaboration;
   placeholder?: string;
   variant?: RequirementEditorProps['variant'];
   autoFocus?: boolean;

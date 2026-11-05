@@ -27,7 +27,7 @@ export const TextAreaField = ({
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<string>) => {
-  const { object, collaboration } = useFormContext('TextAreaField');
+  const { object } = useFormContext('TextAreaField');
   const extensions = useFormExtensions(
     collaborative && path && jsonPath !== undefined ? { path, jsonPath } : undefined,
   );
@@ -43,7 +43,6 @@ export const TextAreaField = ({
         object={object}
         path={path}
         extensions={extensions}
-        presence={collaboration}
         multiline
         placeholder={placeholder}
         readonly={!!readonly}

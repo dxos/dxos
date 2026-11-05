@@ -12,9 +12,8 @@ import * as Project from '@dxos/compute/Project';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { useIdentity } from '@dxos/halo-react';
-import { getSpace } from '@dxos/react-client/echo';
-import { Form, type FormCollaboration, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
+import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
+import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -33,7 +32,7 @@ import {
   getDependents,
 } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useFieldExtensions, useOpenFeatureTarget } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
@@ -46,15 +45,11 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 );
 
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
-const makeFieldMap = (
-  feature: Feature.Feature,
-  extensions: RequirementEditorExtensions,
-  collaboration: FormCollaboration,
-): FormFieldMap => {
+const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExtensions): FormFieldMap => {
   const RequirementsField: FormFieldRenderer = ({ label }) => (
     <Form.Field label={label} standalone>
       <Card.Root grid border={false}>
-        <RequirementEditor feature={feature} extensions={extensions} presence={collaboration} />
+        <RequirementEditor feature={feature} extensions={extensions} />
       </Card.Root>
     </Form.Field>
   );
@@ -67,14 +62,8 @@ const makeFieldMap = (
  */
 export const useFeatureValues = (subject: Feature.Feature) => {
   const [values, updateFeature] = useObject(subject);
-  const extensions = useFieldExtensions(subject);
-  const identity = useIdentity();
-  const space = getSpace(subject);
-  const collaboration = useMemo<FormCollaboration>(() => ({ messenger: space, identity }), [space, identity]);
-  const fieldMap = useMemo(
-    () => makeFieldMap(subject, extensions, collaboration),
-    [subject, extensions, collaboration],
-  );
+  const extensions = ProjectHooks.useFieldExtensions(subject);
+  const fieldMap = useMemo(() => makeFieldMap(subject, extensions), [subject, extensions]);
 
   const onValuesChanged = useCallback(
     (values: Partial<FeatureValues>) => {
@@ -88,7 +77,7 @@ export const useFeatureValues = (subject: Feature.Feature) => {
     [subject, updateFeature],
   );
 
-  return { collaboration, extensions, fieldMap, onValuesChanged, updateFeature, values };
+  return { extensions, fieldMap, onValuesChanged, updateFeature, values };
 };
 
 export type FeatureDetailProps = {
@@ -105,7 +94,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { collaboration, extensions, fieldMap, onValuesChanged, updateFeature, values } = useFeatureValues(subject);
+  const { extensions, fieldMap, onValuesChanged, updateFeature, values } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -170,7 +159,6 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
       object={subject}
       extensions={extensions}
       fieldMap={fieldMap}
-      collaboration={collaboration}
       onValuesChanged={onValuesChanged}
     >
       <Form.Viewport scroll>

@@ -8,7 +8,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { type DataExtensionsPresence, createDataExtensions } from '@dxos/ui-editor';
+import { createDataExtensions } from '@dxos/ui-editor';
 import { getDeep } from '@dxos/util';
 
 export type UseCollaborativeTextProps = {
@@ -19,8 +19,6 @@ export type UseCollaborativeTextProps = {
   /** Added once the editor is bound to the string, such as comments on it. */
   extensions?: Extension[];
   readonly?: boolean;
-  /** Shows the other peers' carets in the string. */
-  presence?: DataExtensionsPresence;
 };
 
 export type CollaborativeText = {
@@ -42,7 +40,6 @@ export const useCollaborativeText = ({
   path,
   extensions,
   readonly,
-  presence,
 }: UseCollaborativeTextProps): CollaborativeText => {
   // Callers pass a fresh path array each render; rebinding on its identity would rebuild the editor per keystroke.
   const pathKey = JSON.stringify(path);
@@ -61,18 +58,12 @@ export const useCollaborativeText = ({
     () =>
       ready
         ? [
-            createDataExtensions({
-              // Names the awareness channel: one per string, so a caret shows only in the field it is in.
-              id: `${Obj.getURI(object)}.${path.join('.')}`,
-              text: Doc.createAccessor(object, [...path]),
-              messenger: presence?.messenger,
-              identity: presence?.identity,
-            }),
+            createDataExtensions({ id: Obj.getURI(object), text: Doc.createAccessor(object, [...path]) }),
             EditorView.domEventHandlers({ blur: () => setCreated(undefined) }),
             extensions ?? [],
           ]
         : [EditorView.domEventHandlers({ focus: () => handleFocus() })],
-    [ready, object, pathKey, extensions, handleFocus, presence?.messenger, presence?.identity],
+    [ready, object, pathKey, extensions, handleFocus],
   );
 
   return { extensions: binding, initialValue: ready ? value : '', autoFocus: created === pathKey };

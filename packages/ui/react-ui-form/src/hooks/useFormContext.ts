@@ -11,7 +11,7 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { createContext } from '@dxos/react-hooks';
 
-import { type FieldContext, type FormCollaboration, type FormFieldStateProps } from '#types';
+import { type FieldContext, type FormFieldStateProps } from '#types';
 
 import { type FormHandler } from './useFormHandler.ts';
 
@@ -41,9 +41,6 @@ export type FormContextValue<T extends AnyProperties = any> = {
 
   /** The live object whose strings collaborative fields (see `CollaborativeAnnotation`) edit in place. */
   object?: Obj.Unknown;
-
-  /** Shows the other peers' carets in the editors bound in place (see {@link FormCollaboration}). */
-  collaboration?: FormCollaboration;
 } & FieldContext;
 
 /** The field an editor edits, for extensions that depend on it (comments anchored to its text). */

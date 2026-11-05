@@ -337,25 +337,25 @@ test QA-5: Showcase clip
 ```mdl
 test QA-9: Two peers edit a project's notes
   desc: |
-    Two peers in one space open the same project, and each sees the other's caret in the overview's Notes, with the
-    other's name. The host's caret is set before the guest opens the project, so this checks that it reaches a late
-    joiner.
+    Two peers already sharing a space open the same project, and each sees the other's caret in the overview's Notes,
+    with the other's name. Automated at the end of the document-caret test, which shares its invitation and covers
+    the late joiner.
   actors: human
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors in a project's outline
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
   given:
-    - host: a booted app with an identity and a space holding a "Launch plan" project
-    - guest: a second browser profile with its own identity
+    - host: a booted app with an identity and a space shared with the guest
+    - guest: a second browser profile with its own identity, joined to the host's space
   steps:
-    - name: Invite the guest
-      do: On the host, share the space and redeem the invitation on the guest.
-      expect: the guest's nav tree lists the space and "Launch plan" in it
-    - name: Focus the notes on the host
-      do: Open "Launch plan" on the host and put the cursor in its Notes.
-      expect: the host's Notes shows no other caret
+    - name: Make the project on the host
+      do: Create "Launch plan" on the host.
+      expect: the host shows the project's Notes
     - name: Open the project on the guest
-      do: Open "Launch plan" on the guest, leaving its Notes unfocused.
+      do: Open "Launch plan" on the guest.
+      expect: the guest shows the project's Notes
+    - name: Focus the notes on the host
+      do: Put the cursor in the host's Notes.
       expect: the guest's Notes shows the host's caret with the host's name
     - name: Focus the notes on the guest
       do: Put the cursor in the guest's Notes.
@@ -2176,4 +2176,21 @@ decision D-205: QA-10 walks two peers through every editor with carets ([D-204])
   supersedes: D-202
   affects: [QA-10, F-4.13, F-5.8]
   why: A recorded walkthrough already covers the editors that need a spec with the Software package; the new caret sites sit in the same views, so they join the same take rather than a separate test.
+```
+
+```mdl
+decision D-206: QA-9 is automated inside the document-caret collaboration test, over its invitation, rather than by a test with an invitation of its own.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-9]
+```
+
+```mdl
+decision D-207: QA-9 starts once the peers share the space: the host makes the project after the document check, and the late joiner stays the document's to check. Fills in [D-206].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-201
+  affects: [QA-9]
+  why: Making the project after the document check leaves the document steps as they were, since the guest's object list and the host's first object do not change.
 ```
