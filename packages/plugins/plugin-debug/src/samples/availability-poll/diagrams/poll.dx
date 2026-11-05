@@ -1,5 +1,5 @@
 diagram flow=down
-node Browser "Invitee's browser"
+node Browser "Respondent's browser"
 group worker "Cloudflare Worker" {
   node Page "Poll page /p/:id"
   node Api "API /api/polls"

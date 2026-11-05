@@ -34,7 +34,7 @@ const MODEL = process.env.DX_MODEL ?? 'Claude Sonnet 5';
 const M1 = { id: 'M-1', features: ['Create a poll', 'Mark availability', 'Heat map and best slot'] };
 const M2 = { id: 'M-2', features: ['New poll page', 'Poll page'] };
 const HEATMAP = 'Heat map and best slot';
-const FLIGHTS = 'Flight options';
+const DESIGN_DOC = 'One Durable Object per poll';
 
 const TIE_BREAK = 'F-3.2';
 const NEW_TIE_BREAK =
@@ -51,11 +51,15 @@ const FAST = 60;
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
 
+/** The planning chat plays a little faster than life, so its tool calls can still be read. */
+const PLAN_SPEED = 4;
+
 const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';
 const taskRow = (title) => `${TASK_ROW}:has([data-testid="taskList.item.title"]:text-is("${title}"))`;
 const PROJECT_NODE = `[data-testid="deck.sidebar"] [data-testid="spacePlugin.object"]:has(:text-is("${PROJECT}")) >> nth=0`;
 const node = (name) => `[data-testid="feature-canvas-node"]:has-text("${name}") >> nth=0`;
 const COMPANION = '[data-testid="feature-companion"]';
+const ARTIFACTS = '[data-testid="projectsPlugin.artifacts"]';
 const DECK_COMPANION = '[data-testid="deck.companion"]';
 const PROMPT = `${DECK_COMPANION} [data-testid="assistant.prompt"] .cm-content`;
 
@@ -254,9 +258,11 @@ const ask = async (demo, page, text) => {
   await page.keyboard.press('Enter');
 };
 
-/** Polls the take's work until `done` holds, fast-forwarded, failing with the last snapshot after `minutes`. */
-const waitFor = async (demo, page, done, minutes, label) => {
-  await demo.speed({ factor: FAST });
+/**
+ * Polls the take's work until `done` holds, sped up by `factor`, failing with the last snapshot after `minutes`.
+ */
+const waitFor = async (demo, page, done, minutes, label, factor = FAST) => {
+  await demo.speed({ factor });
   const deadline = Date.now() + minutes * 60_000;
   for (;;) {
     const state = await snapshot(page);
@@ -351,16 +357,28 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
   await page.waitForTimeout(BEAT);
 };
 
-/** A person signs off each of the milestone's tasks in review, from its status control on the Tasks tab. */
+/**
+ * A person signs off every task of the milestone in review at once, through the operation the status control's Done
+ * runs, so the list goes from all in review to all done in one beat.
+ */
 const acceptMilestone = async (demo, page, milestone) => {
   await openProjectTab(demo, page, 'tasks');
   const titles = tasksOf(await snapshot(page), milestone)
     .filter((task) => task.status === 'review')
     .map((task) => task.title);
-  for (const title of titles) {
-    await demo.click({ selector: `${taskRow(title)} >> [data-testid="taskList.item.status"]`, label: title });
-    await demo.click({ selector: 'role=menuitemradio[name="Done"]', label: 'Done' });
-  }
+  await page.waitForTimeout(BEAT * 2);
+  await page.evaluate(
+    async ({ key, titles }) => {
+      const space = dxos
+        .spaces()
+        .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
+      const tasks = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run();
+      for (const task of tasks.filter((task) => titles.includes(task.title))) {
+        await composer.invoke('org.dxos.operation.tasks.accept', { task: dxos.Ref.make(task) }, { spaceId: space.id });
+      }
+    },
+    { key: TAKE_SPACE, titles },
+  );
   await page.waitForFunction(
     async ({ key, titles }) => {
       const space = dxos
@@ -373,6 +391,16 @@ const acceptMilestone = async (demo, page, milestone) => {
     { timeout: 15_000 },
   );
   await page.waitForTimeout(BEAT);
+};
+
+/** Wheels the plank's content down `notches` at a time, so the camera follows the scroll. */
+const wheel = async (page, selector, notches) => {
+  const box = await page.locator(selector).first().boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  for (let notch = 0; notch < notches; notch++) {
+    await page.mouse.wheel(0, 120);
+    await page.waitForTimeout(120);
+  }
 };
 
 /**
@@ -493,42 +521,65 @@ export const steps = [
     },
   },
   {
-    name: 'Open the feature map',
+    name: 'Show what the project builds',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'A finished spec: every feature planned', subtitle: 'And no tasks yet' });
-      await openProjectTab(demo, page, 'tasks');
-      await page.waitForTimeout(BEAT);
-      await openProjectTab(demo, page, 'features');
-      await page.locator(node(HEATMAP)).waitFor({ state: 'visible', timeout: 15_000 });
+      await openProjectTab(demo, page, 'overview');
+      await demo.caption({
+        value: 'A When2meet-style poll on Cloudflare Workers',
+        subtitle: 'Respondents mark the hours they are free; the poll finds the best slot',
+      });
+      await page.waitForTimeout(BEAT * 3);
+      await page
+        .locator(`${ARTIFACTS} :text-is("${DESIGN_DOC}")`)
+        .first()
+        .waitFor({ state: 'visible', timeout: 15_000 });
+      await demo.caption({ value: 'Design docs and diagrams come with the spec' });
+      await page.locator(ARTIFACTS).first().scrollIntoViewIfNeeded();
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Open a design doc',
+    run: async ({ demo, page }) => {
+      await demo.click({ selector: `${ARTIFACTS} :text-is("${DESIGN_DOC}") >> nth=0`, label: DESIGN_DOC });
+      await demo.caption({
+        value: 'Each poll is its own Durable Object',
+        subtitle: "One writer per poll, so two saves can't lose each other's marks",
+      });
+      await page.waitForTimeout(BEAT * 4);
+      await wheel(page, '[data-testid="deck.plank"] .cm-content', 4);
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
     name: 'Open the spec',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Each feature is a block of the spec', subtitle: 'Staged as milestones M-1 to M-4' });
-      await openFeature(demo, page, HEATMAP);
-      await page.waitForTimeout(BEAT * 2);
       await openProjectTab(demo, page, 'document');
-      await page.waitForTimeout(BEAT * 2);
-      // Down to the milestones and the DST scenario, the part a reader checks the build against.
-      for (const heading of ['M-1: Core poll', 'scenario T-3']) {
-        await scrollDocumentTo(page, heading);
-        await page.waitForTimeout(BEAT * 2);
-      }
+      await demo.caption({ value: 'The spec stages the work as milestones', subtitle: 'This take builds M-1 and M-2' });
+      await scrollDocumentTo(page, 'M-1: Core poll');
+      await page.waitForTimeout(BEAT * 3);
+      await demo.caption({
+        value: 'Each milestone ends in a scenario',
+        subtitle: 'T-1: three respondents mark six slots',
+      });
+      await scrollDocumentTo(page, 'scenario T-1');
+      await page.waitForTimeout(BEAT * 3);
     },
   },
   {
-    name: 'Open the flight options spec',
+    name: 'Open a feature',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'The last milestone is a spec of its own', subtitle: 'It builds on the poll spec' });
-      await openFeature(demo, page, FLIGHTS);
-      await page.waitForTimeout(BEAT);
-      await demo.click({ selector: `${COMPANION} [data-testid="feature-companion.zoom"]`, label: 'Show subfeatures' });
-      await page.locator(node('Offer search')).waitFor({ state: 'visible', timeout: 10_000 });
-      await closeCompanion(page);
-      await page.waitForTimeout(BEAT * 3);
       await openProjectTab(demo, page, 'features');
+      await demo.caption({ value: 'Each feature is a block of the spec', subtitle: 'Planned, and no tasks yet' });
+      await page.locator(node(HEATMAP)).waitFor({ state: 'visible', timeout: 15_000 });
+      await page.waitForTimeout(BEAT * 2);
+      await openFeature(demo, page, HEATMAP);
+      await demo.caption({
+        value: 'A feature: its requirements and status',
+        subtitle: 'The status moves as the work is checked',
+      });
+      await page.waitForTimeout(BEAT * 4);
+      await closeCompanion(page);
     },
   },
   {
@@ -537,10 +588,14 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Ask the agent to plan the first milestone' });
       await ask(demo, page, planPrompt(M1.id));
-      await page.waitForTimeout(BEAT);
+      await demo.caption({
+        value: 'The agent reads the spec and files the tasks',
+        subtitle: `Sped up ${PLAN_SPEED}x`,
+        position: 'top',
+      });
+      await waitFor(demo, page, planned(M1.id), 3, 'the M-1 plan', PLAN_SPEED);
+      await page.waitForTimeout(BEAT * 2);
       await closeCompanion(page);
-      await openProjectTab(demo, page, 'tasks');
-      await waitFor(demo, page, planned(M1.id), 3, 'the M-1 plan');
       await demo.caption({
         value: 'One task per feature, then a check',
         subtitle: 'Each linked to the feature it moves',
@@ -579,8 +634,13 @@ export const steps = [
     name: 'Accept M-1',
     done: async ({ page }) => tasksOf(await snapshot(page), M1.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Sign off the work', subtitle: 'A delegated task waits in review for its person' });
+      await demo.caption({
+        value: 'Sign off the work',
+        subtitle: 'Each delegated task waits in review for its person',
+      });
       await acceptMilestone(demo, page, M1.id);
+      await demo.caption({ value: 'Signed off: every M-1 task done' });
+      await page.waitForTimeout(BEAT * 2);
     },
   },
   {
@@ -589,11 +649,10 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Next: lay out both pages' });
       await ask(demo, page, planPrompt(M2.id));
-      await page.waitForTimeout(BEAT);
-      await closeCompanion(page);
-      await openProjectTab(demo, page, 'tasks');
-      await waitFor(demo, page, planned(M2.id), 10, 'the M-2 plan');
+      await demo.caption({ value: 'The agent plans M-2', subtitle: `Sped up ${PLAN_SPEED * 2}x`, position: 'top' });
+      await waitFor(demo, page, planned(M2.id), 10, 'the M-2 plan', PLAN_SPEED * 2);
       await page.waitForTimeout(BEAT * 2);
+      await closeCompanion(page);
       await demo.caption({ value: 'Hand M-2 to the agent' });
       await delegateMilestone(demo, page, M2.id);
     },
@@ -621,6 +680,8 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Sign off M-2' });
       await acceptMilestone(demo, page, M2.id);
+      await demo.caption({ value: 'Signed off: every M-2 task done' });
+      await page.waitForTimeout(BEAT * 2);
     },
   },
   {

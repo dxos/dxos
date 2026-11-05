@@ -58,7 +58,7 @@
         "id": "Browser",
         "origin": { "x": 384, "y": 0 },
         "scale": 1,
-        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Invitee's browser" }]
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 192, "h": 96, "text": "Respondent's browser" }]
       }
     },
     {
