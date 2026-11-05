@@ -13,12 +13,12 @@ const spec = (...blocks: string[]): string => blocks.map((block) => `\`\`\`mdl\n
 const BASE = spec(
   'type Note\n  fields:\n    title: string',
   'type Tag\n  fields:\n    name: string',
-  'feat F-1: Notes have tags\n  req F-1.1: A Note names its Tag.',
+  'feat F-1: Notes have tags\n  uses: [Note, Tag]\n  req F-1.1: A Note names its Tag.',
 );
 
 const CURRENT = spec(
   'type Note\n  fields:\n    title: string\n    body: string',
-  'feat F-1: Notes have tags\n  req F-1.1: A Note names its Folder.',
+  'feat F-1: Notes have tags\n  uses: [Note, Folder]\n  req F-1.1: A Note names its Folder.',
   'type Folder\n  fields:\n    name: string',
 );
 

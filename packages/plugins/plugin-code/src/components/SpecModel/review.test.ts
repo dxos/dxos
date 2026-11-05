@@ -62,20 +62,19 @@ describe('external definitions', () => {
 
   test('a key to another spec becomes that spec’s block, described when its text is known', ({ expect }) => {
     const other = fence('type Obj: An ECHO object.');
-    const graph = buildDefinitionGraph(spec, new Map([['github:dxos/dxos/packages/core/echo/echo/SPEC.mdl', other]]));
+    const graph = buildDefinitionGraph(spec, { specs: new Map([['github:dxos/dxos/packages/core/echo/echo/SPEC.mdl', other]]) });
     const external = graph.definitions.find(({ id }) => id === 'github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Obj');
     expect(external).toMatchObject({
       kind: 'type',
       title: 'An ECHO object.',
       external: { target: 'spec', resolved: true },
     });
-    const code = graph.definitions.find(({ kind }) => kind === 'code');
-    expect(code).toMatchObject({ title: 'make', external: { target: 'code', fragment: 'make' } });
-    expect(graph.definitions.find(({ id }) => id === 'F-1')?.dependsOn).toEqual([
-      'Thing',
-      'github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Obj',
-      'github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make',
-    ]);
+    // A code key is not a definition, and a name in the description is a mention rather than a reference.
+    expect(graph.definitions.some(({ id }) => id.endsWith('Spec.ts#make'))).toBe(false);
+    expect(graph.definitions.find(({ id }) => id === 'F-1')).toMatchObject({
+      dependsOn: ['github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Obj'],
+      mentions: ['Thing'],
+    });
   });
 
   test('an unknown spec still yields a node, marked unresolved', ({ expect }) => {
@@ -104,14 +103,8 @@ describe('implementation annotations', () => {
       // Missing: no code, and nothing to say about tests.
       { id: 'F-1.2', keys: [] },
     ]);
-    const graph = buildDefinitionGraph(spec, new Map(), annotations);
-    const code = 'github:dxos/dxos/packages/plugins/plugin-x/src/a.ts#openThing';
-    expect(graph.definitions.find(({ id }) => id === 'F-1')?.dependsOn).toEqual([code]);
-    expect(graph.definitions.find(({ id }) => id === code)).toMatchObject({
-      kind: 'code',
-      external: { target: 'code' },
-    });
-    // Without annotations the spec text names no code, so there is no code box.
-    expect(buildDefinitionGraph(spec).definitions.some(({ kind }) => kind === 'code')).toBe(false);
+    const graph = buildDefinitionGraph(spec, { annotations });
+    expect(graph.definitions.find(({ id }) => id === 'F-1')).toMatchObject({ codeRefs: 1, dependsOn: [] });
+    expect(buildDefinitionGraph(spec).definitions.find(({ id }) => id === 'F-1')?.codeRefs).toBe(0);
   });
 });

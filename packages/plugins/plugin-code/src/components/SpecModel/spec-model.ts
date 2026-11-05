@@ -20,10 +20,30 @@ export type DefinitionModel = {
   id: string;
   kind: string;
   title?: string;
-  /** Ids of the other definitions this one names, in order of first mention. */
+  /** The `##` heading the block sits under; absent before the first one and on external nodes. */
+  section?: string;
+  /** Ids this definition references through a typed field or a key, in order of first reference. */
   dependsOn: string[];
-  /** Set on a node that lives outside this spec: a block of another spec, or a code symbol. */
+  /** Ids its prose names that no field or key references. */
+  mentions: string[];
+  /** How many code symbols the review links it (or its requirements) to. */
+  codeRefs: number;
+  /** How many `req` lines a feature holds. */
+  requirements: number;
+  /** Set on a node that lives outside this spec: a block of another spec. */
   external?: ExternalModel;
+};
+
+/** How one definition reaches another: a typed field, a `github:` key or spec reference, or a name in its prose. */
+export type DefinitionEdgeKind = 'reference' | 'external' | 'mention';
+
+export type DefinitionEdge = {
+  id: string;
+  from: string;
+  to: string;
+  kind: DefinitionEdgeKind;
+  /** The field that holds a reference. */
+  field?: string;
 };
 
 /** Where an external node comes from; its id is the `github:` key itself. */
@@ -39,10 +59,10 @@ export type ExternalModel = {
 /** The texts of other specs, keyed by their `github:` key without a fragment. */
 export type SpecTexts = ReadonlyMap<string, string>;
 
-/** The definitions of a spec and which name which, pointing from the dependent to what it names. */
+/** The definitions of a spec and which reach which, pointing from the dependent to what it names. */
 export type DefinitionGraphModel = {
   definitions: DefinitionModel[];
-  edges: { id: string; from: string; to: string }[];
+  edges: DefinitionEdge[];
 };
 
 /** One declared field: `name[?]: Type  # comment`. */
@@ -227,86 +247,143 @@ const namedIds = (text: string, ids: ReadonlySet<string>, self?: string): string
 ];
 
 /**
- * The node a `github:` key names. A spec key with a fragment becomes that block of the other spec, described from
- * its text when `specs` has it; any other key (code, or a whole file) becomes one node for the key.
+ * The node a spec key names: that block of the other spec, described from its text when `specs` has it, or one node
+ * for the whole file.
  */
 const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel => {
-  const id = formatSourceKey(key);
-  if (!isSpecKey(key)) {
-    return {
-      id,
-      kind: 'code',
-      title: key.fragment ?? key.path.split('/').pop(),
-      dependsOn: [],
-      external: { target: 'code', key, ...(key.fragment && { fragment: key.fragment }), resolved: true },
-    };
-  }
   const text = specs.get(formatSourceKey(key, false));
   const blocks = text ? definitionBlocks(text) : [];
   const owner = key.fragment ? resolveToken(key.fragment, new Set(blocks.map((block) => block.id))) : undefined;
   const block = blocks.find((candidate) => candidate.id === owner);
   return {
-    id,
+    id: formatSourceKey(key),
     kind: block?.type ?? 'spec',
     title: block?.title ?? key.fragment ?? key.path,
     dependsOn: [],
+    mentions: [],
+    codeRefs: 0,
+    requirements: 0,
     external: { target: 'spec', key, ...(key.fragment && { fragment: key.fragment }), resolved: block !== undefined },
   };
 };
 
 /**
- * Every definition of a spec with an edge to each other definition its title or body names, plus a node for each
- * block of another spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key) and for each
- * code symbol an annotation links to one of its items, so a spec's graph shows what it rests on elsewhere and where
- * it is implemented.
+ * The fields whose values name other blocks: a type's fields and bases, an op's input and output, a component's props,
+ * what a block requires or uses, what a test covers. A dialect's own fields come from its outline contribution.
+ */
+export const DEFAULT_REFERENCE_FIELDS: ReadonlySet<string> = new Set([
+  'covers',
+  'depends',
+  'dependsOn',
+  'emits',
+  'errors',
+  'events',
+  'extends',
+  'fields',
+  'input',
+  'ops',
+  'output',
+  'props',
+  'requires',
+  'slots',
+  'state',
+  'tests',
+  'uses',
+  'variants',
+]);
+
+export type BuildDefinitionGraphOptions = {
+  /** Other specs this one names by `github:` key, so their blocks can be described. */
+  specs?: SpecTexts;
+  /** A review's links from items to code, counted on the cards. */
+  annotations?: readonly Annotation[];
+  /** Resolves `<spec id>#<item>` references to other specs' files. */
+  index?: SpecIndex;
+  /** The fields that reference other blocks; {@link DEFAULT_REFERENCE_FIELDS} when unset. */
+  referenceFields?: ReadonlySet<string>;
+};
+
+/** The `##` heading in force at each offset of `text`, as sorted offsets and titles. */
+const sectionsOf = (text: string): { from: number; title: string }[] =>
+  [...text.matchAll(/^##\s+(.+?)\s*$/gm)].map((match) => ({ from: match.index ?? 0, title: match[1] }));
+
+const sectionAt = (sections: readonly { from: number; title: string }[], offset: number): string | undefined =>
+  sections.findLast(({ from }) => from < offset)?.title;
+
+/**
+ * Every definition of a spec with an edge to each block a typed field of it references, and to each block of another
+ * spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key). Names that appear only in its
+ * prose are kept apart as mentions, and code symbols a review links to it are counted rather than drawn.
  */
 export const buildDefinitionGraph = (
   text: string,
-  specs: SpecTexts = new Map(),
-  annotations: readonly Annotation[] = [],
-  index?: SpecIndex,
+  { specs = new Map(), annotations = [], index, referenceFields = DEFAULT_REFERENCE_FIELDS }: BuildDefinitionGraphOptions = {},
 ): DefinitionGraphModel => {
   const isReference = index ? specReferenceFilter(index) : () => false;
   const blocks = definitionBlocks(text);
   const ids = new Set(blocks.map(({ id }) => id));
+  const sections = sectionsOf(text);
   const externals = new Map<string, DefinitionModel>();
-  const link = (key: SourceKey): string => {
+  const link = (key: SourceKey): string | undefined => {
+    if (!isSpecKey(key)) {
+      return undefined;
+    }
     const external = externals.get(formatSourceKey(key)) ?? externalDefinition(key, specs);
     externals.set(external.id, external);
     return external.id;
   };
-  // A requirement's annotation hangs off its feature, the box the graph draws.
-  const annotated = new Map<string, SourceKey[]>();
+  // A requirement's code links count on its feature, the card the graph draws.
+  const codeRefs = new Map<string, number>();
   for (const { id, keys } of annotations) {
     const owner = resolveToken(id, ids);
-    if (owner) {
-      annotated.set(owner, [...(annotated.get(owner) ?? []), ...keys]);
-    }
+    const code = keys.filter((key) => !isSpecKey(key)).length;
+    owner && code > 0 && codeRefs.set(owner, (codeRefs.get(owner) ?? 0) + code);
   }
-  const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => {
+  const edges: DefinitionEdge[] = [];
+  const definitions = blocks.map(({ type, id, title, body, from }): DefinitionModel => {
     const prose = `${title ?? ''}\n${body}`;
     const refs = findSpecRefs(prose).filter((ref) => isReference(ref.id));
     const refKeys = refs.flatMap((ref) => {
       const resolved = index && resolveSpecRef(index, ref.id, ref.item);
       return resolved && !('error' in resolved) ? [resolved] : [];
     });
-    const linked = [...findSourceKeys(prose).map(({ key }) => key), ...refKeys, ...(annotated.get(id) ?? [])].map(link);
+    const targets = new Set<string>();
+    const add = (to: string, kind: DefinitionEdgeKind, field?: string) => {
+      if (to !== id && !targets.has(to)) {
+        targets.add(to);
+        edges.push({ id: `${id}->${to}`, from: id, to, kind, ...(field && { field }) });
+      }
+    };
+    for (const [field, value] of parseFields(body)) {
+      if (referenceFields.has(field)) {
+        const values = [value.inline ?? '', ...value.lines].join('\n').replace(SOURCE_KEYS, ' ');
+        namedIds(values, ids, id).forEach((to) => add(to, 'reference', field));
+      }
+    }
+    [...findSourceKeys(prose).map(({ key }) => key), ...refKeys].forEach((key) => {
+      const to = link(key);
+      to && add(to, 'external');
+    });
+    const dependsOn = [...targets];
     // References and keys are removed first so their words are not read as names of this spec's blocks.
     const local = refs
       .reduceRight((stripped, { from, to }) => `${stripped.slice(0, from)} ${stripped.slice(to)}`, prose)
       .replace(SOURCE_KEYS, ' ');
+    const mentions = namedIds(local, ids, id).filter((to) => !targets.has(to));
+    mentions.forEach((to) => edges.push({ id: `${id}~>${to}`, from: id, to, kind: 'mention' }));
+    const section = sectionAt(sections, from);
     return {
       id,
       kind: type,
       ...(title && { title }),
-      dependsOn: [...new Set([...namedIds(local, ids, id), ...linked])],
+      ...(section && { section }),
+      dependsOn,
+      mentions,
+      codeRefs: codeRefs.get(id) ?? 0,
+      requirements: type === 'feat' ? body.split('\n').filter((line) => /^\s*req\s/.test(line)).length : 0,
     };
   });
-  const all = [...definitions, ...externals.values()];
-  return {
-    definitions: all,
-    edges: all.flatMap(({ id, dependsOn }) => dependsOn.map((to) => ({ id: `${id}->${to}`, from: id, to }))),
-  };
+  return { definitions: [...definitions, ...externals.values()], edges };
 };
 
 const SOURCE_KEYS = /github:\S+/g;
@@ -320,10 +397,14 @@ export type DefinitionSelection = DefinitionGraphModel & {
   kinds: string[];
 };
 
-/** Drops the given kinds, and every edge to or from them, from a definition graph. */
+/**
+ * Drops the given kinds, and every edge to or from them, from a definition graph; mentions are dropped too unless
+ * asked for.
+ */
 export const selectDefinitions = (
   { definitions, edges }: DefinitionGraphModel,
   exclude: Iterable<string>,
+  { mentions = false }: { mentions?: boolean } = {},
 ): DefinitionSelection => {
   const excluded = new Set(exclude);
   const keptIds = new Set(definitions.filter(({ kind }) => !excluded.has(kind)).map(({ id }) => id));
@@ -332,7 +413,9 @@ export const selectDefinitions = (
     .filter(({ id }) => keptIds.has(id))
     .map((definition) => ({ ...definition, dependsOn: definition.dependsOn.filter((id) => keptIds.has(id)) }));
   const byId = new Map(kept.map((definition) => [definition.id, definition]));
-  const keptEdges = edges.filter(({ from, to }) => byId.has(from) && byId.has(to));
+  const keptEdges = edges.filter(
+    ({ from, to, kind }) => byId.has(from) && byId.has(to) && (mentions || kind !== 'mention'),
+  );
   const dependents = new Map<string, number>();
   keptEdges.forEach(({ to }) => dependents.set(to, (dependents.get(to) ?? 0) + 1));
   return {

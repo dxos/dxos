@@ -38,7 +38,13 @@ import {
   withTitle,
 } from '../utils/index.ts';
 
-export type GraphNode = { id: string; label?: string; type?: BuiltinNodeType };
+export type GraphNode = {
+  id: string;
+  label?: string;
+  type?: BuiltinNodeType;
+  /** The row the node takes, in place of its rank along the edges (a host's own bands, say). */
+  rank?: number;
+};
 export type GraphEdge = {
   id: string;
   from: string;
@@ -200,7 +206,12 @@ const slotsOf = (graph: GraphModel, options: GraphPlacement, cache?: SlotsCache)
   const known = new Set(ids);
   const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
   const ranks = Layout.rank(ids, edges);
-  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
+  const seed = arrange(
+    new Map(graph.nodes.map(({ id, rank }) => [id, rank ?? ranks.get(id) ?? 0])),
+    edges,
+    options.arrange,
+    options.force,
+  );
   const { nodes, lattice } = options;
   const slots =
     options.arrange === 'routed' && lattice && nodes
@@ -229,7 +240,7 @@ const routedSlots = (
   options: DynamicOptions,
   lattice: LatticeSpec,
 ): Map<string, Slot> => {
-  const key = JSON.stringify([lattice, graph.nodes.map(({ id }) => id), edges.map(({ from, to }) => [from, to])]);
+  const key = JSON.stringify([lattice, graph.nodes.map(({ id, rank }) => [id, rank]), edges.map(({ from, to }) => [from, to])]);
   const cached = routedCache.get(key);
   if (cached) {
     return cached;

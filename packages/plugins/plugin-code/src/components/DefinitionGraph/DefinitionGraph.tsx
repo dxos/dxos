@@ -6,7 +6,7 @@ import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
 import { type ReviewModel, type VerdictStatus, reviewAnnotations, statusOf } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
-import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
+import { type GraphEdge, type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -20,6 +20,7 @@ import { LatticeGraph } from '../LatticeGraph/index.ts';
 import {
   type ChangeKind,
   type DefinitionModel,
+  type DefinitionSelection,
   KIND_GROUPS,
   type KindGroup,
   type SpecTexts,
@@ -60,14 +61,71 @@ const EDGE_STYLE = {
   removed: { hue: 'red', lineStyle: 'dashed' },
 } as const;
 
+/** A name in prose is a weaker link than a field, so its arrow is dashed and grey. */
+const MENTION_STYLE = { hue: 'neutral', lineStyle: 'dashed' } as const;
+
+/**
+ * The order of the rows, top to bottom: what the spec must do, then what it is built from, then how it is checked,
+ * then other specs. A kind not listed sits with the types.
+ */
+const KIND_ORDER = [
+  'feat',
+  'req',
+  'component',
+  'capability',
+  'module',
+  'op',
+  'service',
+  'db',
+  'table',
+  'type',
+  'suite',
+  'test',
+  'scenario',
+  'spec',
+];
+
+/** Cards per row; a kind with more wraps onto further rows, so the graph keeps a readable shape. */
+const ROW_LENGTH = 6;
+
+/** Past this many arrows in, a card shows its count rather than draw them, so a hub does not knot the gutters. */
+const HUB_LIMIT = 8;
+
+const kindRank = (kind: string): number => {
+  const index = KIND_ORDER.indexOf(kind);
+  return index === -1 ? KIND_ORDER.indexOf('type') : index;
+};
+
+/** Each definition's row: one band of rows per kind, in {@link KIND_ORDER}, each band wrapped at {@link ROW_LENGTH}. */
+const rowsByKind = (definitions: readonly DefinitionModel[]): Map<string, number> => {
+  const bands = new Map<number, DefinitionModel[]>();
+  for (const definition of definitions) {
+    const rank = definition.external ? KIND_ORDER.length : kindRank(definition.kind);
+    bands.set(rank, [...(bands.get(rank) ?? []), definition]);
+  }
+  const rows = new Map<string, number>();
+  let row = 0;
+  for (const [, members] of [...bands.entries()].sort(([a], [b]) => a - b)) {
+    members.forEach(({ id }, index) => rows.set(id, row + Math.floor(index / ROW_LENGTH)));
+    row += Math.ceil(members.length / ROW_LENGTH);
+  }
+  return rows;
+};
+
+/** The ids that collect more than {@link HUB_LIMIT} arrows. */
+const hubsOf = (model: DefinitionSelection): Set<string> =>
+  new Set([...model.dependents].filter(([, count]) => count > HUB_LIMIT).map(([id]) => id));
+
 type DefinitionCardProps = {
   definition: DefinitionModel;
   dependents: number;
+  /** Its arrows in are not drawn, so the count stands for them. */
+  hub?: boolean;
   status?: VerdictStatus;
   change?: ChangeKind;
 };
 
-const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCardProps) => {
+const DefinitionCard = ({ definition, dependents, hub, status, change }: DefinitionCardProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { icon, hue } = kindStyle(definition.kind);
   const { external } = definition;
@@ -123,7 +181,19 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
               {definition.dependsOn.length > 0 && (
                 <Tag.Tag>{t('definition-graph.uses.label', { count: definition.dependsOn.length })}</Tag.Tag>
               )}
-              {dependents > 0 && <Tag.Tag>{t('definition-graph.used-by.label', { count: dependents })}</Tag.Tag>}
+              {dependents > 0 && (
+                <Tag.Tag hue={hub ? 'info' : undefined} data-testid={hub ? 'definition-graph.hub' : undefined}>
+                  {t('definition-graph.used-by.label', { count: dependents })}
+                </Tag.Tag>
+              )}
+              {definition.requirements > 0 && (
+                <Tag.Tag>{t('definition-graph.requirements.label', { count: definition.requirements })}</Tag.Tag>
+              )}
+              {definition.codeRefs > 0 && (
+                <Tag.Tag hue='amber' data-testid='definition-graph.code-refs'>
+                  {t('definition-graph.code-refs.label', { count: definition.codeRefs })}
+                </Tag.Tag>
+              )}
             </Layout.Flex>
           </Card.Row>
         </Card.Body>
@@ -137,15 +207,15 @@ type KindLegendProps = {
   kinds: string[];
   groups: Record<KindGroup, boolean>;
   onGroupChange: (group: KindGroup, shown: boolean) => void;
-  /** Absent when no annotation links the spec to code, so the switch is not offered. */
-  code?: boolean;
-  onCodeChange: (code: boolean) => void;
+  /** Whether names that appear only in prose draw dashed arrows too. */
+  mentions: boolean;
+  onMentionsChange: (mentions: boolean) => void;
   /** How many definitions each kind of change touched; absent outside diff mode. */
   changes?: Record<ChangeKind, number>;
 };
 
 /** One switch per group, each beside the kinds it holds. */
-const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange, changes }: KindLegendProps) => {
+const KindLegend = ({ kinds, groups, onGroupChange, mentions, onMentionsChange, changes }: KindLegendProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
@@ -175,7 +245,7 @@ const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange, changes 
             data-testid={`definition-graph.group-${group}`}
           />
           {kinds
-            .filter((kind) => groupOf(kind) === group && kind !== 'code')
+            .filter((kind) => groupOf(kind) === group)
             .map((kind) => (
               <Tag.Tag key={kind} hue={groups[group] ? kindStyle(kind).hue : 'neutral'}>
                 <Icon.Icon icon={kindStyle(kind).icon} size='xs' />
@@ -184,14 +254,12 @@ const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange, changes 
             ))}
         </Layout.Flex>
       ))}
-      {code !== undefined && (
-        <Input.Switch
-          checked={code}
-          onCheckedChange={({ checked }) => onCodeChange(checked)}
-          label={t('definition-graph.code.label')}
-          data-testid='definition-graph.code'
-        />
-      )}
+      <Input.Switch
+        checked={mentions}
+        onCheckedChange={({ checked }) => onMentionsChange(checked)}
+        label={t('definition-graph.mentions.label')}
+        data-testid='definition-graph.mentions'
+      />
     </Layout.Flex>
   );
 };
@@ -203,7 +271,7 @@ export type DefinitionGraphProps = {
   specs?: SpecTexts;
   /** Resolves `<spec id>#<item>` references to other specs' files; without it only `github:` keys name them. */
   index?: SpecIndex;
-  /** The latest compliance review; its verdicts badge the cards and its evidence adds the code boxes. */
+  /** The latest compliance review; its verdicts badge the cards and its evidence counts their code links. */
   review?: ReviewModel;
   /** The base version of `content`; when given, the graph shows what changed since it (diff mode). */
   base?: string;
@@ -216,9 +284,9 @@ export type DefinitionGraphProps = {
 };
 
 /**
- * Every definition of a spec on a lattice, with an arrow from each to the definitions it names, so the
- * spec reads top-down from features to the types they rest on. Blocks of other specs the spec names by id or `github:` key,
- * and the code symbols the review links its items to, are drawn as dashed boxes.
+ * Every definition of a spec on a lattice in one band of rows per kind, so the spec reads top-down from features to
+ * the types they rest on, with an arrow labelled by the field that references another block. Blocks of other specs
+ * the spec names are dashed boxes; names in prose draw only when asked for.
  */
 export const DefinitionGraph = ({
   content,
@@ -235,17 +303,17 @@ export const DefinitionGraph = ({
     (group: KindGroup, shown: boolean) => setGroups((groups) => ({ ...groups, [group]: shown })),
     [],
   );
-  const [code, setCode] = useState(true);
+  const [mentions, setMentions] = useState(false);
   const annotations = useMemo(() => reviewAnnotations(review), [review]);
   const current = useMemo(
-    () => buildDefinitionGraph(content, specs, annotations, index),
+    () => buildDefinitionGraph(content, { specs, annotations, index }),
     [content, specs, annotations, index],
   );
   const diff = useMemo(
     () =>
       base === undefined
         ? undefined
-        : diffDefinitionGraphs(current, buildDefinitionGraph(base, specs, annotations, index), {
+        : diffDefinitionGraphs(current, buildDefinitionGraph(base, { specs, annotations, index }), {
             current: content,
             base,
           }),
@@ -254,26 +322,30 @@ export const DefinitionGraph = ({
   const full = diff ?? current;
   const allKinds = useMemo(() => [...new Set(full.definitions.map(({ kind }) => kind))], [full]);
   // A key rather than the array, so a caller passing a fresh literal each render does not re-lay out the graph.
-  // Code has its own switch, so the concepts group never hides it.
-  const excludeKey = [
-    ...exclude,
-    ...hiddenKinds(
-      allKinds.filter((kind) => kind !== 'code'),
-      groups,
-    ),
-    ...(code ? [] : ['code']),
-  ].join(',');
-  const model = useMemo(() => selectDefinitions(full, excludeKey.split(',')), [full, excludeKey]);
-  const graph = useMemo<GraphModel>(
-    () => ({
-      nodes: model.definitions.map(({ id, title }) => ({ id, label: title ?? id })),
-      edges: model.edges.map((edge) => {
-        const change = diff?.edgeChanges.get(edge.id);
-        return change ? { ...edge, style: EDGE_STYLE[change] } : edge;
-      }),
-    }),
-    [model, diff],
+  const excludeKey = [...exclude, ...hiddenKinds(allKinds, groups)].join(',');
+  const model = useMemo(
+    () => selectDefinitions(full, excludeKey.split(','), { mentions }),
+    [full, excludeKey, mentions],
   );
+  const hubs = useMemo(() => hubsOf(model), [model]);
+  const graph = useMemo<GraphModel>(() => {
+    const rows = rowsByKind(model.definitions);
+    return {
+      nodes: model.definitions.map(({ id, title }) => ({ id, label: title ?? id, rank: rows.get(id) })),
+      edges: model.edges
+        .filter(({ to }) => !hubs.has(to))
+        .map(({ id, from, to, kind, field }): GraphEdge => {
+          const change = diff?.edgeChanges.get(id);
+          return {
+            id,
+            from,
+            to,
+            ...(field && { text: field }),
+            ...(change ? { style: EDGE_STYLE[change] } : kind === 'mention' ? { style: MENTION_STYLE } : {}),
+          };
+        }),
+    };
+  }, [model, hubs, diff]);
   const changeCounts = useMemo(() => {
     if (!diff) {
       return undefined;
@@ -293,13 +365,14 @@ export const DefinitionGraph = ({
           <DefinitionCard
             definition={definition}
             dependents={model.dependents.get(id) ?? 0}
+            hub={hubs.has(id)}
             status={definition.external ? undefined : statusOf(review, id)}
             change={diff?.changes.get(id)}
           />
         )
       );
     },
-    [model, review, diff],
+    [model, hubs, review, diff],
   );
 
   // The canvas captures the pointer, so a double-click never reaches the card; the card under the pointer is found here.
@@ -314,13 +387,13 @@ export const DefinitionGraph = ({
 
   return (
     <div className='contents' onDoubleClick={handleDoubleClick}>
-      <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE} arrange='force'>
+      <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE}>
         <KindLegend
           kinds={allKinds}
           groups={groups}
           onGroupChange={handleGroupChange}
-          code={annotations.length > 0 ? code : undefined}
-          onCodeChange={setCode}
+          mentions={mentions}
+          onMentionsChange={setMentions}
           changes={changeCounts}
         />
       </LatticeGraph>
