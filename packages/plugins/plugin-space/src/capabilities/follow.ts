@@ -59,8 +59,8 @@ const isSamePlanks = (a?: readonly string[], b?: readonly string[]) =>
  * Follows the peer named by the ephemeral `following` state. A deck that lays planks side by side mirrors the leader's
  * deck: its planks, the plank it is scrolled to, and the anchor in each plank. A flat deck opens the plank the leader
  * attends, at the leader's path. Anchors are revealed through each type's `Locator` without moving the caret or focus.
- * The local user's own input in an object, Escape, attending an object outside the leader's deck, or the leader leaving
- * the space ends it.
+ * The local user's own input in an object, Escape, attending an object outside the leader's deck, leaving the space's
+ * workspace, or the leader leaving the space ends it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -228,6 +228,17 @@ export default Capability.makeModule(
       }
     });
 
+    // Switching to Settings or another space is navigating away from them.
+    let workspace = registry.get(layoutAtom).workspace;
+    const unsubscribeLayout = registry.subscribe(layoutAtom, ({ workspace: next }) => {
+      const previous = workspace;
+      workspace = next;
+      const { following } = registry.get(ephemeralAtom);
+      if (following && next !== previous && previous === GraphPath.getSpacePath(following.spaceId)) {
+        stop();
+      }
+    });
+
     const onPointer = (event: Event) => {
       if (isFollowing() && isInObject(event.target)) {
         stop();
@@ -248,6 +259,7 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         unsubscribeState();
         unsubscribeAttention();
+        unsubscribeLayout();
         clearInterval(tick);
         window.removeEventListener('pointerdown', onPointer, listenerOptions);
         window.removeEventListener('wheel', onPointer, listenerOptions);

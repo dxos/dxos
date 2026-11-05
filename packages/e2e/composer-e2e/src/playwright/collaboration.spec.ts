@@ -348,7 +348,7 @@ test.describe('Collaboration tests', () => {
   );
 
   test(
-    'following a peer opens what they open and mirrors their scroll until Escape',
+    'following a peer opens what they open and mirrors their scroll until Escape or leaving the space',
     { tag: ['@space:QA-5'] },
     async () => {
       test.setTimeout(150_000);
@@ -391,6 +391,21 @@ test.describe('Collaboration tests', () => {
       await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
       await expect(rows.getByTestId('spacePlugin.presence.stopFollowing')).toHaveCount(0);
       await expect(rows.getByTestId('spacePlugin.presence.follow')).toHaveCount(1);
+
+      // Leaving the space for Settings ends a follow too.
+      await rows.getByTestId('spacePlugin.presence.follow').click();
+      await expect(rows.first().getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
+      const workspace = host.workspaceId;
+      await host.openSettings();
+      await host.page.locator(`[data-testid="spacePlugin.space"][data-object-id="root/${workspace}"]`).click();
+      await expect.poll(() => host.workspaceId).toBe(workspace);
+      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
+      // Clicking the tab of an open companion would close it.
+      if ((await sidebar.getAttribute('data-state')) !== 'expanded') {
+        await host.openCompanion('members');
+      }
+      await expect(rows.getByTestId('spacePlugin.presence.stopFollowing')).toHaveCount(0);
+      await expect(rows.getByTestId('spacePlugin.presence.follow')).toHaveCount(1, { timeout: 30_000 });
     },
   );
 

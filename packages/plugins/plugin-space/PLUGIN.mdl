@@ -588,7 +588,7 @@ feat F-8: Presence and Sync Status
   req F-8.19: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
   req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
   req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, scrolled to the plank at its front, each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path, whenever it changes, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
-  req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank, presses Escape, or attends an object outside what it shows of the leader; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
+  req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank, presses Escape, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
 ```
 
@@ -800,12 +800,12 @@ test QA-4: Tell a peer's sessions apart
 
 ```mdl
 test QA-5: Follow a peer around the space
-  desc: Following a peer from the Members companion opens what they open and keeps their top line in view without taking focus, marks the companion's tab, and Escape ends it.
+  desc: Following a peer from the Members companion opens what they open and keeps their top line in view without taking focus, marks the companion's tab, and Escape or leaving the space ends it.
   actors: human
   covers: [F-8.19, F-8.20, F-8.21, F-8.22, F-8.23]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › following a peer opens what they open and mirrors their scroll until Escape
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › following a peer opens what they open and mirrors their scroll until Escape or leaving the space
   given:
     - host: a booted app with a space containing two documents, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -822,6 +822,9 @@ test QA-5: Follow a peer around the space
     - name: Stop with Escape
       do: On the host, press Escape.
       expect: the dot clears, and the guest's row is back under their document with Follow among its actions
+    - name: Leave for Settings
+      do: On the host, follow the guest again, open Settings, then return to the space.
+      expect: the follow ended when the host left the space: no dot, and the guest's row has Follow among its actions
 ```
 
 ```mdl
@@ -1348,6 +1351,17 @@ decision D-56: The deck's scroll travels as its front plank, the first one not f
   rejected:
     - Send the deck's scroll offset in pixels, which lands elsewhere in a deck of another width or with other plank sizes.
     - Restore the follower's own planks when the follow stops; each mirrored deck is a browser history entry, so Back walks back to them.
+```
+
+```mdl
+decision D-57: Any navigation by the follower ends the follow, including switching to Settings or another space. Fills in [D-47].
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-8.22, QA-5]
+  why: A follow that survives the follower's own navigation pulls them back on the leader's next move, the jumpy behaviour following is meant to avoid. Follow elsewhere works the same way.
+  rejected:
+    - Pause while the follower is away and resume when they come back to the space.
+    - Keep following and bring the follower back to the space on the leader's next move.
 ```
 
 ## Appendix: Extension Definitions
