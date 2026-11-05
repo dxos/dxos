@@ -17,7 +17,7 @@ import { useIdentity } from '@dxos/halo-react';
 import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
 import { getSpace } from '@dxos/react-client/echo';
 import { Attention } from '@dxos/react-ui-attention';
-import { Editor, useCommentActions, useEditorExtensions } from '@dxos/react-ui-editor';
+import { Editor, useCommentActions } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -100,8 +100,6 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;
     const { invokePromise } = AppHooks.useOperationInvoker();
-    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host.
-    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t });
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
     const source = { spec, content, sourceKey, base, review: staticReview };
@@ -109,12 +107,10 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       useSpecModel(source);
     const { fold } = session;
     const open = useOpenSource({ ...source, id, key, setSession });
-    // Extensions bound to the spec's text (comments on the spec), from enclosing `EditorExtensionsProvider`s.
-    const binding = useMemo(
-      () => (spec && target ? { object: target, path: ['content'], subject: spec } : undefined),
-      [spec, target],
-    );
-    const bindingExtensions = useEditorExtensions(binding);
+    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host; comments on the
+    // spec anchor into the text the editor is bound to.
+    const binding = useMemo(() => (target ? { object: target, path: ['content'] } : undefined), [target]);
+    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t, binding });
 
     useEffect(() => {
       if (defaultDiff) {
@@ -201,7 +197,6 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               messenger: space,
               identity,
             }),
-          ...bindingExtensions,
         ].filter(isTruthy),
       [
         id,
@@ -220,7 +215,6 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         baseText,
         fold,
         contributed,
-        bindingExtensions,
       ],
     );
 

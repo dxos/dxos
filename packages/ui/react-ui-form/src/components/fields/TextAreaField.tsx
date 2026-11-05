@@ -8,10 +8,10 @@ import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { useFormContext } from '../../hooks/index.ts';
+import { useFormContext, useFormExtensions } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
-import { BoundTextEditor } from './BoundTextEditor.tsx';
+import { CollaborativeTextEditor } from './CollaborativeTextEditor.tsx';
 
 export const TextAreaField = ({
   type,
@@ -22,21 +22,27 @@ export const TextAreaField = ({
   presentation,
   jsonPath,
   path,
+  collaborative,
   getValue,
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<string>) => {
   const { object } = useFormContext('TextAreaField');
+  const extensions = useFormExtensions(
+    collaborative && path && jsonPath !== undefined ? { path, jsonPath } : undefined,
+  );
   const value = getValue() ?? '';
   const inPlace = presentation === 'title' || presentation === 'plain';
   const { isStatic, showLabel } = presentationFor(presentation);
   if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
-  if (object && path) {
+  if (collaborative && object && path) {
     return (
-      <BoundTextEditor
-        binding={{ object, path }}
+      <CollaborativeTextEditor
+        object={object}
+        path={path}
+        extensions={extensions}
         multiline
         placeholder={placeholder}
         readonly={!!readonly}

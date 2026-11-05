@@ -27,10 +27,11 @@ import {
   FeatureCard,
   type FeatureTarget,
   RequirementEditor,
+  type RequirementEditorExtensions,
   getDependents,
 } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useFieldExtensions, useOpenFeatureTarget } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
@@ -43,11 +44,11 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 );
 
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
-const makeFieldMap = (feature: Feature.Feature): FormFieldMap => {
+const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExtensions): FormFieldMap => {
   const RequirementsField: FormFieldRenderer = ({ label }) => (
     <Form.Field label={label} standalone>
       <Card.Root grid border={false}>
-        <RequirementEditor feature={feature} />
+        <RequirementEditor feature={feature} extensions={extensions} />
       </Card.Root>
     </Form.Field>
   );
@@ -55,21 +56,14 @@ const makeFieldMap = (feature: Feature.Feature): FormFieldMap => {
 };
 
 /**
- * The form of a feature, bound to the live object so an edit elsewhere reaches an open form. Its text fields and
- * requirements edit the feature in place (pass `subject` as the form's `object`), so only the status is handed back.
+ * The form of a feature, given the live feature as its values: its name and description are collaborative and its
+ * requirements edit the feature in place, so only the status is handed back. `extensions` adds what other plugins give
+ * the feature's text, such as comments.
  */
 export const useFeatureValues = (subject: Feature.Feature) => {
-  const [snapshot, updateFeature] = useObject(subject);
-  const fieldMap = useMemo(() => makeFieldMap(subject), [subject]);
-  const values = useMemo<Partial<FeatureValues>>(
-    () => ({
-      name: snapshot?.name,
-      description: snapshot?.description,
-      status: snapshot?.status,
-      requirements: snapshot?.requirements,
-    }),
-    [snapshot],
-  );
+  const [, updateFeature] = useObject(subject);
+  const extensions = useFieldExtensions(subject);
+  const fieldMap = useMemo(() => makeFieldMap(subject, extensions), [subject, extensions]);
 
   const onValuesChanged = useCallback(
     (values: Partial<FeatureValues>) => {
@@ -83,7 +77,7 @@ export const useFeatureValues = (subject: Feature.Feature) => {
     [subject, updateFeature],
   );
 
-  return { values, fieldMap, onValuesChanged, updateFeature };
+  return { extensions, fieldMap, onValuesChanged, updateFeature };
 };
 
 export type FeatureDetailProps = {
@@ -100,7 +94,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { values, fieldMap, onValuesChanged, updateFeature } = useFeatureValues(subject);
+  const { extensions, fieldMap, onValuesChanged, updateFeature } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -160,9 +154,9 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
   return (
     <Form.Root
       db={db}
-      object={subject}
       schema={FeatureValues}
-      values={values}
+      values={subject}
+      extensions={extensions}
       fieldMap={fieldMap}
       onValuesChanged={onValuesChanged}
     >

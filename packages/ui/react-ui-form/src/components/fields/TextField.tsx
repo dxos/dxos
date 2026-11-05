@@ -12,10 +12,10 @@ import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
-import { useFormContext } from '../../hooks/index.ts';
+import { useFormContext, useFormExtensions } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
-import { BoundTextEditor } from './BoundTextEditor.tsx';
+import { CollaborativeTextEditor } from './CollaborativeTextEditor.tsx';
 
 export const TextField = ({
   type,
@@ -28,12 +28,16 @@ export const TextField = ({
   autoFocus,
   jsonPath,
   path,
+  collaborative,
   getValue,
   onBlur,
   onValueChange,
   onRevert,
 }: FormFieldRendererProps<string>) => {
   const { object } = useFormContext('TextField');
+  const extensions = useFormExtensions(
+    collaborative && path && jsonPath !== undefined ? { path, jsonPath } : undefined,
+  );
   const value = getValue() ?? '';
   // An action resolves after later renders. Only the newest run of a mounted field that nobody has edited since
   // writes, through the latest callbacks, and only while the value is still the one it started from.
@@ -49,10 +53,12 @@ export const TextField = ({
   if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
-  if (object && path) {
+  if (collaborative && object && path) {
     return (
-      <BoundTextEditor
-        binding={{ object, path }}
+      <CollaborativeTextEditor
+        object={object}
+        path={path}
+        extensions={extensions}
         placeholder={placeholder}
         readonly={!!readonly}
         {...((presentation === 'title' || presentation === 'plain') && { variant: presentation })}

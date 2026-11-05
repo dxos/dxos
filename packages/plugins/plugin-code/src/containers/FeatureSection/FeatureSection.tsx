@@ -41,7 +41,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const { hasAttention } = useAttention(attendableId);
   const attended = !attendableId || hasAttention;
-  const { values, onValuesChanged } = useFeatureValues(subject);
+  const { extensions, onValuesChanged } = useFeatureValues(subject);
   // Read through the object, so a block id set by an import shows without a remount.
   const [snapshot] = useObject(subject);
   const blockId = snapshot && Feature.getBlockId(snapshot);
@@ -81,9 +81,9 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   return (
     <Form.Root
       db={db}
-      object={subject}
       schema={FeatureValues}
-      values={values}
+      values={subject}
+      extensions={extensions}
       fieldOverrides={fieldOverrides}
       onValuesChanged={onValuesChanged}
     >
@@ -137,12 +137,18 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
             </Card.Row>
             {!collapsed && (
               <>
-                {(attended || values.description) && (
+                {(attended || snapshot?.description) && (
                   <Card.Row inert={inert}>
                     <Form.Fields include={['description']} />
                   </Card.Row>
                 )}
-                <RequirementEditor feature={subject} variant='plain' actions={attended} inert={inert} />
+                <RequirementEditor
+                  feature={subject}
+                  extensions={extensions}
+                  variant='plain'
+                  actions={attended}
+                  inert={inert}
+                />
                 {(attended || dependsOn.length > 0) && (
                   <Card.Row
                     leading={<RowIcon icon='ph--arrow-right--regular' />}

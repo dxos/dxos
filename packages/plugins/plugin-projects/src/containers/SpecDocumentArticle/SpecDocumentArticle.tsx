@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Spec from '@dxos/compute/Spec';
+import { useResolveRef } from '@dxos/echo-react';
 import { Editor, useCommentActions, useEditorContext } from '@dxos/react-ui-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -23,7 +24,10 @@ export type SpecDocumentArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
  */
 export const SpecDocumentArticle = ({ role, subject, attendableId }: SpecDocumentArticleProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
-  const extensions = useSpecExtensions(subject, { attendableId, t });
+  // The spec's text, which comments on the document anchor into.
+  const text = useResolveRef(subject.content);
+  const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
+  const extensions = useSpecExtensions(subject, { attendableId, t, binding });
 
   return (
     <Editor.Root>

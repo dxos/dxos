@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Editor, type EditorBinding, useEditorExtensions } from '@dxos/react-ui-editor';
+import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import {
@@ -45,8 +45,13 @@ const singleLine: Extension = [
   Prec.high(keymap.of([{ key: 'Enter', run: (view) => (view.contentDOM.blur(), true) }])),
 ];
 
-export type BoundTextEditorProps = {
-  binding: EditorBinding;
+export type CollaborativeTextEditorProps = {
+  /** The live object holding the string. */
+  object: Obj.Unknown;
+  /** The string's key path in `object`. */
+  path: Doc.KeyPath;
+  /** Added once the editor is bound to the string, such as comments on it. */
+  extensions?: Extension[];
   /** Multi-line markdown, framed like a text area; otherwise one line of plain text, framed like an input. */
   markdown?: boolean;
   /** Multi-line plain text, framed like a text area. */
@@ -60,11 +65,13 @@ export type BoundTextEditorProps = {
 };
 
 /**
- * Edits a string of an ECHO object in place: keystrokes splice the object's text, so concurrent edits merge and
- * cursors into it (comment anchors) survive. Extensions from enclosing `EditorExtensionsProvider`s are added.
+ * Edits a string of an ECHO object as collaborative text: keystrokes splice the object's string, so concurrent edits
+ * merge and cursors into it (comment anchors) survive. The string is read once; later changes arrive through the binding.
  */
-export const BoundTextEditor = ({
-  binding,
+export const CollaborativeTextEditor = ({
+  object,
+  path,
+  extensions: extensionsProp,
   markdown,
   multiline,
   placeholder,
@@ -72,8 +79,7 @@ export const BoundTextEditor = ({
   variant,
   autoFocus,
   testId,
-}: BoundTextEditorProps) => {
-  const { object, path } = binding;
+}: CollaborativeTextEditorProps) => {
   // Callers pass a fresh path array each render; rebinding on its identity would rebuild the editor per keystroke.
   const pathKey = JSON.stringify(path);
   // The editor splices into an existing string. A missing one is created when the field takes focus, not when it is
@@ -91,7 +97,6 @@ export const BoundTextEditor = ({
   }, [readonly, object, pathKey]);
 
   const themeMode = Hooks.useThemeMode();
-  const bindingExtensions = useEditorExtensions(ready ? binding : undefined);
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder, readOnly: readonly, lineWrapping: true }),
@@ -101,11 +106,11 @@ export const BoundTextEditor = ({
         ? [
             createDataExtensions({ id: Obj.getURI(object), text: Doc.createAccessor(object, [...path]) }),
             EditorView.domEventHandlers({ blur: () => setCreated(undefined) }),
-            ...bindingExtensions,
+            extensionsProp ?? [],
           ]
         : EditorView.domEventHandlers({ focus: () => handleFocus() }),
     ],
-    [ready, placeholder, readonly, markdown, multiline, themeMode, object, pathKey, bindingExtensions, handleFocus],
+    [ready, placeholder, readonly, markdown, multiline, themeMode, object, pathKey, extensionsProp, handleFocus],
   );
 
   const inPlace = variant === 'title' || variant === 'plain';

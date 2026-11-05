@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { Suspense, useContext, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useContext, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import type * as Spec from '@dxos/compute/Spec';
@@ -15,7 +15,6 @@ import {
   type EditorToolbarState,
   createEditorController,
   useEditorContext,
-  useEditorExtensions,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -44,12 +43,6 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
     // The live text rather than a snapshot, so an edit does not rebuild the editor; it initializes once the ref resolves.
     const text = useResolveRef(spec.content);
-    // Extensions bound to the spec's text (comments on the spec), from enclosing `EditorExtensionsProvider`s.
-    const binding = useMemo(
-      () => (text ? { object: text, path: ['content'], subject: spec } : undefined),
-      [text, spec],
-    );
-    const bindingExtensions = useEditorExtensions(binding);
     const { parentRef, view } = useTextEditor(() => {
       if (!text) {
         return {};
@@ -68,10 +61,9 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
           ),
           widgetHost({ setWidgets }),
           extensions ?? [],
-          bindingExtensions,
         ],
       };
-    }, [themeMode, spec, text, extensions, bindingExtensions, registry, state]);
+    }, [themeMode, spec, text, extensions, registry, state]);
 
     useEffect(() => setController(createEditorController(view)), [view, setController]);
 
