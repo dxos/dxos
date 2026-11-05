@@ -83,7 +83,7 @@ export const OutlineArticle = ({
   // Comments on the outline anchor into its text.
   const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
   const markdownExtensions = useMarkdownExtensions(outline, binding);
-  // The other peers' carets, on the channel of the outline's editor.
+  // Carets only: the outline's editor binds its text itself, under the same id.
   const identity = useIdentity();
   const space = getSpace(outline);
   const extensions = useMemo(

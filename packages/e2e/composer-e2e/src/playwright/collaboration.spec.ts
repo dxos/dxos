@@ -97,7 +97,7 @@ test.describe('Collaboration tests', () => {
       test.setTimeout(90_000 + reAnnounceWait);
 
       await host.createSpace();
-      // Checked after the document, over the same invitation; its section stays collapsed until then.
+      // Shared by the same invitation; its section stays collapsed, so the guest still lists one object link.
       await host.createObject({ type: 'Project', name: PROJECT_NAME });
       await host.createObject({ type: 'Document' });
 
@@ -128,7 +128,7 @@ test.describe('Collaboration tests', () => {
       await expect(Markdown.getCollaboratorNamesWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
       await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toBeVisible();
 
-      // A project's Notes, between peers already connected.
+      // The peers are connected by now, so the project's Notes need no re-announce wait.
       const openProject = async (app: AppManager) => {
         await app.expandSection('org.dxos.type.project.section');
         await app.getObjectByName(PROJECT_NAME).click({ timeout: 30_000 });

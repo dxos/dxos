@@ -43,7 +43,7 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
     [t('skills.label'), skills],
     [t('context.label'), objects],
   ]);
-  // The other peers' carets in the instructions' text, which is a `Ref<Text>` its editor binds itself.
+  // Carets only: the instructions' `Ref<Text>` editor binds its text itself.
   const presence = useDataExtensions(instructions, { text: false });
 
   return (

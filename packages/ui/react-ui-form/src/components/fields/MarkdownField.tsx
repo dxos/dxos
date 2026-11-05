@@ -77,7 +77,7 @@ export const MarkdownField = ({
     return <Typography.Text>{typeof value === 'string' ? value : ''}</Typography.Text>;
   }
 
-  // A collaborative string is the binding's, which the form's extensions give the editor, and never the form's value.
+  // A collaborative string is edited through the binding in the form's extensions, never through the form's value.
   return (
     <MarkdownEditor
       placeholder={placeholder}

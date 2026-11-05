@@ -28,7 +28,7 @@ export type RequirementEditorExtensions = (field: { path: readonly (string | num
 export type RequirementEditorProps = {
   /** The live feature, whose requirement texts the rows edit in place. */
   feature: Feature.Feature;
-  /** Each row's editor's, by the requirement text's path (the feature form's `extensions`). */
+  /** The feature form's `extensions`, which give each row's editor its binding by the requirement text's path. */
   extensions: RequirementEditorExtensions;
   /** `plain` rows read as text until a row is focused. */
   variant?: 'default' | 'plain';

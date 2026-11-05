@@ -74,7 +74,6 @@ const editable = (field) => field.locator('[contenteditable="true"]');
 const featureDescription = (page) => editable(featureField(page, 'description'));
 const focusedIn = (locator) => locator.evaluate((element) => element.contains(document.activeElement));
 
-/** A caret drawn for another peer in `scope`, labelled with that peer's name. */
 const caretOf = (scope, name) =>
   scope.locator('.cm-collab-selectionCaret', {
     has: scope.page().locator('.cm-collab-selectionName', { hasText: name }),
@@ -88,7 +87,7 @@ const expectCaret = (scope, name, what) =>
 
 const hold = ({ page }) => page.waitForTimeout(HOLD);
 
-/** Expands a navtree row unless it is already open; a row with no children yet keeps its caret disabled. */
+/** A navtree row with no children yet keeps its toggle disabled until they arrive. */
 const expandRow = async (row) => {
   const toggle = row.locator('[data-part="branch-trigger"]').first();
   await toggle.waitFor({ state: 'attached', timeout: TIMEOUT });
@@ -215,7 +214,7 @@ export const steps = [
     name: 'Both peers boot with their own identity and name',
     setup: true,
     run: async ({ peers }) => {
-      // The notice arrives a moment after boot; give it the chance to appear before clearing it.
+      // The notice arrives a moment after boot.
       await peers.alice.page.waitForTimeout(3_000);
       for (const peer of [peers.alice, peers.bob]) {
         await clearChrome(peer);
@@ -327,7 +326,6 @@ export const steps = [
     name: "The project's name and description: each sees the other's caret",
     subtitle: 'plugin-projects QA-10 step 1',
     run: async ({ peers: { alice, bob } }) => {
-      // An unset description is created when its editor takes focus, which rebinds the editor before typing.
       const description = (page) => editable(projectField(page, 'description'));
       await bob.click(description(bob.page));
       await waitFor(() => focusedIn(description(bob.page)), {

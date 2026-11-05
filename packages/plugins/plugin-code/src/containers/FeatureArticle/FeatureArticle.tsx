@@ -49,7 +49,6 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
   SchemaAST.pick(Type.getSchema(Feature.Feature).ast, ['name', 'description', 'status', 'requirements']),
 );
 
-/** The name and description are bound to the feature's strings through the form's extensions. */
 const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   name: { collaborative: true },
   description: { collaborative: true },

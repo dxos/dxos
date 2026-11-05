@@ -58,7 +58,6 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
 
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      // Bound to the feature's strings through the form's extensions.
       name: { presentation: 'title', collaborative: true },
       // A status once picked is never cleared, so the tag offers no "None".
       status: { required: true },

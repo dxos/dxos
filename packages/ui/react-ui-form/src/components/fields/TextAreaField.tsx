@@ -39,7 +39,6 @@ export const TextAreaField = ({
   if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
-  // The string is the binding's, which the form's extensions give the editor.
   if (collaborative) {
     return (
       <InputEditor
