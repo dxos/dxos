@@ -397,7 +397,6 @@ export const ProjectArticle = ({
               db={db}
               schema={HeaderValues}
               values={project}
-              object={subject}
               extensions={extensions}
               fieldOverrides={fieldOverrides}
               onValuesChanged={handleValuesChanged}
@@ -417,7 +416,7 @@ export const ProjectArticle = ({
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.FieldSet label={t('outline.label')}>
+                    <Form.FieldSet label={t('outline.label')} data-testid='projectsPlugin.outline'>
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}

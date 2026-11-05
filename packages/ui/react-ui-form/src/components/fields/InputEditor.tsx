@@ -6,17 +6,10 @@ import { EditorState, type Extension, Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
-import { type Obj } from '@dxos/echo';
-import { type Doc } from '@dxos/echo-doc';
-import { Editor } from '@dxos/react-ui-editor';
+import { Editor, type TextEditorProps } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
-
-import { useCollaborativeText } from '../../hooks/index.ts';
-
-/** A text area's minimum height in lines. */
-const TEXT_AREA_ROWS = 3;
 
 const multilineTheme = EditorView.theme({
   '&': { minHeight: '100%' },
@@ -36,65 +29,53 @@ const singleLine: Extension = [
   Prec.high(keymap.of([{ key: 'Enter', run: (view) => (view.contentDOM.blur(), true) }])),
 ];
 
-export type CollaborativeTextEditorProps = {
-  /** The live object holding the string. */
-  object: Obj.Unknown;
-  /** The string's key path in `object`. */
-  path: Doc.KeyPath;
-  /** Added once the editor is bound to the string, such as comments on it. */
+export type InputEditorProps = {
+  /** Added to the editor's own: a language, a binding to the text it edits, comments on it, the other peers' carets. */
   extensions?: Extension[];
-  /** Multi-line, framed like a text area; otherwise one line, framed like an input. */
-  multiline?: boolean;
+  /** Multi-line, framed like a text area at least this many lines high; unset, one line, framed like an input. */
+  rows?: number;
   placeholder?: string;
   readonly?: boolean;
   /** `title` and `plain` edit in place: no well, and one line until the text grows. */
   variant?: 'default' | 'plain' | 'title';
-  autoFocus?: boolean;
   testId?: string;
-};
+} & Pick<TextEditorProps, 'value' | 'initialValue' | 'autoFocus' | 'onChange'>;
 
-/**
- * Edits a plain-text string of an ECHO object as collaborative text (see `useCollaborativeText`), where a form's text
- * input or text area would otherwise take a value. A markdown string is `MarkdownField`'s.
- */
-export const CollaborativeTextEditor = ({
-  object,
-  path,
+/** A CodeMirror editor framed as a form control, where a text input or text area would be. */
+export const InputEditor = ({
   extensions: extensionsProp,
-  multiline,
+  rows,
   placeholder,
   readonly,
   variant,
-  autoFocus,
   testId,
-}: CollaborativeTextEditorProps) => {
-  const binding = useCollaborativeText({ object, path, extensions: extensionsProp, readonly });
+  onChange,
+  ...props
+}: InputEditorProps) => {
   const themeMode = Hooks.useThemeMode();
+  const multiline = rows !== undefined;
+  // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder, readOnly: readonly, lineWrapping: true }),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ syntaxHighlighting: true, themeMode }),
       multiline ? multilineTheme : singleLine,
-      binding.extensions,
+      extensionsProp ?? [],
     ],
-    [placeholder, readonly, multiline, themeMode, binding.extensions],
+    [placeholder, readonly, multiline, themeMode, extensionsProp],
   );
 
   const inPlace = variant === 'title' || variant === 'plain';
   return (
     // Rows, so the frame grows as the text wraps, which even one line does; a title's frame grows already.
     <Input.Frame
-      rows={multiline && !inPlace ? TEXT_AREA_ROWS : variant === 'title' ? undefined : 1}
+      rows={multiline && !inPlace ? rows : variant === 'title' ? undefined : 1}
       variant={variant}
       disabled={readonly}
       data-testid={testId}
     >
       <Editor.Root>
-        <Editor.View
-          extensions={extensions}
-          initialValue={binding.initialValue}
-          autoFocus={autoFocus || binding.autoFocus}
-        />
+        <Editor.View {...props} extensions={extensions} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
     </Input.Frame>
   );

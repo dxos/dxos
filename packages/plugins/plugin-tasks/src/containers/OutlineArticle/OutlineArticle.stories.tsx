@@ -17,10 +17,10 @@ import { toCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList } from '@dxos/react-ui-task';
@@ -212,12 +212,16 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     // The article reads `MarkdownCapabilities.ExtensionProvider` for its editor's contributed
     // extensions, which needs a plugin manager; nothing here contributes any, which is the point —
-    // the outline builds the same editor with an empty list.
-    withPluginManager({ plugins: CorePlugins.make() }),
-    withClientProvider({
-      createIdentity: true,
-      createSpace: true,
-      types: [Text.Text, Outline.Outline, Task.Task, TaskSet.TaskSet],
+    // the outline builds the same editor with an empty list. The client plugin provides the identity
+    // the editor's awareness reads.
+    withPluginManager({
+      plugins: [
+        ...CorePlugins.make(),
+        ClientPlugin.make({
+          types: [Text.Text, Outline.Outline, Task.Task, TaskSet.TaskSet],
+          onClientInitialized: ({ client }) => initializeIdentity(client).pipe(Effect.asVoid),
+        }),
+      ],
     }),
   ],
   parameters: {

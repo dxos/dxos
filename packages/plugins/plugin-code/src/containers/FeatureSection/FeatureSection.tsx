@@ -58,12 +58,13 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
 
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      name: { presentation: 'title' },
+      name: { presentation: 'title', collaborative: true },
       // A status once picked is never cleared, so the tag offers no "None".
       status: { required: true },
       // The schema's guidance wraps at a section's width; the placeholder is one line.
       description: {
         presentation: 'plain',
+        collaborative: true,
         hideLabel: true,
         placeholder: t('feature-section.description.placeholder'),
       },
@@ -84,7 +85,6 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
       db={db}
       schema={FeatureValues}
       values={snapshot}
-      object={subject}
       extensions={extensions}
       fieldOverrides={fieldOverrides}
       onValuesChanged={onValuesChanged}

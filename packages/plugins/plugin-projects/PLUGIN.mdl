@@ -63,6 +63,8 @@ feat F-4: A project's specs
   req F-4.12: A spec's text draws object links and embeds as a Markdown document does, and takes the editor extensions
               other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
               packages add their own editing on top.
+  req F-4.13: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
+              each with the peer's name.
 ```
 
 ```mdl
@@ -88,6 +90,8 @@ feat F-5: A project's overview
              plugin's own. Groups with the same id merge, their fields sorted by each field's order, and a field
              whose `enabled` atom is false is hidden. A field may carry an action, a button at the end of its control
              that sets its value.
+  req F-5.9: The project's name and description, the overview's Notes and the agent's instructions show the carets of
+             the other peers editing them, each with the peer's name.
 ```
 
 ## QA
@@ -331,6 +335,68 @@ test QA-5: Showcase clip
     - name: Send it to the agent
       do: Tick the first task and click Send to agent.
       expect: the Gantt panel opens
+```
+
+```mdl
+test QA-9: Two peers edit a project's notes
+  desc: |
+    Two peers already sharing a space open the same project, and each sees the other's caret in the overview's Notes,
+    with the other's name. Automated at the end of the document-caret test, which shares its invitation and covers
+    the late joiner.
+  actors: human
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
+  given:
+    - host: a booted app with an identity, a space shared with the guest, and a project "Launch plan" in it
+    - guest: a second browser profile with its own identity, joined to the host's space
+  steps:
+    - name: Open the project on the host
+      do: Open "Launch plan" on the host.
+      expect: the host shows the project's Notes
+    - name: Open the project on the guest
+      do: Open "Launch plan" on the guest.
+      expect: the guest shows the project's Notes
+    - name: Focus the notes on the host
+      do: Put the cursor in the host's Notes.
+      expect: the guest's Notes shows the host's caret with the host's name
+    - name: Focus the notes on the guest
+      do: Put the cursor in the guest's Notes.
+      expect: the host's Notes shows the guest's caret with the guest's name
+```
+
+```mdl
+test QA-10: Two peers see each other's carets in every project editor
+  desc: |
+    Alice and Bob share a project and each sees the other's named caret in the project's name and description, the
+    overview's Notes, the agent's instructions, the spec's prose, and a feature's name, description and requirement
+    inside the spec. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/project-cursors.mjs`,
+    recorded side by side.
+  actors: human
+  status: passing            # 2026-11-05, recorded by autocue/project-cursors.mjs
+  given:
+    - alice: a booted app named "Alice", with plugin-code on and a space holding a "Launch plan" project whose spec has
+      prose and one feature, "Landing page", with a description and one requirement
+    - bob: a second browser profile named "Bob", with plugin-code on, joined to Alice's space with "Launch plan" open
+  steps:
+    - name: Project name and description
+      do: Bob types in the project's description, then Alice puts her cursor at the end of its name.
+      expect: Alice's description shows Bob's caret and Bob's name shows Alice's, each with that peer's name
+    - name: Notes
+      do: Alice types in the overview's Notes, then Bob puts his cursor there.
+      expect: each Notes shows the other peer's caret with that peer's name
+    - name: Agent instructions
+      do: Both open Config > Agent; Bob types in the instructions, then Alice puts her cursor there.
+      expect: each instructions editor shows the other peer's caret with that peer's name
+    - name: Spec prose
+      do: Both open the Specs tab; Alice puts her cursor at the end of the prose, then Bob types after it.
+      expect: each spec shows the other peer's caret with that peer's name
+    - name: Feature name and description
+      do: Bob puts his cursor at the end of "Landing page"'s name, then Alice types at the end of its description.
+      expect: Alice's feature name shows Bob's caret and Bob's description shows Alice's, each with that peer's name
+    - name: Feature requirement
+      do: Alice types at the end of the feature's requirement, then Bob puts his cursor there.
+      expect: each requirement row shows the other peer's caret with that peer's name
 ```
 
 ## Changelog
@@ -2066,4 +2132,84 @@ decision D-200: The overview's empty Notes, Artifacts and Specs sections say wha
   date: 2026-11-05
   by: user:wittjosiah
   affects: [F-5.8]
+```
+
+```mdl
+decision D-201: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-4.13, F-5.9]
+```
+
+```mdl
+decision D-202: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-201].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.13, F-5.9]
+  why: These are the CodeMirror editors a project's views mount over shared text. A task's description is left out because it commits through `UpdateTask` on blur to write the task's history, which editing in place would bypass.
+  rejected:
+    - Turning the project's description into a markdown editor so it carries carets, which changes how the field looks and behaves.
+```
+
+```mdl
+decision D-203: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-201].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-9, F-5.9]
+  why: Notes is on the Overview of a project just made from the Default template, so the test needs no setup beyond creating it, and the late joiner is the case that failed before the awareness fix.
+```
+
+```mdl
+decision D-204: QA-10 walks two peers through every editor with carets ([D-202]) in one take, recorded side by side by an autocue flow. Fills in [D-201].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-10, F-5.9]
+  why: QA-9 automates the Notes alone; the instructions, the spec's prose and a feature's description need a spec with the Software package, so they are covered by a recorded walkthrough rather than another e2e test.
+```
+
+```mdl
+decision D-205: Every collaborative text field in a project that takes comments also shows the other peers' carets.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-4.13, F-5.9]
+```
+
+```mdl
+decision D-206: The editors with carets are the project's name and description, a spec's text in either of its views, the feature sections embedded in it (the feature's name, description and requirement rows), the overview's Notes and the agent's instructions. Each collaborative string is its own awareness channel, and a spec's two views share one. Fills in [D-201] and [D-205].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-202
+  affects: [F-4.13, F-5.9]
+  why: These are the fields comments anchor into, plus the instructions, which already had carets. The project's name and description and a feature's fields are now collaborative strings edited in place, so they take the carets through the same binding. A spec's name and description, which the overview's Specs rows edit, are plain fields that take no comments, so they show no carets.
+```
+
+```mdl
+decision D-207: QA-10 walks two peers through every editor with carets ([D-206]) in one take, adding the project's name and description and a feature's name and requirement to its steps. The two feature fields are split across peers so each field's caret shows only in that field. Fills in [D-205].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-204
+  affects: [QA-10, F-4.13, F-5.9]
+  why: A recorded walkthrough already covers the editors that need a spec with the Software package; the new caret sites sit in the same views, so they join the same take rather than a separate test.
+```
+
+```mdl
+decision D-208: QA-9 is automated inside the document-caret collaboration test, over its invitation, rather than by a test with an invitation of its own.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-9]
+```
+
+```mdl
+decision D-209: QA-9 starts once the peers share the space and both have checked the document: the host makes the project with the document, before the invitation, and each peer then opens it. The late joiner stays the document's to check. Fills in [D-208].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-203
+  affects: [QA-9]
+  why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
 ```

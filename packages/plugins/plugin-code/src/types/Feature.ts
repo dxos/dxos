@@ -12,7 +12,6 @@ import { Annotation, DXN, Format, Obj, Ref, Relation, Text, Type } from '@dxos/e
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/keys';
 import { Task } from '@dxos/types';
-import { CollaborativeAnnotationId } from '@dxos/ui-types';
 
 //
 // Status
@@ -90,7 +89,6 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
       Schema.annotate({
         title: 'Name',
         description: 'A noun phrase of two to five words.',
-        [CollaborativeAnnotationId]: true,
       }),
     ),
 
@@ -101,7 +99,6 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
           title: 'Description',
           description:
             'One or two short sentences: the ideal, what the feature does when complete, in the present tense. Not its current state.',
-          [CollaborativeAnnotationId]: true,
         }),
       ),
     ),

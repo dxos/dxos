@@ -365,7 +365,7 @@ export const EmptyRequirementRemoved: Story = {
   },
 };
 
-/** Viewing a feature without a description writes nothing; focusing the field creates it, and typing fills it. */
+/** Viewing a feature without a description writes nothing, nor does focusing the field; the first edit creates it. */
 export const ViewWritesNothing: Story = {
   render: DescriptionProbeStory,
   args: { name: 'IMAP' },
@@ -374,6 +374,8 @@ export const ViewWritesNothing: Story = {
     const description = await canvas.findByTestId('description', undefined, { timeout: 10_000 });
     await expect(canvas.getByTestId('probe.description')).toHaveTextContent('undefined');
     await userEvent.click(queryElement(description, '.cm-content'));
+    await waitFor(() => expect(description.contains(document.activeElement)).toBe(true));
+    await expect(canvas.getByTestId('probe.description')).toHaveTextContent('undefined');
     await userEvent.keyboard('Polls');
     await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
     await waitFor(() => expect(description).toHaveTextContent('Polls'));
@@ -418,7 +420,7 @@ export const MultiLineRequirementEditable: Story = {
   },
 };
 
-/** A field created by focusing it does not take the focus back when a theme change rebuilds it. */
+/** A field created by its first edit does not take the focus back when a theme change rebuilds it. */
 export const RebuildKeepsFocus: Story = {
   render: ThemeToggleStory,
   args: { name: 'IMAP' },
@@ -427,6 +429,7 @@ export const RebuildKeepsFocus: Story = {
     const name = await canvas.findByTestId('name', undefined, { timeout: 10_000 });
     const description = canvas.getByTestId('description');
     await userEvent.click(queryElement(description, '.cm-content'));
+    await userEvent.keyboard('P');
     await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
     await waitFor(() => expect(description.contains(document.activeElement)).toBe(true));
     await userEvent.click(queryElement(name, '.cm-content'));

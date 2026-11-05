@@ -12,7 +12,6 @@ import { type AnyProperties, PropertyMetaAnnotationId } from '@dxos/echo/interna
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { CollaborativeAnnotationId } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -147,7 +146,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     description,
     jsonPath,
     path,
-    collaborative: override?.collaborative ?? SchemaEx.getAnnotation<boolean>(CollaborativeAnnotationId)(type) ?? false,
+    collaborative: override?.collaborative ?? false,
     // An indeterminate value reads as none, so its placeholder says why rather than naming the field.
     placeholder: indeterminate
       ? (override?.placeholder ?? t('indeterminate.placeholder'))

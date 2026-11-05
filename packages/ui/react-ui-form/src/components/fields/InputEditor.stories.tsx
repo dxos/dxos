@@ -3,10 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter, Obj } from '@dxos/echo';
+import { Doc } from '@dxos/echo-doc';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -14,8 +15,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { withTheme } from '@dxos/react-ui/testing';
 import * as Typography from '@dxos/react-ui/Typography';
 import { Person } from '@dxos/types';
+import { createDataExtensions } from '@dxos/ui-editor';
 
-import { CollaborativeTextEditor } from './CollaborativeTextEditor.tsx';
+import { InputEditor } from './InputEditor.tsx';
 
 type StoryArgs = { multiline?: boolean };
 
@@ -24,16 +26,21 @@ const DefaultStory = ({ multiline }: StoryArgs) => {
   const { space } = useClientStory();
   const [person] = useQuery(space?.db, Filter.type(Person.Person));
   const [fullName] = useObject(person, 'fullName');
+  const extensions = useMemo(
+    () =>
+      person ? [createDataExtensions({ id: Obj.getURI(person), text: Doc.createAccessor(person, ['fullName']) })] : [],
+    [person],
+  );
   return (
     <Layout.Container>
-      {person && <CollaborativeTextEditor object={person} path={['fullName']} multiline={multiline} testId='editor' />}
+      {person && <InputEditor extensions={extensions} rows={multiline ? 3 : undefined} testId='editor' />}
       <Typography.Text data-testid='stored'>{fullName}</Typography.Text>
     </Layout.Container>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-form/CollaborativeTextEditor',
+  title: 'ui/react-ui-form/InputEditor',
   render: DefaultStory,
   decorators: [
     withTheme(),
