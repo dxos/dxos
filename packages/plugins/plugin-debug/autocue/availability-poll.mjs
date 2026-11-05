@@ -4,7 +4,7 @@
 
 /**
  * Availability Poll: the development loop at the spec and feature level. The template holds a finished spec staged as
- * three milestones, its feature map and design docs, and no tasks. Ask the project's chat to plan a milestone from
+ * four milestones, its feature map and design docs, and no tasks. Ask the project's chat to plan a milestone from
  * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype as each task runs
  * its feature in the sandbox, Operational once the milestone's scenario passes there and the Worker is deployed. A
  * person accepts the reviewed tasks. Then change a requirement on its card and watch the feature fail, get fixed and
@@ -498,7 +498,7 @@ export const steps = [
   {
     name: 'Open the feature map',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'A finished spec: six features, all planned', subtitle: 'And no tasks yet' });
+      await demo.caption({ value: 'A finished spec: every feature planned', subtitle: 'And no tasks yet' });
       await openProjectTab(demo, page, 'tasks');
       await page.waitForTimeout(BEAT);
       await openProjectTab(demo, page, 'features');
@@ -587,7 +587,7 @@ export const steps = [
     name: 'Plan and delegate M-2',
     done: async ({ page }) => tasksOf(await snapshot(page), M2.id).some((task) => task.assigned),
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Next: time zones and daylight-saving time' });
+      await demo.caption({ value: 'Next: lay out both pages' });
       await ask(demo, page, planPrompt(M2.id));
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
