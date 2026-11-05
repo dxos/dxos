@@ -425,15 +425,14 @@ export const WithSpec: Story = {
   },
 };
 
-/** Each tab's tools follow the tabs: Create artifact on the Overview, the agent and the chart on the Tasks tab. */
+/** Each tab's tools follow the tabs: the agent and the chart on Tasks; the Overview adds artifacts in their section. */
 export const ToolbarByTab: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    await expect(
-      canvas.findByTestId('projectsPlugin.addArtifact', undefined, { timeout: 10_000 }),
-    ).resolves.toBeTruthy();
+    const artifacts = await canvas.findByTestId('projectsPlugin.artifacts', undefined, { timeout: 10_000 });
+    await expect(within(artifacts).getByTestId('projectsPlugin.addArtifact')).toBeTruthy();
     await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
     await expect(canvas.queryByTestId('projectsPlugin.createChat')).toBeNull();
 
