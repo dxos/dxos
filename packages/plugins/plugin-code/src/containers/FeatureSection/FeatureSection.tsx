@@ -41,7 +41,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const { hasAttention } = useAttention(attendableId);
   const attended = !attendableId || hasAttention;
-  const { values, collaboration, onValuesChanged } = useFeatureValues(subject);
+  const { collaboration, extensions, onValuesChanged } = useFeatureValues(subject);
   // Read through the object, so a block id set by an import shows without a remount.
   const [snapshot] = useObject(subject);
   const blockId = snapshot && Feature.getBlockId(snapshot);
@@ -52,7 +52,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   const editing = useFeatureEditing(db);
   const [collapsed, setCollapsed] = useCollapsed(subject.id);
   const options = useDependencyOptions(db, subject.id, dependsOn, graph.lookup, attended);
-  const requirements = values.requirements ?? [];
+  const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
   const inert = attended ? undefined : true;
 
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
@@ -82,7 +82,9 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
     <Form.Root
       db={db}
       schema={FeatureValues}
-      values={values}
+      values={snapshot}
+      object={subject}
+      extensions={extensions}
       fieldOverrides={fieldOverrides}
       collaboration={collaboration}
       onValuesChanged={onValuesChanged}
@@ -137,17 +139,18 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
             </Card.Row>
             {!collapsed && (
               <>
-                {(attended || values.description) && (
+                {(attended || snapshot?.description) && (
                   <Card.Row inert={inert}>
                     <Form.Fields include={['description']} />
                   </Card.Row>
                 )}
                 <RequirementEditor
-                  requirements={requirements}
+                  feature={subject}
+                  extensions={extensions}
+                  presence={collaboration}
                   variant='plain'
                   actions={attended}
                   inert={inert}
-                  onChange={(requirements) => onValuesChanged({ ...values, requirements })}
                 />
                 {(attended || dependsOn.length > 0) && (
                   <Card.Row

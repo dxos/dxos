@@ -13,7 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { Task } from '@dxos/types';
+import { Task, Thread } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 /**
@@ -240,4 +240,22 @@ export const ArtifactList = Operation.make({
     artifacts: Schema.Array(ArtifactInfo),
   }),
   services: [Database.Service],
+}).pipe(Operation.mutation('none'));
+
+/**
+ * Reveals a comment thread's span in whichever open editor shows it, such as a feature's field or a spec's text; the
+ * comments companion invokes it on a click.
+ */
+export const ScrollToAnchor = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.scrollToAnchor'),
+    name: 'Scroll to anchor',
+    icon: 'ph--anchor-simple--regular',
+  },
+  input: Schema.Struct({
+    subject: Schema.String.annotate({ description: 'Attendable id of the commented object.' }),
+    cursor: Schema.String.annotate({ description: 'The anchor to reveal.' }),
+    id: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
+  }),
+  output: Schema.Void,
 }).pipe(Operation.mutation('none'));

@@ -51,7 +51,7 @@ import { type Milestone, Task, type TaskSet } from '@dxos/types';
 import { ObjectGallery, ProjectPipeline } from '#components';
 import { ProjectCapabilities, ProjectOperation, ProjectSurface, ProjectView } from '#types';
 
-import { useProjectSpecs, useRefTargets, useSelectedSpec } from '../../hooks/index.ts';
+import { useFieldExtensions, useProjectSpecs, useRefTargets, useSelectedSpec } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
 import * as ProjectGraph from '../../ProjectGraph.ts';
@@ -289,23 +289,14 @@ export const ProjectArticle = ({
     [invokePromise, db, subject.id, attendableId],
   );
 
-  // Controlled, so the form shows what changes elsewhere, such as a spec added from the Specs tab.
-  const values = useMemo<Partial<HeaderValues>>(
-    () => ({
-      name: project.name,
-      status: project.status,
-      description: project.description,
-      specs: project.specs,
-    }),
-    [project],
-  );
+  const extensions = useFieldExtensions(subject);
   const handleCreate = useCreateObject(db);
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      name: { presentation: 'title', placeholder: t('untitled-project.label') },
+      name: { presentation: 'title', placeholder: t('untitled-project.label'), collaborative: true },
       // A status once picked is never cleared, so the pill offers no "None".
       status: { required: true },
-      description: { presentation: 'plain', placeholder: t('project-description.placeholder') },
+      description: { presentation: 'plain', placeholder: t('project-description.placeholder'), collaborative: true },
       specs: { presentation: 'section', label: t('specs.label') },
     }),
     [t],
@@ -356,7 +347,8 @@ export const ProjectArticle = ({
     });
   }, [db, subject, attendableId, invokePromise, updateProject]);
 
-  // Only the edited path is written, so typing a name does not rewrite the specs.
+  // Only the edited paths are written, so changing the status does not rewrite the specs. The name and description are
+  // collaborative, so their edits reach the project directly and never arrive here.
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>, { changed }: FormUpdateMeta<HeaderValues>) => {
       const paths = Object.keys(changed)
@@ -364,7 +356,10 @@ export const ProjectArticle = ({
         .filter((path) => changed[path]);
       updateProject((project) => {
         for (const path of paths) {
-          Obj.setValue(project, SchemaEx.splitJsonPath(path), SchemaEx.getValue(values, path));
+          const value = SchemaEx.getValue(values, path);
+          if (value !== Obj.getValue(project, SchemaEx.splitJsonPath(path))) {
+            Obj.setValue(project, SchemaEx.splitJsonPath(path), value);
+          }
         }
       });
     },
@@ -402,7 +397,9 @@ export const ProjectArticle = ({
             <Form.Root
               db={db}
               schema={HeaderValues}
-              values={values}
+              values={project}
+              object={subject}
+              extensions={extensions}
               fieldOverrides={fieldOverrides}
               onValuesChanged={handleValuesChanged}
               onCreate={handleCreate}

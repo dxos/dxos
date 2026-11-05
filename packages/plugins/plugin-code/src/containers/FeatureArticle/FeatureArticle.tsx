@@ -29,10 +29,11 @@ import {
   FeatureCard,
   type FeatureTarget,
   RequirementEditor,
+  type RequirementEditorExtensions,
   getDependents,
 } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useFieldExtensions, useOpenFeatureTarget } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
@@ -45,63 +46,49 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 );
 
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
-const RequirementsField: FormFieldRenderer = ({ type, label, getValue, onValueChange }) => (
-  <Form.Field label={label} standalone>
-    <Card.Root grid border={false}>
-      <RequirementEditor
-        requirements={getValue() ?? []}
-        onChange={(requirements) => onValueChange(type, requirements)}
-      />
-    </Card.Root>
-  </Form.Field>
-);
-
-export const FEATURE_FIELD_MAP: FormFieldMap = { requirements: RequirementsField };
+const makeFieldMap = (
+  feature: Feature.Feature,
+  extensions: RequirementEditorExtensions,
+  collaboration: FormCollaboration,
+): FormFieldMap => {
+  const RequirementsField: FormFieldRenderer = ({ label }) => (
+    <Form.Field label={label} standalone>
+      <Card.Root grid border={false}>
+        <RequirementEditor feature={feature} extensions={extensions} presence={collaboration} />
+      </Card.Root>
+    </Form.Field>
+  );
+  return { requirements: RequirementsField };
+};
 
 /**
- * The form values of a feature, bound to the live object so an edit elsewhere reaches an open form; its description is
- * edited in place, with the other peers' carets.
+ * A feature's form: name, description and requirements edit the live feature in place, with the other peers' carets;
+ * only the status comes back.
  */
 export const useFeatureValues = (subject: Feature.Feature) => {
-  const [snapshot, updateFeature] = useObject(subject);
+  const [values, updateFeature] = useObject(subject);
+  const extensions = useFieldExtensions(subject);
   const identity = useIdentity();
   const space = getSpace(subject);
-  const collaboration = useMemo<FormCollaboration>(
-    () => ({ subject, messenger: space, identity }),
-    [subject, space, identity],
-  );
-  const values = useMemo<Partial<FeatureValues>>(
-    () => ({
-      name: snapshot?.name,
-      description: snapshot?.description,
-      status: snapshot?.status,
-      requirements: snapshot?.requirements,
-    }),
-    [snapshot],
+  const collaboration = useMemo<FormCollaboration>(() => ({ messenger: space, identity }), [space, identity]);
+  const fieldMap = useMemo(
+    () => makeFieldMap(subject, extensions, collaboration),
+    [subject, extensions, collaboration],
   );
 
   const onValuesChanged = useCallback(
-    (values: Partial<FeatureValues>) =>
-      updateFeature((feature) => {
-        if (values.name !== undefined) {
-          feature.name = values.name;
-        }
-        // Reassigning the same string would replace the text the description's editor is bound to.
-        if (values.description !== feature.description) {
-          feature.description = values.description;
-        }
-        if (values.status !== undefined) {
-          feature.status = values.status;
-        }
-        const requirements = values.requirements?.map((requirement) => ({ ...requirement }));
-        const blockId = Feature.getBlockId(subject);
-        feature.requirements =
-          requirements && blockId ? Feature.numberRequirements(blockId, requirements) : requirements;
-      }),
+    (values: Partial<FeatureValues>) => {
+      const { status } = values;
+      if (status !== undefined && status !== subject.status) {
+        updateFeature((feature) => {
+          feature.status = status;
+        });
+      }
+    },
     [subject, updateFeature],
   );
 
-  return { values, collaboration, onValuesChanged, updateFeature };
+  return { collaboration, extensions, fieldMap, onValuesChanged, updateFeature, values };
 };
 
 export type FeatureDetailProps = {
@@ -118,7 +105,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { values, collaboration, onValuesChanged, updateFeature } = useFeatureValues(subject);
+  const { collaboration, extensions, fieldMap, onValuesChanged, updateFeature, values } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -180,7 +167,9 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
       db={db}
       schema={FeatureValues}
       values={values}
-      fieldMap={FEATURE_FIELD_MAP}
+      object={subject}
+      extensions={extensions}
+      fieldMap={fieldMap}
       collaboration={collaboration}
       onValuesChanged={onValuesChanged}
     >

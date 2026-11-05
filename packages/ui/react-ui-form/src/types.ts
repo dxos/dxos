@@ -61,6 +61,8 @@ export type FormFieldOverride = {
   onOpenChange?: (open: boolean) => void;
   /** A button at the end of a text control that sets its value. */
   action?: FormFieldAction;
+  /** Edits the string as collaborative text (see `CollaborativeAnnotation`), for this use of the form. */
+  collaborative?: boolean;
 };
 
 export type FormFieldAction = {
@@ -119,6 +121,10 @@ export type FormFieldRendererProps<T = any> = {
    * Dotted JSON path of this field within the form values (e.g. `runtime.client.storage.persistent`).
    */
   jsonPath?: string;
+  /** Key path of this field within the form values. */
+  path?: readonly (string | number)[];
+  /** Bound to the form's live object's string rather than handing back values (see `CollaborativeAnnotation`). */
+  collaborative?: boolean;
   placeholder?: string;
   /** The field's glyph (see `FormFieldOverride.icon`). */
   icon?: string;
@@ -237,13 +243,8 @@ export type RefFieldDataProps = {
   resolveCreateEntry?: (typename: string) => CreateEntryOverride | undefined;
 };
 
-/**
- * Live editing for a form's markdown fields: each shows the other peers' carets. A string field edits `subject` in place
- * at its own path, so `subject` must be the live object the form's values mirror.
- */
-export type FormCollaboration = DataExtensionsPresence & {
-  subject?: Obj.Unknown;
-};
+/** The space and identity with which a form's in-place editors show the other peers' carets. */
+export type FormCollaboration = DataExtensionsPresence;
 
 /**
  * Form-wide field options carried by the form context and threaded down to every field. The

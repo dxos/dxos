@@ -38,7 +38,7 @@ export const useChatExtensions = ({
         createThemeExtensions({ themeMode, syntaxHighlighting: markdown }),
         createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
         xmlFormatting(),
-        markdown && [createMarkdownExtensions(), decorateMarkdown(), formattingKeymap()],
+        markdown && [createMarkdownExtensions({ fixedHeight: true }), decorateMarkdown(), formattingKeymap()],
         // Caller extensions (e.g. `commands()`'s completion-aware Enter binding) must precede
         // `submit()`: both bind Enter at `Prec.highest`, and CodeMirror breaks precedence ties by
         // extension order, so listing `submit()` first would always win and swallow the keystroke.

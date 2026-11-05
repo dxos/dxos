@@ -12,11 +12,14 @@ import { DXN, Format, Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { type DataExtensionsPresence } from '@dxos/ui-editor';
 
+import { CollaborativeAnnotation } from '../../annotations.ts';
 import { Form } from '../Form.tsx';
 import { type FormRootProps } from '../FormRoot.tsx';
 
 const Values = Schema.Struct({
-  description: Schema.optional(Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))),
+  description: Schema.optional(
+    Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown), CollaborativeAnnotation.set(true)),
+  ),
 });
 
 type Values = Schema.Schema.Type<typeof Values>;
@@ -53,10 +56,10 @@ const createMessenger = (): { messenger: NonNullable<DataExtensionsPresence['mes
 describe('MarkdownField', () => {
   afterEach(() => cleanup());
 
-  test('a string field edits the collaboration subject in place', async ({ expect }) => {
+  test("a collaborative string field edits the form's object in place", async ({ expect }) => {
     const item = Obj.make(Item, { description: 'Hello' });
     const onValuesChanged = vi.fn();
-    const getView = renderForm({ description: 'Hello' }, { collaboration: { subject: item }, onValuesChanged });
+    const getView = renderForm({ description: 'Hello' }, { object: item, onValuesChanged });
     await waitFor(() => expect(getView()?.state.doc.toString()).toBe('Hello'));
 
     const view = getView()!;
@@ -73,9 +76,9 @@ describe('MarkdownField', () => {
     const { messenger, channels } = createMessenger();
     renderForm(
       { description: '' },
-      { collaboration: { subject: item, messenger, identity: { identityKey: '0123abcd', displayName: 'Peer' } } },
+      { object: item, collaboration: { messenger, identity: { identityKey: '0123abcd', displayName: 'Peer' } } },
     );
 
-    await waitFor(() => expect(channels).toContain(`awareness.${item.id}.description`));
+    await waitFor(() => expect(channels).toContain(`awareness.${Obj.getURI(item)}.description`));
   });
 });

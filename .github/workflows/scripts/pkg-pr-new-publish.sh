@@ -31,6 +31,22 @@ fi
 read -ra PKG_ARRAY <<< "$PUBLIC_PACKAGES"
 echo "Found ${#PKG_ARRAY[@]} public packages to publish"
 
+# Private packages dxos/edge installs from pkg.pr.new before they have an npm trusted publisher. pkg-pr-new skips a
+# package marked private, so the flag is dropped in this job's throwaway checkout only; `changeset publish` and the npm
+# preflight still read it from the committed package.json and skip them.
+PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare)
+for directory in "${PKG_PR_NEW_ONLY[@]}"; do
+  node -e "
+    const fs = require('fs');
+    const file = process.argv[1] + '/package.json';
+    const manifest = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    delete manifest.private;
+    fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + '\\n');
+  " "$directory"
+  PKG_ARRAY+=("$directory")
+done
+echo "Added ${#PKG_PR_NEW_ONLY[@]} private packages published to pkg.pr.new only"
+
 # `@dxos/cli` publishes generated packages — a launcher plus one prebuilt binary per platform, written
 # to dist/ by `cli:bundle` — rather than its own source directory, which is private and has no binary.
 # They are not workspace members, so the pnpm listing above can never see them.

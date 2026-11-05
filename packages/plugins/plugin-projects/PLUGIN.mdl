@@ -2143,3 +2143,13 @@ decision D-202: QA-10 walks two peers through every editor with carets ([D-200])
   affects: [QA-10, F-5.8]
   why: QA-9 automates the Notes alone; the instructions, the spec's prose and a feature's description need a spec with the Software package, so they are covered by a recorded walkthrough rather than another e2e test.
 ```
+
+```mdl
+decision D-203: The editors with carets are a spec's text, the feature sections embedded in it (the feature's name, description and requirement rows), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-199].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-200
+  affects: [F-4.13, F-5.8]
+  why: A feature's form now edits its name, description and requirements in place as collaborative text, each in a CodeMirror editor over the feature's own strings, so all three take the carets the same way and each string gets its own awareness channel.
+```
