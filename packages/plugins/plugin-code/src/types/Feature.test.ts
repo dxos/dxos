@@ -261,7 +261,7 @@ describe('Feature', () => {
     );
     // Another writer added a record without ordering it.
     Obj.update(feature, (feature) => {
-      feature.requirements!.k9 = { text: 'Sync stops when offline.' };
+      (feature.requirements ??= {}).k9 = { text: 'Sync stops when offline.' };
     });
     const texts = () => Feature.getRequirements(feature).map(({ text }) => text);
     expect(texts()).toEqual(['New mail shows within a minute.', 'Sync stops when offline.']);

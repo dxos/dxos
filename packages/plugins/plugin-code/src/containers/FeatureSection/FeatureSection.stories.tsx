@@ -10,8 +10,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
+import { FeatureEditingPlugin, FeatureSeed, queryElement } from '@dxos/plugin-code/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -97,12 +98,13 @@ const setCollapsed = async (canvasElement: HTMLElement, collapsed: boolean) => {
  */
 const expectRequirementLayout = async (canvasElement: HTMLElement) => {
   for (const frame of within(canvasElement).getAllByTestId(/^requirement-editor\.\d+\.text$/)) {
-    const editor = frame.querySelector<HTMLElement>('.cm-editor')!;
+    const editor = queryElement(frame, '.cm-editor');
     await expect(frame.getBoundingClientRect().bottom).toBeGreaterThanOrEqual(editor.getBoundingClientRect().bottom);
-    const line = editor.querySelector<HTMLElement>('.cm-line')!;
+    const line = queryElement(editor, '.cm-line');
     const lineCentre = line.getBoundingClientRect().top + parseFloat(getComputedStyle(line).lineHeight) / 2;
-    const row = frame.closest<HTMLElement>('.dx-card-row')!;
-    for (const element of [row.querySelector('.dx-icon')!, within(row).getByText(/^F-\d+\.\d+$/)]) {
+    const row = frame.closest<HTMLElement>('.dx-card-row');
+    invariant(row, 'Missing requirement row.');
+    for (const element of [queryElement(row, '.dx-icon'), within(row).getByText(/^F-\d+\.\d+$/)]) {
       const { top, height } = element.getBoundingClientRect();
       await expect(Math.abs(top + height / 2 - lineCentre)).toBeLessThanOrEqual(2);
     }
@@ -149,8 +151,8 @@ export const Wrapped: Story = {
     await setCollapsed(canvasElement, false);
     const canvas = within(canvasElement);
     const frame = await canvas.findByTestId('requirement-editor.0.text', undefined, { timeout: 10_000 });
-    const editor = frame.querySelector<HTMLElement>('.cm-editor')!;
-    const lineHeight = parseFloat(getComputedStyle(editor.querySelector('.cm-line')!).lineHeight);
+    const editor = queryElement(frame, '.cm-editor');
+    const lineHeight = parseFloat(getComputedStyle(queryElement(editor, '.cm-line')).lineHeight);
     await waitFor(() => expect(editor.offsetHeight).toBeGreaterThan(lineHeight * 1.5));
     await expectRequirementLayout(canvasElement);
   },

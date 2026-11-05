@@ -18,7 +18,7 @@ import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
+import { FeatureEditingPlugin, FeatureSeed, queryElement } from '@dxos/plugin-code/testing';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
@@ -183,7 +183,7 @@ export const Default: Story = {
     const name = await within(first).findByTestId('name');
     await waitFor(() => expect(name.closest('[inert]')).toBeNull(), { timeout: 5_000 });
     const original = feature.name;
-    const content = name.querySelector<HTMLElement>('.cm-content')!;
+    const content = queryElement(name, '.cm-content');
     await userEvent.click(content);
     await userEvent.type(content, '{End} 2');
     await waitFor(() => expect(feature.name).toBe(`${original} 2`), { timeout: 5_000 });
