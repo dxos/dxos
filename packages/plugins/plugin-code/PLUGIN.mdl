@@ -2210,6 +2210,42 @@ decision D-76: Each status in the filter is a filled toggle-group button with th
   rejected: A custom segmented control joining the buttons.
 ```
 
+```mdl
+decision D-77: A spec lists its reviews in an annotation, `org.dxos.projects.reviews`, as it lists its features, so the spec holds a ref to each review it owns. Fills in [D-72].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: A parent edge needs a ref from the parent to the child; without one, every new review logged a warning and could be reached only by query.
+  rejected: Dropping the parent edge, which would leave a deleted spec's reviews behind.
+```
+
+```mdl
+decision D-78: A review's `date` may carry a UTC time, `YYYY-MM-DDTHH:MMZ`, and the Spec Review skill writes one, so two reviews of one day keep their order; a plain date orders before that day's timed ones. Fills in [D-72].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: Reviews are ordered by `date` as text, and two reviews of one day tied, so query order chose the current status.
+  rejected: Storing the time a review was imported, which orders imports rather than reviews.
+```
+
+```mdl
+decision D-79: A review file that a GitHub binding already holds as a spec, from before the review mapping, is released and imported as a review by file sync's re-claim (org.dxos.plugin.github.file-sync#F-3.5). Fills in [D-70].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: The spec mapping claimed `**/*.review.mdl` before it excluded them, and file sync pulls only changed files, so an unchanged review would stay a spec.
+  rejected: A one-time migration deleting those specs; leaving them.
+```
+
+```mdl
+decision D-80: Approve [D-77], [D-78] and [D-79].
+  date: 2026-11-05
+  by: user:wittjosiah
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

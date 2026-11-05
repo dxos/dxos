@@ -162,8 +162,8 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
       errors.push(`frontmatter: missing \`${key}\``);
     }
   }
-  if (meta.date && !/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) {
-    errors.push('frontmatter: `date` must be YYYY-MM-DD');
+  if (meta.date && !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?Z)?$/.test(meta.date)) {
+    errors.push('frontmatter: `date` must be YYYY-MM-DD, or YYYY-MM-DDTHH:MMZ with a UTC time');
   }
   if (meta.by && !/^(user|agent):\S+$/.test(meta.by)) {
     errors.push('frontmatter: `by` must be `user:<handle>` or `agent:<name>`');

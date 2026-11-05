@@ -8,7 +8,8 @@ A review never edits the spec. When the spec is wrong, say so in a verdict's not
 
 ## The document
 
-Front matter names the spec, the commit whose code was read, the date (`YYYY-MM-DD`) and the reviewer. A paragraph or two of summary follows
+Front matter names the spec, the commit whose code was read, when (`YYYY-MM-DDTHH:MMZ`, the UTC time, so two reviews
+of one day keep their order) and the reviewer. A paragraph or two of summary follows
 the title. Then one `verdict` block per item, its id the item's id: a requirement (`F-3.2`), a type, an operation, a
 component, a scenario or a test.
 
@@ -16,7 +17,7 @@ component, a scenario or a test.
 ---
 spec: github:dxos/dxos/packages/plugins/plugin-code/PLUGIN.mdl
 commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
-date: 2026-11-05
+date: 2026-11-05T14:30Z
 by: agent:claude-code
 ---
 

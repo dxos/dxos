@@ -13,10 +13,17 @@ export type ReviewFields = Omit<SpecReview.MakeProps, 'spec'>;
 /** What the editor and panel read of a review: a live object or its snapshot. */
 export type ReviewData = Pick<SpecReview.SpecReview, 'id' | 'commit' | 'date' | 'by' | 'summary' | 'verdicts'>;
 
-/** Whether `value` is a calendar date written `YYYY-MM-DD`, the form reviews are ordered by. */
+/**
+ * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, seconds
+ * optional): the forms whose text order is their time order, which is how reviews are ordered.
+ */
 const isDate = (value: string) => {
-  const time = Date.parse(`${value}T00:00:00Z`);
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(time) && new Date(time).toISOString().startsWith(value);
+  const time = Date.parse(value.includes('T') ? value : `${value}T00:00:00Z`);
+  return (
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?Z)?$/.test(value) &&
+    !Number.isNaN(time) &&
+    new Date(time).toISOString().startsWith(value.replace(/Z$/, ''))
+  );
 };
 
 /** The review a `.review.mdl` text holds; a string naming what is wrong when its front matter is incomplete. */
@@ -26,7 +33,7 @@ export const fromText = (text: string): ReviewFields | string => {
     return 'A review needs `commit`, `date` and `by` in its front matter.';
   }
   if (!isDate(date)) {
-    return 'A review `date` must be a calendar date written `YYYY-MM-DD`.';
+    return 'A review `date` must be written `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MMZ` with a UTC time.';
   }
   return {
     commit,

@@ -94,7 +94,7 @@ decides whether the code or the spec changes.
    ---
    spec: github:dxos/dxos/packages/plugins/plugin-x/PLUGIN.mdl
    commit: <git rev-parse HEAD>
-   date: <YYYY-MM-DD>
+   date: <YYYY-MM-DDTHH:MMZ, the UTC time now>
    by: agent:claude-code
    ---
    ```

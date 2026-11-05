@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
@@ -45,7 +46,7 @@ export class SpecReview extends Type.makeObject<SpecReview>(DXN.make('org.dxos.t
     spec: Ref.Ref(Spec.Spec),
     /** The commit the code was read at. */
     commit: Schema.String,
-    /** When the review was made, `YYYY-MM-DD`. */
+    /** When the review was made: `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MMZ` in UTC to order the reviews of one day. */
     date: Schema.String,
     /** Who made it: `user:<handle>` or `agent:<name>`. */
     by: Schema.String,
@@ -55,11 +56,28 @@ export class SpecReview extends Type.makeObject<SpecReview>(DXN.make('org.dxos.t
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--seal-check--regular', hue: 'violet' })),
 ) {}
 
+/** The reviews a spec holds; the refs make the spec each review's owner, so deleting the spec deletes them. */
+export const ReviewsAnnotation = Annotation.make({
+  id: 'org.dxos.projects.reviews',
+  schema: Schema.Array(Ref.Ref(SpecReview)),
+});
+
 export type MakeProps = Omit<Obj.MakeProps<typeof SpecReview>, 'spec'> & { spec: Spec.Spec };
 
-/** A review owned by its spec, so it is deleted with the spec. */
+/** A review listed on and owned by its spec, so it is deleted with the spec. */
 export const make = ({ spec, ...props }: MakeProps): SpecReview => {
   const review = Obj.make(SpecReview, { ...props, spec: Ref.make(spec) });
+  const ref = Ref.make(review);
+  if (Option.isNone(Annotation.get(spec, ReviewsAnnotation))) {
+    Obj.update(spec, (spec) => {
+      Annotation.set(spec, ReviewsAnnotation, [ref]);
+    });
+  } else {
+    // Appended in place, so two peers recording reviews each keep theirs.
+    Annotation.update(spec, ReviewsAnnotation, (reviews) => {
+      reviews.push(ref);
+    });
+  }
   Obj.setParent(review, spec);
   return review;
 };
@@ -76,6 +94,6 @@ export const sameReview = (
   b: Pick<SpecReview, 'commit' | 'date' | 'by'>,
 ) => a.commit === b.commit && a.date === b.date && a.by === b.by;
 
-/** Newest first, by review date. */
+/** Newest first, by review date; a date with a time orders after that day's plain date. */
 export const byNewest = (a: Pick<SpecReview, 'date'>, b: Pick<SpecReview, 'date'>): number =>
   b.date.localeCompare(a.date);

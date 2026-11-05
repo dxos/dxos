@@ -421,6 +421,10 @@ feat F-3: Pull
   req F-3.4:
     when: a path is removed
     then: the marker is dropped and the object is kept, without its foreign key; deleting a remote file never deletes local content
+
+  req F-3.5:
+    when: a path's marker names a mapping other than the one that claims the path now
+    then: the path is released as in F-3.4 and imported as in F-3.1 by the mapping that claims it, whether or not it changed
 ```
 
 ```mdl
@@ -754,4 +758,20 @@ decision D-26: An import may answer a modified path with another object than the
   affects: [FileMarker, F-3.2]
   why: A review file whose front matter changes is a new review, a new SpecReview; a marker left on the old one would rename and remove the wrong review.
   rejected: Updating the old review in place, which loses the review history the reviews are kept for.
+```
+
+```mdl
+decision D-27: A path whose marker names another mapping than the one that claims it now is released and imported again by that mapping, changed or not, on every pass ([F-3.5]). Fills in [D-25].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [FileMarker, F-3.5]
+  why: A mapping that starts excluding paths another claims (D-25) would otherwise leave each unchanged file bound to the old mapping's object, still exported through it.
+  rejected: A migration in the plugin that changed its mapping, which every mapping change would need again.
+```
+
+```mdl
+decision D-28: Approve [D-27].
+  date: 2026-11-05
+  by: user:wittjosiah
 ```

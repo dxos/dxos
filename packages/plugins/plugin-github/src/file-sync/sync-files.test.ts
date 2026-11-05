@@ -346,9 +346,9 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     );
 
     /** One pass; `requests` lists only what this pass asked GitHub for. */
-    const sync = async () => {
+    const sync = async (mappings: readonly GitHubCapabilities.FileMapping[] = [MAPPING]) => {
       git.requests = [];
-      const result = await syncFileBinding(binding, [MAPPING]).pipe(
+      const result = await syncFileBinding(binding, mappings).pipe(
         Effect.provideService(FetchHttpClient.Fetch, fakeFetch(git)),
         Effect.provide(services),
         EffectEx.runAndForwardErrors,
@@ -535,6 +535,23 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     const after = await textAt('spec/PLUGIN.mdl');
     expect(after?.id).not.toBe(before?.id);
     expect(after && Obj.getKeys(after, GITHUB_SOURCE)).toEqual([fileKey('1234', 'spec/PLUGIN.mdl')]);
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
+  });
+
+  test('F-3.5: a path another mapping now claims is released and imported anew, though unchanged', async ({
+    expect,
+  }) => {
+    const { sync, marker, textAt } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    const other = { ...MAPPING, id: 'com.example.mapping.other', match: ['spec/PLUGIN.mdl'] };
+
+    await sync([{ ...MAPPING, exclude: ['spec/PLUGIN.mdl'] }, other]);
+
+    const after = await textAt('spec/PLUGIN.mdl');
+    expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: other.id });
+    expect(after?.id).not.toBe(before?.id);
+    expect(after?.content).toBe(SPEC_V1);
     expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
   });
 
