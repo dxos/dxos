@@ -66,7 +66,7 @@ export type MakeProps = Omit<Obj.MakeProps<typeof SpecReview>, 'spec'> & { spec:
 
 /** A review listed on and owned by its spec, so it is deleted with the spec. */
 export const make = ({ spec, ...props }: MakeProps): SpecReview => {
-  const review = Obj.make(SpecReview, { ...props, spec: Ref.make(spec) });
+  const review = Obj.make(SpecReview, { [Obj.Parent]: spec, ...props, spec: Ref.make(spec) });
   const ref = Ref.make(review);
   if (Option.isNone(Annotation.get(spec, ReviewsAnnotation))) {
     Obj.update(spec, (spec) => {
@@ -78,7 +78,6 @@ export const make = ({ spec, ...props }: MakeProps): SpecReview => {
       reviews.push(ref);
     });
   }
-  Obj.setParent(review, spec);
   return review;
 };
 

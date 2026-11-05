@@ -78,18 +78,7 @@ export const ReviewPanel = ({
   read,
 }: ReviewPanelProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const [filter, setFilter] = useState<VerdictStatus | typeof ALL>(ALL);
-  // Worst first, like the cards.
-  const counts = useMemo(() => (review ? summarizeReview(review).reverse() : []), [review]);
-  // A status the shown review lacks filters nothing, so switching reviews never leaves an empty list.
-  const status = counts.some(({ status }) => status === filter) ? filter : ALL;
-  const verdicts = useMemo(
-    () =>
-      (review?.verdicts ?? [])
-        .filter((verdict) => status === ALL || verdict.status === status)
-        .sort((a, b) => VERDICT_STATUSES.indexOf(b.status) - VERDICT_STATUSES.indexOf(a.status)),
-    [review, status],
-  );
+  const { counts, status, verdicts, onFilterChange } = useStatusFilter(review);
   const [lead, rest] = useMemo(() => splitLead(review?.summary), [review]);
   const handlers = useMemo(() => ({ onSelect, onOpenCode, read }), [onSelect, onOpenCode, read]);
   const handleCurrentChange = useCallback((id: string | undefined) => id && onSelect?.(id), [onSelect]);
@@ -151,7 +140,7 @@ export const ReviewPanel = ({
             <ToggleGroup.Root
               type='single'
               value={status}
-              onValueChange={(value) => setFilter((value || ALL) as VerdictStatus | typeof ALL)}
+              onValueChange={onFilterChange}
               aria-label={t('review-panel.filter.label')}
               classNames='sticky top-0 z-[1] w-full py-1 bg-base-surface flex-wrap'
               data-testid='review-panel.filter'
@@ -198,6 +187,27 @@ export const ReviewPanel = ({
 };
 
 /** A summary's first paragraph and the rest, split at the first blank line. */
+/** The status filter: each status's count, worst first like the cards, the status applied, and the verdicts it keeps. */
+const useStatusFilter = (review: ReviewModel | undefined) => {
+  const [filter, setFilter] = useState<VerdictStatus | typeof ALL>(ALL);
+  const counts = useMemo(() => (review ? summarizeReview(review).reverse() : []), [review]);
+  // A status the shown review lacks filters nothing, so switching reviews never leaves an empty list.
+  const status = counts.some(({ status }) => status === filter) ? filter : ALL;
+  const verdicts = useMemo(
+    () =>
+      (review?.verdicts ?? [])
+        .filter((verdict) => status === ALL || verdict.status === status)
+        .sort((a, b) => VERDICT_STATUSES.indexOf(b.status) - VERDICT_STATUSES.indexOf(a.status)),
+    [review, status],
+  );
+  // Unpressing the pressed status answers an empty value, which shows every verdict.
+  const onFilterChange = useCallback(
+    (value: string) => setFilter(VERDICT_STATUSES.find((status) => status === value) ?? ALL),
+    [],
+  );
+  return { counts, status, verdicts, onFilterChange };
+};
+
 const splitLead = (summary: string | undefined): [string | undefined, string | undefined] => {
   const text = summary?.trim();
   if (!text) {

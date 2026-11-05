@@ -14,6 +14,12 @@ not need part 3, which only makes it react sooner.
 plugin-github owns change detection, sync markers, merging and commits. The mapping plugin owns the
 file format, and nothing else: it never imports plugin-github and never calls GitHub.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.code: Its `.mdl` spec and review mappings are the FileMappings this sync is designed around.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
