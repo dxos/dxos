@@ -3,6 +3,7 @@
 //
 
 import { parseMdlBlocks } from '../extension/blocks.ts';
+import { frontmatter } from '../spec-index/parse.ts';
 import { parseFields } from './fields.ts';
 import { type SourceKey, formatSourceKey, parseSourceKey } from './source-key.ts';
 
@@ -83,23 +84,13 @@ const severity = (status: VerdictStatus): number => VERDICT_STATUSES.indexOf(sta
 const isStatus = (value?: string): value is VerdictStatus =>
   value !== undefined && (VERDICT_STATUSES as readonly string[]).includes(value);
 
-const parseFrontmatter = (text: string): Record<string, string> => {
-  const body = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
-  return Object.fromEntries(
-    body.split('\n').flatMap((line) => {
-      const match = line.match(/^([\w-]+):\s*(.*?)\s*$/);
-      return match ? [[match[1], match[2]]] : [];
-    }),
-  );
-};
-
 /** The prose under the `# ` title, up to the first `## ` section or block. */
 const parseSummary = (text: string): string | undefined =>
   text.match(/^# .*\n([\s\S]*?)(?=^## |^```|(?![\s\S]))/m)?.[1].trim() || undefined;
 
 /** The `verdict` blocks of a review document; a verdict with no known status is dropped. */
 export const parseReview = (text: string): ReviewModel => {
-  const { spec, commit, date, by } = parseFrontmatter(text);
+  const { spec, commit, date, by } = frontmatter(text);
   const summary = parseSummary(text);
   const verdicts = parseMdlBlocks(text)
     .filter(({ type, id }) => type === 'verdict' && id)

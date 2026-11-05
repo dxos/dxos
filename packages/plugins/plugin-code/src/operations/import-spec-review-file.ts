@@ -11,10 +11,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';
-import { recordReview } from './spec-review.ts';
-
-/** The meta key source plugin-github's file sync keys repositories and the objects it imports with. */
-const GITHUB_SOURCE = 'github.com';
+import { GITHUB_SOURCE, recordReview } from './spec-review.ts';
 
 const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecReviewFile> =
   CodeOperation.ImportSpecReviewFile.pipe(

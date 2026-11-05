@@ -491,7 +491,7 @@ op createSpecReview
   key: org.dxos.operation.code.createSpecReview
   desc: |
     Records a `.review.mdl` text as a review of the spec (F-24.2). Refused when the front matter lacks commit, date
-    or by.
+    or by, or names another file than the one GitHub file sync binds the spec to.
   input:
     spec: Ref<Spec>
     content: string
@@ -2173,7 +2173,10 @@ decision D-72: A spec's reviews are ECHO objects beside the spec, one `SpecRevie
   for: user:wittjosiah
   affects: [F-16.1, F-24]
   why: A review read from the checkout is lost to anyone without that checkout, and the file holds only the latest review.
-  rejected: Writing reviews back to git; a review per item rather than per review; backfilling reviews from git history.
+  rejected:
+    - Writing reviews back to git.
+    - A review per item rather than per review.
+    - Backfilling reviews from git history.
 ```
 
 ```mdl
@@ -2190,7 +2193,9 @@ decision D-74: The Review view leads with the review's summary, rendered as mark
   for: user:wittjosiah
   affects: [F-16.4, F-24.7]
   why: A six-line clip cut the summary mid-line, showed its source line breaks and backticks, and hid most of it; the counts looked like filters and did nothing, and as labelled tags they filled the panel's width.
-  rejected: Grouping the cards under collapsible status headers; a fixed-height summary with its own scroll.
+  rejected:
+    - Grouping the cards under collapsible status headers.
+    - A fixed-height summary with its own scroll.
 ```
 
 ```mdl
@@ -2207,7 +2212,8 @@ decision D-76: Each status in the filter is a filled toggle-group button with th
   for: user:wittjosiah
   affects: [F-24.7]
   why: react-ui has no joined button group; filled buttons with standard padding delineate each status from react-ui parts alone, as [D-73] asks.
-  rejected: A custom segmented control joining the buttons.
+  rejected:
+    - A custom segmented control joining the buttons.
 ```
 
 ```mdl
@@ -2217,7 +2223,8 @@ decision D-77: A spec lists its reviews in an annotation, `org.dxos.projects.rev
   for: user:wittjosiah
   affects: [F-16.1]
   why: A parent edge needs a ref from the parent to the child; without one, every new review logged a warning and could be reached only by query.
-  rejected: Dropping the parent edge, which would leave a deleted spec's reviews behind.
+  rejected:
+    - Dropping the parent edge, which would leave a deleted spec's reviews behind.
 ```
 
 ```mdl
@@ -2227,7 +2234,8 @@ decision D-78: A review's `date` may carry a UTC time, `YYYY-MM-DDTHH:MMZ`, and 
   for: user:wittjosiah
   affects: [F-16.1]
   why: Reviews are ordered by `date` as text, and two reviews of one day tied, so query order chose the current status.
-  rejected: Storing the time a review was imported, which orders imports rather than reviews.
+  rejected:
+    - Storing the time a review was imported, which orders imports rather than reviews.
 ```
 
 ```mdl
@@ -2237,13 +2245,26 @@ decision D-79: A review file that a GitHub binding already holds as a spec, from
   for: user:wittjosiah
   affects: [F-16.1]
   why: The spec mapping claimed `**/*.review.mdl` before it excluded them, and file sync pulls only changed files, so an unchanged review would stay a spec.
-  rejected: A one-time migration deleting those specs; leaving them.
+  rejected:
+    - A one-time migration deleting those specs.
+    - Leaving them.
 ```
 
 ```mdl
 decision D-80: Approve [D-77], [D-78] and [D-79].
   date: 2026-11-05
   by: user:wittjosiah
+```
+
+```mdl
+decision D-81: A review whose front matter names another file than the one GitHub file sync binds the spec to is refused, and a review's front matter drops a trailing `# comment` as `deus review check` does. Fills in [D-69].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:createSpecReview, F-24.4]
+  why: op:createSpecReview takes the spec apart from the text, so a review of another spec could be recorded on this one; and a file the check accepted was refused on import.
+  rejected:
+    - Matching the review's repository as well, which needs a Repo lookup for a mistake the path already catches.
 ```
 
 ## Appendix: Extension Definitions

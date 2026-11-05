@@ -33,20 +33,8 @@ describe('CreateSpecReview', () => {
     await builder.close();
   });
 
-  const setup = async () => {
-    const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Spec.Spec, SpecReview.SpecReview, Text.Text]);
-    const spec = db.add(Spec.make({ name: 'plugin-code/PLUGIN.mdl' }));
-    const record = (content: string) =>
-      createSpecReview
-        .handler({ spec: Ref.make(spec), content })
-        .pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
-    const reviews = async () => (await db.query(SpecReview.query(spec)).run()).sort(SpecReview.byNewest);
-    return { spec, record, reviews };
-  };
-
   test("records the repository's review of plugin-code, owned by the spec", async ({ expect }) => {
-    const { spec, record, reviews } = await setup();
+    const { spec, record, reviews } = await setup(builder);
     const { created } = await record(REVIEW);
     expect(created).toBe(true);
 
@@ -62,7 +50,7 @@ describe('CreateSpecReview', () => {
   });
 
   test('the same front matter replaces its review; new front matter adds one', async ({ expect }) => {
-    const { record, reviews } = await setup();
+    const { record, reviews } = await setup(builder);
     await record(REVIEW);
     const fixed = REVIEW.replace(/(verdict F-17\.2:[^\n]*\n  status: )\w+/, '$1missing');
     expect((await record(fixed)).created).toBe(false);
@@ -83,8 +71,13 @@ describe('CreateSpecReview', () => {
     expect(verdict).toMatchObject({ status: 'done', review: { commit: '0123456789abcdef' } });
   });
 
+  test('a review naming another file than the one the spec is synced from is refused', async ({ expect }) => {
+    const { record } = await setup(builder, 'packages/plugins/plugin-other/PLUGIN.mdl');
+    await expect(record(REVIEW)).rejects.toThrow(/plugin-code\/PLUGIN\.mdl, not of this spec's/);
+  });
+
   test('a review without its front matter, or with a date not written `YYYY-MM-DD`, is refused', async ({ expect }) => {
-    const { record } = await setup();
+    const { record } = await setup(builder);
     await expect(record(REVIEW.replace(/^---[\s\S]*?---\n/, ''))).rejects.toThrow(/front matter/);
     await expect(record(later('2026-11-5', 'fedcba9876543210'))).rejects.toThrow(/YYYY-MM-DD/);
     await expect(record(later('2026-11-05T18:30+01:00', 'fedcba9876543210'))).rejects.toThrow(/UTC time/);
@@ -92,3 +85,21 @@ describe('CreateSpecReview', () => {
     await expect(record(later('2026-11-05T18:30:30Z', 'fedcba9876543210'))).rejects.toThrow(/UTC time/);
   });
 });
+
+/** A spec to record reviews on; `syncedPath` binds it to that file as GitHub file sync would. */
+const setup = async (builder: EchoTestBuilder, syncedPath?: string) => {
+  const { db, graph } = await builder.createDatabase();
+  graph.registry.add([Spec.Spec, SpecReview.SpecReview, Text.Text]);
+  const spec = db.add(
+    Spec.make({
+      name: 'plugin-code/PLUGIN.mdl',
+      ...(syncedPath && { [Obj.Meta]: { keys: [{ source: 'github.com', id: `1234:${syncedPath}` }] } }),
+    }),
+  );
+  const record = (content: string) =>
+    createSpecReview
+      .handler({ spec: Ref.make(spec), content })
+      .pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  const reviews = async () => (await db.query(SpecReview.query(spec)).run()).sort(SpecReview.byNewest);
+  return { spec, record, reviews };
+};

@@ -35,6 +35,10 @@ const REVIEW = [
 ].join('\n\n');
 
 describe('review', () => {
+  test('frontmatter drops a trailing comment, as `deus review check` reads it', ({ expect }) => {
+    expect(parseReview(REVIEW.replace('date: 2026-10-22', 'date: 2026-10-22 # reviewed')).date).toBe('2026-10-22');
+  });
+
   test('parses frontmatter and verdicts, dropping unknown statuses', ({ expect }) => {
     const review = parseReview(REVIEW);
     expect(review).toMatchObject({

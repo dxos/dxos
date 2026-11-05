@@ -763,7 +763,8 @@ decision D-26: An import may answer a modified path with another object than the
   for: user:wittjosiah
   affects: [FileMarker, F-3.2]
   why: A review file whose front matter changes is a new review, a new SpecReview; a marker left on the old one would rename and remove the wrong review.
-  rejected: Updating the old review in place, which loses the review history the reviews are kept for.
+  rejected:
+    - Updating the old review in place, which loses the review history the reviews are kept for.
 ```
 
 ```mdl
@@ -773,7 +774,8 @@ decision D-27: A path whose marker names another mapping than the one that claim
   for: user:wittjosiah
   affects: [FileMarker, F-3.5]
   why: A mapping that starts excluding paths another claims (D-25) would otherwise leave each unchanged file bound to the old mapping's object, still exported through it.
-  rejected: A migration in the plugin that changed its mapping, which every mapping change would need again.
+  rejected:
+    - A migration in the plugin that changed its mapping, which every mapping change would need again.
 ```
 
 ```mdl
@@ -798,5 +800,6 @@ decision D-30: While a re-claimed path's import keeps failing, the old mapping d
   for: user:wittjosiah
   affects: [F-3.5, F-4.1]
   why: The kept marker names the old mapping and holds the blob of its last good pull, so exporting through it pushes through a mapping that no longer claims the file, and retrying its blob imports stale content.
-  rejected: A pending-blob field on the marker, which changes FileMarker for a state one tree read recovers.
+  rejected:
+    - A pending-blob field on the marker, which changes FileMarker for a state one tree read recovers.
 ```
