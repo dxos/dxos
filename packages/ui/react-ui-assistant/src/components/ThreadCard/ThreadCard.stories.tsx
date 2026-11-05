@@ -60,11 +60,16 @@ export const TestExpand: Story = {
   play: async ({ canvasElement }) => {
     const button = within(canvasElement).getByRole('button');
     await expect(button.getAttribute('aria-expanded')).toBe('false');
-    const collapsed = canvasElement.querySelector<HTMLElement>('[data-testid="chat.lane-card"]')!.offsetHeight;
+    const cardHeight = () => {
+      const card = canvasElement.querySelector<HTMLElement>('[data-testid="chat.lane-card"]');
+      if (!card) {
+        throw new Error('Lane card not rendered.');
+      }
+      return card.offsetHeight;
+    };
+    const collapsed = cardHeight();
     await userEvent.click(button);
     await expect(button.getAttribute('aria-expanded')).toBe('true');
-    await expect(
-      canvasElement.querySelector<HTMLElement>('[data-testid="chat.lane-card"]')!.offsetHeight,
-    ).toBeGreaterThan(collapsed);
+    await expect(cardHeight()).toBeGreaterThan(collapsed);
   },
 };

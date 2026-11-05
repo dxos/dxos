@@ -118,14 +118,33 @@ export type LaneCardData = { readonly lane: ThreadLane; readonly lines: readonly
 export const laneTag = (cards: readonly LaneCardData[]): string =>
   `<lane>${JSON.stringify(cards).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;
 
+const LaneCards = Schema.Array(
+  Schema.Struct({
+    lane: Schema.Struct({
+      id: Schema.String,
+      hue: Schema.String,
+      title: Schema.optional(Schema.String),
+      owner: Schema.optional(Schema.String),
+      status: Schema.Literals(['running', 'waiting', 'done', 'failed']),
+      waitingOn: Schema.optional(Schema.Struct({ hue: Schema.String, title: Schema.optional(Schema.String) })),
+      started: Schema.String,
+      first: Schema.optional(Schema.String),
+    }),
+    lines: Schema.Array(
+      Schema.Struct({ role: Schema.String, name: Schema.optional(Schema.String), text: Schema.String }),
+    ),
+  }),
+);
+
+const decodeLaneCards = Schema.decodeUnknownOption(LaneCards);
+
 /** The cards of a `<lane>` row from its text; none for a malformed row. */
 export const parseLaneCards = (text: string | null | undefined): readonly LaneCardData[] => {
   if (!text) {
     return [];
   }
   try {
-    const value: readonly LaneCardData[] = JSON.parse(text);
-    return value;
+    return Option.getOrElse(decodeLaneCards(JSON.parse(text)), () => []);
   } catch {
     return [];
   }

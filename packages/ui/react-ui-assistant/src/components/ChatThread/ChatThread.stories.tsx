@@ -632,6 +632,8 @@ export const Hierarchical: Story = {
     while (scroller && scroller.scrollHeight <= scroller.clientHeight) {
       scroller = scroller.parentElement;
     }
+    // The follow only withdraws for a scroll a gesture preceded, and would otherwise pull this one back to the tail.
+    scroller?.dispatchEvent(new WheelEvent('wheel'));
     scroller?.scrollTo({ top: 0 });
     await waitFor(() =>
       expect(canvasElement.querySelector('[data-testid="chat.fork-marker"]')?.textContent).toContain('Thursday'),

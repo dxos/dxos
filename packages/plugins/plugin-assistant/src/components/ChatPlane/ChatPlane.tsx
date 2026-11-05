@@ -146,7 +146,9 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
   // A drag scrolls the strip under the pointer, and the column under the center at that moment means nothing.
   const dragging = !!useDndRootContext('ChatPlane.Root').dragging;
   const draggingRef = useRef(dragging);
-  draggingRef.current = dragging;
+  useLayoutEffect(() => {
+    draggingRef.current = dragging;
+  }, [dragging]);
 
   // One animation that only ever changes its target: a browser smooth scroll restarts from rest when it is called again,
   // so each key press would stall the strip. Snapping would also pull every frame back to a column.
@@ -383,7 +385,9 @@ ChatPlaneViewport.displayName = 'ChatPlane.Viewport';
 /** Lets the container's own drop handler, which sits above the container's context, read the open gap. */
 const ChatPlaneActiveLocation = ({ locationRef }: { locationRef: RefObject<DndLocation | undefined> }) => {
   const { activeLocation } = useMosaicContainer('ChatPlane.ActiveLocation');
-  locationRef.current = activeLocation;
+  useLayoutEffect(() => {
+    locationRef.current = activeLocation;
+  }, [locationRef, activeLocation]);
   return null;
 };
 
