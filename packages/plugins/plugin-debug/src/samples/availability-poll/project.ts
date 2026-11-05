@@ -156,8 +156,9 @@ table, records a spec review, and sets the task to \`review\`. The review is \
 \`dxn:org.dxos.operation.code.createSpecReview\` \`{ spec: project.specs[0], content }\`, \`content\` a \`.review.mdl\`: \
 front matter \`commit:\` (\`git rev-parse HEAD\` in \`/workspace/poll\`), \`date:\` (now, \`YYYY-MM-DDTHH:MMZ\` in UTC) \
 and \`by: agent:claude\`; a \`# Review: Availability Poll\` title and one paragraph naming the milestone, its scenario \
-and the result; then, in an \`mdl\` fence, one \`verdict <id>: <the item's text>\` block for each requirement of the \
-milestone's features and one for its scenario, each with \`status:\` (\`done\` when the scenario or the render check \
+and the result; an \`## Extensions\` table with the columns \`Term\` and \`URI\` and the one row \`verdict\`, \
+\`org.dxos.mdl.verdict@1.0\`; then under \`## Verdicts\` one \`verdict <id>: <the item's text>\` block, each in its own \
+\`mdl\` fence, for each requirement of the milestone's features and one for its scenario, each with \`status:\` (\`done\` when the scenario or the render check \
 covers it, \`untested\` when only the code does it), a \`note:\` naming the file and function that does it, \
 \`evidence: []\` and \`tests: []\`. Make no showcase. \`Check M-2\` reads pages rather than the API: its \
 \`check.mjs\` builds both pages for SSR as the render check does, creates T-1's poll and marks on \`localhost:8787\`, \

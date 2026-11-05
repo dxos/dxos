@@ -10,7 +10,8 @@
  * person accepts the reviewed tasks. Then change a requirement on its card and watch the feature fail, get fixed and
  * recover. Flight options stay planned for the viewer. After each milestone the take pulls the agent's code from the
  * sandbox, serves it on this machine with `wrangler dev`, runs the milestone's scenario against it and shows its pages,
- * all in windows drawn over the app, before the person signs off.
+ * all in windows drawn over the app. Then it opens the spec review the agent's check recorded, whose verdicts also mark
+ * each requirement on the spec's feature cards, before the person signs off.
  *
  * @title Availability Poll: from a spec to a Worker, milestone by milestone
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
@@ -236,13 +237,14 @@ const openFeature = async (demo, page, name) => {
 const DOCUMENT = '[data-testid="projectsPlugin.spec.document"]';
 
 /**
- * Wheels the spec's text down a notch at a time, so the camera follows, until a line holding `text` is in the upper
- * part of the view or the text ends; the editor draws only the lines near the view, so the line cannot be scrolled to.
+ * Wheels the spec's text down a notch at a time, so the camera follows, until a line holding `text` (or, when `exact`,
+ * a line of just `text`, such as a feature card's name) is in the upper part of the view or the text ends; the editor
+ * draws only the lines near the view, so the line cannot be scrolled to.
  */
-const scrollDocumentTo = async (page, text) => {
+const scrollDocumentTo = async (page, text, { exact = false } = {}) => {
   const box = await page.locator(DOCUMENT).first().boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  const line = page.locator(`${DOCUMENT} .cm-line:has-text("${text}")`);
+  const line = page.locator(`${DOCUMENT} .cm-line:${exact ? 'text-is' : 'has-text'}("${text}")`);
   let last;
   for (let notch = 0; notch < 200; notch++) {
     const top = (await line.count()) > 0 ? (await line.first().boundingBox())?.y : undefined;
@@ -428,6 +430,36 @@ const acceptMilestone = async (demo, page, milestone, caption) => {
     { timeout: 15_000 },
   );
   await page.waitForTimeout(BEAT);
+};
+
+/**
+ * The review the milestone's check recorded, in the Spec companion's Review view, then its verdicts on the spec's
+ * feature cards, scrolled to the milestone's first feature.
+ */
+const readReview = async (demo, page, milestone) => {
+  await openProjectTab(demo, page, 'document');
+  await demo.click({
+    selector: '[data-testid="deck.plank"] [data-testid="plankHeading.companion"] >> nth=0',
+    label: 'Companion',
+  });
+  const tab = `${DECK_COMPANION} [data-testid="deck.companion.tab.spec"]`;
+  await page.locator(tab).first().waitFor({ state: 'visible', timeout: 15_000 });
+  await demo.click({ selector: `${tab} >> nth=0`, label: 'Spec' });
+  const view = '[data-testid="spec-article.view.review"]';
+  await page.locator(view).first().waitFor({ state: 'visible', timeout: 15_000 });
+  if ((await page.locator(view).first().getAttribute('aria-checked')) !== 'true') {
+    await demo.click({ selector: `${view} >> nth=0`, label: 'Review' });
+  }
+  await page.getByTestId('verdict-card').first().waitFor({ state: 'visible', timeout: 15_000 });
+  await demo.caption({
+    value: `The agent's review of ${milestone.id}`,
+    subtitle: 'A verdict for each requirement and the scenario',
+  });
+  await page.waitForTimeout(BEAT * 4);
+  await demo.caption({ value: 'The verdicts show in the spec itself', subtitle: 'On each requirement it judged' });
+  await scrollDocumentTo(page, milestone.features[0], { exact: true });
+  await page.waitForTimeout(BEAT * 4);
+  await closeCompanion(page);
 };
 
 /** Wheels the plank's content down `notches` at a time, so the camera follows the scroll. */
@@ -934,6 +966,12 @@ export const steps = [
     },
   },
   {
+    name: 'Read the M-1 review',
+    run: async ({ demo, page }) => {
+      await readReview(demo, page, M1);
+    },
+  },
+  {
     name: 'Accept M-1',
     done: async ({ page }) => tasksOf(await snapshot(page), M1.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
@@ -982,6 +1020,12 @@ export const steps = [
     name: 'Try M-2 locally',
     run: async ({ demo, page }) => {
       await tryLocally(demo, page, M2.id);
+    },
+  },
+  {
+    name: 'Read the M-2 review',
+    run: async ({ demo, page }) => {
+      await readReview(demo, page, M2);
     },
   },
   {
