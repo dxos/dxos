@@ -598,8 +598,10 @@ export const WithoutSpec: Story = {
     const canvas = within(canvasElement);
     await seedContent();
     await expect(canvas.findByDisplayValue(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
-    await expect(within(specs).queryAllByRole('option')).toHaveLength(0);
+    await expect(
+      canvas.findByText('This project has no specs yet.', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.queryByRole('listbox', { name: 'Specs' })).toBeNull();
 
     await showTab(canvas, 'spec');
     await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));

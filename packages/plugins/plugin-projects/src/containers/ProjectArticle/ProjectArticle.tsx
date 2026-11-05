@@ -305,7 +305,7 @@ export const ProjectArticle = ({
       // A status once picked is never cleared, so the pill offers no "None".
       status: { required: true },
       description: { presentation: 'plain', placeholder: t('project-description.placeholder') },
-      specs: { presentation: 'section', label: t('specs.label') },
+      specs: { presentation: 'section', label: t('specs.label'), placeholder: t('specs-empty.message') },
     }),
     [t],
   );

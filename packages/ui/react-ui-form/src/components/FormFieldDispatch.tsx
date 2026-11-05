@@ -202,6 +202,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         label={accessibleLabel}
         hideLabel={override?.hideLabel}
         section={presentation === 'section'}
+        placeholder={override?.placeholder}
         {...props}
         readonly={readonly || presentation === 'static'}
       />

@@ -79,8 +79,8 @@ feat F-5: A project's overview
              filtered to the tasks under it.
   req F-5.7: The Specs heading carries the add button on its own row, and each spec is a row directly under it at the
              same level of nesting as a Config group.
-  req F-5.8: An empty Notes invites notes, plans and next steps where they are typed, and an empty Artifacts says the
-             project has none yet.
+  req F-5.8: An empty Notes invites notes, plans and next steps where they are typed, and an empty Artifacts or Specs
+             says the project has none yet.
   req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
              instructions, skills and context), then the groups other plugins declare.
   req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
@@ -2062,7 +2062,7 @@ decision D-199: Create artifact is the add button on the overview's Artifacts he
 ```
 
 ```mdl
-decision D-200: The overview's empty Notes and Artifacts sections say what goes in them, rather than showing a bare heading.
+decision D-200: The overview's empty Notes, Artifacts and Specs sections say what goes in them, rather than showing a bare heading. An empty array field in a form shows its override's placeholder in place of its rows, which is how Specs says so.
   date: 2026-11-05
   by: user:wittjosiah
   affects: [F-5.8]

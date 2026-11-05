@@ -36,6 +36,8 @@ export type ArrayFieldProps = {
   /** Leave the header's text empty while the list keeps `label` as its name, for a host whose heading already says it. */
   hideLabel?: boolean;
   section?: boolean;
+  /** Shown in place of the rows while there are none; only a field override sets it. */
+  placeholder?: string;
   fieldProps: FormFieldStateProps;
 } & FormFieldDispatchProps;
 
@@ -50,6 +52,7 @@ export const ArrayField = ({
   label,
   hideLabel,
   section,
+  placeholder,
   readonly,
   layout,
   fieldProps,
@@ -149,7 +152,9 @@ export const ArrayField = ({
       data-testid={`${SchemaEx.createJsonPath(path ?? [])}.add`}
     />
   );
-  const list = (
+  const list = count === 0 && placeholder ? (
+    <Typography.Text tone='muted'>{placeholder}</Typography.Text>
+  ) : (
     <OrderedList.Root
       items={items}
       getId={(item) => item.id}
