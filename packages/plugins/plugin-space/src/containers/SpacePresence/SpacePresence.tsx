@@ -184,7 +184,7 @@ export type Member = Space.Member & {
   sessions: PeerSession[];
   /** When the sessions were read, to tell which are moving. */
   now: number;
-  /** The session the member's row acts on; the member's most recently moved session anywhere when unset. */
+  /** The session the member's row acts on; the row has no actions when unset. */
   defaultSessionId?: string;
 };
 
