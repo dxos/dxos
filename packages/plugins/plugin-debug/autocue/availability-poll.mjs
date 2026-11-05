@@ -541,18 +541,41 @@ const sandboxExec = (page, command) =>
     { key: TAKE_SPACE, command },
   );
 
-/** Copies the agent's working tree out of the sandbox, without its installs and builds, into a fresh directory. */
+/** Bytes of the archive read per exec; a sandbox caps an exec's output, so a whole tree in one read comes back empty. */
+const PULL_CHUNK = 256 * 1024;
+
+/** Copies the agent's working tree out of the sandbox, without its installs, builds and history, into a new directory. */
 const pullBuild = async (page, milestone) => {
-  const { stdout, exitCode } = await sandboxExec(
+  const archive = '/tmp/poll-build.tgz';
+  const packed = await sandboxExec(
     page,
-    'cd /workspace/poll && tar czf - --exclude=./node_modules --exclude=./.wrangler --exclude=./dist . | base64 -w0',
+    `cd /workspace/poll && tar czf ${archive} --exclude=./node_modules --exclude=./.wrangler --exclude=./dist ` +
+      `--exclude=./.git . && wc -c < ${archive}`,
   );
-  if (exitCode !== 0) {
-    throw new Error(`The sandbox's working tree could not be copied (${exitCode})`);
+  const size = Number(packed.stdout.trim());
+  if (packed.exitCode !== 0 || !(size > 0)) {
+    throw new Error(
+      `The sandbox's working tree could not be packed (${packed.exitCode}): ${String(packed.stderr ?? '').slice(0, 400)}`,
+    );
+  }
+  const chunks = [];
+  for (let offset = 0; offset < size; offset += PULL_CHUNK) {
+    const { stdout, exitCode } = await sandboxExec(
+      page,
+      `dd if=${archive} bs=${PULL_CHUNK} skip=${offset / PULL_CHUNK} count=1 2>/dev/null | base64 -w0`,
+    );
+    if (exitCode !== 0) {
+      throw new Error(`The sandbox's archive could not be read at ${offset} (${exitCode})`);
+    }
+    chunks.push(Buffer.from(stdout.trim(), 'base64'));
+  }
+  const bytes = Buffer.concat(chunks);
+  if (bytes.length !== size) {
+    throw new Error(`Read ${bytes.length} of the archive's ${size} bytes`);
   }
   const dir = join(BUILDS, `${milestone}-${Date.now()}`);
   mkdirSync(dir, { recursive: true });
-  writeFileSync(`${dir}.tgz`, Buffer.from(stdout.trim(), 'base64'));
+  writeFileSync(`${dir}.tgz`, bytes);
   await run('tar', ['xzf', `${dir}.tgz`, '-C', dir]);
   rmSync(`${dir}.tgz`);
   if (!existsSync(join(dir, 'package.json'))) {
@@ -719,6 +742,16 @@ const closeWindow = (page) => page.evaluate((id) => document.getElementById(id)?
 /** The browser window's page, for driving the served build. */
 const inWindow = (selector) => `#${WINDOW} iframe >> internal:control=enter-frame >> ${selector}`;
 
+/** Opens the browser window on `url` and waits for its page to draw, since the first load of a build takes seconds. */
+const openBrowser = async (page, { title, url }) => {
+  await openWindow(page, { title, url });
+  await page
+    .locator(inWindow(':is(input, button, h1, h2)'))
+    .first()
+    .waitFor({ state: 'visible', timeout: 30_000 })
+    .catch(() => {});
+};
+
 /**
  * Pulls the milestone's build from the sandbox and serves it here, fast-forwarded; then runs T-1 against it in a
  * terminal, and shows its new poll page and the T-1 poll as Ben in a browser.
@@ -733,7 +766,10 @@ const tryLocally = async (demo, page, milestone) => {
   await serveBuild(dir);
   await demo.speed({ factor: 1 });
   await openWindow(page, { title: `Terminal — ${milestone} on wrangler dev, ${LOCAL}` });
-  await demo.caption({ value: 'Scenario T-1, run against the local Worker', subtitle: 'Three respondents, six slots' });
+  await demo.caption({
+    value: 'Scenario T-1, run against the local Worker',
+    subtitle: 'Three respondents, eight slots',
+  });
   await printLine(page, { text: "$ wrangler dev  # the agent's Worker, built here" });
   await printLine(page, { text: `Ready on ${LOCAL}` });
   await page.waitForTimeout(BEAT);
@@ -745,11 +781,11 @@ const tryLocally = async (demo, page, milestone) => {
   }
   await printLine(page, { text: passed ? 'T-1 passed' : 'T-1 FAILED', ok: passed });
   await page.waitForTimeout(BEAT * 3);
-  await openWindow(page, { title: `${LOCAL}/  —  the new poll page`, url: `${LOCAL}/` });
+  await openBrowser(page, { title: `${LOCAL}/  —  the new poll page`, url: `${LOCAL}/` });
   await demo.caption({ value: 'The new poll page', subtitle: 'Served from the build on this machine' });
   await page.waitForTimeout(BEAT * 3);
   if (id) {
-    await openWindow(page, { title: `${LOCAL}/p/${id.slice(0, 12)}…  —  the T-1 poll`, url: `${LOCAL}/p/${id}` });
+    await openBrowser(page, { title: `${LOCAL}/p/${id.slice(0, 12)}…  —  the T-1 poll`, url: `${LOCAL}/p/${id}` });
     await demo.caption({ value: 'The T-1 poll, as Ben', subtitle: 'The heat map and the best slot' });
     await page.waitForTimeout(BEAT);
     // The page asks a visitor's name first; the agent builds the form, so the first text field is the best guess.
@@ -889,7 +925,7 @@ export const steps = [
       await page.waitForTimeout(BEAT * 3);
       await demo.caption({
         value: 'Each milestone ends in a scenario',
-        subtitle: 'T-1: three respondents mark six slots',
+        subtitle: 'T-1: three respondents, eight slots',
       });
       await scrollDocumentTo(page, 'scenario T-1: One zone');
       await page.waitForTimeout(BEAT * 3);
