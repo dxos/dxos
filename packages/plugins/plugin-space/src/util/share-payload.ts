@@ -93,11 +93,13 @@ const transform = async (
   return new Uint8Array(await new Blob(chunks).arrayBuffer());
 };
 
-const toBase64Url = (bytes: Uint8Array): string =>
+/** Unpadded base64url, as a URL parameter or a JWK carries bytes. */
+export const toBase64Url = (bytes: Uint8Array): string =>
   btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
     .replaceAll('+', '-')
     .replaceAll('/', '_')
     .replace(/=+$/, '');
 
-const fromBase64Url = (encoded: string): Uint8Array<ArrayBuffer> =>
+/** Decodes base64url or standard base64, padded or not. */
+export const fromBase64Url = (encoded: string): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(atob(encoded.replaceAll('-', '+').replaceAll('_', '/')), (char) => char.charCodeAt(0));

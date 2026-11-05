@@ -56,13 +56,11 @@ describe('stashShareFragment', () => {
     expect(readStashedShare(() => ({ getItem: (key) => storage.get(key) ?? null }))).toBe('abc');
   });
 
-  test('leaves the payload in the query when storage is blocked', ({ expect }) => {
+  test('drops the payload from the URL when storage is blocked', ({ expect }) => {
     const blocked = () => {
       throw new Error('SecurityError');
     };
-    expect(stashShareFragment('https://composer.space/space/doc+01J#share=abc', blocked)).toBe(
-      '/space/doc+01J?share=abc',
-    );
+    expect(stashShareFragment('https://composer.space/space/doc+01J#share=abc', blocked)).toBe('/space/doc+01J');
     expect(readStashedShare(blocked)).toBeNull();
   });
 

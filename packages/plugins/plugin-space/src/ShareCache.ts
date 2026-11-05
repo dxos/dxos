@@ -12,7 +12,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { getSharedObjectsChallenge } from '@dxos/protocols';
 
-import { decodeSharePayload } from './util/share-payload.ts';
+import { decodeSharePayload, fromBase64Url, toBase64Url } from './util/share-payload.ts';
 
 /** Retries of a read that EDGE answers 404 while the invitation reaches it, which it asks to be retried. */
 const READ_RETRIES = 2;
@@ -48,7 +48,12 @@ export const load = async ({
   }
 
   const issuedAt = Date.now();
-  const challenge = getSharedObjectsChallenge({ spaceId, invitationId: invitation.invitationId, issuedAt });
+  const challenge = getSharedObjectsChallenge({
+    spaceId,
+    invitationId: invitation.invitationId,
+    objectIds: objects,
+    issuedAt,
+  });
   const { EdgeHttpClient } = await import('@dxos/edge-client');
   const { spaceRootUrl, rows } = await new EdgeHttpClient(edgeUrl).readSharedObjects(
     Context.default(),
@@ -66,7 +71,7 @@ export const load = async ({
       spaceId,
       spaceKey: PublicKey.from(spaceKey),
       spaceRootUrl,
-      rows: rows.map(({ documentId, heads, data }) => ({ documentId, heads, bytes: fromBase64(data) })),
+      rows: rows.map(({ documentId, heads, data }) => ({ documentId, heads, bytes: fromBase64Url(data) })),
     },
   ];
 };
@@ -92,22 +97,19 @@ export const signWithGuestKey = async (
   message: string,
   { secretKey, publicKey }: { secretKey: Uint8Array; publicKey: Uint8Array },
 ): Promise<string> => {
-  const key = await crypto.subtle.importKey(
-    'jwk',
-    { kty: 'OKP', crv: 'Ed25519', d: toBase64Url(secretKey.slice(0, 32)), x: toBase64Url(publicKey) },
-    { name: 'Ed25519' },
-    false,
-    ['sign'],
-  );
+  const key = await crypto.subtle
+    .importKey(
+      'jwk',
+      { kty: 'OKP', crv: 'Ed25519', d: toBase64Url(secretKey.slice(0, 32)), x: toBase64Url(publicKey) },
+      { name: 'Ed25519' },
+      false,
+      ['sign'],
+    )
+    .catch((cause) => {
+      // Older browsers (before Chrome 137, Firefox 129, Safari 17) have no Ed25519 in WebCrypto.
+      throw new Error('This browser cannot sign with Ed25519, so the shared object renders once joined.', { cause });
+    });
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message));
   const signature = new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, key, digest));
   return btoa(Array.from(signature, (byte) => String.fromCharCode(byte)).join(''));
 };
-
-const toBase64Url = (bytes: Uint8Array): string =>
-  btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
-    .replaceAll('+', '-')
-    .replaceAll('/', '_')
-    .replace(/=+$/, '');
-
-const fromBase64 = (data: string): Uint8Array => Uint8Array.from(atob(data), (char) => char.charCodeAt(0));

@@ -10,7 +10,7 @@ export const SHARE_STORAGE_KEY = 'dxos.share';
 
 /**
  * Moves a share link's payload out of the URL's fragment into this tab's session storage, where its readers find it, a
- * reload keeps it, and no request or `Referer` carries the invitation it may hold.
+ * reload keeps it, and no request or `Referer` carries the invitation it may hold; the URL never carries it again.
  * @returns The path, query and fragment to show once the payload is out; undefined for a URL whose fragment carries none.
  */
 export const stashShareFragment = (
@@ -24,13 +24,11 @@ export const stashShareFragment = (
     return undefined;
   }
   fragment.delete(PARAM_SHARE);
-  // Reading `sessionStorage` itself throws where the browser blocks storage.
+  // Reading `sessionStorage` itself throws where the browser blocks site data, which also blocks the IndexedDB and OPFS
+  // Composer's client needs, so the link could not open there and the payload is only dropped.
   try {
     getStorage().setItem(SHARE_STORAGE_KEY, payload);
-  } catch {
-    // Without storage the link still has to open, so its readers find the payload in the query.
-    url.searchParams.set(PARAM_SHARE, payload);
-  }
+  } catch {}
   url.hash = fragment.toString();
   return `${url.pathname}${url.search}${url.hash}`;
 };

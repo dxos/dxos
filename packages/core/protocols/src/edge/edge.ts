@@ -248,18 +248,21 @@ export type ReadSharedObjectsResponseBody = {
 };
 
 /**
- * What a {@link ReadSharedObjectsRequest} signs. Bound to the space and the time so a captured signature reads nothing
- * elsewhere and soon expires; the prefix keeps it from ever equalling a join challenge, which is `<invitationId>:<key>`.
+ * What a {@link ReadSharedObjectsRequest} signs. Bound to the space, the objects and the time so a captured signature
+ * reads nothing else and soon expires; the prefix keeps it from ever equalling a join challenge, which is
+ * `<invitationId>:<key>`.
  */
 export const getSharedObjectsChallenge = ({
   spaceId,
   invitationId,
+  objectIds,
   issuedAt,
 }: {
   spaceId: string;
   invitationId: string;
+  objectIds: readonly string[];
   issuedAt: number;
-}): string => `dxos.shared-objects:${spaceId}:${invitationId}:${issuedAt}`;
+}): string => `dxos.shared-objects:${spaceId}:${invitationId}:${issuedAt}:${[...objectIds].sort().join(',')}`;
 
 export type RecoverIdentitySignature =
   | string

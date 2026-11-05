@@ -34,4 +34,17 @@ describe('share cache', () => {
     expect(await ShareCache.admitsGuest(await encode())).toBe(false);
     expect(await ShareCache.admitsGuest('not a payload')).toBe(false);
   });
+
+  test('asks EDGE for nothing without a guest key or for a space already cached', async ({ expect }) => {
+    const spaceId = SpaceId.random();
+    const encode = (invitation?: { invitationId: string }) =>
+      EffectEx.runPromise(encodeSharePayload({ version: 1, spaceId, invitation, plugins: [], objects: ['object'] }));
+    // Nothing listens here, so a request would fail the load rather than return nothing.
+    const load = async (payload: string, cachedSpaceIds: ReadonlySet<string> = new Set()) =>
+      ShareCache.load({ payload, edgeUrl: 'http://127.0.0.1:1', cachedSpaceIds });
+
+    expect(await load(await encode())).toEqual([]);
+    expect(await load(await encode({ invitationId: 'invitation' }))).toEqual([]);
+    expect(await load(await encode({ invitationId: 'invitation' }), new Set([spaceId]))).toEqual([]);
+  });
 });

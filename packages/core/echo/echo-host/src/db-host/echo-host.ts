@@ -1595,6 +1595,8 @@ export class EchoHost extends Resource {
     const directory = this._spaceStateManager.getRootBySpaceId(spaceId)?.directory();
     if (entry && directory) {
       const first = selectSyncFirstDocuments(announced, directory, entry.objectIds);
+      // Pending while heads are read, so a document that arrives meanwhile schedules another announcement.
+      entry.pending = new Set(first);
       const heads = await this._automergeHost.getHeads(first);
       // Replaced or timed out meanwhile, which scheduled another announcement.
       if (this.#syncFirst.get(spaceId) !== entry) {
