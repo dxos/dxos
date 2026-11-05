@@ -85,3 +85,22 @@ export class FeatureV3 extends Type.makeObject<FeatureV3>(DXN.make('org.dxos.typ
     code: Schema.optional(Schema.Array(CodeLink)),
   }),
 ) {}
+
+/**
+ * The 0.4.0 `Feature`, which held its requirements as a list where 0.5.0 keys each one. Kept solely so
+ * `Migration.define` can read existing data.
+ */
+export class FeatureV4 extends Type.makeObject<FeatureV4>(DXN.make('org.dxos.type.feature', '0.4.0'))(
+  Schema.Struct({
+    name: Schema.String,
+    description: Schema.optional(Schema.String),
+    requirements: Schema.optional(
+      Schema.Array(
+        Schema.Struct({ key: Schema.optional(Schema.String), id: Schema.optional(Schema.String), text: Schema.String }),
+      ),
+    ),
+    status: Schema.Literals(['planned', 'prototype', 'operational', 'failing']),
+    spec: Schema.optional(Ref.Ref(Obj.Unknown)),
+    code: Schema.optional(Schema.Array(CodeLink)),
+  }),
+) {}

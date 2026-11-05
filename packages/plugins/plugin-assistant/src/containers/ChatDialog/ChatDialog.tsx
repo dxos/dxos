@@ -59,7 +59,10 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
       <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
         <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
         <NaturalChatDialog.Content>
-          <Chat.Thread viewType={(chatViewType as ChatView | undefined) ?? settings.chatView} />
+          <Chat.Thread
+            viewType={(chatViewType as ChatView | undefined) ?? settings.chatView}
+            showTokens={settings.showTokens}
+          />
         </NaturalChatDialog.Content>
         <NaturalChatDialog.Footer classNames='p-1.5'>
           {/* What the request is doing before the first token arrives. */}

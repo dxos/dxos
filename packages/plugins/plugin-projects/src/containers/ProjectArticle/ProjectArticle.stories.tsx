@@ -598,7 +598,10 @@ export const WithoutSpec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    await expect(canvas.findByDisplayValue(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // The project's name comes first; each spec row has a name of its own.
+    await waitFor(() => expect(canvas.getAllByTestId('name')[0]).toHaveTextContent(OTHER_PROJECT_NAME), {
+      timeout: 10_000,
+    });
     const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
     await expect(within(specs).queryAllByRole('option')).toHaveLength(0);
 
@@ -634,9 +637,9 @@ export const Sections: Story = {
     const canvas = within(canvasElement);
     await seedContent();
 
-    // Header form: the project name renders as the editable name field's value. Identity/space
-    // setup runs async, so allow more than testing-library's default 1s timeout.
-    await expect(canvas.findByDisplayValue(PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    // Header form: identity/space setup runs async, so allow more than testing-library's default 1s timeout.
+    // The project's name comes first; each spec row has a name of its own.
+    await waitFor(() => expect(canvas.getAllByTestId('name')[0]).toHaveTextContent(PROJECT_NAME), { timeout: 10_000 });
 
     // Instructions: the owned Instructions markdown editor mounts once the folded Agent group opens.
     await openConfigGroup(canvas, 'agent');

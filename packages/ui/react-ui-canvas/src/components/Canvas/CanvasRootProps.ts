@@ -78,6 +78,8 @@ export type CanvasRootProps = Util.ThemedClassName<{
    * whatever the layout would allow.
    */
   readonly?: boolean;
+  /** Leaves the wheel and trackpad to the page until focus is inside the view, as a picture a scroll passes over does. */
+  wheelFocusRequired?: boolean;
   /** Draws no surface under the scene, so what is behind the canvas (e.g. a slide) shows through. */
   transparent?: boolean;
   /**

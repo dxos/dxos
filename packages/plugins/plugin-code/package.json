@@ -230,6 +230,7 @@
     "@dxos/deus": "workspace:*",
     "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -267,6 +268,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@typescript/typescript6": "catalog:",
     "@typescript/vfs": "catalog:",
@@ -275,7 +277,6 @@
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",

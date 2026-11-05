@@ -1066,3 +1066,15 @@ export const widgetsCore: Extension = [
   blockFocusKeys,
   scrollJumpMonitor,
 ];
+
+/** Focuses a field inside a block widget with its whole text selected, so typing replaces it: an input or an editor. */
+export const focusBlockField = (element: HTMLElement) => {
+  const editor = EditorView.findFromDOM(element);
+  if (editor) {
+    editor.dispatch({ selection: { anchor: 0, head: editor.state.doc.length } });
+    editor.focus();
+  } else {
+    element.focus();
+    element instanceof HTMLInputElement && element.select();
+  }
+};

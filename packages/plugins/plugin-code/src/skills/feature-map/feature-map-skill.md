@@ -48,10 +48,11 @@ become features and requirements: extract them rather than linking to the spec.
   the spec and deleting one deletes its feature, but its id must be kept as it is; change what a feature says through
   the feature operations.
 - Create a feature with `code-create-feature { name, description, requirements, spec? | parent? }`.
-  Change one with `code-update-feature`; `requirements` replaces the whole list, and `spec` moves it onto that
-  spec's map. `code-delete-feature` deletes a feature with its breakdown. Record that one feature needs another with
-  `code-add-feature-dependency { feature, dependsOn }` — a dependency that would close a cycle is refused, and
-  the error names the cycle. `code-remove-feature-dependency` undoes one.
+  Change one with `code-update-feature`; `requirements` replaces the whole list, so give each requirement back
+  with the `key` `code-get-features` returned for it (comments on it stay anchored by that key), and `spec`
+  moves it onto that spec's map. `code-delete-feature` deletes a feature with its breakdown. Record that one
+  feature needs another with `code-add-feature-dependency { feature, dependsOn }` — a dependency that would close
+  a cycle is refused, and the error names the cycle. `code-remove-feature-dependency` undoes one.
 - **When you pick up a task that moves a feature**, link it with `code-link-feature-task { task, feature }`
   and keep the task's status current: a started task is what marks the feature as being worked on.
 - **Set the status when you observe it**, with `code-update-feature { feature, status }`: `prototype` when it
