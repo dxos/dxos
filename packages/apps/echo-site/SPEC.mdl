@@ -646,6 +646,16 @@ feat F-12: Real-time editor demo
   req F-12.1:
     when: a reader opens the section on real time
     then: it shows a demo built with `react-ui-editor`
+
+feat F-13: Chat and hierarchical feeds demo
+
+  desc: |
+    A demo shows chat and hierarchical feeds with `plugin-assistant`. Planned; the spike does not
+    build it.
+
+  req F-13.1:
+    when: a reader opens the demo
+    then: it shows chat and hierarchical feeds with `plugin-assistant`
 ```
 
 ## Acceptance
@@ -1009,6 +1019,13 @@ decision D-32: Samples in a side-by-side comparison have no line numbers. Fills 
   for: user:richburdon
   affects: [F-2.5]
   why: The gutter takes about a fifth of a comparison column, and the extra wrapping costs more than the numbers give.
+```
+
+```mdl
+decision D-33: A demo shows chat and hierarchical feeds with `plugin-assistant`.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-13]
 ```
 
 ## Appendix: Extension Definitions
