@@ -365,7 +365,6 @@ export class Model2D extends Type.makeObject<Model2D>(DXN.make('org.dxos.type.sc
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -377,7 +376,6 @@ export class Model3D extends Type.makeObject<Model3D>(DXN.make('org.dxos.type.sc
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--shapes--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -390,7 +388,6 @@ export class Layout2D extends Type.makeObject<Layout2D>(DXN.make('org.dxos.type.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -402,7 +399,6 @@ export class Layout3D extends Type.makeObject<Layout3D>(DXN.make('org.dxos.type.
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -411,7 +407,6 @@ export class Scene2D extends Type.makeObject<Scene2D>(DXN.make('org.dxos.type.sc
   Schema.Struct({ key: Schema.String, ...makeSceneSchema(Camera2D, Ref.Ref(Layout2D)).fields }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--square--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 
@@ -420,7 +415,6 @@ export class Scene3D extends Type.makeObject<Scene3D>(DXN.make('org.dxos.type.sc
   Schema.Struct({ key: Schema.String, ...makeSceneSchema(Camera3D, Ref.Ref(Layout3D)).fields }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'sky' }),
-    Annotation.UserType.set(),
   ),
 ) {}
 

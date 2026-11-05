@@ -1025,3 +1025,13 @@ decision D-102: react-ui-canvas-editor's `SceneEditor` edits the scene model and
   affects: [Scene]
   why: The scene UI split into a surface and an editor application, and this spec names where each lives.
 ```
+
+```mdl
+decision D-103: `Model2D`, `Model3D`, `Layout2D`, `Layout3D`, `Scene2D`, `Scene3D` and `StyleCatalog` are not user types: they are the parts of a drawing, which is what a person opens, so they stay out of pickers, the nav tree and a space's Database section.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Scene]
+  why: Each canvas drawing listed its scene types, unlabelled, in the Database section, none of which a person creates or opens on its own.
+  rejected: Labelling the types, which keeps internal parts in every type list.
+```
