@@ -40,8 +40,8 @@ const slides = [
   [
     '# Keyboard',
     '',
-    '- `←` / `→` or `Space` step through the slide, then on to the next',
-    '- `↑` / `↓` or `[` / `]` previous and next slide',
+    '- `↑` / `↓` or `Space` step through the slide, then on to the next',
+    '- `←` / `→` or `[` / `]` previous and next slide',
     '- `Cmd+←` / `Cmd+→` jump to the first or last slide',
     '- `f` toggles fullscreen',
     '- `ESC` leaves fullscreen',

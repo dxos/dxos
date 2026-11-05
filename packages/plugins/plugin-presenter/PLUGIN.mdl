@@ -112,8 +112,8 @@ component Deck
     Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: Cmd (or Ctrl) with
     left or right, Shift with left or right, and Home and End jump to first and last, `f` toggles fullscreen,
-    Escape exits fullscreen. Space and right advance a click step, else the slide; left retreats a click step,
-    else lands on the previous slide fully revealed. Down and `]` move to the next slide at its first step, and Up
+    Escape exits fullscreen. Space and Down advance a click step, else the slide; Up retreats a click step,
+    else lands on the previous slide fully revealed. Right and `]` move to the next slide at its first step, and Left
     and `[` to the previous slide fully revealed, past any remaining click steps; neither acts at the deck's end.
     Click steps are ephemeral and reset on slide change; Space
     does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
@@ -1509,6 +1509,23 @@ decision D-80: Ctrl acts as Cmd on the jump keys, and Shift with left or right, 
 decision D-81: Approve [D-80].
   date: 2026-11-04
   by: user:richburdon
+```
+
+```mdl
+decision D-82: Left and right move between slides; Up and Down move through a slide's click steps.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-78
+  affects: [F-12.4]
+```
+
+```mdl
+decision D-83: Space, `[`, `]`, and Cmd with left or right keep their bindings from [D-78]. Down carries on to the next slide once its click steps run out, and Up to the previous slide fully revealed. Fills in [D-82].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.4]
+  why: The request named only the arrow keys, and stopping at a slide's last step would leave Down and Space disagreeing.
 ```
 
 ---

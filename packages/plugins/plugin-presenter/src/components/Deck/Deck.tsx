@@ -183,6 +183,14 @@ const DeckRoot = ({
           nextSlide();
         }
       };
+      const backward = () => {
+        if (step > 0) {
+          event.preventDefault();
+          setStepState({ index, step: step - 1 });
+        } else {
+          previousSlide();
+        }
+      };
       switch (event.key) {
         case ' ':
           // Space activates a focused control, so it only advances from non-interactive targets.
@@ -196,21 +204,15 @@ const DeckRoot = ({
           setFullscreen(!fullscreen);
           return;
         case 'ArrowLeft':
-          if (command || event.shiftKey) {
-            return go(0);
-          }
-          if (step > 0) {
-            event.preventDefault();
-            setStepState({ index, step: step - 1 });
-            return;
-          }
-          return previousSlide();
+          return command || event.shiftKey ? go(0) : previousSlide();
         case 'ArrowRight':
-          return command || event.shiftKey ? go(count - 1) : forward();
+          return command || event.shiftKey ? go(count - 1) : nextSlide();
         case 'ArrowUp':
+          return backward();
+        case 'ArrowDown':
+          return forward();
         case '[':
           return previousSlide();
-        case 'ArrowDown':
         case ']':
           return nextSlide();
         case 'Home':
