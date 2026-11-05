@@ -87,7 +87,7 @@ const ArtifactURI: Schema.Schema<string> & {
 
 type ArtifactURI = Schema.Schema.Type<typeof ArtifactURI>;
 
-const refFromUri = SchemaTransformation.transform({
+const refFromUri = SchemaTransformation.transform<EncodedReference, string>({
   decode: (fromA: string) => {
     const eid = ArtifactURI.toEchoURI(fromA);
     // Normalize to local form: strip any space authority so the ref resolves within the current

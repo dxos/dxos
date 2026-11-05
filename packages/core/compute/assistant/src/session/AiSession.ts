@@ -16,7 +16,13 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
-import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import {
+  AiTelemetry,
+  type OpaqueToolkit,
+  PromptDefinition,
+  type ToolExecutionService,
+  type ToolResolverService,
+} from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
@@ -53,6 +59,11 @@ export type RunProps<R = never> = {
   system?: string;
   observer?: GenerationObserver;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
+  /**
+   * System prompt sections that tool parameters refer to, added to the ones the turn's tools declare
+   * (see {@link PromptDefinition.fromToolkit}).
+   */
+  definitions?: readonly PromptDefinition.PromptDefinition[];
 
   /**
    * The MCP servers to connect, read at the start of every iteration so a server added during the
@@ -244,14 +255,27 @@ export class Session extends Resource {
         ...currentSkills.map((skill) => skill.instructions.source.target?.content),
       ];
       let formatted:
-        | { skills: Skill.Skill[]; objects: Obj.Unknown[]; sources: (string | undefined)[]; text: string }
+        | {
+            skills: Skill.Skill[];
+            objects: Obj.Unknown[];
+            sources: (string | undefined)[];
+            definitionIds: string;
+            text: string;
+          }
         | undefined;
-      const formatSystem = (currentSkills: Skill.Skill[], currentObjects: Obj.Unknown[]) =>
+      const formatSystem = (
+        currentSkills: Skill.Skill[],
+        currentObjects: Obj.Unknown[],
+        definitions: readonly PromptDefinition.PromptDefinition[],
+      ) =>
         Effect.gen({ self: this }, function* () {
           const currentSources = sources(currentSkills);
+          // The toolkit is rebuilt every iteration, so its definitions compare by id rather than identity.
+          const definitionIds = definitions.map(({ id }) => id).join('\n');
           if (
             formatted?.skills === currentSkills &&
             formatted.objects === currentObjects &&
+            formatted.definitionIds === definitionIds &&
             currentSources.every((source, index) => source !== undefined && source === formatted?.sources[index])
           ) {
             return formatted.text;
@@ -261,8 +285,9 @@ export class Session extends Resource {
             skills: currentSkills,
             objects: currentObjects,
             instructions: this.#instructions,
+            definitions,
           }).pipe(Effect.orDie);
-          formatted = { skills: currentSkills, objects: currentObjects, sources: currentSources, text };
+          formatted = { skills: currentSkills, objects: currentObjects, sources: currentSources, definitionIds, text };
           return text;
         });
 
@@ -281,7 +306,7 @@ export class Session extends Resource {
         prompt: params.prompt,
         sender: params.sender,
         system: params.system,
-        systemPrompt: yield* formatSystem(skills, objects),
+        systemPrompt: yield* formatSystem(skills, objects, params.definitions ?? []),
       });
 
       markWork('session.request-begun');
@@ -311,7 +336,11 @@ export class Session extends Resource {
 
         markWork('session.toolkit-built');
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
-        const system = yield* formatSystem(currentSkills, this.context.getObjects());
+        const definitions = PromptDefinition.merge(
+          params.definitions ?? [],
+          PromptDefinition.fromToolkit(toolkit.toolkit),
+        );
+        const system = yield* formatSystem(currentSkills, this.context.getObjects(), definitions);
         markWork('session.system-prompt-built');
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });

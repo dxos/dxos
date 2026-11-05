@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
+import { PromptDefinition } from '@dxos/ai';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import { Database, type Error, Obj, type Registry } from '@dxos/echo';
@@ -27,7 +28,8 @@ export const formatSystemPrompt = ({
   skills = [],
   objects = [],
   instructions = [],
-}: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects' | 'instructions'>): Effect.Effect<
+  definitions = [],
+}: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects' | 'instructions' | 'definitions'>): Effect.Effect<
   string,
   Operation.FunctionNotFoundError | Error.EntityNotFoundError,
   Database.Service | Registry.Service | Operation.Service
@@ -99,7 +101,10 @@ export const formatSystemPrompt = ({
 
     return yield* Function.pipe(
       Effect.succeed(
-        [system, instructionDefs, skillDefs, objectDefs].filter((def): def is string => def !== undefined),
+        // Definitions precede Context Objects, which change per chat, so the shared text stays in the common prefix.
+        [system, instructionDefs, skillDefs, PromptDefinition.format(definitions), objectDefs].filter(
+          (def): def is string => def !== undefined,
+        ),
       ),
       Effect.map((parts) => parts.join('\n\n')),
     );

@@ -9,13 +9,14 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { OpaqueToolkit, ToolId, ToolResolverService } from '@dxos/ai';
+import { OpaqueToolkit, PromptDefinition, ToolId, ToolResolverService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
+import { ObjectReferenceDefinition } from '../util/index.ts';
 import {
   createStructFieldsFromSchema,
   isHandlerLike,
@@ -195,6 +196,42 @@ describe('projectFunctionToTool', () => {
       properties: { any: 1 },
     });
     expect(decoded.properties).toEqual({ any: 1 });
+  });
+
+  // The format lives once in the system prompt; repeated in every ref parameter it was ~18k tokens a request.
+  test('a ref parameter keeps its own description and refers to the object reference definition', ({ expect }) => {
+    const hint = `An object reference (see "${ObjectReferenceDefinition.title}" in Definitions).`;
+    const Reply = Operation.make({
+      meta: { key: DXN.make('com.example.operation.test.reply'), name: 'Reply' },
+      input: Schema.Struct({
+        agent: Ref.Ref(Obj.Unknown).annotate({ description: 'The agent acting.' }),
+        files: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))),
+      }),
+      output: Schema.Void,
+    });
+
+    // The persisted form is what EDGE projects.
+    for (const operation of [Reply, Operation.deserialize(Operation.serialize(Reply))]) {
+      const tool = projectFunctionToTool(operation);
+      const advertised = Tool.getJsonSchema(tool);
+      expect(advertised).toMatchObject({
+        properties: {
+          agent: { type: 'string', description: `The agent acting.\n${hint}` },
+          files: { type: 'array', items: { type: 'string', description: hint } },
+        },
+      });
+      expect(JSON.stringify(advertised)).not.toContain('examples');
+      expect(PromptDefinition.fromTool(tool)).toEqual([ObjectReferenceDefinition]);
+    }
+  });
+
+  test('a tool without ref parameters refers to no definitions', ({ expect }) => {
+    const Echo = Operation.make({
+      meta: { key: DXN.make('com.example.operation.test.echo') },
+      input: Schema.Struct({ value: Schema.String }),
+      output: Schema.Void,
+    });
+    expect(PromptDefinition.fromTool(projectFunctionToTool(Echo))).toEqual([]);
   });
 
   // v4 nests a rest signature under `allOf`; the recorded corpus states it on the node itself.

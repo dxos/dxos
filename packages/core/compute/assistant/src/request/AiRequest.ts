@@ -22,6 +22,7 @@ import {
   AiSummarizer,
   type AiToolNotFoundError,
   type OpaqueToolkit,
+  PromptDefinition,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
@@ -126,6 +127,11 @@ export type RunProps<R = never> = {
   skills?: readonly Skill.Skill[];
   /** Rendered inline into the system prompt; passed explicitly rather than inferred from `objects`. */
   instructions?: readonly Instructions.Instructions[];
+  /**
+   * System prompt sections that tool parameters refer to, added to the ones the toolkit's tools declare
+   * (see {@link PromptDefinition.fromToolkit}).
+   */
+  definitions?: readonly PromptDefinition.PromptDefinition[];
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
@@ -139,6 +145,7 @@ export type BeginProps = {
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
   instructions?: readonly Instructions.Instructions[];
+  definitions?: readonly PromptDefinition.PromptDefinition[];
 };
 
 export type TurnProps<R = never> = {
@@ -267,6 +274,7 @@ export class Request {
     skills = [],
     objects = [],
     instructions = [],
+    definitions = [],
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen({ self: this }, function* () {
       this._started = Date.now();
@@ -276,7 +284,8 @@ export class Request {
       this.#unresolvedTools = 0;
 
       const systemPrompt =
-        formatted ?? (yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie));
+        formatted ??
+        (yield* formatSystemPrompt({ system, skills, objects, instructions, definitions }).pipe(Effect.orDie));
 
       if (this._options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
@@ -543,12 +552,21 @@ export class Request {
     objects = [],
     skills = [],
     instructions = [],
+    definitions: extraDefinitions = [],
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
-      const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(
-        Effect.orDie,
+      const definitions = PromptDefinition.merge(
+        extraDefinitions,
+        toolkit ? PromptDefinition.fromToolkit(toolkit.toolkit) : [],
       );
+      const system = yield* formatSystemPrompt({
+        system: systemTemplate,
+        skills,
+        objects,
+        instructions,
+        definitions,
+      }).pipe(Effect.orDie);
       yield* this.begin({
         prompt,
         sender,
@@ -558,6 +576,7 @@ export class Request {
         objects,
         skills,
         instructions,
+        definitions,
       });
 
       do {

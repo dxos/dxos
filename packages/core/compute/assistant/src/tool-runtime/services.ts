@@ -443,7 +443,8 @@ const mapSchemaTypeForLLM = (
   if (Ref.isRefType(ast)) {
     // v4's element and property nodes carry their own modifiers, so the wrapper types are gone and
     // the annotations record is optional.
-    const replacement = refFromLLM(SchemaAST.resolveAnnotations(ast)?.description).ast;
+    const own = SchemaAST.resolveAnnotations(ast)?.description;
+    const replacement = refFromLLM(typeof own === 'string' ? own : undefined).ast;
     const replacementDefinition = PromptDefinition.fromAst(replacement);
     if (replacementDefinition) {
       definitions.push(replacementDefinition);

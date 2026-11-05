@@ -14,6 +14,7 @@ import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { Text } from '@dxos/schema';
 
+import { ObjectReferenceDefinition } from '../util/index.ts';
 import { formatSystemPrompt } from './format.ts';
 
 const testLayer = () =>
@@ -77,6 +78,22 @@ describe('formatSystemPrompt', () => {
       expect(prompt).toContain('<label>Draft</label>');
       expect(prompt).not.toContain('## Instructions');
       expect(prompt).not.toContain('Answer like a pirate.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('renders the definitions tools refer to ahead of the per-chat context objects', () =>
+    Effect.gen(function* () {
+      const doc = yield* Database.add(Text.make({ content: 'plain object' }));
+      const prompt = yield* formatSystemPrompt({
+        system: 'Base prompt.',
+        objects: [doc],
+        definitions: [ObjectReferenceDefinition],
+      });
+      expect(prompt).toContain(`## Definitions\n\n<definition name="${ObjectReferenceDefinition.title}">`);
+      expect(prompt).toContain(ObjectReferenceDefinition.text);
+      expect(prompt.indexOf('## Definitions')).toBeLessThan(prompt.indexOf('## Context Objects'));
+
+      expect(yield* formatSystemPrompt({ system: 'Base prompt.' })).not.toContain('## Definitions');
     }).pipe(Effect.provide(testLayer())),
   );
 
