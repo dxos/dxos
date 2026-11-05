@@ -574,24 +574,33 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
   });
 
-  test('F-3.5: a failed import keeps the path bound to its object, and the next pass retries it', async ({
+  test('F-3.5: a failed import keeps the path bound but unexported, and the next pass retries the head', async ({
     expect,
   }) => {
-    const { sync, marker, textAt } = await setup();
+    const { git, sync, marker, textAt, edit, fileOn } = await setup();
     await sync();
     const before = await textAt('spec/PLUGIN.mdl');
     const other = { ...MAPPING, id: 'com.example.mapping.other', match: ['spec/PLUGIN.mdl'] };
     const released = [{ ...MAPPING, exclude: ['spec/PLUGIN.mdl'] }];
+    const failing = [...released, { ...other, import: Unhandled }];
+    const next = SPEC_V1.replace('F-1: one', 'F-1: first');
+    push(git, 'main', { 'spec/PLUGIN.mdl': next });
 
-    const { result } = await sync([...released, { ...other, import: Unhandled }]);
+    const { result } = await sync(failing);
 
     expect(result.skipped).toEqual([{ path: 'spec/PLUGIN.mdl', reason: 'import failed' }]);
     expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: MAPPING.id, object: before && Obj.getURI(before) });
     expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([fileKey('1234', 'spec/PLUGIN.mdl')]);
 
+    // The old mapping no longer claims the path, so an edit to its object is not pushed.
+    await edit('spec/PLUGIN.mdl', (content) => content.replace('F-2: two', 'F-2: second'));
+    await sync(failing);
+    expect(fileOn('composer/edits', 'spec/PLUGIN.mdl')).toBeUndefined();
+
     await sync([...released, other]);
 
     expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: other.id });
+    expect((await textAt('spec/PLUGIN.mdl'))?.content).toBe(next);
     expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
   });
 

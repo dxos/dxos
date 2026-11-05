@@ -430,7 +430,7 @@ feat F-3: Pull
 
   req F-3.5:
     when: a path's marker names a mapping other than the one that claims the path now
-    then: the mapping that claims it imports the path as in F-3.1, whether or not it changed, and only then is the old object released as in F-3.4; a failed import leaves the path bound to the old object for the next pass to retry, and a path renamed in the same pass is imported only at its new path
+    then: the mapping that claims it imports the path as in F-3.1, whether or not it changed, and only then is the old object released as in F-3.4; a failed import leaves the path bound to the old object, which no longer exports it, for the next pass to retry with the head's content; a path renamed in the same pass is imported only at its new path
 ```
 
 ```mdl
@@ -789,4 +789,14 @@ decision D-29: A re-claimed path is released from its old object only once the n
   for: user:wittjosiah
   affects: [F-3.5]
   why: Releasing first left a path whose import failed unbound until it changed again, and imported a renamed file's old path anew.
+```
+
+```mdl
+decision D-30: While a re-claimed path's import keeps failing, the old mapping does not export it, and each retry reads the path's content from the head's tree ([F-3.5]). Fills in [D-27].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.5, F-4.1]
+  why: The kept marker names the old mapping and holds the blob of its last good pull, so exporting through it pushes through a mapping that no longer claims the file, and retrying its blob imports stale content.
+  rejected: A pending-blob field on the marker, which changes FileMarker for a state one tree read recovers.
 ```

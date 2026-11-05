@@ -360,16 +360,28 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       }
 
       // F-3.5: a path another mapping now claims is imported anew, changed or not; pullChange releases it.
-      for (const marker of markers.values()) {
+      const reclaims = [...markers.values()].filter((marker) => {
         const claiming = mappingFor(marker.path);
-        if (!claiming || claiming.id === marker.mapping) {
-          continue;
-        }
-        const touched = changes.some(
-          (change) => change.path === marker.path || (change.kind === 'renamed' && change.from === marker.path),
+        return (
+          claiming !== undefined &&
+          claiming.id !== marker.mapping &&
+          !changes.some(
+            (change) => change.path === marker.path || (change.kind === 'renamed' && change.from === marker.path),
+          )
         );
-        if (!touched) {
-          changes.push({ kind: 'added', path: marker.path, blob: marker.blob });
+      });
+      if (reclaims.length > 0) {
+        // A failed import leaves the marker's blob behind the head, so the content is read from the head's tree.
+        const tree = yield* GitHubApi.fetchTree(owner, name, head);
+        requests++;
+        const blobs = new Map(tree.blobs.map((entry) => [entry.path, entry]));
+        for (const marker of reclaims) {
+          const entry = blobs.get(marker.path);
+          changes.push(
+            entry
+              ? { kind: 'added', path: marker.path, blob: entry.sha, size: entry.size }
+              : { kind: 'removed', path: marker.path },
+          );
         }
       }
 
@@ -514,7 +526,8 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       const exports: { marker: FileMarker; content: string; blob: string; heads: readonly string[] }[] = [];
       for (const marker of markers.values()) {
         const mapping = mappingById.get(marker.mapping);
-        if (!mapping?.export) {
+        // A mapping that no longer claims the path (F-3.5, its import still to succeed) does not export it.
+        if (!mapping?.export || mappingFor(marker.path)?.id !== mapping.id) {
           continue;
         }
         const exported = mapping.export;

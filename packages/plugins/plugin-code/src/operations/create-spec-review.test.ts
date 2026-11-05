@@ -88,5 +88,7 @@ describe('CreateSpecReview', () => {
     await expect(record(REVIEW.replace(/^---[\s\S]*?---\n/, ''))).rejects.toThrow(/front matter/);
     await expect(record(later('2026-11-5', 'fedcba9876543210'))).rejects.toThrow(/YYYY-MM-DD/);
     await expect(record(later('2026-11-05T18:30+01:00', 'fedcba9876543210'))).rejects.toThrow(/UTC time/);
+    // Seconds would order `T18:30:30Z` before `T18:30Z` as text.
+    await expect(record(later('2026-11-05T18:30:30Z', 'fedcba9876543210'))).rejects.toThrow(/UTC time/);
   });
 });

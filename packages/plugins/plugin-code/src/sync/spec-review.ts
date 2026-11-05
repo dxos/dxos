@@ -14,13 +14,13 @@ export type ReviewFields = Omit<SpecReview.MakeProps, 'spec'>;
 export type ReviewData = Pick<SpecReview.SpecReview, 'id' | 'commit' | 'date' | 'by' | 'summary' | 'verdicts'>;
 
 /**
- * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, seconds
- * optional): the forms whose text order is their time order, which is how reviews are ordered.
+ * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, no
+ * seconds): the forms whose text order is their time order, which is how reviews are ordered.
  */
 const isDate = (value: string) => {
   const time = Date.parse(value.includes('T') ? value : `${value}T00:00:00Z`);
   return (
-    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?Z)?$/.test(value) &&
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}Z)?$/.test(value) &&
     !Number.isNaN(time) &&
     new Date(time).toISOString().startsWith(value.replace(/Z$/, ''))
   );

@@ -147,13 +147,13 @@ const declares = (source: string, name: string): boolean => {
 type ResolvedKey = { file?: string; symbol?: string; error?: string };
 
 /**
- * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, seconds
- * optional), as plugin-code's importer accepts it: the forms whose text order is their time order.
+ * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, no
+ * seconds), as plugin-code's importer accepts it: the forms whose text order is their time order.
  */
 const isReviewDate = (value: string) => {
   const time = Date.parse(value.includes('T') ? value : `${value}T00:00:00Z`);
   return (
-    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?Z)?$/.test(value) &&
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}Z)?$/.test(value) &&
     !Number.isNaN(time) &&
     new Date(time).toISOString().startsWith(value.replace(/Z$/, ''))
   );
