@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, type Database, Obj, Type } from '@dxos/echo';
+import { type Database, DXN, Obj, Type } from '@dxos/echo';
 
 class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
   Schema.Struct({ done: Schema.Boolean }),

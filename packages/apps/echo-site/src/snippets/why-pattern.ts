@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { type Database, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 
 declare const db: Database.Database;
 

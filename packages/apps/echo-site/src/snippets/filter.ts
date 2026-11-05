@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { type Database, DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 
 class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
   Schema.Struct({ title: Schema.String, priority: Schema.Number, tags: Schema.Array(Schema.String) }),
@@ -35,4 +35,4 @@ const matches = Filter.text('conflict resolution', { type: 'full-text' });
 const recent = Filter.updated({ after: new Date('2026-11-01') });
 // #endregion
 
-export { matches, recent, results, untyped, Obj };
+export { Obj, matches, recent, results, untyped };
