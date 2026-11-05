@@ -7,7 +7,28 @@ import { describe, test } from 'vitest';
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { createRenderer, linkBareObjectUris, parseMentions } from './renderer.ts';
+import { createRenderer, estimateRow, linkBareObjectUris, parseMentions } from './renderer.ts';
+import { type LaneCardData, laneTag } from './types.ts';
+
+describe('estimateRow', () => {
+  const laneCard = (id: string): LaneCardData => ({
+    lane: { id, hue: 'sky', status: 'running', started: '2026-01-01T00:00:00.000Z' },
+    lines: Array.from({ length: 40 }, () => ({
+      role: 'assistant',
+      text: 'A long line of work in the lane.'.repeat(4),
+    })),
+  });
+  const laneRow = (...ids: string[]) => estimateRow(message([{ _tag: 'text', text: laneTag(ids.map(laneCard)) }]));
+
+  test('a lane row estimates its collapsed cards, not its payload', ({ expect }) => {
+    expect(laneRow('a')).toBeLessThan(300);
+  });
+
+  test('lane cards share lines', ({ expect }) => {
+    expect(laneRow('a', 'b')).toBe(laneRow('a'));
+    expect(laneRow('a', 'b', 'c')).toBeGreaterThan(laneRow('a'));
+  });
+});
 
 describe('createRenderer', () => {
   test('a run of tool calls is one panel', ({ expect }) => {

@@ -43,6 +43,14 @@ export type TurnRequest = {
   sender?: Parameters<AiSession.Session['createRequest']>[0]['sender'];
   system?: string;
   mcpServers?: Parameters<AiSession.Session['createRequest']>[0]['mcpServers'];
+  /** The queued message or alarm the turn answers, which it consumes rather than copies. */
+  source?: AiSession.TurnSource;
+  /** Model the turn runs on. */
+  model?: Parameters<AiSession.Session['createRequest']>[0]['model'];
+  /** The light thread the turn runs in; absent for main. A producer that ignores it runs the turn on main. */
+  thread?: Parameters<AiSession.Session['createRequest']>[0]['thread'];
+  /** Whether the turn may delegate to subagents in background threads. A producer that ignores it cannot. */
+  delegation?: boolean;
 };
 
 export type MakeTurnProducerOptions = {

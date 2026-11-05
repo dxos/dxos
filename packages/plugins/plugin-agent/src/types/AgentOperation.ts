@@ -10,15 +10,26 @@ import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Space } from '@dxos/halo';
-import { Channel } from '@dxos/types';
+import { Text } from '@dxos/schema';
+import { Channel, Person } from '@dxos/types';
 
 import * as AgentEmail from './AgentEmail.ts';
 import * as BrainService from './BrainService.ts';
+
+/**
+ * The types a new agent is made of that this plugin does not register. On EDGE a bundle registers only its own plugin's
+ * types (EDGE-PLUGINS D-41), so an operation declares, in `types`, every other type it writes.
+ */
+const AGENT_TYPES = [Agent.Agent, Chat.Chat, Instructions.Instructions, Text.Text, Feed.Feed];
+
+/** The types a new chat is made of that this plugin does not register. */
+const CHAT_TYPES = [Chat.Chat, Feed.Feed];
 
 /** Creates an agent (instructions, feed and companion chat) in the space. */
 export const CreateAgent = Operation.make({
@@ -30,6 +41,7 @@ export const CreateAgent = Operation.make({
     icon: 'ph--chats-circle--regular',
   },
   services: [Database.Service],
+  types: AGENT_TYPES,
   input: Schema.Struct({
     name: Schema.String.annotate({ description: 'The name of the agent.' }),
     instructions: Schema.optional(
@@ -54,6 +66,7 @@ export const CreateEmailChannel = Operation.make({
     icon: 'ph--envelope--regular',
   },
   services: [Database.Service],
+  types: [Channel.Channel],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that answers mail to the address.' }),
     ...AgentEmail.Properties.fields,
@@ -76,6 +89,7 @@ export const EnsureChannelChat = Operation.make({
     icon: 'ph--chat-circle-dots--regular',
   },
   services: [Database.Service],
+  types: CHAT_TYPES,
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that converses in the channel.' }),
     channel: Ref.Ref(Channel.Channel).annotate({ description: 'The channel the conversation is in.' }),
@@ -157,6 +171,7 @@ export const CustomizeSkill = Operation.make({
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
+  types: [Skill.Skill, Text.Text],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     skill: Schema.String.annotate({ description: 'The registry key of the skill to customize.' }),
@@ -194,6 +209,7 @@ export const EnsureParticipantChat = Operation.make({
     icon: 'ph--user-circle-plus--regular',
   },
   services: [Database.Service],
+  types: CHAT_TYPES,
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     person: Ref.Ref(Obj.Unknown).annotate({ description: 'The person the chat is with.' }),
@@ -221,6 +237,7 @@ export const OpenPrivateChat = Operation.make({
     icon: 'ph--lock-key--regular',
   },
   services: [Database.Service],
+  types: [Person.Person, ...CHAT_TYPES],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
     identityDid: Schema.String.annotate({ description: "The member's identity DID; the chat is private to it." }),
@@ -287,6 +304,7 @@ export const InviteAgent = Operation.make({
     skipRegistry: true,
   },
   services: [Database.Service, Hypergraph.Service, Capability.Service],
+  types: AGENT_TYPES,
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({
       description:

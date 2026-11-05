@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
+import { type Extension, Facet } from '@codemirror/state';
 
 import { AnchorWidget } from './anchor.ts';
 import { type LinkWidgetProps, linkWidgets, matchSchemes } from './link-widgets.ts';
@@ -10,6 +10,16 @@ import { type WidgetDef } from './widgets.ts';
 
 /** URL schemes that name an ECHO object. */
 export const OBJECT_URL_SCHEMES = ['eid:', 'echo:'];
+
+/** The element inside an object's embed that takes the cursor once attended, for an object an extension just made; asked once. */
+export const objectEmbedFocus = Facet.define<
+  (objectId: string) => string | undefined,
+  (objectId: string) => string | undefined
+>({
+  // The first claim wins, and later ones are not asked, as asking can consume a claim.
+  combine: (claims) => (objectId) =>
+    claims.reduce<string | undefined>((found, claim) => found ?? claim(objectId), undefined),
+});
 
 /** A link widget's props, with the URL under the name the object machinery uses. */
 export type ObjectLinkProps<TContext = unknown> = LinkWidgetProps<TContext> & { eid: string };

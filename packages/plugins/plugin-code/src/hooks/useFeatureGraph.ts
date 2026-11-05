@@ -145,6 +145,7 @@ export const useFeatureGraph = (
               requirements,
               status,
               specs: Feature.getSources(snapshot),
+              blockId: Feature.getBlockId(snapshot),
               spec: container?.id,
               parent: parent?.id,
               link: Feature.getLink(snapshot),

@@ -14,7 +14,7 @@ import { mapDevices, printDevices } from '../util.ts';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const devices = client.halo.devices.get();
 
   if (json) {

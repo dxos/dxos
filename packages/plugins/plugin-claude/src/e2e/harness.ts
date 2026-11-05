@@ -11,11 +11,12 @@ import { type IncomingMessage, type ServerResponse, createServer } from 'node:ht
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Database, Feed, Filter, Obj, type Registry } from '@dxos/echo';
+import { Database, type Feed, type Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -259,10 +260,7 @@ export const answerPermissions = ({
     const asked: Asked[] = [];
     const answered = new Set<string>();
     const sweep = Effect.gen(function* () {
-      const messages = (yield* Feed.query(feed, Filter.type(Message.Message)).run).filter(
-        Obj.instanceOf(Message.Message),
-      );
-      for (const message of messages) {
+      for (const message of yield* TrajectoryStore.threadMessages(feed)) {
         for (const block of message.blocks) {
           if (block._tag !== 'request' || block.resolution !== undefined || answered.has(block.requestId)) {
             continue;
@@ -324,9 +322,7 @@ export const turn = Effect.fnUntraced(function* (
     .join('\n');
 });
 
-export const messages = Effect.fnUntraced(function* (feed: Feed.Feed) {
-  return (yield* Feed.query(feed, Filter.type(Message.Message)).run).filter(Obj.instanceOf(Message.Message));
-});
+export const messages = (feed: Feed.Feed) => TrajectoryStore.threadMessages(feed);
 
 /** One line per message, naming its blocks, so a turn that stalls says where. */
 const summarize = (tail: readonly Message.Message[]): string =>

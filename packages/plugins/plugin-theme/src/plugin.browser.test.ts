@@ -141,6 +141,23 @@ describe('ThemePlugin', () => {
     expect(root.style.getPropertyValue('--color-accent-bg')).toBe('');
   });
 
+  test('focus setting rewrites the root focus token, and clears it when unset', async ({ expect }) => {
+    await using harness = await createTestApp({
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
+    });
+    const registry = harness.get(Capabilities.AtomRegistry);
+    const settingsAtom = harness.get(ThemeCapabilities.Settings);
+    const root = document.documentElement;
+
+    registry.set(settingsAtom, { focus: 'violet' });
+    await Promise.resolve();
+    expect(root.style.getPropertyValue('--color-focus')).toBe('var(--color-violet-500)');
+
+    registry.set(settingsAtom, {});
+    await Promise.resolve();
+    expect(root.style.getPropertyValue('--color-focus')).toBe('');
+  });
+
   test("appearance 'system' follows the OS preference", async ({ expect }) => {
     stubMatchMedia(true); // System preference = dark.
     await using _harness = await createTestApp({

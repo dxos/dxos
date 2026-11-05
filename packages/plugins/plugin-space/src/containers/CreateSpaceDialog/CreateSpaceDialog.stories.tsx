@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, screen, waitFor, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -57,6 +57,13 @@ const TemplatesPlugin = Plugin.define(
             hidden: true,
             apply: () => Effect.void,
           },
+          // Enough rows to scroll the dialog at any story height.
+          ...Array.from({ length: 24 }, (_, index) => ({
+            id: `com.example.template.row-${index}`,
+            label: `Sample ${String(index + 1).padStart(2, '0')}`,
+            description: 'Fills the picker.',
+            apply: () => Effect.void,
+          })),
         ],
       }),
     ),
@@ -145,5 +152,49 @@ export const TestLayout: Story = {
     const name = fieldOf('Name').getBoundingClientRect();
     const save = within(dialog).getByTestId('save-button').getBoundingClientRect();
     await expect(Math.abs(save.right - name.right)).toBeLessThanOrEqual(1);
+  },
+};
+
+/**
+ * 1. Clicking a template leaves the list where it was scrolled, and fills the form from it.
+ * 2. The chosen row keeps a standing outline, and it is the only one.
+ * 3. The dialog has one scroller, whose viewport reaches the dialog's edge.
+ */
+export const TestSelection: Story = {
+  play: async () => {
+    const dialog = await screen.findByTestId('create-space-dialog');
+    const row = await within(dialog).findByRole('option', { name: /Sample 12/ }, { timeout: 10_000 });
+    // Measured rather than selected by part, since the viewport is a composed Container that carries its own part.
+    const scrollers = Array.from(dialog.querySelectorAll<HTMLElement>('*')).filter(
+      (element) =>
+        ['auto', 'scroll'].includes(getComputedStyle(element).overflowY) && element.scrollHeight > element.clientHeight,
+    );
+    await expect(scrollers).toHaveLength(1);
+    const [scroller] = scrollers;
+    await expect(
+      Math.abs(scroller.getBoundingClientRect().right - dialog.getBoundingClientRect().right),
+    ).toBeLessThanOrEqual(1);
+
+    // The list's first focus only scrolls while the list's top is in view, so this press has to come before scrolling.
+    await expect(scroller.scrollTop).toBe(0);
+    await userEvent.click(within(dialog).getByRole('option', { name: /Roastery/ }));
+    await waitFor(() => expect(within(dialog).getByRole('textbox', { name: /Name/ })).toHaveValue('Roastery'));
+    await expect(scroller.scrollTop).toBe(0);
+
+    row.scrollIntoView({ block: 'center' });
+    await waitFor(() => expect(scroller.scrollTop).toBeGreaterThan(0));
+    const scrollTop = scroller.scrollTop;
+    await userEvent.click(row);
+
+    await waitFor(() => expect(row).toHaveAttribute('aria-selected', 'true'));
+    await waitFor(() => expect(within(dialog).getByRole('textbox', { name: /Name/ })).toHaveValue('Sample 12'));
+    await expect(row.isConnected).toBe(true);
+    await expect(scroller.scrollTop).toBe(scrollTop);
+    await expect(getComputedStyle(row).outlineStyle).toBe('solid');
+    await expect(
+      Array.from(dialog.querySelectorAll('[role="option"]')).filter(
+        (option) => getComputedStyle(option).outlineStyle === 'solid',
+      ),
+    ).toHaveLength(1);
   },
 };

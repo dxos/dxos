@@ -12,8 +12,11 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
+import { CodeCapabilities } from '#types';
+
 import FeatureSurface from '../capabilities/feature-surface.ts';
 import SpecExtensions from '../capabilities/spec-extensions.ts';
+import StateModule from '../capabilities/state.ts';
 import { CodeOperationHandlerSet } from '../operations/index.ts';
 
 const OperationHandler = Capability.inlineModule(
@@ -28,17 +31,24 @@ const SpecEditing = Capability.inlineModule(
   () => SpecExtensions(),
 );
 
+const State = Capability.inlineModule('FeatureEditingState', { provides: [CodeCapabilities.State] }, () =>
+  StateModule(),
+);
+
 const Surfaces = Capability.inlineModule('FeatureEditingSurfaces', { provides: [Capabilities.ReactSurface] }, () =>
   FeatureSurface(),
 );
 
-/**
- * Contributes the plugin's feature stack alone (its operation handlers, spec editing and surfaces), so stories can edit
- * features without the whole plugin.
- */
+/** Contributes the plugin's feature stack alone, so stories can edit features without the whole plugin. */
 export const make = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.code.testing.featureEditing'),
     name: 'Feature editing',
   }),
-).pipe(Plugin.addModule(OperationHandler), Plugin.addModule(SpecEditing), Plugin.addModule(Surfaces), Plugin.make);
+).pipe(
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(SpecEditing),
+  Plugin.addModule(State),
+  Plugin.addModule(Surfaces),
+  Plugin.make,
+);

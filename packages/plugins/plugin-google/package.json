@@ -125,6 +125,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
+    "@dxos/fixtures": "workspace:*",
     "@dxos/random": "workspace:*",
     "@effect/opentelemetry": "catalog:",
     "@effect/vitest": "catalog:",
@@ -136,7 +137,8 @@
     "@types/mailparser": "catalog:",
     "effect": "catalog:",
     "mailparser": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "yaml": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:"

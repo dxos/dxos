@@ -539,7 +539,8 @@ feat F-8: Presence and Sync Status
   req F-8.4: Peers report and look up presence by object EID. A graph path resolves to its innermost object, or to the space's own EID when it names no object.
   req F-8.5: SpacePresence shows peers in an order that is the same on every client for a given set of peers and changes only when the set changes.
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
-  req F-8.7: A space's navtree row counts the peers viewing the space itself, alongside its sync status.
+  req F-8.7: A space's navtree row counts the peers viewing the space itself.
+  req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
 ```
 
 ## Acceptance
@@ -762,6 +763,26 @@ decision D-7: When the deck switches workspace, the planks that left `active` ar
   affects: [F-8.3]
   why: The new workspace's layout lists none of the old planks, so peers in the old space kept the viewer until its heartbeat lapsed.
   rejected: Treat an empty heartbeat as clearing the peer; heartbeats are not complete updates, so an empty one cannot be told from a partial one.
+```
+
+```mdl
+decision D-8: The navtree presence surface claims space rows, which no longer carry a sync-status glyph.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-6
+  affects: [F-8.7, SpacePresence]
+  why: Sync status moved to the status bar, so nothing on a space row is lost when presence takes it, and space rows draw the same glyph, with the same treatments, as object rows.
+```
+
+```mdl
+decision D-9: Activity on an object reaches its navtree glyph through the progress registry, not a capability of its own.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.8, SpacePresence]
+  why: The progress registry is already the app's channel for work under way, keyed per object by convention; reading it means any producer (an agent turn, a mailbox sync) shows on the row without plugin-space knowing about it.
+  rejected: An `ActivitySource` capability that each plugin contributes per object; a second channel for the same signal.
 ```
 
 ## Appendix: Extension Definitions

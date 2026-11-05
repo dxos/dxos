@@ -4,6 +4,7 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -272,6 +273,34 @@ const makeSumAggregator = () =>
             acc += input;
             yield* StorageService.set(Schema.NumberFromString, 'acc', acc);
             ctx.submitOutput(acc);
+          }),
+        onAlarm: () => Effect.void,
+        onChildEvent: () => Effect.void,
+      }),
+    ),
+  );
+
+/** A service no test resolver provides. */
+class Unavailable extends Context.Service<Unavailable, {}>()('@dxos/compute-runtime/test/Unavailable') {}
+
+/** Outputs which of its optional services it was given. */
+const makeOptionalServicesExecutable = () =>
+  Operation.makeDurable({
+    key: 'test.optional-services',
+    input: Schema.Void,
+    output: Schema.Array(Schema.Boolean),
+    services: [],
+    optionalServices: [Database.Service, Unavailable],
+  }).pipe(
+    Operation.withDurableHandler((ctx) =>
+      Effect.succeed({
+        onSpawn: () => Effect.void,
+        onInput: () =>
+          Effect.gen(function* () {
+            const database = yield* Effect.serviceOption(Database.Service);
+            const unavailable = yield* Effect.serviceOption(Unavailable);
+            ctx.submitOutput([Option.isSome(database), Option.isSome(unavailable)]);
+            ctx.succeed();
           }),
         onAlarm: () => Effect.void,
         onChildEvent: () => Effect.void,
@@ -643,6 +672,16 @@ describe('ManagerImpl', () => {
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([14]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'a process gets the optional services that resolve and runs without the rest',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(makeOptionalServicesExecutable());
+      const outputs = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
+      expect(outputs).toEqual([[true, false]]);
     }, Effect.provide(TestLayer)),
   );
 

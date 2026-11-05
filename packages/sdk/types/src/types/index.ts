@@ -29,6 +29,7 @@ import * as PullRequest from './PullRequest.ts';
 import * as RemoteSession from './RemoteSession.ts';
 import * as Repo from './Repo.ts';
 import * as SpaceInvitationMessage from './SpaceInvitationMessage.ts';
+import * as Subscription from './Subscription.ts';
 import * as Task from './Task.ts';
 import * as TaskMigration from './TaskMigration.ts';
 import * as TaskSet from './TaskSet.ts';
@@ -81,6 +82,7 @@ export {
   RemoteSession,
   Repo,
   SpaceInvitationMessage,
+  Subscription,
   Task,
   TaskMigration,
   TaskSet,

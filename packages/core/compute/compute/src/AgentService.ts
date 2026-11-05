@@ -16,6 +16,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import type * as Process from './Process.ts';
 import type * as Trace from './Trace.ts';
+import type * as Trajectory from './trajectory/Trajectory.ts';
 import { Instructions } from './types/index.ts';
 
 /**
@@ -66,6 +67,8 @@ export type PromptSender = {
 export type SubmitPromptOptions = {
   /** Recorded on the appended user message; a named sender is shown to the model as the speaker. */
   readonly sender?: PromptSender;
+  /** The fork to send the prompt into; main when absent. */
+  readonly thread?: Trajectory.ThreadId;
 };
 
 /**

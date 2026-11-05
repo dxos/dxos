@@ -9,8 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Spec from '@dxos/compute/Spec';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
-import { meta } from '#meta';
-
+import { CODE_HUE } from '../namespace.ts';
 import * as SourceFile from './SourceFile.ts';
 
 export class CodeProject extends Type.makeObject<CodeProject>(DXN.make('org.dxos.type.codeProject', '0.1.0'))(
@@ -20,7 +19,7 @@ export class CodeProject extends Type.makeObject<CodeProject>(DXN.make('org.dxos
     files: Schema.optional(Schema.Array(Ref.Ref(SourceFile.SourceFile))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--app-window--regular', hue: meta.profile.icon?.hue }),
+    Annotation.IconAnnotation.set({ icon: 'ph--app-window--regular', hue: CODE_HUE }),
     Annotation.UserType.set(),
   ),
 ) {}

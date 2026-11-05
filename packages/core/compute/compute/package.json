@@ -48,15 +48,15 @@
       "types": "./dist/types/src/Header.d.ts",
       "import": "./dist/lib/Header.mjs"
     },
-    "./Instructions": {
-      "source": "./src/types/Instructions.ts",
-      "types": "./dist/types/src/types/Instructions.d.ts",
-      "import": "./dist/lib/types/Instructions.mjs"
-    },
     "./Hook": {
       "source": "./src/Hook.ts",
       "types": "./dist/types/src/Hook.d.ts",
       "import": "./dist/lib/Hook.mjs"
+    },
+    "./Instructions": {
+      "source": "./src/types/Instructions.ts",
+      "types": "./dist/types/src/types/Instructions.d.ts",
+      "import": "./dist/lib/types/Instructions.mjs"
     },
     "./LayerSpec": {
       "source": "./src/LayerSpec.ts",
@@ -89,6 +89,11 @@
       "types": "./dist/types/src/types/Project.d.ts",
       "import": "./dist/lib/types/Project.mjs"
     },
+    "./Reducer": {
+      "source": "./src/trajectory/Reducer.ts",
+      "types": "./dist/types/src/trajectory/Reducer.d.ts",
+      "import": "./dist/lib/trajectory/Reducer.mjs"
+    },
     "./Routine": {
       "source": "./src/types/Routine.ts",
       "types": "./dist/types/src/types/Routine.d.ts",
@@ -114,15 +119,15 @@
       "types": "./dist/types/src/ServiceResolver.d.ts",
       "import": "./dist/lib/ServiceResolver.mjs"
     },
-    "./Skill": {
-      "source": "./src/types/Skill.ts",
-      "types": "./dist/types/src/types/Skill.d.ts",
-      "import": "./dist/lib/types/Skill.mjs"
-    },
     "./ShellService": {
       "source": "./src/ShellService.ts",
       "types": "./dist/types/src/ShellService.d.ts",
       "import": "./dist/lib/ShellService.mjs"
+    },
+    "./Skill": {
+      "source": "./src/types/Skill.ts",
+      "types": "./dist/types/src/types/Skill.d.ts",
+      "import": "./dist/lib/types/Skill.mjs"
     },
     "./SqlService": {
       "source": "./src/SqlService.ts",
@@ -148,6 +153,16 @@
       "source": "./src/Trace.ts",
       "types": "./dist/types/src/Trace.d.ts",
       "import": "./dist/lib/Trace.mjs"
+    },
+    "./Trajectory": {
+      "source": "./src/trajectory/Trajectory.ts",
+      "types": "./dist/types/src/trajectory/Trajectory.d.ts",
+      "import": "./dist/lib/trajectory/Trajectory.mjs"
+    },
+    "./Transcript": {
+      "source": "./src/trajectory/Transcript.ts",
+      "types": "./dist/types/src/trajectory/Transcript.d.ts",
+      "import": "./dist/lib/trajectory/Transcript.mjs"
     },
     "./Trigger": {
       "source": "./src/types/Trigger.ts",

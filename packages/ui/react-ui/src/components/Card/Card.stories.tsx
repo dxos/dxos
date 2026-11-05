@@ -326,6 +326,34 @@ export const LeadingRow: Story = {
   },
 };
 
+/** A wrapping Title keeps the header's icon and icon-only Button beside its first line. */
+export const WrappingTitle: Story = {
+  render: () => (
+    <Card.Root classNames='w-48' data-testid='wrapping-card'>
+      <Card.Header>
+        <Block data-testid='wrapping-icon'>
+          <Icon.Icon icon='ph--file--regular' />
+        </Block>
+        <Card.Title data-testid='wrapping-title'>A title long enough to wrap over several lines</Card.Title>
+        <Button data-testid='wrapping-action' icon='ph--dots-three--regular' label='More actions' iconOnly />
+      </Card.Header>
+    </Card.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const middle = (testId: string) => {
+      const box = byTestId(canvasElement, testId).getBoundingClientRect();
+      return box.top + box.height / 2;
+    };
+    const title = byTestId(canvasElement, 'wrapping-title');
+    const { lineHeight, paddingTop } = getComputedStyle(title);
+    const titleBox = title.getBoundingClientRect();
+    await expect(titleBox.height).toBeGreaterThan(parseFloat(lineHeight) * 1.5);
+    const firstLine = titleBox.top + parseFloat(paddingTop) + parseFloat(lineHeight) / 2;
+    await expect(middle('wrapping-icon')).toBeCloseTo(firstLine, 0);
+    await expect(middle('wrapping-action')).toBeCloseTo(firstLine, 0);
+  },
+};
+
 /** `align='start'`: a title over a snippet, its leading avatar and trailing date centred on the title line. */
 export const StartAlignedRow: Story = {
   render: () => (

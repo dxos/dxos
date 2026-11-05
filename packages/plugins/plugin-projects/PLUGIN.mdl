@@ -60,6 +60,9 @@ feat F-4: A project's specs
   req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
               owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
               and the list's `+` creates a spec, its row open for the name.
+  req F-4.12: A spec's text draws object links and embeds as a Markdown document does, and takes the editor extensions
+              other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
+              packages add their own editing on top.
 ```
 
 ```mdl
@@ -2036,4 +2039,12 @@ decision D-196: An inline create row shows status, priority, estimate and assign
 decision D-197: A task's estimate with no value shows the estimate's ruler glyph, not the asterisk unset priority shows, so the two empty cells read apart.
   date: 2026-11-04
   by: user:wittjosiah
+```
+
+```mdl
+decision D-198: The spec editor draws object embeds with plugin-markdown's extension, `MarkdownCapabilities.ObjectEmbeds`, and takes every `MarkdownCapabilities.ExtensionProvider`, so a spec is Markdown with what other plugins add to it, plus its packages' editing. The software package no longer draws feature embeds itself.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-4.12]
+  why: A spec should inherit what Markdown documents gain, such as a diagram, rather than a stricter editor redrawing each addition; one embed definition then serves both editors.
 ```
