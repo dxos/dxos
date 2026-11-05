@@ -15,6 +15,7 @@ import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvide
 import { getHostPlatform } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants.ts';
+import { redactSharePayload } from './share-redaction.ts';
 
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
@@ -123,7 +124,11 @@ export const initializeObservability = async (
         logStore,
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
         feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),
-        posthog: observabilityDisabled ? POSTHOG_DISABLED_CONFIG : undefined,
+        posthog: {
+          ...(observabilityDisabled ? POSTHOG_DISABLED_CONFIG : {}),
+          // A share link's URL can carry a space invitation, which must not reach analytics.
+          before_send: redactSharePayload,
+        },
         sessionRecordingStart,
       }),
     ),

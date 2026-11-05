@@ -62,6 +62,10 @@ export const handleShareLink = (
     if (!target) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no object.' }));
     }
+    // Back/forward navigation re-runs the handlers while `?share=` is still in the address bar.
+    if (joining.has(spaceId)) {
+      return;
+    }
     joining.set(spaceId, target.objectId);
     const client = yield* Capability.get(ClientCapabilities.Client);
     // Detached: its operations load lazily, which must not hold up the join.

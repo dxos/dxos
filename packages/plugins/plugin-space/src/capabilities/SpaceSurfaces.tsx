@@ -17,7 +17,7 @@ import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Space, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { type Space, isSpace, useSpace, useSpaces } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -248,10 +248,15 @@ export type NavbarShareSurfaceProps = {
   subject: Obj.Unknown;
 };
 
-/** The plank heading's Share button, which opens the object's share dialog. */
+/** The plank heading's Share button, which opens the object's share dialog; none in a private space. */
 export const NavbarShareSurface = ({ subject }: NavbarShareSurfaceProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
+  const space = useSpace(Obj.getDatabase(subject)?.spaceId);
+  if (!isShareableSpace(space)) {
+    return null;
+  }
+
   return (
     <Button.Root
       variant='primary'
@@ -264,3 +269,7 @@ export const NavbarShareSurface = ({ subject }: NavbarShareSurfaceProps) => {
     </Button.Root>
   );
 };
+
+/** A private space can never admit members, so it has nothing to share an object with. */
+const isShareableSpace = (space: Space | undefined): space is Space =>
+  space !== undefined && space.membershipPolicy !== MembershipPolicy.LOCKED;

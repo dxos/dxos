@@ -19,18 +19,6 @@ const payload: SharePayload = {
   objects: Array.from({ length: 5 }, () => EntityId.random()),
 };
 
-/** Encodes any JSON the way {@link encodeSharePayload} does, to build payloads it would refuse to produce. */
-const encodeJson = async (value: unknown): Promise<string> => {
-  const stream = new Blob([JSON.stringify(value)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
-  const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
-  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
-    .replaceAll('+', '-')
-    .replaceAll('/', '_')
-    .replace(/=+$/, '');
-};
-
-const decodeError = (encoded: string) => EffectEx.runPromise(Effect.flip(decodeSharePayload(encoded)));
-
 describe('share payload', () => {
   test('round-trips through a URL-safe string', async ({ expect }) => {
     const encoded = await EffectEx.runPromise(encodeSharePayload(payload));
@@ -71,4 +59,21 @@ describe('share target', () => {
   test('is undefined for a path that names no object', ({ expect }) => {
     expect(readShareTarget(new URL(`https://composer.space/w/${SpaceId.random()}`))).toBeUndefined();
   });
+
+  test('is undefined for a type segment with a malformed percent sequence', ({ expect }) => {
+    const url = new URL(`https://composer.space/w/${SpaceId.random()}/db/%E0%A4%A+${EntityId.random()}`);
+    expect(readShareTarget(url)).toBeUndefined();
+  });
 });
+
+/** Encodes any JSON the way {@link encodeSharePayload} does, to build payloads it would refuse to produce. */
+const encodeJson = async (value: unknown): Promise<string> => {
+  const stream = new Blob([JSON.stringify(value)]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+  const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replace(/=+$/, '');
+};
+
+const decodeError = (encoded: string) => EffectEx.runPromise(Effect.flip(decodeSharePayload(encoded)));

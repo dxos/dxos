@@ -699,7 +699,10 @@ const main = async () => {
     shareBoot:
       !!sharePayload &&
       !Hooks.hasSavedPlugins() &&
-      (await import('@dxos/plugin-space/ShareCache').then((ShareCache) => ShareCache.admitsGuest(sharePayload))),
+      // A chunk that fails to load leaves the app to boot as usual rather than not at all.
+      (await import('@dxos/plugin-space/ShareCache')
+        .then((ShareCache) => ShareCache.admitsGuest(sharePayload))
+        .catch(() => false)),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

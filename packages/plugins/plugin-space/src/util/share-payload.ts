@@ -40,7 +40,15 @@ export const readShareTarget = (url: URL): ShareTarget | undefined => {
   const objectId = UrlPath.readReferences(url.pathname).at(-1)?.entityId;
   const segment =
     objectId && url.pathname.split('/').findLast((part) => part.endsWith(`${UrlPath.TAIL_SEPARATOR}${objectId}`));
-  return segment ? { objectId, typeSlug: decodeURIComponent(segment.slice(0, -objectId.length - 1)) } : undefined;
+  if (!segment) {
+    return undefined;
+  }
+  // The sender writes the path, so a malformed percent sequence names no object rather than failing the handler.
+  try {
+    return { objectId, typeSlug: decodeURIComponent(segment.slice(0, -objectId.length - 1)) };
+  } catch {
+    return undefined;
+  }
 };
 
 const decodePayload = Schema.decodeUnknownEffect(Schema.fromJsonString(SharePayload));

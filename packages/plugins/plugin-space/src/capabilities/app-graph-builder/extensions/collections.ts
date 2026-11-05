@@ -28,6 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -267,6 +268,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
         const [ephemeralAtom] = get(ephemeralCapAtom);
+        const [client] = get(capabilities.atom(ClientCapabilities.Client));
+        const spaceId = Obj.getDatabase(object)?.spaceId;
+        const space = spaceId ? client?.spaces.get(spaceId) : undefined;
 
         if (!appGraph || !ephemeralAtom) {
           return Effect.succeed([]);
@@ -282,6 +286,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             nodeId,
             deletable,
             navigable: ephemeralState.navigableCollections,
+            // A private space can never admit members, so it has nothing to share an object with.
+            shareable: space !== undefined && space.membershipPolicy !== MembershipPolicy.LOCKED,
             shareableLinkOrigin,
             container,
             parent: container ? get(Obj.parentAtom(object)) : undefined,
@@ -336,6 +342,7 @@ const constructObjectActions = ({
   nodeId,
   deletable = true,
   navigable = false,
+  shareable = false,
   shareableLinkOrigin,
   container,
   parent,
@@ -346,6 +353,8 @@ const constructObjectActions = ({
   shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
+  /** Whether the object's space can admit anyone, so a share dialog has something to offer. */
+  shareable?: boolean;
   container?: ContainerModel.Container;
   parent?: Obj.Unknown;
   /** Current archive state; undefined when the object's type is not archivable. */
@@ -490,16 +499,20 @@ const constructObjectActions = ({
               testId: 'spacePlugin.copyLink',
             },
           }),
-          AppGraphNode.makeAction({
-            id: SpaceOperation.OpenShareObject.meta.key,
-            data: () => Operation.invoke(SpaceOperation.OpenShareObject, { object }),
-            properties: {
-              label: SHARE_OBJECT_LABEL,
-              icon: 'ph--share-network--regular',
-              disposition: 'list-item',
-              testId: 'spacePlugin.shareObject',
-            },
-          }),
+          ...(shareable
+            ? [
+                AppGraphNode.makeAction({
+                  id: SpaceOperation.OpenShareObject.meta.key,
+                  data: () => Operation.invoke(SpaceOperation.OpenShareObject, { object }),
+                  properties: {
+                    label: SHARE_OBJECT_LABEL,
+                    icon: 'ph--share-network--regular',
+                    disposition: 'list-item',
+                    testId: 'spacePlugin.shareObject',
+                  },
+                }),
+              ]
+            : []),
         ]
       : []),
     AppGraphNode.makeAction({
