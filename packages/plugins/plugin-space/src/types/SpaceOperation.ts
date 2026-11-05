@@ -510,8 +510,14 @@ export const OpenShareObject = Operation.make({
   output: Schema.Void,
 });
 
-/** Query parameter carrying an object share link's payload; onboarding reads it to create an identity in place. */
+/** Fragment (or, from a desktop deep link, query) parameter carrying an object share link's payload. */
 export const SHARE_PARAM = 'share';
+
+/**
+ * This tab's session-storage key for a share link's payload once boot takes it out of the URL, so no request or
+ * `Referer` carries the invitation it may hold, while a reload still finds it.
+ */
+export const SHARE_STORAGE_KEY = 'dxos.share';
 
 /** Who a share link admits: only the space's members, or anyone who has the link. */
 export const ShareAccess = Schema.Literals(['restricted', 'anyone']);

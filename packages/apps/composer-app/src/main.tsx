@@ -60,9 +60,9 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
-  liftShareFragment,
   prespawnWorker,
   readBootAssetFailure,
+  readStashedShare,
   registerPreloadErrorHandler,
   reportBootAssetFailure,
   reportWebProcessTerminations,
@@ -75,6 +75,7 @@ import {
   startupMark,
   startupMeasure,
   startupProfiler,
+  stashShareFragment,
   translations,
 } from './util/index.ts';
 import { watchWindowCorners } from './util/window-corners.ts';
@@ -263,10 +264,10 @@ const main = async () => {
     void showDevRssBanner();
   }
 
-  // Before anything reads the address bar: the handlers read a share link's payload from the query.
-  const liftedShareUrl = liftShareFragment(window.location.href);
-  if (liftedShareUrl) {
-    history.replaceState(history.state, '', liftedShareUrl);
+  // Before anything reads the address bar or a request leaves: a share link's payload moves into session storage.
+  const shareUrl = stashShareFragment(window.location.href, sessionStorage);
+  if (shareUrl) {
+    history.replaceState(history.state, '', shareUrl);
   }
 
   const url = new URL(window.location.href);
@@ -633,7 +634,7 @@ const main = async () => {
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   // A share link's space opens from what EDGE serves for the link's invitation, before the guest has joined it.
-  const sharePayload = url.searchParams.get(PARAM_SHARE);
+  const sharePayload = url.searchParams.get(PARAM_SHARE) ?? readStashedShare(sessionStorage);
   const shareEdgeUrl = config.values.runtime?.services?.edge?.url;
   const pendingSpaces =
     sharePayload && shareEdgeUrl

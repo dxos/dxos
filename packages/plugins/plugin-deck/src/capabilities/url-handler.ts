@@ -58,7 +58,7 @@ export default Capability.makeModule(
 
         const launchUrls = yield* Effect.promise(() => getCurrent());
         if (launchUrls && launchUrls.length > 0) {
-          log('app launched with deep links', { urls: launchUrls });
+          log('app launched with deep links', { urls: launchUrls.map(redactShare) });
           for (const urlString of launchUrls) {
             yield* handleDeepLink(urlString, project);
           }
@@ -138,9 +138,12 @@ const installLeaveTrap = (): string | undefined => {
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
+/** A share link's payload can carry a space invitation, so a logged URL keeps the parameter but not its value. */
+const redactShare = (url: string): string => url.replace(/([?&#]share=)[^&#]*/gi, '$1');
+
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */
 const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: URL) => Effect.Effect<void, any>) {
-  log('deep link received', { url: urlString });
+  log('deep link received', { url: redactShare(urlString) });
 
   const deepLinkUrl = new URL(urlString);
 

@@ -39,7 +39,8 @@ const IDENTITY_TIMEOUT = 60_000;
 const SPACE_TIMEOUT = 180_000;
 
 /**
- * Opens an object share link (`?share=`): turns on the plugins it names and replicates its objects before the rest of
+ * Opens an object share link, whose payload boot moved from the link's `#share=` fragment into session storage (a
+ * desktop deep link leaves it in the query): turns on the plugins it names and replicates its objects before the rest of
  * the space, then, for anyone not yet a member, joins the space in the background and opens the object; a member's path
  * is left to URL projection. `joining` maps the link's space to its object until that attempt ends.
  */
@@ -48,7 +49,7 @@ export const handleShareLink = (
   joining: Map<string, string>,
 ): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
   Effect.gen(function* () {
-    const encoded = url.searchParams.get(SpaceOperation.SHARE_PARAM);
+    const encoded = url.searchParams.get(SpaceOperation.SHARE_PARAM) ?? readStashedShare();
     if (!encoded) {
       return;
     }
@@ -58,13 +59,13 @@ export const handleShareLink = (
     if (!SpaceId.isValid(spaceId)) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no valid space.' }));
     }
+    // Every navigation re-runs the handlers while the link is being opened, possibly at another path.
+    if (joining.has(spaceId)) {
+      return;
+    }
     const target = readShareTarget(url);
     if (!target) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no object.' }));
-    }
-    // Back/forward navigation re-runs the handlers while `?share=` is still in the address bar.
-    if (joining.has(spaceId)) {
-      return;
     }
     joining.set(spaceId, target.objectId);
     const client = yield* Capability.get(ClientCapabilities.Client);
@@ -76,11 +77,20 @@ export const handleShareLink = (
     // identity and joins.
     yield* Effect.forkDetach(
       openShared(client, spaceId, target, payload).pipe(
-        Effect.ensuring(Effect.sync(() => joining.delete(spaceId))),
+        // Every later navigation runs this handler again, which must not reopen a link already handled.
+        Effect.ensuring(
+          Effect.sync(() => {
+            joining.delete(spaceId);
+            clearStashedShare();
+          }),
+        ),
         Effect.catch(reportFailure),
       ),
     );
-  }).pipe(Effect.catch(reportFailure));
+  }).pipe(
+    // A link that cannot open is dropped, or every later navigation would report it again.
+    Effect.catch((error) => Effect.sync(clearStashedShare).pipe(Effect.andThen(reportFailure(error)))),
+  );
 
 /** For anyone not yet a member of the link's space, joins it and opens the object; a member has nothing to join. */
 const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, payload: SharePayload) =>
@@ -91,7 +101,7 @@ const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, paylo
       Effect.catch((error) => Effect.sync(() => log.warn('share link objects not synced first', { error }))),
     );
     yield* waitForIdentity(client).pipe(Effect.timeout(IDENTITY_TIMEOUT));
-    // Kept until now: onboarding reads it from the address bar, after this handler starts, to create the identity.
+    // Kept until now: onboarding reads it, after this handler starts, to create the identity.
     removeQueryParam(SpaceOperation.SHARE_PARAM);
 
     // A space listed from the link's cache before the join is not this client's yet, so the join below still runs.
@@ -252,6 +262,23 @@ const waitForSpace = (client: Client, spaceId: SpaceId): Effect.Effect<Space> =>
     });
     return Effect.sync(() => subscription.unsubscribe());
   });
+
+/** The payload boot moved from the link's fragment into this tab's session storage; storage may be unavailable. */
+const readStashedShare = (): string | null => {
+  try {
+    return sessionStorage.getItem(SpaceOperation.SHARE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const clearStashedShare = () => {
+  try {
+    sessionStorage.removeItem(SpaceOperation.SHARE_STORAGE_KEY);
+  } catch {
+    // Nothing was stashed where storage is unavailable.
+  }
+};
 
 /** Remove a query param from the current browser URL. */
 const removeQueryParam = (key: string) => {

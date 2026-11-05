@@ -5,11 +5,15 @@
 /** An object share link's payload; the same name as plugin-space's `SpaceOperation.SHARE_PARAM`, which boot does not import. */
 export const PARAM_SHARE = 'share';
 
+/** Where boot keeps a share link's payload; plugin-space's `SpaceOperation.SHARE_STORAGE_KEY`. */
+export const SHARE_STORAGE_KEY = 'dxos.share';
+
 /**
- * The path, query and fragment to show for `href` once a share link's payload moves from its fragment, which a browser
- * never sends to a server, into the query the app reads it from; undefined for a URL whose fragment carries none.
+ * Moves a share link's payload out of the URL's fragment into this tab's session storage, where its readers find it, a
+ * reload keeps it, and no request or `Referer` carries the invitation it may hold.
+ * @returns The path, query and fragment to show once the payload is out; undefined for a URL whose fragment carries none.
  */
-export const liftShareFragment = (href: string): string | undefined => {
+export const stashShareFragment = (href: string, storage: Pick<Storage, 'setItem'>): string | undefined => {
   const url = new URL(href);
   const fragment = new URLSearchParams(url.hash.slice(1));
   const payload = fragment.get(PARAM_SHARE);
@@ -17,9 +21,23 @@ export const liftShareFragment = (href: string): string | undefined => {
     return undefined;
   }
   fragment.delete(PARAM_SHARE);
-  url.searchParams.set(PARAM_SHARE, payload);
+  try {
+    storage.setItem(SHARE_STORAGE_KEY, payload);
+  } catch {
+    // Without storage the link still has to open, so its readers find the payload in the query.
+    url.searchParams.set(PARAM_SHARE, payload);
+  }
   url.hash = fragment.toString();
   return `${url.pathname}${url.search}${url.hash}`;
+};
+
+/** The share payload boot stashed; null when there is none or storage is unavailable. */
+export const readStashedShare = (storage: Pick<Storage, 'getItem'>): string | null => {
+  try {
+    return storage.getItem(SHARE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
 };
 
 /**

@@ -22,7 +22,7 @@ export default Capability.makeModule(
     const hubUrl = Account.getHubUrl(client.config);
 
     const token = searchProps.get('token') ?? undefined;
-    const sharePayload = searchProps.get(SpaceOperation.SHARE_PARAM);
+    const sharePayload = searchProps.get(SpaceOperation.SHARE_PARAM) ?? readStashedShare();
     // Only a link that carries an invitation admits a browser with no identity; a restricted one is for members.
     const shareLink = sharePayload
       ? yield* Effect.promise(() =>
@@ -60,3 +60,12 @@ export default Capability.makeModule(
     ];
   }),
 );
+
+/** The share payload boot moved from the link's fragment into this tab's session storage; storage may be unavailable. */
+const readStashedShare = (): string | null => {
+  try {
+    return sessionStorage.getItem(SpaceOperation.SHARE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
