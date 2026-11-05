@@ -680,8 +680,8 @@ const checkT1 = async () => {
 const WINDOW = 'autocue-window';
 
 /**
- * Draws a window over the app, below the captions and cursor: a terminal of `lines` typed in one by one, or a browser
- * on `url`. Its title bar names what it shows.
+ * Fills the screen, below the captions and cursor, with a terminal of `lines` typed in one by one or a browser on
+ * `url`, so it cannot be mistaken for part of the app. Its title bar names what it shows.
  */
 const openWindow = (page, { title, url }) =>
   page.evaluate(
@@ -690,13 +690,12 @@ const openWindow = (page, { title, url }) =>
       const frame = document.createElement('div');
       frame.id = id;
       frame.style.cssText =
-        'position:fixed;inset:7% 9% 16% 9%;z-index:2147483000;display:flex;flex-direction:column;border-radius:12px;' +
-        'overflow:hidden;background:#0d1117;box-shadow:0 24px 80px rgba(0,0,0,.6);border:1px solid #30363d;' +
-        'font:15px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#e6edf3';
+        'position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;overflow:hidden;' +
+        'background:#0d1117;font:20px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#e6edf3';
       const bar = document.createElement('div');
       bar.style.cssText =
-        'display:flex;align-items:center;gap:8px;padding:10px 14px;background:#161b22;border-bottom:1px solid #30363d;' +
-        'font:13px system-ui,sans-serif;color:#8b949e';
+        'display:flex;align-items:center;gap:8px;padding:12px 18px;background:#161b22;border-bottom:1px solid #30363d;' +
+        'font:15px system-ui,sans-serif;color:#8b949e';
       for (const color of ['#ff5f57', '#febc2e', '#28c840']) {
         const dot = document.createElement('span');
         dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${color}`;
@@ -727,7 +726,7 @@ const openWindow = (page, { title, url }) =>
       } else {
         const body = document.createElement('pre');
         body.dataset.part = 'lines';
-        body.style.cssText = 'flex:1;margin:0;padding:18px 22px;overflow:hidden;white-space:pre';
+        body.style.cssText = 'flex:1;margin:0;padding:32px 40px;overflow:hidden;white-space:pre';
         frame.append(body);
       }
       document.body.append(frame);
@@ -786,8 +785,8 @@ const tryLocally = async (demo, page, milestone) => {
   await demo.speed({ factor: 1 });
   await openWindow(page, { title: `Terminal — ${milestone} on wrangler dev, ${LOCAL}` });
   await demo.caption({
-    value: 'Scenario T-1, run against the local Worker',
-    subtitle: 'Three respondents, eight slots',
+    value: 'Scenario T-1, on this machine',
+    subtitle: "Outside Composer: the agent's Worker on wrangler dev",
   });
   await printLine(page, { text: "$ wrangler dev  # the agent's Worker, built here" });
   await printLine(page, { text: `Ready on ${LOCAL}` });
@@ -801,11 +800,14 @@ const tryLocally = async (demo, page, milestone) => {
   await printLine(page, { text: passed ? 'T-1 passed' : 'T-1 FAILED', ok: passed });
   await page.waitForTimeout(BEAT * 3);
   await openBrowser(page, { title: `${LOCAL}/  —  the new poll page`, url: `${LOCAL}/` });
-  await demo.caption({ value: 'The new poll page', subtitle: 'Served from the build on this machine' });
+  await demo.caption({ value: 'The new poll page', subtitle: 'In a browser, served from the build on this machine' });
   await page.waitForTimeout(BEAT * 3);
   if (id) {
     await openBrowser(page, { title: `${LOCAL}/p/${id.slice(0, 12)}…  —  the T-1 poll`, url: `${LOCAL}/p/${id}` });
-    await demo.caption({ value: 'The T-1 poll, as Ben', subtitle: 'The heat map and the best slot' });
+    await demo.caption({
+      value: 'The T-1 poll, as Ben',
+      subtitle: 'Three respondents: the heat map and the best slot',
+    });
     await page.waitForTimeout(BEAT);
     // The page asks a visitor's name first; the agent builds the form, so the first text field is the best guess.
     const name = page.locator(inWindow('input:not([type]), input[type="text"]')).first();
@@ -813,6 +815,11 @@ const tryLocally = async (demo, page, milestone) => {
       await demo.click({ selector: inWindow('input:not([type]), input[type="text"]') + ' >> nth=0', label: 'Name' });
       await page.keyboard.type('Ben', { delay: 60 });
       await page.keyboard.press('Enter');
+      // A name field outside a form ignores Enter, so the page's button takes the click instead.
+      await page.waitForTimeout(BEAT / 2);
+      if (await name.isVisible().catch(() => false)) {
+        await demo.click({ selector: `${inWindow('button')} >> nth=0`, label: 'Continue' });
+      }
     }
     await page.waitForTimeout(BEAT * 4);
   }
