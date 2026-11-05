@@ -556,13 +556,14 @@ export const steps = [
     run: async ({ demo, page }) => {
       await openProjectTab(demo, page, 'document');
       await demo.caption({ value: 'The spec stages the work as milestones', subtitle: 'This take builds M-1 and M-2' });
-      await scrollDocumentTo(page, 'M-1: Core poll');
+      // The milestones are a table, whose cells are not editor lines, so the scroll stops on the line above it.
+      await scrollDocumentTo(page, 'The work ships in this order');
       await page.waitForTimeout(BEAT * 3);
       await demo.caption({
         value: 'Each milestone ends in a scenario',
         subtitle: 'T-1: three respondents mark six slots',
       });
-      await scrollDocumentTo(page, 'scenario T-1');
+      await scrollDocumentTo(page, 'scenario T-1: One zone');
       await page.waitForTimeout(BEAT * 3);
     },
   },
