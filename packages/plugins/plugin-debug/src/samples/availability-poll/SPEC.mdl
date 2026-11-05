@@ -6,9 +6,10 @@ version: 0.1.0
 
 A When2meet-style poll on one Cloudflare Worker. Someone creates a poll with candidate time slots and a list of
 invitees; each invitee marks the slots they are free for, in their own time zone; the page shades a heat map of where
-people overlap and names the best slot. Each poll lives in a Durable Object of its own. The work ships in three
-milestones: the core poll, then time zones and daylight-saving time, then flight options, which `FLIGHTS.mdl`
-specifies.
+people overlap and names the best slot. Each poll lives in a Durable Object of its own. Every page is built from DXOS
+UI components, `@dxos/react-ui` on the `@dxos/ui-theme` theme, bundled by Vite into the Worker's static assets. The
+work ships in three milestones: the core poll, then time zones and daylight-saving time, then flight options, which
+`FLIGHTS.mdl` specifies.
 
 ## Extensions
 
@@ -193,6 +194,12 @@ decision D-1: The Availability Poll template seeds this spec written in full, wi
   for: user:wittjosiah
   why: The demo is the development loop at the spec and feature level; planning the tasks is part of what it shows.
   rejected: Seeding the milestones and tasks, which would skip the step where the agent derives them from the spec.
+
+decision D-2: Every page is built from DXOS UI components, `@dxos/react-ui` on the `@dxos/ui-theme` theme, bundled by Vite into the Worker's static assets, with the Worker answering only `/api`.
+  date: 2026-11-05
+  by: user:wittjosiah
+  why: The poll is built by a Composer agent, so its pages should use the same components and theme as Composer.
+  rejected: Hand-written HTML and CSS served from the Worker, which skips the build step but looks unlike the rest of DXOS.
 ```
 
 ---

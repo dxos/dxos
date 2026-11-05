@@ -111,12 +111,18 @@ const snapshot = (page) =>
           .query(dxos.Filter.type(dxos.DXN.make(typename)))
           .run()
           .catch(() => []);
+      const links = {};
+      for (const link of await query('org.dxos.relation.implements')) {
+        const source = dxos.Relation.getSource(link)?.id;
+        links[source] = (links[source] ?? 0) + 1;
+      }
       const tasks = await Promise.all(
         (await query('org.dxos.type.task')).map(async (task) => ({
           title: task.title,
           status: task.status,
           milestone: (await task.milestone?.load?.().catch(() => undefined))?.name ?? '',
           assigned: task.assignee !== undefined,
+          features: links[task.id] ?? 0,
         })),
       );
       const features = Object.fromEntries(
@@ -267,17 +273,14 @@ const waitFor = async (demo, page, done, minutes, label) => {
 };
 
 /**
- * Whether the agent has filed the milestone's tasks and gone quiet: the planning turn ends with its last task linked,
- * so two equal counts ten seconds apart, with the check task among them, mean the plan is complete.
+ * Whether the agent has filed the milestone's tasks and linked them: the check task links to every feature the others
+ * do, last, so a check task linked to as many features as there are other tasks means the plan is complete.
  */
-const planned = (milestone) => {
-  let last = -1;
-  return (state) => {
-    const tasks = tasksOf(state, milestone);
-    const settled = tasks.length >= 2 && tasks.length === last && tasks.some((task) => /^check/i.test(task.title));
-    last = tasks.length;
-    return settled;
-  };
+const planned = (milestone) => (state) => {
+  const tasks = tasksOf(state, milestone);
+  const check = tasks.find((task) => /^check/i.test(task.title));
+  const others = tasks.filter((task) => task !== check);
+  return check !== undefined && others.length > 0 && others.every((task) => task.features > 0) && check.features >= others.length;
 };
 
 /** Ticks the named rows and assigns them to the agent as one chat. */
@@ -540,7 +543,7 @@ export const steps = [
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
       await openProjectTab(demo, page, 'tasks');
-      await waitFor(demo, page, planned(M1.id), 10, 'the M-1 plan');
+      await waitFor(demo, page, planned(M1.id), 3, 'the M-1 plan');
       await demo.caption({
         value: 'One task per feature, then a check',
         subtitle: 'Each linked to the feature it moves',
@@ -567,7 +570,7 @@ export const steps = [
         // The Gantt chart fills the foot of the plank, where a caption would sit.
         position: 'top',
       });
-      await watchMilestone(demo, page, M1, 40);
+      await watchMilestone(demo, page, M1, 20);
       await demo.caption({ value: 'M-1 checked and deployed: three features operational' });
       await page.waitForTimeout(BEAT * 2);
     },
