@@ -640,6 +640,12 @@ const T1 = {
  * Runs scenario T-1 against the local Worker as terminal lines, each a request or a check; `passed` says whether every
  * check held, and `id` is the poll it made.
  */
+/** An instant to the minute, `2026-06-01T11:00Z`, however the Worker writes it. */
+const minuteOf = (instant) => {
+  const time = Date.parse(instant);
+  return Number.isNaN(time) ? instant : new Date(time).toISOString().slice(0, 16) + 'Z';
+};
+
 const checkT1 = async () => {
   const api = async (path, method = 'GET', body) => {
     const response = await fetch(`${LOCAL}${path}`, {
@@ -662,7 +668,7 @@ const checkT1 = async () => {
   const checks = [
     ['respondents', poll.respondents?.map((respondent) => respondent.name).join(', '), 'Ana, Ben, Chika'],
     ['free counts', poll.slots?.map((slot) => slot.free.length).join(' '), T1.free.join(' ')],
-    ['best slot', best && `${best.id}, ${best.start}`, `${T1.best.id}, ${T1.best.start}`],
+    ['best slot', best && `${best.id}, ${minuteOf(best.start)}`, `${T1.best.id}, ${T1.best.start}`],
   ];
   for (const [label, actual, expected] of checks) {
     lines.push({ text: `${label.padEnd(12)} ${actual ?? '—'}`, ok: actual === expected });
@@ -704,8 +710,20 @@ const openWindow = (page, { title, url }) =>
       if (url) {
         const iframe = document.createElement('iframe');
         iframe.src = url;
-        iframe.style.cssText = 'flex:1;border:0;background:#fff';
+        iframe.style.cssText = 'flex:1;border:0;background:#0d1117';
         frame.append(iframe);
+        // The page is another site, which reaches the recording only when this page repaints; a title bar pixel that
+        // changes every frame keeps the video in step with it.
+        const pulse = document.createElement('span');
+        pulse.style.cssText = 'width:1px;height:1px;margin-left:auto';
+        bar.append(pulse);
+        const beat = () => {
+          if (pulse.isConnected) {
+            pulse.style.background = pulse.style.background === 'rgb(22, 27, 34)' ? '#161b23' : '#161b22';
+            requestAnimationFrame(beat);
+          }
+        };
+        requestAnimationFrame(beat);
       } else {
         const body = document.createElement('pre');
         body.dataset.part = 'lines';
@@ -762,7 +780,8 @@ const tryLocally = async (demo, page, milestone) => {
     subtitle: "The agent's code, pulled from its sandbox",
   });
   await demo.speed({ factor: FAST });
-  const dir = await pullBuild(page, milestone);
+  // `DX_POLL_BUILD` re-serves a build pulled earlier, to re-record this step without building again.
+  const dir = process.env.DX_POLL_BUILD ?? (await pullBuild(page, milestone));
   await serveBuild(dir);
   await demo.speed({ factor: 1 });
   await openWindow(page, { title: `Terminal — ${milestone} on wrangler dev, ${LOCAL}` });
