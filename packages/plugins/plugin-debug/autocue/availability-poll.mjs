@@ -280,7 +280,12 @@ const planned = (milestone) => (state) => {
   const tasks = tasksOf(state, milestone);
   const check = tasks.find((task) => /^check/i.test(task.title));
   const others = tasks.filter((task) => task !== check);
-  return check !== undefined && others.length > 0 && others.every((task) => task.features > 0) && check.features >= others.length;
+  return (
+    check !== undefined &&
+    others.length > 0 &&
+    others.every((task) => task.features > 0) &&
+    check.features >= others.length
+  );
 };
 
 /** Ticks the named rows and assigns them to the agent as one chat. */
@@ -303,8 +308,6 @@ const delegateMilestone = async (demo, page, milestone) => {
   await delegate(demo, page, titles);
 };
 
-const STATUS_LABEL = { failing: 'Failing', operational: 'Operational', planned: 'Planned', prototype: 'Prototype' };
-
 /** The Tasks tab scrolled to the Gantt chart. */
 const showGantt = async (demo, page) => {
   await openProjectTab(demo, page, 'tasks');
@@ -316,9 +319,8 @@ const showGantt = async (demo, page) => {
 };
 
 /**
- * Holds the camera on the Gantt chart while the milestone's tasks run. Each time one of its features changes status,
- * cuts to the feature map at normal speed to show the card, then goes back. Ends once every task is finished and every
- * feature operational.
+ * Holds the camera on the task list and Gantt chart while the milestone's tasks run, captioning each task as it
+ * finishes. Ends once every task is finished and every feature operational, on the feature map.
  */
 const watchMilestone = async (demo, page, milestone, minutes) => {
   await showGantt(demo, page);
@@ -327,29 +329,24 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
     demo,
     page,
     async (state) => {
-      const statuses = Object.fromEntries(milestone.features.map((name) => [name, state.features[name]?.status]));
-      const changed = seen ? milestone.features.filter((name) => statuses[name] !== seen[name]) : [];
-      seen = statuses;
       const tasks = tasksOf(state, milestone.id);
-      const finished = tasks.length > 0 && tasks.every((task) => FINISHED.includes(task.status));
-      if (changed.length > 0) {
+      const done = tasks.filter((task) => FINISHED.includes(task.status)).map((task) => task.title);
+      const added = seen ? done.filter((title) => !seen.includes(title)) : [];
+      seen = done;
+      const finished = tasks.length > 0 && done.length === tasks.length;
+      if (added.length > 0 && !finished) {
         await demo.speed({ factor: 1 });
-        await openProjectTab(demo, page, 'features');
-        await demo.caption({
-          value: changed.map((name) => `${name}: ${STATUS_LABEL[statuses[name]] ?? statuses[name]}`).join(' · '),
-          subtitle: statuses[changed[0]] === 'prototype' ? 'Running in its sandbox' : 'Checked, then deployed',
-        });
+        await demo.caption({ value: `${added.join(' · ')}: in review`, position: 'top' });
         await page.waitForTimeout(BEAT * 2);
-        if (!finished || !allOperational(state, milestone.features)) {
-          await showGantt(demo, page);
-          await demo.speed({ factor: FAST });
-        }
+        await demo.speed({ factor: FAST });
       }
       return finished && allOperational(state, milestone.features);
     },
     minutes,
     `${milestone.id}'s tasks and features`,
   );
+  await demo.caption({ value: `Every ${milestone.id} task in review`, position: 'top' });
+  await page.waitForTimeout(BEAT * 2);
   await openProjectTab(demo, page, 'features');
   await page.waitForTimeout(BEAT);
 };
@@ -571,7 +568,10 @@ export const steps = [
         position: 'top',
       });
       await watchMilestone(demo, page, M1, 20);
-      await demo.caption({ value: 'M-1 checked and deployed: three features operational' });
+      await demo.caption({
+        value: 'With its tasks done, M-1 is operational',
+        subtitle: 'Three features checked, then deployed',
+      });
       await page.waitForTimeout(BEAT * 2);
     },
   },
@@ -608,7 +608,10 @@ export const steps = [
         position: 'top',
       });
       await watchMilestone(demo, page, M2, 40);
-      await demo.caption({ value: 'M-2 checked: five features operational' });
+      await demo.caption({
+        value: 'With its tasks done, M-2 is operational',
+        subtitle: 'Both pages checked, then deployed',
+      });
       await page.waitForTimeout(BEAT * 2);
     },
   },
