@@ -14,6 +14,7 @@ import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
+import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
 import { getSpace } from '@dxos/react-client/echo';
 import { Attention } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
@@ -42,7 +43,7 @@ import { CodeNamespace } from '../../namespace.ts';
 import { type SpecSessionState, registerEditor, reveal } from './spec-session.ts';
 import { SpecPanel, useOpenSource } from './SpecPanel.tsx';
 import { useSpecModel } from './useSpecModel.ts';
-import { type DiffAgainst, useContributedExtensions } from './useSpecSources.ts';
+import { type DiffAgainst } from './useSpecSources.ts';
 
 /** Lower bound (rem) of either side while split, so a drag cannot squeeze one unreadable; the toggle hides the panel. */
 const MIN_PANE_SIZE = 16;
@@ -100,7 +101,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const space = spec ? getSpace(spec) : undefined;
     const { invokePromise } = AppHooks.useOperationInvoker();
     // Objects the text embeds render as their own plugin's widgets, through the editor's widget host.
-    const contributed = useContributedExtensions(spec, { attendableId, t });
+    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t });
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
     const source = { spec, content, sourceKey, base, review: staticReview };

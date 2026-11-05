@@ -92,6 +92,32 @@ describe('arrangeLanes', () => {
     expect(arranged.lanes.get(idOf('a3'))?.first).to.eq(idOf('a3'));
   });
 
+  test('adjacent background lanes share one row, and a row between them splits it', ({ expect }) => {
+    const arranged = arrangeLanes({
+      messages: [
+        message('x1', 'user', 'first'),
+        message('y1', 'user', 'second'),
+        message('x2', 'assistant', 'more'),
+        message('m1', 'assistant', 'main'),
+        message('z1', 'user', 'third'),
+      ],
+      tail: 0,
+      lanes: [
+        lane('x', 'running', { backgrounded: true }),
+        lane('y', 'running', { backgrounded: true }),
+        lane('z', 'running', { backgrounded: true }),
+      ],
+      laneOf: new Map([
+        [idOf('x1'), 'x'],
+        [idOf('y1'), 'y'],
+        [idOf('x2'), 'x'],
+        [idOf('z1'), 'z'],
+      ]),
+    });
+    expect(texts(arranged.messages)).to.deep.eq(['card:x', 'main', 'card:z']);
+    expect(Message.extractText(arranged.messages[0])).to.include('"id":"y"');
+  });
+
   test('lanes of different agents are not backgrounded, so they interleave', ({ expect }) => {
     const arranged = arrangeLanes({ messages, tail: 1, lanes: [lane('a', 'running'), lane('b', 'running')], laneOf });
     expect(texts(arranged.messages)).to.deep.eq(['research', '17 x 23', 'computing', '391', 'translate', 'queued']);

@@ -105,10 +105,11 @@ export interface QueueService {
     ctx: TraceContext,
     request: FeedProtocol.QueryFeedRequest,
   ) => Promise<RpcResult<FeedProtocol.QueryResult>>;
+  /** Resolves to the written blocks and their predecessors, or to nothing from a service that reports neither. */
   insertIntoQueue: (
     ctx: TraceContext,
     request: FeedProtocol.InsertIntoFeedRequest,
-  ) => Promise<RpcResult<RpcDisposable>>;
+  ) => Promise<RpcResult<FeedProtocol.InsertIntoFeedResponse | RpcDisposable>>;
   deleteFromQueue: (
     ctx: TraceContext,
     request: FeedProtocol.DeleteFromFeedRequest,

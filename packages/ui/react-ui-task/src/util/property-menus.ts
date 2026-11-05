@@ -7,7 +7,7 @@ import { type MenuAction, type MenuItem, createLineSeparator, createMenuAction }
 import { type Actor, type Person, Task } from '@dxos/types';
 
 import { PERSON_ICON, shortDid } from './assignee.ts';
-import { UNSET_ICON, priorityTextStyle, statusIcon, statusTextStyle } from './status-icons.ts';
+import { UNSET_ICON, priorityIcon, priorityTextStyle, statusIcon, statusTextStyle } from './status-icons.ts';
 
 /** A member of the task's space, offered as an assignee by identity. */
 export type TaskMember = { did: string; name?: string };
@@ -44,7 +44,7 @@ export const priorityMenuActions = ({
   [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
     createMenuAction(`priority-${id}`, () => onChange(id === 'none' ? null : id), {
       label: t(`priority-${id}.label`),
-      icon: icon ?? UNSET_ICON,
+      icon: icon ?? priorityIcon(undefined),
       iconClassNames: priorityTextStyle(id),
       checked: (priority ?? 'none') === id,
     }),

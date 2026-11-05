@@ -80,7 +80,7 @@ export const automerge = (accessor: Doc.Accessor): Extension => {
             if (value !== current) {
               this._view.dispatch({
                 changes: { from: 0, to: this._view.state.doc.length, insert: value },
-                annotations: [initialSync, reconcileAnnotation.of(true)],
+                annotations: [initialSync, reconcileAnnotation.of(true), Transaction.remote.of(true)],
               });
             }
           });
