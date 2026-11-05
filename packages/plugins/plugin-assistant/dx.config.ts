@@ -202,6 +202,17 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         () => import('./src/capabilities/toolkit.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
+        'ChatUnread',
+        {
+          // ProgressRegistry is read optionally in the body: a host without plugin-progress loses the indicator.
+          requires: [ClientCapabilities.Client, Capabilities.AtomRegistry],
+          provides: [],
+          activatesOn: AssistantEvents.Start,
+          environments: ['browser', 'tauri'],
+        },
+        () => import('./src/capabilities/chat-unread.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
         'AgentHydrator',
         {
           requires: [Capabilities.ProcessManagerRuntime],

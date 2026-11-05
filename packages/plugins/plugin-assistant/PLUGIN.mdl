@@ -576,6 +576,41 @@ test QA-5: A working agent marks its chat and its companion's subject in the nav
         the star clears when the reply finishes
 ```
 
+```mdl
+test QA-6: A turn that finishes unseen leaves an amber star until anyone opens the chat
+  desc: |
+    When an agent's turn ends while nobody has its chat open, the working star stops pulsing and
+    turns amber, on the chat's row and, for a companion chat, on its subject's row. The chat's feed
+    records how far the space has seen it, so unread survives a reload and is shared by the space:
+    anyone who opens the chat, in its own plank or as the companion, reads it for everyone. A turn
+    that ends while someone has the chat open leaves nothing behind.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - chat: a chat "Trip ideas" in the space
+    - subject: a document "Launch plan" in the space
+  steps:
+    - name: A chat that finishes unseen is unread
+      do: Send "Trip ideas" a prompt, open "Launch plan" before the reply finishes, and wait for it.
+      expect: the chat's row shows a still amber star; its tooltip reads "New reply from the assistant"
+    - name: Unread survives a reload
+      do: Reload the app.
+      expect: the chat's row still shows the amber star
+    - name: Opening the chat reads it
+      do: Open "Trip ideas" from the navtree.
+      expect: the amber star clears from the chat's row
+    - name: A companion that finishes unseen marks its subject
+      do: Send a prompt from "Launch plan"'s Assistant companion, open "Trip ideas", and wait for the
+        reply.
+      expect: the document's row shows the amber star; its tooltip reads "The assistant finished work
+        on this"
+    - name: Opening the companion reads it
+      do: Open "Launch plan" with its Assistant companion showing.
+      expect: the amber star clears from the document's row
+```
+
 
 ## Changelog
 
@@ -757,6 +792,37 @@ decision D-21: Each turn sends a status update keyed `<uri>#agent` on the chat a
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
     - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
     - An `ActivitySource` capability the glyph merges: a second channel beside the progress registry for the same signal.
+```
+
+```mdl
+decision D-22: A turn that finishes while nobody has its chat open leaves a still amber agent star in the glyph's mark until anyone opens the chat. A chat open here never shows it, and a turn that ends while a view here has the chat open is not marked unread.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-6]
+```
+
+```mdl
+decision D-23: Unread comes from the chat's feed: the chat is unread while its feed has items after one seen cursor, an annotation on the feed that any member's open view moves forward. It uses feed cursors and feed queries as they are, adds one annotation in `@dxos/schema`, and adds nothing to the chat. A concurrent write can merge the cursor back, which at worst shows a read chat as unread until it is opened again. Chats come first; the same annotation can mark any feed.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [QA-6]
+```
+
+```mdl
+decision D-24: `SeenAnnotation` (`org.dxos.annotation.feed-seen`, in `@dxos/schema` beside `FeedAnnotation`) holds a `Feed.Cursor`. An open chat view, in a plank or as a companion, calls `trackSeen`, which writes `Feed.START` the first time a feed is viewed, then runs `unseenQuery` and passes its newest item to `markSeen`. `unseenQuery` reads every branch of the feed, since each agent turn writes on a branch of its own. plugin-assistant's `ChatUnread` module follows each chat's feed with a one-item `unseenQuery` and, once a chat has been unread for 2 seconds and no agent turn runs on the object, registers a done monitor keyed `<uri>#unread` on the chat and on a companion chat's subject. Fills in [D-22] and [D-23].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-6]
+  why: The working star disappears when the turn ends, so without an unread mark a reply that arrived while you worked elsewhere leaves no trace in the navtree. The feed already orders its items and answers "what came after this cursor", so unread needs no count kept by whoever runs the turn, and it works the same for a turn on this peer, another member's or EDGE. `markSeen` only takes an item `unseenQuery` returned, which is after the stored cursor by construction, so the cursor moves forward without code outside `Feed.ts` comparing cursors. A feed nobody has viewed has no cursor and reports nothing, so existing chats do not all turn unread on upgrade. Only items EDGE has positioned count, so a reply shows as unread once it is acknowledged. The grace period covers the time a view on another peer takes to mark the reply and sync, so a chat someone is reading does not flash amber. A turn's events reach the feed while it runs, so the mark waits for the turn's `#agent` monitor to end and means finished work, not work in progress. The `#unread` key keeps the done monitor apart from that status.
+  rejected:
+    - A turn count and a per-member read position on `Chat`: it changed the chat's schema, needed the runtime to count turns, and kept a record per member only to stop concurrent writes undoing each other.
+    - The annotation in `@dxos/echo` beside `Feed.CursorAnnotation`: that one is a reader's checkpoint for triggers; seen is an app-level mark like `ArchivedAnnotation`.
+    - A missing cursor read as `Feed.START`: every existing chat would show unread at once.
+    - An `unread` flag the agent sets unless a view on its peer has the chat open: the agent had to know about views and could not see one on another peer or a turn running on EDGE.
+    - Presence (who is viewing the chat): it lapses on a timer and is not kept, so it could not decide a mark that has to survive a reload.
+    - Unread per member: you would see the star for replies other members had already read.
+    - The star in the glyph's corner: it took the corner from mentions and changes, though the mark is always free while the star shows.
 ```
 
 ---

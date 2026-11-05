@@ -26,7 +26,15 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatModel, useChatServices, usePlatform, usePresets, usePromptActions, useSelectionContext } from '#hooks';
+import {
+  useChatModel,
+  useChatServices,
+  useMarkSeen,
+  usePlatform,
+  usePresets,
+  usePromptActions,
+  useSelectionContext,
+} from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 import { AssistantNamespace } from '../../namespace.ts';
@@ -68,6 +76,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     useEffect(() => setThread(undefined), [chat?.id]);
     const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender, thread });
     const [feedSnapshot] = useObject(chat?.feed);
+    useMarkSeen(feedSnapshot);
     const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>(
       (event) => {
         if (event.type === 'open-fork') {

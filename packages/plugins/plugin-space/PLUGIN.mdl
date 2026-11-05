@@ -540,7 +540,7 @@ feat F-8: Presence and Sync Status
   req F-8.5: SpacePresence shows peers in an order that is the same on every client for a given set of peers and changes only when the set changes.
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself.
-  req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
+  req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence; a still amber star when one is done but still registered (finished work nobody has seen yet); and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
 ```
 
 ## Acceptance
@@ -783,6 +783,15 @@ decision D-9: Activity on an object reaches its navtree glyph through the progre
   affects: [F-8.8, SpacePresence]
   why: The progress registry is already the app's channel for work under way, keyed per object by convention; reading it means any producer (an agent turn, a mailbox sync) shows on the row without plugin-space knowing about it.
   rejected: An `ActivitySource` capability that each plugin contributes per object; a second channel for the same signal.
+```
+
+```mdl
+decision D-10: A progress monitor that is done but not removed shows as a still amber star: finished work the producer keeps in view until someone sees it.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.8, SpacePresence]
+  why: Producers that only report work in flight remove their monitor as they finish it (mail sync, the trace sink), so a done monitor that stays is a deliberate "look at this"; the assistant uses it for a turn nobody has read. The rail lists only pending and running monitors, so it never shows there.
 ```
 
 ## Appendix: Extension Definitions

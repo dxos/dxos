@@ -22,6 +22,7 @@ export * from './usePromptActions.ts';
 export * from './useSelectionContext.ts';
 export * from './useSlashCommands.ts';
 export * from './useHomeSuggestions.ts';
+export * from './useMarkSeen.ts';
 export * from './useProcessEphemeralStatus.ts';
 export * from './useSessionTimeline.ts';
 

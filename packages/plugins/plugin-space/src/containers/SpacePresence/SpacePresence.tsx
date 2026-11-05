@@ -237,6 +237,8 @@ export const SmallPresenceLive = ({ id, open, viewers, object }: SmallPresenceLi
 const ONE_VIEWER: Activity.Treatment = { slot: 'mark', icon: 'dot', hue: 'primary', priority: 10 };
 const SEVERAL_VIEWERS: Activity.Treatment = { slot: 'mark', icon: 'dots', hue: 'primary', priority: 10 };
 const WORKING: Activity.Treatment = { slot: 'mark', icon: 'star', priority: 30, animate: true };
+/** A done monitor still registered: finished work nobody has seen yet. */
+const FINISHED: Activity.Treatment = { slot: 'mark', icon: 'star', hue: 'amber', priority: 20 };
 const FAILED: Activity.Treatment = { slot: 'edge', hue: 'error', priority: 40 };
 
 const toActivity = (monitor: Progress.TaskProgress): Activity.Entry[] => {
@@ -245,10 +247,10 @@ const toActivity = (monitor: Progress.TaskProgress): Activity.Entry[] => {
     case 'pending':
     case 'running':
       return [{ source: monitor.name, label, treatment: WORKING }];
+    case 'done':
+      return [{ source: monitor.name, label, treatment: FINISHED }];
     case 'error':
       return [{ source: monitor.name, label: monitor.error ? `${label}: ${monitor.error}` : label, treatment: FAILED }];
-    default:
-      return [];
   }
 };
 
