@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { useListSelection } from '@dxos/react-ui-list';
@@ -44,8 +44,6 @@ export type FeatureKanbanProps = {
   /** The card selected when the board opens, as for a link to one feature. */
   defaultSelectedId?: string;
   onSelect?: (id: string | undefined) => void;
-  /** Marks for a card's header beside its own, by feature id. */
-  renderMarks?: (id: string) => ReactNode;
 };
 
 type FeatureKanbanContextValue = Omit<FeatureKanbanProps, 'features' | 'defaultSelectedId' | 'onSelect'> & {
@@ -54,7 +52,7 @@ type FeatureKanbanContextValue = Omit<FeatureKanbanProps, 'features' | 'defaultS
 };
 
 const FeatureKanbanCard = ({ data: feature, location, draggable, binding }: MosaicTileProps<FeatureModel>) => {
-  const { lookup, selectedId, clearSelection, onZoom, renderMarks } = useContext(FeatureKanbanContext);
+  const { lookup, selectedId, clearSelection, onZoom } = useContext(FeatureKanbanContext);
   const selected = selectedId ? lookup(selectedId) : undefined;
   const relation = getFeatureRelation(feature, selected);
   const faded = selected && feature.id !== selected.id && !relation;
@@ -92,7 +90,6 @@ const FeatureKanbanCard = ({ data: feature, location, draggable, binding }: Mosa
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            {renderMarks?.(feature.id)}
             <FeatureCard.Marks />
           </FeatureCard.Header>
           <FeatureCard.Body>
@@ -151,10 +148,7 @@ const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<Feature
  */
 // Composable, so a host's slot (the spec map's `Panel.Body asChild`) styles the board itself.
 export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>(
-  (
-    { features, onZoom, onChange, selectedId: selectedIdProp, defaultSelectedId, onSelect, renderMarks, ...props },
-    forwardedRef,
-  ) => {
+  ({ features, onZoom, onChange, selectedId: selectedIdProp, defaultSelectedId, onSelect, ...props }, forwardedRef) => {
     const [selectedIdState, setSelectedIdState] = useState<string | undefined>(defaultSelectedId);
     const selectedId = selectedIdProp ?? selectedIdState;
     const handleSelect = (id: string | undefined) => {
@@ -199,7 +193,6 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
           clearSelection: clear,
           onZoom,
           onChange,
-          renderMarks,
         }}
       >
         <Board.Root model={model} navigation='grid' itemProps={(id) => bind(id).rowProps}>

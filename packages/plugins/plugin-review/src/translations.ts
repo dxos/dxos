@@ -62,8 +62,6 @@ export const translations = [
         'add-object-comment.label': 'Add comment',
         'subscribe-comments.label': 'Notify me of comments',
         'comments.label': 'Comments',
-        'comment-count.label_one': '{{count}} open thread',
-        'comment-count.label_other': '{{count}} open threads',
         'show-unresolved.label': 'Active comments',
         'show-all.label': 'All comments',
         'add-comment.label': 'Add comment',

@@ -8,9 +8,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Obj } from '@dxos/echo';
 
-import { CommentCount, CommentsArticle } from '#containers';
+import { CommentsArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -24,12 +23,6 @@ export default Capability.makeModule(() =>
         ),
         component: CommentsArticle,
         props: ({ data: { attendableId, companionTo } }) => ({ attendableId, subject: companionTo }),
-      }),
-      Surface.create({
-        id: 'commentCount',
-        filter: AppSurface.subject(AppSurface.CardMarks, Obj.isObject),
-        component: CommentCount,
-        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),

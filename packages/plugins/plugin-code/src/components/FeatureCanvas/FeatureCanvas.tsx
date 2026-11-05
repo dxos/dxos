@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ReactNode, createContext, useCallback, useContext, useMemo, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 
 import {
   type Arrangement,
@@ -34,7 +34,6 @@ const createFeatureNode = (props: CreateProps): Node => ({ type: FEATURE_NODE_TY
 type FeatureNodeContextValue = {
   lookup: FeatureLookup;
   cells: FeatureCanvasCellsProps;
-  renderMarks?: (id: string) => ReactNode;
 };
 
 /** Node views and the cells overlay get no host props, so the cards' data and the cell actions reach them through context. */
@@ -43,7 +42,7 @@ const FeatureNodeContext = createContext<FeatureNodeContextValue>({ lookup: () =
 const FeatureCells = () => <FeatureCanvasCells {...useContext(FeatureNodeContext).cells} />;
 
 const FeatureNodeView = ({ node }: NodeViewProps) => {
-  const { lookup, renderMarks } = useContext(FeatureNodeContext);
+  const { lookup } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
     // One bounded row, so the card fits the box; it is a summary that never scrolls, so presses, the wheel and
@@ -54,7 +53,6 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            {renderMarks?.(feature.id)}
             <FeatureCard.Marks />
           </FeatureCard.Header>
           {/* Dependencies are the canvas's arrows, and the rest is the companion's, so the card stays a summary. */}
@@ -151,8 +149,6 @@ export type FeatureCanvasProps = {
   force?: ForceOptions;
   /** False lays the boxes out freely, with no lattice cells to snap to or guides to draw; on by default. */
   lattice?: boolean;
-  /** Marks for a card's header beside its own, by feature id. */
-  renderMarks?: (id: string) => ReactNode;
 };
 
 /**
@@ -176,7 +172,6 @@ export const FeatureCanvas = ({
   arrange = 'crossings',
   force,
   lattice = true,
-  renderMarks,
 }: FeatureCanvasProps) => {
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
   // Pinning keeps the drawn cards where they are, so a card placed in a cell does not move the layout around it.
@@ -185,8 +180,8 @@ export const FeatureCanvas = ({
     [onPositionsChange, positions],
   );
   const nodeContext = useMemo(
-    () => ({ lookup, cells: { onCreate, onAdd, onPin: handlePin }, renderMarks }),
-    [lookup, onCreate, onAdd, handlePin, renderMarks],
+    () => ({ lookup, cells: { onCreate, onAdd, onPin: handlePin } }),
+    [lookup, onCreate, onAdd, handlePin],
   );
   const graph = useMemo(() => toGraph(features), [features]);
 
