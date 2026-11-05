@@ -11,6 +11,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 
@@ -19,8 +20,19 @@ import { type SourceReader } from '../SpecEditor/snippet-card.ts';
 import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { VerdictCard } from '../VerdictCard/index.ts';
 
+/** One of a spec's reviews, as the panel's picker lists it. */
+export type ReviewOption = { id: string; label: string };
+
+/** The picker's value for each item's newest verdict across the reviews. */
+const CURRENT = 'current';
+
 export type ReviewPanelProps = {
   review?: ReviewModel;
+  /** The spec's reviews, newest first; the picker shows the current status or one of them. */
+  history?: readonly ReviewOption[];
+  /** The review shown; undefined shows the current status. */
+  selectedReview?: string;
+  onSelectReview?: (id: string | undefined) => void;
   /** Where the review was looked for, shown when there is none yet. */
   reviewKey?: string;
   /** The current verdict; kept in step with the item selected in the spec. */
@@ -36,10 +48,21 @@ export type ReviewPanelProps = {
 const ReviewPanelContext = createContext<Pick<ReviewPanelProps, 'onSelect' | 'onOpenCode' | 'read'>>({});
 
 /**
- * The latest compliance review of a spec: counts per status, then every verdict, worst first, as a list of cards.
+ * A spec's compliance review: a picker of its reviews, counts per status and the review's summary, then every verdict,
+ * worst first, as a list of cards. The current status takes each item's verdict from the newest review that judges it.
  * The list is the shared card container: arrow keys move the current card, and the current card follows the spec.
  */
-export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode, read }: ReviewPanelProps) => {
+export const ReviewPanel = ({
+  review,
+  history = [],
+  selectedReview,
+  onSelectReview,
+  reviewKey,
+  selected,
+  onSelect,
+  onOpenCode,
+  read,
+}: ReviewPanelProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const verdicts = useMemo(
     () =>
@@ -63,6 +86,23 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode,
   return (
     <ReviewPanelContext.Provider value={handlers}>
       <Layout.Flex column classNames='h-full min-h-0' data-testid='review-panel'>
+        {history.length > 0 && onSelectReview && (
+          <div className='px-2 pt-2'>
+            <Select.Root
+              value={[selectedReview ?? CURRENT]}
+              onValueChange={({ value: [value] }) => onSelectReview(value === CURRENT ? undefined : value)}
+              items={[{ value: CURRENT, label: t('review-panel.current.label') }, ...history.map(toItem)]}
+            >
+              <Select.Trigger classNames='w-full' data-testid='review-panel.picker' />
+              <Select.Content>
+                <Select.Item item={{ value: CURRENT, label: t('review-panel.current.label') }} />
+                {history.map((option) => (
+                  <Select.Item key={option.id} item={toItem(option)} />
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </div>
+        )}
         <Layout.Flex wrap gap='xs' classNames='p-2 items-center text-xs text-description'>
           {summarizeReview(review).map(({ status, count }) => (
             <Tag.Tag key={status} hue={STATUS_STYLE[status].hue} data-testid={`review-panel.count.${status}`}>
@@ -70,8 +110,19 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode,
               {count} {STATUS_STYLE[status].label}
             </Tag.Tag>
           ))}
-          <span>{[review.by, review.date, review.commit?.slice(0, 10)].filter(Boolean).join(' · ')}</span>
+          {/* The current status mixes reviews, so each card names its own; one review is named here. */}
+          {selectedReview !== undefined || history.length === 0 ? (
+            <span>{[review.by, review.date, review.commit?.slice(0, 10)].filter(Boolean).join(' · ')}</span>
+          ) : null}
         </Layout.Flex>
+        {review.summary && (
+          <p
+            className='px-2 pb-2 text-sm text-description whitespace-pre-line line-clamp-6'
+            data-testid='review-panel.summary'
+          >
+            {review.summary}
+          </p>
+        )}
         <Focus.Group asChild>
           <Mosaic.Container asChild currentId={selected} onCurrentChange={handleCurrentChange}>
             <ScrollArea.Root orientation='vertical' classNames='grow'>
@@ -92,6 +143,8 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode,
     </ReviewPanelContext.Provider>
   );
 };
+
+const toItem = ({ id, label }: ReviewOption) => ({ value: id, label });
 
 type VerdictTileProps = Pick<MosaicTileProps<Verdict>, 'location' | 'data' | 'current'>;
 

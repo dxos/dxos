@@ -107,6 +107,7 @@ export const translations = [
         'verdict-card.evidence.label_other': '{{count}} code links',
         'definition-graph.external.hint': 'Double-click to open',
         'definition-graph.local.hint': 'Double-click to show in the spec',
+        'review-panel.current.label': 'Current status',
         'review-panel.empty.label': 'No review yet. Run the spec-review skill to write one beside the spec:',
         'code-view.loading.label': 'Loading…',
         'code-view.empty.label': 'Ctrl/⌘-click a code key in the spec, or double-click a code box, to open it here.',

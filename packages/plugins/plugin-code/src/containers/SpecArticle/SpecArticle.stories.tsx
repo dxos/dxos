@@ -9,6 +9,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Spec from '@dxos/compute/Spec';
+import * as SpecReview from '@dxos/compute/SpecReview';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -16,6 +17,7 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { SpecReviews } from '#sync';
 import { translations } from '#translations';
 
 import CHESS_1_MDL from '../../../../../reflect/deus/lang/examples/chess-1.mdl?raw';
@@ -23,8 +25,10 @@ import CONNECTOR_EVENTS_MDL from '../../../../plugin-connector/spec/EVENTS.mdl?r
 import GITHUB_FILE_SYNC_MDL from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
 import GITHUB_SYNC_MDL from '../../../../plugin-github/spec/SYNC.mdl?raw';
 import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
+import PLUGIN_CODE_REVIEW from '../../../PLUGIN.review.mdl?raw';
 import { useSpecTexts } from '../../testing/index.ts';
 import PLUGIN_CODE_BASE_MDL from './__fixtures__/plugin-code.base.mdl?raw';
+import PLUGIN_CODE_EARLIER_REVIEW from './__fixtures__/plugin-code.review-2026-10-23.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';
 import { SpecPanel } from './SpecPanel.tsx';
 
@@ -60,7 +64,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [Spec.Spec],
+          types: [Spec.Spec, SpecReview.SpecReview],
           onClientInitialized: ({ client }) => initializeIdentity(client).pipe(Effect.asVoid),
         }),
       ],
@@ -77,6 +81,49 @@ export default meta;
 type Story = StoryObj;
 
 export const Default: Story = {};
+
+/** plugin-code's spec with two of its reviews from the repository's history, recorded as the spec's SpecReviews. */
+const ReviewsStory = () => {
+  const [space] = useSpaces();
+  const [spec, setSpec] = useState<Spec.Spec | undefined>();
+
+  useEffect(() => {
+    if (space && !spec) {
+      const added = space.db.add(Spec.make({ name: 'plugin-code/PLUGIN.mdl', content: PLUGIN_CODE_MDL }));
+      for (const text of [PLUGIN_CODE_EARLIER_REVIEW, PLUGIN_CODE_REVIEW]) {
+        const fields = SpecReviews.fromText(text);
+        if (typeof fields === 'string') {
+          throw new Error(fields);
+        }
+        space.db.add(SpecReview.make({ spec: added, ...fields }));
+      }
+      setSpec(added);
+    }
+  }, [space, spec]);
+
+  if (!spec) {
+    return <Loading />;
+  }
+
+  return <SpecArticle role='article' subject={spec} attendableId='story' panel />;
+};
+
+/**
+ * Each reviewed item shows its newest verdict in the margin, naming its review on hover, and the Review view picks the
+ * current status or one review.
+ */
+export const Reviews: Story = {
+  render: () => <ReviewsStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByTestId('spec-review.gutter-chip').length).toBeGreaterThan(0), {
+      timeout: 10_000,
+    });
+    await userEvent.click(canvas.getByTestId('spec-article.view.review'));
+    await waitFor(() => expect(canvas.getAllByTestId('verdict-card').length).toBeGreaterThan(100));
+    await expect(canvas.getByTestId('review-panel.summary')).toHaveTextContent(/^136 items/);
+  },
+};
 
 export const Chess: Story = {
   args: {

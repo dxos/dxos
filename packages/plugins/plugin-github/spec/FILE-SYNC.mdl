@@ -379,6 +379,8 @@ feat F-1: Mapping contract
   req F-1.2: When two mappings match one path, the one contributed first wins and the conflict is logged once per pass.
 
   req F-1.3: A mapping without `export` is pull-only; local edits to its objects are never pushed and are overwritten only where the remote changed the same text.
+
+  req F-1.4: A mapping's `exclude` globs carve paths out of its `match`, so a more specific mapping can claim them without a conflict.
 ```
 
 ```mdl
@@ -729,4 +731,15 @@ decision D-24: ImportSpecFile and ExportSpecFile merge only the text after a fil
   why: The text holds what follows the front matter, so the merge runs on that part of each version of the file.
   rejected:
     - Merging whole files and stripping the front matter afterwards, which would merge front matter the text never holds.
+```
+
+```mdl
+decision D-25: A FileMapping takes `exclude` globs, and plugin-code's spec mapping excludes `**/*.review.mdl`, which its review mapping claims.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [FileMapping, F-1.4]
+  why: A review file is a `.mdl` file but becomes a SpecReview, not a Spec; the glob syntax has no negation.
+  rejected:
+    - Contributing the review mapping first so it wins F-1.2's tie, which logs a conflict for every review file on every pass.
 ```

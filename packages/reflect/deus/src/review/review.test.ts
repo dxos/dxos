@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseReview, statusOf, summarizeReview, walkthroughOf } from './review.ts';
+import { mergeReviews, parseReview, statusOf, summarizeReview, walkthroughOf } from './review.ts';
 
 const fence = (body: string) => ['```mdl', body, '```'].join('\n');
 
@@ -15,6 +15,10 @@ const REVIEW = [
   'date: 2026-10-22',
   'by: agent:claude-code',
   '---',
+  '',
+  '# Review: X',
+  '',
+  'Two items: one done, one missing.',
   '',
   fence(
     [
@@ -33,7 +37,11 @@ const REVIEW = [
 describe('review', () => {
   test('parses frontmatter and verdicts, dropping unknown statuses', ({ expect }) => {
     const review = parseReview(REVIEW);
-    expect(review).toMatchObject({ commit: '0123456789abcdef', by: 'agent:claude-code' });
+    expect(review).toMatchObject({
+      commit: '0123456789abcdef',
+      by: 'agent:claude-code',
+      summary: 'Two items: one done, one missing.',
+    });
     expect(review.verdicts).toEqual([
       {
         id: 'F-1.1',
@@ -107,5 +115,25 @@ describe('review', () => {
       { status: 'done', count: 1 },
       { status: 'missing', count: 1 },
     ]);
+  });
+
+  test('the current status takes each item from the newest review that judges it', ({ expect }) => {
+    const older = parseReview(REVIEW);
+    const newer = parseReview(
+      [
+        '---',
+        'commit: fedcba',
+        'date: 2026-11-01',
+        '---',
+        fence(['verdict F-1.2: Picker added.', '  status: done'].join('\n')),
+      ].join('\n'),
+    );
+    const current = mergeReviews([newer, older]);
+    expect(current?.commit).toBe('fedcba');
+    expect(current?.verdicts.map(({ id, status, review }) => [id, status, review?.commit])).toEqual([
+      ['F-1.2', 'done', 'fedcba'],
+      ['F-1.1', 'done', '0123456789abcdef'],
+    ]);
+    expect(mergeReviews([])).toBeUndefined();
   });
 });

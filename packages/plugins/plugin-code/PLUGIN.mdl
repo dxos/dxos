@@ -487,6 +487,32 @@ op exportSpecFile
 ```
 
 ```mdl
+op createSpecReview
+  key: org.dxos.operation.code.createSpecReview
+  desc: |
+    Records a `.review.mdl` text as a review of the spec (F-24.2). Refused when the front matter lacks commit, date
+    or by.
+  input:
+    spec: Ref<Spec>
+    content: string
+  output: { review: Ref<SpecReview>, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
+```mdl
+op importSpecReviewFile
+  key: org.dxos.operation.code.importSpecReviewFile
+  desc: |
+    The import of the `.review.mdl` FileMapping: records the file against the Spec synced from the `.mdl` beside it,
+    and fails when there is none. The mapping has no export.
+  input: FileImportInput
+  output: FileImportOutput
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
+```mdl
 op listLocalSpecs
   key: org.dxos.operation.code.listLocalSpecs
   desc: Lists the `.mdl` specs in every known checkout as source keys, reviews excluded.
@@ -550,6 +576,18 @@ type RepositoriesSkill
     key: org.dxos.skill.code.repositories
     tools:
       - op:updateProjectRepositories
+    instructions: prose
+```
+
+```mdl
+type SpecReviewSkill
+  desc: |
+    Skill key `org.dxos.skill.code.specReview`, named Spec Review, which an agent can enable. Records a `.review.mdl`
+    review of a spec in the space (F-24).
+  fields:
+    key: org.dxos.skill.code.specReview
+    tools:
+      - op:createSpecReview
     instructions: prose
 ```
 
@@ -1030,6 +1068,23 @@ feat F-23: A project's repositories
   req F-23.2: An agent asked to give a project a repository, or to take one away, adds or removes it with
               op:updateProjectRepositories from the Project Repositories skill; a repository already listed keeps its
               place.
+```
+
+```mdl
+feat F-24: Spec reviews in ECHO
+  req F-24.1: A review of a spec is a `SpecReview` object owned by the spec (`@dxos/compute`'s `SpecReview`, typename
+              `org.dxos.type.projects.specReview`): its commit, date and reviewer, its summary, and a verdict per spec
+              item keyed by the item's id.
+  req F-24.2: Recording a review with the same commit, date and reviewer as one the spec has replaces that review's
+              summary and verdicts; any other review is added beside the spec's earlier ones.
+  req F-24.3: Reviews are imported from git and never written back. A `.review.mdl` file is recorded against the spec
+              synced from the file beside it, by the local checkout sync ([F-14]) and by GitHub file sync, which maps
+              it to `SpecReview` and excludes it from the spec mapping.
+  req F-24.4: An agent records a review with op:createSpecReview from the Spec Review skill, given the spec and the
+              review file's text.
+  req F-24.5: Each item shows its newest verdict across the spec's reviews. The editor's status chip, the Review view's
+              cards and a requirement's chip on a feature card show it, with the review's date and commit.
+  req F-24.6: The Review view picks a review from the spec's history; it shows the current status by default.
 ```
 
 ## Acceptance
@@ -2082,6 +2137,16 @@ decision D-68: A feature embed in a spec is the editor's object embed, plugin-ma
   affects: [F-20.7]
   supersedes: D-65
   why: The spec drew its sections in a frame of its own, a copy of the object embed; one embed keeps both documents the same.
+```
+
+```mdl
+decision D-69: A spec's reviews are ECHO objects beside the spec, one `SpecReview` per review, so a spec in a space keeps its review history. Each item's current status is its newest verdict in any review. Reviews come from git only: the `.review.mdl` file in the checkout or repository is imported and nothing writes one back, and only the current file is imported, with no backfill of earlier commits. The same front matter updates a review in place; new front matter makes a new review. The one way in for an agent is op:createSpecReview, which the Spec Review skill declares and the MCP server exposes. Amends [F-16.1] for a spec in a space, whose review is read from ECHO instead of the checkout.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1, F-24]
+  why: A review read from the checkout is lost to anyone without that checkout, and the file holds only the latest review.
+  rejected: Writing reviews back to git; a review per item rather than per review; backfilling reviews from git history.
 ```
 
 ## Appendix: Extension Definitions

@@ -246,7 +246,11 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       const mappings = contributed.filter((mapping) => !options.mappings || options.mappings.includes(mapping.id));
       const mappingById = new Map(mappings.map((mapping) => [mapping.id, mapping]));
       const pathFilter = options.paths ? globMatcher(options.paths) : undefined;
-      const matchers = mappings.map((mapping) => ({ mapping, matches: globMatcher(mapping.match) }));
+      const matchers = mappings.map((mapping) => {
+        const included = globMatcher(mapping.match);
+        const excluded = globMatcher(mapping.exclude ?? []);
+        return { mapping, matches: (path: string) => included(path) && !excluded(path) };
+      });
       const conflicts = new Set<string>();
       /** The first contributed mapping that claims `path` (F-1.2). */
       const mappingFor = (path: string): GitHubCapabilities.FileMapping | undefined => {

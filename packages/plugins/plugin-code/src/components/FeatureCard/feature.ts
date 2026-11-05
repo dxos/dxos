@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Verdict } from '@dxos/deus/review';
+
 import { type Feature } from '#types';
 
 /**
@@ -39,6 +41,8 @@ export type FeatureModel = {
    */
   active: boolean;
   requirements: readonly Feature.Requirement[];
+  /** Each requirement's newest verdict across its spec's reviews, by requirement id (`F-3.2`). */
+  verdicts?: Readonly<Record<string, Verdict>>;
   /** The spec blocks the requirements were extracted from. */
   specs: readonly string[];
   /** The block id its spec numbers it with (`F-3`). */
@@ -139,6 +143,7 @@ export type FeatureGraphInput = {
     description?: string;
     status: FeatureStatus;
     requirements?: readonly Feature.Requirement[];
+    verdicts?: Readonly<Record<string, Verdict>>;
     specs?: readonly string[];
     blockId?: string;
     spec?: string;
