@@ -369,6 +369,61 @@ export const ClickSteps: Story = {
   },
 };
 
+/** Up, Down and the brackets move whole slides past any build; Cmd or Ctrl with left or right jumps to the deck's ends. */
+export const SlideKeys: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    deck.focus();
+    for (const [key, page] of [
+      ['{ArrowDown}', '2 / 2'],
+      ['{ArrowUp}', '1 / 2'],
+      [']', '2 / 2'],
+      // A doubled bracket is a literal `[` in userEvent's key syntax.
+      ['[[', '1 / 2'],
+    ] as const) {
+      await userEvent.keyboard(key);
+      await expect(await canvas.findByText(page)).toBeVisible();
+    }
+    // Back through the slide keys lands on the slide fully revealed, as left does.
+    await waitFor(() => expect(hidden()).toBe(0));
+
+    await userEvent.keyboard('{Meta>}{ArrowRight}{/Meta}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await userEvent.keyboard('{Control>}{ArrowLeft}{/Control}');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
+
+    // Cmd with any other key stays with the browser.
+    await userEvent.keyboard('{Meta>}]{/Meta}');
+    await expect(canvas.getByText('1 / 2')).toBeVisible();
+  },
+};
+
+/** The slide keys stop at the deck's ends without dropping what is revealed there. */
+export const SlideKeysAtEnd: Story = {
+  render: ClickStepsLastStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    deck.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(hidden()).toBe(2));
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(canvas.getByText('2 / 2')).toBeVisible();
+    await expect(hidden()).toBe(2);
+  },
+};
+
 /** Advancing past the last slide keeps its revealed steps. */
 export const ClickStepsAtEnd: Story = {
   render: ClickStepsLastStory,

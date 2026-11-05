@@ -110,10 +110,12 @@ component Deck
     and prints; `Deck.Viewport`, the current slide; `Deck.Grid`, every slide as a thumbnail; `Deck.Pager`,
     `Deck.PageNumber` and `Deck.PlayButton`), composed by its containers into a Panel.
     Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
-    and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
-    step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
+    and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: Cmd (or Ctrl) with
+    left or right, Shift with left or right, and Home and End jump to first and last, `f` toggles fullscreen,
     Escape exits fullscreen. Space and right advance a click step, else the slide; left retreats a click step,
-    else lands on the previous slide fully revealed. Click steps are ephemeral and reset on slide change; Space
+    else lands on the previous slide fully revealed. Down and `]` move to the next slide at its first step, and Up
+    and `[` to the previous slide fully revealed, past any remaining click steps; neither acts at the deck's end.
+    Click steps are ephemeral and reset on slide change; Space
     does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
     slide into a print-only container, one 16:9 page each with every click step shown, and drops the rest of the
     app from the printout.
@@ -557,7 +559,7 @@ feat F-12: Speaker Notes
   req F-12.3:
     when: the `notes` setting is `window` and a Presentation is presented
     then: a second window shows the current slide's notes, the time on the slide against its desired length, and the next slide's notes; it closes when the presentation ends
-  req F-12.4: Arrow keys and Space pressed in the notes window move the deck as they do in the deck.
+  req F-12.4: Arrow keys, brackets, Home, End and Space pressed in the notes window move the deck as they do in the deck.
   req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
   req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
   req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
@@ -1476,6 +1478,31 @@ decision D-77: Presenter implements plugin-projects' `CreateShowcase` operation 
   for: user:dmaretskyi
   affects: [Presentation, CreateShowcase]
   why: Presenter already depends on plugin-projects through plugin-studio, so only this side can name both the deck and the relation.
+```
+
+```mdl
+decision D-78: Left, right and Space move through a slide's click steps, with Space moving forward only; Up, Down, `[` and `]` move between slides; Cmd with left or right moves to the deck's start and end.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-12.4]
+```
+
+```mdl
+decision D-79: Up and `[` land on the previous slide fully revealed, and Down and `]` on the next at its first step; at the deck's ends they do nothing and keep the revealed steps. Fills in [D-78].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.4]
+  why: Left already lands on the previous slide fully revealed, and resetting a slide when there is nowhere to go would hide what the speaker has built.
+```
+
+```mdl
+decision D-80: Ctrl acts as Cmd on the jump keys, and Shift with left or right, Home and End still jump to the deck's ends. Fills in [D-78].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.4]
+  why: Only Macs have Cmd, and the other jump keys do not conflict with the new bindings.
 ```
 
 ---

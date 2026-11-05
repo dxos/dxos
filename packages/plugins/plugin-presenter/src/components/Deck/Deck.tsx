@@ -139,7 +139,13 @@ const DeckRoot = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
-      if (isEditable(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+      // Cmd (Ctrl elsewhere) belongs to the browser and app except on the two arrows that jump to the deck's ends.
+      const command = event.metaKey || event.ctrlKey;
+      if (
+        isEditable(event.target) ||
+        event.altKey ||
+        (command && event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+      ) {
         return;
       }
       // Arrow keys inside a toolbar move between its buttons (roving focus), so only `f` applies there.
@@ -154,15 +160,27 @@ const DeckRoot = ({
         setStepState({ index: clamped, step: 0 });
         onIndexChange(clamped);
       };
-      const forward = () => {
-        if (step < clicks) {
-          event.preventDefault();
-          setStepState({ index, step: step + 1 });
-        } else if (index < count - 1) {
+      const nextSlide = () => {
+        if (index < count - 1) {
           go(index + 1);
         } else {
           // Past the last slide there is nowhere to go, and its revealed steps must stay revealed.
           event.preventDefault();
+        }
+      };
+      const previousSlide = () => {
+        event.preventDefault();
+        if (index > 0) {
+          setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
+          onIndexChange(index - 1);
+        }
+      };
+      const forward = () => {
+        if (step < clicks) {
+          event.preventDefault();
+          setStepState({ index, step: step + 1 });
+        } else {
+          nextSlide();
         }
       };
       switch (event.key) {
@@ -178,7 +196,7 @@ const DeckRoot = ({
           setFullscreen(!fullscreen);
           return;
         case 'ArrowLeft':
-          if (event.shiftKey) {
+          if (command || event.shiftKey) {
             return go(0);
           }
           if (step > 0) {
@@ -186,19 +204,18 @@ const DeckRoot = ({
             setStepState({ index, step: step - 1 });
             return;
           }
-          event.preventDefault();
-          if (index > 0) {
-            setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
-            onIndexChange(index - 1);
-          }
-          return;
+          return previousSlide();
         case 'ArrowRight':
-          return event.shiftKey ? go(count - 1) : forward();
-        case 'Home':
+          return command || event.shiftKey ? go(count - 1) : forward();
         case 'ArrowUp':
+        case '[':
+          return previousSlide();
+        case 'ArrowDown':
+        case ']':
+          return nextSlide();
+        case 'Home':
           return go(0);
         case 'End':
-        case 'ArrowDown':
           return go(count - 1);
       }
     },

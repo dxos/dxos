@@ -20,7 +20,7 @@ import { PresenterNamespace } from '../../namespace.ts';
 const slideOf = (source: SlideSource | undefined) => (source && 'slide' in source ? source.slide : undefined);
 
 /** Keys a speaker presses in the notes window that move the deck. */
-const DECK_KEYS = new Set([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
+const DECK_KEYS = new Set([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '[', ']', 'Home', 'End']);
 
 export type PresentedOverlayProps = {
   presentation: Presentation.Presentation;
@@ -58,7 +58,13 @@ export const PresentedOverlay = ({ presentation }: PresentedOverlayProps) => {
       if (DECK_KEYS.has(event.key)) {
         event.preventDefault();
         focusRef.current?.dispatchEvent(
-          new KeyboardEvent('keydown', { key: event.key, shiftKey: event.shiftKey, bubbles: true }),
+          new KeyboardEvent('keydown', {
+            key: event.key,
+            shiftKey: event.shiftKey,
+            metaKey: event.metaKey,
+            ctrlKey: event.ctrlKey,
+            bubbles: true,
+          }),
         );
       }
     },
