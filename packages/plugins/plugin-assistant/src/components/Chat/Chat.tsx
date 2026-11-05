@@ -583,10 +583,10 @@ type ChatThreadProps = Util.ThemedClassName<{
   tailLines?: number;
   /** Hue of the user's messages; defaults to the identity's hue. */
   userHue?: string;
-  /** Invoked from the over-quota error toast to open the usage dashboard. */
-  onViewUsage?: () => void;
   /** Shows each block's estimated token count beside it. */
   showTokens?: boolean;
+  /** Invoked from the over-quota error toast to open the usage dashboard. */
+  onViewUsage?: () => void;
 }>;
 
 /**
@@ -607,8 +607,8 @@ const ChatThread = ({
   viewType,
   tailLines,
   userHue: userHueProp,
-  onViewUsage,
   showTokens,
+  onViewUsage,
 }: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);

@@ -203,12 +203,10 @@ describe('createRenderer', () => {
 
     expect(markdown(createRenderer('normal')(message(blocks)))).not.toContain('<tokens>');
     expect(markdown(createRenderer('debug', { showTokens: true })(message(blocks)))).not.toContain('<tokens>');
-    expect(renderUserTokens(userMessage([ContentBlock.Text.make({ text: 'hello' })]))).not.toContain('<tokens>');
+    const prompt = userMessage([ContentBlock.Text.make({ text: 'hello' })]);
+    expect(markdown(createRenderer('normal', { showTokens: true })(prompt))).not.toContain('<tokens>');
   });
 });
-
-const renderUserTokens = (message: Message.Message): string =>
-  markdown(createRenderer('normal', { showTokens: true })(message));
 
 const message = (blocks: NonNullable<Parameters<typeof Message.make>[0]['blocks']>) =>
   Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });
