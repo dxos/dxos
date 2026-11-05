@@ -82,8 +82,9 @@ export const CollaborativeTextEditor = ({
 
   const inPlace = variant === 'title' || variant === 'plain';
   return (
+    // Rows, so the frame grows as the text wraps, which even one line does; a title's frame grows already.
     <Input.Frame
-      rows={multiline ? (inPlace ? 1 : TEXT_AREA_ROWS) : undefined}
+      rows={multiline && !inPlace ? TEXT_AREA_ROWS : variant === 'title' ? undefined : 1}
       variant={variant}
       disabled={readonly}
       data-testid={testId}
