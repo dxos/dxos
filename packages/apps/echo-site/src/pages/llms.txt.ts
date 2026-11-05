@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parsePages, readSpec } from '../lib/spec.ts';
+import { parsePages, readSpec } from '../util/spec.ts';
 
 export const GET = ({ site }: { site?: URL }) => {
   const pages = parsePages(readSpec()).filter((page) => page.status !== 'planned');

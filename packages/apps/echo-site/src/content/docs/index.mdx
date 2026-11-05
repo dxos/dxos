@@ -9,9 +9,22 @@ hero:
   title: ECHO
 ---
 
-import { guarantees, routes } from '../../lib/home.ts';
+import { guarantees, reasons, routes } from '../../util/home.ts';
 import SpecCite from '../../components/SpecCite.astro';
 import Diagram from '../../components/Diagram.astro';
+
+## Why it exists
+
+<div class="card-grid not-content">
+  {reasons.map(({ title, body }) => (
+    <div class="card">
+      <h3>{title}</h3>
+      <p>{body}</p>
+    </div>
+  ))}
+</div>
+
+## What it guarantees
 
 <div class="card-grid not-content">
   {guarantees.map(({ title, body, cite }) => (

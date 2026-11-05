@@ -1,15 +1,67 @@
 ---
 title: Why ECHO?
-description: The argument for a typed, local-first object graph.
+description: The data model that apps and agents share, and that ties external data together.
 ---
 
 import Anatomy from '../../components/Anatomy.astro';
 import Snippet from '../../components/Snippet.astro';
 import SpecCite from '../../components/SpecCite.astro';
 
-Most applications keep their real state on a server and spend their client code on copies of it: caches, optimistic
-updates, retry queues and conflict handling. ECHO moves the state onto the device. Your objects are CRDT documents in a
-local database, so a write is finished when the call returns, and peers merge their changes when they connect.
+ECHO is the data model that applications and agents share. Plugins code against its objects instead of keeping private
+stores. An agent keeps its memory in the same graph, and can inspect the schema of everything in it. Data from external
+systems lands there as linked objects, so one query can reach all of it.
+
+## Agents need memory they can query
+
+A conversation ends and its context goes with it. An agent that works across sessions needs somewhere durable to put what
+it learned, and that memory is only useful if it connects to the work it is about.
+
+In ECHO a memory is an ordinary object. It has a type, it can reference the issue it is about, and it comes back through the
+same query an application uses. The `org.dxos.skill.memory` skill stores an agent's memories this way.
+
+<Snippet file="why-model" region="memory" />
+
+Because memory is not a separate store, it replicates with the rest of the space, and any code that can query the space can
+read it.
+
+## An agent can only use what it can inspect
+
+An agent has no compiled types. It works from what it can read at run time, so the schema has to be data, not only a
+TypeScript declaration.
+
+Every ECHO type reports its name, version and metadata at run time, and converts to JSON Schema, the format tool parameters
+already use. <SpecCite item="org.dxos.echo#F-2.3" /> The schema goes the other way too: a type built from JSON Schema and
+added to a database replicates like any object, so an agent can define a new type while it runs.
+
+<Snippet file="why-model" region="introspect" />
+
+The database skill in `plugin-space` gives agents this through its `QueryTypes` and `AddType` operations. An agent can look
+up what a space holds before it writes, instead of guessing at field names.
+
+## External data needs somewhere to meet
+
+Mail, issues and calendars live in systems that do not know about each other. Syncing them into ECHO makes each record an
+object, with a foreign key that records where it came from. A `Ref` can then link a GitHub issue to a Linear task, or to the
+note that discusses both.
+
+The foreign key is what makes a repeat sync safe. Look the record up by its key, then update the object you found or add a
+new one, and the record does not end up in the graph twice.
+
+<Snippet file="why-model" region="external" />
+
+`plugin-github` and `plugin-linear` sync this way. Once the data is in the graph, the code that reads it does not need to
+know which system it came from.
+
+## Plugins code against the data model
+
+A plugin declares its types with `Type.makeObject` and contributes them to the schema registry. Its UI, its operations and
+the agents that use it all read and write the same objects. There is no plugin-specific API in between, so a second plugin
+can select the first plugin's objects by type.
+
+The rest of this page is the argument for the model itself. Keeping state on a server means client code spends its time on
+copies: caches, optimistic updates, retry queues and conflict handling. ECHO moves the state onto the device. Objects are
+CRDT documents in a local database, so a write is finished when the call returns, and peers merge their changes when they
+connect.
 
 ## The ECHO pattern
 

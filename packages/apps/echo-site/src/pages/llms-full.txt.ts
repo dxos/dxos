@@ -4,7 +4,7 @@
 
 import { getCollection } from 'astro:content';
 
-import { toMarkdown } from '../lib/markdown.ts';
+import { toMarkdown } from '../util/markdown.ts';
 
 export const GET = async () => {
   const entries = await getCollection('docs');

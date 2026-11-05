@@ -13,6 +13,9 @@ The site is a static Astro build with Starlight as the documentation shell. Its 
 from the DXOS brand assets: logos, background art, fonts and palette. Its structure follows the Effect documentation: a short
 argument for the idea, then a learning path, core concepts, guides and a reference.
 
+The site opens with why ECHO exists: it is the data model that plugins code against, the place agents keep
+their memory, a schema an agent can inspect, and the graph where data from external systems meets [F-14].
+
 Three properties outrank everything else:
 
 - **Every code sample compiles against this commit.** The ECHO docs on dxos.org teach APIs that no
@@ -126,7 +129,7 @@ page welcome: Welcome
 
 ```mdl
 page why-echo: Why ECHO?
-  The argument for a typed, local-first object graph, modeled on "Why Effect?".
+  Why apps and agents share one data model: agent memory, introspection, external data, then the argument for a typed, local-first object graph.
   route: /why-echo/
   group: Start here
   template: narrative
@@ -656,6 +659,22 @@ feat F-13: Chat and hierarchical feeds demo
   req F-13.1:
     when: a reader opens the demo
     then: it shows chat and hierarchical feeds with `plugin-assistant`
+
+feat F-14: Upfront motivation
+
+  desc: |
+    The site says why ECHO exists before it says how ECHO works.
+
+  req F-14.1:
+    when: a reader opens the landing page or Why ECHO?
+    then: before any other argument, it gives the motivation for agents and agent memory, the rationale
+          for being introspectable, and the role of tying together data from external sources, and it
+          says that ECHO is the data model that apps (plugins) code against
+
+  req F-14.2:
+    when: the motivation shows code
+    then: the sample is checked like every other sample [F-3], and each claim about an agent names the
+          skill or operation that does it
 ```
 
 ## Acceptance
@@ -1026,6 +1045,40 @@ decision D-33: A demo shows chat and hierarchical feeds with `plugin-assistant`.
   date: 2026-11-04
   by: user:richburdon
   affects: [F-13]
+```
+
+```mdl
+decision D-34: ECHO needs an upfront motivation for agents and agent memory, the rationale for being introspectable, and for being the glue that ties together data from external sources. It is the data model that apps (plugins) code against.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-14.1]
+```
+
+```mdl
+decision D-35: The motivation opens Why ECHO?, as four sections ahead of the local-first argument, and the landing page shows it as a "Why it exists" row above the guarantees. Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.1, why-echo, welcome]
+  why: The local-first argument explains how ECHO works, and it reads as the reason for ECHO when it comes first.
+```
+
+```mdl
+decision D-36: The landing headline becomes "The data model for apps and agents." Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.1]
+  why: The earlier headline said where the data lives, which is not why a reader would choose ECHO.
+```
+
+```mdl
+decision D-37: Each claim about an agent names the skill or operation that does it, such as `org.dxos.skill.memory` or `QueryTypes`. Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.2]
+  why: Agent behavior is not in the specs this site cites, so the name is the evidence a reader can check.
 ```
 
 ## Appendix: Extension Definitions

@@ -4,7 +4,7 @@
 
 import { type CollectionEntry, getCollection } from 'astro:content';
 
-import { toMarkdown } from '../lib/markdown.ts';
+import { toMarkdown } from '../util/markdown.ts';
 
 export const getStaticPaths = async () => {
   const entries = await getCollection('docs');

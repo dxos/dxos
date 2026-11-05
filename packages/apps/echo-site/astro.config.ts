@@ -7,7 +7,7 @@ import { defineConfig } from 'astro/config';
 import { type IncomingMessage, type ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 
-import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/lib/spec.ts';
+import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/util/spec.ts';
 
 const BASE = '/echo';
 
