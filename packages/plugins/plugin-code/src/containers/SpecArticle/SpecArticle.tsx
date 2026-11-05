@@ -4,10 +4,12 @@
 
 import { ViewPlugin } from '@codemirror/view';
 import { useAtomSet, useAtomValue } from '@effect/atom-react';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Spec from '@dxos/compute/Spec';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
@@ -17,7 +19,8 @@ import { useIdentity } from '@dxos/halo-react';
 import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
 import { getSpace } from '@dxos/react-client/echo';
 import { Attention } from '@dxos/react-ui-attention';
-import { Editor, useCommentActions } from '@dxos/react-ui-editor';
+import { Editor } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -275,8 +278,15 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 
 SpecArticle.displayName = 'SpecArticle';
 
-/** The editor's toolbar and, while another plugin adds comments to the editor, its comment action. */
+/** The editor's toolbar, with the toolbar actions other plugins give the spec's node, such as commenting. */
 const SpecToolbar = ({ role, attendableId }: Pick<SpecArticleProps, 'role' | 'attendableId'>) => {
-  const customActions = useCommentActions();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const customActions = useMemo(
+    () =>
+      attendableId
+        ? Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        : undefined,
+    [graph, attendableId],
+  );
   return <Editor.Toolbar role={role} attendableId={attendableId} customActions={customActions} />;
 };
