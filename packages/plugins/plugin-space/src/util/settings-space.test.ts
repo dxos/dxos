@@ -28,7 +28,7 @@ import {
 describe('resolveSettingsSpace', () => {
   it.effect('waits out identity genesis instead of racing it into a duplicate', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       // The ordering object is an Expando; the app registers it via its schema module.
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
@@ -58,7 +58,7 @@ describe('resolveSettingsSpace', () => {
 
   it.effect('creates the settings space for a legacy profile that predates it', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
 
       const legacySpace = yield* Effect.promise(() =>
@@ -75,7 +75,7 @@ describe('resolveSettingsSpace', () => {
 
   it.effect('resolves the annotated settings space on a profile carrying a duplicate', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
 
       // The duplicate the race used to create lands first in the space list; the genesis-created
@@ -98,7 +98,7 @@ describe('resolveSettingsSpace', () => {
 describe('resolveAppSettings', () => {
   it.effect('names a fresh settings object when the named one is missing', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.addTypes([AppSettings.AppSettings]));
       const space = yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
@@ -175,7 +175,7 @@ describe('settings space healing', () => {
 
   it.effect('the healing loop heals the settled boot snapshot and then exits on its own', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
 
@@ -202,7 +202,7 @@ describe('settings space healing', () => {
 
 /** Two ready settings-space duplicates, identified by the id order healing uses. */
 const setupDuplicates = Effect.gen(function* () {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   yield* Effect.tryPromise(() => client.halo.createIdentity());
   yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
   yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });

@@ -15,7 +15,7 @@ import { handler } from './list.ts';
 describe('halo credential list', () => {
   it('should list HALO credentials', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* handler({ type: Option.none(), spaceId: Option.none(), timeout: 500, delay: 250 });
       const logger = yield* TestConsole.TestConsole;

@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
@@ -47,7 +47,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     if (!space) {
       return undefined;
     }
-    const feed = Feed.make();
+    const feed = TrajectoryStore.makeFeed();
     return { feed, chat: Chat.make({ feed: Ref.make(feed) }) };
   }, [space, draftGeneration]);
   const chat = draft?.chat;

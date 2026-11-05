@@ -2,18 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension, Prec, Transaction } from '@codemirror/state';
+import { type Extension, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
-import { type FunctionComponent } from 'react';
 
 import * as SpecCommands from '@dxos/plugin-projects/SpecCommands';
-import { OBJECT_URL_SCHEMES, type ObjectLinkProps, linkWidgets, matchSchemes } from '@dxos/ui-editor';
 
 import { FeatureEmbed } from '#types';
 
 export type FeatureEmbedsOptions = {
-  /** The card an object embed is drawn as, in place of its source. */
-  Component: FunctionComponent<ObjectLinkProps>;
   /**
    * Called when the editor opens, and after local edits settle with the objects whose embeds they took out, so the spec
    * follows its text. Edits from other peers are synced by the peer that made them.
@@ -33,18 +29,11 @@ export type FeatureEmbedsOptions = {
 const ids = (text: string): Set<string> => new Set(FeatureEmbed.parse(text).map(({ id }) => id));
 
 /**
- * Object embeds in a spec document as cards: each `![label](echo:///<id>)` is one atomic block, so its id cannot be
- * edited by typing, though it can be moved, cut, copied and deleted like a line. A paste of an embed already in the
- * document embeds a copy of its object, `/feature` makes a new feature at the cursor, and local edits that add or take
- * out embeds are reported so the spec follows the text.
+ * A spec's embeds as its features: a paste of an embed already in the document embeds a copy of its object, `/feature`
+ * makes a new feature at the cursor, and local edits that add or take out embeds are reported so the spec follows the
+ * text.
  */
-export const featureEmbeds = ({
-  Component,
-  onChange,
-  onCopy,
-  onCreate,
-  delay = 300,
-}: FeatureEmbedsOptions): Extension => {
+export const featureEmbeds = ({ onChange, onCopy, onCreate, delay = 300 }: FeatureEmbedsOptions): Extension => {
   let removed = new Set<string>();
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const flush = () => {
@@ -110,21 +99,5 @@ export const featureEmbeds = ({
     return {};
   });
 
-  // The editor keeps the scroll position itself. The browser's own anchoring prefers the focused element, so a focused
-  // embed scrolled out of the rendered range pulls the view back toward it.
-  const anchoring = Prec.high(EditorView.theme({ '.cm-scroller': { overflowAnchor: 'none' } }));
-
-  return [
-    anchoring,
-    linkWidgets<ObjectLinkProps>({
-      match: matchSchemes(OBJECT_URL_SCHEMES),
-      image: { Component, keepAlive: true },
-      props: (props) => ({ ...props, eid: props.url }),
-    }),
-    listener,
-    open,
-    paste,
-    feature,
-    SpecCommands.slashCommands,
-  ];
+  return [listener, open, paste, feature, SpecCommands.slashCommands];
 };
