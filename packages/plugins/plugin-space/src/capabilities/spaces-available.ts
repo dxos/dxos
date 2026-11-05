@@ -284,14 +284,19 @@ export default Capability.makeModule(
                 attended,
                 added,
                 removed,
-                locations: getLocations(attended),
+                // Every plank's, so a follower mirroring this deck scrolls each of them, not only the attended one.
+                locations: getLocations([...new Set([...attended, ...added])]),
                 ...(following?.spaceId === space.id && {
                   following: {
                     identityKey: following.identityKey,
                     ...(following.sessionId && { sessionId: following.sessionId }),
                   },
                 }),
-                deck: { planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id) },
+                deck: {
+                  planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
+                  ...(layout.front &&
+                    GraphPath.getSpaceIdFromPath(layout.front) === space.id && { front: layout.front }),
+                },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -307,7 +312,7 @@ export default Capability.makeModule(
       // Send at interval to allow peers to expire entries if they become disconnected.
       const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
 
-      // Moving or scrolling in an attended object re-sends, at most once per interval, which is shorter while followed.
+      // Moving or scrolling in an open object re-sends, at most once per interval, which is shorter while followed.
       let locationTimer: ReturnType<typeof setTimeout> | undefined;
       const scheduleSend = () => {
         locationTimer ??= setTimeout(
@@ -318,7 +323,7 @@ export default Capability.makeModule(
           isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
         );
       };
-      const locationSubscriptions = [...current].flatMap((path) => {
+      const locationSubscriptions = [...new Set([...current, ...active])].flatMap((path) => {
         const key = getPresenceKeyFromPath(path);
         return key ? [viewState.subscribe(ViewLocation.aspect, key, scheduleSend)] : [];
       });

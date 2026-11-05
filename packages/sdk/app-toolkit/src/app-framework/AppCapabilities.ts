@@ -80,6 +80,15 @@ export type Layout = Readonly<{
    * Identifier of the item which should be scrolled into view.
    */
   scrollIntoView: string | undefined;
+  /**
+   * Whether the layout shows only its current item (a flattened deck, or mobile) rather than items side by side.
+   */
+  flat?: boolean;
+  /**
+   * The first item of the layout with at least half its width in view; the current item when {@link flat}. Where the
+   * layout is scrolled to, independent of its width.
+   */
+  front?: string;
 }>;
 
 /**

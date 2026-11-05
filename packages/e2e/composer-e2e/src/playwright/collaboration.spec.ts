@@ -27,6 +27,39 @@ const navigateToNewDocument = async (app: AppManager) => {
   await app.navigateToObject(0); // New document.
 };
 
+/** Turns the deck's flatten setting off, so the app lays planks side by side. */
+const unflattenDeck = async (app: AppManager) => {
+  await app.openPluginSettings('org.dxos.plugin.deck');
+  const flatten = app.page.getByTestId('flatten');
+  await expect(flatten).toBeChecked();
+  await flatten.click();
+  await expect(flatten).not.toBeChecked();
+};
+
+/** The graph paths of the deck's planks, in order. */
+const getPlanks = (app: AppManager) =>
+  app.page.getByTestId('deck.plank').evaluateAll((planks) => planks.map((plank) => plank.dataset.attendableId));
+
+/** The planks of a sliding deck that are not folded and have at least half their width inside the deck's viewport. */
+const getShownPlanks = (app: AppManager) =>
+  app.page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('[role="listitem"][data-object-id]')]
+      .filter((tile) => {
+        let viewport = tile.parentElement;
+        while (viewport && !['auto', 'scroll'].includes(getComputedStyle(viewport).overflowX)) {
+          viewport = viewport.parentElement;
+        }
+        const rect = tile.getBoundingClientRect();
+        const bounds = viewport?.getBoundingClientRect() ?? { left: 0, right: window.innerWidth };
+        const shown = Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left);
+        return !tile.hasAttribute('data-folded') && shown >= rect.width / 2;
+      })
+      .map((tile) => tile.getAttribute('data-object-id')),
+  );
+
+/** The plank a sliding deck is scrolled to: the first one shown. */
+const getFrontPlank = async (app: AppManager) => (await getShownPlanks(app))[0] ?? undefined;
+
 // Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
 // there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
 // webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
@@ -338,9 +371,10 @@ test.describe('Collaboration tests', () => {
 
       // The guest opens the other document and scrolls to its end; the host's deck goes with them.
       await guest.navigateToObject(1);
-      // The host reaches the object by its own path, so only the object id at the end of both URLs matches.
-      const objectId = guest.page.url().split(/[/+]/).at(-1);
-      await expect.poll(() => host.page.url(), { timeout: 30_000 }).toContain(`+${objectId}`);
+      // At the guest's own path, so the host's navtree shows the document where the guest's does.
+      await expect
+        .poll(() => new URL(host.page.url()).pathname, { timeout: 30_000 })
+        .toBe(new URL(guest.page.url()).pathname);
       const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
       await guestTextbox.focus();
       await guestTextbox.fill(Array.from({ length: 120 }, (_, i) => `Line ${i + 1}`).join('\n'));
@@ -354,6 +388,54 @@ test.describe('Collaboration tests', () => {
       await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
       await expect(rows.getByTestId('spacePlugin.presence.stopFollowing')).toHaveCount(0);
       await expect(rows.getByTestId('spacePlugin.presence.follow')).toHaveCount(1);
+    },
+  );
+
+  test(
+    "a follower whose deck lays planks side by side mirrors the leader's planks and scroll",
+    { tag: ['@space:QA-6'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await Promise.all([unflattenDeck(host), unflattenDeck(guest)]);
+      await host.createSpace();
+      for (let index = 0; index < 3; index++) {
+        await host.createObject({ type: 'Document' });
+      }
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await guest.navigateToObject(0);
+      await guest
+        .getObjectLinks()
+        .nth(1)
+        .click({ modifiers: ['Shift'] });
+      await guest
+        .getObjectLinks()
+        .nth(2)
+        .click({ modifiers: ['Shift'] });
+      await expect(guest.page.getByTestId('deck.plank')).toHaveCount(3);
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      const rows = sidebar.getByTestId('spacePlugin.presence.row');
+      await host.openCompanion('members');
+      await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
+      await expect.poll(() => getPlanks(host), { timeout: 30_000 }).toEqual(await getPlanks(guest));
+
+      // The guest brings the first plank to the front, then the last; the host's deck scrolls to show it. A wider deck
+      // shows more planks, so the host's front plank can differ from the guest's.
+      const planks = await getPlanks(guest);
+      for (const subject of [planks[0], planks[2]]) {
+        await guest.page.evaluate(
+          (subject) =>
+            globalThis.composer?.invoke?.('org.dxos.operation.appToolkit.scrollIntoView', { subject, focus: false }),
+          subject,
+        );
+        await expect.poll(() => getFrontPlank(guest), { timeout: 10_000 }).toBe(subject);
+        await expect.poll(() => getShownPlanks(host), { timeout: 30_000 }).toContain(subject);
+      }
+
+      await host.page.keyboard.press('Escape');
+      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
     },
   );
 });

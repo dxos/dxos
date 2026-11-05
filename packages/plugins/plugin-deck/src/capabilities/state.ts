@@ -66,6 +66,9 @@ export default Capability.makeModule(
       Atom.keepAlive,
     );
 
+    // Settings land after this module, so hoist the capability atom and let the derivation heal when they arrive.
+    const settingsCapabilityAtom = yield* Capability.atom(DeckCapabilities.Settings);
+
     // Create derived layout atom (read-only) from both state atoms.
     const layoutAtom = Atom.make((get) => {
       const state = get(stateAtom);
@@ -73,6 +76,14 @@ export default Capability.makeModule(
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
+      const [settingsAtom] = get(settingsCapabilityAtom);
+      const flat = platform === 'mobile' || (settingsAtom ? !!get(settingsAtom).flatten : false);
+      // A deck that is not sliding measures no front, and shows its planks from the first.
+      const front = flat
+        ? open.active.at(-1)
+        : ephemeral.front && open.active.includes(ephemeral.front)
+          ? ephemeral.front
+          : open.active[0];
       return {
         mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
@@ -82,6 +93,8 @@ export default Capability.makeModule(
         active: open.active,
         inactive: open.inactive,
         scrollIntoView: ephemeral.scrollIntoView?.id,
+        flat,
+        front,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 

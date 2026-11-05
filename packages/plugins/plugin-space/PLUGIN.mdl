@@ -49,7 +49,7 @@ type ObjectViewerProps
     lastSeen: number            # unix timestamp of last observation
     movedAt: number             # when the session opened the object, came back to it, or moved its anchor there
     currentlyAttended: boolean  # true if the session is currently viewing this object
-    location?: PeerLocation     # the session's selection and top of view, while it attends the object
+    location?: PeerLocation     # the session's selection and top of view in the object, while its deck holds it
     device?: SessionDevice      # the device the session runs on
 ```
 
@@ -58,6 +58,7 @@ type PeerDeck
   desc: A session's deck in one space, as its viewing message reports it.
   fields:
     planks: string[]            # graph paths of the deck's planks in that space, in order
+    front?: string              # the plank the deck is scrolled to, when it is in that space
 ```
 
 ```mdl
@@ -580,13 +581,13 @@ feat F-8: Presence and Sync Status
   req F-8.17: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
   req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on the session whose anchor moved most recently. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
-  req F-8.13: The viewing message carries the sender's session id, its device, each attended object's location and the graph paths of its deck's planks in the space; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.19]).
+  req F-8.13: The viewing message carries the sender's session id, its device, the location in each object its deck holds, and the graph paths of its deck's planks in the space with the one it is scrolled to; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.19]).
   req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
   req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
   req F-8.18: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
   req F-8.19: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
-  req F-8.20: While following, the follower opens the object the leader attends whenever it changes, and reveals the top of the leader's viewport, or their selection when they report no viewport, through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
-  req F-8.21: A follow ends when the follower scrolls, clicks, touches or types in any object's plank, presses Escape, or attends another object; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
+  req F-8.20: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, scrolled to the plank at its front, each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path, whenever it changes, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
+  req F-8.21: A follow ends when the follower scrolls, clicks, touches or types in any object's plank, presses Escape, or attends an object outside what it shows of the leader; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
   req F-8.22: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
 ```
 
@@ -820,6 +821,32 @@ test QA-5: Follow a peer around the space
     - name: Stop with Escape
       do: On the host, press Escape.
       expect: the dot clears, and the guest's row is back under their document with Follow among its actions
+```
+
+```mdl
+test QA-6: Follow a peer's deck side by side
+  desc: A follower whose deck is not flattened shows the leader's planks in the leader's order and scrolls its deck with theirs.
+  actors: human
+  covers: [F-8.20]
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower whose deck lays planks side by side mirrors the leader's planks and scroll
+  given:
+    - host: a booted app with the deck's flatten setting off, and a space containing three documents, shared with a guest
+    - guest: a second browser profile with its own identity and the flatten setting off, a member of that space
+  steps:
+    - name: The guest opens three planks
+      do: On the guest, open the first document, then shift-click the second and third.
+      expect: the guest's deck shows the three documents side by side
+    - name: Follow the guest
+      do: On the host, open the Members companion and click Follow on the guest's row.
+      expect: the host's deck shows the same three planks, in the guest's order
+    - name: The guest scrolls their deck
+      do: On the guest, bring the first plank to the front, then the last.
+      expect: each time, the host's deck scrolls to show the plank the guest brought to the front
+    - name: Stop with Escape
+      do: On the host, press Escape.
+      expect: the Members tab's dot clears
 ```
 
 ---
@@ -1325,4 +1352,23 @@ decision D-50: The viewing message carries the sender's deck in that space as th
   affects: [F-8.8, F-8.13, PeerDeck, PluginState]
   why: Presence keys name an object, not where it sits in the tree. Opening the object's database path expanded the Database section in the follower's navtree, though the peer had opened it from a collection.
   rejected: Resolve a collection that holds the object on the receiving side, which can pick a different collection than the peer's, or the wrong section entirely.
+```
+
+```mdl
+decision D-51: Following mirrors the leader's whole deck: the planks it holds, how far it is scrolled, and the scroll within each plank. A follower whose own deck is flat navigates by the plank the leader attends.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.20]
+```
+
+```mdl
+decision D-52: The deck's scroll travels as its front plank, the first one not folded with at least half its width in view; a flat deck's front is its current plank. The follower switches to the space's workspace, sets its deck to the leader's planks, and scrolls the front plank to just past its own left pile without focusing it. Every plank's location goes out, not only the attended one's, and each mirrored plank reveals its own. A follower deck wider than the leader's can show more planks, so its own front plank may differ; it shows the leader's. For five seconds after its deck changes the follower sends the scroll and the reveals again on every tick. Attending any plank of the mirrored deck keeps the follow. A leader that sent no deck is followed as a flat deck follows. Stopping leaves the follower's deck as it is. Fills in [D-51].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.13, F-8.20, F-8.21, ObjectViewerProps, PeerDeck, QA-6]
+  why: A plank, unlike a scroll offset, means the same thing in a viewport of another width. The deck moves attention to a visible plank when the attended one folds, so a scroll the follow makes can move attention inside the mirrored deck.
+  rejected:
+    - Send the deck's scroll offset in pixels, which lands elsewhere in a deck of another width or with other plank sizes.
+    - Restore the follower's own planks when the follow stops; each mirrored deck is a browser history entry, so Back walks back to them.
 ```
