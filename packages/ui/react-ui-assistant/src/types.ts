@@ -114,6 +114,38 @@ export type LaneLine = { readonly role: string; readonly name?: string; readonly
 /** The data a `<lane>` row (a lane working in the background) carries. */
 export type LaneCardData = { readonly lane: ThreadLane; readonly lines: readonly LaneLine[] };
 
-/** The text of a row standing for a lane working in the background, which renders as its card. */
-export const laneTag = (data: LaneCardData): string =>
-  `<lane>${JSON.stringify(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;
+/** The text of a row standing for lanes working in the background, which renders as their cards, side by side. */
+export const laneTag = (cards: readonly LaneCardData[]): string =>
+  `<lane>${JSON.stringify(cards).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;
+
+const LaneCards = Schema.Array(
+  Schema.Struct({
+    lane: Schema.Struct({
+      id: Schema.String,
+      hue: Schema.String,
+      title: Schema.optional(Schema.String),
+      owner: Schema.optional(Schema.String),
+      status: Schema.Literals(['running', 'waiting', 'done', 'failed']),
+      waitingOn: Schema.optional(Schema.Struct({ hue: Schema.String, title: Schema.optional(Schema.String) })),
+      started: Schema.String,
+      first: Schema.optional(Schema.String),
+    }),
+    lines: Schema.Array(
+      Schema.Struct({ role: Schema.String, name: Schema.optional(Schema.String), text: Schema.String }),
+    ),
+  }),
+);
+
+const decodeLaneCards = Schema.decodeUnknownOption(LaneCards);
+
+/** The cards of a `<lane>` row from its text; none for a malformed row. */
+export const parseLaneCards = (text: string | null | undefined): readonly LaneCardData[] => {
+  if (!text) {
+    return [];
+  }
+  try {
+    return Option.getOrElse(decodeLaneCards(JSON.parse(text)), () => []);
+  } catch {
+    return [];
+  }
+};
