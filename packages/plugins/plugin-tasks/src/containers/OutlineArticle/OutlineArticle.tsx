@@ -161,7 +161,8 @@ export const OutlineArticle = ({
       {(text) => (
         <Outline.Root
           ref={outlineRef}
-          id={text.id}
+          // The outline's URI, which keys the editor's comments as it does a Markdown document's.
+          id={Obj.getURI(outline)}
           text={text}
           onConvertToTask={taskSet ? handleConvertToTask : undefined}
           onConvertibleChange={setConvertible}
