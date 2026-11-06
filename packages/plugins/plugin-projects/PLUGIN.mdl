@@ -75,7 +75,11 @@ feat F-4: A project's specs
   req F-4.14: A spec's text opens in preview, where each block of a kind its schemas define is drawn as a form over that
               kind's fields, and offers readonly and source views. The text is the only store: a form edit changes only
               the source of the field it edits, and the title, the prose and each prose field are editors of their own
-              over their source, showing the other peers' carets and the comments anchored in them.
+              over their source, showing the other peers' carets and the comments anchored in them. A form takes about
+              the room of its source: a header row with the block's label, its title and its choice fields as tags, then
+              a row per other field with its name small before its value, and a line per keyed entry and per map row.
+              Empty fields and the add and remove actions show only while the form has focus, a form folds to its header
+              row, and prose it cannot place shows as a note pointing to the source view.
   req F-4.15: An agent reads and writes a spec's blocks with `GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`,
               naming a block by key or positional label. A write is checked against the kind's schema and changes only
               the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
@@ -2438,3 +2442,13 @@ decision D-215: A spec's carets show in its text and in each block form drawn in
   affects: [F-4.13]
 ```
 
+```mdl
+decision D-216: A block form is laid out compactly, as the feature section was: a header row of label, title and choice tags; a row per field with its name inline; a line per keyed entry and per map row; empty fields and actions only while focused; foldable to its header. Amends [F-4.14].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The standard form gives every field a labelled well, so a block of three lines took a screen. The form should read close to its source while keeping fields typed and checked.
+  rejected:
+    - The standard form with the compact presentation, which still boxes each map row and each list.
+```
