@@ -12,6 +12,7 @@ import { unified } from 'unified';
 
 import { SlideTheme } from '#types';
 
+import { readFrontmatter } from './edit.ts';
 import { type LayoutName, LAYOUTS, type SlideFrontmatter, type SlideIssue, parseFrontmatter } from './frontmatter.ts';
 import { type SlotName, SLOTS, remarkSlidev } from './remark-slidev.ts';
 import { isolateSlotMarkers } from './split.ts';
@@ -156,6 +157,14 @@ export const slotAtOffset = (slide: ParsedSlide, offset: number): SlotName | und
  * The deck theme named by a first slide's headmatter, if it is a built-in theme.
  */
 export const parseHeadmatterTheme = (content: string): SlideTheme.Name | undefined => {
-  const { theme } = parseSlide(content).frontmatter;
+  const { theme } = readFrontmatter(content);
   return SlideTheme.isName(theme) ? theme : undefined;
 };
+
+// Only `<v-click>` and `<v-clicks>` add steps, so a slide without either needs no parse to count them.
+const CLICK_TAG = /<v-clicks?[\s/>]/i;
+
+/**
+ * A slide's click count; cheap for the common slide with no click tags, which a deck asks on every edit.
+ */
+export const countClicks = (content: string): number => (CLICK_TAG.test(content) ? parseSlide(content).clicks : 0);

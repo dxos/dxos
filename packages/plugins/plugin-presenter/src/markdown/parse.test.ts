@@ -5,7 +5,14 @@
 import type { Element, Root, RootContent } from 'hast';
 import { describe, expect, test } from 'vitest';
 
-import { parseHeadmatterTheme, parseSlide, parseSourceRange, slotAtOffset, stepAtOffset } from './parse.ts';
+import {
+  countClicks,
+  parseHeadmatterTheme,
+  parseSlide,
+  parseSourceRange,
+  slotAtOffset,
+  stepAtOffset,
+} from './parse.ts';
 
 type HastNode = Root | RootContent;
 
@@ -344,6 +351,18 @@ describe('parseHeadmatterTheme', () => {
 
   test('a slide without headmatter has no theme', () => {
     expect(parseHeadmatterTheme('# Title')).toBeUndefined();
+  });
+});
+
+describe('countClicks', () => {
+  test.each([
+    '# Title\n\nNo clicks here.',
+    '<v-click>\n\nOne\n\n</v-click>\n\n<v-click>\n\nTwo\n\n</v-click>',
+    '<v-clicks>\n\n- a\n- b\n- c\n\n</v-clicks>',
+    '<V-CLICK>\n\nUpper\n\n</V-CLICK>',
+    '<v-click at="2">\n\nAttributed\n\n</v-click>',
+  ])('agrees with the full parse: %j', (content) => {
+    expect(countClicks(content)).toBe(parseSlide(content).clicks);
   });
 });
 
