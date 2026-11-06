@@ -48,6 +48,12 @@ export interface SpaceInternal {
   get db(): EchoDatabase;
   get data(): SpaceData;
 
+  /**
+   * Set while this client lists the space from documents fetched before it joined (a share link's), not from its
+   * services; it turns false once the services list the space as ready.
+   */
+  get provisional(): boolean;
+
   getCredentials(): Promise<Credential[]>;
 
   getEpochs(): Promise<SpecificCredential<Epoch>[]>;

@@ -12,3 +12,4 @@ export const CREATE_SPACE_DIALOG = DXN.make(`${SpaceNamespace.key}.createSpaceDi
 export const IMPORT_SPACE_DIALOG = DXN.make(`${SpaceNamespace.key}.importSpaceDialog`);
 export const JOIN_DIALOG = DXN.make(`${SpaceNamespace.key}.joinDialog`);
 export const RENAME_POPOVER = DXN.make(`${SpaceNamespace.key}.renamePopover`);
+export const SHARE_OBJECT_DIALOG = DXN.make(`${SpaceNamespace.key}.shareObjectDialog`);

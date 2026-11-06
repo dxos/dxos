@@ -19,7 +19,7 @@ import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 import isEqual from 'fast-deep-equal';
 
-import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
+import { DeferredTask, Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -82,6 +82,7 @@ import {
   replacementDocumentId,
 } from './retirement.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
+import { selectSyncFirstDocuments } from './sync-first.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -90,6 +91,9 @@ import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManag
 const CLOSURE_YIELD_INTERVAL = 32;
 
 const AUTOMATIC_GARBAGE_COLLECTION = false;
+
+/** Longest a space waits for its sync-first documents before it replicates the rest anyway. */
+const SYNC_FIRST_TIMEOUT = 30_000;
 
 const AUTOMERGE_URL_PREFIX = 'automerge:';
 
@@ -273,6 +277,12 @@ export class EchoHost extends Resource {
 
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
+
+  /** Per space, the objects that replicate before the rest of it, and their documents still to arrive. */
+  readonly #syncFirst = new Map<SpaceId, { objectIds: ReadonlySet<string>; pending: ReadonlySet<DocumentId> }>();
+
+  /** Per space, its sync-first collection announcement, run one at a time so the last one written is current. */
+  readonly #syncFirstAnnouncements = new Map<SpaceId, DeferredTask>();
 
   /** The latest retirement pass per space; passes are chained so two never write one space's directory at once. */
   readonly #retirements = new Map<SpaceId, Promise<void>>();
@@ -532,10 +542,14 @@ export class EchoHost extends Resource {
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
       }
-      void this._automergeHost.updateLocalCollectionState(
-        deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
-        e.documentIds,
-      );
+      if (this.#syncFirst.has(e.spaceId)) {
+        this.#announceSyncFirst(e.spaceId);
+      } else {
+        void this._automergeHost.updateLocalCollectionState(
+          deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
+          e.documentIds,
+        );
+      }
 
       // TODO(dmaretskyi): Current algortithm is too expensive.
       if (AUTOMATIC_GARBAGE_COLLECTION) {
@@ -557,6 +571,14 @@ export class EchoHost extends Resource {
       // A directory change can carry another peer's retirement, and a newly opened space can link a document
       // quarantined on an earlier start.
       this.#scheduleDirectoryMaintenance(e.spaceId);
+    });
+    // The last sync-first document to arrive lets the rest of its space replicate.
+    this._automergeHost.documentHeadsChanged.on(this._ctx, ({ documentId }) => {
+      for (const [spaceId, { pending }] of this.#syncFirst) {
+        if (pending.has(documentId)) {
+          this.#announceSyncFirst(spaceId);
+        }
+      }
     });
     this._automergeHost.documentQuarantined.on(this._ctx, ({ reason }) => {
       if (reason === 'load-failed') {
@@ -872,6 +894,28 @@ export class EchoHost extends Resource {
   /** References carried by the space root document, or undefined for a space that predates it. */
   getSpaceRootRefs(spaceId: SpaceId): SpaceRootRefs | undefined {
     return this._spaceStateManager.getSpaceRootRefs(spaceId);
+  }
+
+  /**
+   * Replicates the documents of `objectIds` before the rest of `spaceId`: until they have all arrived, or for at most
+   * {@link SYNC_FIRST_TIMEOUT}, the space's collection names only them and the documents the space opens with. May be
+   * called before the space is joined, so its first sync round is already limited; held in memory only.
+   */
+  syncFirst(spaceId: SpaceId, objectIds: readonly string[]): void {
+    const entry = { objectIds: new Set(objectIds), pending: new Set<DocumentId>() };
+    this.#syncFirst.set(spaceId, entry);
+    scheduleTask(
+      this._ctx,
+      () => {
+        if (this.#syncFirst.get(spaceId) === entry) {
+          log.info('sync-first documents not all arrived; replicating the rest of the space', { spaceId });
+          this.#syncFirst.delete(spaceId);
+          this.#announceSyncFirst(spaceId);
+        }
+      },
+      SYNC_FIRST_TIMEOUT,
+    );
+    this.#announceSyncFirst(spaceId);
   }
 
   get spaces(): ReadonlyArray<{ spaceId: SpaceId; rootDocUrl: AutomergeUrl }> {
@@ -1528,6 +1572,49 @@ export class EchoHost extends Resource {
       }
     }
     return referenced;
+  }
+
+  #announceSyncFirst(spaceId: SpaceId): void {
+    defaultMap(
+      this.#syncFirstAnnouncements,
+      spaceId,
+      () => new DeferredTask(this._ctx, () => this.#announceSpaceDocuments(spaceId)),
+    ).schedule();
+  }
+
+  /** Names a space's documents in its collection, only the sync-first ones while any of them has not arrived. */
+  async #announceSpaceDocuments(spaceId: SpaceId): Promise<void> {
+    const spaceRootId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
+    const documentIds = this._spaceDocumentIds.get(spaceId);
+    if (!spaceRootId || !documentIds) {
+      return;
+    }
+
+    let announced = [...documentIds];
+    const entry = this.#syncFirst.get(spaceId);
+    const directory = this._spaceStateManager.getRootBySpaceId(spaceId)?.directory();
+    if (entry && directory) {
+      const first = selectSyncFirstDocuments(announced, directory, entry.objectIds);
+      // Pending while heads are read, so a document that arrives meanwhile schedules another announcement.
+      entry.pending = new Set(first);
+      const heads = await this._automergeHost.getHeads(first);
+      // Replaced or timed out meanwhile, which scheduled another announcement.
+      if (this.#syncFirst.get(spaceId) !== entry) {
+        return;
+      }
+      const pending = first.filter((_, index) => !heads[index]?.length);
+      if (pending.length > 0) {
+        entry.pending = new Set(pending);
+        announced = first;
+      } else {
+        this.#syncFirst.delete(spaceId);
+      }
+    }
+
+    await this._automergeHost.updateLocalCollectionState(
+      deriveCollectionIdFromSpaceId(spaceId, spaceRootId),
+      announced,
+    );
   }
 
   /** Document ids present in the space's previous directory listing but not the current one. */

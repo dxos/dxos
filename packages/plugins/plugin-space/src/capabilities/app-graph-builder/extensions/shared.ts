@@ -63,6 +63,7 @@ export const ADD_TO_COLLECTION_LABEL: Label = ['add-to-collection.label', { ns: 
 export const ADD_VIEW_TO_SCHEMA_LABEL: Label = ['add-view-to-schema.label', META_NS];
 export const ARCHIVE_OBJECT_LABEL: Label = ['archive-object.label', META_NS];
 export const COPY_LINK_LABEL: Label = ['copy-link.label', META_NS];
+export const SHARE_OBJECT_LABEL: Label = ['share-object.label', META_NS];
 export const CREATE_OBJECT_IN_COLLECTION_LABEL: Label = ['create-object-in-collection.label', META_NS];
 export const CREATE_OBJECT_IN_SPACE_LABEL: Label = ['create-object-in-space.label', META_NS];
 export const EXPOSE_OBJECT_LABEL: Label = ['expose-object.label', META_NS];

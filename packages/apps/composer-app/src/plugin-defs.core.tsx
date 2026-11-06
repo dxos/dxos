@@ -65,6 +65,11 @@ export type PluginConfig = State & {
   isMobile?: boolean;
   /** Replaces the assistant's language models with the offline scripted model (`?model=scripted`). */
   scriptedModel?: boolean;
+  /**
+   * A fresh browser opening an object share link: boots only what shows the shared object, with no default plugins,
+   * none of the core plugins a viewer cannot reach, and no seeded content.
+   */
+  shareBoot?: boolean;
 };
 
 /**
@@ -96,6 +101,7 @@ export const getCorePlugins = ({
   isTauri,
   isPopover,
   isMobile,
+  shareBoot = false,
 }: PluginConfig): Plugin.Plugin[] => {
   // Mobile is two plugins, not one: headless Deck (state/ops, no root/surfaces) plus Mobile (root +
   // surfaces) rendering over it — one state machine, plugin-mobile is only ever the renderer.
@@ -106,7 +112,7 @@ export const getCorePlugins = ({
       : [DeckPlugin.make({ platform: 'desktop' })];
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
-    AtprotoPlugin.make(),
+    !shareBoot && AtprotoPlugin.make(),
     AttentionPlugin.make(),
     ClientPlugin.make({
       client,
@@ -127,32 +133,33 @@ export const getCorePlugins = ({
     // `SetupConnectors` (the event every connector-contributing plugin activates on), registers the
     // Connection/AccessToken/Cursor schema, and runs the coordinator that materializes and binds
     // targets. Without it a plugin like Inbox contributes connectors nobody ever asks for.
-    ConnectorPlugin.make(),
+    !shareBoot && ConnectorPlugin.make(),
     // Only `vite dev` serves the routes its tools and its agent host need (vite.config.ts); the constant drops it from
     // every build.
     import.meta.env.DEV && DevShellPlugin.make(),
     GraphPlugin.make(),
     ...layoutPlugins,
     // Core because invitations reach the user only through its inbox materializer.
-    MessengerPlugin.make(),
+    !shareBoot && MessengerPlugin.make(),
     NavTreePlugin.make(),
     ObservabilityPlugin.make({
       namespace: appKey,
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
     }),
-    OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
+    OnboardingPlugin.make({ generateDemoSpace: !isLocal && !shareBoot, defaultContent: !shareBoot }),
     isTauri && !isMobile && !isPopover && NativePlugin.make({ defaultAutoUpdate: isPreview }),
     PreviewPlugin.make(),
     ProcessManagerPlugin.make(),
     ProgressPlugin.make(),
     !isTauri && PwaPlugin.make({ defaultAutoUpdate: isPreview, serviceWorker: isPwa }),
-    RegistryPlugin.make({ externalPlugins }),
-    RoutinePlugin.make(),
-    SearchPlugin.make(),
+    !shareBoot && RegistryPlugin.make({ externalPlugins }),
+    !shareBoot && RoutinePlugin.make(),
+    !shareBoot && SearchPlugin.make(),
     SettingsPlugin.make(),
     SpacePlugin.make({
       observability: true,
+      shareBoot,
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,

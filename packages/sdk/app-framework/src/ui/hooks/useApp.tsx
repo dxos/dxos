@@ -29,6 +29,9 @@ import { createStartupWatchdog } from './startup-watchdog.ts';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
+/** Whether this browser has saved an enabled plugin set, which `useApp` restores in place of its defaults. */
+export const hasSavedPlugins = (): boolean => localStorage.getItem(ENABLED_KEY) !== null;
+
 export type StartupProgress = {
   /** Number of modules that have been activated. */
   activated: number;

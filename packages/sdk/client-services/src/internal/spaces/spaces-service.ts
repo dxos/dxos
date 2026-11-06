@@ -158,6 +158,16 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
+  ['SpacesService.syncFirst']({ spaceId, objectIds }: SpacesService.SyncFirstRequest): Effect.Effect<void, BaseError> {
+    return Effect.try({
+      try: () => {
+        assertArgument(SpaceId.isValid(spaceId), 'spaceId', 'Invalid space ID');
+        this._echoHost.syncFirst(spaceId, objectIds);
+      },
+      catch: toServiceError,
+    });
+  }
+
   ['SpacesService.updateMemberRole'](request: SpacesService.UpdateMemberRoleRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {

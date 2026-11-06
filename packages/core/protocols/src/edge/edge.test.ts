@@ -13,6 +13,7 @@ import {
   InvitationCodeSchema,
   RedeemInvitationCodeRequestSchema,
   WS_AUTH_PROTOCOL_PREFIX,
+  getSharedObjectsChallenge,
 } from './edge.ts';
 
 describe('InvitationCodeSchema', () => {
@@ -165,5 +166,14 @@ describe('EdgeCredentialsHeaderCodec', () => {
     expect(
       EdgeCredentialsHeaderCodec.decodeWebSocketProtocol(`${WS_AUTH_PROTOCOL_PREFIX}.not base64!!`),
     ).toBeUndefined();
+  });
+});
+
+describe('getSharedObjectsChallenge', () => {
+  test('binds the objects, in any order', () => {
+    const challenge = (objectIds: string[]) =>
+      getSharedObjectsChallenge({ spaceId: 'space', invitationId: 'invitation', objectIds, issuedAt: 1 });
+    expect(challenge(['first', 'second'])).toEqual(challenge(['second', 'first']));
+    expect(challenge(['first', 'second'])).not.toEqual(challenge(['first']));
   });
 });

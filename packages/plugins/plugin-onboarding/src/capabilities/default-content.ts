@@ -30,7 +30,11 @@ const DEFAULT_SPACE_ICON_HUE = 'violet';
 export const README_DOCUMENT_NAME = 'README';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ generateDemoSpace }: OnboardingOptions) {
+  Effect.fnUntraced(function* ({ generateDemoSpace, defaultContent = true }: OnboardingOptions) {
+    // A share-link guest lands on the shared object; seeding and opening its own space would only compete with that.
+    if (!defaultContent) {
+      return [];
+    }
     const { Annotation, Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));

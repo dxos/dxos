@@ -42,6 +42,22 @@ describe('BootCacheServices', () => {
     expect((await new BootCacheStore().read())?.spaces.has('space')).toBe(false);
   });
 
+  test('asks for pending spaces with the ids the store already holds', async ({ expect }) => {
+    const writer = new BootCacheServices(provider(Promise.resolve()));
+    await writer.open();
+    await writer.persist([space]);
+
+    const asked: ReadonlySet<string>[] = [];
+    const reader = new BootCacheServices(provider(Promise.resolve()), {
+      pendingSpaces: async (cachedSpaceIds) => {
+        asked.push(cachedSpaceIds);
+        return [];
+      },
+    });
+    await reader.open();
+    expect(asked.map((ids) => [...ids])).toEqual([['space']]);
+  });
+
   test('clear wins over a write queued before it, and later writes', async ({ expect }) => {
     const services = new BootCacheServices(provider(Promise.resolve()));
     await services.open();

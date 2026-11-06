@@ -9,16 +9,57 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { Annotation, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { SpaceCapabilities } from '#types';
 
+import { waitUntilJoined } from '../util/index.ts';
+
+/** Longest this identity's own spaces wait for the shared space, short of the module activation timeout. */
+const SHARE_JOIN_WAIT = 20_000;
+
+/** How long the shared object has the worker to itself once its space is ready: it loads and renders in about 2.5 s. */
+const SHARE_RENDER_SETTLE = 4_000;
+
+/**
+ * Resolves {@link SHARE_RENDER_SETTLE} after the first space the identity lists, the one a share link joins, is ready,
+ * or after {@link SHARE_JOIN_WAIT}.
+ */
+const waitForSharedSpace = (client: Client): Effect.Effect<void> =>
+  Effect.callback<Space>((resume) => {
+    const subscription = client.spaces.subscribe((spaces) => {
+      if (spaces.length > 0) {
+        resume(Effect.succeed(spaces[0]));
+      }
+    });
+    return Effect.sync(() => subscription.unsubscribe());
+  }).pipe(
+    // Joined, not only listed: a space listed from the link's cache is ready before the join has begun.
+    Effect.flatMap((space) =>
+      Effect.tryPromise(() => space.waitUntilReady()).pipe(Effect.andThen(waitUntilJoined(space))),
+    ),
+    Effect.ignore,
+    Effect.andThen(Effect.sleep(SHARE_RENDER_SETTLE)),
+    Effect.timeoutOrElse({ duration: SHARE_JOIN_WAIT, orElse: () => Effect.void }),
+  );
+
+type IdentityCreatedOptions = {
+  /** The app booted to open a share link: the shared space opens first, as the guest is waiting on it. */
+  shareBoot?: boolean;
+};
+
 export default Capability.makeModule(
-  Effect.fnUntraced(function* () {
+  Effect.fnUntraced(function* ({ shareBoot = false }: IdentityCreatedOptions = {}) {
     const client = yield* ClientCapabilities.Client;
 
+    // Both spaces would queue on the worker ahead of the join.
+    if (shareBoot) {
+      yield* waitForSharedSpace(client);
+    }
     const { defaultSpace, settingsSpace } = yield* AppSpace.setupIdentitySpaces(client);
     // Boot-waterfall milestone: the default space is usable from here (first-run path).
     performance.mark('milestone:default-space-ready');
