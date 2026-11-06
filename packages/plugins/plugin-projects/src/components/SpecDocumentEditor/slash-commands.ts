@@ -27,7 +27,7 @@ export const slashCommand = Facet.define<SlashCommand>();
 const BLOCK_MARKER = /^(?:>\s*|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)*(?:#{1,6}\s+)?/;
 
 /** The text of a line, without the marker that makes it a list item, quote or heading. */
-export const lineText = (text: string): string => text.trim().replace(BLOCK_MARKER, '').trim();
+export const lineText = (text: string): string => text.trimStart().replace(BLOCK_MARKER, '').trim();
 
 const source = (context: CompletionContext): CompletionResult | null => {
   const commands = context.state.facet(slashCommand);

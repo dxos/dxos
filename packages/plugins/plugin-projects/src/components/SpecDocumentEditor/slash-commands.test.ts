@@ -23,6 +23,12 @@ describe('lineText', () => {
     expect(lineText('> # - Draws')).toBe('- Draws');
   });
 
+  test('leaves nothing of a line that is only a marker', ({ expect }) => {
+    expect(lineText('- ')).toBe('');
+    expect(lineText('- [ ] ')).toBe('');
+    expect(lineText('# ')).toBe('');
+  });
+
   test('keeps prose that only looks like a marker', ({ expect }) => {
     expect(lineText('-1 is negative')).toBe('-1 is negative');
     expect(lineText('#hashtag')).toBe('#hashtag');
