@@ -48,6 +48,6 @@ describe('Timeline project template', () => {
     // Every task is linked to a feature, and the features' needs are fields of their blocks.
     const count = (type: string) => archive.objects.filter((object) => object['@type']?.includes(type)).length;
     expect(count('org.dxos.relation.implementsItem')).toBe(6);
-    expect(content.match(/^  needs: /gm)).toHaveLength(4);
+    expect(content.match(/^  depends: /gm)).toHaveLength(4);
   });
 });

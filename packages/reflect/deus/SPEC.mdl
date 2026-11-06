@@ -769,3 +769,12 @@ decision D-76: A union of single references is a reference to any of its kinds; 
   affects: [F-9.3, F-9.5]
   why: A form drew every standard block kind in turn; these were the field types it drew as the wrong control, and folding a step's lines into one item would have lost them on the next edit.
 ```
+
+```mdl
+decision D-77: Block schemas resolve from the dialect texts the `dialect` module imports, the same texts every other reader uses, so no generated copy of `lang/` exists. An `ext` block whose `extends` names its own kind extends the last earlier definition of that kind, which is how the QA dialect adds `key` to the code dialect's `op`. `BlockRef` is a reference to a block of any kind. `feat` names the features it depends on in `depends`, as the code dialect declares it. Fills in [D-74].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, F-9.3]
+  why: The code dialect and the umbrella software dialect landed with their own bundler; two copies of the dialect texts could disagree, and matching by URI let a same-version `op` extend itself to nothing.
+```

@@ -145,7 +145,7 @@ ext feat
   fields:
     status?: planned | in-progress | prototype | operational | failing
     desc?: Prose
-    needs?: Ref<feat>[]         # features this one needs first; no cycles
+    depends?: Ref<feat>[]       # features this one needs first; no cycles
     spec?: Ref<spec>            # the spec that breaks this feature down
     req: RequirementList        # req <key>: one testable sentence
 ```

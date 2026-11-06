@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DIALECTS } from '../dialect/dialects.ts';
 import { type ExtDefinition, parseExtDefinitions, resolveDefinition } from './ext.ts';
-import { DIALECT_SOURCES } from './gen/dialects.ts';
 import { type BlockSchema, type FieldSchema } from './types.ts';
 
 /** Dialect texts by frontmatter id. */
 export type DialectRegistry = ReadonlyMap<string, string>;
 
 /** The dialects `lang/` defines. */
-export const STANDARD_DIALECTS: DialectRegistry = new Map(Object.entries(DIALECT_SOURCES));
+export const STANDARD_DIALECTS: DialectRegistry = DIALECTS;
 
 /** The dialect a package spec extends for its standard blocks. */
 export const SOFTWARE_DIALECT = 'org.dxos.spec.software';
@@ -70,8 +70,8 @@ export const resolveBlockSchemas = (
     ),
     ...parseExtDefinitions(text),
   ];
-  const lookup = (kind: string, except: string) =>
-    definitions.findLast((definition) => definition.kind === kind && definition.uri !== except);
+  const lookup = (kind: string, child: ExtDefinition) =>
+    definitions.slice(0, definitions.indexOf(child)).findLast((definition) => definition.kind === kind);
   const schemas = new Map<string, BlockSchema>();
   for (const definition of definitions) {
     schemas.set(definition.kind, resolveDefinition(definition, lookup));

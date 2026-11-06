@@ -62,7 +62,7 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
       const breakdown = yield* Database.add(
         Spec.make({
           name: verdict.name,
-          dialects: [...FeatureMap.SOFTWARE_DIALECTS],
+          dialects: [FeatureMap.SOFTWARE_DIALECT],
           content: SpecItem.writeFeatures(
             '',
             parts.map((name, index) => ({ key: `F-${index + 1}`, title: name, fields: { status: 'planned' } })),
@@ -79,7 +79,7 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
           fields: {
             status: 'planned',
             // Every other card reads the verdict's forecast.
-            ...(seed !== verdict && { needs: [verdict.feat] }),
+            ...(seed !== verdict && { depends: [verdict.feat] }),
             ...(seed === verdict && { spec: `echo:///${breakdown.id}` }),
           },
         })),
@@ -88,7 +88,7 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
         Text.update(text, 'content', content);
       });
       Obj.update(map, (map) => {
-        map.dialects.splice(0, map.dialects.length, ...FeatureMap.SOFTWARE_DIALECTS);
+        map.dialects.splice(0, map.dialects.length, FeatureMap.SOFTWARE_DIALECT);
       });
       Obj.update(project.project, (project) => {
         project.specs.push(Ref.make(map), Ref.make(breakdown));

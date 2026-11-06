@@ -51,7 +51,7 @@ type FeatureSeed = {
   /** Its parts, each a feature on the spec that breaks this one down. */
   readonly subfeatures?: readonly { readonly name: string; readonly status: string }[];
   /** Keys of the features this one needs. */
-  readonly needs?: readonly string[];
+  readonly depends?: readonly string[];
 };
 
 const FEATURES: readonly FeatureSeed[] = [
@@ -80,7 +80,7 @@ const FEATURES: readonly FeatureSeed[] = [
       { name: 'Event cards with images', status: 'operational' },
       { name: 'Text filter', status: 'operational' },
     ],
-    needs: ['charts'],
+    depends: ['charts'],
   },
   {
     key: 'embeds',
@@ -92,7 +92,7 @@ const FEATURES: readonly FeatureSeed[] = [
       { name: 'Full-viewport embeds', status: 'operational' },
       { name: 'Keyboard isolation', status: 'operational' },
     ],
-    needs: ['charts'],
+    depends: ['charts'],
   },
   {
     key: 'presenter',
@@ -104,7 +104,7 @@ const FEATURES: readonly FeatureSeed[] = [
       { name: 'Deck from a markdown template', status: 'operational' },
       { name: 'Events dataset', status: 'operational' },
     ],
-    needs: ['timeline', 'embeds'],
+    depends: ['timeline', 'embeds'],
   },
   {
     key: 'research',
@@ -112,7 +112,7 @@ const FEATURES: readonly FeatureSeed[] = [
     description: 'Researches the events for a range of years and a set of categories, and fills a sheet with them.',
     status: 'planned',
     feat: 'F-5',
-    needs: ['timeline'],
+    depends: ['timeline'],
   },
 ];
 
@@ -259,7 +259,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
           );
           breakdowns.set(
             seed.key,
-            yield* Database.add(Spec.make({ name: seed.name, dialects: [...FeatureMap.SOFTWARE_DIALECTS], content })),
+            yield* Database.add(Spec.make({ name: seed.name, dialects: [FeatureMap.SOFTWARE_DIALECT], content })),
           );
         }
       }
@@ -273,7 +273,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
             prose: seed.description,
             fields: {
               status: seed.status,
-              ...(seed.needs && { needs: seed.needs.map((need) => blockOf.get(need)!) }),
+              ...(seed.depends && { depends: seed.depends.map((name) => blockOf.get(name)!) }),
               ...(breakdown && { spec: `echo:///${breakdown.id}` }),
             },
           };
@@ -285,7 +285,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         text.content = content;
       });
       Obj.update(map, (map) => {
-        map.dialects.splice(0, map.dialects.length, ...FeatureMap.SOFTWARE_DIALECTS);
+        map.dialects.splice(0, map.dialects.length, FeatureMap.SOFTWARE_DIALECT);
       });
       Obj.update(project, (project) => {
         project.specs.push(...[...breakdowns.values()].map((breakdown) => Ref.make(breakdown)));

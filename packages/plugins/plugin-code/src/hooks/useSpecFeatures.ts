@@ -70,13 +70,13 @@ export const toFeatureInput = (spec: Spec.Spec, block: ProjectOperation.SpecBloc
   ...(typeof block.fields.spec === 'string' && { breakdown: block.fields.spec }),
 });
 
-/** `needs` edges between the blocks, by key; a name no block of the spec carries is left out. */
+/** `depends` edges between the blocks, by key; a name no block of the spec carries is left out. */
 export const toDependencies = (blocks: readonly ProjectOperation.SpecBlock[]): (readonly [string, string])[] => {
   const byName = new Map(
     blocks.flatMap(({ key, label }) => [[key, key] as const, ...(label ? [[label, key] as const] : [])]),
   );
   return blocks.flatMap(({ key, fields }) =>
-    strings(fields.needs).flatMap((name) => {
+    strings(fields.depends).flatMap((name) => {
       const target = byName.get(name);
       return target ? [[key, target] as const] : [];
     }),

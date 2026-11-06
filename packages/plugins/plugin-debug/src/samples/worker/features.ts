@@ -87,7 +87,7 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
           );
           breakdowns.set(
             seed.feat,
-            yield* Database.add(Spec.make({ name: seed.name, dialects: [...FeatureMap.SOFTWARE_DIALECTS], content })),
+            yield* Database.add(Spec.make({ name: seed.name, dialects: [FeatureMap.SOFTWARE_DIALECT], content })),
           );
         }
       }
@@ -103,7 +103,7 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
             prose: seed.description,
             fields: {
               status: 'planned',
-              ...(index > 0 && { needs: [FEATURES[index - 1].feat] }),
+              ...(index > 0 && { depends: [FEATURES[index - 1].feat] }),
               ...(breakdown && { spec: `echo:///${breakdown.id}` }),
             },
           };
@@ -113,7 +113,7 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
         Text.update(text, 'content', content);
       });
       Obj.update(map, (map) => {
-        map.dialects.splice(0, map.dialects.length, ...FeatureMap.SOFTWARE_DIALECTS);
+        map.dialects.splice(0, map.dialects.length, FeatureMap.SOFTWARE_DIALECT);
       });
       Obj.update(project.project, (project) => {
         project.specs.push(Ref.make(map), ...[...breakdowns.values()].map((breakdown) => Ref.make(breakdown)));

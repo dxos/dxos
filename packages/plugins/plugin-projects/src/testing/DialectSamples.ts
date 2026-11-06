@@ -286,7 +286,7 @@ export const samples: Record<string, Sample> = {
       'feat k7q2x: Sorted inbox',
       '  status: in-progress',
       '  desc: Mail lands in the folder its sender and subject suggest.',
-      '  needs: [p4m8d]',
+      '  depends: [p4m8d]',
       "  req m3pza: A message from a known sender goes to that sender's folder.",
       '  req w8rtn: A message the rules cannot place stays in the inbox.',
       '```',

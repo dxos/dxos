@@ -9,7 +9,7 @@ a spec's `.mdl` text, and it holds:
 - **requirements** (`req` entries): what the feature must do, one short, testable sentence each.
 - a **status**: `planned`, `prototype`, `operational` or `failing`. Whether anyone works on it is a separate axis, read
   from its linked tasks: an operational feature can be under work too.
-- **needs**: the features of the same spec it needs first. A need that would close a cycle is a mistake.
+- **depends**: the features of the same spec it depends on. A dependency that would close a cycle is a mistake.
 - **spec**: the spec that breaks it down, whose features are its subfeatures.
 
 The spec text is the source of truth. Every block has a stable **key**, which links, tasks and comments use; its `F-n`

@@ -73,7 +73,7 @@ const printFeature = (model: FeatureModel, breakdown?: Spec.Spec) =>
     ...(model.description && { prose: model.description }),
     fields: {
       status: model.status,
-      ...(model.dependsOn.length > 0 && { needs: [...model.dependsOn] }),
+      ...(model.dependsOn.length > 0 && { depends: [...model.dependsOn] }),
       ...(breakdown && { spec: `echo:///${breakdown.id}` }),
       req: model.requirements.map(({ key, id, text }, index) => ({ key: key ?? id ?? `${model.id}.${index}`, text })),
     },

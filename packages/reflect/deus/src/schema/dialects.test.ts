@@ -2,12 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-// @ts-ignore: a plain-JS build script.
-import { dialectModule } from '../../scripts/gen-dialects.mjs';
 import {
   SOFTWARE_DIALECT,
   extensionTable,
@@ -19,11 +15,6 @@ import {
 const fence = (...lines: string[]) => ['```mdl', ...lines, '```'].join('\n');
 
 describe('dialects', () => {
-  test('the bundled dialects match lang/', ({ expect }) => {
-    const bundled = readFileSync(join(import.meta.dirname, 'gen/dialects.ts'), 'utf8');
-    expect(bundled === dialectModule(), 'run `node scripts/gen-dialects.mjs`').toBe(true);
-  });
-
   test('frontmatter extends reads as a list in either form', ({ expect }) => {
     expect(parseDialectHeader('---\nid: a\nextends: [b, c]\n---\n')).toEqual({ id: 'a', extends: ['b', 'c'] });
     expect(parseDialectHeader('---\nid: a\nextends:\n  - b\n  - c\n---\n')).toEqual({ id: 'a', extends: ['b', 'c'] });
@@ -35,7 +26,7 @@ describe('resolveBlockSchemas', () => {
     const schemas = resolveBlockSchemas('', { dialects: [SOFTWARE_DIALECT] });
     expect(schemas.get('feat')).toMatchObject({
       uri: 'org.dxos.mdl.feat@1.1',
-      dialect: SOFTWARE_DIALECT,
+      dialect: 'org.dxos.spec.code',
       role: 'anchor',
       label: 'F',
       hue: 'emerald',
@@ -84,10 +75,11 @@ describe('resolveBlockSchemas', () => {
     const schemas = resolveBlockSchemas('', { dialects: ['org.dxos.spec.changelog'] });
     expect(extensionTable(schemas)).toEqual([
       { term: 'uses', uri: 'dxos.spec.core/uses' },
+      { term: 'type', uri: 'org.dxos.mdl.type@1.0' },
       { term: 'decision', uri: 'org.dxos.mdl.decision@1.0' },
       { term: 'question', uri: 'org.dxos.mdl.question@1.0' },
     ]);
-    expect(printExtensionTable(extensionTable(schemas)).split('\n')[3]).toBe(
+    expect(printExtensionTable(extensionTable(schemas)).split('\n')[4]).toBe(
       '| `decision` | `org.dxos.mdl.decision@1.0` |',
     );
   });

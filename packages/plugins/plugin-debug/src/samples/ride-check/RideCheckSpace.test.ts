@@ -100,7 +100,7 @@ describe('Ride Check template', () => {
 
       expect(featHeaders(text)).toEqual(['F-1 Go / no-go', 'F-2 Hourly forecast', 'F-3 Best window', 'F-4 Daylight']);
       expect(text.match(/^  status: planned$/gm)).toHaveLength(4);
-      expect(text.match(/^  needs: \[F-1\]$/gm)).toHaveLength(3);
+      expect(text.match(/^  depends: \[F-1\]$/gm)).toHaveLength(3);
       // The verdict's parts are features of their own, on the spec that breaks it down.
       expect(text).toContain(`spec: echo:///${breakdown?.id}`);
       expect(featHeaders(textOf(breakdown))).toEqual(['F-1 Rain rule', 'F-2 Wind rule']);

@@ -14,7 +14,7 @@ describe('references', () => {
     const text = [
       fence(
         'feat a2b3c: Inbox',
-        '  needs: [d4e5f, g6h7i]',
+        '  depends: [d4e5f, g6h7i]',
         '  spec: echo:///01M6RNZX2K2G2VPAQT0KRRJNZY',
         '  req k8m9n: Sorts.',
       ),
@@ -22,8 +22,8 @@ describe('references', () => {
     ].join('\n\n');
     const schemas = resolveBlockSchemas(text, { dialects: ['org.dxos.spec.software'] });
     expect(blockReferences(text, schemas)).toEqual([
-      { kind: 'feat', key: 'a2b3c', field: 'needs', target: 'd4e5f', spec: false },
-      { kind: 'feat', key: 'a2b3c', field: 'needs', target: 'g6h7i', spec: false },
+      { kind: 'feat', key: 'a2b3c', field: 'depends', target: 'd4e5f', spec: false },
+      { kind: 'feat', key: 'a2b3c', field: 'depends', target: 'g6h7i', spec: false },
       { kind: 'feat', key: 'a2b3c', field: 'spec', target: 'echo:///01M6RNZX2K2G2VPAQT0KRRJNZY', spec: true },
     ]);
   });

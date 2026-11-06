@@ -15,6 +15,7 @@ describe('parseFieldType', () => {
     ['OpRefList', { kind: 'ref', to: ['op'], many: true }],
     ['ServiceList', { kind: 'ref', to: ['service'], many: true }],
     ['RefList', { kind: 'ref', to: [], many: true }],
+    ['BlockRef[]', { kind: 'ref', to: [], many: true }],
     ['FieldMap', { kind: 'map', value: 'type' }],
     ['ErrorMap', { kind: 'map', value: 'prose' }],
     ['RequirementList', { kind: 'keyed' }],

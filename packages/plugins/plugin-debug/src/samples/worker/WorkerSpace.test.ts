@@ -106,7 +106,7 @@ describe('Worker template', () => {
         'F-4 Claimed account',
       ]);
       expect(text.match(/^  status: planned$/gm)).toHaveLength(4);
-      expect(text.match(/^  needs: \[F-\d\]$/gm)).toHaveLength(3);
+      expect(text.match(/^  depends: \[F-\d\]$/gm)).toHaveLength(3);
       // The endpoint's parts are features of their own, on the spec that breaks it down.
       expect(text).toContain(`spec: echo:///${breakdown?.id}`);
       expect(featHeaders(textOf(breakdown))).toEqual(['F-1 JSON greeting', 'F-2 UTC time']);

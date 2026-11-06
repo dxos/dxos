@@ -997,7 +997,7 @@ feat F-19: A spec's document is the spec
   req F-19.1: The spec's `feat` blocks are its features, in the order its text states them. No ECHO object holds a
              feature: the text is the only store.
   req F-19.2: A `feat` block states the feature's name (its title), status (`status:`, planned when it has none),
-             description (`desc:`, or the block's prose), requirements (`req`), the features it needs first (`needs:`)
+             description (`desc:`, or the block's prose), requirements (`req`), the features it depends on (`depends:`)
              and the spec that breaks it down (`spec:`).
   req F-19.3: No structure is required. A text may be prose alone, `feat` blocks may sit anywhere in it, and the prose
              around them is kept as written.
@@ -2547,6 +2547,15 @@ decision D-113: A spec's features are the `feat` blocks of its text. Feature obj
   affects: [F-19, F-20, F-21, F-22, QA-4, QA-5]
   why: Two stores for one feature drifted apart. With the text as the only store, the spec, its file and every view agree by construction, and the schema-driven block forms edit every block kind the same way.
   rejected: Keeping feature objects as a cache of the blocks, which keeps the sync that drifted.
+```
+
+```mdl
+decision D-114: With the canvas gone ([D-102]), the Board is the one view that draws a spec's `feat` blocks, and editing a feature from it only sets its title, prose or status. A double-click on a card opens the breakdown's level beneath a project, and the breakdown as an article of its own for a spec no project owns, so the in-place zoom and its trail go with the feature objects. Fills in [D-113].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.3, F-22.4]
+  why: The canvas was where features were added, linked and removed; with it removed, those edits are the block form's and the block operations'.
 ```
 
 ## Appendix: Extension Definitions

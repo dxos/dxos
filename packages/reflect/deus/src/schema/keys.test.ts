@@ -17,7 +17,7 @@ const SPEC = [
   '',
   fence('feat F-1: Retention', '  req F-1.1: Old entries are dropped.', '  req F-1.2: Retention is per feed.'),
   '',
-  fence('feat F-2: Trim', '  needs: [F-1]', '  req F-2.1: Trimming keeps the newest entry.'),
+  fence('feat F-2: Trim', '  depends: [F-1]', '  req F-2.1: Trimming keeps the newest entry.'),
   '',
   'Trimming builds on org.example.spec#F-1.2.',
   '',
@@ -61,7 +61,7 @@ describe('rekey', () => {
     expect([...keys.keys()]).toEqual(['F-1', 'F-1.1', 'F-1.2', 'F-2', 'F-2.1']);
     expect(out).toContain(`feat ${keys.get('F-1')}: Retention`);
     expect(out).toContain(`  req ${keys.get('F-1.2')}: Retention is per feed.`);
-    expect(out).toContain(`  needs: [${keys.get('F-1')}]`);
+    expect(out).toContain(`  depends: [${keys.get('F-1')}]`);
     expect(out).toContain(`org.example.spec#${keys.get('F-1.2')}.`);
     expect(out).not.toMatch(/F-\d/);
     expect(labelsByKey(specItems(out, schemas)).get(keys.get('F-2.1')!)).toBe('F-2.1');

@@ -46,7 +46,8 @@ export const parseFieldType = (expr: string): FieldType => {
   }
   const alias = source.match(/^(\w+)Ref(List|Chain|\[\])?$/);
   if (alias) {
-    const to = [alias[1] === 'Ext' ? 'ext' : aliasKind(alias[1])];
+    // `BlockRef`: a block of any kind.
+    const to = alias[1] === 'Block' ? [] : [alias[1] === 'Ext' ? 'ext' : aliasKind(alias[1])];
     // `PlankRefChain`: an ordered list written `A > B`.
     return { kind: 'ref', to, many: Boolean(alias[2]), ...(alias[2] === 'Chain' && { chain: true }) };
   }

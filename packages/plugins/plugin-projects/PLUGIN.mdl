@@ -2438,7 +2438,7 @@ decision D-222: The generic block operations `GetSpecBlocks`, `SetSpecBlock` and
 ```
 
 ```mdl
-decision D-215: A spec's carets show in its text and in each block form drawn in it; a feature is a `feat` block of the text, drawn as one of those forms. Amends [F-4.13].
+decision D-223: A spec's carets show in its text and in each block form drawn in it; a feature is a `feat` block of the text, drawn as one of those forms. Amends [F-4.13].
   date: 2026-11-06
   by: agent:claude-code
   for: user:wittjosiah
@@ -2446,7 +2446,7 @@ decision D-215: A spec's carets show in its text and in each block form drawn in
 ```
 
 ```mdl
-decision D-216: A block form is laid out compactly, as the feature section was: a header row of label, title and choice tags; a row per field with its name inline; a line per keyed entry and per map row; empty fields and actions only while focused; foldable to its header. Amends [F-4.14].
+decision D-224: A block form is laid out compactly, as the feature section was: a header row of label, title and choice tags; a row per field with its name inline; a line per keyed entry and per map row; empty fields and actions only while focused; foldable to its header. Amends [F-4.14].
   date: 2026-11-06
   by: agent:claude-code
   for: user:wittjosiah
@@ -2457,7 +2457,7 @@ decision D-216: A block form is laid out compactly, as the feature section was: 
 ```
 
 ```mdl
-decision D-217: A block form picks references and types rather than taking them as text: a `Ref<kind>` field from the spec's blocks of that kind (chips for a list), `Ref<spec>` from the space's specs, and a type expression from the built-in types and the spec's `type` blocks, with a list toggle. A name the spec does not hold is flagged; an expression a picker cannot hold stays text. Amends [F-4.14].
+decision D-225: A block form picks references and types rather than taking them as text: a `Ref<kind>` field from the spec's blocks of that kind (chips for a list), `Ref<spec>` from the space's specs, and a type expression from the built-in types and the spec's `type` blocks, with a list toggle. A name the spec does not hold is flagged; an expression a picker cannot hold stays text. Amends [F-4.14].
   date: 2026-11-06
   by: agent:claude-code
   for: user:wittjosiah
@@ -2468,7 +2468,7 @@ decision D-217: A block form picks references and types rather than taking them 
 ```
 
 ```mdl
-decision D-218: Every standard block kind draws as a reasonable form: a list one item per line, a reference with its kind keeps it, a name outside the spec is not flagged, a reference to no block kind of the spec is text, a field's name labels every prose field but `desc`, and an `ext` block's field types are text. Amends [F-4.14].
+decision D-226: Every standard block kind draws as a reasonable form: a list one item per line, a reference with its kind keeps it, a name outside the spec is not flagged, a reference to no block kind of the spec is text, a field's name labels every prose field but `desc`, and an `ext` block's field types are text. Amends [F-4.14].
   date: 2026-11-06
   by: agent:claude-code
   for: user:wittjosiah
@@ -2477,7 +2477,7 @@ decision D-218: Every standard block kind draws as a reasonable form: a list one
 ```
 
 ```mdl
-decision D-219: A row or item added to a block form gets a fresh name (`name`, `name2`, …) and takes focus with its text selected, and a row's name is never set empty; each dialect has a story that draws one block of every kind it defines. Amends [F-4.14].
+decision D-227: A row or item added to a block form gets a fresh name (`name`, `name2`, …) and takes focus with its text selected, and a row's name is never set empty; each dialect has a story that draws one block of every kind it defines. Amends [F-4.14].
   date: 2026-11-06
   by: agent:claude-code
   for: user:wittjosiah

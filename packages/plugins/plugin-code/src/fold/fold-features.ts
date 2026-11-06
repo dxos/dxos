@@ -84,7 +84,7 @@ const cite = (from: Spec.Spec, { spec, key }: Placement) => (spec.id === from.id
 
 /**
  * Folds every feature object of the space into its spec's text as a `feat` block, once: the block is the feature from
- * then on. Requirements keep their text under keys of their own, dependencies become `needs`, a breakdown becomes the
+ * then on. Requirements keep their text under keys of their own, dependencies become `depends`, a breakdown becomes the
  * block's `spec` with the breakdown filed flat in the project, and comments, task links, showcases and canvas positions
  * move to the spec and the item's key. A spec of the features dialect moves to the software dialect. A second run finds
  * nothing to fold.
@@ -149,7 +149,7 @@ export const foldFeatures = Effect.fn('foldFeatures')(function* () {
     const blocks = new Map(
       features.map((feature) => {
         const placement = placements.get(feature.id)!;
-        const needs = dependsOn
+        const depends = dependsOn
           .filter((relation) => entityId(Relation.getSourceURI(relation)) === feature.id)
           .flatMap((relation) => placements.get(entityId(Relation.getTargetURI(relation))) ?? [])
           .map((target) => cite(spec, target));
@@ -159,7 +159,7 @@ export const foldFeatures = Effect.fn('foldFeatures')(function* () {
           ...(feature.description && { prose: feature.description }),
           fields: {
             status: feature.status,
-            ...(needs.length > 0 && { needs }),
+            ...(depends.length > 0 && { depends }),
             ...(breakdown && { spec: `echo:///${breakdown}` }),
             req: Feature.getRequirements(feature).map(({ key, text }) => ({
               key: placement.requirements.get(key)!,

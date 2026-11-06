@@ -78,7 +78,8 @@ describe('fold-features', () => {
       expect(keys.map(([, title]) => title)).toEqual(['Sorted inbox', 'Sync']);
       const [[sortingKey], [syncKey]] = keys;
       expect(text.content.startsWith('An inbox.\n\n```mdl\nfeat ')).toBe(true);
-      expect(text.content).toContain(`  status: prototype\n  needs: [${syncKey}]\n  spec: echo:///${breakdown.id}`);
+      expect(text.content).toContain('  status: prototype\n');
+      expect(text.content).toContain(`  depends: [${syncKey}]\n  spec: echo:///${breakdown.id}`);
       expect(text.content).toMatch(/\n {2}req [a-z2-9]{5}: A known sender's mail goes to its folder\.\n/);
       expect(spec.dialects).toContain('org.dxos.spec.software');
       expect(spec.dialects).not.toContain(FeatureMap.DIALECT);

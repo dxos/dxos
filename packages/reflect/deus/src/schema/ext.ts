@@ -84,15 +84,11 @@ export const parseExtDefinitions = (text: string, dialect = ''): ExtDefinition[]
  */
 export const resolveDefinition = (
   definition: ExtDefinition,
-  /** The definition a kind name resolves to, other than the one with URI `except`. */
-  lookup: (kind: string, except: string) => ExtDefinition | undefined,
-  seen: ReadonlySet<string> = new Set(),
+  /** The last definition of a kind declared before `child`, so `ext op` with `extends: op` adds to the earlier `op`. */
+  lookup: (kind: string, child: ExtDefinition) => ExtDefinition | undefined,
 ): BlockSchema => {
-  const parentDefinition = definition.extends ? lookup(definition.extends, definition.uri) : undefined;
-  const parent =
-    parentDefinition && !seen.has(parentDefinition.uri)
-      ? resolveDefinition(parentDefinition, lookup, new Set([...seen, definition.uri]))
-      : undefined;
+  const parentDefinition = definition.extends ? lookup(definition.extends, definition) : undefined;
+  const parent = parentDefinition && resolveDefinition(parentDefinition, lookup);
   const own = [...definition.fields, ...definition.addsFields];
   const inherited = parent?.fields ?? [];
   const fields = [
