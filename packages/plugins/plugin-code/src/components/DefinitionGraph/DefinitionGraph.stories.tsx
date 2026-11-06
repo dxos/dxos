@@ -14,7 +14,7 @@ import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
 import TRIP_SPEC from '../../../../plugin-trip/PLUGIN.mdl?raw';
 import CODE_SPEC from '../../../PLUGIN.mdl?raw';
 import CODE_BASE_SPEC from '../../containers/SpecArticle/__fixtures__/plugin-code.base.mdl?raw';
-import { buildDefinitionGraph, sectionsOf, selectDefinitions } from '../SpecModel/index.ts';
+import { buildDefinitionGraph, groupDefinitions } from '../SpecModel/index.ts';
 import { DefinitionGraph } from './DefinitionGraph.tsx';
 
 const meta = {
@@ -30,54 +30,82 @@ type Story = StoryObj<typeof meta>;
 
 const TIMEOUT = { timeout: 10_000 };
 
-/** plugin-calls's design: its sections, then one section's definitions, then one definition and its neighbours. */
+/** plugin-code's features as a map, clustered around the blocks they share. */
 export const Default: Story = {
-  args: { content: CALLS_SPEC },
+  args: { content: CODE_SPEC, layout: 'map' },
+};
+
+/** Selecting a feature lights what it shares, and a shared block opens its related view. */
+export const Navigate: Story = {
+  args: { content: CODE_SPEC, layout: 'map' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const sections = sectionsOf(
-      selectDefinitions(buildDefinitionGraph(CALLS_SPEC), ['scenario', 'test', 'suite']),
-    ).filter(({ external }) => !external);
+    const { groups } = groupDefinitions(buildDefinitionGraph(CODE_SPEC));
+    await waitFor(() => expect(canvas.getAllByTestId('definition-map.group')).toHaveLength(groups.length), TIMEOUT);
+    const frame = canvasElement.querySelector('[data-group="F-12a"]')!;
+    await userEvent.click(within(frame as HTMLElement).getByTestId('definition-map.select'));
     await waitFor(
-      () => expect(canvas.getAllByTestId('definition-graph.section')).toHaveLength(sections.length),
+      () => expect(canvasElement.querySelector('[data-lit][data-definition="buildProject"]')).not.toBeNull(),
       TIMEOUT,
     );
-    const [sectionCard] = canvas.getAllByTestId('definition-graph.section');
-    const section = sections.find(({ id }) => id === sectionCard.getAttribute('data-section'));
-    await userEvent.click(sectionCard);
+    await userEvent.click(canvasElement.querySelector<HTMLElement>('[data-definition="buildProject"]')!);
     await waitFor(
-      () => expect(canvas.getAllByTestId('definition-graph.definition')).toHaveLength(section?.definitions.length ?? 0),
-      TIMEOUT,
-    );
-    const [definitionCard] = canvas.getAllByTestId('definition-graph.definition');
-    const id = definitionCard.getAttribute('data-definition');
-    await userEvent.click(definitionCard);
-    await waitFor(
-      () => expect(canvasElement.querySelector('[data-focused]')?.getAttribute('data-definition')).toBe(id),
+      () => expect(canvas.getByTestId('definition-related.focus')).toHaveAttribute('data-definition', 'buildProject'),
       TIMEOUT,
     );
   },
 };
 
-/** A types-heavy spec: segment variants, the core they spread, and the providers and places they name. */
-export const Types: Story = {
-  args: { content: TRIP_SPEC },
+/** The same spec in a narrow panel: pointing at a shared block brackets every group naming it. */
+export const Outline: Story = {
+  args: { content: CODE_SPEC, layout: 'outline' },
+  decorators: [withLayout({ layout: 'column' })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [group] = await waitFor(() => canvas.getAllByTestId('definition-outline.group'), TIMEOUT);
+    await userEvent.click(group);
+    const shared = await waitFor(
+      () => canvas.getAllByTestId('definition-outline.definition').find((row) => row.textContent?.includes('×'))!,
+      TIMEOUT,
+    );
+    await userEvent.hover(shared);
+    await waitFor(() => expect(canvas.getByTestId('definition-outline.bracket')).toBeInTheDocument(), TIMEOUT);
+  },
 };
 
-/** A large spec: plugin-code's own, whose many cross-references made the graph slow to draw. */
-export const Large: Story = {
-  args: { content: CODE_SPEC },
+/** One block and everything it touches: the features naming SourceFile above it, what it names below, its checks. */
+export const Related: Story = {
+  args: { content: CODE_SPEC, defaultFocus: 'SourceFile' },
+  decorators: [withLayout({ layout: 'column' })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(
+      () =>
+        expect(
+          within(canvas.getByTestId('definition-related.above')).getAllByTestId('definition-related.node').length,
+        ).toBeGreaterThan(1),
+      TIMEOUT,
+    );
+    await waitFor(() => expect(canvas.getAllByTestId('definition-graph.connector').length).toBeGreaterThan(1), TIMEOUT);
+  },
+};
+
+/** plugin-calls, grouped around Call and CallState. */
+export const Calls: Story = {
+  args: { content: CALLS_SPEC, layout: 'map' },
+};
+
+/** A types-heavy spec whose features name few blocks, so most of it is in no group. */
+export const Types: Story = {
+  args: { content: TRIP_SPEC, layout: 'map' },
 };
 
 /** plugin-code's features against an earlier commit: new ones boxed green, changed ones amber, removed ones faded. */
 export const Diff: Story = {
-  args: { content: CODE_SPEC, base: CODE_BASE_SPEC, defaultFocus: { section: 'section:Features' } },
+  args: { content: CODE_SPEC, base: CODE_BASE_SPEC, layout: 'map' },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByTestId('definition-graph.filters'));
-    await waitFor(() => expect(canvas.getByTestId('definition-graph.changes.added')).toBeVisible(), TIMEOUT);
     await waitFor(
-      () => expect(canvasElement.querySelector('[data-definition="F-14"]')?.getAttribute('data-change')).toBe('added'),
+      () => expect(canvasElement.querySelector('[data-group="F-14"]')?.getAttribute('data-change')).toBe('added'),
       TIMEOUT,
     );
   },
@@ -85,5 +113,5 @@ export const Diff: Story = {
 
 /** The same change read backwards, so the three features it added show as removed: faded, dashed and red. */
 export const DiffRemoved: Story = {
-  args: { content: CODE_BASE_SPEC, base: CODE_SPEC },
+  args: { content: CODE_BASE_SPEC, base: CODE_SPEC, layout: 'map' },
 };

@@ -2315,6 +2315,19 @@ decision D-85: Definitions opens on the spec's sections, a card each; a section 
     - A canvas per section fitted to the companion; a 24-feature section zoomed to 19%.
 ```
 
+```mdl
+decision D-86: Definitions groups a spec by what names its blocks, not by its sections. Each block kind has a role: an anchor (a feature) names the blocks that serve it, structure is what they are built from, verification checks them, and context comes from outside. Every anchor is a group of the structure it names, owned when only it names a block and shared otherwise, and groups gather into clusters around the shared block most of them name. Where there is room the whole spec is a map of those clusters, a frame per group over a strip of what the cluster shares, and selecting a group draws arrows only for it, to the groups it builds on and the shared blocks it names; in a narrow companion it is an outline whose gutter brackets every group naming the block pointed at. Any block opens its related view: what names it above, with arrows in, what it names below, with arrows out, one arrow per row once a row wraps, then the checks and live decisions that touch it. Roles come from the kind groups unless the spec declares them, and a spec with no anchors groups around the structure nothing else references. Replaces the Definitions half of [D-85].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecViewContent]
+  why: Sections say where a block is written, not what it is for, and the section levels drew no arrows until the last one. Grouping by role reads the same for a features spec, a types-only spec and a dialect whose kinds the view has never seen.
+  rejected:
+    - One zoomable diagram from clusters down to a group's blocks; its layout has to hold still across zoom levels, and the map is its middle level already.
+    - Grouping by connected components of shared blocks; plugin-code's 24 features came out as one component of 21.
+    - Taking blocks nothing points at as anchors; that picks tests and scenarios, which point at everything.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
