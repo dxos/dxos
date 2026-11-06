@@ -23,7 +23,7 @@ import {
   groupDefinitions,
 } from '../SpecModel/index.ts';
 import { DEFAULT_FACTS, type DefinitionFacts } from './definition-facts.ts';
-import { type CanvasLevel, DefinitionCanvas } from './DefinitionCanvas.tsx';
+import { DefinitionCanvas } from './DefinitionCanvas.tsx';
 import { type DefinitionViewModel } from './DefinitionChip.tsx';
 import { DefinitionMap } from './DefinitionMap.tsx';
 import { DefinitionOutline } from './DefinitionOutline.tsx';
@@ -51,7 +51,7 @@ export type DefinitionGraphProps = {
   facts?: DefinitionFacts;
   /** An external block opens its spec or code; a local one is shown in the spec. */
   onActivate?: (definition: DefinitionModel) => void;
-  /** The block, or on a canvas the cluster, it opens on; the whole spec by default. */
+  /** The block a map or outline opens on; the whole spec by default. */
   defaultFocus?: string;
   /** The whole spec as a canvas, a map or an outline; by default a map when there is room for one. */
   layout?: DefinitionLayout;
@@ -60,8 +60,9 @@ export type DefinitionGraphProps = {
 /**
  * A spec's definitions, grouped by what names them. The whole spec is a map of clusters of groups where there is
  * room and an outline where there is not; either opens a block's related view, which centres on it and draws
- * everything it touches. As a canvas, it opens one level at a time: the clusters, one cluster's groups, then a block.
- * The trail of clusters and blocks opened is a breadcrumb back to the whole spec.
+ * everything it touches, and the trail of blocks opened is a breadcrumb back to the whole spec. As a canvas, the levels
+ * nest: the clusters, one cluster's groups, then a block, each drilled into by zooming into its card, with the canvas's
+ * own trail.
  */
 export const DefinitionGraph = ({
   content,
@@ -136,7 +137,6 @@ export const DefinitionGraph = ({
     },
     [view, top, onActivate, push],
   );
-  const handleOpenCluster = useCallback((id: string) => id !== top && push(id), [top, push]);
   const crumbLabel = (id: string) => {
     const cluster = clusterById.get(id);
     return cluster === undefined
@@ -165,14 +165,6 @@ export const DefinitionGraph = ({
     return () => observer.disconnect();
   }, []);
   const shown: DefinitionLayout = layout ?? (wide ? 'map' : 'outline');
-  const level: CanvasLevel =
-    top === undefined
-      ? { kind: 'spec' }
-      : clusterById.has(top)
-        ? { kind: 'cluster', cluster: top }
-        : focus
-          ? { kind: 'block', focus }
-          : { kind: 'spec' };
 
   return (
     <Layout.Flex
@@ -182,56 +174,52 @@ export const DefinitionGraph = ({
       data-testid='definition-graph'
       data-layout={shown === 'canvas' ? shown : focus ? 'related' : shown}
     >
-      <Layout.Flex align='center' gap='sm' classNames='px-2 py-1 min-h-[2.5rem]'>
-        <Breadcrumb.Root aria-label={t('definition-graph.breadcrumb.label')} classNames='min-w-0'>
-          <Breadcrumb.List>
-            <Breadcrumb.Item>
-              {top !== undefined ? (
-                <Breadcrumb.Link asChild>
-                  <button type='button' onClick={() => setTrail([])} data-testid='definition-graph.crumb.spec'>
-                    {t('definition-graph.crumb.spec.label')}
-                  </button>
-                </Breadcrumb.Link>
-              ) : (
-                <Breadcrumb.Current>{t('definition-graph.crumb.spec.label')}</Breadcrumb.Current>
-              )}
-            </Breadcrumb.Item>
-            {trail.map((id, position) => (
-              <React.Fragment key={`${position}:${id}`}>
-                <Breadcrumb.Separator />
-                <Breadcrumb.Item>
-                  {position === trail.length - 1 ? (
-                    <Breadcrumb.Current classNames='font-mono'>{crumbLabel(id)}</Breadcrumb.Current>
-                  ) : (
-                    <Breadcrumb.Link asChild>
-                      <button
-                        type='button'
-                        className='font-mono'
-                        onClick={() => setTrail((trail) => trail.slice(0, position + 1))}
-                        data-testid='definition-graph.crumb'
-                      >
-                        {crumbLabel(id)}
-                      </button>
-                    </Breadcrumb.Link>
-                  )}
-                </Breadcrumb.Item>
-              </React.Fragment>
-            ))}
-          </Breadcrumb.List>
-        </Breadcrumb.Root>
-      </Layout.Flex>
+      {/* A canvas has its own trail, of the levels it has drilled into. */}
+      {shown !== 'canvas' && (
+        <Layout.Flex align='center' gap='sm' classNames='px-2 py-1 min-h-[2.5rem]'>
+          <Breadcrumb.Root aria-label={t('definition-graph.breadcrumb.label')} classNames='min-w-0'>
+            <Breadcrumb.List>
+              <Breadcrumb.Item>
+                {top !== undefined ? (
+                  <Breadcrumb.Link asChild>
+                    <button type='button' onClick={() => setTrail([])} data-testid='definition-graph.crumb.spec'>
+                      {t('definition-graph.crumb.spec.label')}
+                    </button>
+                  </Breadcrumb.Link>
+                ) : (
+                  <Breadcrumb.Current>{t('definition-graph.crumb.spec.label')}</Breadcrumb.Current>
+                )}
+              </Breadcrumb.Item>
+              {trail.map((id, position) => (
+                <React.Fragment key={`${position}:${id}`}>
+                  <Breadcrumb.Separator />
+                  <Breadcrumb.Item>
+                    {position === trail.length - 1 ? (
+                      <Breadcrumb.Current classNames='font-mono'>{crumbLabel(id)}</Breadcrumb.Current>
+                    ) : (
+                      <Breadcrumb.Link asChild>
+                        <button
+                          type='button'
+                          className='font-mono'
+                          onClick={() => setTrail((trail) => trail.slice(0, position + 1))}
+                          data-testid='definition-graph.crumb'
+                        >
+                          {crumbLabel(id)}
+                        </button>
+                      </Breadcrumb.Link>
+                    )}
+                  </Breadcrumb.Item>
+                </React.Fragment>
+              ))}
+            </Breadcrumb.List>
+          </Breadcrumb.Root>
+        </Layout.Flex>
+      )}
       <p className='px-2 pb-1 text-xs text-description' data-testid='definition-graph.hint'>
         {t(shown !== 'canvas' && focus ? 'definition-graph.hint.related' : `definition-graph.hint.${shown}`)}
       </p>
       {shown === 'canvas' ? (
-        <DefinitionCanvas
-          depth={trail.length}
-          view={view}
-          edges={full.edges}
-          level={level}
-          onOpenCluster={handleOpenCluster}
-          onOpen={handleOpen}
-        />
+        <DefinitionCanvas view={view} edges={full.edges} onActivate={onActivate} />
       ) : (
         <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
           <ScrollArea.Viewport classNames='px-2 pb-2'>

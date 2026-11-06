@@ -2,16 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Dsl, Semantic, SemanticEngine } from '@dxos/diagram';
-import { type LatticeSpec, quantize } from '@dxos/react-ui-canvas';
-import { type Shape } from '@dxos/scene';
+import { type Scene as DiagramScene, Dsl, Semantic, SemanticEngine } from '@dxos/diagram';
+import { type DiagramSet, type LatticeSpec, boxId, quantize } from '@dxos/react-ui-canvas';
 
 import { type DefinitionEdge, type DefinitionGrouping, type DefinitionModel } from '../SpecModel/index.ts';
 
 export type Point = { x: number; y: number };
 export type Size = { width: number; height: number };
 
-/** One card size and cell pitch for every level, shared with the canvas so the engine's positions land on cards 1:1. */
+/** One card size and cell pitch for every level, shared with the canvas so the engine's boxes are its cards 1:1. */
 export const CARD: Size = { width: 272, height: 112 };
 export const PITCH: Size = { width: 352, height: 192 };
 
@@ -22,8 +21,8 @@ export const PITCH: Size = { width: 352, height: 192 };
  */
 export const LATTICE: LatticeSpec = { width: 16, height: 16, gutterX: 16, gutterY: 16 };
 
-/** The lattice centre nearest a card centred at `center`. */
-const onLattice = (center: Point): Point => {
+/** The lattice centre nearest a card centred at `center`, so its links take the gutters from the start. */
+export const onLattice = (center: Point): Point => {
   const { x, y, width, height } = quantize(
     { x: center.x - CARD.width / 2, y: center.y - CARD.height / 2, ...CARD },
     LATTICE,
@@ -193,43 +192,30 @@ export const blockScene = (
   };
 };
 
-/** A frame as the engine drew it, in canvas units, for the canvas's diagram shape to draw. */
-export type PlacedFrame = {
-  id: string;
-  label: string;
-  center: Point;
-  size: Size;
-  element: Shape.Box;
-  heading?: { id: string; x: number; y: number; w?: number; color?: Shape.Color; weight?: Shape.Weight };
-};
-
-export type PlacedScene = {
-  positions: Record<string, Point>;
-  frames: PlacedFrame[];
-  /** Each arrow's route as the engine drew it, by edge id, from the source's outline to the target's. */
-  routes: Record<string, Point[]>;
-};
-
-/** How far a frame is drawn inside the cells it spans, so neighbouring frames keep a gutter between them. */
-const FRAME_INSET = 12;
-
-/** The level as illustrator DSL: one box per card, a group per frame, one edge per arrow. */
+/**
+ * The level as illustrator DSL: one box per card, a group per frame, one edge per arrow; each card by DSL id, and each
+ * arrow's label by the id of the link it compiles to. Labels are the canvas's to place: placing them while routing is
+ * most of a level's layout time.
+ */
 const toDsl = (
   scene: DefinitionScene,
-): { source: string; ids: Map<string, string>; frames: Map<string, string>; edges: string[] } => {
-  const ids = new Map<string, string>();
+  cells?: ReadonlyMap<string, Point>,
+): { source: string; cards: Map<string, SceneNode>; labels: Map<string, string> } => {
+  const cards = new Map<string, SceneNode>();
   const dslId = new Map<string, string>();
-  scene.nodes.forEach(({ id }, index) => {
-    ids.set(`n${index}`, id);
-    dslId.set(id, `n${index}`);
+  scene.nodes.forEach((node, index) => {
+    cards.set(`n${index}`, node);
+    dslId.set(node.id, `n${index}`);
   });
   const lines = [`diagram flow=down box=${CARD.width}x${CARD.height} grid=${PITCH.width}x${PITCH.height}`];
-  const nodeLine = (node: SceneNode) => `node ${dslId.get(node.id)} ${Dsl.formatString(node.id)}`;
+  const nodeLine = (node: SceneNode) => {
+    const id = dslId.get(node.id) ?? node.id;
+    const cell = cells?.get(id);
+    return `node ${id} ${Dsl.formatString(node.id)}${cell ? ` @cell(${cell.x},${cell.y})` : ''}`;
+  };
   const byId = new Map(scene.nodes.map((node) => [node.id, node]));
   const framed = new Set<string>();
-  const frames = new Map<string, string>();
   scene.frames.forEach((frame, index) => {
-    frames.set(`g${index}`, frame.id);
     lines.push(
       `group g${index} ${Dsl.formatString(frame.label)}${frame.maxWidth ? ` max-width=${frame.maxWidth}` : ''} {`,
     );
@@ -245,103 +231,174 @@ const toDsl = (
   for (const node of scene.nodes) {
     framed.has(node.id) || lines.push(nodeLine(node));
   }
-  // The engine names each edge's route by its place among the edges.
-  const edges: string[] = [];
+  const labels = new Map<string, string>();
+  let index = 0;
   for (const edge of scene.edges) {
     const [from, to] = [dslId.get(edge.from), dslId.get(edge.to)];
     if (from && to && from !== to) {
-      edges.push(edge.id);
-      lines.push(edge.against ? `edge ${to} -> ${from}` : `edge ${from} -> ${to}`);
+      // Laid out against the flow, the edge runs from its target and is headed at its source.
+      const [source, target] = edge.against ? [to, from] : [from, to];
+      // The engine names each edge's link by its ends and its place among the edges.
+      edge.label && labels.set(`${Semantic.CONNECTORS}/${source}-${target}-${index}`, edge.label);
+      index++;
+      const stroke = edge.dashed ? ' stroke=dashed' : '';
+      lines.push(
+        edge.against
+          ? `edge ${source} -> ${target}${stroke} head=none tail=arrow`
+          : `edge ${source} -> ${target}${stroke}${edge.both ? ' tail=arrow' : ''}`,
+      );
     }
   }
-  return { source: lines.join('\n'), ids, frames, edges };
+  return { source: lines.join('\n'), cards, labels };
 };
 
-/**
- * Places a level with plugin-illustrator's semantic engine: card centres by id, and each frame's box and title. One
- * search restart, so a level lays out quickly enough to open on a double-click.
- */
-export const placeScene = (scene: DefinitionScene): PlacedScene => {
-  if (scene.nodes.length === 0) {
-    return { positions: {}, frames: [], routes: {} };
-  }
-  const { source, ids, frames: frameIds, edges } = toDsl(scene);
+/** A level laid out by plugin-illustrator's semantic engine: its scene commands, and its cards by DSL id. */
+export type CompiledScene = {
+  commands: readonly DiagramScene.Command[];
+  cards: ReadonlyMap<string, SceneNode>;
+  /** Each arrow's label, by the id of its link. */
+  labels: ReadonlyMap<string, string>;
+};
+
+const solve = (source: string): DiagramScene.Command[] => {
   const reading = Dsl.read(source);
-  const solution = reading.diagram && SemanticEngine.solve(reading.diagram, { restarts: 1 });
-  const { commands } = Dsl.withLayout(reading, solution);
-  const labels = new Map(scene.frames.map(({ id, label }) => [id, label]));
-  const against = new Set(scene.edges.filter((edge) => edge.against).map(({ id }) => id));
-  const positions: Record<string, Point> = {};
-  const frames: PlacedFrame[] = [];
-  const routes: Record<string, Point[]> = {};
+  return Dsl.withLayout(reading, reading.diagram && SemanticEngine.solve(reading.diagram, { restarts: 1 })).commands;
+};
+
+/** The cell of each box the commands place, by DSL id, counted from the top-left box. */
+const cellsOf = (commands: readonly DiagramScene.Command[]): Map<string, Point> => {
+  const centers = new Map<string, Point>();
   for (const command of commands) {
-    if (command.op !== 'upsert-object') {
-      continue;
-    }
-    const { object } = command;
-    const scale = object.scale ?? 1;
-    const origin = object.origin ?? { x: 0, y: 0 };
-    const at = (x: number, y: number): Point => ({ x: origin.x + x * scale, y: origin.y + y * scale });
-    const node = ids.get(object.id);
-    const frame = frameIds.get(object.id);
-    if (object.id === Semantic.CONNECTORS) {
-      // An arrow `<from>-<to>-<index>` runs from the end of its `-path` line, when it bends, to its target.
-      for (const arrow of object.elements) {
-        const edge = arrow.kind === 'arrow' ? edges[Number(arrow.id.split('-').at(-1))] : undefined;
-        if (arrow.kind !== 'arrow' || edge === undefined) {
-          continue;
-        }
-        const path = object.elements.find((element) => element.id === `${arrow.id}-path`);
-        const points = path?.kind === 'line' ? [...path.points, arrow.end] : [arrow.start, arrow.end];
-        const route = points.flatMap((point) => (point ? [at(point.x, point.y)] : []));
-        // A route laid out against the flow runs from the edge's target; the canvas wants it from its source.
-        routes[edge] = against.has(edge) ? route.reverse() : route;
-      }
-    } else if (node) {
-      const box = object.elements.find((element) => 'w' in element && 'h' in element);
-      if (box && 'w' in box) {
-        positions[node] = at(box.x + box.w / 2, box.y + box.h / 2);
-      }
-    } else if (frame) {
-      const cell = object.elements.find((element): element is Shape.Box => element.kind === 'rect');
-      if (!cell) {
-        continue;
-      }
-      const box = {
-        ...cell,
-        x: cell.x + FRAME_INSET,
-        y: cell.y + FRAME_INSET,
-        w: cell.w - 2 * FRAME_INSET,
-        h: cell.h - 2 * FRAME_INSET,
-      };
-      const title = object.elements.find((element): element is Shape.Text => element.kind === 'text');
-      frames.push({
-        id: frame,
-        label: title?.text ?? labels.get(frame) ?? frame,
-        center: at(box.x + box.w / 2, box.y + box.h / 2),
-        size: { width: box.w * scale, height: box.h * scale },
-        element: box,
-        ...(title && {
-          heading: {
-            id: title.id,
-            x: (title.x - box.x) * scale,
-            y: (title.y - box.y) * scale,
-            ...(title.w !== undefined && { w: title.w * scale }),
-            ...(title.color && { color: title.color }),
-            ...(title.weight && { weight: title.weight }),
-          },
-        }),
+    const box = command.op === 'upsert-object' ? command.object.elements.find(({ id }) => id === 'box') : undefined;
+    if (command.op === 'upsert-object' && box && 'w' in box && 'h' in box) {
+      const { origin = { x: 0, y: 0 }, scale = 1 } = command.object;
+      centers.set(command.object.id, {
+        x: origin.x + (box.x + box.w / 2) * scale,
+        y: origin.y + (box.y + box.h / 2) * scale,
       });
     }
   }
-  // One shift puts the engine's layout on the lattice, routes and all; a card the shift misses is snapped alone.
-  const first = Object.values(positions)[0];
-  const snapped = first && onLattice(first);
-  const [dx, dy] = snapped ? [snapped.x - first.x, snapped.y - first.y] : [0, 0];
-  const shift = ({ x, y }: Point): Point => ({ x: x + dx, y: y + dy });
-  return {
-    positions: Object.fromEntries(Object.entries(positions).map(([id, center]) => [id, onLattice(shift(center))])),
-    frames: frames.map((frame) => ({ ...frame, center: shift(frame.center) })),
-    routes: Object.fromEntries(Object.entries(routes).map(([id, route]) => [id, route.map(shift)])),
+  const x0 = Math.min(...[...centers.values()].map(({ x }) => x));
+  const y0 = Math.min(...[...centers.values()].map(({ y }) => y));
+  return new Map(
+    [...centers].map(([id, { x, y }]) => [
+      id,
+      { x: Math.round((x - x0) / PITCH.width), y: Math.round((y - y0) / PITCH.height) },
+    ]),
+  );
+};
+
+/**
+ * Lays a level out in two passes, since routing every arrow inside the placement search is what costs: the cards are
+ * placed with one arrow per pair of frames (a card outside a frame its own), then pinned to those cells while every
+ * arrow is routed.
+ */
+export const compileScene = (scene: DefinitionScene): CompiledScene => {
+  const frameOf = new Map(scene.frames.flatMap(({ id, members }) => members.map((member) => [member, id] as const)));
+  const pairs = new Map<string, SceneEdge>();
+  for (const edge of scene.edges) {
+    const key = `${frameOf.get(edge.from) ?? edge.from}|${frameOf.get(edge.to) ?? edge.to}`;
+    pairs.has(key) || pairs.set(key, edge);
+  }
+  const first = toDsl({ ...scene, edges: [...pairs.values()] });
+  const placed = solve(first.source);
+  if (pairs.size === scene.edges.length) {
+    return { commands: placed, cards: first.cards, labels: first.labels };
+  }
+  const { source, cards, labels } = toDsl(scene, cellsOf(placed));
+  return { commands: solve(source), cards, labels };
+};
+
+export const SPEC_LEVEL = 'spec';
+const clusterLevel = (cluster: string) => `cluster:${cluster}`;
+const blockLevel = (ref: string) => `block:${ref}`;
+
+export type DefinitionLevelsOptions = {
+  spec: { name: string; scene: DefinitionScene };
+  cluster: (cluster: string) => { name: string; scene: DefinitionScene };
+  block: (ref: string) => { name: string; scene: DefinitionScene };
+  /** Whether a block's card opens its level. */
+  opens: (card: Extract<SceneNode, { kind: 'definition' }>) => boolean;
+};
+
+/** A level as named and laid out, by level id; what {@link definitionLevels} has done so far. */
+export type CompiledLevels = ReadonlyMap<string, CompiledScene & { name: string }>;
+
+export type DefinitionLevels = {
+  set: DiagramSet;
+  /** Each card, by its level and the id of the box it compiles to (`<level>#<box>`). */
+  cards: ReadonlyMap<string, SceneNode>;
+  /** Each arrow's label, by its level and the id of its link (`<level>#<link>`). */
+  labels: ReadonlyMap<string, string>;
+  /** Every level laid out, those given and those this call laid out. */
+  compiled: CompiledLevels;
+  /** The blocks whose levels are not laid out yet, which open nothing until they are. */
+  pending: readonly string[];
+};
+
+export const cardKey = (level: string, box: string) => `${level}#${box}`;
+
+/**
+ * Every level as one diagram set: the spec, whose clusters drill into their levels, whose blocks drill into theirs.
+ * A block level drills no further, and a block reached from two clusters is laid out once. The spec and cluster
+ * levels are laid out here; a block level only by {@link compileBlock}, so the canvas opens before they are done.
+ */
+export const definitionLevels = (
+  { spec, cluster, opens }: DefinitionLevelsOptions,
+  given: CompiledLevels = new Map(),
+): DefinitionLevels => {
+  const compiled = new Map(given);
+  const diagrams: Record<string, readonly DiagramScene.Command[]> = {};
+  const names: Record<string, string> = {};
+  const drills: Record<string, Record<string, string>> = {};
+  const cards = new Map<string, SceneNode>();
+  const labels = new Map<string, string>();
+  const pending = new Set<string>();
+  const add = (level: string, { name, scene }: { name: string; scene: DefinitionScene }) => {
+    const entry = compiled.get(level) ?? { ...compileScene(scene), name };
+    compiled.set(level, entry);
+    return use(level, entry);
   };
+  const use = (level: string, entry: CompiledScene & { name: string }) => {
+    diagrams[level] = entry.commands;
+    names[level] = entry.name;
+    for (const [id, card] of entry.cards) {
+      cards.set(cardKey(level, boxId(id)), card);
+    }
+    for (const [id, label] of entry.labels) {
+      labels.set(cardKey(level, id), label);
+    }
+    return entry.cards;
+  };
+  drills[SPEC_LEVEL] = {};
+  for (const [id, card] of add(SPEC_LEVEL, spec)) {
+    if (card.kind !== 'cluster') {
+      continue;
+    }
+    const level = clusterLevel(card.cluster);
+    drills[SPEC_LEVEL][id] = level;
+    drills[level] = {};
+    for (const [blockId, member] of add(level, cluster(card.cluster))) {
+      if (member.kind === 'definition' && opens(member)) {
+        const target = blockLevel(member.ref);
+        const entry = compiled.get(target);
+        if (entry) {
+          drills[level][blockId] = target;
+          target in diagrams || use(target, entry);
+        } else {
+          pending.add(member.ref);
+        }
+      }
+    }
+  }
+  return { set: { root: SPEC_LEVEL, diagrams, names, drills }, cards, labels, compiled, pending: [...pending] };
+};
+
+/** Lays out one block's level, for {@link definitionLevels} to drill into. */
+export const compileBlock = (
+  { block }: Pick<DefinitionLevelsOptions, 'block'>,
+  ref: string,
+): [string, CompiledScene & { name: string }] => {
+  const { name, scene } = block(ref);
+  return [blockLevel(ref), { ...compileScene(scene), name }];
 };

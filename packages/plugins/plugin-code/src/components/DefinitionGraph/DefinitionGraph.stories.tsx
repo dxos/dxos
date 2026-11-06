@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { parseReview } from '@dxos/deus/review';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -84,25 +84,39 @@ export const Canvas: Story = {
   },
 };
 
+/** A double-click as the canvas reads one: a press and release on the node, then the `dblclick`. */
+const doubleClick = async (element: Element) => {
+  const { left, top, width, height } = element.getBoundingClientRect();
+  const point = { clientX: left + width / 2, clientY: top + height / 2, button: 0, pointerId: 1 };
+  await fireEvent.pointerDown(element, point);
+  await fireEvent.pointerUp(element, point);
+  await fireEvent.dblClick(element, point);
+};
+
 /**
- * One cluster on the canvas: a frame per feature holding what only it names, and the blocks they share outside. Every
- * card carries its review verdict, a feature its status, and a card that opens a level is marked.
+ * Drilling down the canvas: double-clicking a cluster zooms into its level, a frame per feature holding what only it
+ * names; every card carries its verdict, a feature its status, and a card that opens a level is marked. Double-clicking
+ * F-8 zooms into everything that touches it.
  */
-export const CanvasCluster: Story = {
-  args: { content: CODE_SPEC_STATUS, layout: 'canvas', review: REVIEW, defaultFocus: 'cluster:CoderSkill' },
+export const CanvasDrill: Story = {
+  args: { content: CODE_SPEC_STATUS, layout: 'canvas', review: REVIEW },
   play: async ({ canvasElement }) => {
     const card = (id: string) =>
       canvasElement.querySelector(`[data-testid="definition-canvas.card"][data-definition="${id}"]`);
-    await waitFor(() => expect(card('F-8')).not.toBeNull(), TIMEOUT);
+    const clusterCard = () => canvasElement.querySelector('[data-cluster="cluster:CoderSkill"]');
+    await waitFor(() => expect(clusterCard()).not.toBeNull(), TIMEOUT);
+    const cluster = clusterCard();
+    cluster && (await doubleClick(cluster));
+    // Drilled in, the spec's clusters are no longer drawn.
+    await waitFor(
+      () => expect(canvasElement.querySelector('[data-testid="definition-canvas.cluster"]')).toBeNull(),
+      TIMEOUT,
+    );
+    // F-8 opens its level once the block levels are laid out, after the canvas opens.
+    await waitFor(() => expect(card('F-8')?.hasAttribute('data-opens')).toBe(true), TIMEOUT);
     await expect(card('F-8')?.querySelector('[data-testid="definition-canvas.fact"]')?.textContent).toBe('operational');
-    await expect(card('F-8')?.hasAttribute('data-opens')).toBe(true);
-  },
-};
-
-/** One block on the canvas: what names SourceFile above it, its checks framed, and what it names below. */
-export const CanvasBlock: Story = {
-  args: { content: CODE_SPEC_STATUS, layout: 'canvas', review: REVIEW, defaultFocus: 'SourceFile' },
-  play: async ({ canvasElement }) => {
+    const feature = card('F-8');
+    feature && (await doubleClick(feature));
     await waitFor(
       () => expect(canvasElement.querySelector('[data-testid="definition-canvas.card"][data-focused]')).not.toBeNull(),
       TIMEOUT,
