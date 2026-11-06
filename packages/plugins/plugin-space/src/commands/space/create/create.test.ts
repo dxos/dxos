@@ -15,7 +15,7 @@ import { handler } from './create.ts';
 describe('space create', () => {
   it('should create a space without a name', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const logger = yield* TestConsole.TestConsole;
       // Catch timeout errors from sync, but still check output
@@ -42,7 +42,7 @@ describe('space create', () => {
 
   it('should create a space with a name', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const logger = yield* TestConsole.TestConsole;
       // Catch timeout errors from sync, but still check output

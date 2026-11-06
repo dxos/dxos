@@ -10,4 +10,5 @@ export * from './import-map/index.ts';
 // they stay at the top level because they're not vite plugins themselves.
 export * from './packages.ts';
 export * from './plugin-config/index.ts';
+export { loadDxConfigWithVite } from './composer/load-with-vite.ts';
 export { findDxConfigFile, loadDxConfig } from './load.ts';

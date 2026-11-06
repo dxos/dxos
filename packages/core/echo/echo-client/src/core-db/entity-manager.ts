@@ -77,6 +77,7 @@ import {
   type ReleaseObjectOptions,
   type SpaceDocumentHeads,
 } from './types.ts';
+import { UpdateDispatch } from './update-dispatch.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
 import { type ExportWorkingSetOptions, type WorkingSetRow } from './working-set-row.ts';
 
@@ -198,6 +199,8 @@ export class EntityManager implements IDatabaseBinding {
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   /** Objects a local commit wrote, emitted synchronously after the commit and before {@link _updateEvent}. */
   readonly _localCommitEvent = new Event<ItemsUpdatedEvent>();
+  /** Routes {@link _updateEvent} to the live queries it can change; they stay registered across a close and reopen. */
+  readonly updateDispatch = new UpdateDispatch(this._updateEvent, (id) => this.getObjectCoreById(id, { load: false }));
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   /** Fires when the database has finished loading its initial space root document. */
@@ -323,6 +326,15 @@ export class EntityManager implements IDatabaseBinding {
 
   get linksAdded(): ReadOnlyEvent<string[]> {
     return this._linksAddedEvent;
+  }
+
+  get lifetimeEnded(): ReadOnlyEvent<void> {
+    return this.#lifetimeEnded;
+  }
+
+  /** Whether a close has begun, so the working set and the space root handle are no longer readable. */
+  get isClosing(): boolean {
+    return this.#closing;
   }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────

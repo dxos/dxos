@@ -28,7 +28,7 @@ export default defineConfig({
     'AssistantOptions': 'src/types/AssistantOptions.ts',
     'AssistantPreset': 'src/types/AssistantPreset.ts',
     'AssistantService': 'src/types/AssistantService.ts',
-    'ChatSurface': 'src/types/ChatSurface.ts',
+    'AssistantSurface': 'src/types/AssistantSurface.ts',
     'Settings': 'src/types/Settings.ts',
     'Assistant': 'src/types/Assistant.ts',
     'AssistantOperation': 'src/types/AssistantOperation.ts',
@@ -37,5 +37,7 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true, workerd: true },
+  // Clears the stories' own waits (two scripted turns at up to 15s each), so a slow run fails on the wait that names
+  // what is missing rather than on the default 15s test timeout.
+  test: { node: true, storybook: { timeout: 60_000 }, workerd: true },
 });

@@ -17,7 +17,7 @@ export default defineConfig({
     'overlays': 'src/containers/Overlays/index.ts',
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
-    'DeckRole': 'src/types/DeckRole.ts',
+    'DeckSurface': 'src/types/DeckSurface.ts',
     'DeckSchema': 'src/types/DeckSchema.ts',
     'DeckCapabilities': 'src/types/DeckCapabilities.ts',
     'DeckOperation': 'src/types/DeckOperation.ts',

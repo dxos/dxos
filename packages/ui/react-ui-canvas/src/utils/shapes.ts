@@ -17,12 +17,13 @@ import {
   type Link,
   type LinkEnds,
   type LinkType,
-  type LinkValues,
   MAJOR_GRID_RATIO,
   type Node,
   type Point,
   type Size,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
+import { type LinkValues } from '../model/index.ts';
 import { type PartField } from './parts.ts';
 import { DEFAULT_POLYLINE_POINTS } from './polyline.ts';
 import { DEFAULT_CLOUD_BUMPS, DEFAULT_POLYGON_SIDES } from './silhouette.ts';
@@ -167,13 +168,11 @@ export type CreateLinkProps = {
   z: string;
   source: Endpoint;
   target: Endpoint;
-  /** Where a new spline gets its first control point; ignored by the other types. */
-  midpoint?: Point;
   ends?: LinkEnds;
 };
 
-/** A new link of `type`; a spline starts with one control point so it is editable at once. */
-export const createLink = ({ type, id, z, source, target, midpoint, ends }: CreateLinkProps): Link => {
+/** A new link of `type`; a spline starts with no control points, and its span's midpoint handle adds the first. */
+export const createLink = ({ type, id, z, source, target, ends }: CreateLinkProps): Link => {
   const base = { id, z, source, target, ...(ends ? { ends } : {}) };
   switch (type) {
     case 'line':
@@ -181,7 +180,7 @@ export const createLink = ({ type, id, z, source, target, midpoint, ends }: Crea
     case 'smart':
       return { type, ...base };
     case 'spline':
-      return { type, ...base, points: midpoint ? [midpoint] : [] };
+      return { type, ...base, points: [] };
   }
 };
 

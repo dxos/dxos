@@ -1,0 +1,12 @@
+---
+'@dxos/compute': minor
+'@dxos/echo': minor
+'@dxos/plugin-assistant': minor
+'@dxos/react-ui-assistant': minor
+---
+
+Agent chats are now stored as an append-only log of `Trajectory.Event`s. Older feeds still load because their messages, bindings, alarms and fork links are converted to events in memory. Folded state is cached in SQLite, so reopening a chat reads only the events written since; the chat and an agent on the same device share that cache. Each thread and each agent turn is a branch of the chat's feed, so an agent never writes on the branch a person owns. `Feed.walk` takes `branch: 'all'` to walk every branch in local order and resume after a local cursor, and `Feed.setBranch` puts an item on a branch before it is appended. The trajectory modules are `@dxos/compute/Trajectory`, `@dxos/compute/Reducer` and `@dxos/compute/Transcript`. A durable operation can declare `optionalServices`, which a process receives when the runtime can resolve them and runs without otherwise. New chat feeds are created with indexing off (`TrajectoryStore.makeFeed`), so their events are not indexed or text-searchable. Breaking: chat feeds no longer receive new `Message`, `AiContext.Binding`, `Alarm` or `SessionLink` records, and `SessionStore.markInFlight` is removed.
+
+Light threads: with the assistant's new **Parallel threads** setting on, a prompt sent while the agent works starts a thread that runs in parallel instead of waiting. The new thread starts with a transcript of every running thread and can wait for one with the `thread_wait` tool; finished threads join the conversation. The chat colours each thread's gutter; a thread a newer prompt sends to the background becomes a card in its original place, and its answer appears where it completes. Another installed agent can share the chat (**Parallel thread agents**): a prompt starting with `@<agent>` runs on that agent, in a lane of its own. The trace panel draws each thread as a lane of its own.
+
+Forks: an answer's toolbar offers **Fork the conversation here**, which opens a thread that sees the chat up to that answer and then only what is sent in it. A fork stays apart from the main conversation, which shows it as a marker at the answer it forks at, until a person merges it (by default as a summary of its final answer). `TrajectoryStore.forkThread`, `forkOf` and `mergeFork` do the same from code, `AgentService.SubmitPromptOptions.thread` sends a prompt into a fork, and `ThreadingOptions.policy` sets which kinds of thread join main when they complete.

@@ -9,10 +9,10 @@ import { describe, test } from 'vitest';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { AiContext } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -124,31 +124,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     await expect.poll(() => chat.name).toBe('Coffee Prep');
   });
 
-  test("starts the chat on the project's session config", async ({ expect }) => {
-    await using harness = await setup();
-    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
-    invariant(space, 'Expected a default space.');
-
-    const { project } = await harness.runPromise(
-      Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: space.id }),
-    );
-    const model = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
-    Obj.update(project, (project) => {
-      project.session = { model };
-    });
-    const taskSet = await project.taskSet?.tryLoad();
-    invariant(taskSet, 'Expected the scaffolded task set.');
-    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
-    await space.db.flush();
-
-    const { chat } = await harness.runPromise(
-      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
-    );
-
-    expect(chat.session?.model).toBe(model);
-  });
-
-  test('files the chat under the task project, marks it started, and names a reviewer', async ({ expect }) => {
+  test('files the chat under the task project, marks it started, and delegates it to the chat', async ({ expect }) => {
     await using harness = await setup();
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
     invariant(space, 'Expected a default space.');
@@ -173,17 +149,54 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // owning checklist would re-parent it and drop it out of the project's task list.
     expect(Obj.getParent(task)?.id).toBe(taskSet.id);
 
-    // Started on delegation, not on completion: the row shows work is underway from the moment the
-    // session has it, and the chat's agent is who holds it.
     expect(task.status).toBe('started');
-    expect(task.assignee?.role).toBe('assistant');
-    // Held by that chat, named as the assignee's subject: a bare assistant role is the supervisor's
-    // spawn request, whose orphan sweep would fail a started task no sub-agent is running.
-    expect(Task.refEntityId(task.assignee?.subject)).toBe(chat.id);
+    expect(task.delegate?.role).toBe('assistant');
+    expect(Task.refEntityId(task.delegate?.subject)).toBe(chat.id);
 
-    // The delegating identity reviews the result, which is what will send the task to `review`
-    // rather than `done` when the work finishes.
-    expect(task.reviewers).toHaveLength(1);
+    expect(task.assignee?.role).toBe('user');
+  });
+
+  test('the delegating identity answers for a task an agent was assigned, so its finish still waits on review', async ({
+    expect,
+  }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const task = space.db.add(
+      Task.make({ title: 'Write a poem', status: 'todo', assignee: { role: 'assistant', name: 'Old session' } }),
+    );
+    await space.db.flush();
+
+    await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    expect(task.assignee?.role).toBe('user');
+    Task.setStatus(task, 'done');
+    expect(task.status).toBe('review');
+  });
+
+  test("an unowned step answers to its parent's person, not the delegating identity", async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const step = space.db.add(Task.make({ title: 'Draft the verse', status: 'todo' }));
+    const poem = space.db.add(
+      Task.make({
+        title: 'Write a poem',
+        status: 'todo',
+        assignee: { name: 'Riley', identityDid: 'did:key:riley' },
+        subtasks: [Ref.make(step)],
+      }),
+    );
+    Obj.setParent(step, poem);
+    await space.db.flush();
+
+    await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(step)] }, { spaceId: space.id }),
+    );
+
+    expect(step.assignee?.name).toBe('Riley');
   });
 
   test('binds the skills the project instructions name, alongside the delegation set', async ({ expect }) => {
@@ -210,8 +223,10 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     );
 
     const feed = await chat.feed.load();
-    const bindings = await space.db.query(Query.select(Filter.type(AiContext.Binding)).from(feed)).run();
-    const bound = bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+    const events = await EffectEx.runPromise(TrajectoryStore.read(feed).pipe(Effect.provide(Database.layer(space.db))));
+    const bound = events.flatMap((event) =>
+      event.payload._tag === 'contextBind' ? event.payload.skills.map((ref) => ref.uri) : [],
+    );
     expect(bound).toContain(studioSkill);
     // The delegation set still comes along, and the shared project skill is bound once.
     expect(bound).toContain(Skill.registryURI('org.dxos.skill.planning'));
@@ -242,9 +257,8 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Unnamed: a chat holding several tasks would be claiming to be about whichever came first.
     expect(chat.name).toBeUndefined();
 
-    // Every delegated task is underway and assigned to the agent; the one left unchecked is untouched.
     expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
-    expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
+    expect(tasks.map((task) => task.delegate?.role)).toEqual(['assistant', undefined, 'assistant']);
   });
 
   test('a parent brings its subtasks, parent first', async ({ expect }) => {

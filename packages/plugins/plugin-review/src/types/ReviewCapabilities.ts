@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { EditorView } from '@codemirror/view';
 import type * as Deferred from 'effect/Deferred';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
@@ -122,4 +123,9 @@ export type CommentState = {
    * `currentObjectId` (`util/comment-state.ts`), never by string equality.
    */
   current?: string | undefined;
+  /**
+   * The comment-taking editor the reader focused last and the URI of the object its threads anchor to. It outlives the
+   * editor's blur, since a click on a comment button takes the focus; the editor clears it when it is destroyed.
+   */
+  focused?: { subject: string; view: EditorView };
 };

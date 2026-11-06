@@ -15,7 +15,7 @@ import { type CodeGraph } from '#types';
 
 import { SAMPLE_FILES, SAMPLE_GRAPH } from '../../testing.ts';
 import { CodeGraphDiagram } from '../CodeGraphDiagram/index.ts';
-import { CodeGraphCanvas } from './CodeGraphCanvas.tsx';
+import { CodeGraphCanvas, framePositions } from './CodeGraphCanvas.tsx';
 
 type StoryArgs = {
   layout?: CodeGraph.Layout;
@@ -39,7 +39,8 @@ const DefaultStory = ({ layout = 'illustrator', graph = SAMPLE_GRAPH }: StoryArg
         nodes={graph.nodes}
         edges={graph.edges}
         arrange={layout === 'force' ? 'force' : 'crossings'}
-        positions={{ ...semantic?.positions, ...dragged }}
+        frames={semantic?.frames}
+        positions={{ ...semantic?.positions, ...framePositions(semantic?.frames ?? []), ...dragged }}
         onPositionsChange={setDragged}
         selected={selected}
         onOpen={setSelected}

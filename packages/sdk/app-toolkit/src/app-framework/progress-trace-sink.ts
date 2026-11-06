@@ -8,13 +8,14 @@ import { EID } from '@dxos/keys';
 import type * as AppCapabilities from './AppCapabilities.ts';
 
 /** Terminal status message — reducer calls `done()` then `remove()` on the keyed monitor. */
-export const STATUS_COMPLETE = 'progress.complete';
+export const STATUS_COMPLETE = Trace.StatusComplete;
 
-/** Terminal status message — reducer calls `fail()` and leaves the monitor visible. */
-export const STATUS_FAILED = 'Sync failed';
+/** Terminal status messages — reducer calls `fail()` with the message and leaves the monitor visible. */
+export const STATUS_FAILED = Trace.StatusFailed;
+export const STATUS_ERROR = Trace.StatusError;
 
 /** Terminal status message — reducer calls `note()` then `remove()`. */
-export const STATUS_CANCELLED = 'Cancelled';
+export const STATUS_CANCELLED = Trace.StatusCancelled;
 
 /**
  * Reason shown when a run stops reporting. Deliberately not "failed": the run may well have finished
@@ -25,7 +26,7 @@ export const STATUS_STALLED = 'Stopped reporting';
 
 /** A terminal status message ends a run — the reducer removes or fails the keyed monitor. */
 const isTerminalMessage = (message: string | undefined): boolean =>
-  message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_CANCELLED;
+  message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_ERROR || message === STATUS_CANCELLED;
 
 type StatusPayload = Trace.PayloadType<typeof Trace.StatusUpdate>;
 type ProgressMonitor = ReturnType<AppCapabilities.ProgressRegistry['register']>;
@@ -352,11 +353,11 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
 
     const handle = monitorFor(registry, key, data.message, target);
 
-    if (data.message === STATUS_FAILED) {
+    if (data.message === STATUS_FAILED || data.message === STATUS_ERROR) {
       // Stays registered so the meter can show it, but the clock stops: a stall firing over a
       // reported failure would replace the producer's reason with a guess about silence.
       disarmStall(key);
-      handle.fail(STATUS_FAILED);
+      handle.fail(data.message);
       const entry = monitors.get(key);
       if (entry) {
         entry.ended = true;

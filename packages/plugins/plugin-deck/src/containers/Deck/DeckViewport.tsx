@@ -48,7 +48,7 @@ import {
   useSelectedCompanion,
   useSelectedCompanionVariant,
 } from '#hooks';
-import { DeckOperation, DeckRole } from '#types';
+import { DeckOperation, DeckSurface } from '#types';
 
 import { DeckNamespace } from '../../namespace.ts';
 import { Navigation } from '../../url/index.ts';
@@ -252,7 +252,7 @@ export const DeckContentEmpty = () => {
       data-tauri-drag-region='deep'
       data-testid='layoutPlugin.firstRunMessage'
     >
-      <Surface.Surface type={DeckRole.Keyshortcuts} />
+      <Surface.Surface type={DeckSurface.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </Layout.Flex>
   );
@@ -1877,7 +1877,9 @@ export const DeckPlanks = () => {
                       ? 'dx-fill'
                       : isSliding
                         ? mx(
-                            'h-full gap-(--main-spacing)',
+                            // `w-max`: a sticky tile pins only within its containing block, so the row has to
+                            // span every plank; at the viewport's width the left pile scrolls away unpinned.
+                            'h-full w-max min-w-full gap-(--main-spacing)',
                             overscrollPx > 0 && 'pe-(--deck-overscroll)',
                             // Anchored left so the row starts where the deck does, and centred vertically
                             // because a uniform scale shrinks the height too. `translate` composes before

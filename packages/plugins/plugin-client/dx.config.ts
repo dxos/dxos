@@ -9,6 +9,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as WorkerCapabilities from '@dxos/app-framework/WorkerCapabilities';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { trim } from '@dxos/util';
 
 import { ClientNamespace } from './src/namespace.ts';
@@ -156,12 +157,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         () => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } }),
       ),
       AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-        roles: [
-          'org.dxos.role.article',
-          'org.dxos.role.contactPicker',
-          'org.dxos.role.dialog',
-          'org.dxos.role.spaceInvitation',
-        ],
+        roles: [AppSurface.Article, AppSurface.ContactPicker, AppSurface.Dialog, AppSurface.SpaceInvitation],
       }),
       // Swarm-backed remote trace source (DX-1125). Collected when the process-manager runtime is built.
       Capability.lazyModule(

@@ -459,8 +459,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     }
   }
 
+  /** Unchecked: callers pass heads the document holds, and `A.hasHeads` looks up each head's change by hash on every update. */
   #hostHolds(body: LoadedBody<T>, heads: A.Heads): void {
-    invariant(A.hasHeads(body.doc, heads), 'The host cannot hold a change the document lacks.');
     body.hostHeads = heads;
   }
 

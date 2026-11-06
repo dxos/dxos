@@ -1,0 +1,26 @@
+diagram flow=down
+group core "Neutral core (new)" compact {
+  node Model "@dxos/animation" ref="packages/ui/react-ui-canvas/src/model/timeline.ts"
+  node TimelineUi "react-ui-animation" ref="packages/ui/react-ui-canvas/src/components/panels/TimelinePanel/TimelinePanel.tsx"
+}
+group animator "plugin-animator (new)" compact {
+  node Animator "plugin-animator" ref="packages/plugins/plugin-animator/docs/DESIGN.md"
+  node Exporter "Exporter" below Animator
+}
+group stages "Stage plugins" {
+  node Canvas "plugin-canvas" ref="packages/plugins/plugin-canvas/src/capabilities/drawing-variant.ts"
+  node CanvasUi "react-ui-canvas" ref="packages/ui/react-ui-canvas/src/model/timeline.ts"
+  node Spacetime "plugin-spacetime" ref="packages/plugins/plugin-spacetime/src/engine/scene-manager.ts"
+}
+node Studio "plugin-studio" ref="packages/plugins/plugin-studio/src/types/GenerationService.ts"
+node Edge "EDGE render job" ref="packages/core/mesh/edge-client/src/edge-http-client.ts"
+edge Animator depends-on Model
+edge Animator depends-on TimelineUi
+edge TimelineUi depends-on Model
+edge CanvasUi depends-on Model
+edge Canvas depends-on CanvasUi
+edge Canvas -> Animator "Stage"
+edge Spacetime -> Animator "Stage"
+edge Animator owns Exporter
+edge Animator -> Studio "video provider"
+edge Exporter -> Edge "long renders"

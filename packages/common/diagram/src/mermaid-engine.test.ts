@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
 import { trim } from '@dxos/util';
 
 import { analyze, errors } from './diagnostics.ts';
@@ -70,12 +71,12 @@ describe('mermaid-engine', { timeout: 120_000 }, () => {
 
     const frame = (id: string) => {
       const object = objects.find((entry) => entry.id === id)!;
-      const rect = object.elements.find((element) => element.id === 'frame') as Scene.Box;
+      const rect = object.elements.find((element) => element.id === 'frame') as Shape.Box;
       return { x: object.origin!.x, y: object.origin!.y, w: rect.w, h: rect.h };
     };
     const inside = (nodeId: string, frameId: string) => {
       const node = objects.find((entry) => entry.id === nodeId)!;
-      const box = node.elements[0] as Scene.Box;
+      const box = node.elements[0] as Shape.Box;
       const outer = frame(frameId);
       return (
         node.origin!.x >= outer.x &&
@@ -220,7 +221,7 @@ describe('mermaid-engine', { timeout: 120_000 }, () => {
     const frames = objects
       .filter((object) => object.id.startsWith('pkg'))
       .map((object) => {
-        const rect = object.elements.find((element) => element.id === 'frame') as Scene.Box;
+        const rect = object.elements.find((element) => element.id === 'frame') as Shape.Box;
         return { id: object.id, x: object.origin!.x, y: object.origin!.y, w: rect.w, h: rect.h };
       });
     expect(frames).toHaveLength(3);

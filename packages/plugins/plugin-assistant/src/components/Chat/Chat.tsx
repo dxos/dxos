@@ -4,6 +4,7 @@
 
 import { Collapsible } from '@ark-ui/react/collapsible';
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -11,12 +12,13 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { SessionConfig } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
-import { Alarm } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
-import { type Database, Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,7 +26,9 @@ import {
   type ChatThreadController,
   type ChatThreadEvent,
   type ChatView,
+  type ForkMarker,
   ChatThread as NaturalChatThread,
+  assistantRegistry,
 } from '@dxos/react-ui-assistant';
 import {
   type FeedModel,
@@ -35,7 +39,7 @@ import {
   useFeedModel,
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import { type TaskColumn, TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
@@ -44,14 +48,12 @@ import { type Actor, Message, Task } from '@dxos/types';
 import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
-import { AssistantOperation, ChatSurface } from '#types';
+import { AssistantOperation, AssistantSurface } from '#types';
 
 import {
   AiUsageQuotaError,
   type ChatRequestContext,
   getChatModelState,
-  projectAlarms,
-  projectSelfWakes,
   resolveRewind,
 } from '../../chat-model/index.ts';
 import { AssistantNamespace } from '../../namespace.ts';
@@ -72,6 +74,7 @@ import {
   useChatThreadContext,
 } from './context.ts';
 import { type ChatDrawer, type ChatEvent } from './events.ts';
+import { LaneSurfaceWidget } from './LaneSurfaceWidget.tsx';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 
@@ -137,14 +140,9 @@ const ChatRoot = ({
   const [controller, setController] = useState<ChatThreadController | null>(null);
   const [visibleRange, setVisibleRange] = useState<MessageRange | undefined>(undefined);
 
-  const feedAlarms = useQuery(
-    db,
-    feed ? Query.select(Filter.type(Alarm.Alarm)).from(feed) : Query.select(Filter.nothing()),
-  );
-  // The chat model queries the feed and reconciles it with the streamed turn and the outbox.
-  const { messages, delivery, queued, tail } = useAtomValue(chatModelState.thread);
-  const alarms = useMemo(() => projectAlarms({ feedAlarms }), [feedAlarms]);
-  const selfWakes = useMemo(() => projectSelfWakes({ feedAlarms, messages }), [feedAlarms, messages]);
+  // The chat model folds the feed and reconciles it with the streamed turn and the outbox.
+  const { messages, delivery, queued, tail, lanes } = useAtomValue(chatModelState.thread);
+  const { alarms, selfWakes, forks } = useAtomValue(chatModelState.trajectory);
 
   const dump = useDebug({ chatModel });
 
@@ -178,27 +176,41 @@ const ChatRoot = ({
 
         case 'rewind': {
           // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
-          // composer so it can be revised. Recorded on the feed rather than the chat because the
-          // continuation is appended by the agent's process, which resolves the feed and never sees the
-          // chat. A stale click (message already gone) resolves to nothing and is a no-op. A prompt sent
-          // from here keeps its own row id, so the feed is pointed at its turn's message.
-          const rewind = feed && resolveRewind(messages, ev.id);
+          // composer so it can be revised. Recorded on the feed, where the agent's next turn reads it. A stale
+          // click (message already gone) resolves to nothing and is a no-op. A prompt sent from here keeps its
+          // own row id, so the rewind names the message the agent consumed.
+          const rewind = feed && db && resolveRewind(messages, ev.id);
           if (rewind) {
-            Obj.update(feed, (feed) => {
-              feed.rewindFrom = delivery.get(rewind.rewindFrom)?.turnId ?? rewind.rewindFrom;
-            });
+            const from = delivery.get(rewind.rewindFrom)?.turnId ?? rewind.rewindFrom;
+            void EffectEx.runPromise(TrajectoryStore.rewind(feed, from).pipe(Effect.provide(Database.layer(db)))).catch(
+              (err: unknown) => log.catch(err),
+            );
             event.emit({ type: 'update-prompt', text: rewind.text });
           }
           break;
         }
 
+        case 'fork': {
+          // A fork opens at once, so the reader goes straight to the thread they asked for.
+          if (feed && db) {
+            void EffectEx.runPromise(
+              TrajectoryStore.forkThread(feed, { from: ev.id }).pipe(Effect.provide(Database.layer(db))),
+            )
+              .then((thread) => event.emit({ type: 'open-fork', thread }))
+              .catch((err: unknown) => log.catch(err));
+          }
+          break;
+        }
+
         case 'remove-prompt': {
-          // Withdrawing a prompt the agent has not taken up: the queue is feed state, so removing the
-          // entry is what takes it out of the agent's queue, and the outbox forgets this client's copy.
+          // Withdrawing a prompt the agent has not taken up: a `promptCancel` takes it out of the agent's queue,
+          // and the outbox forgets this client's copy.
           const row = delivery.get(ev.id);
           if (row?.status === 'failed' || row?.status === 'delivered') {
             if (row.entryId && db && feed) {
-              void db.removeFeedItemsByIds(feed, [row.entryId]).catch((err) => log.catch(err));
+              void EffectEx.runPromise(
+                TrajectoryStore.cancelPrompt(feed, row.entryId).pipe(Effect.provide(Database.layer(db))),
+              ).catch((err: unknown) => log.catch(err));
             }
             if (row.outboxId) {
               chatModel?.removePrompt(row.outboxId);
@@ -309,10 +321,11 @@ const ChatRoot = ({
                 const currentFeed = feed ?? chat.feed?.target;
                 if (currentFeed && result.summary) {
                   const ran = result.prompt ? resolved.command.command : text;
-                  await currentDb.appendToFeed(currentFeed, [
-                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: ran }] }),
-                    Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
-                  ]);
+                  await EffectEx.runPromise(
+                    TrajectoryStore.appendExchange(currentFeed, { prompt: ran, reply: result.summary }).pipe(
+                      Effect.provide(Database.layer(currentDb)),
+                    ),
+                  );
                 }
 
                 if (result.followUp) {
@@ -394,6 +407,8 @@ const ChatRoot = ({
       <ChatThreadContextProvider
         messages={messages}
         tail={tail}
+        lanes={lanes}
+        forks={forks}
         alarms={alarms}
         selfWakes={selfWakes}
         requestTiming={requestTiming}
@@ -556,11 +571,15 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+/** The plugin's `surface` and `lane` widgets layered over the package registry: they can dispatch a Surface. */
 const chatRegistry = {
   surface: {
     block: true,
     Component: SurfaceWidget,
+  },
+  lane: {
+    ...assistantRegistry.lane,
+    Component: LaneSurfaceWidget,
   },
 } as const;
 
@@ -570,6 +589,8 @@ type ChatThreadProps = Util.ThemedClassName<{
   tailLines?: number;
   /** Hue of the user's messages; defaults to the identity's hue. */
   userHue?: string;
+  /** Shows each block's estimated token count beside it. */
+  showTokens?: boolean;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
@@ -587,10 +608,31 @@ const useInPlaceUpdates = (model: FeedModel, messages: readonly Message.Message[
   }, [model, messages]);
 };
 
-const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({
+  classNames,
+  viewType,
+  tailLines,
+  userHue: userHueProp,
+  showTokens,
+  onViewUsage,
+}: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
-  const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
+  const { messages, tail, lanes, forks } = useChatThreadContext(CHAT_THREAD_NAME);
+  const getLane = useCallback((message: Message.Message) => lanes?.get(message.id), [lanes]);
+  const forkMarkers = useMemo(() => {
+    const markers = new Map<string, ForkMarker[]>();
+    for (const fork of forks ?? []) {
+      if (fork.from !== undefined) {
+        markers.set(fork.from, [
+          ...(markers.get(fork.from) ?? []),
+          { id: fork.id, label: fork.purpose ?? t('fork.label') },
+        ]);
+      }
+    }
+    return markers;
+  }, [forks, t]);
+  const getForks = useCallback((message: Message.Message) => forkMarkers.get(message.id), [forkMarkers]);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -703,10 +745,15 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         userHue={userHue}
         userDid={identity.did}
         getAuthor={getAuthor}
+        getLane={getLane}
         tailLines={tailLines}
         debug={debug}
         // An external agent keeps its own context, which a rewind of the transcript cannot reach.
         rewind={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        // Forking needs the trajectory the Composer harness writes; an external agent keeps its own.
+        fork={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        getForks={getForks}
+        showTokens={showTokens}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
@@ -896,7 +943,7 @@ const ChatContextDrawer = () => {
   const { chat, db, chatModel } = useChatContext(CHAT_CONTEXT_DRAWER_NAME);
   return (
     <div className='flex flex-col gap-1 p-1' data-testid='assistant.details'>
-      {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
+      {chat && <Surface.Surface type={AssistantSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
     </div>
   );
 };
@@ -909,6 +956,8 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 /** Rows the chat's checklist shows before it scrolls. */
 const CHAT_TASK_ROWS = 4;
+
+const CHAT_TASK_COLUMNS: readonly TaskColumn[] = ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'];
 
 const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
@@ -945,7 +994,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   );
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Task.update(task, patch);
+    Task.update(task, patch, { approve: true });
   }, []);
 
   // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
@@ -987,17 +1036,16 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     <TaskList.Root
       tasks={tasks}
       showGroupLabels={false}
-      showOrdinals
-      showEstimates
-      // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
+      // The prompt frames the list, and its rows are too narrow for who holds a task or its reference.
       flush
-      showAssignees={false}
+      columns={CHAT_TASK_COLUMNS}
       showMnemonics={false}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       getTaskActions={getTaskActions}
     >
-      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+      {/* The inset puts the list's outer columns on the same lines as the context drawer's icons and carets. */}
+      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow px-1' })} ref={forwardedRef}>
         {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
         <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />
@@ -1007,7 +1055,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
             happened, so the answer is given here rather than in a pane the reader has to open. */}
         <ChatTaskQuestions tasks={tasks} />
         {/* Only creates: a task is changed through its own row controls, not by selecting it into the strip. */}
-        <TaskList.Editor createOnly />
+        <TaskList.Editor createOnly inline />
       </div>
     </TaskList.Root>
   );

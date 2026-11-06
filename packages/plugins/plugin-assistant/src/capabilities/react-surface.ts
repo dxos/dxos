@@ -23,6 +23,7 @@ import {
   AgentArticle,
   AgentProperties,
   ChatArticle,
+  ChatCard,
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
@@ -32,8 +33,9 @@ import {
   QuestionSurface,
   SpaceAssistantSettings,
   SpaceHomePrompt,
+  ThreadCard,
 } from '#containers';
-import { ChatSurface } from '#types';
+import { AssistantSurface } from '#types';
 
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, SPACE_SETTINGS_TYPE } from '../constants.ts';
 import { AssistantNamespace } from '../namespace.ts';
@@ -64,7 +66,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'chatContext',
-        filter: Surface.makeFilter(ChatSurface.ChatDetails),
+        filter: Surface.makeFilter(AssistantSurface.ChatDetails),
         component: ChatContextPanel,
         props: ({ data: { chat, db, context } }) => ({ chat, db, context }),
         position: Position.first,
@@ -154,7 +156,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: IntegrationPrompt,
         // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
         props: ({ data }) => ({
@@ -167,14 +169,14 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'pluginPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
         component: PluginPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
         props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
       }),
       Surface.create({
         id: 'pluginUrlPrompt',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
         component: PluginUrlPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow before use.
         props: ({ data }) => ({ url: nonBlank(data.data?.url), name: nonBlank(data.data?.name) }),
@@ -183,15 +185,27 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'objectCard',
         filter: Surface.makeFilter(
-          ChatSurface.ChatSurface,
+          AssistantSurface.ChatSurface,
           (data) => data.role === 'card' && EID.tryParse(nonBlank(data.data?.id) ?? '') !== undefined,
         ),
         component: ObjectCardSurface,
         props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
       }),
       Surface.create({
+        id: 'card.chat',
+        filter: AppSurface.object(AppSurface.CardContent, Chat.Chat),
+        component: ChatCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: 'threadCard',
+        filter: Surface.makeFilter(AssistantSurface.ThreadCard),
+        component: ThreadCard,
+        props: ({ data }) => data,
+      }),
+      Surface.create({
         id: 'question',
-        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
+        filter: Surface.makeFilter(AssistantSurface.ChatSurface, (data) => data.role === 'question'),
         component: QuestionSurface,
         // `data.data` is model-supplied JSON (untyped); narrow the ids before use.
         props: ({ data }) => ({ task: nonBlank(data.data?.task), question: nonBlank(data.data?.question) }),

@@ -21,6 +21,7 @@ import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Obj, Type } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
@@ -375,6 +376,36 @@ export type TextContent = Readonly<{
  */
 export const TextContent = Capability$.make<TextContent>()('org.dxos.app-framework.capability.textContent');
 
+/** A file an object is saved as. */
+export type ExportFile = Readonly<{
+  /** File extension without the dot (e.g. `md`); the file is named after the object's label. */
+  extension: string;
+  mimeType: string;
+  content: string | Blob;
+}>;
+
+/** An object could not be rendered for printing or saving. */
+export class ExportError extends BaseError.extend('ExportError', 'The object could not be exported.') {}
+
+/**
+ * Print and save contributed per typename by plugins whose objects can leave the app.
+ * Contributing one adds Print and/or Save to the object's article menu (`ExportOperation`).
+ */
+export type Exporter = Readonly<{
+  id: string;
+  /** Whether the menu offers this object, for a type only some of whose objects can leave; every object when absent. */
+  available?: (object: any, get: Atom.AtomContext) => boolean;
+  /** The object as a file in its native format (e.g. `.md`, `.csv`). */
+  save?: (object: any) => Effect$.Effect<ExportFile, ExportError>;
+  /** The object as an HTML fragment, which the browser prints (or saves as PDF). */
+  print?: (object: any) => Effect$.Effect<string, ExportError>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const Exporter = Capability$.make<Exporter>()('org.dxos.app-framework.capability.exporter');
+
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
   id: string;
@@ -389,6 +420,25 @@ export type CommentConfig = Readonly<{
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/**
+ * The comments of graph nodes that cover more than one commentable object (a project and its specs, a level of a spec):
+ * the objects whose threads they list, grouped, and the object a comment on the whole node goes on. Every scope that
+ * covers a node adds its objects, so each plugin lists the objects it owns.
+ */
+export type CommentScope = Readonly<{
+  id: string;
+  /** Undefined for node data this scope does not cover; read through `get` so the targets follow edits. */
+  resolve: (
+    data: unknown,
+    get: Atom.AtomContext,
+  ) => { subject: Obj.Unknown; targets: readonly Obj.Unknown[] } | undefined;
+}>;
+
+/**
+ * @category Capability
+ */
+export const CommentScope = Capability$.make<CommentScope>()('org.dxos.app-framework.capability.commentScope');
 
 /**
  * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
@@ -408,6 +458,19 @@ export type CommentAgentRunner = Readonly<{
 export const CommentAgentRunner = Capability$.make<CommentAgentRunner>()(
   'org.dxos.app-framework.capability.commentAgentRunner',
 );
+
+/**
+ * Signs a message and relays it to another identity's inbox, addressed by their identity DID; resolves once
+ * the relay accepts it. Contributed by the messenger, so plugins can notify people without depending on it.
+ */
+export type InboxSender<E extends Error = Error> = Readonly<{
+  send: (recipientDid: string, message: Message.Message) => Effect$.Effect<void, E>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const InboxSender = Capability$.makeSingleton<InboxSender>()('org.dxos.app-framework.capability.inboxSender');
 
 /**
  * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the

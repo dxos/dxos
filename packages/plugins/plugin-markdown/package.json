@@ -189,6 +189,8 @@
     "@dxos/util": "workspace:*",
     "@dxos/versioning": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "micromark": "catalog:",
+    "micromark-extension-gfm": "catalog:",
     "react-dropzone": "catalog:"
   },
   "devDependencies": {

@@ -178,6 +178,10 @@
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
     },
+    "./vite-plugin/config": {
+      "types": "./dist/types/src/vite-plugin/config.d.ts",
+      "import": "./dist/lib/vite-plugin/config.mjs"
+    },
     "./WorkerCapabilities": {
       "source": "./src/worker/WorkerCapabilities.ts",
       "types": "./dist/types/src/worker/WorkerCapabilities.d.ts",

@@ -73,17 +73,13 @@ export type ClientPluginOptions = ClientOptions & {
   initializeTimeout?: number;
 
   /**
-   * Gate the contributed `ClientService` on initialization, so resolving it yields a client whose
-   * `halo`/`spaces`/`services` getters are safe to touch.
-   *
-   * For imperative hosts (the CLI): a command body runs straight through, so an ungated service
-   * hands it a client whose getters still throw `Client not initialized`. Leave it off in the app,
-   * where the forked initialization is the point — React consumers suspend on the client instead,
-   * and blocking the service would stall the boot waterfall.
+   * Start `client.initialize()` only when something first resolves `ClientService.client`, rather than
+   * on activation. For imperative hosts (the CLI), so a command that never uses the client neither
+   * waits for its initialization nor fails with it. The app leaves it off: it always uses the client.
    *
    * @default false
    */
-  awaitInitialization?: boolean;
+  initializeOnUse?: boolean;
 
   /**
    * Called when spaces are ready.

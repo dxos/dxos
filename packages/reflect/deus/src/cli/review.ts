@@ -147,6 +147,19 @@ const declares = (source: string, name: string): boolean => {
 type ResolvedKey = { file?: string; symbol?: string; error?: string };
 
 /**
+ * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, no
+ * seconds), as plugin-code's importer accepts it: the forms whose text order is their time order.
+ */
+const isReviewDate = (value: string) => {
+  const time = Date.parse(value.includes('T') ? value : `${value}T00:00:00Z`);
+  return (
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}Z)?$/.test(value) &&
+    !Number.isNaN(time) &&
+    new Date(time).toISOString().startsWith(value.replace(/Z$/, ''))
+  );
+};
+
+/**
  * Validates a `.review.mdl` against its spec and the checkout: frontmatter, statuses, notes, coverage of every item,
  * and that each evidence key names an existing file and symbol.
  */
@@ -162,8 +175,8 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
       errors.push(`frontmatter: missing \`${key}\``);
     }
   }
-  if (meta.date && !/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) {
-    errors.push('frontmatter: `date` must be YYYY-MM-DD');
+  if (meta.date && !isReviewDate(meta.date)) {
+    errors.push('frontmatter: `date` must be YYYY-MM-DD, or YYYY-MM-DDTHH:MMZ with a UTC time');
   }
   if (meta.by && !/^(user|agent):\S+$/.test(meta.by)) {
     errors.push('frontmatter: `by` must be `user:<handle>` or `agent:<name>`');

@@ -18,10 +18,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { getProjectArtifactPath } from '../paths.ts';
+import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT, getProjectArtifactPath } from '../paths.ts';
 import {
-  ARTIFACTS_SEGMENT,
-  SESSIONS_SEGMENT,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
   createProjectChatsChildrenExtension,
