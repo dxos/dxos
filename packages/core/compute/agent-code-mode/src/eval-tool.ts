@@ -226,6 +226,15 @@ const recordingService = (service: Operation.OperationService, recorder: Recorde
     }),
 });
 
+/**
+ * An encoded reference (`{ "/": uri, target }`) as its URI alone: a reference made from an object carries the whole
+ * object as `target`, which would spend the budget on a copy of what the URI already names.
+ */
+const withoutInlinedTarget = (value: unknown): unknown =>
+  typeof value === 'object' && value !== null && '/' in value && typeof value['/'] === 'string' && 'target' in value
+    ? { '/': value['/'] }
+    : value;
+
 /** Thrown by {@link encodeSmall}'s replacer to stop serializing once the budget is spent. */
 const TOO_LARGE = Symbol('too-large');
 
@@ -245,7 +254,7 @@ const encodeSmall = (value: unknown): string | undefined => {
       if (budget < 0) {
         throw TOO_LARGE;
       }
-      return child;
+      return withoutInlinedTarget(child);
     });
     return json !== undefined && json.length <= MAX_INVOCATION_RESULT ? json : undefined;
   } catch {
