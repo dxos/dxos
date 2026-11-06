@@ -1647,14 +1647,17 @@ test QA-8: Tour a spec's companion tabs
   desc: |
     Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
     editor's cursor from block to block, then Data model and API; Decisions by person and as threads; Review and Code.
+    The same tabs on a script in the video dialect then show which views work for any dialect and which read code.
     Walked by the autocue flow `spec-companions` against Composer.
   actors: human
-  covers: [F-25.2, F-25.6]
+  covers: [F-25.2, F-25.5, F-25.6]
   status: passing            # 2026-11-06, recorded by autocue/spec-companions.mjs
   given:
     - composer serves plugin-code, enabled
     - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec, with the review of 2026-10-27
       (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it
+    - the project also owns "Launch video", whose text is deus's `lang/examples/launch-video.mdl` and which uses the
+      Video package
     - the Specs tab shows "CodePlugin" with the cursor on its first line, the sidebar closed and the companion 62rem wide
   steps:
     - name: Open Definitions
@@ -1693,6 +1696,21 @@ test QA-8: Tour a spec's companion tabs
     - name: Open Code
       do: Show the done verdicts, then open compileEntry from buildProject's verdict menu.
       expect: Code shows `compiler/build.ts` with compileEntry highlighted
+    - name: Open the launch video
+      do: Pick "Launch video" from the spec dropdown, then open Structure's Definitions.
+      expect: the script's clusters, around maya and around narrator
+    - name: Put the cursor in a scene
+      do: Pick Related, then click SC-2's header line in the editor.
+      expect: Related centres on SC-2, with its shots, voiceover, caption and cast below it and its screenings
+    - name: Open Data model and API on the script
+      do: Pick Data model, then API.
+      expect: each says the spec declares none, since only code has types and operations
+    - name: Open the script's decisions
+      do: Open the Decisions tab and pick By person.
+      expect: the script's two decisions, under the agent that made them
+    - name: Open the script's Review and Code
+      do: Open the Review tab, then pick Code.
+      expect: Review says the script has no review yet; Code says it has no code key open
 ```
 
 ## Changelog

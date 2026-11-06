@@ -4,7 +4,8 @@
 
 /**
  * Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
- * editor's cursor, then Data model and API; Decisions by person and as a graph; Review and Code.
+ * editor's cursor, then Data model and API; Decisions by person and as threads; Review and Code. The same tabs on a
+ * script in the video dialect then show which views work for any dialect and which read code.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-8
  * @app composer-app via `moon run composer-app:serve -- --port 5180 --strictPort`
@@ -19,10 +20,12 @@ import { readFileSync } from 'node:fs';
 const SUBTITLE = 'from plugin-code/PLUGIN.mdl QA-8';
 const PROJECT = 'Composer specs';
 const CODE_SPEC = 'CodePlugin';
+const VIDEO_SPEC = 'Launch video';
 
 /** A spec's text without the front matter the spec's own fields replace. */
 const body = (path) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^---\n[\s\S]*?\n---\n+/, '');
 const CODE_TEXT = body('../PLUGIN.mdl');
+const VIDEO_TEXT = body('../../../reflect/deus/lang/examples/launch-video.mdl');
 const REVIEW_TEXT = readFileSync(
   new URL('../src/containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl', import.meta.url),
   'utf8',
@@ -36,6 +39,7 @@ const LOOK = 3_500;
 
 const OVERVIEW = '[data-testid="projectsPlugin.tab.overview"]';
 const COMPANION = '[data-testid="deck.companion"]';
+const EXTENSIONS = '[data-testid="projectsPlugin.specExtensions"]';
 const DOCUMENT = '[data-testid="projectsPlugin.spec.document"]';
 const EDITOR = `${DOCUMENT} .cm-content`;
 const PICKER = '[data-testid="projectsPlugin.specPicker"]';
@@ -44,8 +48,14 @@ const tab = (group) => `[data-testid="deck.companion.tab.spec-${group}"]`;
 const view = (id) => `${COMPANION} [data-testid="spec-companion.view.${id}"]`;
 const RELATED = `${COMPANION} [data-testid="definition-related.focus"]`;
 const line = (text) => `${EDITOR} .cm-line:has-text("${text}")`;
-/** A block's id in its header line, clear of the review's chips floated at the line's end. */
-const blockId = (text, id) => `${line(text)} .cm-mdl-block-id:text-is("${id}")`;
+/**
+ * A block's id in its header line, clear of the chips floated at the line's end; a dialect's header the editor does
+ * not highlight is the line itself.
+ */
+const blockId = async (page, text, id) => {
+  const span = `${line(text)} .cm-mdl-block-id:text-is("${id}")`;
+  return (await page.locator(span).count()) > 0 ? span : line(text);
+};
 const CLUSTER = `${COMPANION} [data-testid="definition-canvas.cluster"]`;
 const row = (name) => `${SPECS} [role="group"]:has(> [data-part="legend"]:text-is("${name}"))`;
 const field = (name, label) =>
@@ -168,6 +178,7 @@ const open = async (demo, page, selector, label) => {
 };
 
 const CODE_MARKS = ['plugin CodePlugin', 'decision D-'];
+const VIDEO_MARKS = ['character maya', 'A 45-second launch video'];
 
 export const steps = [
   {
@@ -224,11 +235,12 @@ export const steps = [
     },
   },
   {
-    name: 'Prep (off camera): add the spec',
+    name: 'Prep (off camera): add the specs',
     setup: true,
-    done: async ({ page }) => (await page.locator(row(CODE_SPEC)).count()) > 0,
+    done: async ({ page }) => (await page.locator(row(VIDEO_SPEC)).count()) > 0,
     run: async ({ page }) => {
       await addSpec(page, CODE_SPEC);
+      await addSpec(page, VIDEO_SPEC);
     },
   },
   {
@@ -240,6 +252,23 @@ export const steps = [
       if (!(await hasText(page, CODE_MARKS))) {
         await writeSpec(page, CODE_SPEC, CODE_TEXT, CODE_MARKS);
       }
+    },
+  },
+  {
+    name: 'Prep (off camera): write the launch video in the video dialect',
+    setup: true,
+    run: async ({ page }) => {
+      await pickSpec(page, VIDEO_SPEC);
+      if (!(await hasText(page, VIDEO_MARKS))) {
+        await writeSpec(page, VIDEO_SPEC, VIDEO_TEXT, VIDEO_MARKS);
+      }
+      await page.locator(EXTENSIONS).first().click();
+      const video = page.locator('[role="menu"] >> [role="menuitemcheckbox"]:has-text("Video")');
+      await video.waitFor({ state: 'visible', timeout: 5_000 });
+      if ((await video.getAttribute('aria-checked')) !== 'true') {
+        await video.click();
+      }
+      await page.keyboard.press('Escape');
     },
   },
   {
@@ -279,6 +308,7 @@ export const steps = [
       await page.evaluate(() =>
         composer.invoke('org.dxos.operation.deck.updatePlankSize', { id: 'companion', size: 62 }),
       );
+      await pickSpec(page, CODE_SPEC);
       await page.locator(EDITOR).first().click();
       await page.keyboard.press('ControlOrMeta+Home');
       await page.waitForTimeout(2_000);
@@ -326,7 +356,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 4, 'Click into F-8: Related centres on it');
       await scrollToLine(page, 'feat F-8:');
-      await demo.click({ selector: blockId('feat F-8:', 'F-8'), label: 'F-8' });
+      await demo.click({ selector: await blockId(page, 'feat F-8:', 'F-8'), label: 'F-8' });
       await waitForRelated(page, 'F-8');
       await demo.sleep({ ms: LOOK });
     },
@@ -353,7 +383,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 6, 'Click into a type: the features naming it');
       await scrollToLine(page, 'type CodeProject', -1);
-      await demo.click({ selector: blockId('type CodeProject', 'CodeProject'), label: 'CodeProject' });
+      await demo.click({ selector: await blockId(page, 'type CodeProject', 'CodeProject'), label: 'CodeProject' });
       await waitForRelated(page, 'CodeProject');
       await demo.sleep({ ms: LOOK });
     },
@@ -427,7 +457,68 @@ export const steps = [
         label: 'compileEntry',
       });
       await page.locator(`${COMPANION} [data-testid="code-view"]`).waitFor({ state: 'visible', timeout: 15_000 });
-      await demo.sleep({ ms: LOOK + 1_000 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Open the launch video',
+    narration:
+      'A script in the video dialect has the same tabs. Definitions works for any dialect: scenes gather around their cast.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 13, 'A video script: the same tabs');
+      await pickSpec(page, VIDEO_SPEC, demo);
+      await openTab(demo, page, 'structure', 'Structure');
+      await openView(demo, page, 'definitions', 'Definitions', '[data-cluster="cluster:maya"]');
+      await caption(demo, 13, 'Definitions: any dialect — scenes around their cast');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Put the cursor in a scene',
+    narration: "Related works for any dialect too: a scene's shots, voiceover and captions.",
+    run: async ({ demo, page }) => {
+      await caption(demo, 14, "Related: any dialect — a scene's parts");
+      await openView(demo, page, 'related', 'Related', '[data-testid="definition-related.focus"]');
+      await scrollToLine(page, 'scene SC-2');
+      await demo.click({ selector: await blockId(page, 'scene SC-2', 'SC-2'), label: 'SC-2' });
+      await waitForRelated(page, 'SC-2');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Open Data model and API on the script',
+    narration: 'Data model and API read types and operations, which only code declares.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 15, 'Data model: code only — a script has no types');
+      await openView(demo, page, 'data', 'Data model', '[data-testid="data-model.empty"]');
+      await demo.sleep({ ms: LOOK - 1_000 });
+      await caption(demo, 15, 'API: code only — a script has no operations');
+      await openView(demo, page, 'api', 'API', '[data-testid="api-surface.empty"]');
+      await demo.sleep({ ms: LOOK - 1_000 });
+    },
+  },
+  {
+    name: "Open the script's decisions",
+    narration: 'Every dialect extends the changelog, so Decisions reads the script the same way.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 16, "Decisions: any dialect — the script's changelog");
+      await openTab(demo, page, 'decisions', 'Decisions');
+      await openView(demo, page, 'log', 'By person', '[data-testid="decision-log.decision"]');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: "Open the script's Review and Code",
+    narration:
+      'Review takes a review of any spec; this script has none yet. Code opens source keys, which only code has.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 17, 'Review: any dialect — no review of this script yet');
+      await openTab(demo, page, 'review', 'Review');
+      await openView(demo, page, 'review', 'Review', '[data-testid="review-panel.empty"]');
+      await demo.sleep({ ms: LOOK - 1_000 });
+      await caption(demo, 17, 'Code: code only — a script cites no source');
+      await openView(demo, page, 'code', 'Code', '[data-testid="code-view.empty"]');
+      await demo.sleep({ ms: LOOK });
       await demo.clearCaption();
       await demo.sleep({ ms: 2_000 });
     },

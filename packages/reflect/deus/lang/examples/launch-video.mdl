@@ -176,3 +176,22 @@ screening SN-2: Final cut, launch partners
   audience: launch partners
   expect: Each can name where to get it.
 ```
+
+## Changelog
+
+```mdl
+decision D-1: The video opens on Maya alone, so the cut to one shared space in SC-2 is the turn.
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SC-1, SC-2]
+```
+
+```mdl
+decision D-2: Every voiceover line is the narrator's; Maya and Sam are seen, never heard.
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [VO-1, VO-2, VO-3, maya, sam]
+  why: One voice keeps 45 seconds easy to follow, and the cast can be recast without rerecording lines.
+```
