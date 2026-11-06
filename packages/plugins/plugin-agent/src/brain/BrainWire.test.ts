@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as AgentService from '@dxos/compute/AgentService';
 import { Obj, Ref } from '@dxos/echo';
 import { RDF } from '@dxos/pipeline-rdf';
 import { Person } from '@dxos/types';
@@ -16,16 +15,10 @@ import { BrainService, Trigger } from '#types';
 
 import * as BrainMemory from './BrainMemory.ts';
 import * as BrainWire from './BrainWire.ts';
-import { TEST_MEMBERS } from './testing.ts';
+import { TEST_MEMBERS, UNUSED_AGENTS } from './testing.ts';
 
 const AGENT = 'kai';
 const NOW = Date.parse('2026-10-07T12:00:00.000Z');
-
-// Waking is not under test here; a brain that tried would fail loudly.
-const agents: AgentService.Service = {
-  getSession: () => Effect.die('getSession is not used by these tests'),
-  hydrate: () => Effect.void,
-};
 
 const fact = (id: string): RDF.Fact => ({
   id,
@@ -87,7 +80,7 @@ const serve = (brain: BrainService.Service, calls: unknown[][]): Capabilities.Ho
 
 const setup = () => {
   const calls: unknown[][] = [];
-  const { service: memory } = BrainMemory.make(agents, { now: () => NOW });
+  const { service: memory } = BrainMemory.make(UNUSED_AGENTS, { now: () => NOW });
   return { calls, brain: BrainWire.make(serve(memory, calls)) };
 };
 
