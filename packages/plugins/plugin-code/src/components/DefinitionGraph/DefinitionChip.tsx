@@ -15,6 +15,7 @@ import {
   STATUS_STYLE,
   kindStyle,
 } from '../SpecModel/index.ts';
+import { type CardFact } from './definition-facts.ts';
 
 /** What every Definitions view draws from: the definitions, how they group, and how review and diff mark them. */
 export type DefinitionViewModel = {
@@ -22,6 +23,8 @@ export type DefinitionViewModel = {
   grouping: DefinitionGrouping;
   statusOf: (id: string) => VerdictStatus | undefined;
   changeOf: (id: string) => ChangeKind | undefined;
+  /** What its kind writes about it that a card shows, such as a feature's status. */
+  factsOf: (id: string) => CardFact[];
 };
 
 /** How a changed chip is framed in diff mode: green for new, amber for changed, red and dashed for removed. */

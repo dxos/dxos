@@ -3,3 +3,5 @@
 //
 
 export * from './DefinitionGraph.tsx';
+
+export * from './definition-facts.ts';

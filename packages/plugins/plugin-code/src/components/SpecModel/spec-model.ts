@@ -30,6 +30,8 @@ export type DefinitionModel = {
   codeRefs: number;
   /** How many `req` lines a feature holds. */
   requirements: number;
+  /** The one-line values of its fact fields, by field: a feature's `status: operational`. */
+  facts?: Record<string, string>;
   /** Set on a node that lives outside this spec: a block of another spec. */
   external?: ExternalModel;
 };
@@ -301,6 +303,8 @@ export type BuildDefinitionGraphOptions = {
   index?: SpecIndex;
   /** The fields that reference other blocks; {@link DEFAULT_REFERENCE_FIELDS} when unset. */
   referenceFields?: ReadonlySet<string>;
+  /** The fields whose one-line value is kept on the definition as a fact; none when unset. */
+  factFields?: ReadonlySet<string>;
 };
 
 /** The `##` heading in force at each offset of `text`, as sorted offsets and titles. */
@@ -322,6 +326,7 @@ export const buildDefinitionGraph = (
     annotations = [],
     index,
     referenceFields = DEFAULT_REFERENCE_FIELDS,
+    factFields = new Set(),
   }: BuildDefinitionGraphOptions = {},
 ): DefinitionGraphModel => {
   const isReference = index ? specReferenceFilter(index) : () => false;
@@ -359,7 +364,10 @@ export const buildDefinitionGraph = (
         edges.push({ id: `${id}->${to}`, from: id, to, kind, ...(field && { field }) });
       }
     };
+    const facts: Record<string, string> = {};
     for (const [field, value] of parseFields(body)) {
+      const fact = factFields.has(field) ? value.inline?.replace(/\s+#.*$/, '').trim() : undefined;
+      fact && (facts[field] = fact);
       if (referenceFields.has(field)) {
         const values = [value.inline ?? '', ...value.lines].join('\n').replace(SOURCE_KEYS, ' ');
         namedIds(values, ids, id).forEach((to) => add(to, 'reference', field));
@@ -386,6 +394,7 @@ export const buildDefinitionGraph = (
       mentions,
       codeRefs: codeRefs.get(id) ?? 0,
       requirements: type === 'feat' ? body.split('\n').filter((line) => /^\s*req\s/.test(line)).length : 0,
+      ...(Object.keys(facts).length > 0 && { facts }),
     };
   });
   return { definitions: [...definitions, ...externals.values()], edges };

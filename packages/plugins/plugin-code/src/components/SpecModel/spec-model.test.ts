@@ -70,6 +70,27 @@ describe('spec model', () => {
     );
   });
 
+  test('keeps the one-line value of each fact field, without its comment', ({ expect }) => {
+    const spec = [
+      '```mdl',
+      'feat F-1: Meetings',
+      '  status: operational',
+      '```',
+      '```mdl',
+      'test QA-1: Join a call',
+      '  status: passing   # recorded 2026-11-04',
+      '  desc: Joins.',
+      '```',
+    ].join('\n');
+    const byId = (id: string) =>
+      buildDefinitionGraph(spec, { factFields: new Set(['status']) }).definitions.find(
+        (definition) => definition.id === id,
+      );
+    expect(byId('F-1')?.facts).toEqual({ status: 'operational' });
+    expect(byId('QA-1')?.facts).toEqual({ status: 'passing' });
+    expect(buildDefinitionGraph(spec).definitions[0].facts).toBeUndefined();
+  });
+
   test('keeps stored types and the types they embed', ({ expect }) => {
     const { types, edges } = buildDataModel(TRIP_SPEC);
     const ids = types.map(({ id }) => id);

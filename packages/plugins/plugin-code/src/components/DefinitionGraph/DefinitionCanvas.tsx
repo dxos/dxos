@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { createContext, useContext, useLayoutEffect, useMemo, useRef } from 'react';
 
+import { VERDICT_STATUSES, type VerdictStatus } from '@dxos/deus/review';
 import {
   type CreateProps,
   type GraphLayoutOptions,
@@ -23,7 +24,7 @@ import { type Layer, type Node, nodeBase } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { type DefinitionEdge, STATUS_STYLE, kindStyle } from '../SpecModel/index.ts';
+import { type DefinitionEdge, type DefinitionGroup, STATUS_STYLE, kindStyle } from '../SpecModel/index.ts';
 import {
   CARD,
   type DefinitionScene,
@@ -58,25 +59,76 @@ const frameShape = (frame: PlacedFrame): GraphShape => ({
 });
 
 /** Node views get no host props, so the cards' data reaches them through context. */
-const CardContext = createContext<{ view?: DefinitionViewModel; nodes: ReadonlyMap<string, SceneNode> }>({
-  nodes: new Map(),
-});
+const CardContext = createContext<{
+  view?: DefinitionViewModel;
+  nodes: ReadonlyMap<string, SceneNode>;
+  /** How many blocks each block touches; one that touches a single block opens onto nothing new. */
+  touches: ReadonlyMap<string, number>;
+}>({ nodes: new Map(), touches: new Map() });
+
+/** Whether double-clicking a card opens a level: every cluster, and every block but the focus and the leaves. */
+const opensLevel = (card: SceneNode, touches: ReadonlyMap<string, number>) =>
+  card.kind === 'cluster' || (!card.focused && (touches.get(card.ref) ?? 0) > 1);
+
+/** The blocks a group names, its anchor first. */
+const groupMembers = ({ id, owned, shared, context }: DefinitionGroup) => [id, ...owned, ...shared, ...context];
+
+/** The verdicts of a cluster's blocks, counted, worst last. */
+const VerdictCounts = ({ view, groups }: { view: DefinitionViewModel; groups: readonly string[] }) => {
+  const counts = useMemo(() => {
+    const ids = new Set(
+      view.grouping.groups.filter(({ id }) => groups.includes(id)).flatMap((group) => groupMembers(group)),
+    );
+    const counts = new Map<VerdictStatus, number>();
+    for (const id of ids) {
+      const status = view.byId.get(id)?.external ? undefined : view.statusOf(id);
+      status && counts.set(status, (counts.get(status) ?? 0) + 1);
+    }
+    return VERDICT_STATUSES.flatMap((status) => {
+      const count = counts.get(status);
+      return count ? [{ status, count }] : [];
+    });
+  }, [view, groups]);
+  return (
+    <span className='flex items-center gap-2 text-xs' data-testid='definition-canvas.verdicts'>
+      {counts.map(({ status, count }) => (
+        <span key={status} className={mx('flex items-center gap-0.5', STATUS_STYLE[status].text)}>
+          <Icon.Icon icon={STATUS_STYLE[status].icon} size='xs' label={STATUS_STYLE[status].label} />
+          {count}
+        </span>
+      ))}
+    </span>
+  );
+};
+
+/** The corner mark of a card that opens a level, with how many blocks that level shows around it. */
+const OpenMark = ({ count }: { count?: number }) => (
+  <span
+    className='absolute top-1.5 end-2 flex items-center gap-0.5 text-xs text-description'
+    data-testid='definition-canvas.opens'
+  >
+    {count !== undefined && count}
+    <Icon.Icon icon='ph--arrows-out-simple--regular' size='xs' />
+  </span>
+);
 
 const CardView = ({ node }: NodeViewProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { view, nodes } = useContext(CardContext);
+  const { view, nodes, touches } = useContext(CardContext);
   const card = nodes.get(node.id);
   if (!view || !card) {
     return null;
   }
+  const opens = opensLevel(card, touches);
   if (card.kind === 'cluster') {
     const cluster = view.grouping.clusters.find(({ id }) => id === card.cluster);
     return (
       <div
-        className='dx-cover flex flex-col justify-center gap-1 px-3 rounded-md border border-separator bg-group-surface'
+        className='dx-cover relative flex flex-col justify-center gap-0.5 px-3 rounded-md border border-separator bg-group-surface cursor-zoom-in'
         data-testid='definition-canvas.cluster'
         data-cluster={card.cluster}
       >
+        <OpenMark />
         <span className={mx('truncate font-medium', cluster?.hub !== undefined && 'font-mono')}>
           {cluster?.hub === undefined
             ? t('definition-map.cluster.unshared.label')
@@ -88,6 +140,7 @@ const CardView = ({ node }: NodeViewProps) => {
             <Tag.Tag>{t('definition-map.shares.label', { count: cluster?.shared.length })}</Tag.Tag>
           )}
         </span>
+        <VerdictCounts view={view} groups={cluster?.groups ?? []} />
       </div>
     );
   }
@@ -102,7 +155,8 @@ const CardView = ({ node }: NodeViewProps) => {
   return (
     <div
       className={mx(
-        'dx-cover flex flex-col justify-center gap-0.5 px-3 rounded-md border bg-base-surface',
+        'dx-cover relative flex flex-col justify-center gap-0.5 px-3 rounded-md border bg-base-surface',
+        opens && 'cursor-zoom-in',
         card.focused ? 'border-2 border-accent-text' : 'border-separator',
         (definition.external || card.outside) && 'border-dashed',
         card.outside && 'opacity-70',
@@ -111,8 +165,10 @@ const CardView = ({ node }: NodeViewProps) => {
       data-testid='definition-canvas.card'
       data-definition={card.ref}
       data-focused={card.focused ? '' : undefined}
+      data-opens={opens ? '' : undefined}
     >
-      <span className='flex items-center gap-1 min-w-0'>
+      {opens && <OpenMark count={touches.get(card.ref)} />}
+      <span className='flex items-center gap-1 min-w-0 pe-8'>
         <Icon.Icon icon={icon} size='xs' classNames='shrink-0' />
         <span className='truncate font-mono text-sm'>{definition.external?.fragment ?? card.ref}</span>
         {(card.count ?? 0) > 1 && <span className='shrink-0 text-xs text-description'>×{card.count}</span>}
@@ -125,14 +181,21 @@ const CardView = ({ node }: NodeViewProps) => {
         )}
       </span>
       {title && <span className='truncate text-xs text-description'>{title}</span>}
-      <span className='flex'>
+      <span className='flex gap-1 min-w-0'>
         <Tag.Tag hue={hue}>{definition.kind}</Tag.Tag>
+        {view.factsOf(card.ref).map(({ field, value, style }) => (
+          <Tag.Tag key={field} hue={style?.hue} data-testid='definition-canvas.fact' data-field={field}>
+            {style && <Icon.Icon icon={style.icon} size='xs' />}
+            {value}
+          </Tag.Tag>
+        ))}
       </span>
     </div>
   );
 };
 
-const createRegistry = (open: (id: string) => void) =>
+/** Cards that open a level zoom into themselves first; any other card opens nothing. */
+const createRegistry = (opens: (id: string) => boolean, open: (id: string) => void) =>
   createNodeRegistry(
     {
       ...defaultNodeTypes,
@@ -147,7 +210,8 @@ const createRegistry = (open: (id: string) => void) =>
         palette: false,
         portsPerSide: 1,
         openable: true,
-        hostOpen: (node) => () => open(node.id),
+        hostOpen: (node) => (opens(node.id) ? () => open(node.id) : undefined),
+        hostOpenZoom: true,
         bare: true,
       },
     },
@@ -170,6 +234,8 @@ export type DefinitionCanvasProps = {
   /** Every edge, mentions included, for the block level. */
   edges: readonly DefinitionEdge[];
   level: CanvasLevel;
+  /** How far down the trail the level is, so a level opened deeper grows into view and one backed out to shrinks. */
+  depth: number;
   /** Double-clicking a cluster opens it. */
   onOpenCluster: (id: string) => void;
   /** Double-clicking a block opens its level. */
@@ -181,7 +247,7 @@ export type DefinitionCanvasProps = {
  * routes its arrows; the canvas draws them, pans and zooms. Double-clicking a cluster opens it, and a block opens
  * what touches it.
  */
-export const DefinitionCanvas = ({ view, edges, level, onOpenCluster, onOpen }: DefinitionCanvasProps) => {
+export const DefinitionCanvas = ({ view, edges, level, depth, onOpenCluster, onOpen }: DefinitionCanvasProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const scene = useMemo<DefinitionScene>(() => {
     switch (level.kind) {
@@ -199,22 +265,35 @@ export const DefinitionCanvas = ({ view, edges, level, onOpenCluster, onOpen }: 
   }, [view, edges, level, t]);
   const placed = useMemo(() => placeScene(scene), [scene]);
   const nodes = useMemo(() => new Map(scene.nodes.map((node) => [node.id, node])), [scene]);
+  const touches = useMemo(() => {
+    const neighbours = new Map<string, Set<string>>();
+    const add = (from: string, to: string) => neighbours.set(from, (neighbours.get(from) ?? new Set()).add(to));
+    for (const { from, to } of edges) {
+      add(from, to);
+      add(to, from);
+    }
+    return new Map([...neighbours].map(([id, set]) => [id, set.size]));
+  }, [edges]);
 
-  const callbacks = useRef({ onOpen, onOpenCluster, nodes });
+  const callbacks = useRef({ onOpen, onOpenCluster, nodes, touches });
   // After commit, so a render React discards never leaves its callbacks behind.
   useLayoutEffect(() => {
-    callbacks.current = { onOpen, onOpenCluster, nodes };
-  }, [onOpen, onOpenCluster, nodes]);
+    callbacks.current = { onOpen, onOpenCluster, nodes, touches };
+  }, [onOpen, onOpenCluster, nodes, touches]);
   const registry = useMemo(
     () =>
-      createRegistry((id) => {
-        const card = callbacks.current.nodes.get(id);
-        if (card?.kind === 'cluster') {
-          callbacks.current.onOpenCluster(card.cluster);
-        } else if (card) {
-          callbacks.current.onOpen(card.ref);
-        }
-      }),
+      createRegistry(
+        (id) => {
+          const card = callbacks.current.nodes.get(id);
+          return card !== undefined && opensLevel(card, callbacks.current.touches);
+        },
+        (id) => {
+          const card = callbacks.current.nodes.get(id);
+          card?.kind === 'cluster'
+            ? callbacks.current.onOpenCluster(card.cluster)
+            : card && callbacks.current.onOpen(card.ref);
+        },
+      ),
     [],
   );
 
@@ -258,12 +337,30 @@ export const DefinitionCanvas = ({ view, edges, level, onOpenCluster, onOpen }: 
     }),
     [placed],
   );
-  const context = useMemo(() => ({ view, nodes }), [view, nodes]);
+  const context = useMemo(() => ({ view, nodes, touches }), [view, nodes, touches]);
   const levelKey = level.kind === 'spec' ? 'spec' : level.kind === 'cluster' ? level.cluster : level.focus;
+
+  // The camera zooms into the card that opens a level; the level then comes forward, or recedes when backed out to.
+  const container = useRef<HTMLDivElement>(null);
+  const shown = useRef({ levelKey, depth });
+  useLayoutEffect(() => {
+    const previous = shown.current;
+    shown.current = { levelKey, depth };
+    if (previous.levelKey === levelKey || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    container.current?.animate(
+      [
+        { opacity: 0, transform: `scale(${depth < previous.depth ? 1.08 : 0.92})` },
+        { opacity: 1, transform: 'none' },
+      ],
+      { duration: 300, easing: 'ease-out' },
+    );
+  }, [levelKey, depth]);
 
   return (
     <CardContext.Provider value={context}>
-      <div className='dx-fill relative' data-testid='definition-canvas' data-level={level.kind}>
+      <div ref={container} className='dx-fill relative' data-testid='definition-canvas' data-level={level.kind}>
         <Graph2DView key={levelKey} graph={graph} layout={layout} nodes={registry} positions={positions} />
       </div>
     </CardContext.Provider>

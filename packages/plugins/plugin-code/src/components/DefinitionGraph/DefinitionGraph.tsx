@@ -22,6 +22,7 @@ import {
   diffDefinitionGraphs,
   groupDefinitions,
 } from '../SpecModel/index.ts';
+import { DEFAULT_FACTS, type DefinitionFacts } from './definition-facts.ts';
 import { type CanvasLevel, DefinitionCanvas } from './DefinitionCanvas.tsx';
 import { type DefinitionViewModel } from './DefinitionChip.tsx';
 import { DefinitionMap } from './DefinitionMap.tsx';
@@ -46,6 +47,8 @@ export type DefinitionGraphProps = {
   base?: string;
   /** Roles of the spec's block kinds, over the ones derived from the graph. */
   roles?: BlockRoles;
+  /** The fields a card shows beside its kind, and how; a feature's status by default. */
+  facts?: DefinitionFacts;
   /** An external block opens its spec or code; a local one is shown in the spec. */
   onActivate?: (definition: DefinitionModel) => void;
   /** The block, or on a canvas the cluster, it opens on; the whole spec by default. */
@@ -67,25 +70,27 @@ export const DefinitionGraph = ({
   review,
   base,
   roles = DEFAULT_ROLES,
+  facts = DEFAULT_FACTS,
   onActivate,
   defaultFocus,
   layout,
 }: DefinitionGraphProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const annotations = useMemo(() => reviewAnnotations(review), [review]);
+  const factFields = useMemo(() => new Set(Object.keys(facts)), [facts]);
   const current = useMemo(
-    () => buildDefinitionGraph(content, { specs, annotations, index }),
-    [content, specs, annotations, index],
+    () => buildDefinitionGraph(content, { specs, annotations, index, factFields }),
+    [content, specs, annotations, index, factFields],
   );
   const diff = useMemo(
     () =>
       base === undefined
         ? undefined
-        : diffDefinitionGraphs(current, buildDefinitionGraph(base, { specs, annotations, index }), {
+        : diffDefinitionGraphs(current, buildDefinitionGraph(base, { specs, annotations, index, factFields }), {
             current: content,
             base,
           }),
-    [current, content, base, specs, annotations, index],
+    [current, content, base, specs, annotations, index, factFields],
   );
   const full = diff ?? current;
   const grouping = useMemo(() => groupDefinitions(full, roles), [full, roles]);
@@ -93,15 +98,21 @@ export const DefinitionGraph = ({
     () => buildChangelogGraph(content).nodes.filter((node): node is DecisionModel => node.kind === 'decision'),
     [content],
   );
-  const view = useMemo<DefinitionViewModel>(
-    () => ({
-      byId: new Map(full.definitions.map((definition) => [definition.id, definition])),
+  const view = useMemo<DefinitionViewModel>(() => {
+    const byId = new Map(full.definitions.map((definition) => [definition.id, definition]));
+    return {
+      byId,
       grouping,
       statusOf: (id) => statusOf(review, id),
       changeOf: (id) => diff?.changes.get(id),
-    }),
-    [full, grouping, review, diff],
-  );
+      factsOf: (id) =>
+        Object.entries(byId.get(id)?.facts ?? {}).map(([field, value]) => ({
+          field,
+          value,
+          ...(facts[field]?.[value] && { style: facts[field][value] }),
+        })),
+    };
+  }, [full, grouping, review, diff, facts]);
 
   const [trail, setTrail] = useState<string[]>(() => (defaultFocus ? [defaultFocus] : []));
   const clusterById = useMemo(() => new Map(grouping.clusters.map((cluster) => [cluster.id, cluster])), [grouping]);
@@ -214,6 +225,7 @@ export const DefinitionGraph = ({
       </p>
       {shown === 'canvas' ? (
         <DefinitionCanvas
+          depth={trail.length}
           view={view}
           edges={full.edges}
           level={level}
