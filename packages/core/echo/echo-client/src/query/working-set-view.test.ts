@@ -165,6 +165,62 @@ describe('WorkingSetView', () => {
     expect(query.ids()).toEqual([]);
   });
 
+  test('deleting the parent of a member removes it from a by-id selection', ({ expect }) => {
+    const alice = person('alice');
+    const task = childTask(alice, 'task');
+    const query = watch(Query.select(Filter.id(task.id)));
+    expect(query.ids()).toEqual([task.id]);
+
+    db.remove(alice);
+    expect(query.ids()).toEqual([]);
+  });
+
+  test('deleting the parent of a member removes it from a type selection', ({ expect }) => {
+    const alice = person('alice');
+    const task = childTask(alice, 'task');
+    const query = watch(Query.select(Filter.type(TestSchema.Task)));
+    expect(query.ids()).toEqual([task.id]);
+
+    db.remove(alice);
+    expect(query.changes()).toBeGreaterThan(0);
+    expect(query.ids()).toEqual([]);
+  });
+
+  test('deleting the new parent of a re-parented member removes it from a type selection', ({ expect }) => {
+    const alice = person('alice');
+    const bob = person('bob');
+    const task = childTask(alice, 'task');
+    Obj.update(bob, (bob) => bob.tasks?.push(Ref.make(task)));
+    const query = watch(Query.select(Filter.type(TestSchema.Task)));
+    expect(query.ids()).toEqual([task.id]);
+
+    Obj.setParent(task, bob);
+    db.remove(bob);
+    expect(query.ids()).toEqual([]);
+  });
+
+  test('deleting the survivor a member’s parent merged into removes it from a type selection', ({ expect }) => {
+    const winner = person('winner');
+    const loser = person('loser');
+    const task = childTask(loser, 'task');
+    getObjectCore(loser).setMergedInto(winner.id, []);
+    const query = watch(Query.select(Filter.type(TestSchema.Task)));
+    expect(query.ids()).toEqual([task.id]);
+
+    db.remove(winner);
+    expect(query.ids()).toEqual([]);
+  });
+
+  test('a type selection that includes deleted objects keeps a member whose parent is deleted', ({ expect }) => {
+    const alice = person('alice');
+    const task = childTask(alice, 'task');
+    const query = watch(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' }));
+    expect(query.ids()).toEqual([task.id]);
+
+    db.remove(alice);
+    expect(query.ids()).toEqual([task.id]);
+  });
+
   test('a type query hears an object that loads after it computed', async ({ expect }) => {
     const peer = await builder.createPeer({ storagePath: createTmpPath(), types: [TestSchema.Person] });
     const before = await peer.createDatabase();
