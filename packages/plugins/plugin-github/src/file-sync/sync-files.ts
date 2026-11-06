@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Option from 'effect/Option';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, URI } from '@dxos/echo';
@@ -246,7 +247,11 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       const mappings = contributed.filter((mapping) => !options.mappings || options.mappings.includes(mapping.id));
       const mappingById = new Map(mappings.map((mapping) => [mapping.id, mapping]));
       const pathFilter = options.paths ? globMatcher(options.paths) : undefined;
-      const matchers = mappings.map((mapping) => ({ mapping, matches: globMatcher(mapping.match) }));
+      const matchers = mappings.map((mapping) => {
+        const included = globMatcher(mapping.match);
+        const excluded = globMatcher(mapping.exclude ?? []);
+        return { mapping, matches: (path: string) => included(path) && !excluded(path) };
+      });
       const conflicts = new Set<string>();
       /** The first contributed mapping that claims `path` (F-1.2). */
       const mappingFor = (path: string): GitHubCapabilities.FileMapping | undefined => {
@@ -325,10 +330,10 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       }
 
       // F-2.3: what changed on the read branch since the token.
+      let changes: Change[] = [];
+      // Whether the read branch now carries what this space pushed (its pull request merged).
+      let merged = false;
       if (head !== token) {
-        let changes: Change[];
-        // Whether the read branch now carries what this space pushed (its pull request merged).
-        let merged = false;
         if (!token) {
           const tree = yield* GitHubApi.fetchTree(owner, name, head);
           requests++;
@@ -352,125 +357,168 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
             merged = pushedComparison.status === 'ahead' || pushedComparison.status === 'identical';
           }
         }
+      }
 
-        /** Pulls one change; true when an object was created or changed. */
-        const pullChange = (change: Change) =>
-          Effect.gen(function* () {
-            const previous = change.kind === 'renamed' ? markers.get(change.from) : markers.get(change.path);
-            if (change.kind === 'removed') {
-              // F-3.4: drop the marker and the key; the object stays.
-              if (previous) {
-                const object = yield* resolveBound(previous.object);
-                dropKey(object, fileKey(repoId, previous.path));
-                deleteMarker(previous.path);
-                return true;
-              }
-              return false;
-            }
-            const mapping = mappingFor(change.path);
-            if (!mapping) {
-              // A tracked file renamed out of every mapping is released as a removal would be.
-              if (previous && change.kind === 'renamed') {
-                const object = yield* resolveBound(previous.object);
-                dropKey(object, fileKey(repoId, previous.path));
-                deleteMarker(previous.path);
-              }
-              return false;
-            }
-            const maxBytes = mapping.maxBytes ?? DEFAULT_MAX_BYTES;
-            if (change.kind !== 'renamed' && change.size !== undefined && change.size > maxBytes) {
-              skipped.push({ path: change.path, reason: `larger than ${maxBytes} bytes` });
-              return false;
-            }
+      // F-3.5: a path another mapping now claims is imported anew, changed or not; pullChange releases it.
+      const reclaims = [...markers.values()].filter((marker) => {
+        const claiming = mappingFor(marker.path);
+        return (
+          claiming !== undefined &&
+          claiming.id !== marker.mapping &&
+          !changes.some(
+            (change) => change.path === marker.path || (change.kind === 'renamed' && change.from === marker.path),
+          )
+        );
+      });
+      if (reclaims.length > 0) {
+        // A failed import leaves the marker's blob behind the head, so the content is read from the head's tree.
+        const tree = yield* GitHubApi.fetchTree(owner, name, head);
+        requests++;
+        const blobs = new Map(tree.blobs.map((entry) => [entry.path, entry]));
+        for (const marker of reclaims) {
+          const entry = blobs.get(marker.path);
+          changes.push(
+            entry
+              ? { kind: 'added', path: marker.path, blob: entry.sha, size: entry.size }
+              : { kind: 'removed', path: marker.path },
+          );
+        }
+      }
 
-            if (previous && change.kind === 'renamed') {
-              // F-3.3: move the key and the marker; the content change, if any, is applied below.
+      /** Pulls one change; true when an object was created or changed. */
+      const pullChange = (change: Change) =>
+        Effect.gen(function* () {
+          const previous = change.kind === 'renamed' ? markers.get(change.from) : markers.get(change.path);
+          if (change.kind === 'removed') {
+            // F-3.4: drop the marker and the key; the object stays.
+            if (previous) {
               const object = yield* resolveBound(previous.object);
               dropKey(object, fileKey(repoId, previous.path));
-              addKey(object, fileKey(repoId, change.path));
               deleteMarker(previous.path);
-              setMarker({ ...previous, path: change.path });
-            }
-            const marker = markers.get(change.path);
-            if (marker && marker.blob === change.blob) {
-              setMarker({ ...marker, commit: head });
-              return change.kind === 'renamed';
-            }
-
-            const content = yield* GitHubApi.fetchBlob(owner, name, change.blob);
-            requests++;
-            cacheBlob(change.blob, content);
-            if (new TextEncoder().encode(content).byteLength > maxBytes) {
-              skipped.push({ path: change.path, reason: `larger than ${maxBytes} bytes` });
-              return false;
-            }
-
-            if (!marker) {
-              // F-3.1: a new file, or one a mapping claims for the first time.
-              const imported = yield* Operation.invoke(mapping.import, {
-                repository: Ref.make(repo),
-                path: change.path,
-                content,
-              });
-              const object = yield* Database.load(imported.object);
-              addKey(object, fileKey(repoId, change.path));
-              setMarker({
-                mapping: mapping.id,
-                path: change.path,
-                blob: change.blob,
-                commit: head,
-                heads: imported.heads,
-                object: Obj.getURI(object),
-              });
-              appendHistory(change.path, { commit: head, heads: imported.heads, direction: 'pull' });
               return true;
             }
-
-            if (marker.pushed?.blob === change.blob) {
-              // The read branch took exactly what this space pushed: the object already holds it.
-              setMarker({ ...marker, blob: change.blob, commit: head, heads: marker.pushed.heads, pushed: undefined });
-              return false;
+            return false;
+          }
+          const mapping = mappingFor(change.path);
+          if (!mapping) {
+            // A tracked file renamed out of every mapping is released as a removal would be.
+            if (previous && change.kind === 'renamed') {
+              const object = yield* resolveBound(previous.object);
+              dropKey(object, fileKey(repoId, previous.path));
+              deleteMarker(previous.path);
             }
+            return false;
+          }
+          const maxBytes = mapping.maxBytes ?? DEFAULT_MAX_BYTES;
+          if (change.kind !== 'renamed' && change.size !== undefined && change.size > maxBytes) {
+            skipped.push({ path: change.path, reason: `larger than ${maxBytes} bytes` });
+            return false;
+          }
 
-            // F-3.2: apply base → content as of the heads the base was synced at. Once the pull request
-            // merged, the base is what this space pushed, so its own edits are not applied a second time.
-            const fromPushed = merged ? marker.pushed : undefined;
-            const baseBlob = fromPushed?.blob ?? marker.blob;
-            const baseHeads = fromPushed?.heads ?? marker.heads;
-            const base = yield* GitHubApi.fetchBlob(owner, name, baseBlob);
-            requests++;
-            cacheBlob(baseBlob, base);
+          if (previous && change.kind === 'renamed') {
+            // F-3.3: move the key and the marker; the content change, if any, is applied below.
+            const object = yield* resolveBound(previous.object);
+            dropKey(object, fileKey(repoId, previous.path));
+            addKey(object, fileKey(repoId, change.path));
+            deleteMarker(previous.path);
+            setMarker({ ...previous, path: change.path });
+          }
+          const marker = markers.get(change.path);
+          // F-3.5: a marker another mapping wrote is replaced by a fresh import, whatever its blob.
+          const reclaimed = marker !== undefined && marker.mapping !== mapping.id;
+          if (marker && !reclaimed && marker.blob === change.blob) {
+            setMarker({ ...marker, commit: head });
+            return change.kind === 'renamed';
+          }
+
+          const content = yield* GitHubApi.fetchBlob(owner, name, change.blob);
+          requests++;
+          cacheBlob(change.blob, content);
+          if (new TextEncoder().encode(content).byteLength > maxBytes) {
+            skipped.push({ path: change.path, reason: `larger than ${maxBytes} bytes` });
+            return false;
+          }
+
+          if (!marker || reclaimed) {
+            // F-3.1: a new file, or one a mapping claims for the first time.
             const imported = yield* Operation.invoke(mapping.import, {
               repository: Ref.make(repo),
               path: change.path,
               content,
-              base,
-              object: Ref.make(yield* resolveBound(marker.object)),
-              heads: baseHeads,
             });
+            const object = yield* Database.load(imported.object);
+            if (marker) {
+              // F-3.5: released only once the new import holds it, so a failed import keeps the binding to retry.
+              const released = yield* Effect.option(resolveBound(marker.object));
+              if (Option.isSome(released)) {
+                dropKey(released.value, fileKey(repoId, change.path));
+              }
+            }
+            addKey(object, fileKey(repoId, change.path));
             setMarker({
-              ...marker,
               mapping: mapping.id,
+              path: change.path,
               blob: change.blob,
               commit: head,
               heads: imported.heads,
-              pushed: fromPushed ? undefined : marker.pushed,
+              object: Obj.getURI(object),
             });
             appendHistory(change.path, { commit: head, heads: imported.heads, direction: 'pull' });
             return true;
-          });
-
-        for (const change of changes) {
-          const outcome = yield* pullChange(change).pipe(
-            Effect.catchCause((cause) => {
-              log.warn('github file sync: pull failed', { path: change.path, cause });
-              skipped.push({ path: change.path, reason: 'import failed' });
-              return Effect.succeed(false);
-            }),
-          );
-          if (outcome) {
-            pulled++;
           }
+
+          if (marker.pushed?.blob === change.blob) {
+            // The read branch took exactly what this space pushed: the object already holds it.
+            setMarker({ ...marker, blob: change.blob, commit: head, heads: marker.pushed.heads, pushed: undefined });
+            return false;
+          }
+
+          // F-3.2: apply base → content as of the heads the base was synced at. Once the pull request
+          // merged, the base is what this space pushed, so its own edits are not applied a second time.
+          const fromPushed = merged ? marker.pushed : undefined;
+          const baseBlob = fromPushed?.blob ?? marker.blob;
+          const baseHeads = fromPushed?.heads ?? marker.heads;
+          const base = yield* GitHubApi.fetchBlob(owner, name, baseBlob);
+          requests++;
+          cacheBlob(baseBlob, base);
+          const bound = yield* resolveBound(marker.object);
+          const imported = yield* Operation.invoke(mapping.import, {
+            repository: Ref.make(repo),
+            path: change.path,
+            content,
+            base,
+            object: Ref.make(bound),
+            heads: baseHeads,
+          });
+          // F-3.2: an import may answer with another object (a review with new front matter); the file is its now.
+          const object = yield* Database.load(imported.object);
+          if (object.id !== bound.id) {
+            dropKey(bound, fileKey(repoId, change.path));
+            addKey(object, fileKey(repoId, change.path));
+          }
+          setMarker({
+            ...marker,
+            object: Obj.getURI(object),
+            mapping: mapping.id,
+            blob: change.blob,
+            commit: head,
+            heads: imported.heads,
+            pushed: fromPushed ? undefined : marker.pushed,
+          });
+          appendHistory(change.path, { commit: head, heads: imported.heads, direction: 'pull' });
+          return true;
+        });
+
+      for (const change of changes) {
+        const outcome = yield* pullChange(change).pipe(
+          Effect.catchCause((cause) => {
+            log.warn('github file sync: pull failed', { path: change.path, cause });
+            skipped.push({ path: change.path, reason: 'import failed' });
+            return Effect.succeed(false);
+          }),
+        );
+        if (outcome) {
+          pulled++;
         }
       }
 
@@ -478,7 +526,8 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       const exports: { marker: FileMarker; content: string; blob: string; heads: readonly string[] }[] = [];
       for (const marker of markers.values()) {
         const mapping = mappingById.get(marker.mapping);
-        if (!mapping?.export) {
+        // A mapping that no longer claims the path (F-3.5, its import still to succeed) does not export it.
+        if (!mapping?.export || mappingFor(marker.path)?.id !== mapping.id) {
           continue;
         }
         const exported = mapping.export;

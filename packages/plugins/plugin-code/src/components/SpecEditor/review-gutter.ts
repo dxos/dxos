@@ -153,6 +153,8 @@ class ReviewWidget extends WidgetType {
       other.verdict.status === this.verdict.status &&
       other.verdict.summary === this.verdict.summary &&
       other.verdict.note === this.verdict.note &&
+      other.verdict.review?.commit === this.verdict.review?.commit &&
+      other.verdict.review?.date === this.verdict.review?.date &&
       other.verdict.walkthrough === this.verdict.walkthrough &&
       other.annotation?.testing === this.annotation?.testing &&
       keysEqual(other.annotation?.keys, this.annotation?.keys) &&
@@ -161,7 +163,9 @@ class ReviewWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView): HTMLElement {
-    const { id, status, summary, note } = this.verdict;
+    const { id, status, summary, note, review } = this.verdict;
+    const reviewed =
+      review && ['Reviewed', review.date, review.commit && `at ${review.commit.slice(0, 7)}`].filter(Boolean).join(' ');
     const { onSelect, onOpen, read } = this.callbacks;
     // Floated into the right margin, beside the decision chips, so the annotated line's text does not move.
     const row = document.createElement('span');
@@ -191,7 +195,9 @@ class ReviewWidget extends WidgetType {
     const statusTag = tag(
       STATUS_STYLE[status].label,
       STATUS_STYLE[status].hue,
-      steps ? undefined : [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note].filter(Boolean).join('\n\n'),
+      steps
+        ? undefined
+        : [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note, reviewed].filter(Boolean).join('\n\n'),
       'spec-review.gutter-chip',
       () => onSelect?.(id),
     );
@@ -200,10 +206,14 @@ class ReviewWidget extends WidgetType {
       this.hover.attach(
         view,
         statusTag,
-        (dark) => walkthroughCard(steps, { read, onOpen, dark }),
-        [`${STATUS_STYLE[status].label}: ${summary ?? id}`, ...steps.map((step) => `${step.text} ${step.key}`)].join(
-          '. ',
-        ),
+        (dark) => walkthroughCard(steps, { read, onOpen, dark }, reviewed),
+        [
+          `${STATUS_STYLE[status].label}: ${summary ?? id}`,
+          ...steps.map((step) => `${step.text} ${step.key}`),
+          reviewed,
+        ]
+          .filter(Boolean)
+          .join('. '),
       );
     }
 

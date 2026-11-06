@@ -60,6 +60,12 @@ export const Settings = Schema.Struct({
         'Controls which message blocks are shown in the chat: normal hides reasoning, thinking shows reasoning, debug shows raw blocks, summary shows only conversational text.',
     }),
   ),
+  showTokens: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Show token counts',
+      description: 'Show the estimated number of tokens each block of the chat consumes, beside the block.',
+    }),
+  ),
   modelProvider: Schema.optional(
     ModelProvider.annotate({
       title: 'LLM provider',

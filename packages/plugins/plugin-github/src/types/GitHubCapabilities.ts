@@ -74,6 +74,8 @@ export type FileMapping = {
   readonly id: string;
   /** Repository-relative globs the mapping claims, e.g. `['**' + '/*.mdl']`: `**` spans directories, `*` stays within one. */
   readonly match: readonly string[];
+  /** Globs within `match` the mapping leaves to others, e.g. `['**' + '/*.review.mdl']`. */
+  readonly exclude?: readonly string[];
   /** The ECHO type a matched file becomes. */
   readonly type: Type.AnyObj;
   /** Pull: create the object, or apply a remote change to it. */

@@ -202,6 +202,9 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
       target,
       outfile,
       autoloadBunfig: false,
+      // `dx registry publish` imports the plugin project's own Vite, whose bare imports (`rolldown/parseAst`, …)
+      // resolve through package.json `exports` — which a compiled binary ignores outside its embedded files unless set.
+      autoloadPackageJson: true,
     },
   });
 
