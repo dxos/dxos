@@ -686,8 +686,7 @@ const checkT1 = async () => {
   const api = async (path, method = 'GET', body) => {
     const response = await fetch(`${LOCAL}${path}`, {
       method,
-      headers: body ? { 'content-type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
+      ...(body ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}),
     });
     return { status: response.status, body: await response.json().catch(() => undefined) };
   };
