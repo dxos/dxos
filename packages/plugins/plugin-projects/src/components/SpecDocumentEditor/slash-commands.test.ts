@@ -15,6 +15,12 @@ describe('lineText', () => {
     expect(lineText('> Quoted')).toBe('Quoted');
     expect(lineText('## Heading')).toBe('Heading');
     expect(lineText('> - [ ] Quoted task')).toBe('Quoted task');
+    expect(lineText('> ## Quoted heading')).toBe('Quoted heading');
+  });
+
+  test('keeps the text of a heading whole', ({ expect }) => {
+    expect(lineText('# 1. Openings')).toBe('1. Openings');
+    expect(lineText('> # - Draws')).toBe('- Draws');
   });
 
   test('keeps prose that only looks like a marker', ({ expect }) => {

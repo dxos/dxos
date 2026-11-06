@@ -157,9 +157,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             ...prev,
             variant: linked,
           }));
-          // Beside the subject, which an open beside an origin places before the deck's last plank.
-          const subject = input.subject[0] && next.includes(input.subject[0]) ? input.subject[0] : main;
-          companionPlanks = openCompanionPlank(companionPlanks, flatten, subject);
+          // Beside the plank the open lands on, as the scroll intent below picks it: the first one it adds, else the
+          // subject it shows, which an open beside an origin places before the deck's last plank.
+          const landing =
+            deckUpdates.active.find((id) => !previouslyOpenIds.has(id)) ??
+            (input.subject[0] && next.includes(input.subject[0]) ? input.subject[0] : main);
+          companionPlanks = openCompanionPlank(companionPlanks, flatten, landing);
         }
         const holder = input.subject[0];
         const plankNames =
