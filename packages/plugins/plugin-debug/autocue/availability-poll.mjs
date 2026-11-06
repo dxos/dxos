@@ -621,9 +621,19 @@ const stopServing = () => {
 };
 process.on('exit', stopServing);
 
+const answers = () =>
+  fetch(LOCAL, { signal: AbortSignal.timeout(2_000) }).then(
+    (response) => response.ok,
+    () => false,
+  );
+
 /** Installs and builds the pulled code, then serves it with `wrangler dev` until it answers. */
 const serveBuild = async (dir) => {
   stopServing();
+  // A take whose driver was killed leaves its `wrangler dev` holding the port, which would answer for this build.
+  if (await answers()) {
+    throw new Error(`${LOCAL} already answers; stop the wrangler dev that holds port ${LOCAL_PORT}`);
+  }
   const seed = process.env.DX_POLL_NODE_MODULES;
   if (seed && existsSync(seed) && !existsSync(join(dir, 'node_modules'))) {
     cpSync(seed, join(dir, 'node_modules'), { recursive: true, verbatimSymlinks: true });
@@ -644,12 +654,7 @@ const serveBuild = async (dir) => {
     stdio: ['ignore', log, log],
   });
   for (let attempt = 0; attempt < 120; attempt++) {
-    if (
-      await fetch(LOCAL, { signal: AbortSignal.timeout(2_000) }).then(
-        (response) => response.ok,
-        () => false,
-      )
-    ) {
+    if (await answers()) {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -859,14 +864,14 @@ const tagCells = (page, title, prefix) =>
 
 const cell = (prefix, column, row) => inWindow(`[data-autocue-cell="${prefix}-${column}-${row}"]`);
 
-/** Scrolls the poll page's roster into view and holds on it. */
+/** Scrolls the poll page to its foot, where the roster is, and holds on it with the caption up top, out of its way. */
 const showRoster = async (demo, page, caption) => {
   await page
-    .locator(inWindow(':text("Respondents")'))
-    .first()
-    .scrollIntoViewIfNeeded()
+    .locator(inWindow('body'))
+    .evaluate((body) => body.ownerDocument.scrollingElement.scrollTo({ top: 1e6, behavior: 'smooth' }))
     .catch(() => {});
-  await demo.caption({ ...caption, hold: BEAT * 4 });
+  await page.waitForTimeout(BEAT);
+  await demo.caption({ ...caption, position: 'top', hold: BEAT * 4 });
   await page.waitForTimeout(BEAT * 4);
 };
 
@@ -883,18 +888,25 @@ const showPoll = async (demo, page) => {
           value: "Ben's grid beside the group's",
           subtitle: 'Each slot shaded by how many are free; the best slot outlined',
           hold: BEAT * 4,
+          position: 'top',
         }
       : {
           value: 'The heat map and the best slot',
           subtitle: "M-1's plain page; M-2 lays it out to the spec",
           hold: BEAT * 4,
+          position: 'top',
         },
   );
   await page.waitForTimeout(BEAT * 4);
   if (group) {
     // T-1's best slot, s3, is Monday at 11:00: the first day's third row.
     await demo.hover({ selector: cell('group', 0, 2), label: 'Mon 11:00' });
-    await demo.caption({ value: 'Hover a slot to see who is free', subtitle: 'Mon 11:00: all three', hold: BEAT * 3 });
+    await demo.caption({
+      value: 'Hover a slot to see who is free',
+      subtitle: 'Mon 11:00: all three',
+      hold: BEAT * 3,
+      position: 'top',
+    });
     await page.waitForTimeout(BEAT * 3);
   }
   if (yours?.columns > 1) {
@@ -902,6 +914,7 @@ const showPoll = async (demo, page) => {
       value: 'Ben drags down Tuesday',
       subtitle: 'Every cell it crosses is marked, then saved once',
       hold: BEAT * 4,
+      position: 'top',
     });
     await demo.drag({
       from: cell('yours', 1, 0),
