@@ -9,6 +9,14 @@ import { Progress } from '@dxos/progress';
 
 import * as AppCapabilities from './AppCapabilities.ts';
 
+const sameTask = (left: Progress.TaskProgress, right: Progress.TaskProgress): boolean => {
+  const keys = Object.keys(left) as (keyof Progress.TaskProgress)[];
+  return keys.length === Object.keys(right).length && keys.every((key) => left[key] === right[key]);
+};
+
+const sameTasks = (left: readonly Progress.TaskProgress[], right: readonly Progress.TaskProgress[]): boolean =>
+  left.length === right.length && left.every((task, index) => sameTask(task, right[index]));
+
 /**
  * Builds the {@link AppCapabilities.ProgressRegistry} capability value over an atom {@link Registry.AtomRegistry}. A
  * shared `@dxos/progress` core drives an in-memory snapshot; every mutation is mirrored into a
@@ -31,6 +39,21 @@ export const makeRegistry = (registry: Registry.AtomRegistry): AppCapabilities.P
     return derived;
   };
 
+  const objectMonitorsAtoms = new Map<string, Atom.Atom<readonly Progress.TaskProgress[]>>();
+  const objectMonitorsAtom = (uri: string): Atom.Atom<readonly Progress.TaskProgress[]> => {
+    const existing = objectMonitorsAtoms.get(uri);
+    if (existing) {
+      return existing;
+    }
+    // Every snapshot copies every task, so compare by value or each tick anywhere notifies every object.
+    const prefix = `${uri}#`;
+    const derived = Atom.map(snapshotAtom, (snapshot) =>
+      snapshot.tasks.filter((task) => task.name.startsWith(prefix)),
+    ).pipe(Atom.withEquality(sameTasks));
+    objectMonitorsAtoms.set(uri, derived);
+    return derived;
+  };
+
   // App-registry monitors are transient per-run, not resumable like a pipeline's task list. Drop any
   // prior entry for this name first so a re-register (e.g. a retry after a failed sync) starts fresh —
   // otherwise the stale `current`/`startedAt`/`error` would carry into the new run.
@@ -45,6 +68,7 @@ export const makeRegistry = (registry: Registry.AtomRegistry): AppCapabilities.P
   return {
     snapshotAtom,
     monitorAtom,
+    objectMonitorsAtom,
     register,
     cancel: (name) => core.cancel(name),
     snapshot: () => registry.get(snapshotAtom),
