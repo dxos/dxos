@@ -251,23 +251,39 @@ const scrollDocumentTo = async (page, text, { exact = false, delay = 250 } = {})
 };
 
 /**
- * Puts the spec's line holding `find` at the top of the view in one move, through the editor's own scroll, so the camera
- * cuts to it rather than following a scroll; `line` is that line's rendered text, for the wheel when the view is not
- * reachable. `last` takes the text's last occurrence.
+ * Puts the spec's line holding `find` at the top of the view in one move, so the camera cuts to it rather than following
+ * a scroll; `line` is that line's rendered text, for the wheel when the editor is not reachable. `last` takes the text's
+ * last occurrence. The editor is laid out at full height inside the plank, so the plank's scroller moves, a pass at a
+ * time while the lines it brings into view replace their estimated heights.
  */
 const jumpDocumentTo = async (page, find, line, { last = false } = {}) => {
   const jumped = await page
     .locator(`${DOCUMENT} .cm-content`)
     .first()
     .evaluate(
-      (content, { find, last }) => {
+      async (content, { find, last }) => {
         const view = content.cmTile?.root?.view;
         const text = view?.state.doc.toString() ?? '';
         const at = last ? text.lastIndexOf(find) : text.indexOf(find);
-        if (at < 0) {
+        let scroller = view?.dom.parentElement;
+        while (
+          scroller &&
+          !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))
+        ) {
+          scroller = scroller.parentElement;
+        }
+        if (at < 0 || !scroller) {
           return false;
         }
-        view.dispatch({ effects: view.constructor.scrollIntoView(at, { y: 'start', yMargin: 24 }) });
+        const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        for (let pass = 0; pass < 6; pass++) {
+          const offset = view.documentTop + view.lineBlockAt(at).top - scroller.getBoundingClientRect().top - 24;
+          if (Math.abs(offset) < 4) {
+            break;
+          }
+          scroller.scrollTop += offset;
+          await frame();
+        }
         return true;
       },
       { find, last },
