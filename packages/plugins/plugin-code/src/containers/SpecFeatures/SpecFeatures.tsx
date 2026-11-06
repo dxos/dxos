@@ -3,12 +3,11 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment, useCallback, useMemo } from 'react';
 
 import * as Spec from '@dxos/compute/Spec';
-import { Annotation, Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
@@ -21,34 +20,24 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { FeatureKanban } from '#components';
 import { Feature, FeatureMap, FeatureMapView } from '#types';
 
-// Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
-import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
-import { type FeatureViewId } from '../../spec-views.ts';
-import { useAddFeature, useFeatureSelection, useLevelIds } from './spec-map-actions.ts';
-
-type Point = FeatureMap.Position;
+import { useFeatureSelection, useLevelIds } from './spec-map-actions.ts';
 
 const nothing = Query.select(Filter.nothing());
 
 export type SpecMapProps = {
   spec: Spec.Spec;
-  mode: FeatureViewId;
   attendableId?: string;
-  /** Not offered when adding an existing feature, besides the map's own features: the features above it. */
-  exclude?: readonly string[];
   /** Opens the level breaking the feature down: a double-click on its card. */
   onZoom: (id: string) => void;
 };
 
-/** One level of a feature map: the features on `spec`, on a canvas or by status. A click selects a feature. */
-export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapProps) => {
+/** One level of a feature map: the features on `spec` on a board by status. A click selects a feature. */
+export const SpecMap = ({ spec, attendableId, onZoom }: SpecMapProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const db = Obj.getDatabase(spec);
   const ids = useLevelIds(spec);
-  const layout = useAtomValue(useMemo(() => Annotation.atom(spec, FeatureMap.LayoutAnnotation), [spec]));
-  const positions = useMemo(() => ({ ...Option.getOrUndefined(layout)?.positions }), [layout]);
   // Neighbours load the features on other specs that this level depends on, which the cards mark rather than draw.
   const graph = useFeatureGraph(db, ids, { neighbours: true });
   const features = useMemo(
@@ -70,30 +59,13 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
   );
   const editing = useFeatureEditing(db, spec);
   const { selectedId, select } = useFeatureSelection(attendableId);
-  const { createAt, addAt } = useAddFeature({ db, spec, attendableId, exclude });
   const handleZoom = useCallback((id: string | undefined) => id && onZoom(id), [onZoom]);
 
-  // Only the boxes that moved are written, so a drag touches one entry of the layout rather than all of it.
-  const handlePositionsChange = useCallback(
-    (next: Record<string, Point>) => {
-      const moved = ids.flatMap((id) => {
-        const point = next[id];
-        const current = positions[id];
-        return point && (point.x !== current?.x || point.y !== current?.y) ? [[id, point] as const] : [];
-      });
-      for (const [id, { x, y }] of moved) {
-        FeatureMap.setPosition(spec, id, { x, y });
-      }
-    },
-    [spec, ids, positions],
-  );
-
-  // The canvas shows even when empty: its empty cells are where features are added.
-  if (mode === 'kanban' && ids.length === 0) {
+  if (ids.length === 0) {
     return <Status.Empty classNames='h-full'>{t('feature-map.empty.message')}</Status.Empty>;
   }
 
-  return mode === 'kanban' ? (
+  return (
     <FeatureKanban
       features={features}
       selectedId={selectedId}
@@ -101,25 +73,6 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
       onZoom={handleZoom}
       onChange={editing.update}
     />
-  ) : (
-    <div className='relative h-full' data-testid='feature-map.canvas'>
-      {/* Keyed by level, so a new level starts a fresh camera and layout rather than morphing the last one's, and by
-          whether the level has loaded, since the canvas fits its camera to the boxes it mounts with. */}
-      <FeatureCanvas
-        key={`${spec.id}:${features.length > 0}`}
-        features={features}
-        positions={positions}
-        selectedId={selectedId}
-        onPositionsChange={handlePositionsChange}
-        onSelect={select}
-        onZoom={handleZoom}
-        onLink={editing.addDependency}
-        onUnlink={editing.removeDependency}
-        onRemove={editing.removeFeature}
-        onCreate={(position) => void createAt(position)}
-        onAdd={addAt}
-      />
-    </div>
   );
 };
 
@@ -148,7 +101,6 @@ const useTrail = (root: Spec.Spec, feature: Feature.Feature | undefined): { id: 
 export type SpecFeaturesProps = {
   role?: string;
   spec: Spec.Spec;
-  mode: FeatureViewId;
   attendableId?: string;
 };
 
@@ -156,7 +108,7 @@ export type SpecFeaturesProps = {
  * The feature map of a spec no project tracks, zooming in place: a double-click zooms into the spec that breaks the
  * feature down, and the trail above zooms back out. A project's specs open each level as a node of its own instead.
  */
-export const SpecFeatures = ({ role, spec, mode, attendableId }: SpecFeaturesProps) => {
+export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const { focus } = useViewState(FeatureMapView.aspect, spec.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, spec.id);
@@ -171,7 +123,6 @@ export const SpecFeatures = ({ role, spec, mode, attendableId }: SpecFeaturesPro
       ? focusFeature
       : undefined;
   const trail = useTrail(spec, zoomed);
-  const exclude = useMemo(() => trail.map(({ id }) => id), [trail]);
 
   // The level's spec: the map's own, or the one breaking the zoomed feature down (none until a feature is added).
   const breakdown = useResolveRef(useObject(zoomed)[0]?.spec);
@@ -227,7 +178,7 @@ export const SpecFeatures = ({ role, spec, mode, attendableId }: SpecFeaturesPro
       </Panel.Header>
       <Panel.Body>
         {level ? (
-          <SpecMap spec={level} mode={mode} attendableId={attendableId} exclude={exclude} onZoom={handleZoom} />
+          <SpecMap spec={level} attendableId={attendableId} onZoom={handleZoom} />
         ) : (
           <Status.Empty classNames='h-full'>{t('feature-map.empty.message')}</Status.Empty>
         )}

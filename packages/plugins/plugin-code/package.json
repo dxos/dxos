@@ -278,6 +278,7 @@
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-video": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",

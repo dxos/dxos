@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import { EditorSelection } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorSelection, type Extension } from '@codemirror/state';
+import { EditorView, ViewPlugin } from '@codemirror/view';
 import * as Atom from 'effect/reactivity/Atom';
 
 import type * as Translations from '@dxos/app-toolkit/Translations';
@@ -55,6 +55,22 @@ export type State = {
 
 /** One session per spec, keyed by its id or a static spec's source key; dropped once nothing shows it. */
 export const session = Atom.family((id: string) => Atom.make<State>({ views: {}, fold: false }));
+
+/** Where the cursor is in each session's spec editor. Kept alive since the editor writes it before a view reads it. */
+export const cursor = Atom.family((id: string) => Atom.make<number | undefined>(undefined).pipe(Atom.keepAlive));
+
+/** Reports the editor's cursor offset when the editor opens and whenever the cursor or the text moves. */
+export const trackCursor = (onCursor: (offset: number) => void): Extension =>
+  ViewPlugin.define((view) => {
+    onCursor(view.state.selection.main.head);
+    return {
+      update: (update) => {
+        if (update.selectionSet || update.docChanged) {
+          onCursor(update.state.selection.main.head);
+        }
+      },
+    };
+  });
 
 /** The editor each session's spec is open in, so a view can move it to an item. */
 const editors = new Map<string, EditorView>();

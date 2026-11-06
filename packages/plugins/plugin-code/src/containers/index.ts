@@ -4,6 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+
 import { type AddFeatureDialogProps } from './AddFeatureDialog/index.ts';
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
@@ -65,6 +67,9 @@ export const SpecLevelCompanion: ComponentType<SpecLevelCompanionProps> = lazy((
 );
 export const SpecSourceToolbar: ComponentType<SpecSource> = lazy(() =>
   import('./SpecArticle/index.ts').then((module) => ({ default: module.SpecSourceToolbar })),
+);
+export const SpecSourcesProvider: ProjectCapabilities.SpecSourcesProvider = lazy(() =>
+  import('./SpecArticle/index.ts').then((module) => ({ default: module.SpecSourcesProvider })),
 );
 export const SpecViewContent: ComponentType<SpecViewContentProps> = lazy(() =>
   import('./SpecArticle/index.ts').then((module) => ({ default: module.SpecViewContent })),

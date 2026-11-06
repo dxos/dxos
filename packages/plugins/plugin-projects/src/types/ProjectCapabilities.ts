@@ -8,13 +8,17 @@ import type { Extension } from '@codemirror/state';
 import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Schema from 'effect/Schema';
+import type { ComponentType, ReactNode } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Translations from '@dxos/app-toolkit/Translations';
 import * as Project from '@dxos/compute/Project';
 import type * as Spec from '@dxos/compute/Spec';
+import type { SourceKey } from '@dxos/deus/review';
+import type { SpecIndex } from '@dxos/deus/spec-index';
 import type { Database, Obj } from '@dxos/echo';
 import type { FormFieldAction } from '@dxos/react-ui-form';
+import type * as Tag from '@dxos/react-ui/Tag';
 
 import { ProjectsNamespace } from '../namespace.ts';
 import type * as SpecSession from './SpecSession.ts';
@@ -92,6 +96,15 @@ export type SpecExtensions = (spec: Spec.Spec, options: SpecExtensionOptions) =>
 
 export const SpecExtensions = Capability.make<SpecExtensions>()(`${ProjectsNamespace.key}.capability.specExtensions`);
 
+/** How a definition card draws one value of a fact field. */
+export type FactStyle = { icon: string; hue: Tag.TagHue };
+
+/**
+ * The fields a definition card shows beside its kind, each with a style per known value; a value with no style is shown
+ * plain. A block shows a field only when it writes one.
+ */
+export type SpecFacts = Readonly<Record<string, Readonly<Record<string, FactStyle>>>>;
+
 /**
  * A package of extensions a plugin offers specs: dialects a spec takes or drops together, each a set of block kinds
  * beyond the core and changelog ones. A spec lists the dialects it uses in `dialects`, and a dialect's views and
@@ -102,6 +115,8 @@ export type SpecPackage = {
   label: Translations.Label;
   /** The ids a spec's `dialects` lists, as a `.mdl` file's front matter lists them in `extends`. */
   dialects: readonly string[];
+  /** The fact fields a definition card shows for the package's blocks, such as a feature's status. */
+  facts?: SpecFacts;
 };
 
 export const SpecPackage = Capability.make<SpecPackage>()(`${ProjectsNamespace.key}.capability.specPackage`);
@@ -120,6 +135,29 @@ export type SpecView = {
 };
 
 export const SpecView = Capability.make<SpecView>()(`${ProjectsNamespace.key}.capability.specView`);
+
+/** What a spec's companion views read beyond its own text, from where only the contributing plugin can reach. */
+export type SpecSources = {
+  /** The text diff mode compares the spec with. */
+  base?: string;
+  /** The texts of the specs the spec names, by `github:` file key. */
+  specs?: ReadonlyMap<string, string>;
+  /** The specs a `<spec id>#<item>` reference can name. */
+  index?: SpecIndex;
+  /** Reads a file a review cites. */
+  read?: (key: SourceKey) => string | undefined;
+  /** Opens what a `github:` key names, such as another spec or code. */
+  onOpenSource?: (key: SourceKey) => void;
+};
+
+export type SpecSourcesProviderProps = { spec: Spec.Spec; children: (sources: SpecSources) => ReactNode };
+
+/** Gives the companion views of a spec its {@link SpecSources}; the views read none without one. */
+export type SpecSourcesProvider = ComponentType<SpecSourcesProviderProps>;
+
+export const SpecSourcesProvider = Capability.make<SpecSourcesProvider>()(
+  `${ProjectsNamespace.key}.capability.specSources`,
+);
 
 /** One setting in a {@link ConfigGroup}; `value` is a writable atom so the form never knows where it is stored. */
 export type ConfigField = {

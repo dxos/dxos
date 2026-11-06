@@ -3,3 +3,4 @@
 //
 
 export * from './SpecCompanion.tsx';
+export * from './SpecCompanionView.tsx';

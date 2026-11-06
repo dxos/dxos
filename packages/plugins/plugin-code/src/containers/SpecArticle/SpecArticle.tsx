@@ -41,18 +41,9 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import {
-  SPEC_INDEX,
-  decisionGutter,
-  pendingReveal,
-  reviewGutter,
-  sourceLinks,
-  specCursor,
-  trackCursor,
-} from '#components';
+import { SPEC_INDEX, decisionGutter, pendingReveal, reviewGutter, sourceLinks } from '#components';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { type SpecViewId } from '../../spec-views.ts';
 import { SpecPanel, useOpenSource } from './SpecPanel.tsx';
 import { useSpecModel } from './useSpecModel.ts';
 import { type DiffAgainst } from './useSpecSources.ts';
@@ -144,7 +135,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 
     // A margin click shows its item in a view, opening the view's companion tab when the panel is not on the page.
     const show = useCallback(
-      (group: SpecSession.Group, view: SpecViewId, patch: Partial<SpecSession.State>) => {
+      (group: SpecSession.Group, view: string, patch: Partial<SpecSession.State>) => {
         setSession((current) => ({ ...current, ...patch, focus: group, views: { ...current.views, [group]: view } }));
         if (!panel && attendableId) {
           void invokePromise(LayoutOperation.UpdateCompanion, {
@@ -159,7 +150,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     // Another article that opened this spec at an item left it pending; the text may arrive after mount.
     const pending = useAtomValue(pendingReveal);
     const setPendingReveal = useAtomSet(pendingReveal);
-    const setCursor = useAtomSet(specCursor(id));
+    const setCursor = useAtomSet(SpecSession.cursor(id));
     useEffect(() => {
       if (pending && key && pending.path === key.path && SpecSession.reveal(id, pending.item)) {
         setPendingReveal(undefined);
@@ -178,7 +169,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           mdl(isReviewFile ? {} : { index: SPEC_INDEX }),
           sourceLinks((target) => void open(target), SPEC_INDEX),
           ViewPlugin.define((editor) => ({ destroy: SpecSession.registerEditor(id, editor) })),
-          trackCursor(setCursor),
+          SpecSession.trackCursor(setCursor),
           decisions.length > 0 &&
             // The ledger opens a decision's thread, or lists a question among the questions.
             decisionGutter(decisions, (item) => show('decisions', 'ledger', { selectedDecision: item })),

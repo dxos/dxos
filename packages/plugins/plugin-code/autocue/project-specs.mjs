@@ -7,8 +7,7 @@
  * and whose + adds one. The Specs tab shows one spec at a time, picked from a dropdown in its toolbar: a feature map
  * whose prose and features sit together, where `/feature` turns a line of prose into a feature, and a spec of prose.
  * The toolbar follows the tab, a spec's Structure companion offers the views its packages give, another plugin's
- * package adds slash commands that write its blocks, and the feature map's canvas adds a feature in the empty cell
- * under the pointer.
+ * package adds slash commands that write its blocks, and the software dialect's Board sorts the features by status.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-5
  * @app storybook-react, narrowed to plugin-code, on :9009
@@ -41,7 +40,7 @@ const IDEA_DESCRIPTION = 'Each morning, one note lists what agents closed, opene
 const PICKER = '[data-testid="projectsPlugin.specPicker"]';
 const DOCUMENT = '[data-testid="projectsPlugin.spec.document"]';
 const ADD_ARTIFACT = '[data-testid="projectsPlugin.addArtifact"]';
-const CANVAS_TOGGLE = '[data-testid="spec-companion.view.canvas"]';
+const BOARD_TOGGLE = '[data-testid="spec-companion.view.kanban"]';
 const EXTENSIONS = '[data-testid="projectsPlugin.specExtensions"]';
 const EDITOR = `${DOCUMENT} .cm-content`;
 // A listbox option's children are presentational to role selectors, so its rows are found by their legend.
@@ -56,22 +55,6 @@ const expectCount = async (page, selector, count, what) => {
   if (seen !== count) {
     throw new Error(`expected ${count} ${what}, saw ${seen}`);
   }
-};
-
-/**
- * Points at the empty cell right of the top row's last card, where the canvas then shows its `+`. The top row keeps the
- * new card clear of the caption at the bottom of the frame.
- */
-const showAdd = async (page) => {
-  const boxes = await page
-    .locator('[data-testid="feature-canvas-node"]')
-    .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON()));
-  const top = Math.min(...boxes.map((box) => box.y));
-  const { x, y, width, height } = boxes
-    .filter((box) => box.y - top < box.height / 2)
-    .reduce((right, box) => (box.x > right.x ? box : right));
-  await page.mouse.move(x + width / 2 + width * 1.25, y + height / 2, { steps: 12 });
-  await page.getByTestId('feature-canvas.add').waitFor({ state: 'visible', timeout: 5_000 });
 };
 
 const openExtensions = async (demo, page) => {
@@ -190,7 +173,7 @@ export const steps = [
       await waitForDocument(page, MAP_SPEC);
       await page.locator('[data-testid="markdown.embed"]').first().waitFor({ state: 'visible', timeout: 10_000 });
       await expectCount(page, ADD_ARTIFACT, 0, 'Create artifact buttons');
-      await expectCount(page, CANVAS_TOGGLE, 1, 'view toggles');
+      await expectCount(page, BOARD_TOGGLE, 1, 'view toggles');
       await expectCount(page, EXTENSIONS, 1, 'Extensions menus');
       await demo.sleep({ ms: LOOK });
       await scrollDocumentTo(page, `${EDITOR} .cm-line:has-text("${IDEA}")`);
@@ -241,7 +224,7 @@ export const steps = [
       await demo.click({ selector: `[role="menu"] >> [role^="menuitem"]:has-text("${TALK_SPEC}")`, label: TALK_SPEC });
       await waitForDocument(page, TALK_SPEC);
       await expectCount(page, '[data-testid="markdown.embed"]', 0, 'feature sections');
-      await expectCount(page, CANVAS_TOGGLE, 0, 'view toggles');
+      await expectCount(page, BOARD_TOGGLE, 0, 'view toggles');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -253,9 +236,9 @@ export const steps = [
       await expectCount(page, '[role="menu"] >> [role="menuitemcheckbox"]', 2, 'packages');
       await demo.sleep({ ms: 1_500 });
       await checkPackage(demo, 'Software');
-      await page.locator(CANVAS_TOGGLE).waitFor({ state: 'visible', timeout: 5_000 });
+      await page.locator(BOARD_TOGGLE).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.press({ key: 'Escape' });
-      await caption(demo, 8, 'With Software checked, the canvas and board views appear');
+      await caption(demo, 8, 'With Software checked, Data model, API and Board appear');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -269,7 +252,7 @@ export const steps = [
       await checkPackage(demo, 'Video');
       await demo.press({ key: 'Escape' });
       await page.getByRole('menu').waitFor({ state: 'hidden', timeout: 5_000 });
-      await expectCount(page, CANVAS_TOGGLE, 0, 'view toggles');
+      await expectCount(page, BOARD_TOGGLE, 0, 'view toggles');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -295,23 +278,11 @@ export const steps = [
   {
     name: 'Go back to the feature map',
     run: async ({ demo, page }) => {
-      await caption(demo, 11, `Back on "${MAP_SPEC}", the canvas draws its features, the new one too`);
+      await caption(demo, 11, `Back on "${MAP_SPEC}", the Board sorts its features by status, the new one too`);
       await pickSpec(demo, page, MAP_SPEC);
-      await demo.click({ selector: CANVAS_TOGGLE, label: 'Canvas' });
-      await page.getByTestId('feature-card').nth(8).waitFor({ state: 'visible', timeout: 10_000 });
-      await expectCount(page, '[data-testid="feature-card"]', 9, 'feature cards');
-      await demo.sleep({ ms: LOOK });
-    },
-  },
-  {
-    name: 'Add a feature on the canvas',
-    done: async ({ page }) => (await page.getByTestId('feature-card').count()) > 9,
-    run: async ({ demo, page }) => {
-      await caption(demo, 12, 'Pointing at an empty cell shows a + that adds a feature there');
-      await showAdd(page);
-      await demo.click({ selector: '[data-testid="feature-canvas.add"]', label: 'Add a feature here' });
-      await demo.click({ selector: '[data-testid="feature-map.new-feature"]', label: 'New feature' });
-      await page.getByTestId('feature-card').nth(9).waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.click({ selector: BOARD_TOGGLE, label: 'Board' });
+      await page.getByTestId('feature-kanban.card').nth(8).waitFor({ state: 'visible', timeout: 10_000 });
+      await expectCount(page, '[data-testid="feature-kanban.card"]', 9, 'feature cards');
       await demo.clearCaption();
       await demo.sleep({ ms: 6_000 });
     },

@@ -20,7 +20,7 @@ import { CodeOperation, Feature, FeatureMap } from '#types';
 
 import { useFeatureGraph, useOpenSpecLevel, useSpecTreeIds } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
-import { type FeatureViewId, isFeatureView } from '../../spec-views.ts';
+import { isFeatureView } from '../../spec-views.ts';
 
 // Lazy: the canvas engine is large, and only the map's own views need it.
 const SpecMap = lazy(() => import('../SpecFeatures/index.ts').then((module) => ({ default: module.SpecMap })));
@@ -146,9 +146,9 @@ export const FeatureSpecView = ({ subject, view, project, attendableId }: Featur
   return (
     <Suspense fallback={null}>
       {tracker ? (
-        <ProjectSpecMap spec={subject} mode={view} project={tracker} owner={owner} attendableId={attendableId} />
+        <ProjectSpecMap spec={subject} project={tracker} owner={owner} attendableId={attendableId} />
       ) : (
-        <SpecFeatures spec={subject} mode={view} attendableId={attendableId} />
+        <SpecFeatures spec={subject} attendableId={attendableId} />
       )}
     </Suspense>
   );
@@ -156,18 +156,16 @@ export const FeatureSpecView = ({ subject, view, project, attendableId }: Featur
 
 type ProjectSpecMapProps = {
   spec: Spec.Spec;
-  mode: FeatureViewId;
   project: Project.Project;
-  /** The feature the spec breaks down, whose lineage the map does not offer to add. */
+  /** The feature the spec breaks down. */
   owner?: Feature.Feature;
   attendableId: string;
 };
 
-const ProjectSpecMap = ({ spec, mode, project, owner, attendableId }: ProjectSpecMapProps) => {
+const ProjectSpecMap = ({ spec, project, owner, attendableId }: ProjectSpecMapProps) => {
   const openLevel = useOpenSpecLevel(project, attendableId);
-  const lineage = useMemo(() => (owner ? FeatureMap.getLineage(owner).map(({ id }) => id) : []), [owner]);
   const handleZoom = useCallback((id: string) => openLevel(owner ?? spec, id), [openLevel, owner, spec]);
-  return <SpecMap spec={spec} mode={mode} attendableId={attendableId} exclude={lineage} onZoom={handleZoom} />;
+  return <SpecMap spec={spec} attendableId={attendableId} onZoom={handleZoom} />;
 };
 
 export type FeatureSpecCompanionProps = {

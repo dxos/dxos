@@ -10,13 +10,17 @@ import FEATURES from '../../lang/features.mdl?raw';
 import PLUGIN from '../../lang/plugin.mdl?raw';
 import QA from '../../lang/qa.mdl?raw';
 import REVIEW from '../../lang/review.mdl?raw';
+import SOFTWARE from '../../lang/software.mdl?raw';
 import SQL from '../../lang/sql.mdl?raw';
 import VIDEO from '../../lang/video.mdl?raw';
 import { frontmatter } from '../spec-index/parse.ts';
 
 /** The dialects in `lang/`, by frontmatter id. */
 export const DIALECTS: ReadonlyMap<string, string> = new Map(
-  [APP, CHANGELOG, CODE, CORE, FEATURES, PLUGIN, QA, REVIEW, SQL, VIDEO].map((text) => [frontmatter(text).id, text]),
+  [APP, CHANGELOG, CODE, CORE, FEATURES, PLUGIN, QA, REVIEW, SOFTWARE, SQL, VIDEO].map((text) => [
+    frontmatter(text).id,
+    text,
+  ]),
 );
 
 /** The ids a document's frontmatter lists under `extends`. */

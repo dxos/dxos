@@ -216,18 +216,25 @@ component SpecArticle
 ```mdl
 component SpecViewContent
   desc: |
-    One of the views this plugin contributes to a spec's companion tabs (`ProjectCapabilities.SpecView`):
-    Definitions, Related, Data model and API in Structure; At cursor and the Ledger in Decisions; Review and Code
-    in Review. Data model, API, Review and Code read code, so only a spec using the code
-    dialect is offered them; the others read any dialect's blocks. It shares plugin-projects' `SpecSession` with the
-    spec's editor, wherever each is shown: a chip in the editor's margin opens its view's tab,
-    and a view moves the editor to an item. An answer goes through the open editor, else into
-    the spec's text.
+    One of the views the software dialect contributes to a spec's companion tabs (`ProjectCapabilities.SpecView`):
+    Data model and API in Structure, and Code in Review. Each reads code, so only a spec using the software dialect
+    is offered them. It shares plugin-projects' `SpecSession` with the spec's editor, wherever each is shown: a
+    verdict's source opens Code, and a view moves the editor to an item.
   props:
     spec?: Spec
     content?: string
     sourceKey?: string
-    view: definitions | related | data | api | cursor | ledger | review | code
+    view: data | api | code
+```
+
+```mdl
+component SpecSourcesProvider
+  desc: |
+    What plugin-projects' companion views read from where a spec comes from, given through
+    `ProjectCapabilities.SpecSourcesProvider`: the base text diff mode compares with, the specs its source keys
+    name, the source index, a reader for files in the checkout, and a way to open one.
+  props:
+    spec: Spec
 ```
 
 ```mdl
@@ -242,8 +249,8 @@ component SpecSourceToolbar
 ```mdl
 component SpecPanel
   desc: |
-    Every SpecViewContent in one panel beside the editor, for static content: it shows the view of
-    the group last asked for, with one toggle across all of them and the SpecSourceToolbar.
+    plugin-projects' companion views and every SpecViewContent in one panel beside the editor, for static content:
+    it shows the view of the group last asked for, with one toggle across all of them and the SpecSourceToolbar.
   props:
     content?: string
     sourceKey?: string
@@ -995,7 +1002,7 @@ feat F-19: A spec's document is the spec
              block for a feature it embeds.
   req F-19.3: No structure is required. A document may be prose alone, embeds may sit anywhere in it, and the prose
              around them is kept as written.
-  req F-19.4: A feature added from the canvas or an operation is embedded at the end of the document's
+  req F-19.4: A feature added by an operation is embedded at the end of the document's
              `## Features` section, or at the end of the document when it has none.
   req F-19.5: A feature the spec holds that its document has never embedded, such as one a seed or a migration added, is
              embedded when the spec is synced, never dropped.
@@ -1080,13 +1087,11 @@ feat F-22: The feature map in a project
   req F-22.3: The nav tree lists each feature on a spec level beneath it as a level of its own, by name, nested through
               its breakdown at `project/<id>/specs/<spec>/<feature>/…`. A tracked feature opens as the project's
               article at its level, its Overview the feature and its Specs tab its breakdown.
-  req F-22.4: The software package's dialects are the features (`org.dxos.spec.features`), app, plugin, QA and SQL
-              dialects. A spec that uses the features dialect offers the canvas and the board as views of the
-              project's Specs tab. Adding a feature to a spec gives it the software package.
-  req F-22.5: The canvas shows a `+` in the empty cell under the pointer, anywhere on the grid, which adds a new feature
-              or an existing one in that cell, fixing the other cards where they are drawn. It has no up or home
-              button: a feature map does not nest scenes, and a double-click opens a feature's own level.
-  req F-22.6: The software package offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`,
+  req F-22.4: This plugin provides one dialect, the software dialect (`org.dxos.spec.software`), which extends the
+              features (`org.dxos.spec.features`), app, code, plugin, QA and SQL dialects. A spec that uses it is
+              offered Data model, API and Board in Structure and Code in Review. Adding a feature to a spec gives it
+              the software dialect.
+  req F-22.6: The software dialect offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`,
               `/test` and `/table`, which write text only.
   req F-22.7: The feature operations are `CodeOperation`s, keyed in this plugin's domain (`org.dxos.operation.code.*`)
               and handled by `CodeOperationHandlerSet`. The Feature Map skill (`org.dxos.skill.code.featureMap`)
@@ -1121,49 +1126,8 @@ feat F-24: Spec reviews in ECHO
   req F-24.5: Each item shows its newest verdict across the spec's reviews, with the review's date and commit: in the
               editor's status chip, the Review view's cards, and a chip on each requirement where a feature's page and
               its section in a spec list them. A feature card shows no verdicts.
-  req F-24.6: The Review view picks a review from the spec's history; it shows the current status by default.
-  req F-24.7: The Review view shows the review's summary as markdown: its first paragraph, with the rest behind a
-              disclosure. Below it, a filter of each status with its count, worst first, stays pinned above the cards
-              and shows only that status's verdicts; each status is a button of its own, its icon beside its count. The summary, filter and cards scroll together under the picker,
-              and the current card shows its note in full.
 ```
 
-```mdl
-feat F-25: Definitions
-  uses: [SpecViewContent]
-  req F-25.1: Definitions groups a spec by what names its blocks: each anchor is a group of the structure it names, and
-              groups gather into clusters around the block most of them share.
-  req F-25.2: Definitions draws the whole spec as a canvas, with no layout of its own to pick.
-  req F-25.3: The canvas opens a level at a time: a card per cluster, then one cluster's groups, then one block and
-              everything it touches. Double-clicking a card opens its level, and the canvas's trail goes back up.
-  req F-25.4: Every block draws with the icon and colour its dialect declares, and every link with the ends of the
-              relationship its field declares.
-  req F-25.5: The Video package gives a spec the video dialect, so a script's scenes, shots and cast group and draw by
-              the same rules as software.
-  req F-25.6: Related, Structure's second view, centres on the block nearest the editor's cursor, with what names it
-              above and what it names below, and moves to another block as the cursor does.
-```
-
-```mdl
-feat F-26: Decisions
-  uses: [SpecViewContent]
-  desc: |
-    Decisions mirrors Structure: At cursor reads the changelog for the block at the editor's cursor, and the Ledger
-    reads all of it, a level at a time. Both are built from react-ui's existing components.
-  req F-26.1: At cursor, Decisions' first and default view, shows what holds on the item at the editor's cursor, each
-              with the decisions that fill it in, then what holds on its block or on the block's items, and moves as
-              the cursor does.
-  req F-26.2: The Ledger opens on a card per block the changelog affects, the most recently decided first. A block
-              opens its threads, the decisions on it that cite one another; a thread opens with what holds now, then
-              its decisions by day. The trail goes back up.
-  req F-26.3: The Ledger filters by status (holds, replaced, not approved, questions), by who decided, and by text.
-  req F-26.4: Every level offers to approve the agent decisions in it that hold and that nobody has approved, with
-              the count on the button. On a thread it sits at the top. Approving records one decision by the person,
-              `Approve [D-a] and [D-b].`
-  req F-26.5: A decision shows how it relates to each decision it cites (fills in, replaces, replaces part of,
-              refines, builds on), read from the prose before the citation.
-  req F-26.6: A decision's chip in the margin opens the Ledger at the decision's thread.
-```
 
 ## Acceptance
 
@@ -1441,38 +1405,6 @@ test QA-2: Showcase clip
 ```
 
 ```mdl
-test QA-3: Walk a spec's feature map
-  desc: |
-    A spec is the feature map the sidebar lists. A feature nests by owning a spec of its own, which the map zooms
-    into. Walked by the autocue flow `spec-map` against the SpecFeatures story, whose seed puts eight features on one
-    spec and gives "Provider sync" two subfeatures.
-  actors: human
-  status: passing            # 2026-10-27, recorded by autocue/spec-map.mjs
-  given:
-    - storybook serves plugin-code
-    - the seeded spec "Inbox and agents" is owned by a project and holds eight features
-  steps:
-    - name: Open a spec's feature map
-      do: Open the spec.
-      expect: the canvas shows eight feature cards with an arrow per dependency
-    - name: Select a feature
-      do: Click the "Provider sync" card.
-      expect: the companion shows its description, requirements and its subfeatures IMAP and Gmail
-    - name: Zoom into the feature's own spec
-      do: Double-click the "Provider sync" card.
-      expect: the canvas shows its two subfeatures, and the trail reads All features › Provider sync
-    - name: Add a subfeature
-      do: Point at an empty cell, click the `+` that shows there, then New feature.
-      expect: a third card appears on the nested spec and the companion shows "New feature"
-    - name: Zoom back out
-      do: Click "All features" in the trail.
-      expect: the eight top-level cards return, and "Provider sync" counts three subfeatures
-    - name: View the map by status
-      do: Click the Kanban toggle.
-      expect: one column per status, the eight features sorted into them
-```
-
-```mdl
 test QA-4: Grow a spec from prose
   desc: |
     A spec starts as plain prose and takes structure a paragraph at a time, with nothing forced on it: each paragraph
@@ -1531,11 +1463,11 @@ test QA-5: Switch between a project's specs
     A project holds a feature map and a spec of prose side by side. Its Overview is one form in which each spec is a
     folded row that unfolds to the spec's fields, and whose `+` adds a spec. Its Specs tab shows one spec at a time,
     picked from a dropdown in the toolbar. The feature map's text mixes prose with its features, and `/feature` turns
-    a line of that prose into a feature. A new "Launch video" spec takes a package from another plugin, which adds
-    slash commands and no views. Walked by the autocue flow `project-specs` against the FeatureLevel story
+    a line of that prose into a feature. A new "Launch video" spec takes plugin-video's package, which adds slash
+    commands and no views. Walked by the autocue flow `project-specs` against the FeatureLevel story
     "Default", whose project "Inbox" owns the specs "Inbox and agents" and "Launch talk".
   actors: human
-  covers: [F-22.4, F-22.5, F-22.6]
+  covers: [F-22.4, F-22.6]
   status: unverified
   given:
     - storybook serves plugin-code
@@ -1544,7 +1476,7 @@ test QA-5: Switch between a project's specs
     - the document of "Inbox and agents" opens with a paragraph and a list of goals, embeds its eight features under
       the headings Accounts, Mail and Work with notes between them, and ends with two ideas under Ideas, the last
       "A morning digest of what agents did overnight"
-    - this plugin contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`, `/shot`,
+    - plugin-video contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`, `/shot`,
       `/voiceover` and `/caption` write its blocks, and no views of its own
   steps:
     - name: See the project's specs
@@ -1572,23 +1504,20 @@ test QA-5: Switch between a project's specs
     - name: Pick the other spec
       do: Click "Launch talk".
       expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and its Structure tab
-        offers no Canvas
+        offers no Board
     - name: Give it the software package
       do: Open Extensions and check Software.
-      expect: the menu lists Software and Video, and the Structure tab now offers Canvas and Board beside
-        Definitions
+      expect: the menu lists Software and Video, and the Structure tab now offers Data model, API and Board beside
+        Definitions and Related
     - name: Give the new spec the video package
       do: Pick "Launch video" from the dropdown, open Extensions and check Video.
-      expect: the document is empty, Video is checked and the Structure tab offers no Canvas
+      expect: the document is empty, Video is checked and the Structure tab offers no Board
     - name: Write a scene
       do: At the end of the document, type `/scene` and press Enter.
       expect: a fenced `scene SC-1:` block with empty `duration:` and `goal:` fields, the cursor at its title
     - name: Go back to the feature map
-      do: Pick "Inbox and agents" from the dropdown, open the Structure tab and click Canvas.
-      expect: the canvas shows nine feature cards, the morning digest among them, and no up or home button
-    - name: Add a feature on the canvas
-      do: Point at an empty cell, click the `+` that shows there, then New feature.
-      expect: a tenth card, "New feature", appears in that cell
+      do: Pick "Inbox and agents" from the dropdown, open the Structure tab and click Board.
+      expect: a column per status, the nine features sorted into them, the morning digest among the planned
 ```
 
 ```mdl
@@ -1629,15 +1558,14 @@ test QA-7: Walk a spec's structure on the canvas
   desc: |
     Definitions in a spec's Structure companion, a canvas opened a level at a time by double-clicking:
     the spec's clusters, one cluster's features, then one feature and everything it touches. A script in the video
-    dialect draws by the same rules in its own icons and colours. Walked by the autocue flow `spec-canvas` against
-    Composer.
+    dialect draws by the same rules in its own icons and colours. Definitions is plugin-projects' (its F-6); this
+    test walks it over this plugin's spec. Walked by the autocue flow `spec-canvas` against Composer.
   actors: human
-  covers: [F-25.2, F-25.3, F-25.4, F-25.5]
   status: passing            # 2026-11-06, recorded by autocue/spec-canvas.mjs
   given:
     - composer serves plugin-code, enabled
     - the project "Composer specs" owns the specs "CodePlugin", whose text is this spec, and "Launch video", whose text
-      is deus's `lang/examples/launch-video.mdl` and which uses the Video package
+      is deus's `lang/examples/launch-video.mdl` and which uses plugin-video's Video package
     - the Specs tab shows "CodePlugin", with the sidebar closed and the companion 62rem wide
   steps:
     - name: Open the Structure companion
@@ -1657,8 +1585,8 @@ test QA-7: Walk a spec's structure on the canvas
       expect: the canvas draws the spec's clusters again
     - name: Open the launch video
       do: Open the Structure tab, then pick "Launch video" from the spec dropdown.
-      expect: Definitions draws the script's clusters, around maya and around narrator; Structure offers only
-        Definitions and Related, and there is no Review tab
+      expect: Definitions draws the script's clusters, around maya and around narrator, and Structure offers only
+        Definitions and Related
     - name: Open a character's cluster
       do: Double-click the maya cluster.
       expect: a frame per scene holding what only it names, SC-2 marked as opening a level
@@ -1677,21 +1605,22 @@ test QA-7: Walk a spec's structure on the canvas
 test QA-8: Tour a spec's companion tabs
   desc: |
     Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
-    editor's cursor from block to block, then Data model and API; Decisions at the cursor and the Ledger, a level at
-    a time; Review and Code.
+    editor's cursor from block to block, then the software dialect's Data model, API and Board; Decisions at the
+    cursor and the Ledger, a level at a time; Review, and the software dialect's Code. Definitions, Related,
+    Decisions and Review are plugin-projects' (its F-6, F-7 and F-8).
     A script in the video dialect then offers only the views that read any dialect, and Definitions drills into it as
     it does into code.
     Walked by the autocue flow `spec-companions` against Composer.
   actors: human
-  covers: [F-25.2, F-25.5, F-25.6, F-26.1, F-26.2]
+  covers: [F-22.4]
   status: passing            # 2026-11-06, recorded by autocue/spec-companions.mjs
   given:
-    - composer serves plugin-code, enabled
-    - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec and which uses the Software
-      package, with the review of 2026-10-27
+    - composer serves plugin-code and plugin-video, enabled
+    - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec and which uses the software
+      dialect, with the review of 2026-10-27
       (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it
-    - the project also owns "Launch video", whose text is deus's `lang/examples/launch-video.mdl` and which uses the
-      Video package
+    - the project also owns "Launch video", whose text is deus's `lang/examples/launch-video.mdl` and which uses
+      plugin-video's Video package
     - the Specs tab shows "CodePlugin" with the cursor on its first line, the sidebar closed and the companion 62rem wide
   steps:
     - name: Open Definitions
@@ -1718,9 +1647,12 @@ test QA-8: Tour a spec's companion tabs
     - name: Open API
       do: Pick API in Structure's toolbar.
       expect: the spec's operations, with the services each needs
+    - name: Open Board
+      do: Pick Board in Structure's toolbar.
+      expect: a column per status, the spec's features sorted into them
     - name: Open Decisions at the cursor
-      do: Click F-25.6's id in the editor, then open the companion's Decisions tab.
-      expect: At cursor shows D-93, which holds on F-25.6, then the decisions that hold on F-25
+      do: Click F-22.4's id in the editor, then open the companion's Decisions tab.
+      expect: At cursor shows the decisions that hold on F-22.4, then those that hold on F-22
     - name: Open the Ledger
       do: Pick Ledger in Decisions' toolbar.
       expect: a card per block, the most recently decided first, under a count of the decisions not yet approved
@@ -1738,19 +1670,19 @@ test QA-8: Tour a spec's companion tabs
       expect: Code shows `compiler/build.ts` with compileEntry highlighted
     - name: Open the launch video
       do: Pick "Launch video" from the spec dropdown, then open Structure's Definitions.
-      expect: the script's clusters, around maya and around narrator
+      expect: the script's clusters, around maya and around narrator, and Structure offers no Data model, API or Board
+    - name: Open a character's cluster
+      do: Double-click the maya cluster.
+      expect: a frame per scene holding what only it names
+    - name: Open a scene
+      do: Double-click SC-2.
+      expect: SC-2 is centred, with its shots, voiceover, caption and cast and the screenings that name it
     - name: Put the cursor in a scene
-      do: Pick Related, then click SC-2's header line in the editor.
-      expect: Related centres on SC-2, with its shots, voiceover, caption and cast below it and its screenings
-    - name: Open Data model and API on the script
-      do: Pick Data model, then API.
-      expect: each says the spec declares none, since only code has types and operations
+      do: Pick Related, then click SC-3's header line in the editor.
+      expect: Related centres on SC-3
     - name: Open the script's decisions
       do: Open the Decisions tab and pick Ledger.
       expect: a card per block the script's two decisions affect
-    - name: Open the script's Review and Code
-      do: Open the Review tab, then pick Code.
-      expect: Review says the script has no review yet; Code says it has no code key open
 ```
 
 ## Changelog
@@ -2648,6 +2580,80 @@ decision D-100: A decision's relation to each one it cites is read from the clau
   why: The changelog's prose already says how decisions relate, so no past entry has to be rewritten, and the approval stays in the form the graph already reads.
   rejected:
     - A `relation:` field per citation: every past entry would need it, and the prose would repeat it.
+
+```mdl
+decision D-101: Each companion view lives with what it is for: a view that reads any dialect is plugin-projects', a software view is this plugin's and comes with the software dialect, and a video view is plugin-video's and comes with the video dialect.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [SpecViewContent, F-24, F-25, F-26]
+```
+
+```mdl
+decision D-102: The Definitions canvas replaces the feature map's canvas, which is removed: Definitions does what it did.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-22.4, F-22.5, QA-3, QA-5]
+```
+
+```mdl
+decision D-103: Review reads any dialect, so it is plugin-projects'. Code, the source a verdict cites, is software's.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [SpecViewContent, F-24.6, F-24.7]
+```
+
+```mdl
+decision D-104: This plugin provides one dialect, the software dialect, and the software dialect provides the slash commands, the Board, Code, Data model and API.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-22.4, F-22.6, SpecViewContent]
+```
+
+```mdl
+decision D-105: The tour of a spec's companion tabs shows the Board.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-106: Definitions, Related, At cursor, the Ledger and Review move to plugin-projects with their requirements (F-25, F-26, F-24.6 and F-24.7 become its F-6, F-7 and F-8). This plugin gives them what only it knows through `ProjectCapabilities.SpecSourcesProvider`: the base text, the specs a spec's source keys name, the source index and the checkout's files. The software dialect styles a feature's status on their cards through its package's `facts`. Fills in [D-101] and [D-103].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecSourcesProvider, SpecPanel, SpecViewContent]
+  why: The views were generic but read the checkout through this plugin's hooks; a capability keeps the checkout here and the views there.
+  rejected:
+    - Moving the checkout reader to plugin-projects: it knows no file service or GitHub source.
+```
+
+```mdl
+decision D-107: The Video package and its slash commands move to plugin-video, so a spec is offered the video dialect only while plugin-video is enabled. Fills in [D-101].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-5, QA-7, QA-8]
+  why: plugin-video is where video is stored and transcribed; nothing in this plugin reads the video dialect.
+```
+
+```mdl
+decision D-108: QA-3 is removed with the canvas it walked, and QA-5 ends on the Board instead of adding a feature on the canvas. Features are added with `/feature` or an operation. Fills in [D-102].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3, QA-5, F-19.4]
+  why: QA-3 zoomed into a feature's spec and added features in a cell, which the Board does not do.
+  rejected:
+    - Rewriting QA-3 on the Board: the Board neither nests specs nor places features.
+```
+
+```mdl
+decision D-109: QA-8 opens the Board after API, stops At cursor on F-22.4 now that F-25.6 is plugin-projects', and follows the flow's video steps: the script offers no Data model, API or Board, and opens a character's cluster and a scene. Fills in [D-105] and [D-106].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+```
 
 ## Appendix: Extension Definitions
 

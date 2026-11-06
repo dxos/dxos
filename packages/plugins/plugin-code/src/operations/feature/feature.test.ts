@@ -195,7 +195,7 @@ describe('CodeOperation.CreateSpec', () => {
       const inbox = yield* Database.add(Spec.make({ name: 'Inbox', dialects: ['org.dxos.dialect.code'] }));
       const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(inbox) });
       const { spec: breakdown } = yield* createSpec.handler({ name: 'Sync', feature: ref(sync) });
-      expect(breakdown.dialects).toEqual(['org.dxos.dialect.code', ...FeatureMap.SOFTWARE_DIALECTS]);
+      expect(breakdown.dialects).toEqual(['org.dxos.dialect.code', FeatureMap.SOFTWARE_DIALECT]);
     }).pipe(Effect.provide(testLayer())),
   );
 });

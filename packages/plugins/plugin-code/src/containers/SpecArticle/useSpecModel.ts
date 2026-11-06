@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtom, useAtomValue } from '@effect/atom-react';
-import * as Atom from 'effect/reactivity/Atom';
+import { useAtom } from '@effect/atom-react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type * as Spec from '@dxos/compute/Spec';
-import * as SpecReview from '@dxos/compute/SpecReview';
 import { findSpecRefs, specReferenceFilter } from '@dxos/deus/extension';
 import {
   type ReviewModel,
@@ -20,15 +18,16 @@ import {
   parseSourceKey,
   reviewKeyOf,
 } from '@dxos/deus/review';
-import { Obj } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { useObject } from '@dxos/echo-react';
 import type * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 import * as SpecSession from '@dxos/plugin-projects/SpecSession';
+import * as SpecViews from '@dxos/plugin-projects/SpecViews';
 import { type Text } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { type GutterItem, SPEC_INDEX, buildChangelogGraph, resolveSpecRef } from '#components';
-import { SpecReviews, getSpecKey } from '#sync';
+import { type GutterItem, SPEC_INDEX } from '#components';
+import { getSpecKey } from '#sync';
 
 import { fileKey, useLocalTexts, useResolvedPath, useSpecDiff } from './useSpecSources.ts';
 
@@ -52,7 +51,7 @@ export type SpecSource = {
 export const sessionId = ({ spec, sourceKey }: Pick<SpecSource, 'spec' | 'sourceKey'>): string =>
   spec?.id ?? sourceKey ?? 'static';
 
-export type SpecModel = {
+export type SpecArticleModel = {
   /** The session the editor and the panel share. */
   id: string;
   session: SpecSession.State;
@@ -65,7 +64,7 @@ export type SpecModel = {
   /** Files read from the checkout, by file key. */
   texts: ReadonlyMap<string, string>;
   /** The spec's reviews, newest first. */
-  reviews: readonly SpecReviews.ReviewData[];
+  reviews: readonly SpecModel.ReviewData[];
   /** Each item's newest verdict across the reviews, or the static content's review. */
   review?: ReviewModel;
   read: (target: SourceKey) => string | undefined;
@@ -85,7 +84,13 @@ export type SpecModel = {
  * Everything the spec's editor and its panel read: its text, the files it names from the checkout, its reviews,
  * its decisions and what diff mode compares it with. Both call it, so either can be shown without the other.
  */
-export const useSpecModel = ({ spec, content, sourceKey, base, review: staticReview }: SpecSource): SpecModel => {
+export const useSpecModel = ({
+  spec,
+  content,
+  sourceKey,
+  base,
+  review: staticReview,
+}: SpecSource): SpecArticleModel => {
   const id = sessionId({ spec, sourceKey });
   const [session, setSession] = useAtom(SpecSession.session(id));
   const { evidence } = session;
@@ -115,7 +120,7 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
           .map(fileKey),
         ...findSpecRefs(ownText)
           .filter(({ id }) => isIndexedSpec(id))
-          .map(({ id }) => resolveSpecRef(SPEC_INDEX, id))
+          .map(({ id }) => SpecModel.resolveSpecRef(SPEC_INDEX, id))
           .flatMap((resolved) => ('error' in resolved ? [] : [fileKey(resolved)])),
       ].filter(isTruthy),
     [reviewKey, spec, key, evidence, ownText],
@@ -125,17 +130,10 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
   const texts = useLocalTexts(useMemo(() => [...related, ...codeKeys], [related, codeKeys]));
   const text = (!spec && key && texts.get(fileKey(key))) || ownText;
   const reviewText = (!spec && reviewKey ? texts.get(reviewKey) : undefined) ?? staticReview;
-  const queried = useQuery(spec && Obj.getDatabase(spec), SpecReview.query(spec));
-  // Through each review's atom, so a review recorded again with new verdicts reaches the editor and the panel.
-  const reviews = useAtomValue(
-    useMemo(
-      () => Atom.make((get) => queried.map((review) => get(Obj.atom(review))).sort(SpecReview.byNewest)),
-      [queried],
-    ),
-  );
+  const { reviews, review: current } = SpecViews.useSpecReviews(spec);
   const review = useMemo(
-    () => (spec ? SpecReviews.currentModel(reviews) : reviewText ? parseReview(reviewText) : undefined),
-    [spec, reviews, reviewText],
+    () => (spec ? current : reviewText ? parseReview(reviewText) : undefined),
+    [spec, current, reviewText],
   );
   const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
   useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
@@ -158,7 +156,7 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
   const changelogStart = text.search(/^## Changelog/m);
   const changelog = changelogStart < 0 ? '' : text.slice(changelogStart);
   const parsedDecisions = useMemo(
-    () => buildChangelogGraph(changelog).nodes.filter((node): node is GutterItem => node.kind !== 'block'),
+    () => SpecModel.buildChangelogGraph(changelog).nodes.filter((node): node is GutterItem => node.kind !== 'block'),
     [changelog],
   );
   // Held stable while the decisions are unchanged, so typing does not rebuild the editor's extensions (which resets it).

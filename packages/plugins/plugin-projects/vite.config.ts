@@ -9,6 +9,8 @@ export default defineConfig({
     'ns/ProjectGraph': 'src/ProjectGraph.ts',
     'ns/ProjectHooks': 'src/ProjectHooks.ts',
     'ns/SpecCommands': 'src/SpecCommands.ts',
+    'ns/SpecModel': 'src/SpecModel.ts',
+    'ns/SpecViews': 'src/SpecViews.ts',
     'ns/Templates': 'src/Templates.ts',
     'templates': 'src/templates/index.ts',
     'ProjectOperationHandlerSet': 'src/operations/ProjectOperationHandlerSet.ts',

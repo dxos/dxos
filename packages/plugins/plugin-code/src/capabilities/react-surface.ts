@@ -43,7 +43,7 @@ export default Capability.makeModule(() =>
         id: 'specView',
         filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => isSpecView(view)),
         component: SpecViewContent,
-        props: ({ data: { subject, view } }) => ({ spec: subject, view: isSpecView(view) ? view : 'definitions' }),
+        props: ({ data: { subject, view } }) => ({ spec: subject, view: isSpecView(view) ? view : 'data' }),
       }),
       Surface.create({
         id: 'specToolbar',

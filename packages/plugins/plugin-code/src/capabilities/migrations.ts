@@ -110,7 +110,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   if (parent) {
     let spec = await findNested(db, state, parent);
     if (!spec) {
-      spec = db.add(Spec.make({ name: parent.name, dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
+      spec = db.add(Spec.make({ name: parent.name, dialects: [FeatureMap.SOFTWARE_DIALECT] }));
       Obj.setParent(spec, parent);
       state.byParent.set(parent.id, spec);
     }
@@ -131,7 +131,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
       if (Spec.instanceOf(existing)) {
         spec = existing;
       } else {
-        const made = db.add(Spec.make({ name: project.name ?? '', dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
+        const made = db.add(Spec.make({ name: project.name ?? '', dialects: [FeatureMap.SOFTWARE_DIALECT] }));
         Obj.update(project, (project) => {
           project.specs.push(Ref.make(made));
         });
@@ -149,7 +149,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   const [existing] = await db
     .query(Filter.and(Filter.type(Spec.Spec, { name: UNPLACED_NAME }), Filter.hasParent(false)))
     .run();
-  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME, dialects: [...FeatureMap.SOFTWARE_DIALECTS] }));
+  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME, dialects: [FeatureMap.SOFTWARE_DIALECT] }));
   state.unplaced = unplaced;
   return unplaced;
 };
@@ -346,7 +346,7 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
   const members = new Map<string, Feature.Feature[]>();
   return Migration.define({
     from: LegacySpec.SpecV2,
-    to: Spec.Spec,
+    to: LegacySpec.SpecV3,
     transform: async (from, { db }) => {
       const { id, name, description, document, features } = from;
       const held = await document.tryLoad();
@@ -364,7 +364,7 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
       return {
         name,
         description,
-        dialects: [...FeatureMap.SOFTWARE_DIALECTS],
+        dialects: [...LegacySpec.SOFTWARE_DIALECTS_V3],
         content: Ref.fromURI(content.uri),
         [Obj.Meta]: { keys },
       };
@@ -398,8 +398,32 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
  */
 export const specDocuments = Migration.define({
   from: LegacySpec.Document,
-  to: Spec.Spec,
+  to: LegacySpec.SpecV3,
   transform: async ({ name, content }) => ({ name: name ?? '', dialects: [], content: Ref.fromURI(content.uri) }),
+});
+
+/**
+ * `Spec` 0.3.0 → 0.4.0: a spec that listed any of the software package's dialects lists the one software dialect that
+ * extends them all, in place of the first; its other dialects stay.
+ */
+export const specSoftwareDialect = Migration.define({
+  from: LegacySpec.SpecV3,
+  to: Spec.Spec,
+  transform: async ({ name, description, dialects, content }) => {
+    const first = dialects.findIndex((id) => LegacySpec.SOFTWARE_DIALECTS_V3.includes(id));
+    const kept = dialects.filter((id) => !LegacySpec.SOFTWARE_DIALECTS_V3.includes(id));
+    return {
+      name,
+      description,
+      dialects:
+        first < 0
+          ? kept
+          : [...kept.slice(0, first), FeatureMap.SOFTWARE_DIALECT, ...kept.slice(first)].filter(
+              (id, index, all) => all.indexOf(id) === index,
+            ),
+      content: Ref.fromURI(content.uri),
+    };
+  },
 });
 
 export default Capability.makeModule(
@@ -417,6 +441,7 @@ export default Capability.makeModule(
       // Before the documents' own migration, so only the documents no spec held become specs.
       makeSpecContent(),
       specDocuments,
+      specSoftwareDialect,
       // After the specs' own migrations, so a feature's container reads as a current spec.
       featureSources,
       featureRequirements,

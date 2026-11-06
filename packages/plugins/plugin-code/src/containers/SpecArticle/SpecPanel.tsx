@@ -2,61 +2,39 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomSet, useAtomValue } from '@effect/atom-react';
+import { useAtomSet } from '@effect/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import type * as Translations from '@dxos/app-toolkit/Translations';
 import { type SourceKey, formatSourceKey, isSpecKey } from '@dxos/deus/review';
-import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 import * as SpecSession from '@dxos/plugin-projects/SpecSession';
+import * as SpecViews from '@dxos/plugin-projects/SpecViews';
 import { getSpace } from '@dxos/react-client/echo';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { openExternalUrl } from '@dxos/util';
 
-import {
-  ApiSurface,
-  CodeView,
-  DataModelGraph,
-  DecisionCursor,
-  DecisionLedger,
-  DefinitionFocus,
-  DefinitionGraph,
-  type DefinitionModel,
-  ReviewPanel,
-  SPEC_INDEX,
-  answerQuestion,
-  approveDecisions,
-  pendingReveal,
-  specCursor,
-  toUserHandle,
-} from '#components';
-import { SpecReviews } from '#sync';
-import { CodeOperation } from '#types';
+import { ApiSurface, CodeView, DataModelGraph, SPEC_INDEX, pendingReveal } from '#components';
+import { CodeOperation, FeatureMap } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { SPEC_VIEWS, type SpecViewId, isSpecView } from '../../spec-views.ts';
+import { SOFTWARE_FACTS, SPEC_VIEWS, type SpecViewId, isSpecView } from '../../spec-views.ts';
 import { useGitHubText } from './useGitHubText.ts';
-import { type SpecModel, type SpecSource, useSpecModel } from './useSpecModel.ts';
+import { type SpecArticleModel, type SpecSource, useSpecModel } from './useSpecModel.ts';
 import { fileKey, useSpecSyncState } from './useSpecSources.ts';
-
-const { getEditor, reveal } = SpecSession;
-
-const VIEWS = SPEC_VIEWS;
-
-type View = SpecViewId;
-
-const groupOf = (view: View): SpecSession.Group => VIEWS.find(({ id }) => id === view)!.group;
 
 const isDiffAgainst = (value: string): value is SpecSession.DiffAgainst => value === 'base' || value === 'head';
 
@@ -75,7 +53,7 @@ export const useOpenSource = ({
   id,
   key,
   setSession,
-}: Pick<SpecModel, 'id' | 'key' | 'setSession'> & SpecSource) => {
+}: Pick<SpecArticleModel, 'id' | 'key' | 'setSession'> & SpecSource) => {
   const space = spec ? getSpace(spec) : undefined;
   const { invokePromise } = AppHooks.useOperationInvoker();
   const setPendingReveal = useAtomSet(pendingReveal);
@@ -97,7 +75,7 @@ export const useOpenSource = ({
       }
       if (key && fileKey(target) === fileKey(key)) {
         if (target.fragment) {
-          reveal(id, target.fragment);
+          SpecSession.reveal(id, target.fragment);
         }
         return;
       }
@@ -123,112 +101,22 @@ export const useOpenSource = ({
 };
 
 export type SpecViewContentProps = SpecSource & {
-  view: View;
-  /** Whether answers to the changelog's questions are taken; an ECHO spec takes them unless read-only. */
-  readOnly?: boolean;
+  view: SpecViewId;
 };
 
 /**
- * One view of a spec: its definitions, review, cited code, decision log or graph, data model or API. It shares its
- * session with the spec's editor, wherever that is open, so either moves the other to an item.
+ * One view of a spec that reads code: its data model, its API, or the code a review cites. It shares its session with
+ * the spec's editor, wherever that is open.
  */
-export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewContentProps) => {
-  const { spec } = source;
-  const [dialects] = useObject(spec, 'dialects');
+export const SpecViewContent = ({ view, ...source }: SpecViewContentProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const identity = useIdentity();
   const sync = useSpecSyncState();
-  const model = useSpecModel(source);
-  const { id, session, setSession, target, key, reviewKey, text, texts, reviews, review, read, specs, changelog } =
-    model;
-  const { codePath, baseText } = model;
-  const { evidence, selectedVerdict, selectedReview, selectedDecision } = session;
-  const cursor = useAtomValue(specCursor(id));
-  // The review view shows the current status or one review; the editor's chips always show the current status.
-  const history = useMemo(
-    () => reviews.map(({ id, date, by, commit }) => ({ id, label: `${date} · ${by} · ${commit.slice(0, 7)}` })),
-    [reviews],
-  );
+  const { session, text, texts, reviews, review, codePath } = useSpecModel(source);
+  const { evidence, selectedVerdict, selectedReview } = session;
   const shownReview = useMemo(() => {
     const picked = selectedReview && reviews.find(({ id }) => id === selectedReview);
-    return picked ? SpecReviews.toModel(picked) : review;
+    return picked ? SpecModel.toReviewModel(picked) : review;
   }, [reviews, review, selectedReview]);
-
-  const update = useCallback(
-    (patch: Partial<typeof session>) => setSession((current) => ({ ...current, ...patch })),
-    [setSession],
-  );
-
-  const open = useOpenSource({ ...source, id, key, setSession });
-
-  const activate = useCallback(
-    (definition: DefinitionModel) =>
-      definition.external ? void open(definition.external.key) : reveal(id, definition.id),
-    [id, open],
-  );
-
-  const selectVerdict = useCallback(
-    (verdict: string) => {
-      update({ selectedVerdict: verdict });
-      // The card list keeps focus, so the arrow keys keep moving through the verdicts.
-      reveal(id, verdict, false);
-    },
-    [id, update],
-  );
-
-  // Appends a decision through the open editor when there is one, so it reaches collaborators like a typed edit; else
-  // as a minimal change to the spec's text. Returns whether the spec had a changelog to append to.
-  const appendDecision = useCallback(
-    (edit: (current: string, by: string, date: string) => { from: number; to: number; insert: string } | undefined) => {
-      const editor = getEditor(id);
-      const current = editor ? editor.state.doc.toString() : text;
-      const name = identity?.displayName;
-      const change = edit(
-        current,
-        `user:${name ? toUserHandle(name) : identity?.did}`,
-        new Date().toISOString().slice(0, 10),
-      );
-      if (!change) {
-        return false;
-      }
-      if (editor) {
-        editor.dispatch({ changes: change });
-      } else if (target) {
-        Doc.updateText(target, ['content'], current.slice(0, change.from) + change.insert + current.slice(change.to));
-      }
-      return true;
-    },
-    [id, identity, text, target],
-  );
-  const handleAnswer = useCallback(
-    (question: string, answer: string) => {
-      if (!appendDecision((current, by, date) => answerQuestion(current, { question, answer, by, date }))) {
-        log.warn('answer not recorded: no changelog', { question });
-        return;
-      }
-      update({ selectedDecision: question });
-    },
-    [appendDecision, update],
-  );
-  const handleApprove = useCallback(
-    (ids: readonly string[]) => {
-      if (!appendDecision((current, by, date) => approveDecisions(current, { ids, by, date }))) {
-        log.warn('approval not recorded: no changelog', { ids });
-      }
-    },
-    [appendDecision],
-  );
-  const openLedger = useCallback(
-    (decision: string) =>
-      setSession((current) => ({
-        ...current,
-        selectedDecision: decision,
-        views: { ...current.views, decisions: 'ledger' },
-      })),
-    [setSession],
-  );
-  // Only an editable spec bound to ECHO takes answers and approvals; a static or read-only one lists them.
-  const canAnswer = !readOnly && spec !== undefined && identity !== undefined;
 
   // A local checkout holds today's code, so an earlier review's evidence, like any without a checkout, is read from
   // GitHub at the commit that was reviewed: the selected verdict's own, since the current status merges several.
@@ -257,82 +145,45 @@ export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewC
     [codePath],
   );
 
-  return (
-    <>
-      {view === 'definitions' && (
-        <DefinitionGraph
-          content={text}
-          dialects={dialects}
-          base={baseText}
-          specs={specs}
-          index={SPEC_INDEX}
-          review={review}
-          onActivate={activate}
+  switch (view) {
+    case 'code':
+      return evidence ? (
+        <CodeView
+          label={formatSourceKey(evidence)}
+          path={evidence.path}
+          content={codeText}
+          symbol={evidence.fragment}
+          source={codeIsLocal ? undefined : t('code-view.github-source.label', { ref: shortSha(codeRef) })}
+          error={codeError}
+          onOpenExternal={codeIsLocal ? openExternal : undefined}
         />
-      )}
-      {view === 'related' && (
-        <DefinitionFocus
-          content={text}
-          cursor={cursor}
-          dialects={dialects}
-          base={baseText}
-          specs={specs}
-          index={SPEC_INDEX}
-          review={review}
-          onActivate={activate}
-        />
-      )}
-      {view === 'review' && (
-        <ReviewPanel
-          review={shownReview}
-          history={history}
-          selectedReview={shownReview === review ? undefined : selectedReview}
-          onSelectReview={(next) => update({ selectedReview: next })}
-          reviewKey={reviewKey}
-          selected={selectedVerdict}
-          onSelect={selectVerdict}
-          onOpenCode={(target) => void open(target)}
-          read={read}
-        />
-      )}
-      {view === 'code' &&
-        (evidence ? (
-          <CodeView
-            label={formatSourceKey(evidence)}
-            path={evidence.path}
-            content={codeText}
-            symbol={evidence.fragment}
-            source={codeIsLocal ? undefined : t('code-view.github-source.label', { ref: shortSha(codeRef) })}
-            error={codeError}
-            onOpenExternal={codeIsLocal ? openExternal : undefined}
-          />
-        ) : (
-          <Status.Empty classNames='dx-fill' data-testid='code-view.empty'>
-            {t('code-view.empty.label')}
-          </Status.Empty>
-        ))}
-      {view === 'cursor' && (
-        <DecisionCursor
-          content={text}
-          cursor={cursor}
-          onApprove={canAnswer ? handleApprove : undefined}
-          onAnswer={canAnswer ? handleAnswer : undefined}
-          onOpenLedger={openLedger}
-        />
-      )}
-      {view === 'ledger' && (
-        <DecisionLedger
-          content={changelog}
-          selected={selectedDecision}
-          onApprove={canAnswer ? handleApprove : undefined}
-          onAnswer={canAnswer ? handleAnswer : undefined}
-          onShowBlock={(block) => reveal(id, block)}
-        />
-      )}
-      {view === 'data' && <DataModelGraph content={text} />}
-      {view === 'api' && <ApiSurface content={text} />}
-    </>
+      ) : (
+        <Status.Empty classNames='dx-fill' data-testid='code-view.empty'>
+          {t('code-view.empty.label')}
+        </Status.Empty>
+      );
+    case 'data':
+      return <DataModelGraph content={text} />;
+    case 'api':
+      return <ApiSurface content={text} />;
+  }
+};
+
+/** What the reader of a spec's companion views gets from the checkout: diff base, named specs, cited files, links. */
+const useSources = (source: SpecSource): ProjectCapabilities.SpecSources => {
+  const { id, key, setSession, baseText, specs, read } = useSpecModel(source);
+  const open = useOpenSource({ ...source, id, key, setSession });
+  const onOpenSource = useCallback((target: SourceKey) => void open(target), [open]);
+  return useMemo(
+    () => ({ base: baseText, specs, index: SPEC_INDEX, read, onOpenSource }),
+    [baseText, specs, read, onOpenSource],
   );
+};
+
+/** Gives an ECHO spec's companion views what it reads from the checkout. */
+export const SpecSourcesProvider = ({ spec, children }: ProjectCapabilities.SpecSourcesProviderProps) => {
+  const sources = useSources({ spec });
+  return <>{children(sources)}</>;
 };
 
 /**
@@ -444,16 +295,41 @@ export type SpecPanelProps = SpecSource & {
   readOnly?: boolean;
 };
 
+type PanelView = { id: string; group: SpecSession.Group; icon: string; label: Translations.Label };
+
+/** Every view of a software spec, the generic ones and this plugin's, in companion tab order. */
+const PANEL_VIEWS: readonly PanelView[] = [
+  ...SpecViews.SPEC_VIEWS,
+  ...SPEC_VIEWS.map(({ id, group, icon }): PanelView => ({
+    id,
+    group,
+    icon,
+    label: [`spec-view.${id}.label`, { ns: CodeNamespace.key }],
+  })),
+].sort((a, b) => SpecSession.GROUPS.indexOf(a.group) - SpecSession.GROUPS.indexOf(b.group));
+
+const groupOf = (view: string): SpecSession.Group | undefined => PANEL_VIEWS.find(({ id }) => id === view)?.group;
+
 /**
  * Every view of a spec in one panel, for a spec with no node to give companions (a bundled plugin spec): it shows the
  * view of the group last asked for.
  */
 export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { session, setSession } = useSpecModel(source);
+  const { spec } = source;
+  const [specDialects] = useObject(spec, 'dialects');
+  const model = useSpecModel(source);
+  const { id, session, setSession, text, reviews, review, reviewKey } = model;
+  const sources = useSources(source);
+  // A bundled spec names no dialects; it is a plugin's, so it is read as software.
+  const dialects = useMemo(
+    () => (specDialects && specDialects.length > 0 ? specDialects : [FeatureMap.SOFTWARE_DIALECT]),
+    [specDialects],
+  );
   const group = session.focus ?? 'structure';
   const view =
-    VIEWS.find(({ id }) => id === session.views[group])?.id ?? VIEWS.find((view) => view.group === group)!.id;
+    PANEL_VIEWS.find(({ id }) => id === session.views[group])?.id ??
+    PANEL_VIEWS.find((view) => view.group === group)!.id;
   return (
     <Panel.Root>
       <Panel.Header>
@@ -461,22 +337,20 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
           <Toolbar.ToggleGroup
             type='single'
             value={view}
-            onValueChange={(value) =>
-              isSpecView(value) &&
-              setSession((current) => ({
-                ...current,
-                focus: groupOf(value),
-                views: { ...current.views, [groupOf(value)]: value },
-              }))
-            }
+            onValueChange={(value) => {
+              const next = groupOf(value);
+              if (next) {
+                setSession((current) => ({ ...current, focus: next, views: { ...current.views, [next]: value } }));
+              }
+            }}
             aria-label={t('spec-view.label')}
           >
-            {VIEWS.map(({ id, icon }) => (
+            {PANEL_VIEWS.map(({ id, icon, label }) => (
               <ToggleGroup.Item
                 key={id}
                 value={id}
                 icon={icon}
-                label={t(`spec-view.${id}.label`)}
+                label={Theme.toLocalizedString(label, t)}
                 // Only the open view is labelled, so the toolbar fits a narrow panel.
                 iconOnly={id !== view}
                 data-testid={`spec-article.view.${id}`}
@@ -487,7 +361,23 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='relative' data-testid='spec-article.panel' data-view={view}>
-        <SpecViewContent {...source} view={view} readOnly={readOnly} />
+        {SpecViews.isSpecView(view) ? (
+          <SpecViews.SpecCompanionView
+            {...sources}
+            view={view}
+            id={id}
+            spec={spec}
+            text={text}
+            dialects={dialects}
+            reviews={reviews}
+            review={review}
+            reviewKey={reviewKey}
+            facts={SOFTWARE_FACTS}
+            readOnly={readOnly}
+          />
+        ) : (
+          isSpecView(view) && <SpecViewContent {...source} view={view} />
+        )}
       </Panel.Body>
     </Panel.Root>
   );

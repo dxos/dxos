@@ -97,6 +97,56 @@ feat F-5: A project's overview
              the other peers editing them, each with the peer's name.
 ```
 
+```mdl
+feat F-6: Definitions
+  req F-6.1: Definitions groups a spec by what names its blocks: each anchor is a group of the structure it names, and
+             groups gather into clusters around the block most of them share.
+  req F-6.2: Definitions draws the whole spec as a canvas, with no layout of its own to pick.
+  req F-6.3: The canvas opens a level at a time: a card per cluster, then one cluster's groups, then one block and
+             everything it touches. Double-clicking a card opens its level, and the canvas's trail goes back up.
+  req F-6.4: Every block draws with the icon and colour its dialect declares, and every link with the ends of the
+             relationship its field declares. A package may style a field's values on the cards (`SpecPackage.facts`).
+  req F-6.5: Related, Structure's second view, centres on the block nearest the editor's cursor, with what names it
+             above and what it names below, and moves to another block as the cursor does.
+  req F-6.6: A spec's blocks are read with the dialects it names and no others; a spec that names none uses the core
+             and changelog blocks only.
+  req F-6.7: The companion views read the spec's text. A plugin that knows where a spec comes from gives them the rest
+             through `ProjectCapabilities.SpecSourcesProvider`: the base text diff mode compares with, the specs its
+             source keys name, the source index, and its files.
+```
+
+```mdl
+feat F-7: Decisions
+  desc: |
+    Decisions mirrors Structure: At cursor reads the changelog for the block at the editor's cursor, and the Ledger
+    reads all of it, a level at a time. Both are built from react-ui's existing components.
+  req F-7.1: At cursor, Decisions' first and default view, shows what holds on the item at the editor's cursor, each
+             with the decisions that fill it in, then what holds on its block or on the block's items, and moves as
+             the cursor does.
+  req F-7.2: The Ledger opens on a card per block the changelog affects, the most recently decided first. A block
+             opens its threads, the decisions on it that cite one another; a thread opens with what holds now, then
+             its decisions by day. The trail goes back up.
+  req F-7.3: The Ledger filters by status (holds, replaced, not approved, questions), by who decided, and by text.
+  req F-7.4: Every level offers to approve the agent decisions in it that hold and that nobody has approved, with
+             the count on the button. On a thread it sits at the top. Approving records one decision by the person,
+             `Approve [D-a] and [D-b].`
+  req F-7.5: A decision shows how it relates to each decision it cites (fills in, replaces, replaces part of,
+             refines, builds on), read from the prose before the citation.
+  req F-7.6: An answer to a question, or an approval, goes through the spec's open editor, else into its text.
+  req F-7.7: A decision's chip in the editor's margin opens the Ledger at the decision's thread.
+```
+
+```mdl
+feat F-8: Review
+  req F-8.1: Review is offered for a spec of any dialect and shows its `SpecReview`s.
+  req F-8.2: The Review view picks a review from the spec's history; it shows the current status by default.
+  req F-8.3: The Review view shows the review's summary as markdown: its first paragraph, with the rest behind a
+             disclosure. Below it, a filter of each status with its count, worst first, stays pinned above the cards
+             and shows only that status's verdicts; each status is a button of its own, its icon beside its count.
+             The summary, filter and cards scroll together under the picker, and the current card shows its note in
+             full.
+```
+
 ## QA
 
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an invocable
@@ -2295,4 +2345,36 @@ decision D-213: A project's companion tabs follow the spec its Specs tab shows, 
   for: user:wittjosiah
   affects: [F-4.8]
   why: The project offered every group any spec could use, so a video script kept a Review tab with nothing in it.
+```
+
+```mdl
+decision D-214: A companion view that reads any dialect belongs to this plugin: Definitions, Related, At cursor, the Ledger and Review.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-6, F-7, F-8]
+```
+
+```mdl
+decision D-215: Review is generic: a spec of any dialect is offered it. The code a verdict cites stays with the software dialect.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-8.1]
+```
+
+```mdl
+decision D-216: F-6, F-7 and F-8 take plugin-code's F-25 (without the Video package, now plugin-video's), F-26, and F-24.6 and F-24.7. The views get the checkout through `ProjectCapabilities.SpecSourcesProvider`, and a package styles its field values on cards through `SpecPackage.facts`. Fills in [D-214] and [D-215].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.4, F-6.7]
+  why: The views read the checkout through plugin-code's hooks, and only plugin-code knows a file service or a GitHub source.
+```
+
+```mdl
+decision D-217: A spec that names no dialects is read with the core and changelog blocks only, not as software. A bundled spec names its dialects. Fills in [D-214].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6.6, F-4.3]
+  why: A software fallback in a generic view made every dialect-less spec look like software, which F-4.3 already rules out.
 ```

@@ -23,10 +23,12 @@ import {
   SpecCompanionPanel,
   SpecDocumentArticle,
   SpecLevelArticle,
+  SpecView,
 } from '#containers';
 import { ProjectSurface, SpecSession } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
+import { isSpecView } from '../companion-views.ts';
 import { MOVE_TASK_DIALOG } from '../constants.ts';
 
 /** A spec a project owns is a level of the project: the project article on that spec. */
@@ -71,6 +73,12 @@ export default Capability.makeModule(() =>
           props: ({ data: { companionTo, attendableId } }) => ({ companionTo, group, attendableId }),
         }),
       ),
+      Surface.create({
+        id: 'spec.view',
+        filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => isSpecView(view)),
+        component: SpecView,
+        props: ({ data: { subject, view } }) => ({ spec: subject, view: isSpecView(view) ? view : 'definitions' }),
+      }),
       Surface.create({
         id: 'spec.companion.panel',
         filter: Surface.makeFilter(ProjectSurface.SpecCompanion),

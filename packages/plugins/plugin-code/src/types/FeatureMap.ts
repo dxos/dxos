@@ -19,24 +19,11 @@ import * as FeatureEmbed from './FeatureEmbed.ts';
  * them. A feature belongs to one spec (its ECHO parent), and nests by owning a spec of its own that breaks it down.
  */
 
-/** The dialect whose `feat` blocks a feature map's features are; a spec uses it to be drawn as a map. */
-export const DIALECT = 'org.dxos.spec.features';
+/** The software dialect, which extends the features, app, code, plugin, QA and storage dialects. */
+export const SOFTWARE_DIALECT = 'org.dxos.spec.software';
 
-/**
- * The software package's dialects, which a spec takes together: features, and the dialects a software project's specs
- * extend for its app, code, plugins, QA and storage.
- */
-export const SOFTWARE_DIALECTS: readonly string[] = [
-  DIALECT,
-  'org.dxos.spec.app',
-  'org.dxos.spec.code',
-  'org.dxos.spec.plugin',
-  'org.dxos.spec.qa',
-  'org.dxos.spec.sql',
-];
-
-/** Whether the spec uses the features dialect, which its map views, its feature embeds and `/feature` need. */
-export const usesDialect = (spec: Pick<Spec.Spec, 'dialects'>): boolean => spec.dialects.includes(DIALECT);
+/** Whether the spec uses the software dialect, which its board, its feature embeds and `/feature` need. */
+export const usesDialect = (spec: Pick<Spec.Spec, 'dialects'>): boolean => spec.dialects.includes(SOFTWARE_DIALECT);
 
 /** Where a feature's card sits on its spec's canvas. */
 export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
@@ -69,12 +56,11 @@ export const getFeatures = (spec: Spec.Spec | Entity.Snapshot): readonly Ref.Ref
 export const getLayout = (spec: Spec.Spec | Entity.Snapshot): Layout | undefined =>
   Annotation.get(spec, LayoutAnnotation).pipe(Option.getOrUndefined);
 
-/** Gives a spec about to hold features the software package, whose features dialect they need. */
+/** Gives a spec about to hold features the software dialect, which declares their blocks. */
 const addDialect = (spec: Spec.Spec): void => {
-  const missing = SOFTWARE_DIALECTS.filter((id) => !spec.dialects.includes(id));
-  if (missing.length > 0) {
+  if (!spec.dialects.includes(SOFTWARE_DIALECT)) {
     Obj.update(spec, (spec) => {
-      spec.dialects.push(...missing);
+      spec.dialects.push(SOFTWARE_DIALECT);
     });
   }
 };
@@ -158,7 +144,7 @@ export type MakeProps = Spec.MakeProps & {
 };
 
 /** A spec in the software package holding `features`, its text embedding each of them. */
-export const make = ({ features = [], dialects = SOFTWARE_DIALECTS, content, ...props }: MakeProps): Spec.Spec => {
+export const make = ({ features = [], dialects = [SOFTWARE_DIALECT], content, ...props }: MakeProps): Spec.Spec => {
   const spec = Spec.make({ ...props, dialects, content: content ?? makeContent(features) });
   if (features.length > 0) {
     setFeatures(spec, features);

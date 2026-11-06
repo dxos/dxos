@@ -80,3 +80,28 @@ export class SpecV2 extends Type.makeObject<SpecV2>(DXN.make('org.dxos.type.proj
     document: Ref.Ref(Document),
   }),
 ) {}
+
+/**
+ * The dialects a software spec listed before `Spec` 0.4.0, where it lists the one software dialect that extends them.
+ */
+export const SOFTWARE_DIALECTS_V3: readonly string[] = [
+  'org.dxos.spec.features',
+  'org.dxos.spec.app',
+  'org.dxos.spec.code',
+  'org.dxos.spec.plugin',
+  'org.dxos.spec.qa',
+  'org.dxos.spec.sql',
+];
+
+/**
+ * The 0.3.0 `Spec`, which listed the software package's dialects one by one where 0.4.0 lists the software dialect
+ * that extends them. Kept solely so `Migration.define` can read existing data. Never constructed by this plugin.
+ */
+export class SpecV3 extends Type.makeObject<SpecV3>(DXN.make('org.dxos.type.projects.spec', '0.3.0'))(
+  Schema.Struct({
+    name: Schema.String,
+    description: Schema.optional(Schema.String),
+    dialects: Schema.Array(Schema.String),
+    content: Ref.Ref(Text.Text),
+  }),
+) {}
