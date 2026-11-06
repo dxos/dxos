@@ -112,7 +112,15 @@ const filterPath = (file) => file.replace(/\\/g, '\\\\').replace(/:/g, '\\:').re
  * }} options
  * @returns {Promise<{ file: string, mp4?: string, vtt?: string, seconds: number, size: { width: number, height: number } }>}
  */
-export const composeSideBySide = async ({ inputs, captions: given = [], out, gap = 16, fps = 25, crf = 30, mp4 = false }) => {
+export const composeSideBySide = async ({
+  inputs,
+  captions: given = [],
+  out,
+  gap = 16,
+  fps = 25,
+  crf = 30,
+  mp4 = false,
+}) => {
   if (inputs.length < 2) {
     throw new Error('side-by-side needs at least two inputs');
   }
