@@ -193,9 +193,8 @@ component SpecArticle
     no node to give companions, shows the SpecPanel beside the editor.
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
-    reviewed item and links it to its code (F-16). Extensions plugin-projects
-    contributes (`ProjectCapabilities.SpecExtensions`), such as the
-    editable section of each feature the text embeds, are added to the editor.
+    reviewed item and links it to its code (F-16). Extensions other plugins
+    contribute through `ProjectCapabilities.SpecExtensions` are added to the editor.
   props:
     role: string
     subject?: Spec
@@ -989,113 +988,62 @@ feat F-18: Spec questions
               Ledger's questions.
 ```
 
-A spec's document is the spec, and its text is `Spec.content`. It can be prose alone and take structure a piece at a time: a line becomes a feature,
-the feature becomes an object the document embeds, and the canvas and the board are drawn from the features the
-document embeds. In a repository the same spec is a `.mdl` file in which each feature is a `feat` block.
+A spec's document is the spec, and its text is `Spec.content`. It can be prose alone and take structure a piece at a
+time: a line becomes a `feat` block, and the canvas and the board are drawn from the spec's `feat` blocks. In a
+repository the same spec is a `.mdl` file with the same text.
 
 ```mdl
 feat F-19: A spec's document is the spec
-  req F-19.1: The document's embeds of feature objects, `![name](echo:///<id>)`, say which features the spec holds and
-             in what order. The spec's features annotation holds the same list as refs, which make the spec each feature's
-             owner so deleting the spec deletes them; only the sync and the feature operations write it.
-  req F-19.2: A feature object holds its name, description, status and requirements. The document holds no `feat`
-             block for a feature it embeds.
-  req F-19.3: No structure is required. A document may be prose alone, embeds may sit anywhere in it, and the prose
+  req F-19.1: The spec's `feat` blocks are its features, in the order its text states them. No ECHO object holds a
+             feature: the text is the only store.
+  req F-19.2: A `feat` block states the feature's name (its title), status (`status:`, planned when it has none),
+             description (`desc:`, or the block's prose), requirements (`req`), the features it needs first (`needs:`)
+             and the spec that breaks it down (`spec:`).
+  req F-19.3: No structure is required. A text may be prose alone, `feat` blocks may sit anywhere in it, and the prose
              around them is kept as written.
-  req F-19.4: A feature added by an operation is embedded at the end of the document's
-             `## Features` section, or at the end of the document when it has none.
-  req F-19.5: A feature the spec holds that its document has never embedded, such as one a seed or a migration added, is
-             embedded when the spec is synced, never dropped.
-  req F-19.6: Every feature the spec holds has a block id, as its `feat` block does, and every requirement an id under
-             it (`F-21.2`). A feature read in from a file keeps the file's id; one made in the app takes the next `F-n`
-             after the highest in the spec when the spec is synced, and a requirement added to it takes the next id
-             under the feature. Ids are kept once given: moving or removing a feature or a requirement leaves the
-             others' ids as they were.
+  req F-19.4: A feature added with `/feat` or an operation is a new `feat` block after the spec's last one, or at
+             the end of the text when it has none.
+  req F-19.5: A feature's block key names it to its task links, its showcases and its citations
+             (`echo:///<spec>#<key>`). A block added in the app takes a fresh key, and keys are kept once given. Its
+             `F-n` label is positional.
+  req F-19.6: An edit from a view changes only the fields it names, through plugin-projects' `SetSpecBlock` and
+             `DeleteSpecBlock` (org.dxos.plugin.projects#F-4.15). An empty field is removed from the block.
 ```
 
 ```mdl
-feat F-20: Feature embeds in the editor
-  uses: [SpecArticle]
-  req F-20.1: Each embed is drawn as the feature's editable section, one atomic block: typing cannot change its id, and
-             it moves, cuts, copies and deletes like a line.
-  req F-20.2: Moving an embed reorders the spec's features.
-  req F-20.3: Deleting an embed deletes its feature: Backspace with the cursor after it, or deleting its line. Undo, or
-             pasting the embed back, restores the same feature.
-  req F-20.4: An embed cut from one spec's document and pasted into another moves the feature to that spec. An embed of
-             a feature whose own spec's document still embeds it is a reference and moves nothing.
-  req F-20.5: Pasting an embed into a document that already embeds it embeds a copy of the feature.
-  req F-20.6: `/feature`, at the start of a line or after a space, puts a new feature's embed in place of its line, and
-             the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
-             sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
-             "New feature" until changed, as on an empty line.
-  req F-20.7: A section is inert until it has attention, so scrolling passes through it. A click gives it
-             attention, and its form then edits the feature's name, description, requirements and status in place,
-             and its fold toggle folds or unfolds it. Arrowing through the text stops on a section rather than skipping
-             it. The embed of a missing feature is its source text, marked not found. A selected section has
-             attention and a focus ring. Enter then edits its name, the arrows move on to the next section or the text
-             on either side, Alt with Up or Down moves it as a line, undo undoes the move, and Backspace or Delete
-             deletes it. Escape in a field selects the section again, and Escape on a selected section returns the
-             cursor to the text after it, or before it when none follows. In a read-only document a selected section
-             neither moves nor deletes.
-  req F-20.10: A section shows everything the feature's `feat` block says: its block id, name, status, description and
-              requirements, a structured requirement with each field on a line of its own. It also lists the features
-              the feature depends on, which it can add and remove.
-  req F-20.8: SpecArticle and plugin-projects' spec section draw the same sections, through
-              `ProjectCapabilities.SpecExtensions`, which this plugin contributes.
-  req F-20.9: A feature's `section` surface is that form, so any document embedding the feature can edit it in place. Its
-             card is the read-only version, shown on the map, the board and in search.
-  req F-20.11: A section is compact. Its header row reads a fold toggle, the block id, the name and, at its end, the
-              status. Under it are the description, the requirements, and a "Needs" row that picks the features it
-              depends on, never one that depends on it. Empty rows and the add and remove actions show only while the
-              section has attention. Folded, a section shows only its header row, with the block ids of the features
-              it needs and its requirement count. Each reader's device keeps which sections are folded; it is not
-              synced.
+feat F-20: Feature blocks in the editor
+  req F-20.1: The spec's text draws each `feat` block in place as a form over the software dialect's `feat` schema, as
+             it draws any block a dialect defines (org.dxos.plugin.projects#F-4.14).
+  req F-20.2: `/feat` writes a new `feat` block in place (org.dxos.plugin.projects#F-4.10).
+  req F-20.3: A `feat` block's `depends:` names the features it depends on by key or label, and its `spec:` cites the spec that
+             breaks it down by object id (`echo:///<id>`) or spec id.
 ```
 
 ```mdl
 feat F-21: A spec as a file
-  uses: [org.dxos.plugin.github.file-sync]
-  req F-21.1: Importing a file (`op:ImportSpec`) maps each `feat` block to the feature read in from it before, found by
-             its source `path#F-n` wherever it has moved since, to the feature the spec numbered `F-n` before any file
-             held its block, or to a new one, and puts the feature's embed in place of the block. A feature holds one
-             block of a file: when two blocks name the same feature, the first keeps it and drops its other sources in
-             that file, and each later block becomes a new feature. The file states the feature's name, description,
-             requirements and status, planned when the block has no `status:` line. The description is the block's
-             `desc:` field, the prose alone when it is a block scalar (`desc: |` or `desc: >`), or its bare prose before
-             the first `req`.
-  req F-21.7: A fence that holds several `feat` blocks, or other blocks before one, is split so each `feat` block is a
-             fence of its own, which its embed replaces on import and an export writes back.
-  req F-21.2: A feature the document embedded that no block of the file names is kept at the end when it was added in
-             the app, and deleted when the file dropped its block.
-  req F-21.3: Exporting (`op:ExportSpec`) writes each embed of a feature the spec holds as its `feat` block with a
-             `status:` line and the description as a `desc:` field. An embed of another spec's feature stays an embed.
-  req F-21.4: Written against the file text last synced, the block of a feature that has not changed is copied as it was,
-             and a changed one has only its changed lines rewritten.
-  req F-21.5: [F-14] syncs a spec's document with its file through export and import, by
-             `ProjectCapabilities.SpecCodec`, so the file holds `feat` blocks and the document holds embeds.
-             org.dxos.plugin.github.file-sync#F-6 syncs a file in a GitHub repository the same way.
-  req F-21.6: The codec handles a spec whose document embeds a feature or whose file holds a `feat` block. A spec of
-             prose alone is synced as plain text.
+  req F-21.1: A spec's file holds the spec's text, so its `feat` blocks sync as written, in both directions.
+  req F-21.2: A fence holds one block. A file whose fence holds several blocks is split before it is read in, so each
+             block can be edited and deleted on its own.
 ```
 
 ```mdl
 feat F-22: The feature map in a project
-  req F-22.1: A feature owns the spec that breaks it down (`Feature.spec`), so feature specs nest to any depth, and a
-              breakdown spec takes the dialects of the spec its feature is on.
-  req F-22.2: The features dialect keeps a spec's features (`org.dxos.projects.features`) and canvas layout
-              (`org.dxos.projects.layout`) as annotations on the spec.
-  req F-22.3: The nav tree lists each feature on a spec level beneath it as a level of its own, by name, nested through
-              its breakdown at `project/<id>/specs/<spec>/<feature>/…`. A tracked feature opens as the project's
-              article at its level, its Overview the feature and its Specs tab its breakdown.
+  req F-22.1: A feature's `spec:` field cites the spec that breaks it down, so specs nest to any depth. Breaking a
+              feature down (`CodeOperation.CreateSpec` with `breaks`) makes a spec with the software package in the
+              owner project and cites it, or returns the spec the feature already cites.
+  req F-22.3: The nav tree lists a breakdown beneath each spec whose feature cites it
+              (org.dxos.plugin.projects#F-4.6). A double-click on a feature with a breakdown opens the breakdown's
+              level, and the companion's "Break down" makes one for a feature with none.
   req F-22.4: This plugin provides one dialect, the software dialect (`org.dxos.spec.software`), which extends the
-              features (`org.dxos.spec.features`), app, code, plugin, QA and SQL dialects. A spec that uses it is
-              offered Data model, API and Board in Structure and Code in Review. Adding a feature to a spec gives it
-              the software dialect.
-  req F-22.6: The software dialect offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`,
-              `/test` and `/table`, which write text only.
-  req F-22.7: The feature operations are `CodeOperation`s, keyed in this plugin's domain (`org.dxos.operation.code.*`)
-              and handled by `CodeOperationHandlerSet`. The Feature Map skill (`org.dxos.skill.code.featureMap`)
-              declares them.
+              code, app, plugin, QA and SQL dialects. A spec that uses it is offered Data model, API and Board in
+              Structure and Code in Review.
+  req F-22.6: A task delivers a feature through `SpecItem.Implements`, a relation to the spec naming the feature's
+              block key (`CodeOperation.LinkTask`). A showcase demonstrates one through `Showcase.Demonstrates` with
+              the same key as its `item` (`CodeOperation.CreateShowcase` with `items`). The card shows both.
+  req F-22.7: The Feature Map skill (`org.dxos.skill.code.featureMap`) reads and writes features with plugin-projects'
+              block operations, and breaks them down, links tasks and makes showcases with `CodeOperation.CreateSpec`,
+              `UpdateSpec`, `LinkTask` and `CreateShowcase`, keyed in this plugin's domain (`org.dxos.operation.code.*`)
+              and handled by `CodeOperationHandlerSet`.
   req F-22.8: The feature map, its types and their migrations are present only while this plugin is enabled.
 ```
 
@@ -1405,77 +1353,22 @@ test QA-2: Showcase clip
 ```
 
 ```mdl
-test QA-4: Grow a spec from prose
-  desc: |
-    A spec starts as plain prose and takes structure a paragraph at a time, with nothing forced on it: each paragraph
-    turned into a feature becomes that feature's description, in a form edited where the paragraph was. Walked by the
-    autocue flow `spec-document` against the feature-embeds story "Prose", whose spec "Mail" is three paragraphs
-    of prose with no features.
-  actors: human
-  covers: [F-19.3, F-19.6, F-20.1, F-20.2, F-20.3, F-20.6, F-20.7, F-20.10, F-20.11]
-  status: unverified
-  given:
-    - storybook serves plugin-code
-    - the spec "Mail" holds no features, and its document is three paragraphs of prose
-  steps:
-    - name: Open a spec written as prose
-      do: Open the spec "Mail".
-      expect: the document shows its three paragraphs, none of them a feature
-    - name: Turn a paragraph into a feature
-      do: Put the cursor at the end of the paragraph "Search finds any message…", type " /feature" and accept the completion.
-      expect: the paragraph becomes a feature's section, whose description is the paragraph, with the cursor in its name
-    - name: Name it
-      do: Type "Search" and press Escape.
-      expect: the section is named "Search" with block id F-19, and is selected, ringed in the focus colour
-    - name: Turn another paragraph into a feature
-      do: Put the cursor at the end of the paragraph "Mail should feel instant…", type " /feature", accept it, type "Instant inbox" and press Escape.
-      expect: a second section, "Instant inbox" with block id F-20, above "Search", and selected; the last paragraph is still prose
-    - name: Reorder by moving the embed
-      do: Press Alt+Down twice.
-      expect: the "Instant inbox" section sits below "Search", the spec lists Search first, and each keeps its block id
-    - name: Delete a feature by deleting its embed
-      do: With the "Instant inbox" section still selected, press Backspace.
-      expect: the section is gone and the spec holds only Search
-    - name: Undo restores it
-      do: Press Cmd+Z.
-      expect: the "Instant inbox" section returns, the same feature with its description
-    - name: Add a requirement
-      do: Click the "Search" section, click "Add requirement" in it, type "Results appear as you type." and press Enter.
-      expect: the requirement shows its id, F-19.1
-    - name: Depend on another feature
-      do: Click the "Instant inbox" section, open its "Needs" picker and pick "Search".
-      expect: the section's "Needs" row shows "Search"
-    - name: Turn the last paragraph into a feature
-      do: Put the cursor at the end of the paragraph "Later, maybe…", type " /feature", accept it, type "Snooze" and press Escape.
-      expect: a third section, "Snooze", below "Instant inbox"
-    - name: Need a second feature
-      do: Click the "Instant inbox" section, open its "Needs" picker and pick "Snooze".
-      expect: the section's "Needs" row shows "Search" and "Snooze"
-    - name: Fold the sections
-      do: In each section, click the section, then its fold chevron.
-      expect: each section folds to its header row; "Search" reads "1 requirement" and "Instant inbox" shows the
-        block ids of "Search" and "Snooze"
-```
-
-```mdl
 test QA-5: Switch between a project's specs
   desc: |
     A project holds a feature map and a spec of prose side by side. Its Overview is one form in which each spec is a
     folded row that unfolds to the spec's fields, and whose `+` adds a spec. Its Specs tab shows one spec at a time,
-    picked from a dropdown in the toolbar. The feature map's text mixes prose with its features, and `/feature` turns
-    a line of that prose into a feature. A new "Launch video" spec takes plugin-video's package, which adds slash
-    commands and no views. Walked by the autocue flow `project-specs` against the FeatureLevel story
-    "Default", whose project "Inbox" owns the specs "Inbox and agents" and "Launch talk".
+    picked from a dropdown in the toolbar. The feature map's text mixes prose with its `feat` blocks. A new "Launch
+    video" spec takes plugin-video's package, which adds slash commands and no views. The project "Inbox" owns the
+    specs "Inbox and agents" and "Launch talk".
   actors: human
-  covers: [F-22.4, F-22.6]
+  covers: [F-22.4]
   status: unverified
   given:
     - storybook serves plugin-code
     - the project "Inbox" owns the spec "Inbox and agents" and then the spec "Launch talk", whose document is
       three paragraphs of prose
-    - the document of "Inbox and agents" opens with a paragraph and a list of goals, embeds its eight features under
-      the headings Accounts, Mail and Work with notes between them, and ends with two ideas under Ideas, the last
-      "A morning digest of what agents did overnight"
+    - the document of "Inbox and agents" opens with a paragraph and a list of goals, states its eight `feat` blocks under
+      the headings Accounts, Mail and Work with notes between them, and ends with two ideas under Ideas
     - plugin-video contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`, `/shot`,
       `/voiceover` and `/caption` write its blocks, and no views of its own
   steps:
@@ -1492,18 +1385,14 @@ test QA-5: Switch between a project's specs
       expect: a third row opens, titled Untitled until its name is typed, then "Launch video"
     - name: Open the Specs tab
       do: Click the Specs tab and scroll through the document.
-      expect: the tab shows "Inbox and agents", its prose and goals with its features embedded under their headings,
+      expect: the tab shows "Inbox and agents", its prose and goals with its `feat` blocks under their headings,
         and the toolbar holds the spec dropdown and Extensions
-    - name: Turn an idea into a feature
-      do: At the end of the line "A morning digest of what agents did overnight", type `/feature`, press Enter and
-        type a description.
-      expect: the line is now an embedded feature of that name, planned, whose description takes the typed text
     - name: List the specs
       do: Click the spec dropdown in the toolbar.
       expect: the menu lists "Inbox and agents", checked, "Launch talk" and "Launch video", and ends in Add spec
     - name: Pick the other spec
       do: Click "Launch talk".
-      expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and its Structure tab
+      expect: the tab shows "Launch talk", three paragraphs of prose and no `feat` blocks, and its Structure tab
         offers no Board
     - name: Give it the software package
       do: Open Extensions and check Software.
@@ -1517,41 +1406,9 @@ test QA-5: Switch between a project's specs
       expect: a fenced `scene SC-1:` block with empty `duration:` and `goal:` fields, the cursor at its title
     - name: Go back to the feature map
       do: Pick "Inbox and agents" from the dropdown, open the Structure tab and click Board.
-      expect: a column per status, the nine features sorted into them, the morning digest among the planned
+      expect: a column per status, the eight features sorted into them
 ```
 
-```mdl
-test QA-6: Arrow through a spec's features
-  desc: |
-    A spec read with the keyboard alone: the cursor arrows through the text and stops on each feature's section on the
-    way, rather than skipping it, so a section can be opened, edited and left without the mouse. Walked by the autocue
-    flow `embed-keyboard` against the feature-embeds story "Sample".
-  actors: human
-  covers: [F-20.7]
-  status: passing            # 2026-11-04, recorded by autocue/embed-keyboard.mjs
-  given:
-    - storybook serves plugin-code
-    - the spec "Inbox and agents" embeds its features under the heading "Features", Accounts first, with a blank line
-      between each
-  steps:
-    - name: Arrow onto a section
-      do: Put the cursor at the end of the heading "Features" and press Down twice.
-      expect: the first press moves to the blank line; the second selects the Accounts section, ringed in the focus
-        colour, and the cursor is gone from the text
-    - name: Edit it
-      do: Press Enter, then Right, type " (all providers)" and press Escape.
-      expect: Enter selects the section's name, the name takes the text, and Escape selects the section again
-    - name: Arrow on through the spec
-      do: Press Down until the "Provider sync" section is selected, then Up until Accounts is selected again.
-      expect: each press selects the next section or moves to the next line of text, in document order, and no
-        section is skipped
-    - name: Move a section
-      do: Press Alt+Down twice.
-      expect: the section moves down a line at a time, below the section after it, and stays selected
-    - name: Leave with Escape
-      do: Press Escape.
-      expect: the cursor is in the text on the line after the section
-```
 
 ```mdl
 test QA-7: Walk a spec's structure on the canvas
@@ -2680,6 +2537,16 @@ decision D-112: `AddFeatureDialog`, its dialog surface and `useFeatureEditing`'s
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-19.4]
+```
+
+```mdl
+decision D-113: A spec's features are the `feat` blocks of its text. Feature objects are gone: the board and the companion read the blocks through plugin-projects' `useSpecBlocks`, and edits go through `SetSpecBlock` and `DeleteSpecBlock`. The feature operations (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `GetFeatures`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`) give way to `CreateSpec` with `breaks`, `UpdateSpec`, `LinkTask` and `CreateShowcase` with `items`. Tasks and showcases link to a feature by block key, through `SpecItem.Implements` and `Showcase.Demonstrates` with `item`. The feature embeds, `/feature` and the spec codec are removed, so a spec syncs with its file as text, and a breakdown nests in the nav tree by citation instead of through feature levels. QA-4 and QA-6, which walked the embeds, are removed, and the Board reads the blocks. Replaces [D-57], [D-62] and [D-111].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-19, F-20, F-21, F-22, QA-4, QA-5]
+  why: Two stores for one feature drifted apart. With the text as the only store, the spec, its file and every view agree by construction, and the schema-driven block forms edit every block kind the same way.
+  rejected: Keeping feature objects as a cache of the blocks, which keeps the sync that drifted.
 ```
 
 ## Appendix: Extension Definitions

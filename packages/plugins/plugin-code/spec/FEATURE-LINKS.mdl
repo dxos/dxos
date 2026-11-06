@@ -175,7 +175,7 @@ test QA-1: Cite a feature from code
     against the SpecFeatures and FeatureArticle stories, whose seed gives "Provider sync" a key and three code
     links.
   actors: human
-  status: passing            # 2026-10-25, recorded by the plugin-projects/feature-links flow
+  status: failing            # 2026-11-06, features are blocks with no `code` list (D-13)
   given:
     - storybook serves plugin-code
     - the seeded "Provider sync" feature has the key `org.dxos.plugin.inbox.feature.providerSync` and three code links
@@ -304,4 +304,13 @@ decision D-12: This spec moves with the feature map, its id becomes `org.dxos.pl
   by: agent:claude-code
   for: user:wittjosiah
   why: The spec's id names the plugin that holds it, and the scanner reads plugin-code's `FeatureLink`.
+```
+
+```mdl
+decision D-13: A feature is a `feat` block of its spec's text, not an object, so nothing holds its `code` list: `op:ImportFeatureLinks` and the feature article are removed, and [F-6] is unmet until a link can name a block. The scanner and its script still run. Amends [F-6] and [D-9].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-6, QA-1]
+  why: The text is the only store for features; where a block's code links live is a design question of its own.
 ```

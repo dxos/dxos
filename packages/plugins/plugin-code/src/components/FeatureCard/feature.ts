@@ -49,6 +49,8 @@ export type FeatureModel = {
   spec?: string;
   /** Id of the feature this one breaks down: the owner of its spec. */
   parent?: string;
+  /** The spec that breaks the feature down, as its block's `spec:` field names it. */
+  breakdown?: string;
   /** The features of the spec that breaks this one down, by name. */
   subfeatures: readonly FeatureChild[];
   /** The features it needs that sit on another spec's map; set by a view of one map, which draws no arrow to them. */
@@ -143,6 +145,7 @@ export type FeatureGraphInput = {
     blockId?: string;
     spec?: string;
     parent?: string;
+    breakdown?: string;
     link?: string;
     code?: readonly Feature.CodeLink[];
   }[];

@@ -7,12 +7,13 @@
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
-import { type Database, DXN, Obj, Ref, Relation } from '@dxos/echo';
+import { SOFTWARE_DIALECT, printBlock, resolveBlockSchemas } from '@dxos/deus/schema';
+import { type Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
-import { Feature, FeatureEmbed, FeatureMap, Showcase } from '#types';
+import { FeatureMap, Showcase, SpecItem } from '#types';
 
 import { type FeatureModel } from '../components/FeatureCard/feature.ts';
 import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
@@ -20,9 +21,7 @@ import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
 /** The types a database needs to hold a seeded spec. */
 export const types = [
   Spec.Spec,
-  Feature.Feature,
-  Feature.DependsOn,
-  Feature.Implements,
+  SpecItem.Implements,
   Project.Project,
   Instructions.Instructions,
   Markdown.Document,
@@ -34,8 +33,8 @@ export const types = [
   PullRequest.PullRequest,
 ];
 
-/** Lays out a spec's text around its features' embeds, each looked up by its model's id. */
-export type Layout = (embed: (id: string) => string) => string;
+/** Lays out a spec's text around its features' blocks, each looked up by its model's id. */
+export type Layout = (block: (id: string) => string) => string;
 
 /**
  * The sample features as a spec is first written: prose and goals, the features grouped under headings with notes
@@ -65,10 +64,25 @@ export const INBOX_LAYOUT: Layout = (embed) =>
     'A morning digest of what agents did overnight',
   ].join('\n\n') + '\n';
 
+const featSchema = resolveBlockSchemas('', { dialects: [SOFTWARE_DIALECT] }).get('feat')!;
+
+/** A model's `feat` block, keyed by its id. */
+const printFeature = (model: FeatureModel, breakdown?: Spec.Spec) =>
+  printBlock(featSchema, model.id, {
+    title: model.name,
+    ...(model.description && { prose: model.description }),
+    fields: {
+      status: model.status,
+      ...(model.dependsOn.length > 0 && { needs: [...model.dependsOn] }),
+      ...(breakdown && { spec: `echo:///${breakdown.id}` }),
+      req: model.requirements.map(({ key, id, text }, index) => ({ key: key ?? id ?? `${model.id}.${index}`, text })),
+    },
+  });
+
 /**
- * Writes card models into a database as the objects and relations they are derived from — features on one spec that
- * names one project (made unless given), each with its subfeatures on a spec it owns, `DependsOn`, tasks and
- * milestones with `Implements`, and showcases with `Demonstrates`. Ids in the models are only keys within the seed.
+ * Writes card models into a database as the spec text and relations they are derived from: a `feat` block per model
+ * on one spec that names one project (made unless given), subfeatures on a spec each parent cites, tasks and milestones
+ * with `Implements`, and showcases with `Demonstrates`. Each model's id is its block's key.
  */
 export const seed = (
   db: Database.Database,
@@ -79,46 +93,23 @@ export const seed = (
     layout,
   }: { name?: string; features?: readonly FeatureModel[]; project?: Project.Project; layout?: Layout } = {},
 ): Spec.Spec => {
-  const objects = new Map<string, Feature.Feature>();
+  const dialects = [FeatureMap.SOFTWARE_DIALECT];
+  const breakdowns = new Map<string, Spec.Spec>();
   for (const model of features) {
-    const feature = db.add(
-      Feature.make({
-        name: model.name,
-        description: model.description,
-        status: model.status,
-        requirements: model.requirements.map((requirement) => ({ ...requirement })),
-        code: model.code.map((link) => ({ ...link })),
-      }),
-    );
-    Obj.update(feature, (feature) => {
-      Feature.setSources(feature, model.specs);
-    });
     if (model.subfeatures.length > 0) {
-      const subfeatures = model.subfeatures.map((subfeature) =>
-        db.add(Feature.make({ name: subfeature.name, status: subfeature.status })),
-      );
-      const breakdown = db.add(FeatureMap.make({ name: model.name, features: subfeatures }));
-      Obj.update(feature, (feature) => {
-        feature.spec = Ref.make(breakdown);
-      });
+      const content = model.subfeatures
+        .map((subfeature) =>
+          printBlock(featSchema, subfeature.id, { title: subfeature.name, fields: { status: subfeature.status } }),
+        )
+        .join('\n\n');
+      breakdowns.set(model.id, db.add(Spec.make({ name: model.name, dialects, content: content + '\n' })));
     }
-    // A model's link names the key only; the mnemonic comes from the object the seed creates.
-    const link = model.link ? DXN.tryMake(model.link) : undefined;
-    if (link) {
-      Obj.update(feature, (feature) => {
-        Obj.getMeta(feature).key = DXN.getName(link);
-      });
-    }
-    objects.set(model.id, feature);
   }
-  // Made once its features exist, so its text embeds them.
-  const embed = (id: string) => {
-    const feature = objects.get(id);
-    return feature ? FeatureEmbed.make({ label: feature.name, uri: Obj.getURI(feature) }) : '';
-  };
-  const spec = db.add(FeatureMap.make({ name, features: [...objects.values()], content: layout?.(embed) }));
+  const blocks = new Map(features.map((model) => [model.id, printFeature(model, breakdowns.get(model.id))]));
+  const content = layout ? layout((id) => blocks.get(id) ?? '') : [...blocks.values()].join('\n\n') + '\n';
+  const spec = db.add(Spec.make({ name, dialects, content }));
   Obj.update(project, (project) => {
-    project.specs.push(Ref.make(spec));
+    project.specs.push(Ref.make(spec), ...[...breakdowns.values()].map((breakdown) => Ref.make(breakdown)));
   });
 
   const milestones = new Map<string, Milestone.Milestone>();
@@ -129,16 +120,6 @@ export const seed = (
   };
 
   for (const model of features) {
-    const feature = objects.get(model.id);
-    if (!feature) {
-      continue;
-    }
-    for (const id of model.dependsOn) {
-      const dependency = objects.get(id);
-      if (dependency) {
-        db.add(Feature.makeDependsOn({ [Relation.Source]: feature, [Relation.Target]: dependency }));
-      }
-    }
     for (const { title, done, active, milestone: milestoneName } of model.tasks) {
       const task = db.add(
         Task.make({
@@ -147,7 +128,7 @@ export const seed = (
           milestone: milestoneName ? Ref.make(milestone(milestoneName)) : undefined,
         }),
       );
-      db.add(Feature.makeImplements({ [Relation.Source]: task, [Relation.Target]: feature }));
+      db.add(SpecItem.makeImplements({ [Relation.Source]: task, [Relation.Target]: spec, item: model.id }));
     }
     for (const { name: showcaseName } of model.showcases) {
       // A document stands in for the deck, whose type is plugin-presenter's: that plugin depends on this one.
@@ -157,7 +138,7 @@ export const seed = (
           content: `# ${showcaseName}\n\nWhat was shown, and how to reproduce it:\n\n1. Open the feature.\n2. Follow the steps.\n`,
         }),
       );
-      db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: feature }));
+      db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: spec, item: model.id }));
     }
   }
 

@@ -92,7 +92,7 @@ const cite = (from: Spec.Spec, { spec, key }: Placement) => (spec.id === from.id
 export const foldFeatures = Effect.fn('foldFeatures')(function* () {
   const result: FoldResult = { specs: 0, features: 0, relations: 0, threads: 0 };
   const specs = (yield* Database.query(Filter.type(Spec.Spec)).run).filter(
-    (spec) => FeatureMap.usesDialect(spec) || FeatureMap.getFeatures(spec).length > 0,
+    (spec) => spec.dialects.includes(FeatureMap.DIALECT) || FeatureMap.getFeatures(spec).length > 0,
   );
   if (specs.length === 0) {
     return result;
