@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import CODE_SPEC from '../../../PLUGIN.mdl?raw';
-import { DEFAULT_ROLES, buildDefinitionGraph, groupDefinitions } from '../SpecModel/index.ts';
+import { buildDefinitionGraph, groupDefinitions } from '../SpecModel/index.ts';
 import {
   SPEC_LEVEL,
   blockScene,
@@ -17,14 +17,14 @@ import {
 
 describe('definitionLevels', () => {
   const graph = buildDefinitionGraph(CODE_SPEC);
-  const grouping = groupDefinitions(graph, DEFAULT_ROLES);
+  const grouping = groupDefinitions(graph);
   const byId = new Map(graph.definitions.map((definition) => [definition.id, definition]));
   const labels = { above: 'Named by', below: 'Names', checks: 'Checked by' };
 
   const options = {
     spec: { name: 'Spec', scene: specScene(grouping) },
-    cluster: (id: string) => ({ name: id, scene: clusterScene(grouping, id, { buildsOn: 'builds on' }) }),
-    block: (ref: string) => ({ name: ref, scene: blockScene(byId, grouping, graph.edges, ref, labels) }),
+    cluster: (id: string) => ({ name: id, scene: clusterScene(grouping, graph.edges, id, { buildsOn: 'builds on' }) }),
+    block: (ref: string) => ({ name: ref, scene: blockScene(byId, graph.edges, ref, labels) }),
     opens: () => true,
   };
 

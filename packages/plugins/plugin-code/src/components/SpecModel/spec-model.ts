@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Relationship, type Role } from '@dxos/deus/dialect';
 import { type MdlBlock, findSpecRefs, parseMdlBlocks, specReferenceFilter } from '@dxos/deus/extension';
 import {
   type Annotation,
@@ -14,11 +15,14 @@ import {
 import { type SpecIndex } from '@dxos/deus/spec-index';
 
 import { resolveSpecRef } from '../SpecEditor/spec-ref.ts';
+import { type Declarations, type DefinitionRelation, relationOf, specDeclarations } from './declarations.ts';
 
 /** A top-level spec block that other blocks can depend on. */
 export type DefinitionModel = {
   id: string;
   kind: string;
+  /** Its type's declared role; `structure` when undeclared, and `context` for a block outside the spec. */
+  role: Role;
   title?: string;
   /** The `##` heading the block sits under; absent before the first one and on external nodes. */
   section?: string;
@@ -46,6 +50,8 @@ export type DefinitionEdge = {
   kind: DefinitionEdgeKind;
   /** The field that holds a reference. */
   field?: string;
+  /** How a reference or key relates its ends; a mention has none. */
+  relation?: DefinitionRelation;
 };
 
 /** Where an external node comes from; its id is the `github:` key itself. */
@@ -260,6 +266,7 @@ const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel =
   return {
     id: formatSourceKey(key),
     kind: block?.type ?? 'spec',
+    role: 'context',
     title: block?.title ?? key.fragment ?? key.path,
     dependsOn: [],
     mentions: [],
@@ -269,31 +276,6 @@ const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel =
   };
 };
 
-/**
- * The fields whose values name other blocks: a type's fields and bases, an op's input and output, a component's props,
- * what a block requires or uses, what a test covers. A dialect's own fields come from its outline contribution.
- */
-export const DEFAULT_REFERENCE_FIELDS: ReadonlySet<string> = new Set([
-  'covers',
-  'depends',
-  'dependsOn',
-  'emits',
-  'errors',
-  'events',
-  'extends',
-  'fields',
-  'input',
-  'ops',
-  'output',
-  'props',
-  'requires',
-  'slots',
-  'state',
-  'tests',
-  'uses',
-  'variants',
-]);
-
 export type BuildDefinitionGraphOptions = {
   /** Other specs this one names by `github:` key, so their blocks can be described. */
   specs?: SpecTexts;
@@ -301,8 +283,8 @@ export type BuildDefinitionGraphOptions = {
   annotations?: readonly Annotation[];
   /** Resolves `<spec id>#<item>` references to other specs' files. */
   index?: SpecIndex;
-  /** The fields that reference other blocks; {@link DEFAULT_REFERENCE_FIELDS} when unset. */
-  referenceFields?: ReadonlySet<string>;
+  /** Each block type's role and links; those of the spec's dialects when unset (see {@link specDeclarations}). */
+  declarations?: Declarations;
   /** The fields whose one-line value is kept on the definition as a fact; none when unset. */
   factFields?: ReadonlySet<string>;
 };
@@ -314,10 +296,14 @@ const sectionsOf = (text: string): { from: number; title: string }[] =>
 const sectionAt = (sections: readonly { from: number; title: string }[], offset: number): string | undefined =>
   sections.findLast(({ from }) => from < offset)?.title;
 
+/** A value written as a reference (`Ref<X>`, `Ref(X)`), which points at X without holding it. */
+const REF_VALUE = /\bRef\s*[<(]\s*([A-Za-z][\w.-]*)/g;
+
 /**
- * Every definition of a spec with an edge to each block a typed field of it references, and to each block of another
- * spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key). Names that appear only in its
- * prose are kept apart as mentions, and code symbols a review links to it are counted rather than drawn.
+ * Every definition of a spec with an edge to each block a linked field of it names, as its type's links relate them,
+ * and to each block of another spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key). A
+ * link read from the other end is turned round, so a part's `part-of` is its whole's `composes`. Names in any other
+ * field or in prose are kept apart as mentions, and code symbols a review links to it are counted rather than drawn.
  */
 export const buildDefinitionGraph = (
   text: string,
@@ -325,7 +311,7 @@ export const buildDefinitionGraph = (
     specs = new Map(),
     annotations = [],
     index,
-    referenceFields = DEFAULT_REFERENCE_FIELDS,
+    declarations = specDeclarations(text),
     factFields = new Set(),
   }: BuildDefinitionGraphOptions = {},
 ): DefinitionGraphModel => {
@@ -350,6 +336,7 @@ export const buildDefinitionGraph = (
     owner && code > 0 && codeRefs.set(owner, (codeRefs.get(owner) ?? 0) + code);
   }
   const edges: DefinitionEdge[] = [];
+  const edgeIds = new Set<string>();
   const definitions = blocks.map(({ type, id, title, body, from }): DefinitionModel => {
     const prose = `${title ?? ''}\n${body}`;
     const refs = findSpecRefs(prose).filter((ref) => isReference(ref.id));
@@ -358,24 +345,37 @@ export const buildDefinitionGraph = (
       return resolved && !('error' in resolved) ? [resolved] : [];
     });
     const targets = new Set<string>();
-    const add = (to: string, kind: DefinitionEdgeKind, field?: string) => {
-      if (to !== id && !targets.has(to)) {
-        targets.add(to);
-        edges.push({ id: `${id}->${to}`, from: id, to, kind, ...(field && { field }) });
+    const add = (to: string, kind: DefinitionEdgeKind, relationship: Relationship, field?: string) => {
+      if (to === id || targets.has(to)) {
+        return;
+      }
+      targets.add(to);
+      const { relation, reversed } = relationOf(relationship);
+      const [from, target] = reversed ? [to, id] : [id, to];
+      const edgeId = `${from}->${target}`;
+      if (!edgeIds.has(edgeId)) {
+        edgeIds.add(edgeId);
+        edges.push({ id: edgeId, from, to: target, kind, relation, ...(field && { field }) });
       }
     };
+    const links = declarations.get(type)?.links ?? {};
     const facts: Record<string, string> = {};
     for (const [field, value] of parseFields(body)) {
       const fact = factFields.has(field) ? value.inline?.replace(/\s+#.*$/, '').trim() : undefined;
       fact && (facts[field] = fact);
-      if (referenceFields.has(field)) {
+      const relationship = links[field];
+      if (relationship) {
         const values = [value.inline ?? '', ...value.lines].join('\n').replace(SOURCE_KEYS, ' ');
-        namedIds(values, ids, id).forEach((to) => add(to, 'reference', field));
+        if (relationship === 'composes' || relationship === 'aggregates') {
+          const refs = [...values.matchAll(REF_VALUE)].map(([, name]) => name).join(' ');
+          namedIds(refs, ids, id).forEach((to) => add(to, 'reference', 'references', field));
+        }
+        namedIds(values, ids, id).forEach((to) => add(to, 'reference', relationship, field));
       }
     }
     [...findSourceKeys(prose).map(({ key }) => key), ...refKeys].forEach((key) => {
       const to = link(key);
-      to && add(to, 'external');
+      to && add(to, 'external', 'references');
     });
     const dependsOn = [...targets];
     // References and keys are removed first so their words are not read as names of this spec's blocks.
@@ -388,6 +388,7 @@ export const buildDefinitionGraph = (
     return {
       id,
       kind: type,
+      role: declarations.get(type)?.role ?? 'structure',
       ...(title && { title }),
       ...(section && { section }),
       dependsOn,

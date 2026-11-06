@@ -11,6 +11,7 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
+import LAUNCH_VIDEO from '../../../../../reflect/deus/lang/examples/launch-video.mdl?raw';
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
 import TRIP_SPEC from '../../../../plugin-trip/PLUGIN.mdl?raw';
 import CODE_SPEC from '../../../PLUGIN.mdl?raw';
@@ -119,6 +120,22 @@ export const CanvasDrill: Story = {
     feature && (await doubleClick(feature));
     await waitFor(
       () => expect(canvasElement.querySelector('[data-testid="definition-canvas.card"][data-focused]')).not.toBeNull(),
+      TIMEOUT,
+    );
+  },
+};
+
+/**
+ * A script in the video dialect, grouped by the same rules as code: each scene composes its shots, voiceover and
+ * captions, and the scenes gather around the characters they share.
+ */
+export const Video: Story = {
+  args: { content: LAUNCH_VIDEO, layout: 'canvas' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { clusters } = groupDefinitions(buildDefinitionGraph(LAUNCH_VIDEO));
+    await waitFor(
+      () => expect(canvas.getAllByTestId('definition-canvas.cluster')).toHaveLength(clusters.length),
       TIMEOUT,
     );
   },

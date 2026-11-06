@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import LAUNCH_VIDEO from '../../../../../reflect/deus/lang/examples/launch-video.mdl?raw';
 import { UNSHARED_CLUSTER_ID, groupDefinitions, rolesOf } from './definition-groups.ts';
 import { buildDefinitionGraph } from './spec-model.ts';
 
@@ -24,14 +25,15 @@ const SPEC = [
 const graph = buildDefinitionGraph(SPEC);
 
 describe('definition groups', () => {
-  test('takes features as anchors and scenarios as checks unless the spec declares otherwise', ({ expect }) => {
+  test("takes each kind's role from its dialect, and from the spec's own ext over it", ({ expect }) => {
     const roles = rolesOf(graph);
     expect([roles.get('feat'), roles.get('scenario'), roles.get('type')]).toEqual([
       'anchor',
       'verification',
       'structure',
     ]);
-    expect(rolesOf(graph, { type: 'anchor' }).get('type')).toBe('anchor');
+    const declared = [SPEC, ...block('ext type', '  uri: org.dxos.mdl.type@1.0', '  role: anchor')].join('\n');
+    expect(rolesOf(buildDefinitionGraph(declared)).get('type')).toBe('anchor');
   });
 
   test('groups each anchor with what it names, owned or shared, and clusters groups on what they share', ({
@@ -57,5 +59,19 @@ describe('definition groups', () => {
     );
     expect(groups.map(({ id, owned }) => ({ id, owned }))).toEqual([{ id: 'File', owned: ['Project'] }]);
     expect(clusters.map(({ id }) => id)).toEqual([UNSHARED_CLUSTER_ID]);
+  });
+
+  test('groups a spec in another dialect by the roles and links it declares', ({ expect }) => {
+    const { groups, clusters } = groupDefinitions(buildDefinitionGraph(LAUNCH_VIDEO));
+    // Each scene is an anchor that composes its shots, voiceover and captions, which name it as `part-of`.
+    expect(groups.find(({ id }) => id === 'SC-2')).toMatchObject({
+      owned: expect.arrayContaining(['SH-2', 'SH-3', 'VO-1', 'CA-1']),
+      buildsOn: ['SC-1'],
+      verifiedBy: ['SN-1', 'SN-2'],
+    });
+    expect(clusters.map(({ hub, groups }) => ({ hub, groups }))).toEqual([
+      { hub: 'maya', groups: ['SC-1', 'SC-2', 'SC-3'] },
+      { hub: 'narrator', groups: ['SC-4'] },
+    ]);
   });
 });

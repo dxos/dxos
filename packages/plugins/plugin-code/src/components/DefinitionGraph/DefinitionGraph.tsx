@@ -14,13 +14,12 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { CodeNamespace } from '../../namespace.ts';
 import { type DecisionModel, buildChangelogGraph } from '../ChangelogGraph/index.ts';
 import {
-  type BlockRoles,
-  DEFAULT_ROLES,
   type DefinitionModel,
   type SpecTexts,
   buildDefinitionGraph,
   diffDefinitionGraphs,
   groupDefinitions,
+  specDeclarations,
 } from '../SpecModel/index.ts';
 import { DEFAULT_FACTS, type DefinitionFacts } from './definition-facts.ts';
 import { DefinitionCanvas } from './DefinitionCanvas.tsx';
@@ -45,8 +44,8 @@ export type DefinitionGraphProps = {
   review?: ReviewModel;
   /** The base version of `content`; when given, each block is marked with what changed since it (diff mode). */
   base?: string;
-  /** Roles of the spec's block kinds, over the ones derived from the graph. */
-  roles?: BlockRoles;
+  /** The dialects whose block types the spec is written in; those its frontmatter extends by default. */
+  dialects?: readonly string[];
   /** The fields a card shows beside its kind, and how; a feature's status by default. */
   facts?: DefinitionFacts;
   /** An external block opens its spec or code; a local one is shown in the spec. */
@@ -70,7 +69,7 @@ export const DefinitionGraph = ({
   index,
   review,
   base,
-  roles = DEFAULT_ROLES,
+  dialects,
   facts = DEFAULT_FACTS,
   onActivate,
   defaultFocus,
@@ -79,22 +78,24 @@ export const DefinitionGraph = ({
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const annotations = useMemo(() => reviewAnnotations(review), [review]);
   const factFields = useMemo(() => new Set(Object.keys(facts)), [facts]);
+  const declarations = useMemo(() => specDeclarations(content, dialects), [content, dialects]);
   const current = useMemo(
-    () => buildDefinitionGraph(content, { specs, annotations, index, factFields }),
-    [content, specs, annotations, index, factFields],
+    () => buildDefinitionGraph(content, { specs, annotations, index, declarations, factFields }),
+    [content, specs, annotations, index, declarations, factFields],
   );
   const diff = useMemo(
     () =>
       base === undefined
         ? undefined
-        : diffDefinitionGraphs(current, buildDefinitionGraph(base, { specs, annotations, index, factFields }), {
-            current: content,
-            base,
-          }),
-    [current, content, base, specs, annotations, index, factFields],
+        : diffDefinitionGraphs(
+            current,
+            buildDefinitionGraph(base, { specs, annotations, index, declarations, factFields }),
+            { current: content, base },
+          ),
+    [current, content, base, specs, annotations, index, declarations, factFields],
   );
   const full = diff ?? current;
-  const grouping = useMemo(() => groupDefinitions(full, roles), [full, roles]);
+  const grouping = useMemo(() => groupDefinitions(full), [full]);
   const decisions = useMemo(
     () => buildChangelogGraph(content).nodes.filter((node): node is DecisionModel => node.kind === 'decision'),
     [content],

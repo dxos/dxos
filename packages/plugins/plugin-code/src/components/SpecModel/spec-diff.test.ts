@@ -13,12 +13,12 @@ const spec = (...blocks: string[]): string => blocks.map((block) => `\`\`\`mdl\n
 const BASE = spec(
   'type Note\n  fields:\n    title: string',
   'type Tag\n  fields:\n    name: string',
-  'feat F-1: Notes have tags\n  uses: [Note, Tag]\n  req F-1.1: A Note names its Tag.',
+  'op tag: Tags a note.\n  input: { note: Note, tag: Tag }\n  note: A Note names its Tag.',
 );
 
 const CURRENT = spec(
   'type Note\n  fields:\n    title: string\n    body: string',
-  'feat F-1: Notes have tags\n  uses: [Note, Folder]\n  req F-1.1: A Note names its Folder.',
+  'op tag: Tags a note.\n  input: { note: Note, folder: Folder }\n  note: A Note names its Folder.',
   'type Folder\n  fields:\n    name: string',
 );
 
@@ -29,18 +29,18 @@ describe('definition diff', () => {
   test('marks added, changed and removed definitions, and keeps the removed ones', ({ expect }) => {
     const diff = diffOf(CURRENT, BASE);
     expect(Object.fromEntries(diff.changes)).toEqual({
-      'Note': 'changed',
-      'F-1': 'changed',
-      'Folder': 'added',
-      'Tag': 'removed',
+      Note: 'changed',
+      tag: 'changed',
+      Folder: 'added',
+      Tag: 'removed',
     });
-    expect(diff.definitions.map(({ id }) => id)).toEqual(expect.arrayContaining(['Note', 'F-1', 'Folder', 'Tag']));
+    expect(diff.definitions.map(({ id }) => id)).toEqual(expect.arrayContaining(['Note', 'tag', 'Folder', 'Tag']));
   });
 
   test('marks arrows the change added and removed', ({ expect }) => {
     const diff = diffOf(CURRENT, BASE);
-    expect(Object.fromEntries(diff.edgeChanges)).toEqual({ 'F-1->Folder': 'added', 'F-1->Tag': 'removed' });
-    expect(diff.edges.map(({ id }) => id)).toEqual(expect.arrayContaining(['F-1->Folder', 'F-1->Tag', 'F-1->Note']));
+    expect(Object.fromEntries(diff.edgeChanges)).toEqual({ 'tag->Folder': 'added', 'tag->Tag': 'removed' });
+    expect(diff.edges.map(({ id }) => id)).toEqual(expect.arrayContaining(['tag->Folder', 'tag->Tag', 'tag->Note']));
   });
 
   test('re-wrapping a block is not a change', ({ expect }) => {

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './declarations.ts';
 export * from './definition-groups.ts';
 export * from './kinds.ts';
 export * from './review.ts';

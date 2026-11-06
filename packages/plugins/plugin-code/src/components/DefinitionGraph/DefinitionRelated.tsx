@@ -154,10 +154,7 @@ export type DefinitionRelatedProps = {
 export const DefinitionRelated = ({ view, edges, decisions, focus, onOpen, onShow }: DefinitionRelatedProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const container = useRef<HTMLDivElement>(null);
-  const roleOf = (id: string) => {
-    const kind = view.byId.get(id)?.kind;
-    return kind === undefined ? undefined : view.grouping.roles.get(kind);
-  };
+  const roleOf = (id: string) => view.byId.get(id)?.role;
   const { above, below, checks } = useMemo(() => {
     const incoming = neighboursOf(edges, focus, 'from');
     const isCheck = ({ id }: Neighbour) => roleOf(id) === 'verification';

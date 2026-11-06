@@ -54,11 +54,13 @@ describe('spec model', () => {
       '```',
     ].join('\n');
     const { definitions, edges } = buildDefinitionGraph(spec);
+    // A field typed `Ref<Room>` points at Room without holding it, though a type composes its other fields' types.
     expect(edges).toContainEqual({
       id: 'Meeting->Room',
       from: 'Meeting',
       to: 'Room',
       kind: 'reference',
+      relation: 'references',
       field: 'fields',
     });
     // A requirement id resolves to its feature, and a member to its type.
@@ -68,6 +70,23 @@ describe('spec model', () => {
     expect(buildDefinitionGraph(CALLS_SPEC).definitions.some(({ kind }) => kind === 'decision' || kind === 'ext')).toBe(
       false,
     );
+  });
+
+  test("relates each field's names as its type's links say, turning a link read from the other end round", ({
+    expect,
+  }) => {
+    const spec = [
+      '```mdl\next shot\n  uri: org.dxos.mdl.shot@0.1\n  links:\n    scene: part-of\n```',
+      '```mdl\ntype Base\n```',
+      '```mdl\ntype Sub\n  extends: [Base]\n```',
+      '```mdl\nscene SC-1: Open\n```',
+      '```mdl\nshot SH-1: Wide\n  scene: SC-1\n```',
+    ].join('\n');
+    const { edges } = buildDefinitionGraph(spec);
+    expect(edges.map(({ id, relation }) => ({ id, relation }))).toEqual([
+      { id: 'Sub->Base', relation: 'extends' },
+      { id: 'SC-1->SH-1', relation: 'composes' },
+    ]);
   });
 
   test('keeps the one-line value of each fact field, without its comment', ({ expect }) => {

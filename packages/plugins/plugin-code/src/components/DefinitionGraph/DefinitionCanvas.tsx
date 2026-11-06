@@ -272,11 +272,11 @@ export const DefinitionCanvas = ({ view, edges, onActivate }: DefinitionCanvasPr
       spec: { name: t('definition-graph.crumb.spec.label'), scene: specScene(view.grouping) },
       cluster: (id) => ({
         name: clusterName(id),
-        scene: clusterScene(view.grouping, id, { buildsOn: t('definition-canvas.builds-on.label') }),
+        scene: clusterScene(view.grouping, edges, id, { buildsOn: t('definition-canvas.builds-on.label') }),
       }),
       block: (ref) => ({
         name: ref,
-        scene: blockScene(view.byId, view.grouping, edges, ref, {
+        scene: blockScene(view.byId, edges, ref, {
           above: t('definition-canvas.above.label'),
           below: t('definition-canvas.below.label'),
           checks: t('definition-canvas.checks.label'),

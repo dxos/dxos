@@ -2328,6 +2328,24 @@ decision D-86: Definitions groups a spec by what names its blocks, not by its se
     - Taking blocks nothing points at as anchors; that picks tests and scenarios, which point at everything.
 ```
 
+```mdl
+decision D-87: Definitions reads how a spec's blocks group and link from the spec's dialect, and draws links by kind, such as owning and not owning, so a software spec reads as a UML-like diagram.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [SpecViewContent]
+```
+
+```mdl
+decision D-88: Definitions takes each block's role, and each field's relationship, from the dialects the spec uses (its `dialects`, else its frontmatter `extends`, else the software package's), with the spec's own `ext` blocks over them. The software package gains the code dialect. A name in a field with no link, or in prose, is a mention. On the canvas a link draws its relationship's UML ends: a filled diamond at the whole, a hollow diamond at the holder, a hollow triangle at the base, and a dashed arrow for a dependency or a check. Replaces the roles of [D-86]; fills in [D-87].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecViewContent]
+  why: A spec in a dialect the view has never seen, such as the video sample, groups without a change to this plugin.
+  rejected:
+    - Keeping the kind and field tables in this plugin beside the dialects; a new dialect's blocks would all group as structure.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

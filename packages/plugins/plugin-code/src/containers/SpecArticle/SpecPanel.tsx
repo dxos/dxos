@@ -10,6 +10,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type SourceKey, formatSourceKey, isSpecKey } from '@dxos/deus/review';
 import { Doc } from '@dxos/echo-doc';
+import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import * as SpecSession from '@dxos/plugin-projects/SpecSession';
@@ -130,6 +131,7 @@ export type SpecViewContentProps = SpecSource & {
  */
 export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewContentProps) => {
   const { spec } = source;
+  const [dialects] = useObject(spec, 'dialects');
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const identity = useIdentity();
   const sync = useSpecSyncState();
@@ -231,6 +233,7 @@ export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewC
       {view === 'definitions' && (
         <DefinitionGraph
           content={text}
+          dialects={dialects}
           base={baseText}
           specs={specs}
           index={SPEC_INDEX}

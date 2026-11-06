@@ -24,11 +24,12 @@ export const DIALECT = 'org.dxos.spec.features';
 
 /**
  * The software package's dialects, which a spec takes together: features, and the dialects a software project's specs
- * extend for its app, plugins, QA and storage.
+ * extend for its app, code, plugins, QA and storage.
  */
 export const SOFTWARE_DIALECTS: readonly string[] = [
   DIALECT,
   'org.dxos.spec.app',
+  'org.dxos.spec.code',
   'org.dxos.spec.plugin',
   'org.dxos.spec.qa',
   'org.dxos.spec.sql',

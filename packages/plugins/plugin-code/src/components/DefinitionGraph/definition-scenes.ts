@@ -5,7 +5,12 @@
 import { type Scene as DiagramScene, Dsl, Semantic, SemanticEngine } from '@dxos/diagram';
 import { type DiagramSet, type LatticeSpec, boxId, quantize } from '@dxos/react-ui-canvas';
 
-import { type DefinitionEdge, type DefinitionGrouping, type DefinitionModel } from '../SpecModel/index.ts';
+import {
+  type DefinitionEdge,
+  type DefinitionGrouping,
+  type DefinitionModel,
+  type DefinitionRelation,
+} from '../SpecModel/index.ts';
 
 export type Point = { x: number; y: number };
 export type Size = { width: number; height: number };
@@ -44,7 +49,7 @@ export type SceneNode =
 
 /**
  * An arrow; `both` heads it at each end, for two cards that name each other. One laid out `against` the flow is placed
- * as if it ran from `to` to `from`, so its source sits below its target.
+ * as if it ran from `to` to `from`, so its source sits below its target. A `relation` draws its UML ends and dash.
  */
 export type SceneEdge = {
   id: string;
@@ -54,6 +59,7 @@ export type SceneEdge = {
   dashed?: boolean;
   both?: boolean;
   against?: boolean;
+  relation?: DefinitionRelation;
 };
 
 /** A frame drawn round some of a level's cards, at most `maxWidth` cards wide. */
@@ -92,6 +98,7 @@ export const specScene = (grouping: DefinitionGrouping): DefinitionScene => {
  */
 export const clusterScene = (
   grouping: DefinitionGrouping,
+  edges: readonly DefinitionEdge[],
   clusterId: string,
   { buildsOn }: { buildsOn: string },
 ): DefinitionScene => {
@@ -105,19 +112,24 @@ export const clusterScene = (
   const nodes = new Map<string, SceneNode>();
   const add = (ref: string, extra: Partial<Extract<SceneNode, { kind: 'definition' }>> = {}) =>
     nodes.has(ref) || nodes.set(ref, { id: ref, kind: 'definition', ref, ...extra });
-  const edges: SceneEdge[] = [];
+  const relationOf = new Map(
+    edges.flatMap(({ from, to, relation }) => (relation ? [[`${from}->${to}`, relation]] : [])),
+  );
+  const named = (from: string, to: string): SceneEdge => {
+    const relation = relationOf.get(`${from}->${to}`);
+    return { id: `${from}->${to}`, from, to, ...(relation && { relation }) };
+  };
+  const sceneEdges: SceneEdge[] = [];
   const frames: SceneFrame[] = [];
   for (const group of groups) {
     add(group.id);
     const own = [...group.owned, ...group.context];
     own.forEach((id) => add(id));
     own.length > 0 && frames.push({ id: `frame:${group.id}`, label: group.id, members: [group.id, ...own] });
-    for (const id of own) {
-      edges.push({ id: `${group.id}->${id}`, from: group.id, to: id });
-    }
+    own.forEach((id) => sceneEdges.push(named(group.id, id)));
     for (const id of group.shared.filter((id) => shared.has(id))) {
       add(id, { count: grouping.memberOf.get(id)?.length });
-      edges.push({ id: `${group.id}->${id}`, from: group.id, to: id });
+      sceneEdges.push(named(group.id, id));
     }
   }
   for (const group of grouping.groups) {
@@ -125,11 +137,11 @@ export const clusterScene = (
       if (members.has(group.id) || members.has(target)) {
         add(group.id, { outside: !members.has(group.id) });
         add(target, { outside: !members.has(target) });
-        edges.push({ id: `${group.id}=>${target}`, from: group.id, to: target, label: buildsOn, dashed: true });
+        sceneEdges.push({ id: `${group.id}=>${target}`, from: group.id, to: target, label: buildsOn, dashed: true });
       }
     }
   }
-  return { nodes: [...nodes.values()], edges, frames };
+  return { nodes: [...nodes.values()], edges: sceneEdges, frames };
 };
 
 /** Prefixes keeping a block above the focus apart from the same block below it. */
@@ -146,15 +158,11 @@ const SIDE_WIDTH = 3;
  */
 export const blockScene = (
   byId: ReadonlyMap<string, DefinitionModel>,
-  grouping: DefinitionGrouping,
   edges: readonly DefinitionEdge[],
   focus: string,
   labels: { above: string; below: string; checks: string },
 ): DefinitionScene => {
-  const roleOf = (id: string) => {
-    const kind = byId.get(id)?.kind;
-    return kind === undefined ? undefined : grouping.roles.get(kind);
-  };
+  const roleOf = (id: string) => byId.get(id)?.role;
   const nodes = new Map<string, SceneNode>([[focus, { id: focus, kind: 'definition', ref: focus, focused: true }]]);
   const sceneEdges = new Map<string, SceneEdge>();
   const sides = { above: new Set<string>(), below: new Set<string>(), checks: new Set<string>() };
@@ -162,7 +170,16 @@ export const blockScene = (
     const existing = sceneEdges.get(id);
     const label = edge.field ?? existing?.label;
     const dashed = (existing?.dashed ?? true) && !edge.field;
-    sceneEdges.set(id, { id, from, to, ...(label && { label }), dashed, ...(against && { against }) });
+    const relation = edge.relation ?? existing?.relation;
+    sceneEdges.set(id, {
+      id,
+      from,
+      to,
+      ...(label && { label }),
+      dashed,
+      ...(against && { against }),
+      ...(relation && { relation }),
+    });
   };
   for (const edge of edges) {
     if (edge.from === edge.to || !byId.has(edge.from) || !byId.has(edge.to)) {
@@ -190,6 +207,17 @@ export const blockScene = (
         : [],
     ),
   };
+};
+
+/** The diagram DSL's word for each relation: its ends and dash are UML's. */
+const DSL_RELATIONSHIP: Record<DefinitionRelation, string> = {
+  'aggregates': 'owns',
+  'composes': 'composes',
+  'depends-on': 'depends-on',
+  'extends': 'extends',
+  'implements': 'implements',
+  'references': '->',
+  'verifies': 'depends-on',
 };
 
 /**
@@ -241,11 +269,13 @@ const toDsl = (
       // The engine names each edge's link by its ends and its place among the edges.
       edge.label && labels.set(`${Semantic.CONNECTORS}/${source}-${target}-${index}`, edge.label);
       index++;
-      const stroke = edge.dashed ? ' stroke=dashed' : '';
+      const word = edge.relation ? DSL_RELATIONSHIP[edge.relation] : '->';
+      const stroke = edge.dashed && !edge.relation ? ' stroke=dashed' : '';
+      // A relation's ends are at its owner or subtype, so one laid out against the flow keeps only a plain head.
       lines.push(
         edge.against
-          ? `edge ${source} -> ${target}${stroke} head=none tail=arrow`
-          : `edge ${source} -> ${target}${stroke}${edge.both ? ' tail=arrow' : ''}`,
+          ? `edge ${source} -> ${target}${edge.dashed || edge.relation ? ' stroke=dashed' : ''} head=none tail=arrow`
+          : `edge ${source} ${word} ${target}${stroke}${edge.both ? ' tail=arrow' : ''}`,
       );
     }
   }

@@ -2,27 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type KindGroup, groupOf } from './kinds.ts';
+import { type Role } from '@dxos/deus/dialect';
+
 import { type DefinitionGraphModel, type DefinitionModel } from './spec-model.ts';
 
 /**
- * What a block kind does in a spec, which is all grouping reads besides the edges. An anchor states intent and names
- * the blocks that serve it; structure is what they are built from; verification checks them; context is what the spec
- * relies on from outside.
+ * What a block type is to a spec, as its dialect declares it: an anchor states intent and names the blocks that serve
+ * it; structure is what they are built from; verification checks them; context is what the spec relies on from outside.
  */
-export type BlockRole = 'anchor' | 'structure' | 'verification' | 'context';
-
-/** Roles by block kind; a kind not listed takes the role {@link rolesOf} derives from the graph. */
-export type BlockRoles = Readonly<Record<string, BlockRole>>;
-
-const ROLE_OF_GROUP: Record<KindGroup, BlockRole> = {
-  requirements: 'anchor',
-  qa: 'verification',
-  concepts: 'structure',
-};
-
-/** The core kinds' roles: what they are taken to be when a spec declares none. */
-export const DEFAULT_ROLES: BlockRoles = { plugin: 'context', uses: 'context' };
+export type BlockRole = Role;
 
 /** One anchor and the blocks it names. */
 export type DefinitionGroup = {
@@ -68,18 +56,11 @@ export type DefinitionGrouping = {
 
 export const UNSHARED_CLUSTER_ID = 'cluster:unshared';
 
-/**
- * Each kind's role: the declared one, else the role of its kind group (requirements anchor, QA verifies), else
- * external blocks are context and everything else is structure. A spec with no anchors takes as anchors the
- * structure no other structure references, so a spec made only of types still groups around its root types.
- */
-export const rolesOf = (
-  { definitions, edges }: DefinitionGraphModel,
-  declared: BlockRoles = DEFAULT_ROLES,
-): Map<string, BlockRole> => {
+/** The role of each kind present, as its first definition carries it. */
+export const rolesOf = ({ definitions }: DefinitionGraphModel): Map<string, BlockRole> => {
   const roles = new Map<string, BlockRole>();
-  for (const { kind, external } of definitions) {
-    roles.has(kind) || roles.set(kind, declared[kind] ?? (external ? 'context' : ROLE_OF_GROUP[groupOf(kind)]));
+  for (const { kind, role } of definitions) {
+    roles.has(kind) || roles.set(kind, role);
   }
   return roles;
 };
@@ -89,16 +70,10 @@ export const rolesOf = (
  * other group names it and shared otherwise. Each group joins the cluster of the shared block it names that the most
  * groups name; a group that shares nothing joins the cluster of an anchor it builds on, else the unshared cluster.
  */
-export const groupDefinitions = (
-  model: DefinitionGraphModel,
-  declared: BlockRoles = DEFAULT_ROLES,
-): DefinitionGrouping => {
-  const roles = rolesOf(model, declared);
+export const groupDefinitions = (model: DefinitionGraphModel): DefinitionGrouping => {
+  const roles = rolesOf(model);
   const byId = new Map(model.definitions.map((definition) => [definition.id, definition]));
-  const roleOf = (id: string) => {
-    const definition = byId.get(id);
-    return definition && roles.get(definition.kind);
-  };
+  const roleOf = (id: string) => byId.get(id)?.role;
   const named = new Map<string, Set<string>>();
   for (const { from, to } of model.edges) {
     if (from !== to && byId.has(from) && byId.has(to)) {
