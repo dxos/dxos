@@ -121,7 +121,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   schema={Type.getSchema(Task.Task)}
                   // The whole task, so the schema's other required fields validate; only the fields shown can change.
                   values={snapshot}
-                  markdownExtensions={descriptionExtensions}
+                  extensions={descriptionExtensions}
                   testId='tasksPlugin.fields'
                   autoSave
                   onSave={handleSave}

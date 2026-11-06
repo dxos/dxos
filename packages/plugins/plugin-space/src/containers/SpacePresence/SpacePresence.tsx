@@ -4,11 +4,13 @@
 
 import React, {
   type ComponentProps,
+  type ComponentPropsWithoutRef,
   type ReactNode,
   forwardRef,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -42,8 +44,7 @@ import {
   type PeerSession,
   countViewers,
   getFreshSessions,
-  getPeerNodeId,
-  getSessionNodeId,
+  getPeerNodeIds,
   isMoving,
 } from '../../util/index.ts';
 import { PeerActions, useExpandPeerNodes } from './PeerActions.tsx';
@@ -92,14 +93,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
   const [showSessions, setShowSessions] = useShowSessions();
   const viewers = (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
   // Ready before the list opens, so its rows' actions do not appear after it.
-  useExpandPeerNodes(
-    spaceId
-      ? Object.entries(viewers).flatMap(([identityKey, sessions]) => [
-          getPeerNodeId(spaceId, identityKey),
-          ...Object.keys(sessions).map((sessionId) => getSessionNodeId(spaceId, identityKey, sessionId)),
-        ])
-      : [],
-  );
+  useExpandPeerNodes(spaceId ? getPeerNodeIds(spaceId, viewers, now) : []);
 
   if (!identity || !ephemeral || !presenceKey) {
     return null;
@@ -123,7 +117,12 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
       showSessions={showSessions}
       renderActions={(member, sessionId) =>
         spaceId && member.identityKey && sessionId ? (
-          <PeerActions spaceId={spaceId} identityKey={member.identityKey} sessionId={sessionId} />
+          <PeerActions
+            spaceId={spaceId}
+            identityKey={member.identityKey}
+            presenceKey={presenceKey}
+            sessionId={sessionId}
+          />
         ) : null
       }
       headerAction={
@@ -204,50 +203,74 @@ export type MemberPresenceProps = Util.ThemedClassName<{
   headerAction?: ReactNode;
 }>;
 
+const OVERFLOW_TRIGGER = 'overflow';
+
+type AvatarTriggerProps = ComponentPropsWithoutRef<'button'> & { tooltip: string };
+
+/** A button around an avatar; its tooltip finds it by the id the `asChild` Popover trigger gives it. */
+const AvatarTrigger = forwardRef<HTMLButtonElement, AvatarTriggerProps>(
+  ({ tooltip, children, ...props }, forwardedRef) => (
+    <Tooltip.Root ids={props.id ? { trigger: props.id } : undefined} positioning={{ placement: 'bottom' }}>
+      <Tooltip.Trigger asChild>
+        <button type='button' className='grid focus:outline-hidden' {...props} ref={forwardedRef}>
+          {children}
+        </button>
+      </Tooltip.Trigger>
+      <Tooltip.Content>{tooltip}</Tooltip.Content>
+    </Tooltip.Root>
+  ),
+);
+
 /** Avatars of the members on an object; clicking any opens the full list, with the clicked member's row highlighted. */
 export const FullPresence = (props: MemberPresenceProps) => {
   const { size = 'md', showSessions, renderActions, headerAction } = props;
   const members = UiHooks.useDefaultValue(props.members, () => []);
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  const [open, setOpen] = useState(false);
-  const [highlighted, setHighlighted] = useState<string>();
-  const openList = (member?: Member) => {
-    setHighlighted(member?.rowId);
-    setOpen(true);
-  };
+  // The row of the avatar that opened the list; the list seeds its own selection from it on every open.
+  const [openedFor, setOpenedFor] = useState<string>();
+  const groupRef = useRef<HTMLDivElement>(null);
 
   if (members.length === 0) {
     return null;
   }
 
+  // Each avatar and the overflow are the list's own triggers, so the popover returns focus to the one that opened it
+  // and keeps the list in the tab order after it (zag binds that tab order at open, not on a switch to another avatar).
   return (
-    <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'bottom-end' }}>
+    <Popover.Root
+      positioning={{ placement: 'bottom-end' }}
+      onTriggerValueChange={({ value }) => setOpenedFor(value === OVERFLOW_TRIGGER ? undefined : (value ?? undefined))}
+      // zag focuses nothing when the opening avatar has left, so focus falls back to the first one.
+      finalFocusEl={() =>
+        groupRef.current?.querySelector<HTMLElement>('[data-part="trigger"][data-current]') ??
+        groupRef.current?.querySelector<HTMLElement>('[data-part="trigger"]') ??
+        null
+      }
+    >
       <Popover.Anchor asChild>
-        <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
+        <div ref={groupRef} className='dx-avatar-group' data-testid='spacePlugin.presence'>
           {members.slice(0, 3).map((member, i) => (
-            <Tooltip.Trigger
-              key={member.identityKey}
-              side='bottom'
-              content={getName(member)}
-              className='grid focus:outline-hidden'
-            >
-              <PresenceAvatar
-                member={member}
-                match={isAttending(member)}
-                index={members.length - i}
-                onClick={() => openList(member)}
-                size={size}
-              />
-            </Tooltip.Trigger>
+            <Popover.Trigger key={member.identityKey} asChild value={member.rowId}>
+              <AvatarTrigger tooltip={getName(member)}>
+                <PresenceAvatar member={member} match={isAttending(member)} index={members.length - i} size={size} />
+              </AvatarTrigger>
+            </Popover.Trigger>
           ))}
           {members.length > 3 && (
-            <Avatar.Root
-              status='inactive'
-              style={{ zIndex: members.length - 4 }}
-              fallback={`+${members.length - 3}`}
-              size={size}
-              onClick={() => openList()}
-            />
+            <Popover.Trigger asChild value={OVERFLOW_TRIGGER}>
+              <button
+                type='button'
+                className='grid focus:outline-hidden'
+                aria-label={t('presence-in-object.heading', { count: members.length })}
+              >
+                <Avatar.Root
+                  status='inactive'
+                  style={{ zIndex: members.length - 4 }}
+                  fallback={`+${members.length - 3}`}
+                  size={size}
+                />
+              </button>
+            </Popover.Trigger>
           )}
         </div>
       </Popover.Anchor>
@@ -259,10 +282,11 @@ export const FullPresence = (props: MemberPresenceProps) => {
         </Popover.Header>
         {/* The header keeps a gap from the panel's top edge; the list keeps the same from its bottom. */}
         <Popover.Body classNames='pb-2'>
+          {/* Keyed by the opener, so a switch to another avatar while open reseeds the selection too. */}
           <Listbox.Root
+            key={openedFor ?? ''}
             items={getPresenceOptions(members, showSessions, t)}
-            value={highlighted ?? ''}
-            onValueChange={setHighlighted}
+            defaultValue={openedFor ?? ''}
           >
             <Listbox.Content aria-label={t('presence-in-object.heading', { count: members.length })}>
               {members.map((member) => (

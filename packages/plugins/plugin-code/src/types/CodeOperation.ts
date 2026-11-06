@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
+import * as SpecReview from '@dxos/compute/SpecReview';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
@@ -339,6 +340,45 @@ export const ExportSpecFile = Operation.make({
   services: [Capability.Service, Database.Service],
 });
 
+export const CreateSpecReview = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.createSpecReview'),
+    name: 'Create spec review',
+    icon: 'ph--seal-check--regular',
+    description: trim`
+      Records a compliance review of a spec from its \`.review.mdl\` text: front matter with \`commit\`, \`date\` and
+      \`by\`, a summary, then one \`verdict\` block per spec item. A review with the same commit, date and reviewer as
+      an existing one replaces it; any other is added to the spec's reviews.
+    `,
+  },
+  services: [Database.Service],
+  types: [Spec.Spec, SpecReview.SpecReview],
+  input: Schema.Struct({
+    spec: Ref.Ref(Spec.Spec).annotate({ description: 'The reviewed spec.' }),
+    content: Schema.String.annotate({ description: 'The review as `.review.mdl` text.' }),
+  }),
+  output: Schema.Struct({
+    review: Ref.Ref(SpecReview.SpecReview),
+    created: Schema.Boolean,
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * \`GitHubCapabilities.FileMapping.import\` for \`.review.mdl\` files: records the review against the Spec synced from
+ * the file beside it (\`PLUGIN.review.mdl\` reviews \`PLUGIN.mdl\`).
+ */
+export const ImportSpecReviewFile = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.importSpecReviewFile'),
+    name: 'Import Spec Review File',
+    description: 'Records a synced repository review file as a review of the Spec synced from the file beside it.',
+    icon: 'ph--seal-check--regular',
+  },
+  input: GitHubCapabilities.FileImportInput,
+  output: GitHubCapabilities.FileImportOutput,
+  services: [Database.Service],
+});
+
 /**
  * Every type a spec's features touch. Declared on the operations (`types`) as well as in the plugin's schema
  * capability, because a host that imports the handler set without activating the plugin — the EDGE
@@ -426,7 +466,8 @@ export const UpdateFeature = Operation.make({
     icon: 'ph--pencil-simple--regular',
     description: trim`
       Changes a feature's key, name, description, requirements or status, or moves it to another spec; fields left out
-      are kept. Requirements replace the whole list when given. A spec moves the feature onto that spec's map, which
+      are kept. Requirements replace the whole list when given; give each one back with the key it was read with, so
+      comments on it stay anchored. A spec moves the feature onto that spec's map, which
       may be another spec's or a feature's own; a move into the feature's own breakdown is refused.
       Status says how far the feature has come, not whether anyone is working on it (that is read from its linked
       tasks): planned until it works, prototype when it works in a demo, operational when people can rely on it,

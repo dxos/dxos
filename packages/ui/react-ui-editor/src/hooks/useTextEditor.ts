@@ -21,6 +21,7 @@ import { log } from '@dxos/log';
 import {
   type EditorSelection,
   type EditorSelectionState,
+  INITIAL_SELECTION_EVENT,
   debugDispatcher,
   documentId,
   modalStateField,
@@ -129,7 +130,7 @@ export const useTextEditor = (
       // Move to end of line after document loaded (unless selection is specified).
       if (selectionEnd && !initialSelection) {
         const { to } = view.state.doc.lineAt(0);
-        view.dispatch({ selection: { anchor: to } });
+        view.dispatch({ selection: { anchor: to }, userEvent: INITIAL_SELECTION_EVENT });
       }
 
       setView(view);

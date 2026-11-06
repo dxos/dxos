@@ -137,13 +137,24 @@ const fakeFetch =
       const [base, head] = route.slice('/compare/'.length).split('...');
       const before = treeOf(git, base);
       const after = treeOf(git, head);
+      // A removed file whose blob reappears at another path is a rename, as GitHub reports it.
+      const removed = [...before].filter(([filename]) => !after.has(filename));
       const files = [
-        ...[...after].flatMap(([filename, sha]) =>
-          before.get(filename) === sha ? [] : [{ filename, sha, status: before.has(filename) ? 'modified' : 'added' }],
-        ),
-        ...[...before.keys()]
-          .filter((filename) => !after.has(filename))
-          .map((filename) => ({ filename, status: 'removed' })),
+        ...[...after].flatMap(([filename, sha]) => {
+          if (before.get(filename) === sha) {
+            return [];
+          }
+          if (before.has(filename)) {
+            return [{ filename, sha, status: 'modified' }];
+          }
+          const index = removed.findIndex(([, removedSha]) => removedSha === sha);
+          if (index < 0) {
+            return [{ filename, sha, status: 'added' }];
+          }
+          const [[previous_filename]] = removed.splice(index, 1);
+          return [{ filename, sha, status: 'renamed', previous_filename }];
+        }),
+        ...removed.map(([filename]) => ({ filename, status: 'removed' })),
       ];
       const status = base === head ? 'identical' : isAncestor(git, base, head) ? 'ahead' : 'diverged';
       return Response.json({ status, files });
@@ -231,8 +242,19 @@ const ExportText = Operation.make({
   services: [Database.Service],
 });
 
+/** An import no handler answers, as an import that fails does. */
+const Unhandled = Operation.make({
+  meta: { key: DXN.make('com.example.operation.unhandled'), name: 'Unhandled' },
+  input: GitHubCapabilities.FileImportInput,
+  output: GitHubCapabilities.FileImportOutput,
+  services: [Database.Service],
+});
+
+/** A file that starts with this is a new object on every change, as a review with new front matter is. */
+const NEW_OBJECT = '# new\n';
+
 const importText = Effect.fn(function* (input: GitHubCapabilities.FileImportInput) {
-  if (!input.object || !input.heads || input.base === undefined) {
+  if (!input.object || !input.heads || input.base === undefined || input.content.startsWith(NEW_OBJECT)) {
     const text = yield* Database.add(Text.make({ content: input.content }));
     return { object: Ref.make(text), heads: TextMerge.currentHeads(text) };
   }
@@ -343,9 +365,9 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     );
 
     /** One pass; `requests` lists only what this pass asked GitHub for. */
-    const sync = async () => {
+    const sync = async (mappings: readonly GitHubCapabilities.FileMapping[] = [MAPPING]) => {
       git.requests = [];
-      const result = await syncFileBinding(binding, [MAPPING]).pipe(
+      const result = await syncFileBinding(binding, mappings).pipe(
         Effect.provideService(FetchHttpClient.Fetch, fakeFetch(git)),
         Effect.provide(services),
         EffectEx.runAndForwardErrors,
@@ -519,6 +541,82 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     expect(text && Obj.getKeys(text, GITHUB_SOURCE)).toEqual([]);
     const all = await run(Database.query(Filter.type(Text.Text)).run);
     expect(all.map((object) => object.id)).toContain(text?.id);
+  });
+
+  test('an import that answers with another object moves the marker and the key to it', async ({ expect }) => {
+    const { git, sync, textAt } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    push(git, 'main', { 'spec/PLUGIN.mdl': NEW_OBJECT + SPEC_V1 });
+
+    await sync();
+
+    const after = await textAt('spec/PLUGIN.mdl');
+    expect(after?.id).not.toBe(before?.id);
+    expect(after && Obj.getKeys(after, GITHUB_SOURCE)).toEqual([fileKey('1234', 'spec/PLUGIN.mdl')]);
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
+  });
+
+  test('F-3.5: a path another mapping now claims is released and imported anew, though unchanged', async ({
+    expect,
+  }) => {
+    const { sync, marker, textAt } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    const other = { ...MAPPING, id: 'com.example.mapping.other', match: ['spec/PLUGIN.mdl'] };
+
+    await sync([{ ...MAPPING, exclude: ['spec/PLUGIN.mdl'] }, other]);
+
+    const after = await textAt('spec/PLUGIN.mdl');
+    expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: other.id });
+    expect(after?.id).not.toBe(before?.id);
+    expect(after?.content).toBe(SPEC_V1);
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
+  });
+
+  test('F-3.5: a failed import keeps the path bound but unexported, and the next pass retries the head', async ({
+    expect,
+  }) => {
+    const { git, sync, marker, textAt, edit, fileOn } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    const other = { ...MAPPING, id: 'com.example.mapping.other', match: ['spec/PLUGIN.mdl'] };
+    const released = [{ ...MAPPING, exclude: ['spec/PLUGIN.mdl'] }];
+    const failing = [...released, { ...other, import: Unhandled }];
+    const next = SPEC_V1.replace('F-1: one', 'F-1: first');
+    push(git, 'main', { 'spec/PLUGIN.mdl': next });
+
+    const { result } = await sync(failing);
+
+    expect(result.skipped).toEqual([{ path: 'spec/PLUGIN.mdl', reason: 'import failed' }]);
+    expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: MAPPING.id, object: before && Obj.getURI(before) });
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([fileKey('1234', 'spec/PLUGIN.mdl')]);
+
+    // The old mapping no longer claims the path, so an edit to its object is not pushed.
+    await edit('spec/PLUGIN.mdl', (content) => content.replace('F-2: two', 'F-2: second'));
+    await sync(failing);
+    expect(fileOn('composer/edits', 'spec/PLUGIN.mdl')).toBeUndefined();
+
+    await sync([...released, other]);
+
+    expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: other.id });
+    expect((await textAt('spec/PLUGIN.mdl'))?.content).toBe(next);
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
+  });
+
+  test('F-3.5: a path another mapping now claims, renamed in the same pass, is not imported at its old path', async ({
+    expect,
+  }) => {
+    const { git, sync, marker, textAt } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    push(git, 'main', { 'spec/PLUGIN.mdl': null, 'spec/MOVED.mdl': SPEC_V1 });
+    const other = { ...MAPPING, id: 'com.example.mapping.other', match: ['spec/PLUGIN.mdl'] };
+
+    await sync([{ ...MAPPING, exclude: ['spec/PLUGIN.mdl'] }, other]);
+
+    expect(marker('spec/PLUGIN.mdl')).toBeUndefined();
+    expect(marker('spec/MOVED.mdl')).toMatchObject({ mapping: MAPPING.id, object: before && Obj.getURI(before) });
   });
 
   test('a merged pull request is adopted without applying its own edits twice', async ({ expect }) => {

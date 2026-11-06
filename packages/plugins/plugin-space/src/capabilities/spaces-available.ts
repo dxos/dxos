@@ -44,7 +44,9 @@ import {
   groupPresenceKeysBySpace,
   isFollowTargetOf,
   isSameFollowTarget,
+  makeLocationScheduler,
   parseViewingMessage,
+  prunePeerDecks,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
@@ -220,13 +222,15 @@ export default Capability.makeModule(
     subscriptions.add(() => spaceNamesSub.unsubscribe());
 
     // Only the defined fields: the payload is packed as a protobuf Struct, which has no undefined.
+    const getLocation = (key: string): SpaceSchema.PeerLocation | undefined => {
+      const { selection, viewport } = viewState.get(ViewLocation.aspect, key);
+      return selection || viewport ? { ...(selection && { selection }), ...(viewport && { viewport }) } : undefined;
+    };
     const getLocations = (keys: readonly string[]) =>
       Object.fromEntries(
         keys.flatMap((key) => {
-          const { selection, viewport } = viewState.get(ViewLocation.aspect, key);
-          return selection || viewport
-            ? [[key, { ...(selection && { selection }), ...(viewport && { viewport }) }]]
-            : [];
+          const location = getLocation(key);
+          return location ? [[key, location]] : [];
         }),
       );
 
@@ -264,8 +268,8 @@ export default Capability.makeModule(
       const inactive = [...layout.inactive, ...departed];
       previousActive = active;
 
-      const send = () => {
-        const spaces = client.spaces.get();
+      const send = (spaceIds?: ReadonlySet<string>) => {
+        const spaces = client.spaces.get().filter((space) => !spaceIds || spaceIds.has(space.id));
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           const device = getDevice();
@@ -312,25 +316,19 @@ export default Capability.makeModule(
       // Send at interval to allow peers to expire entries if they become disconnected.
       const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
 
-      // Moving or scrolling in an open object re-sends, at most once per interval, which is shorter while followed.
-      let locationTimer: ReturnType<typeof setTimeout> | undefined;
-      const scheduleSend = () => {
-        locationTimer ??= setTimeout(
-          () => {
-            locationTimer = undefined;
-            send();
-          },
-          isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
-        );
-      };
-      const locationSubscriptions = [...new Set([...current, ...active])].flatMap((path) => {
-        const key = getPresenceKeyFromPath(path);
-        return key ? [viewState.subscribe(ViewLocation.aspect, key, scheduleSend)] : [];
-      });
+      // Moving or scrolling in an open object re-sends to its space, at most once per interval, which is shorter while
+      // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
+      const locationKeys = [...new Set([...current, ...active].flatMap((path) => getPresenceKeyFromPath(path) ?? []))];
+      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, send, () =>
+        isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
+      );
+      const locationSubscriptions = locationKeys.map((key) =>
+        viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
+      );
 
       broadcastCleanup = () => {
         clearInterval(interval);
-        clearTimeout(locationTimer);
+        locationScheduler.dispose();
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
     };
@@ -379,11 +377,17 @@ export default Capability.makeModule(
               } else {
                 followers.delete(follower);
               }
-              registry.update(ephemeralAtom, (ephemeral) => ({
-                ...ephemeral,
-                viewersByObject: applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen),
-                peerDecks: applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
-              }));
+              registry.update(ephemeralAtom, (ephemeral) => {
+                const viewersByObject = applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen);
+                return {
+                  ...ephemeral,
+                  viewersByObject,
+                  peerDecks: prunePeerDecks(
+                    applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
+                    viewersByObject,
+                  ),
+                };
+              });
             }
           }),
         );

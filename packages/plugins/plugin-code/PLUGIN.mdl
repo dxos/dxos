@@ -19,8 +19,8 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - ReactSurface: the spec article surface, and the code project's article and section surfaces
     - Schema: the Spec and CodeProject types
     - Settings: repos to sync and build settings
-    - SkillDefinition: the Coder, Feature Map and Project Repositories skills
-    - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
+    - SkillDefinition: the Coder, Feature Map, Project Repositories and Spec Review skills
+    - SpecFileMapping: the GitHubCapabilities.FileMappings for `**/*.mdl` and `**/*.review.mdl`, so a GitHub file binding syncs specs and imports their reviews (org.dxos.plugin.github.file-sync#F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
 ```
@@ -487,6 +487,32 @@ op exportSpecFile
 ```
 
 ```mdl
+op createSpecReview
+  key: org.dxos.operation.code.createSpecReview
+  desc: |
+    Records a `.review.mdl` text as a review of the spec (F-24.2). Refused when the front matter lacks commit, date
+    or by, or names another file than the one GitHub file sync binds the spec to.
+  input:
+    spec: Ref<Spec>
+    content: string
+  output: { review: Ref<SpecReview>, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
+```mdl
+op importSpecReviewFile
+  key: org.dxos.operation.code.importSpecReviewFile
+  desc: |
+    The import of the `.review.mdl` FileMapping: records the file against the Spec synced from the `.mdl` beside it,
+    and fails when there is none. The mapping has no export.
+  input: FileImportInput
+  output: FileImportOutput
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
+```mdl
 op listLocalSpecs
   key: org.dxos.operation.code.listLocalSpecs
   desc: Lists the `.mdl` specs in every known checkout as source keys, reviews excluded.
@@ -550,6 +576,18 @@ type RepositoriesSkill
     key: org.dxos.skill.code.repositories
     tools:
       - op:updateProjectRepositories
+    instructions: prose
+```
+
+```mdl
+type SpecReviewSkill
+  desc: |
+    Skill key `org.dxos.skill.code.specReview`, named Spec Review, which an agent can enable. Records a `.review.mdl`
+    review of a spec in the space (F-24).
+  fields:
+    key: org.dxos.skill.code.specReview
+    tools:
+      - op:createSpecReview
     instructions: prose
 ```
 
@@ -848,8 +886,9 @@ feat F-16: Compliance review annotations
     The `spec-review` skill writes `<SPEC>.review.mdl` beside a spec: one verdict
     per item, in the review dialect (`org.dxos.spec.review`).
 
-  req F-16.1: SpecArticle reads the review beside the spec from the checkout and
-              re-reads it every 3 seconds.
+  req F-16.1: SpecArticle reads a spec's reviews: a spec in a space reads its SpecReviews from
+              ECHO; a spec read from a checkout reads the review beside it there and re-reads it
+              every 3 seconds.
   req F-16.2: Each reviewed item's declaration line gets a status bar and chip in
               the margin; a chip opens the verdict in the Review view.
   req F-16.3: Each definitions-graph box gets a status badge; a feature shows the
@@ -1030,6 +1069,28 @@ feat F-23: A project's repositories
   req F-23.2: An agent asked to give a project a repository, or to take one away, adds or removes it with
               op:updateProjectRepositories from the Project Repositories skill; a repository already listed keeps its
               place.
+```
+
+```mdl
+feat F-24: Spec reviews in ECHO
+  req F-24.1: A review of a spec is a `SpecReview` object owned by the spec (`@dxos/compute`'s `SpecReview`, typename
+              `org.dxos.type.projects.specReview`): its commit, date and reviewer, its summary, and a verdict per spec
+              item keyed by the item's id.
+  req F-24.2: Recording a review with the same commit, date and reviewer as one the spec has replaces that review's
+              summary and verdicts; any other review is added beside the spec's earlier ones.
+  req F-24.3: Reviews are imported from git and never written back. A `.review.mdl` file is recorded against the spec
+              synced from the file beside it, by the local checkout sync ([F-14]) and by GitHub file sync, which maps
+              it to `SpecReview` and excludes it from the spec mapping.
+  req F-24.4: An agent records a review with op:createSpecReview from the Spec Review skill, given the spec and the
+              review file's text.
+  req F-24.5: Each item shows its newest verdict across the spec's reviews, with the review's date and commit: in the
+              editor's status chip, the Review view's cards, and a chip on each requirement where a feature's page and
+              its section in a spec list them. A feature card shows no verdicts.
+  req F-24.6: The Review view picks a review from the spec's history; it shows the current status by default.
+  req F-24.7: The Review view shows the review's summary as markdown: its first paragraph, with the rest behind a
+              disclosure. Below it, a filter of each status with its count, worst first, stays pinned above the cards
+              and shows only that status's verdicts; each status is a button of its own, its icon beside its count. The summary, filter and cards scroll together under the picker,
+              and the current card shows its note in full.
 ```
 
 ## Acceptance
@@ -1417,7 +1478,7 @@ test QA-5: Switch between a project's specs
     - name: See the project's specs
       do: Open the project "Inbox" on its Overview.
       expect: the project's form lists its specs under Specs, "Inbox and agents" and then "Launch talk", each a row
-        folded under its name, with a `+` beside the label, and the toolbar offers Create artifact
+        folded under its name, with a `+` beside the label, and Artifacts carries a `+` of its own
     - name: Unfold a spec
       do: Unfold the row "Inbox and agents" and type a description.
       expect: the row shows the spec's Name and Description fields nested in the project's form, and the description
@@ -1428,7 +1489,7 @@ test QA-5: Switch between a project's specs
     - name: Open the Specs tab
       do: Click the Specs tab and scroll through the document.
       expect: the tab shows "Inbox and agents", its prose and goals with its features embedded under their headings,
-        and the toolbar holds the spec dropdown, the view toggle and Extensions instead of Create artifact
+        and the toolbar holds the spec dropdown, the view toggle and Extensions
     - name: Turn an idea into a feature
       do: At the end of the line "A morning digest of what agents did overnight", type `/feature`, press Enter and
         type a description.
@@ -2082,6 +2143,135 @@ decision D-68: A feature embed in a spec is the editor's object embed, plugin-ma
   affects: [F-20.7]
   supersedes: D-65
   why: The spec drew its sections in a frame of its own, a copy of the object embed; one embed keeps both documents the same.
+```
+
+```mdl
+decision D-69: A spec's reviews are structured data. A SpecReview type sits beside the Spec type, and each review holds its verdicts keyed by the spec items they judge. The feature component draws the verdicts on requirements and a CodeMirror extension draws them on other items. An operation creates a review, with no UI of its own, as a tool for agents over MCP and in the app. GitHub file sync imports reviews into structured data. Reviews have a fixed format and are not extensible. A view of a whole review sits beside the spec, in its companion. An item's current status is its newest verdict, and old verdicts are kept.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16, F-24]
+```
+
+```mdl
+decision D-70: Each review is a separate ECHO object. Reviews are only imported from git, never written back for now, and only the most recent review is imported, with no backfill.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16.1]
+```
+
+```mdl
+decision D-71: Feature cards stay small and show no requirement verdicts; a feature's requirements and their verdicts are seen by going to the feature.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-24]
+```
+
+```mdl
+decision D-72: A spec's reviews are ECHO objects beside the spec, one `SpecReview` per review, so a spec in a space keeps its review history. Each item's current status is its newest verdict in any review. Reviews come from git only: the `.review.mdl` file in the checkout or repository is imported and nothing writes one back, and only the current file is imported, with no backfill of earlier commits. The same front matter updates a review in place; new front matter makes a new review. The one way in for an agent is op:createSpecReview, which the Spec Review skill declares and the MCP server exposes. Requirement verdicts show where a feature's requirements are listed, its page and its section, and never on a feature card, which stays small. Fills in [D-69], [D-70] and [D-71], and amends [F-16.1] for a spec in a space, whose review is read from ECHO instead of the checkout.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1, F-24]
+  why: A review read from the checkout is lost to anyone without that checkout, and the file holds only the latest review.
+  rejected:
+    - Writing reviews back to git.
+    - A review per item rather than per review.
+    - Backfilling reviews from git history.
+```
+
+```mdl
+decision D-73: The Review view does not clip the summary, which made it cluttered. The summary leads the view, and the status counts become filters right above the cards they filter. The view is built from react-ui components only, and the proportion bar may be left out.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16.4, F-24.7]
+```
+
+```mdl
+decision D-74: The Review view leads with the review's summary, rendered as markdown and cut only at its first paragraph, with the rest behind a disclosure. The status counts become a filter pinned right above the cards they filter, each status an icon and count with its name in a tooltip, so the row fits a narrow panel. The summary scrolls with the cards rather than holding a fixed share of the panel. Fills in [D-73].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.4, F-24.7]
+  why: A six-line clip cut the summary mid-line, showed its source line breaks and backticks, and hid most of it; the counts looked like filters and did nothing, and as labelled tags they filled the panel's width.
+  rejected:
+    - Grouping the cards under collapsible status headers.
+    - A fixed-height summary with its own scroll.
+```
+
+```mdl
+decision D-75: The filter's statuses are delineated as a button group, so each count sits with its own icon rather than nearer the next one.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-24.7]
+```
+
+```mdl
+decision D-76: Each status in the filter is a filled toggle-group button with the button's standard padding, which matches the gap between its icon and count. Fills in [D-75].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-24.7]
+  why: react-ui has no joined button group; filled buttons with standard padding delineate each status from react-ui parts alone, as [D-73] asks.
+  rejected:
+    - A custom segmented control joining the buttons.
+```
+
+```mdl
+decision D-77: A spec lists its reviews in an annotation, `org.dxos.projects.reviews`, as it lists its features, so the spec holds a ref to each review it owns. Fills in [D-72].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: A parent edge needs a ref from the parent to the child; without one, every new review logged a warning and could be reached only by query.
+  rejected:
+    - Dropping the parent edge, which would leave a deleted spec's reviews behind.
+```
+
+```mdl
+decision D-78: A review's `date` may carry a UTC time, `YYYY-MM-DDTHH:MMZ`, and the Spec Review skill writes one, so two reviews of one day keep their order; a plain date orders before that day's timed ones. Fills in [D-72].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: Reviews are ordered by `date` as text, and two reviews of one day tied, so query order chose the current status.
+  rejected:
+    - Storing the time a review was imported, which orders imports rather than reviews.
+```
+
+```mdl
+decision D-79: A review file that a GitHub binding already holds as a spec, from before the review mapping, is released and imported as a review by file sync's re-claim (org.dxos.plugin.github.file-sync#F-3.5). Fills in [D-70].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: The spec mapping claimed `**/*.review.mdl` before it excluded them, and file sync pulls only changed files, so an unchanged review would stay a spec.
+  rejected:
+    - A one-time migration deleting those specs.
+    - Leaving them.
+```
+
+```mdl
+decision D-80: Approve [D-77], [D-78] and [D-79].
+  date: 2026-11-05
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-81: A review whose front matter names another file than the one GitHub file sync binds the spec to is refused, and a review's front matter drops a trailing `# comment` as `deus review check` does. Fills in [D-69].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:createSpecReview, F-24.4]
+  why: op:createSpecReview takes the spec apart from the text, so a review of another spec could be recorded on this one; and a file the check accepted was refused on import.
+  rejected:
+    - Matching the review's repository as well, which needs a Repo lookup for a mistake the path already catches.
+```
+
+```mdl
+decision D-82: QA-5 finds Create artifact on the overview's Artifacts heading rather than the toolbar, following plugin-projects ([org.dxos.plugin.projects#D-199]).
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-5]
 ```
 
 ## Appendix: Extension Definitions
