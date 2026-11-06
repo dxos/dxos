@@ -2475,3 +2475,12 @@ decision D-218: Every standard block kind draws as a reasonable form: a list one
   affects: [F-4.14]
   why: The user asked to see the form of every block type, to check that each works; a story with one block of each kind showed these as the ones that did not.
 ```
+
+```mdl
+decision D-219: A row or item added to a block form gets a fresh name (`name`, `name2`, …) and takes focus with its text selected, and a row's name is never set empty; each dialect has a story that draws one block of every kind it defines. Amends [F-4.14].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: An added map row was written as a bare `:` line, which does not parse, so the row vanished; the user asked for a story per dialect that shows every block kind as its form.
+```

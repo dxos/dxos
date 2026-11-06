@@ -533,6 +533,8 @@ const Rows = ({ view, locator, name, typeOptions, actions, readonly }: RowsProps
     updateBlock(view, locator, (value) => setField(name, change((value.fields[name] ?? []) as readonly Row[]))(value));
   const set = (index: number, row: Partial<Row>) =>
     update((current) => current.map((candidate, at) => (at === index ? { ...candidate, ...row } : candidate)));
+  // The row just added, whose name is selected for typing over.
+  const [added, setAdded] = useState<number>();
 
   return (
     <Card.Row align='start' data-testid={`spec-block.${name}`}>
@@ -546,7 +548,9 @@ const Rows = ({ view, locator, name, typeOptions, actions, readonly }: RowsProps
                 placeholder={t('spec-block.row-name.placeholder')}
                 readonly={readonly}
                 classNames='w-auto shrink-0 [field-sizing:content]'
-                onCommit={(next) => set(index, { name: next })}
+                select={index === added ? () => setAdded(undefined) : undefined}
+                // A row needs a name to be read back as a row.
+                onCommit={(next) => next && set(index, { name: next })}
               />
               <button
                 type='button'
@@ -600,7 +604,10 @@ const Rows = ({ view, locator, name, typeOptions, actions, readonly }: RowsProps
               variant='ghost'
               classNames='self-start'
               data-testid={`spec-block.${name}.add`}
-              onClick={() => update((current) => [...current, { name: '', optional: false, value: '' }])}
+              onClick={() => {
+                setAdded(rows.length);
+                update((current) => [...current, { name: freshName(current), optional: false, value: '' }]);
+              }}
             >
               {t('spec-block.add-entry.label', { name })}
             </Button.Root>
@@ -609,6 +616,16 @@ const Rows = ({ view, locator, name, typeOptions, actions, readonly }: RowsProps
       </Layout.Flex>
     </Card.Row>
   );
+};
+
+/** A name no row of the map has yet: `name`, then `name2` and on. */
+const freshName = (rows: readonly Row[]) => {
+  const names = new Set(rows.map((row) => row.name));
+  let count = 1;
+  while (names.has(count === 1 ? 'name' : `name${count}`)) {
+    count++;
+  }
+  return count === 1 ? 'name' : `name${count}`;
 };
 
 /** A list field (`[a, b]` or bullets) as one line per item. */
@@ -621,6 +638,8 @@ const Items = ({ view, locator, name, actions, readonly }: EntriesProps) => {
       const next = change([value.fields[name] ?? []].flat() as readonly string[]);
       return setField(name, next.length > 0 ? next : undefined)(value);
     });
+  // The item just added, whose text is selected for typing over.
+  const [added, setAdded] = useState<number>();
 
   return (
     <Card.Row align='start' data-testid={`spec-block.${name}`}>
@@ -634,6 +653,7 @@ const Items = ({ view, locator, name, actions, readonly }: EntriesProps) => {
                 placeholder={t('spec-block.item.placeholder')}
                 readonly={readonly}
                 classNames='grow'
+                select={index === added ? () => setAdded(undefined) : undefined}
                 onCommit={(next) =>
                   update((current) =>
                     next
@@ -657,7 +677,10 @@ const Items = ({ view, locator, name, actions, readonly }: EntriesProps) => {
               variant='ghost'
               classNames='self-start'
               data-testid={`spec-block.${name}.add`}
-              onClick={() => update((current) => [...current, t('spec-block.new-item.text')])}
+              onClick={() => {
+                setAdded(items.length);
+                update((current) => [...current, t('spec-block.new-item.text')]);
+              }}
             >
               {t('spec-block.add-entry.label', { name })}
             </Button.Root>
@@ -673,6 +696,7 @@ const RowInput = ({
   value,
   onCommit,
   readonly,
+  select,
   ...props
 }: {
   value: string;
@@ -680,10 +704,21 @@ const RowInput = ({
   readonly: boolean;
   placeholder: string;
   classNames: string;
+  /** Given, the input takes focus with its text selected (as a part just added does), then calls it. */
+  select?: () => void;
 }) => (
   <Input.Root
     key={value}
     variant='plain'
+    autoFocus={!!select}
+    onFocus={
+      select
+        ? (event) => {
+            event.target.select();
+            select();
+          }
+        : undefined
+    }
     // Sized to its text, so the row reads as the line it writes; `size` stands in where `field-sizing` is unsupported.
     size={Math.max(value.length, props.placeholder.length) + 2}
     defaultValue={value}
