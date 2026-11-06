@@ -1,0 +1,38 @@
+---
+title: Sharing a space
+description: Replicate a database between two peers and watch a conflict merge.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page a second peer will have joined your space, and both peers will replicate its database.
+[Spaces and databases](/docs/echo/concepts/spaces/#joining-a-space) explains the handshake these steps drive.
+
+<Steps>
+
+1. **List the spaces you have.** `client.spaces.get()` returns every space this identity belongs to.
+
+   <Snippet file="sharing" region="list" />
+
+2. **Invite a peer.** `space.share` starts an invitation. Its code locates you on the network, and its authentication code proves the guest received the invitation from you.
+
+   <Snippet file="sharing" region="invite" />
+
+   Send the two codes over different channels. Someone who intercepts one of them cannot join.
+
+3. **Join from the other peer.** The guest decodes the invitation, connects, and sends the authentication code back over the new connection.
+
+   <Snippet file="sharing" region="join" />
+
+   Once authentication completes, the space appears in the guest's `client.spaces.get()`, and both peers replicate it.
+
+</Steps>
+
+## What you can do now
+
+You can create an invitation to a space, and accept it from a second peer.
+
+## Next
+
+[Spaces and databases](/docs/echo/concepts/spaces/): what a space is, and how peers join one.

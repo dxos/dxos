@@ -1,0 +1,84 @@
+---
+title: React
+description: useQuery, useObject and useSchema, and the reactivity rules behind them.
+---
+
+import { Aside, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page you will have a React app that lists a space's tasks, adds and removes them, and re-renders when any peer changes one.
+
+<Steps>
+
+1. **Install the React client.** `@dxos/react-client` wraps `@dxos/client` in a provider and hooks. Configure the bundler as in [Installation](/docs/echo/learn/installation/).
+
+   <Tabs>
+     <TabItem label="pnpm">
+       ```bash
+       pnpm add @dxos/react-client
+       ```
+     </TabItem>
+     <TabItem label="npm">
+       ```bash
+       npm install --save @dxos/react-client
+       ```
+     </TabItem>
+     <TabItem label="yarn">
+       ```bash
+       yarn add @dxos/react-client
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **Wrap the app in a `ClientProvider`.** The provider creates a client, registers your types, and gives the hooks below access to the client.
+
+   <Snippet file="react" region="provider" lang="tsx" />
+
+3. **List spaces.** `useSpaces` returns the spaces this identity belongs to and re-renders when one is added. `useClient` returns the client, for calls such as `client.spaces.create`.
+
+   <Snippet file="react" region="spaces" lang="tsx" />
+
+4. **Query a space.** `useQuery` takes a database and a filter, and re-renders when the results change.
+
+   <Snippet file="react" region="list" lang="tsx" />
+
+   Clicking "Add a task" adds a row, and so does a task added by another peer. Filters work as in [Querying](/docs/echo/learn/querying/).
+
+5. **Change an object.** `useObject` returns a snapshot of the object and a function that updates it. The component re-renders when the object changes.
+
+   <Snippet file="react" region="row" lang="tsx" />
+
+   <Aside type="caution">
+     Reading a field of an ECHO object during render does not subscribe the component to it. Read fields through
+     the snapshot from `useObject`, or the component will not re-render when the field changes.
+   </Aside>
+
+</Steps>
+
+## Configure the provider
+
+### Show a fallback
+
+`fallback` renders while the client initializes.
+
+<Snippet file="react" region="fallback" lang="tsx" />
+
+### Pass your own client
+
+Create the client yourself to use it outside React too.
+
+<Snippet file="react" region="client" lang="tsx" />
+
+### Pass a config
+
+`config` takes a function that returns a `Config`, built from the same sources as in [Configure the client](/docs/echo/learn/installation/#configure-the-client).
+
+<Snippet file="react" region="config" lang="tsx" />
+
+## What you can do now
+
+You can provide a client to a React app, list spaces, query objects, and change them from components that re-render on every change. The [Tasks sample](/docs/additional-resources/samples#tasks) is a complete app built this way.
+
+## Next
+
+[Spaces and databases](/docs/echo/concepts/spaces/): what a space is, and how peers join one.

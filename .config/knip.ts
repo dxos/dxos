@@ -457,6 +457,10 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     'sharp',
     // Declared so `docs:typedoc`'s `^:typedoc` builds the API reference `collect-typedoc.sh` copies.
     '@dxos/app-framework',
+    // Read through `node_modules/@dxos/brand` paths for its fonts and logos, never imported.
+    '@dxos/brand',
+    // A peer of `expressive-code-twoslash`, which `ec.config.mjs` loads outside knip's graph.
+    'twoslash',
   ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so

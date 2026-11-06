@@ -1,0 +1,45 @@
+---
+title: Spaces and databases
+description: The unit of sharing, access and replication.
+---
+
+import { Aside, Badge } from '@astrojs/starlight/components';
+
+A space is an ECHO database that a set of peers replicates, and it is the unit of sharing and access control.
+
+## Model
+
+A space works like a collection in a document store. Every object belongs to exactly one space, and `space.db` is the database that holds them. A peer usually belongs to many spaces at once, and each space has its own members.
+
+There is no server that owns a space. Each member keeps a full copy of the space's database in local storage, and members exchange changes directly over [WebRTC](https://en.wikipedia.org/wiki/WebRTC) or through EDGE.
+
+### Joining a space
+
+A peer joins a space through an invitation from a member. The handshake has five steps:
+
+1. <Badge text="Peer A" variant="tip" /> generates an [invitation code](/docs/additional-resources/glossary#invitation-code) and listens on the network for peers that present it.
+2. <Badge text="Peer B" variant="note" /> obtains the invitation code and finds <Badge text="Peer A" variant="tip" /> through the [signaling service](/docs/additional-resources/glossary#signaling-service).
+3. The two peers open a secure connection with a [Diffie-Hellman](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) key exchange.
+4. <Badge text="Peer A" variant="tip" /> generates an [authorization code](/docs/additional-resources/glossary#authorization-code) and gives it to <Badge text="Peer B" variant="note" /> over a second channel, such as a QR code.
+5. <Badge text="Peer B" variant="note" /> sends the authorization code back to <Badge text="Peer A" variant="tip" /> over the new connection.
+
+The last step proves that the connection is secure and that each peer is who the other expects. [Sharing a space](/docs/echo/learn/sharing/) drives these steps from code.
+
+### Spaces and HALO
+
+ECHO keeps both the user's data and the user's identity in persistent storage on the device: browser storage in a web app, files on disk in Node, where the database runs in the same process. [HALO](/docs/halo/introduction) holds the identity, its keys and its credentials.
+
+An identity can span several devices. To give a second app or device read and write access to all of a user's spaces, the user starts a device invitation from one that already has access. The user can revoke a device at any time.
+
+## Behavior
+
+- Each member holds a full replica, so reads and writes work offline and merge when the peer reconnects.
+- Several members can write to the same space at the same time. Their changes merge without a central authority.
+- A peer joins only after it completes the handshake above. Holding the invitation code alone is not enough.
+
+## Limits
+
+<Aside type="caution">
+  This page is a first pass ported from the earlier ECHO guides. The behavior above does not cite spec items yet,
+  because the ECHO spec does not cover spaces or invitations.
+</Aside>

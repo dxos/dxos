@@ -1,0 +1,45 @@
+---
+title: Querying
+description: Select objects with Filter and Query, one-shot and live.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page you will read objects from a space once, by type and by field, and keep a live query running as objects arrive.
+
+<Steps>
+
+1. **Register your types.** The client has to know a type before it can return typed objects. Pass types when you create the client, or later with `client.addTypes`.
+
+   <Snippet file="querying" region="types" />
+
+2. **Read everything.** `db.query` takes a filter and returns a query. `run` resolves to an array of the matching objects.
+
+   <Snippet file="querying" region="everything" />
+
+3. **Read by type and field.** `Filter.type` takes a type and an optional props shape, so the compiler checks field names and values, and the results are typed.
+
+   <Snippet file="querying" region="typed" />
+
+   The [Filter reference](/docs/echo/reference/filter/) lists comparisons, combinators, text search and time ranges.
+
+4. **Read untyped objects.** Filter `Expando` objects by the fields you gave them.
+
+   <Snippet file="querying" region="untyped" />
+
+5. **Keep the query live.** `subscribe` calls back with the current results each time they change, and returns a function that stops the subscription.
+
+   <Snippet file="querying" region="live" />
+
+   The callback runs for the task added after the subscription, before `add` returns.
+
+</Steps>
+
+## What you can do now
+
+You can register types, read objects once by type or field, and follow a query as its results change.
+
+## Next
+
+[Sharing a space](/docs/echo/learn/sharing/): replicate the database to a second peer.

@@ -1,0 +1,102 @@
+---
+title: Installation
+description: Add the packages and open a database in Node or the browser.
+---
+
+import { Aside, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page you will have a running `Client` with an identity and a space whose database you can write to.
+
+<Steps>
+
+1. **Install the client.** `@dxos/client` holds the `Client`, and it brings `@dxos/echo` with it.
+
+   <Tabs>
+     <TabItem label="pnpm">
+       ```bash
+       pnpm add @dxos/client
+       ```
+     </TabItem>
+     <TabItem label="npm">
+       ```bash
+       npm install --save @dxos/client
+       ```
+     </TabItem>
+     <TabItem label="yarn">
+       ```bash
+       yarn add @dxos/client
+       ```
+     </TabItem>
+   </Tabs>
+
+   In a React app, install `@dxos/react-client` instead and follow the [React guide](/docs/echo/guides/react/).
+
+2. **Configure the bundler.** In the browser, ECHO loads WebAssembly in the page and in workers, so Vite needs `vite-plugin-wasm` for both. `ConfigPlugin` loads the client's config from YAML files at the package root.
+
+   <Snippet file="vite-config" title="vite.config.ts" />
+
+   `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin` for Rollup and esbuild. Node needs no bundler setup.
+
+3. **Create a client.** `initialize` opens local storage and connects to the network.
+
+   <Snippet file="installation" region="client" />
+
+4. **Create an identity.** A space belongs to an identity, so the client needs one before it can create a space. [HALO](/docs/halo/typescript) covers identities and devices.
+
+   <Snippet file="installation" region="identity" />
+
+5. **Create a space.** A space is a database that peers replicate. `space.db` is where objects live.
+
+   <Snippet file="installation" region="space" />
+
+   The space's id prints once its database is ready to read and write.
+
+</Steps>
+
+## Configure the client
+
+`new Client()` uses built-in defaults. Pass a `Config` to choose where settings come from. Each source is a function from `@dxos/config`, and earlier sources override later ones.
+
+### Defaults from a file
+
+`Defaults` returns the config in `dx.yml`. In Node it reads `config/default.yml` in your project instead.
+
+<Snippet file="installation" region="defaults" />
+
+### Local development
+
+`Local` returns the config in `dx-local.yml`, so a development preset can sit beside the defaults. In Node, `Local` returns nothing.
+
+<Snippet file="installation" region="local" />
+
+### Environment variables
+
+`Envs` maps environment variables to config paths, as listed in `dx-env.yml`.
+
+<Snippet file="installation" region="envs" />
+
+Each entry in `dx-env.yml` names a variable, the config path it sets, and its type:
+
+```yml
+LOG_FILTER:
+  path: runtime.client.log.filter
+  type: string
+
+DX_PERSIST:
+  path: runtime.client.storage.persistence
+  type: boolean
+```
+
+<Aside type="tip">
+  Vite exposes only variables prefixed with `VITE_`. To read any other variable at build time, list it in the
+  `env` option of `ConfigPlugin`, as in step 2. Its value appears at the config path `runtime.app.env.MY_ENV_VAR`.
+</Aside>
+
+## What you can do now
+
+You can install ECHO, configure a client for the browser or Node, and open a space with an identity.
+
+## Next
+
+[Defining types](/docs/echo/learn/defining-types/): declare the types of the objects you will store.

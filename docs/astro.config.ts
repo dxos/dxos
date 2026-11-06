@@ -2,20 +2,95 @@
 // Copyright 2025 DXOS.org
 //
 
+import react from '@astrojs/react';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
+import path from 'node:path';
 import starlightLinksValidator from 'starlight-links-validator';
+import { type Plugin } from 'vite';
+import wasm from 'vite-plugin-wasm';
+
+import { LAYER_ORDER, ThemePlugin } from '@dxos/ui-theme/plugin';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
+import importSource from '@dxos/vite-plugin-import-source';
+
+import { generateIslandBase, generateTheme } from './scripts/gen-theme.mjs';
+import { PAGE_LAYERS } from './src/demos/layers.ts';
+import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
+
+generateTheme();
+generateIslandBase();
+
+const themeLayers = PAGE_LAYERS.filter((name) => (LAYER_ORDER as readonly string[]).includes(name));
+if (themeLayers.join() !== LAYER_ORDER.join()) {
+  throw new Error(`PAGE_LAYERS no longer contains the theme's LAYER_ORDER: ${LAYER_ORDER.join(', ')}`);
+}
+
+const echoPages = parsePages(readSpec());
+assertContentExists(echoPages);
+
+/** Node builtins the `@dxos/*` sources import, shimmed for the browser only: the server build needs the real ones. */
+const browserNodeStd = (): Plugin => ({
+  name: 'docs:browser-node-std',
+  enforce: 'pre',
+  applyToEnvironment: (environment) => environment.name === 'client',
+  resolveId(id, importer) {
+    const name = /^(?:node:)?(util|path|crypto|stream)$/.exec(id)?.[1];
+    return name ? this.resolve(`@dxos/node-std/${name}`, importer, { skipSelf: true }) : undefined;
+  },
+});
+
+const rootDir = path.resolve(import.meta.dirname, '..');
+const phosphorIconsCore = path.join(rootDir, 'node_modules/@phosphor-icons/core/assets');
+const dxosIcons = path.join(rootDir, 'packages/ui/brand/assets/icons');
+const extendedIcons = path.join(rootDir, 'packages/ui/ui-icons/assets');
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://dxos.org',
+  // The `/echo` demos are React islands built from the workspace's `@dxos/*` sources and the react-ui theme.
+  vite: {
+    plugins: [
+      importSource({ include: ['@dxos/**', '#*'] }),
+      browserNodeStd(),
+      IconsPlugin({
+        symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
+        assetPath: (iconSet, name, variant) => {
+          switch (iconSet) {
+            case 'dx':
+              return `${dxosIcons}/${name}.svg`;
+            case 'px':
+              return `${extendedIcons}/${name}.svg`;
+            default:
+              return `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`;
+          }
+        },
+        spriteFile: 'icons.svg',
+        contentPaths: [
+          path.join(rootDir, '{packages,tools}/**/dist/**/*.{mjs,html}'),
+          path.join(rootDir, '{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+          path.join(import.meta.dirname, 'src/demos/**/*.{ts,tsx}'),
+        ],
+        scanPaths: [path.join(rootDir, 'packages/ui/ui-icons/src/index.ts')],
+      }),
+      ThemePlugin({}),
+      wasm(),
+    ],
+    optimizeDeps: {
+      exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
+    },
+  },
   integrations: [
+    react({ include: ['**/src/demos/**'] }),
     starlight({
       title: 'DXOS Documentation',
       lastUpdated: true,
       favicon: '/favicon.ico',
+      customCss: ['./src/styles/tokens.generated.css', './src/styles/fonts.css', './src/styles/theme.css'],
       components: {
+        Footer: './src/components/Footer.astro',
         Head: './src/components/Head.astro',
+        Header: './src/components/Header.astro',
         // TODO(wittjosiah): Uncomment to link logo to home page.
         // SiteTitle: './src/components/CustomSiteTitle.astro',
       },
@@ -31,9 +106,6 @@ export default defineConfig({
         { icon: 'blueSky', label: 'Bluesky', href: 'https://bsky.app/profile/dxos.org' },
         { icon: 'x.com', label: 'X', href: 'https://x.com/dxos_org' },
       ],
-      expressiveCode: {
-        themes: ['github-light', 'github-dark'],
-      },
       // TODO(wittjosiah): Nested docs subdir is needed because link validation doesn't work with generateId config.
       sidebar: [
         {
@@ -41,35 +113,18 @@ export default defineConfig({
           slug: 'docs',
         },
         {
-          label: 'Composer',
-          items: [{ autogenerate: { directory: 'docs/composer' } }],
-          collapsed: false,
-        },
-        {
-          label: 'ECHO Database',
-          items: [
-            {
-              label: 'Introduction',
-              slug: 'docs/echo/introduction',
-            },
-            {
-              label: 'Installation',
-              items: [{ autogenerate: { directory: 'docs/echo/installation' } }],
-            },
-            {
-              label: 'Typescript',
-              items: [{ autogenerate: { directory: 'docs/echo/typescript' } }],
-            },
-            {
-              label: 'React',
-              items: [{ autogenerate: { directory: 'docs/echo/react' } }],
-            },
-          ],
+          label: 'ECHO',
+          items: sidebarFromSpec(echoPages),
           collapsed: false,
         },
         {
           label: 'HALO Identity',
           items: [{ autogenerate: { directory: 'docs/halo' } }],
+          collapsed: false,
+        },
+        {
+          label: 'Composer',
+          items: [{ autogenerate: { directory: 'docs/composer' } }],
           collapsed: false,
         },
         {

@@ -10,6 +10,9 @@
   ],
   "references": [
     {
+      "path": "../packages/common/node-std"
+    },
+    {
       "path": "../packages/core/echo/echo"
     },
     {
@@ -32,6 +35,27 @@
     },
     {
       "path": "../packages/sdk/schema"
+    },
+    {
+      "path": "../packages/ui/brand"
+    },
+    {
+      "path": "../packages/ui/react-ui"
+    },
+    {
+      "path": "../packages/ui/react-ui-editor"
+    },
+    {
+      "path": "../packages/ui/ui-editor"
+    },
+    {
+      "path": "../packages/ui/ui-theme"
+    },
+    {
+      "path": "../tools/vite-plugin-icons"
+    },
+    {
+      "path": "../tools/vite-plugin-import-source"
     }
   ]
 }

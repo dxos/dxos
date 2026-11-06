@@ -19,17 +19,26 @@
     "typedoc": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
+    "@astrojs/react": "catalog:",
     "@astrojs/rss": "catalog:",
     "@astrojs/starlight": "catalog:",
     "@bryanguffey/astro-standard-site": "catalog:",
     "@bufbuild/protobuf": "catalog:",
+    "@dxos/brand": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
     "astro": "catalog:",
+    "astro-expressive-code": "catalog:",
+    "effect": "catalog:",
     "sharp": "catalog:",
     "starlight-links-validator": "catalog:"
   },
@@ -37,7 +46,19 @@
     "@atproto/api": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/vite-plugin-icons": "workspace:*",
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "@expressive-code/plugin-line-numbers": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "@types/turndown": "catalog:",
-    "turndown": "catalog:"
+    "expressive-code-twoslash": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "turndown": "catalog:",
+    "twoslash": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-wasm": "catalog:"
   }
 }

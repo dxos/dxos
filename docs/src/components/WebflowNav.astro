@@ -6,7 +6,7 @@ import IconX from './svg/IconX.astro';
 import IconBluesky from './svg/IconBluesky.astro';
 
 interface Props {
-  currentPage: 'home' | 'composer' | 'plugins' | 'blog';
+  currentPage: 'home' | 'composer' | 'echo' | 'plugins' | 'blog';
 }
 
 const { currentPage } = Astro.props;
@@ -35,6 +35,9 @@ const accent = currentPage !== 'home' ? ' c' : '';
         <div class="div-block-9">
           <a href="/" {...(currentPage === 'home' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'home' ? ' w--current' : ''}`}>
             <div>Home</div>
+          </a>
+          <a href="/echo" {...(currentPage === 'echo' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'echo' ? ' w--current' : ''}`}>
+            <div>ECHO</div>
           </a>
           <a href="/composer" {...(currentPage === 'composer' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'composer' ? ' w--current' : ''}`}>
             <div>Composer</div>
