@@ -599,6 +599,11 @@ export type ProgressRegistry = Readonly<{
   /** One provider's reactive state, by name (stable/memoized per name). */
   monitorAtom: (name: string) => Atom.Atom<Progress.TaskProgress | undefined>;
   /**
+   * The providers keyed `<uri>#<suffix>` for the object at `uri` (stable/memoized per URI); notifies only when
+   * those providers change, so a per-row consumer is not re-rendered by every other provider's progress.
+   */
+  objectMonitorsAtom: (uri: string) => Atom.Atom<readonly Progress.TaskProgress[]>;
+  /**
    * Register (or resume) a provider and mark it running. Pass `onCancel` to make it cancellable — the
    * meter then shows a cancel control that invokes {@link ProgressRegistry.cancel}.
    */
