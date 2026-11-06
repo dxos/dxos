@@ -2,27 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type ReviewModel, type VerdictStatus, reviewAnnotations, statusOf } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
-import { type GraphEdge, type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
+import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
+import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { LatticeGraph } from '../LatticeGraph/index.ts';
 import {
   type ChangeKind,
+  type DefinitionFocus,
   type DefinitionModel,
-  type DefinitionSelection,
+  EXTERNAL_SECTION_ID,
   KIND_GROUPS,
   type KindGroup,
+  type SectionModel,
   type SpecTexts,
   STATUS_STYLE,
   buildDefinitionGraph,
@@ -30,14 +33,17 @@ import {
   groupOf,
   hiddenKinds,
   kindStyle,
+  levelOf,
+  referencesBySection,
+  sectionsOf,
   selectDefinitions,
 } from '../SpecModel/index.ts';
 
 /** QA blocks name most of the design, so they start hidden to keep the design legible. */
 const DEFAULT_GROUPS: Record<KindGroup, boolean> = { concepts: true, requirements: true, qa: false };
 
-/** Short cards: a definition shows its kind, id and title, and its dependencies are the arrows. */
-const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 64, gutterY: 64 };
+/** A card lists the sections it references most, then how many more. */
+const MAX_USES = 2;
 
 /**
  * How a changed card is framed in diff mode: an addition boxed in green, a change in amber, and a removal faded and
@@ -55,20 +61,12 @@ const CHANGE_HUE: Record<ChangeKind, 'success' | 'warning' | 'error'> = {
   removed: 'error',
 };
 
-/** Arrows the change added are green; arrows it removed are red and dashed. */
-const EDGE_STYLE = {
-  added: { hue: 'green' },
-  removed: { hue: 'red', lineStyle: 'dashed' },
-} as const;
-
-/** A name in prose is a weaker link than a field, so its arrow is dashed and grey. */
-const MENTION_STYLE = { hue: 'neutral', lineStyle: 'dashed' } as const;
-
 /**
  * The order of the rows, top to bottom: what the spec must do, then what it is built from, then how it is checked,
  * then other specs. A kind not listed sits with the types.
  */
 const KIND_ORDER = [
+  'plugin',
   'feat',
   'req',
   'component',
@@ -82,50 +80,41 @@ const KIND_ORDER = [
   'suite',
   'test',
   'scenario',
+  'uses',
   'spec',
 ];
-
-/** Cards per row; a kind with more wraps onto further rows, so the graph keeps a readable shape. */
-const ROW_LENGTH = 6;
-
-/** Past this many arrows in, a card shows its count rather than draw them, so a hub does not knot the gutters. */
-const HUB_LIMIT = 8;
 
 const kindRank = (kind: string): number => {
   const index = KIND_ORDER.indexOf(kind);
   return index === -1 ? KIND_ORDER.indexOf('type') : index;
 };
 
-/** Each definition's row: one band of rows per kind, in {@link KIND_ORDER}, each band wrapped at {@link ROW_LENGTH}. */
-const rowsByKind = (definitions: readonly DefinitionModel[]): Map<string, number> => {
-  const bands = new Map<number, DefinitionModel[]>();
-  for (const definition of definitions) {
-    const rank = definition.external ? KIND_ORDER.length : kindRank(definition.kind);
-    bands.set(rank, [...(bands.get(rank) ?? []), definition]);
-  }
-  const rows = new Map<string, number>();
-  let row = 0;
-  for (const [, members] of [...bands.entries()].sort(([a], [b]) => a - b)) {
-    members.forEach(({ id }, index) => rows.set(id, row + Math.floor(index / ROW_LENGTH)));
-    row += Math.ceil(members.length / ROW_LENGTH);
-  }
-  return rows;
-};
+/** Definitions in one band per kind, in {@link KIND_ORDER}, each band in spec order. */
+const byKind = (definitions: readonly DefinitionModel[]): DefinitionModel[] =>
+  [...definitions].sort(
+    (a, b) => (a.external ? KIND_ORDER.length : kindRank(a.kind)) - (b.external ? KIND_ORDER.length : kindRank(b.kind)),
+  );
 
-/** The ids that collect more than {@link HUB_LIMIT} arrows. */
-const hubsOf = (model: DefinitionSelection): Set<string> =>
-  new Set([...model.dependents].filter(([, count]) => count > HUB_LIMIT).map(([id]) => id));
+/** Sections ordered by the highest kind each holds, so the spec reads top-down as its definitions do. */
+const bySection = (sections: readonly SectionModel[]): SectionModel[] => {
+  const rankOf = (section: SectionModel) => Math.min(...section.kinds.map(([kind]) => kindRank(kind)));
+  return [...sections].sort((a, b) => rankOf(a) - rankOf(b));
+};
 
 type DefinitionCardProps = {
   definition: DefinitionModel;
   dependents: number;
-  /** Its arrows in are not drawn, so the count stands for them. */
-  hub?: boolean;
   status?: VerdictStatus;
   change?: ChangeKind;
+  /** References by section, which a section counts rather than draws. */
+  outside?: SectionUse[];
+  /** The definition the level is drawn around. */
+  focused?: boolean;
+  /** The fields that link it to the focused definition. */
+  via?: string[];
 };
 
-const DefinitionCard = ({ definition, dependents, hub, status, change }: DefinitionCardProps) => {
+const DefinitionCard = ({ definition, dependents, status, change, outside, focused, via }: DefinitionCardProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { icon, hue } = kindStyle(definition.kind);
   const { external } = definition;
@@ -135,8 +124,9 @@ const DefinitionCard = ({ definition, dependents, hub, status, change }: Definit
       className={mx(
         'contents',
         change ? CHANGE_FRAME[change] : external && '[&>*]:border-dashed [&>*]:border-2 [&>*]:border-accent-text',
+        focused && '[&>*]:ring-2 [&>*]:ring-accent-text',
       )}
-      title={external ? t('definition-graph.external.hint') : t('definition-graph.local.hint')}
+      title={external ? t('definition-graph.external.hint') : undefined}
     >
       <Card.Root
         data-testid='definition-graph.definition'
@@ -145,6 +135,7 @@ const DefinitionCard = ({ definition, dependents, hub, status, change }: Definit
         data-external={external?.target}
         data-status={status}
         data-change={change}
+        data-focused={focused ? '' : undefined}
       >
         <Card.Header>
           <Layout.Block rail='start'>
@@ -175,17 +166,16 @@ const DefinitionCard = ({ definition, dependents, hub, status, change }: Definit
           )}
           <Card.Row>
             <Layout.Flex wrap gap='xs'>
+              {via?.map((field) => (
+                <Tag.Tag key={field} data-testid='definition-graph.via'>
+                  <Icon.Icon icon='ph--link-simple--regular' size='xs' />
+                  {field}
+                </Tag.Tag>
+              ))}
               {change && <Tag.Tag hue={CHANGE_HUE[change]}>{t(`definition-graph.change.${change}.label`)}</Tag.Tag>}
               <Tag.Tag hue={hue}>{definition.kind}</Tag.Tag>
               {status && <Tag.Tag hue={STATUS_STYLE[status].hue}>{STATUS_STYLE[status].label}</Tag.Tag>}
-              {definition.dependsOn.length > 0 && (
-                <Tag.Tag>{t('definition-graph.uses.label', { count: definition.dependsOn.length })}</Tag.Tag>
-              )}
-              {dependents > 0 && (
-                <Tag.Tag hue={hub ? 'info' : undefined} data-testid={hub ? 'definition-graph.hub' : undefined}>
-                  {t('definition-graph.used-by.label', { count: dependents })}
-                </Tag.Tag>
-              )}
+              {dependents > 0 && <Tag.Tag>{t('definition-graph.used-by.label', { count: dependents })}</Tag.Tag>}
               {definition.requirements > 0 && (
                 <Tag.Tag>{t('definition-graph.requirements.label', { count: definition.requirements })}</Tag.Tag>
               )}
@@ -196,11 +186,116 @@ const DefinitionCard = ({ definition, dependents, hub, status, change }: Definit
               )}
             </Layout.Flex>
           </Card.Row>
+          {outside && outside.length > 0 && (
+            <Card.Row>
+              <UsesTags uses={outside} />
+            </Card.Row>
+          )}
         </Card.Body>
       </Card.Root>
     </div>
   );
 };
+
+/** How many references a definition or section makes into another section. */
+type SectionUse = { title: string; count: number; external: boolean };
+
+/** The sections referenced most, then how many more. */
+const UsesTags = ({ uses }: { uses: SectionUse[] }) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  return (
+    <Layout.Flex wrap gap='xs'>
+      {uses.slice(0, MAX_USES).map(({ title, count, external }) => (
+        <Tag.Tag key={title} data-testid='definition-graph.outside'>
+          <Icon.Icon icon={external ? 'ph--arrow-square-out--regular' : 'ph--arrow-right--regular'} size='xs' />
+          {t('definition-graph.outside.label', { section: title, count })}
+        </Tag.Tag>
+      ))}
+      {uses.length > MAX_USES && (
+        <Tag.Tag>{t('definition-graph.hidden.label', { count: uses.length - MAX_USES })}</Tag.Tag>
+      )}
+    </Layout.Flex>
+  );
+};
+
+/** A heading over the definitions on one side of the focused one; absent when it has none. */
+const NeighbourGroup = ({ label, count, children }: { label: string; count: number; children: ReactNode }) =>
+  count === 0 ? null : (
+    <Layout.Flex column gap='xs'>
+      <Layout.Flex align='center' gap='xs' classNames='text-sm text-description'>
+        {label}
+        <Tag.Tag>{count}</Tag.Tag>
+      </Layout.Flex>
+      {children}
+    </Layout.Flex>
+  );
+
+type SectionCardProps = {
+  section: SectionModel;
+  /** How many references its definitions make into each other section, which the whole-spec level never draws. */
+  uses: SectionUse[];
+  changes?: Record<ChangeKind, number>;
+};
+
+/** A section of the spec, folded: its heading and how many definitions of each kind it holds. */
+const SectionCard = ({ section, uses, changes }: SectionCardProps) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const title = sectionTitle(t, section);
+  return (
+    <div className={mx('contents', section.external && '[&>*]:border-dashed [&>*]:border-2 [&>*]:border-accent-text')}>
+      <Card.Root
+        data-testid='definition-graph.section'
+        data-section={section.id}
+        title={t('definition-graph.section.hint')}
+      >
+        <Card.Header>
+          <Layout.Block rail='start'>
+            <Icon.Icon icon={section.external ? 'ph--arrow-square-out--regular' : 'ph--folder-simple--regular'} />
+          </Layout.Block>
+          <Card.Title truncate>{title}</Card.Title>
+          <Layout.Block rail='end'>
+            <Tag.Tag>{section.definitions.length}</Tag.Tag>
+          </Layout.Block>
+        </Card.Header>
+        <Card.Body>
+          <Card.Row>
+            <Layout.Flex wrap gap='xs'>
+              {section.kinds.map(([kind, count]) => (
+                <Tag.Tag key={kind} hue={kindStyle(kind).hue}>
+                  <Icon.Icon icon={kindStyle(kind).icon} size='xs' />
+                  {count} {kind}
+                </Tag.Tag>
+              ))}
+            </Layout.Flex>
+          </Card.Row>
+          {uses.length > 0 && (
+            <Card.Row>
+              <UsesTags uses={uses} />
+            </Card.Row>
+          )}
+          <Card.Row>
+            <Layout.Flex wrap gap='xs'>
+              {changes &&
+                (['added', 'changed', 'removed'] as const).map(
+                  (change) =>
+                    changes[change] > 0 && (
+                      <Tag.Tag key={change} hue={CHANGE_HUE[change]}>
+                        {t(`definition-graph.change.${change}.count`, { count: changes[change] })}
+                      </Tag.Tag>
+                    ),
+                )}
+            </Layout.Flex>
+          </Card.Row>
+        </Card.Body>
+      </Card.Root>
+    </div>
+  );
+};
+
+const sectionTitle = (t: (key: string) => string, section?: SectionModel): string =>
+  section?.external
+    ? t('definition-graph.section.external.label')
+    : (section?.title ?? t('definition-graph.section.none.label'));
 
 type KindLegendProps = {
   /** Every kind in the spec, shown or not, so a hidden group still lists what it holds. */
@@ -218,12 +313,7 @@ type KindLegendProps = {
 const KindLegend = ({ kinds, groups, onGroupChange, mentions, onMentionsChange, changes }: KindLegendProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
-    <Layout.Flex
-      column
-      gap='xs'
-      classNames='absolute top-2 start-2 z-10 p-2 rounded-sm bg-base-surface border border-separator'
-      data-testid='definition-graph.legend'
-    >
+    <Layout.Flex column gap='xs' classNames='px-2 pb-2 border-b border-separator' data-testid='definition-graph.legend'>
       {changes && (
         <Layout.Flex wrap gap='xs'>
           {(['added', 'changed', 'removed'] as const).map(
@@ -281,12 +371,15 @@ export type DefinitionGraphProps = {
   defaultGroups?: Partial<Record<KindGroup, boolean>>;
   /** Double-click: an external node opens its spec or code; a local one is revealed in the spec. */
   onActivate?: (definition: DefinitionModel) => void;
+  /** The level it opens on; the whole spec by default. */
+  defaultFocus?: DefinitionFocus;
 };
 
 /**
- * Every definition of a spec on a lattice in one band of rows per kind, so the spec reads top-down from features to
- * the types they rest on, with an arrow labelled by the field that references another block. Blocks of other specs
- * the spec names are dashed boxes; names in prose draw only when asked for.
+ * A spec's definitions, one level at a time. It opens on the spec's sections, a card each; opening a section lists its
+ * definitions in bands by kind, each card counting its references by section. Opening a definition lists what uses
+ * it above it and what it uses below, each tagged with the field that links them. Blocks of other specs are dashed
+ * boxes; names in prose are listed only when asked for.
  */
 export const DefinitionGraph = ({
   content,
@@ -297,7 +390,11 @@ export const DefinitionGraph = ({
   exclude = [],
   defaultGroups,
   onActivate,
+  defaultFocus,
 }: DefinitionGraphProps) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const [focus, setFocus] = useState<DefinitionFocus>(() => defaultFocus ?? {});
+  const [legend, setLegend] = useState(false);
   const [groups, setGroups] = useState<Record<KindGroup, boolean>>(() => ({ ...DEFAULT_GROUPS, ...defaultGroups }));
   const handleGroupChange = useCallback(
     (group: KindGroup, shown: boolean) => setGroups((groups) => ({ ...groups, [group]: shown })),
@@ -327,67 +424,242 @@ export const DefinitionGraph = ({
     () => selectDefinitions(full, excludeKey.split(','), { mentions }),
     [full, excludeKey, mentions],
   );
-  const hubs = useMemo(() => hubsOf(model), [model]);
-  const graph = useMemo<GraphModel>(() => {
-    const rows = rowsByKind(model.definitions);
-    return {
-      nodes: model.definitions.map(({ id, title }) => ({ id, label: title ?? id, rank: rows.get(id) })),
-      edges: model.edges
-        .filter(({ to }) => !hubs.has(to))
-        .map(({ id, from, to, kind, field }): GraphEdge => {
-          const change = diff?.edgeChanges.get(id);
-          return {
-            id,
-            from,
-            to,
-            ...(field && { text: field }),
-            ...(change ? { style: EDGE_STYLE[change] } : kind === 'mention' ? { style: MENTION_STYLE } : {}),
-          };
-        }),
-    };
-  }, [model, hubs, diff]);
-  const changeCounts = useMemo(() => {
-    if (!diff) {
+  const sections = useMemo(() => sectionsOf(model), [model]);
+  // A level whose section or definition the filters hid falls back to the whole spec.
+  const shownFocus = useMemo<DefinitionFocus>(
+    () => ({
+      section: focus.section && sections.some(({ id }) => id === focus.section) ? focus.section : undefined,
+      definition: focus.definition && model.byId.has(focus.definition) ? focus.definition : undefined,
+    }),
+    [focus, sections, model],
+  );
+  useEffect(() => {
+    if (shownFocus.section !== focus.section || shownFocus.definition !== focus.definition) {
+      setFocus(shownFocus);
+    }
+  }, [shownFocus, focus]);
+  const level = useMemo(
+    () => levelOf(model, sections, shownFocus, { neighbours: Number.POSITIVE_INFINITY }),
+    [model, sections, shownFocus],
+  );
+  const references = useMemo(() => referencesBySection(model, sections), [model, sections]);
+  const sectionById = useMemo(() => new Map(sections.map((section) => [section.id, section])), [sections]);
+  const focusedDefinition = shownFocus.definition ? model.byId.get(shownFocus.definition) : undefined;
+  const currentSection = shownFocus.section ? sectionById.get(shownFocus.section) : undefined;
+  // Each neighbour of the focused definition, by the fields that link the two.
+  const neighbours = useMemo(() => {
+    if (!focusedDefinition) {
       return undefined;
     }
-    const counts: Record<ChangeKind, number> = { added: 0, changed: 0, removed: 0 };
-    model.definitions.forEach(({ id }) => {
-      const change = diff.changes.get(id);
-      change && counts[change]++;
-    });
-    return counts;
-  }, [diff, model]);
+    const linked = (end: 'from' | 'to') => {
+      const fields = new Map<string, string[]>();
+      for (const edge of level.edges) {
+        const [near, far] = end === 'to' ? [edge.from, edge.to] : [edge.to, edge.from];
+        if (near === focusedDefinition.id && far !== near) {
+          const field = edge.field ?? (edge.kind === 'mention' ? t('definition-graph.mention.label') : undefined);
+          const list = fields.get(far) ?? [];
+          field && !list.includes(field) && list.push(field);
+          fields.set(far, list);
+        }
+      }
+      return fields;
+    };
+    return { usedBy: linked('from'), uses: linked('to') };
+  }, [level, focusedDefinition, t]);
+  const changeCountsOf = useCallback(
+    (definitions: readonly DefinitionModel[]) => {
+      if (!diff) {
+        return undefined;
+      }
+      const counts: Record<ChangeKind, number> = { added: 0, changed: 0, removed: 0 };
+      definitions.forEach(({ id }) => {
+        const change = diff.changes.get(id);
+        change && counts[change]++;
+      });
+      return counts;
+    },
+    [diff],
+  );
+  const changeCounts = useMemo(() => changeCountsOf(model.definitions), [changeCountsOf, model]);
+  const usesOf = useCallback(
+    (counts: Iterable<[section: string, count: number]>): SectionUse[] =>
+      [...counts]
+        .map(([target, count]) => ({
+          title: sectionTitle(t, sectionById.get(target)),
+          count,
+          external: target === EXTERNAL_SECTION_ID,
+        }))
+        .sort((a, b) => Number(a.external) - Number(b.external) || b.count - a.count),
+    [sectionById, t],
+  );
+  // A section's references to its own definitions stay inside it, so its card counts only the others.
+  const sectionUses = useCallback(
+    (section: SectionModel) => {
+      const counts = new Map<string, number>();
+      section.definitions.forEach(({ id }) =>
+        references
+          .get(id)
+          ?.forEach((count, target) => target !== section.id && counts.set(target, (counts.get(target) ?? 0) + count)),
+      );
+      return usesOf(counts);
+    },
+    [references, usesOf],
+  );
   const renderNode = useCallback(
     (id: string) => {
-      const definition = model.byId.get(id);
+      const node = level.nodes.find((node) => node.id === id);
+      if (node?.kind === 'section') {
+        return (
+          <SectionCard
+            section={node.section}
+            uses={sectionUses(node.section)}
+            changes={changeCountsOf(node.section.definitions)}
+          />
+        );
+      }
+      const definition = node?.definition;
       return (
         definition && (
           <DefinitionCard
             definition={definition}
             dependents={model.dependents.get(id) ?? 0}
-            hub={hubs.has(id)}
             status={definition.external ? undefined : statusOf(review, id)}
             change={diff?.changes.get(id)}
+            focused={definition.id === focusedDefinition?.id}
+            outside={focusedDefinition ? undefined : usesOf(references.get(id) ?? [])}
+            via={neighbours?.uses.get(id) ?? neighbours?.usedBy.get(id)}
           />
         )
       );
     },
-    [model, hubs, review, diff],
+    [level, sectionUses, usesOf, changeCountsOf, model, review, diff, focusedDefinition, references, neighbours],
   );
 
-  // The canvas captures the pointer, so a double-click never reaches the card; the card under the pointer is found here.
-  const handleDoubleClick = useCallback(
-    (event: MouseEvent) => {
-      const card = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-definition]');
-      const definition = card && model.byId.get(card.getAttribute('data-definition') ?? '');
-      definition && onActivate?.(definition);
+  // A section opens; a definition opens around itself, and the one already open is shown in the spec.
+  const handleOpen = useCallback(
+    (id: string) => {
+      if (sectionById.has(id)) {
+        setFocus({ section: id });
+        return;
+      }
+      const definition = model.byId.get(id);
+      if (!definition) {
+        return;
+      }
+      if (definition.external || definition.id === focusedDefinition?.id) {
+        onActivate?.(definition);
+      } else {
+        setFocus({
+          section: sections.find(({ definitions }) => definitions.includes(definition))?.id,
+          definition: definition.id,
+        });
+      }
     },
-    [model, onActivate],
+    [model, sections, sectionById, focusedDefinition, onActivate],
   );
+
+  const cards = useMemo(
+    () =>
+      focusedDefinition
+        ? []
+        : currentSection
+          ? byKind(level.nodes.flatMap((node) => (node.kind === 'definition' ? [node.definition] : []))).map(
+              ({ id }) => id,
+            )
+          : bySection(level.nodes.flatMap((node) => (node.kind === 'section' ? [node.section] : []))).map(
+              ({ id }) => id,
+            ),
+    [level, focusedDefinition, currentSection],
+  );
+  const neighbourIds = (fields: Map<string, string[]>) =>
+    byKind([...fields.keys()].flatMap((id) => model.byId.get(id) ?? [])).map(({ id }) => id);
+  const cardGrid = (ids: readonly string[]) => (
+    <div className='grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] items-start gap-2'>
+      {ids.map((id) => (
+        <button
+          key={id}
+          type='button'
+          className='block text-start rounded-md dx-focus-ring'
+          onClick={() => handleOpen(id)}
+          data-testid='definition-graph.open'
+        >
+          {renderNode(id)}
+        </button>
+      ))}
+    </div>
+  );
+
+  const focusSection = focusedDefinition
+    ? sections.find(({ definitions }) => definitions.some(({ id }) => id === focusedDefinition.id))
+    : currentSection;
 
   return (
-    <div className='contents' onDoubleClick={handleDoubleClick}>
-      <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE}>
+    <Layout.Flex column classNames='dx-fill'>
+      <Layout.Flex align='center' gap='sm' classNames='px-2 py-1 min-h-[2.5rem]'>
+        <Breadcrumb.Root aria-label={t('definition-graph.breadcrumb.label')} classNames='shrink-0'>
+          <Breadcrumb.List>
+            <Breadcrumb.Item>
+              {focusSection ? (
+                <Breadcrumb.Link asChild>
+                  <button type='button' onClick={() => setFocus({})} data-testid='definition-graph.crumb.spec'>
+                    {t('definition-graph.crumb.spec.label')}
+                  </button>
+                </Breadcrumb.Link>
+              ) : (
+                <Breadcrumb.Current>{t('definition-graph.crumb.spec.label')}</Breadcrumb.Current>
+              )}
+            </Breadcrumb.Item>
+            {focusSection && (
+              <>
+                <Breadcrumb.Separator />
+                <Breadcrumb.Item>
+                  {focusedDefinition ? (
+                    <Breadcrumb.Link asChild>
+                      <button
+                        type='button'
+                        onClick={() => setFocus({ section: focusSection.id })}
+                        data-testid='definition-graph.crumb.section'
+                      >
+                        {sectionTitle(t, focusSection)}
+                      </button>
+                    </Breadcrumb.Link>
+                  ) : (
+                    <Breadcrumb.Current>{sectionTitle(t, focusSection)}</Breadcrumb.Current>
+                  )}
+                </Breadcrumb.Item>
+              </>
+            )}
+            {focusedDefinition && (
+              <>
+                <Breadcrumb.Separator />
+                <Breadcrumb.Item>
+                  <Breadcrumb.Current classNames='font-mono'>{focusedDefinition.id}</Breadcrumb.Current>
+                </Breadcrumb.Item>
+              </>
+            )}
+          </Breadcrumb.List>
+        </Breadcrumb.Root>
+        <span className='grow' />
+        <Button.Root
+          variant='ghost'
+          icon='ph--funnel-simple--regular'
+          iconOnly
+          label={t('definition-graph.filters.label')}
+          aria-expanded={legend}
+          onClick={() => setLegend((legend) => !legend)}
+          data-testid='definition-graph.filters'
+        />
+      </Layout.Flex>
+      <p className='px-2 pb-1 text-xs text-description' data-testid='definition-graph.hint'>
+        {t(
+          focusedDefinition
+            ? 'definition-graph.hint.definition'
+            : currentSection
+              ? 'definition-graph.hint.section'
+              : 'definition-graph.hint.spec',
+        )}
+      </p>
+      {legend && (
         <KindLegend
           kinds={allKinds}
           groups={groups}
@@ -396,7 +668,26 @@ export const DefinitionGraph = ({
           onMentionsChange={setMentions}
           changes={changeCounts}
         />
-      </LatticeGraph>
-    </div>
+      )}
+      <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
+        <ScrollArea.Viewport classNames='px-2 pb-2'>
+          <div data-testid='definition-graph'>
+            {focusedDefinition && neighbours ? (
+              <Layout.Flex column gap='sm'>
+                <NeighbourGroup label={t('definition-graph.used-by.heading')} count={neighbours.usedBy.size}>
+                  {cardGrid(neighbourIds(neighbours.usedBy))}
+                </NeighbourGroup>
+                {cardGrid([focusedDefinition.id])}
+                <NeighbourGroup label={t('definition-graph.uses.heading')} count={neighbours.uses.size}>
+                  {cardGrid(neighbourIds(neighbours.uses))}
+                </NeighbourGroup>
+              </Layout.Flex>
+            ) : (
+              cardGrid(cards)
+            )}
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Layout.Flex>
   );
 };

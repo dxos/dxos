@@ -54,7 +54,13 @@ describe('spec model', () => {
       '```',
     ].join('\n');
     const { definitions, edges } = buildDefinitionGraph(spec);
-    expect(edges).toContainEqual({ id: 'Meeting->Room', from: 'Meeting', to: 'Room', kind: 'reference', field: 'fields' });
+    expect(edges).toContainEqual({
+      id: 'Meeting->Room',
+      from: 'Meeting',
+      to: 'Room',
+      kind: 'reference',
+      field: 'fields',
+    });
     // A requirement id resolves to its feature, and a member to its type.
     expect(definitions.find(({ id }) => id === 'T-1')).toMatchObject({ dependsOn: ['F-1'], mentions: ['Meeting'] });
     expect(definitions.find(({ id }) => id === 'Room')).toMatchObject({ section: 'Types', dependsOn: [] });

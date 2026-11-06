@@ -14,7 +14,7 @@ import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
 import TRIP_SPEC from '../../../../plugin-trip/PLUGIN.mdl?raw';
 import CODE_SPEC from '../../../PLUGIN.mdl?raw';
 import CODE_BASE_SPEC from '../../containers/SpecArticle/__fixtures__/plugin-code.base.mdl?raw';
-import { buildDefinitionGraph, selectDefinitions } from '../SpecModel/index.ts';
+import { buildDefinitionGraph, sectionsOf, selectDefinitions } from '../SpecModel/index.ts';
 import { DefinitionGraph } from './DefinitionGraph.tsx';
 
 const meta = {
@@ -30,20 +30,30 @@ type Story = StoryObj<typeof meta>;
 
 const TIMEOUT = { timeout: 10_000 };
 
-/** plugin-calls's design on a lattice; the legend's switch adds its scenarios and tests. */
+/** plugin-calls's design: its sections, then one section's definitions, then one definition and its neighbours. */
 export const Default: Story = {
   args: { content: CALLS_SPEC },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const graph = buildDefinitionGraph(CALLS_SPEC);
-    const design = selectDefinitions(graph, ['scenario', 'test', 'suite']).definitions;
+    const sections = sectionsOf(
+      selectDefinitions(buildDefinitionGraph(CALLS_SPEC), ['scenario', 'test', 'suite']),
+    ).filter(({ external }) => !external);
     await waitFor(
-      () => expect(canvas.getAllByTestId('definition-graph.definition')).toHaveLength(design.length),
+      () => expect(canvas.getAllByTestId('definition-graph.section')).toHaveLength(sections.length),
       TIMEOUT,
     );
-    await userEvent.click(canvas.getByText('Scenarios & tests'));
+    const [sectionCard] = canvas.getAllByTestId('definition-graph.section');
+    const section = sections.find(({ id }) => id === sectionCard.getAttribute('data-section'));
+    await userEvent.click(sectionCard);
     await waitFor(
-      () => expect(canvas.getAllByTestId('definition-graph.definition')).toHaveLength(graph.definitions.length),
+      () => expect(canvas.getAllByTestId('definition-graph.definition')).toHaveLength(section?.definitions.length ?? 0),
+      TIMEOUT,
+    );
+    const [definitionCard] = canvas.getAllByTestId('definition-graph.definition');
+    const id = definitionCard.getAttribute('data-definition');
+    await userEvent.click(definitionCard);
+    await waitFor(
+      () => expect(canvasElement.querySelector('[data-focused]')?.getAttribute('data-definition')).toBe(id),
       TIMEOUT,
     );
   },
@@ -59,11 +69,12 @@ export const Large: Story = {
   args: { content: CODE_SPEC },
 };
 
-/** plugin-code's spec against an earlier commit: new features boxed green, changed ones amber, removed ones faded. */
+/** plugin-code's features against an earlier commit: new ones boxed green, changed ones amber, removed ones faded. */
 export const Diff: Story = {
-  args: { content: CODE_SPEC, base: CODE_BASE_SPEC },
+  args: { content: CODE_SPEC, base: CODE_BASE_SPEC, defaultFocus: { section: 'section:Features' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByTestId('definition-graph.filters'));
     await waitFor(() => expect(canvas.getByTestId('definition-graph.changes.added')).toBeVisible(), TIMEOUT);
     await waitFor(
       () => expect(canvasElement.querySelector('[data-definition="F-14"]')?.getAttribute('data-change')).toBe('added'),

@@ -317,7 +317,12 @@ const sectionAt = (sections: readonly { from: number; title: string }[], offset:
  */
 export const buildDefinitionGraph = (
   text: string,
-  { specs = new Map(), annotations = [], index, referenceFields = DEFAULT_REFERENCE_FIELDS }: BuildDefinitionGraphOptions = {},
+  {
+    specs = new Map(),
+    annotations = [],
+    index,
+    referenceFields = DEFAULT_REFERENCE_FIELDS,
+  }: BuildDefinitionGraphOptions = {},
 ): DefinitionGraphModel => {
   const isReference = index ? specReferenceFilter(index) : () => false;
   const blocks = definitionBlocks(text);

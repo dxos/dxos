@@ -213,7 +213,7 @@ component SpecArticle
 component SpecViewContent
   desc: |
     One of the views this plugin contributes to a spec's companion tabs (`ProjectCapabilities.SpecView`):
-    Definitions, Data model and API in Structure; decisions by person and the decision graph in
+    Definitions, Data model and API in Structure; decisions by person and decision threads in
     Decisions; Review and Code in Review. It shares plugin-projects' `SpecSession` with the
     spec's editor, wherever each is shown: a chip in the editor's margin opens its view's tab,
     and a view moves the editor to an item. An answer goes through the open editor, else into
@@ -955,9 +955,8 @@ feat F-18: Spec questions
   req F-18.3: In an editable spec, an answer appends to `## Changelog` a decision by the person
               who answered, with `answers:` naming the question. A read-only spec lists its
               questions without the answer controls.
-  req F-18.4: The decision graph draws each question as a card, with an edge to the decision
-              that answers it. A question's `affects:` puts a chip on each block it names, and the
-              chip opens the decisions-by-person view.
+  req F-18.4: A question's `affects:` puts a chip on each block it names, and the chip opens the
+              decisions-by-person view.
 ```
 
 A spec's document is the spec, and its text is `Spec.content`. It can be prose alone and take structure a piece at a time: a line becomes a feature,
@@ -2302,6 +2301,18 @@ decision D-84: SpecPanel splits into SpecViewContent, one view as a tab draws it
   why: A tab draws one view, so each view renders alone; the toolbar's diff and sync controls apply to every view of the spec.
   rejected:
     - Removing the feature companion now, which loses editing a feature's fields before the graph can edit them through the spec.
+```
+
+```mdl
+decision D-85: Definitions opens on the spec's sections, a card each; a section lists its definitions; a definition lists what uses it and what it uses, each tagged with the linking field. No level draws arrows, and each card counts its references by section. Decisions draws threads in place of the graph: the decisions that build on, supersede or approve one another, newest first, folded to the newest, opened on a rail of lanes, with superseded decisions hidden until asked for. Questions stay in decisions by person. Fills in [D-83].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecViewContent, F-18.4]
+  why: Both graphs drew every item and every link at once, so arrows converged in shared channels and no level could be read; a narrow companion fits a list of cards at full size, and one level at a time.
+  rejected:
+    - Arrows between sections, counted; their labels overlapped in the middle gutter.
+    - A canvas per section fitted to the companion; a 24-feature section zoomed to 19%.
 ```
 
 ## Appendix: Extension Definitions

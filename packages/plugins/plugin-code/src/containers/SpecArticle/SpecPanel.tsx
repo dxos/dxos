@@ -25,10 +25,10 @@ import { openExternalUrl } from '@dxos/util';
 
 import {
   ApiSurface,
-  ChangelogGraph,
   CodeView,
   DataModelGraph,
   DecisionLog,
+  DecisionThreads,
   DefinitionGraph,
   type DefinitionModel,
   ReviewPanel,
@@ -270,7 +270,7 @@ export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewC
       {view === 'log' && (
         <DecisionLog content={changelog} selected={selectedDecision} onAnswer={canAnswer ? handleAnswer : undefined} />
       )}
-      {view === 'decisions' && <ChangelogGraph content={changelog} selected={selectedDecision} />}
+      {view === 'decisions' && <DecisionThreads content={changelog} selected={selectedDecision} />}
       {view === 'data' && <DataModelGraph content={text} />}
       {view === 'api' && <ApiSurface content={text} />}
     </>

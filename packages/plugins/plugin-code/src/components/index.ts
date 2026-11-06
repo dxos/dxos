@@ -8,6 +8,7 @@ export * from './ChangelogGraph/index.ts';
 export * from './CodeToolbar/index.ts';
 export * from './DataModelGraph/index.ts';
 export * from './DecisionLog/index.ts';
+export * from './DecisionThreads/index.ts';
 export * from './DefinitionGraph/index.ts';
 export * from './FeatureCard/index.ts';
 export * from './FeatureKanban/index.ts';
