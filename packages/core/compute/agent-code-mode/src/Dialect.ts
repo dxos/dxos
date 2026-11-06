@@ -9,6 +9,8 @@ import type * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
+import { ABRIDGED_UNION } from './fields.ts';
+
 /**
  * An operation the sandbox exposes, projected from a skill-bound tool.
  */
@@ -109,12 +111,22 @@ export const renderTypes = (
 
       Every registered type and its fields (\`?\` marks an optional field). This is the whole schema —
       do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
-      the object or its id.
+      the object or its id.${types.some(hasAbridgedUnion) ? ` ${ABRIDGED_UNION_NOTE}` : ''}
 
       ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${type.fields.map(renderField).join(', ')}`).join('\n')}
     `;
 
 const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;
+
+/**
+ * Said only when a type has one: the exception to "the whole schema", so the model looks up a variant's fields rather
+ * than guessing them.
+ */
+const ABRIDGED_UNION_NOTE =
+  'A union of many tagged variants is shortened to its tags (`{ _tag: "a" | "b" | …, … }`): print an existing value ' +
+  "of that type to see a variant's fields before writing one.";
+
+const hasAbridgedUnion = ({ fields }: SandboxType): boolean => fields.some(({ type }) => type.includes(ABRIDGED_UNION));
 
 /**
  * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
