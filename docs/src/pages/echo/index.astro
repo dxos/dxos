@@ -3,7 +3,7 @@ import { Code } from 'astro-expressive-code/components';
 
 import art from '../../../node_modules/@dxos/brand/assets/backgrounds/bg-echo.svg?raw';
 import Diagram from '../../components/Diagram.astro';
-import { Spike } from '../../demos/Spike.tsx';
+import { EchoDemo } from '../../demos/EchoDemo.tsx';
 import SpecCite from '../../components/SpecCite.astro';
 import WebflowFooter from '../../components/WebflowFooter.astro';
 import WebflowNav from '../../components/WebflowNav.astro';
@@ -15,6 +15,9 @@ import '../../styles/fonts.css';
 
 // The art's icon sits left of center, so a square panel crops from the right.
 const cropped = art.replace('<svg ', '<svg preserveAspectRatio="xMinYMid slice" ');
+
+/** The live demos shown, in order, by id in `DEMOS`. */
+const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 ---
 <WebflowLayout
   title="ECHO by DXOS"
@@ -53,7 +56,15 @@ const cropped = art.replace('<svg ', '<svg preserveAspectRatio="xMinYMid slice" 
 
   <section class="echo-section">
     <div class="container-large">
-      <div id="echo-demo-spike" class="echo-demo dx-island"><Spike client:only="react" /></div>
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Live</div>
+        <h2 class="heading-style-h2">Two peers, one space</h2>
+      </div>
+      <div class="echo-demos">
+        {DEMO_ORDER.map((id) => (
+          <div class="echo-demo dx-island"><EchoDemo id={id} client:only="react" /></div>
+        ))}
+      </div>
     </div>
   </section>
 
@@ -240,6 +251,15 @@ const cropped = art.replace('<svg ', '<svg preserveAspectRatio="xMinYMid slice" 
 
   .echo-sample :global(.expressive-code) {
     max-width: 60rem;
+  }
+
+  .echo-demos {
+    display: grid;
+    gap: 3rem;
+  }
+
+  .echo-demo {
+    height: 32rem;
   }
 
   .echo-section :global(.diagram) {

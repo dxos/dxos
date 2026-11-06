@@ -10,16 +10,20 @@ import starlightLinksValidator from 'starlight-links-validator';
 import { type Plugin } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
+import { pluginConfigPlugin } from '@dxos/app-framework/vite-plugin';
 import { LAYER_ORDER, ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
-import { generateIslandBase, generateTheme } from './scripts/gen-theme.mjs';
-import { PAGE_LAYERS } from './src/demos/layers.ts';
+import { generateIslandBase, generateTheme, generateWebflowScoped } from './scripts/gen-theme.mjs';
+import { ISLAND_ROOTS, PAGE_LAYERS } from './src/demos/layers.ts';
 import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
 
 generateTheme();
-generateIslandBase();
+generateIslandBase(ISLAND_ROOTS);
+generateWebflowScoped(ISLAND_ROOTS);
 
 const themeLayers = PAGE_LAYERS.filter((name) => (LAYER_ORDER as readonly string[]).includes(name));
 if (themeLayers.join() !== LAYER_ORDER.join()) {
@@ -51,8 +55,12 @@ export default defineConfig({
   // The `/echo` demos are React islands built from the workspace's `@dxos/*` sources and the react-ui theme.
   vite: {
     plugins: [
+      // Replaces each plugin's `dx.config.ts` with its manifest, as in the apps.
+      pluginConfigPlugin(),
       importSource({ include: ['@dxos/**', '#*'] }),
       browserNodeStd(),
+      DxosLogPlugin(),
+      ModuleUrlPlugin(),
       IconsPlugin({
         symbolPattern: iconSymbolPattern({ sets: ['ph', 'dx', 'px'], regularOnly: ['dx', 'px'] }),
         assetPath: (iconSet, name, variant) => {
@@ -73,11 +81,16 @@ export default defineConfig({
         ],
         scanPaths: [path.join(rootDir, 'packages/ui/ui-icons/src/index.ts')],
       }),
-      ThemePlugin({}),
+      ThemePlugin({ srcCssPath: path.join(import.meta.dirname, 'src/styles/demo-theme.css') }),
       wasm(),
     ],
     optimizeDeps: {
       exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
+    },
+    // Workers the demos start load wasm with top-level await, which only an ES module worker supports.
+    worker: {
+      format: 'es',
+      plugins: () => [importSource({ include: ['@dxos/**', '#*'] }), browserNodeStd(), DxosLogPlugin(), wasm()],
     },
   },
   integrations: [

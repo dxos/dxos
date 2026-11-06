@@ -10,16 +10,64 @@
   ],
   "references": [
     {
+      "path": "../packages/common/async"
+    },
+    {
+      "path": "../packages/common/invariant"
+    },
+    {
+      "path": "../packages/common/keys"
+    },
+    {
       "path": "../packages/common/node-std"
+    },
+    {
+      "path": "../packages/core/compute/compute"
     },
     {
       "path": "../packages/core/echo/echo"
     },
     {
+      "path": "../packages/core/echo/echo-react"
+    },
+    {
       "path": "../packages/core/protocols"
     },
     {
+      "path": "../packages/plugins/plugin-canvas"
+    },
+    {
+      "path": "../packages/plugins/plugin-client"
+    },
+    {
+      "path": "../packages/plugins/plugin-explorer"
+    },
+    {
+      "path": "../packages/plugins/plugin-illustrator"
+    },
+    {
+      "path": "../packages/plugins/plugin-kanban"
+    },
+    {
+      "path": "../packages/plugins/plugin-markdown"
+    },
+    {
+      "path": "../packages/plugins/plugin-preview"
+    },
+    {
+      "path": "../packages/plugins/plugin-space"
+    },
+    {
+      "path": "../packages/plugins/plugin-table"
+    },
+    {
+      "path": "../packages/plugins/plugin-testing"
+    },
+    {
       "path": "../packages/sdk/app-framework"
+    },
+    {
+      "path": "../packages/sdk/app-toolkit"
     },
     {
       "path": "../packages/sdk/client"
@@ -37,13 +85,22 @@
       "path": "../packages/sdk/schema"
     },
     {
+      "path": "../packages/sdk/types"
+    },
+    {
       "path": "../packages/ui/brand"
     },
     {
       "path": "../packages/ui/react-ui"
     },
     {
+      "path": "../packages/ui/react-ui-attention"
+    },
+    {
       "path": "../packages/ui/react-ui-editor"
+    },
+    {
+      "path": "../packages/ui/react-ui-table"
     },
     {
       "path": "../packages/ui/ui-editor"
@@ -56,6 +113,12 @@
     },
     {
       "path": "../tools/vite-plugin-import-source"
+    },
+    {
+      "path": "../tools/vite-plugin-log"
+    },
+    {
+      "path": "../tools/vite-plugin-module-url"
     }
   ]
 }

@@ -614,8 +614,14 @@ feat F-7: Relationship to dxos.org
     when: a reader is on `/echo`
     then: it has the dxos.org Webflow nav and footer, with no docs header, search or sidebar, and its
           actions lead into `/docs/echo`; the Webflow styles sit in a cascade layer above the theme's global
-          reset and below its base, component and utility layers, so the page keeps its typography and code
-          samples and embedded components keep their styling
+          reset and below its base, component and utility layers, and stop at each embedded component, so the
+          page keeps its typography and code samples and embedded components keep their styling
+
+  req F-7.5:
+    when: a reader is on `/echo`
+    then: it shows live demos, in order: a collaborative editor, a table and board over one data set, a graph
+          explorer, and an architecture diagram; each runs two peers, Alice and Bob, in one space in the page,
+          shows one or both, and has a switch per peer that takes it offline
 ```
 
 ```mdl
@@ -632,8 +638,8 @@ feat F-8: Live playground
 feat F-9: Diagrams as canvas applications
 
   desc: |
-    Each diagram is a stand-alone `plugin-canvas` application. Planned; the spike renders its one
-    diagram as a static image.
+    Each diagram is a stand-alone `plugin-canvas` application. `/echo` shows Composer's architecture
+    this way; the docs pages still render their diagrams as static images.
 
   req F-9.1:
     when: a page shows a diagram
@@ -652,7 +658,7 @@ feat F-11: Graph visualizations
 
   desc: |
     A section on the graph shows visualizations from `react-ui-graph` and `plugin-explorer`.
-    Planned; the spike does not build it.
+    `/echo` shows the `plugin-explorer` graph of a demo space; the docs section is planned.
 
   req F-11.1:
     when: a reader opens the section on the graph
@@ -661,7 +667,8 @@ feat F-11: Graph visualizations
 feat F-12: Real-time editor demo
 
   desc: |
-    A section on real time shows a `react-ui-editor` demo. Planned; the spike does not build it.
+    A section on real time shows a `react-ui-editor` demo. `/echo` shows it with two peers editing one
+    document; the docs section is planned.
 
   req F-12.1:
     when: a reader opens the section on real time
@@ -1188,7 +1195,7 @@ decision D-47: The sample on `/echo` renders without compiler hover types; sampl
 ```
 
 ```mdl
-decision D-48: The port maps the earlier guides onto the site map: the introduction to welcome, spaces and objects-relations; installation and configuration to installation; mutations to mutating-objects; queries to querying; the client API to sharing; the React pages to the React guide. Ported pages move from planned to spike. Fills in [D-45].
+decision D-48: Welcome, spaces and objects-relations carry the earlier introduction; installation carries installation and configuration; mutating-objects carries mutations; querying carries queries; sharing carries the client API; the React guide carries the React pages. Each of these pages has spike status. Fills in [D-45].
   date: 2026-11-06
   by: agent:claude-code
   for: user:wittjosiah
@@ -1223,6 +1230,49 @@ decision D-51: On `/echo` the Webflow layer sits above Tailwind's preflight and 
   rejected:
     - Shadow DOM around each demo: portalled menus and dialogs render outside it, and the theme's tokens sit on `:root`.
     - Iframes: each demo would load its own page and copy of the theme.
+```
+
+```mdl
+decision D-52: `/echo` has live demos, built as React islands from Composer plugin surfaces and sample-space templates with in-memory clients and peers, not iframes: a markdown editor, two peers by default, with cursors; the nested DXOS architecture diagram on a canvas; a table and a kanban board over the same data, one view per peer; and the explorer's force-directed graph, which shows a card for a node. Each demo has a toolbar to show one or two peers, its peers are created and joined in advance, and a per-peer offline switch is optional. Demos are easy to add and reorder.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.5, F-9, F-11, F-12]
+```
+
+```mdl
+decision D-53: On `/echo` the Webflow styles are scoped to stop at each demo and at what a demo portals outside the Webflow content. Fills in [D-51].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.4]
+  why: Webflow class rules that share a name with a Tailwind utility reached into the demos: Webflow's `.grid` gives three columns and a 4rem gap, which laid a demo's toolbar beside its panes.
+  rejected:
+    - Renaming each colliding class: every plugin a demo adds brings classes that would need checking.
+```
+
+```mdl
+decision D-54: Each demo runs two peers, Alice and Bob, each a Composer plugin app with its own in-memory client. Alice creates the space and seeds it from the demo's sample-space partial; Bob joins it by invitation; both join when the page opens, so showing the second peer is instant. A demo names the object each peer opens, and a peer can switch between a demo's objects. The online switch takes a peer's network offline, and its edits merge when it comes back. The page lists its demos by id, in order. Fills in [D-52].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5]
+  why: One space per demo keeps the demos independent, and a list of ids is the one place that adds or reorders a demo.
+```
+
+```mdl
+decision D-55: The editor seeds a short checklist; the table, board and graph share six companies and their people; the diagram seeds Composer's architecture set, opening on its overview, read-only until a peer unlocks it. The board hides the column for companies with no status, and the graph opens a node's card on hover. Fills in [D-52].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5, F-9, F-11]
+  why: Composer's set is the nested architecture diagram the canvas plugin ships; every seeded company has a status, so that column stays empty; the explorer opens cards on hover, not on click.
+```
+
+```mdl
+decision D-56: The architecture diagram demo opens with one peer.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.5]
 ```
 
 ## Appendix: Extension Definitions

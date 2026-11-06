@@ -1,6 +1,6 @@
 ---
 import PostHog from '../components/PostHog.astro';
-import { PAGE_LAYERS } from '../demos/layers.ts';
+import { ISLAND_ROOTS, PAGE_LAYERS } from '../demos/layers.ts';
 
 interface Props {
   title: string;
@@ -8,17 +8,17 @@ interface Props {
   ogImage: string;
   wfPageId: string;
   /**
-   * Hosts react-ui demo islands: loads the Webflow CSS into a `webflow` cascade layer ordered by `PAGE_LAYERS`, and
-   * pins the react-ui theme and code frames to dark mode on `<html>`, as Webflow pages are dark. Content outside `.page-wrapper` (a demo's
-   * portalled menus and dialogs) is styled as part of the demo.
+   * Hosts react-ui demo islands: loads the Webflow CSS into a `webflow` cascade layer ordered by `PAGE_LAYERS` and
+   * scoped to stop at `ISLAND_ROOTS`, and pins the react-ui theme and code frames to dark mode on `<html>`, as Webflow
+   * pages are dark.
    */
   demos?: boolean;
 }
 
 const { title, description, ogImage, wfPageId, demos = false } = Astro.props;
 
-const STYLESHEETS = ['/webflow/css/normalize.css', '/webflow/css/webflow.css', '/webflow/css/dxos-org.webflow.css'];
-const layer = (css: string) => (demos ? `@layer webflow {\n${css}\n}` : css);
+const STYLESHEETS = ['normalize.css', 'webflow.css', 'dxos-org.webflow.css'];
+const layer = (css: string) => (demos ? `@layer webflow {\n@scope (html) to (${ISLAND_ROOTS}) {\n${css}\n}\n}` : css);
 
 const HEAD_CSS = `  * {
   -webkit-font-smoothing: antialiased;
@@ -219,9 +219,9 @@ margin: 0rem !important;
   <meta content="summary_large_image" name="twitter:card">
   <meta content="width=device-width, initial-scale=1" name="viewport">
   {demos ? (
-    <style is:inline set:html={[`@layer ${PAGE_LAYERS.join(', ')};`, ...STYLESHEETS.map((href) => `@import url('${href}') layer(webflow);`)].join('\n')} />
+    <style is:inline set:html={[`@layer ${PAGE_LAYERS.join(', ')};`, ...STYLESHEETS.map((name) => `@import url('/webflow/css/scoped/${name}') layer(webflow);`)].join('\n')} />
   ) : (
-    STYLESHEETS.map((href) => <link href={href} rel="stylesheet" type="text/css" />)
+    STYLESHEETS.map((name) => <link href={`/webflow/css/${name}`} rel="stylesheet" type="text/css" />)
   )}
   <slot name="head" />
   <PostHog />
