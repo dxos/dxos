@@ -867,34 +867,51 @@ const openBrowser = async (page, { title, url }) => {
     .catch(() => {});
 };
 
+const GRID_TITLES = ['Your availability', 'Group availability'];
+
 /**
  * Tags the cells of the grid in the poll page's card titled `title` as `data-autocue-cell="<prefix>-<column>-<row>"`,
  * and returns the grid's size, or nothing when the page has no such grid. The agent writes the page, so a grid's cells
  * are found as the card's largest set of equal boxes at least 2rem tall, which F-5.2 asks for, holding no day or time.
+ * M-1's page has no cards: its headings and tables are siblings, so the grid is what follows the heading up to the
+ * other grid's title.
  */
 const tagCells = (page, title, prefix) =>
   page
     .locator(inWindow('body'))
     .evaluate(
-      (body, { title, prefix }) => {
+      (body, { title, prefix, others }) => {
         const heading = [...body.querySelectorAll('*')].find(
           (element) => element.childElementCount === 0 && element.textContent.trim().startsWith(title),
         );
+        const holdsOther = (element) => others.some((other) => element.textContent.includes(other));
         let card = heading;
-        while (card?.parentElement && card.getBoundingClientRect().height < 120) {
+        while (card?.parentElement && card.getBoundingClientRect().height < 120 && !holdsOther(card.parentElement)) {
           card = card.parentElement;
         }
         if (!card) {
           return undefined;
         }
-        const sizes = {};
-        for (const element of card.querySelectorAll('*')) {
-          const { width, height } = element.getBoundingClientRect();
-          if (height >= 24 && width >= 30 && !/\d{2}:\d{2}|[A-Z][a-z]{2} \d/.test(element.textContent)) {
-            (sizes[`${Math.round(width)}x${Math.round(height)}`] ??= []).push(element);
-          }
+        const scope = [card];
+        const bare = card.getBoundingClientRect().height < 120;
+        for (let next = card.nextElementSibling; bare && next && !holdsOther(next); next = next.nextElementSibling) {
+          scope.push(next);
         }
-        const cells = Object.values(sizes).sort((a, b) => b.length - a.length)[0] ?? [];
+        const elements = scope.flatMap((element) => [...element.querySelectorAll('*')]);
+        const isCell = (element) => {
+          const { width, height } = element.getBoundingClientRect();
+          return height >= 24 && width >= 30 && !/\d{2}:\d{2}|[A-Z][a-z]{2} \d/.test(element.textContent);
+        };
+        const sizes = {};
+        for (const element of elements.filter(isCell)) {
+          const { width, height } = element.getBoundingClientRect();
+          (sizes[`${Math.round(width)}x${Math.round(height)}`] ??= []).push(element);
+        }
+        let cells = Object.values(sizes).sort((a, b) => b.length - a.length)[0] ?? [];
+        // A table's cells differ by a pixel or two, with the best cell's outline and the headers' widths.
+        if (cells.length < 4) {
+          cells = elements.filter((element) => element.tagName === 'TD' && isCell(element));
+        }
         if (cells.length < 4) {
           return undefined;
         }
@@ -907,7 +924,7 @@ const tagCells = (page, title, prefix) =>
         }
         return { columns: xs.length, rows: ys.length };
       },
-      { title, prefix },
+      { title, prefix, others: GRID_TITLES.filter((other) => other !== title) },
     )
     .catch(() => undefined);
 

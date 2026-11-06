@@ -72,17 +72,19 @@ Keep it in git there; do not create or attach a repository.
 - The pages are a React app bundled by Vite into the Worker's static assets. \`package.json\` (\`"type": "module"\`) \
 depends on \`@dxos/react-ui\` and \`@dxos/ui-theme\` \`^0.16.0\`, \`react\` and \`react-dom\` \`^19.2.9\`, \
 \`@vitejs/plugin-react\` \`^6.1.2\` and \`vite\` \`^8.3.5\`, all installed in the first task. \
-\`vite.config.js\`: \`plugins: [ThemePlugin({ content: ['node_modules/@dxos/react-ui/src/theme/*.css'] }), \
-react()]\` (\`import { ThemePlugin } from '@dxos/ui-theme/plugin'\`; the \`content\` keeps the components' \
-theme tokens), \`build: { outDir: 'dist' }\`. \`index.html\` (\`<html class="dark">\`) loads \`/src/main.jsx\`, which \
-renders the page for \`location.pathname\` (\`/\` is F-1's form, the default export of \`src/Home.jsx\`; \`/p/:id\` the \
+\`vite.config.js\`: \`plugins: [react()]\`, \`build: { outDir: 'dist' }\`. \`index.html\` (a bare \`<html>\`) loads \
+\`/src/main.jsx\`, which renders the page for \`location.pathname\` (\`/\` is F-1's form, the default export of \`src/Home.jsx\`; \`/p/:id\` the \
 poll, the default export of \`src/Poll.jsx\`, given \`id\` as a prop and taking optional \`poll\` and \`name\` props as \
 its first state, so a check can render it with data).
 - M-1's pages are bare HTML, as the spec's Interface section says: plain \`<form>\`, \`<input>\`, \`<button>\` and a \
 \`<table>\` for the grid, with no \`@dxos/react-ui\`, no theme import and no stylesheet, so the browser's defaults \
 show. A cell is \`lightgreen\` when marked and \`white\` when not, the heat map's five shades are \
 \`rgba(0, 128, 0, share)\`, and the best cell has a \`2px solid black\` outline.
-- M-2 builds both pages with DXOS UI. F-4's task makes \`src/main.jsx\` start \`import '@dxos-theme'; import \
+- M-2 builds both pages with DXOS UI. F-4's task adds \
+\`ThemePlugin({ content: ['node_modules/@dxos/react-ui/src/theme/*.css'] })\` before \`react()\` in \`vite.config.js\` \
+(\`import { ThemePlugin } from '@dxos/ui-theme/plugin'\`; the \`content\` keeps the components' theme tokens, and the \
+plugin writes the theme's first-paint CSS into \`index.html\`, which is why M-1 goes without it), gives \`index.html\` \
+\`<html class="dark">\`, and makes \`src/main.jsx\` start \`import '@dxos-theme'; import \
 '@dxos/react-ui/theme.css';\` and wrap the page in \`<Theme.Provider tx={Theme.defaultTx} themeMode='dark'>\`. Pages \
 then use \`Button.Root\` (\`label\`, \
 \`variant: 'primary'\`, \`onClick\`), \`Input.Root\` (the \`<input>\` itself, with \`value\` and \`onChange\` and no children), \`Input.Textarea\` (a list, one item per line), \
