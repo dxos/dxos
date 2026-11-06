@@ -122,6 +122,48 @@ describe('project app graph builder', () => {
       ),
     );
   });
+
+  test('nests a spec beneath each spec citing it, and stops a cycle before it repeats', async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const cite = (key: string, id: string) =>
+          ['```mdl', `feat ${key}: Broken down`, `  spec: echo:///${id}`, '```'].join('\n');
+        const project = yield* Database.add(Project.make({ name: 'Inbox' }));
+        const sync = yield* Database.add(Spec.make({ name: 'Sync', dialects: ['org.dxos.spec.software'] }));
+        const inbox = yield* Database.add(
+          Spec.make({ name: 'Inbox', content: cite('a2b3c', sync.id), dialects: ['org.dxos.spec.software'] }),
+        );
+        Obj.update(project, (project) => {
+          project.specs.push(Ref.make(inbox), Ref.make(sync));
+        });
+        const syncText = yield* Database.load(sync.content);
+        Obj.update(syncText, (syncText) => {
+          syncText.content = cite('d4e5f', inbox.id);
+        });
+        yield* Database.flush();
+
+        const context = yield* Effect.promise(async () =>
+          setupSubject(project, await EffectEx.runPromise(createProjectSpecExtension())),
+        );
+        const children = async (...path: string[]) => {
+          const id = GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, ...path);
+          await context.expand(id);
+          return context.registry.get(context.graph.connections(id, 'child')).map((node) => node.data);
+        };
+
+        // Each cites the other: the first in the project's order is the root, and the cycle ends beneath it.
+        const { SPECS_SEGMENT } = ProjectGraph;
+        yield* Effect.promise(() => children());
+        expect(yield* Effect.promise(() => children(SPECS_SEGMENT))).toEqual([inbox]);
+        expect(yield* Effect.promise(() => children(SPECS_SEGMENT, inbox.id))).toEqual([sync]);
+        expect(yield* Effect.promise(() => children(SPECS_SEGMENT, inbox.id, sync.id))).toEqual([]);
+      }).pipe(
+        Effect.provide(
+          TestDatabaseLayer({ types: [Project.Project, Spec.Spec, Outline.Outline, TaskSet.TaskSet, Text.Text] }),
+        ),
+      ),
+    );
+  });
 });
 
 const SUBJECT_ID = 'subject';

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -19,6 +20,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -33,6 +35,7 @@ import { ProjectsNamespace } from '../namespace.ts';
 import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from '../paths.ts';
 import * as ProjectGraph from '../ProjectGraph.ts';
 import { inboxResearch } from '../templates/index.ts';
+import { readNesting } from '../util/spec-references.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
@@ -339,10 +342,14 @@ export const createProjectActionExtension = () =>
       ]),
   });
 
+const makeSpecNode = (spec: Spec.Spec, space: unknown, get: Atom.AtomContext) =>
+  ProjectGraph.makeLevelNode(spec, space, { label: get(Obj.atom(spec)).name, icon: 'ph--blueprint--regular' });
+
 /**
  * The project's specs under a Specs branch beside Sessions and Artifacts. Every spec is a level node holding the object,
- * so `…/project/<id>/specs/<spec>/…` addresses one depth of the project, however many specs it has, and the level gets
- * the companions of any object; other plugins nest their own levels beneath a spec as level nodes too.
+ * so `…/project/<id>/specs/<spec>/…` addresses one depth of the project, and the level gets the companions of any
+ * object; other plugins nest their own levels beneath a spec as level nodes too. A spec another spec cites through a
+ * `Ref<spec>` field sits beneath each spec citing it rather than at the top; a cycle stops before a spec repeats.
  */
 export const createProjectSpecExtension = () =>
   Effect.all([
@@ -354,8 +361,9 @@ export const createProjectSpecExtension = () =>
           ? Option.some({ project: node.data, space: node.properties.space })
           : Option.none(),
       connector: ({ project, space }, get) => {
-        // One node per spec, in the project's order.
+        // One node per root spec, in the project's order.
         const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
+        const { roots } = readNesting(specs, get);
         return Effect.succeed([
           AppGraphNode.make({
             id: ProjectGraph.SPECS_SEGMENT,
@@ -371,14 +379,34 @@ export const createProjectSpecExtension = () =>
               space,
               testId: 'projectsPlugin.specBranch',
             },
-            nodes: specs.map((spec) =>
-              ProjectGraph.makeLevelNode(spec, space, {
-                label: get(Obj.atom(spec)).name,
-                icon: 'ph--blueprint--regular',
-              }),
-            ),
+            nodes: specs.filter(({ id }) => roots.includes(id)).map((spec) => makeSpecNode(spec, space, get)),
           }),
         ]);
+      },
+    }),
+    AppGraphBuilder.createExtension({
+      id: 'projectSpecCitations',
+      url: ProjectGraph.PROJECT_URL,
+      match: (node) => {
+        if (node.type !== ProjectGraph.SPEC_LEVEL_TYPE || !Spec.instanceOf(node.data)) {
+          return Option.none();
+        }
+        const segments = node.id.split(GraphNode.PathSeparator);
+        const lineage = segments.slice(segments.lastIndexOf(ProjectGraph.SPECS_SEGMENT) + 1);
+        return Option.some({ spec: node.data, space: node.properties.space, lineage });
+      },
+      connector: ({ spec, space, lineage }, get) => {
+        const project = ProjectGraph.findLevelProject(spec);
+        if (!project) {
+          return Effect.succeed([]);
+        }
+        const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
+        const children = readNesting(specs, get).children.get(spec.id) ?? [];
+        return Effect.succeed(
+          specs
+            .filter(({ id }) => children.includes(id) && !lineage.includes(id))
+            .map((child) => makeSpecNode(child, space, get)),
+        );
       },
     }),
   ]).pipe(Effect.map((extensions) => extensions.flat()));

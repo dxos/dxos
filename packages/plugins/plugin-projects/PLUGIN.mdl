@@ -39,8 +39,11 @@ feat F-4: A project's specs
              that contributes the dialect.
   req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
              spec. It opens on the spec picked last, or the project's first.
-  req F-4.6: The nav tree lists each spec under the project's Specs branch at `project/<id>/specs/<spec>`, and a spec a
-             project owns opens as the project's article on that spec. Another plugin nests levels of its own beneath a
+  req F-4.6: The nav tree lists the project's specs under its Specs branch at `project/<id>/specs/<spec>`, and a spec a
+             project owns opens as the project's article on that spec. A spec that a `Ref<spec>` field of another
+             spec's block cites, by object id (`echo:///<id>`) or spec id, sits beneath each spec citing it at
+             `…/specs/<spec>/<cited>`, not at the top; a cycle stops before a spec repeats, and a spec that only a cycle
+             reaches is listed at the top. Another plugin nests levels of its own beneath a
              spec with `ProjectGraph.makeLevelNode`, at `…/specs/<spec>/<level>/…`, each node holding its object. A
              level opens as the project's article narrowed to it, through the `ProjectSurface.Level` surface; its
              Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
@@ -57,9 +60,10 @@ feat F-4: A project's specs
              the toolbar a plugin draws through `ProjectSurface.SpecToolbar`. A package is a set of dialects a
              plugin contributes (`ProjectCapabilities.SpecPackage`). The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
              checking one adds its dialects and unchecking removes them.
-  req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
-              block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
-              of its kind already in the text; text before the slash becomes the block's title.
+  req F-4.10: A spec's text offers a slash command for each block kind its dialects and its own `ext` blocks define. A
+              command writes the block in place, fenced as `mdl`, with a fresh key as the id of a numbered kind and
+              its required fields empty; text before the slash becomes the block's title, and the block's form takes
+              the focus.
   req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
               owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
               and the list's `+` creates a spec, its row open for the name.
@@ -68,6 +72,13 @@ feat F-4: A project's specs
               packages add their own editing on top.
   req F-4.13: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
               each with the peer's name.
+  req F-4.14: A spec's text opens in preview, where each block of a kind its schemas define is drawn as a form over that
+              kind's fields, and offers readonly and source views. The text is the only store: a form edit changes only
+              the source of the field it edits, and the title, the prose and each prose field are editors of their own
+              over their source, showing the other peers' carets and the comments anchored in them.
+  req F-4.15: An agent reads and writes a spec's blocks with `GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`,
+              naming a block by key or positional label. A write is checked against the kind's schema and changes only
+              the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
 ```
 
 ```mdl
@@ -2378,3 +2389,44 @@ decision D-217: A spec that names no dialects is read with the core and changelo
   affects: [F-6.6, F-4.3]
   why: A software fallback in a generic view made every dialect-less spec look like software, which F-4.3 already rules out.
 ```
+
+```mdl
+decision D-218: A spec's blocks are drawn as forms over their kinds' schemas, read from the `ext` blocks of its dialects and its own. The text stays the only store, and the editor has preview, readonly and source views as a Markdown document does.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.14]
+  why: Feature objects copied what the text already says, and the copies drifted. Edits through the form keep the text's comments and alignment.
+```
+
+```mdl
+decision D-219: A form's title, prose and prose fields are editors bound to their source range, so carets and comments show inside them as they do in the text.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.14]
+  why: Feature fields showed carets on main, and the inline form had to keep parity.
+```
+
+```mdl
+decision D-220: A numbered kind's id is a stable random key and its `F-n` label is positional, drawn and never written. Slash commands write the key and only the required fields, then focus the block's form. Replaces the numbering of [D-82].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.10]
+  why: A positional id renumbered on every insert, breaking comments, links and task relations that cited it.
+```
+
+```mdl
+decision D-221: Specs stay flat on the project. The nav tree nests a spec beneath every spec whose `Ref<spec>` field cites it, read from the text and cached per spec; a cycle stops before a spec repeats.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.6]
+  why: A breakdown is a `spec:` field on the parent `feat` block, so nesting follows the text instead of an owner link.
+```
+
+```mdl
+decision D-222: The generic block operations `GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock` replace the per-feature operations for every dialect.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.15]
+  why: With blocks in the text, one set of operations checked against each kind's schema covers every kind.
+```
+

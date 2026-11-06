@@ -5,14 +5,7 @@
 import { type EditorState, type Extension, Facet, StateField } from '@codemirror/state';
 import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import {
-  type BlockSchema,
-  type DialectRegistry,
-  type SourceBlock,
-  type SpecItem,
-  scanBlocks,
-  specItems,
-} from '@dxos/deus/schema';
+import { type BlockSchema, type DialectRegistry, type SourceBlock, type SpecItem, specItems } from '@dxos/deus/schema';
 
 import { specSchemas } from '../../util/spec-schemas.ts';
 import { type SharedAwareness } from './shared-awareness.ts';
@@ -41,29 +34,17 @@ export type SpecBlocks = {
   blocks: readonly SourceBlock[];
   /** Blocks and their keyed lines, with their positional labels. */
   items: readonly SpecItem[];
-  /** What the schemas were resolved from: the front matter and the spec's own `ext` blocks. */
-  source: string;
 };
 
 /** Which block a card shows: the nth block of a kind and id, so a card follows its block across edits. */
 export type BlockLocator = { kind: string; id: string; index: number };
 
-const schemaSource = (text: string, dialects: readonly string[]) =>
-  [
-    dialects.join(','),
-    text.match(/^---\n[\s\S]*?\n---/)?.[0] ?? '',
-    ...scanBlocks(text)
-      .map(({ from, to }) => text.slice(from, to))
-      .filter((block) => /^\s*ext\b/.test(block)),
-  ].join('\0');
-
-const read = (state: EditorState, previous?: SpecBlocks): SpecBlocks => {
+const read = (state: EditorState): SpecBlocks => {
   const text = state.doc.toString();
   const { dialects, registry } = state.facet(specBlocksConfig);
-  const source = schemaSource(text, dialects);
-  const schemas = previous?.source === source ? previous.schemas : specSchemas(text, dialects, registry);
+  const schemas = specSchemas(text, dialects, registry);
   const items = specItems(text, schemas);
-  return { schemas, items, blocks: [...new Set(items.map(({ block }) => block))], source };
+  return { schemas, items, blocks: [...new Set(items.map(({ block }) => block))] };
 };
 
 export const specBlocksField = StateField.define<SpecBlocks>({
@@ -71,7 +52,7 @@ export const specBlocksField = StateField.define<SpecBlocks>({
   update: (value, transaction) =>
     transaction.docChanged ||
     transaction.startState.facet(specBlocksConfig) !== transaction.state.facet(specBlocksConfig)
-      ? read(transaction.state, value)
+      ? read(transaction.state)
       : value,
 });
 

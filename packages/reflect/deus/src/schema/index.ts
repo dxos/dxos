@@ -28,6 +28,7 @@ export {
 } from './dialects.ts';
 export { type ExtDefinition, parseExtDefinitions, resolveDefinition } from './ext.ts';
 export { parseFieldType } from './field-type.ts';
+export { type BlockReference, blockReferences, parseCitation } from './references.ts';
 export { type RekeyOptions, type SpecItem, isNumberedId, labelsByKey, mintKey, rekey, specItems } from './keys.ts';
 export {
   type ParseOptions,
