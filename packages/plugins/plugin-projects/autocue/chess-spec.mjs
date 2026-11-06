@@ -165,11 +165,17 @@ const expectCaret = (scope, name, what) =>
 
 const hold = ({ page }) => page.waitForTimeout(HOLD);
 
-/** The names of the features the spec's text embeds, as their sections show them. */
+/** The names of the features the spec's text embeds, as their sections show them, without another peer's caret. */
 const embeddedFeatures = (page) =>
   specDocument(page)
     .getByTestId('name')
-    .evaluateAll((fields) => fields.map((field) => field.textContent?.trim() ?? ''));
+    .evaluateAll((fields) =>
+      fields.map((field) => {
+        const copy = field.cloneNode(true);
+        copy.querySelectorAll('.cm-collab-selectionCaret').forEach((caret) => caret.remove());
+        return copy.textContent?.trim() ?? '';
+      }),
+    );
 
 const expectFeatures = (page, names, what) =>
   waitFor(
@@ -344,8 +350,22 @@ const ports = (box) =>
     }),
   );
 
-/** The closest pair of ports between two cards, the pair a finished link between them is drawn from. */
-const nearestPorts = (source, target) => {
+/**
+ * The ports a finished link between two cards joins: the closest pair, unless a card stands between them in their row,
+ * when the link leaves the source's top for the gutter above and enters the target's facing side.
+ */
+const linkPorts = (source, target, others) => {
+  const [left, right] = source.x < target.x ? [source, target] : [target, source];
+  const between = others.some(
+    (box) =>
+      box.x >= left.x + left.width && box.x + box.width <= right.x && Math.abs(box.y - source.y) < source.height / 2,
+  );
+  if (between && Math.abs(source.y - target.y) < source.height / 2) {
+    return {
+      from: { x: source.x + source.width / 2, y: source.y },
+      to: { x: target.x < source.x ? target.x + target.width : target.x, y: target.y + target.height / 2 },
+    };
+  }
   let best;
   for (const from of ports(source)) {
     for (const to of ports(target)) {
@@ -375,7 +395,8 @@ const drawDependency = async (peer, from, to) => {
   await page.waitForTimeout(300);
   await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2, { steps: 6 });
   await page.waitForTimeout(300);
-  const { from: start, to: end } = nearestPorts(source, target);
+  const others = (await page.getByTestId('feature-canvas-node').all()).map((node) => node.boundingBox());
+  const { from: start, to: end } = linkPorts(source, target, (await Promise.all(others)).filter(Boolean));
   await page.mouse.move(start.x, start.y, { steps: 4 });
   await page.waitForTimeout(400);
   await page.mouse.down();
@@ -661,10 +682,11 @@ export const steps = [
     name: 'Bob switches to Canvas. Alice turns her first two bullets into features with `/feature`, naming them "Gameboard" and "Make Move", while Bob adds "Start Game" from the `+` in an empty cell.',
     subtitle: 'QA-11 step 5',
     run: async ({ peers: { alice, bob } }) => {
-      // The companion is open before the canvas fits, so the feature Bob adds opens in it without resizing the canvas.
-      await openComments(bob);
       await showView(bob, 'canvas');
       await canvas(bob.page).waitFor({ timeout: TIMEOUT });
+      // Opened while the canvas is empty, so the feature Bob adds opens in it without resizing a canvas with cards on.
+      // The view toggle does not fit beside an open companion, so the companion follows the switch to Canvas.
+      await openComments(bob);
       await makeFeature(alice, BOARD, 'Gameboard');
       await card(bob.page, 'Gameboard').waitFor({ timeout: TIMEOUT });
       // Bob's new feature lands in Alice's text too, which would close her `/feature` menu if it arrived mid-gesture.
@@ -681,6 +703,7 @@ export const steps = [
     name: `Bob comments on "Make Move"'s description, "${MOVE_QUESTION}", then closes his tab.`,
     subtitle: 'QA-11 step 6',
     run: async ({ peers: { bob } }) => {
+      await closeCompanion(bob);
       await showView(bob, 'document');
       await openComments(bob);
       await commentOnFeature(bob, 'Make Move', MOVE_QUESTION);
