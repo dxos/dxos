@@ -61,7 +61,9 @@ export const steps = [
 ```
 
 Peers are keyed by lowercased name (`--peers Alice,Bob,Carol` gives three panes). `caption(title,
-subtitle)` adds a caption mid-step; `caption: false` on a step suppresses its automatic one. A failing step
+subtitle)` adds a caption mid-step; `caption: false` on a step suppresses its automatic one. `speed(10)` …
+`speed(1)` plays a stretch such as an agent working at ten times speed once the composed video is trimmed, with
+a badge on every pane, like the driver's `speed`. A failing step
 stops the run, but the videos up to that point are still written and composed, which shows where it went
 wrong.
 

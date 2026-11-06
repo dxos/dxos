@@ -16,7 +16,7 @@
  *   node pair.mjs --flow packages/apps/composer-app/autocue/two-peer-collaboration.mjs \
  *     --url http://127.0.0.1:4173 --out /tmp/pair [--peers Alice,Bob] [--scale 2] [--mp4 on]
  *
- * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, sleep })` gets each
+ * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, speed, sleep })` gets each
  * peer by its lowercased name (`peers.alice.page`, `peers.alice.click(locator)`). Steps run in order; a
  * step's `name` is its caption unless it sets `caption: false` or captions itself.
  */
@@ -259,6 +259,51 @@ const caption = (text, subtitle) => {
   }
 };
 
+const SPEED_ID = '__demo_speed__';
+/** `speed` changes in ms from the shared cut, for `trim-static.mjs` to play those stretches faster. */
+const speedChanges = [];
+
+/**
+ * Plays what follows at `factor` times speed in the cut (`1` returns to normal), for stretches that are motion
+ * without content, like an agent working. Every pane carries a badge meanwhile, so the jump is not a lie.
+ */
+const speed = async (requested = 1) => {
+  const rounded = Math.round(Number(requested));
+  const factor = Number.isFinite(rounded) ? Math.max(1, rounded) : 1;
+  if (takeStart !== undefined) {
+    speedChanges.push({ ms: Date.now() - takeStart, factor });
+  }
+  await Promise.all(
+    peerList.map((peer) =>
+      peer.page.evaluate(
+        ({ id, factor }) => {
+          document.getElementById(id)?.remove();
+          if (factor === 1) {
+            return;
+          }
+          const badge = document.createElement('div');
+          badge.id = id;
+          badge.style.cssText = [
+            'position:fixed',
+            'top:16px',
+            'right:16px',
+            'z-index:2147483647',
+            'padding:6px 12px',
+            'border-radius:999px',
+            'background:rgba(17,17,17,0.85)',
+            'color:#fff',
+            'font:600 15px/1.2 ui-sans-serif,system-ui,sans-serif',
+            'pointer-events:none',
+          ].join(';');
+          badge.textContent = `\u23e9 ${factor}\u00d7`;
+          document.body.appendChild(badge);
+        },
+        { id: SPEED_ID, factor },
+      ),
+    ),
+  );
+};
+
 const stepsDir = path.join(options.out, 'steps');
 mkdirSync(stepsDir, { recursive: true });
 
@@ -300,7 +345,7 @@ try {
     }
     const started = Date.now();
     try {
-      await step.run({ peers, caption, sleep });
+      await step.run({ peers, caption, speed, sleep });
       results.push({ step: index + 1, name: step.name, ok: true, ms: Date.now() - started });
     } catch (error) {
       failed = true;
@@ -337,6 +382,7 @@ try {
       offsetMs: peer.recorder.started - base,
     })),
     steps: captions,
+    speed: speedChanges,
     results,
   };
   writeFileSync(path.join(options.out, 'timeline.json'), JSON.stringify(timeline, null, 2));
