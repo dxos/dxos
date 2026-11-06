@@ -49,9 +49,12 @@ export const snapshotDeep = <V>(value: V): V => {
   if (isRefLike(value)) {
     return value;
   }
-  // Bytes stay bytes: the record branch below would turn them into an index-keyed plain object.
+  // Bytes and dates keep their class: the record branch below would turn them into plain objects.
   if (value instanceof Uint8Array) {
     return new Uint8Array(value) as V;
+  }
+  if (value instanceof Date) {
+    return new Date(value.getTime()) as V;
   }
   if (value !== null && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, snapshotDeep(entry)])) as V;
@@ -89,6 +92,9 @@ const valueEquals = (a: unknown, b: unknown): boolean => {
 export const snapshotDeepEquals = (a: unknown, b: unknown): boolean => {
   if (isRefLike(a) || isRefLike(b)) {
     return valueEquals(a, b);
+  }
+  if (a instanceof Date || b instanceof Date) {
+    return a instanceof Date && b instanceof Date && Object.is(a.getTime(), b.getTime());
   }
   if (a instanceof Uint8Array || b instanceof Uint8Array) {
     return (

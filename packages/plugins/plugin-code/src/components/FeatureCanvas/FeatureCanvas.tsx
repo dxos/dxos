@@ -182,7 +182,7 @@ export const FeatureCanvas = ({
 }: FeatureCanvasProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  // The cell a feature is being added to, which its card takes when it appears.
+  // The cell a feature is being created in, which its card takes when it appears. Add's dialog places its own feature.
   const placing = useRef<Point | undefined>(undefined);
   const handleCreate = useMemo(
     () =>
@@ -193,18 +193,9 @@ export const FeatureCanvas = ({
       }),
     [onCreate],
   );
-  const handleAdd = useMemo(
-    () =>
-      onAdd &&
-      ((position: Point) => {
-        placing.current = position;
-        onAdd(position);
-      }),
-    [onAdd],
-  );
   const nodeContext = useMemo(
-    () => ({ lookup, cells: { onCreate: handleCreate, onAdd: handleAdd } }),
-    [lookup, handleCreate, handleAdd],
+    () => ({ lookup, cells: { onCreate: handleCreate, onAdd } }),
+    [lookup, handleCreate, onAdd],
   );
   const graph = useMemo(() => toGraph(features), [features]);
 
