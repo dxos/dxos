@@ -14,8 +14,9 @@ export type ClientPluginOptions = ClientOptions & {
    * A client to adopt instead of constructing one, so a host can start `initialize()` at entry
    * rather than when activation reaches this lazily-imported module. `@synchronized`, so the
    * plugin's own call joins it; lifecycle stays with the plugin, which destroys it on teardown.
+   * A getter is read on activation, for a host that builds its plugin list before its client.
    */
-  client?: Client;
+  client?: Client | (() => Client);
 
   /**
    * Whether the navigation handler consumes invitation codes from URL query params.

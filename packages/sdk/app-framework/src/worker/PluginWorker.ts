@@ -16,15 +16,16 @@ import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import * as Hook from '@dxos/effect/Hook';
 import { BaseError } from '@dxos/errors';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcRouter } from '@dxos/rpc';
 import { markMilestone } from '@dxos/util';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import * as Capabilities from '../common/capabilities.ts';
+import type * as Capability from '../core/capability.ts';
 import * as PluginManager from '../core/plugin-manager/index.ts';
 import * as Plugin from '../core/plugin.ts';
-import { normalizePluginExport } from '../core/url-loader.ts';
 import * as WorkerCapabilities from './WorkerCapabilities.ts';
 import * as WorkerEvents from './WorkerEvents.ts';
 
@@ -36,7 +37,7 @@ export class WorkerPluginLoadError extends BaseError.extend(
 export type RunOptions = {
   /** Web Lock key gating storage ownership; every generation of the app's worker must share it. */
   storageLockKey: string;
-  /** Plugins compiled into the worker entry; those listed in `runtime.client.workerPlugins` join them. */
+  /** Plugins compiled into the worker entry; the modules the tab sends in `runtime.client.workerModules` join them. */
   plugins?: readonly Plugin.Plugin[];
   /** Runs once the tab's config arrives, before any plugin loads: the place for process-wide setup such as telemetry. */
   onBeforeStart?: (config: Config) => Effect.Effect<void>;
@@ -48,11 +49,51 @@ export type RunOptions = {
   onStart?: (stack: LayerStack.LayerStack) => Effect.Effect<void, unknown>;
 };
 
-/** Imports a worker plugin by URL; the module's default export is a plugin or a zero-arg factory. */
-const loadPlugin = (url: string): Effect.Effect<Plugin.Plugin, WorkerPluginLoadError> =>
-  Effect.tryPromise({
-    try: async () => normalizePluginExport(await import(/* @vite-ignore */ url)),
-    catch: (cause) => new WorkerPluginLoadError({ context: { url }, cause }),
+/** The worker modules the tab sent, as sent: one per module, each naming its plugin. */
+type WorkerModuleEntry = NonNullable<NonNullable<Config['values']['runtime']>['client']>['workerModules'];
+
+const toArity = (arity: string | undefined): Capability.Arity | undefined =>
+  arity === 'single' || arity === 'multi' ? arity : undefined;
+
+const toTags = (
+  tags: readonly { identifier?: string; arity?: string }[] = [],
+): Effect.Effect<Plugin.ManifestTag[], WorkerPluginLoadError> =>
+  Effect.forEach(tags, ({ identifier, arity }) => {
+    const parsed = toArity(arity);
+    return identifier && parsed
+      ? Effect.succeed({ identifier, arity: parsed })
+      : Effect.fail(new WorkerPluginLoadError({ context: { identifier, arity } }));
+  });
+
+/**
+ * One plugin per plugin key the tab's entries name, holding just those modules. Each activates on
+ * {@link WorkerEvents.Startup}: an entry carries no activation spec, since `Capability.workerModule`
+ * fixes it.
+ */
+const pluginsFromEntries = (entries: WorkerModuleEntry = []): Effect.Effect<Plugin.Plugin[], WorkerPluginLoadError> =>
+  Effect.gen(function* () {
+    const modules = new Map<string, Capability.Module<any>[]>();
+    for (const { plugin, id, url, requires, provides } of entries) {
+      if (!plugin || !id || !url) {
+        return yield* Effect.fail(new WorkerPluginLoadError({ context: { plugin, id, url } }));
+      }
+      const module = Plugin.fromManifestModule({
+        id,
+        url,
+        activatesOn: WorkerEvents.Startup,
+        requires: yield* toTags(requires),
+        provides: yield* toTags(provides),
+      });
+      modules.set(plugin, [...(modules.get(plugin) ?? []), module]);
+    }
+    return [...modules].map(([key, pluginModules]) =>
+      Plugin.make(
+        pluginModules.reduce(
+          (builder, module) => Plugin.addModule(module)(builder),
+          Plugin.define(Plugin.makeMeta({ key: DXN.make(key), name: key })),
+        ),
+      )(),
+    );
   });
 
 /**
@@ -76,10 +117,9 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
           yield* onBeforeStart(config);
         }
 
-        const urls = config.values.runtime?.client?.workerPlugins ?? [];
-        log('plugin-worker: loading plugins', { urls });
-        const loaded = yield* Effect.forEach(urls, loadPlugin, { concurrency: 'unbounded' });
-        const plugins = [...builtIn, ...loaded];
+        const entries = config.values.runtime?.client?.workerModules;
+        log('plugin-worker: loading modules', { modules: entries?.map(({ plugin, id }) => `${plugin}/${id}`) });
+        const plugins = [...builtIn, ...(yield* pluginsFromEntries(entries))];
         const manager = PluginManager.make({
           pluginLoader: (id) =>
             Effect.fromNullishOr(plugins.find((plugin) => plugin.meta.profile.key === id)).pipe(

@@ -676,8 +676,8 @@ export const inlineModule = <
  * Helper to define a module that runs only in the plugin worker (`@dxos/app-framework/PluginWorker`):
  * a {@link lazyModule} activating on `WorkerEvents.Startup`, in the `plugin-worker` environment
  * alone. The environment is what keeps it out of the page: a plugin's manifest lists only the modules
- * for its build's target, and only a worker realm targets `plugin-worker` (see the `moduleUrlPlugin`
- * in `@dxos/app-framework/vite-plugin`).
+ * for its build's target, and the plugin's lazy stub carries the module's entry as data, which the tab
+ * sends to the worker (see `workerHost` in `pluginConfigPlugin`).
  * @param name The export name — used to auto-compute module IDs.
  * @param spec The requires/provides declaration; activation and conditions are fixed.
  * @param loader The lazy loader function.

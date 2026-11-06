@@ -231,7 +231,6 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/vite-plugin-module-url": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/platform-browser": "catalog:",
     "@effect/vitest": "catalog:",

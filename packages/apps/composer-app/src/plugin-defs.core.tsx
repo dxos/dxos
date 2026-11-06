@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
-import { type Client, type ClientServicesProvider, type Config } from '@dxos/client';
+import { type Client, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import type * as Observability from '@dxos/observability/Observability';
 import * as AtprotoPlugin from '@dxos/plugin-atproto/AtprotoPlugin';
@@ -44,9 +44,11 @@ const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 export type State = {
   appKey: string;
   config: Config;
-  services: ClientServicesProvider;
-  /** Constructed and initializing at the entry point, so the handshake overlaps plugin loading. */
-  client: Client;
+  /**
+   * Constructed and initializing at the entry point, so the handshake overlaps plugin loading; a
+   * getter because the plugin list is built first.
+   */
+  client: () => Client;
   observability: Promise<Observability.Observability>;
   logStore: IdbLogStore;
 };
@@ -84,7 +86,6 @@ export type PluginConfig = State & {
 export const getCorePlugins = ({
   appKey,
   config,
-  services,
   client,
   observability,
   logStore,
@@ -110,8 +111,6 @@ export const getCorePlugins = ({
     AttentionPlugin.make(),
     ClientPlugin.make({
       client,
-      config,
-      services,
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,

@@ -24,6 +24,7 @@ import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
 import {
+  type PluginConfigPluginOptions,
   bootLoaderPlugin,
   hotModulesPlugin,
   importMapPlugin,
@@ -35,7 +36,7 @@ import { isNonNullable } from '@dxos/util';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
-import { ModuleUrlPlugin, type ModuleUrlPluginOptions } from '@dxos/vite-plugin-module-url';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { reactCompilerOptions } from '../../../react-compiler.config.ts';
@@ -234,21 +235,14 @@ const NODE_BUILTIN_STUBS = {
 } as const;
 
 /**
- * The plugins the dedicated worker loads by URL are entries of its own build, so they share its
- * chunks: one instance of `effect`'s identities and the RPC router across the worker. Worker realms
- * resolve the `plugin-worker` condition, which is what keeps `Capability.workerModule` modules out of the page.
+ * The dedicated worker's build hosts the worker modules of every plugin, so a module the tab sends it
+ * shares the worker's chunks: one instance of `effect`'s identities and the RPC router across the worker.
  */
-const MODULE_URL: ModuleUrlPluginOptions = {
-  workers: { 'src/workers/dedicated-worker.ts': ['src/workers/client-plugin.ts'] },
-  workerConditions: ['plugin-worker'],
-};
+const PLUGIN_CONFIG: PluginConfigPluginOptions = { workerHost: 'src/workers/dedicated-worker.ts' };
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
-  // `?module-url` imports (compiled module URLs handed to a worker to `import()`) and worker-realm
-  // resolution; first, since it decides a worker module's id before the resolvers below settle on the page's.
-  ModuleUrlPlugin(MODULE_URL),
   // Resolve `@dxos/*` (and matching `#*` subpath imports) via the `source`
   // condition rather than the published `dist/`. This is required at both
   // `serve` and `build` time so Vite-specific constructs survive into the
@@ -276,6 +270,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
+  // `?module-url` imports: compiled module URLs handed to a worker to `import()`.
+  ModuleUrlPlugin(),
   wasm(),
   // sourcemaps(),
 ];
@@ -598,13 +594,13 @@ export default defineConfig((env) => ({
   worker: {
     format: 'es' as const,
 
-    plugins: () => [...sharedPlugins(env)],
+    plugins: () => [pluginConfigPlugin(PLUGIN_CONFIG), ...sharedPlugins(env)],
     rolldownOptions: {
       // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
       // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
       experimental: { chunkOptimization: false },
       output: {
-        // The client plugin the worker hosts reaches `HubHttpClient` only through a lazy module, so default
+        // The client services module the worker hosts reaches `HubHttpClient` only through a lazy module, so default
         // splitting gives it a chunk of its own, which edge-client's barrel chunk re-exports while it imports
         // `BaseHttpClient` back from that barrel: a chunk cycle that runs the subclass first.
         codeSplitting: { groups: [{ name: 'edge-client', test: /[\\/]edge-client[\\/]/ }] },
@@ -613,7 +609,7 @@ export default defineConfig((env) => ({
   },
   plugins: [
     // Serves each `Plugin.config`-defined `dx.config.ts` as its build-time manifest.
-    pluginConfigPlugin(),
+    pluginConfigPlugin(PLUGIN_CONFIG),
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     rearmWatchPlugin(),

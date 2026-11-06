@@ -20514,9 +20514,6 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/vite-plugin-module-url':
-        specifier: workspace:*
-        version: link:../../../tools/vite-plugin-module-url
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
@@ -27130,9 +27127,6 @@ importers:
 
   tools/vite-plugin-module-url:
     devDependencies:
-      rolldown:
-        specifier: 'catalog:'
-        version: 1.2.14
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)

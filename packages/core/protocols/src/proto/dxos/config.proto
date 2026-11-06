@@ -232,9 +232,25 @@ message Runtime {
     /// overrides it when unset.
     optional QueryExecutor query_executor = 18 [ (env_var) = "DX_ECHO_QUERY_EXECUTOR" ];
 
-    /// URLs of the plugin modules the dedicated services worker loads; each module's default export
-    /// is a plugin factory. Set by the app at runtime (the URLs come from its build), not by env.
-    repeated string worker_plugins = 19;
+    /// A module the dedicated services worker loads: the build records it on its plugin, and the
+    /// app sends the entries of its enabled plugins at runtime, never through env.
+    message WorkerModule {
+      message Tag {
+        string identifier = 1;
+        /// `single` or `multi`.
+        string arity = 2;
+      }
+
+      /// Key of the plugin the module belongs to.
+      string plugin = 1;
+      string id = 2;
+      /// URL of the module body, built into the worker's own module graph.
+      string url = 3;
+      repeated Tag requires = 4;
+      repeated Tag provides = 5;
+    }
+
+    repeated WorkerModule worker_modules = 19;
   }
 
   message App {

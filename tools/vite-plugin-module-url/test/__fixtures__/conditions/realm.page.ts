@@ -1,5 +1,0 @@
-//
-// Copyright 2026 DXOS.org
-//
-
-export const realm = 'page-realm';

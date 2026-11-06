@@ -186,8 +186,7 @@ export const getInstalledVersion = (id: string, options: Options = {}): string |
   return getPersistedRemotePlugins(storage, key).find((entry) => entry.id === id)?.version;
 };
 
-/** The plugin a module URL exports: its default export, as a plugin or a zero-arg plugin factory. */
-export const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
+const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
   const exported = mod.default;
   if (Plugin.isPlugin(exported)) {
     return exported;
@@ -205,9 +204,7 @@ export const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plug
       return result;
     }
   }
-  throw new Error(
-    `Remote module default export is not a Plugin, a zero-arg plugin factory or a plugin config (got ${typeof exported}).`,
-  );
+  throw new Error('Remote module default export is not a Plugin, a zero-arg plugin factory or a plugin config.');
 };
 
 /**

@@ -4,7 +4,7 @@ Design: [`./DESIGN.md`](./DESIGN.md). Branch `dm/zen-hawking-92843m`.
 
 ## Phase 1 — base worker
 
-- [x] `runtime.client.worker_plugins` proto field.
+- [x] `runtime.client.worker_modules` proto field (module entries the tab sends).
 - [x] `@dxos/app-framework/{PluginWorker,WorkerEvents,WorkerCapabilities}`.
 - [x] Browser test: toy plugin by URL contributes a LayerSpec + RPC group; tab calls it.
 

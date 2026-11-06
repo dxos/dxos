@@ -20,7 +20,7 @@ import type * as Devtools from '@dxos/app-framework/Devtools';
 import * as Hooks from '@dxos/app-framework/Hooks';
 // Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
-import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import * as Registry from '@dxos/app-framework/Registry';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
@@ -76,7 +76,6 @@ import {
   translations,
 } from './util/index.ts';
 import { watchWindowCorners } from './util/window-corners.ts';
-import clientWorkerPluginUrl from './workers/client-plugin.ts?module-url';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -577,6 +576,53 @@ const main = async () => {
     await initEchoHostWasm();
   }
 
+  const isPwa = !isFalse(getEnvString(config, 'DX_PWA'));
+  // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
+  // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
+  // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
+  let raiseFatalError: (error: unknown) => void = (error) =>
+    log.error('client initialization failed before render', { error: String(error) });
+
+  const conf: PluginConfig = {
+    appKey: APP_KEY,
+    config,
+    // Read on activation: the list is built before the services, so the worker gets the modules it lists.
+    client: () => client,
+    observability,
+    logStore,
+    onFatalError: (error) => {
+      // The phase reaches PostHog on the exception itself; this event carries only the timings.
+      captureStartupFailure();
+      raiseFatalError(error);
+    },
+
+    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
+    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
+    isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
+    isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+    isPreview: getEnvString(config, 'DX_ENVIRONMENT') === 'preview',
+    isPwa,
+    isTauri,
+    isPopover,
+    isMobile,
+    isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
+    // Loopback only: a shared link must not swap a reader's assistant for the perf script.
+    scriptedModel:
+      url.searchParams.get(PARAM_MODEL) === 'scripted' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+  };
+
+  // `getPlugins` is synchronous: each plugin's main entry exposes only `meta` + a `Plugin.lazy(...)`
+  // stub, so building the plugin array doesn't pull any plugin's body. The plugin manager loads the
+  // real plugin (separate Rollup chunk) on first `enable`. Built ahead of the services because the
+  // worker serves the worker modules of the plugins the app starts with, which the stubs list.
+  const builtinPlugins = getPlugins(conf);
+  const defaults = getDefaults(conf);
+  const workerModules = Plugin.getStartupWorkerModules(
+    builtinPlugins,
+    Hooks.readEnabled({ defaults, cacheEnabled: true, safeMode }),
+  );
+
   config = new Config(
     {
       runtime: {
@@ -592,8 +638,8 @@ const main = async () => {
             sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS,
             ...(import.meta.env.VITE_DX_STORAGE === 'memory' && { persistent: false }),
           },
-          // What the dedicated worker serves: it loads each of these plugins by URL.
-          workerPlugins: [clientWorkerPluginUrl],
+          // What the dedicated worker serves: it loads each of these modules by URL.
+          workerModules,
         },
       },
     },
@@ -656,51 +702,9 @@ const main = async () => {
 
   startupMark('plugins:start');
 
-  const isPwa = !isFalse(getEnvString(config, 'DX_PWA'));
-  // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
-  // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
-  // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
-  let raiseFatalError: (error: unknown) => void = (error) =>
-    log.error('client initialization failed before render', { error: String(error) });
-
-  const conf: PluginConfig = {
-    appKey: APP_KEY,
-    config,
-    services,
-    client,
-    observability,
-    logStore,
-    onFatalError: (error) => {
-      // The phase reaches PostHog on the exception itself; this event carries only the timings.
-      captureStartupFailure();
-      raiseFatalError(error);
-    },
-
-    // Strictly the `dev` cloud environment (not preview) or a local `DX_DEV=true` opt-in, so a plain
-    // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
-    isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
-    isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
-    isPreview: getEnvString(config, 'DX_ENVIRONMENT') === 'preview',
-    isPwa,
-    isTauri,
-    isPopover,
-    isMobile,
-    isStrict: !isFalse(getEnvString(config, 'DX_STRICT')),
-    // Loopback only: a shared link must not swap a reader's assistant for the perf script.
-    scriptedModel:
-      url.searchParams.get(PARAM_MODEL) === 'scripted' &&
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
-  };
-
-  // `getPlugins` is synchronous: each plugin's main entry exposes only
-  // `meta` + a `Plugin.lazy(...)` stub, so building the plugin array doesn't
-  // pull any plugin's body. The plugin manager loads the real plugin
-  // (separate Rollup chunk) on first `enable`. Remote plugin preload is
-  // network-bound — the boot loader's counter follows that until the
-  // plugin manager (post-React mount) takes over with module-activation
-  // progress.
+  // Remote plugin preload is network-bound — the boot loader's counter follows that until the plugin
+  // manager (post-React mount) takes over with module-activation progress.
   bootStatus('Loading plugins…');
-  const builtinPlugins = getPlugins(conf);
   const assetCache = await createAssetCache(isPwa, isTauri);
   const remotePluginsResult = await EffectEx.runPromise(
     UrlLoader.preload({
@@ -726,7 +730,6 @@ const main = async () => {
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
-  const defaults = getDefaults(conf);
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl ? new Registry.EdgePluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;

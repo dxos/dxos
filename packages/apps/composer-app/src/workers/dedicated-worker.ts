@@ -44,7 +44,7 @@ let observability: ReturnType<typeof initializeObservability> | undefined;
 // while the tab is still booting; `onBeforeStart` awaits the same memoized init, which surfaces a failure.
 void initEchoHostWasm().catch((err) => log.verbose('early wasm init failed; retried on init', { err }));
 
-// The services this worker serves come from the plugins the tab lists in `runtime.client.workerPlugins`
+// The services this worker serves come from the plugin modules the tab sends in `runtime.client.workerModules`
 // (see main.tsx); observability stays here, set up before any plugin loads.
 PluginWorker.run({
   storageLockKey: STORAGE_LOCK_KEY,
