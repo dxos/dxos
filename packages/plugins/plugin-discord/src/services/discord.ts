@@ -56,7 +56,8 @@ export const HttpResponse = Schema.Struct({
 export interface HttpResponse extends Schema.Schema.Type<typeof HttpResponse> {}
 
 export interface DiscordHttpService {
-  readonly fetch: (request: HttpRequest) => Effect.Effect<unknown, Error>;
+  // The global Error: `Error` here names `@dxos/echo`'s error namespace.
+  readonly fetch: (request: HttpRequest) => Effect.Effect<unknown, globalThis.Error>;
 }
 
 /**

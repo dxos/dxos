@@ -169,10 +169,13 @@ for (const [file, content] of Object.entries(SAMPLE_PLUGIN)) {
 }
 // The plugin's dependencies, linked from the workspace's install; vite is not a dependency of the CLI itself.
 for (const [name, fromPackage] of SAMPLE_PLUGIN_DEPENDENCIES) {
-  symlinkSync(
-    realpathSync(join(workspaceRoot, fromPackage, 'node_modules', name)),
-    join(pluginDir, 'node_modules', name),
-  );
+  const source = join(workspaceRoot, fromPackage, 'node_modules', name);
+  if (!existsSync(source)) {
+    console.error(`[Smoke] ✗ ${name} is not installed at ${source}`);
+    cleanup();
+    process.exit(1);
+  }
+  symlinkSync(realpathSync(source), join(pluginDir, 'node_modules', name));
 }
 const published = run(
   join(scratch, 'node_modules', '@dxos', `cli-${platformKey}`, binaryName),
