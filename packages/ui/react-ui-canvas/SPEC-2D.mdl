@@ -840,8 +840,9 @@ feat F-15: Modes
     dynamic and scored as the host passes them), with its generators.
   req F-15.2: A dynamic layout (`arrange` of kind `dynamic`) is its own graph: its shapes are the nodes and its links
     the edges. A shape a person moves is pinned where it lands, and an edit that adds or removes a shape or link
-    re-places every unpinned shape by the layout engine, on the layout's lattice when it has one. The lattice is the
-    layout's `lattice`.
+    re-places every unpinned shape by the layout engine, on the layout's lattice when it has one. An unpinned shape
+    placed in a cell a pinned shape holds moves along its row to the next free cell. The lattice is the layout's
+    `lattice`.
   req F-15.5: A layout with `constraints` is constrained; its constraints name element ids. A shape an edit moves or
     creates is re-related to its nearest neighbour where it lands, a deleted shape takes its constraints with it, and
     the solver re-places every shape. The new constraints are written by a `layout` intent in the same batch as the
@@ -1645,6 +1646,15 @@ decision D-63: The standalone 2D engine's action bar, display panel and inspecto
   affects: [Canvas, Dimension2D, F-10.4]
   supersedes: D-62
   why: The user asked for the port in this PR (2026-10-31); D-62 kept them only until the shared parts modelled them.
+```
+
+```mdl
+decision D-64: In a dynamic layout, a shape the engine places in a cell that a pinned shape holds moves along its row to the next free cell. Fills in [F-15.2].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.2]
+  why: On a feature map, a feature added from a spec's text took the cell of one placed from the map, and the two cards stacked.
 ```
 
 ---

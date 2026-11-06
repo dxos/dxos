@@ -92,6 +92,12 @@ describe('graphLayout', () => {
     expect(graphPositions(placed)).toEqual({ store: { x: 1024, y: 0 } });
   });
 
+  test('a node arranged into the cell a placed node holds moves to the next free cell in its row', ({ expect }) => {
+    const app = graphLayout(GRAPH, { lattice: LATTICE }).elements.app.center ?? { x: 0, y: 0 };
+    const placed = graphLayout(GRAPH, { lattice: LATTICE }, { store: app });
+    expect(placed.elements.app.center).toEqual({ x: app.x + LATTICE.width + LATTICE.gutterX, y: app.y });
+  });
+
   test('a free force layout keeps the lattice sizes but no lattice', ({ expect }) => {
     const layout = graphLayout(GRAPH, { lattice: LATTICE, arrange: 'force-free' });
     expect(layout.lattice).toBeUndefined();
