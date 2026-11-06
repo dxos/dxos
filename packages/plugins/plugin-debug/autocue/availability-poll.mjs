@@ -71,7 +71,8 @@ const PLAN_SPEED = 4;
 const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';
 const taskRow = (title) => `${TASK_ROW}:has([data-testid="taskList.item.title"]:text-is("${title}"))`;
 const PROJECT_NODE = `[data-testid="deck.sidebar"] [data-testid="spacePlugin.object"]:has(:text-is("${PROJECT}")) >> nth=0`;
-const node = (name) => `[data-testid="feature-canvas-node"]:has-text("${name}") >> nth=0`;
+// By the whole name: "Poll page" is also part of "New poll page".
+const node = (name) => `[data-testid="feature-canvas-node"]:has(:text-is("${name}")) >> nth=0`;
 const COMPANION = '[data-testid="feature-companion"]';
 const ARTIFACTS = '[data-testid="projectsPlugin.artifacts"]';
 const DECK_COMPANION = '[data-testid="deck.companion"]';
@@ -1310,32 +1311,16 @@ export const steps = [
         hold: BEAT * 3,
       });
       await openFeature(demo, page, POLL_PAGE);
-      // The requirement is a text field of the feature's form, found by its current text.
-      const field = page.locator(`${COMPANION} :is(textarea, input[type="text"], input:not([type]))`);
-      const count = await field.count();
-      let index = -1;
-      for (let candidate = 0; candidate < count; candidate++) {
-        if (
-          (
-            await field
-              .nth(candidate)
-              .inputValue()
-              .catch(() => '')
-          ).startsWith(ROSTER_PREFIX)
-        ) {
-          index = candidate;
-          break;
-        }
+      // Each requirement's text is an editor of its own, found by its current text.
+      const editor = `${COMPANION} [data-testid^="requirement-editor."][data-testid$=".text"]:has-text("${ROSTER_PREFIX}") .cm-content`;
+      if (!(await visible(page.locator(editor), 10_000))) {
+        throw new Error(`no editor holds ${ROSTER} in the feature companion`);
       }
-      if (index < 0) {
-        throw new Error(`no field holds ${ROSTER} in the feature companion`);
-      }
-      await field.nth(index).scrollIntoViewIfNeeded();
+      await page.locator(editor).first().scrollIntoViewIfNeeded();
       await page.waitForTimeout(BEAT * 2);
-      await field.nth(index).click();
+      await demo.click({ selector: `${editor} >> nth=0`, label: ROSTER });
       await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
       await page.keyboard.type(NEW_ROSTER, { delay: 20 });
-      await page.keyboard.press('Tab');
       await page.waitForFunction(
         async ({ key, text }) => {
           const space = dxos
