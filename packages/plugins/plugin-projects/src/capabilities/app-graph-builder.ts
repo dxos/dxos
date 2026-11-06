@@ -32,8 +32,8 @@ import { artifacts } from '../artifacts.ts';
 import { ProjectsNamespace } from '../namespace.ts';
 import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from '../paths.ts';
 import * as ProjectGraph from '../ProjectGraph.ts';
-import { inboxResearch } from '../templates/index.ts';
 import * as SpecSession from '../SpecSession.ts';
+import { inboxResearch } from '../templates/index.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —
