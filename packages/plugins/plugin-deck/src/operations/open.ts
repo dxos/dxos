@@ -83,6 +83,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       /** The plank the deck write below focuses, so the followups know whether one carried the intent. */
       let scrolled: string | undefined;
       let shownInCompanion = false;
+      /** The plank a linked companion opens beside, which attention has not reached yet. */
+      let companionAnchor: string | undefined;
       {
         const before = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(before.active);
@@ -159,10 +161,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           }));
           // Beside the plank the open lands on, as the scroll intent below picks it: the first one it adds, else the
           // subject it shows, which an open beside an origin places before the deck's last plank.
-          const landing =
+          companionAnchor =
             deckUpdates.active.find((id) => !previouslyOpenIds.has(id)) ??
             (input.subject[0] && next.includes(input.subject[0]) ? input.subject[0] : main);
-          companionPlanks = openCompanionPlank(companionPlanks, flatten, landing);
+          companionPlanks = openCompanionPlank(companionPlanks, flatten, companionAnchor);
         }
         const holder = input.subject[0];
         const plankNames =
@@ -185,6 +187,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
+          companionAnchor,
           intent: { scrollIntoView: scrolled, focus: input.focus },
         });
       }
