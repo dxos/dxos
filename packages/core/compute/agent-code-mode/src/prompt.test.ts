@@ -85,6 +85,18 @@ describe('prompt', () => {
     );
   });
 
+  test('the types section says how to see a shortened union, and only when a type has one', ({ expect }) => {
+    const type = (field: string) => ({
+      typename: 'com.example.type.note',
+      dxn: 'dxn:com.example.type.note:0.1.0',
+      kind: 'object' as const,
+      fields: [{ name: 'block', type: field, optional: false }],
+    });
+    const shortened = describeInput(Schema.Union(['a', 'b', 'c', 'd', 'e'].map((tag) => Schema.TaggedStruct(tag, {}))));
+    expect(renderTypes([type(shortened)])).toContain("print an existing value of that type to see a variant's fields");
+    expect(renderTypes([type('string')])).not.toContain('shortened to its tags');
+  });
+
   test('the effect dialect documents an operation by the schema Operation.invoke decodes against', ({ expect }) => {
     const Close = Operation.make({
       meta: { key: DXN.make('com.example.operation.close'), name: 'Close', description: 'Closes a task.' },

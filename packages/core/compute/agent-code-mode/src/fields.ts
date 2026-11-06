@@ -44,6 +44,9 @@ const MAX_DEPTH = 3;
  */
 const MAX_TAGGED_VARIANTS = 4;
 
+/** How a union named by its tags ends, so a reader of the label can tell its variants' fields were left out. */
+export const ABRIDGED_UNION = ', … }';
+
 /**
  * The fields of a type's schema as the model is told about them: name, a TypeScript-like type
  * label, and whether the field may be omitted.
@@ -119,7 +122,7 @@ export const labelOf = (ast: SchemaAST.AST, depth: number): string => {
   if (SchemaAST.isUnion(ast)) {
     const tags = ast.types.map(tagOf);
     if (tags.length > MAX_TAGGED_VARIANTS && tags.every((tag) => tag !== undefined)) {
-      return `{ _tag: ${tags.map((tag) => JSON.stringify(tag)).join(' | ')}, … }`;
+      return `{ _tag: ${tags.map((tag) => JSON.stringify(tag)).join(' | ')}${ABRIDGED_UNION}`;
     }
     // The `undefined` member is how an optional field is spelled; optionality is reported separately.
     const members = ast.types.filter((type) => !SchemaAST.isUndefined(type)).map((type) => labelOf(type, depth));
