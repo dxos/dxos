@@ -75,14 +75,17 @@ feat F-4: A project's specs
   req F-4.14: A spec's text opens in preview, where each block of a kind its schemas define is drawn as a form over that
               kind's fields, and offers readonly and source views. The text is the only store: a form edit changes only
               the source of the field it edits, and the title, the prose and each prose field are editors of their own
-              over their source, showing the other peers' carets and the comments anchored in them. A form takes about
-              the room of its source: a header row with the block's label, its title and its choice fields as tags, then
-              a row per other field with its name small before its value, and a line per keyed entry and per map row.
-              Empty fields and the add and remove actions show only while the form has focus, a form folds to its header
-              row, and prose it cannot place shows as a note pointing to the source view. A reference field is picked
-              from the blocks of the kinds it names (from the space's specs for `Ref<spec>`) and a type, in a field or a
-              map row, from the built-in types and the spec's `type` blocks, so neither can be mistyped; a name the spec
-              does not hold is flagged. A map row's comment shows as its note, without the `#`. A list shows one item per line; a reference written with its kind (`op:Sort`) keeps it, and a name outside the spec (a path, a `github:` key, a `user:`) shows as written and is not flagged. A field that names no block kind of the spec (`ActorRef`) is text. Every prose field but `desc` carries its name.
+              over their source, showing the other peers' carets and the comments anchored in them. A form is one
+              react-ui-form `Form` over a schema generated from the kind: a header row with the block's label and kind
+              icon, then the title and a field per block field. Empty fields and the add and remove actions show only
+              while the form has focus, a form folds to its title, and prose it cannot place shows as a note pointing
+              to the source view. A reference field is a combobox over the blocks of the kinds it names (over the
+              space's specs for `Ref<spec>`), and a list of references is chips; a type, in a field or a map row, is a
+              combobox over the built-in types and the spec's `type` blocks. A map row's comment shows as its note,
+              without the `#`. A list shows one item per row; a keyed entry is an editor of its own labelled by its
+              position. A reference written with its kind (`op:Sort`) keeps it, and a name outside the spec (a path, a
+              `github:` key, a `user:`) shows as written. A field that names no block kind of the spec (`ActorRef`) is
+              text.
   req F-4.15: An agent reads and writes a spec's blocks with `GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`,
               naming a block by key or positional label. A write is checked against the kind's schema and changes only
               the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
@@ -2483,4 +2486,15 @@ decision D-227: A row or item added to a block form gets a fresh name (`name`, `
   for: user:wittjosiah
   affects: [F-4.14]
   why: An added map row was written as a bare `:` line, which does not parse, so the row vanished; the user asked for a story per dialect that shows every block kind as its form.
+```
+
+```mdl
+decision D-228: A block form is one react-ui-form `Form` over a schema generated from its kind, built only from the form's own fields: comboboxes for references and types, chips for a list of references, array rows for lists, map rows and keyed entries. The custom row, item, entry, type and reference controls are deleted. Replaces [D-224]; amends [D-225] and [D-227].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user asked that every block form be a single form over an Effect schema, using react-ui-form elements and none of the custom controls. A combobox takes a typed name, so a name the spec does not hold is no longer flagged, and a type expression has no list toggle.
+  rejected:
+    - Keeping the compact custom rows of [D-224] beside the standard fields, which leaves two ways to draw one field.
 ```

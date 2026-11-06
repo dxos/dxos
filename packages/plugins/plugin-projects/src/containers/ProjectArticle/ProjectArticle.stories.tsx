@@ -499,16 +499,16 @@ export const SpecBlockForms: Story = {
       'type',
       'op',
     ]);
-    // A typed map row names its type with a picker over the spec's types.
+    // A typed map row names its type in a combobox over the spec's types.
     const op = canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'op');
-    await expect(within(op!).getByTestId('spec-block.input.0.type')).toHaveTextContent('Message');
+    await expect([...op!.querySelectorAll('input')].map((input) => input.value)).toContain('Message');
 
+    // Each requirement is a bound editor of its own, labelled by its position.
     const requirement = () => {
-      const content = within(featureCard())
-        .getByTestId('spec-block.req.m3pza')
-        .querySelector<HTMLElement>('.cm-content');
-      const view = content && EditorView.findFromDOM(content);
-      if (!view?.state.doc.toString().includes('known sender')) {
+      const view = [...featureCard().querySelectorAll<HTMLElement>('.cm-content')]
+        .map((content) => EditorView.findFromDOM(content))
+        .find((candidate) => candidate?.state.doc.toString().startsWith('A message from a known sender'));
+      if (!view) {
         throw new Error('no requirement editor');
       }
       return view;
@@ -567,12 +567,12 @@ const dialectStory = ({ content, dialects, kinds }: DialectSamples.Sample): Stor
 
 export const AppDialect = dialectStory(DialectSamples.samples.app);
 export const ChangelogDialect = dialectStory(DialectSamples.samples.changelog);
+export const CodeDialect = dialectStory(DialectSamples.samples.code);
 export const CoreDialect = dialectStory(DialectSamples.samples.core);
 export const FeaturesDialect = dialectStory(DialectSamples.samples.features);
 export const PluginDialect = dialectStory(DialectSamples.samples.plugin);
 export const QaDialect = dialectStory(DialectSamples.samples.qa);
 export const ReviewDialect = dialectStory(DialectSamples.samples.review);
-export const SoftwareDialect = dialectStory(DialectSamples.samples.software);
 export const SqlDialect = dialectStory(DialectSamples.samples.sql);
 
 /** Each tab's tools follow the tabs: the agent and the chart on Tasks; the Overview adds artifacts in their section. */

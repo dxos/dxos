@@ -4,43 +4,39 @@
 
 import { type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import React, { type ReactNode, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   type BlockPart,
   type BlockSchema,
   type Entry,
-  type FieldSchema,
-  type Row,
   type SourceBlock,
   decodeBlock,
-  mintKey,
   partSource,
   patchPart,
 } from '@dxos/deus/schema';
-import {
-  Form,
-  type FormExtensionsField,
-  type FormFieldOverride,
-  InputEditor,
-  type RefOption,
-} from '@dxos/react-ui-form';
-import * as Button from '@dxos/react-ui/Button';
+import { Form, type FormExtensionsField, type FormFieldOverride } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Input from '@dxos/react-ui/Input';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
-import * as Tag from '@dxos/react-ui/Tag';
 import { type WidgetProps } from '@dxos/ui-editor';
 import { hues } from '@dxos/ui-types';
 
 import { ProjectsNamespace } from '../../namespace.ts';
 import { focusBlockEffect, isFocusRequested } from './block-commands.ts';
-import { PROSE, TITLE, blockFormSchema, fromFormValues, isBoundField, toFormValues } from './block-form.ts';
-import { RefField, TypePicker, isPickedRef, isPickedType, parseTypeName, typeOptions } from './block-pickers.tsx';
-import { readBlock, setField, updateBlock, useSpecBlocks } from './block-value.ts';
+import {
+  type BlockFormContext,
+  PROSE,
+  TITLE,
+  blockFormSchema,
+  formKey,
+  formOptionsKey,
+  fromFormValues,
+  isBoundField,
+  toFormValues,
+} from './block-form.ts';
+import { updateBlock, useSpecBlocks } from './block-value.ts';
 import { type PartSource, partBinding } from './part-binding.ts';
 import {
   type BlockLocator,
@@ -93,22 +89,41 @@ const locatePart =
     return { ...partSource(text, block, schema, part), patch: (next) => patchPart(text, block, schema, part, next) };
   };
 
+const isEmpty = (value: unknown) => value === undefined || value === '' || (Array.isArray(value) && value.length === 0);
+
 const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  const readonly = view.state.facet(specBlocksConfig).readonly;
+  const { readonly, specs } = view.state.facet(specBlocksConfig);
   const value = decodeBlock(view.state.doc.toString(), block, schema);
+  const context = useMemo<BlockFormContext>(
+    () => ({
+      blocks,
+      block,
+      specs,
+      defaults: { item: t('spec-block.new-item.text'), entry: t('spec-block.new-entry.text') },
+    }),
+    [blocks, block, specs, t],
+  );
   const raw = value.raw.join(',');
-  // Rebuilt only when a field changes how it is edited, so the bound editors keep their state across edits.
-  const formSchema = useMemo(() => blockFormSchema(schema, value), [schema, raw]);
-  const values = useMemo(() => toFormValues(schema, value), [schema, JSON.stringify(value)]);
+  const optionsKey = formOptionsKey(schema, context);
+  // Rebuilt only when the options or how a field is edited change, so the bound editors keep their state across edits.
+  const formSchema = useMemo(() => blockFormSchema(schema, value, context), [schema, raw, optionsKey]);
+  const values = useMemo(() => toFormValues(schema, value, context), [schema, JSON.stringify(value), optionsKey]);
+  const keyed = schema.fields.filter((field) => field.type.kind === 'keyed');
+  const entriesOf = (name: string) => (value.fields[name] ?? []) as readonly Entry[];
 
   const { kind, id, index } = locator;
   const extensions = useCallback(
     ({ path }: FormExtensionsField) => {
-      const [name] = path;
+      const [name, at] = path;
+      const field = schema.fields.find((candidate) => formKey(candidate.name) === name);
+      const entry = field && typeof at === 'number' ? entriesOf(field.name)[at] : undefined;
       const part: BlockPart =
-        name === TITLE ? { part: 'title' } : name === PROSE ? { part: 'prose' } : { part: 'field', name: String(name) };
-      const field = schema.fields.find((candidate) => candidate.name === name);
+        name === TITLE
+          ? { part: 'title' }
+          : name === PROSE
+            ? { part: 'prose' }
+            : { part: 'field', name: field?.name ?? String(name), ...(entry && { key: entry.key }) };
       return [
         partBinding({
           parent: view,
@@ -117,9 +132,13 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
         }),
       ];
     },
-    [view, schema, kind, id, index],
+    // Keyed on the entries' keys, not their text, so typing into a line leaves its editor mounted.
+    [view, schema, kind, id, index, JSON.stringify(keyed.map(({ name }) => entriesOf(name).map(({ key }) => key)))],
   );
 
+  // A focused or pressed card shows its empty fields, where a value is added; at rest it shows only what the block holds.
+  const ref = useRef<HTMLDivElement>(null);
+  const active = useActive(ref, view.dom) && !readonly;
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
       [TITLE]: {
@@ -129,42 +148,47 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
         readonly,
         placeholder: t('spec-block.title.placeholder'),
       },
-      // Prose reads as body text, with a one-line placeholder rather than the schema's guidance.
       [PROSE]: {
         collaborative: true,
         presentation: 'plain',
         hideLabel: true,
         readonly,
         placeholder: t('spec-block.prose.placeholder'),
+        hidden: !active && !value.prose,
       },
       ...Object.fromEntries(
-        schema.fields
-          .filter((field) => isBoundField(field, value))
-          .map((field) => [
-            field.name,
-            field.type.kind === 'prose'
-              ? { collaborative: true, presentation: 'plain', hideLabel: true, readonly, placeholder: field.name }
-              : { collaborative: true, presentation: 'plain', hideLabel: true, readonly },
-          ]),
+        schema.fields.map((field) => [
+          formKey(field.name),
+          {
+            readonly,
+            hidden: !active && isEmpty(values[formKey(field.name)]),
+            ...(isBoundField(field, value) && { collaborative: true, presentation: 'plain' }),
+          },
+        ]),
       ),
-      // A one-line value reads as text beside its name, with no well until it is focused.
+      // Each keyed line is its own bound editor, labelled by its position (`F-1.2`); its key is the block's business.
       ...Object.fromEntries(
-        schema.fields
-          .filter((field) => !isBoundField(field, value) && isScalar(field))
-          .map((field) => [field.name, { presentation: 'plain', hideLabel: true, readonly }]),
+        keyed.flatMap(({ name }) =>
+          entriesOf(name).flatMap(({ key }, at) => [
+            [`${formKey(name)}[${at}].key`, { hidden: true }],
+            [
+              `${formKey(name)}[${at}].text`,
+              { collaborative: true, label: labelOf(blocks, block, key) ?? key, readonly },
+            ],
+          ]),
+        ),
       ),
     }),
-    [schema, raw, readonly, t],
+    [schema, raw, readonly, active, blocks, block, JSON.stringify(values), t],
   );
 
   const handleValuesChanged = useCallback(
     (next: Record<string, unknown>) =>
-      updateBlock(view, { kind, id, index }, (before) => fromFormValues(schema, before, next)),
-    [view, schema, kind, id, index],
+      updateBlock(view, { kind, id, index }, (before) => fromFormValues(schema, before, next, context)),
+    [view, schema, kind, id, index, context],
   );
 
   // A block a slash command just wrote opens with its first field focused, once its editor has taken its text.
-  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isFocusRequested(view.state, locator)) {
       view.dispatch({ effects: focusBlockEffect.of(undefined) });
@@ -172,241 +196,57 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
     }
   }, [view, locator]);
 
-  const active = useActive(ref, view.dom) && !readonly;
   const [folded, setFolded] = useState(false);
   const label = labelOf(blocks, block) ?? (block.id || undefined);
   const hue = hues.find((candidate) => candidate === schema.hue);
-  const tags = schema.fields.filter((field) => field.type.kind === 'literal').map(({ name }) => name);
-  const keyed = schema.fields.filter((field) => field.type.kind === 'keyed');
-  const rows = schema.fields.filter((field) => field.type.kind !== 'literal' && field.type.kind !== 'keyed');
-  const types = useMemo(() => typeOptions(blocks), [blocks]);
-  const refs = schema.fields.flatMap((field) =>
-    field.type.kind === 'ref' ? [value.fields[field.name] ?? []].flat().map(String) : [],
-  );
-  const refLabel = (name: string) => blocks.items.find((item) => !item.entry && item.key === name)?.label ?? name;
-  // An empty inline prose row would sit beside a kind's own prose field (`desc`) and offer a second place to write it.
-  const hasProseField = schema.fields.some((field) => field.type.kind === 'prose');
-  const entries = keyed.reduce((count, { name }) => count + ((value.fields[name] ?? []) as readonly Entry[]).length, 0);
   // Lines the codec reads as prose only when they come before the first field; the source view shows the rest.
   const stray = block.fields.length > 0 ? block.prose.filter((line) => line.from > block.fields[0].from).length : 0;
 
   return (
-    <Form.Root
-      schema={formSchema}
-      values={values}
-      readonly={readonly}
-      extensions={extensions}
-      fieldOverrides={fieldOverrides}
-      onValuesChanged={handleValuesChanged}
-    >
-      <Form.Viewport gutter='none'>
-        <Form.Content>
-          <Card.Root grid classNames='my-1' data-testid='spec-block' data-kind={block.kind} ref={ref}>
-            <Card.Row
-              leading={
-                <SystemButton.Disclosure
-                  variant='ghost'
-                  label={t('spec-block.fold.label')}
-                  expanded={!folded}
-                  onExpandedChange={(expanded) => setFolded(!expanded)}
-                  data-testid='spec-block.fold'
-                />
-              }
-              trailing={
-                <Layout.Flex align='center' gap='sm'>
-                  {folded &&
-                    refs.map((name) => (
-                      <Tag.Tag key={name} data-testid='spec-block.ref'>
-                        {refLabel(name)}
-                      </Tag.Tag>
-                    ))}
-                  {folded && entries > 0 && (
-                    <Card.Text variant='muted' data-testid='spec-block.entry-count'>
-                      {t('spec-block.entry-count.label', { count: entries })}
-                    </Card.Text>
-                  )}
-                  {tags.length > 0 && <Form.Fields include={tags} layout='tag' />}
-                </Layout.Flex>
-              }
-            >
-              <Layout.Flex align='center' gap='sm'>
-                <Icon.Icon icon={schema.icon ?? 'ph--cube--regular'} hue={hue} />
-                <FieldName data-testid='spec-block.label'>{label ? `${block.kind} ${label}` : block.kind}</FieldName>
-                <Layout.Flex column grow>
-                  <Form.Fields include={[TITLE]} />
-                </Layout.Flex>
-              </Layout.Flex>
-            </Card.Row>
-            {!folded && (
-              <>
-                {schema.inlineProse && (value.prose || (active && !hasProseField)) && (
-                  <Card.Row>
-                    <Form.Fields include={[PROSE]} />
-                  </Card.Row>
-                )}
-                {rows
-                  .filter((field) => active || !isEmpty(value.fields[field.name]))
-                  .map((field) =>
-                    isBoundField(field, value) && field.type.kind !== 'prose' ? (
-                      <FieldRow key={field.name} name={field.name}>
-                        <Form.Fields include={[field.name]} layout='inline' />
-                      </FieldRow>
-                    ) : field.type.kind === 'map' ? (
-                      <Rows
-                        key={field.name}
-                        view={view}
-                        locator={locator}
-                        name={field.name}
-                        // An `ext` block's field types are the language's (`Prose`, `Identifier`), not the spec's.
-                        typeOptions={field.type.value === 'type' && block.kind !== 'ext' ? types : undefined}
-                        actions={active}
-                        readonly={!!readonly}
-                      />
-                    ) : field.type.kind === 'list' ||
-                      (field.type.kind === 'ref' && field.type.many && !isPickedRef(field, blocks)) ? (
-                      <Items
-                        key={field.name}
-                        view={view}
-                        locator={locator}
-                        name={field.name}
-                        actions={active}
-                        readonly={!!readonly}
-                      />
-                    ) : field.type.kind === 'ref' && !isPickedRef(field, blocks) ? (
-                      <FieldRow key={field.name} name={field.name}>
-                        <RowInput
-                          value={String(value.fields[field.name] ?? '')}
-                          placeholder={field.name}
-                          readonly={!!readonly}
-                          classNames='w-full'
-                          onCommit={(next) => updateBlock(view, locator, setField(field.name, next || undefined))}
-                        />
-                      </FieldRow>
-                    ) : field.type.kind === 'ref' ? (
-                      <FieldRow key={field.name} name={field.name}>
-                        <RefField
-                          view={view}
-                          locator={locator}
-                          blocks={blocks}
-                          block={block}
-                          field={field}
-                          held={value.fields[field.name]}
-                          readonly={!!readonly}
-                        />
-                      </FieldRow>
-                    ) : field.type.kind === 'typeExpr' ? (
-                      <FieldRow key={field.name} name={field.name}>
-                        <TypeValue
-                          value={String(value.fields[field.name] ?? '')}
-                          options={types}
-                          readonly={!!readonly}
-                          actions={active}
-                          testId={`spec-block.${field.name}`}
-                          onChange={(next) => updateBlock(view, locator, setField(field.name, next))}
-                        />
-                      </FieldRow>
-                    ) : field.type.kind === 'prose' && field.name === 'desc' ? (
-                      <Card.Row key={field.name}>
-                        <Form.Fields include={[field.name]} />
-                      </Card.Row>
-                    ) : field.type.kind === 'prose' ? (
-                      <FieldRow key={field.name} name={field.name}>
-                        <Form.Fields include={[field.name]} />
-                      </FieldRow>
-                    ) : (
-                      <FieldRow key={field.name} name={field.name}>
-                        <Form.Fields include={[field.name]} layout='inline' />
-                      </FieldRow>
-                    ),
-                  )}
-                {keyed.map(({ name }) => (
-                  <Entries
-                    key={name}
-                    view={view}
-                    locator={locator}
-                    name={name}
-                    actions={active}
-                    readonly={!!readonly}
-                  />
-                ))}
-                {stray > 0 && (
-                  <Card.Row icon='ph--warning--regular' data-testid='spec-block.stray'>
-                    <Card.Text variant='muted'>{t('spec-block.stray-prose.message', { count: stray })}</Card.Text>
-                  </Card.Row>
-                )}
-              </>
-            )}
-          </Card.Root>
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
-  );
-};
-
-/** Whether a field's form value is one string or number, rather than a choice, a switch or a list. */
-const isScalar = ({ type }: FieldSchema) =>
-  !['boolean', 'keyed', 'list', 'literal', 'map'].includes(type.kind) && !(type.kind === 'ref' && type.many);
-
-const isEmpty = (value: unknown) => value === undefined || value === '' || (Array.isArray(value) && value.length === 0);
-
-/** A field's name or a block's label, small and on one line, before what it names. */
-const FieldName = ({ children, ...props }: { 'children': string; 'data-testid'?: string }) => (
-  <span className='shrink-0 text-xs text-description tabular-nums whitespace-nowrap' {...props}>
-    {children}
-  </span>
-);
-
-/** One field as a line: its name small, then its value. */
-const FieldRow = ({ name, children }: { name: string; children: ReactNode }) => (
-  <Card.Row align='start'>
-    <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
-      <FieldName>{name}</FieldName>
-      <div className='grow min-w-0'>{children}</div>
-    </Layout.Flex>
-  </Card.Row>
-);
-
-/** A type expression: picked when it names one type (or a list of it), otherwise edited as its text. */
-const TypeValue = ({
-  value,
-  options,
-  readonly,
-  actions,
-  testId,
-  onChange,
-}: {
-  value: string;
-  options: RefOption[];
-  readonly: boolean;
-  actions: boolean;
-  testId: string;
-  onChange: (value: string | undefined) => void;
-}) => {
-  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  return isPickedType(value) ? (
-    <TypePicker
-      value={value}
-      options={options}
-      readonly={readonly}
-      actions={actions}
-      data-testid={testId}
-      onChange={onChange}
-    />
-  ) : (
-    <RowInput
-      value={value}
-      placeholder={t('spec-block.type.placeholder')}
-      readonly={readonly}
-      classNames='w-full'
-      onCommit={(next) => onChange(next || undefined)}
-    />
+    <Card.Root classNames='my-1' data-testid='spec-block' data-kind={block.kind} ref={ref}>
+      <Card.Row
+        leading={
+          <SystemButton.Disclosure
+            variant='ghost'
+            label={t('spec-block.fold.label')}
+            expanded={!folded}
+            onExpandedChange={(expanded) => setFolded(!expanded)}
+            data-testid='spec-block.fold'
+          />
+        }
+        trailing={<Icon.Icon icon={schema.icon ?? 'ph--cube--regular'} hue={hue} />}
+      >
+        <Card.Text variant='muted' data-testid='spec-block.label'>
+          {label ? `${block.kind} ${label}` : block.kind}
+        </Card.Text>
+      </Card.Row>
+      <Form.Root
+        schema={formSchema}
+        values={values}
+        readonly={readonly}
+        extensions={extensions}
+        fieldOverrides={fieldOverrides}
+        onValuesChanged={handleValuesChanged}
+      >
+        <Form.Viewport gutter='none'>
+          <Form.Content>
+            <Form.Fields include={folded ? [TITLE] : undefined} />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+      {!folded && stray > 0 && (
+        <Card.Row icon='ph--warning--regular' data-testid='spec-block.stray'>
+          <Card.Text variant='muted'>{t('spec-block.stray-prose.message', { count: stray })}</Card.Text>
+        </Card.Row>
+      )}
+    </Card.Root>
   );
 };
 
 /**
  * Whether the card holds focus or took the last press. Only focus or a press elsewhere in the spec's editor ends it, so
  * a menu the card opens (portalled outside it) and a button that takes no focus (Safari) leave it active. A press
- * activates the card once it is released: the actions an active card adds move what is under the pointer, which would
+ * activates the card once it is released: the fields an active card adds move what is under the pointer, which would
  * otherwise take the click.
  */
 const useActive = (ref: RefObject<HTMLElement | null>, scope: HTMLElement): boolean => {
@@ -449,309 +289,4 @@ const useActive = (ref: RefObject<HTMLElement | null>, scope: HTMLElement): bool
     };
   }, [ref, scope]);
   return active;
-};
-
-type EntriesProps = {
-  view: EditorView;
-  locator: BlockLocator;
-  name: string;
-  /** Whether the remove and add actions show; the lines stay editable either way. */
-  actions: boolean;
-  readonly: boolean;
-};
-
-/** A keyed field (`req <key>: text`) as one bound line per entry, led by its positional label. */
-const Entries = ({ view, locator, name, actions, readonly }: EntriesProps) => {
-  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  const blocks = useSpecBlocks(view);
-  const block = findBlock(blocks, locator);
-  const entries = (readBlock(view, locator)?.fields[name] ?? []) as readonly Entry[];
-  const update = (change: (entries: readonly Entry[]) => readonly Entry[]) =>
-    updateBlock(view, locator, (value) =>
-      setField(name, change((value.fields[name] ?? []) as readonly Entry[]))(value),
-    );
-
-  if (!block) {
-    return null;
-  }
-  return (
-    <Card.Section role='list' data-testid={`spec-block.${name}`}>
-      {entries.map(({ key }) => (
-        <Card.Row
-          key={key}
-          role='listitem'
-          align='start'
-          // The content clips overflow (for truncation), which would cut off the editor's focus ring.
-          classNames='[&_.dx-card-row-content]:overflow-visible'
-          trailing={
-            actions && (
-              <Card.Action
-                icon='ph--x--regular'
-                label={t('spec-block.remove-entry.label')}
-                onClick={() => update((current) => current.filter((entry) => entry.key !== key))}
-              />
-            )
-          }
-        >
-          <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
-            <FieldName>{labelOf(blocks, block, key) ?? key}</FieldName>
-            <div className='grow min-w-0'>
-              <EntryEditor view={view} locator={locator} name={name} entryKey={key} readonly={readonly} />
-            </div>
-          </Layout.Flex>
-        </Card.Row>
-      ))}
-      {actions && (
-        <Card.Row
-          icon='ph--plus--regular'
-          data-testid={`spec-block.${name}.add`}
-          onClick={() =>
-            update((current) => [
-              ...current,
-              { key: mintKey(new Set(blocks.items.map(({ key }) => key))), text: t('spec-block.new-entry.text') },
-            ])
-          }
-        >
-          <Card.Text variant='muted'>{t('spec-block.add-entry.label', { name })}</Card.Text>
-        </Card.Row>
-      )}
-    </Card.Section>
-  );
-};
-
-type RowsProps = EntriesProps & {
-  /** The spec's `type` blocks, for a map whose values are type expressions. */
-  typeOptions?: RefOption[];
-};
-
-/** A map field (`name?: Type  # note`) as one line per row: its name, its type picked or its text, then its note. */
-const Rows = ({ view, locator, name, typeOptions, actions, readonly }: RowsProps) => {
-  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  useSpecBlocks(view);
-  const rows = (readBlock(view, locator)?.fields[name] ?? []) as readonly Row[];
-  const update = (change: (rows: readonly Row[]) => readonly Row[]) =>
-    updateBlock(view, locator, (value) => setField(name, change((value.fields[name] ?? []) as readonly Row[]))(value));
-  const set = (index: number, row: Partial<Row>) =>
-    update((current) => current.map((candidate, at) => (at === index ? { ...candidate, ...row } : candidate)));
-  // The row just added, whose name is selected for typing over.
-  const [added, setAdded] = useState<number>();
-
-  return (
-    <Card.Row align='start' data-testid={`spec-block.${name}`}>
-      <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
-        <FieldName>{name}</FieldName>
-        <Layout.Flex column grow classNames='min-w-0'>
-          {rows.map((row, index) => (
-            <Layout.Flex key={index} gap='xs' classNames='items-baseline' role='listitem'>
-              <RowInput
-                value={row.name}
-                placeholder={t('spec-block.row-name.placeholder')}
-                readonly={readonly}
-                classNames='w-auto shrink-0 [field-sizing:content]'
-                select={index === added ? () => setAdded(undefined) : undefined}
-                // A row needs a name to be read back as a row.
-                onCommit={(next) => next && set(index, { name: next })}
-              />
-              <button
-                type='button'
-                className='text-description'
-                disabled={readonly}
-                aria-pressed={row.optional}
-                title={t('spec-block.row-optional.label')}
-                onClick={() => set(index, { optional: !row.optional })}
-              >
-                {row.optional ? '?:' : ':'}
-              </button>
-              {typeOptions && parseTypeName(row.value) ? (
-                <TypePicker
-                  value={row.value}
-                  options={typeOptions}
-                  readonly={readonly}
-                  actions={actions}
-                  data-testid={`spec-block.${name}.${index}.type`}
-                  onChange={(next) => set(index, { value: next ?? '' })}
-                />
-              ) : (
-                <RowInput
-                  value={row.value}
-                  placeholder={t(typeOptions ? 'spec-block.type.placeholder' : 'spec-block.row-value.placeholder')}
-                  readonly={readonly}
-                  classNames='w-auto shrink-0 [field-sizing:content]'
-                  onCommit={(next) => set(index, { value: next })}
-                />
-              )}
-              {(row.note || actions) && (
-                <RowInput
-                  value={row.note ?? ''}
-                  placeholder={t('spec-block.row-note.placeholder')}
-                  readonly={readonly}
-                  classNames='grow ms-2 text-description'
-                  onCommit={(next) => set(index, { note: next || undefined })}
-                />
-              )}
-              {actions && (
-                <Card.Action
-                  icon='ph--x--regular'
-                  label={t('spec-block.remove-entry.label')}
-                  onClick={() => update((current) => current.filter((_, at) => at !== index))}
-                />
-              )}
-            </Layout.Flex>
-          ))}
-          {actions && (
-            <Button.Root
-              icon='ph--plus--regular'
-              variant='ghost'
-              classNames='self-start'
-              data-testid={`spec-block.${name}.add`}
-              onClick={() => {
-                setAdded(rows.length);
-                update((current) => [...current, { name: freshName(current), optional: false, value: '' }]);
-              }}
-            >
-              {t('spec-block.add-entry.label', { name })}
-            </Button.Root>
-          )}
-        </Layout.Flex>
-      </Layout.Flex>
-    </Card.Row>
-  );
-};
-
-/** A name no row of the map has yet: `name`, then `name2` and on. */
-const freshName = (rows: readonly Row[]) => {
-  const names = new Set(rows.map((row) => row.name));
-  let count = 1;
-  while (names.has(count === 1 ? 'name' : `name${count}`)) {
-    count++;
-  }
-  return count === 1 ? 'name' : `name${count}`;
-};
-
-/** A list field (`[a, b]` or bullets) as one line per item. */
-const Items = ({ view, locator, name, actions, readonly }: EntriesProps) => {
-  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  useSpecBlocks(view);
-  const items = [readBlock(view, locator)?.fields[name] ?? []].flat() as readonly string[];
-  const update = (change: (items: readonly string[]) => readonly string[]) =>
-    updateBlock(view, locator, (value) => {
-      const next = change([value.fields[name] ?? []].flat() as readonly string[]);
-      return setField(name, next.length > 0 ? next : undefined)(value);
-    });
-  // The item just added, whose text is selected for typing over.
-  const [added, setAdded] = useState<number>();
-
-  return (
-    <Card.Row align='start' data-testid={`spec-block.${name}`}>
-      <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
-        <FieldName>{name}</FieldName>
-        <Layout.Flex column grow classNames='min-w-0'>
-          {items.map((item, index) => (
-            <Layout.Flex key={index} gap='xs' classNames='items-baseline' role='listitem'>
-              <RowInput
-                value={item}
-                placeholder={t('spec-block.item.placeholder')}
-                readonly={readonly}
-                classNames='grow'
-                select={index === added ? () => setAdded(undefined) : undefined}
-                onCommit={(next) =>
-                  update((current) =>
-                    next
-                      ? current.map((candidate, at) => (at === index ? next : candidate))
-                      : current.filter((_, at) => at !== index),
-                  )
-                }
-              />
-              {actions && (
-                <Card.Action
-                  icon='ph--x--regular'
-                  label={t('spec-block.remove-entry.label')}
-                  onClick={() => update((current) => current.filter((_, at) => at !== index))}
-                />
-              )}
-            </Layout.Flex>
-          ))}
-          {actions && (
-            <Button.Root
-              icon='ph--plus--regular'
-              variant='ghost'
-              classNames='self-start'
-              data-testid={`spec-block.${name}.add`}
-              onClick={() => {
-                setAdded(items.length);
-                update((current) => [...current, t('spec-block.new-item.text')]);
-              }}
-            >
-              {t('spec-block.add-entry.label', { name })}
-            </Button.Root>
-          )}
-        </Layout.Flex>
-      </Layout.Flex>
-    </Card.Row>
-  );
-};
-
-/** One part of a row, committed on blur or Enter; it shows the source's value again whenever that changes. */
-const RowInput = ({
-  value,
-  onCommit,
-  readonly,
-  select,
-  ...props
-}: {
-  value: string;
-  onCommit: (value: string) => void;
-  readonly: boolean;
-  placeholder: string;
-  classNames: string;
-  /** Given, the input takes focus with its text selected (as a part just added does), then calls it. */
-  select?: () => void;
-}) => (
-  <Input.Root
-    key={value}
-    variant='plain'
-    autoFocus={!!select}
-    onFocus={
-      select
-        ? (event) => {
-            event.target.select();
-            select();
-          }
-        : undefined
-    }
-    // Sized to its text, so the row reads as the line it writes; `size` stands in where `field-sizing` is unsupported.
-    size={Math.max(value.length, props.placeholder.length) + 2}
-    defaultValue={value}
-    readOnly={readonly}
-    onBlur={(event) => event.target.value !== value && onCommit(event.target.value)}
-    onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-    {...props}
-  />
-);
-
-const EntryEditor = ({
-  view,
-  locator,
-  name,
-  entryKey,
-  readonly,
-}: {
-  view: EditorView;
-  locator: BlockLocator;
-  name: string;
-  entryKey: string;
-  readonly: boolean;
-}) => {
-  const extensions = useMemo(
-    () => [partBinding({ parent: view, locate: locatePart(locator, { part: 'field', name, key: entryKey }) })],
-    [view, locator.kind, locator.id, locator.index, name, entryKey],
-  );
-  return (
-    <InputEditor
-      extensions={extensions}
-      readonly={readonly}
-      variant='plain'
-      testId={`spec-block.${name}.${entryKey}`}
-    />
-  );
 };
