@@ -252,7 +252,6 @@
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
-    "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-client": "workspace:*",
