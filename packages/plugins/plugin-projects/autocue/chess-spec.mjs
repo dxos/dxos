@@ -4,8 +4,8 @@
 
 /**
  * Alice and Bob write the spec for a Composer chess plugin together: a draft typed at the same time, features made in
- * the text and on the feature map at once, an agent that fills in requirements, types and operations, dependencies
- * drawn on the map, and two comments that wait for Alice while she is offline.
+ * the text and on the feature map at once, a question Bob leaves before he goes, an agent that fills in requirements,
+ * types and operations while Alice watches, and Bob back to her answer, the thread's agent and the map's dependencies.
  *
  * @title Write a chess plugin's spec together
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-11
@@ -39,21 +39,18 @@ const LOBBY = 'Players find and join open games in a lobby.';
 const RULES = 'Every move is checked against the rules.';
 const SYNC = 'Games are saved and reach every peer.';
 const ASK =
-  "Turn this draft into the full spec for a Composer chess plugin: a feature for each remaining bullet, requirements for every feature, and the plugin's types (down to pieces and squares) and operations as type and op blocks.";
-/** The features the draft names, and the agent's for the remaining bullets, whatever it calls them. */
-const FEATURES = ['Gameboard', 'Make Move', 'Start Game'];
+  "Turn this draft into the spec for a Composer chess plugin: a feature for each remaining bullet, requirements for every feature, and the plugin's types (down to pieces and squares) and operations as type and op blocks.";
+/** The features the draft names, and the one Bob's arrow needs; the agent names the rest as it likes. */
+const FEATURES = ['Gameboard', 'Make Move', 'Start Game', 'Move Validation'];
 const FEATURE_COUNT = 6;
 // The agent runs on a live model for minutes; its stretch plays this many times faster in the cut.
 const AGENT_SPEED = 10;
 
-const BOARD_QUESTION = 'What does the board show when the game is over?';
 const MOVE_QUESTION = 'Who checks a move, the board or the engine?';
-const BOARD_ANSWER = 'Nothing yet: no requirement covers a finished game.';
-const MOVE_ANSWER = 'Move Validation does; Make Move needs it, as the map shows.';
-const MOVE_REPLY = 'Thanks, that settles it.';
+const MOVE_ANSWER = 'Move Validation does; the agent just added it.';
 // The comment agent's name, as a thread's `@` menu offers it.
 const AGENT = 'Kai';
-const BOARD_ASK = 'add a requirement that a finished game shows its result and takes no more moves';
+const MOVE_ASK = 'add a requirement that a finished game takes no more moves';
 
 const waitFor = async (predicate, { timeout = TIMEOUT, what }) => {
   const deadline = Date.now() + timeout;
@@ -183,21 +180,28 @@ const expectFeatures = (page, names, what) =>
     { what: `${names.join(', ')} in ${what}` },
   );
 
-/** The project's address, taken when Alice creates it; the navtree lists projects only once indexed. */
+/** The project's address, taken when Alice creates it, where Bob's tab reopens. */
 let projectUrl;
 
+/** A row of the current workspace's navtree, by its heading. */
+const treeRow = (page, heading) =>
+  currentWorkspace(page)
+    .getByTestId('treeItem.heading')
+    .filter({ hasText: new RegExp(`^${heading}$`) })
+    .first()
+    .locator('xpath=ancestor::*[@role="treeitem"][1]');
+
 /**
- * Opens the project by its address inside the running app. A reload would restart a peer that just joined from an
- * empty replica, so the route changes in place and the wait covers the project arriving. `ready` is what shows once it
- * has, since the plank reopens on the tab it was left on.
+ * Opens the project from Projects in the navtree. A peer that just joined lists projects only once its replica has
+ * indexed them, so the wait for the row is long.
  */
-const openProject = async ({ page }, ready = notes) => {
-  const { pathname, search } = new URL(projectUrl);
-  await page.evaluate((path) => {
-    globalThis.history.pushState({}, '', path);
-    globalThis.dispatchEvent(new PopStateEvent('popstate'));
-  }, `${pathname}${search}`);
-  await ready(page).waitFor({ timeout: 120_000 });
+const openProject = async (peer) => {
+  const { page } = peer;
+  const projects = treeRow(page, 'Projects');
+  await projects.waitFor({ timeout: 120_000 });
+  await expandRow(projects);
+  await peer.click(treeRow(page, PROJECT).getByTestId('treeItem.heading').first());
+  await plank(page).getByTestId('projectsPlugin.tab.spec').waitFor({ timeout: TIMEOUT });
 };
 
 /** Closes the companion, which narrows the plank until the spec toolbar overflows and the canvas zooms out. */
@@ -334,9 +338,8 @@ const ask = async (peer, skill, text) => {
 
 /**
  * Draws a dependency on the canvas from the port on the right of `from`'s card onto the middle of `to`'s. A card shows
- * its ports under the pointer only while nothing is selected, and a new arrow re-places the cards nobody placed, so
- * each arrow starts from a cleared selection and a fitted map. The drag moves in steps, since the canvas starts a link
- * only once the pointer has moved.
+ * its ports under the pointer only while nothing is selected, so each arrow starts from a cleared selection and a
+ * fitted map. The drag moves in steps, since the canvas starts a link only once the pointer has moved.
  */
 const drawDependency = async (peer, from, to) => {
   const { page } = peer;
@@ -420,7 +423,7 @@ const commentOnFeature = async (peer, name, text) => {
   await thread(page, text).waitFor({ timeout: TIMEOUT });
 };
 
-/** Opens a notification's subject from the sidebar's Notifications, then the subject's comments in its companion. */
+/** Opens a notification from the sidebar's Notifications; its subject opens with its comments in the companion. */
 const openNotification = async (peer, subject) => {
   const { page } = peer;
   // The tab stays selected while the sidebar is collapsed, so only an expanded sidebar counts as open.
@@ -433,8 +436,6 @@ const openNotification = async (peer, subject) => {
   const notification = page.getByTestId('messenger.notification').filter({ hasText: subject }).first();
   await peer.click(notification.getByText(subject).last());
   await plank(page).getByText(subject).first().waitFor({ timeout: TIMEOUT });
-  await peer.click(sidebar(page).getByTestId('deck.toggleComplementarySidebar'));
-  await openComments(peer);
 };
 
 /** The requirements of the feature named `name`, as the space holds them. */
@@ -589,7 +590,7 @@ export const steps = [
     },
   },
   {
-    name: 'Bob opens "Chess" on its Specs tab.',
+    name: 'Bob opens "Chess" from Projects in the navigation tree, then its Specs tab.',
     subtitle: 'QA-11 step 3',
     run: async ({ peers: { alice, bob } }) => {
       await openProject(bob);
@@ -648,9 +649,20 @@ export const steps = [
     },
   },
   {
-    name: "Alice opens the Assistant in the companion and asks it to turn the draft into a full spec for a Composer chess plugin, with requirements for every feature and the plugin's types and operations as `type` and `op` blocks.",
+    name: `Bob comments on "Make Move"'s description, "${MOVE_QUESTION}", then closes his tab.`,
     subtitle: 'QA-11 step 6',
-    run: async ({ peers: { alice, bob }, speed }) => {
+    run: async ({ peers: { bob } }) => {
+      await showView(bob, 'document');
+      await openComments(bob);
+      await commentOnFeature(bob, 'Make Move', MOVE_QUESTION);
+      await hold(bob);
+      await bob.page.goto('about:blank');
+    },
+  },
+  {
+    name: "Alice opens the Assistant in the companion and asks it to turn the draft into the spec for a Composer chess plugin, with requirements for every feature and the plugin's types and operations as `type` and `op` blocks.",
+    subtitle: 'QA-11 step 7',
+    run: async ({ peers: { alice }, speed }) => {
       await ask(alice, 'feature-map', ASK);
       await waitFor(() => agentBusy(alice.page), { timeout: 30_000, what: 'the agent to start' });
       await speed(AGENT_SPEED);
@@ -673,18 +685,91 @@ export const steps = [
       if (embeds < features.length || types === 0 || ops === 0) {
         throw new Error(`the spec's text has ${embeds} features, ${types} type and ${ops} op blocks`);
       }
-      await bob.click(bob.page.getByTestId('toolbar-fit'));
-      for (const name of names) {
-        await card(bob.page, name).waitFor({ timeout: TIMEOUT });
-      }
       await hold(alice);
     },
   },
   {
-    name: 'On the canvas, Bob draws an arrow from "Make Move" to "Gameboard", then one from "Make Move" to "Move Validation".',
-    subtitle: 'QA-11 step 7',
+    name: `Alice answers Bob's question on "Make Move", "${MOVE_ANSWER}"`,
+    subtitle: 'QA-11 step 8',
+    run: async ({ peers: { alice } }) => {
+      await openComments(alice);
+      await thread(alice.page, MOVE_QUESTION).waitFor({ timeout: TIMEOUT });
+      await reply(alice, thread(alice.page, MOVE_QUESTION), MOVE_ANSWER);
+      await thread(alice.page, MOVE_ANSWER).waitFor({ timeout: TIMEOUT });
+      await hold(alice);
+    },
+  },
+  {
+    name: 'Bob opens Composer again.',
+    subtitle: 'QA-11 step 9',
+    run: async ({ peers: { bob }, speed }) => {
+      await speed(4);
+      await bob.page.goto(projectUrl);
+      await plank(bob.page).waitFor({ timeout: 120_000 });
+      await speed(1);
+      await clearChrome(bob);
+      await bob.page.locator('[role="tab"][aria-label="Notifications"][data-badge="1"]').waitFor({ timeout: TIMEOUT });
+      await bob.click(notificationsTab(bob.page));
+      await bob.page.getByTestId('messenger.notification').filter({ hasText: 'Make Move' }).first().waitFor();
+      await hold(bob);
+    },
+  },
+  {
+    name: `Bob opens the "Make Move" notification and replies "@${AGENT} ${MOVE_ASK}".`,
+    subtitle: 'QA-11 step 10',
+    run: async ({ peers: { bob }, speed }) => {
+      const before = await requirementsOf(bob.page, 'Make Move');
+      await openNotification(bob, 'Make Move');
+      const scope = thread(bob.page, MOVE_ANSWER);
+      await scope.waitFor({ timeout: TIMEOUT });
+      await bob.click(scope.getByTestId('thread.reply').last());
+      await bob.type(`@${AGENT.slice(0, 2)}`, { delay: 80 });
+      await bob.page
+        .locator('.cm-tooltip-autocomplete li')
+        .filter({ hasText: `@${AGENT}` })
+        .first()
+        .waitFor();
+      await bob.page.waitForTimeout(400);
+      await bob.page.keyboard.press('Enter');
+      // The mention completes with its own trailing space.
+      await bob.type(MOVE_ASK, { delay: 25 });
+      await bob.page.keyboard.press('Enter');
+      await speed(AGENT_SPEED);
+      await waitFor(async () => (await requirementsOf(bob.page, 'Make Move')).length > before.length, {
+        timeout: 5 * 60_000,
+        what: 'Make Move to gain a requirement',
+      });
+      await speed(1);
+      await hold(bob);
+    },
+  },
+  {
+    name: 'Bob resolves the thread.',
+    subtitle: 'QA-11 step 11',
+    run: async ({ peers: { alice, bob } }) => {
+      const scope = thread(bob.page, MOVE_QUESTION);
+      await scope.hover();
+      await bob.click(scope.getByTestId('thread.resolve'));
+      for (const peer of [alice, bob]) {
+        await waitFor(async () => (await thread(peer.page, MOVE_QUESTION).count()) === 0, {
+          what: `the thread to leave ${peer.name}'s active comments`,
+        });
+      }
+      await hold(bob);
+    },
+  },
+  {
+    name: 'Alice switches to Canvas. Bob opens "Chess" again and, on its canvas, draws an arrow from "Make Move" to "Gameboard", then one from "Make Move" to "Move Validation".',
+    subtitle: 'QA-11 step 12',
     run: async ({ peers: { alice, bob } }) => {
       await closeCompanion(alice);
+      await showView(alice, 'canvas');
+      await canvas(alice.page).waitFor({ timeout: TIMEOUT });
+      await openProject(bob);
+      await closeCompanion(bob);
+      await bob.click(plank(bob.page).getByTestId('projectsPlugin.tab.spec'));
+      await showView(bob, 'canvas');
+      await canvas(bob.page).waitFor({ timeout: TIMEOUT });
       for (const to of ['Gameboard', 'Move Validation']) {
         await drawDependency(bob, 'Make Move', to);
         await waitFor(async () => (await dependencies(alice.page)).includes(`Make Move → ${to}`), {
@@ -692,118 +777,15 @@ export const steps = [
           what: `Make Move to need ${to} at Alice's end`,
         });
       }
-      await bob.click(bob.page.getByTestId('toolbar-fit'));
-      await hold(alice);
-    },
-  },
-  {
-    name: 'Alice comments on "Gameboard"\'s description, "What does the board show when the game is over?", and on "Make Move"\'s, "Who checks a move, the board or the engine?", then closes her tab.',
-    subtitle: 'QA-11 step 8',
-    run: async ({ peers: { alice } }) => {
-      await showView(alice, 'document');
-      await openComments(alice);
-      await commentOnFeature(alice, 'Gameboard', BOARD_QUESTION);
-      await commentOnFeature(alice, 'Make Move', MOVE_QUESTION);
-      await hold(alice);
-      await alice.page.goto('about:blank');
-    },
-  },
-  {
-    name: `Bob answers both: "${BOARD_ANSWER}" on Gameboard and "${MOVE_ANSWER}" on Make Move.`,
-    subtitle: 'QA-11 step 9',
-    run: async ({ peers: { bob } }) => {
-      await showView(bob, 'document');
-      await openComments(bob);
-      for (const [question, answer] of [
-        [BOARD_QUESTION, BOARD_ANSWER],
-        [MOVE_QUESTION, MOVE_ANSWER],
-      ]) {
-        await thread(bob.page, question).waitFor({ timeout: TIMEOUT });
-        await reply(bob, thread(bob.page, question), answer);
-        await thread(bob.page, answer).waitFor({ timeout: TIMEOUT });
-      }
-      await hold(bob);
-    },
-  },
-  {
-    name: 'Alice opens Composer again.',
-    subtitle: 'QA-11 step 10',
-    run: async ({ peers: { alice }, speed }) => {
-      await speed(4);
-      await alice.page.goto(projectUrl);
-      await plank(alice.page).waitFor({ timeout: 120_000 });
-      await speed(1);
-      await clearChrome(alice);
-      await alice.page
-        .locator('[role="tab"][aria-label="Notifications"][data-badge="2"]')
-        .waitFor({ timeout: TIMEOUT });
-      await alice.click(notificationsTab(alice.page));
-      for (const subject of ['Gameboard', 'Make Move']) {
-        await alice.page.getByTestId('messenger.notification').filter({ hasText: subject }).first().waitFor();
-      }
-      await hold(alice);
-    },
-  },
-  {
-    name: `Alice opens the "Make Move" notification and replies "${MOVE_REPLY}"`,
-    subtitle: 'QA-11 step 11',
-    run: async ({ peers: { alice, bob } }) => {
-      await openNotification(alice, 'Make Move');
-      await reply(alice, thread(alice.page, MOVE_ANSWER), MOVE_REPLY);
-      await thread(bob.page, MOVE_REPLY).waitFor({ timeout: TIMEOUT });
-      await hold(alice);
-    },
-  },
-  {
-    name: `Alice opens the "Gameboard" notification and replies "@${AGENT} ${BOARD_ASK}".`,
-    subtitle: 'QA-11 step 12',
-    run: async ({ peers: { alice }, speed }) => {
-      const before = await requirementsOf(alice.page, 'Gameboard');
-      await openNotification(alice, 'Gameboard');
-      const scope = thread(alice.page, BOARD_ANSWER);
-      await alice.click(scope.getByTestId('thread.reply').last());
-      await alice.type(`@${AGENT.slice(0, 2)}`, { delay: 80 });
-      await alice.page
-        .locator('.cm-tooltip-autocomplete li')
-        .filter({ hasText: `@${AGENT}` })
-        .first()
-        .waitFor();
-      await alice.page.waitForTimeout(400);
-      await alice.page.keyboard.press('Enter');
-      // The mention completes with its own trailing space.
-      await alice.type(BOARD_ASK, { delay: 25 });
-      await alice.page.keyboard.press('Enter');
-      await speed(AGENT_SPEED);
-      await waitFor(async () => (await requirementsOf(alice.page, 'Gameboard')).length > before.length, {
-        timeout: 5 * 60_000,
-        what: 'Gameboard to gain a requirement',
-      });
-      await speed(1);
-      await hold(alice);
-    },
-  },
-  {
-    name: 'Alice resolves the "Gameboard" thread.',
-    subtitle: 'QA-11 step 13',
-    run: async ({ peers: { alice, bob } }) => {
-      const scope = thread(alice.page, BOARD_QUESTION);
-      await scope.hover();
-      await alice.click(scope.getByTestId('thread.resolve'));
-      for (const peer of [alice, bob]) {
-        await waitFor(async () => (await thread(peer.page, BOARD_QUESTION).count()) === 0, {
-          what: `the Gameboard thread to leave ${peer.name}'s active comments`,
-        });
-      }
       await hold(alice);
     },
   },
   {
     name: "Both scroll through the spec's text from the top.",
-    subtitle: 'QA-11 step 14',
+    subtitle: 'QA-11 step 13',
     run: async ({ peers: { alice, bob } }) => {
-      await openProject(alice, (page) => plank(page).getByTestId('projectsPlugin.tab.spec'));
-      await alice.click(plank(alice.page).getByTestId('projectsPlugin.tab.spec'));
       for (const peer of [alice, bob]) {
+        await showView(peer, 'document');
         await closeCompanion(peer);
         await specLine(peer.page, SUMMARY).waitFor({ timeout: TIMEOUT });
       }
