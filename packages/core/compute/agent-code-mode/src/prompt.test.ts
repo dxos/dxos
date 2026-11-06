@@ -72,6 +72,19 @@ describe('prompt', () => {
     expect(describeInput(Schema.suspend(() => Schema.Struct({ id: Schema.String })))).toEqual('{ id: string }');
   });
 
+  test('a union of more than four tagged variants is named by its tags', ({ expect }) => {
+    const variant = (tag: string) => Schema.TaggedStruct(tag, { text: Schema.String });
+    const many = Schema.Union(['a', 'b', 'c', 'd', 'e'].map(variant));
+    expect(describeInput(Schema.Struct({ block: many }))).toEqual(
+      '{ block: { _tag: "a" | "b" | "c" | "d" | "e", … } }',
+    );
+    // Four or fewer are still spelled out, since their fields are short enough to be worth stating.
+    const few = Schema.Union(['a', 'b'].map(variant));
+    expect(describeInput(Schema.Struct({ block: few }))).toEqual(
+      '{ block: { _tag: "a", text: string } | { _tag: "b", text: string } }',
+    );
+  });
+
   test('the effect dialect documents an operation by the schema Operation.invoke decodes against', ({ expect }) => {
     const Close = Operation.make({
       meta: { key: DXN.make('com.example.operation.close'), name: 'Close', description: 'Closes a task.' },
