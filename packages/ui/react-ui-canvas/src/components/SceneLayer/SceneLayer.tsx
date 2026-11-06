@@ -112,6 +112,7 @@ import {
 } from '../../utils/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
 import { renderMarkup } from './markup.ts';
+import { paintRuns } from './paint-order.ts';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
@@ -209,22 +210,19 @@ export const SceneLayer = memo(
       () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],
     );
-    // Paint order is the layers', bottom first: each layer's links, then its nodes, then its links' ends, so an upper
-    // layer covers a lower one whole. Within a layer it is z, with the selection on top: a selected node is being
-    // worked on and must not hide under a neighbour, while the model's order stays what the user arranged.
+    // Paint order is the layers', bottom first, so an upper layer covers a lower one whole. Within a layer it is one
+    // order over the nodes and the links together, by `z`: a shape drawn over a link covers it and a link drawn over a
+    // shape crosses it, exactly as the Views list lists them. Consecutive links share one `<svg>`, so a run of them is
+    // one element of the stack rather than one each.
     const groups = useMemo(() => {
       const layers = viewLayers(scene);
-      const nodes = sortByZ(Object.values(scene.nodes));
-      return layers.map((layer) => {
-        const onLayer = nodes.filter((node) => elementLayer(node, layers) === layer.id);
-        return {
-          layer,
-          nodes: selected?.size
-            ? [...onLayer.filter((node) => !selected.has(node.id)), ...onLayer.filter((node) => selected.has(node.id))]
-            : onLayer,
-          links: links.filter(({ link }) => elementLayer(link, layers) === layer.id),
-        };
-      });
+      return layers.map((layer) => ({
+        layer,
+        runs: paintRuns(
+          Object.values(scene.nodes).filter((node) => elementLayer(node, layers) === layer.id),
+          links.filter(({ link }) => elementLayer(link, layers) === layer.id),
+        ),
+      }));
     }, [scene, links, selected]);
     // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
     const styles = useAtomValue(lists.styles ?? NO_STYLES);
@@ -271,124 +269,135 @@ export const SceneLayer = memo(
             </svg>
             {groups.map((group) => (
               <Fragment key={group.layer.id}>
-                <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-                  {group.links.map(({ link, path, diagram }) => (
-                    <g key={link.id}>
-                      {/* A wide transparent twin makes the thin stroke easy to press. */}
-                      {handlers && (
-                        <path
-                          d={path}
-                          className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
-                          style={{ pointerEvents: 'stroke' }}
-                          strokeWidth={12 * unit}
-                          onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
-                          onPointerEnter={() => handlers.onLinkHover?.(link.id)}
-                          onPointerLeave={() => handlers.onLinkHover?.(undefined)}
-                          onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
-                          onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                {group.runs.map((run, index) =>
+                  run.kind === 'links' ? (
+                    <svg
+                      key={index}
+                      className='absolute overflow-visible pointer-events-none'
+                      style={fadeStyle}
+                      width={1}
+                      height={1}
+                    >
+                      {run.links.map(({ link, path, diagram }) => (
+                        <g key={link.id}>
+                          {/* A wide transparent twin makes the thin stroke easy to press. */}
+                          {handlers && (
+                            <path
+                              d={path}
+                              className='fill-none stroke-transparent pointer-events-auto cursor-pointer'
+                              style={{ pointerEvents: 'stroke' }}
+                              strokeWidth={12 * unit}
+                              onPointerDown={(event) => handlers.onLinkPointerDown?.(link, event)}
+                              onPointerEnter={() => handlers.onLinkHover?.(link.id)}
+                              onPointerLeave={() => handlers.onLinkHover?.(undefined)}
+                              onDoubleClick={(event) => handlers.onLinkDoubleClick?.(link, event)}
+                              onContextMenu={(event) => handlers.onLinkContextMenu?.(link, event)}
+                            />
+                          )}
+                          {diagram && link.connector ? (
+                            <DiagramLink
+                              path={path}
+                              markup={diagramLinkMarkup(link, link.connector, diagram, diagramMarkers)}
+                              highlight={
+                                plain
+                                  ? undefined
+                                  : selected?.has(link.id)
+                                    ? 'stroke-focus'
+                                    : hoveredLink === link.id
+                                      ? 'stroke-focus/50'
+                                      : undefined
+                              }
+                              linkId={link.id}
+                            />
+                          ) : (
+                            <LinkStroke
+                              id={`${markerId}-${link.id}`}
+                              kind={look.styleSet.link.kind}
+                              path={path}
+                              stroke={
+                                plain
+                                  ? lineClasses(lines.get(link.id)?.hue).stroke
+                                  : selected?.has(link.id)
+                                    ? 'stroke-focus'
+                                    : hoveredLink === link.id
+                                      ? 'stroke-focus/50'
+                                      : lineClasses(lines.get(link.id)?.hue).stroke
+                              }
+                              emphasis={!plain && (selected?.has(link.id) || hoveredLink === link.id)}
+                              width={linkWidth}
+                              lineStyle={lines.get(link.id)?.lineStyle}
+                              linkId={link.id}
+                              ends={linkMarkers(link)}
+                              endSize={END_BOX * cell}
+                              markerWidth={markerWidth}
+                            />
+                          )}
+                          {link.text && !diagram && (
+                            <LinkText
+                              path={path}
+                              text={link.text}
+                              backdrop={canvasFillClass(look, look.styleSet.link.caption)}
+                              textClass={CAPTION_TEXT[look.tone]}
+                              fontSize={lines.get(link.id)?.fontSize ?? LINK_FONT_SIZE}
+                            />
+                          )}
+                        </g>
+                      ))}
+                      {/* A run's ends paint over its own lines, so an end centred on a node's edge shows whole. */}
+                      {run.links.map(({ link, path, diagram }) =>
+                        // A groove draws its ends with its track.
+                        diagram || look.styleSet.link.kind === 'groove' ? null : (
+                          <path
+                            key={link.id}
+                            d={path}
+                            className='fill-none stroke-none'
+                            markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
+                            markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
+                          />
+                        ),
+                      )}
+                    </svg>
+                  ) : (
+                    <Fragment key={index}>
+                      {/* Above the layer's links, below its nodes; marked with the time it drew, which export waits on. */}
+                      {generated && run.nodes.some(isGeneratorNode) && (
+                        <GeneratedShapes
+                          lists={lists}
+                          registry={registry}
+                          zoom={zoom}
+                          depth={depth}
+                          t={generated.t}
+                          shapes={run.nodes.flatMap((node) => generated.frames[node.id]?.shapes ?? [])}
+                          style={fadeStyle}
                         />
                       )}
-                      {diagram && link.connector ? (
-                        <DiagramLink
-                          path={path}
-                          markup={diagramLinkMarkup(link, link.connector, diagram, diagramMarkers)}
-                          highlight={
-                            plain
-                              ? undefined
-                              : selected?.has(link.id)
-                                ? 'stroke-focus'
-                                : hoveredLink === link.id
-                                  ? 'stroke-focus/50'
-                                  : undefined
-                          }
-                          linkId={link.id}
+                      {run.nodes.map((node) => (
+                        <NodeFrame
+                          key={node.id}
+                          lists={lists}
+                          scene={scene}
+                          registry={registry}
+                          node={node}
+                          styles={styles}
+                          zoom={zoom}
+                          depth={depth}
+                          liveDepth={liveDepth}
+                          selected={!plain && (selected?.has(node.id) ?? false)}
+                          hovered={hover === node.id}
+                          opening={opening === node.id}
+                          fade={focus && focus.id !== node.id ? fadeStyle : dimmed === node.id ? DIMMED : undefined}
+                          chromeFade={focus?.id === node.id ? fadeStyle : undefined}
+                          editingPart={editing?.id === node.id ? editing.part : undefined}
+                          active={active === node.id}
+                          ghost={ghost === node.id}
+                          framed={ghost === node.id || (!!plain && (selected?.has(node.id) ?? false))}
+                          debug={debug}
+                          handlers={handlers}
                         />
-                      ) : (
-                        <LinkStroke
-                          id={`${markerId}-${link.id}`}
-                          kind={look.styleSet.link.kind}
-                          path={path}
-                          stroke={
-                            plain
-                              ? lineClasses(lines.get(link.id)?.hue).stroke
-                              : selected?.has(link.id)
-                                ? 'stroke-focus'
-                                : hoveredLink === link.id
-                                  ? 'stroke-focus/50'
-                                  : lineClasses(lines.get(link.id)?.hue).stroke
-                          }
-                          emphasis={!plain && (selected?.has(link.id) || hoveredLink === link.id)}
-                          width={linkWidth}
-                          lineStyle={lines.get(link.id)?.lineStyle}
-                          linkId={link.id}
-                          ends={linkMarkers(link)}
-                          endSize={END_BOX * cell}
-                          markerWidth={markerWidth}
-                        />
-                      )}
-                      {link.text && !diagram && (
-                        <LinkText
-                          path={path}
-                          text={link.text}
-                          backdrop={canvasFillClass(look, look.styleSet.link.caption)}
-                          textClass={CAPTION_TEXT[look.tone]}
-                          fontSize={lines.get(link.id)?.fontSize ?? LINK_FONT_SIZE}
-                        />
-                      )}
-                    </g>
-                  ))}
-                </svg>
-                {/* Above the layer's links, below its nodes; marked with the time it drew, which export waits on. */}
-                {generated && group.nodes.some(isGeneratorNode) && (
-                  <GeneratedShapes
-                    lists={lists}
-                    registry={registry}
-                    zoom={zoom}
-                    depth={depth}
-                    t={generated.t}
-                    shapes={group.nodes.flatMap((node) => generated.frames[node.id]?.shapes ?? [])}
-                    style={fadeStyle}
-                  />
+                      ))}
+                    </Fragment>
+                  ),
                 )}
-                {group.nodes.map((node) => (
-                  <NodeFrame
-                    key={node.id}
-                    lists={lists}
-                    scene={scene}
-                    registry={registry}
-                    node={node}
-                    styles={styles}
-                    zoom={zoom}
-                    depth={depth}
-                    liveDepth={liveDepth}
-                    selected={!plain && (selected?.has(node.id) ?? false)}
-                    hovered={hover === node.id}
-                    opening={opening === node.id}
-                    fade={focus && focus.id !== node.id ? fadeStyle : dimmed === node.id ? DIMMED : undefined}
-                    chromeFade={focus?.id === node.id ? fadeStyle : undefined}
-                    editingPart={editing?.id === node.id ? editing.part : undefined}
-                    active={active === node.id}
-                    ghost={ghost === node.id}
-                    framed={ghost === node.id || (!!plain && (selected?.has(node.id) ?? false))}
-                    debug={debug}
-                    handlers={handlers}
-                  />
-                ))}
-                {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
-                <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
-                  {group.links.map(({ link, path, diagram }) =>
-                    // A groove draws its ends with its track.
-                    diagram || look.styleSet.link.kind === 'groove' ? null : (
-                      <path
-                        key={link.id}
-                        d={path}
-                        className='fill-none stroke-none'
-                        markerStart={markerUrl(linkMarkers(link).start, 'start', lines.get(link.id)?.hue)}
-                        markerEnd={markerUrl(linkMarkers(link).end, 'end', lines.get(link.id)?.hue)}
-                      />
-                    ),
-                  )}
-                </svg>
               </Fragment>
             ))}
           </LatticeContext.Provider>
