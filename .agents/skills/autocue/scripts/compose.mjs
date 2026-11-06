@@ -63,6 +63,9 @@ const probeSize = (file) => {
 };
 
 /** Greedy word wrap to at most `limit` characters a line; a single longer word keeps its own line. */
+/** Step names mark code with backticks, which drawtext and a VTT cue would show as they are. */
+const plainText = (text) => text.replace(/`([^`]*)`/g, '$1');
+
 const wrapLines = (text, limit) =>
   text.split(/\s+/).reduce((lines, word) => {
     const last = lines.at(-1);
@@ -109,10 +112,15 @@ const filterPath = (file) => file.replace(/\\/g, '\\\\').replace(/:/g, '\\:').re
  * }} options
  * @returns {Promise<{ file: string, mp4?: string, vtt?: string, seconds: number, size: { width: number, height: number } }>}
  */
-export const composeSideBySide = async ({ inputs, captions = [], out, gap = 16, fps = 25, crf = 30, mp4 = false }) => {
+export const composeSideBySide = async ({ inputs, captions: given = [], out, gap = 16, fps = 25, crf = 30, mp4 = false }) => {
   if (inputs.length < 2) {
     throw new Error('side-by-side needs at least two inputs');
   }
+  const captions = given.map((caption) => ({
+    ...caption,
+    text: plainText(caption.text),
+    subtitle: caption.subtitle && plainText(caption.subtitle),
+  }));
   const textDir = path.join(path.dirname(out), `${path.basename(out, path.extname(out))}.text`);
   mkdirSync(textDir, { recursive: true });
 
