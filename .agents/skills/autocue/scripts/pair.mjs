@@ -26,9 +26,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { composeSideBySide } from './compose.mjs';
+import { canCompose, composeSideBySide } from './compose.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { recordingInfo } from './recording.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -74,8 +75,10 @@ const parseArgs = () => {
 };
 
 const options = parseArgs();
-if (!hasFullFfmpeg()) {
-  console.error('pair.mjs needs an ffmpeg with libvpx-vp9 on PATH (or FFMPEG_PATH): it records and composes with it');
+if (!hasFullFfmpeg() || !canCompose()) {
+  console.error(
+    "pair.mjs needs an ffmpeg with libvpx-vp9 and drawtext on PATH (or FFMPEG_PATH), such as Homebrew's ffmpeg-full: it records and composes with it",
+  );
   process.exit(1);
 }
 mkdirSync(options.out, { recursive: true });
@@ -369,6 +372,13 @@ try {
 } finally {
   // `stop` is what writes each pane's video, so it runs even after a failure: the take up to the failing step
   // is the evidence of where it went wrong.
+  // Read from a live page, so before the browser closes; `pack.mjs` needs it to bundle the take.
+  const recording = await recordingInfo({
+    page: peerList[0].page,
+    flowFile: path.resolve(options.flow),
+    appUrl: options.url,
+    target: 'browser',
+  });
   const stopped = await Promise.all(peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error }))));
   await browser.close();
 
@@ -383,6 +393,8 @@ try {
     })),
     steps: captions,
     speed: speedChanges,
+    flow: recording.flow,
+    recording,
     results,
   };
   writeFileSync(path.join(options.out, 'timeline.json'), JSON.stringify(timeline, null, 2));
