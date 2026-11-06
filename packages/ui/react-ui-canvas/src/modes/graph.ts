@@ -128,15 +128,26 @@ export const graphCenters = (
   };
   const origin =
     options.origin ?? (options.lattice ? latticeOrigin(extent, pitch) : centeredOrigin(extent, pitch, size));
-  return new Map(
-    graph.nodes.map(({ id }) => [
-      id,
-      overlay.positions[id] ?? {
-        x: origin.x + (slots.get(id)?.column ?? 0) * pitch.width,
-        y: origin.y + (slots.get(id)?.row ?? 0) * pitch.height,
-      },
-    ]),
+  const cellOf = ({ x, y }: Point) =>
+    `${Math.round((x - origin.x) / pitch.width)},${Math.round((y - origin.y) / pitch.height)}`;
+  // A node arranged into a cell a placed node holds moves along its row to the next free cell, so the two never stack.
+  const taken = new Set(
+    graph.nodes.flatMap(({ id }) => (overlay.positions[id] ? [cellOf(overlay.positions[id])] : [])),
   );
+  const arranged = graph.nodes
+    .filter(({ id }) => !overlay.positions[id])
+    .map(({ id }) => ({ id, column: slots.get(id)?.column ?? 0, row: slots.get(id)?.row ?? 0 }))
+    .sort((a, b) => a.row - b.row || a.column - b.column);
+  const centers = new Map<string, Point>();
+  for (const { id, column, row } of arranged) {
+    let center = { x: origin.x + column * pitch.width, y: origin.y + row * pitch.height };
+    while (taken.has(cellOf(center))) {
+      center = { x: center.x + pitch.width, y: center.y };
+    }
+    taken.add(cellOf(center));
+    centers.set(id, center);
+  }
+  return new Map(graph.nodes.map(({ id }) => [id, overlay.positions[id] ?? centers.get(id) ?? origin]));
 };
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */

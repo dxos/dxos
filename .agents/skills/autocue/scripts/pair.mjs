@@ -16,7 +16,7 @@
  *   node pair.mjs --flow packages/apps/composer-app/autocue/two-peer-collaboration.mjs \
  *     --url http://127.0.0.1:4173 --out /tmp/pair [--peers Alice,Bob] [--scale 2] [--mp4 on]
  *
- * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, sleep })` gets each
+ * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, speed, sleep })` gets each
  * peer by its lowercased name (`peers.alice.page`, `peers.alice.click(locator)`). Steps run in order; a
  * step's `name` is its caption unless it sets `caption: false` or captions itself.
  */
@@ -26,9 +26,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { composeSideBySide } from './compose.mjs';
+import { canCompose, composeSideBySide } from './compose.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { recordingInfo } from './recording.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -74,8 +75,10 @@ const parseArgs = () => {
 };
 
 const options = parseArgs();
-if (!hasFullFfmpeg()) {
-  console.error('pair.mjs needs an ffmpeg with libvpx-vp9 on PATH (or FFMPEG_PATH): it records and composes with it');
+if (!hasFullFfmpeg() || !canCompose()) {
+  console.error(
+    "pair.mjs needs an ffmpeg with libvpx-vp9 and drawtext on PATH (or FFMPEG_PATH), such as Homebrew's ffmpeg-full: it records and composes with it",
+  );
   process.exit(1);
 }
 mkdirSync(options.out, { recursive: true });
@@ -259,6 +262,51 @@ const caption = (text, subtitle) => {
   }
 };
 
+const SPEED_ID = '__demo_speed__';
+/** `speed` changes in ms from the shared cut, for `trim-static.mjs` to play those stretches faster. */
+const speedChanges = [];
+
+/**
+ * Plays what follows at `factor` times speed in the cut (`1` returns to normal), for stretches that are motion
+ * without content, like an agent working. Every pane carries a badge meanwhile, so the jump is not a lie.
+ */
+const speed = async (requested = 1) => {
+  const rounded = Math.round(Number(requested));
+  const factor = Number.isFinite(rounded) ? Math.max(1, rounded) : 1;
+  if (takeStart !== undefined) {
+    speedChanges.push({ ms: Date.now() - takeStart, factor });
+  }
+  await Promise.all(
+    peerList.map((peer) =>
+      peer.page.evaluate(
+        ({ id, factor }) => {
+          document.getElementById(id)?.remove();
+          if (factor === 1) {
+            return;
+          }
+          const badge = document.createElement('div');
+          badge.id = id;
+          badge.style.cssText = [
+            'position:fixed',
+            'top:16px',
+            'right:16px',
+            'z-index:2147483647',
+            'padding:6px 12px',
+            'border-radius:999px',
+            'background:rgba(17,17,17,0.85)',
+            'color:#fff',
+            'font:600 15px/1.2 ui-sans-serif,system-ui,sans-serif',
+            'pointer-events:none',
+          ].join(';');
+          badge.textContent = `\u23e9 ${factor}\u00d7`;
+          document.body.appendChild(badge);
+        },
+        { id: SPEED_ID, factor },
+      ),
+    ),
+  );
+};
+
 const stepsDir = path.join(options.out, 'steps');
 mkdirSync(stepsDir, { recursive: true });
 
@@ -300,7 +348,7 @@ try {
     }
     const started = Date.now();
     try {
-      await step.run({ peers, caption, sleep });
+      await step.run({ peers, caption, speed, sleep });
       results.push({ step: index + 1, name: step.name, ok: true, ms: Date.now() - started });
     } catch (error) {
       failed = true;
@@ -324,6 +372,17 @@ try {
 } finally {
   // `stop` is what writes each pane's video, so it runs even after a failure: the take up to the failing step
   // is the evidence of where it went wrong.
+  // Read from a live page, so before the browser closes; `pack.mjs` needs it to bundle the take.
+  // A failed read must not skip the stops and the close below, which save the take.
+  const recording = await recordingInfo({
+    page: peerList[0].page,
+    flowFile: path.resolve(options.flow),
+    appUrl: options.url,
+    target: 'browser',
+  }).catch((error) => {
+    console.error('could not read the recording metadata:', error);
+    return undefined;
+  });
   const stopped = await Promise.all(peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error }))));
   await browser.close();
 
@@ -337,6 +396,9 @@ try {
       offsetMs: peer.recorder.started - base,
     })),
     steps: captions,
+    speed: speedChanges,
+    flow: recording?.flow,
+    recording,
     results,
   };
   writeFileSync(path.join(options.out, 'timeline.json'), JSON.stringify(timeline, null, 2));

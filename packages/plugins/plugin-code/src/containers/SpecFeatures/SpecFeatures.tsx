@@ -84,10 +84,12 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
       const moved = ids.flatMap((id) => {
         const point = next[id];
         const current = positions[id];
-        return point && (point.x !== current?.x || point.y !== current?.y) ? [[id, point] as const] : [];
+        return point && (point.x !== current?.x || point.y !== current?.y)
+          ? [[id, { x: point.x, y: point.y }] as const]
+          : [];
       });
-      for (const [id, { x, y }] of moved) {
-        FeatureMap.setPosition(spec, id, { x, y });
+      if (moved.length > 0) {
+        FeatureMap.setPositions(spec, Object.fromEntries(moved));
       }
     },
     [spec, ids, positions],
@@ -136,6 +138,7 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
         onRemove={editing.removeFeature}
         onCreate={(position) => void createAt(position)}
         onAdd={addAt}
+        onArrange={() => FeatureMap.clearPositions(spec)}
       />
     </div>
   );

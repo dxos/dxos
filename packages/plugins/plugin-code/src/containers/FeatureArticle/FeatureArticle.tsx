@@ -32,6 +32,7 @@ import {
   getDependents,
 } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
+import { featureRelabel } from '../../extensions/feature-relabel.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget, useRequirementVerdicts } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 
@@ -70,7 +71,12 @@ const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExt
  */
 export const useFeatureValues = (subject: Feature.Feature) => {
   const [values, updateFeature] = useObject(subject);
-  const extensions = ProjectHooks.useFieldExtensions(subject);
+  const fieldExtensions = ProjectHooks.useFieldExtensions(subject);
+  const relabel = useMemo(() => featureRelabel(subject), [subject]);
+  const extensions = useCallback<typeof fieldExtensions>(
+    (field) => [...fieldExtensions(field), ...(field.path[0] === 'name' ? [relabel] : [])],
+    [fieldExtensions, relabel],
+  );
   const fieldMap = useMemo(() => makeFieldMap(subject, extensions), [subject, extensions]);
 
   const onValuesChanged = useCallback(

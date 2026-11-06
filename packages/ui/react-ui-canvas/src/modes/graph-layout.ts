@@ -153,6 +153,25 @@ export const graphDocument = (layout: Scene.LayoutRecord2D): Scene.SceneDocument
   models: [],
 });
 
+/**
+ * Every node's position: its own, or the centre the layout arranges it at, so a host that keeps them fixes the
+ * arrangement once rather than re-arranging on every edit. `placed` gives a node without a position its cell instead.
+ */
+export const pinGraph = (
+  graph: GraphModel,
+  options: GraphLayoutOptions,
+  positions: Readonly<Record<string, Point>>,
+  placed: Readonly<Record<string, Point>> = {},
+): Record<string, Point> => {
+  const { elements } = graphLayout(graph, options, { ...placed, ...positions });
+  return Object.fromEntries(
+    graph.nodes.flatMap(({ id }) => {
+      const center = positions[id] ?? elements[id]?.center;
+      return center ? [[id, center]] : [];
+    }),
+  );
+};
+
 /** Where a person placed shapes: the centres of the layout's pinned shapes, by id. */
 export const graphPositions = (layout: Scene.LayoutRecord2D): Record<string, Point> =>
   Object.fromEntries(

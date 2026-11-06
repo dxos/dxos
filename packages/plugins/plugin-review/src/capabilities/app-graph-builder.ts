@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -60,17 +61,18 @@ export default Capability.makeModule(
         id: 'commentToolbar',
         match: (node, get) =>
           findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
-        actions: (matched, get) => {
+        actions: (matched) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
           const viewState = capabilities.get(AttentionCapabilities.ViewState);
-          // The texts the node's comments cover: the object's, and those of the objects its scopes add (a spec's features).
-          const uris = [
+          // The texts the node's comments cover: the object's, and those of the objects its scopes add (a spec's
+          // features). Read when the action runs, since a feature added after the node's actions were built counts too.
+          const urisAtom = Atom.make((get) => [
             objectUri,
             ...get(commentScopesAtom).flatMap(
               (scope) => scope.resolve(object, get)?.targets.map((target) => Obj.getURI(target)) ?? [],
             ),
-          ];
+          ]);
 
           return Effect.succeed([
             {
@@ -93,10 +95,11 @@ export default Capability.makeModule(
                 }
 
                 // Else the comment editor focused last on one of the node's texts: a spec's, or a feature field drawn in it.
-                const state = capabilities
-                  .get(Capabilities.AtomRegistry)
-                  .get(capabilities.get(CommentCapabilities.State));
-                const fieldView = getFocusedEditor(state, uris);
+                const registry = capabilities.get(Capabilities.AtomRegistry);
+                const fieldView = getFocusedEditor(
+                  registry.get(capabilities.get(CommentCapabilities.State)),
+                  registry.get(urisAtom),
+                );
                 if (fieldView) {
                   createComment(fieldView);
                   return;
