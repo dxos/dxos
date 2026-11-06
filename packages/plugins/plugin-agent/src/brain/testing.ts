@@ -21,6 +21,12 @@ import { AgentOperation, BrainService } from '#types';
 
 import * as BrainMemory from './BrainMemory.ts';
 
+/** An `AgentService` for brain tests that never wake an agent, so a brain that tried fails loudly. */
+export const UNUSED_AGENTS: AgentService.Service = {
+  getSession: () => Effect.die('getSession is not used by these tests'),
+  hydrate: () => Effect.void,
+};
+
 export type TestBrainOptions = {
   /**
    * `session` submits a woken prompt to the chat's session, so a turn runs there; `record` only keeps
