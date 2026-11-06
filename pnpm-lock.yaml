@@ -16752,6 +16752,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

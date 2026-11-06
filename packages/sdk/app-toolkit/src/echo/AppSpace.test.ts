@@ -149,3 +149,48 @@ describe('space templates', () => {
     expect(AppSpace.getSpaceTemplateId(untagged)).toBeUndefined();
   });
 });
+
+describe('space plugins', () => {
+  const THREAD = 'org.dxos.plugin.thread';
+  const TABLE = 'org.dxos.plugin.table';
+
+  test('an untouched space has made no choice, so its members run their own sets', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    expect(AppSpace.getSpacePlugins(space)).toEqual({});
+    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
+  });
+
+  test('enabling a plugin makes it part of the space', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePluginEnabled(space, THREAD, true);
+    AppSpace.setSpacePluginEnabled(space, TABLE, false);
+
+    expect(AppSpace.getSpacePlugins(space)).toEqual({ [THREAD]: true, [TABLE]: false });
+    expect(AppSpace.getEnabledSpacePlugins(space)).toEqual([THREAD]);
+  });
+
+  test('a record naming nothing enabled is the space having made no choice', ({ expect }) => {
+    // Not "the space runs nothing": a space with every plugin off can do nothing, so the two collapse
+    // and the fallback to each member's own set survives (spec D-81).
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePluginEnabled(space, THREAD, false);
+    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
+  });
+
+  test('disabling the last plugin returns the space to deferring to its members', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePluginEnabled(space, THREAD, true);
+    AppSpace.setSpacePluginEnabled(space, THREAD, false);
+    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
+  });
+
+  test('a reset drops every decision', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePluginEnabled(space, THREAD, true);
+    AppSpace.setSpacePluginEnabled(space, TABLE, false);
+    AppSpace.clearSpacePlugins(space);
+
+    expect(AppSpace.getSpacePlugins(space)).toEqual({});
+    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
+  });
+});
