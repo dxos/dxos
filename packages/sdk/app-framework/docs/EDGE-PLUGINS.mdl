@@ -1785,3 +1785,27 @@ decision D-75: An operation that writes a type its plugin does not contribute li
   affects: [F-3.4]
   why: The operation states what it writes where it is defined, and `db.add` stays synchronous and independent of the type registry. Rejected: registering an added object's own static type in `db.add` whenever a type source is installed, which hides a missing declaration in every plugin running on EDGE.
 ```
+
+```mdl
+decision D-76: Enumeration — `listOperations`, `listSkills` and `listRegistry` — moves off operation-service and is answered from the registry, scoped to a named set of plugins rather than everything the registry holds. The registry is the whole published world, so an unscoped enumeration would offer a caller every plugin anyone ever uploaded; the scope is what makes the move possible at all. Fills in [D-37].
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-1.1, F-3.1]
+  why: operation-service is the only catalog today, so no plugin can be removed from its `makePlugins` without vanishing from discovery while its bundle sits in the registry ready to run. Scoped enumeration is the unlock for retiring it.
+```
+
+```mdl
+decision D-77: The immediate scope is a structured list of globally enabled plugins in compute-service's EDGE config, and enumeration queries the registry for those plugin keys only. The value is an object, not the comma-separated string the routing table uses, because Cloudflare vars carry JSON and a list of plugin keys has no reason to be parsed out of a string. The field is `EDGE_CONFIG.plugins.enabled`; registry-service answers a `catalogs(pluginKeys, channel)` RPC scoped to those keys, and compute-service merges the result with what operation-service serves, operation-service's records winning for a plugin it still holds. Fills in [D-76].
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-1.1]
+  why: It needs no new UX and no per-caller state, so it unblocks the migration now. Explicitly a stopgap: one list for every caller, edited by deploying.
+```
+
+```mdl
+decision D-78: The eventual scope is per-caller: a user's enabled plugins come from their settings space, which Composer already syncs to EDGE, and a space's and an agent's from their own enabled lists once Composer has UX to install plugins per space and per agent. An invocation running for a user reads the user's list; one running in a space reads the space's; one running as an agent reads the agent's. Fills in [D-76], supersedes [D-77] when the UX exists.
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-1.1]
+  why: Enabling a plugin is a per-user and per-space choice, and the data for the user case already travels to EDGE. The global list cannot express "this agent has these plugins", which is what the three running contexts — user, space, agent — each need.
+```
