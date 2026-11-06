@@ -58,7 +58,7 @@ describe('graphLayout', () => {
     expect(Object.values(view.links).map(({ type }) => type)).toEqual(['smart', 'smart', 'smart', 'smart']);
   });
 
-  test("a host type's fields, layer and lock reach the node the viewport draws", ({ expect }) => {
+  test("a host type's fields, layer, lock and style reach the node the viewport draws", ({ expect }) => {
     const layers = [
       { id: 'backdrop', name: 'Backdrop', z: 'a0' },
       { id: 'graph', name: 'Graph', z: 'a1' },
@@ -67,7 +67,14 @@ describe('graphLayout', () => {
       layers,
       shape: (node) =>
         node.id === 'app'
-          ? { type: 'diagram', layer: 'backdrop', locked: true, label: 'App', fields: { heading: { id: 'title' } } }
+          ? {
+              type: 'diagram',
+              layer: 'backdrop',
+              locked: true,
+              label: 'App',
+              fields: { heading: { id: 'title' } },
+              style: { border: false },
+            }
           : { type: 'card', layer: 'graph' },
       link: { type: 'curve', layer: 'graph' },
     });
@@ -78,6 +85,7 @@ describe('graphLayout', () => {
       locked: true,
       label: 'App',
       heading: { id: 'title' },
+      style: { border: false },
     });
     expect(view.links['app->ui']).toMatchObject({ type: 'curve', layer: 'graph' });
     expect(Object.keys(view.layers ?? {})).toEqual(['backdrop', 'graph']);

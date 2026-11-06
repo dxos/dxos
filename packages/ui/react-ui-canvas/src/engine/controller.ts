@@ -490,7 +490,8 @@ export const createCanvasController = ({
       fitMode().takeOver();
       select([]);
       registry.set(atoms.hover, undefined);
-      camera().animateTo(fitBounds(nodeBounds(portal), viewport(), inset()), open, DRILL_ANIMATION_MS);
+      open();
+      camera().animateTo(fitBounds(nodeBounds(portal), viewport(), inset()), undefined, DRILL_ANIMATION_MS);
       return;
     }
     if (open) {

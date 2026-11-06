@@ -14,6 +14,7 @@ import {
   type LinkEnds,
   type LinkType,
   type Node,
+  type NodeStyle,
   type Point,
   type Scene,
   type Size,
@@ -36,6 +37,8 @@ export type GraphShape = {
   label?: string;
   /** The type's own fields (a diagram frame's `element`, say). */
   fields?: Record<string, unknown>;
+  /** Overrides of the shape's style; a borderless one (a backdrop) takes no lattice cells. */
+  style?: NodeStyle;
 };
 
 export type GraphLayoutOptions = {
@@ -124,7 +127,7 @@ export const graphLayout = (
     };
   });
   graph.nodes.forEach((node, index) => {
-    const { type, size: shapeSize, layer, locked, label, fields } = shapeOf(node);
+    const { type, size: shapeSize, layer, locked, label, fields, style } = shapeOf(node);
     const title = label ?? (type === undefined ? (node.label ?? node.id) : undefined);
     elements[node.id] = {
       id: node.id,
@@ -135,6 +138,7 @@ export const graphLayout = (
       ...(title !== undefined ? { label: title } : {}),
       ...(layer !== undefined ? { layer } : {}),
       ...(locked ? { locked } : {}),
+      ...(style ? { overrides: style } : {}),
       ...(positions[node.id] ? { pinned: true } : {}),
       // A host type is drawn only from its canvas fields; a titled rect is drawn from the element's own.
       ...(type !== undefined ? { props: { canvas: { ...fields } } } : {}),
