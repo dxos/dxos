@@ -1829,7 +1829,8 @@ decision D-78: The eventual scope is per-caller: a user's enabled plugins come f
 ```mdl
 decision D-79: `OPERATION_SERVICE_PLUGINS` decides both halves of a key: the plugins it names are served by operation-service and described by operation-service's catalog record, and every other key runs in its bundle and is described by that bundle's catalog. One list rather than two, so `queryOperations` cannot describe a handler other than the one an invocation reaches. Enumeration stays unscoped by space: it carries no space id and reads the `latest` channel, so a space pinned to another channel ([F-2.2]) runs a version whose surface may differ from the one listed. Fills in [D-76].
   date: 2026-11-06
-  by: agent:claude
+  by: agent:claude-code
+  for: user:dmaretskyi
   affects: [F-4.2, F-5.1, F-6.6]
   why: Reviewing [D-76] showed [F-6.6] still promised a published bundle always wins, which the holdback list contradicts, and that nothing said which channel enumeration reads. The space-scoped case needs a space id on the enumeration RPC and is not worth it while the held set is shrinking to nothing.
 ```
