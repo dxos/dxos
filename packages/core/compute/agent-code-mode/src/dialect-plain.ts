@@ -20,7 +20,6 @@ import {
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
-import { describeInput, describeInputFields } from './fields.ts';
 
 /**
  * A typename the registry has no object type for — an expected failure of the model's code, so it
@@ -192,38 +191,14 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   ### Operations
 
   The skills above describe their capabilities as tools; in code mode they are NOT tools. Each one
-  is an async function on \`ops\`, taking one object with the fields listed under it (\`?\` marks an
-  optional field). A \`Ref<typename>\` field takes \`ref(obj)\` or the object's URI as the
-  conversation gives it (\`echo://…\`). A failed operation throws, so wrap a call you expect to
-  fail in \`try\`/\`catch\`. The names are kebab-case, so they are indexed rather than dotted.
+  is an async function on \`ops\`, taking one argument matching its parameter schema. A failed
+  operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
+  so they are indexed rather than dotted.
 
-  ${operations.map(renderPlainOperation).join('\n')}
+  ${operations
+    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
+    .join('\n')}
 `;
-
-/**
- * One operation's entry: its call, its description, and its input field by field with each field's own
- * description. Compact where the tool's JSON schema is not: that schema repeats the reference format in every
- * reference field and replaces the field's description with it.
- */
-const renderPlainOperation = (operation: SandboxOperation): string => {
-  const call = `await ops[${JSON.stringify(operation.name)}](input)`;
-  const fields = operation.definition && describeInputFields(operation.definition.input);
-  if (operation.definition === undefined) {
-    // An MCP tool has no schema of its own to read, only the JSON schema it was declared with.
-    return renderOperation(operation, () => call);
-  }
-  const head = `- \`${call}\` — ${operation.description ?? 'No description.'}`;
-  if (fields === undefined) {
-    return `${head}\n  input: ${describeInput(operation.definition.input)}`;
-  }
-  return [
-    head,
-    ...fields.map(
-      ({ name, type, optional, description }) =>
-        `  - \`${name}${optional ? '?' : ''}\`: ${type}${description ? ` — ${description}` : ''}`,
-    ),
-  ].join('\n');
-};
 
 /** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
 export const camelCase = (name: string): string =>

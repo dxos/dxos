@@ -74,32 +74,6 @@ export const describeInput = (schema: Schema.Top): string => {
   return labelOf(ast, 0);
 };
 
-/** One field of an operation's input, as the model is told about it. */
-export type InputField = SandboxField & {
-  /** The field's own description, which a tool's JSON schema replaces with its type's for a reference. */
-  readonly description?: string;
-};
-
-/**
- * An operation's input as a list of top-level fields with their descriptions, or `undefined` when the input is not a
- * closed struct (then {@link describeInput} labels it whole).
- */
-export const describeInputFields = (schema: Schema.Top): InputField[] | undefined => {
-  const ast = schema.ast;
-  if (!SchemaAST.isObjects(ast) || ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
-    return undefined;
-  }
-  return ast.propertySignatures.map((property) => {
-    const description = SchemaAST.resolveDescription(property.type);
-    return {
-      name: String(property.name),
-      type: labelOf(property.type, 1),
-      optional: SchemaAST.isOptional(property.type),
-      ...(description !== undefined && { description }),
-    };
-  });
-};
-
 /** The `_tag` literal of a tagged struct, if it is one. */
 const tagOf = (ast: SchemaAST.AST): string | undefined => {
   if (SchemaAST.isSuspend(ast)) {
