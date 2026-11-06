@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'vitest';
@@ -72,7 +72,8 @@ describe('buildInProcess', () => {
   });
 
   test('fails with a hint when the project does not install Vite', async ({ expect }) => {
-    rmSync(join(dir, 'node_modules'));
+    // A symlink to a directory, which `rmSync` refuses as a directory on some Node versions.
+    unlinkSync(join(dir, 'node_modules'));
     const error = await EffectEx.runPromise(Effect.flip(buildInProcess({ dir, outDir: join(dir, 'dist'), env: {} })));
     expect(error.message).toContain('vite is not installed');
   });
