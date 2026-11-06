@@ -50,7 +50,9 @@ const TIE_BREAK = 'F-3.2';
 const NEW_TIE_BREAK =
   'The best slot is the one the most respondents are free for; on a tie, the one whose next slot keeps the most of the same respondents free, so the meeting can run over; then the earliest. With no marks there is no best slot.';
 
-const planPrompt = (milestone) => `Plan ${milestone} from the spec.`;
+// Plans have left out the milestone's check, or its links, which the instructions ask for, so the prompt names both.
+const planPrompt = (milestone) =>
+  `Plan ${milestone} from the spec: a task per feature, then Check ${milestone} linked to each of those features.`;
 const REVALIDATE_PROMPT = `I changed ${TIE_BREAK} on "${HEATMAP}". Revalidate it.`;
 
 const FINISHED = ['done', 'review'];
@@ -1098,6 +1100,12 @@ export const steps = [
     name: 'Plan and delegate M-2',
     done: async ({ page }) => tasksOf(await snapshot(page), M2.id).some((task) => task.assigned),
     run: async ({ demo, page }) => {
+      // Half an hour of agent work slows the page until M-2's agents time out, so M-2 starts on a fresh one.
+      await demo.speed({ factor: FAST });
+      await page.reload();
+      await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 300_000 });
+      await page.waitForTimeout(BEAT * 4);
+      await demo.speed({ factor: 1 });
       await demo.caption({ value: 'Next: lay out both pages' });
       await freshChat(page);
       await ask(demo, page, planPrompt(M2.id));
@@ -1119,7 +1127,7 @@ export const steps = [
         subtitle: 'Checked against the scenario before it deploys',
         position: 'top',
       });
-      await watchMilestone(demo, page, M2, 40);
+      await watchMilestone(demo, page, M2, 60);
       await demo.caption({
         value: 'With its tasks done, M-2 is operational',
         subtitle: 'Both pages checked, then deployed',
