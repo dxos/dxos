@@ -29,7 +29,7 @@ import { hexToHue, isTruthy } from '@dxos/util';
 
 import { baseTheme, createFontTheme, editorGutter } from '../../styles/index.ts';
 import { automerge } from '../collab/automerge/index.ts';
-import { SpaceAwarenessProvider, awareness } from '../collab/awareness/index.ts';
+import { type AwarenessProvider, SpaceAwarenessProvider, awareness } from '../collab/awareness/index.ts';
 import { emptyPlaceholder } from '../completion/placeholder.ts';
 import { focus } from '../state/focus.ts';
 import { scrollPastEnd } from '../streaming/scrolling/index.ts';
@@ -295,12 +295,20 @@ export type DataExtensionsProps<T> = {
   text?: Doc.Accessor<T>;
   messenger?: Messenger;
   identity?: DataExtensionsIdentity | null;
+  /** Wraps the presence channel's provider, so editors nested in this one can publish carets on it. */
+  wrapAwareness?: (provider: AwarenessProvider) => AwarenessProvider;
 };
 
 /**
  * Wires document sync (automerge) and presence (awareness) for a text accessor.
  */
-export const createDataExtensions = <T>({ id, text, messenger, identity }: DataExtensionsProps<T>): Extension[] => {
+export const createDataExtensions = <T>({
+  id,
+  text,
+  messenger,
+  identity,
+  wrapAwareness = (provider) => provider,
+}: DataExtensionsProps<T>): Extension[] => {
   const extensions: Extension[] = [];
   if (text) {
     extensions.push(automerge(text));
@@ -311,16 +319,18 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
     const hue = (identity.data?.hue as ChromaticPalette | undefined) ?? hexToHue(peerId);
     extensions.push(
       awareness(
-        new SpaceAwarenessProvider({
-          messenger,
-          channel: `awareness.${id}`,
-          peerId,
-          info: {
-            darkColor: `var(--color-${hue}-border)`,
-            lightColor: `var(--color-${hue}-border)`,
-            displayName: identity.displayName ?? generateName(peerId),
-          },
-        }),
+        wrapAwareness(
+          new SpaceAwarenessProvider({
+            messenger,
+            channel: `awareness.${id}`,
+            peerId,
+            info: {
+              darkColor: `var(--color-${hue}-border)`,
+              lightColor: `var(--color-${hue}-border)`,
+              displayName: identity.displayName ?? generateName(peerId),
+            },
+          }),
+        ),
       ),
     );
   }

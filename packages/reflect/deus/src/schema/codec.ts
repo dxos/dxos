@@ -679,3 +679,65 @@ export const fieldRange = (
   const field = block.fields.find((candidate) => candidate.name === name && candidate.key === key);
   return field && valueRange(field);
 };
+
+/** A part of a block an editor edits as text: its title, its inline prose, a field, or one keyed line. */
+export type BlockPart = { part: 'title' } | { part: 'prose' } | { part: 'field'; name: string; key?: string };
+
+/** A part's text as an editor shows it, and the source range it is read from; empty at its insertion point when absent. */
+export const partSource = (
+  text: string,
+  block: SourceBlock,
+  schema: BlockSchema,
+  part: BlockPart,
+): { value: string; from: number; to: number } => {
+  const value = decodeBlock(text, block, schema);
+  switch (part.part) {
+    case 'title':
+      return block.header.title
+        ? { value: value.title ?? '', ...block.header.title }
+        : { value: '', from: block.header.to, to: block.header.to };
+    case 'prose': {
+      const lines = proseLines(block);
+      return lines.length > 0
+        ? { value: value.prose ?? '', from: lines[0].from + lines[0].indent, to: lines[lines.length - 1].to }
+        : { value: '', from: block.header.to, to: block.header.to };
+    }
+    case 'field': {
+      const range = fieldRange(block, part.name, part.key) ?? { from: block.to, to: block.to };
+      const field = value.fields[part.name];
+      const text =
+        part.key === undefined
+          ? typeof field === 'string'
+            ? field
+            : ''
+          : ((field as readonly Entry[] | undefined)?.find(({ key }) => key === part.key)?.text ?? '');
+      return { value: text, ...range };
+    }
+  }
+};
+
+/** The changes that set one part of a block to `next`. */
+export const patchPart = (
+  text: string,
+  block: SourceBlock,
+  schema: BlockSchema,
+  part: BlockPart,
+  next: string,
+): Change[] => {
+  const value = decodeBlock(text, block, schema);
+  switch (part.part) {
+    case 'title':
+      return patchBlock(text, block, schema, { ...value, title: next });
+    case 'prose':
+      return patchBlock(text, block, schema, { ...value, prose: next });
+    case 'field': {
+      const field =
+        part.key === undefined
+          ? next
+          : ((value.fields[part.name] ?? []) as readonly Entry[]).map((entry) =>
+              entry.key === part.key ? { ...entry, text: next } : entry,
+            );
+      return patchBlock(text, block, schema, { ...value, fields: { ...value.fields, [part.name]: field } });
+    }
+  }
+};

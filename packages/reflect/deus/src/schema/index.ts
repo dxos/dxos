@@ -3,13 +3,16 @@
 //
 
 export {
+  type BlockPart,
   type BlockValue,
   type Entry,
   type FieldValue,
   type Row,
   decodeBlock,
   fieldRange,
+  partSource,
   patchBlock,
+  patchPart,
 } from './codec.ts';
 export {
   type DialectRegistry,
@@ -36,7 +39,7 @@ export {
   parseSourceBlocks,
   scanBlocks,
 } from './source.ts';
-export { type Change, applyChanges, minimalChange } from './text.ts';
+export { type Change, type OffsetMap, applyChanges, minimalChange, offsetMap } from './text.ts';
 export {
   BLOCK_ROLES,
   type BlockRole,

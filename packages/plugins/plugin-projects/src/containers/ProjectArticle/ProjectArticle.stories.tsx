@@ -71,6 +71,23 @@ const SPEC_CONTENT = [
   'An inbox that sorts itself, and agents that answer what they can.',
   '',
   'Mail syncs from each provider into the space, where the agents read it.',
+  '',
+  '```mdl',
+  'feat k7q2x: Sorted inbox',
+  '  status: in-progress',
+  '  Mail lands in the folder its sender and subject suggest.',
+  '',
+  "  req m3pza: A message from a known sender goes to that sender's folder.",
+  '  req w8rtn: A message the rules cannot place stays in the inbox.',
+  '```',
+  '',
+  '```mdl',
+  'op Sort: Moves a message to its folder',
+  '  desc: Reads the message, picks a folder by its rules, and moves it there.',
+  '  input:',
+  '    message: Message   # the message to sort',
+  '  output: Folder',
+  '```',
 ].join('\n');
 const TALK_SPEC_NAME = 'Launch talk';
 const NEW_SPEC_NAME = 'Launch video';
@@ -189,7 +206,9 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
 
   // The project's specs, which put the Specs tab and the overview's summary lines on the article.
-  const spec = space.db.add(Spec.make({ name: SPEC_NAME, content: SPEC_CONTENT }));
+  const spec = space.db.add(
+    Spec.make({ name: SPEC_NAME, content: SPEC_CONTENT, dialects: ['org.dxos.spec.software'] }),
+  );
   const talk = space.db.add(Spec.make({ name: TALK_SPEC_NAME, content: TALK_SPEC_CONTENT }));
   Obj.update(project, (project) => {
     project.specs.push(Ref.make(spec), Ref.make(talk));
@@ -422,6 +441,57 @@ export const WithSpec: Story = {
     await expect(canvas.queryByTestId('projectsPlugin.overflow')).toBeNull();
     // With no plugin contributing a view for its dialects, a spec shows its text alone, with no view toggle.
     await expect(canvas.queryByTestId('projectsPlugin.specView.document')).toBeNull();
+  },
+};
+
+/**
+ * A spec's blocks show as forms over their kinds' schemas: a feature's title, status and requirements. Editing a
+ * requirement in its form rewrites that requirement's line of the spec's text and nothing else.
+ */
+export const SpecBlockForms: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+    await showTab(canvas, 'spec');
+    // The editor is rebuilt as the spec packages' extensions arrive, so each element is read from the settled editor.
+    const featureCard = () => {
+      const card = canvas.queryAllByTestId('spec-block').find((element) => element.dataset.kind === 'feat');
+      if (!card) {
+        throw new Error('no feature card');
+      }
+      return card;
+    };
+    await waitFor(() => expect(featureCard()).toHaveTextContent('Sorted inbox'), { timeout: 30_000 });
+    await expect(featureCard()).toHaveTextContent('F-1.2');
+    await expect(canvas.getAllByTestId('spec-block').map((element) => element.dataset.kind)).toEqual(['feat', 'op']);
+
+    const requirement = () => {
+      const content = within(featureCard())
+        .getByTestId('spec-block.req.m3pza')
+        .querySelector<HTMLElement>('.cm-content');
+      const view = content && EditorView.findFromDOM(content);
+      if (!view?.state.doc.toString().includes('known sender')) {
+        throw new Error('no requirement editor');
+      }
+      return view;
+    };
+    await waitFor(requirement, { timeout: 10_000 });
+    const view = requirement();
+    view.dispatch({ changes: { from: view.state.doc.length, insert: ' Always.' }, userEvent: 'input.type' });
+    const text = () => project.specs[0]?.target?.content.target?.content ?? '';
+    await waitFor(
+      () =>
+        expect(text()).toContain("  req m3pza: A message from a known sender goes to that sender's folder. Always.\n"),
+      { timeout: 5_000 },
+    );
+    await expect(text()).toContain('  req w8rtn: A message the rules cannot place stays in the inbox.\n');
+
+    // Typing keeps the field focused while each keystroke rewrites the spec's text around it.
+    view.focus();
+    view.dispatch({ selection: { anchor: view.state.doc.length } });
+    await userEvent.keyboard(' Twice.');
+    await waitFor(() => expect(text()).toContain("sender's folder. Always. Twice.\n"), { timeout: 5_000 });
   },
 };
 

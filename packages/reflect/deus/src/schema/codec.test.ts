@@ -7,10 +7,19 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
-import { type BlockValue, type Entry, type Row, decodeBlock, patchBlock } from './codec.ts';
+import {
+  type BlockPart,
+  type BlockValue,
+  type Entry,
+  type Row,
+  decodeBlock,
+  partSource,
+  patchBlock,
+  patchPart,
+} from './codec.ts';
 import { SOFTWARE_DIALECT, keyedFields, parseDialectHeader, resolveBlockSchemas } from './dialects.ts';
 import { type SourceBlock, parseSourceBlocks } from './source.ts';
-import { applyChanges } from './text.ts';
+import { applyChanges, offsetMap } from './text.ts';
 import { type BlockSchema } from './types.ts';
 
 const fence = (...lines: string[]) => ['```mdl', ...lines, '```'].join('\n');
@@ -189,13 +198,21 @@ const corpus = execSync("git ls-files '*.mdl'", { cwd: root, encoding: 'utf8' })
   .split('\n')
   .map((path) => ({ path, text: readFileSync(join(root, path), 'utf8') }));
 
-const eachBlock = (visit: (text: string, block: SourceBlock, schema: BlockSchema, index: number) => void) => {
+const eachBlock = (
+  visit: (
+    text: string,
+    block: SourceBlock,
+    schema: BlockSchema,
+    index: number,
+    schemas: ReadonlyMap<string, BlockSchema>,
+  ) => void,
+) => {
   for (const { text } of corpus) {
     const schemas = schemasOf(text);
     blocksOf(text, schemas).forEach((block, index) => {
       const schema = schemas.get(block.kind);
       if (schema) {
-        visit(text, block, schema, index);
+        visit(text, block, schema, index, schemas);
       }
     });
   }
@@ -299,6 +316,52 @@ describe('patchBlock over the repository', () => {
       }
     });
     expect(edits).toBeGreaterThan(500);
+    expect(failures.slice(0, 3)).toEqual([]);
+  });
+
+  test('a part maps onto its source and an edit through it reads back', ({ expect }) => {
+    let parts = 0;
+    const failures: string[] = [];
+    eachBlock((text, block, schema, index, schemas) => {
+      // A fence holding several blocks, against the one-block rule, reads its later headers as prose.
+      if (block.indent === 0) {
+        return;
+      }
+      const value = decodeBlock(text, block, schema);
+      const candidates: BlockPart[] = [
+        { part: 'title' },
+        ...(schema.inlineProse ? [{ part: 'prose' } as const] : []),
+        ...schema.fields.flatMap((field): BlockPart[] =>
+          value.raw.includes(field.name)
+            ? []
+            : field.type.kind === 'prose'
+              ? [{ part: 'field', name: field.name }]
+              : field.type.kind === 'keyed'
+                ? ((value.fields[field.name] ?? []) as Entry[]).map(({ key }) => ({
+                    part: 'field',
+                    name: field.name,
+                    key,
+                  }))
+                : [],
+        ),
+      ];
+      for (const part of candidates) {
+        const source = partSource(text, block, schema, part);
+        if (!source.value) {
+          continue;
+        }
+        parts++;
+        const map = offsetMap(source.value, text.slice(source.from, source.to), source.from);
+        const misplaced = [...source.value].findIndex((char, i) => /\S/.test(char) && text[map.toSource(i)] !== char);
+        const next = `${source.value} Edited.`;
+        const out = applyChanges(text, patchPart(text, block, schema, part, next));
+        const reread = partSource(out, blocksOf(out, schemas)[index], schema, part);
+        if (misplaced !== -1 || reread.value !== next) {
+          failures.push(`${JSON.stringify(part)}: ${text.slice(block.from, block.to)}`);
+        }
+      }
+    });
+    expect(parts).toBeGreaterThan(5_000);
     expect(failures.slice(0, 3)).toEqual([]);
   });
 });

@@ -3,7 +3,7 @@
 //
 
 import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
-import { type Extension, Facet, type Line } from '@codemirror/state';
+import { type EditorState, type Extension, Facet, type Line } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
 /** Where a slash command runs: the `/name` typed (`from`–`to`) and the text before it on its line. */
@@ -20,8 +20,25 @@ export type SlashCommand = {
 /** The commands each extension package contributes; `slashCommands` lists them all. */
 export const slashCommand = Facet.define<SlashCommand>();
 
+/** Commands that depend on the text, such as one per block kind the spec defines; a contributed command of the same name wins. */
+export const slashCommandSource = Facet.define<(state: EditorState) => readonly SlashCommand[]>();
+
+const commandsOf = (state: EditorState): SlashCommand[] => {
+  const commands = [...state.facet(slashCommand)];
+  const names = new Set(commands.map(({ name }) => name));
+  for (const source of state.facet(slashCommandSource)) {
+    for (const command of source(state)) {
+      if (!names.has(command.name)) {
+        names.add(command.name);
+        commands.push(command);
+      }
+    }
+  }
+  return commands;
+};
+
 const source = (context: CompletionContext): CompletionResult | null => {
-  const commands = context.state.facet(slashCommand);
+  const commands = commandsOf(context.state);
   const word = context.matchBefore(/\/[\w-]*$/);
   if (commands.length === 0 || !word || (word.from === word.to && !context.explicit)) {
     return null;

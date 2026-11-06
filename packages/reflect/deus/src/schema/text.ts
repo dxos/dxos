@@ -104,3 +104,63 @@ export const reprose = (source: string, text: string, { column = 0, indent }: { 
   });
   return [...kept, ...out].join('\n');
 };
+
+/** Offsets between a decoded value and the source it was read from. */
+export type OffsetMap = {
+  /** The source offset of a value offset. */
+  toSource: (offset: number) => number;
+  /** The value offset of a source offset; undefined outside the source. */
+  fromSource: (offset: number) => number | undefined;
+};
+
+const isSpace = (char: string) => /\s/.test(char);
+
+/**
+ * Maps between a value and the source at `from` it decodes, which differ in whitespace and in source
+ * characters the value drops: each non-whitespace character of the value maps to the next equal one of
+ * the source, and a whitespace run maps to the start of the source's.
+ */
+export const offsetMap = (value: string, source: string, from = 0): OffsetMap => {
+  const positions = new Array<number>(value.length + 1);
+  let j = 0;
+  for (let i = 0; i < value.length; i++) {
+    if (isSpace(value[i])) {
+      positions[i] = j;
+      while (i + 1 < value.length && isSpace(value[i + 1])) {
+        positions[++i] = j;
+      }
+      while (j < source.length && isSpace(source[j])) {
+        j++;
+      }
+      continue;
+    }
+    while (j < source.length && source[j] !== value[i]) {
+      j++;
+    }
+    positions[i] = Math.min(j, source.length);
+    j = Math.min(j + 1, source.length);
+  }
+  positions[value.length] = value.length === 0 ? 0 : Math.max(positions[value.length - 1] + 1, 0);
+  positions[value.length] = Math.min(positions[value.length], source.length);
+  return {
+    toSource: (offset) => from + positions[Math.max(0, Math.min(offset, value.length))],
+    fromSource: (offset) => {
+      const local = offset - from;
+      if (local < 0 || local > source.length) {
+        return undefined;
+      }
+      // The last value offset at or before the source offset.
+      let low = 0;
+      let high = value.length;
+      while (low < high) {
+        const middle = Math.ceil((low + high) / 2);
+        if (positions[middle] <= local) {
+          low = middle;
+        } else {
+          high = middle - 1;
+        }
+      }
+      return low;
+    },
+  };
+};
