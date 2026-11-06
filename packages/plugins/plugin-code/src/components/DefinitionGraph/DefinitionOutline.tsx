@@ -9,7 +9,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { type DefinitionCluster, UNSHARED_CLUSTER_ID, kindStyle } from '../SpecModel/index.ts';
+import { type DefinitionCluster, UNSHARED_CLUSTER_ID } from '../SpecModel/index.ts';
 import { type DefinitionViewModel } from './DefinitionChip.tsx';
 
 const clusterTitle = (t: (key: string, options?: object) => string, cluster: DefinitionCluster): string =>
@@ -115,7 +115,7 @@ export const DefinitionOutline = ({ view, onOpen }: DefinitionOutlineProps) => {
           end={count > 1 ? `×${count}` : undefined}
           testId='definition-outline.definition'
         >
-          <Icon.Icon icon={kindStyle(definition.kind).icon} size='xs' classNames='shrink-0' />
+          <Icon.Icon icon={definition.style.icon} size='xs' classNames='shrink-0' />
           <span className='truncate font-mono'>{definition.external?.fragment ?? id}</span>
         </Row>
       )

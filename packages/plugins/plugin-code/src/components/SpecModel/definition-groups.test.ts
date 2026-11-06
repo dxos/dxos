@@ -16,10 +16,10 @@ const SPEC = [
   ...block('type Theme'),
   ...block('op build: Builds a project.', '  input: { project: Ref<Project> }'),
   ...block('op lint: Lints a file.', '  input: { file: Ref<File> }'),
-  ...block('feat F-1: Build', '  req F-1.1: op:build compiles a Project.'),
-  ...block('feat F-2: Lint', '  req F-2.1: op:lint checks each File of a Project.'),
-  ...block('feat F-3: Watch', '  req F-3.1: Rebuilds on save, as F-1 does.'),
-  ...block('scenario T-1: Build runs', '  when: op:build is invoked', '  then: it succeeds'),
+  ...block('feat F-1: Build', '  uses: [build, Project]', '  req F-1.1: op:build compiles a Project.'),
+  ...block('feat F-2: Lint', '  uses: [File, lint, Project]', '  req F-2.1: op:lint checks each File of a Project.'),
+  ...block('feat F-3: Watch', '  depends: [F-1]', '  req F-3.1: Rebuilds on save, as F-1 does.'),
+  ...block('scenario T-1: Build runs', '  covers: [build]', '  when: op:build is invoked', '  then: it succeeds'),
 ].join('\n');
 
 const graph = buildDefinitionGraph(SPEC);
@@ -42,7 +42,7 @@ describe('definition groups', () => {
     const { groups, clusters, ungrouped } = groupDefinitions(graph);
     const byId = new Map(groups.map((group) => [group.id, group]));
     expect(byId.get('F-1')).toMatchObject({ owned: ['build'], shared: ['Project'], verifiedBy: ['T-1'] });
-    expect(byId.get('F-2')).toMatchObject({ owned: ['lint', 'File'], shared: ['Project'] });
+    expect(byId.get('F-2')).toMatchObject({ owned: ['File', 'lint'], shared: ['Project'] });
     expect(byId.get('F-3')).toMatchObject({ owned: [], shared: [], buildsOn: ['F-1'] });
     // F-3 shares nothing, so it joins the cluster of the feature it builds on.
     expect(clusters.map(({ hub, groups, shared }) => ({ hub, groups, shared }))).toEqual([

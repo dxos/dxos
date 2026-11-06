@@ -63,8 +63,8 @@ describe('spec model', () => {
       relation: 'references',
       field: 'fields',
     });
-    // A requirement id resolves to its feature, and a member to its type.
-    expect(definitions.find(({ id }) => id === 'T-1')).toMatchObject({ dependsOn: ['F-1'], mentions: ['Meeting'] });
+    // A requirement id resolves to its feature; a name in prose is not a link.
+    expect(definitions.find(({ id }) => id === 'T-1')).toMatchObject({ dependsOn: ['F-1'] });
     expect(definitions.find(({ id }) => id === 'Room')).toMatchObject({ section: 'Types', dependsOn: [] });
     expect(definitions.find(({ id }) => id === 'F-1')).toMatchObject({ section: 'Features', requirements: 2 });
     expect(buildDefinitionGraph(CALLS_SPEC).definitions.some(({ kind }) => kind === 'decision' || kind === 'ext')).toBe(

@@ -55,7 +55,7 @@ const GroupFrame = ({ view, group, selected, lit, onSelect, onOpen }: GroupFrame
         onClick={() => onSelect(group.id)}
         data-testid='definition-map.select'
       >
-        <Icon.Icon icon={kindStyle(anchor.kind).icon} classNames='mt-0.5 shrink-0' />
+        <Icon.Icon icon={anchor.style.icon} classNames='mt-0.5 shrink-0' />
         <span className='flex flex-col min-w-0'>
           {anchor.title && anchor.title !== anchor.id ? (
             <>

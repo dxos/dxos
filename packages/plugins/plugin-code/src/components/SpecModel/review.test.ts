@@ -71,11 +71,10 @@ describe('external definitions', () => {
       title: 'An ECHO object.',
       external: { target: 'spec', resolved: true },
     });
-    // A code key is not a definition, and a name in the description is a mention rather than a reference.
+    // A code key is not a definition, and a name in the description is not a link.
     expect(graph.definitions.some(({ id }) => id.endsWith('Spec.ts#make'))).toBe(false);
     expect(graph.definitions.find(({ id }) => id === 'F-1')).toMatchObject({
       dependsOn: ['github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Obj'],
-      mentions: ['Thing'],
     });
   });
 

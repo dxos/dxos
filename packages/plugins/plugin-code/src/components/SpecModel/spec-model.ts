@@ -16,6 +16,7 @@ import { type SpecIndex } from '@dxos/deus/spec-index';
 
 import { resolveSpecRef } from '../SpecEditor/spec-ref.ts';
 import { type Declarations, type DefinitionRelation, relationOf, specDeclarations } from './declarations.ts';
+import { type KindStyle, kindStyle, styleOf } from './kinds.ts';
 
 /** A top-level spec block that other blocks can depend on. */
 export type DefinitionModel = {
@@ -23,13 +24,13 @@ export type DefinitionModel = {
   kind: string;
   /** Its type's declared role; `structure` when undeclared, and `context` for a block outside the spec. */
   role: Role;
+  /** Its type's declared icon and hue. */
+  style: KindStyle;
   title?: string;
   /** The `##` heading the block sits under; absent before the first one and on external nodes. */
   section?: string;
-  /** Ids this definition references through a typed field or a key, in order of first reference. */
+  /** Ids this definition references through a linked field or a key, in order of first reference. */
   dependsOn: string[];
-  /** Ids its prose names that no field or key references. */
-  mentions: string[];
   /** How many code symbols the review links it (or its requirements) to. */
   codeRefs: number;
   /** How many `req` lines a feature holds. */
@@ -40,8 +41,8 @@ export type DefinitionModel = {
   external?: ExternalModel;
 };
 
-/** How one definition reaches another: a typed field, a `github:` key or spec reference, or a name in its prose. */
-export type DefinitionEdgeKind = 'reference' | 'external' | 'mention';
+/** How one definition reaches another: a linked field, or a `github:` key or spec reference. */
+export type DefinitionEdgeKind = 'reference' | 'external';
 
 export type DefinitionEdge = {
   id: string;
@@ -50,8 +51,8 @@ export type DefinitionEdge = {
   kind: DefinitionEdgeKind;
   /** The field that holds a reference. */
   field?: string;
-  /** How a reference or key relates its ends; a mention has none. */
-  relation?: DefinitionRelation;
+  /** How the field or key relates its ends. */
+  relation: DefinitionRelation;
 };
 
 /** Where an external node comes from; its id is the `github:` key itself. */
@@ -267,9 +268,9 @@ const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel =
     id: formatSourceKey(key),
     kind: block?.type ?? 'spec',
     role: 'context',
+    style: kindStyle(block?.type ?? 'spec'),
     title: block?.title ?? key.fragment ?? key.path,
     dependsOn: [],
-    mentions: [],
     codeRefs: 0,
     requirements: 0,
     external: { target: 'spec', key, ...(key.fragment && { fragment: key.fragment }), resolved: block !== undefined },
@@ -302,8 +303,8 @@ const REF_VALUE = /\bRef\s*[<(]\s*([A-Za-z][\w.-]*)/g;
 /**
  * Every definition of a spec with an edge to each block a linked field of it names, as its type's links relate them,
  * and to each block of another spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key). A
- * link read from the other end is turned round, so a part's `part-of` is its whole's `composes`. Names in any other
- * field or in prose are kept apart as mentions, and code symbols a review links to it are counted rather than drawn.
+ * link read from the other end is turned round, so a part's `part-of` is its whole's `composes`. A name in a field with
+ * no link, or in prose, is not an edge, and code symbols a review links to it are counted rather than drawn.
  */
 export const buildDefinitionGraph = (
   text: string,
@@ -377,22 +378,15 @@ export const buildDefinitionGraph = (
       const to = link(key);
       to && add(to, 'external', 'references');
     });
-    const dependsOn = [...targets];
-    // References and keys are removed first so their words are not read as names of this spec's blocks.
-    const local = refs
-      .reduceRight((stripped, { from, to }) => `${stripped.slice(0, from)} ${stripped.slice(to)}`, prose)
-      .replace(SOURCE_KEYS, ' ');
-    const mentions = namedIds(local, ids, id).filter((to) => !targets.has(to));
-    mentions.forEach((to) => edges.push({ id: `${id}~>${to}`, from: id, to, kind: 'mention' }));
     const section = sectionAt(sections, from);
     return {
       id,
       kind: type,
       role: declarations.get(type)?.role ?? 'structure',
+      style: styleOf(declarations.get(type)),
       ...(title && { title }),
       ...(section && { section }),
-      dependsOn,
-      mentions,
+      dependsOn: [...targets],
       codeRefs: codeRefs.get(id) ?? 0,
       requirements: type === 'feat' ? body.split('\n').filter((line) => /^\s*req\s/.test(line)).length : 0,
       ...(Object.keys(facts).length > 0 && { facts }),
@@ -412,14 +406,10 @@ export type DefinitionSelection = DefinitionGraphModel & {
   kinds: string[];
 };
 
-/**
- * Drops the given kinds, and every edge to or from them, from a definition graph; mentions are dropped too unless
- * asked for.
- */
+/** Drops the given kinds, and every edge to or from them, from a definition graph. */
 export const selectDefinitions = (
   { definitions, edges }: DefinitionGraphModel,
   exclude: Iterable<string>,
-  { mentions = false }: { mentions?: boolean } = {},
 ): DefinitionSelection => {
   const excluded = new Set(exclude);
   const keptIds = new Set(definitions.filter(({ kind }) => !excluded.has(kind)).map(({ id }) => id));
@@ -428,9 +418,7 @@ export const selectDefinitions = (
     .filter(({ id }) => keptIds.has(id))
     .map((definition) => ({ ...definition, dependsOn: definition.dependsOn.filter((id) => keptIds.has(id)) }));
   const byId = new Map(kept.map((definition) => [definition.id, definition]));
-  const keptEdges = edges.filter(
-    ({ from, to, kind }) => byId.has(from) && byId.has(to) && (mentions || kind !== 'mention'),
-  );
+  const keptEdges = edges.filter(({ from, to }) => byId.has(from) && byId.has(to));
   const dependents = new Map<string, number>();
   keptEdges.forEach(({ to }) => dependents.set(to, (dependents.get(to) ?? 0) + 1));
   return {

@@ -111,7 +111,6 @@ export const translations = [
         'definition-graph.hint.outline':
           'Point at a block to see which groups name it; click it to see everything it touches',
         'definition-graph.hint.related': 'Click a card to centre on it',
-        'definition-graph.mention.label': 'mentioned',
         'definition-graph.requirements.label_one': '{{count}} requirement',
         'definition-graph.requirements.label_other': '{{count}} requirements',
         'definition-map.cluster.label': 'Around {{hub}}',

@@ -8,13 +8,7 @@ import { type VerdictStatus } from '@dxos/deus/review';
 import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  type ChangeKind,
-  type DefinitionGrouping,
-  type DefinitionModel,
-  STATUS_STYLE,
-  kindStyle,
-} from '../SpecModel/index.ts';
+import { type ChangeKind, type DefinitionGrouping, type DefinitionModel, STATUS_STYLE } from '../SpecModel/index.ts';
 import { type CardFact } from './definition-facts.ts';
 
 /** What every Definitions view draws from: the definitions, how they group, and how review and diff mark them. */
@@ -71,7 +65,7 @@ export const DefinitionChip = ({ view, id, count = 0, lit, onOpen }: DefinitionC
       data-change={change}
       data-status={status}
     >
-      <Icon.Icon icon={kindStyle(definition.kind).icon} size='xs' classNames='shrink-0' />
+      <Icon.Icon icon={definition.style.icon} size='xs' classNames='shrink-0' />
       <span className='truncate'>{definition.external?.fragment ?? id}</span>
       {count > 1 && <span className='shrink-0 text-description'>×{count}</span>}
       {status && (

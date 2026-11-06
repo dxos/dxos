@@ -12,17 +12,17 @@ import { mx } from '@dxos/ui-theme';
 
 import { CodeNamespace } from '../../namespace.ts';
 import { type DecisionModel } from '../ChangelogGraph/index.ts';
-import { type DefinitionEdge, STATUS_STYLE, kindStyle } from '../SpecModel/index.ts';
+import { type DefinitionEdge, STATUS_STYLE } from '../SpecModel/index.ts';
 import { type Connector, ConnectorLayer } from './Connectors.tsx';
 import { CHANGE_FRAME, type DefinitionViewModel } from './DefinitionChip.tsx';
 
 /** A neighbour of the focused block and how the two are linked. */
-type Neighbour = { id: string; fields: string[]; mention: boolean };
+type Neighbour = { id: string; fields: string[] };
 
 type NodeCardProps = {
   view: DefinitionViewModel;
   id: string;
-  /** The fields that link it to the focus, or that it is named in prose. */
+  /** The fields that link it to the focus. */
   via?: Neighbour;
   focused?: boolean;
   /** The connector end it answers to; a block both above and below the focus has one per row. */
@@ -39,7 +39,7 @@ const NodeCard = ({ view, id, via, focused, node = id, onOpen }: NodeCardProps) 
   }
   const status = definition.external ? undefined : view.statusOf(id);
   const change = view.changeOf(id);
-  const { icon, hue } = kindStyle(definition.kind);
+  const { icon, hue } = definition.style;
   return (
     <button
       type='button'
@@ -80,7 +80,6 @@ const NodeCard = ({ view, id, via, focused, node = id, onOpen }: NodeCardProps) 
             {field}
           </Tag.Tag>
         ))}
-        {via?.mention && via.fields.length === 0 && <Tag.Tag>{t('definition-graph.mention.label')}</Tag.Tag>}
       </span>
     </button>
   );
@@ -92,9 +91,8 @@ const neighboursOf = (edges: readonly DefinitionEdge[], focus: string, end: 'fro
   for (const edge of edges) {
     const [near, far] = end === 'to' ? [edge.from, edge.to] : [edge.to, edge.from];
     if (near === focus && far !== focus) {
-      const neighbour = byId.get(far) ?? { id: far, fields: [], mention: false };
+      const neighbour = byId.get(far) ?? { id: far, fields: [] };
       edge.field && !neighbour.fields.includes(edge.field) && neighbour.fields.push(edge.field);
-      neighbour.mention ||= edge.kind === 'mention';
       byId.set(far, neighbour);
     }
   }
@@ -134,7 +132,7 @@ const BELOW = 'related:below';
 
 export type DefinitionRelatedProps = {
   view: DefinitionViewModel;
-  /** Every edge, mentions included, so the anchors naming it in prose are drawn too. */
+  /** Every edge of the spec, so the anchors naming it are drawn even when its view hides their kind. */
   edges: readonly DefinitionEdge[];
   decisions: readonly DecisionModel[];
   /** The block drawn in the middle. */
@@ -170,27 +168,17 @@ export const DefinitionRelated = ({ view, edges, decisions, focus, onOpen, onSho
   const belowRow = useRef<HTMLDivElement>(null);
   const aboveWrapped = useWrapped(aboveRow, [above]);
   const belowWrapped = useWrapped(belowRow, [below]);
-  const connectors = useMemo<Connector[]>(() => {
-    const onlyMentioned = ({ fields, mention }: Neighbour) => mention && fields.length === 0;
-    return [
+  const connectors = useMemo<Connector[]>(
+    () => [
       ...(aboveWrapped
-        ? [{ id: `${ABOVE}->${focus}`, from: ABOVE, to: focus, dashed: above.every(onlyMentioned) }]
-        : above.map((neighbour) => ({
-            id: `${neighbour.id}->${focus}`,
-            from: `${ABOVE}:${neighbour.id}`,
-            to: focus,
-            dashed: onlyMentioned(neighbour),
-          }))),
+        ? [{ id: `${ABOVE}->${focus}`, from: ABOVE, to: focus }]
+        : above.map(({ id }) => ({ id: `${id}->${focus}`, from: `${ABOVE}:${id}`, to: focus }))),
       ...(belowWrapped
-        ? [{ id: `${focus}->${BELOW}`, from: focus, to: BELOW, dashed: below.every(onlyMentioned) }]
-        : below.map((neighbour) => ({
-            id: `${focus}->${neighbour.id}`,
-            from: focus,
-            to: `${BELOW}:${neighbour.id}`,
-            dashed: onlyMentioned(neighbour),
-          }))),
-    ];
-  }, [above, below, focus, aboveWrapped, belowWrapped]);
+        ? [{ id: `${focus}->${BELOW}`, from: focus, to: BELOW }]
+        : below.map(({ id }) => ({ id: `${focus}->${id}`, from: focus, to: `${BELOW}:${id}` }))),
+    ],
+    [above, below, focus, aboveWrapped, belowWrapped],
+  );
   const live = useMemo(
     () => decisions.filter((decision) => !decision.supersededBy && affects(decision, focus)).reverse(),
     [decisions, focus],

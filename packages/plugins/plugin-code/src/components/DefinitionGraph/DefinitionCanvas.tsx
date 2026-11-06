@@ -24,13 +24,7 @@ import { type Node, type Scene, nodeBase } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { CodeNamespace } from '../../namespace.ts';
-import {
-  type DefinitionEdge,
-  type DefinitionGroup,
-  type DefinitionModel,
-  STATUS_STYLE,
-  kindStyle,
-} from '../SpecModel/index.ts';
+import { type DefinitionEdge, type DefinitionGroup, type DefinitionModel, STATUS_STYLE } from '../SpecModel/index.ts';
 import {
   type CompiledLevels,
   type DefinitionLevelsOptions,
@@ -146,7 +140,7 @@ const CardFace = ({ card, opens }: { card: SceneNode; opens: boolean }) => {
   if (!definition) {
     return null;
   }
-  const { icon, hue } = kindStyle(definition.kind);
+  const { icon, hue } = definition.style;
   const status = definition.external ? undefined : view.statusOf(card.ref);
   const change = view.changeOf(card.ref);
   const title = definition.title && definition.title !== card.ref ? definition.title : undefined;
@@ -238,7 +232,7 @@ const createRegistry = (open: (node: Node) => (() => void) | undefined) =>
 
 export type DefinitionCanvasProps = {
   view: DefinitionViewModel;
-  /** Every edge, mentions included, for the block levels. */
+  /** Every edge of the spec, for the block levels. */
   edges: readonly DefinitionEdge[];
   /** Double-clicking a block of another spec opens it. */
   onActivate?: (definition: DefinitionModel) => void;

@@ -158,9 +158,9 @@ export const Outline: Story = {
   },
 };
 
-/** One block and everything it touches: the features naming SourceFile above it, what it names below, its checks. */
+/** One block and everything it touches: the features naming CodeProject above it, what it names below, its checks. */
 export const Related: Story = {
-  args: { content: CODE_SPEC, defaultFocus: 'SourceFile' },
+  args: { content: CODE_SPEC, defaultFocus: 'CodeProject' },
   decorators: [withLayout({ layout: 'column' })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

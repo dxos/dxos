@@ -112,9 +112,7 @@ export const clusterScene = (
   const nodes = new Map<string, SceneNode>();
   const add = (ref: string, extra: Partial<Extract<SceneNode, { kind: 'definition' }>> = {}) =>
     nodes.has(ref) || nodes.set(ref, { id: ref, kind: 'definition', ref, ...extra });
-  const relationOf = new Map(
-    edges.flatMap(({ from, to, relation }) => (relation ? [[`${from}->${to}`, relation]] : [])),
-  );
+  const relationOf = new Map(edges.map(({ from, to, relation }) => [`${from}->${to}`, relation]));
   const named = (from: string, to: string): SceneEdge => {
     const relation = relationOf.get(`${from}->${to}`);
     return { id: `${from}->${to}`, from, to, ...(relation && { relation }) };
@@ -154,7 +152,7 @@ const SIDE_WIDTH = 3;
 
 /**
  * One block and what touches it, each side in a frame: what names it above, and what it names and the checks that
- * name it below. Mentions in prose are dashed; field references are labelled with the field.
+ * name it below. Each link is labelled with its field.
  */
 export const blockScene = (
   byId: ReadonlyMap<string, DefinitionModel>,
@@ -169,17 +167,7 @@ export const blockScene = (
   const link = (id: string, from: string, to: string, edge: DefinitionEdge, against = false) => {
     const existing = sceneEdges.get(id);
     const label = edge.field ?? existing?.label;
-    const dashed = (existing?.dashed ?? true) && !edge.field;
-    const relation = edge.relation ?? existing?.relation;
-    sceneEdges.set(id, {
-      id,
-      from,
-      to,
-      ...(label && { label }),
-      dashed,
-      ...(against && { against }),
-      ...(relation && { relation }),
-    });
+    sceneEdges.set(id, { id, from, to, ...(label && { label }), ...(against && { against }), relation: edge.relation });
   };
   for (const edge of edges) {
     if (edge.from === edge.to || !byId.has(edge.from) || !byId.has(edge.to)) {
