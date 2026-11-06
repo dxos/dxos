@@ -44,11 +44,14 @@ ext plugin
   desc: |
     A Composer plugin: what it is for and the modules it adds. The identifier is the plugin's
     class name; the inline prose is its purpose in one line.
+  role: context
   fields:
     id: URI                     # the plugin id, as in the document's frontmatter
     desc?: Prose                # what the plugin is for, and what it leaves to other plugins
     dependsOn?: URI[]           # runtime plugin dependencies, as in dx.config.ts
     modules: ProseList          # `- Name: what it contributes`, one per Plugin.addModule
+  links:
+    dependsOn: depends-on
   syntax: |
     plugin CodePlugin: Authors and reviews DEUS specs.
       id: org.dxos.plugin.code

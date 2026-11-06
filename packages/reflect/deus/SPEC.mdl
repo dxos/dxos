@@ -89,6 +89,16 @@ feat F-7: Spec dependencies
   req F-7.7: The spec index of the dxos repository is generated at build time and bundled with plugin-code. The spec viewer opens a referenced spec scrolled to the item (to the top for a bare id), and draws a reference it cannot resolve as a broken link with the lint message on hover.
 ```
 
+```mdl
+feat F-8: Dialects declare roles and links
+  req F-8.1: An `ext` block may give its block type a `role` (`anchor`, `structure`, `verification` or `context`) and `links`, which map each field whose values name other blocks to a relationship (`lang/core.mdl`, Roles and Links).
+  req F-8.2: The relationships are `extends`, `generalizes`, `implements`, `composes`, `part-of`, `aggregates`, `references`, `depends-on` and `verifies`, each with a UML reading; `generalizes` and `part-of` are read from the named block.
+  req F-8.3: In a `composes` or `aggregates` field, a value written as `Ref<X>` or `Ref(X)` references X without holding it.
+  req F-8.4: A spec's own `ext` for a block type its dialect declares overrides the dialect's role, and its links field by field. An `ext` that extends another starts from the parent's role and links.
+  req F-8.5: `@dxos/deus/dialect` bundles the dialects in `lang/` by id, resolves ids to their texts together with every dialect they extend, and reads the declarations from texts.
+  req F-8.6: The code dialect (`lang/code.mdl`) declares the blocks software specs are written in. The video dialect (`lang/video.mdl`) is a sample second dialect, with an example script in `lang/examples/launch-video.mdl`.
+```
+
 ## Changelog
 
 Backfilled on 2026-10-20 from the session that built the changelog,
@@ -640,4 +650,23 @@ decision D-64: A block header inside a fence is a line after the fence's first l
   why: A block body is always indented, so a column-0 line of a known type is never body text; on the repo's specs this finds exactly the hidden headers and no prose line.
   rejected:
     - Any column-0 line of the header form, which would also flag undeclared types such as `surface` lines that list surfaces.
+```
+
+```mdl
+decision D-65: How blocks group and link belongs in each dialect, not in the tools that read it. A second dialect beside the software one, such as a mostly theoretical video dialect, shows the model is general and makes it more real. Links need more kinds than internal and external, such as owning and not owning, so a software spec can be drawn as a UML-like diagram.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-8]
+```
+
+```mdl
+decision D-66: Roles and links are fields of `ext`. A link names a relationship from a fixed set that maps onto UML: generalization, realization, composition, aggregation, association and dependency, with `part-of` and `generalizes` for a field written on the part or the subtype's base, and `verifies` for checks. A new code dialect declares the software blocks once, since about seventy specs declare `type`, `op` and `component` in their own appendix; those declarations keep the dialect's role and links. Fills in [D-65].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8]
+  why: A tool that reads only roles and relationships groups and draws a dialect it has never seen, as the video sample shows.
+  rejected:
+    - Inferring links from field types (`TypeRef`, `RefList`); they are written inconsistently (`URI[]`, `ServiceList`, `FieldMap`), and a type says nothing about owning.
+    - Adding roles and links to each spec's appendix; seventy copies to keep in step.
 ```

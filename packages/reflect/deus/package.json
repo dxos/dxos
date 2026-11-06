@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./dialect": {
+      "source": "./src/dialect/index.ts",
+      "types": "./dist/types/src/dialect/index.d.ts",
+      "import": "./dist/lib/dialect.mjs"
+    },
     "./extension": {
       "source": "./src/extension/index.ts",
       "types": "./dist/types/src/extension/index.d.ts",

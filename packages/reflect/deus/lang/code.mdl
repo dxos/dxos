@@ -1,0 +1,179 @@
+---
+id: org.dxos.spec.code
+name: DSL.Code
+version: 1.0
+extends:
+  - org.dxos.spec.core
+  - org.dxos.spec.changelog
+---
+
+The code dialect: the blocks a software spec is written in. A `feat` states what the code must do
+and groups its requirements; types, operations, components, services, capabilities and modules are
+what it is built from; a `scenario` checks it. Their links make a spec a UML model: a type composes
+the types of its fields and extends its bases, an operation depends on its input and output, a
+service composes its operations.
+
+Many specs still declare these blocks in their own appendix. Rule 4 of the core language's Roles and
+Links applies: an appendix declaration keeps this dialect's role, and its own links add to these.
+
+## Extensions
+
+| Term         | URI                           |
+| ------------ | ----------------------------- |
+| `capability` | `org.dxos.mdl.capability@1.0` |
+| `component`  | `org.dxos.mdl.component@1.0`  |
+| `db`         | `org.dxos.mdl.db@1.0`         |
+| `feat`       | `org.dxos.mdl.feat@1.0`       |
+| `module`     | `org.dxos.mdl.module@1.0`     |
+| `op`         | `org.dxos.mdl.op@1.1`         |
+| `scenario`   | `org.dxos.mdl.scenario@1.0`   |
+| `service`    | `org.dxos.mdl.service@1.0`    |
+| `type`       | `org.dxos.mdl.type@1.0`       |
+
+## Definitions
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  nesting: self
+  inline-prose: true
+  role: anchor
+  fields:
+    desc?: Prose
+    req: RequirementList
+    depends?: FeatRef[]          # features this one needs first
+  links:
+    depends: depends-on
+```
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  role: structure
+  fields:
+    desc?: Prose
+    fields?: FieldMap            # a field typed `Ref<X>` points at X; any other names a part
+    literals?: UnionList
+    extends?: TypeRef[]
+    variants?: TypeRef[]         # the types a union is one of
+  links:
+    extends: extends
+    fields: composes
+    variants: generalizes
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.1
+  desc: A named operation with typed inputs, outputs, and declared errors.
+  role: structure
+  fields:
+    key?: NSID
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+  links:
+    errors: depends-on
+    input: depends-on
+    output: depends-on
+    requires: depends-on
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  role: structure
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+  links:
+    emits: depends-on
+    props: depends-on
+    slots: aggregates
+    state: composes
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  role: structure
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                  # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+  links:
+    errors: depends-on
+    ops: composes
+```
+
+```mdl
+ext capability
+  uri: org.dxos.mdl.capability@1.0
+  desc: A typed slot in the app-framework Capability registry; `multi: true` marks a contributable collection.
+  role: structure
+  fields:
+    desc?: Prose
+    type: TypeRef
+    events?: EventList
+    multi?: boolean
+  links:
+    events: depends-on
+    type: references
+```
+
+```mdl
+ext module
+  uri: org.dxos.mdl.module@1.0
+  desc: An ESM namespace module, re-exported from index.ts as `export * as <Name>`.
+  role: structure
+  fields:
+    desc?: Prose
+    api: ApiMap                  # public members reached as `<Name>.<member>`
+  links:
+    api: depends-on
+```
+
+```mdl
+ext db
+  uri: org.dxos.mdl.db@1.0
+  desc: A store and what it holds.
+  role: structure
+  fields:
+    desc?: Prose
+    backend?: Prose
+    entities?: TypeRef[]
+    queries?: ProseList
+    note?: Prose
+  links:
+    entities: aggregates
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  role: verification
+  fields:
+    covers?: RefList             # the features and requirements it checks
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+  links:
+    covers: verifies
+```
