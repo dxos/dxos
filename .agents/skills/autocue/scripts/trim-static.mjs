@@ -243,6 +243,8 @@ const captions = (timeline.steps ?? [])
   .toSorted((a, b) => a.ms - b.ms)
   .map((step) => ({
     ...step,
+    // Step names mark code with backticks, which a chapter title would show as they are.
+    text: step.text.replace(/`([^`]*)`/g, '$1'),
     frame: Math.round((step.ms / 1000) * options.fps),
   }));
 
