@@ -4,7 +4,7 @@
 
 import * as Yaml from 'yaml';
 
-import { parseFrontmatter } from './frontmatter.ts';
+import { type SlideFrontmatter, parseFrontmatter } from './frontmatter.ts';
 import { type SlotName } from './remark-slidev.ts';
 
 /** A text replacement in a slide's markdown, with where the cursor should land afterwards. */
@@ -13,11 +13,14 @@ export type SlideEdit = { from: number; to: number; insert: string; cursor: numb
 // The same leading block `remark-frontmatter` reads: `---` on the first line, YAML, then a closing `---`.
 const FRONTMATTER = /^---[ \t]*\r?\n([\s\S]*?)\r?\n?---[ \t]*(?:\r?\n|$)/;
 
-/** Whether a slide's frontmatter sets `hide: true`, which leaves it out when the deck is presented. */
-export const isHiddenSlide = (content: string): boolean => {
+/** A slide's frontmatter alone, read without parsing the markdown body. */
+export const readFrontmatter = (content: string): SlideFrontmatter => {
   const match = FRONTMATTER.exec(content);
-  return match ? parseFrontmatter(match[1]).frontmatter.hide === true : false;
+  return match ? parseFrontmatter(match[1]).frontmatter : {};
 };
+
+/** Whether a slide's frontmatter sets `hide: true`, which leaves it out when the deck is presented. */
+export const isHiddenSlide = (content: string): boolean => readFrontmatter(content).hide === true;
 
 /**
  * Sets (or, for `undefined`, removes) frontmatter keys, keeping the block's other keys, order and comments;
