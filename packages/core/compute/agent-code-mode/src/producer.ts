@@ -26,14 +26,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import {
-  type CallLabel,
-  EVAL_TOOL_NAME,
-  type Evaluation,
-  evalCode,
-  labelEvalCall,
-  makeEvalToolkit,
-} from './eval-tool.ts';
+import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -158,6 +151,7 @@ const runCodeModeTurn = ({
           const runIteration = (turn: number) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => session.context.sync());
+              evaluations.clear();
               const skills = session.context.getSkills();
               // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
               const mcps = yield* AiSession.connectMcpServers(
@@ -224,25 +218,24 @@ const runCodeModeTurn = ({
   );
 
 /**
- * The request's evaluations, matched to the `eval` results they produced. A results message carries only the call
- * id, so the call's code is noted when the call is written and the evaluation of that code is the one taken; the
- * tool calls of a message run one at a time, so evaluations of the same code arrive in call order.
+ * The request's evaluations by the `eval` call each answered, so a result written to the feed takes the operations
+ * its own call ran. An evaluation whose result is never written (the call was interrupted) is dropped when the next
+ * iteration starts.
  */
 const makeEvaluationLog = () => {
-  const codeOf = new Map<string, string>();
-  const pending: Evaluation[] = [];
+  const byCall = new Map<string, Evaluation>();
   return {
     add: (evaluation: Evaluation): void => {
-      pending.push(evaluation);
-    },
-    noteCall: (block: ContentBlock.ToolCall): void => {
-      codeOf.set(block.toolCallId, evalCode(block.input));
+      if (evaluation.toolCallId !== undefined) {
+        byCall.set(evaluation.toolCallId, evaluation);
+      }
     },
     take: (block: ContentBlock.ToolResult): Evaluation | undefined => {
-      const code = codeOf.get(block.toolCallId);
-      const index = pending.findIndex((evaluation) => evaluation.code === code);
-      return index < 0 ? undefined : pending.splice(index, 1)[0];
+      const evaluation = byCall.get(block.toolCallId);
+      byCall.delete(block.toolCallId);
+      return evaluation;
     },
+    clear: (): void => byCall.clear(),
   };
 };
 
@@ -261,7 +254,6 @@ const annotateEvalBlocks = (
 ): Message.Message => {
   const annotations = message.blocks.map((block): EvalAnnotation | undefined => {
     if (block._tag === 'toolCall' && block.name === EVAL_TOOL_NAME) {
-      evaluations.noteCall(block);
       return labelCall(block);
     }
     if (block._tag === 'toolResult' && block.name === EVAL_TOOL_NAME) {
