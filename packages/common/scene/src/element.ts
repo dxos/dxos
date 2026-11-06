@@ -411,10 +411,9 @@ export type ElementEndpoint = Schema.Schema.Type<typeof ElementEndpoint>;
 export const rebindEndpoint = <E extends Endpoint | ElementEndpoint>(end: E, map: (node: NodeId) => NodeId): E =>
   'node' in end && end.node !== undefined ? { ...end, node: map(end.node) } : end;
 
-/** What is drawn at a link end. */
 /**
- * An end marker: an open `arrow`, a `circle`, a hollow `triangle` (inheritance), or at the owning end a hollow
- * `diamond` (aggregation) or a `diamond-filled` (composition).
+ * What is drawn at a link end: an open `arrow`, a `circle`, a hollow `triangle` (inheritance), or at the owning end
+ * a hollow `diamond` (aggregation) or a `diamond-filled` (composition).
  */
 export const Marker = Schema.Literals(['arrow', 'circle', 'diamond', 'diamond-filled', 'triangle']);
 export type Marker = Schema.Schema.Type<typeof Marker>;
