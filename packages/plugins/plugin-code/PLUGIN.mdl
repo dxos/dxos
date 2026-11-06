@@ -988,7 +988,8 @@ feat F-20: Feature embeds in the editor
   req F-20.6: `/feature`, at the start of a line or after a space, puts a new feature's embed in place of its line, and
              the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
              sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
-             "New feature" until changed, as on an empty line.
+             "New feature" until changed, as on an empty line. A list item's, quote's or heading's marker is not part of
+             either.
   req F-20.7: A section is inert until it has attention, so scrolling passes through it. A click gives it
              attention, and its form then edits the feature's name, description, requirements and status in place,
              and its fold toggle folds or unfolds it. Arrowing through the text stops on a section rather than skipping
@@ -2272,6 +2273,15 @@ decision D-82: QA-5 finds Create artifact on the overview's Artifacts heading ra
   date: 2026-11-05
   by: user:wittjosiah
   affects: [QA-5]
+```
+
+```mdl
+decision D-83: `/feature` on a bullet, a quote or a heading leaves the line's marker out of the feature's name or description. Fills in [F-20.6].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.6]
+  why: A bullet turned into a feature gave a description that began with `- `.
 ```
 
 ## Appendix: Extension Definitions

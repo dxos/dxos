@@ -206,11 +206,15 @@ export const FeatureCanvas = ({
     [lattice, arrange, force?.attraction, force?.repulsion, force?.range],
   );
 
-  // A single selected box is the selected feature; an arrow, several boxes or none select nothing.
-  const handleSelectionChange = useCallback((ids: readonly string[]) => {
-    const [id] = ids;
-    callbacks.current.onSelect?.(ids.length === 1 && !id.includes(EDGE_SEPARATOR) ? id : undefined);
-  }, []);
+  // A single selected box is the selected feature; an arrow, one just drawn (the editor selects it under an id of its
+  // own), several boxes or none select nothing.
+  const handleSelectionChange = useCallback(
+    (ids: readonly string[]) => {
+      const [id] = ids;
+      callbacks.current.onSelect?.(ids.length === 1 && lookup(id) ? id : undefined);
+    },
+    [lookup],
+  );
   const selection = useMemo(() => (selectedId && lookup(selectedId) ? [selectedId] : undefined), [selectedId, lookup]);
 
   const handleLink = useCallback((from: string, to: string) => callbacks.current.onLink?.(from, to), []);

@@ -47,6 +47,18 @@ become features and requirements: extract them rather than linking to the spec.
   `code-export-spec-features { spec }`, which writes each embed out as its `feat` block. Moving an embed reorders
   the spec and deleting one deletes its feature, but its id must be kept as it is; change what a feature says through
   the feature operations.
+- **To write out a whole spec** (a draft turned into features, requirements, and `type` or `op` blocks), export it,
+  rewrite the text in full, and import it once with `code-import-spec-features { path, text, spec }`, any repo path
+  for a spec that has none. Keep each exported block's `F-n` id so its feature is updated in place. One import does
+  what a call per feature and requirement would. A requirement line needs its own id, or it is read as description:
+
+  ```mdl
+  feat F-1: Gameboard
+    Two players play on a shared board.
+
+    req F-1.1: The board shows the current position after every move.
+  ```
+
 - Create a feature with `code-create-feature { name, description, requirements, spec? | parent? }`.
   Change one with `code-update-feature`; `requirements` replaces the whole list, so give each requirement back
   with the `key` `code-get-features` returned for it (comments on it stay anchored by that key), and `spec`

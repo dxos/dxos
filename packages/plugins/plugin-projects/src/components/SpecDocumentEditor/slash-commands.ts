@@ -20,6 +20,12 @@ export type SlashCommand = {
 /** The commands each extension package contributes; `slashCommands` lists them all. */
 export const slashCommand = Facet.define<SlashCommand>();
 
+/** A Markdown block's marker at the start of a line: a heading, a quote, or a list item with its task box. */
+const BLOCK_MARKER = /^(?:#{1,6}\s+|>\s*|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)/;
+
+/** The text of a line, without the marker that makes it a list item, quote or heading. */
+export const lineText = (text: string): string => text.trim().replace(BLOCK_MARKER, '').trim();
+
 const source = (context: CompletionContext): CompletionResult | null => {
   const commands = context.state.facet(slashCommand);
   const word = context.matchBefore(/\/[\w-]*$/);
@@ -31,7 +37,7 @@ const source = (context: CompletionContext): CompletionResult | null => {
   if (word.from > line.from && !/\s/.test(context.state.sliceDoc(word.from - 1, word.from))) {
     return null;
   }
-  const before = context.state.sliceDoc(line.from, word.from).trim();
+  const before = lineText(context.state.sliceDoc(line.from, word.from));
   return {
     from: word.from,
     filter: true,
