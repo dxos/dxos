@@ -16,13 +16,8 @@ import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
-import {
-  AiTelemetry,
-  type OpaqueToolkit,
-  PromptDefinition,
-  type ToolExecutionService,
-  type ToolResolverService,
-} from '@dxos/ai';
+import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
+import { PromptDefinition } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
