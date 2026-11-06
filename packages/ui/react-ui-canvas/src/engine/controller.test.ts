@@ -262,6 +262,26 @@ describe('CanvasController', () => {
       expect(controller.document.order(['c'], 'back')).toBe(false);
     });
 
+    test('order restacks a node against the links too, since one order paints them', ({ expect }) => {
+      const tree = ViewBuilder.view('root', [
+        ViewBuilder.rect('a', box(0)),
+        ViewBuilder.rect('b', box(512)),
+        ViewBuilder.link('line', 'a', 'b').id('ab'),
+      ]).build();
+      const { controller, scene } = setup({ tree });
+      const order = () =>
+        [...Object.values(scene().nodes), ...Object.values(scene().links)]
+          .sort((left, right) => (left.z < right.z ? -1 : 1))
+          .map((element) => element.id);
+      expect(order()).toEqual(['a', 'b', 'ab']);
+      // The link is on top, so a shape brought to the front must go over it, not just over the other shape.
+      expect(controller.document.order(['a'], 'front')).toBe(true);
+      expect(order()).toEqual(['b', 'ab', 'a']);
+      // And a link sent to the back goes under the shapes, not just under the other links.
+      expect(controller.document.order(['ab'], 'back')).toBe(true);
+      expect(order()).toEqual(['ab', 'b', 'a']);
+    });
+
     test('order leaves a read-only view alone', ({ expect }) => {
       const { controller, scene } = setup({ readonly: true });
       const before = Object.values(scene().nodes).map((node) => node.z);

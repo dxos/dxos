@@ -747,19 +747,9 @@ export const createCanvasController = ({
         return false;
       }
       const scene = currentScene();
-      const selected = new Set(ids);
-      const keys = {
-        ...orderToEnd(
-          Object.values(scene.nodes),
-          [...selected].filter((id) => scene.nodes[id] !== undefined),
-          place,
-        ),
-        ...orderToEnd(
-          Object.values(scene.links),
-          [...selected].filter((id) => scene.links[id] !== undefined),
-          place,
-        ),
-      };
+      // Nodes and links share one paint order, so they restack against each other: a shape brought to the front
+      // goes over the links too, and a link sent to the back goes under the shapes.
+      const keys = orderToEnd([...Object.values(scene.nodes), ...Object.values(scene.links)], ids, place);
       const moved = Object.entries(keys);
       if (moved.length === 0) {
         return false;

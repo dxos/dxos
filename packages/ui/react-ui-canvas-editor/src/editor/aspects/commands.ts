@@ -92,9 +92,6 @@ export const createCommandsAspect = <C>(
     }
   };
   /** A link is an element with ends; the two paint in groups of their own, as the engine stacks them. */
-  const isLinkRecord = (element: Scene.Element): boolean =>
-    element.source !== undefined || element.target !== undefined;
-
   /** Restacks the selection within the open layout: one reorder per element that moves, in one batch (one undo step). */
   const orderSelection = (place: 'front' | 'back') => () => {
     const open = registry.get(atoms.layout);
@@ -104,15 +101,9 @@ export const createCommandsAspect = <C>(
       return;
     }
     const selection = registry.get(editorSelection.atoms.selection);
-    const elements = Object.values(record.elements);
-    const keys = {
-      ...orderToEnd(
-        elements.filter((element) => !isLinkRecord(element)),
-        selection,
-        place,
-      ),
-      ...orderToEnd(elements.filter(isLinkRecord), selection, place),
-    };
+    // Nodes and links share one paint order, so they restack against each other: a shape brought to the front
+    // goes over the links too, and a link sent to the back goes under the shapes.
+    const keys = orderToEnd(Object.values(record.elements), selection, place);
     const intents = Object.entries(keys).map(([id, order]) => ({ kind: 'reorder' as const, id, order }));
     intents.length > 0 && intent(open, { kind: 'batch', intents });
   };
