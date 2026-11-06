@@ -139,11 +139,11 @@ Field reference for `plugin`:
 
 Field reference for `publish`:
 
-| Field             | Required | Notes                                                                              |
-| ----------------- | -------- | ---------------------------------------------------------------------------------- |
-| `buildCommand`    | no       | Build command run by `dx registry publish` (skipped with `--no-build`).            |
-| `outputDirectory` | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`. |
-| `assetBaseUrl`    | no       | Skip the upload and point the release at a bundle you host yourself.               |
+| Field             | Required | Notes                                                                                                                                      |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `buildCommand`    | no       | Build command run by `dx registry publish` (skipped with `--no-build`); unset or `vite build` runs the project's Vite in the `dx` process. |
+| `outputDirectory` | no       | Directory the build emits into (must contain `manifest.json`). Defaults to `dist`.                                                         |
+| `assetBaseUrl`    | no       | Skip the upload and point the release at a bundle you host yourself.                                                                       |
 
 The release **version is taken from your `package.json` `version` field**, not from `dx.config.ts`. Bump it before publishing a new release.
 
@@ -172,7 +172,7 @@ dx registry publish
 
 This will:
 
-1. Run your `build.command` (skip with `--no-build` to publish a pre-built `dist`).
+1. Build the bundle (skip with `--no-build` to publish a pre-built `dist`): with no `buildCommand`, or `vite build`, `dx` loads the Vite your project installs and runs it in its own process, so neither node nor a separate Vite process is needed; any other `buildCommand` runs in a shell.
 2. Read the emitted `manifest.json`.
 3. Upload the bundle to the DXOS edge and record the resulting `moduleUrl`.
 4. Write a `package.profile` record and a `package.release` record (rkey `<key>:<version>`) to your PDS.
@@ -183,6 +183,7 @@ Useful flags:
 | ------------------------ | ---------------------------------------------------------------------------------- |
 | `--dir <path>`           | Project directory containing `dx.config.ts` (defaults to the current directory).   |
 | `--no-build`             | Skip the build and publish the existing `dist`.                                    |
+| `--dry-run`              | Build and check the bundle, then stop: nothing is uploaded or recorded.            |
 | `--asset-base-url <url>` | Skip the upload and point the release at a bundle you host yourself.               |
 | `--edge-url <url>`       | Override the edge used for upload (mainly for local testing against a dev worker). |
 | `--private`              | Publish privately instead; see below.                                              |
