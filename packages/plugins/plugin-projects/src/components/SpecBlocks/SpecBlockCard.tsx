@@ -192,7 +192,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
     }
   }, [view, locator]);
 
-  const active = useActive(ref) && !readonly;
+  const active = useActive(ref, view.dom) && !readonly;
   const [folded, setFolded] = useState(false);
   const label = labelOf(blocks, block) ?? (block.id || undefined);
   const hue = hues.find((candidate) => candidate === schema.hue);
@@ -327,10 +327,10 @@ const FieldName = ({ children, ...props }: { 'children': string; 'data-testid'?:
 );
 
 /**
- * Whether the card holds focus or took the last press. A press on a button that takes no focus (Safari) blurs with no
- * related target, so only focus moving elsewhere or a press outside ends it.
+ * Whether the card holds focus or took the last press. Only focus or a press elsewhere in the spec's editor ends it, so
+ * a menu the card opens (portalled outside it) and a button that takes no focus (Safari) leave it active.
  */
-const useActive = (ref: RefObject<HTMLElement | null>): boolean => {
+const useActive = (ref: RefObject<HTMLElement | null>, scope: HTMLElement): boolean => {
   const [active, setActive] = useState(false);
   useEffect(() => {
     const element = ref.current;
@@ -338,22 +338,22 @@ const useActive = (ref: RefObject<HTMLElement | null>): boolean => {
       return;
     }
     const inside = (target: EventTarget | null) => target instanceof Node && element.contains(target);
-    const handleFocusIn = () => setActive(true);
-    const handleFocusOut = (event: FocusEvent) => {
-      if (event.relatedTarget && !inside(event.relatedTarget)) {
+    const elsewhere = (target: EventTarget | null) =>
+      target instanceof Node && scope.contains(target) && !inside(target);
+    const handle = ({ target }: Event) => {
+      if (inside(target)) {
+        setActive(true);
+      } else if (elsewhere(target)) {
         setActive(false);
       }
     };
-    const handlePointerDown = (event: PointerEvent) => setActive(inside(event.target));
-    element.addEventListener('focusin', handleFocusIn);
-    element.addEventListener('focusout', handleFocusOut);
-    document.addEventListener('pointerdown', handlePointerDown, true);
+    document.addEventListener('focusin', handle);
+    document.addEventListener('pointerdown', handle, true);
     return () => {
-      element.removeEventListener('focusin', handleFocusIn);
-      element.removeEventListener('focusout', handleFocusOut);
-      document.removeEventListener('pointerdown', handlePointerDown, true);
+      document.removeEventListener('focusin', handle);
+      document.removeEventListener('pointerdown', handle, true);
     };
-  }, [ref]);
+  }, [ref, scope]);
   return active;
 };
 

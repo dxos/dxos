@@ -41,6 +41,7 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
+import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -391,6 +392,7 @@ const meta = {
     translations: [
       ...translations,
       ...reactUiTranslations,
+      ...editorTranslations,
       ...formTranslations,
       ...routineTranslations,
       ...tasksTranslations,
