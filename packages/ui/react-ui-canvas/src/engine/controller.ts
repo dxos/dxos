@@ -484,16 +484,7 @@ export const createCanvasController = ({
   };
 
   const drillInto = (portal: Node, animate = true) => {
-    const def = nodeDef(nodeRegistry(), portal);
-    const open = def?.hostOpen?.(portal);
-    if (open && animate && def?.hostOpenZoom) {
-      fitMode().takeOver();
-      select([]);
-      registry.set(atoms.hover, undefined);
-      open();
-      camera().animateTo(fitBounds(nodeBounds(portal), viewport(), inset()), undefined, DRILL_ANIMATION_MS);
-      return;
-    }
+    const open = nodeDef(nodeRegistry(), portal)?.hostOpen?.(portal);
     if (open) {
       open();
       return;

@@ -10,7 +10,6 @@
 import { Layout } from '@dxos/diagram';
 import {
   type BuiltinNodeType,
-  type DiagramConnector,
   type Layer,
   type LayerId,
   type LineStyle,
@@ -55,8 +54,6 @@ export type GraphEdge = {
   /** Overrides `DynamicOptions.link.ends` for this edge, so a graph can draw several kinds of edge. */
   ends?: LinkEnds;
   style?: LineStyle;
-  /** A layout engine's route for the link, drawn as given while its ends stay on the nodes' outlines. */
-  connector?: DiagramConnector;
 };
 
 export type GraphModel = {
@@ -181,7 +178,6 @@ export const layoutGraph = (
         ...((edge.ends ?? options.link?.ends) && { ends: edge.ends ?? options.link?.ends }),
         ...(edge.text !== undefined && { text: edge.text }),
         ...(edge.style && { style: edge.style }),
-        ...(edge.connector && { connector: edge.connector }),
         ...(options.link?.layer && { layer: options.link.layer }),
       };
     }

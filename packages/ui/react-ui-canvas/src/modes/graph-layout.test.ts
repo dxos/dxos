@@ -58,7 +58,7 @@ describe('graphLayout', () => {
     expect(Object.values(view.links).map(({ type }) => type)).toEqual(['smart', 'smart', 'smart', 'smart']);
   });
 
-  test("a host type's fields, layer, lock and style reach the node the viewport draws", ({ expect }) => {
+  test("a host type's fields, layer and lock reach the node the viewport draws", ({ expect }) => {
     const layers = [
       { id: 'backdrop', name: 'Backdrop', z: 'a0' },
       { id: 'graph', name: 'Graph', z: 'a1' },
@@ -67,14 +67,7 @@ describe('graphLayout', () => {
       layers,
       shape: (node) =>
         node.id === 'app'
-          ? {
-              type: 'diagram',
-              layer: 'backdrop',
-              locked: true,
-              label: 'App',
-              fields: { heading: { id: 'title' } },
-              style: { border: false },
-            }
+          ? { type: 'diagram', layer: 'backdrop', locked: true, label: 'App', fields: { heading: { id: 'title' } } }
           : { type: 'card', layer: 'graph' },
       link: { type: 'curve', layer: 'graph' },
     });
@@ -85,28 +78,9 @@ describe('graphLayout', () => {
       locked: true,
       label: 'App',
       heading: { id: 'title' },
-      style: { border: false },
     });
     expect(view.links['app->ui']).toMatchObject({ type: 'curve', layer: 'graph' });
     expect(Object.keys(view.layers ?? {})).toEqual(['backdrop', 'graph']);
-  });
-
-  test("an edge's connector reaches the link the viewport draws", ({ expect }) => {
-    const connector = {
-      head: 'arrow' as const,
-      route: [
-        { x: 0, y: 48 },
-        { x: 0, y: 112 },
-      ],
-    };
-    const graph: GraphModel = {
-      ...GRAPH,
-      edges: GRAPH.edges.map((edge) => (edge.id === 'app->ui' ? { ...edge, connector } : edge)),
-    };
-    const layout = graphLayout(graph, { lattice: LATTICE });
-    const view = toRenderList2D(graphDocument(layout), layout);
-    expect(view.links['app->ui'].connector).toEqual(connector);
-    expect(view.links['ui->model'].connector).toBeUndefined();
   });
 
   test('a placed node is pinned where it was placed, and the rest keep their slots', ({ expect }) => {

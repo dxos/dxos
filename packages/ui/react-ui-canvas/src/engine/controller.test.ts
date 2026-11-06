@@ -9,7 +9,7 @@ import { isInstanceNode, isViewNode } from '@dxos/scene';
 
 import { ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type BackgroundGrid, type NodeRegistry } from '../model/index.ts';
+import { type BackgroundGrid } from '../model/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { type LookHandlers, createCanvasController } from './controller.ts';
 import { createDrawState, drawStateVersions } from './draw-state.ts';
@@ -51,8 +51,7 @@ const setup = ({
   readonly = false,
   tree = flat(),
   look = {},
-  nodeRegistry = defaultNodeRegistry,
-}: { readonly?: boolean; tree?: ViewTree; look?: LookHandlers; nodeRegistry?: NodeRegistry } = {}) => {
+}: { readonly?: boolean; tree?: ViewTree; look?: LookHandlers } = {}) => {
   const registry = Registry.make();
   const store = createDrawState(tree.views);
   const atoms = createCanvasAtoms(tree.root);
@@ -69,7 +68,7 @@ const setup = ({
     atoms,
     store,
     draw: () => draw,
-    nodeRegistry: () => nodeRegistry,
+    nodeRegistry: () => defaultNodeRegistry,
     readonly: () => readonly,
     grid: () => ({ major: 64, snap: (value) => Math.round(value / 16) * 16 }),
     viewport: () => VIEWPORT,
@@ -113,31 +112,6 @@ describe('CanvasController', () => {
       const history = registry.get(atoms.history);
       expect(history.entries.map((entry) => entry.path)).toEqual([['root', 'child']]);
       expect(registry.get(atoms.camera)).toEqual(history.entries[0].camera);
-    });
-
-    test('a node the host opens is opened by the host, as the camera starts zooming into it when it asks', ({
-      expect,
-    }) => {
-      const open = (zoom: boolean) => {
-        const opened: { id: string; zoom: number }[] = [];
-        let zoomNow = () => 0;
-        const nodeRegistry: NodeRegistry = {
-          ...defaultNodeRegistry,
-          rect: {
-            ...defaultNodeRegistry.rect,
-            hostOpen: (node) => () => opened.push({ id: node.id, zoom: zoomNow() }),
-            hostOpenZoom: zoom,
-          },
-        };
-        const { registry, atoms, controller, scene } = setup({ nodeRegistry });
-        zoomNow = () => registry.get(atoms.camera).zoom;
-        registry.set(atoms.camera, { x: 0, y: 0, zoom: 1 });
-        controller.navigation.drillIn(scene().nodes.a);
-        return { opened, path: registry.get(atoms.path), zoom: registry.get(atoms.camera).zoom };
-      };
-      // A 256-wide box zoomed to fill the 1024-wide view, and no scene entered.
-      expect(open(true)).toEqual({ opened: [{ id: 'a', zoom: 1 }], path: ['root'], zoom: 4 });
-      expect(open(false)).toEqual({ opened: [{ id: 'a', zoom: 1 }], path: ['root'], zoom: 1 });
     });
 
     test('drillOut and openPath return to the parent through the frame the child was entered with', ({ expect }) => {

@@ -104,11 +104,6 @@ export type NodeDef = {
    */
   hostOpen?: (node: Node) => (() => void) | undefined;
   /**
-   * Opening also zooms the camera into the node, as drilling into a frame does, over `DRILL_ANIMATION_MS` from when
-   * `hostOpen`'s callback runs, so the host can bring in what it opens while the camera moves.
-   */
-  hostOpenZoom?: boolean;
-  /**
    * Controls floating above the node, flush with its right edge and at screen size, so they neither cover the node's
    * content nor scale with the camera; renders nothing when it returns `null`.
    */

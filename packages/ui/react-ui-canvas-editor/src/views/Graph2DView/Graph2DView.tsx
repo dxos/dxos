@@ -56,8 +56,6 @@ export type Graph2DViewProps = PropsWithChildren<{
   onSelectionChange?: (ids: readonly string[]) => void;
   /** Whether the background grid is drawn; a lattice's guides are the structure, so it is off by default. */
   grid?: boolean;
-  /** Whether a lattice's cells are drawn; off for a lattice too fine to read as places. */
-  guides?: boolean;
   /** A new key frames the graph again (an asynchronous layout landing, say); edits never refit by themselves. */
   refitKey?: string | number;
   /** Drawn in scene coordinates over the graph, with the canvas's services in reach; a stable component. */
@@ -80,7 +78,6 @@ export const Graph2DView = ({
   selection,
   onSelectionChange,
   grid = false,
-  guides = true,
   refitKey,
   Overlay,
   children,
@@ -121,7 +118,7 @@ export const Graph2DView = ({
     [nodes, editable.link, editable.delete, Overlay],
   );
 
-  const [display, setDisplay] = useState<EditorDisplay>({ theme: 'flat', grid, snap: true, guides });
+  const [display, setDisplay] = useState<EditorDisplay>({ theme: 'flat', grid, snap: true, guides: true });
   const handleDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => setDisplay((current) => ({ ...current, ...next })),
     [],
