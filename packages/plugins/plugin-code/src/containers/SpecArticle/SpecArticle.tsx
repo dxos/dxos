@@ -180,14 +180,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           ViewPlugin.define((editor) => ({ destroy: SpecSession.registerEditor(id, editor) })),
           trackCursor(setCursor),
           decisions.length > 0 &&
-            decisionGutter(decisions, (item) =>
-              // A question is answered in the log, which lists it; a decision shows in the graph.
-              show(
-                'decisions',
-                decisions.some(({ id, kind }) => id === item && kind === 'question') ? 'log' : 'decisions',
-                { selectedDecision: item },
-              ),
-            ),
+            // The ledger opens a decision's thread, or lists a question among the questions.
+            decisionGutter(decisions, (item) => show('decisions', 'ledger', { selectedDecision: item })),
           review &&
             reviewGutter(review, {
               onSelect: (verdict) => show('review', 'review', { selectedVerdict: verdict, selectedReview: undefined }),

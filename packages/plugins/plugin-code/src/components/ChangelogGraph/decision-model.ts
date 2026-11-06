@@ -23,8 +23,25 @@ export type DecisionModel = {
   principal?: string;
   /** The decision that replaced this one, if any. */
   supersededBy?: string;
+  /** Later decisions that replaced a part of this one, with the part as their prose names it. */
+  replacedInPart: { id: string; part: string }[];
   /** User decisions that approved this one. */
   approvedBy: string[];
+  /** How this decision's prose relates it to each decision it cites. */
+  cites: Citation[];
+};
+
+/**
+ * How a decision relates to one it cites, read from the clause that cites it: it fills in, replaces (wholly or a named
+ * part of), refines or approves it, else builds on it.
+ */
+export type CitationKind = 'fills-in' | 'replaces' | 'refines' | 'approves' | 'builds-on';
+
+export type Citation = {
+  id: string;
+  kind: CitationKind;
+  /** The part replaced, as the prose names it, such as `the switch` in "Replaces the switch of [D-92]". */
+  part?: string;
 };
 
 /** A `question` of the changelog: open until a decision `answers:` it. */
@@ -84,6 +101,40 @@ export const githubAvatarUrl = (handle: string): string | undefined =>
 export const isApproval = (entry: ChangelogEntry): boolean =>
   parseActor(entry.by).actor === 'user' && APPROVAL.test(entry.title);
 
+/** The prose before a citation, back to the start of its clause. */
+const clauseBefore = (title: string, ref: string): string => {
+  const at = title.indexOf(`[${ref}]`);
+  const before = at === -1 ? '' : title.slice(0, at);
+  return before.slice(Math.max(before.lastIndexOf('.'), before.lastIndexOf(';')) + 1);
+};
+
+const REPLACES_PART = /\breplaces\s+(.+?)\s+of\s*$/i;
+
+/** How `entry` relates to the decision `ref` it cites. */
+export const citationOf = (entry: ChangelogEntry, ref: string): Citation => {
+  if (isApproval(entry)) {
+    return { id: ref, kind: 'approves' };
+  }
+  if (entry.supersedes === ref) {
+    return { id: ref, kind: 'replaces' };
+  }
+  const clause = clauseBefore(entry.title, ref);
+  const part = REPLACES_PART.exec(clause);
+  if (part) {
+    return { id: ref, kind: 'replaces', part: part[1] };
+  }
+  if (/\breplaces\b/i.test(clause)) {
+    return { id: ref, kind: 'replaces' };
+  }
+  if (/\bfills in\b/i.test(clause)) {
+    return { id: ref, kind: 'fills-in' };
+  }
+  if (/\brefines\b/i.test(clause)) {
+    return { id: ref, kind: 'refines' };
+  }
+  return { id: ref, kind: 'builds-on' };
+};
+
 /** The decisions of a spec's `## Changelog` and how they relate, ready to lay out as a graph. */
 export const buildChangelogGraph = (
   text: string,
@@ -93,9 +144,26 @@ export const buildChangelogGraph = (
   const ids = new Set(entries.map(({ id }) => id));
   const edges: ChangelogEdgeModel[] = [];
   const supersededBy = new Map<string, string>();
+  const replacedInPart = new Map<string, { id: string; part: string }[]>();
   const approvedBy = new Map<string, string[]>();
+  const cites = new Map<string, Citation[]>();
 
   for (const entry of entries) {
+    const citations = [...new Set([...(entry.supersedes ? [entry.supersedes] : []), ...entry.refs])]
+      .filter((ref) => ids.has(ref))
+      .map((ref) => citationOf(entry, ref));
+    cites.set(entry.id, citations);
+    for (const { id, kind, part } of citations) {
+      if (kind !== 'replaces') {
+        continue;
+      }
+      if (part) {
+        replacedInPart.set(id, [...(replacedInPart.get(id) ?? []), { id: entry.id, part }]);
+      } else if (!supersededBy.has(id)) {
+        // Prose that replaces a whole decision retires it as `supersedes:` would.
+        supersededBy.set(id, entry.id);
+      }
+    }
     if (entry.supersedes && ids.has(entry.supersedes)) {
       supersededBy.set(entry.supersedes, entry.id);
       edges.push({
@@ -128,7 +196,9 @@ export const buildChangelogGraph = (
       handle,
       principal: parseActor(entry.for).handle,
       supersededBy: supersededBy.get(entry.id),
+      replacedInPart: replacedInPart.get(entry.id) ?? [],
       approvedBy: approvedBy.get(entry.id) ?? [],
+      cites: cites.get(entry.id) ?? [],
     };
   });
 
@@ -191,14 +261,15 @@ export type AnswerProps = {
 /** A handle for `user:` from a display name: the dialect allows no whitespace in it. */
 export const toUserHandle = (name: string): string => name.trim().replace(/\s+/g, '-');
 
+export type TextEdit = { from: number; to: number; insert: string };
+
+type AppendProps = { title: string; by: string; date: string; answers?: string };
+
 /**
- * The edit that records an answer as the next decision of the spec's `## Changelog`: an insertion at the end of the
- * section, so the log stays append-only. Undefined when the spec has no changelog to append to.
+ * The edit that records the next decision of the spec's `## Changelog`: an insertion at the end of the section, so the
+ * log stays append-only. Undefined when the spec has no changelog to append to.
  */
-export const answerQuestion = (
-  text: string,
-  { question, answer, by, date }: AnswerProps,
-): { from: number; to: number; insert: string } | undefined => {
+const appendDecision = (text: string, { title, by, date, answers }: AppendProps): TextEdit | undefined => {
   const heading = /^## Changelog[ \t]*$/m.exec(text);
   if (!heading) {
     return undefined;
@@ -208,14 +279,14 @@ export const answerQuestion = (
   const end = next ? after + next.index : text.length;
   const { entries } = parseChangelog(text);
   const id = Math.max(0, ...entries.map(({ id }) => Number(/^D-(\d+)$/.exec(id)?.[1] ?? 0))) + 1;
-  // The answer is the decision's inline prose, which is one line.
-  const prose = answer.replace(/\s+/g, ' ').trim();
+  // The decision is its inline prose, which is one line.
+  const prose = title.replace(/\s+/g, ' ').trim();
   const block = [
     '```mdl',
     `decision D-${id}: ${prose}`,
     `  date: ${date}`,
     `  by: ${by}`,
-    `  answers: ${question}`,
+    ...(answers ? [`  answers: ${answers}`] : []),
     '```',
   ];
   // Replaces the whitespace that ends the section, so the entry sits one blank line after the last.
@@ -223,25 +294,32 @@ export const answerQuestion = (
   return { from, to: end, insert: `\n\n${block.join('\n')}${next ? '\n\n' : '\n'}` };
 };
 
-/** The decisions one decider made, in log order. */
-export type DeciderGroup = { actor?: DecisionActor; handle?: string; decisions: DecisionModel[] };
+/** The edit that records an answer to a question as the next decision. */
+export const answerQuestion = (text: string, { question, answer, by, date }: AnswerProps): TextEdit | undefined =>
+  appendDecision(text, { title: answer, by, date, answers: question });
 
-const ACTOR_ORDER = (actor?: DecisionActor): number => (actor === 'user' ? 0 : actor === 'agent' ? 2 : 1);
-
-/**
- * Decisions grouped by who made them: people first, then unattributed entries, then agents, so the
- * decisions that carry a person's authority lead; within each, the most prolific decider first.
- */
-export const groupByDecider = (decisions: readonly DecisionModel[]): DeciderGroup[] => {
-  const groups = new Map<string, DeciderGroup>();
-  for (const decision of decisions) {
-    const key = `${decision.actor ?? ''}:${decision.handle ?? ''}`;
-    const group = groups.get(key) ?? { actor: decision.actor, handle: decision.handle, decisions: [] };
-    group.decisions.push(decision);
-    groups.set(key, group);
-  }
-  return [...groups.values()].sort(
-    (left, right) =>
-      ACTOR_ORDER(left.actor) - ACTOR_ORDER(right.actor) || right.decisions.length - left.decisions.length,
-  );
+export type ApproveProps = {
+  /** The decisions approved, `D-n`, in log order. */
+  ids: readonly string[];
+  /** The person approving, `user:<handle>`. */
+  by: string;
+  /** `YYYY-MM-DD`. */
+  date: string;
 };
+
+/** The edit that records a person's approval of `ids` as the next decision, worded as {@link isApproval} reads it. */
+export const approveDecisions = (text: string, { ids, by, date }: ApproveProps): TextEdit | undefined => {
+  if (ids.length === 0) {
+    return undefined;
+  }
+  const cited = ids.map((id) => `[${id}]`);
+  const list = cited.length === 1 ? cited[0] : `${cited.slice(0, -1).join(', ')} and ${cited[cited.length - 1]}`;
+  return appendDecision(text, { title: `Approve ${list}.`, by, date });
+};
+
+/** Whether a decision still holds: nothing has replaced all of it. */
+export const holds = (decision: DecisionModel): boolean => !decision.supersededBy;
+
+/** Whether an agent made a decision that holds and no person has approved it. */
+export const awaitsApproval = (decision: DecisionModel): boolean =>
+  decision.actor === 'agent' && decision.approvedBy.length === 0 && holds(decision);

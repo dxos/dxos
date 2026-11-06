@@ -28,14 +28,15 @@ import {
   ApiSurface,
   CodeView,
   DataModelGraph,
-  DecisionLog,
-  DecisionThreads,
+  DecisionCursor,
+  DecisionLedger,
   DefinitionFocus,
   DefinitionGraph,
   type DefinitionModel,
   ReviewPanel,
   SPEC_INDEX,
   answerQuestion,
+  approveDecisions,
   pendingReveal,
   specCursor,
   toUserHandle,
@@ -175,33 +176,58 @@ export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewC
     [id, update],
   );
 
-  // Through the open editor when there is one, so the answer reaches collaborators like a typed edit; else as a
-  // minimal change to the spec's text.
-  const handleAnswer = useCallback(
-    (question: string, answer: string) => {
+  // Appends a decision through the open editor when there is one, so it reaches collaborators like a typed edit; else
+  // as a minimal change to the spec's text. Returns whether the spec had a changelog to append to.
+  const appendDecision = useCallback(
+    (edit: (current: string, by: string, date: string) => { from: number; to: number; insert: string } | undefined) => {
       const editor = getEditor(id);
       const current = editor ? editor.state.doc.toString() : text;
       const name = identity?.displayName;
-      const edit = answerQuestion(current, {
-        question,
-        answer,
-        by: `user:${name ? toUserHandle(name) : identity?.did}`,
-        date: new Date().toISOString().slice(0, 10),
-      });
-      if (!edit) {
+      const change = edit(
+        current,
+        `user:${name ? toUserHandle(name) : identity?.did}`,
+        new Date().toISOString().slice(0, 10),
+      );
+      if (!change) {
+        return false;
+      }
+      if (editor) {
+        editor.dispatch({ changes: change });
+      } else if (target) {
+        Doc.updateText(target, ['content'], current.slice(0, change.from) + change.insert + current.slice(change.to));
+      }
+      return true;
+    },
+    [id, identity, text, target],
+  );
+  const handleAnswer = useCallback(
+    (question: string, answer: string) => {
+      if (!appendDecision((current, by, date) => answerQuestion(current, { question, answer, by, date }))) {
         log.warn('answer not recorded: no changelog', { question });
         return;
       }
-      if (editor) {
-        editor.dispatch({ changes: edit });
-      } else if (target) {
-        Doc.updateText(target, ['content'], current.slice(0, edit.from) + edit.insert + current.slice(edit.to));
-      }
       update({ selectedDecision: question });
     },
-    [id, identity, text, target, update],
+    [appendDecision, update],
   );
-  // Only an editable spec bound to ECHO takes answers; a static or read-only one lists its questions.
+  const handleApprove = useCallback(
+    (ids: readonly string[]) => {
+      if (!appendDecision((current, by, date) => approveDecisions(current, { ids, by, date }))) {
+        log.warn('approval not recorded: no changelog', { ids });
+      }
+    },
+    [appendDecision],
+  );
+  const openLedger = useCallback(
+    (decision: string) =>
+      setSession((current) => ({
+        ...current,
+        selectedDecision: decision,
+        views: { ...current.views, decisions: 'ledger' },
+      })),
+    [setSession],
+  );
+  // Only an editable spec bound to ECHO takes answers and approvals; a static or read-only one lists them.
   const canAnswer = !readOnly && spec !== undefined && identity !== undefined;
 
   // A local checkout holds today's code, so an earlier review's evidence, like any without a checkout, is read from
@@ -285,10 +311,24 @@ export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewC
             {t('code-view.empty.label')}
           </Status.Empty>
         ))}
-      {view === 'log' && (
-        <DecisionLog content={changelog} selected={selectedDecision} onAnswer={canAnswer ? handleAnswer : undefined} />
+      {view === 'cursor' && (
+        <DecisionCursor
+          content={text}
+          cursor={cursor}
+          onApprove={canAnswer ? handleApprove : undefined}
+          onAnswer={canAnswer ? handleAnswer : undefined}
+          onOpenLedger={openLedger}
+        />
       )}
-      {view === 'decisions' && <DecisionThreads content={changelog} selected={selectedDecision} />}
+      {view === 'ledger' && (
+        <DecisionLedger
+          content={changelog}
+          selected={selectedDecision}
+          onApprove={canAnswer ? handleApprove : undefined}
+          onAnswer={canAnswer ? handleAnswer : undefined}
+          onShowBlock={(block) => reveal(id, block)}
+        />
+      )}
       {view === 'data' && <DataModelGraph content={text} />}
       {view === 'api' && <ApiSurface content={text} />}
     </>

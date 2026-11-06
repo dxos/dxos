@@ -17,8 +17,8 @@ export const SPEC_VIEWS = [
   { id: 'related', group: 'structure', icon: 'ph--crosshair--regular', dialects: [] },
   { id: 'data', group: 'structure', icon: 'ph--database--regular', dialects: [CODE_DIALECT] },
   { id: 'api', group: 'structure', icon: 'ph--plugs-connected--regular', dialects: [CODE_DIALECT] },
-  { id: 'log', group: 'decisions', icon: 'ph--users-three--regular', dialects: [] },
-  { id: 'decisions', group: 'decisions', icon: 'ph--graph--regular', dialects: [] },
+  { id: 'cursor', group: 'decisions', icon: 'ph--crosshair--regular', dialects: [] },
+  { id: 'ledger', group: 'decisions', icon: 'ph--list-checks--regular', dialects: [] },
   { id: 'review', group: 'review', icon: 'ph--seal-check--regular', dialects: [CODE_DIALECT] },
   { id: 'code', group: 'review', icon: 'ph--file-code--regular', dialects: [CODE_DIALECT] },
 ] as const satisfies readonly { id: string; group: SpecSession.Group; icon: string; dialects: readonly string[] }[];

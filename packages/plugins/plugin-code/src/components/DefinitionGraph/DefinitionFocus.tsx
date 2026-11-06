@@ -10,8 +10,8 @@ import * as Status from '@dxos/react-ui/Status';
 
 import { CodeNamespace } from '../../namespace.ts';
 import { type DefinitionModel } from '../SpecModel/index.ts';
-import { nearestDefinition } from './nearest-definition.ts';
 import { DefinitionRelated } from './DefinitionRelated.tsx';
+import { nearestDefinition } from './nearest-definition.ts';
 import { type DefinitionViewOptions, useDefinitionView } from './useDefinitionView.ts';
 
 export type DefinitionFocusProps = DefinitionViewOptions & {

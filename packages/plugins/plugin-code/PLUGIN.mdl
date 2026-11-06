@@ -217,8 +217,8 @@ component SpecArticle
 component SpecViewContent
   desc: |
     One of the views this plugin contributes to a spec's companion tabs (`ProjectCapabilities.SpecView`):
-    Definitions, Related, Data model and API in Structure; decisions by person and decision threads in
-    Decisions; Review and Code in Review. Data model, API, Review and Code read code, so only a spec using the code
+    Definitions, Related, Data model and API in Structure; At cursor and the Ledger in Decisions; Review and Code
+    in Review. Data model, API, Review and Code read code, so only a spec using the code
     dialect is offered them; the others read any dialect's blocks. It shares plugin-projects' `SpecSession` with the
     spec's editor, wherever each is shown: a chip in the editor's margin opens its view's tab,
     and a view moves the editor to an item. An answer goes through the open editor, else into
@@ -227,7 +227,7 @@ component SpecViewContent
     spec?: Spec
     content?: string
     sourceKey?: string
-    view: definitions | data | api | log | decisions | review | code
+    view: definitions | related | data | api | cursor | ledger | review | code
 ```
 
 ```mdl
@@ -971,15 +971,15 @@ feat F-18: Spec questions
     A `question` in a spec's changelog is a choice nobody has made yet. It is answered in
     Composer, and the answer is recorded as a decision.
 
-  req F-18.1: SpecArticle has a decisions-by-person view: the changelog's decisions grouped by
-              decider, with the spec's questions above them, open ones first.
+  req F-18.1: The Ledger lists the spec's questions as one of its filters, open ones first, and At cursor
+              shows the open questions on the block at the editor's cursor.
   req F-18.2: Each question is drawn with the question component the chat uses: its context,
               its options, and a free-form answer field.
   req F-18.3: In an editable spec, an answer appends to `## Changelog` a decision by the person
               who answered, with `answers:` naming the question. A read-only spec lists its
               questions without the answer controls.
   req F-18.4: A question's `affects:` puts a chip on each block it names, and the chip opens the
-              decisions-by-person view.
+              Ledger's questions.
 ```
 
 A spec's document is the spec, and its text is `Spec.content`. It can be prose alone and take structure a piece at a time: a line becomes a feature,
@@ -1142,6 +1142,27 @@ feat F-25: Definitions
               the same rules as software.
   req F-25.6: Related, Structure's second view, centres on the block nearest the editor's cursor, with what names it
               above and what it names below, and moves to another block as the cursor does.
+```
+
+```mdl
+feat F-26: Decisions
+  uses: [SpecViewContent]
+  desc: |
+    Decisions mirrors Structure: At cursor reads the changelog for the block at the editor's cursor, and the Ledger
+    reads all of it, a level at a time. Both are built from react-ui's existing components.
+  req F-26.1: At cursor, Decisions' first and default view, shows what holds on the item at the editor's cursor, each
+              with the decisions that fill it in, then what holds on its block or on the block's items, and moves as
+              the cursor does.
+  req F-26.2: The Ledger opens on a card per block the changelog affects, the most recently decided first. A block
+              opens its threads, the decisions on it that cite one another; a thread opens with what holds now, then
+              its decisions by day. The trail goes back up.
+  req F-26.3: The Ledger filters by status (holds, replaced, not approved, questions), by who decided, and by text.
+  req F-26.4: Every level offers to approve the agent decisions in it that hold and that nobody has approved, with
+              the count on the button. On a thread it sits at the top. Approving records one decision by the person,
+              `Approve [D-a] and [D-b].`
+  req F-26.5: A decision shows how it relates to each decision it cites (fills in, replaces, replaces part of,
+              refines, builds on), read from the prose before the citation.
+  req F-26.6: A decision's chip in the margin opens the Ledger at the decision's thread.
 ```
 
 ## Acceptance
@@ -1648,20 +1669,21 @@ test QA-7: Walk a spec's structure on the canvas
       do: Pick Related, then click SC-3's header line in the editor.
       expect: Related centres on SC-3
     - name: Open the script's decisions
-      do: Open the Decisions tab and pick By person.
-      expect: the script's two decisions, under the agent that made them
+      do: Open the Decisions tab and pick Ledger.
+      expect: a card per block the script's two decisions affect
 ```
 
 ```mdl
 test QA-8: Tour a spec's companion tabs
   desc: |
     Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
-    editor's cursor from block to block, then Data model and API; Decisions by person and as threads; Review and Code.
+    editor's cursor from block to block, then Data model and API; Decisions at the cursor and the Ledger, a level at
+    a time; Review and Code.
     A script in the video dialect then offers only the views that read any dialect, and Definitions drills into it as
     it does into code.
     Walked by the autocue flow `spec-companions` against Composer.
   actors: human
-  covers: [F-25.2, F-25.5, F-25.6]
+  covers: [F-25.2, F-25.5, F-25.6, F-26.1, F-26.2]
   status: passing            # 2026-11-06, recorded by autocue/spec-companions.mjs
   given:
     - composer serves plugin-code, enabled
@@ -1696,12 +1718,18 @@ test QA-8: Tour a spec's companion tabs
     - name: Open API
       do: Pick API in Structure's toolbar.
       expect: the spec's operations, with the services each needs
-    - name: Open Decisions by person
-      do: Open the companion's Decisions tab and pick By person.
-      expect: the spec's decisions grouped by who made them
-    - name: Open the decision threads
-      do: Pick Threads in Decisions' toolbar.
-      expect: decisions threaded by what each replaces and fills in
+    - name: Open Decisions at the cursor
+      do: Click F-25.6's id in the editor, then open the companion's Decisions tab.
+      expect: At cursor shows D-93, which holds on F-25.6, then the decisions that hold on F-25
+    - name: Open the Ledger
+      do: Pick Ledger in Decisions' toolbar.
+      expect: a card per block, the most recently decided first, under a count of the decisions not yet approved
+    - name: Open a block
+      do: Click the SpecViewContent card.
+      expect: its threads, a card each, with an approve button on those holding unapproved decisions
+    - name: Open a thread
+      do: Click the first thread.
+      expect: the approve button at the top, what holds now, then the thread's decisions by day
     - name: Open Review
       do: Open the companion's Review tab.
       expect: the review's summary, a count per status and a card per verdict
@@ -1718,8 +1746,8 @@ test QA-8: Tour a spec's companion tabs
       do: Pick Data model, then API.
       expect: each says the spec declares none, since only code has types and operations
     - name: Open the script's decisions
-      do: Open the Decisions tab and pick By person.
-      expect: the script's two decisions, under the agent that made them
+      do: Open the Decisions tab and pick Ledger.
+      expect: a card per block the script's two decisions affect
     - name: Open the script's Review and Code
       do: Open the Review tab, then pick Code.
       expect: Review says the script has no review yet; Code says it has no code key open
@@ -2582,6 +2610,44 @@ decision D-96: Data model, API, Review and Code need the code dialect; Definitio
   rejected:
     - Keeping Review for any dialect: its statuses (`untested`, `partial`) and fields (`evidence`, `tests`) only mean something for code.
 ```
+
+```mdl
+decision D-97: Decisions mirrors Structure. At cursor, the decisions on the block at the editor's cursor, is its first and default view; the Ledger is its overview, opened a level at a time, and a thread's story and its timeline are one level of it. Both are built from react-ui's existing components. Replaces the decision views of [D-85].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-26, SpecViewContent]
+  why: Structure already reads as what is at the cursor plus an overview to drill into, and new UI paradigms are not wanted.
+```
+
+```mdl
+decision D-98: Approving is offered at every level of the Ledger, and on a thread it sits at the top. The approve button carries the count, so nothing beside it repeats it. Refines [D-97].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-26.4]
+  why: Decisions awaiting approval were tucked at the bottom of the thread, with no way to approve them from the levels above, and a "7 not approved" tag beside "Approve 7" said the same thing twice.
+```
+
+```mdl
+decision D-99: At cursor shows each decision that holds on the item with the decisions that fill it in, then what holds on its block or the block's items, its open questions, and a link to what was replaced. The Ledger's levels are blocks, threads and days: a decision belongs to each block it affects; a thread is the decisions of one block that cite one another, titled by the first person's call in it; and a day joins an agent decision to the call it fills in. A decision's chip opens the Ledger at its thread, and a question's at the questions. Fills in [D-97].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1, F-18.4, F-26.1, F-26.2, F-26.6, SpecViewContent]
+  why: Grouping by what decisions affect matches how the editor's chips already place them, and a person's call is what a thread is about.
+  rejected:
+    - Threads across blocks: one decision that touches five blocks pulls unrelated threads together.
+    - Keeping decisions by person as a third view: the Ledger's decider filter covers it.
+```
+
+```mdl
+decision D-100: A decision's relation to each one it cites is read from the clause before the citation: fills in, replaces, replaces part of, refines, or builds on. An approval is still a decision by the person titled `Approve [D-a] and [D-b].`, and approving everything at the Ledger's top level asks first. Fills in [D-98].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-26.4, F-26.5]
+  why: The changelog's prose already says how decisions relate, so no past entry has to be rewritten, and the approval stays in the form the graph already reads.
+  rejected:
+    - A `relation:` field per citation: every past entry would need it, and the prose would repeat it.
 
 ## Appendix: Extension Definitions
 

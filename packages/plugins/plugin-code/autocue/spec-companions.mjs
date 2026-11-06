@@ -4,8 +4,9 @@
 
 /**
  * Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
- * editor's cursor, then Data model and API; Decisions by person and as threads; Review and Code. A script in the video
- * dialect then offers only the views that read any dialect, and Definitions drills into it as it does into code.
+ * editor's cursor, then Data model and API; Decisions at the cursor and the Ledger, a level at a time; Review and Code.
+ * A script in the video dialect then offers only the views that read any dialect, and Definitions drills into it as it
+ * does into code.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-8
  * @app composer-app via `moon run composer-app:serve -- --port 5180 --strictPort`
@@ -47,6 +48,8 @@ const SPECS = '[role="listbox"][aria-label="Specs"]';
 const tab = (group) => `[data-testid="deck.companion.tab.spec-${group}"]`;
 const view = (id) => `${COMPANION} [data-testid="spec-companion.view.${id}"]`;
 const RELATED = `${COMPANION} [data-testid="definition-related.focus"]`;
+const LEDGER_BLOCK = '[data-testid="decision-ledger.block"]';
+const LEDGER_THREAD = '[data-testid="decision-ledger.thread"]';
 const line = (text) => `${EDITOR} .cm-line:has-text("${text}")`;
 /**
  * A block's id in its header line, clear of the chips floated at the line's end; a dialect's header the editor does
@@ -413,29 +416,58 @@ export const steps = [
     },
   },
   {
-    name: 'Open Decisions by person',
-    narration: "Decisions groups the spec's changelog by who decided.",
+    name: 'Open Decisions at the cursor',
+    narration: 'At cursor, the first Decisions view, shows what holds on the item at the cursor.',
     run: async ({ demo, page }) => {
-      await caption(demo, 9, 'Decisions › by person');
+      await caption(demo, 9, 'Decisions › At cursor: what holds on F-25.6');
+      await scrollToLine(page, 'req F-25.6:');
+      await demo.click({ selector: await blockId(page, 'req F-25.6:', 'F-25.6'), label: 'F-25.6' });
       await openTab(demo, page, 'decisions', 'Decisions');
-      await openView(demo, page, 'log', 'By person', '[data-testid="decision-log.decision"]');
+      await page
+        .locator(`${COMPANION} [data-testid="decision-cursor"][data-focus="F-25.6"]`)
+        .waitFor({ state: 'visible', timeout: 15_000 });
       await demo.sleep({ ms: LOOK });
     },
   },
   {
-    name: 'Open the decision threads',
-    narration: 'Threads follow each decision through what replaces and fills it in.',
+    name: 'Open the Ledger',
+    narration: 'The Ledger opens on a card per block, the most recently decided first.',
     run: async ({ demo, page }) => {
-      await caption(demo, 10, 'Decisions › threads');
-      await openView(demo, page, 'decisions', 'Threads', '[data-testid="decision-threads.thread"]');
+      await caption(demo, 10, 'Decisions › Ledger: a card per block');
+      await openView(demo, page, 'ledger', 'Ledger', LEDGER_BLOCK);
       await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Open a block',
+    narration: 'A block opens its threads: the decisions on it that cite one another.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 11, 'Open SpecViewContent: its threads');
+      await demo.click({
+        selector: `${COMPANION} ${LEDGER_BLOCK}[data-block="SpecViewContent"]`,
+        label: 'SpecViewContent',
+      });
+      await page.locator(`${COMPANION} ${LEDGER_THREAD}`).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Open a thread',
+    narration: 'A thread shows what holds now, then its decisions by day, with approval at the top.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 12, 'Open a thread: what holds now, then each day');
+      await demo.click({ selector: `${COMPANION} ${LEDGER_THREAD} >> nth=0`, label: 'Thread' });
+      await page
+        .locator(`${COMPANION} [data-testid="decision-ledger.holds-now"]`)
+        .waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: LOOK + 1_000 });
     },
   },
   {
     name: 'Open Review',
     narration: "Review shows the spec's latest compliance review, a verdict per item.",
     run: async ({ demo, page }) => {
-      await caption(demo, 11, 'Review › the latest compliance review');
+      await caption(demo, 13, 'Review › the latest compliance review');
       await openTab(demo, page, 'review', 'Review');
       await openView(
         demo,
@@ -451,7 +483,7 @@ export const steps = [
     name: 'Open Code',
     narration: 'A verdict opens the code it cites in Code, at its symbol.',
     run: async ({ demo, page }) => {
-      await caption(demo, 12, 'Review › Code: the source a verdict cites');
+      await caption(demo, 14, 'Review › Code: the source a verdict cites');
       await demo.click({ selector: `${COMPANION} [data-testid="review-panel.count.done"]`, label: 'Done' });
       // buildProject's verdict cites the function that compiles a project.
       const verdict = `${COMPANION} [data-testid="verdict-card"]:has(:text-is("buildProject"))`;
@@ -470,12 +502,12 @@ export const steps = [
     name: 'Open the launch video',
     narration: 'A script in the video dialect offers only the views that read any dialect: Definitions and Related.',
     run: async ({ demo, page }) => {
-      await caption(demo, 13, 'A video script: only the views for any dialect');
+      await caption(demo, 15, 'A video script: only the views for any dialect');
       await openTab(demo, page, 'structure', 'Structure');
       await pickSpec(page, VIDEO_SPEC, demo);
       await openView(demo, page, 'definitions', 'Definitions', '[data-cluster="cluster:maya"]');
       await page.locator(tab('review')).waitFor({ state: 'detached', timeout: 10_000 });
-      await caption(demo, 13, 'No Data model, API or Review: they read code');
+      await caption(demo, 15, 'No Data model, API or Review: they read code');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -483,7 +515,7 @@ export const steps = [
     name: "Open a character's cluster",
     narration: 'Definitions drills into a script as it does into code: a frame per scene, holding its shots and lines.',
     run: async ({ demo, page }) => {
-      await caption(demo, 14, "Double-click maya's cluster: a frame per scene");
+      await caption(demo, 16, "Double-click maya's cluster: a frame per scene");
       await open(demo, page, cluster('maya'), 'Maya');
       await page.locator(CLUSTER).first().waitFor({ state: 'detached', timeout: 15_000 });
       await page.locator(`${card('SC-2')}[data-opens]`).waitFor({ state: 'visible', timeout: 30_000 });
@@ -495,7 +527,7 @@ export const steps = [
     narration:
       'A scene opens onto everything it touches: its shots, voiceover and captions, its cast and its screenings.',
     run: async ({ demo, page }) => {
-      await caption(demo, 15, 'Double-click SC-2: everything it touches');
+      await caption(demo, 17, 'Double-click SC-2: everything it touches');
       await open(demo, page, card('SC-2'), 'SC-2');
       await page
         .locator(`${COMPANION} [data-testid="definition-canvas.card"][data-focused]`)
@@ -507,7 +539,7 @@ export const steps = [
     name: 'Put the cursor in a scene',
     narration: 'Related follows the cursor through the script as it does through code.',
     run: async ({ demo, page }) => {
-      await caption(demo, 16, 'Related: follows the cursor into SC-3');
+      await caption(demo, 18, 'Related: follows the cursor into SC-3');
       await openView(demo, page, 'related', 'Related', '[data-testid="definition-related.focus"]');
       await scrollToLine(page, 'scene SC-3');
       await demo.click({ selector: await blockId(page, 'scene SC-3', 'SC-3'), label: 'SC-3' });
@@ -519,9 +551,9 @@ export const steps = [
     name: "Open the script's decisions",
     narration: 'Every dialect extends the changelog, so Decisions reads the script the same way.',
     run: async ({ demo, page }) => {
-      await caption(demo, 17, "Decisions: any dialect — the script's changelog");
+      await caption(demo, 19, "Decisions: any dialect — the script's changelog");
       await openTab(demo, page, 'decisions', 'Decisions');
-      await openView(demo, page, 'log', 'By person', '[data-testid="decision-log.decision"]');
+      await openView(demo, page, 'ledger', 'Ledger', LEDGER_BLOCK);
       await demo.sleep({ ms: LOOK });
       await demo.clearCaption();
       await demo.sleep({ ms: 2_000 });

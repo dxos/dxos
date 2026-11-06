@@ -7,15 +7,17 @@ import { describe, test } from 'vitest';
 import { checkChangelogChange } from '@dxos/deus/extension';
 
 import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?raw';
+import CODE_SPEC from '../../../PLUGIN.mdl?raw';
 import CANVAS_AUTOGROW_SPEC from './__fixtures__/canvas-autogrow.mdl?raw';
 import INBOX_SYNC_SPEC from './__fixtures__/inbox-sync.mdl?raw';
 import {
   type DecisionModel,
   SPEC_BLOCK_PREFIX,
   answerQuestion,
+  approveDecisions,
+  awaitsApproval,
   buildChangelogGraph,
   buildQuestions,
-  groupByDecider,
 } from './decision-model.ts';
 
 const decisionsOf = (content: string) =>
@@ -61,13 +63,18 @@ describe('changelog graph', () => {
     );
   });
 
-  test('groups decisions by decider, people first and agents last', ({ expect }) => {
-    const groups = groupByDecider([...decisionsOf(CANVAS_AUTOGROW_SPEC).values()]);
-    const actors = groups.map(({ actor }) => actor);
-    expect(actors.indexOf('agent')).toBeGreaterThan(actors.lastIndexOf('user'));
-    expect(groups.reduce((total, { decisions }) => total + decisions.length, 0)).toBe(
-      decisionsOf(CANVAS_AUTOGROW_SPEC).size,
-    );
+  test('reads how each decision relates to those it cites, and what replaced part of it', ({ expect }) => {
+    const decisions = decisionsOf(CODE_SPEC);
+    expect(decisions.get('D-84')?.cites).toEqual([
+      { id: 'D-48', kind: 'replaces' },
+      { id: 'D-83', kind: 'fills-in' },
+    ]);
+    expect(decisions.get('D-93')?.cites).toEqual([{ id: 'D-92', kind: 'replaces', part: 'the switch' }]);
+    expect(decisions.get('D-92')).toMatchObject({
+      supersededBy: undefined,
+      replacedInPart: [{ id: 'D-93', part: 'the switch' }],
+    });
+    expect(decisions.get('D-48')?.supersededBy).toBe('D-84');
   });
 
   test('pairs each question with the decision that answers it, open ones first', ({ expect }) => {
@@ -117,5 +124,35 @@ describe('answer question', () => {
 
   test('needs a changelog', ({ expect }) => {
     expect(answerQuestion('# Spec\n', props)).toBeUndefined();
+  });
+});
+
+describe('approve decisions', () => {
+  const text = [
+    '# Spec',
+    '',
+    '## Changelog',
+    '',
+    '```mdl\ndecision D-1: X.\n  date: 2026-10-08\n  by: user:bob\n```',
+    '',
+    '```mdl\ndecision D-2: Y. Fills in [D-1].\n  date: 2026-10-08\n  by: agent:claude-code\n  for: user:bob\n```',
+    '',
+    '```mdl\ndecision D-3: Z.\n  date: 2026-10-08\n  by: agent:claude-code\n  for: user:bob\n```',
+    '',
+  ].join('\n');
+
+  test('records one decision approving each, which the changelog check accepts', ({ expect }) => {
+    expect([...decisionsOf(text).values()].filter(awaitsApproval).map(({ id }) => id)).toEqual(['D-2', 'D-3']);
+    const edit = approveDecisions(text, { ids: ['D-2', 'D-3'], by: 'user:bob', date: '2026-10-09' });
+    const approved = edit && text.slice(0, edit.from) + edit.insert + text.slice(edit.to);
+    expect(approved).toContain('decision D-4: Approve [D-2] and [D-3].');
+    expect(checkChangelogChange(text, approved ?? '')).toEqual([]);
+    const decisions = decisionsOf(approved ?? '');
+    expect(decisions.get('D-2')?.approvedBy).toEqual(['D-4']);
+    expect([...decisions.values()].filter(awaitsApproval)).toEqual([]);
+  });
+
+  test('approves nothing when given no ids', ({ expect }) => {
+    expect(approveDecisions(text, { ids: [], by: 'user:bob', date: '2026-10-09' })).toBeUndefined();
   });
 });
