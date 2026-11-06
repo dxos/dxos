@@ -13,6 +13,7 @@ export {
   partSource,
   patchBlock,
   patchPart,
+  printBlock,
 } from './codec.ts';
 export {
   type DialectRegistry,

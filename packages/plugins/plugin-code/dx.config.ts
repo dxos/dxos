@@ -12,6 +12,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
@@ -76,6 +77,18 @@ const config: Plugin.PluginConfig = Plugin.config({
       'FeatureMigrations',
       { provides: [ClientCapabilities.Migration] },
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
+    // Feature objects fold into their specs' text as each space loads, so no surface reads them.
+    // `SchemaRegistered` pulls the idle-gated type registration ahead of it: the spaces load first on a cold boot.
+    Capability.lazyModule(
+      'FeatureFold',
+      {
+        requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
+        provides: [],
+        activatesOn: ClientEvents.SpacesAvailable,
+        environments: ['browser', 'node', 'tauri'],
+      },
+      () => import('./src/capabilities/feature-fold.ts', { with: { type: 'module-url' } }),
     ),
     // Registered at startup so a GitHub file sync on EDGE, where no UI event fires, finds the mapping.
     Capability.lazyModule(

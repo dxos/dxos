@@ -16,6 +16,7 @@ import {
   partSource,
   patchBlock,
   patchPart,
+  printBlock,
 } from './codec.ts';
 import { SOFTWARE_DIALECT, keyedFields, parseDialectHeader, resolveBlockSchemas } from './dialects.ts';
 import { type SourceBlock, parseSourceBlocks } from './source.ts';
@@ -184,6 +185,30 @@ describe('patchBlock', () => {
       prose: 'Feeds forget old entries.',
     }));
     expect(touched(SPEC, out)).toEqual(['feat abcde: Feed retention', '  Feeds forget old entries.']);
+  });
+});
+
+describe('printBlock', () => {
+  test('writes a block that decodes to the value it states', ({ expect }) => {
+    const schema = schemasOf(SPEC).get('feat')!;
+    const value: BlockValue = {
+      title: 'Sorted inbox',
+      prose: 'Mail lands in the folder its sender suggests.',
+      fields: { status: 'planned', req: [{ key: 'm3pza', text: 'A known sender goes to its folder.' }] },
+      raw: [],
+    };
+    const text = printBlock(schema, 'k7q2x', value);
+    expect(text.split('\n').slice(0, 3)).toEqual([
+      '```mdl',
+      'feat k7q2x: Sorted inbox',
+      '  Mail lands in the folder its sender suggests.',
+    ]);
+    const [block] = blocksOf(text, schemasOf(SPEC));
+    expect(decodeBlock(text, block, schema)).toMatchObject({
+      title: value.title,
+      prose: value.prose,
+      fields: value.fields,
+    });
   });
 });
 

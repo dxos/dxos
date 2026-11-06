@@ -363,6 +363,27 @@ export const CreateSpecReview = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/** Writes every feature object of the space into its spec as a `feat` block; a space already folded is left alone. */
+export const MigrateFeatures = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.migrateFeatures'),
+    name: 'Migrate Features',
+    description: trim`
+      Folds the space's feature objects into their specs' text as \`feat\` blocks, moving comments, task links,
+      showcases, canvas positions and breakdown specs onto the spec and the block's key. Safe to run again.
+    `,
+    icon: 'ph--arrows-in-line-vertical--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    specs: Schema.Number,
+    features: Schema.Number,
+    relations: Schema.Number,
+    threads: Schema.Number,
+  }),
+}).pipe(Operation.mutation('write'));
+
 /**
  * \`GitHubCapabilities.FileMapping.import\` for \`.review.mdl\` files: records the review against the Spec synced from
  * the file beside it (\`PLUGIN.review.mdl\` reviews \`PLUGIN.mdl\`).

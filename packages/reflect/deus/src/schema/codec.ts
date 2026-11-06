@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SourceBlock, type SourceField, type SourceLine } from './source.ts';
-import { type Change, minimalChange, paragraphs, reprose, wrap } from './text.ts';
+import { keyedFields } from './dialects.ts';
+import { type SourceBlock, type SourceField, type SourceLine, parseSourceBlocks } from './source.ts';
+import { type Change, applyChanges, minimalChange, paragraphs, reprose, wrap } from './text.ts';
 import { type BlockSchema, type FieldSchema } from './types.ts';
 
 /** One row of a map field: `name[?]: value  # note`. */
@@ -668,6 +669,13 @@ export const patchBlock = (text: string, block: SourceBlock, schema: BlockSchema
     );
   }
   return changes;
+};
+
+/** A block of `schema`'s kind with id `id` stating `value`, fenced as `mdl`, in the form `patchBlock` writes. */
+export const printBlock = (schema: BlockSchema, id: string, value: Omit<BlockValue, 'raw'>): string => {
+  const head = ['```mdl', `${schema.kind}${id ? ` ${id}` : ''}`, '```'].join('\n');
+  const [block] = parseSourceBlocks(head, { keyed: () => keyedFields(schema) });
+  return applyChanges(head, patchBlock(head, block, schema, { ...value, raw: [] }));
 };
 
 /** The source range of a field's value in the spec text, for anchoring a comment or a bound editor. */

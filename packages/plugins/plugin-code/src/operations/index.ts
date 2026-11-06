@@ -24,6 +24,7 @@ export const CodeOperationHandlerSet = OperationHandlerSet.lazy([
   CodeOperation.ExportSpecFile.pipe(Operation.lazyHandler(() => import('./export-spec-file.ts'))),
   CodeOperation.CreateSpecReview.pipe(Operation.lazyHandler(() => import('./create-spec-review.ts'))),
   CodeOperation.ImportSpecReviewFile.pipe(Operation.lazyHandler(() => import('./import-spec-review-file.ts'))),
+  CodeOperation.MigrateFeatures.pipe(Operation.lazyHandler(() => import('./migrate-features.ts'))),
   CodeOperation.ListLocalSpecs.pipe(Operation.lazyHandler(() => import('./list-local-specs.ts'))),
   CodeOperation.CreateFeature.pipe(Operation.lazyHandler(() => import('./feature/create.ts'))),
   CodeOperation.UpdateFeature.pipe(Operation.lazyHandler(() => import('./feature/update.ts'))),
