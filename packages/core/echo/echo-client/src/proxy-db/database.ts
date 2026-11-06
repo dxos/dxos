@@ -221,6 +221,13 @@ export type EchoDatabaseProps = {
    */
   preloadSchemaOnOpen?: boolean;
 
+  /**
+   * Re-read the space root before treating an object it does not list as absent; for a data plane that sends a
+   * document only when it is first subscribed, such as a function invocation's.
+   * @default false
+   */
+  refreshDirectoryOnMiss?: boolean;
+
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 
@@ -410,6 +417,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
       documentRetention: params.documentRetention,
+      refreshDirectoryOnMiss: params.refreshDirectoryOnMiss,
       createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 

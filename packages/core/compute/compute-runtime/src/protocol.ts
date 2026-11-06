@@ -250,6 +250,9 @@ export class FunctionContext extends Resource {
             spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
             reactiveSchemaQuery: false,
             preloadSchemaOnOpen: false,
+            // The data plane sends a document only when it is first subscribed, so an object another invocation
+            // created after this one opened is found by re-reading the root.
+            refreshDirectoryOnMiss: true,
           })
         : undefined;
 

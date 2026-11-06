@@ -38,6 +38,9 @@ const FLUSH_ATTEMPTS = 3;
 /** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
 const FLUSH_RETRY_DELAY_MS = 50;
 
+/** How long {@link RepoProxy.refresh} waits for the host to answer before giving up on it. */
+const REFRESH_TIMEOUT_MS = 5_000;
+
 /** Delay before replacing a subscription the host dropped; doubled on each consecutive attempt. */
 const RESUBSCRIBE_DELAY_MS = 250;
 
@@ -154,6 +157,9 @@ export class RepoProxy extends Resource {
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
+
+  /** Callers of {@link refresh} waiting on the host's next send of a document. */
+  readonly #answerWaiters = new Map<DocumentId, Set<() => void>>();
 
   /**
    * What stopped the proxy taking work, recorded once when it does: a close, whose error's stack is the call site,
@@ -327,6 +333,60 @@ export class RepoProxy extends Resource {
     if (disk) {
       await this._saveWritten();
     }
+  }
+
+  /**
+   * Asks the host for its current bytes of loaded documents, and resolves once each answer is integrated or after
+   * `timeout`.
+   *
+   * For a data plane that sends a document only when it is first subscribed — a function invocation's, which pushes
+   * nothing afterwards — a write another client made after the load never reaches this one otherwise. The answer
+   * merges like any host update, so a document that has not changed costs a round trip and emits nothing.
+   */
+  async refresh(documentIds: readonly DocumentId[], { timeout = REFRESH_TIMEOUT_MS } = {}): Promise<void> {
+    const loaded = documentIds.filter((documentId) => this._handles[documentId] !== undefined);
+    if (loaded.length === 0) {
+      return;
+    }
+    const answers = loaded.map((documentId) => this.#awaitAnswer(documentId));
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      for (const documentId of loaded) {
+        this._pendingRemoveIds.delete(documentId);
+        this._pendingAddIds.add(documentId);
+      }
+      this._sendUpdatesJob?.trigger();
+      await this.flush();
+      await Promise.race([
+        Promise.all(answers.map(({ answered }) => answered)),
+        new Promise<void>((resolve) => {
+          timer = setTimeout(resolve, timeout);
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+      answers.forEach(({ dispose }) => dispose());
+    }
+  }
+
+  /** Resolves when the host next sends `documentId`, bytes or `unavailable`; see {@link refresh}. */
+  #awaitAnswer(documentId: DocumentId): { answered: Promise<void>; dispose: () => void } {
+    let resolve!: () => void;
+    const answered = new Promise<void>((resolvePromise) => {
+      resolve = resolvePromise;
+    });
+    const waiters = this.#answerWaiters.get(documentId) ?? new Set<() => void>();
+    waiters.add(resolve);
+    this.#answerWaiters.set(documentId, waiters);
+    return {
+      answered,
+      dispose: () => {
+        waiters.delete(resolve);
+        if (waiters.size === 0 && this.#answerWaiters.get(documentId) === waiters) {
+          this.#answerWaiters.delete(documentId);
+        }
+      },
+    };
   }
 
   private async _sendPending(): Promise<void> {
@@ -975,6 +1035,9 @@ export class RepoProxy extends Resource {
         // One bad document must not strand every update queued behind it.
         log.catch(err, { documentId });
       }
+    }
+    if (mutation || unavailable) {
+      this.#answerWaiters.get(documentId as DocumentId)?.forEach((resolve) => resolve());
     }
   }
 

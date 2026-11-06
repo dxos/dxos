@@ -54,6 +54,13 @@ export type ConstructDatabaseProps = {
   preloadSchemaOnOpen?: boolean;
 
   /**
+   * Re-read the space root before treating an object it does not list as absent; for a data plane that sends a
+   * document only when it is first subscribed, such as a function invocation's.
+   * @default false
+   */
+  refreshDirectoryOnMiss?: boolean;
+
+  /**
    * Space proxy reference for SDK compatibility.
    */
   // TODO(dmaretskyi): Remove.
@@ -195,6 +202,7 @@ export class EchoClient extends Resource {
     owningObject,
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
+    refreshDirectoryOnMiss,
     spaceKey,
     branchStore,
     documentRetention,
@@ -211,6 +219,7 @@ export class EchoClient extends Resource {
       spaceId,
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
+      refreshDirectoryOnMiss,
       spaceKey,
       branchStore,
       documentRetention,

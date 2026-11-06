@@ -131,6 +131,15 @@ export type EntityManagerProps = {
 
   /** Mints the caller-facing proxy for a core, injected because the proxy layer is built on this one. */
   createEntity: (core: ObjectCore) => Entity.Unknown;
+
+  /**
+   * Re-reads the space root from the data service before treating an object it does not list as absent.
+   *
+   * For a data plane that sends a document only when it is first subscribed (a function invocation's): the root
+   * this database opened with predates every object another invocation created since, so without a re-read a
+   * reference to one of them — another bundle's output, an id a query returned — never resolves.
+   */
+  refreshDirectoryOnMiss?: boolean;
 };
 
 /**
@@ -294,6 +303,15 @@ export class EntityManager implements IDatabaseBinding {
    */
   #generation = 0;
 
+  /** See {@link EntityManagerProps.refreshDirectoryOnMiss}. */
+  private readonly _refreshDirectoryOnMiss: boolean;
+
+  /** The re-read of the root that a miss now joins; see {@link #rereadDirectory}. */
+  #queuedDirectoryRead: Promise<void> | undefined;
+
+  /** Settles after the latest re-read, so the next one starts only once it is done. */
+  #directoryReadTail: Promise<void> = Promise.resolve();
+
   /** Settles loads waiting on an update when {@link close} ends their lifetime, rather than leaving them pending. */
   readonly #lifetimeEnded = new Event<void>();
 
@@ -307,6 +325,7 @@ export class EntityManager implements IDatabaseBinding {
     this._runtime = options.runtime;
     this._branchStore = options.branchStore;
     this._documentRetention = { ...DOCUMENT_RETENTION, ...options.documentRetention };
+    this._refreshDirectoryOnMiss = options.refreshDirectoryOnMiss ?? false;
     this._repoProxy = new RepoProxy(this._dataService, this._runtime, this._spaceId);
     this.saveStateChanged = this._repoProxy.saveStateChanged;
   }
@@ -1063,6 +1082,16 @@ export class EntityManager implements IDatabaseBinding {
     }
     if (!this._spaceRootDocHandle) {
       throw new Error('Database is not ready.');
+    }
+    // A by-id query loads through here, and an id the root does not list may be one created since it was read.
+    if (this._refreshDirectoryOnMiss && objectIds.some((objectId) => !this._objectPresent(objectId as EntityId))) {
+      await this.#rereadDirectory();
+      if (this.#isStale(generation)) {
+        throw new ContextDisposedError();
+      }
+      if (!this._spaceRootDocHandle) {
+        throw new Error('Database is not ready.');
+      }
     }
 
     const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
@@ -2137,8 +2166,12 @@ export class EntityManager implements IDatabaseBinding {
         this._objectsPendingDocumentLoad.set(objectId, opts);
         const isInline = DatabaseDirectory.getInlineObject(this.#rootDirectory(), objectId) != null;
         if (!isInline) {
-          log('object absent from space directory, marking unavailable', { objectId });
-          this._onObjectUnavailable({ objectId });
+          if (this._refreshDirectoryOnMiss) {
+            this.#markUnavailableUnlessListed(objectId);
+          } else {
+            log('object absent from space directory, marking unavailable', { objectId });
+            this._onObjectUnavailable({ objectId });
+          }
         } else {
           log('loading delayed until object links are initialized', { objectId });
         }
@@ -2150,6 +2183,50 @@ export class EntityManager implements IDatabaseBinding {
     if (hasUrlsToLoad) {
       this._loadLinkedObjects(urlsToLoad, opts);
     }
+  }
+
+  /**
+   * Reports an object the directory does not list unavailable only once a re-read of the root still does not list it;
+   * see {@link EntityManagerProps.refreshDirectoryOnMiss}. A link the re-read brings is loaded by
+   * {@link _onObjectLinksUpdated}, since the object is still pending.
+   */
+  #markUnavailableUnlessListed(objectId: string): void {
+    const generation = this.#generation;
+    void this.#rereadDirectory().then(() => {
+      if (!this.#isStale(generation) && this._spaceRootDocHandle && !this._objectPresent(objectId as EntityId)) {
+        log('object absent from space directory, marking unavailable', { objectId });
+        this._onObjectUnavailable({ objectId });
+      }
+    });
+  }
+
+  /**
+   * Re-reads the space root from the data service. Misses that arrive while one re-read runs share the next, so each
+   * is answered by a root read after it, and a burst of misses costs two round trips, not one per miss. Never
+   * rejects: a failed re-read leaves the root as it was.
+   */
+  #rereadDirectory(): Promise<void> {
+    if (this.#queuedDirectoryRead) {
+      return this.#queuedDirectoryRead;
+    }
+    const read: Promise<void> = this.#directoryReadTail.then(async () => {
+      if (this.#queuedDirectoryRead === read) {
+        this.#queuedDirectoryRead = undefined;
+      }
+      const rootDocumentId = this._spaceRootDocHandle?.documentId;
+      if (!rootDocumentId || this.#closed) {
+        return;
+      }
+      log('object absent from space directory, re-reading the root');
+      try {
+        await this._repoProxy.refresh([rootDocumentId]);
+      } catch (err) {
+        log.catch(err);
+      }
+    });
+    this.#queuedDirectoryRead = read;
+    this.#directoryReadTail = read;
+    return read;
   }
 
   private _onObjectLinksUpdated(links: SpaceDocumentLinks): void {
