@@ -35,6 +35,14 @@ export interface TurnProducer {
 
   /** Skills bound to this conversation, which the process fires end-request hooks against. */
   getSkills(): Skill.Skill[];
+
+  /**
+   * Re-reads the skills bound to this conversation; called as a request begins, once its prompt has been read from
+   * the feed. A producer that reads its skills from the feed needs it: one opened before the index held a binding
+   * written elsewhere (EDGE: the chat's skills, bound by the worker that made the chat) would run the request
+   * without that skill.
+   */
+  syncSkills?(): Effect.Effect<void>;
 }
 
 export type TurnRequest = {
@@ -77,5 +85,6 @@ export const makeAiSessionTurnProducer: MakeTurnProducer = ({ feed, runtime, ins
     Effect.map((session) => ({
       runTurn: (params: TurnRequest) => session.createRequest(params),
       getSkills: () => session.context.getSkills(),
+      syncSkills: () => Effect.promise(() => session.context.sync({ force: true })),
     })),
   );

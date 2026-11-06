@@ -381,22 +381,23 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           yield* ctx.setAlarm(0);
         });
 
-        // Snapshots the end-request hooks for the request now beginning, and records why each runs and any plugin a
-        // setting turns on that this host lacks, so a hook that did not run is still on file.
+        // Snapshots the end-request hooks for the request now beginning, and records the skills they were resolved
+        // against, why each runs, and any plugin a setting turns on that this host lacks.
         const resolveRequestHooks = Effect.gen(function* () {
           const [properties] = yield* Database.query(Filter.type(DXN.make(SPACE_PROPERTIES_TYPENAME))).run;
+          const skills = session.getSkills().flatMap((skill) => Obj.getMeta(skill).key ?? []);
           const resolution = Hook.resolve({
             catalog: options.hooks?.() ?? [],
             event: 'end-request',
             space: properties && Annotation.get(properties, Hook.SettingsAnnotation).pipe(Option.getOrUndefined),
             instructions:
               instructions && Annotation.get(instructions, Hook.SettingsAnnotation).pipe(Option.getOrUndefined),
-            skillKeys: new Set(session.getSkills().flatMap((skill) => Obj.getMeta(skill).key ?? [])),
+            skillKeys: new Set(skills),
           });
           const run = resolution.run.map((hook) => hook.key);
-          if (run.length + resolution.inactive.length + resolution.missing.length > 0) {
-            yield* Trace.write(Trace.AgentHooksResolved, { ...resolution, run });
-          }
+          // Written when nothing matched too: a request that ran with no skills is otherwise indistinguishable from
+          // one whose skills declare no hooks.
+          yield* Trace.write(Trace.AgentHooksResolved, { ...resolution, run, skills });
           yield* RequestHooksCell.set(run);
         });
 
@@ -580,6 +581,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           log('begin request', { prompt });
           log('trace agent request begin');
           yield* Trace.write(Trace.AgentRequestBegin, {});
+          // The prompt was just read through an index that holds a feed in position order, so skills another worker
+          // bound before it are readable now, though they may not have been when the session opened.
+          yield* session.syncSkills?.() ?? Effect.void;
+          if (tenant) {
+            yield* tenant.producer.syncSkills?.() ?? Effect.void;
+          }
           yield* resolveRequestHooks;
           const mcpContext = yield* Effect.context<
             Database.Service | Registry.Service | Credential.CredentialsService

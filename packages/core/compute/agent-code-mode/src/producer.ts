@@ -76,6 +76,7 @@ export const makeCodeModeTurnProducer =
       Effect.map((session): TurnProducer => ({
         runTurn: (params) => runCodeModeTurn({ session, feed, instructions, params, options }),
         getSkills: () => session.context.getSkills(),
+        syncSkills: () => Effect.promise(() => session.context.sync({ force: true })),
       })),
     );
 

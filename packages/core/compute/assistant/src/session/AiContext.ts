@@ -191,6 +191,15 @@ const countBindingWrite = (feed: Feed.Feed): void => {
   bindingWrites.set(feed.id, (bindingWrites.get(feed.id) ?? 0) + 1);
 };
 
+export type SyncOptions = {
+  /**
+   * Re-read even when this realm has noted no binding write since the last read. For a caller that has just read a
+   * later item of the feed (the prompt it answers): EDGE indexes a feed in position order, so the index then holds
+   * every binding appended before that item, including one another worker wrote, which no live query carries here.
+   */
+  readonly force?: boolean;
+};
+
 export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Context.Context<Database.Service>;
@@ -360,12 +369,13 @@ export class Binder extends Resource {
 
   /**
    * Re-reads bindings from the feed to pick up changes made by other processes in this realm, such
-   * as a tool that bound a skill. A no-op when none has been written since the last read.
+   * as a tool that bound a skill. A no-op when none has been written since the last read, unless
+   * {@link SyncOptions.force forced}.
    */
-  async sync(): Promise<void> {
+  async sync({ force = false }: SyncOptions = {}): Promise<void> {
     const writes = bindingWriteCount(this._feed);
     const external = externalBindingWrites;
-    if (this.#bindingsQuery && writes !== this.#readWrites) {
+    if (this.#bindingsQuery && (force || writes !== this.#readWrites)) {
       // A write noted from another process is in the feed but may not be indexed yet, so a read that returns no
       // new item is retried until it does or the wait runs out.
       const awaitingExternal = external !== this.#readExternal;

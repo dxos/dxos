@@ -721,7 +721,7 @@ export const AgentRequestEnd = EventType('assistant.agentRequestEnd', {
 /**
  * The end-request hooks a request runs, resolved when it begins (see `Hook.resolve`): which ran by their plugin's
  * default, which a setting turned on but whose skill is unbound, and which plugins a setting turned on that this
- * host lacks. Written only when one of those is non-empty.
+ * host lacks. Written for every request, so one that ran with no skills is on file.
  */
 export const AgentHooksResolved = EventType('assistant.agentHooksResolved', {
   schema: Schema.Struct({
@@ -729,6 +729,8 @@ export const AgentHooksResolved = EventType('assistant.agentHooksResolved', {
     byDefault: Schema.Array(Schema.String),
     inactive: Schema.Array(Schema.String),
     missing: Schema.Array(Schema.String),
+    /** Keys of the skills the request runs with; absent on events written before it was recorded. */
+    skills: Schema.optional(Schema.Array(Schema.String)),
   }),
   isEphemeral: false,
 });

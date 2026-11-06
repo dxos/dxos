@@ -320,6 +320,47 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  test('a forced sync reads a binding written before the binder opened that its first read missed', async ({
+    expect,
+  }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      // Written by another worker before this one opened the conversation; this realm counts no write.
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(a)], removed: [] },
+        }),
+      ]);
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      // The binder opens as an index that has not caught up would serve it: the read misses the binding, and the
+      // live query, answered once, never delivers it.
+      const prototype = Object.getPrototypeOf(probe);
+      const run = vi.spyOn(prototype, 'run').mockResolvedValueOnce([]);
+      const subscribe = vi.spyOn(prototype, 'subscribe').mockReturnValueOnce(() => {});
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+      yield* Effect.promise(() => agent.sync());
+      const unforced = agent.getObjects();
+      yield* Effect.promise(() => agent.sync({ force: true }));
+      const forced = agent.getObjects();
+      run.mockRestore();
+      subscribe.mockRestore();
+      yield* Effect.promise(() => agent.close());
+
+      expect(unforced).toEqual([]);
+      expect(forced.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
   test('sync after a noted external write waits for the index to return it', async ({ expect }) => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
