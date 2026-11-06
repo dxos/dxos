@@ -158,3 +158,43 @@ describe('Operation consent preview', () => {
     expect(Operation.getConsentPreview(op, { to: 'dana', body: 'Hi Dana' })).toBeUndefined();
   });
 });
+
+describe('script operations', () => {
+  const inline = Operation.makeScript({
+    meta: { key: KEY, name: 'Inline Script' },
+    source: Operation.inlineScript('print(1)', Operation.Dialects.Effect),
+  });
+
+  test('a script operation is its own kind — neither a handler nor a durable operation', ({ expect }) => {
+    expect(Operation.isScript(inline)).toBe(true);
+    expect(Operation.isOperationDefinition(inline)).toBe(false);
+    expect(Operation.isOperationWithHandler(inline)).toBe(false);
+    expect(Operation.isDurable(inline)).toBe(false);
+  });
+
+  test('an inline source carries its dialect; an object source does not restate one', ({ expect }) => {
+    expect(Operation.isInlineScript(inline.source)).toBe(true);
+    expect(Operation.isScriptRef(inline.source)).toBe(false);
+    expect(Operation.isDialect('effect')).toBe(true);
+    expect(Operation.isDialect('cobol')).toBe(false);
+  });
+
+  test('an inline script round-trips through its registry record, dialect included', ({ expect }) => {
+    const record = Operation.serializeScript(inline);
+    const restored = Operation.deserializeScript(record);
+    expect(restored && Operation.isScript(restored)).toBe(true);
+    expect(restored?.source).toEqual(inline.source);
+    expect(restored?.meta.name).toBe('Inline Script');
+  });
+
+  test('a record of a compiled operation deserializes to no script', ({ expect }) => {
+    const record = Operation.serialize(
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY, name: 'Compiled' } }),
+    );
+    expect(Operation.deserializeScript(record)).toBeUndefined();
+  });
+
+  test('input and output default to Unknown, since a snippet rarely declares either', ({ expect }) => {
+    expect(Schema.decodeUnknownSync(Schema.toType(inline.input))({ anything: true })).toEqual({ anything: true });
+  });
+});

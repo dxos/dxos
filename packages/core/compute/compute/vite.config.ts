@@ -20,6 +20,7 @@ export default defineConfig({
     'OperationRegistry': 'src/OperationRegistry.ts',
     'Process': 'src/Process.ts',
     'Runnable': 'src/Runnable.ts',
+    'ScriptRunner': 'src/ScriptRunner.ts',
     'ServiceResolver': 'src/ServiceResolver.ts',
     'ShellService': 'src/ShellService.ts',
     'SqlService': 'src/SqlService.ts',

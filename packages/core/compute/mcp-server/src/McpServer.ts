@@ -17,6 +17,7 @@ import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Obj, Registry } from '@dxos/echo';
@@ -763,17 +764,74 @@ export const runScript = (
   host: HostShape,
   gate: SkillGate,
   { code, spaceId, skillTokens = [] }: { code: string; spaceId?: SpaceId; skillTokens?: readonly string[] },
-  { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
+  options: ScriptOptions,
 ): Effect.Effect<ScriptResult> =>
-  sandbox
-    .run({ code, spaceId, skillTokens, timeout: Duration.fromInputUnsafe(timeout), maxOutput }, (call) =>
-      scriptDispatch(registry, host, gate, call, { spaceId }),
-    )
+  scriptRunner(registry, host, gate, options)
+    .run({
+      source: Operation.inlineScript(code, Operation.Dialects.Effect),
+      ...(spaceId !== undefined ? { spaceId } : {}),
+      skillTokens,
+    })
     .pipe(
-      Effect.tap(({ error }) =>
-        error === undefined ? Effect.void : Effect.sync(() => log.info('mcp script failed', { message: error })),
-      ),
+      // A runner failure here is this server's own misconfiguration, and the caller is a model: it
+      // reads the message as the script's failure rather than losing the turn to a tool error.
+      Effect.catchTag('ScriptRunnerError', (error) => Effect.succeed({ output: '', error: error.message })),
     );
+
+/**
+ * This server's script execution as a {@link ScriptRunner.Runner}: the same sandbox, dispatch and
+ * skill gate, behind the API every other script caller uses.
+ *
+ * Only the `effect` dialect: the program is written against this host's three verbs as effects, which
+ * is what `scriptDispatch` answers — a `plain` or `typescript` body has nothing to run against here.
+ */
+export const scriptRunner = (
+  registry: Registry.Registry,
+  host: HostShape,
+  gate: SkillGate,
+  { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
+): ScriptRunner.Runner => ({
+  run: (request) =>
+    Effect.gen(function* () {
+      const { code, dialect } = yield* ScriptRunner.resolveSource(request.source);
+      if (dialect !== Operation.Dialects.Effect) {
+        return yield* Effect.fail(
+          new ScriptRunner.RunnerError({
+            message: `This server runs the "${Operation.Dialects.Effect}" dialect only, not "${dialect}".`,
+            dialect,
+          }),
+        );
+      }
+      const spaceId = yield* decodeScriptSpaceId(request.spaceId);
+      return yield* sandbox
+        .run(
+          {
+            code,
+            spaceId,
+            skillTokens: request.skillTokens ?? [],
+            timeout:
+              request.timeoutMs !== undefined ? Duration.millis(request.timeoutMs) : Duration.fromInputUnsafe(timeout),
+            maxOutput: request.maxOutput ?? maxOutput,
+          },
+          (call) => scriptDispatch(registry, host, gate, call, { spaceId }),
+        )
+        .pipe(
+          Effect.tap(({ error }) =>
+            error === undefined ? Effect.void : Effect.sync(() => log.info('mcp script failed', { message: error })),
+          ),
+        );
+    }),
+});
+
+/** The request's space as this server's branded id; a value that is not one is the caller's mistake. */
+const decodeScriptSpaceId = (
+  spaceId: string | undefined,
+): Effect.Effect<SpaceId | undefined, ScriptRunner.RunnerError> =>
+  spaceId === undefined
+    ? Effect.succeed(undefined)
+    : Schema.decodeUnknownEffect(SpaceId)(spaceId).pipe(
+        Effect.mapError(() => new ScriptRunner.RunnerError({ message: `Not a space id: ${spaceId}` })),
+      );
 
 const ScriptInvokeArguments = Schema.Struct({
   key: Schema.String,

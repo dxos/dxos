@@ -702,6 +702,202 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
 };
 
 //
+// Script operations.
+//
+
+/**
+ * Language an inline script snippet is written in.
+ *
+ * Carried by the snippet rather than by the runtime, because one runtime serves several: a code-mode
+ * turn writes `plain` or `effect` against the same host that runs a `typescript` module.
+ */
+export const Dialect = Schema$.Literals(['plain', 'effect', 'javascript', 'typescript']);
+export type Dialect = Schema$.Schema.Type<typeof Dialect>;
+
+/** Named {@link Dialect} values, so a caller names one without spelling the literal. */
+export const Dialects = {
+  /** Code-mode's plain dialect: `await`-style bindings over the workspace. */
+  Plain: 'plain',
+  /** Code-mode's Effect dialect: the body of an `Effect.gen` generator. */
+  Effect: 'effect',
+  JavaScript: 'javascript',
+  TypeScript: 'typescript',
+} as const satisfies Record<string, Dialect>;
+
+/** A snippet carried by the operation itself, in the dialect it is written in. */
+export const InlineScript = Schema$.Struct({
+  _tag: Schema$.Literal('inline'),
+  code: Schema$.String,
+  dialect: Dialect,
+});
+export type InlineScript = Schema$.Schema.Type<typeof InlineScript>;
+
+/**
+ * A script stored in ECHO, as the `Script` object `@dxos/compute/Script` declares.
+ *
+ * The target is typed as an unknown object, exactly as the registry record's own `source` field is:
+ * one value travels between the two without a conversion, and the runner that resolves it says so
+ * when the target turns out not to be a script. The dialect is the object's own (its editor compiles
+ * TypeScript), so unlike {@link InlineScript} it is not restated here.
+ */
+export const ScriptRef = Schema$.Struct({
+  _tag: Schema$.Literal('object'),
+  script: Ref.Ref(Obj.Unknown),
+});
+export type ScriptRef = Schema$.Schema.Type<typeof ScriptRef>;
+
+/** Where a script operation's code comes from: a snippet it carries, or an ECHO object it points at. */
+export const ScriptSource = Schema$.Union([InlineScript, ScriptRef]);
+export type ScriptSource = Schema$.Schema.Type<typeof ScriptSource>;
+
+/** A snippet source in `dialect`. */
+export const inlineScript = (code: string, dialect: Dialect = Dialects.TypeScript): InlineScript => ({
+  _tag: 'inline',
+  code,
+  dialect,
+});
+
+/** A source pointing at a `Script` object. */
+export const scriptRef = (script: Ref.Ref<Obj.Unknown>): ScriptRef => ({ _tag: 'object', script });
+
+export const isInlineScript = (source: ScriptSource): source is InlineScript => source._tag === 'inline';
+export const isScriptRef = (source: ScriptSource): source is ScriptRef => source._tag === 'object';
+
+export const ScriptDefinitionTypeId = '~@dxos/operation/ScriptDefinition' as const;
+export type ScriptDefinitionTypeId = typeof ScriptDefinitionTypeId;
+
+/**
+ * The third kind of operation, beside a non-durable {@link Definition} and a {@link Durable} one: an
+ * operation whose body is a script rather than a compiled handler.
+ *
+ * It carries no handler at all — the code is data, so the definition crosses a boundary whole and the
+ * runtime that executes it is chosen at call time (`ScriptRunner`, or a process spawned locally or on
+ * EDGE). That is what a non-durable operation cannot do: its handler is a closure in one runtime.
+ */
+export interface ScriptDefinition<I, O> extends Pipeable.Pipeable, ScriptDefinition.Variance<I, O> {
+  readonly source: ScriptSource;
+  readonly input: Schema<I>;
+  readonly output: Schema<O>;
+  readonly meta: Definition<I, O>['meta'];
+  /** Wall-clock bound on one execution, in milliseconds; absent leaves the bound to the runtime. */
+  readonly timeout?: number;
+}
+
+export declare namespace ScriptDefinition {
+  export interface Variance<I, O> {
+    readonly [ScriptDefinitionTypeId]: {
+      readonly _Input: Types.Contravariant<I>;
+      readonly _Output: Types.Covariant<O>;
+    };
+  }
+
+  export type Any = ScriptDefinition<any, any>;
+
+  export type Input<T extends Any> = T extends Variance<infer I, infer _O> ? I : never;
+  export type Output<T extends Any> = T extends Variance<infer _I, infer O> ? O : never;
+}
+
+/** Props {@link makeScript} takes; `input`/`output` default to `Unknown`, as a snippet rarely declares either. */
+export type ScriptProps = Omit<ScriptDefinition<any, any>, ScriptDefinitionTypeId | 'pipe' | 'input' | 'output'> & {
+  readonly input?: Schema$.Codec<any, any, never, never>;
+  readonly output?: Schema$.Codec<any, any, never, never>;
+};
+
+/**
+ * Creates a script operation.
+ *
+ * @example
+ * ```ts
+ * const Hello = Operation.makeScript({
+ *   meta: { key: DXN.make('example.hello') },
+ *   source: Operation.inlineScript('print("hi")', Operation.Dialects.Effect),
+ * });
+ * ```
+ */
+export const makeScript = <const P extends Types.NoExcessProperties<ScriptProps, P>>(
+  props: P,
+): ScriptDefinition<
+  P['input'] extends Schema$.Codec<any, any, any, any> ? Schema$.Schema.Type<P['input']> : unknown,
+  P['output'] extends Schema$.Codec<any, any, any, any> ? Schema$.Schema.Type<P['output']> : unknown
+> =>
+  ({
+    [ScriptDefinitionTypeId]: {},
+    ...props,
+    input: props.input ?? Schema$.Unknown,
+    output: props.output ?? Schema$.Unknown,
+    pipe() {
+      // eslint-disable-next-line prefer-rest-params
+      return Pipeable.pipeArguments(this, arguments);
+    },
+  }) as any;
+
+/** Whether a value is a script operation. */
+export const isScript = (value: unknown): value is ScriptDefinition.Any =>
+  typeof value === 'object' && value !== null && ScriptDefinitionTypeId in value;
+
+/** Meta key under which a script operation's dialect rides on a persisted record. */
+const SCRIPT_DIALECT_META_KEY = 'org.dxos.operation.script.dialect';
+
+/**
+ * Serializes a script operation to its registry record: a snippet lands in `binding`-free
+ * `scriptSource`, an object source in `source`, and the dialect in the record's foreign keys — the
+ * one place a record can carry a value the schema does not name.
+ */
+export const serializeScript = (operation: ScriptDefinition.Any, options?: Obj.MakeOptions): PersistentOperation => {
+  const record = serialize(
+    make({
+      input: operation.input,
+      output: operation.output,
+      meta: operation.meta,
+      services: [],
+    }),
+    options,
+  );
+  Obj.update(record, (record) => {
+    if (isInlineScript(operation.source)) {
+      record.scriptSource = operation.source.code;
+      Obj.getMeta(record).keys = [
+        ...Obj.getMeta(record).keys,
+        { source: SCRIPT_DIALECT_META_KEY, id: operation.source.dialect },
+      ];
+    } else {
+      record.source = operation.source.script;
+    }
+  });
+  return record;
+};
+
+/**
+ * Reads a script operation back from its registry record, or undefined when the record holds no
+ * script — a record of a compiled operation is not a malformed script, so it is not an error.
+ */
+export const deserializeScript = (record: PersistentOperation): ScriptDefinition.Any | undefined => {
+  const definition = deserialize(record);
+  const dialect = Obj.getMeta(record).keys.find((key) => key.source === SCRIPT_DIALECT_META_KEY)?.id;
+  if (record.scriptSource !== undefined) {
+    return makeScript({
+      meta: definition.meta,
+      input: definition.input,
+      output: definition.output,
+      source: inlineScript(record.scriptSource, isDialect(dialect) ? dialect : Dialects.TypeScript),
+    });
+  }
+  if (record.source !== undefined) {
+    return makeScript({
+      meta: definition.meta,
+      input: definition.input,
+      output: definition.output,
+      source: scriptRef(record.source),
+    });
+  }
+  return undefined;
+};
+
+/** Whether `value` names a known {@link Dialect}. */
+export const isDialect = (value: unknown): value is Dialect =>
+  typeof value === 'string' && (Dialect.literals as readonly string[]).includes(value);
+
+//
 // Tool projection
 //
 
@@ -824,6 +1020,12 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
      * Match the Context.Tag keys of the services the operation handler declares.
      */
     services: Schema$.optional(Schema$.Array(Schema$.String)),
+
+    /**
+     * Inline script body of a script operation (see {@link ScriptDefinition}); its dialect rides on the
+     * record's foreign keys. Absent for a compiled operation and for one whose script is the `source` object.
+     */
+    scriptSource: Schema$.optional(Schema$.String),
 
     // Local binding to a function name.
     // TODO(dmaretskyi): Add this field to Operation.Definition.
