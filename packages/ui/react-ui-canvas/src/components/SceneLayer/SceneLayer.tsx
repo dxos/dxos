@@ -620,6 +620,7 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   const arrow = markerFrame('arrow', box, width);
   const triangle = markerFrame('triangle', box, width);
   const circle = markerFrame('circle', box, width);
+  const diamond = markerFrame('diamond', box, width);
   // An outline matches the line's width, in its marker's view units.
   const outline = ({ size, view }: MarkerFrame) => (width * view) / size;
   const ends = ['start', 'end'] as const;
@@ -658,6 +659,19 @@ const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
           />
         </marker>
       ))}
+      {/* Aggregation and composition (UML): a diamond at the owning end, hollow (filled with the canvas) or solid. */}
+      {ends.flatMap((end) =>
+        (['diamond', 'diamond-filled'] as const).map((kind) => (
+          <marker key={`${kind}-${end}`} id={`${id}-${kind}-${end}`} viewBox='-1 -1 18 18' {...frame(diamond, end)}>
+            <path
+              d='M 0 5 L 8 0 L 16 5 L 8 10 z'
+              className={mx(kind === 'diamond' ? canvasFill : line.fill, line.stroke)}
+              strokeWidth={outline(diamond)}
+              strokeLinejoin='miter'
+            />
+          </marker>
+        )),
+      )}
       {/* A circle filled with the canvas, its far side on the connection point, so the line stops under it. */}
       {ends.map((end) => (
         <marker key={`circle-${end}`} id={`${id}-circle-${end}`} viewBox='0 0 10 10' {...frame(circle, end)}>

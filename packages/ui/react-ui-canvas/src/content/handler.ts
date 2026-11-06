@@ -154,11 +154,15 @@ const nodeAt = (nodes: readonly Node[], point: { x: number; y: number }, slack =
     })
     .sort((left, right) => left.size.width * left.size.height - right.size.width * right.size.height)[0];
 
-/** The canvas markers of a connector's ends; a canvas end marker is one of arrow, circle or triangle. */
+/** The canvas markers of a connector's ends; a diagram marker the canvas has no equal for draws as an arrow. */
 const endsOf = (arrow: Shape.Arrow): Link['ends'] => {
   const markers = Shape.markersOf(arrow);
   const marker = (value: Shape.Marker | undefined) =>
-    value === 'triangle' ? 'triangle' : value === 'circle' ? 'circle' : value ? 'arrow' : undefined;
+    value === 'triangle' || value === 'circle' || value === 'diamond' || value === 'diamond-filled'
+      ? value
+      : value
+        ? 'arrow'
+        : undefined;
   const start = marker(markers.start);
   const end = marker(markers.end);
   return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
