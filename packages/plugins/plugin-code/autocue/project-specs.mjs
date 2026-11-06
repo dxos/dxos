@@ -6,8 +6,9 @@
  * A project owns several specs: the Overview is one form in which each spec is a folded row that unfolds to its fields,
  * and whose + adds one. The Specs tab shows one spec at a time, picked from a dropdown in its toolbar: a feature map
  * whose prose and features sit together, where `/feature` turns a line of prose into a feature, and a spec of prose.
- * The toolbar follows the tab, a spec offers the views its packages give, another plugin's package adds slash
- * commands that write its blocks, and the feature map's canvas adds a feature in the empty cell under the pointer.
+ * The toolbar follows the tab, a spec's Structure companion offers the views its packages give, another plugin's
+ * package adds slash commands that write its blocks, and the feature map's canvas adds a feature in the empty cell
+ * under the pointer.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-5
  * @app storybook-react, narrowed to plugin-code, on :9009
@@ -40,7 +41,7 @@ const IDEA_DESCRIPTION = 'Each morning, one note lists what agents closed, opene
 const PICKER = '[data-testid="projectsPlugin.specPicker"]';
 const DOCUMENT = '[data-testid="projectsPlugin.spec.document"]';
 const ADD_ARTIFACT = '[data-testid="projectsPlugin.addArtifact"]';
-const CANVAS_TOGGLE = '[data-testid="projectsPlugin.specView.canvas"]';
+const CANVAS_TOGGLE = '[data-testid="spec-companion.view.canvas"]';
 const EXTENSIONS = '[data-testid="projectsPlugin.specExtensions"]';
 const EDITOR = `${DOCUMENT} .cm-content`;
 // A listbox option's children are presentational to role selectors, so its rows are found by their legend.
@@ -86,7 +87,9 @@ const checkPackage = (demo, label) =>
 const hasFeature = (page, name) =>
   page.evaluate(
     ([name]) =>
-      [...document.querySelectorAll('[data-testid="markdown.embed"] input')].some((input) => input.value === name),
+      [...document.querySelectorAll('[data-testid="markdown.embed"]')].some((embed) =>
+        embed.textContent.includes(name),
+      ),
     [name],
   );
 
@@ -211,7 +214,9 @@ export const steps = [
       await demo.press({ key: 'Enter' });
       await page.waitForFunction(
         ([name]) =>
-          [...document.querySelectorAll('[data-testid="markdown.embed"] input')].some((input) => input.value === name),
+          [...document.querySelectorAll('[data-testid="markdown.embed"]')].some((embed) =>
+            embed.textContent.includes(name),
+          ),
         [IDEA],
         { timeout: 5_000 },
       );

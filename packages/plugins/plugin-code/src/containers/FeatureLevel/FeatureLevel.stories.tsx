@@ -19,6 +19,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 import { VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -45,7 +46,7 @@ type StoryArgs = {
   featureName?: string;
 };
 
-/** Opens the project, or one of its features, through the article surface, as the deck does. */
+/** Opens the project, or one of its features, with its Structure companion beside it, as the deck does. */
 const DefaultStory = ({ attendableId, featureName }: StoryArgs) => {
   const [space] = useSpaces();
   const project = useQuery(space?.db, Filter.type(Project.Project)).find((entry) => entry.name === PROJECT_NAME);
@@ -58,8 +59,13 @@ const DefaultStory = ({ attendableId, featureName }: StoryArgs) => {
   }
 
   return (
-    <AttendableContainer id={attendableId} classNames='contents'>
+    <AttendableContainer id={attendableId} classNames='grid grid-cols-2 dx-fill'>
       <Surface.Surface type={AppSurface.Article} data={{ subject, attendableId }} limit={1} />
+      <Surface.Surface
+        type={AppSurface.Article}
+        data={{ subject: SpecSession.companionVariant('structure'), companionTo: subject, attendableId }}
+        limit={1}
+      />
     </AttendableContainer>
   );
 };
@@ -70,7 +76,7 @@ const showTab = async (canvas: ReturnType<typeof within>, tab: string) => {
 };
 
 const showCanvas = async (canvas: ReturnType<typeof within>) => {
-  await userEvent.click(await canvas.findByTestId('projectsPlugin.specView.canvas', undefined, { timeout: 10_000 }));
+  await userEvent.click(await canvas.findByTestId('spec-companion.view.canvas', undefined, { timeout: 10_000 }));
   await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 };
 
@@ -166,7 +172,7 @@ export const Default: Story = {};
 
 /**
  * The project's Specs tab: a spec in the software package shows its features embedded in its text, and the map's views
- * join the toggle; the canvas's `+` adds a new feature or moves an existing one.
+ * join its Structure companion; the canvas's `+` adds a new feature or moves an existing one.
  */
 export const AddFeature: Story = {
   play: async ({ canvasElement }) => {
@@ -213,12 +219,12 @@ export const SoftwarePackage: Story = {
     await userEvent.keyboard('{Escape}');
 
     await pickSpec(canvas, TALK_SPEC_NAME);
-    await expect(canvas.queryByTestId('projectsPlugin.specView.canvas')).toBeNull();
+    await expect(canvas.queryByTestId('spec-companion.view.canvas')).toBeNull();
     const software = await findPackage(canvas, 'Software');
     await expect(software.getAttribute('aria-checked')).toBe('false');
     await userEvent.click(software);
     await expect(
-      canvas.findByTestId('projectsPlugin.specView.canvas', undefined, { timeout: 10_000 }),
+      canvas.findByTestId('spec-companion.view.canvas', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
   },
 };
@@ -234,7 +240,8 @@ export const WithBreakdown: Story = {
     ).resolves.toBeTruthy();
     await showTab(canvas, 'spec');
     await showCanvas(canvas);
-    await expect(canvas.findByText('Gmail', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const map = canvas.getByTestId('feature-map.canvas');
+    await expect(within(map).findByText('Gmail', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 
@@ -248,7 +255,7 @@ export const WithoutBreakdown: Story = {
     await expect(within(empty).getByText(/no spec of its own/)).toBeTruthy();
     await userEvent.click(within(empty).getByTestId('projectsPlugin.addSpec'));
     await expect(
-      canvas.findByTestId('projectsPlugin.specView.canvas', undefined, { timeout: 10_000 }),
+      canvas.findByTestId('spec-companion.view.canvas', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
   },
 };
