@@ -17,6 +17,7 @@ import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Obj, Registry } from '@dxos/echo';
@@ -793,7 +794,7 @@ export const scriptRunner = (
 ): Operation.ScriptRunner => ({
   run: (request) =>
     Effect.gen(function* () {
-      const { code, dialect } = yield* Operation.resolveScriptSource(request.source);
+      const { code, dialect } = yield* ScriptRunner.resolveSource(request.source);
       if (dialect !== Operation.ScriptDialects.Effect) {
         return yield* Effect.fail(
           new Operation.ScriptError({

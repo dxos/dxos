@@ -60,7 +60,7 @@ describe('script operations', () => {
   });
 
   test('an inline script round-trips through its registry record, dialect included', ({ expect }) => {
-    const restored = Operation.deserializeScript(Operation.serializeScript(script));
+    const restored = ScriptRunner.deserialize(ScriptRunner.serialize(script));
     expect(restored && Operation.isScript(restored)).toBe(true);
     expect(restored?.source).toEqual(script.source);
     expect(restored?.meta.name).toBe('Inline Script');
@@ -70,7 +70,7 @@ describe('script operations', () => {
     const record = Operation.serialize(
       Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY, name: 'Compiled' } }),
     );
-    expect(Operation.deserializeScript(record)).toBeUndefined();
+    expect(ScriptRunner.deserialize(record)).toBeUndefined();
   });
 });
 
@@ -98,17 +98,17 @@ describe('Operation.scriptRequest', () => {
   });
 });
 
-describe('Operation.resolveScriptSource', () => {
+describe('ScriptRunner.resolveSource', () => {
   test('a snippet resolves to its own code and dialect', async ({ expect }) => {
     const resolved = await EffectEx.runPromise(
-      Operation.resolveScriptSource(Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect)),
+      ScriptRunner.resolveSource(Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect)),
     );
     expect(resolved).toEqual({ code: 'print(1)', dialect: 'effect' });
   });
 
   test('an object source resolves to the text of the script it points at', async ({ expect }) => {
     const resolved = await EffectEx.runPromise(
-      Operation.resolveScriptSource(Operation.scriptRef(Ref.make(Script.make({ source: 'const x = 1;' })))),
+      ScriptRunner.resolveSource(Operation.scriptRef(Ref.make(Script.make({ source: 'const x = 1;' })))),
     );
     expect(resolved).toEqual({ code: 'const x = 1;', dialect: 'typescript' });
   });

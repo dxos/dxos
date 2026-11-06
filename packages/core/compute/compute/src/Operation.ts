@@ -20,7 +20,7 @@ import * as Scope from 'effect/Scope';
 import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
-import { Annotation, Database, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,7 +30,7 @@ import type { Operation } from './index.ts';
 import type * as Process from './Process.ts';
 import type * as StorageService from './StorageService.ts';
 import type * as Trace from './Trace.ts';
-import * as Script from './types/Script.ts';
+import type * as Script from './types/Script.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -725,29 +725,32 @@ export const ScriptDialects = {
   TypeScript: 'typescript',
 } as const satisfies Record<string, ScriptDialect>;
 
-/** A snippet carried by the operation itself, in the dialect it is written in. */
-export const InlineScript = Schema$.Struct({
-  _tag: Schema$.Literal('inline'),
-  code: Schema$.String,
-  dialect: ScriptDialect,
-});
-export type InlineScript = Schema$.Schema.Type<typeof InlineScript>;
+/**
+ * A snippet carried by the operation itself, in the dialect it is written in.
+ *
+ * Declared as a type here and as a schema in `ScriptRunner`, because the schema of a {@link ScriptRef}
+ * needs the `Script` object type, whose module reaches the whole `@dxos/schema` barrel: the kind is on
+ * every app's boot path through this module, and the schema is not.
+ */
+export type InlineScript = {
+  readonly _tag: 'inline';
+  readonly code: string;
+  readonly dialect: ScriptDialect;
+};
 
 /**
- * A script stored in ECHO as a {@link Script.Script} object.
+ * A script stored in ECHO as a `Script` object.
  *
  * The dialect is the object's own (its editor compiles TypeScript), so unlike {@link InlineScript} it
  * is not restated here — a snippet has no object to ask.
  */
-export const ScriptRef = Schema$.Struct({
-  _tag: Schema$.Literal('object'),
-  script: Ref.Ref(Script.Script),
-});
-export type ScriptRef = Schema$.Schema.Type<typeof ScriptRef>;
+export type ScriptRef = {
+  readonly _tag: 'object';
+  readonly script: Ref.Ref<Script.Script>;
+};
 
 /** Where a script operation's code comes from: a snippet it carries, or an ECHO object it points at. */
-export const ScriptSource = Schema$.Union([InlineScript, ScriptRef]);
-export type ScriptSource = Schema$.Schema.Type<typeof ScriptSource>;
+export type ScriptSource = InlineScript | ScriptRef;
 
 /** A snippet source in `dialect`. */
 export const inlineScript = (code: string, dialect: ScriptDialect = ScriptDialects.TypeScript): InlineScript => ({
@@ -756,7 +759,7 @@ export const inlineScript = (code: string, dialect: ScriptDialect = ScriptDialec
   dialect,
 });
 
-/** A source pointing at a {@link Script.Script} object. */
+/** A source pointing at a `Script` object. */
 export const scriptRef = (script: Ref.Ref<Script.Script>): ScriptRef => ({ _tag: 'object', script });
 
 export const isInlineScript = (source: ScriptSource): source is InlineScript => source._tag === 'inline';
@@ -785,28 +788,27 @@ export type ScriptStats = Schema$.Schema.Type<typeof ScriptStats>;
 /**
  * One run, as a runtime's script backend receives it.
  *
- * Fully serializable — the source is data and every option is a scalar — so the same request runs in
- * this process, on a worker, or on EDGE without being rebuilt. What a request cannot carry is the
- * workspace: the bindings the code runs against are the backend's, built wherever it lives.
+ * Every field but the source is a scalar, so the same request runs in this process, on a worker, or
+ * on EDGE without being rebuilt (`ScriptRunner.Request` is its schema). What a request cannot carry
+ * is the workspace: the bindings the code runs against are the backend's, built wherever it lives.
  */
-export const ScriptRequest = Schema$.Struct({
-  source: ScriptSource,
+export type ScriptRequest = {
+  readonly source: ScriptSource;
   /**
    * Input handed to the script, bound under `input` by a backend whose dialect can carry it. A
    * backend that evaluates out of process builds its bindings on the far side and may not, so a
    * script that must have its input should read it from the database instead.
    */
-  input: Schema$.optional(Schema$.Unknown),
+  readonly input?: unknown;
   /** Space the script's calls default to; absent runs against the backend's own default. */
-  spaceId: Schema$.optional(Schema$.String),
+  readonly spaceId?: string;
   /** Wall-clock bound on the run, in milliseconds. */
-  timeoutMs: Schema$.optional(Schema$.Number),
+  readonly timeoutMs?: number;
   /** Characters of printed output returned before truncation. */
-  maxOutput: Schema$.optional(Schema$.Number),
+  readonly maxOutput?: number;
   /** Skill tokens the caller already holds, which the script's `invoke` presents for it. */
-  skillTokens: Schema$.optional(Schema$.Array(Schema$.String)),
-});
-export type ScriptRequest = Schema$.Schema.Type<typeof ScriptRequest>;
+  readonly skillTokens?: readonly string[];
+};
 
 /**
  * What a run produced: what the script printed, why it failed when it did, and the calls it made.
@@ -860,34 +862,6 @@ export interface ScriptRunner {
  */
 export const scriptDialectOf = (source: ScriptSource): ScriptDialect =>
   isInlineScript(source) ? source.dialect : ScriptDialects.TypeScript;
-
-/**
- * The code a source holds: a snippet's own body, or the text of the `Script` object it points at.
- *
- * An object source is two ref loads — the script, then its text — so resolving one needs the database
- * those refs were read from; a snippet needs nothing, which is why a backend in another runtime can
- * be handed one whole.
- */
-export const resolveScriptSource = (
-  source: ScriptSource,
-): Effect.Effect<{ readonly code: string; readonly dialect: ScriptDialect }, ScriptError> =>
-  Effect.gen(function* () {
-    if (isInlineScript(source)) {
-      return { code: source.code, dialect: source.dialect };
-    }
-    const target = yield* Database.load(source.script).pipe(
-      Effect.mapError((error) => new ScriptError({ message: `Script object did not load: ${String(error)}` })),
-    );
-    if (!Obj.instanceOf(Script.Script, target)) {
-      return yield* Effect.fail(
-        new ScriptError({ message: `A script source must point at a Script object: ${Obj.getTypename(target)}` }),
-      );
-    }
-    const text = yield* Database.load(target.source).pipe(
-      Effect.mapError((error) => new ScriptError({ message: `Script source did not load: ${String(error)}` })),
-    );
-    return { code: text.content, dialect: ScriptDialects.TypeScript };
-  });
 
 /** The request that runs `operation` on `input`. */
 export const scriptRequest = (
@@ -982,67 +956,6 @@ export const makeScript = <const P extends Types.NoExcessProperties<ScriptProps,
 /** Whether an operation is the script kind, which a runtime runs rather than looking up a handler for. */
 export const isScript = (value: unknown): value is ScriptDefinition.Any =>
   typeof value === 'object' && value !== null && ScriptDefinitionTypeId in value;
-
-/**
- * Annotation carrying a script operation's inline snippet on its persisted record.
- *
- * An annotation rather than a field on {@link PersistentOperation}: that schema is rendered into
- * agent prompts field by field, so a new field there changes what every agent reads about every
- * operation record — a cost a value only script operations carry should not impose.
- */
-export const InlineScriptAnnotation = Annotation.make({
-  id: 'org.dxos.operation.script.inline',
-  schema: InlineScript,
-});
-
-/**
- * Serializes a script operation to its registry record: a snippet rides as the
- * {@link InlineScriptAnnotation}, an object source in the record's own `source` ref.
- */
-export const serializeScript = (operation: ScriptDefinition.Any, options?: Obj.MakeOptions): PersistentOperation => {
-  const annotations = { ...(operation.meta.annotations ?? {}) };
-  if (isInlineScript(operation.source)) {
-    Annotation.setDictionary(annotations, InlineScriptAnnotation, operation.source);
-  }
-  const record = serialize(
-    make({
-      input: operation.input,
-      output: operation.output,
-      meta: { ...operation.meta, annotations },
-      services: [],
-    }),
-    options,
-  );
-  const { source } = operation;
-  if (isScriptRef(source)) {
-    Obj.update(record, (record) => {
-      record.source = source.script;
-    });
-  }
-  return record;
-};
-
-/**
- * Reads a script operation back from its registry record, or undefined when the record holds no
- * script — a record of a compiled operation is not a malformed script, so it is not an error.
- */
-export const deserializeScript = (record: PersistentOperation): ScriptDefinition.Any | undefined => {
-  const definition = deserialize(record);
-  const inline = Option.getOrUndefined(Annotation.get(record, InlineScriptAnnotation));
-  // The record's `source` is a ref to any object (it predates script operations), so the typed ref
-  // is rebuilt from its URI rather than reinterpreted; `resolveSource` is what reports a target that
-  // turns out not to be a script.
-  const source = inline ?? (record.source !== undefined ? scriptRef(Ref.fromURI(record.source.uri)) : undefined);
-  if (source === undefined) {
-    return undefined;
-  }
-  return makeScript({
-    meta: definition.meta,
-    input: definition.input,
-    output: definition.output,
-    source,
-  });
-};
 
 /** Whether `value` names a known {@link ScriptDialect}. */
 export const isScriptDialect = (value: unknown): value is ScriptDialect =>

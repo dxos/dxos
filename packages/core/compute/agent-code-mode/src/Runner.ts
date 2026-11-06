@@ -56,7 +56,7 @@ export const make = (options: Options): Operation.ScriptRunner => {
   return {
     run: (request, runtime) =>
       Effect.gen(function* () {
-        const { code, dialect } = yield* Operation.resolveScriptSource(request.source);
+        const { code, dialect } = yield* ScriptRunner.resolveSource(request.source);
         const resolved = dialects[dialect];
         if (resolved === undefined) {
           return yield* Effect.fail(
