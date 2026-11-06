@@ -660,20 +660,27 @@ feat F-4: Skills are exposed
     instructions and its tool keys.
 
   req F-4.2: The MCP server's `loadSkill` and the skill list of compute-service's agents read skills
-    from the newest bundle of each enabled plugin, merged with the skills operation-service still
-    serves. The enabled set is named in compute-service's EDGE config ([D-77]); the registry holds
-    every plugin anyone published, so an unscoped union would offer skills nobody enabled.
+    from each enabled plugin's bundle on the `latest` channel, merged with the skills
+    operation-service still serves. The enabled set is named in compute-service's EDGE config
+    ([D-77]); the registry holds every plugin anyone published, so an unscoped union would offer
+    skills nobody enabled.
 ```
 
 ```mdl
 feat F-5: Operations are exposed and callable
   Every operation a published plugin handles can be found and invoked on EDGE.
 
-  req F-5.1: The MCP server's `queryOperations` lists the operations of the newest version of each
-    enabled plugin, merged with the operations operation-service still serves; operation-service's
-    record wins for a plugin it serves, since its handler runs the key. The enabled set is named in
+  req F-5.1: The MCP server's `queryOperations` lists the operations of each enabled plugin's bundle
+    on the `latest` channel, merged with the operations operation-service still serves;
+    operation-service's record wins for a plugin `OPERATION_SERVICE_PLUGINS` holds back, which is the
+    plugin whose handler that list also routes the key to ([F-6.6]). The enabled set is named in
     compute-service's EDGE config ([D-77]) and becomes per-caller once Composer can express it
     ([D-78]).
+
+  req F-5.1.1: Enumeration is not space-scoped: `listOperations`, `listSkills` and `listRegistry`
+    carry no space, so they read the `latest` channel while an invocation runs the version the
+    invoking space's channel points at ([F-2.2]). A space pinned to another channel is therefore
+    described by `latest`'s surface and runs its own ([D-79]).
 
   req F-5.2:
     when: compute-service receives `invokeOperation` for a key a published plugin implements
@@ -722,8 +729,12 @@ feat F-6: compute-service routes invocations to published plugins
   req F-6.5: Logs and traces of a Dynamic Worker reach the same sinks as other compute-service
     functions, tagged with the plugin key and version.
 
-  req F-6.6: While both run, PluginRouter prefers a published plugin and falls back to
-    operation-service for keys no published plugin implements.
+  req F-6.6: While both run, PluginRouter prefers the published bundle, except for the plugins
+    `OPERATION_SERVICE_PLUGINS` names, which operation-service keeps serving however their bundle is
+    published — that list is how plugins are converted in batches, and how a broken bundle is
+    withdrawn ([D-79]). It falls back to operation-service for a key no published bundle implements,
+    a bundle that does not handle the key, and a bundle whose protocol version it cannot serve
+    ([F-6.9]).
 
   req F-6.7: operation-service is removed once every plugin in its static list is published, and no
     caller binds `OPERATION_SERVICE`.
@@ -1813,4 +1824,12 @@ decision D-78: The eventual scope is per-caller: a user's enabled plugins come f
   by: user:dmaretskyi
   affects: [F-4.2, F-5.1]
   why: Enabling a plugin is a per-user and per-space choice, and the data for the user case already travels to EDGE. The global list cannot express "this agent has these plugins", which is what the three running contexts — user, space, agent — each need.
+```
+
+```mdl
+decision D-79: `OPERATION_SERVICE_PLUGINS` decides both halves of a key: the plugins it names are served by operation-service and described by operation-service's catalog record, and every other key runs in its bundle and is described by that bundle's catalog. One list rather than two, so `queryOperations` cannot describe a handler other than the one an invocation reaches. Enumeration stays unscoped by space: it carries no space id and reads the `latest` channel, so a space pinned to another channel ([F-2.2]) runs a version whose surface may differ from the one listed. Fills in [D-76].
+  date: 2026-11-06
+  by: agent:claude
+  affects: [F-4.2, F-5.1, F-6.6]
+  why: Reviewing [D-76] showed [F-6.6] still promised a published bundle always wins, which the holdback list contradicts, and that nothing said which channel enumeration reads. The space-scoped case needs a space id on the enumeration RPC and is not worth it while the held set is shrinking to nothing.
 ```
