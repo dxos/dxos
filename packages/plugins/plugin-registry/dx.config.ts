@@ -55,6 +55,17 @@ const config: Plugin.PluginConfig<RegistryPluginOptions> = Plugin.config<Registr
       },
       () => import('./src/capabilities/private-registry.ts', { with: { type: 'module-url' } }),
     ),
+    Capability.lazyModule(
+      'EdgeScopePublisher',
+      {
+        requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, ClientCapabilities.Client],
+        provides: [],
+        // An initialized client: the module reads the identity's enabled set and the space list at once.
+        activatesOn: ClientEvents.Initialized,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/edge-scope-publisher.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [AppSurface.Article, AppSurface.Dialog],
     }),

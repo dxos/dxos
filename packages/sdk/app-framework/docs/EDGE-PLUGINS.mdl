@@ -690,6 +690,11 @@ feat F-5: Operations are exposed and callable
   req F-5.3: A handler's nested `Operation.invoke` re-enters compute-service through a service
     binding, so a call chain across plugins never holds more than one Dynamic Worker per I/O context.
 
+  req F-5.7: An invocation runs a published bundle only where the bundle's plugin is in the caller's
+    scope: the space's published list, else the identity's, else the globally enabled set, else
+    unscoped ([D-79]). A plugin outside it is not routed, and the key falls back to operation-service
+    as any other unroutable key does.
+
   req F-5.4: An operation key belongs to exactly one plugin key; an upload whose catalog claims a key
     of another plugin fails with KeyConflict.
 
@@ -1833,4 +1838,17 @@ decision D-79: `OPERATION_SERVICE_PLUGINS` decides both halves of a key: the plu
   for: user:dmaretskyi
   affects: [F-4.2, F-5.1, F-6.6]
   why: Reviewing [D-76] showed [F-6.6] still promised a published bundle always wins, which the holdback list contradicts, and that nothing said which channel enumeration reads. The space-scoped case needs a space id on the enumeration RPC and is not worth it while the held set is shrinking to nothing.
+decision D-80: A scope's enabled plugin list is PUBLISHED to EDGE by Composer, not read from ECHO by EDGE. The list replicates in ECHO — the identity's set through the settings space, a space's through `SpacePluginsAnnotation` on its `properties` — and Composer pushes the resolved list to registry-service (`PUT /registry/scopes/identity`, `PUT /registry/scopes/spaces/:spaceId`) whenever it changes. registry-service keeps one D1 row per scope and answers compute-service's `enabledPlugins(scopes)` from a 30-second per-isolate value cache; compute-service applies the precedence space → identity → `EDGE_CONFIG.plugins.enabled` → unscoped. Fills in [D-78].
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1, F-5.7]
+  why: Enumeration and routing are on the path of every `queryOperations`, every skill list and every invocation, and reading the list from its ECHO home would mean opening an Automerge document there — the settings space is not even a space a headless invocation has any other reason to open. A published projection makes the read a cached D1 lookup, and an absent record falls back to the global list rather than to "nothing enabled", so a scope nobody has published for behaves as it did before scoping existed. Rejected: EDGE opening the settings space per call, which puts a space load on the hot path; a push with no ECHO source of truth, which would lose a user's choices to a cleared D1.
+```
+
+```mdl
+decision D-81: Precedence between the scopes, not intersection: a space's list REPLACES the caller's own rather than narrowing it. An empty published list means the scope enabled nothing; an absent record means the scope has made no choice. Composer therefore clears a space's published scope rather than publishing an empty list, and a space's annotation holding no enabled plugin is the space making no choice.
+  date: 2026-11-06
+  by: user:dmaretskyi
+  affects: [F-5.7]
+  why: The three lists answer different questions — what this space runs, what this user installed, what this deployment serves — and an intersection would stop a space running a plugin a member had not also enabled personally, which is not what installing a plugin into a shared space means. Keeping "no choice" distinct from "nothing enabled" is what lets the fallback chain exist at all; collapsing them would make an untouched space disable every plugin for every member.
 ```

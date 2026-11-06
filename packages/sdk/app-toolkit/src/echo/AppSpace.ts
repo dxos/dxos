@@ -324,6 +324,52 @@ export const getActiveSpace = (client: Client, capabilities: CapabilityManager.C
 };
 
 //
+// Space plugins.
+//
+
+/**
+ * The space's plugin decisions, keyed by plugin id: present means decided, `true` means enabled.
+ *
+ * Empty — whether the annotation is absent or holds nothing — is the space having made no choice, so
+ * each member's own enabled set applies. "The space runs nothing" is not a state worth expressing: a
+ * space with every plugin off can do nothing, and collapsing the two keeps one meaning per shape.
+ * EDGE reads the same distinction when it scopes a headless invocation (spec D-78), where a published
+ * empty list does mean nothing is enabled — so Composer clears a space's published scope rather than
+ * publishing an empty one.
+ */
+export const getSpacePlugins = (space: Space): Record<string, boolean> =>
+  Annotation.get(space.properties, AppAnnotation.SpacePluginsAnnotation).pipe(
+    Option.getOrElse((): Record<string, boolean> => ({})),
+  );
+
+/** Plugin ids the space enables, or `undefined` when it has made no choice. */
+export const getEnabledSpacePlugins = (space: Space): string[] | undefined => {
+  const decisions = getSpacePlugins(space);
+  const enabled = Object.keys(decisions).filter((id) => decisions[id] === true);
+  return enabled.length === 0 ? undefined : enabled;
+};
+
+/**
+ * Record one decision for the space. The first enable takes the space from deferring to each member's
+ * own set to running exactly what it names.
+ */
+export const setSpacePluginEnabled = (space: Space, id: string, enabled: boolean): void => {
+  Obj.update(space.properties, (properties) => {
+    const decisions = Annotation.get(properties, AppAnnotation.SpacePluginsAnnotation).pipe(
+      Option.getOrElse((): Record<string, boolean> => ({})),
+    );
+    Annotation.set(properties, AppAnnotation.SpacePluginsAnnotation, { ...decisions, [id]: enabled });
+  });
+};
+
+/** Drop every decision, so the space defers to its members' own enabled sets again. */
+export const clearSpacePlugins = (space: Space): void => {
+  Obj.update(space.properties, (properties) => {
+    Annotation.set(properties, AppAnnotation.SpacePluginsAnnotation, {});
+  });
+};
+
+//
 // Home content visibility.
 //
 
