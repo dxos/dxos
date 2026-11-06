@@ -41,6 +41,8 @@ export type CommandState = {
   canUngroup: boolean;
   /** The canvas has a model to extract an object into. */
   canMakeObject: boolean;
+  /** The scene draws in a stored order a restack can change, which is 2D's: a 3D scene draws by depth. */
+  canOrder: boolean;
   /** False when the host gives no codec, so the view keeps its own clipboard. */
   clipboard?: boolean;
 };
@@ -124,8 +126,8 @@ export const buildCommands = ({
     'paste': clipboard && editable,
     'duplicate': clipboard && some,
     'delete': some,
-    'bring-to-front': some,
-    'send-to-back': some,
+    'bring-to-front': some && state.canOrder,
+    'send-to-back': some && state.canOrder,
     'group': editable && state.selection.length > 1,
     'ungroup': editable && state.canUngroup,
     'make-object': some && state.canMakeObject,

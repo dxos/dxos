@@ -226,13 +226,18 @@ export const useSceneKeys = ({
           duplicate();
           event.preventDefault();
           break;
+        // Restacking is an update, so without it the chord is left to whatever else would take it.
         case 'bringToFront':
-          order(selected, 'front');
-          event.preventDefault();
+          if (capabilities.update) {
+            order(selected, 'front');
+            event.preventDefault();
+          }
           break;
         case 'sendToBack':
-          order(selected, 'back');
-          event.preventDefault();
+          if (capabilities.update) {
+            order(selected, 'back');
+            event.preventDefault();
+          }
           break;
         case 'undo':
           onUndo();

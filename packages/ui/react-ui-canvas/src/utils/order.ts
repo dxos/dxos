@@ -60,6 +60,15 @@ export const topZ = (elements: readonly Ordered[]): string => {
   return between(max, undefined);
 };
 
+/**
+ * A key above every element of a view, nodes and links alike: one order paints them, so a new element of either kind
+ * goes above both.
+ */
+export const topOfView = (view: {
+  nodes: Readonly<Record<string, Ordered>>;
+  links: Readonly<Record<string, Ordered>>;
+}): string => topZ([...Object.values(view.nodes), ...Object.values(view.links)]);
+
 /** Keys for `count` elements in paint order, evenly spread from the open bottom. */
 export const initialKeys = (count: number): string[] => {
   const keys: string[] = [];
@@ -77,8 +86,8 @@ export type MaybeOrdered = { id: string; z?: string };
 /**
  * The keys that lift `ids` above every other element of their group, or drop them below it, keeping their order among
  * themselves; only the moved elements are keyed, so a reorder writes as little as possible. Empty when they are already
- * there, or when there is nothing to move past. A group holding an element written with no key has no room beneath it,
- * so sending to the back renumbers the whole group instead.
+ * there, or when there is nothing to move past. A group whose edge cannot be split — an element written with no key,
+ * or a stored key no key fits past (one with a trailing zero) — is renumbered whole instead.
  */
 export const orderToEnd = (
   elements: readonly MaybeOrdered[],
@@ -98,25 +107,35 @@ export const orderToEnd = (
   if (run.every((element) => moved.has(element.id))) {
     return {};
   }
+  // The order the group ends in, which the fallback renumbers against.
+  const settled = place === 'front' ? [...rest, ...moving] : [...moving, ...rest];
+  const renumber = (): Record<string, string> => {
+    const fresh = initialKeys(settled.length);
+    return Object.fromEntries(settled.map((element, index) => [element.id, fresh[index]]));
+  };
   const keys: Record<string, string> = {};
-  if (place === 'front') {
-    let previous = rest[rest.length - 1].z;
-    for (const element of moving) {
-      previous = between(previous === '' ? undefined : previous, undefined);
-      keys[element.id] = previous;
+  try {
+    if (place === 'front') {
+      let previous = rest[rest.length - 1].z;
+      for (const element of moving) {
+        previous = between(previous === '' ? undefined : previous, undefined);
+        keys[element.id] = previous;
+      }
+      return keys;
+    }
+    const limit = rest[0].z;
+    // Nothing to go under, so the group is renumbered from the bottom with the moved elements first.
+    if (limit === '') {
+      return renumber();
+    }
+    let next = limit;
+    for (let index = moving.length - 1; index >= 0; index--) {
+      next = between(undefined, next);
+      keys[moving[index].id] = next;
     }
     return keys;
+  } catch {
+    // No key fits past the edge the group is moving to (a stored key with a trailing zero): renumber it whole.
+    return renumber();
   }
-  const limit = rest[0].z;
-  if (limit === '') {
-    // Nothing to go under: the group is renumbered from the bottom, the moved elements first.
-    const fresh = initialKeys(keyed.length);
-    return Object.fromEntries([...moving, ...rest].map((element, index) => [element.id, fresh[index]]));
-  }
-  let next = limit;
-  for (let index = moving.length - 1; index >= 0; index--) {
-    next = between(undefined, next);
-    keys[moving[index].id] = next;
-  }
-  return keys;
 };

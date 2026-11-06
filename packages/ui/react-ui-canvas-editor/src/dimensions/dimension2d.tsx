@@ -331,12 +331,13 @@ export const createDimension2D =
             ),
           },
           'delete': { enabled: selected(() => true), run: run((engine) => void engine.controller.selection.delete()) },
+          // Restacking is an update, which `document.order` refuses without: the command shows what it can do.
           'bring-to-front': {
-            enabled: selected(() => true),
+            enabled: selected((_elements, engine) => engine.capabilities.update === true),
             run: run((engine) => void engine.controller.document.order(registry.get(canvas.selection), 'front')),
           },
           'send-to-back': {
-            enabled: selected(() => true),
+            enabled: selected((_elements, engine) => engine.capabilities.update === true),
             run: run((engine) => void engine.controller.document.order(registry.get(canvas.selection), 'back')),
           },
           // A locked node may not leave its View, so a selection holding one is not grouped.

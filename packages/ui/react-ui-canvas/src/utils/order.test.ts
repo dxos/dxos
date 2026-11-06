@@ -88,4 +88,25 @@ describe('order', () => {
       expect(after(elements, keys)).toEqual(['b', 'c', 'a']);
     });
   });
+
+  test('a stored key no key fits past renumbers the group, keeping the order it settles in', ({ expect }) => {
+    // 'a0' has a trailing zero, so nothing can be keyed under it; the whole group is renumbered instead.
+    const elements = [
+      { id: 'back', z: 'a0' },
+      { id: 'a', z: 'a1' },
+      { id: 'b', z: 'a2' },
+    ];
+    const keys = orderToEnd(elements, ['a'], 'back');
+    expect(Object.keys(keys).sort()).toEqual(['a', 'b', 'back']);
+    expect(sortByZ(elements.map(({ id }) => ({ id, z: keys[id] }))).map(({ id }) => id)).toEqual(['a', 'back', 'b']);
+  });
+
+  test('a key with a trailing zero at the top renumbers rather than throwing', ({ expect }) => {
+    const elements = [
+      { id: 'a', z: 'a1' },
+      { id: 'top', z: 'b0' },
+    ];
+    const keys = orderToEnd(elements, ['a'], 'front');
+    expect(sortByZ(elements.map(({ id }) => ({ id, z: keys[id] ?? '' }))).map(({ id }) => id)).toEqual(['top', 'a']);
+  });
 });

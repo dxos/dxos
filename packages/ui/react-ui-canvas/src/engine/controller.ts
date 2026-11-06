@@ -62,7 +62,7 @@ import {
   promotedBy,
   reorderElement,
   restackZ,
-  topZ,
+  topOfView,
   ungroupInstance,
   unionBounds,
   updateElement,
@@ -422,14 +422,15 @@ export const createCanvasController = ({
       const bounds = clipboardBounds(fragment);
       const step = major * (fragment.pasted + 1);
       const offset = at && bounds ? { x: snap(at.x) - bounds.x, y: snap(at.y) - bounds.y } : { x: step, y: step };
-      let nodeZ = topZ(Object.values(scene.nodes));
-      let linkZ = topZ(Object.values(scene.links));
+      // One cursor for both kinds, so every pasted element lands above the view and above the one pasted before it.
+      let z = topOfView(scene);
+      const next = () => (z = between(z, undefined));
       const { edit, ids } = pasteFragment({
         clipboard: fragment,
         offset,
         createId: newId,
-        nodeZ: () => (nodeZ = between(nodeZ, undefined)),
-        linkZ: () => (linkZ = between(linkZ, undefined)),
+        nodeZ: next,
+        linkZ: next,
         layer: activeLayer(scene, registry.get(atoms.layer)),
       });
       const records = pastedRecords(registry.get(store.views), fragment);

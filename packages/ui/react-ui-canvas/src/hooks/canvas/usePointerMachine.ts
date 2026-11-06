@@ -54,6 +54,7 @@ import {
   type SceneEdit,
   VERTEX_SNAP_PX,
   activeLayer,
+  between,
   boundsCenter,
   boundsFromPoints,
   chainEdits,
@@ -85,7 +86,7 @@ import {
   resizeTo,
   screenToScene,
   sideToward,
-  topZ,
+  topOfView,
   updateElement,
 } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
@@ -277,7 +278,7 @@ export const usePointerMachine = ({
       const node = def.createFromPoints(
         {
           id: createId(drawing.type),
-          z: topZ(Object.values(scene.nodes)),
+          z: topOfView(scene),
           center: boundsCenter(bounds),
           size: { width: bounds.width, height: bounds.height },
         },
@@ -940,7 +941,7 @@ export const usePointerMachine = ({
       const center = drag.dropped
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
-      const props: CreateProps = { id, z: topZ(Object.values(scene.nodes)), center, size };
+      const props: CreateProps = { id, z: topOfView(scene), center, size };
       const pending = pendingRef.current;
       // No `fontSize`: a new node inherits the view's default, as one created by dropping a link does.
       const reused = pending?.type === drag.type ? { ...pending.node, ...props } : undefined;
@@ -1058,6 +1059,10 @@ export const usePointerMachine = ({
           // Everything the drop makes lands as one edit, so the node and the link to it undo together.
           const edits: SceneEdit[] = [];
           {
+            // One cursor over the whole view, so the node a drop makes and the link to it land above it and
+            // above each other rather than sharing a key.
+            let z = topOfView(scene);
+            const nextZ = () => (z = between(z, undefined));
             if (!target && isPointEndpoint(current.source)) {
               // A free-ended link that never reached a node ends free too.
               target = { point: current.to };
@@ -1072,7 +1077,7 @@ export const usePointerMachine = ({
               const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
               const props = {
                 id: createId(source?.type ?? 'rect'),
-                z: topZ(Object.values(scene.nodes)),
+                z,
                 center: {
                   x: snapMinor(drop.x - size.width / 2) + size.width / 2,
                   y: snapMinor(drop.y - size.height / 2) + size.height / 2,
@@ -1091,7 +1096,7 @@ export const usePointerMachine = ({
               const link = createLink({
                 type: current.type,
                 id: createId(current.type),
-                z: topZ(Object.values(scene.links)),
+                z: created ? nextZ() : z,
                 source: current.source,
                 target,
                 // A link between ports that declare a direction is drawn with one.

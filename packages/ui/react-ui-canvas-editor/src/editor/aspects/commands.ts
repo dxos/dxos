@@ -99,7 +99,8 @@ export const createCommandsAspect = <C>(
   const orderSelection = (place: 'front' | 'back') => () => {
     const open = registry.get(atoms.layout);
     const record = open === undefined ? undefined : findLayout(registry.get(atoms.document), open);
-    if (open === undefined || !record) {
+    // Only a 2D layout draws in the stored order; a reorder of a 3D one would be an undo step with nothing to show.
+    if (open === undefined || record?.dim !== '2d') {
       return;
     }
     const selection = registry.get(editorSelection.atoms.selection);
@@ -230,6 +231,7 @@ export const createCommandsAspect = <C>(
           canRedo: history?.canRedo ?? false,
           canUngroup: type === 'group',
           canMakeObject: model !== undefined && get(atoms.host).model,
+          canOrder: config.dim === '2d',
           clipboard: get(atoms.host).clipboard,
         },
         run,
