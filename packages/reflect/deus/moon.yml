@@ -5,6 +5,15 @@ tags:
   - ts-test
   - pack
 tasks:
+  prebuild-dialects:
+    command: node ./scripts/gen-dialects.mjs
+    inputs:
+      - lang/*.mdl
+      - scripts/gen-dialects.mjs
+    outputs:
+      - src/schema/gen/dialects.ts
+    tags:
+      - prebuild
   build:
     deps:
       - ~:#prebuild

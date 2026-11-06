@@ -156,6 +156,7 @@ ext ext
     nesting?:       self | none   # whether instances may contain same-type blocks
     inline-prose?:  Boolean       # first non-key line treated as prose value
     role?:          Role          # what instances are to the spec's structure (see Roles and Links)
+    label?:         Identifier    # a numbered kind's label prefix; ids are keys, labels positional
     links?:         LinkMap       # fields whose values name other blocks, and how (see Roles and Links)
     icon?:          Icon          # how tools draw instances (see Roles and Links)
     hue?:           Hue           # the colour tools tag instances with (see Roles and Links)
