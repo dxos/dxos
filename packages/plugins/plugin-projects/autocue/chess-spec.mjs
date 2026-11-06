@@ -221,8 +221,7 @@ const showView = async (peer, view) => {
 
 /**
  * Turns the line holding `text` into a feature named `name`: the line's sentence becomes its description and the
- * cursor moves to the new feature's name. The first feature's section can mount twice and drop that focus, so a
- * name that did not take is typed again into the section holding the sentence.
+ * cursor moves to the new feature's name.
  */
 const makeFeature = async (peer, text, name) => {
   const { page } = peer;
@@ -238,13 +237,6 @@ const makeFeature = async (peer, text, name) => {
   const section = featureSection(page, text);
   await section.waitFor({ timeout: TIMEOUT });
   await page.waitForTimeout(500);
-  await peer.type(name);
-  await page.waitForTimeout(500);
-  if ((await embeddedFeatures(page)).includes(name)) {
-    return;
-  }
-  await peer.click(editable(section.getByTestId('name')), { force: true });
-  await page.keyboard.press('ControlOrMeta+a');
   await peer.type(name);
   await waitFor(async () => (await embeddedFeatures(page)).includes(name), { what: `the feature "${name}"` });
 };
@@ -262,13 +254,12 @@ const addFeatureOnCanvas = async (peer, beside) => {
   await editable(companion(page).getByTestId('name').first()).waitFor({ timeout: TIMEOUT });
 };
 
-/** Names the feature open in the companion, then closes it. */
+/** Names the feature open in the companion, which stays open: closing it would resize the canvas and refit it. */
 const nameInCompanion = async (peer, name) => {
   const { page } = peer;
   await peer.click(editable(companion(page).getByTestId('name').first()));
   await page.keyboard.press('ControlOrMeta+a');
   await peer.type(name);
-  await closeCompanion(peer);
   // Off the plank heading, whose tooltip would otherwise stay over the canvas.
   await page.mouse.move(600, 880);
   await card(page, name).waitFor({ timeout: TIMEOUT });
@@ -336,10 +327,41 @@ const ask = async (peer, skill, text) => {
   await peer.click(companion(page).getByTestId('assistant.send'));
 };
 
+/** A card's ports, three to a side, centre first, in the order the canvas tries them. */
+const ports = (box) =>
+  ['n', 'e', 's', 'w'].flatMap((side) =>
+    [0.5, 0.25, 0.75].map((offset) => {
+      switch (side) {
+        case 'n':
+          return { x: box.x + box.width * offset, y: box.y };
+        case 's':
+          return { x: box.x + box.width * offset, y: box.y + box.height };
+        case 'w':
+          return { x: box.x, y: box.y + box.height * offset };
+        case 'e':
+          return { x: box.x + box.width, y: box.y + box.height * offset };
+      }
+    }),
+  );
+
+/** The closest pair of ports between two cards, the pair a finished link between them is drawn from. */
+const nearestPorts = (source, target) => {
+  let best;
+  for (const from of ports(source)) {
+    for (const to of ports(target)) {
+      const distance = (from.x - to.x) ** 2 + (from.y - to.y) ** 2;
+      if (!best || distance < best.distance) {
+        best = { from, to, distance };
+      }
+    }
+  }
+  return best;
+};
+
 /**
- * Draws a dependency on the canvas from the port on the right of `from`'s card onto the middle of `to`'s. A card shows
- * its ports under the pointer only while nothing is selected, so each arrow starts from a cleared selection and a
- * fitted map. The drag moves in steps, since the canvas starts a link only once the pointer has moved.
+ * Draws a dependency on the canvas between the ports the finished arrow joins, so the arrow lands where it was drawn.
+ * A card shows its ports under the pointer only while nothing is selected, so each arrow starts from a cleared
+ * selection and a fitted map. The drag moves in steps, since the canvas starts a link only once the pointer has moved.
  */
 const drawDependency = async (peer, from, to) => {
   const { page } = peer;
@@ -353,10 +375,11 @@ const drawDependency = async (peer, from, to) => {
   await page.waitForTimeout(300);
   await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2, { steps: 6 });
   await page.waitForTimeout(300);
-  await page.mouse.move(source.x + source.width, source.y + source.height / 2, { steps: 4 });
+  const { from: start, to: end } = nearestPorts(source, target);
+  await page.mouse.move(start.x, start.y, { steps: 4 });
   await page.waitForTimeout(400);
   await page.mouse.down();
-  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 25 });
+  await page.mouse.move(end.x, end.y, { steps: 25 });
   await page.waitForTimeout(300);
   await page.mouse.up();
 };
@@ -416,8 +439,8 @@ const commentOnFeature = async (peer, name, text) => {
   await section.scrollIntoViewIfNeeded();
   await peer.click(section, { position: { x: 12, y: 12 } });
   await peer.click(editable(section.getByTestId('description')).first(), { force: true });
-  await page.keyboard.press('End');
-  await page.keyboard.press('Shift+ControlOrMeta+ArrowLeft');
+  // The whole description, so the thread quotes the sentence it asks about.
+  await page.keyboard.press('ControlOrMeta+a');
   await peer.click(companion(page).getByTestId('comments.object-comment.add'));
   await reply(peer, companion(page), text);
   await thread(page, text).waitFor({ timeout: TIMEOUT });
@@ -638,6 +661,8 @@ export const steps = [
     name: 'Bob switches to Canvas. Alice turns her first two bullets into features with `/feature`, naming them "Gameboard" and "Make Move", while Bob adds "Start Game" from the `+` in an empty cell.',
     subtitle: 'QA-11 step 5',
     run: async ({ peers: { alice, bob } }) => {
+      // The companion is open before the canvas fits, so the feature Bob adds opens in it without resizing the canvas.
+      await openComments(bob);
       await showView(bob, 'canvas');
       await canvas(bob.page).waitFor({ timeout: TIMEOUT });
       await makeFeature(alice, BOARD, 'Gameboard');
