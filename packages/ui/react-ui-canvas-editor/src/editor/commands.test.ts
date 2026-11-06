@@ -16,6 +16,7 @@ const state: SceneMenuState = {
   canPaste: true,
   canCreate: true,
   canDelete: true,
+  canOrder: true,
   canGroup: true,
   canUngroup: false,
   canMakeObject: true,
@@ -32,6 +33,8 @@ describe('sceneMenuItems', () => {
       'paste',
       'duplicate',
       'delete',
+      'bring-to-front',
+      'send-to-back',
       'group',
       'ungroup',
       'make-object',
@@ -48,6 +51,13 @@ describe('sceneMenuItems', () => {
   test('on empty space the selection commands are left out', ({ expect }) => {
     const ids = sceneMenuItems({ ...state, kind: 'canvas' }).map((item) => item.id);
     expect(ids).toEqual(['undo', 'redo', 'paste']);
+  });
+
+  test('restacking is offered on an element, with nothing selected it is not', ({ expect }) => {
+    const items = sceneMenuItems({ ...state, canOrder: false });
+    expect(items.find((item) => item.id === 'bring-to-front')?.disabled).toBe(true);
+    expect(sceneMenuItems(state).find((item) => item.id === 'send-to-back')?.disabled).toBe(false);
+    expect(sceneMenuItems({ ...state, kind: 'canvas' }).some((item) => item.id === 'bring-to-front')).toBe(false);
   });
 
   test('a command table gives the menu its states, so the bar, shortcuts and menu share one source', ({ expect }) => {
@@ -76,6 +86,8 @@ const handlers = (onRun: (id: SceneMenuCommand) => void): Record<SceneMenuComman
   'paste': () => onRun('paste'),
   'duplicate': () => onRun('duplicate'),
   'delete': () => onRun('delete'),
+  'bring-to-front': () => onRun('bring-to-front'),
+  'send-to-back': () => onRun('send-to-back'),
   'group': () => onRun('group'),
   'ungroup': () => onRun('ungroup'),
   'make-object': () => onRun('make-object'),

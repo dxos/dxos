@@ -61,7 +61,7 @@ import {
   useSceneTime,
   useSceneTools,
 } from './aspects/index.ts';
-import { type Command, SHARED_COMMANDS } from './commands.ts';
+import { type Command, MENU_ONLY_COMMANDS, SHARED_COMMANDS } from './commands.ts';
 import { type DimensionConfig, type LibraryItem, type ToolCategory, type ToolDef } from './config.ts';
 import { SceneEditorInspector } from './sections.tsx';
 import { keySelection, placementFields } from './timeline.ts';
@@ -411,7 +411,7 @@ const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' 
   const groups = [
     <Fragment key='shared'>
       {table.commands
-        .filter((command) => shared.has(command.id) && !history(command))
+        .filter((command) => shared.has(command.id) && !history(command) && !MENU_ONLY_COMMANDS.has(command.id))
         .map((command) => (
           <CommandButton key={command.id} command={command} />
         ))}

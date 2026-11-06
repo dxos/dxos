@@ -70,3 +70,53 @@ export const initialKeys = (count: number): string[] => {
   }
   return keys;
 };
+
+/** An element as an order read: one written without a key sorts at the bottom. */
+export type MaybeOrdered = { id: string; z?: string };
+
+/**
+ * The keys that lift `ids` above every other element of their group, or drop them below it, keeping their order among
+ * themselves; only the moved elements are keyed, so a reorder writes as little as possible. Empty when they are already
+ * there, or when there is nothing to move past. A group holding an element written with no key has no room beneath it,
+ * so sending to the back renumbers the whole group instead.
+ */
+export const orderToEnd = (
+  elements: readonly MaybeOrdered[],
+  ids: Iterable<string>,
+  place: 'front' | 'back',
+): Record<string, string> => {
+  const moved = new Set(ids);
+  const keyed: Ordered[] = elements.map(({ id, z }) => ({ id, z: z ?? '' }));
+  const moving = sortByZ(keyed.filter((element) => moved.has(element.id)));
+  const rest = sortByZ(keyed.filter((element) => !moved.has(element.id)));
+  if (moving.length === 0 || rest.length === 0) {
+    return {};
+  }
+  // Already there: the moving elements are the group's top (or bottom) run.
+  const ordered = sortByZ(keyed);
+  const run = place === 'front' ? ordered.slice(-moving.length) : ordered.slice(0, moving.length);
+  if (run.every((element) => moved.has(element.id))) {
+    return {};
+  }
+  const keys: Record<string, string> = {};
+  if (place === 'front') {
+    let previous = rest[rest.length - 1].z;
+    for (const element of moving) {
+      previous = between(previous === '' ? undefined : previous, undefined);
+      keys[element.id] = previous;
+    }
+    return keys;
+  }
+  const limit = rest[0].z;
+  if (limit === '') {
+    // Nothing to go under: the group is renumbered from the bottom, the moved elements first.
+    const fresh = initialKeys(keyed.length);
+    return Object.fromEntries([...moving, ...rest].map((element, index) => [element.id, fresh[index]]));
+  }
+  let next = limit;
+  for (let index = moving.length - 1; index >= 0; index--) {
+    next = between(undefined, next);
+    keys[moving[index].id] = next;
+  }
+  return keys;
+};

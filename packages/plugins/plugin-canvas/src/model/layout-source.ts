@@ -46,6 +46,8 @@ const writeLayoutField = (layout: Obj.Mutable<Scene.Layout2D>, field: keyof Layo
     isLayoutKind(next) && (layout.kind = next);
   } else if (field === 'name') {
     typeof next === 'string' && (layout.name = next);
+  } else if (field === 'grid') {
+    typeof next === 'number' && (layout.grid = next);
   } else {
     typeof next === 'boolean' && (layout.anonymous = next);
   }

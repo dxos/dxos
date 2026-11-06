@@ -56,6 +56,7 @@ import {
   fitBounds,
   fitFrame,
   nodeBounds,
+  orderToEnd,
   pastedRecords,
   pasteFragment,
   promotedBy,
@@ -203,6 +204,11 @@ export type DocumentEditCommands = {
    */
   restack: (container: ViewId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
   /**
+   * Lifts `ids` above every other element of the open View, or drops them below it, keeping their order among
+   * themselves (nodes among nodes, links among links), as one edit; false when nothing moved.
+   */
+  order: (ids: Iterable<ElementId>, place: 'front' | 'back') => boolean;
+  /**
    * Drops a copy of the nodes `ids` and the links between them `delta` away, as one undo step, and selects it; an
    * anonymous Object placed again this way joins the library. False when nothing was copied.
    */
@@ -222,6 +228,8 @@ export type EditingCommands = {
 export type ToolsCommands = {
   /** A creation tool clears the selection, whose outline would only sit over the drawing; a link tool sets the type. */
   setTool: (tool: Tool) => void;
+  /** The background grid drawn; a host that owns the display takes the change from the atom. */
+  toggleGrid: () => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
   toggleAxes: () => void;
@@ -442,6 +450,7 @@ export const createCanvasController = ({
         select([]);
       }
     },
+    toggleGrid: toggle(atoms.grid),
     toggleSnap: toggle(atoms.snap),
     toggleGuides: toggle(atoms.guides),
     toggleAxes: toggle(atoms.axes),
@@ -731,6 +740,30 @@ export const createCanvasController = ({
           : host;
       commit(() => registry.set(store.views, { ...views, [container]: moved }));
       return true;
+    },
+    order: (ids, place) => {
+      if (!capabilities().update) {
+        return false;
+      }
+      const scene = currentScene();
+      const selected = new Set(ids);
+      const keys = {
+        ...orderToEnd(
+          Object.values(scene.nodes),
+          [...selected].filter((id) => scene.nodes[id] !== undefined),
+          place,
+        ),
+        ...orderToEnd(
+          Object.values(scene.links),
+          [...selected].filter((id) => scene.links[id] !== undefined),
+          place,
+        ),
+      };
+      const moved = Object.entries(keys);
+      if (moved.length === 0) {
+        return false;
+      }
+      return commit(() => draw().apply(chainEdits(moved.map(([id, z]) => reorderElement(id, z)))));
     },
     duplicate: (ids, delta) => {
       const scene = currentScene();

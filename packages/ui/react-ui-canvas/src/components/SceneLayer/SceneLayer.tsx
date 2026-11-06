@@ -584,10 +584,13 @@ const MINOR_GRID = '--dx-minor-grid';
 // so the text does not move when editing starts.
 const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-(--dx-minor-grid)';
 
-/** A line is a whole number of minor grid units tall, the text centred in it, so lines of text sit on the grid. */
+/**
+ * A line is a whole number of half minor grid units tall, the text centred in it, so every pair of lines sits on the
+ * grid; half a unit rather than a whole one, as a whole one leaves a line of body text looking adrift in its own box.
+ */
 const LINE_ON_GRID = mx(
   // Important: a size class (`text-lg`) carries its own leading, which would otherwise win.
-  '[--dx-line:round(up,1.25em,var(--dx-minor-grid))] leading-(--dx-line)!',
+  '[--dx-line:round(up,1.2em,calc(var(--dx-minor-grid)/2))] leading-(--dx-line)!',
 );
 
 /**
@@ -1405,7 +1408,7 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       LINE_ON_GRID,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
       // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
-      sizeClass(node, 'text-[24px]'),
+      sizeClass(node, 'text-[20px]'),
     )}
   >
     {label}

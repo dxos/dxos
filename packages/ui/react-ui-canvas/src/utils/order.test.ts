@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { between, initialKeys, sortByZ, topZ } from './order.ts';
+import { between, initialKeys, orderToEnd, sortByZ, topZ } from './order.ts';
 
 describe('order', () => {
   test('between yields keys strictly inside the interval', ({ expect }) => {
@@ -42,5 +42,50 @@ describe('order', () => {
   test('rejects inverted or zero-terminated keys', ({ expect }) => {
     expect(() => between('b', 'a')).toThrow();
     expect(() => between('a0')).toThrow();
+  });
+
+  describe('orderToEnd', () => {
+    const group = (keys: readonly string[]) => keys.map((z, index) => ({ id: `n${index}`, z }));
+    const after = (elements: readonly { id: string; z?: string }[], keys: Record<string, string>) =>
+      sortByZ(elements.map(({ id, z }) => ({ id, z: keys[id] ?? z ?? '' }))).map(({ id }) => id);
+
+    test('lifts the selection above the rest, in its own order', ({ expect }) => {
+      const elements = group(['1', '2', '3', '4']);
+      const keys = orderToEnd(elements, ['n0', 'n1'], 'front');
+      expect(after(elements, keys)).toEqual(['n2', 'n3', 'n0', 'n1']);
+    });
+
+    test('drops the selection below the rest, in its own order', ({ expect }) => {
+      const elements = group(['1', '2', '3', '4']);
+      const keys = orderToEnd(elements, ['n2', 'n3'], 'back');
+      expect(after(elements, keys)).toEqual(['n2', 'n3', 'n0', 'n1']);
+    });
+
+    test('keys only what moves', ({ expect }) => {
+      const elements = group(['1', '2', '3']);
+      expect(Object.keys(orderToEnd(elements, ['n0'], 'front'))).toEqual(['n0']);
+      expect(Object.keys(orderToEnd(elements, ['n2'], 'back'))).toEqual(['n2']);
+    });
+
+    test('nothing to do when the selection is already at that end', ({ expect }) => {
+      const elements = group(['1', '2', '3']);
+      expect(orderToEnd(elements, ['n1', 'n2'], 'front')).toEqual({});
+      expect(orderToEnd(elements, ['n0'], 'back')).toEqual({});
+      expect(orderToEnd(elements, ['n0', 'n1', 'n2'], 'front')).toEqual({});
+      expect(orderToEnd(elements, [], 'front')).toEqual({});
+    });
+
+    test('renumbers the group when an element has no key to go under', ({ expect }) => {
+      const elements = [{ id: 'a' }, { id: 'b', z: '2' }, { id: 'c', z: '3' }];
+      const keys = orderToEnd(elements, ['c'], 'back');
+      expect(Object.keys(keys).sort()).toEqual(['a', 'b', 'c']);
+      expect(after(elements, keys)).toEqual(['c', 'a', 'b']);
+    });
+
+    test('lifts above a group written with no keys', ({ expect }) => {
+      const elements = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+      const keys = orderToEnd(elements, ['a'], 'front');
+      expect(after(elements, keys)).toEqual(['b', 'c', 'a']);
+    });
   });
 });

@@ -51,10 +51,12 @@ import {
 import {
   DEFAULT_LAYER,
   NOMINAL_SIZES,
+  type SceneEdit,
   VERTEX_SNAP_PX,
   activeLayer,
   boundsCenter,
   boundsFromPoints,
+  chainEdits,
   cloneShape,
   createId,
   createLink,
@@ -820,6 +822,7 @@ export const usePointerMachine = ({
           break;
         }
         case 'link': {
+          // Everything the drop makes is one undo step, so the node it creates and the link to it go together.
           // The band follows the pointer exactly; it snaps as it lands (`settle`). A free source keeps
           // facing the far end.
           const point = toScene(event);
@@ -954,9 +957,12 @@ export const usePointerMachine = ({
     [nodeRegistry, scene.nodes, cell],
   );
 
-  /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
-  const addNode = useCallback(
-    (node: Node) => {
+  /**
+   * The edit that adds a new node, with the scene a new portal opens onto registered as a side effect; a gesture that
+   * makes more than one element chains the edits so they land, and undo, as one.
+   */
+  const nodeEdit = useCallback(
+    (node: Node): SceneEdit => {
       if (isViewNode(node)) {
         registry.set(store.views, {
           ...registry.get(store.views),
@@ -968,10 +974,13 @@ export const usePointerMachine = ({
           },
         });
       }
-      draw.apply(insertNode({ ...node, layer: activeLayer(scene, registry.get(atoms.layer)) }));
+      return insertNode({ ...node, layer: activeLayer(scene, registry.get(atoms.layer)) });
     },
-    [draw, registry, store, scene, atoms.layer],
+    [registry, store, scene, atoms.layer],
   );
+
+  /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
+  const addNode = useCallback((node: Node) => draw.apply(nodeEdit(node)), [draw, nodeEdit]);
 
   /** The node the gesture made, committed: the next gesture starts from a fresh `create`. */
   const commitCreated = useCallback(
@@ -1046,49 +1055,54 @@ export const usePointerMachine = ({
           }
           let target = current.target;
           let created: Node | undefined;
-          if (!target && isPointEndpoint(current.source)) {
-            // A free-ended link that never reached a node ends free too.
-            target = { point: current.to };
-          } else if (!target && capabilities.create) {
-            // Dropping a link drag on empty canvas creates a node there and links to it (canvas-editor
-            // behaviour): a copy of the shape it left, without its text, else a rectangle. It is centred on
-            // the release point (not the settled end, already snapped to the coarse grid) with its top-left
-            // on the minor grid, as a palette drop lands.
-            const drop = raw.kind === 'link' ? raw.to : current.to;
-            const source = scene.nodes[endpointNode(current.source) ?? ''];
-            const def = source ? nodeRegistry[source.type] : undefined;
-            const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
-            const props = {
-              id: createId(source?.type ?? 'rect'),
-              z: topZ(Object.values(scene.nodes)),
-              center: {
-                x: snapMinor(drop.x - size.width / 2) + size.width / 2,
-                y: snapMinor(drop.y - size.height / 2) + size.height / 2,
-              },
-              size,
-            };
-            const node =
-              source && def
-                ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
-                : createNode({ type: 'rect', ...props });
-            addNode(node);
-            created = node;
-            target = { node: node.id };
-          }
-          if (target) {
-            const link = createLink({
-              type: current.type,
-              id: createId(current.type),
-              z: topZ(Object.values(scene.links)),
-              source: current.source,
-              target,
-              // A link between ports that declare a direction is drawn with one.
-              ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
-            });
-            draw.apply(insertLink({ ...link, layer: activeLayer(scene, registry.get(atoms.layer)) }));
-            // What the user just made is what they act on next (style, delete): the link, and the node
-            // the drop created with it.
-            select(created ? [link.id, created.id] : [link.id]);
+          // Everything the drop makes lands as one edit, so the node and the link to it undo together.
+          const edits: SceneEdit[] = [];
+          {
+            if (!target && isPointEndpoint(current.source)) {
+              // A free-ended link that never reached a node ends free too.
+              target = { point: current.to };
+            } else if (!target && capabilities.create) {
+              // Dropping a link drag on empty canvas creates a node there and links to it (canvas-editor
+              // behaviour): a copy of the shape it left, without its text, else a rectangle. It is centred on
+              // the release point (not the settled end, already snapped to the coarse grid) with its top-left
+              // on the minor grid, as a palette drop lands.
+              const drop = raw.kind === 'link' ? raw.to : current.to;
+              const source = scene.nodes[endpointNode(current.source) ?? ''];
+              const def = source ? nodeRegistry[source.type] : undefined;
+              const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
+              const props = {
+                id: createId(source?.type ?? 'rect'),
+                z: topZ(Object.values(scene.nodes)),
+                center: {
+                  x: snapMinor(drop.x - size.width / 2) + size.width / 2,
+                  y: snapMinor(drop.y - size.height / 2) + size.height / 2,
+                },
+                size,
+              };
+              const node =
+                source && def
+                  ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
+                  : createNode({ type: 'rect', ...props });
+              edits.push(nodeEdit(node));
+              created = node;
+              target = { node: node.id };
+            }
+            if (target) {
+              const link = createLink({
+                type: current.type,
+                id: createId(current.type),
+                z: topZ(Object.values(scene.links)),
+                source: current.source,
+                target,
+                // A link between ports that declare a direction is drawn with one.
+                ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
+              });
+              edits.push(insertLink({ ...link, layer: activeLayer(scene, registry.get(atoms.layer)) }));
+              draw.apply(edits.length === 1 ? edits[0] : chainEdits(edits));
+              // What the user just made is what they act on next (style, delete): the link, and the node
+              // the drop created with it.
+              select(created ? [link.id, created.id] : [link.id]);
+            }
           }
           break;
         }
@@ -1151,6 +1165,7 @@ export const usePointerMachine = ({
       createdNode,
       commitCreated,
       addNode,
+      nodeEdit,
       minor,
       cell,
       snapMinor,

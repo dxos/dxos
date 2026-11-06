@@ -352,7 +352,7 @@ const CanvasEngine = ({
     viewport,
   });
 
-  const { setTool, toggleSnap, toggleGuides, toggleDebug } = controller.tools;
+  const { setTool, toggleGrid, toggleSnap, toggleGuides, toggleDebug } = controller.tools;
   const { editNode, exitEdit } = useEditMode({ registry, atoms, nodeRegistry, capabilities, select });
   const {
     onBackgroundPointerDown,
@@ -451,12 +451,14 @@ const CanvasEngine = ({
     navigation,
     grid,
     select,
+    toggleGrid,
     toggleSnap,
     toggleGuides,
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,
     duplicate: () => controller.document.duplicate(registry.get(atoms.selection), { x: major, y: major }),
+    order: controller.document.order,
     commit: history.commit,
     major,
     copy,

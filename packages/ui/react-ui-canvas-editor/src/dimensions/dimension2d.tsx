@@ -85,13 +85,15 @@ const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
   'redo',
   'group',
   'ungroup',
+  'bringToFront',
+  'sendToBack',
 ]);
 
 /**
  * Reports an aid the engine's own key toggled to the host's display, since the editor's constrain and the host's saved
  * view read the display; a change the display itself made reports nothing back.
  */
-const useAidReport = (aid: Atom.Atom<boolean>, key: 'snap' | 'axes' | 'guides', editing: boolean) => {
+const useAidReport = (aid: Atom.Atom<boolean>, key: 'grid' | 'snap' | 'axes' | 'guides', editing: boolean) => {
   const { display, setDisplay } = useSceneLook('SceneEditor.AidReport');
   const value = useAtomValue(aid);
   const previous = useRef(value);
@@ -314,30 +316,38 @@ export const createDimension2D =
       engine.capabilities.create === true && engine.capabilities.delete === true;
     const edits: Dimension['edits'] = options.standalone
       ? ({
-          undo: { enabled: history('canUndo'), run: run((engine) => engine.document.undo()) },
-          redo: { enabled: history('canRedo'), run: run((engine) => engine.document.redo()) },
-          cut: { enabled: selected(() => true), run: run((engine) => engine.controller.editing.cut()) },
-          copy: { enabled: selected(() => true), run: run((engine) => void engine.controller.editing.copy()) },
-          paste: {
+          'undo': { enabled: history('canUndo'), run: run((engine) => engine.document.undo()) },
+          'redo': { enabled: history('canRedo'), run: run((engine) => engine.document.redo()) },
+          'cut': { enabled: selected(() => true), run: run((engine) => engine.controller.editing.cut()) },
+          'copy': { enabled: selected(() => true), run: run((engine) => void engine.controller.editing.copy()) },
+          'paste': {
             enabled: Atom.keepAlive(Atom.make((get) => get(canvas.clipboard) !== undefined && get(canCreate))),
             run: run((engine) => engine.controller.editing.paste()),
           },
-          duplicate: {
+          'duplicate': {
             enabled: selected(() => true),
             run: run((engine) =>
               engine.controller.document.duplicate(registry.get(canvas.selection), { x: MAJOR_GRID, y: MAJOR_GRID }),
             ),
           },
-          delete: { enabled: selected(() => true), run: run((engine) => void engine.controller.selection.delete()) },
+          'delete': { enabled: selected(() => true), run: run((engine) => void engine.controller.selection.delete()) },
+          'bring-to-front': {
+            enabled: selected(() => true),
+            run: run((engine) => void engine.controller.document.order(registry.get(canvas.selection), 'front')),
+          },
+          'send-to-back': {
+            enabled: selected(() => true),
+            run: run((engine) => void engine.controller.document.order(registry.get(canvas.selection), 'back')),
+          },
           // A locked node may not leave its View, so a selection holding one is not grouped.
-          group: {
+          'group': {
             enabled: selected((elements, engine) => {
               const shapes = nodes(elements);
               return editable(engine) && shapes.length > 0 && shapes.every((node) => !node.locked);
             }),
             run: run((engine) => void engine.controller.selection.group()),
           },
-          ungroup: {
+          'ungroup': {
             enabled: selected((elements, engine) => editable(engine) && nodes(elements).some(isInstanceNode)),
             run: run((engine) => void engine.controller.selection.ungroup()),
           },
@@ -462,15 +472,21 @@ export const createDimension2D =
       const { display, options: look } = useSceneLook('SceneEditor.Root2D');
       const drawn = useDrawnDocument(useAtomValue(atoms.shown));
       const scene = useAtomValue(atoms.scene);
+      const open = useAtomValue(atoms.layout);
+      // The open layout's grid pitch, which snapping, nudging and the grid drawn all derive from.
+      const openLayout = open === undefined ? undefined : findLayout(drawn, open);
+      const grid = openLayout?.dim === '2d' ? openLayout.grid : undefined;
       const readonly = useAtomValue(atoms.readonly);
       const picture = useAtomValue(atoms.picture);
       const offers = useAtomValue(atoms.host);
       const host = useContext(Canvas2DHostContext);
       const editing = !picture;
       // The aids are the host's display, which the engine keeps as atoms its own keys toggle too.
+      useEffect(() => registry.set(canvas.grid, editing && display.grid), [editing, display.grid]);
       useEffect(() => registry.set(canvas.snap, editing && display.snap), [editing, display.snap]);
       useEffect(() => registry.set(canvas.axes, editing && (display.axes ?? false)), [editing, display.axes]);
       useEffect(() => registry.set(canvas.guides, editing && (display.guides ?? false)), [editing, display.guides]);
+      useAidReport(canvas.grid, 'grid', editing);
       useAidReport(canvas.snap, 'snap', editing);
       useAidReport(canvas.axes, 'axes', editing);
       useAidReport(canvas.guides, 'guides', editing);
@@ -483,6 +499,7 @@ export const createDimension2D =
           onModelIntent={offers.model ? document.commands.modelIntent : undefined}
           onTransaction={document.commands.transaction}
           atoms={canvas}
+          grid={grid}
           nodes={options.nodes}
           capabilities={options.capabilities}
           theme={display.theme}

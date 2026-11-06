@@ -239,6 +239,36 @@ describe('CanvasController', () => {
       expect(applied).toBe(1);
     });
 
+    test('order lifts the selection over the rest and drops it under, as one undo step', ({ expect }) => {
+      const tree = ViewBuilder.view('root', [
+        ViewBuilder.rect('a', box(0)),
+        ViewBuilder.rect('b', box(512)),
+        ViewBuilder.rect('c', box(1024)),
+      ]).build();
+      const { controller, scene, undoStep } = setup({ tree });
+      const order = () =>
+        Object.values(scene().nodes)
+          .sort((left, right) => (left.z < right.z ? -1 : 1))
+          .map((node) => node.id);
+      expect(order()).toEqual(['a', 'b', 'c']);
+      expect(controller.document.order(['a', 'b'], 'front')).toBe(true);
+      expect(order()).toEqual(['c', 'a', 'b']);
+      // One undo step for the whole selection.
+      undoStep();
+      expect(order()).toEqual(['a', 'b', 'c']);
+      expect(controller.document.order(['c'], 'back')).toBe(true);
+      expect(order()).toEqual(['c', 'a', 'b']);
+      // Already at that end: nothing is written.
+      expect(controller.document.order(['c'], 'back')).toBe(false);
+    });
+
+    test('order leaves a read-only view alone', ({ expect }) => {
+      const { controller, scene } = setup({ readonly: true });
+      const before = Object.values(scene().nodes).map((node) => node.z);
+      expect(controller.document.order(['b'], 'back')).toBe(false);
+      expect(Object.values(scene().nodes).map((node) => node.z)).toEqual(before);
+    });
+
     test("restack in another container (an Object's definition) writes the store, as one undo step", ({ expect }) => {
       const tree = ViewBuilder.view('root', [
         ViewBuilder.rect('a', box(0)),

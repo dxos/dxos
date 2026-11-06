@@ -4,6 +4,7 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 
+import { orderToEnd } from '@dxos/react-ui-canvas';
 import { type Scene, findLayout, resolveLayout } from '@dxos/scene';
 
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from '../clipboard.ts';
@@ -90,6 +91,31 @@ export const createCommandsAspect = <C>(
       editorSelection.commands.select([]);
     }
   };
+  /** A link is an element with ends; the two paint in groups of their own, as the engine stacks them. */
+  const isLinkRecord = (element: Scene.Element): boolean =>
+    element.source !== undefined || element.target !== undefined;
+
+  /** Restacks the selection within the open layout: one reorder per element that moves, in one batch (one undo step). */
+  const orderSelection = (place: 'front' | 'back') => () => {
+    const open = registry.get(atoms.layout);
+    const record = open === undefined ? undefined : findLayout(registry.get(atoms.document), open);
+    if (open === undefined || !record) {
+      return;
+    }
+    const selection = registry.get(editorSelection.atoms.selection);
+    const elements = Object.values(record.elements);
+    const keys = {
+      ...orderToEnd(
+        elements.filter((element) => !isLinkRecord(element)),
+        selection,
+        place,
+      ),
+      ...orderToEnd(elements.filter(isLinkRecord), selection, place),
+    };
+    const intents = Object.entries(keys).map(([id, order]) => ({ kind: 'reorder' as const, id, order }));
+    intents.length > 0 && intent(open, { kind: 'batch', intents });
+  };
+
   const run = {
     'undo': () => {
       latest.current.props.history?.undo();
@@ -111,6 +137,8 @@ export const createCommandsAspect = <C>(
     },
     'duplicate': () => copy() && pasteFrom(undefined),
     'delete': deleteSelection,
+    'bring-to-front': orderSelection('front'),
+    'send-to-back': orderSelection('back'),
     'group': () => {
       const open = registry.get(atoms.layout);
       const selection = registry.get(editorSelection.atoms.selection);
