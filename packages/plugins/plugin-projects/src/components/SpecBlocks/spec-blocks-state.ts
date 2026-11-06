@@ -10,12 +10,11 @@ import {
   type DialectRegistry,
   type SourceBlock,
   type SpecItem,
-  parseDialectHeader,
-  resolveBlockSchemas,
   scanBlocks,
   specItems,
 } from '@dxos/deus/schema';
 
+import { specSchemas } from '../../util/spec-schemas.ts';
 import { type SharedAwareness } from './shared-awareness.ts';
 
 export type SpecBlocksConfig = {
@@ -49,8 +48,6 @@ export type SpecBlocks = {
 /** Which block a card shows: the nth block of a kind and id, so a card follows its block across edits. */
 export type BlockLocator = { kind: string; id: string; index: number };
 
-const CORE_DIALECT = 'org.dxos.spec.core';
-
 const schemaSource = (text: string, dialects: readonly string[]) =>
   [
     dialects.join(','),
@@ -64,13 +61,7 @@ const read = (state: EditorState, previous?: SpecBlocks): SpecBlocks => {
   const text = state.doc.toString();
   const { dialects, registry } = state.facet(specBlocksConfig);
   const source = schemaSource(text, dialects);
-  const schemas =
-    previous?.source === source
-      ? previous.schemas
-      : resolveBlockSchemas(text, {
-          dialects: [...new Set([CORE_DIALECT, ...parseDialectHeader(text).extends, ...dialects])],
-          registry,
-        });
+  const schemas = previous?.source === source ? previous.schemas : specSchemas(text, dialects, registry);
   const items = specItems(text, schemas);
   return { schemas, items, blocks: [...new Set(items.map(({ block }) => block))], source };
 };

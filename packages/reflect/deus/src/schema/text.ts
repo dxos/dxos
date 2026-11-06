@@ -25,11 +25,12 @@ export const minimalChange = (from: number, before: string, after: string): Chan
   return { from: from + start, to: from + before.length - end, insert: after.slice(start, after.length - end) };
 };
 
-/** Applies changes to a text; they must not overlap. */
+/** Applies changes to a text; they must not overlap. Inserts at one offset land in the order given. */
 export const applyChanges = (text: string, changes: readonly Change[]): string =>
-  [...changes]
-    .sort((a, b) => b.from - a.from || b.to - a.to)
-    .reduce((out, { from, to, insert }) => out.slice(0, from) + insert + out.slice(to), text);
+  changes
+    .map((change, index) => ({ change, index }))
+    .sort((a, b) => b.change.from - a.change.from || b.change.to - a.change.to || b.index - a.index)
+    .reduce((out, { change: { from, to, insert } }) => out.slice(0, from) + insert + out.slice(to), text);
 
 const words = (text: string) => text.split(/\s+/).filter(Boolean);
 
