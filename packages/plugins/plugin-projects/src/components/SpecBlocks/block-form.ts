@@ -174,6 +174,9 @@ const fieldSchema = (field: FieldSchema, value: BlockValue, context: BlockFormCo
   }
 };
 
+/** A field's label: its name as a phrase (`adds-fields` → `Adds fields`). */
+const fieldTitle = (name: string) => name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, ' ');
+
 /** A block kind as a form's schema: its title, its inline prose when it takes it, then its fields in order. */
 export const blockFormSchema = (schema: BlockSchema, value: BlockValue, context: BlockFormContext) => {
   const fields: Record<string, Schema.Top> = {
@@ -182,7 +185,10 @@ export const blockFormSchema = (schema: BlockSchema, value: BlockValue, context:
     ...Object.fromEntries(
       schema.fields.map((field) => [
         formKey(field.name),
-        Schema.optional(fieldSchema(field, value, context)).annotate({ title: field.name, description: field.doc }),
+        Schema.optional(fieldSchema(field, value, context)).annotate({
+          title: fieldTitle(field.name),
+          description: field.doc,
+        }),
       ]),
     ),
   };
@@ -255,6 +261,34 @@ const freshName = (rows: readonly Partial<Pick<Row, 'name'>>[]) => {
 };
 
 /**
+ * The row a field's add button creates, as the block will store it, so the form's pending edit matches the source once
+ * written; undefined where the schema's empty value is stored as it is.
+ */
+export const newFormItem = (
+  field: BlockSchema['fields'][number],
+  context: BlockFormContext,
+): ((values: readonly unknown[]) => unknown) | undefined => {
+  switch (field.type.kind) {
+    case 'list':
+      return () => context.defaults.item;
+    case 'map':
+      return (rows) => ({ name: freshName(rows as readonly Partial<Row>[]), optional: false, value: '' });
+    case 'keyed':
+      return (entries) => ({
+        key: mintKey(
+          new Set([
+            ...context.blocks.items.map(({ key }) => key),
+            ...(entries as readonly Partial<Entry>[]).flatMap(({ key }) => (key ? [key] : [])),
+          ]),
+        ),
+        text: context.defaults.entry,
+      });
+    default:
+      return undefined;
+  }
+};
+
+/**
  * The block value the form's values state. Bound text keeps the block's own, since its editors write it directly; an
  * element the form just appended (empty, past the block's own) takes a fresh name, key or starting text.
  */
@@ -312,7 +346,7 @@ export const fromFormValues = (
               if (key && own.has(key)) {
                 return { key, text: own.get(key)! };
               }
-              const minted = mintKey(taken);
+              const minted = key && !taken.has(key) ? key : mintKey(taken);
               taken.add(minted);
               return { key: minted, text: text || context.defaults.entry };
             }),

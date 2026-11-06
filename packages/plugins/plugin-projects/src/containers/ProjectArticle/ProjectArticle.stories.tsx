@@ -529,6 +529,26 @@ export const SpecBlockForms: Story = {
     view.dispatch({ selection: { anchor: view.state.doc.length } });
     await userEvent.keyboard(' Twice.');
     await waitFor(() => expect(text()).toContain("sender's folder. Always. Twice.\n"), { timeout: 5_000 });
+
+    // A requirement added and written keeps its text when another field of the block changes.
+    await userEvent.click(within(featureCard()).getByTestId('req.add'));
+    const added = await waitFor(() => {
+      const content = featureCard().querySelector<HTMLElement>('[data-testid="req[2].text"] .cm-content');
+      const editor = content && EditorView.findFromDOM(content);
+      if (!editor) {
+        throw new Error('no added requirement');
+      }
+      return editor;
+    });
+    added.dispatch({
+      changes: { from: 0, to: added.state.doc.length, insert: 'A muted sender is archived.' },
+      userEvent: 'input.type',
+    });
+    await waitFor(() => expect(text()).toContain(': A muted sender is archived.\n'), { timeout: 5_000 });
+    await userEvent.click(within(featureCard()).getByTestId('status'));
+    await userEvent.click(await screen.findByRole('option', { name: 'prototype' }));
+    await waitFor(() => expect(text()).toContain('  status: prototype\n'), { timeout: 5_000 });
+    await expect(text()).toContain(': A muted sender is archived.\n');
   },
 };
 

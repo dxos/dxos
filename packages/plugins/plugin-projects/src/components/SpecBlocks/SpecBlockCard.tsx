@@ -34,6 +34,7 @@ import {
   formOptionsKey,
   fromFormValues,
   isBoundField,
+  newFormItem,
   toFormValues,
 } from './block-form.ts';
 import { updateBlock, useSpecBlocks } from './block-value.ts';
@@ -162,6 +163,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
           {
             readonly,
             hidden: !active && isEmpty(values[formKey(field.name)]),
+            newItem: newFormItem(field, context),
             ...(isBoundField(field, value) && { collaborative: true, presentation: 'plain' }),
           },
         ]),
@@ -179,7 +181,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
         ),
       ),
     }),
-    [schema, raw, readonly, active, blocks, block, JSON.stringify(values), t],
+    [schema, raw, readonly, active, blocks, block, context, JSON.stringify(values), t],
   );
 
   const handleValuesChanged = useCallback(
