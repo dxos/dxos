@@ -636,10 +636,14 @@ const main = async () => {
           // the Linux desktop app. Nothing survives a reload; for demos and automated runs only.
           storage: {
             sqliteMode: defs.Runtime_Client_Storage_SqliteMode.OPFS,
-            ...(import.meta.env.VITE_DX_STORAGE === 'memory' && { persistent: false }),
+            ...(import.meta.env.VITE_DX_STORAGE === 'memory' ? { persistent: false } : {}),
           },
           // What the dedicated worker serves: it loads each of these modules by URL.
-          workerModules,
+          workerModules: workerModules.map(({ requires, provides, ...module }) => ({
+            ...module,
+            requires: [...requires],
+            provides: [...provides],
+          })),
         },
       },
     },
