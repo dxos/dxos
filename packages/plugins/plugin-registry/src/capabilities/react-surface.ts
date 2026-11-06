@@ -12,10 +12,16 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { DisableDependentsAlert } from '#components';
-import { LoadPluginDialog, PluginArticle, PublicRegistryArticle, RegistrySettingsContainer } from '#containers';
+import {
+  LoadPluginDialog,
+  PluginArticle,
+  PublicRegistryArticle,
+  RegistrySettingsContainer,
+  SpacePluginsSettings,
+} from '#containers';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
-import { DISABLE_DEPENDENTS_DIALOG } from '../constants.ts';
+import { DISABLE_DEPENDENTS_DIALOG, SPACE_SETTINGS_TYPE } from '../constants.ts';
 import { RegistryNamespace } from '../namespace.ts';
 import { RegistryCategoryArticle } from './RegistryCategoryArticle.tsx';
 
@@ -44,6 +50,12 @@ export default Capability.makeModule(({ externalPlugins = true }: RegistryPlugin
 
   return Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
+      // The plugins panel in a space's settings section: which plugins the space runs, for everyone.
+      Surface.create({
+        id: 'spaceSettings',
+        filter: AppSurface.literal(AppSurface.Article, SPACE_SETTINGS_TYPE),
+        component: SpacePluginsSettings,
+      }),
       Surface.create({
         id: 'bundled',
         filter: AppSurface.literal(AppSurface.Article, 'bundled'),
