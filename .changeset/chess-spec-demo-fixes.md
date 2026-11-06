@@ -2,6 +2,7 @@
 '@dxos/app-toolkit': patch
 '@dxos/plugin-code': patch
 '@dxos/plugin-deck': patch
+'@dxos/plugin-markdown': patch
 '@dxos/plugin-messenger': patch
 '@dxos/plugin-projects': patch
 '@dxos/plugin-review': patch
@@ -17,5 +18,6 @@ Fixes found while recording a two-person spec demo:
 - A resolved comment thread leaves Active comments as soon as it is resolved, on every peer.
 - Opening a comment notification opens the commented object with Comments beside it. `LayoutOperation.Open` takes a linked companion (`~comments`) as its `variant` and opens it in the same navigation.
 - The toolbar's Add comment comments on text selected in a feature field, also for a feature added after the project opened.
+- The first feature `/feature` makes takes the cursor in its name, as later ones do.
 - Renaming a feature in its form relabels its embeds in the spec's text.
 - The feature-map skill writes out a whole spec with one import and gives each requirement line its own id.
