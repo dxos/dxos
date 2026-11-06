@@ -7,6 +7,7 @@
 import * as Effect from 'effect/Effect';
 
 import type { OpaqueToolkit } from '@dxos/ai';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as Capability from '@dxos/app-framework/Capability';
@@ -73,6 +74,10 @@ export const activate = async (release: Plugins): Promise<Activation> => {
       manager.activate(ActivationEvents.Idle),
       // Skills default to AssistantStart; without it a headless host registers none.
       manager.activate(AppActivationEvents.AssistantStart),
+      // A plugin's own start event, which Composer fires and nothing here did: plugin-thread registers its local
+      // channel backend on it, so without it `thread.appendChannelMessage` finds no backend for a channel the same
+      // bundle just created.
+      manager.activate(ActivationEvent.pluginStart(release.primary.meta.profile.key)),
     ]).pipe(Effect.scoped),
   );
 
