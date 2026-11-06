@@ -36,7 +36,7 @@ const SUMMARY = 'A two-player chess game plugin for Composer.';
 const BOARD = 'Two players play on a shared board.';
 const MOVE = 'A player makes a move on their turn.';
 const LOBBY = 'Players find and join open games in a lobby.';
-const RULES = 'Every move is checked against the rules.';
+const RULES = 'Move Validation checks every move against the rules.';
 const SYNC = 'Games are saved and reach every peer.';
 const ASK =
   "Turn this draft into the spec for a Composer chess plugin: a feature for each remaining bullet, requirements for every feature, and the plugin's types (down to pieces and squares) and operations as type and op blocks.";
@@ -434,8 +434,12 @@ const openNotification = async (peer, subject) => {
     await peer.click(notificationsTab(page));
   }
   const notification = page.getByTestId('messenger.notification').filter({ hasText: subject }).first();
-  await peer.click(notification.getByText(subject).last());
+  // The tile's title opens the notification; its attachment chip would open only the object.
+  await peer.click(notification.getByText(subject).first());
   await plank(page).getByText(subject).first().waitFor({ timeout: TIMEOUT });
+  // The notification opens Comments beside the plank, but the deck draws a companion only when the pair fits, and
+  // beside an open sidebar it does not.
+  await peer.click(sidebar(page).getByTestId('deck.toggleComplementarySidebar'));
 };
 
 /** The requirements of the feature named `name`, as the space holds them. */

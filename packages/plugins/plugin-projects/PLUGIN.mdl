@@ -410,7 +410,7 @@ test QA-11: Two people write a chess plugin's spec with the agent
     by the autocue flow `packages/plugins/plugin-projects/autocue/chess-spec.mjs`, recorded side by side.
   actors: human
   covers: [F-4.8, F-4.10, F-4.13]
-  status: draft              # 2026-11-06, rewritten; not yet recorded
+  status: passing            # 2026-11-06, recorded by autocue/chess-spec.mjs
   given:
     - alice: a booted app named "Alice", with plugin-code on
     - bob: a second browser profile named "Bob", with plugin-code on, joined to Alice's space by invitation
@@ -450,8 +450,8 @@ test QA-11: Two people write a chess plugin's spec with the agent
         features for the remaining bullets appear in Alice's text as the agent makes them. When the agent finishes,
         the spec holds at least six features, Gameboard, Make Move, Start Game and Move Validation among them, every
         feature has requirements, and the spec's text embeds every feature and holds `type` and `op` blocks
-      note: The agent names the features it adds, so only the three made by hand and Move Validation are checked by
-        name.
+      note: The agent names the features it adds, so only the three made by hand and Move Validation, which Bob's
+        bullet names, are checked by name.
     - name: Alice answers Bob
       do: Alice answers Bob's question on "Make Move", "Move Validation does; the agent just added it."
       expect: the answer shows under Bob's question in Alice's Comments
