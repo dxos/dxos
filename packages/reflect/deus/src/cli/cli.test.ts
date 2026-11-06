@@ -194,6 +194,14 @@ describe('deus review', () => {
     ]);
     expect(output.at(-1)).toBe('3 verdicts for 4 items; 5 errors, 1 warnings.');
   });
+
+  test('check refuses a date that is not a real UTC time, as the importer does', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/bad-date/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(output.filter((line) => line.startsWith('error: '))).toEqual([
+      'error: frontmatter: `date` must be YYYY-MM-DD, or YYYY-MM-DDTHH:MMZ with a UTC time',
+    ]);
+  });
 });
 
 describe('review dependsOn', () => {

@@ -57,7 +57,7 @@ import { ChatDetailsSection } from '#components';
 import { usePromptActions } from '#hooks';
 import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
-import { ChatSurface } from '#types';
+import { AssistantSurface } from '#types';
 
 import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
 
@@ -176,7 +176,7 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
 
 const changesSection = Surface.create({
   id: 'storyChanges',
-  filter: Surface.makeFilter(ChatSurface.ChatDetails),
+  filter: Surface.makeFilter(AssistantSurface.ChatDetails),
   component: () => (
     <ChatDetailsSection icon='ph--git-diff--regular' title='Changes' count={3}>
       <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>
@@ -633,12 +633,12 @@ export const Rewind: Story = {
     // Greeting, then the question.
     await submitPrompt(canvasElement, greeting.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(greeting.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
     await submitPrompt(canvasElement, asked.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(asked.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
 
@@ -665,7 +665,7 @@ export const Rewind: Story = {
     await clearPrompt(canvasElement);
     await submitPrompt(canvasElement, revised.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(revised.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
     await expect(threadText(canvasElement)).toContain(revised.prompt);

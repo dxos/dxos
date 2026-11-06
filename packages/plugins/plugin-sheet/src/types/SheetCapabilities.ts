@@ -11,10 +11,14 @@ import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { SheetNamespace } from '../namespace.ts';
 import * as Sheet from './Sheet.ts';
 
-export type GridEntry = { grid: DxGridElement; setActiveRefs: (refs: GridContentProps['activeRefs']) => void };
+export type GridEntry = {
+  sheet: Sheet.Sheet;
+  grid: DxGridElement;
+  setActiveRefs: (refs: GridContentProps['activeRefs']) => void;
+};
 
 export type GridRegistry = {
-  register: (attendableId: string, grid: DxGridElement, setActiveRefs: GridEntry['setActiveRefs']) => void;
+  register: (attendableId: string, entry: GridEntry) => void;
   unregister: (attendableId: string) => void;
   get: (attendableId: string) => GridEntry | undefined;
 };

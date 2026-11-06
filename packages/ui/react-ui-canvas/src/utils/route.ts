@@ -10,26 +10,25 @@
 //
 
 import { Nudge } from '@dxos/diagram';
-
 import {
   DEFAULT_GRID,
   type Endpoint,
   type Link,
   MAJOR_GRID,
   type Node,
-  type NodeRegistry,
   type Point,
   type Port,
   type PortEndpoint,
   type Side,
-  type View,
   isCloudNode,
   isEllipseNode,
   isPointEndpoint,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
+import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
-import { type LatticeSpec } from './lattice.ts';
+import { type LatticeSpec, onLattice, quantize } from './lattice.ts';
 import {
   type PortTerminal,
   nearestPort,
@@ -152,6 +151,23 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
 export type LatticeRoute = { spec: LatticeSpec; nodes: readonly Node[] };
 
 /**
+ * Whether a link may take the gutters: each node end that keeps to the lattice sits on whole cells. A shape between
+ * cells (one in flight) would re-route on every pixel, two port pairs tying on bends and the nearer one flipping, so
+ * its links take the plain route until it lands.
+ */
+const onCells = (scene: RenderList2D, link: Link, spec: LatticeSpec): boolean =>
+  [link.source, link.target].every((end) => {
+    const node = isPointEndpoint(end) ? undefined : scene.nodes[end.node];
+    if (!node || !onLattice(node)) {
+      return true;
+    }
+    const bounds = nodeBounds(node);
+    const cell = quantize(bounds, spec);
+    // A snapped shape sits exactly on its cells, so any offset at all means it is between them.
+    return (['x', 'y', 'width', 'height'] as const).every((key) => Math.abs(cell[key] - bounds[key]) < 1e-6);
+  });
+
+/**
  * The polyline a smart link follows: a stub out of each port along its side's normal, then one segment
  * joining them. `splinePath` rounds where they meet, so a pair of facing ports reads as the elbow the
  * ports imply rather than a straight line cutting across their own nodes.
@@ -179,7 +195,7 @@ const polylinePath = (points: readonly Point[]): string =>
   points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${pt(point)}`).join(' ');
 
 /** A diagram connector between two nodes, routed as the diagram renderer draws it (`diagramRoute`). */
-const diagramGeometry = (scene: View, link: Link): LinkGeometry | undefined => {
+const diagramGeometry = (scene: RenderList2D, link: Link): LinkGeometry | undefined => {
   if (!link.connector || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
     return undefined;
   }
@@ -213,7 +229,7 @@ export const sideToward = (from: Point, to: Point): Side => {
 };
 
 /** A node end as the port picker sees it, or nothing when the node is gone. */
-const terminalOf = (scene: View, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
+const terminalOf = (scene: RenderList2D, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
   const node = scene.nodes[end.node];
   return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node), port: end.port } : undefined;
 };
@@ -256,7 +272,7 @@ const leastBends = (from: RouteEnd, to: RouteEnd): number => {
  * rather than from the nearest port round a corner. Pairs are tried nearest first, so a tie keeps the nearest.
  */
 export const latticeEnds = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   link: Link,
   route: LatticeRoute,
@@ -312,7 +328,7 @@ export const latticeEnds = (
  * a node end facing a free point takes the port nearest that point, and two free points face each other.
  */
 export const linkGeometry = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   link: Link,
   lattice?: LatticeSpec,
@@ -321,7 +337,8 @@ export const linkGeometry = (
   if (diagram) {
     return diagram;
   }
-  const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
+  const route =
+    lattice && onCells(scene, link, lattice) ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
   const routed = route && latticeEnds(scene, registry, link, route);
   if (routed) {
     return { link, path: splinePath(routed.points), source: routed.from, target: routed.to };
@@ -359,7 +376,7 @@ const centredEnd = (node: Node, toward: Point): RouteEnd => {
  * A plain (non-smart) link's ends: a free point stays where it is, a named port is used as given, and a node end with
  * no port points at the node's centre, from the other end's centre (or port, or point), stopping at its outline.
  */
-const centredEnds = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint) => {
+const centredEnds = (scene: RenderList2D, registry: NodeRegistry, source: Endpoint, target: Endpoint) => {
   const anchor = (end: Endpoint): Point | undefined => {
     if (isPointEndpoint(end)) {
       return end.point;
@@ -390,7 +407,7 @@ const centredEnds = (scene: View, registry: NodeRegistry, source: Endpoint, targ
 };
 
 const resolveEnds = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   source: Endpoint,
   target: Endpoint,
@@ -439,7 +456,7 @@ const resolveEnds = (
  * Other links, and any scene without a lattice, route one by one as `linkGeometry` does.
  */
 export const viewLinkGeometry = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   links: readonly Link[],
   lattice?: LatticeSpec,
@@ -469,6 +486,11 @@ export const viewLinkGeometry = (
   const routed = links
     .filter((link) => !diagrams.has(link.id))
     .flatMap((link) => {
+      if (!onCells(scene, link, lattice)) {
+        // Routed on its own and left out of the lanes, which are for gutter routes.
+        const geometry = linkGeometry(scene, registry, link);
+        return geometry ? [{ link, from: geometry.source, to: geometry.target, points: undefined }] : [];
+      }
       const chosen = latticeEnds(scene, registry, link, route);
       if (chosen) {
         return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];

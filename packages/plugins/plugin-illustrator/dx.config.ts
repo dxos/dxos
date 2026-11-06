@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
@@ -57,7 +58,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {
@@ -89,7 +92,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
+      roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.Section, AppSurface.Slide],
     }),
     Capability.lazyModule(
       'RefitState',
@@ -105,8 +108,19 @@ const config: Plugin.PluginConfig = Plugin.config({
       {
         provides: [IllustratorCapabilities.VariantProvider],
         activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
+        environments: ['browser', 'tauri'],
       },
-      () => import('#svg-variant', { with: { type: 'module-url' } }),
+      () => import('./src/capabilities/svg-variant.ts', { with: { type: 'module-url' } }),
+    ),
+    // The same variant without its React surfaces.
+    Capability.lazyModule(
+      'IllustratorSvgVariantHeadless',
+      {
+        provides: [IllustratorCapabilities.VariantProvider],
+        activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
+        environments: ['node', 'workerd'],
+      },
+      () => import('./src/capabilities/svg-variant.node.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],

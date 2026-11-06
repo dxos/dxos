@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { isEllipseNode, isNoteNode, isRectNode, isViewNode } from '../model/index.ts';
+import { isEllipseNode, isNoteNode, isRectNode, isViewNode } from '@dxos/scene';
+
 import { DEFAULT_LAYER } from '../utils/index.ts';
 import { ViewBuilder } from './builder.ts';
 

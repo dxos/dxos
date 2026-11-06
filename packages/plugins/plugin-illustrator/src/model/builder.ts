@@ -30,10 +30,10 @@ import * as Drawing from '../types/Drawing.ts';
 export type DrawingBuilder = {
   /** Renderer dialect this builder handles; matched against `Canvas.schema`. */
   readonly schema: string;
-  /** Derive the neutral scene from the canvas. */
-  read: (canvas: Drawing.Canvas) => ReadResult;
+  /** Derive the neutral scene from the canvas, which is of the builder's variant. */
+  read: (canvas: Obj.Unknown) => ReadResult;
   /** Apply a batch of edit commands atomically. */
-  apply: (canvas: Drawing.Canvas, commands: readonly Scene.Command[]) => ApplyResult;
+  apply: (canvas: Obj.Unknown, commands: readonly Scene.Command[]) => ApplyResult;
 };
 
 /**

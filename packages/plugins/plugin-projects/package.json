@@ -57,46 +57,26 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./LegacyProject": {
+      "source": "./src/types/LegacyProject.ts",
+      "types": "./dist/types/src/types/LegacyProject.d.ts",
+      "import": "./dist/lib/LegacyProject.mjs"
+    },
     "./package.json": "./package.json",
-    "./Feature": {
-      "source": "./src/types/Feature.ts",
-      "types": "./dist/types/src/types/Feature.d.ts",
-      "import": "./dist/lib/Feature.mjs"
-    },
-    "./FeatureLink": {
-      "source": "./src/types/FeatureLink.ts",
-      "types": "./dist/types/src/types/FeatureLink.d.ts",
-      "import": "./dist/lib/FeatureLink.mjs"
-    },
-    "./FeatureMapView": {
-      "source": "./src/types/FeatureMapView.ts",
-      "types": "./dist/types/src/types/FeatureMapView.d.ts",
-      "import": "./dist/lib/FeatureMapView.mjs"
-    },
-    "./FeatureOperation": {
-      "source": "./src/types/FeatureOperation.ts",
-      "types": "./dist/types/src/types/FeatureOperation.d.ts",
-      "import": "./dist/lib/FeatureOperation.mjs"
-    },
-    "./FeatureSpec": {
-      "source": "./src/types/FeatureSpec.ts",
-      "types": "./dist/types/src/types/FeatureSpec.d.ts",
-      "import": "./dist/lib/FeatureSpec.mjs"
-    },
-    "./LegacyFeature": {
-      "source": "./src/types/LegacyFeature.ts",
-      "types": "./dist/types/src/types/LegacyFeature.d.ts",
-      "import": "./dist/lib/LegacyFeature.mjs"
-    },
-    "./LegacyShowcase": {
-      "source": "./src/types/LegacyShowcase.ts",
-      "types": "./dist/types/src/types/LegacyShowcase.d.ts",
-      "import": "./dist/lib/LegacyShowcase.mjs"
-    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
       "import": "./dist/lib/ProjectCapabilities.mjs"
+    },
+    "./ProjectGraph": {
+      "source": "./src/ProjectGraph.ts",
+      "types": "./dist/types/src/ProjectGraph.d.ts",
+      "import": "./dist/lib/ns/ProjectGraph.mjs"
+    },
+    "./ProjectHooks": {
+      "source": "./src/ProjectHooks.ts",
+      "types": "./dist/types/src/ProjectHooks.d.ts",
+      "import": "./dist/lib/ns/ProjectHooks.mjs"
     },
     "./ProjectMailboxOperation": {
       "source": "./src/types/ProjectMailboxOperation.ts",
@@ -130,6 +110,11 @@
       "node": "./dist/lib/ProjectsPlugin.node.mjs",
       "import": "./dist/lib/ProjectsPlugin.mjs"
     },
+    "./ProjectSurface": {
+      "source": "./src/types/ProjectSurface.ts",
+      "types": "./dist/types/src/types/ProjectSurface.d.ts",
+      "import": "./dist/lib/ProjectSurface.mjs"
+    },
     "./ProjectView": {
       "source": "./src/types/ProjectView.ts",
       "types": "./dist/types/src/types/ProjectView.d.ts",
@@ -140,15 +125,10 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./Showcase": {
-      "source": "./src/types/Showcase.ts",
-      "types": "./dist/types/src/types/Showcase.d.ts",
-      "import": "./dist/lib/Showcase.mjs"
-    },
-    "./Spec": {
-      "source": "./src/types/Spec.ts",
-      "types": "./dist/types/src/types/Spec.d.ts",
-      "import": "./dist/lib/Spec.mjs"
+    "./SpecCommands": {
+      "source": "./src/SpecCommands.ts",
+      "types": "./dist/types/src/SpecCommands.d.ts",
+      "import": "./dist/lib/ns/SpecCommands.mjs"
     },
     "./Templates": {
       "source": "./src/Templates.ts",
@@ -189,18 +169,24 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/deus": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/errors": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/graph": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
@@ -209,24 +195,21 @@
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-canvas": "workspace:*",
-    "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
@@ -235,11 +218,12 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
+    "@dxos/plugin-builder": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",

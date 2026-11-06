@@ -27,7 +27,7 @@ import { MIGRATIONS as OBJECT_SNAPSHOT } from './object-snapshot/index.ts';
 import reverseRefInit from './reverse-ref/0001_init.sql?raw';
 import { MIGRATIONS as REVERSE_REF } from './reverse-ref/index.ts';
 import trackerInit from './tracker/0001_init.sql?raw';
-import { MIGRATIONS as TRACKER } from './tracker/index.ts';
+import { MIGRATIONS as TRACKER, MIGRATIONS_TABLE as TRACKER_TABLE } from './tracker/index.ts';
 
 const STORES = [
   { name: 'activity', init: activityInit, manifest: ACTIVITY },
@@ -44,6 +44,21 @@ const migrateEntityMeta = Migrator.make({})({
   loader: Migrator.fromRecord(ENTITY_META),
   table: ENTITY_META_TABLE,
 }).pipe(Effect.orDie);
+
+/** Applies the entity-meta manifest up to and including `lastId`, as an older release would have. */
+const migrateEntityMetaThrough = (lastId: string) =>
+  Migrator.make({})({
+    loader: Migrator.fromRecord(Object.fromEntries(Object.entries(ENTITY_META).filter(([key]) => key <= lastId))),
+    table: ENTITY_META_TABLE,
+  }).pipe(Effect.orDie);
+
+const migrateTrackerThrough = (lastId?: string) =>
+  Migrator.make({})({
+    loader: Migrator.fromRecord(
+      Object.fromEntries(Object.entries(TRACKER).filter(([key]) => lastId === undefined || key <= lastId)),
+    ),
+    table: TRACKER_TABLE,
+  }).pipe(Effect.orDie);
 
 /** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
 const ENTITY_META_IDS = Object.keys(ENTITY_META).map((key) => [
@@ -67,6 +82,7 @@ const DESIRED_COLUMNS = [
   'objectId',
   'parent',
   'parentId',
+  'queueBranch',
   'queueId',
   'queueInsertionId',
   'queueNamespace',
@@ -180,6 +196,44 @@ describe('objectMeta vintages', () => {
     Effect.gen(function* () {
       yield* migrateEntityMeta;
       expect(yield* migrateEntityMeta).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('feed branches', () => {
+  it.effect('a database from before branches gains queueBranch, with existing feed rows on main', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* migrateEntityMetaThrough('0011_queue_insertion_id');
+      yield* sql`INSERT INTO objectMeta (objectId, queueId, spaceId, entityKind, typeDXN, deleted, version)
+        VALUES ('o1', 'q1', 's1', 'object', 'dxn:type:example', 0, 1)`;
+
+      expect(yield* migrateEntityMeta).toEqual([[12, 'queue_branch']]);
+      const rows = yield* sql<{ queueBranch: string | null }>`SELECT queueBranch FROM objectMeta`;
+      expect(rows).toEqual([{ queueBranch: null }]);
+      const indexes = yield* sql.unsafe<{ name: string }>('PRAGMA index_list("objectMeta")');
+      expect(indexes.map((index) => index.name)).toContain('idx_object_index_queueBranch');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the tracker re-presents feed blocks to the snapshot leg only', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      yield* migrateTrackerThrough('0010_represent_feed_blocks');
+      yield* sql`INSERT INTO indexCursor (indexName, spaceId, sourceName, resourceId, cursor) VALUES
+        ('objectSnapshot', 's1', 'queue', 'q1', 5),
+        ('reverseRef3', 's1', 'queue', 'q1', 5),
+        ('objectSnapshot', 's1', 'automerge', 'd1', 'heads')`;
+
+      yield* migrateTrackerThrough();
+      const rows = yield* sql<{
+        indexName: string;
+        sourceName: string;
+      }>`SELECT indexName, sourceName FROM indexCursor ORDER BY indexName, sourceName`;
+      expect(rows).toEqual([
+        { indexName: 'objectSnapshot', sourceName: 'automerge' },
+        { indexName: 'reverseRef3', sourceName: 'queue' },
+      ]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

@@ -420,7 +420,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
           <canvas
             ref={canvasRef}
-            className={`dx-expand absolute inset-0 outline-none bg-base-surface ${view === 'map' ? 'invisible' : ''}`}
+            className={`dx-expand absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
             style={{ touchAction: 'none' }}
           />
           {view === 'map' && (

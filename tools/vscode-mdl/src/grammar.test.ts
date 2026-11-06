@@ -104,6 +104,12 @@ describe('mdl grammar', () => {
     expect(scopesOf(grammar, source, 'D-1', 'Bounds are derived.')).toContain('entity.name.section.title.mdl');
   });
 
+  test('a question is a known block type', ({ expect }) => {
+    const source = fence('question Q-1: Does the canvas shrink?', '  by: agent:claude-code', '  for: user:alice');
+    expect(scopesOf(grammar, source, 'Q-1', 'question')).toContain('keyword.control.block.question.mdl');
+    expect(scopesOf(grammar, source, 'by:', 'agent')).toContain('support.function.actor.agent.mdl');
+  });
+
   test('an unknown block type is still a type', ({ expect }) => {
     const source = fence('diagram-rule DR-1: Edges route around nodes');
     expect(scopesOf(grammar, source, 'DR-1', 'diagram-rule')).toContain('entity.name.type.block.mdl');

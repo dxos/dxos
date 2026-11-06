@@ -11,7 +11,8 @@ import { Task, TaskSet } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors.ts';
-import { validateAssignee } from './validate-assignee.ts';
+import { claimedAssignee } from './claim.ts';
+import { requireOwner, validateAssignee, validateDelegate } from './validate-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOperation.CreateTask.pipe(
   Operation.withHandler(
@@ -19,14 +20,26 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       taskSet: taskSetRef,
       title,
       description,
+      status,
       priority,
+      estimate,
       assignee,
+      delegate,
       parentTask,
       milestone,
     }) {
       yield* validateAssignee(assignee);
+      yield* validateDelegate(delegate);
       const taskSet = yield* Database.load(taskSetRef);
       const parent = parentTask ? yield* Database.load(parentTask) : undefined;
+      const answering = Task.owner(parent);
+      const holders = {
+        assignee: delegate ? claimedAssignee(answering, assignee) : (assignee ?? (answering && { ...answering })),
+        delegate,
+      };
+      if (delegate) {
+        yield* requireOwner(title, Task.owner(holders));
+      }
 
       // A task may only be filed under a milestone of its own set — the milestone sequence is what
       // the set renders, so a cross-set ref would show work under a milestone that never lists it.
@@ -51,10 +64,11 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       const task = yield* TaskSet.addPersisted(
         Task.make({
           title: title.trim(),
-          status: 'todo',
+          status: status === 'done' && Task.needsReview(holders) ? 'review' : (status ?? 'todo'),
           description,
           priority,
-          assignee,
+          estimate,
+          ...holders,
           milestone,
         }),
       );

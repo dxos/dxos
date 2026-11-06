@@ -134,7 +134,7 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
       }
 
       if (chats.length > 0) {
-        builder.separator().group(
+        builder.group(
           'chats',
           {
             label: ['chat-history.label', { ns: AssistantNamespace.key }],

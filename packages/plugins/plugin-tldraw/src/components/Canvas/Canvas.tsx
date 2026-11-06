@@ -36,6 +36,7 @@ export type CanvasProps = {
   readonly?: boolean;
   autoCenter?: boolean;
   hideUi?: boolean;
+  focusContainer?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
   onSettingsChange?: (fn: (current: Settings.Settings) => Settings.Settings) => void;
@@ -65,6 +66,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
       readonly = false,
       autoCenter = true,
       hideUi = false,
+      focusContainer = true,
       assetsBaseUrl = '/assets/plugin-tldraw',
       settings,
       onSettingsChange,
@@ -86,8 +88,8 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
 
     // Focus.
     useEffect(() => {
-      hideUi ? editor?.blur() : editor?.focus();
-    }, [hideUi, editor]);
+      hideUi ? editor?.blur() : editor?.focus({ focusContainer });
+    }, [hideUi, focusContainer, editor]);
 
     // Editor State.
     useEffect(() => {

@@ -100,6 +100,20 @@ type FindingSource
 ## Components
 
 ```mdl
+component ResearchListArticle
+  desc: >
+    The space's Research as lighthouse's session list, newest first: name and goal, status (not started, running,
+    reported, failed), pages, cost and start time, read from the space's lighthouse connection every 10 s. Opens from
+    the Research type's node in the Database; New research starts one as the sidebar section's + does. The Research
+    section itself sits in the sidebar's Assistant group, its rows the space's Research newest first.
+  props:
+    db: Database
+  actions:
+    open(research)
+    new()                                   # creates a Research and opens it on its goal
+```
+
+```mdl
 component ResearchArticle
   desc: >
     Article surface for a Research, in plugin-commerce's SearchArticle shape. Left pane: the goal and budget
@@ -555,6 +569,23 @@ test QA-6: Search by image
     - name: Attach to a follow-up
       do: Attach the photo in the composer, then remove it.
       expect: a thumbnail above the composer with a remove button; nothing is sent
+
+test QA-7: Research in the sidebar
+  desc: Research is a top-level section of the space's sidebar, like sessions: its Research newest first, a + that starts one on its goal, and the session list with status.
+  actors: both
+  status: passing            # 2026-10-29; autocue/sidebar.mjs, the sidebar steps (the daemon was down: status read as unknown)
+  given:
+    - QA-1's given and before: the plugin is enabled (and, for status, the space has a Lighthouse connection)
+  steps:
+    - name: The section
+      do: Look at the space's sidebar.
+      expect: a Research section in the Assistant group, with a + button, even before the space has any Research
+    - name: Start one
+      do: Press the section's +.
+      expect: a new Research opens on its goal form with the keyboard in the goal; typing fills it; it is listed first in the section
+    - name: The session list
+      do: Open Research under the Database (or New research in the list).
+      expect: every Research newest first with its status (not started / running / reported / failed), pages, cost and start time
 ```
 
 ## Open questions
@@ -788,4 +819,29 @@ decision D-27: The thread's image widgets fetch blobs and image query nodes thro
   for: user:dmaretskyi
   affects: [ResultPills, ResearchThread]
   why: Blobs need the API token, which an img src cannot send; the session's results leave image query nodes out.
+```
+
+```mdl
+decision D-28: "pull out Research from Database into a top-level sidebar entry with a plus button to start a new one — kinda like sessions"
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [Research, ResearchArticle, ResearchListArticle, QA-7]
+```
+
+```mdl
+decision D-29: Research is a type section of the space's AI group (TypeSection, as Chats, Projects and Specs are), shown even while empty, newest first, its + creating a Research and opening it on its goal without a dialog; the type stays in the Database, where its node opens the session list, since every user type is listed there (Chats and Books are too); the create menu keeps Research. Fills in [D-28].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Research, ResearchListArticle, ResearchArticle]
+  why: A section with a URL key of its own also gets the Database's type actions, so its + hides in a menu; app-toolkit's TypeSection gained `sort` and `showEmpty` for a section that is where its objects are made. The navtree row has no place for a status line, so status, pages and cost are in the session list.
+```
+
+```mdl
+decision D-30: The goal form is seeded once per Research and per Edit instead of from every autosave, so typing is not reset by its own saves. Fills in [D-28].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResearchArticle]
+  why: Typing into a new Research's goal kept only the last few words: each save fed the saved goal back into the field.
 ```

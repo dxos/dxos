@@ -8,12 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { trim } from '@dxos/util';
 
 import { PwaNamespace } from './src/namespace.ts';
+import { type PwaOptions } from './src/settings-store.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig = Plugin.config({
+const config: Plugin.PluginConfig<PwaOptions> = Plugin.config<PwaOptions>({
   plugin: {
     key: PwaNamespace.key,
     name: 'PWA',
@@ -29,11 +31,22 @@ const config: Plugin.PluginConfig = Plugin.config({
       activatesOn: ActivationEvents.Idle,
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article'],
+      roles: [AppSurface.Article],
     }),
+    Capability.lazyModule(
+      'BootGate',
+      {
+        activatesOn: ActivationEvents.Startup,
+        requires: [Capabilities.AtomRegistry, AppCapabilities.UpdateManager],
+        provides: [Capabilities.BootGate],
+      },
+      () => import('./src/capabilities/boot-gate.ts', { with: { type: 'module-url' } }),
+    ),
     Capability.lazyModule(
       'RegisterPwa',
       {
+        // Startup: `BootGate` requires this, and the startup pass activates only startup modules.
+        activatesOn: ActivationEvents.Startup,
         requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry],
         provides: [AppCapabilities.UpdateManager],
       },

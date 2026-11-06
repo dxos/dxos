@@ -26,9 +26,11 @@ import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
+import { StackCapabilities } from '#types';
 
 import { StackArticle, type StackArticleProps } from './StackArticle.tsx';
 
@@ -58,7 +60,10 @@ const meta: Meta<typeof StackArticle> = {
     withMosaic(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
+      capabilities: [
+        Capability.contribute(AppCapabilities.Translations, translations),
+        Capability.contribute(StackCapabilities.SectionHeights, UiHooks.createHeightMemory()),
+      ],
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({

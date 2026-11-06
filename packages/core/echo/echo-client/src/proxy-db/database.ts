@@ -174,7 +174,11 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Removes feed entities by id.
    */
-  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+  removeFeedItemsByIds(
+    feed: Feed.Feed,
+    ids: string[],
+    options?: { branches?: ReadonlyArray<string | null> },
+  ): Promise<void>;
 
   /**
    * Syncs a feed with the server.
@@ -467,6 +471,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   get linksAdded() {
     return this._entityManager.linksAdded;
+  }
+
+  /** Fires when a close ends this database's lifetime, so waiters settle instead of outliving the root handle. */
+  get lifetimeEnded() {
+    return this._entityManager.lifetimeEnded;
+  }
+
+  /**
+   * Whether a close has begun. Distinct from `isOpen`, which is also false while `_open` runs — and
+   * the preload query it awaits reaches the working set through this database.
+   */
+  get isClosing(): boolean {
+    return this._entityManager.isClosing;
   }
 
   // ── Resource lifecycle ──────────────────────────────────────────────────
@@ -810,15 +827,33 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#emitFeedAppend(feed, entities, opts?.origin);
   }
 
+  async forkFeed(
+    feed: Feed.Feed,
+    base: Entity.Unknown,
+    opts: { at: Entity.Unknown | Entity.Snapshot | Feed.BlockId },
+  ): Promise<Feed.BranchId> {
+    const handle = this.#getFeedHandle(feed);
+    const at = typeof opts.at === 'string' ? opts.at : handle.blockIdOf(opts.at);
+    invariant(at !== undefined, 'fork: the fork point has no block yet; flush it first');
+    const branch = Feed.BranchId.make(await handle.fork(base, at));
+    this.#emitFeedAppend(feed, [base], undefined);
+    return branch;
+  }
+
   async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
     await this.removeFeedItemsByIds(
       feed,
       entities.map((entity) => entity.id),
+      { branches: entities.map((entity) => Feed.getBranch(entity) ?? null) },
     );
   }
 
-  async removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
-    await this.#getFeedHandle(feed).delete(ids);
+  async removeFeedItemsByIds(
+    feed: Feed.Feed,
+    ids: string[],
+    options?: { branches?: ReadonlyArray<string | null> },
+  ): Promise<void> {
+    await this.#getFeedHandle(feed).delete(ids, options?.branches);
   }
 
   async syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> {

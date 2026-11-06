@@ -9,7 +9,7 @@
 // report a contradiction against the statement that caused it.
 //
 
-import type * as Scene from './scene.ts';
+import { Shape } from '@dxos/scene';
 
 export type Range = { from: number; to: number };
 
@@ -68,10 +68,10 @@ export type Node = {
   ref?: string;
   pin?: Pin;
   relations: Relation[];
-  shape?: Scene.BoxKind;
-  color?: Scene.Color;
-  fill?: Scene.Fill;
-  stroke?: Scene.Stroke;
+  shape?: Shape.BoxKind;
+  color?: Shape.Color;
+  fill?: Shape.Fill;
+  stroke?: Shape.Stroke;
   range: Range;
 };
 
@@ -85,7 +85,7 @@ export type Group = {
   maxWidth?: number;
   /** Keep the group near-square rather than a strip. */
   compact?: boolean;
-  color?: Scene.Color;
+  color?: Shape.Color;
   range: Range;
 };
 
@@ -99,7 +99,7 @@ export type End = { node: string; sides?: readonly Side[]; soft?: boolean; range
  * Relationship words an edge may use in place of `->`, each naming the scene relation it draws.
  * The left end is the subtype, the whole, the owner, or the one side.
  */
-export const RELATIONSHIPS: Readonly<Record<string, Scene.Relation>> = {
+export const RELATIONSHIPS: Readonly<Record<string, Shape.Relation>> = {
   'extends': 'inheritance',
   'implements': 'implementation',
   'composes': 'composition',
@@ -113,14 +113,14 @@ export const RELATIONSHIPS: Readonly<Record<string, Scene.Relation>> = {
 export const CONNECTORS = 'edges';
 
 /** Relations whose target is the abstraction, which reads best above its subtypes. */
-export const pointsUp = (relation: Scene.Relation | undefined): boolean =>
+export const pointsUp = (relation: Shape.Relation | undefined): boolean =>
   relation === 'inheritance' || relation === 'implementation';
 
 /**
  * How strongly a connector's relation shapes the reading of a diagram, highest first; on a box face
  * shared by several connectors the most significant takes the centre.
  */
-export const SIGNIFICANCE: Readonly<Record<Scene.Relation, number>> = {
+export const SIGNIFICANCE: Readonly<Record<Shape.Relation, number>> = {
   'inheritance': 4,
   'implementation': 4,
   'composition': 3,
@@ -132,15 +132,15 @@ export const SIGNIFICANCE: Readonly<Record<Scene.Relation, number>> = {
 };
 
 /** The significance of an edge's relation; an untyped dashed edge reads as a dependency. */
-export const significance = (relation: Scene.Relation | undefined, stroke?: Scene.Stroke): number =>
+export const significance = (relation: Shape.Relation | undefined, stroke?: Shape.Stroke): number =>
   SIGNIFICANCE[relation ?? (stroke === 'dashed' ? 'dependency' : 'association')];
 
 export type EdgeStyle = {
-  relation?: Scene.Relation;
-  head?: Scene.ArrowHead;
-  tail?: Scene.ArrowTail;
-  stroke?: Scene.Stroke;
-  color?: Scene.Color;
+  relation?: Shape.Relation;
+  head?: Shape.ArrowHead;
+  tail?: Shape.ArrowTail;
+  stroke?: Shape.Stroke;
+  color?: Shape.Color;
 };
 
 /**
@@ -178,9 +178,9 @@ export type Bus = {
   hub: End;
   direction: 'out' | 'in';
   edges: readonly Edge[];
-  /** Text on the trunk, from a multi-target statement's label. */
+  /** Text on the trunk, from a multi-target statement's label or the property its edges share. */
   label?: string;
-  /** Gathered by relation rather than by a `bus` statement, so the router may still split it. */
+  /** Gathered by inheritance rather than by a `bus` statement, so the router may still split it. */
   implicit?: boolean;
 };
 
@@ -192,7 +192,7 @@ export type Note = {
   over: readonly string[];
   side: 'left' | 'right' | 'over';
   text: string;
-  color?: Scene.Color;
+  color?: Shape.Color;
   range: Range;
 };
 
@@ -215,7 +215,7 @@ export type Step =
 export type Diagram = {
   kind: DiagramKind;
   flow: Flow;
-  origin: Scene.Point;
+  origin: Shape.Point;
   /** Cell pitch (box plus gutter), in scene units; measured from the boxes when absent. */
   grid?: Size;
   /** Box size; measured from the longest label when absent. */
@@ -262,17 +262,83 @@ export const inheritanceKey = (edge: Edge): string | undefined =>
     ? `${edge.to.node}|${edge.relation}|in`
     : undefined;
 
+/** Prefix of the keys `propertyKeys` gives, which carry their label to the trunk. */
+const PROPERTY = '@';
+
+/**
+ * The implicit bus keys of labelled edges: edges that carry one property (same label and style)
+ * out of one node — from one pinned side, if pinned — share a trunk, and so do those into one node.
+ * Fanning out wins over gathering in, so an edge joins at most one such bus.
+ */
+const propertyKeys = (edges: readonly Edge[]): Map<Edge, string> => {
+  const candidates = edges.filter(
+    (edge) =>
+      edge.bus === undefined &&
+      edge.label !== undefined &&
+      inheritanceKey(edge) === undefined &&
+      edge.via.length === 0 &&
+      edge.from.node !== edge.to.node,
+  );
+  const property = (edge: Edge, end: End, direction: Bus['direction']) =>
+    `${PROPERTY}${busKey(
+      end.node,
+      JSON.stringify([
+        edge.label,
+        end.sides,
+        end.soft,
+        edge.relation,
+        edge.head,
+        edge.tail,
+        edge.stroke,
+        edge.color,
+        edge.message,
+      ]),
+      direction,
+    )}`;
+  const keys = new Map<Edge, string>();
+  const claim = (pool: readonly Edge[], keyOf: (edge: Edge) => string) => {
+    const families = new Map<string, Edge[]>();
+    pool.forEach((edge) => families.set(keyOf(edge), [...(families.get(keyOf(edge)) ?? []), edge]));
+    for (const [key, family] of families) {
+      if (family.length > 1) {
+        family.forEach((edge) => keys.set(edge, key));
+      }
+    }
+  };
+  claim(candidates, (edge) => property(edge, edge.from, 'out'));
+  claim(
+    candidates.filter((edge) => !keys.has(edge)),
+    (edge) => property(edge, edge.to, 'in'),
+  );
+  return keys;
+};
+
+/**
+ * The key each edge shares a trunk under: a `bus` statement's, an inheritance edge's (`~`), or a
+ * property's (`@`); edges with none are drawn alone.
+ */
+export const busKeys = (diagram: Diagram): Map<Edge, string> => {
+  const properties = propertyKeys(diagram.edges);
+  return new Map(
+    diagram.edges.flatMap((edge) => {
+      const inherited = inheritanceKey(edge);
+      const key = edge.bus ?? (inherited === undefined ? properties.get(edge) : `~${inherited}`);
+      return key === undefined ? [] : [[edge, key] as const];
+    }),
+  );
+};
+
 /** The edges grouped into buses (two or more edges with one key) and the rest. */
 export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
   const byKey = new Map<string, { hub: End; direction: Bus['direction']; edges: Edge[]; implicit: boolean }>();
+  const keys = busKeys(diagram);
   for (const edge of diagram.edges) {
-    const implicit = inheritanceKey(edge);
-    const key = edge.bus ?? (implicit === undefined ? undefined : `~${implicit}`);
+    const key = keys.get(edge);
     if (key === undefined) {
       continue;
     }
     const [hub, direction] = key.endsWith('|in') ? [edge.to, 'in' as const] : [edge.from, 'out' as const];
-    const entry = byKey.get(key) ?? { hub, direction, edges: [], implicit: edge.bus === undefined };
+    const entry = byKey.get(key) ?? { hub, direction, edges: [], implicit: key.startsWith('~') };
     entry.edges.push(edge);
     byKey.set(key, entry);
   }
@@ -288,7 +354,11 @@ export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
       hub,
       direction,
       edges,
-      ...(diagram.busLabels.has(key) ? { label: diagram.busLabels.get(key) } : {}),
+      ...(diagram.busLabels.has(key)
+        ? { label: diagram.busLabels.get(key) }
+        : key.startsWith(PROPERTY)
+          ? { label: edges[0].label }
+          : {}),
       ...(implicit ? { implicit } : {}),
     });
   }
@@ -296,7 +366,7 @@ export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
 };
 
 /** The mermaid dialect's token per relation, so its layering ranks abstractions as ours does. */
-const MERMAID_TOKEN: Record<Scene.Relation, string> = {
+const MERMAID_TOKEN: Record<Shape.Relation, string> = {
   'association': '-->',
   'dependency': '-.->',
   'inheritance': '--|>',

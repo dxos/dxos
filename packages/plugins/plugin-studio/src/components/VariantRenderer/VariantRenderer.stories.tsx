@@ -7,26 +7,26 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type VariantContent } from '#surfaces';
 import { translations } from '#translations';
+import { type StudioSurface } from '#types';
 
 import { AudioVariant } from './AudioVariant.tsx';
 import { ImageVariant } from './ImageVariant.tsx';
 import { VideoVariant } from './VideoVariant.tsx';
 
-const imageVariant: VariantContent = {
+const imageVariant: StudioSurface.VariantContent = {
   contentType: 'image/png',
   url: 'https://picsum.photos/seed/studio-image/640/480',
   generation: { provider: 'mock', prompt: 'A serene mountain lake at dawn.' },
 };
 
-const videoVariant: VariantContent = {
+const videoVariant: StudioSurface.VariantContent = {
   contentType: 'video/mp4',
   url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
   generation: { provider: 'mock', prompt: 'A blooming flower time-lapse.' },
 };
 
-const audioVariant: VariantContent = {
+const audioVariant: StudioSurface.VariantContent = {
   contentType: 'audio/mpeg',
   url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
 };

@@ -6,6 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
@@ -56,9 +57,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
+      { environments: ['browser', 'node', 'tauri'], activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: ScriptNamespace.key,
@@ -67,12 +66,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [
-        'org.dxos.role.article',
-        'org.dxos.role.dialog',
-        'org.dxos.role.objectProperties',
-        'org.dxos.role.section',
-      ],
+      roles: [AppSurface.Article, AppSurface.Dialog, AppSurface.ObjectProperties, AppSurface.Section],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {

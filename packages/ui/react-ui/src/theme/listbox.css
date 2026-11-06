@@ -37,6 +37,15 @@
     outline: none;
   }
 
+  /* A picker's choice stays marked after focus leaves the list, and is drawn inside the row so no viewport clips it. */
+  .dx-listbox[data-selection-style='outline'] .dx-row:is([aria-selected='true'], [data-selected]) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: -2px;
+  }
+  .dx-listbox[data-selection-style='outline'] .dx-row[data-selectable]:hover:not([aria-selected='true']) {
+    background: var(--color-hover-surface);
+  }
+
   /*
    * Tiles (Root `tiles`; `data-tiles`, since the Container owns `data-layout`): equal columns inside the content's
    * gutters, the count from zag's `--column-count`; each tile
@@ -204,10 +213,19 @@
     grid-row: auto;
     align-self: center;
   }
-  /* Custom end cells keep a gap from the row's edges, as the text part does, so its highlight ring frames them. */
+  /*
+   * Custom end cells keep a gap from the row's edges, as the text part does, so its highlight ring frames them. A cell
+   * that is a template root (a form's array item) is exempt: its fields carry their own inset and line up with the form's.
+   */
   :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
     > .dx-listbox-item.dx-container
-    > :first-child:not(.dx-listbox-item-icon, .dx-listbox-item-text, .dx-button, .dx-block) {
+    > :first-child:not(
+      .dx-listbox-item-icon,
+      .dx-listbox-item-text,
+      .dx-button,
+      .dx-block,
+      .dx-container[data-gutter='none']
+    ) {
     padding-inline-start: var(--dx-gap-size);
   }
   :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)

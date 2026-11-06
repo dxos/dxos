@@ -16,6 +16,9 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
+      "path": "packages/common/animation/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {
@@ -388,6 +391,9 @@
       "path": "packages/plugins/plugin-agent/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-animator/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -412,6 +418,9 @@
       "path": "packages/plugins/plugin-brain/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/plugin-builder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
@@ -431,6 +440,9 @@
     },
     {
       "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare-os/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
@@ -512,6 +524,9 @@
     },
     {
       "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/plugin-host-cloudflare/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
@@ -661,9 +676,6 @@
       "path": "packages/plugins/plugin-space/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-spacetime/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"
     },
     {
@@ -784,6 +796,9 @@
       "path": "packages/ui/react-ui/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-animation/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-assistant/tsconfig.json"
     },
     {
@@ -803,6 +818,9 @@
     },
     {
       "path": "packages/ui/react-ui-canvas-compute/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-card/tsconfig.json"
@@ -920,6 +938,9 @@
     },
     {
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
+    },
+    {
+      "path": "packages/common/scene/tsconfig.json"
     },
     {
       "path": "packages/sdk/schema/tsconfig.json"

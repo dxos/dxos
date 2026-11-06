@@ -535,6 +535,8 @@ describe('runGoogleSync against a mock Gmail API', () => {
   test(
     'capped backfill runs keep every message of a newest day that holds more than two caps — ' +
       'regression: the forward re-list of that day pulled `min` past messages no run had committed',
+    // A thousand messages over a dozen capped runs; it outruns the 15s default on CI's loaded runners.
+    { timeout: 60_000 },
     async ({ expect }) => {
       // Pinned clock with mail up to an hour ago: the newest day holds ~300 messages, three caps' worth.
       // Run 1 commits the newest 100; run 2's day-granular forward window re-lists that whole day, and

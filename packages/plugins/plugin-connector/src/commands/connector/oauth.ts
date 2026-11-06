@@ -48,7 +48,7 @@ const createBunServerProvider = (): OAuthServerProvider => ({
  * Performs OAuth flow for a preset using the shared Bun HTTP callback server.
  */
 export const performOAuthFlow = Effect.fn(function* (preset: OAuthPreset, accessToken: AccessToken.AccessToken) {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const edgeClient = createEdgeClient(client);
   const spaceId = yield* Database.spaceId;
 

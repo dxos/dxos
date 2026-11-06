@@ -11,13 +11,13 @@ import * as Schema from 'effect/Schema';
 import { mcpServerTypes } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -185,7 +185,4 @@ function layerWithResult(success: unknown) {
 }
 
 const countFeedMessages = (feed: Feed.Feed) =>
-  Effect.gen(function* () {
-    const items = yield* Feed.query(feed, Filter.everything()).run;
-    return items.filter(Obj.instanceOf(Message.Message)).length;
-  });
+  TrajectoryStore.messages(feed).pipe(Effect.map((messages) => messages.length));

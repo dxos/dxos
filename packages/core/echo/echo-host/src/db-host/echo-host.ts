@@ -64,7 +64,7 @@ import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
-import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId } from './feed-data-source.ts';
+import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId, indexesAllBranches } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
 import { buildInlineObjectDocument, inlineObjectDocumentId, isUntouchedSinceCreation } from './inline-objects.ts';
@@ -1889,7 +1889,9 @@ export class EchoHost extends Resource {
    * Applies each pending feed-options intent to the feed store and clears it. The index side runs
    * before the store write, so a crash in between redoes it: a disable removes the feed's rows on
    * every apply, and a re-enable seeds the backfill while the store still holds the disabled options.
-   * A failed apply leaves its intent pending for the next pass.
+   * The index mode is handled the same way: widening to all branches seeds a backfill, and narrowing
+   * to the main branch removes the other branches' rows. A failed apply leaves its intent pending for
+   * the next pass.
    */
   #applyFeedOptionsIntents(changes: FeedChanges): Effect.Effect<void, never, SqlClient.SqlClient> {
     return Effect.gen({ self: this }, function* () {
@@ -1904,13 +1906,19 @@ export class EchoHost extends Resource {
               changes.spaceIds.add(spaceId);
               changes.queueIds.add(feedId);
             }
-          } else if (isIndexingDisabled(previous)) {
+          } else if (isIndexingDisabled(previous) || (indexesAllBranches(options) && !indexesAllBranches(previous))) {
             yield* this.indexEngine.seedCursor({
               sourceName: this._feedDataSource.sourceName,
               spaceId,
               resourceId: backfillResourceId(namespace, feedId),
               cursor: '',
             });
+          } else if (!indexesAllBranches(options) && indexesAllBranches(previous)) {
+            const deleted = yield* this.indexEngine.deleteFeedBranchObjects({ spaceId, queueId: feedId });
+            if (deleted > 0 && EntityId.isValid(feedId)) {
+              changes.spaceIds.add(spaceId);
+              changes.queueIds.add(feedId);
+            }
           }
           const { trim } = yield* this._feedStore.setFeedOptions({ ...feed, options });
           const now = yield* Clock.currentTimeMillis;

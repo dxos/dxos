@@ -1,4 +1,7 @@
 # Licensed fonts: keep local, never commit (Sharp Sans is commercially licensed).
 public/fonts/*
 !public/fonts/README.md
+# DM Sans and DM Mono are OFL, so the Saas2D video can render from a clean checkout.
+!public/fonts/DMSans-*.ttf
+!public/fonts/DMMono-*.ttf
 out/

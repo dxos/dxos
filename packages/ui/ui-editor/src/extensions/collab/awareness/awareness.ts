@@ -2,7 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Annotation, type Extension, type Range, RangeSet, StateEffect, StateField } from '@codemirror/state';
+import {
+  Annotation,
+  type Extension,
+  Prec,
+  type Range,
+  RangeSet,
+  StateEffect,
+  StateField,
+  Transaction,
+} from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
@@ -27,8 +36,13 @@ export interface AwarenessProvider {
   close(): void;
 
   getRemoteStates(): AwarenessState[];
-  update(position: AwarenessPosition | undefined): void;
+  update(position: AwarenessPosition | undefined, options?: AwarenessUpdateOptions): void;
 }
+
+export type AwarenessUpdateOptions = {
+  /** False when only a remote edit shifted the caret; defaults to true. */
+  moved?: boolean;
+};
 
 export type AwarenessPosition = {
   anchor?: string;
@@ -51,11 +65,16 @@ export type AwarenessState = {
  * Extension provides presence information about other peers.
  */
 export const awareness = (provider = dummyProvider): Extension => {
+  const remoteSelections = ViewPlugin.fromClass(RemoteSelectionsDecorator, {
+    decorations: (value) => value.decorations,
+  });
+
   return [
     awarenessProvider.of(provider),
-    ViewPlugin.fromClass(RemoteSelectionsDecorator, {
-      decorations: (value) => value.decorations,
-    }),
+    remoteSelections,
+    // Last of the update listeners: the automerge extension writes a local edit to the document from its own
+    // listener, and a caret encoded before that would name the character after the one it sits at.
+    Prec.lowest(EditorView.updateListener.of((update) => update.view.plugin(remoteSelections)?.publish(update))),
     hoveredCaret,
     styles,
   ];
@@ -110,14 +129,18 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 
   update(update: ViewUpdate): void {
-    this._updateLocalSelection(update.view);
     this._updateRemoteSelections(update.view);
   }
 
-  private _updateLocalSelection(view: EditorView): void {
+  /** Sends the local selection to the other peers. */
+  publish({ view, focusChanged, transactions }: ViewUpdate): void {
     const hasFocus = view.hasFocus && view.dom.ownerDocument.hasFocus();
     const { anchor = undefined, head = undefined } = hasFocus ? view.state.selection.main : {};
-    if (this._lastAnchor === anchor && this._lastHead === head) {
+    // Edits applied from other peers are marked remote; any other edit or selection is the local user's.
+    const moved =
+      focusChanged ||
+      transactions.some((tr) => (tr.docChanged || tr.selection !== undefined) && !tr.annotation(Transaction.remote));
+    if (!moved && this._lastAnchor === anchor && this._lastHead === head) {
       return;
     }
 
@@ -131,6 +154,7 @@ export class RemoteSelectionsDecorator implements PluginValue {
             head: this._cursorConverter.toCursor(head, -1),
           }
         : undefined,
+      { moved },
     );
   }
 

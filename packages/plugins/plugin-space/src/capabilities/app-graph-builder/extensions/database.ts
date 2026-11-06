@@ -126,6 +126,14 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
         // Index-only per-type counts; the same query as the space dashboard, so both share one result.
         const withObjects = typeUrisWithObjects(get(space.db.query(SPACE_STATS_QUERY).atom));
 
+        // The registry keeps a disabled plugin's static types; those stay in the graph, so their objects' paths still
+        // resolve, but are hidden from the navtree.
+        const contributedTypeUris = new Set(
+          get(capabilities.atom(AppCapabilities.Schema))
+            .flat()
+            .map((schema) => Type.getURI(schema)),
+        );
+
         const visibleSchemas = userSchemas.filter((schema) => {
           if (Type.getDatabase(schema) != null) {
             return true;
@@ -152,7 +160,18 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed(
           visibleSchemas
-            .map((schema) => createSchemaNode({ schema, space, get }))
+            .map((schema) =>
+              createSchemaNode({
+                schema,
+                space,
+                get,
+                // A view over the type lives under this node, so the node stays visible while it has one.
+                hidden:
+                  Type.getDatabase(schema) == null &&
+                  !contributedTypeUris.has(Type.getURI(schema)) &&
+                  !viewIndex.typeUrisWithViews.has(Type.getURI(schema)),
+              }),
+            )
             .toSorted((nodeA, nodeB) => labelOf(nodeA).localeCompare(labelOf(nodeB))),
         );
       },
@@ -301,10 +320,12 @@ const createSchemaNode = ({
   schema,
   space,
   get,
+  hidden,
 }: {
   schema: Type.AnyEntity;
   space: Space;
   get: Atom.AtomContext;
+  hidden?: boolean;
 }): AppGraphNode.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   // The node id doubles as the `types/<slug>` path segment, so it must be slash- and colon-free:
@@ -349,6 +370,7 @@ const createSchemaNode = ({
       // objects resolve on demand as hidden children. View objects are its only visible children, so
       // without a view the node is a leaf (no `role: 'branch'`).
       testId: `spacePlugin.schemaNode.${typename}`,
+      disposition: hidden ? 'hidden' : undefined,
       selectable: true,
       draggable: false,
       droppable: false,

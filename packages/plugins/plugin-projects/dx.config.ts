@@ -7,6 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -19,6 +20,7 @@ import { trim } from '@dxos/util';
 import { ProjectsNamespace } from './src/namespace.ts';
 import * as ProjectCapabilities from './src/types/ProjectCapabilities.ts';
 import * as ProjectsEvents from './src/types/ProjectsEvents.ts';
+import * as ProjectSurface from './src/types/ProjectSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -62,6 +64,19 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
     ),
+    Capability.lazyModule(
+      'ProjectComments',
+      {
+        provides: [
+          AppCapabilities.AnchorResolver,
+          AppCapabilities.AnchorSort,
+          AppCapabilities.CommentConfig,
+          AppCapabilities.CommentScope,
+        ],
+        activatesOn: ProjectsEvents.Start,
+      },
+      () => import('./src/capabilities/project-comments.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.navigationResolver(
       () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
     ),
@@ -71,6 +86,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ActivationEvents.Idle,
       },
     ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
+      { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
+    ),
     // Bundled so a feature that cites this plugin's spec opens it rendered in the app.
     AppCapability.pluginAsset({
       pluginId: ProjectsNamespace.key,
@@ -79,7 +98,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog'],
+      roles: [AppSurface.Article, AppSurface.Dialog, AppSurface.Section, ProjectSurface.Level],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
@@ -94,7 +113,6 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
       () => import('./src/capabilities/subject-context.ts', { with: { type: 'module-url' } }),
     ),
-    // Injects `Assign to agent`, an `Assign to <agent>` per agent, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
     Capability.lazyModule(
       'TaskAction',
       // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.

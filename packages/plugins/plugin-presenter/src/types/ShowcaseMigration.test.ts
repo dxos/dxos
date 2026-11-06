@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import * as Feature from '@dxos/plugin-projects/Feature';
-import * as LegacyShowcase from '@dxos/plugin-projects/LegacyShowcase';
-import * as Showcase from '@dxos/plugin-projects/Showcase';
+import * as Feature from '@dxos/plugin-code/Feature';
+import * as LegacyShowcase from '@dxos/plugin-code/LegacyShowcase';
+import * as Showcase from '@dxos/plugin-code/Showcase';
 import { Text } from '@dxos/schema';
 import { PullRequest } from '@dxos/types';
 

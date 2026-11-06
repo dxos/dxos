@@ -53,6 +53,8 @@ export interface FileImportOutput extends Schema.Schema.Type<typeof FileImportOu
 export const FileExportInput = Schema.Struct({
   object: Ref.Ref(Obj.Unknown),
   path: Schema.String,
+  /** The file as GitHub holds it for this space: the blob last synced, or last pushed while that is unmerged. */
+  base: Schema.optional(Schema.String),
 });
 export interface FileExportInput extends Schema.Schema.Type<typeof FileExportInput> {}
 
@@ -72,6 +74,8 @@ export type FileMapping = {
   readonly id: string;
   /** Repository-relative globs the mapping claims, e.g. `['**' + '/*.mdl']`: `**` spans directories, `*` stays within one. */
   readonly match: readonly string[];
+  /** Globs within `match` the mapping leaves to others, e.g. `['**' + '/*.review.mdl']`. */
+  readonly exclude?: readonly string[];
   /** The ECHO type a matched file becomes. */
   readonly type: Type.AnyObj;
   /** Pull: create the object, or apply a remote change to it. */

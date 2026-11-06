@@ -17,6 +17,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Hook from '@dxos/compute/Hook';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed, Obj } from '@dxos/echo';
@@ -30,6 +31,7 @@ import { AssistantOperationHandlerSet } from '#operations';
 import { TurnReviewSkill } from '#skills';
 import { type Assistant, AssistantCapabilities } from '#types';
 
+import { AssistantNamespace } from '../namespace.ts';
 import { REVIEW_SYSTEM_PROMPT, STRUGGLE_EVENT, type TurnVerdict } from '../review/turn-review.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -104,6 +106,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
   types: [Chat.Chat, Feed.Feed, Message.Message, Skill.Skill],
   skills: [TurnReviewSkill.make()],
+  agent: { hooks: () => Hook.forPlugin(AssistantNamespace.key, TurnReviewSkill.hooks) },
   // The reviewer gets the verdict; the conversational turn gets a plain reply.
   aiService: ScriptedLanguageModel.scriptedAiService((request) => ({
     parts: [

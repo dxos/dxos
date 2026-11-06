@@ -132,6 +132,22 @@ describe('DatabaseImpl', () => {
       await db.loadObjectCoreById(objectIds[0]);
       expect(db.getLinkedDocHandles()).toHaveLength(1);
     });
+
+    test('a batch load answers a child once its parent has loaded', async () => {
+      const testBuilder = new EchoTestBuilder();
+      await openAndClose(testBuilder);
+      const peer = await testBuilder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const task = db.add(Obj.make(TestSchema.Task, { title: 'Owned' }));
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Owner', tasks: [Ref.make(task)] }));
+      Obj.setParent(task, person);
+      await db.flush({ indexes: false });
+
+      // A fresh client holds neither document, so the parent's load starts only once the child's body names it.
+      const reader = await peer.openLastDatabase({ client: await peer.createClient() });
+      const [core] = await reader.batchLoadObjectCores([task.id]);
+      expect(core?.id).toBe(task.id);
+    });
   });
 
   describe('passive space root', () => {

@@ -15,7 +15,7 @@ import { ClientService } from '@dxos/client';
 // TODO(burdon): Move handler inline and test separate functions.
 export const handler = Effect.fn(function* ({ wait }: { wait: Option.Option<number> }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const spaces = client.spaces.get();
   const waitSeconds = Option.getOrElse(wait, () => 0);
   const formattedSpaces = yield* Effect.all(spaces.map((space) => formatSpace(space, { waitSeconds })));

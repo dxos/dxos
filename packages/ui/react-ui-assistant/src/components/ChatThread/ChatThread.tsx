@@ -21,13 +21,13 @@ import {
 } from '@dxos/react-ui-feed';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { type Actor } from '@dxos/types';
+import { type Actor, type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
 import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
 import { translationKey } from '../../translations.ts';
-import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { type ChatThreadEvent, type ChatView, type ForkMarker, type ThreadLane } from '../../types.ts';
 import { type MessageAuthor, MessageChrome, MessageChromeProvider, hasOtherAuthors } from '../MessageChrome/index.ts';
 
 //
@@ -74,11 +74,19 @@ type ChatThreadRootProps = PropsWithChildren<
     userDid?: string;
     /** Resolves a prompt's sender to the profile its avatar shows. */
     getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
+    /** The lane each message belongs to, in a chat that ran several requests at once (light threads). */
+    getLane?: (message: Message.Message) => ThreadLane | undefined;
+    /** The forks that start at each message; their markers open them. */
+    getForks?: (message: Message.Message) => readonly ForkMarker[] | undefined;
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
     tailLines?: number;
     debug?: boolean;
     /** Offers rewind under each prompt; off for an agent that cannot forget a turn. */
     rewind?: boolean;
+    /** Offers forking the conversation at each answer. */
+    fork?: boolean;
+    /** Shows each block's estimated token count in a gutter beside it. */
+    showTokens?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
     /** The visible index range, as the reader scrolls — what an outline rail tracks. */
     onRangeChange?: (range: MessageRange) => void;
@@ -105,14 +113,21 @@ const ChatThreadRoot = ({
   userHue,
   userDid,
   getAuthor,
+  getLane,
+  getForks,
   tailLines,
   debug,
   rewind = true,
+  fork = false,
+  showTokens = false,
   onEvent,
   onRangeChange,
   controllerRef,
 }: ChatThreadRootProps) => {
-  const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
+  const renderer = useMemo(
+    () => createRenderer(viewType, { getObjectLabel, showTokens }),
+    [viewType, getObjectLabel, showTokens],
+  );
   // Debug shows the raw document: an empty registry renders no widgets, so the tags stay visible as
   // the text they are, but still highlighted as tags.
   const merged = useMemo(
@@ -120,6 +135,8 @@ const ChatThreadRoot = ({
     [registry, viewType],
   );
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);
+  const handleFork = useCallback((id: string) => onEvent?.({ type: 'fork', id }), [onEvent]);
+  const handleOpenFork = useCallback((thread: string) => onEvent?.({ type: 'open-fork', thread }), [onEvent]);
 
   // While an answer streams, the chrome keeps its toolbars hidden — a control on a half-written
   // answer invites acting on it, and the hover reveal moving with the growing rows reads as noise.
@@ -139,6 +156,9 @@ const ChatThreadRoot = ({
     <ChatThreadProvider userHue={userHue} viewType={viewType} onEvent={onEvent}>
       <MessageChromeProvider
         onRewind={onEvent && rewind ? handleRewind : undefined}
+        onFork={onEvent && fork ? handleFork : undefined}
+        getForks={getForks}
+        onOpenFork={handleOpenFork}
         streaming={streaming}
         showContext={viewType !== 'summary'}
         debug={debug}
@@ -146,6 +166,8 @@ const ChatThreadRoot = ({
         userDid={userDid}
         showAuthors={showAuthors}
         getAuthor={getAuthor}
+        getLane={getLane}
+        showTokens={showTokens && viewType !== 'debug'}
       >
         <MessageList.Root
           model={model}

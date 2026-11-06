@@ -20,7 +20,6 @@ export const CollectionSection: ComponentType<any> = lazy(() => import('./Collec
 export const CreateSpaceDialog: ComponentType<any> = lazy(() => import('./CreateSpaceDialog/index.ts'));
 export const DefaultProperties: ComponentType<any> = lazy(() => import('./DefaultProperties/index.ts'));
 export const ImportSpaceDialog: ComponentType<any> = lazy(() => import('./ImportSpaceDialog/index.ts'));
-export const InlineSyncStatus: ComponentType<any> = lazy(() => import('./InlineSyncStatus/index.ts'));
 export const JoinDialog: ComponentType<any> = lazy(() => import('./JoinDialog/index.ts'));
 export const MembersContainer: ComponentType<any> = lazy(() => import('./MembersContainer/index.ts'));
 export const MergePreview: ComponentType<any> = lazy(() => import('./MergePreview/index.ts'));

@@ -18,6 +18,9 @@ export const translations = [
         // 'offline ready label': '{{appName}} is ready to use offline.',
         'offline-ready.label': 'Ready to use offline.',
         'confirm.label': 'Okay',
+        'settings.auto-update.label': 'Update on startup',
+        'settings.auto-update.description':
+          'Apply a new version before Composer opens. When off, updates still download in the background and Composer asks you to refresh.',
         'settings.updates.label': 'Updates',
         'settings.updates.check.label': 'Check for updates',
         'settings.updates.checking.label': 'Checking…',

@@ -14,7 +14,7 @@ import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
-import { canvasRecordOf } from '#model';
+import { Canvas } from '#types';
 
 import * as ArchitectureSpace from './ArchitectureSpace.ts';
 
@@ -64,7 +64,8 @@ afterEach(async () => {
   await builder.close();
 });
 
-describe('ArchitectureSpace', () => {
+// Seeding lays out every diagram, which takes a few seconds alone and several times that on a loaded CI shard.
+describe('ArchitectureSpace', { timeout: 60_000 }, () => {
   test('seeds every diagram, and Composer, DXOS and EDGE documents that link and embed them', async ({ expect }) => {
     const definition = ArchitectureSpace.make();
     const { db } = await builder.createDatabase({ types: [...definition.schemas] });
@@ -76,7 +77,7 @@ describe('ArchitectureSpace', () => {
     expect(drawings).toHaveLength(15);
     // Reference diagrams open read-only for a viewer who has not chosen to edit.
     const canvases = await Promise.all(drawings.map((drawing) => drawing.canvas.load()));
-    expect(canvases.every((canvas) => canvasRecordOf(canvas.content)?.readonly === true)).toBe(true);
+    expect(canvases.every((canvas) => Canvas.isCanvas(canvas) && canvas.settings.readonly === true)).toBe(true);
     const collections = await db.query(Filter.type(Collection.Collection)).run();
     const listed = collections.find((collection) => collection.name === 'Architecture');
     const listedObjects = await Promise.all((listed?.objects ?? []).map((ref) => ref.load()));

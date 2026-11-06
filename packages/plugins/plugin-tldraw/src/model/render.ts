@@ -9,6 +9,7 @@
 //
 
 import { Scene } from '@dxos/diagram';
+import { Shape } from '@dxos/scene';
 
 import {
   type CanvasContent,
@@ -27,7 +28,7 @@ export const DEFAULT_SCALE = 1;
 export type ExternalBox = { x: number; y: number; w: number; h: number };
 
 export type RenderOptions = {
-  origin: Scene.Point;
+  origin: Shape.Point;
   scale: number;
   /** Fractional-index seed past the existing canvas content. */
   indexStart: number;
@@ -39,14 +40,14 @@ export type RenderOptions = {
 /** Stable record id for an element: `shape:<objectId>/<elementId>`. */
 export const shapeId = (objectId: string, elementId: string) => `shape:${objectId}/${elementId}`;
 
-const strokeToDash: Record<Scene.Stroke, Dash> = {
+const strokeToDash: Record<Shape.Stroke, Dash> = {
   sketchy: 'draw',
   solid: 'solid',
   dashed: 'dashed',
   dotted: 'dotted',
 };
 
-const fillToFill: Record<Scene.Fill, Fill> = {
+const fillToFill: Record<Shape.Fill, Fill> = {
   none: 'none',
   solid: 'solid',
   pattern: 'pattern',
@@ -61,7 +62,7 @@ const boxKindToGeo = {
   triangle: 'triangle',
 } as const;
 
-const style = (element: Scene.Element): Pick<ShapeProps, 'color' | 'fill' | 'dash' | 'size'> => ({
+const style = (element: Shape.Element): Pick<ShapeProps, 'color' | 'fill' | 'dash' | 'size'> => ({
   color: element.color,
   fill: 'fill' in element && element.fill ? fillToFill[element.fill] : undefined,
   dash: element.stroke ? strokeToDash[element.stroke] : undefined,
@@ -74,7 +75,7 @@ const style = (element: Scene.Element): Pick<ShapeProps, 'color' | 'fill' | 'das
  */
 export const renderObject = (object: Scene.WorldObject, options: RenderOptions): CanvasContent => {
   const { origin, scale, indexStart, external = {}, dialect = 'scene' } = options;
-  const point = (local: Scene.Point | { x: number; y: number }): Point => ({
+  const point = (local: Shape.Point | { x: number; y: number }): Point => ({
     x: origin.x + local.x * scale,
     y: origin.y + local.y * scale,
   });
@@ -95,7 +96,7 @@ export const renderObject = (object: Scene.WorldObject, options: RenderOptions):
   }
 
   // tldraw binds to the shape, so an endpoint's `#port` is dropped.
-  const ref = (value: string) => Scene.resolveRef(value, object.id);
+  const ref = (value: string) => Shape.resolveRef(value, object.id);
 
   for (const element of object.elements) {
     const handle = `${object.id}/${element.id}`;
@@ -185,7 +186,7 @@ const splitHandle = (handle: string): [string, string] => {
 };
 
 /** Sample an arc (degrees, clockwise from +x, y-down screen coords) into spline points. */
-const sampleArc = ({ cx, cy, r, startAngle, endAngle }: Scene.Arc): Scene.Point[] => {
+const sampleArc = ({ cx, cy, r, startAngle, endAngle }: Shape.Arc): Shape.Point[] => {
   const sweep = endAngle - startAngle;
   const steps = Math.max(4, Math.ceil(Math.abs(sweep) / 22.5));
   return Array.from({ length: steps + 1 }, (_, i) => {

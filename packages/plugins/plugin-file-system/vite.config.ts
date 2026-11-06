@@ -11,6 +11,7 @@ export default defineConfig({
     hooks: 'src/hooks/index.ts',
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
+    FileSystem: 'src/types/FileSystem.ts',
     FileSystemCapabilities: 'src/types/FileSystemCapabilities.ts',
     FileSystemEvents: 'src/types/FileSystemEvents.ts',
     FileSystemOperation: 'src/types/FileSystemOperation.ts',

@@ -40,6 +40,8 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
 
 export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   anchor: AnchoredTo.AnchoredTo;
+  /** The anchor names a field its object no longer holds, so the thread reads as detached. */
+  orphaned?: boolean;
   /** Messages to show in place of the thread's feed, for a host with no database (a story). */
   messages?: Message.Message[];
   /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
@@ -78,6 +80,7 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
 export const CommentThread = ({
   activity,
   anchor,
+  orphaned,
   messages,
   components,
   authorMetadata,
@@ -95,9 +98,11 @@ export const CommentThread = ({
   onAcceptChange,
 }: CommentThreadProps) => {
   const { t } = Hooks.useTranslation(ReviewNamespace.key);
-  const detached = !anchor.anchor;
   const source = useRelationSource(anchor);
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
+  // A thread with no anchor is on the whole object and quotes nothing, unless it had quoted text that is now gone.
+  const wholeObject = !anchor.anchor && !thread?.name;
+  const detached = (!anchor.anchor && !wholeObject) || !!orphaned;
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [status] = useObject(thread, 'status');
   const feedMessages = useThreadMessages(thread);
@@ -214,7 +219,7 @@ export const CommentThread = ({
     <Thread.Header
       current={current}
       title={thread.name}
-      timestamp={loadedMessages[0]?.created}
+      timestamp={wholeObject ? undefined : loadedMessages[0]?.created}
       onSelect={handleActivate}
       controls={headerControls}
     />

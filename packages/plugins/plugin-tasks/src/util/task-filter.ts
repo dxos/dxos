@@ -14,10 +14,12 @@ export type TaskFilterOptions = {
   filter?: Filter.Any;
   /** The statuses the reader kept; absent keeps every status, and empty keeps none. */
   statuses?: ReadonlySet<Task.Status>;
+  /** The id of the milestone the reader picked; absent keeps every task. */
+  milestone?: string;
 };
 
 /**
- * The tasks the toolbar's two terms keep, in the array's order — which is the set's canonical one.
+ * The tasks the toolbar's terms keep, in the array's order — which is the set's canonical one.
  *
  * The terms read the tree differently, because they answer different questions:
  *
@@ -28,12 +30,14 @@ export type TaskFilterOptions = {
  *   is filed, and a match whose parent was dropped would render at the root — silently restructuring
  *   what they are looking at. Those ancestors are drawn from what the status selector left, so the
  *   query can never bring a hidden branch back.
+ * - The milestone keeps a task under it by its effective milestone (`Task.effectiveMilestoneIds`), as
+ *   the milestone's progress counts it, and keeps the ancestors of a match as the query does.
  */
 export const filterTasks = (
   tasks: readonly Task.Task[],
-  { filter, statuses }: TaskFilterOptions = {},
+  { filter, statuses, milestone }: TaskFilterOptions = {},
 ): readonly Task.Task[] => {
-  if (!filter && !statuses) {
+  if (!filter && !statuses && !milestone) {
     return tasks;
   }
 
@@ -46,14 +50,19 @@ export const filterTasks = (
 
   const visible = statuses ? statusVisible(tasks, statuses, parentOf) : undefined;
   const shown = visible ? tasks.filter((task) => visible.has(task.id)) : tasks;
-  if (!filter) {
+  if (!filter && !milestone) {
     return shown;
   }
 
+  // Over every task, so a sub-task inherits its milestone from a parent the status selector hid.
+  const milestoneIds = milestone ? Task.effectiveMilestoneIds(tasks) : undefined;
   const keep = new Set<string>();
   for (const task of shown) {
+    if (milestoneIds && milestoneIds.get(task.id) !== milestone) {
+      continue;
+    }
     // In memory rather than as a query: a query would drop the ancestors of a matching sub-task.
-    if (!matchesFilter(filter, task, { text: taskText })) {
+    if (filter && !matchesFilter(filter, task, { text: taskText })) {
       continue;
     }
     for (let current: Task.Task | undefined = task; current && !keep.has(current.id); current = parentOf(current)) {
@@ -92,4 +101,26 @@ const statusVisible = (
   };
 
   return new Set(tasks.filter(resolve).map(({ id }) => id));
+};
+
+/**
+ * The tasks named in `scope` and everything filed under them, in the array's order: a sub-task is part of the work its
+ * parent stands for. A branch whose parent is left out is rooted at the kept task.
+ */
+export const withinScope = (tasks: readonly Task.Task[], scope: ReadonlySet<string>): readonly Task.Task[] => {
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const kept = new Map<string, boolean>();
+  const isKept = (task: Task.Task, depth = 0): boolean => {
+    const known = kept.get(task.id);
+    if (known !== undefined) {
+      return known;
+    }
+    const parentId = Task.parentTaskId(task);
+    const parent = parentId ? byId.get(parentId) : undefined;
+    // Bounded, so a cycle written by a concurrent move cannot loop.
+    const result = scope.has(task.id) || (!!parent && depth < tasks.length && isKept(parent, depth + 1));
+    kept.set(task.id, result);
+    return result;
+  };
+  return tasks.filter((task) => isKept(task));
 };

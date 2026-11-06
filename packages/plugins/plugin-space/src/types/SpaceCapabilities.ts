@@ -14,9 +14,7 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
 import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
-import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
-import { type ComplexMap } from '@dxos/util';
 import type * as Position from '@dxos/util/Position';
 
 import { type SpaceDashboard } from '#dashboard';
@@ -57,8 +55,8 @@ export type MergePreview = {
 export type SpaceEphemeralState = {
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
-  viewersByObject: Record<string, ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>>;
-  viewersByIdentity: ComplexMap<PublicKey, Set<string>>;
+  /** Peers viewing each object, keyed by the object's EID and then by the peer's hex identity key. */
+  viewersByObject: Record<string, Record<string, SpaceSchema.ObjectViewerProps>>;
   mergePreview: MergePreview | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;

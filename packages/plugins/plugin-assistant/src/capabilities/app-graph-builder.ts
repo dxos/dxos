@@ -38,7 +38,7 @@ import * as Position from '@dxos/util/Position';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
+import { ASSISTANT_COMPANION_VARIANT, SPACE_SETTINGS_ID, SPACE_SETTINGS_TYPE } from '../constants.ts';
 import { AssistantNamespace } from '../namespace.ts';
 import { currentChatRef } from '../util/current-chat.ts';
 
@@ -77,6 +77,25 @@ export const createPromptExtension = () =>
     id: 'prompt',
     match: whenPromptHost,
     connector: () => Effect.succeed([AppNode.makePrompt()]),
+  });
+
+/** The assistant panel in each space's settings section. */
+export const createSpaceSettingsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'spaceSettingsAssistant',
+    url: { key: SPACE_SETTINGS_ID, kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
+    match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
+    connector: () =>
+      Effect.succeed([
+        AppNode.makeSettingsPanel({
+          id: SPACE_SETTINGS_ID,
+          type: SPACE_SETTINGS_TYPE,
+          label: ['space-settings.label', { ns: AssistantNamespace.key }],
+          icon: 'ph--sparkle--regular',
+          iconHue: 'emerald',
+          position: Position.last,
+        }),
+      ]),
   });
 
 export default Capability.makeModule(
@@ -223,6 +242,7 @@ export default Capability.makeModule(
       }),
 
       createPromptExtension(),
+      createSpaceSettingsExtension(),
 
       AppGraphBuilder.createExtension({
         id: 'invocations',

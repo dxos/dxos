@@ -153,6 +153,8 @@ class ReviewWidget extends WidgetType {
       other.verdict.status === this.verdict.status &&
       other.verdict.summary === this.verdict.summary &&
       other.verdict.note === this.verdict.note &&
+      other.verdict.review?.commit === this.verdict.review?.commit &&
+      other.verdict.review?.date === this.verdict.review?.date &&
       other.verdict.walkthrough === this.verdict.walkthrough &&
       other.annotation?.testing === this.annotation?.testing &&
       keysEqual(other.annotation?.keys, this.annotation?.keys) &&
@@ -161,7 +163,9 @@ class ReviewWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView): HTMLElement {
-    const { id, status, summary, note } = this.verdict;
+    const { id, status, summary, note, review } = this.verdict;
+    const reviewed =
+      review && ['Reviewed', review.date, review.commit && `at ${review.commit.slice(0, 7)}`].filter(Boolean).join(' ');
     const { onSelect, onOpen, read } = this.callbacks;
     // Floated into the right margin, beside the decision chips, so the annotated line's text does not move.
     const row = document.createElement('span');
@@ -191,7 +195,9 @@ class ReviewWidget extends WidgetType {
     const statusTag = tag(
       STATUS_STYLE[status].label,
       STATUS_STYLE[status].hue,
-      steps ? undefined : [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note].filter(Boolean).join('\n\n'),
+      steps
+        ? undefined
+        : [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note, reviewed].filter(Boolean).join('\n\n'),
       'spec-review.gutter-chip',
       () => onSelect?.(id),
     );
@@ -200,10 +206,14 @@ class ReviewWidget extends WidgetType {
       this.hover.attach(
         view,
         statusTag,
-        (dark) => walkthroughCard(steps, { read, onOpen, dark }),
-        [`${STATUS_STYLE[status].label}: ${summary ?? id}`, ...steps.map((step) => `${step.text} ${step.key}`)].join(
-          '. ',
-        ),
+        (dark) => walkthroughCard(steps, { read, onOpen, dark }, reviewed),
+        [
+          `${STATUS_STYLE[status].label}: ${summary ?? id}`,
+          ...steps.map((step) => `${step.text} ${step.key}`),
+          reviewed,
+        ]
+          .filter(Boolean)
+          .join('. '),
       );
     }
 
@@ -307,6 +317,15 @@ const buildDecorations = (
   return builder.finish();
 };
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const reviewGutterTheme = EditorView.theme({
+  '.dx-review-done': { boxShadow: 'inset 3px 0 0 var(--color-success-text, #16a34a)' },
+  '.dx-review-untested': { boxShadow: 'inset 3px 0 0 var(--color-info-text, #2563eb)' },
+  '.dx-review-partial': { boxShadow: 'inset 3px 0 0 var(--color-warning-text, #d97706)' },
+  '.dx-review-diverged': { boxShadow: 'inset 3px 0 0 var(--color-orange-text, #ea580c)' },
+  '.dx-review-missing': { boxShadow: 'inset 3px 0 0 var(--color-error-text, #dc2626)' },
+});
+
 /**
  * Marks each reviewed spec item's declaration line with its verdict, the code that implements it and whether tests
  * exercise it. These come from the review, not the spec text, so they render as decorations like the decision chips.
@@ -321,12 +340,6 @@ export const reviewGutter = (review: ReviewModel, callbacks: ReviewGutterCallbac
     EditorView.decorations.compute(['doc'], (state) =>
       buildDecorations(state, verdicts, annotations, callbacks, hover),
     ),
-    EditorView.theme({
-      '.dx-review-done': { boxShadow: 'inset 3px 0 0 var(--color-success-text, #16a34a)' },
-      '.dx-review-untested': { boxShadow: 'inset 3px 0 0 var(--color-info-text, #2563eb)' },
-      '.dx-review-partial': { boxShadow: 'inset 3px 0 0 var(--color-warning-text, #d97706)' },
-      '.dx-review-diverged': { boxShadow: 'inset 3px 0 0 var(--color-orange-text, #ea580c)' },
-      '.dx-review-missing': { boxShadow: 'inset 3px 0 0 var(--color-error-text, #dc2626)' },
-    }),
+    reviewGutterTheme,
   ];
 };

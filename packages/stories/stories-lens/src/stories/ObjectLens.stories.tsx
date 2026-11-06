@@ -132,12 +132,12 @@ export const Spec: Story = {
     // Completing it through the lens writes `status` on the base object — visible in both other panes.
     await userEvent.click(control(lensed, 'Done'));
     await waitFor(async () => {
-      await expect(selectValue(canonical, 'Status')).toBe('done');
+      await expect(selectValue(canonical, 'Status')).toBe('Done');
       await expect(find('inspector-properties')).toHaveTextContent('"status": "done"');
     });
 
     // A canonical edit shows through the lens, in the other direction.
-    await selectOption(canonical, 'Status', 'todo');
+    await selectOption(canonical, 'Status', 'Todo');
     await waitFor(async () => {
       await expect(control(lensed, 'Done')).not.toBeChecked();
       await expect(selectValue(lensed, 'Stage')).toBe('todo');

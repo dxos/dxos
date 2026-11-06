@@ -5,7 +5,6 @@
 '@dxos/plugin-map': patch
 '@dxos/react-ui-geo': patch
 '@dxos/plugin-canvas': patch
-'@dxos/plugin-spacetime': patch
 '@dxos/echo': patch
 '@dxos/ui-editor': patch
 '@dxos/plugin-review': patch

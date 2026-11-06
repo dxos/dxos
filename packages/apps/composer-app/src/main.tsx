@@ -672,6 +672,7 @@ const main = async () => {
     // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
     isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+    isPreview: getEnvString(config, 'DX_ENVIRONMENT') === 'preview',
     isPwa,
     isTauri,
     isPopover,
