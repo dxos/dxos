@@ -7,7 +7,7 @@ import * as Clock from 'effect/Clock';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { Alarm, SessionStore, TrajectoryStore } from '@dxos/assistant';
@@ -178,6 +178,54 @@ describe('AgentProcess residency (scripted)', () => {
         const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
         expect(processes.map((process) => String(process.pid))).toEqual([String(handle.pid)]);
         expect(new Set(promptTexts((yield* readFeed(session.feed)).messages))).toEqual(new Set(['first', 'second']));
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [Alarm.Alarm],
+          agent: { resident: true },
+          aiService: scriptedAiService(Array.from({ length: 4 }, () => ({ parts: [text('Acknowledged.')] }))),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  // Live clock: the retries are alarms a fixed interval apart.
+  it.live(
+    'a prompt the read lags behind is retried even after an earlier prompt spent the retry budget',
+    Effect.fnUntraced(
+      function* (_) {
+        // Hides the queue from the agent's reads while `hiddenReads` lasts, as an index that has not caught up would.
+        let hiddenReads = Number.POSITIVE_INFINITY;
+        const loadPending = SessionStore.prototype.loadPending;
+        const spy = vi
+          .spyOn(SessionStore.prototype, 'loadPending')
+          .mockImplementation(function (this: SessionStore, feed) {
+            if (hiddenReads <= 0) {
+              return loadPending.call(this, feed);
+            }
+            hiddenReads--;
+            return Effect.map(loadPending.call(this, feed), (state) => ({ ...state, pendingMessages: [] }));
+          });
+        yield* Effect.addFinalizer(() => Effect.sync(() => spy.mockRestore()));
+
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('first');
+        yield* session.waitForCompletion();
+
+        // The next prompt lags by a few reads only, well within a fresh budget.
+        hiddenReads = 3;
+        const followUp = yield* ComputeAgentService.getSession(session.chat);
+        yield* followUp.submitPrompt('second');
+        yield* followUp.waitForCompletion();
+
+        const { pendingMessages, prompts, consumed } = yield* readFeed(session.feed);
+        expect(pendingMessages).toEqual([]);
+        expect(prompts.map(promptText)).toEqual(['first', 'second']);
+        for (const prompt of prompts) {
+          expect(consumed.has(prompt.id)).toBe(true);
+        }
       },
       Effect.provide(
         AssistantTestLayer({
