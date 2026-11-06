@@ -25,7 +25,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
   - `mark` "Mark availability" (F-2), 3 requirements.
   - `heatmap` "Heat map and best slot" (F-3), 4 requirements.
   - `newPage` "New poll page" (F-4), 3 requirements.
-  - `pollPage` "Poll page" (F-5), 6 requirements.
+  - `pollPage` "Poll page" (F-5), 7 requirements.
   - `zones` "Time zones" (F-6), 3 requirements.
   - `dst` "Daylight-saving time" (F-7), 4 requirements.
   - `flights` "Flight options" (F-8), 1 requirement, owning the "Flight options" spec (`spec`).

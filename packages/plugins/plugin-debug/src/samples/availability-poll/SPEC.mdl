@@ -6,10 +6,10 @@ version: 0.1.0
 
 A When2meet-style poll on one Cloudflare Worker. Someone creates a poll with candidate time slots and shares its
 link; each person who opens it gives their name and marks the slots they are free for, in their own time zone; the page shades a heat map of where
-people overlap and names the best slot. Each poll lives in a Durable Object of its own. Every page is built from DXOS
-UI components, `@dxos/react-ui` on the `@dxos/ui-theme` theme, bundled by Vite into the Worker's static assets. The
-work ships in four milestones: the core poll on plain pages, then the page design, then time zones and daylight-saving
-time, then flight options, which `FLIGHTS.mdl` specifies.
+people overlap and names the best slot. Each poll lives in a Durable Object of its own. The pages are a React app
+bundled by Vite into the Worker's static assets; from M-2 they are built from DXOS UI components, `@dxos/react-ui` on
+the `@dxos/ui-theme` theme. The work ships in four milestones: the core poll on plain pages, then the page design, then
+time zones and daylight-saving time, then flight options, which `FLIGHTS.mdl` specifies.
 
 ## Extensions
 
@@ -84,8 +84,9 @@ type LocalRange
 
 ## Interface
 
-From M-2 both pages follow these rules; F-4 and F-5 say what each page holds. M-1's pages need only work, with DXOS UI
-components.
+From M-2 both pages follow these rules; F-4 and F-5 say what each page holds. M-1's pages are bare HTML: no DXOS UI
+components, no theme and no stylesheet, so they show the browser's defaults; the grid is a `<table>` whose cells take
+literal colours.
 
 - The pages use DXOS UI components only: `Card` for every panel, `Button` for every action, `Input` and `Field` for every
   form control, `Tag` for names and counts, and `Tooltip` for hover detail. The grid's cells are the only plain elements.
@@ -147,6 +148,7 @@ feat F-5: Poll page
   req F-5.4: Beside the reader's grid, a card titled "Group availability" shows the same grid read-only, each cell shaded by the share of respondents free for it in five steps from none to all, with a legend from "0 of n" to "n of n"; hovering a cell shows a tooltip listing who is free and who is not.
   req F-5.5: Above the grids a card names the best slot as its day and time range, says how many of how many are free, and shows each free respondent as a tag; the best cell is outlined in both grids. With no marks the card says "Nobody has marked yet".
   req F-5.6: Below the grids a roster lists every respondent as a tag with how many slots they marked, and marks the reader; before anyone answers it says "Nobody has answered yet".
+  req F-5.7: The page's accent colour is the theme's: marked cells, the heat map's five shades and the best cell's outline use `--color-accent-bg`.
 ```
 
 ```mdl
@@ -269,6 +271,12 @@ decision D-5: The page design is its own milestone. M-1 ships the core poll on p
   by: user:wittjosiah
   why: M-1 should build in about 5 minutes, and the design work is a step of its own that the demo can show.
   rejected: Keeping the layout in M-1, which makes the first milestone the slowest.
+
+decision D-6: M-1's pages are bare HTML with the browser's default styles, and the Poll page's accent colour is a requirement of its own (F-5.7). D-2's DXOS UI components and theme arrive with M-2.
+  date: 2026-11-06
+  by: user:wittjosiah
+  why: Each milestone should look different on screen: M-1 working but plain, M-2 designed, and a change to F-5.7 recolours the page.
+  rejected: DXOS UI components from M-1, which made M-1's and M-2's pages look nearly the same.
 ```
 
 ---

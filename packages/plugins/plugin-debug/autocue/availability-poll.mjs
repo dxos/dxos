@@ -47,16 +47,17 @@ const HEATMAP = 'Heat map and best slot';
 const DESIGN_DOC = 'One Durable Object per poll';
 
 const POLL_PAGE = 'Poll page';
-const ROSTER = 'F-5.6';
-const ROSTER_PREFIX = 'Below the grids a roster';
-const NEW_ROSTER =
-  'Below the grids a roster lists every respondent as a tag with how many slots they marked, most marks first and ties in the order they answered, and marks the reader; before anyone answers it says "Nobody has answered yet".';
+const ACCENT = 'F-5.7';
+const ACCENT_PREFIX = "The page's accent colour is";
+// Typed into the requirement's editor, so no brackets or backticks for it to pair.
+const NEW_ACCENT =
+  "The page's accent colour is pink: marked cells, the heat map's five shades and the best cell's outline use the theme's pink token --color-pink-bg in place of --color-accent-bg.";
 
 // Plans have left out the milestone's check, or its links, which the instructions ask for, so the prompt names both.
 const planPrompt = (milestone) =>
   `Plan ${milestone} from the spec: a task per feature, then Check ${milestone} linked to each of those features.`;
 // A revalidation has stopped at recording a diverged verdict, so the prompt names the steps the instructions give.
-const REVALIDATE_PROMPT = `I changed ${ROSTER} on "${POLL_PAGE}". Revalidate it; if it fails, set the feature to failing and file the fix task.`;
+const REVALIDATE_PROMPT = `I changed ${ACCENT} on "${POLL_PAGE}". Revalidate it; if it fails, set the feature to failing and file the fix task.`;
 
 const FINISHED = ['done', 'review'];
 
@@ -249,6 +250,40 @@ const scrollDocumentTo = async (page, text, { exact = false, delay = 250 } = {})
   }
 };
 
+/**
+ * Puts the spec's line holding `find` at the top of the view in one move, through the editor's own scroll, so the camera
+ * cuts to it rather than following a scroll; `line` is that line's rendered text, for the wheel when the view is not
+ * reachable. `last` takes the text's last occurrence.
+ */
+const jumpDocumentTo = async (page, find, line, { last = false } = {}) => {
+  const jumped = await page
+    .locator(`${DOCUMENT} .cm-content`)
+    .first()
+    .evaluate(
+      (content, { find, last }) => {
+        const view = content.cmTile?.root?.view;
+        const text = view?.state.doc.toString() ?? '';
+        const at = last ? text.lastIndexOf(find) : text.indexOf(find);
+        if (at < 0) {
+          return false;
+        }
+        view.dispatch({ effects: view.constructor.scrollIntoView(at, { y: 'start', yMargin: 24 }) });
+        return true;
+      },
+      { find, last },
+    );
+  if (!jumped) {
+    await scrollDocumentTo(page, line, { exact: true, delay: 30 });
+  }
+  await page.waitForTimeout(500);
+};
+
+/** A feature's card in the spec's text, which embeds each feature by name. */
+const jumpToFeature = (page, name) => jumpDocumentTo(page, `![${name}](`, name);
+
+/** The M-1 feature the reviews show, kept in the page so a later step's run finds it. */
+const SHOWN_FEATURE = '__availabilityPollShownFeature';
+
 /** Delegating makes the build chat the project's chat; this gives the project a new, empty one. */
 const freshChat = (page) =>
   page.evaluate(async (key) => {
@@ -425,10 +460,11 @@ const acceptMilestone = async (demo, page, milestone, caption) => {
 };
 
 /**
- * The review the milestone's check recorded, in the Spec companion's Review view, read card by card, then its verdicts
- * on the spec's feature cards from the first feature to the milestone's last.
+ * The review the milestone's check recorded, in the Spec companion's Review view, then one feature's card in the spec,
+ * where each requirement shows its verdict: after M-1, its feature with the most left untested; after M-2, that feature
+ * again and the Poll page.
  */
-const readReview = async (demo, page, milestone, { features = milestone.features } = {}) => {
+const readReview = async (demo, page, milestone) => {
   await openProjectTab(demo, page, 'document');
   // The companion button reopens the last tab, which after a delegation is the build chat and its claim URL; the
   // Spec companion opens directly instead, and the project gets an empty chat in case anything shows the chat tab.
@@ -448,11 +484,13 @@ const readReview = async (demo, page, milestone, { features = milestone.features
     hold: BEAT * 4,
   });
   // The current status takes each item's verdict from its newest review, so the counts cover every milestone so far.
-  const statuses = await page
+  const verdicts = await page
     .getByTestId('verdict-card')
-    .evaluateAll((cards) => cards.map((card) => card.getAttribute('data-status')));
-  const done = statuses.filter((status) => status === 'done').length;
-  const open = statuses.length - done;
+    .evaluateAll((cards) =>
+      cards.map((card) => ({ id: card.getAttribute('data-verdict'), status: card.getAttribute('data-status') })),
+    );
+  const done = verdicts.filter(({ status }) => status === 'done').length;
+  const open = verdicts.length - done;
   await demo.caption(
     open > 0
       ? {
@@ -462,26 +500,37 @@ const readReview = async (demo, page, milestone, { features = milestone.features
         }
       : { value: `All ${done} verdicts done`, subtitle: 'A check covers every requirement', hold: BEAT * 3 },
   );
-  await wheel(page, `${DECK_COMPANION} [data-testid="review-panel"]`, 8, { delay: 600 });
   await page.waitForTimeout(BEAT);
-  await demo.caption({
-    value: 'The verdicts show in the spec itself',
-    subtitle: 'A tag on each requirement it judged',
-    hold: BEAT * 2,
-  });
-  // The text above the features is not what this beat reads, so the scroll to them is quick.
-  await scrollDocumentTo(page, features[0], { exact: true, delay: 100 });
-  await page.waitForTimeout(BEAT * 3);
-  for (const feature of features.slice(1)) {
-    await scrollDocumentTo(page, feature, { exact: true });
-    await page.waitForTimeout(BEAT * 2);
-  }
-  if (open === 0) {
+  if (milestone.id === M1.id) {
+    // Requirement F-n.m belongs to M-1's nth feature.
+    const untested = (index) =>
+      verdicts.filter(({ id, status }) => status !== 'done' && id?.startsWith(`F-${index + 1}.`)).length;
+    const index = M1.features.reduce((best, _, index) => (untested(index) > untested(best) ? index : best), 2);
+    const feature = M1.features[index];
+    await page.evaluate(([key, feature]) => sessionStorage.setItem(key, feature), [SHOWN_FEATURE, feature]);
+    await jumpToFeature(page, feature);
     await demo.caption({
-      value: 'Nothing left untested',
-      subtitle: 'Every requirement built so far is checked',
-      hold: BEAT * 3,
+      value: untested(index) > 0 ? `${feature}: ${untested(index)} untested` : `${feature}: every requirement done`,
+      subtitle: 'In the spec, a tag on each requirement and the feature status',
+      hold: BEAT * 4,
     });
+    await page.waitForTimeout(BEAT * 4);
+  } else {
+    const feature = (await page.evaluate((key) => sessionStorage.getItem(key), SHOWN_FEATURE)) ?? HEATMAP;
+    await jumpToFeature(page, feature);
+    await demo.caption({
+      value: `${feature}: every requirement done`,
+      subtitle: "M-2's check covers what M-1's left untested",
+      hold: BEAT * 4,
+    });
+    await page.waitForTimeout(BEAT * 4);
+    await jumpToFeature(page, POLL_PAGE);
+    await demo.caption({
+      value: `${POLL_PAGE}: operational, every requirement done`,
+      subtitle: `${ACCENT}: the accent colour is the theme's blue`,
+      hold: BEAT * 4,
+    });
+    await page.waitForTimeout(BEAT * 4);
   }
   await closeCompanion(page);
 };
@@ -869,6 +918,17 @@ const showRoster = async (demo, page, caption) => {
   await page
     .locator(inWindow('body'))
     .evaluate((body) => body.ownerDocument.scrollingElement.scrollTo({ top: 1e6, behavior: 'smooth' }))
+    .catch(() => {});
+  await page.waitForTimeout(BEAT);
+  await demo.caption({ ...caption, position: 'top', hold: BEAT * 4 });
+  await page.waitForTimeout(BEAT * 4);
+};
+
+/** Scrolls the poll page back to its grids and holds on them with the caption up top. */
+const showGrids = async (demo, page, caption) => {
+  await page
+    .locator(inWindow('body'))
+    .evaluate((body) => body.ownerDocument.scrollingElement.scrollTo({ top: 0, behavior: 'smooth' }))
     .catch(() => {});
   await page.waitForTimeout(BEAT);
   await demo.caption({ ...caption, position: 'top', hold: BEAT * 4 });
@@ -1294,7 +1354,7 @@ export const steps = [
   {
     name: 'Read the M-2 review',
     run: async ({ demo, page }) => {
-      await readReview(demo, page, M2, { features: [...M1.features, ...M2.features] });
+      await readReview(demo, page, M2);
     },
   },
   {
@@ -1307,10 +1367,10 @@ export const steps = [
     },
   },
   {
-    name: 'Change the roster order',
+    name: 'Change the accent colour',
     done: async ({ page }) =>
       (await snapshot(page)).features[POLL_PAGE]?.requirements.some(
-        ({ id, text }) => id === ROSTER && text === NEW_ROSTER,
+        ({ id, text }) => id === ACCENT && text === NEW_ACCENT,
       ) ?? false,
     run: async ({ demo, page }) => {
       // As before M-2: the agents' work so far has slowed the page, and the revalidation runs on a fresh one.
@@ -1321,20 +1381,20 @@ export const steps = [
       await demo.speed({ factor: 1 });
       await demo.caption({
         value: 'Now change the spec',
-        subtitle: `${ROSTER}: the roster lists the most marks first`,
+        subtitle: `${ACCENT}: the accent turns from blue to pink`,
         hold: BEAT * 3,
       });
       await openFeature(demo, page, POLL_PAGE);
       // Each requirement's text is an editor of its own, found by its current text.
-      const editor = `${COMPANION} [data-testid^="requirement-editor."][data-testid$=".text"]:has-text("${ROSTER_PREFIX}") .cm-content`;
+      const editor = `${COMPANION} [data-testid^="requirement-editor."][data-testid$=".text"]:has-text("${ACCENT_PREFIX}") .cm-content`;
       if (!(await visible(page.locator(editor), 10_000))) {
-        throw new Error(`no editor holds ${ROSTER} in the feature companion`);
+        throw new Error(`no editor holds ${ACCENT} in the feature companion`);
       }
       await page.locator(editor).first().scrollIntoViewIfNeeded();
       await page.waitForTimeout(BEAT * 2);
-      await demo.click({ selector: `${editor} >> nth=0`, label: ROSTER });
+      await demo.click({ selector: `${editor} >> nth=0`, label: ACCENT });
       await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
-      await page.keyboard.type(NEW_ROSTER, { delay: 20 });
+      await page.keyboard.type(NEW_ACCENT, { delay: 20 });
       await page.waitForFunction(
         async ({ key, text }) => {
           const space = dxos
@@ -1345,7 +1405,7 @@ export const steps = [
             Object.values(feature.requirements ?? {}).some((requirement) => requirement.text === text),
           );
         },
-        { key: TAKE_SPACE, text: NEW_ROSTER },
+        { key: TAKE_SPACE, text: NEW_ACCENT },
         { timeout: 10_000 },
       );
       await demo.caption({ value: 'The requirement changes; the code does not, yet', hold: BEAT * 3 });
@@ -1374,10 +1434,18 @@ export const steps = [
       await waitFor(demo, page, (state) => state.features[POLL_PAGE]?.status === 'failing', 45, 'the revalidation');
       await demo.caption({
         value: 'The Worker no longer meets it: failing',
-        subtitle: 'Its roster is still in the order people answered',
+        subtitle: 'Its cells are still blue',
         hold: BEAT * 4,
       });
       await page.waitForTimeout(BEAT * 3);
+      await openProjectTab(demo, page, 'document');
+      await jumpToFeature(page, POLL_PAGE);
+      await demo.caption({
+        value: `${POLL_PAGE}: failing`,
+        subtitle: `In the spec, beside the changed ${ACCENT}`,
+        hold: BEAT * 4,
+      });
+      await page.waitForTimeout(BEAT * 4);
       // The fix task is the one filed after the change, unassigned until it is delegated.
       await waitFor(demo, page, (state) => state.tasks.some((task) => !task.assigned), 15, 'the fix task');
     },
@@ -1427,9 +1495,9 @@ export const steps = [
         caption: 'Try the fix on this machine',
         newPage: false,
         poll: (demo, page) =>
-          showRoster(demo, page, {
-            value: 'The roster now leads with the most marks',
-            subtitle: 'Ben marked 4 slots, so he comes before Ana and Chika',
+          showGrids(demo, page, {
+            value: 'The accent is pink now',
+            subtitle: 'Marked cells, the heat map and the best slot',
           }),
       });
     },
@@ -1438,10 +1506,21 @@ export const steps = [
     name: 'Hold on the spec',
     run: async ({ demo, page }) => {
       await openProjectTab(demo, page, 'document');
-      await demo.caption({ value: 'The spec records the change', subtitle: `${ROSTER}, T-2 and the Changelog` });
-      await scrollDocumentTo(page, POLL_PAGE, { exact: true, delay: 100 });
+      await jumpToFeature(page, POLL_PAGE);
+      await demo.caption({
+        value: `${POLL_PAGE}: operational again`,
+        subtitle: `${ACCENT} now asks for pink, and the Worker meets it`,
+        hold: BEAT * 4,
+      });
       await page.waitForTimeout(BEAT * 4);
-      await scrollDocumentTo(page, 'Changelog', { delay: 100 });
+      // The agent's decision for the change is the Changelog's newest.
+      await jumpDocumentTo(page, 'decision D-', 'Changelog', { last: true });
+      await demo.caption({
+        value: 'The spec records the change',
+        subtitle: 'The newest decision in its Changelog',
+        hold: BEAT * 3,
+      });
+      await page.waitForTimeout(BEAT * 3);
       await demo.caption({
         value: 'M-1 and M-2 operational, the change verified',
         subtitle: 'Time zones and flight options are the next milestones',
