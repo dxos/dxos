@@ -114,7 +114,7 @@ export const evaluate = Effect.fnUntraced(function* ({
   // Recorded on both paths an operation is reached by: the plain dialect calls `SandboxOperation.invoke` (the tool
   // path, whose handlers hold their own services), while the Effect dialect and the worker sandbox call
   // `Operation.invoke`, which resolves `Operation.Service` from the runtime handed to the sandbox.
-  const record = recordInto(invocations);
+  const recorder = makeRecorder(invocations);
   const result = yield* sandbox
     .evaluate({
       code: dialect.wrap(code),
@@ -123,9 +123,9 @@ export const evaluate = Effect.fnUntraced(function* ({
         runtime: Context.add(
           runtime,
           Operation.Service,
-          recordingService(Context.get(runtime, Operation.Service), record),
+          recordingService(Context.get(runtime, Operation.Service), recorder),
         ),
-        operations: recordInvocations(operations, record),
+        operations: recordInvocations(operations, recorder),
         skills,
         print: printer.print,
       },
@@ -172,49 +172,59 @@ export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.Opaq
  */
 const MAX_INVOCATION_RESULT = 1_000;
 
-/** Records one operation call: its key, and its encoded result or the first line of its failure. */
-type RecordInvocation = (operationKey: string) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+/** Records operation calls into one evaluation's list: each call's key, and its result or the first line of its failure. */
+type Recorder = {
+  /** Records the call `effect` makes once it settles. */
+  readonly effect: (operationKey: string) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  /** Records a call that reported its outcome as `invokePromise` does. */
+  readonly outcome: (operationKey: string, outcome: { readonly data?: unknown; readonly error?: Error }) => void;
+};
 
-const recordInto =
-  (invocations: ContentBlock.Invocation[]): RecordInvocation =>
-  (operationKey) =>
-  (effect) =>
-    effect.pipe(
-      Effect.tap((output) =>
-        Effect.sync(() => {
-          const result = encode(output);
-          invocations.push(
-            result !== undefined && result.length <= MAX_INVOCATION_RESULT
-              ? { operationKey, result }
-              : { operationKey },
-          );
-        }),
-      ),
-      // The first line names the failure; the rest of the pretty-printed cause is a trace no reader of the history needs.
-      Effect.tapCause((cause) =>
-        Effect.sync(() => invocations.push({ operationKey, error: Cause.pretty(cause).split('\n')[0] })),
-      ),
+const makeRecorder = (invocations: ContentBlock.Invocation[]): Recorder => {
+  const succeeded = (operationKey: string, output: unknown) => {
+    const result = encode(output);
+    invocations.push(
+      result !== undefined && result.length <= MAX_INVOCATION_RESULT ? { operationKey, result } : { operationKey },
     );
+  };
+  // The first line names the failure; the rest is a trace no reader of the history needs.
+  const failed = (operationKey: string, message: string) =>
+    invocations.push({ operationKey, error: message.split('\n')[0] });
+  return {
+    effect: (operationKey) => (effect) =>
+      effect.pipe(
+        Effect.tap((output) => Effect.sync(() => succeeded(operationKey, output))),
+        Effect.tapCause((cause) => Effect.sync(() => failed(operationKey, Cause.pretty(cause)))),
+      ),
+    outcome: (operationKey, { data, error }) =>
+      error === undefined ? succeeded(operationKey, data) : failed(operationKey, error.message),
+  };
+};
 
 /**
  * The operations, each recording its calls as it runs. Only an operation-backed call is recorded: an MCP tool has no
  * key a reader of the history could match.
  */
-const recordInvocations = (operations: readonly SandboxOperation[], record: RecordInvocation): SandboxOperation[] =>
+const recordInvocations = (operations: readonly SandboxOperation[], recorder: Recorder): SandboxOperation[] =>
   operations.map((operation) => {
     const operationKey = operation.definition && String(operation.definition.meta.key);
     return operationKey === undefined
       ? operation
-      : { ...operation, invoke: (input: unknown) => operation.invoke(input).pipe(record(operationKey)) };
+      : { ...operation, invoke: (input: unknown) => operation.invoke(input).pipe(recorder.effect(operationKey)) };
   });
 
-/** `service`, recording each operation invoked through it. */
-const recordingService = (
-  service: Operation.OperationService,
-  record: RecordInvocation,
-): Operation.OperationService => ({
+/**
+ * `service`, recording each operation invoked through it. Both of its invoking methods are wrapped, and each call is
+ * recorded once: the original `invokePromise` runs through the original service, not through the `invoke` here.
+ */
+const recordingService = (service: Operation.OperationService, recorder: Recorder): Operation.OperationService => ({
   ...service,
-  invoke: (op, ...args) => service.invoke(op, ...args).pipe(record(String(op.meta.key))),
+  invoke: (op, ...args) => service.invoke(op, ...args).pipe(recorder.effect(String(op.meta.key))),
+  invokePromise: (op, ...args) =>
+    service.invokePromise(op, ...args).then((outcome) => {
+      recorder.outcome(String(op.meta.key), outcome);
+      return outcome;
+    }),
 });
 
 const encode = (value: unknown): string | undefined => {
