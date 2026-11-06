@@ -6,17 +6,11 @@ import { describe, test } from 'vitest';
 
 import { type ContentMap, Dsl, SvgFile, applyCommands } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import {
-  DEFAULT_LAYER,
-  type RenderList2D,
-  defaultNodeRegistry,
-  diagramLinkMarkup,
-  diagramNodeMarkup,
-  linkGeometry,
-  sortByZ,
-} from '@dxos/react-ui-canvas';
 import { type Shape, isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
+import { defaultNodeRegistry } from '../components/index.ts';
+import { type RenderList2D } from '../model/index.ts';
+import { DEFAULT_LAYER, diagramLinkMarkup, diagramNodeMarkup, linkGeometry, sortByZ } from '../utils/index.ts';
 import { ROOT_VIEW_ID, readViews, rootOf, seedContent, updateCanvasRecord, writeViews } from './content.ts';
 import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';
 

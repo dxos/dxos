@@ -4,21 +4,12 @@
 
 //
 // The canvas content records: one per scene, node and link (plus one `canvas` record naming the root). The illustrator
-// DSL bridge (`handler.ts`, `canvas-content.ts`) reads and edits a `Canvas` through them, stamping its identity on the
-// records it manages, and the legacy migration reads them where a `Drawing.Canvas` stored them before `Canvas`.
+// DSL bridge (`handler.ts`) reads and edits a drawing through them, stamping its identity on the records it manages.
 //
 
 import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
-import {
-  DEFAULT_LAYER,
-  type RenderList2D,
-  type RenderLists2D,
-  elementLayer,
-  orphanViews,
-  sortByZ,
-} from '@dxos/react-ui-canvas/headless';
 import {
   Layer,
   LINE_STYLES,
@@ -35,7 +26,9 @@ import {
   withLegacyParams,
 } from '@dxos/scene';
 
-import { Canvas } from '#types';
+import { type RenderList2D, type RenderLists2D, orphanViews } from '../model/index.ts';
+import { DEFAULT_LAYER, elementLayer, sortByZ } from '../utils/index.ts';
+import { CanvasSettings } from './canvas-settings.ts';
 
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
@@ -46,7 +39,7 @@ import { Canvas } from '#types';
 export const CanvasRecord = Schema.Struct({
   kind: Schema.Literal('canvas'),
   root: Schema.String,
-  ...Canvas.CanvasSettings.fields,
+  ...CanvasSettings.fields,
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 

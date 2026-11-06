@@ -13,19 +13,6 @@
 
 import { type ContentHandler, type ContentMap, Diagnostics, type ReadWorldObject, type SvgFile } from '@dxos/diagram';
 import {
-  DEFAULT_LAYER,
-  DEFAULT_SIZES,
-  between,
-  createLink,
-  defaultNodeRegistry,
-  diagramNodeElements,
-  isDiagramBackdrop,
-  nodeBounds,
-  nodeTitle,
-  sortByZ,
-  topZ,
-} from '@dxos/react-ui-canvas';
-import {
   type DiagramConnector,
   type DiagramNode,
   type DiagramShape,
@@ -44,6 +31,19 @@ import {
   isNoteNode,
 } from '@dxos/scene';
 
+import { defaultNodeRegistry } from '../components/index.ts';
+import {
+  DEFAULT_LAYER,
+  DEFAULT_SIZES,
+  between,
+  createLink,
+  diagramNodeElements,
+  isDiagramBackdrop,
+  nodeBounds,
+  nodeTitle,
+  sortByZ,
+  topZ,
+} from '../utils/index.ts';
 import {
   type ElementRecord,
   type LinkRecord,

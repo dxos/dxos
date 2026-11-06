@@ -4,6 +4,7 @@
 
 import { type ReadWorldObject, type Scene, SvgFile } from '@dxos/diagram';
 import {
+  SceneHandler,
   defaultNodeRegistry,
   diagramLinkElements,
   flattenPath,
@@ -11,14 +12,13 @@ import {
   viewLinkGeometry,
   visibleView,
 } from '@dxos/react-ui-canvas';
+import { canvasRecordOf, isNodeRecord, linkKey, readViews } from '@dxos/react-ui-canvas/headless';
 import { type DiagramConnector, type Link, fromEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
 import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { openScene } from './canvas-document.ts';
-import { canvasRecordOf, isNodeRecord, linkKey, readViews } from './content.ts';
-import { SceneHandler } from './handler.ts';
 
 /** The diagram a canvas's open Layout2D draws, as the command protocol's world objects. */
 export const canvasWorld = (canvas: Canvas.Canvas): ReadWorldObject[] => CanvasLayoutBuilder.read(canvas).scene.objects;

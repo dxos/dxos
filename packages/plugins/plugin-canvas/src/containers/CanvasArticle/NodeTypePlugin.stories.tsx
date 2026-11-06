@@ -16,13 +16,13 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
+import { nodeKey } from '@dxos/react-ui-canvas/headless';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { mx } from '@dxos/ui-theme';
 
 import * as CanvasPlugin from '#meta';
-import { nodeKey } from '#model';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 

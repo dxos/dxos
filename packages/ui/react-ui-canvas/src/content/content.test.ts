@@ -5,9 +5,9 @@
 import { describe, test } from 'vitest';
 
 import { type ContentMap } from '@dxos/diagram';
-import { DEFAULT_LAYER } from '@dxos/react-ui-canvas';
 import { type InstanceNode, type NodeBase, type ViewNode, isViewNode } from '@dxos/scene';
 
+import { DEFAULT_LAYER } from '../utils/index.ts';
 import {
   ROOT_VIEW_ID,
   canvasRecordOf,
