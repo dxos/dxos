@@ -82,8 +82,7 @@ const openExtensions = async (demo, page) => {
 const checkPackage = (demo, label) =>
   demo.click({ selector: `[role="menu"] >> [role="menuitemcheckbox"]:has-text("${label}")`, label });
 
-/** Scrolls the spec's document a notch at a time, so the camera can follow, until `selector` is up in view or the end. */
-/** Whether a feature embed named `name` is drawn; its name is an input's value, not its text. */
+/** Whether a feature embed named `name` is drawn. */
 const hasFeature = (page, name) =>
   page.evaluate(
     ([name]) =>
@@ -93,6 +92,7 @@ const hasFeature = (page, name) =>
     [name],
   );
 
+/** Scrolls the spec's document a notch at a time, so the camera can follow, until `selector` is up in view or the end. */
 const scrollDocumentTo = async (page, selector) => {
   const box = await page.locator(DOCUMENT).boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -263,7 +263,7 @@ export const steps = [
     name: 'Give the new spec the video package',
     done: async ({ page }) => (await page.locator(`${EDITOR}:has-text("scene SC-1:")`).count()) > 0,
     run: async ({ demo, page }) => {
-      await caption(demo, 9, `"${NEW_SPEC}" starts empty; Video is another plugin's package, with no views`);
+      await caption(demo, 9, `"${NEW_SPEC}" starts empty; the Video package adds no views`);
       await pickSpec(demo, page, NEW_SPEC);
       await openExtensions(demo, page);
       await checkPackage(demo, 'Video');

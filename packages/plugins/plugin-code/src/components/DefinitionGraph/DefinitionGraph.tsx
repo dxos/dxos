@@ -10,6 +10,7 @@ import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 
 import { CodeNamespace } from '../../namespace.ts';
 import { type DecisionModel, buildChangelogGraph } from '../ChangelogGraph/index.ts';
@@ -33,6 +34,14 @@ const MAP_MIN_WIDTH = 720;
 
 export type DefinitionLayout = 'canvas' | 'map' | 'outline';
 
+const LAYOUTS: readonly { id: DefinitionLayout; icon: string }[] = [
+  { id: 'canvas', icon: 'ph--flow-arrow--regular' },
+  { id: 'map', icon: 'ph--squares-four--regular' },
+  { id: 'outline', icon: 'ph--list-bullets--regular' },
+];
+
+const isLayout = (value: string): value is DefinitionLayout => LAYOUTS.some(({ id }) => id === value);
+
 export type DefinitionGraphProps = {
   /** The text of a `.mdl` spec; its `## Changelog` gives the decisions a block's view lists. */
   content: string;
@@ -52,7 +61,7 @@ export type DefinitionGraphProps = {
   onActivate?: (definition: DefinitionModel) => void;
   /** The block a map or outline opens on; the whole spec by default. */
   defaultFocus?: string;
-  /** The whole spec as a canvas, a map or an outline; by default a map when there is room for one. */
+  /** Fixes the whole spec as a canvas, a map or an outline; without it the reader picks, a map when there is room. */
   layout?: DefinitionLayout;
 };
 
@@ -165,7 +174,8 @@ export const DefinitionGraph = ({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  const shown: DefinitionLayout = layout ?? (wide ? 'map' : 'outline');
+  const [picked, setPicked] = useState<DefinitionLayout>();
+  const shown: DefinitionLayout = layout ?? picked ?? (wide ? 'map' : 'outline');
 
   return (
     <Layout.Flex
@@ -175,45 +185,67 @@ export const DefinitionGraph = ({
       data-testid='definition-graph'
       data-layout={shown === 'canvas' ? shown : focus ? 'related' : shown}
     >
-      {/* A canvas has its own trail, of the levels it has drilled into. */}
-      {shown !== 'canvas' && (
+      {(shown !== 'canvas' || layout === undefined) && (
         <Layout.Flex align='center' gap='sm' classNames='px-2 py-1 min-h-[2.5rem]'>
-          <Breadcrumb.Root aria-label={t('definition-graph.breadcrumb.label')} classNames='min-w-0'>
-            <Breadcrumb.List>
-              <Breadcrumb.Item>
-                {top !== undefined ? (
-                  <Breadcrumb.Link asChild>
-                    <button type='button' onClick={() => setTrail([])} data-testid='definition-graph.crumb.spec'>
-                      {t('definition-graph.crumb.spec.label')}
-                    </button>
-                  </Breadcrumb.Link>
-                ) : (
-                  <Breadcrumb.Current>{t('definition-graph.crumb.spec.label')}</Breadcrumb.Current>
-                )}
-              </Breadcrumb.Item>
-              {trail.map((id, position) => (
-                <React.Fragment key={`${position}:${id}`}>
-                  <Breadcrumb.Separator />
-                  <Breadcrumb.Item>
-                    {position === trail.length - 1 ? (
-                      <Breadcrumb.Current classNames='font-mono'>{crumbLabel(id)}</Breadcrumb.Current>
-                    ) : (
-                      <Breadcrumb.Link asChild>
-                        <button
-                          type='button'
-                          className='font-mono'
-                          onClick={() => setTrail((trail) => trail.slice(0, position + 1))}
-                          data-testid='definition-graph.crumb'
-                        >
-                          {crumbLabel(id)}
-                        </button>
-                      </Breadcrumb.Link>
-                    )}
-                  </Breadcrumb.Item>
-                </React.Fragment>
+          {/* A canvas has its own trail, of the levels it has drilled into. */}
+          {shown !== 'canvas' && (
+            <Breadcrumb.Root aria-label={t('definition-graph.breadcrumb.label')} classNames='min-w-0'>
+              <Breadcrumb.List>
+                <Breadcrumb.Item>
+                  {top !== undefined ? (
+                    <Breadcrumb.Link asChild>
+                      <button type='button' onClick={() => setTrail([])} data-testid='definition-graph.crumb.spec'>
+                        {t('definition-graph.crumb.spec.label')}
+                      </button>
+                    </Breadcrumb.Link>
+                  ) : (
+                    <Breadcrumb.Current>{t('definition-graph.crumb.spec.label')}</Breadcrumb.Current>
+                  )}
+                </Breadcrumb.Item>
+                {trail.map((id, position) => (
+                  <React.Fragment key={`${position}:${id}`}>
+                    <Breadcrumb.Separator />
+                    <Breadcrumb.Item>
+                      {position === trail.length - 1 ? (
+                        <Breadcrumb.Current classNames='font-mono'>{crumbLabel(id)}</Breadcrumb.Current>
+                      ) : (
+                        <Breadcrumb.Link asChild>
+                          <button
+                            type='button'
+                            className='font-mono'
+                            onClick={() => setTrail((trail) => trail.slice(0, position + 1))}
+                            data-testid='definition-graph.crumb'
+                          >
+                            {crumbLabel(id)}
+                          </button>
+                        </Breadcrumb.Link>
+                      )}
+                    </Breadcrumb.Item>
+                  </React.Fragment>
+                ))}
+              </Breadcrumb.List>
+            </Breadcrumb.Root>
+          )}
+          {layout === undefined && (
+            <ToggleGroup.Root
+              type='single'
+              value={shown}
+              onValueChange={(next) => isLayout(next) && setPicked(next)}
+              aria-label={t('definition-graph.layout.label')}
+              classNames='ms-auto'
+            >
+              {LAYOUTS.map(({ id, icon }) => (
+                <ToggleGroup.Item
+                  key={id}
+                  value={id}
+                  icon={icon}
+                  label={t(`definition-graph.layout.${id}.label`)}
+                  iconOnly
+                  data-testid={`definition-graph.layout.${id}`}
+                />
               ))}
-            </Breadcrumb.List>
-          </Breadcrumb.Root>
+            </ToggleGroup.Root>
+          )}
         </Layout.Flex>
       )}
       <p className='px-2 pb-1 text-xs text-description' data-testid='definition-graph.hint'>

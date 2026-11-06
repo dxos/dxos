@@ -11,13 +11,18 @@ import { FeatureMap } from '#types';
 
 import { featureEmbedExtensions } from '../extensions/feature-embed-extensions.ts';
 import { softwareCommands } from '../extensions/software-commands.ts';
+import { videoCommands } from '../extensions/video-commands.ts';
 import { CodeNamespace } from '../namespace.ts';
 import { FEATURE_VIEWS, SPEC_VIEWS } from '../spec-views.ts';
 
+/** The video dialect, whose scenes, shots and cast Definitions draws like any other dialect's blocks. */
+const VIDEO_DIALECT = 'org.dxos.spec.video';
+
 /**
- * The views this plugin draws in a spec's companion tabs, and the software package: a spec using it keeps its features
- * in step with their embeds in any editor of it, such as plugin-code's, offers `/feature` and a slash command for each
- * of its other blocks, and shows its features on a canvas and a board.
+ * The views this plugin draws in a spec's companion tabs, and the software and video packages. A spec using the
+ * software package keeps its features in step with their embeds in any editor of it, such as plugin-code's, offers
+ * `/feature` and a slash command for each of its other blocks, and shows its features on a canvas and a board; one
+ * using the video package offers a slash command for each of its blocks.
  */
 export default Capability.makeModule(() =>
   Effect.succeed([
@@ -44,6 +49,11 @@ export default Capability.makeModule(() =>
       label: ['software-package.label', { ns: CodeNamespace.key }],
       dialects: FeatureMap.SOFTWARE_DIALECTS,
     }),
+    Capability.contribute(ProjectCapabilities.SpecPackage, {
+      id: 'video',
+      label: ['video-package.label', { ns: CodeNamespace.key }],
+      dialects: [VIDEO_DIALECT],
+    }),
     Capability.contribute(ProjectCapabilities.SpecExtensions, (spec, { dialects, t }) =>
       dialects.includes(FeatureMap.DIALECT)
         ? [
@@ -53,6 +63,9 @@ export default Capability.makeModule(() =>
             ...softwareCommands,
           ]
         : [],
+    ),
+    Capability.contribute(ProjectCapabilities.SpecExtensions, (_spec, { dialects }) =>
+      dialects.includes(VIDEO_DIALECT) ? videoCommands : [],
     ),
   ]),
 );

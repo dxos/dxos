@@ -20,7 +20,6 @@ import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as SpecSession from '@dxos/plugin-projects/SpecSession';
-import { VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -148,7 +147,6 @@ const meta = {
         TasksPlugin.make(),
         FeatureEditingPlugin.make(),
         // A second plugin's extension package, beside the software one.
-        VideoPackagePlugin.make(),
       ],
     }),
     // The deck provides the drag-and-drop root in the app; the Kanban view needs one here.

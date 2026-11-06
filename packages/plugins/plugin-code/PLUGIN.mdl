@@ -1127,6 +1127,21 @@ feat F-24: Spec reviews in ECHO
               and the current card shows its note in full.
 ```
 
+```mdl
+feat F-25: Definitions
+  uses: [SpecViewContent]
+  req F-25.1: Definitions groups a spec by what names its blocks: each anchor is a group of the structure it names, and
+              groups gather into clusters around the block most of them share.
+  req F-25.2: Definitions draws the whole spec as a canvas, a map or an outline, picked from a switch beside its trail;
+              it opens as a map where there is room for one and as an outline where there is not.
+  req F-25.3: The canvas opens a level at a time: a card per cluster, then one cluster's groups, then one block and
+              everything it touches. Double-clicking a card opens its level, and the canvas's trail goes back up.
+  req F-25.4: Every block draws with the icon and colour its dialect declares, and every link with the ends of the
+              relationship its field declares.
+  req F-25.5: The Video package gives a spec the video dialect, so a script's scenes, shots and cast group and draw by
+              the same rules as software.
+```
+
 ## Acceptance
 
 ```mdl
@@ -1506,8 +1521,8 @@ test QA-5: Switch between a project's specs
     - the document of "Inbox and agents" opens with a paragraph and a list of goals, embeds its eight features under
       the headings Accounts, Mail and Work with notes between them, and ends with two ideas under Ideas, the last
       "A morning digest of what agents did overnight"
-    - a sample plugin contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`,
-      `/shot`, `/voiceover` and `/caption` write its blocks, and no views
+    - this plugin contributes the Video package: the video dialect (`org.dxos.spec.video`), whose `/scene`, `/shot`,
+      `/voiceover` and `/caption` write its blocks, and no views of its own
   steps:
     - name: See the project's specs
       do: Open the project "Inbox" on its Overview.
@@ -1584,6 +1599,48 @@ test QA-6: Arrow through a spec's features
     - name: Leave with Escape
       do: Press Escape.
       expect: the cursor is in the text on the line after the section
+```
+
+```mdl
+test QA-7: Walk a spec's structure on the canvas
+  desc: |
+    Definitions in a spec's Structure companion, switched to the canvas, opened a level at a time by double-clicking:
+    the spec's clusters, one cluster's features, then one feature and everything it touches. A script in the video
+    dialect draws by the same rules in its own icons and colours. Walked by the autocue flow `spec-canvas` against
+    Composer.
+  actors: human
+  covers: [F-25.2, F-25.3, F-25.4, F-25.5]
+  status: passing            # 2026-11-06, recorded by autocue/spec-canvas.mjs
+  given:
+    - composer serves plugin-code, enabled
+    - the project "Composer specs" owns the specs "CodePlugin", whose text is this spec, and "Launch video", whose text
+      is deus's `lang/examples/launch-video.mdl` and which uses the Video package
+    - the Specs tab shows "CodePlugin", with the sidebar closed and the companion 62rem wide
+  steps:
+    - name: Open the Structure companion
+      do: Open the companion's Structure tab.
+      expect: Definitions draws the spec as a map, with a switch for Canvas, Map and Outline beside its trail
+    - name: Switch to the canvas
+      do: Click Canvas.
+      expect: the canvas draws a card per cluster, CoderSkill among them, with arrows between clusters that share blocks
+    - name: Open a cluster
+      do: Double-click the CoderSkill cluster.
+      expect: the canvas zooms into a frame per feature holding what only it names, each block in its dialect's icon
+        and colour, and F-8 marked as opening a level
+    - name: Open a block
+      do: Double-click F-8.
+      expect: F-8 is centred, what it names drawn in a frame with dashed `uses` arrows into it, and QA-1 below it as
+        what checks it
+    - name: Back to the whole spec
+      do: Click the home of the canvas's trail.
+      expect: the canvas draws the spec's clusters again
+    - name: Open the launch video
+      do: Pick "Launch video" from the spec dropdown.
+      expect: the canvas draws the script's clusters, around maya and around narrator
+    - name: Open a character's cluster
+      do: Double-click the maya cluster.
+      expect: a frame per scene, each scene's shots, voiceover and captions joined to it by filled diamonds, in the
+        video dialect's icons and colours
 ```
 
 ## Changelog
@@ -2386,6 +2443,24 @@ decision D-90: Definitions drops mention edges. A block's neighbours are its lin
   for: user:wittjosiah
   affects: [SpecViewContent]
   why: Across the repo's specs, 763 of the 766 blocks features grouped through prose now come through `uses`.
+```
+
+```mdl
+decision D-91: Everything Definitions draws in Storybook is reachable in Composer before it is demonstrated there.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-25]
+```
+
+```mdl
+decision D-92: Definitions has a Canvas, Map and Outline switch beside its trail, and still opens as a map or an outline by width. This plugin contributes the Video package with its slash commands, which the sample plugin in plugin-projects' testing keeps for its own stories. Fills in [D-91].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-25.2, F-25.5]
+  why: The canvas was reachable only through the `layout` prop, which no surface passed, and a spec could not take the video dialect in the app.
+  rejected:
+    - Making the canvas the default where there is room: that changes what every spec opens on, which was not asked for.
 ```
 
 ## Appendix: Extension Definitions

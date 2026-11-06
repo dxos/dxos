@@ -111,6 +111,10 @@ export const translations = [
         'definition-graph.hint.outline':
           'Point at a block to see which groups name it; click it to see everything it touches',
         'definition-graph.hint.related': 'Click a card to centre on it',
+        'definition-graph.layout.canvas.label': 'Canvas',
+        'definition-graph.layout.label': 'Layout',
+        'definition-graph.layout.map.label': 'Map',
+        'definition-graph.layout.outline.label': 'Outline',
         'definition-graph.requirements.label_one': '{{count}} requirement',
         'definition-graph.requirements.label_other': '{{count}} requirements',
         'definition-map.cluster.label': 'Around {{hub}}',
@@ -188,6 +192,7 @@ export const translations = [
         'api-surface.services.label': 'Services',
         'api-surface.empty.message': 'This spec declares no operations or services.',
         'software-package.label': 'Software',
+        'video-package.label': 'Video',
         'feature-status.planned.label': 'Planned',
         'feature-status.prototype.label': 'Prototype',
         'feature-status.operational.label': 'Operational',
