@@ -6,7 +6,6 @@ import { type ComponentType, lazy } from 'react';
 
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
-import { type AddFeatureDialogProps } from './AddFeatureDialog/index.ts';
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
 import {
@@ -24,10 +23,6 @@ import {
 import { type FeatureSectionProps } from './FeatureSection/index.ts';
 import { type SpecViewContentProps } from './SpecArticle/SpecPanel.tsx';
 import { type SpecSource } from './SpecArticle/useSpecModel.ts';
-
-export const AddFeatureDialog: ComponentType<AddFeatureDialogProps> = lazy(() =>
-  import('./AddFeatureDialog/index.ts').then((module) => ({ default: module.AddFeatureDialog })),
-);
 
 export const CodeArticle: ComponentType<any> = lazy(() => import('./CodeArticle/index.ts'));
 export const CodeSettings: ComponentType<any> = lazy(() => import('./CodeSettings/index.ts'));

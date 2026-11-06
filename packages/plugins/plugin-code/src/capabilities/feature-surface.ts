@@ -14,7 +14,6 @@ import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 
 import {
-  AddFeatureDialog,
   FeatureArticle,
   FeatureCardContent,
   FeatureCompanion,
@@ -29,8 +28,7 @@ import {
 } from '#containers';
 import { Feature, FeatureMap } from '#types';
 
-import { ADD_FEATURE_DIALOG, FEATURE_COMPANION } from '../constants.ts';
-import { type AddFeatureDialogProps } from '../containers/AddFeatureDialog/index.ts';
+import { FEATURE_COMPANION } from '../constants.ts';
 import { isFeatureView } from '../spec-views.ts';
 
 const isTracked = (feature: Feature.Feature) => FeatureMap.findProject(feature) !== undefined;
@@ -136,12 +134,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, Feature.Feature),
         component: FeatureCardContent,
         props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: ADD_FEATURE_DIALOG,
-        filter: AppSurface.component<AddFeatureDialogProps>(AppSurface.Dialog, ADD_FEATURE_DIALOG),
-        component: AddFeatureDialog,
-        props: ({ data: { props } }) => ({ ...props }),
       }),
     ]),
   ),

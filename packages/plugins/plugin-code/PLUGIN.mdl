@@ -2667,6 +2667,21 @@ decision D-110: QA-8 gives "CodePlugin" six features on its map, at least one pe
     - Importing the `feat` blocks as features: that replaces them in the text with embeds, and the tour's cursor steps click their ids.
 ```
 
+```mdl
+decision D-111: With the canvas gone, a feature is added to a spec only with `/feature` or an operation; the dialog that added an existing feature from elsewhere in the space is removed.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-19.4, F-22.6]
+```
+
+```mdl
+decision D-112: `AddFeatureDialog`, its dialog surface and `useFeatureEditing`'s `moveFeature`, which only the dialog called, are deleted. An agent still moves a feature with op:updateFeature. Fills in [D-111].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-19.4]
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

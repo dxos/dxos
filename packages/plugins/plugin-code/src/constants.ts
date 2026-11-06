@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
-
 import { CodeNamespace } from './namespace.ts';
 
 export const CODE_PROJECTS_SECTION_TYPE = `${CodeNamespace.key}.code-projects-section`;
@@ -17,9 +15,6 @@ export const CODE_PROJECT_BUILD_TYPE = `${CodeNamespace.key}.code-project-build`
  * live here.
  */
 export const PLUGIN_SPEC_TYPE = 'org.dxos.plugin.spec';
-
-/** Picks an existing feature to add to a spec's map. */
-export const ADD_FEATURE_DIALOG = DXN.make(`${CodeNamespace.key}.addFeatureDialog`);
 
 /** The spec plank's companion that shows the feature selected on its feature map. */
 export const FEATURE_COMPANION = 'feature';
