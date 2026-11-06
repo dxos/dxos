@@ -103,6 +103,8 @@ export type NodeDef = {
    * opening calls it instead of drilling in, and auto-drill passes the node by.
    */
   hostOpen?: (node: Node) => (() => void) | undefined;
+  /** Opening zooms the camera into the node before `hostOpen` is called, as drilling into a frame does. */
+  hostOpenZoom?: boolean;
   /**
    * Controls floating above the node, flush with its right edge and at screen size, so they neither cover the node's
    * content nor scale with the camera; renders nothing when it returns `null`.
