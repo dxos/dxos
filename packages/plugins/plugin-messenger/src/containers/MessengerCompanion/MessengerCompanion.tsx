@@ -59,10 +59,10 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
           Effect.flatMap((object) =>
             Effect.promise(async () => {
               const path = GraphPath.getObjectPathFromObject(object);
-              await invokePromise(LayoutOperation.Open, { subject: [path] });
-              if (typeof companion === 'string') {
-                await invokePromise(LayoutOperation.UpdateCompanion, { subject: companion, anchor: path });
-              }
+              await invokePromise(LayoutOperation.Open, {
+                subject: [path],
+                variant: typeof companion === 'string' ? companion : undefined,
+              });
             }),
           ),
         ),

@@ -225,7 +225,7 @@ decision D-2: The capability is named `InboxSender` and its `send` fails with `E
 ```
 
 ```mdl
-decision D-3: A notification may name, in its `companion` property, the companion its linked object opens with (a `~<variant>` segment); the panel opens the object, then that companion on its plank. Fills in [F-2.2].
+decision D-3: A notification may name, in its `companion` property, the companion its linked object opens with (a `~<variant>` segment); the panel passes it as `LayoutOperation.Open`'s `variant`, so the object and its companion open together. Fills in [F-2.2].
   date: 2026-11-06
   by: user:wittjosiah
   affects: [F-2.2]
