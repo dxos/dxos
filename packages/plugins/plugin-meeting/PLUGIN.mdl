@@ -155,6 +155,7 @@ op Summarize
 
 ```mdl
 feat F-1: Meeting Creation
+  uses: [Meeting, MeetingsList]
 
   req F-1.1: A new Meeting is created with an ISO timestamp and empty participants list.
   req F-1.2: The meeting is linked to a freshly created Transcript feed object.
@@ -166,6 +167,7 @@ feat F-1: Meeting Creation
 
 ```mdl
 feat F-2: Active Meeting
+  uses: [Meeting, SetActive]
 
   req F-2.1:
     when: op:SetActive is invoked with a meeting
@@ -182,6 +184,7 @@ feat F-2: Active Meeting
 
 ```mdl
 feat F-3: Real-Time Transcription
+  uses: [HandlePayload]
 
   req F-3.1:
     when: user joins a call
@@ -202,6 +205,7 @@ feat F-3: Real-Time Transcription
 
 ```mdl
 feat F-4: AI Summary
+  uses: [MeetingArticle, Summarize]
 
   req F-4.1:
     when: user requests a summary
@@ -222,6 +226,7 @@ feat F-4: AI Summary
 
 ```mdl
 feat F-5: Notes
+  uses: [MeetingArticle]
 
   req F-5.1: Notes section always rendered in MeetingArticle regardless of summary state.
   req F-5.2: Notes are persisted as a linked Text object in ECHO and replicated to all peers.

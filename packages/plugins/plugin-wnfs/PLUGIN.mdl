@@ -199,6 +199,7 @@ op flushBlockQueue
 
 ```mdl
 feat F-1: Upload File
+  uses: [wnfsBlobPut]
 
   req F-1.1:
     when: core Blob.fromBytes routes to the 'wnfs' storage (i.e. BlobBackend.put is invoked
@@ -218,6 +219,7 @@ feat F-1: Upload File
 
 ```mdl
 feat F-2: Resolve wnfs:// blobs
+  uses: [WnfsInstance]
 
   req F-2.1:
     when: a Blob's URI scheme is 'wnfs' (i.e. this plugin's registered schemes include it)
@@ -266,6 +268,7 @@ feat F-3: Blockstore Sync
 
 ```mdl
 feat F-4: Space-Scoped Private File System
+  uses: [WnfsInstance]
 
   req F-4.1:
     when: a space has no existing WNFS properties

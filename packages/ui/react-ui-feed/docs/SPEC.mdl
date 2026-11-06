@@ -336,6 +336,7 @@ aspect useListSelection
 
 ```mdl
 feat F-1: Virtualizer invariants
+  uses: [Virtualizer]
   The properties every binding must hold; each is mutation-checked in placement.test.ts and the
   placement/* stories.
   req F-1.1: Prepending moves nothing at or after the anchor.
@@ -352,6 +353,7 @@ feat F-1: Virtualizer invariants
 
 ```mdl
 feat F-2: Rendering
+  uses: [FeedModel]
   req F-2.1: Block renderers are pluggable by kind — markdown (CodeMirror, cached shared extension
     sets), html, custom; room for json, transcript, tool-call blocks.
   req F-2.2: Chrome is a host render-prop and must not affect measurement beyond being inside the
@@ -364,6 +366,7 @@ feat F-2: Rendering
 
 ```mdl
 feat F-3: Navigation
+  uses: [FeedModel, useFeedNavigation, useStops]
   req F-3.1: Stops are a model policy (FeedModel.stops via useStops); default is every message;
     isAnchor survives as fromMessages() sugar.
   req F-3.2: All drivers — toolbar, arrows, outliner, minimap — call useFeedNavigation; no parallel
@@ -376,6 +379,7 @@ feat F-3: Navigation
 
 ```mdl
 feat F-4: Selection
+  uses: [useItemSelection, useListSelection]
   req F-4.1: Selection modes single, multi, range are interchangeable policies (useListSelection).
   req F-4.2: Selection is model-space (ids) and survives virtualization; items read their own
     binding via useItemSelection(id), never a threaded selectedIds prop.
@@ -393,6 +397,7 @@ feat F-5: Follow
 
 ```mdl
 feat F-6: Rails
+  uses: [Minimap, Outline, WindowState]
   req F-6.1: Outline ticks and card: pointer wins while pointing, keyboard while navigating,
     pointing again hands back; state observable via data-* attributes.
   req F-6.2: Minimap draws only from WindowState.geometry; viewport band stays inside the mounted
@@ -404,6 +409,7 @@ feat F-6: Rails
 
 ```mdl
 feat F-7: Model
+  uses: [FeedModel, ListModel]
   req F-7.1: The virtualizer binds to ListModel; a prepend is told, never inferred by identity scan.
   req F-7.2: FeedModel is the native case: stops, streamingId, and iteration (loadBefore/loadAfter
     consumed by onEdge) are model concerns, not list props.
@@ -415,6 +421,7 @@ feat F-7: Model
 
 ```mdl
 feat F-8: Retrofit
+  uses: [ListModel, useDecorations, useListSelection, useWindow]
   req F-8.1: DONE — the virtualizer (placement + useWindow + Window + follow + ListModel + tests)
     lives in its own package, @dxos/react-ui-virtual; this package depends on it and the
     /virtualizer entry point is gone.

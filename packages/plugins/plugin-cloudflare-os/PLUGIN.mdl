@@ -66,6 +66,7 @@ feat F-1: Connect a Cloudflare OS account
 
 ```mdl
 feat F-2: Bind a workspace to the space
+  uses: [Workspace]
 
   req F-2.1: The connection's sync targets are the account's workspaces, newest first, after a
     "New workspace" target.

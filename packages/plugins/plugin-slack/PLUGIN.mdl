@@ -150,6 +150,7 @@ feat F-1: OAuth Connection
 
 ```mdl
 feat F-2: Channel Discovery
+  uses: [GetSlackChannels, RemoteTarget, SyncSlackChannel]
 
   req F-2.1:
     when: op:GetSlackChannels is invoked with a valid Integration ref
@@ -166,6 +167,7 @@ feat F-2: Channel Discovery
 
 ```mdl
 feat F-3: Incremental Sync
+  uses: [SyncSlackChannel]
 
   req F-3.1:
     when: op:SyncSlackChannel is invoked for the first time on a target
@@ -215,6 +217,7 @@ feat F-4: Message Mapping
 
 ```mdl
 feat F-5: Error Handling and Retries
+  uses: [SyncSlackChannel]
 
   req F-5.1: Slack API calls MUST retry on transient failures (transport
     errors, 429, 5xx, timeout) using exponential backoff with jitter up to

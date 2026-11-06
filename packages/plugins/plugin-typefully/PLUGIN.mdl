@@ -118,6 +118,7 @@ service TypefullyPublisherService
 
 ```mdl
 feat F-1: Credential Entry
+  uses: [SubmitTypefullyCredentials]
 
   req F-1.1: The Typefully ConnectorEntry (id "typefully", source "typefully.com", label "Typefully") is contributed on AppActivationEvents.SetupConnectors.
   req F-1.2: Submitting a non-blank API key via op:SubmitTypefullyCredentials builds an AccessToken (source "typefully.com") and a Connection linked to the "typefully" connector, returned as { kind: 'complete' }.
@@ -126,6 +127,7 @@ feat F-1: Credential Entry
 
 ```mdl
 feat F-2: Publisher Service Registration
+  uses: [TypefullyPublisherService]
 
   req F-2.1: service:TypefullyPublisherService is contributed under plugin-blogger's BloggerCapabilities.PublisherService.
   req F-2.2: Every request authenticates via TypefullyCredentials.fromConnection: loads the Connection then its linked AccessToken, and sends X-API-KEY: Bearer <token>.

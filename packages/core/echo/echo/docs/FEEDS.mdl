@@ -61,6 +61,7 @@ container types. This document gives the containers a common store.
 
 ```mdl
 feat F-1: Model
+  uses: [branches, Feed]
 
   req F-1.1: Feed. A feed is one logical append log of ECHO objects. Usually these objects are
     `Message` objects. A feed also holds the records that its users need (bindings, turn markers,
@@ -92,6 +93,7 @@ feat F-1: Model
 
 ```mdl
 feat F-2: Read, index and sync
+  uses: [branches]
 
   req F-2.1: Index all or main. Indexing is a separate layer, and a feed can have no index. The index
     of a feed holds all branches or only the main branch. It does not hold a selected subset of
@@ -112,6 +114,7 @@ feat F-2: Read, index and sync
 
 ```mdl
 feat F-3: Uses
+  uses: [branches, Feed, feeds]
 
   req F-3.1: AI chat, comments and messaging all use this model.
 
@@ -131,6 +134,7 @@ feat F-3: Uses
 
 ```mdl
 feat F-4: Cross-cutting
+  uses: [branches]
 
   req F-4.1: Hidden by construction. A default read covers one branch. Thus a private branch never
     gets to a reader that did not ask for it.
@@ -150,6 +154,7 @@ feat F-4: Cross-cutting
 
 ```mdl
 feat F-5: Walk
+  uses: [branches]
 
   req F-5.1: Forward walk. A reader can walk a feed forward from the base of the root branch to a target
     branch that it names before the walk starts. The default target is the main branch [D-40].

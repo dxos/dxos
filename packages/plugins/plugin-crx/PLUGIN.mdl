@@ -179,6 +179,7 @@ type InvokeAck
 
 ```mdl
 feat F-1: Settings Capability
+  uses: [Settings]
 
   req F-1.1:
     when: plugin is activated
@@ -194,6 +195,7 @@ feat F-1: Settings Capability
 
 ```mdl
 feat F-2: Settings Surface
+  uses: [Settings]
 
   req F-2.1:
     when: the app-framework settings panel renders the CRX section
@@ -211,6 +213,7 @@ feat F-2: Settings Surface
 
 ```mdl
 feat F-2c: Settings Enforcement
+  uses: [Settings]
 
   req F-2c.1:
     when: `enabled` is false and a page-action invoke arrives
@@ -229,6 +232,7 @@ feat F-2c: Settings Enforcement
 
 ```mdl
 feat F-3: Page Action Contributions
+  uses: [PageAction]
   desc: |
     Plugins contribute `PageAction[]` under the plugin-scoped
     `CrxCapabilities.PageAction` capability. Other plugins contribute their
@@ -315,6 +319,7 @@ feat F-5: Invoke Validation & Dispatch
 
 ```mdl
 feat F-6: Snapshot → Object Mapping
+  uses: [Snapshot]
   desc: |
     Each contributed operation maps a Snapshot to an ECHO object and adds it
     to the target database via SpaceOperation.AddObject.

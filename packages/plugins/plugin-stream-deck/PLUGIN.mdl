@@ -152,6 +152,7 @@ feat F-3: Rendering
 
 ```mdl
 feat F-4: The bridge
+  uses: [BridgeStatus]
 
   req F-4.1: Composer dials into the device plugin, which listens; a browser tab cannot accept
     connections, and the Elgato-hosted process outlives any Composer window.

@@ -184,6 +184,7 @@ op refreshDirectory
 
 ```mdl
 feat F-1: Open Workspace
+  uses: [openDirectory]
 
   req F-1.1: An "Open Folder" action is registered as a primary app graph action.
   req F-1.2:
@@ -221,6 +222,7 @@ feat F-3: Refresh Workspace
 
 ```mdl
 feat F-4: App Graph Integration
+  uses: [FileSystemWorkspace]
 
   req F-4.1: Each FileSystemWorkspace appears as a root navtree node.
   req F-4.2: Each subdirectory appears as a branch node under its parent.
@@ -247,6 +249,7 @@ feat F-5: Markdown Integration
 
 ```mdl
 feat F-6: Workspace Settings
+  uses: [WorkspaceSettings]
 
   req F-6.1: Each workspace exposes a "General" settings sub-node in the navtree.
   req F-6.2: The settings article renders a WorkspaceSettings form.

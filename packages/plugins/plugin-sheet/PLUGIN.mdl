@@ -206,6 +206,7 @@ op setRange
 
 ```mdl
 feat F-1: Sheet Object
+  uses: [Sheet]
 
   req F-1.1: A Sheet is an ECHO object with typename org.dxos.type.sheet persisted in the user's space.
   req F-1.2: Cells are stored in a sparse map keyed by internal row/column indices.
@@ -226,6 +227,7 @@ feat F-2: Formula Evaluation
 
 ```mdl
 feat F-3: Row and Column Management
+  uses: [dropAxis, insertAxis, restoreAxis]
 
   req F-3.1:
     when: op:insertAxis is called
@@ -240,6 +242,7 @@ feat F-3: Row and Column Management
 
 ```mdl
 feat F-4: Cell Formatting
+  uses: [RangeList]
 
   req F-4.1: Ranges support alignment values: start | center | end.
   req F-4.2: Ranges support comment annotations displayed as a visual overlay on the cell.
@@ -269,6 +272,7 @@ feat F-6: Markdown Integration
 
 ```mdl
 feat F-7: Anchor Navigation
+  uses: [scrollToAnchor, SheetArticle]
 
   req F-7.1:
     when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor

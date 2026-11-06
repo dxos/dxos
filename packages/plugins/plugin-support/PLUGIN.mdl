@@ -218,6 +218,7 @@ the same flow.
 
 ```mdl
 feat F-1: Ticket Lifecycle
+  uses: [markInProgress, resolveTicket, SupportArticle, Ticket]
 
   req F-1.1: User can create a Ticket from the AI assistant or directly via the navtree.
   req F-1.2:
@@ -237,6 +238,7 @@ feat F-1: Ticket Lifecycle
 
 ```mdl
 feat F-2: AI Support Assistant
+  uses: [createTicket, markInProgress, resolveTicket, searchDocs, Ticket]
 
   req F-2.1: A skill is registered with key org.dxos.skill.support.
   req F-2.2: Skill tools include createTicket, markInProgress, resolveTicket, searchDocs.
@@ -248,6 +250,7 @@ feat F-2: AI Support Assistant
 
 ```mdl
 feat F-3: Documentation Search
+  uses: [searchDocs]
 
   req F-3.1: searchDocs operation is defined with a query input.
   req F-3.2:
@@ -258,6 +261,7 @@ feat F-3: Documentation Search
 
 ```mdl
 feat F-4: One-shot Feedback
+  uses: [submitReport]
 
   req F-4.1: plugin-support contributes the deck `--help` companion surface; it renders a FeedbackForm.
   req F-4.2:

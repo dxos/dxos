@@ -115,6 +115,7 @@ component DebugPanel
 
 ```mdl
 feat DebugPanel
+  uses: [DebugPanelViewState]
   desc: |
     A status-bar button shows the debug panel: docked (the default) it toggles the deck's bottom
     drawer via `LayoutOperation.UpdateDrawer`, so the planks reflow above it, its height is dragged

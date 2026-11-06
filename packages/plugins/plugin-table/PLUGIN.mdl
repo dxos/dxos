@@ -142,6 +142,7 @@ op onSchemaAdded
 
 ```mdl
 feat F-1: Table Creation
+  uses: [create, onCreateSpace, onSchemaAdded, Table]
 
   req F-1.1: User can create a Table by selecting a typename from the space or runtime schema registry.
   req F-1.2:
@@ -157,6 +158,7 @@ feat F-1: Table Creation
 
 ```mdl
 feat F-2: Table Editing
+  uses: [Table]
 
   req F-2.1: Cells are editable inline when the schema type is mutable.
   req F-2.2: New rows can be inserted via the toolbar Add button or by clicking the frozen last row.
@@ -178,6 +180,7 @@ feat F-3: Sorting and Filtering
 
 ```mdl
 feat F-4: Surface Integration
+  uses: [Table]
 
   req F-4.1: Table renders as a full article in article, section, and slide roles.
   req F-4.2: Table renders as a compact read-only card in card roles.
@@ -186,12 +189,14 @@ feat F-4: Surface Integration
 
 ```mdl
 feat F-5: Comments
+  uses: [Table]
 
   req F-5.1: Table objects support unanchored (document-level) comments via the comment config.
 ```
 
 ```mdl
 feat F-6: AI / Skill
+  uses: [create, Table]
 
   req F-6.1: Plugin contributes a Table skill with instructions for creating and updating tables.
   req F-6.2:

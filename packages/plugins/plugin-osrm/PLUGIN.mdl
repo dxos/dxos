@@ -215,6 +215,7 @@ op PlanRoute
 
 ```mdl
 feat PlanRouteAction
+  uses: [PlanRoute]
   desc: >
     There is no dedicated route-planning panel. A driving trip is fully
     described by its ordered road Segments, rendered by the existing
@@ -302,6 +303,7 @@ feat MapTileSettingsSurface
 
 ```mdl
 feat OsrmRoutingService
+  uses: [Route, RouteLeg, RoutingService]
   desc: >
     plugin-osrm's RoutingService impl. Geocodes name-only waypoints via
     Nominatim, then computes a single driving route through all

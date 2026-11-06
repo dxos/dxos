@@ -163,6 +163,7 @@ op Create
 
 ```mdl
 feat F-1: File upload
+  uses: [Create, File, Preview]
 
   req F-1.1: Every MIME type MUST be accepted, including an absent one. A type
     that is absent or that a browser executes (text/html, application/xhtml+xml,
@@ -190,6 +191,7 @@ feat F-1: File upload
 
 ```mdl
 feat F-2: Backend capability system
+  uses: [BackendDescriptor, File, Settings]
 
   req F-2.1: Any plugin may contribute a BackendDescriptor capability. Multiple
     descriptors may be registered simultaneously.
@@ -215,6 +217,7 @@ feat F-2: Backend capability system
 
 ```mdl
 feat F-3: File preview
+  uses: [File, FileArticle, Preview]
 
   req F-3.1: FileArticle MUST resolve a renderable URL via Blob.url before
     rendering Preview. For inline files this is always a data: URL
@@ -241,6 +244,7 @@ feat F-3: File preview
 
 ```mdl
 feat F-4: Markdown integration
+  uses: [File, FileArticle]
 
   req F-4.1: A Markdown extension contributed at MarkdownEvents.SetupExtensions
     MUST allow files to be embedded in Markdown documents as inline attachments,
@@ -250,6 +254,7 @@ feat F-4: Markdown integration
 
 ```mdl
 feat F-5: Settings
+  uses: [BackendDescriptor, Settings]
 
   req F-5.1: The Settings panel MUST list all registered BackendDescriptor
     capabilities with their id, display name, and optional description.

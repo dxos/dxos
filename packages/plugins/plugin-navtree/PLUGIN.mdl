@@ -167,6 +167,7 @@ op expose
 
 ```mdl
 feat F-1: Sidebar Navigation
+  uses: [NavTree]
 
   req F-1.1: NavTree renders all root-level graph connections as workspace tabs.
   req F-1.2:
@@ -182,6 +183,7 @@ feat F-1: Sidebar Navigation
 
 ```mdl
 feat F-2: Tree Expand / Collapse
+  uses: [expose]
 
   req F-2.1: Tree items with children show an expand/collapse toggle.
   req F-2.2:
@@ -218,6 +220,7 @@ feat F-3: Item Selection
 
 ```mdl
 feat F-4: Drag and Drop
+  uses: [NavTree]
 
   req F-4.1: NavTree items can be dragged to rearrange within the same parent.
   req F-4.2: NavTree items can be dragged to a different parent, moving within a shared move scope and linking elsewhere when the target accepts links.
@@ -240,6 +243,7 @@ feat F-4: Drag and Drop
 
 ```mdl
 feat F-5: Keyboard Shortcuts
+  uses: [NavTree]
 
   req F-5.1: NavTree plugin registers keyboard shortcuts for all graph actions that declare a keyBinding property.
   req F-5.2: Graph is traversed on change (debounced 500 ms) to bind newly added shortcuts.

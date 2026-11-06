@@ -99,6 +99,7 @@ feat F-1: Create account
 
 ```mdl
 feat F-2: Sync games
+  uses: [SyncGames]
 
   req F-2.1: SyncGames loads player profile fields from the chess.com Published API.
   req F-2.2: SyncGames walks monthly archives and imports each game as a `Game` with `Chess.State` (PGN/FEN).
@@ -107,6 +108,7 @@ feat F-2: Sync games
 
 ```mdl
 feat F-3: Game gallery
+  uses: [ChessGameArticle]
 
   req F-3.1: ChessGameArticle lists games from the account feed in a masonry layout.
   req F-3.2: Each tile renders `AppSurface.CardContent` so plugin-chess supplies the game card.

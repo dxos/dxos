@@ -135,6 +135,7 @@ op summarizeVideo
 
 ```mdl
 feat F-1: Store Video
+  uses: [Video]
 
   req F-1.1: A Video is created with a name and url.
   req F-1.2: Video.transcript is initially unset.
@@ -142,6 +143,7 @@ feat F-1: Store Video
 
 ```mdl
 feat F-2: Play Video
+  uses: [Video]
 
   req F-2.1:
     when: a Video is opened in the article surface
@@ -154,6 +156,7 @@ feat F-2: Play Video
 
 ```mdl
 feat F-3: Transcribe Video
+  uses: [Text, transcribeVideo, TranscriptionService, Video, VideoArticle]
 
   req F-3.1:
     when: the user triggers Transcribe on the VideoArticle
@@ -175,6 +178,7 @@ feat F-3: Transcribe Video
 
 ```mdl
 feat F-4: Summarize Video
+  uses: [summarizeVideo, Text, Video, VideoArticle]
 
   req F-4.1:
     when: the user triggers Summarize on the VideoArticle
@@ -193,6 +197,7 @@ feat F-4: Summarize Video
 
 ```mdl
 feat F-5: View Transcript and Summary
+  uses: [summarizeVideo, Video, VideoArticle]
 
   req F-5.1:
     when: Video.transcript or Video.summary is set
@@ -210,6 +215,7 @@ feat F-5: View Transcript and Summary
 
 ```mdl
 feat F-6: Comments
+  uses: [Video]
 
   req F-6.1:
     when: a Video is the active subject

@@ -565,6 +565,7 @@ op invokeOperation
 
 ```mdl
 feat F-1: Publish a plugin from the CLI
+  uses: [PluginLoader, PluginStore]
   `dx registry publish` publishes a plugin's one bundle, which the browser and EDGE both load.
 
   req F-1.1:
@@ -623,6 +624,7 @@ feat F-2: Versioning
 
 ```mdl
 feat F-3: Types are exposed
+  uses: [PluginStore]
   The ECHO types a plugin contributes are visible on EDGE and usable by its operations.
 
   req F-3.1: A bundle's catalog lists the JSON Schema of every `AppCapabilities.Schema` entry of its
@@ -665,6 +667,7 @@ feat F-4: Skills are exposed
 
 ```mdl
 feat F-5: Operations are exposed and callable
+  uses: [InvocationScope, invokeOperation]
   Every operation a published plugin handles can be found and invoked on EDGE.
 
   req F-5.1: The MCP server's `queryOperations` lists the operations of the newest version of every
@@ -700,6 +703,7 @@ feat F-5: Operations are exposed and callable
 
 ```mdl
 feat F-6: compute-service routes invocations to published plugins
+  uses: [InvocationScope, invokeOperation, PluginLoader, PluginRouter]
   compute-service is the single entry for running plugin code on EDGE.
 
   req F-6.1: PluginRouter resolves a `dxn:` target from the operation index without starting an
@@ -735,6 +739,7 @@ feat F-6: compute-service routes invocations to published plugins
 
 ```mdl
 feat F-8: Durable plugin state through facets
+  uses: [PluginSupervisor]
   A plugin module that needs its own storage runs as a Durable Object facet.
 
   req F-8.1: A module that exports a Durable Object class runs as a facet of a PluginSupervisor, one
@@ -759,6 +764,7 @@ feat F-9: Continuous delivery from DXOS
 
 ```mdl
 feat F-10: Readable manifests and registry query
+  uses: [queryPlugins]
   Anyone can read what a published plugin contains before running it.
 
   req F-10.1: `GET /registry/modules/:slug/:version/manifest.json` returns the bundle's manifest, and
@@ -773,6 +779,7 @@ feat F-10: Readable manifests and registry query
 
 ```mdl
 feat F-12: Tested end to end
+  uses: [PluginLoader]
   Every publishable plugin, the host and the EDGE path are tested in the runtime they run in.
 
   req F-12.1: CI loads the bundle of each plugin tagged `edge-release` through Worker Loader in
