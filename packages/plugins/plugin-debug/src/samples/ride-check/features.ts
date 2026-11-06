@@ -5,15 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import type * as Spec from '@dxos/compute/Spec';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-code/Feature';
+import * as Spec from '@dxos/compute/Spec';
+import { Database, Obj, Ref, Relation, Text } from '@dxos/echo';
 import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
-import * as SpecText from '@dxos/plugin-code/SpecText';
+import * as SpecItem from '@dxos/plugin-code/SpecItem';
 
 import { type ProjectResult } from './project.ts';
-import specContent from './SPEC.mdl?raw';
-import { SPEC_PATH, type SpecResult } from './spec.ts';
+import { type SpecResult } from './spec.ts';
 import { type TasksResult } from './tasks.ts';
 
 //
@@ -23,10 +21,8 @@ import { type TasksResult } from './tasks.ts';
 
 export type FeatureSeed = {
   readonly name: string;
-  readonly description: string;
+  /** The block that states it, whose prose and requirements the spec's text holds. */
   readonly feat: string;
-  /** The spec block's `req` lines. */
-  readonly requirements: readonly Feature.Requirement[];
   /** Its parts, each a feature on the spec that breaks this one down. */
   readonly subfeatures?: readonly string[];
 };
@@ -34,86 +30,78 @@ export type FeatureSeed = {
 export const FEATURES: readonly FeatureSeed[] = [
   {
     name: 'Go / no-go',
-    description: 'One word for the next three hours — go, maybe or no-go — with the reasons under it.',
     feat: 'F-1',
-    requirements: [
-      { id: 'F-1.1', text: 'The verdict covers the next three hours.' },
-      { id: 'F-1.2', text: 'Rain over 50% or wind over 35 km/h is no-go; over 25% or 25 km/h is maybe.' },
-      { id: 'F-1.3', text: 'Every rule that fired is listed as a reason.' },
-    ],
     subfeatures: ['Rain rule', 'Wind rule'],
   },
   {
     name: 'Hourly forecast',
-    description: 'The next twelve hours as one chart: temperature over rain chance, wind under each hour.',
     feat: 'F-2',
-    requirements: [{ id: 'F-2.1', text: 'Temperature over rain chance, one column per hour, wind under each.' }],
   },
   {
     name: 'Best window',
-    description: 'The driest, calmest two hours of daylight, today or tomorrow.',
     feat: 'F-3',
-    requirements: [{ id: 'F-3.1', text: 'The two consecutive daylight hours with the least rain, wind and cold.' }],
   },
   {
     name: 'Daylight',
-    description: 'Time left until sunset, or when the sun comes up.',
     feat: 'F-4',
-    requirements: [{ id: 'F-4.1', text: 'Before sunset, the time left; after it, the next sunrise.' }],
   },
 ];
 
 export type FeaturesInput = { tasks: TasksResult; project: ProjectResult; spec: SpecResult };
 
-export type FeaturesResult = { map: Spec.Spec; features: Feature.Feature[] };
+export type FeaturesResult = { map: Spec.Spec; breakdown: Spec.Spec };
 
 export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput> = SampleSpace.partial('features', {
-  schemas: [Feature.Feature, Feature.DependsOn, Feature.Implements],
+  schemas: [Spec.Spec, SpecItem.Implements],
   run: ({ tasks, project, spec }: FeaturesInput) =>
     Effect.gen(function* () {
-      // The imported spec is the map, which the project that tracks its tasks owns.
+      // The imported spec is the map, which the project that tracks its tasks owns; its feat blocks are the cards.
       const map = spec.spec;
-      Obj.update(project.project, (project) => {
-        project.specs.push(Ref.make(map));
-      });
-      const features: Feature.Feature[] = [];
-      for (const seed of FEATURES) {
-        const feature = yield* Database.add(
-          Feature.make({
-            name: seed.name,
-            description: seed.description,
-            requirements: seed.requirements.map((requirement) => ({ ...requirement })),
+      const [verdict, ...rest] = FEATURES;
+      const parts = verdict.subfeatures ?? [];
+      const breakdown = yield* Database.add(
+        Spec.make({
+          name: verdict.name,
+          dialects: [...FeatureMap.SOFTWARE_DIALECTS],
+          content: SpecItem.writeFeatures(
+            '',
+            parts.map((name, index) => ({ key: `F-${index + 1}`, title: name, fields: { status: 'planned' } })),
+          ),
+        }),
+      );
+      // Made by this template, so a text that will not load is a bug, not an outcome.
+      const text = yield* Database.load(map.content).pipe(Effect.orDie);
+      const content = SpecItem.writeFeatures(
+        text.content,
+        FEATURES.map((seed) => ({
+          key: seed.feat,
+          title: seed.name,
+          fields: {
             status: 'planned',
-          }),
-        );
-        Obj.update(feature, (feature) => {
-          Feature.setSources(feature, [`${SPEC_PATH}#${seed.feat}`]);
-        });
-        if (seed.subfeatures) {
-          const parts: Feature.Feature[] = [];
-          for (const name of seed.subfeatures) {
-            parts.push(yield* Database.add(Feature.make({ name, status: 'planned' })));
-          }
-          const breakdown = yield* Database.add(FeatureMap.make({ name: seed.name, features: parts }));
-          Obj.update(feature, (feature) => {
-            feature.spec = Ref.make(breakdown);
-          });
-        }
-        features.push(feature);
-      }
-      FeatureMap.setFeatures(map, features);
-      // Each `feat` block in the text becomes an embed of the feature seeded from it.
-      yield* Effect.promise(() => SpecText.take(map, { path: SPEC_PATH, text: specContent }));
+            // Every other card reads the verdict's forecast.
+            ...(seed !== verdict && { needs: [verdict.feat] }),
+            ...(seed === verdict && { spec: `echo:///${breakdown.id}` }),
+          },
+        })),
+      );
+      Obj.update(text, (text) => {
+        Text.update(text, 'content', content);
+      });
+      Obj.update(map, (map) => {
+        map.dialects.splice(0, map.dialects.length, ...FeatureMap.SOFTWARE_DIALECTS);
+      });
+      Obj.update(project.project, (project) => {
+        project.specs.push(Ref.make(map), Ref.make(breakdown));
+      });
 
-      const [verdict, ...rest] = features;
-      for (const feature of rest) {
-        yield* Database.add(Feature.makeDependsOn({ [Relation.Source]: feature, [Relation.Target]: verdict }));
-      }
+      // The build task ships every card, so each card shows it.
       const build = tasks.tasks[1];
-      for (const feature of features) {
-        yield* Database.add(Feature.makeImplements({ [Relation.Source]: build, [Relation.Target]: feature }));
+      for (const seed of [verdict, ...rest]) {
+        yield* Database.add(
+          SpecItem.makeImplements({ [Relation.Source]: build, [Relation.Target]: map, item: seed.feat }),
+        );
       }
 
-      return { map, features };
+      return { map, breakdown };
     }),
 });
