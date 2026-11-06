@@ -21,10 +21,10 @@ export type SlashCommand = {
 export const slashCommand = Facet.define<SlashCommand>();
 
 /**
- * The Markdown block markers at the start of a line: headings, quotes, and list items with their task boxes, stacked
- * as in a quoted list item (`> - `).
+ * The Markdown block markers at the start of a line: quotes and list items with their task boxes, stacked as in a
+ * quoted list item (`> - `), then a heading's, after which the rest is the heading's text (`# 1. Openings`).
  */
-const BLOCK_MARKER = /^(?:#{1,6}\s+|>\s*|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)+/;
+const BLOCK_MARKER = /^(?:>\s*|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)*(?:#{1,6}\s+)?/;
 
 /** The text of a line, without the marker that makes it a list item, quote or heading. */
 export const lineText = (text: string): string => text.trim().replace(BLOCK_MARKER, '').trim();
