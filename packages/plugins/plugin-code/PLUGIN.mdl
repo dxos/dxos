@@ -1618,7 +1618,8 @@ test QA-8: Tour a spec's companion tabs
     - composer serves plugin-code and plugin-video, enabled
     - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec and which uses the software
       dialect, with the review of 2026-10-27
-      (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it
+      (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it, and six
+      features on its map, at least one per status
     - the project also owns "Launch video", whose text is deus's `lang/examples/launch-video.mdl` and which uses
       plugin-video's Video package
     - the Specs tab shows "CodePlugin" with the cursor on its first line, the sidebar closed and the companion 62rem wide
@@ -2653,6 +2654,17 @@ decision D-109: QA-8 opens the Board after API, stops At cursor on F-22.4 now th
   by: agent:claude-code
   for: user:wittjosiah
   affects: [QA-8]
+```
+
+```mdl
+decision D-110: QA-8 gives "CodePlugin" six features on its map, at least one per status, before the tour, since the Board lists a spec's feature objects and the `feat` blocks in its text are not features of the map. Fills in [D-105].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: Written from text alone, the spec's Board showed only its empty state.
+  rejected:
+    - Importing the `feat` blocks as features: that replaces them in the text with embeds, and the tour's cursor steps click their ids.
 ```
 
 ## Appendix: Extension Definitions

@@ -23,6 +23,16 @@ const PROJECT = 'Composer specs';
 const CODE_SPEC = 'CodePlugin';
 const VIDEO_SPEC = 'Launch video';
 
+/** Features of plugin-code's map, one or more per status, for the Board to sort. */
+const BOARD_FEATURES = [
+  ['Two-way spec sync', 'operational'],
+  ['Diff mode', 'operational'],
+  ['Spec questions', 'prototype'],
+  ["A project's repositories", 'prototype'],
+  ['Local build & run', 'failing'],
+  ['Spec reviews in ECHO', 'planned'],
+];
+
 /** A spec's text without the front matter the spec's own fields replace. */
 const body = (path) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^---\n[\s\S]*?\n---\n+/, '');
 const CODE_TEXT = body('../PLUGIN.mdl');
@@ -300,6 +310,30 @@ export const steps = [
           await composer.invoke('org.dxos.operation.code.createSpecReview', { spec, content }, { spaceId });
         },
         [CODE_SPEC, REVIEW_TEXT],
+      );
+    },
+  },
+  {
+    name: "Prep (off camera): put features on plugin-code's map",
+    setup: true,
+    run: async ({ page }) => {
+      // The Board lists the spec's feature objects; the `feat` blocks in its text are not features of the map.
+      await page.evaluate(
+        async ([name, features]) => {
+          const project = composer.graph._model
+            .filterNodes(() => true)
+            .find(({ id }) => /\/org\.dxos\.type\.project\/[^/]+$/.test(id)).data.data;
+          const spec = project.specs.find((ref) => ref.target?.name === name) ?? project.specs[0];
+          const spaceId = location.pathname.split('/')[2];
+          for (const [feature, status] of features) {
+            await composer.invoke(
+              'org.dxos.operation.code.createFeature',
+              { name: feature, status, spec },
+              { spaceId },
+            );
+          }
+        },
+        [CODE_SPEC, BOARD_FEATURES],
       );
     },
   },
