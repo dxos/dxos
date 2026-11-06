@@ -16,7 +16,7 @@ import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
@@ -548,6 +548,31 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
 
 // No model in the loop, so not tagged `model-fixture`: this runs with every test run.
 describe('code mode records the operations an eval ran', () => {
+  it.effect(
+    'a reference in a result is recorded as its URI, without the object it was made from',
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        // Made from an object, a reference carries the whole object; its URI is all a reader of the history needs.
+        const chat = Ref.make(Obj.make(Task, { title: 'x'.repeat(2_000), status: 'open' }));
+        const evaluations: Evaluation[] = [];
+        yield* evaluate({
+          code: "await ops.score({ title: 'x' });",
+          dialect: PlainDialect,
+          sandbox: Sandbox.inProcess,
+          runtime,
+          operations: [{ ...ScoreOperation, invoke: () => Effect.succeed({ delivered: true, chat }) }],
+          onEvaluated: (evaluation) => evaluations.push(evaluation),
+        });
+
+        const [[invocation]] = evaluations.map(({ invocations }) => invocations);
+        expect(JSON.parse(invocation.result ?? 'null')).toEqual({ delivered: true, chat: { '/': String(chat.uri) } });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
   it.effect(
     'a large result is not stored, and is not serialized past the cap',
     Effect.fnUntraced(
