@@ -27,6 +27,8 @@ const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGmailTarg
         //   have it provided by the OperationInvoker — composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
+        //   Not declaring it also means the host does not flush the write (it flushes only for an operation that
+        //   declares `Database.Service`), so the handler flushes it, or the object is dropped on EDGE.
         const db = yield* databaseOf(connection);
 
         return yield* Effect.gen(function* () {
@@ -34,6 +36,7 @@ const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGmailTarg
           const accessToken = yield* Database.load(Connection.getAccessToken(connectionObj));
           const name = accessToken.account ?? 'Inbox';
           const created = yield* Database.add(Mailbox.make({ name }));
+          yield* Database.flush({ disk: true, indexes: false });
           return { target: Ref.make(created) };
         }).pipe(Effect.provide(Database.layer(db)));
       }),

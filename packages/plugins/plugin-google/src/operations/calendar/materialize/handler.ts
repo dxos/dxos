@@ -61,9 +61,12 @@ const handler: Operation.WithHandler<typeof GoogleOperation.MaterializeGoogleCal
         //   have it provided by the OperationInvoker — composer's invoker is wired
         //   without a `databaseResolver`, so we derive the db from the connection ref's
         //   target and provide `Database.layer(db)` ourselves.
+        //   Not declaring it also means the host does not flush the write (it flushes only for an operation that
+        //   declares `Database.Service`), so the handler flushes it, or the object is dropped on EDGE.
         const db = yield* databaseOf(connection);
 
         return yield* findOrCreateCalendar(remoteTarget.id, remoteTarget.name).pipe(
+          Effect.tap(() => Database.flush({ disk: true, indexes: false })),
           Effect.map((calendar) => ({ target: Ref.make(calendar) })),
           Effect.provide(Database.layer(db)),
         );
