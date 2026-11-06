@@ -440,11 +440,11 @@ export class DxGrid extends LitElement {
   private moveFocusIntoPlane(plane: DxGridPlane): void {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
-    this.focusedCell = {
+    this.setFocusedCell({
       plane,
       col: colPlane === 'grid' ? this.visColMin : 0,
       row: rowPlane === 'grid' ? this.visRowMin : 0,
-    };
+    });
     this.focusedCellElement()?.focus({ preventScroll: true });
   }
 
@@ -568,7 +568,43 @@ export class DxGrid extends LitElement {
     }
   }
 
-  // Selection setter for consumers
+  // Selection accessors for consumers
+
+  /** The range the grid shows selected, as copies, since the grid moves its own positions in place. */
+  getSelection(): DxGridRange {
+    return { start: { ...this.selectionStart }, end: { ...this.selectionEnd } };
+  }
+
+  /** The focused cell, as a copy. */
+  getFocusedCell(): DxGridPosition {
+    return { ...this.focusedCell };
+  }
+
+  /**
+   * Moves the selection to `range`, for a selection whose cells have moved, and reports it like any other selection.
+   * Focus moves to its start when `focus` is set, or else only if it was on the selection's start, so focus on a header
+   * or elsewhere stays put. Does nothing while a cell is being edited.
+   */
+  moveSelection({ start, end }: DxGridRange, { focus = false }: { focus?: boolean } = {}): void {
+    if (this.mode !== 'browse') {
+      return;
+    }
+    // `focusActive` outlives DOM focus when an editor outside this element loses it; a moved focused cell would then
+    // pull focus back into the grid from wherever the user went.
+    if (!document.activeElement?.closest(`[data-grid="${this.gridId}"]`)) {
+      this.focusActive = false;
+    }
+    const moveFocus = focus || isSameCell(this.focusedCell, this.selectionStart);
+    if (moveFocus && !isSameCell(this.focusedCell, start)) {
+      this.focusedCell = { ...start };
+    }
+    if (isSameCell(this.selectionStart, start) && isSameCell(this.selectionEnd, end)) {
+      return;
+    }
+    this.selectionStart = { ...start };
+    this.selectionEnd = { ...end };
+    this.dispatchSelectionChange();
+  }
 
   setSelection(range: DxGridRange): void {
     if (this.mode !== 'edit') {
@@ -981,17 +1017,19 @@ export class DxGrid extends LitElement {
    */
   refocus(increment: 'col' | 'row' | undefined = undefined, delta: 1 | -1 | 0 = 1): void {
     if (increment) {
-      switch (increment) {
-        case 'col': {
-          this.focusedCell.col = this.clampCol(this.focusedCell, delta);
-          break;
-        }
-        case 'row': {
-          this.focusedCell.row = this.clampRow(this.focusedCell, delta);
-          break;
-        }
-      }
+      // The selection moves with focus, as on every other focus move. A closing editor calls this before the grid is back
+      // in browse mode, so no event is dispatched then and consumers read the selection back once editing ends.
+      const nextCell =
+        increment === 'col'
+          ? { ...this.focusedCell, col: this.clampCol(this.focusedCell, delta) }
+          : { ...this.focusedCell, row: this.clampRow(this.focusedCell, delta) };
+      this.focusedCell = nextCell;
+      this.selectionStart = { ...nextCell };
+      this.selectionEnd = { ...nextCell };
       this.snapPosToFocusedCell();
+      if (this.mode === 'browse') {
+        this.dispatchSelectionChange();
+      }
     }
 
     queueMicrotask(() => {
@@ -1760,6 +1798,7 @@ export {
   closestAction,
   closestCell,
   colToA1Notation,
+  isSameCell,
   parseCellIndex,
   rowToA1Notation,
   toPlaneCellIndex,

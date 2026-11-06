@@ -552,6 +552,18 @@ decision D-3: Collaborators' selections are published by cell id over the object
     - Publish A1 positions: they point at whatever cell moved into place on the other side.
 ```
 
+```mdl
+decision D-4: The published selection is what the member's grid shows, kept by cell id: focusing a header clears it, a row or column change moves the grid's highlight with it, and a selection whose row or column is gone keeps naming it, so the sheet's cursor is empty until the next click. Fills in [D-3].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: A header names no cell, so keeping the last one showed peers a cell the member had left; a deleted row cannot be told apart from one a filter hides, so renaming the selection to the row now in its place published records the member never chose.
+  rejected:
+    - Keep the last cell selected while a header has focus: peers keep seeing a cell the member left.
+    - Rename the selection to the row now at its position when its row is gone: a filter makes that a record the member never chose.
+```
+
 ---
 
 ## Appendix: Extension Definitions

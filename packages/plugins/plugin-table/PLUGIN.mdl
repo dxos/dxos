@@ -395,6 +395,17 @@ decision D-1: Collaborators' cell selections are published as field id and row o
     - Publish visual row and column indexes: a peer's sort would move the outline onto another row.
 ```
 
+```mdl
+decision D-2: The published selection is what the member's grid shows, kept by field and row object id: focusing a header or the draft row clears it, a sort or insert moves the grid's highlight with it, and a selection whose row is filtered out or deleted keeps naming it. Fills in [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1]
+  why: A header or draft row names no record, so keeping the last cell showed peers a record the member had left; a filtered-out row cannot be told apart from a deleted one, so renaming the selection to the row now in its place published records the member never chose.
+  rejected:
+    - Rename the selection to the row now at its position when its row is gone: a search makes that a record the member never chose.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
