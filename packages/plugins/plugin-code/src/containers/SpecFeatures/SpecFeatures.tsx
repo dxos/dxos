@@ -52,18 +52,8 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const db = Obj.getDatabase(spec);
   const ids = useLevelIds(spec);
-  // Read on every change to the spec: the layout's own atom compares one level deep, so a card added to its
-  // positions went unseen.
-  const positions = useAtomValue(
-    useMemo(
-      () =>
-        Atom.make((get) => {
-          get(Obj.atom(spec));
-          return { ...FeatureMap.getLayout(spec)?.positions };
-        }),
-      [spec],
-    ),
-  );
+  const layout = useAtomValue(useMemo(() => Annotation.atom(spec, FeatureMap.LayoutAnnotation), [spec]));
+  const positions = useMemo(() => ({ ...Option.getOrUndefined(layout)?.positions }), [layout]);
   // Neighbours load the features on other specs that this level depends on, which the cards mark rather than draw.
   const graph = useFeatureGraph(db, ids, { neighbours: true });
   const features = useMemo(

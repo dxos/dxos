@@ -38,6 +38,23 @@ export const snapshotForComparison = <V>(value: V): V => {
   return value;
 };
 
+/**
+ * {@link snapshotForComparison} at every depth, for a value whose readers hold on to its nested records and arrays: a
+ * shallow copy would hand them the same nested reference after an in-place change below the top level.
+ */
+export const snapshotDeep = <V>(value: V): V => {
+  if (Array.isArray(value)) {
+    return value.map(snapshotDeep) as V;
+  }
+  if (isRefLike(value)) {
+    return value;
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, snapshotDeep(entry)])) as V;
+  }
+  return value;
+};
+
 // Refs compare by URI: `RefImpl` mints a fresh wrapper on every property read, so `Object.is` never
 // matches two reads of the same ref. The inlined target is part of the ref's encoded value
 // (`{'/': uri, target}` for an object not yet in the database), so `Ref.make(target)` and a
