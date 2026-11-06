@@ -10485,9 +10485,6 @@ importers:
       '@codemirror/lang-markdown':
         specifier: 'catalog:'
         version: 6.5.2
-      '@codemirror/language':
-        specifier: 'catalog:'
-        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6
@@ -10605,9 +10602,6 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
-      '@dxos/react-ui-markdown':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-markdown
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu

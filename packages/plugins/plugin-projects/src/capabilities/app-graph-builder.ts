@@ -26,13 +26,14 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { ProjectCapabilities, ProjectOperation, ProjectView, SpecSession } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import { artifacts } from '../artifacts.ts';
 import { ProjectsNamespace } from '../namespace.ts';
 import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from '../paths.ts';
 import * as ProjectGraph from '../ProjectGraph.ts';
 import { inboxResearch } from '../templates/index.ts';
+import * as SpecSession from '../SpecSession.ts';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —

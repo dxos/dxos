@@ -21,7 +21,7 @@ import type { FormFieldAction } from '@dxos/react-ui-form';
 import type * as Tag from '@dxos/react-ui/Tag';
 
 import { ProjectsNamespace } from '../namespace.ts';
-import type * as SpecSession from './SpecSession.ts';
+import type * as SpecSession from '../SpecSession.ts';
 
 /**
  * Id of the built-in default template. Declared here (rather than on the template itself) so callers

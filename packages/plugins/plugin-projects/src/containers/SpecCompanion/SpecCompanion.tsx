@@ -20,9 +20,10 @@ import * as Theme from '@dxos/react-ui/Theme';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { ProjectCapabilities, ProjectSurface, ProjectView, SpecSession } from '#types';
+import { ProjectCapabilities, ProjectSurface, ProjectView } from '#types';
 
 import { ProjectsNamespace } from '../../namespace.ts';
+import * as SpecSession from '../../SpecSession.ts';
 
 export type SpecCompanionProps = {
   /** The spec, or the project whose Specs tab shows one of its specs. */

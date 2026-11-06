@@ -141,8 +141,8 @@
       "import": "./dist/lib/ns/SpecModel.mjs"
     },
     "./SpecSession": {
-      "source": "./src/types/SpecSession.ts",
-      "types": "./dist/types/src/types/SpecSession.d.ts",
+      "source": "./src/SpecSession.ts",
+      "types": "./dist/types/src/SpecSession.d.ts",
       "import": "./dist/lib/SpecSession.mjs"
     },
     "./Templates": {
@@ -177,7 +177,7 @@
         "dist/types/src/types/ProjectsEvents.d.ts"
       ],
       "SpecSession": [
-        "dist/types/src/types/SpecSession.d.ts"
+        "dist/types/src/SpecSession.d.ts"
       ]
     }
   },

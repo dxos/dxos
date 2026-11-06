@@ -25,11 +25,12 @@ import {
   SpecLevelArticle,
   SpecView,
 } from '#containers';
-import { ProjectSurface, SpecSession } from '#types';
+import { ProjectSurface } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 import { isSpecView } from '../companion-views.ts';
 import { MOVE_TASK_DIALOG } from '../constants.ts';
+import * as SpecSession from '../SpecSession.ts';
 
 /** A spec a project owns is a level of the project: the project article on that spec. */
 const isProjectSpec = (value: unknown): value is Spec.Spec =>

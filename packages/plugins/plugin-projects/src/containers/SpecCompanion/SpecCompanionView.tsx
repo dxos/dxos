@@ -26,10 +26,11 @@ import {
   toReviewModel,
   toUserHandle,
 } from '#components';
-import { ProjectCapabilities, SpecSession } from '#types';
+import { ProjectCapabilities } from '#types';
 
 import { type SpecViewId } from '../../companion-views.ts';
 import { useSpecReviews } from '../../hooks/index.ts';
+import * as SpecSession from '../../SpecSession.ts';
 
 const NO_REVIEWS: readonly ReviewData[] = [];
 
