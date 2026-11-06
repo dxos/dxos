@@ -1,5 +1,6 @@
 ---
 '@dxos/app-toolkit': patch
+'@dxos/echo': patch
 '@dxos/plugin-code': patch
 '@dxos/plugin-deck': patch
 '@dxos/plugin-markdown': patch
@@ -21,3 +22,4 @@ Fixes found while recording a two-person spec demo:
 - The first feature `/feature` makes takes the cursor in its name, as later ones do.
 - Renaming a feature in its form relabels its embeds in the spec's text.
 - The feature-map skill writes out a whole spec with one import and gives each requirement line its own id.
+- `Annotation.atom` and `Annotation.atomProperty` snapshot the value at every depth, so a record nested in an annotation and changed in place reaches readers as a new value.
