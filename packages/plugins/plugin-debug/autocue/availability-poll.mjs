@@ -438,13 +438,12 @@ const acceptMilestone = async (demo, page, milestone, caption) => {
  */
 const readReview = async (demo, page, milestone) => {
   await openProjectTab(demo, page, 'document');
-  await demo.click({
-    selector: '[data-testid="deck.plank"] [data-testid="plankHeading.companion"] >> nth=0',
-    label: 'Companion',
-  });
-  const tab = `${DECK_COMPANION} [data-testid="deck.companion.tab.spec"]`;
+  // The companion button reopens the last tab, which after a delegation is the build chat and its claim URL; the
+  // Spec companion opens directly instead, and the project gets an empty chat in case anything shows the chat tab.
+  await freshChat(page);
+  await page.evaluate(() => composer.invoke('org.dxos.operation.appToolkit.updateCompanion', { subject: '~spec' }));
+  const tab = `${DECK_COMPANION} [data-testid="deck.companion.tab.spec"][aria-selected="true"]`;
   await page.locator(tab).first().waitFor({ state: 'visible', timeout: 15_000 });
-  await demo.click({ selector: `${tab} >> nth=0`, label: 'Spec' });
   const view = '[data-testid="spec-article.view.review"]';
   await page.locator(view).first().waitFor({ state: 'visible', timeout: 15_000 });
   if ((await page.locator(view).first().getAttribute('aria-checked')) !== 'true') {
@@ -777,6 +776,8 @@ const tryLocally = async (demo, page, milestone) => {
   await demo.caption({
     value: `Try ${milestone} on this machine`,
     subtitle: "The agent's code, pulled from its sandbox",
+    // The Gantt chart's captions sit at the top, where the served pages have their headings.
+    position: 'bottom',
   });
   await demo.speed({ factor: FAST });
   // `DX_POLL_BUILD` re-serves a build pulled earlier, to re-record this step without building again.
