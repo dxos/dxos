@@ -174,11 +174,11 @@ export const wrapFunctionHandler = (
         // `object-update`, `relation-create`) would be silently dropped before reaching
         // the edge `AutomergeReplicator`. A `runAgain` exit is a checkpoint the next
         // run continues from, so its writes are kept too.
-        if (
-          (Exit.isSuccess(exit) || isRunAgainExit(exit)) &&
-          serviceTags.includes(Database.Service.key) &&
-          funcContext.db
-        ) {
+        // Flushed whenever the invocation has a database, not only when the operation
+        // declares `Database.Service`: the layer provides the database either way, and an
+        // operation that only edits an object its input names (a `Ref` resolved here)
+        // declares none, so gating on the declaration dropped its edits.
+        if ((Exit.isSuccess(exit) || isRunAgainExit(exit)) && funcContext.db) {
           await funcContext.db.flush({ disk: true, indexes: false });
         }
 
