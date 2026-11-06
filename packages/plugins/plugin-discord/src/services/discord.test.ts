@@ -21,27 +21,6 @@ import {
   resolveDiscordToken,
 } from './discord.ts';
 
-/** A {@link DiscordHttp} that records each request and answers it with `body` as JSON. */
-const recordingHttp = (body: unknown) => {
-  const requests: HttpRequest[] = [];
-  const layer = Layer.succeed(
-    DiscordHttp,
-    DiscordHttp.of({
-      fetch: (request) =>
-        Effect.sync(() => {
-          requests.push(request);
-          return {
-            status: 200,
-            statusText: 'OK',
-            headers: { 'content-type': 'application/json' },
-            body: btoa(JSON.stringify(body)),
-          };
-        }),
-    }),
-  );
-  return { requests, layer };
-};
-
 describe('DiscordHttp', () => {
   test('a host that serves it sends the request, by its path below the API base', async ({ expect }) => {
     const http = recordingHttp([]);
@@ -96,3 +75,24 @@ describe('resolveDiscordToken', () => {
     expect(credentials.queries).toEqual([{ accessTokenId: accessToken.id }]);
   });
 });
+
+/** A {@link DiscordHttp} that records each request and answers it with `body` as JSON. */
+const recordingHttp = (body: unknown) => {
+  const requests: HttpRequest[] = [];
+  const layer = Layer.succeed(
+    DiscordHttp,
+    DiscordHttp.of({
+      fetch: (request) =>
+        Effect.sync(() => {
+          requests.push(request);
+          return {
+            status: 200,
+            statusText: 'OK',
+            headers: { 'content-type': 'application/json' },
+            body: btoa(JSON.stringify(body)),
+          };
+        }),
+    }),
+  );
+  return { requests, layer };
+};

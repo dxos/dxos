@@ -98,7 +98,10 @@ const importFrom = Effect.fnUntraced(function* (dir: string, specifier: string) 
   });
 });
 
-/** Runs `effect` with `dir` as the working directory and `env` set, restoring both after. */
+/**
+ * Runs `effect` with `dir` as the working directory and `env` set, restoring both after. The whole environment is
+ * restored, since the build itself sets keys too (Vite sets `NODE_ENV`).
+ */
 const withProcessScope = <A, E, R>(
   dir: string,
   env: Readonly<Record<string, string>>,
@@ -106,7 +109,7 @@ const withProcessScope = <A, E, R>(
 ) =>
   Effect.acquireUseRelease(
     Effect.sync(() => {
-      const previous = { cwd: process.cwd(), env: Object.keys(env).map((key) => [key, process.env[key]] as const) };
+      const previous = { cwd: process.cwd(), env: { ...process.env } };
       process.chdir(dir);
       Object.assign(process.env, env);
       return previous;
@@ -114,13 +117,12 @@ const withProcessScope = <A, E, R>(
     () => effect,
     (previous) =>
       Effect.sync(() => {
-        for (const [key, value] of previous.env) {
-          if (value === undefined) {
+        for (const key of Object.keys(process.env)) {
+          if (!(key in previous.env)) {
             delete process.env[key];
-          } else {
-            process.env[key] = value;
           }
         }
+        Object.assign(process.env, previous.env);
         process.chdir(previous.cwd);
       }),
   );
