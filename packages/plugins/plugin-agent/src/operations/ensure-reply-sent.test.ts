@@ -135,6 +135,55 @@ describe('EnsureReplySent', () => {
   );
 
   it.effect(
+    'is silent once a code-mode eval sent in this conversation',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const conversation = yield* setupChat({
+          channel: true,
+          messages: () => [
+            prompt('Hi'),
+            ...evalCall('eval-1', [
+              { operation: MemoryOperation.Remember, output: {} },
+              { operation: EmailOperation.Send, output: { thread: 'thread' } },
+            ]),
+            reply('Replied by email.'),
+          ],
+        });
+        const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
+          Effect.provide(conversation),
+        );
+
+        expect(output).toEqual({});
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'still asks when a code-mode eval sent elsewhere',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const conversation = yield* setupChat({
+          channel: true,
+          messages: () => [
+            prompt('Email Bob that I am late.'),
+            ...evalCall('eval-1', [{ operation: EmailOperation.Send, output: { thread: 'bob' } }]),
+            reply('Told Bob.'),
+          ],
+        });
+        const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
+          Effect.provide(conversation),
+        );
+
+        expect(output).toEqual({ followUp: REMINDER });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'is silent in a Composer chat, where the text is the reply',
     Effect.fnUntraced(
       function* ({ expect }) {
@@ -223,3 +272,30 @@ const call = (operation: Operation.Definition.Any, toolCallId: string, output: o
     }),
   ];
 };
+
+/** A code-mode `eval` call whose code ran `invoked`, recorded on its result as code mode records it. */
+const evalCall = (
+  toolCallId: string,
+  invoked: { operation: Operation.Definition.Any; output: object }[],
+): Message.Message[] => [
+  Message.make({
+    sender: { role: 'assistant' },
+    blocks: [{ _tag: 'toolCall', toolCallId, name: 'eval', input: '{"code":"..."}', providerExecuted: false }],
+  }),
+  Message.make({
+    sender: { role: 'tool' },
+    blocks: [
+      {
+        _tag: 'toolResult',
+        toolCallId,
+        name: 'eval',
+        result: 'done',
+        providerExecuted: false,
+        invocations: invoked.map(({ operation, output }) => ({
+          operationKey: operation.meta.key,
+          result: JSON.stringify(output),
+        })),
+      },
+    ],
+  }),
+];

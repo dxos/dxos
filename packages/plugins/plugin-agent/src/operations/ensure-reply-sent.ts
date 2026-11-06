@@ -80,11 +80,27 @@ const succeededCalls = (
         : [],
     ),
   );
-  return blocks.flatMap((block) =>
+  const calls = blocks.flatMap((block) =>
     block._tag === 'toolCall' && block.operationKey && outputs.has(block.toolCallId)
       ? [{ operationKey: block.operationKey, output: outputs.get(block.toolCallId) }]
       : [],
   );
+  // A code-mode `eval` is one call that may run several operations; its result records which, and what each returned.
+  const invoked = blocks.flatMap((block) =>
+    block._tag === 'toolResult'
+      ? (block.invocations ?? []).flatMap(({ operationKey, result, error }) =>
+          error === undefined
+            ? [
+                {
+                  operationKey,
+                  output: result === undefined ? undefined : safeParseJson<Record<string, unknown>>(result),
+                },
+              ]
+            : [],
+        )
+      : [],
+  );
+  return [...calls, ...invoked];
 };
 
 /** Whether a send's destination is this conversation: its thread id, or an encoded reference to its chat. */

@@ -80,6 +80,32 @@ describe('AiPreprocessor.preprocessPrompt', () => {
   );
 
   it.effect(
+    'never sends the operations a code-mode eval recorded on its result',
+    Effect.fn(function* ({ expect }) {
+      const messages = [
+        makeMessage('assistant', [
+          { _tag: 'toolCall', toolCallId: 'call_1', name: 'eval', input: '{"code":"..."}', providerExecuted: false },
+        ]),
+        makeMessage('tool', [
+          {
+            _tag: 'toolResult',
+            toolCallId: 'call_1',
+            name: 'eval',
+            result: JSON.stringify('sent'),
+            providerExecuted: false,
+            invocations: [{ operationKey: 'org.example.operation.send', result: '{"channel":"thread-1"}' }],
+          },
+        ]),
+      ];
+
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
+      expect(input.content).toHaveLength(2);
+      expect(JSON.stringify(input.content)).not.toContain('org.example.operation.send');
+      expect(JSON.stringify(input.content)).not.toContain('invocations');
+    }),
+  );
+
+  it.effect(
     'should handle assistant message with tool calls',
     Effect.fn(function* ({ expect }) {
       const messages = [
