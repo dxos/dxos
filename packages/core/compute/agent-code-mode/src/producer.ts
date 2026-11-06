@@ -174,7 +174,7 @@ const runCodeModeTurn = ({
               // runner must evaluate THAT one, not the canonical entry.
               const toolkit = makeEvalToolkit({
                 ...evalOptions,
-                ...(Operation.isDialect(dialect.name)
+                ...(Operation.isScriptDialect(dialect.name)
                   ? { runner: Runner.make({ ...evalOptions, dialects: { [dialect.name]: dialect } }) }
                   : {}),
               });

@@ -29,7 +29,7 @@ const KEY = DXN.make('com.example.operation.script');
 
 const Greet = Operation.makeScript({
   meta: { key: KEY, name: 'Greet' },
-  source: Operation.inlineScript("print('hello')", Operation.Dialects.Effect),
+  source: Operation.inlineScript("print('hello')", Operation.ScriptDialects.Effect),
 });
 
 /** Every request the backend was handed, so a test can see what crossed into it. */

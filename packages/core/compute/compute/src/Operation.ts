@@ -30,6 +30,7 @@ import type { Operation } from './index.ts';
 import type * as Process from './Process.ts';
 import type * as StorageService from './StorageService.ts';
 import type * as Trace from './Trace.ts';
+import * as Script from './types/Script.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -711,38 +712,36 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
  * Carried by the snippet rather than by the runtime, because one runtime serves several: a code-mode
  * turn writes `plain` or `effect` against the same host that runs a `typescript` module.
  */
-export const Dialect = Schema$.Literals(['plain', 'effect', 'javascript', 'typescript']);
-export type Dialect = Schema$.Schema.Type<typeof Dialect>;
+export const ScriptDialect = Schema$.Literals(['plain', 'effect', 'javascript', 'typescript']);
+export type ScriptDialect = Schema$.Schema.Type<typeof ScriptDialect>;
 
-/** Named {@link Dialect} values, so a caller names one without spelling the literal. */
-export const Dialects = {
+/** Named {@link ScriptDialect} values, so a caller names one without spelling the literal. */
+export const ScriptDialects = {
   /** Code-mode's plain dialect: `await`-style bindings over the workspace. */
   Plain: 'plain',
   /** Code-mode's Effect dialect: the body of an `Effect.gen` generator. */
   Effect: 'effect',
   JavaScript: 'javascript',
   TypeScript: 'typescript',
-} as const satisfies Record<string, Dialect>;
+} as const satisfies Record<string, ScriptDialect>;
 
 /** A snippet carried by the operation itself, in the dialect it is written in. */
 export const InlineScript = Schema$.Struct({
   _tag: Schema$.Literal('inline'),
   code: Schema$.String,
-  dialect: Dialect,
+  dialect: ScriptDialect,
 });
 export type InlineScript = Schema$.Schema.Type<typeof InlineScript>;
 
 /**
- * A script stored in ECHO, as the `Script` object `@dxos/compute/Script` declares.
+ * A script stored in ECHO as a {@link Script.Script} object.
  *
- * The target is typed as an unknown object, exactly as the registry record's own `source` field is:
- * one value travels between the two without a conversion, and the runner that resolves it says so
- * when the target turns out not to be a script. The dialect is the object's own (its editor compiles
- * TypeScript), so unlike {@link InlineScript} it is not restated here.
+ * The dialect is the object's own (its editor compiles TypeScript), so unlike {@link InlineScript} it
+ * is not restated here — a snippet has no object to ask.
  */
 export const ScriptRef = Schema$.Struct({
   _tag: Schema$.Literal('object'),
-  script: Ref.Ref(Obj.Unknown),
+  script: Ref.Ref(Script.Script),
 });
 export type ScriptRef = Schema$.Schema.Type<typeof ScriptRef>;
 
@@ -751,14 +750,14 @@ export const ScriptSource = Schema$.Union([InlineScript, ScriptRef]);
 export type ScriptSource = Schema$.Schema.Type<typeof ScriptSource>;
 
 /** A snippet source in `dialect`. */
-export const inlineScript = (code: string, dialect: Dialect = Dialects.TypeScript): InlineScript => ({
+export const inlineScript = (code: string, dialect: ScriptDialect = ScriptDialects.TypeScript): InlineScript => ({
   _tag: 'inline',
   code,
   dialect,
 });
 
-/** A source pointing at a `Script` object. */
-export const scriptRef = (script: Ref.Ref<Obj.Unknown>): ScriptRef => ({ _tag: 'object', script });
+/** A source pointing at a {@link Script.Script} object. */
+export const scriptRef = (script: Ref.Ref<Script.Script>): ScriptRef => ({ _tag: 'object', script });
 
 export const isInlineScript = (source: ScriptSource): source is InlineScript => source._tag === 'inline';
 export const isScriptRef = (source: ScriptSource): source is ScriptRef => source._tag === 'object';
@@ -810,7 +809,7 @@ export type ScriptProps = Omit<ScriptDefinition<any, any>, ScriptDefinitionTypeI
  * ```ts
  * const Hello = Operation.makeScript({
  *   meta: { key: DXN.make('example.hello') },
- *   source: Operation.inlineScript('print("hi")', Operation.Dialects.Effect),
+ *   source: Operation.inlineScript('print("hi")', Operation.ScriptDialects.Effect),
  * });
  * ```
  */
@@ -881,7 +880,10 @@ export const serializeScript = (operation: ScriptDefinition.Any, options?: Obj.M
 export const deserializeScript = (record: PersistentOperation): ScriptDefinition.Any | undefined => {
   const definition = deserialize(record);
   const inline = Option.getOrUndefined(Annotation.get(record, InlineScriptAnnotation));
-  const source = inline ?? (record.source !== undefined ? scriptRef(record.source) : undefined);
+  // The record's `source` is a ref to any object (it predates script operations), so the typed ref
+  // is rebuilt from its URI rather than reinterpreted; `resolveSource` is what reports a target that
+  // turns out not to be a script.
+  const source = inline ?? (record.source !== undefined ? scriptRef(Ref.fromURI(record.source.uri)) : undefined);
   if (source === undefined) {
     return undefined;
   }
@@ -893,9 +895,9 @@ export const deserializeScript = (record: PersistentOperation): ScriptDefinition
   });
 };
 
-/** Whether `value` names a known {@link Dialect}. */
-export const isDialect = (value: unknown): value is Dialect =>
-  typeof value === 'string' && (Dialect.literals as readonly string[]).includes(value);
+/** Whether `value` names a known {@link ScriptDialect}. */
+export const isScriptDialect = (value: unknown): value is ScriptDialect =>
+  typeof value === 'string' && (ScriptDialect.literals as readonly string[]).includes(value);
 
 //
 // Tool projection

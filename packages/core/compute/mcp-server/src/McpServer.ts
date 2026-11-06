@@ -768,7 +768,7 @@ export const runScript = (
 ): Effect.Effect<ScriptResult> =>
   scriptRunner(registry, host, gate, options)
     .run({
-      source: Operation.inlineScript(code, Operation.Dialects.Effect),
+      source: Operation.inlineScript(code, Operation.ScriptDialects.Effect),
       ...(spaceId !== undefined ? { spaceId } : {}),
       skillTokens,
     })
@@ -794,10 +794,10 @@ export const scriptRunner = (
   run: (request) =>
     Effect.gen(function* () {
       const { code, dialect } = yield* ScriptRunner.resolveSource(request.source);
-      if (dialect !== Operation.Dialects.Effect) {
+      if (dialect !== Operation.ScriptDialects.Effect) {
         return yield* Effect.fail(
           new ScriptRunner.RunnerError({
-            message: `This server runs the "${Operation.Dialects.Effect}" dialect only, not "${dialect}".`,
+            message: `This server runs the "${Operation.ScriptDialects.Effect}" dialect only, not "${dialect}".`,
             dialect,
           }),
         );

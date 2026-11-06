@@ -21,7 +21,7 @@ import { evaluate } from './eval-tool.ts';
 import type * as Sandbox from './Sandbox.ts';
 
 /** The dialects code mode serves, keyed by the name a {@link ScriptRunner.Request} names them by. */
-export const DIALECTS: Partial<Record<Operation.Dialect, Dialect>> = {
+export const DIALECTS: Partial<Record<Operation.ScriptDialect, Dialect>> = {
   plain: PlainDialect,
   effect: EffectDialect,
 };
@@ -37,7 +37,7 @@ export type Options = {
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
   /** Dialects this runner serves; defaults to {@link DIALECTS}. */
-  readonly dialects?: Partial<Record<Operation.Dialect, Dialect>>;
+  readonly dialects?: Partial<Record<Operation.ScriptDialect, Dialect>>;
   /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
   readonly skills?: readonly string[];
   readonly maxOutput?: number;

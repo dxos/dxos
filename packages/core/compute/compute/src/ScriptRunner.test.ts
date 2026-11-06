@@ -25,7 +25,7 @@ describe('ScriptRunner.byDialect', () => {
   test('routes a request to the runner registered for its dialect', async ({ expect }) => {
     const runner = ScriptRunner.byDialect({ plain: echoRunner('plain'), effect: echoRunner('effect') });
     const result = await EffectEx.runPromise(
-      runner.run({ source: Operation.inlineScript('print(1)', Operation.Dialects.Effect) }),
+      runner.run({ source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect) }),
     );
     expect(result.output).toBe('effect:print(1)');
   });
@@ -33,7 +33,7 @@ describe('ScriptRunner.byDialect', () => {
   test('fails a dialect no backend claims, naming the ones it serves', async ({ expect }) => {
     const runner = ScriptRunner.byDialect({ effect: echoRunner('effect') });
     const error = await EffectEx.runPromise(
-      runner.run({ source: Operation.inlineScript('x', Operation.Dialects.Plain) }).pipe(Effect.flip),
+      runner.run({ source: Operation.inlineScript('x', Operation.ScriptDialects.Plain) }).pipe(Effect.flip),
     );
     expect(error._tag).toBe('ScriptRunnerError');
     expect(error.dialect).toBe('plain');
@@ -50,7 +50,7 @@ describe('ScriptRunner.byDialect', () => {
 describe('ScriptRunner.run', () => {
   test('runs through the ambient runner', async ({ expect }) => {
     const result = await EffectEx.runPromise(
-      ScriptRunner.run({ source: Operation.inlineScript('print(1)', Operation.Dialects.Plain) }).pipe(
+      ScriptRunner.run({ source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Plain) }).pipe(
         Effect.provide(ScriptRunner.layer(echoRunner('ambient'))),
       ),
     );
@@ -62,7 +62,7 @@ describe('ScriptRunner.requestOf', () => {
   test('carries the operation source, its timeout and the input', ({ expect }) => {
     const operation = Operation.makeScript({
       meta: { key: DXN.make('com.example.script'), name: 'Example' },
-      source: Operation.inlineScript('print(input)', Operation.Dialects.Effect),
+      source: Operation.inlineScript('print(input)', Operation.ScriptDialects.Effect),
       timeout: 5_000,
     });
     expect(ScriptRunner.requestOf(operation, { a: 1 }, { spaceId: 'SPACE' })).toEqual({
@@ -76,7 +76,7 @@ describe('ScriptRunner.requestOf', () => {
   test('omits an absent input rather than sending undefined', ({ expect }) => {
     const operation = Operation.makeScript({
       meta: { key: DXN.make('com.example.script') },
-      source: Operation.inlineScript('print(1)', Operation.Dialects.Plain),
+      source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Plain),
     });
     expect(ScriptRunner.requestOf(operation)).toEqual({ source: operation.source });
   });
@@ -85,7 +85,7 @@ describe('ScriptRunner.requestOf', () => {
 describe('ScriptRunner.resolveSource', () => {
   test('a snippet resolves to its own code and dialect', async ({ expect }) => {
     const resolved = await EffectEx.runPromise(
-      ScriptRunner.resolveSource(Operation.inlineScript('print(1)', Operation.Dialects.Effect)),
+      ScriptRunner.resolveSource(Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect)),
     );
     expect(resolved).toEqual({ code: 'print(1)', dialect: 'effect' });
   });

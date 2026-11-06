@@ -162,7 +162,7 @@ describe('Operation consent preview', () => {
 describe('script operations', () => {
   const inline = Operation.makeScript({
     meta: { key: KEY, name: 'Inline Script' },
-    source: Operation.inlineScript('print(1)', Operation.Dialects.Effect),
+    source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect),
   });
 
   test('a script operation is its own kind — neither a handler nor a durable operation', ({ expect }) => {
@@ -175,8 +175,8 @@ describe('script operations', () => {
   test('an inline source carries its dialect; an object source does not restate one', ({ expect }) => {
     expect(Operation.isInlineScript(inline.source)).toBe(true);
     expect(Operation.isScriptRef(inline.source)).toBe(false);
-    expect(Operation.isDialect('effect')).toBe(true);
-    expect(Operation.isDialect('cobol')).toBe(false);
+    expect(Operation.isScriptDialect('effect')).toBe(true);
+    expect(Operation.isScriptDialect('cobol')).toBe(false);
   });
 
   test('an inline script round-trips through its registry record, dialect included', ({ expect }) => {

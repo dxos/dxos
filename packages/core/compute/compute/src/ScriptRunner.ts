@@ -24,7 +24,7 @@ import * as Script from './types/Script.ts';
  */
 export class RunnerError extends Schema.TaggedError<RunnerError>('ScriptRunnerError')('ScriptRunnerError', {
   message: Schema.String,
-  dialect: Schema.optional(Operation.Dialect),
+  dialect: Schema.optional(Operation.ScriptDialect),
 }) {}
 
 /** The host calls one run made: how many, and the wall time spent waiting on them. */
@@ -97,7 +97,7 @@ export const layer = (runner: Runner): Layer.Layer<Service> => Layer.succeed(Ser
  * bindings are, not in where they run: a host serving code-mode's two dialects needs both, in the
  * same place.
  */
-export const byDialect = (runners: Partial<Record<Operation.Dialect, Runner>>): Runner => ({
+export const byDialect = (runners: Partial<Record<Operation.ScriptDialect, Runner>>): Runner => ({
   run: (request) =>
     Effect.gen(function* () {
       const dialect = yield* dialectOf(request.source);
@@ -118,8 +118,8 @@ export const byDialect = (runners: Partial<Record<Operation.Dialect, Runner>>): 
  * The dialect a source is written in. A source naming a {@link Operation.ScriptRef} is TypeScript: a
  * `Script` object is what the script editor writes, and it compiles TypeScript.
  */
-export const dialectOf = (source: Operation.ScriptSource): Effect.Effect<Operation.Dialect, RunnerError> =>
-  Effect.succeed(Operation.isInlineScript(source) ? source.dialect : Operation.Dialects.TypeScript);
+export const dialectOf = (source: Operation.ScriptSource): Effect.Effect<Operation.ScriptDialect, RunnerError> =>
+  Effect.succeed(Operation.isInlineScript(source) ? source.dialect : Operation.ScriptDialects.TypeScript);
 
 /**
  * The code a source holds: a snippet's own body, or the text of the `Script` object it points at.
@@ -130,7 +130,7 @@ export const dialectOf = (source: Operation.ScriptSource): Effect.Effect<Operati
  */
 export const resolveSource = (
   source: Operation.ScriptSource,
-): Effect.Effect<{ readonly code: string; readonly dialect: Operation.Dialect }, RunnerError> =>
+): Effect.Effect<{ readonly code: string; readonly dialect: Operation.ScriptDialect }, RunnerError> =>
   Effect.gen(function* () {
     if (Operation.isInlineScript(source)) {
       return { code: source.code, dialect: source.dialect };
@@ -146,7 +146,7 @@ export const resolveSource = (
     const text = yield* Database.load(target.source).pipe(
       Effect.mapError((error) => new RunnerError({ message: `Script source did not load: ${String(error)}` })),
     );
-    return { code: text.content, dialect: Operation.Dialects.TypeScript };
+    return { code: text.content, dialect: Operation.ScriptDialects.TypeScript };
   });
 
 /** The request that runs a script operation (see {@link Operation.ScriptDefinition}) on `input`. */

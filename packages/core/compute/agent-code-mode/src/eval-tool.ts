@@ -154,7 +154,7 @@ const runThroughRunner = (
 ): Effect.Effect<string, string> =>
   Effect.suspend(() => {
     const dialect = options.dialect.name;
-    if (!Operation.isDialect(dialect)) {
+    if (!Operation.isScriptDialect(dialect)) {
       return Effect.fail(`Error: dialect "${dialect}" cannot be run by a script runner.`);
     }
     return runner
