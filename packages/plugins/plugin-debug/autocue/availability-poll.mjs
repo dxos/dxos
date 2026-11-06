@@ -55,7 +55,8 @@ const NEW_ROSTER =
 // Plans have left out the milestone's check, or its links, which the instructions ask for, so the prompt names both.
 const planPrompt = (milestone) =>
   `Plan ${milestone} from the spec: a task per feature, then Check ${milestone} linked to each of those features.`;
-const REVALIDATE_PROMPT = `I changed ${ROSTER} on "${POLL_PAGE}". Revalidate it.`;
+// A revalidation has stopped at recording a diverged verdict, so the prompt names the steps the instructions give.
+const REVALIDATE_PROMPT = `I changed ${ROSTER} on "${POLL_PAGE}". Revalidate it; if it fails, set the feature to failing and file the fix task.`;
 
 const FINISHED = ['done', 'review'];
 
