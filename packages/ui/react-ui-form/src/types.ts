@@ -65,6 +65,12 @@ export type FormFieldOverride = {
   /** A button at the end of a text control that sets its value. */
   action?: FormFieldAction;
   /**
+   * An array's value for the row its add button creates, from the rows it has. A host that stores a new row differently
+   * from the schema's empty value (a minted key, default text) gives the stored value here, so the form holds no edit
+   * the source never matches.
+   */
+  newItem?: (values: readonly unknown[]) => unknown;
+  /**
    * Edits the string through the binding the form's `extensions` give the field's editor (`createDataExtensions`), so
    * its edits reach the object directly rather than `onValuesChanged`.
    */

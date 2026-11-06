@@ -38,6 +38,8 @@ export type ArrayFieldProps = {
   section?: boolean;
   /** Shown in place of the rows while there are none; only a field override sets it. */
   placeholder?: string;
+  /** The row the add button creates, in place of the element type's empty value; only a field override sets it. */
+  newItem?: (values: readonly unknown[]) => unknown;
   fieldProps: FormFieldStateProps;
 } & FormFieldDispatchProps;
 
@@ -53,6 +55,7 @@ export const ArrayField = ({
   hideLabel,
   section,
   placeholder,
+  newItem,
   readonly,
   layout,
   fieldProps,
@@ -102,14 +105,17 @@ export const ArrayField = ({
   const handleAdd = useCallback(() => {
     let value: unknown;
     try {
-      value =
-        elementType && SchemaEx.isNestedType(elementType) ? defaultObject(elementType) : getDefaultValue(elementType);
+      value = newItem
+        ? newItem(values ?? [])
+        : elementType && SchemaEx.isNestedType(elementType)
+          ? defaultObject(elementType)
+          : getDefaultValue(elementType);
     } catch (err) {
       log.catch(err);
       return;
     }
     onValueChange(type, [...(values ?? []), value]);
-  }, [elementType, onValueChange, type, values]);
+  }, [elementType, newItem, onValueChange, type, values]);
 
   const handleRemove = useCallback(
     (index: number) => {
