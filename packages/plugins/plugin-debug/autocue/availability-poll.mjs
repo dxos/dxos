@@ -30,7 +30,7 @@
  */
 
 import { execFile, spawn } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, openSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -643,7 +643,13 @@ const serveBuild = async (dir) => {
     cpSync(seed, join(dir, 'node_modules'), { recursive: true, verbatimSymlinks: true });
   }
   await run('npm', ['install', '--prefer-offline', '--no-audit', '--no-fund'], dir);
-  await run('npm', ['run', 'build', '--if-present'], dir);
+  // The agent may build in the sandbox with `vite build` and leave the package without a build script.
+  const { scripts } = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  if (scripts?.build) {
+    await run('npm', ['run', 'build'], dir);
+  } else if (['js', 'mjs', 'ts'].some((ext) => existsSync(join(dir, `vite.config.${ext}`)))) {
+    await run('npx', ['vite', 'build'], dir);
+  }
   const log = openSync(join(dir, 'wrangler-dev.log'), 'a');
   served = spawn('npx', ['wrangler', 'dev', '--port', String(LOCAL_PORT), '--ip', '127.0.0.1'], {
     cwd: dir,
