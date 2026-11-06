@@ -209,7 +209,12 @@ const ObjectGroup = ({ space, objectKey, members, showSessions }: ObjectGroupPro
           showSessions={showSessions}
           renderActions={(member, sessionId) =>
             member.identityKey ? (
-              <PeerActions spaceId={space.id} identityKey={member.identityKey} sessionId={sessionId} />
+              <PeerActions
+                spaceId={space.id}
+                identityKey={member.identityKey}
+                presenceKey={objectKey}
+                sessionId={sessionId}
+              />
             ) : null
           }
         />

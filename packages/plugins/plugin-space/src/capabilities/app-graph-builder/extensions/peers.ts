@@ -118,7 +118,8 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Jump when the session's object is open in this deck; otherwise Go to opens it.
+    // Per object the node's session attends: Jump when it is open in this deck, otherwise Go to opens it. Each action
+    // names its object, so a list of one object's viewers shows only the actions on that object.
     AppGraphBuilder.createExtension({
       id: 'peerActions',
       match: matchPeerNode,
@@ -130,80 +131,88 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        const focus = getPeerFocus(get(ephemeralAtom).viewersByObject, spaceId, identityKey, Date.now(), sessionId);
-        if (!focus) {
-          return Effect.succeed([]);
-        }
+        const { viewersByObject, peerDecks } = get(ephemeralAtom);
+        const now = Date.now();
+        const active = get(layoutAtom).active;
+        const locators = get(capabilities.atom(AppCapabilities.Locator));
+        return Effect.succeed(
+          Object.keys(viewersByObject).flatMap((key) => {
+            const objectKey = EID.tryParse(key);
+            const focus = objectKey && getPeerFocus(viewersByObject, spaceId, identityKey, now, sessionId, objectKey);
+            if (!focus) {
+              return [];
+            }
 
-        const openPath = get(layoutAtom).active.find((path) => getPresenceKeyFromPath(path) === focus.key);
-        if (openPath) {
-          const node = Option.getOrUndefined(get(appGraph.graph.node(openPath)));
-          const typename = node && Obj.isObject(node.data) ? Obj.getTypename(node.data) : undefined;
-          const locator = get(capabilities.atom(AppCapabilities.Locator)).find(({ id }) => id === typename);
-          const anchor = focus.location?.selection ?? focus.location?.viewport;
-          return Effect.succeed(
-            locator && anchor
-              ? [
-                  AppGraphNode.makeAction({
-                    id: 'jump',
-                    data: () => Operation.invoke(locator.reveal, { subject: openPath, anchor }),
-                    properties: {
-                      label: JUMP_LABEL,
-                      icon: 'ph--crosshair-simple--regular',
-                      disposition: 'list-item',
-                      testId: 'spacePlugin.presence.jump',
-                    },
+            const suffix = EID.getEntityId(focus.key) ?? 'space';
+            const openPath = active.find((path) => getPresenceKeyFromPath(path) === focus.key);
+            if (openPath) {
+              const node = Option.getOrUndefined(get(appGraph.graph.node(openPath)));
+              const typename = node && Obj.isObject(node.data) ? Obj.getTypename(node.data) : undefined;
+              const locator = locators.find(({ id }) => id === typename);
+              const anchor = focus.location?.selection ?? focus.location?.viewport;
+              return locator && anchor
+                ? [
+                    AppGraphNode.makeAction({
+                      id: `jump-${suffix}`,
+                      data: () => Operation.invoke(locator.reveal, { subject: openPath, anchor }),
+                      properties: {
+                        label: JUMP_LABEL,
+                        icon: 'ph--crosshair-simple--regular',
+                        disposition: 'list-item',
+                        testId: 'spacePlugin.presence.jump',
+                        presenceKey: focus.key,
+                      },
+                    }),
+                  ]
+                : [];
+            }
+
+            // At the path the session has the object open at, so the navtree shows it where the peer does.
+            const peerPath = getPeerPlankPath(peerDecks, spaceId, identityKey, focus.sessionId, focus.key);
+            return [
+              AppGraphNode.makeAction({
+                id: `goTo-${suffix}`,
+                data: () =>
+                  Effect.gen(function* () {
+                    if (peerPath) {
+                      yield* Operation.invoke(LayoutOperation.Open, { subject: [peerPath] });
+                      return;
+                    }
+
+                    // A peer on the space's Home attends the space itself, whose key names no object.
+                    if (!EID.getEntityId(focus.key)) {
+                      yield* Operation.invoke(LayoutOperation.Open, {
+                        subject: [GraphPath.getSpaceHomePath(spaceId)],
+                      });
+                      return;
+                    }
+
+                    const client = yield* Capability.get(ClientCapabilities.Client);
+                    const space = client.spaces.get().find((space) => space.id === spaceId);
+                    if (!space) {
+                      return;
+                    }
+
+                    const object = yield* Effect.promise(() => space.db.makeRef(focus.key).tryLoad());
+                    if (!Obj.isObject(object)) {
+                      return;
+                    }
+
+                    yield* Operation.invoke(LayoutOperation.Open, {
+                      subject: [GraphPath.getObjectPathFromObject(object)],
+                    });
                   }),
-                ]
-              : [],
-          );
-        }
-
-        // At the path the session has the object open at, so the navtree shows it where the peer does.
-        const peerPath = getPeerPlankPath(
-          get(ephemeralAtom).peerDecks,
-          spaceId,
-          identityKey,
-          focus.sessionId,
-          focus.key,
-        );
-        return Effect.succeed([
-          AppGraphNode.makeAction({
-            id: 'goTo',
-            data: () =>
-              Effect.gen(function* () {
-                if (peerPath) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [peerPath] });
-                  return;
-                }
-
-                // A peer on the space's Home attends the space itself, whose key names no object.
-                if (!EID.getEntityId(focus.key)) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getSpaceHomePath(spaceId)] });
-                  return;
-                }
-
-                const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = client.spaces.get().find((space) => space.id === spaceId);
-                if (!space) {
-                  return;
-                }
-
-                const object = yield* Effect.promise(() => space.db.makeRef(focus.key).tryLoad());
-                if (!Obj.isObject(object)) {
-                  return;
-                }
-
-                yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
+                properties: {
+                  label: GO_TO_LABEL,
+                  icon: 'ph--arrow-right--regular',
+                  disposition: 'list-item',
+                  testId: 'spacePlugin.presence.goTo',
+                  presenceKey: focus.key,
+                },
               }),
-            properties: {
-              label: GO_TO_LABEL,
-              icon: 'ph--arrow-right--regular',
-              disposition: 'list-item',
-              testId: 'spacePlugin.presence.goTo',
-            },
+            ];
           }),
-        ]);
+        );
       },
     }),
   ]);

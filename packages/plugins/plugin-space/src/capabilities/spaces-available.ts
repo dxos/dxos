@@ -33,14 +33,15 @@ import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
-  LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
   applyPeerDeck,
   applyViewingMessage,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  makeLocationScheduler,
   parseViewingMessage,
+  prunePeerDecks,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
@@ -216,13 +217,15 @@ export default Capability.makeModule(
     subscriptions.add(() => spaceNamesSub.unsubscribe());
 
     // Only the defined fields: the payload is packed as a protobuf Struct, which has no undefined.
+    const getLocation = (key: string): SpaceSchema.PeerLocation | undefined => {
+      const { selection, viewport } = viewState.get(ViewLocation.aspect, key);
+      return selection || viewport ? { ...(selection && { selection }), ...(viewport && { viewport }) } : undefined;
+    };
     const getLocations = (keys: readonly string[]) =>
       Object.fromEntries(
         keys.flatMap((key) => {
-          const { selection, viewport } = viewState.get(ViewLocation.aspect, key);
-          return selection || viewport
-            ? [[key, { ...(selection && { selection }), ...(viewport && { viewport }) }]]
-            : [];
+          const location = getLocation(key);
+          return location ? [[key, location]] : [];
         }),
       );
 
@@ -256,8 +259,8 @@ export default Capability.makeModule(
       const inactive = [...layout.inactive, ...departed];
       previousActive = active;
 
-      const send = () => {
-        const spaces = client.spaces.get();
+      const send = (spaceIds?: ReadonlySet<string>) => {
+        const spaces = client.spaces.get().filter((space) => !spaceIds || spaceIds.has(space.id));
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           const device = getDevice();
@@ -292,22 +295,16 @@ export default Capability.makeModule(
       // Send at interval to allow peers to expire entries if they become disconnected.
       const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
 
-      // Moving or scrolling in an attended object re-sends, at most once per interval.
-      let locationTimer: ReturnType<typeof setTimeout> | undefined;
-      const scheduleSend = () => {
-        locationTimer ??= setTimeout(() => {
-          locationTimer = undefined;
-          send();
-        }, LOCATION_BROADCAST_INTERVAL);
-      };
-      const locationSubscriptions = [...current].flatMap((path) => {
-        const key = getPresenceKeyFromPath(path);
-        return key ? [viewState.subscribe(ViewLocation.aspect, key, scheduleSend)] : [];
-      });
+      // Moving or scrolling in an attended object re-sends to its space, at most once per interval.
+      const attendedKeys = [...current].flatMap((path) => getPresenceKeyFromPath(path) ?? []);
+      const locationScheduler = makeLocationScheduler(attendedKeys, getLocation, send);
+      const locationSubscriptions = attendedKeys.map((key) =>
+        viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
+      );
 
       broadcastCleanup = () => {
         clearInterval(interval);
-        clearTimeout(locationTimer);
+        locationScheduler.dispose();
         locationSubscriptions.forEach((unsubscribe) => unsubscribe());
       };
     };
@@ -335,11 +332,17 @@ export default Capability.makeModule(
             if (viewing && identityKey && currentIdentity?.identityKey !== identityKey.toHex()) {
               const peer = identityKey.toHex();
               const lastSeen = Date.now();
-              registry.update(ephemeralAtom, (ephemeral) => ({
-                ...ephemeral,
-                viewersByObject: applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen),
-                peerDecks: applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
-              }));
+              registry.update(ephemeralAtom, (ephemeral) => {
+                const viewersByObject = applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen);
+                return {
+                  ...ephemeral,
+                  viewersByObject,
+                  peerDecks: prunePeerDecks(
+                    applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
+                    viewersByObject,
+                  ),
+                };
+              });
             }
           }),
         );

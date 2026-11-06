@@ -193,7 +193,7 @@ export const translations = [
         'presence.label_other': '{{count}} other viewers',
         'presence-go-to.label': 'Go to',
         'presence-jump.label': 'Jump',
-        'presence-in-object.heading': 'In this document · {{count}}',
+        'presence-in-object.heading': 'Viewers · {{count}}',
         'presence-see-everyone.label': 'See everyone in this space',
         'presence-show-sessions.label': 'Show each session',
         'presence-active.label': 'Active',
