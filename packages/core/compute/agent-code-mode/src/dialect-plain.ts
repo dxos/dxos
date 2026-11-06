@@ -20,6 +20,7 @@ import {
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
+import { REFERENCE_FORMAT, REFERENCE_NOTE, compactReferences, hasReferences } from './references.ts';
 
 /**
  * A typename the registry has no object type for — an expected failure of the model's code, so it
@@ -195,10 +196,38 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.
 
-  ${operations
-    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
-    .join('\n')}
+  ${
+    // One interpolation, not two side by side: \`trim\` re-indents a value by the text just before it.
+    referencesPrefix(operations) +
+    operations
+      .map((operation) =>
+        renderOperation(
+          operation,
+          (name) => `await ops[${JSON.stringify(name)}](input)`,
+          JSON.stringify(compactReferences(operation)),
+        ),
+      )
+      .join('\n')
+  }
 `;
+
+/** The references note ahead of the list, or nothing, so a prompt with no reference field is unchanged. */
+const referencesPrefix = (operations: readonly SandboxOperation[]): string =>
+  operations.some(hasReferences) ? `${renderReferences()}\n\n` : '';
+
+/**
+ * The reference format, stated once: each reference field's schema says only that it is one, rather than repeating
+ * the format the tool projection writes into it.
+ */
+const renderReferences = (): string =>
+  // Joined rather than a \`trim\` template: the format is several lines, and \`trim\` would not re-indent it mid-line.
+  [
+    '#### References',
+    '',
+    `A field marked "${REFERENCE_NOTE}" takes a string naming the object:`,
+    '',
+    REFERENCE_FORMAT,
+  ].join('\n');
 
 /** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
 export const camelCase = (name: string): string =>
