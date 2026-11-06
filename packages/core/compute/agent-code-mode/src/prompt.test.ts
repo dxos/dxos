@@ -72,17 +72,19 @@ describe('prompt', () => {
     expect(describeInput(Schema.suspend(() => Schema.Struct({ id: Schema.String })))).toEqual('{ id: string }');
   });
 
-  test('a union of more than four tagged variants is named by its tags', ({ expect }) => {
+  test("a type's union of more than four tagged variants is named by its tags", ({ expect }) => {
     const variant = (tag: string) => Schema.TaggedStruct(tag, { text: Schema.String });
     const many = Schema.Union(['a', 'b', 'c', 'd', 'e'].map(variant));
-    expect(describeInput(Schema.Struct({ block: many }))).toEqual(
-      '{ block: { _tag: "a" | "b" | "c" | "d" | "e", … } }',
-    );
+    expect(describeFields({ block: many })).toEqual([
+      { name: 'block', type: '{ _tag: "a" | "b" | "c" | "d" | "e", … }', optional: false },
+    ]);
     // Four or fewer are still spelled out, since their fields are short enough to be worth stating.
     const few = Schema.Union(['a', 'b'].map(variant));
-    expect(describeInput(Schema.Struct({ block: few }))).toEqual(
-      '{ block: { _tag: "a", text: string } | { _tag: "b", text: string } }',
-    );
+    expect(describeFields({ block: few })).toEqual([
+      { name: 'block', type: '{ _tag: "a", text: string } | { _tag: "b", text: string }', optional: false },
+    ]);
+    // An operation's input is what the model writes, so it keeps every variant's fields.
+    expect(describeInput(Schema.Struct({ block: many }))).toContain('{ _tag: "e", text: string }');
   });
 
   test('the types section says how to see a shortened union, and only when a type has one', ({ expect }) => {
@@ -92,7 +94,9 @@ describe('prompt', () => {
       kind: 'object' as const,
       fields: [{ name: 'block', type: field, optional: false }],
     });
-    const shortened = describeInput(Schema.Union(['a', 'b', 'c', 'd', 'e'].map((tag) => Schema.TaggedStruct(tag, {}))));
+    const [{ type: shortened }] = describeFields({
+      block: Schema.Union(['a', 'b', 'c', 'd', 'e'].map((tag) => Schema.TaggedStruct(tag, {}))),
+    });
     expect(renderTypes([type(shortened)])).toContain("print an existing value of that type to see a variant's fields");
     expect(renderTypes([type('string')])).not.toContain('shortened to its tags');
   });
