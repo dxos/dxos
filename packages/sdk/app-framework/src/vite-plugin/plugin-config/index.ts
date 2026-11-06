@@ -194,7 +194,11 @@ const findWorkerConfigs = (root: string): string[] => {
  * and the URL of each body. Module bodies become their own chunks; bodies for other environments are
  * never emitted. In dev the config is re-evaluated on every load, so edits hot-reload.
  */
-export const pluginConfigPlugin = ({ apply, onLibraryManifest, workerHost }: PluginConfigPluginOptions = {}): VitePlugin => {
+export const pluginConfigPlugin = ({
+  apply,
+  onLibraryManifest,
+  workerHost,
+}: PluginConfigPluginOptions = {}): VitePlugin => {
   let evaluator: Promise<RunnableDevEnvironment> | undefined;
   const getEvaluator = (root: string) =>
     (evaluator ??= (async () => {
