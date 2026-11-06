@@ -19,6 +19,7 @@ import * as Tracer from 'effect/Tracer';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import type * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
 import { Database } from '@dxos/echo';
@@ -33,7 +34,23 @@ import * as OperationProcess from './OperationProcess.ts';
 import { promptScheduler } from './prompt-scheduler.ts';
 import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
-export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
+export type ProcessOperationInvoker = Operation.OperationService &
+  OperationInvoker.OperationInvokerInternal & {
+    /**
+     * Runs a script operation (see `Operation.ScriptDefinition`) to its result, as a process on this
+     * runtime or at `options.on`.
+     *
+     * Separate from {@link Operation.OperationService.invoke} only in its result: a script answers
+     * with what it printed rather than with a value typed by the operation's output schema. The path
+     * is the same — one process under the operation's own key — because the process manager is what
+     * runs a script.
+     */
+    readonly invokeScript: (
+      op: Operation.ScriptDefinition.Any,
+      input?: unknown,
+      options?: Operation.InvokeOptions,
+    ) => Effect.Effect<ScriptRunner.Result>;
+  };
 
 export class Service extends Context.Service<Service, ProcessOperationInvoker>()(
   '@dxos/functions/ProcessOperationInvoker',
@@ -89,7 +106,7 @@ export const make = ({
   // Scheduled invocations are detached: they stay out of the caller's child set, so a parent that does not
   // await them is neither woken by nor kept alive by their exit.
   const spawn = <I, O>(
-    op: Operation.Definition<I, O>,
+    op: Operation.Definition<I, O> | Operation.ScriptDefinition.Any,
     input: I,
     options: Operation.InvokeOptions | undefined,
     detached: boolean,
@@ -99,7 +116,7 @@ export const make = ({
         return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
       }
       const parentThread = yield* Trace.CurrentThread;
-      const handle = yield* Process.spawn(OperationProcess.make(op), input, {
+      const handle = yield* Process.spawn(durableOf(op), input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
         ...(origin !== undefined ? { origin } : {}),
@@ -121,6 +138,12 @@ export const make = ({
         attributes: { [SpanAttributes.OPERATION.key]: op.meta.key.toString() },
       }),
     );
+
+  /** The durable that runs `op`: the script kind runs through the runtime's script runner, every other as its handler. */
+  const durableOf = (
+    op: Operation.Definition.Any | Operation.ScriptDefinition.Any,
+  ): Operation.Durable<any, any, any> =>
+    Operation.isScript(op) ? OperationProcess.makeScript(op) : OperationProcess.make(op);
 
   /**
    * {@link Process.awaitOutput} for a process spawned on EDGE, failing if EDGE has not accepted it
@@ -228,6 +251,18 @@ export const make = ({
     );
   };
 
+  const invokeScript: ProcessOperationInvoker['invokeScript'] = (op, input, options) =>
+    // The output type is the run's result, which a script operation's own schemas do not carry (see
+    // `OperationProcess.makeScript`), so it is named here rather than inferred from the definition.
+    spawn<unknown, ScriptRunner.Result>(op, input, options, false).pipe(
+      Effect.flatMap((handle) =>
+        options?.on === 'edge'
+          ? awaitRemoteOutput<ScriptRunner.Result>(handle, String(op.meta.key))
+          : Process.awaitOutput<ScriptRunner.Result>(handle),
+      ),
+      withFallbackTracer,
+    );
+
   const schedule: Operation.OperationService['schedule'] = <I, O>(
     op: Operation.Definition<I, O>,
     ...args: any[]
@@ -281,6 +316,7 @@ export const make = ({
 
   return {
     invoke,
+    invokeScript,
     schedule,
     invokePromise,
     invocations: pubsub,

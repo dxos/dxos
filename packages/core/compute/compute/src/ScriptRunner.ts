@@ -72,9 +72,9 @@ export type Result = Schema.Schema.Type<typeof Result>;
 /**
  * Runs scripts.
  *
- * One seam, several backends: in-process evaluation, a worker thread that can be terminated, a
- * workerd isolate that contains the code, and the process runtime, which routes a request to
- * whichever runtime hosts the script process (`ScriptProcess` in `@dxos/compute-runtime`).
+ * One seam, several backends: in-process evaluation, a worker thread that can be terminated, and a
+ * workerd isolate that contains the code. The process manager runs a script operation through
+ * whichever one its runtime provides (`OperationProcess.makeScript` in `@dxos/compute-runtime`).
  */
 export interface Runner {
   readonly run: (request: Request) => Effect.Effect<Result, RunnerError>;
