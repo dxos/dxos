@@ -48,6 +48,32 @@ const memos = new WeakMap<object, Map<string, Memo<unknown>>>();
 type FullRead = { readonly items: readonly (Trajectory.Event | Legacy.Record)[]; readonly cursor?: Feed.LocalCursor };
 const fullReads = new WeakMap<object, Map<string, FullRead>>();
 
+/**
+ * Per feed, the local cursor of the last item a walk on this replica returned. A local cursor never moves, so a walk
+ * after it that gives nothing means nothing is new, without the second walk that checks a cursor of unknown origin.
+ */
+const walkEnds = new WeakMap<object, Map<string, string>>();
+
+/** Records where the last walk of `feed` ended. */
+const recordWalkEnd = (db: object, feed: Feed.Feed, items: readonly (Trajectory.Event | Legacy.Record)[]): void => {
+  const last = items.at(-1);
+  const cursor = last && Feed.getLocalCursor(last);
+  if (cursor === undefined) {
+    return;
+  }
+  const byFeed = walkEnds.get(db) ?? new Map<string, string>();
+  walkEnds.set(db, byFeed);
+  const key = trajectoryId(feed);
+  byFeed.delete(key);
+  byFeed.set(key, cursor);
+  for (const oldest of byFeed.keys()) {
+    if (byFeed.size <= MEMO_LIMIT) {
+      break;
+    }
+    byFeed.delete(oldest);
+  }
+};
+
 /** Every item of `feed`, from the last whole read of it plus what came after (see {@link FullRead}). */
 const readAll = Effect.fnUntraced(function* (
   feed: Feed.Feed,
@@ -62,6 +88,7 @@ const readAll = Effect.fnUntraced(function* (
       ? [...known.items, ...(yield* readItems(feed, { after: known.cursor }))]
       : yield* readItems(feed);
   const last = items.at(-1);
+  recordWalkEnd(db, feed, items);
   byFeed.delete(key);
   byFeed.set(key, { items, cursor: last && Feed.getLocalCursor(last) });
   for (const oldest of byFeed.keys()) {
@@ -196,11 +223,17 @@ const tailAfter = Effect.fnUntraced(function* (
     return undefined;
   }
 
+  const { db } = yield* Database.Service;
   const tail = yield* readItems(feed, { after: cursor.value });
   // A walk gives nothing after a cursor it cannot place, as it does when nothing is new; only in the second case is
   // the checkpoint's head still the walk's last item.
-  if (tail.length === 0 && (yield* lastItem(feed))?.id !== position.head) {
-    return undefined;
+  if (tail.length === 0) {
+    const placed = walkEnds.get(db)?.get(trajectoryId(feed)) === position.cursor;
+    if (!placed && (yield* lastItem(feed))?.id !== position.head) {
+      return undefined;
+    }
+  } else {
+    recordWalkEnd(db, feed, tail);
   }
   return tail.some(Legacy.isRecord) ? undefined : tail;
 });
@@ -244,6 +277,7 @@ const resumeStored = Effect.fnUntraced(function* <S>(
 export const forget = (db: object): void => {
   memos.delete(db);
   fullReads.delete(db);
+  walkEnds.delete(db);
 };
 
 /** The id a trajectory's checkpoints are stored under; the feed that holds it is a storage detail. */
