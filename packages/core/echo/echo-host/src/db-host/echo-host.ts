@@ -967,11 +967,13 @@ export class EchoHost extends Resource {
   /**
    * Runs `wipe`, which deletes this host's rows while it stays open, with indexing stopped and the feed
    * store's caches dropped after it: either would otherwise write cursors under tokens the wipe deleted.
+   * Resident documents are unloaded first, so none outlives the bytes behind it.
    */
   async wipeStorage(wipe: () => Promise<void>): Promise<void> {
     // Closing drains the pass under way.
     await this._indexScheduler.close();
     try {
+      await this._automergeHost.unloadAllDocuments();
       await wipe();
     } finally {
       this._feedStore.resetCaches();
