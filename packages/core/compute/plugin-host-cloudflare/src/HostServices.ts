@@ -13,7 +13,7 @@ import * as Stream from 'effect/Stream';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Entity, Obj } from '@dxos/echo';
+import { Database, Entity, Filter, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId, type SpaceId, URI } from '@dxos/keys';
@@ -244,16 +244,22 @@ export const makeOperations = ({
     return Output.encode(input, { entities: 'reference' });
   };
 
-  /** The output with each entity's JSON form and each ref restored from this invocation's database. */
+  /**
+   * The output with each entity's JSON form and each ref restored from this invocation's database. An entity the
+   * callee just created is found by id through the query service, which has indexed the callee's flush: this
+   * database read the space root once, so it has no route to the new object's document.
+   */
   const loadEntities = async (output: unknown): Promise<unknown> => {
     const database = databaseOf();
-    return database === undefined
-      ? output
-      : Output.decodeEntities(
-          output,
-          (uri) => database.makeRef(URI.make(uri)).load(),
-          (uri) => database.makeRef(URI.make(uri)),
-        );
+    if (database === undefined) {
+      return output;
+    }
+    const load = async (uri: string): Promise<unknown> => {
+      const id = uri.slice(uri.lastIndexOf('/') + 1);
+      const [indexed] = EntityId.isValid(id) ? await database.query(Filter.id(id)).run() : [];
+      return indexed ?? database.makeRef(URI.make(uri)).load();
+    };
+    return Output.decodeEntities(output, load, (uri) => database.makeRef(URI.make(uri)));
   };
 
   /**
