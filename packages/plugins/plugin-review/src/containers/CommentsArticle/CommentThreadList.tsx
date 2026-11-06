@@ -3,6 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -102,8 +103,7 @@ export const useCommentAnchors = (
 
   const db = Obj.getDatabase(subject);
   const objectsAnchoredTo = useQuery(db, Query.select(Filter.id(subject.id)).targetOf(AnchoredTo.AnchoredTo));
-  // Resolving a thread mutates the Thread object, not the AnchoredTo relation the query above tracks;
-  // subscribe to threads so the resolved filter (below) re-applies when a thread's status changes.
+  // An anchor whose thread has not loaded is dropped below; this query re-renders once the threads load.
   useQuery(db, Filter.type(Thread.Thread));
   // Committed anchors come first, then drafts; on submit a draft's thread is persisted with a new
   // relation, so both briefly reference the same thread. Dedupe by source thread id (first — the
@@ -137,12 +137,22 @@ export const useCommentAnchors = (
       return true;
     });
 
-  return showResolvedThreads
-    ? anchors.filter((anchor) => !!Relation.getSource(anchor))
-    : anchors.filter((anchor) => {
-        const thread = Relation.getSource(anchor) as Thread.Thread | undefined;
-        return thread && thread.status !== 'resolved';
-      });
+  const threads = anchors.map((anchor) => Relation.getSource(anchor) as Thread.Thread);
+  const threadKey = threads.map((thread) => thread.id).join();
+  // Resolving a thread changes the thread, not the relation the query tracks, so the filter reads each status atom.
+  const resolvedAtom = useMemo(
+    () =>
+      Atom.make((get) =>
+        threads
+          .filter((thread) => get(Obj.atomProperty(thread, 'status')) === 'resolved')
+          .map(({ id }) => id)
+          .join(),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [threadKey],
+  );
+  const resolved = new Set(useAtomValue(resolvedAtom).split(','));
+  return showResolvedThreads ? anchors : anchors.filter((_, index) => !resolved.has(threads[index].id));
 };
 
 export type CommentThreadListProps = {
