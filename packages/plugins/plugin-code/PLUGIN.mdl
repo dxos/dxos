@@ -1052,14 +1052,17 @@ feat F-22: The feature map in a project
               dialects. A spec that uses the features dialect offers the canvas and the board as views of the
               project's Specs tab. Adding a feature to a spec gives it the software package.
   req F-22.5: The canvas shows a `+` in the empty cell under the pointer, anywhere on the grid, which adds a new feature
-              or an existing one in that cell, fixing the other cards where they are drawn. It has no up or home
-              button: a feature map does not nest scenes, and a double-click opens a feature's own level.
+              or an existing one in that cell, where its card first appears. It has no up or home button: a feature
+              map does not nest scenes, and a double-click opens a feature's own level.
   req F-22.6: The software package offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`,
               `/test` and `/table`, which write text only.
   req F-22.7: The feature operations are `CodeOperation`s, keyed in this plugin's domain (`org.dxos.operation.code.*`)
               and handled by `CodeOperationHandlerSet`. The Feature Map skill (`org.dxos.skill.code.featureMap`)
               declares them.
   req F-22.8: The feature map, its types and their migrations are present only while this plugin is enabled.
+  req F-22.9: The canvas arranges a card by dependency rank once, when it first draws it, and keeps it there: drawing or
+              deleting an arrow, or adding a card, moves no other card. Its Arrange button lays every card out
+              afresh.
 ```
 
 ```mdl
@@ -2282,6 +2285,14 @@ decision D-83: `/feature` on a bullet, a quote or a heading leaves the line's ma
   for: user:wittjosiah
   affects: [F-20.6]
   why: A bullet turned into a feature gave a description that began with `- `.
+```
+
+```mdl
+decision D-84: The feature canvas keeps the arrangement it first draws: every card without a position is pinned where the layout places it, and a card added in an empty cell is pinned to that cell before it is drawn. Re-arranging is a button, never a side effect of an edit. Fills in [F-22.5] and [F-22.9].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-22.5, F-22.9]
+  why: Cards re-ranked on every arrow, so the map moved under the person drawing it, and a card made from `+` appeared elsewhere before jumping to its cell.
 ```
 
 ## Appendix: Extension Definitions

@@ -8,7 +8,7 @@ import { applyIntent } from '@dxos/scene';
 
 import { toRenderList2D } from '../viewport2d/index.ts';
 import { dynamicConstrain } from './dynamic.ts';
-import { graphDocument, graphLayout, graphPositions, splitGraphEdit } from './graph-layout.ts';
+import { graphDocument, graphLayout, graphPositions, pinGraph, splitGraphEdit } from './graph-layout.ts';
 import { type GraphModel } from './graph.ts';
 
 const GRAPH: GraphModel = {
@@ -135,5 +135,23 @@ describe('splitGraphEdit', () => {
       ],
     });
     expect(edit).toEqual({ deleted: [], linked: [{ from: 'ui', to: 'store' }], rest: move });
+  });
+});
+
+describe('pinGraph', () => {
+  test('pins every node where the layout arranges it', ({ expect }) => {
+    const options = { lattice: LATTICE };
+    const { elements } = graphLayout(GRAPH, options);
+    expect(pinGraph(GRAPH, options, {})).toEqual(
+      Object.fromEntries(GRAPH.nodes.map(({ id }) => [id, elements[id].center])),
+    );
+  });
+
+  test('a node without a position takes the cell it was placed in', ({ expect }) => {
+    const options = { lattice: LATTICE };
+    const pinned = pinGraph(GRAPH, options, {});
+    const grown = { ...GRAPH, nodes: [...GRAPH.nodes, { id: 'cli', label: 'cli' }] };
+    const cell = { x: 1024, y: 512 };
+    expect(pinGraph(grown, options, pinned, { cli: cell })).toEqual({ ...pinned, cli: cell });
   });
 });

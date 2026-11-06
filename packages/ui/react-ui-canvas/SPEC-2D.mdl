@@ -842,7 +842,8 @@ feat F-15: Modes
     the edges. A shape a person moves is pinned where it lands, and an edit that adds or removes a shape or link
     re-places every unpinned shape by the layout engine, on the layout's lattice when it has one. An unpinned shape
     placed in a cell a pinned shape holds moves along its row to the next free cell. The lattice is the layout's
-    `lattice`.
+    `lattice`. `pinGraph` gives every node a position, its own or where the engine places it, so a host that keeps
+    them arranges a graph once.
   req F-15.5: A layout with `constraints` is constrained; its constraints name element ids. A shape an edit moves or
     creates is re-related to its nearest neighbour where it lands, a deleted shape takes its constraints with it, and
     the solver re-places every shape. The new constraints are written by a `layout` intent in the same batch as the
@@ -1655,6 +1656,14 @@ decision D-64: In a dynamic layout, a shape the engine places in a cell that a p
   for: user:wittjosiah
   affects: [F-15.2]
   why: On a feature map, a feature added from a spec's text took the cell of one placed from the map, and the two cards stacked.
+```
+
+```mdl
+decision D-65: A graph host that should not re-arrange on every edit pins the whole graph with `pinGraph`, which takes each unpinned node's place from the engine, or from a cell the host names for it. Fills in [F-15.2].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-15.2]
+  why: The feature map re-ranked its cards whenever an arrow was drawn; its owner wants the arrangement made once and redone only on request.
 ```
 
 ---
