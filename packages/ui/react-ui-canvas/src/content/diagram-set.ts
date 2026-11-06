@@ -3,7 +3,7 @@
 //
 
 import { type ContentMap, type Scene as DiagramScene, applyCommands } from '@dxos/diagram';
-import { type Node, type Scene } from '@dxos/scene';
+import { type Link, type Node, type Scene } from '@dxos/scene';
 
 import { fromRenderLists2D } from '../viewport2d/index.ts';
 import {
@@ -101,13 +101,18 @@ export const nestDrills = (
 export type DiagramSetDocumentOptions = {
   /** Rewrites a node of a diagram (a box drawn as the host's own type, say) before the diagrams are nested. */
   node?: (diagram: string, node: Node) => Node;
+  /** Rewrites a link of a diagram (its text, say) before the diagrams are nested. */
+  link?: (diagram: string, link: Link) => Link;
 };
 
 /**
  * The set as one 2D document held in memory: the root diagram's scene, with each drill-down box a frame onto a nested
  * copy of the diagram it names, as {@link nestDrills} makes them; nothing is stored.
  */
-export const diagramSetDocument = (set: DiagramSet, { node }: DiagramSetDocumentOptions = {}): Scene.SceneDocument => {
+export const diagramSetDocument = (
+  set: DiagramSet,
+  { node, link }: DiagramSetDocumentOptions = {},
+): Scene.SceneDocument => {
   const own = new Map<string, ContentMap>();
   for (const [id, commands] of Object.entries(set.diagrams)) {
     const content: ContentMap = {};
@@ -115,6 +120,8 @@ export const diagramSetDocument = (set: DiagramSet, { node }: DiagramSetDocument
     for (const [key, record] of Object.entries(content)) {
       if (node && isNodeRecord(record)) {
         content[key] = { ...record, node: node(id, record.node) };
+      } else if (link && isLinkRecord(record)) {
+        content[key] = { ...record, link: link(id, record.link) };
       }
     }
     const root = rootOf(content);
