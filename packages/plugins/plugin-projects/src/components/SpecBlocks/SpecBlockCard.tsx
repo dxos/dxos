@@ -39,7 +39,7 @@ import { hues } from '@dxos/ui-types';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { focusBlockEffect, isFocusRequested } from './block-commands.ts';
 import { PROSE, TITLE, blockFormSchema, fromFormValues, isBoundField, toFormValues } from './block-form.ts';
-import { RefField, TypePicker, isPickedType, parseTypeName, typeOptions } from './block-pickers.tsx';
+import { RefField, TypePicker, isPickedRef, isPickedType, parseTypeName, typeOptions } from './block-pickers.tsx';
 import { readBlock, setField, updateBlock, useSpecBlocks } from './block-value.ts';
 import { type PartSource, partBinding } from './part-binding.ts';
 import {
@@ -144,7 +144,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
             field.name,
             field.type.kind === 'prose'
               ? { collaborative: true, presentation: 'plain', hideLabel: true, readonly, placeholder: field.name }
-              : { collaborative: true, readonly },
+              : { collaborative: true, presentation: 'plain', hideLabel: true, readonly },
           ]),
       ),
       // A one-line value reads as text beside its name, with no well until it is focused.
@@ -257,10 +257,31 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                         view={view}
                         locator={locator}
                         name={field.name}
-                        typeOptions={field.type.value === 'type' ? types : undefined}
+                        // An `ext` block's field types are the language's (`Prose`, `Identifier`), not the spec's.
+                        typeOptions={field.type.value === 'type' && block.kind !== 'ext' ? types : undefined}
                         actions={active}
                         readonly={!!readonly}
                       />
+                    ) : field.type.kind === 'list' ||
+                      (field.type.kind === 'ref' && field.type.many && !isPickedRef(field, blocks)) ? (
+                      <Items
+                        key={field.name}
+                        view={view}
+                        locator={locator}
+                        name={field.name}
+                        actions={active}
+                        readonly={!!readonly}
+                      />
+                    ) : field.type.kind === 'ref' && !isPickedRef(field, blocks) ? (
+                      <FieldRow key={field.name} name={field.name}>
+                        <RowInput
+                          value={String(value.fields[field.name] ?? '')}
+                          placeholder={field.name}
+                          readonly={!!readonly}
+                          classNames='w-full'
+                          onCommit={(next) => updateBlock(view, locator, setField(field.name, next || undefined))}
+                        />
+                      </FieldRow>
                     ) : field.type.kind === 'ref' ? (
                       <FieldRow key={field.name} name={field.name}>
                         <RefField
@@ -284,10 +305,14 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                           onChange={(next) => updateBlock(view, locator, setField(field.name, next))}
                         />
                       </FieldRow>
-                    ) : field.type.kind === 'prose' ? (
+                    ) : field.type.kind === 'prose' && field.name === 'desc' ? (
                       <Card.Row key={field.name}>
                         <Form.Fields include={[field.name]} />
                       </Card.Row>
+                    ) : field.type.kind === 'prose' ? (
+                      <FieldRow key={field.name} name={field.name}>
+                        <Form.Fields include={[field.name]} />
+                      </FieldRow>
                     ) : (
                       <FieldRow key={field.name} name={field.name}>
                         <Form.Fields include={[field.name]} layout='inline' />
@@ -380,7 +405,9 @@ const TypeValue = ({
 
 /**
  * Whether the card holds focus or took the last press. Only focus or a press elsewhere in the spec's editor ends it, so
- * a menu the card opens (portalled outside it) and a button that takes no focus (Safari) leave it active.
+ * a menu the card opens (portalled outside it) and a button that takes no focus (Safari) leave it active. A press
+ * activates the card once it is released: the actions an active card adds move what is under the pointer, which would
+ * otherwise take the click.
  */
 const useActive = (ref: RefObject<HTMLElement | null>, scope: HTMLElement): boolean => {
   const [active, setActive] = useState(false);
@@ -392,18 +419,33 @@ const useActive = (ref: RefObject<HTMLElement | null>, scope: HTMLElement): bool
     const inside = (target: EventTarget | null) => target instanceof Node && element.contains(target);
     const elsewhere = (target: EventTarget | null) =>
       target instanceof Node && scope.contains(target) && !inside(target);
-    const handle = ({ target }: Event) => {
+    let pressed = false;
+    const handle = ({ type, target }: Event) => {
+      if (type === 'pointerdown') {
+        pressed = inside(target);
+      }
       if (inside(target)) {
-        setActive(true);
+        if (!pressed) {
+          setActive(true);
+        }
       } else if (elsewhere(target)) {
         setActive(false);
       }
     };
+    // The click a release makes is dispatched before the next frame.
+    const release = () => {
+      if (pressed) {
+        pressed = false;
+        requestAnimationFrame(() => setActive(true));
+      }
+    };
     document.addEventListener('focusin', handle);
     document.addEventListener('pointerdown', handle, true);
+    document.addEventListener('pointerup', release, true);
     return () => {
       document.removeEventListener('focusin', handle);
       document.removeEventListener('pointerdown', handle, true);
+      document.removeEventListener('pointerup', release, true);
     };
   }, [ref, scope]);
   return active;
@@ -559,6 +601,63 @@ const Rows = ({ view, locator, name, typeOptions, actions, readonly }: RowsProps
               classNames='self-start'
               data-testid={`spec-block.${name}.add`}
               onClick={() => update((current) => [...current, { name: '', optional: false, value: '' }])}
+            >
+              {t('spec-block.add-entry.label', { name })}
+            </Button.Root>
+          )}
+        </Layout.Flex>
+      </Layout.Flex>
+    </Card.Row>
+  );
+};
+
+/** A list field (`[a, b]` or bullets) as one line per item. */
+const Items = ({ view, locator, name, actions, readonly }: EntriesProps) => {
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
+  useSpecBlocks(view);
+  const items = [readBlock(view, locator)?.fields[name] ?? []].flat() as readonly string[];
+  const update = (change: (items: readonly string[]) => readonly string[]) =>
+    updateBlock(view, locator, (value) => {
+      const next = change([value.fields[name] ?? []].flat() as readonly string[]);
+      return setField(name, next.length > 0 ? next : undefined)(value);
+    });
+
+  return (
+    <Card.Row align='start' data-testid={`spec-block.${name}`}>
+      <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
+        <FieldName>{name}</FieldName>
+        <Layout.Flex column grow classNames='min-w-0'>
+          {items.map((item, index) => (
+            <Layout.Flex key={index} gap='xs' classNames='items-baseline' role='listitem'>
+              <RowInput
+                value={item}
+                placeholder={t('spec-block.item.placeholder')}
+                readonly={readonly}
+                classNames='grow'
+                onCommit={(next) =>
+                  update((current) =>
+                    next
+                      ? current.map((candidate, at) => (at === index ? next : candidate))
+                      : current.filter((_, at) => at !== index),
+                  )
+                }
+              />
+              {actions && (
+                <Card.Action
+                  icon='ph--x--regular'
+                  label={t('spec-block.remove-entry.label')}
+                  onClick={() => update((current) => current.filter((_, at) => at !== index))}
+                />
+              )}
+            </Layout.Flex>
+          ))}
+          {actions && (
+            <Button.Root
+              icon='ph--plus--regular'
+              variant='ghost'
+              classNames='self-start'
+              data-testid={`spec-block.${name}.add`}
+              onClick={() => update((current) => [...current, t('spec-block.new-item.text')])}
             >
               {t('spec-block.add-entry.label', { name })}
             </Button.Root>

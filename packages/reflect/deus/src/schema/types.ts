@@ -17,7 +17,7 @@ export type FieldType =
   /** `a | b | c`. */
   | { kind: 'literal'; options: readonly string[] }
   /** `Ref<op>`, `Ref<spec>`, `TypeRef`, `OpRefList`; `to` is empty for a reference to any kind. */
-  | { kind: 'ref'; to: readonly string[]; many: boolean }
+  | { kind: 'ref'; to: readonly string[]; many: boolean; chain?: boolean }
   /** A type expression, which names `type` blocks. */
   | { kind: 'typeExpr' }
   /** Rows of `name[?]: value  # note`: a `FieldMap` (typed values) or an entry map (`ErrorMap`, prose values). */

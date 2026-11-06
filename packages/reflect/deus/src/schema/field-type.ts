@@ -7,6 +7,7 @@ import { type FieldType } from './types.ts';
 const SCALARS: Record<string, FieldType> = {
   Boolean: { kind: 'boolean' },
   CodeBlock: { kind: 'code' },
+  Date: { kind: 'identifier' },
   Expr: { kind: 'identifier' },
   Identifier: { kind: 'identifier' },
   NSID: { kind: 'identifier' },
@@ -17,6 +18,8 @@ const SCALARS: Record<string, FieldType> = {
   TypeExpr: { kind: 'typeExpr' },
   UnionList: { kind: 'typeExpr' },
   URI: { kind: 'uri' },
+  boolean: { kind: 'boolean' },
+  number: { kind: 'number' },
 };
 
 /** Maps whose values are type expressions; every other `*Map` holds prose values. */
@@ -41,9 +44,11 @@ export const parseFieldType = (expr: string): FieldType => {
   if (source === 'RefList' || source === 'Ref[]') {
     return { kind: 'ref', to: [], many: true };
   }
-  const alias = source.match(/^(\w+)Ref(List|\[\])?$/);
+  const alias = source.match(/^(\w+)Ref(List|Chain|\[\])?$/);
   if (alias) {
-    return { kind: 'ref', to: [alias[1] === 'Ext' ? 'ext' : aliasKind(alias[1])], many: Boolean(alias[2]) };
+    const to = [alias[1] === 'Ext' ? 'ext' : aliasKind(alias[1])];
+    // `PlankRefChain`: an ordered list written `A > B`.
+    return { kind: 'ref', to, many: Boolean(alias[2]), ...(alias[2] === 'Chain' && { chain: true }) };
   }
   const list = source.match(/^(\w+)List$/);
   if (source === 'ServiceList') {
@@ -60,6 +65,11 @@ export const parseFieldType = (expr: string): FieldType => {
   }
   if (source.includes('|')) {
     const options = source.split('|').map((option) => option.trim());
+    // `NodeRef | TypeRef`: one block of any of the kinds.
+    const refs = options.map(parseFieldType);
+    if (refs.every((ref) => ref.kind === 'ref' && !ref.many)) {
+      return { kind: 'ref', to: refs.flatMap((ref) => (ref.kind === 'ref' ? ref.to : [])), many: false };
+    }
     if (options.every((option) => LITERAL.test(option))) {
       return { kind: 'literal', options };
     }

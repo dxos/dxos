@@ -158,6 +158,49 @@ describe('patchBlock', () => {
     expect(touched(SPEC, out)).toEqual(['  requires: [Database, Clock, Log]']);
   });
 
+  test('a chain keeps its arrows', ({ expect }) => {
+    const text = [
+      '---',
+      'extends: [org.dxos.spec.app]',
+      '---',
+      '',
+      fence('deck Mail', '  chain: Box > Message'),
+      '',
+    ].join('\n');
+    const { out, reread } = edit(text, 0, (value) => ({
+      ...value,
+      fields: { ...value.fields, chain: [...(value.fields.chain as string[]), 'Attachment'] },
+    }));
+    expect(touched(text, out)).toEqual(['  chain: Box > Message > Attachment']);
+    expect(reread.fields.chain).toEqual(['Box', 'Message', 'Attachment']);
+    // Down to one level and back, the field still writes arrows.
+    const one = edit(text, 0, (value) => ({ ...value, fields: { ...value.fields, chain: ['Box'] } })).out;
+    const two = edit(one, 0, (value) => ({ ...value, fields: { ...value.fields, chain: ['Box', 'Message'] } })).out;
+    expect(two).toEqual(text);
+  });
+
+  test('a list of mappings is raw text, so an edit cannot fold an item onto one line', ({ expect }) => {
+    const text = [
+      '---',
+      'extends: [org.dxos.spec.qa]',
+      '---',
+      '',
+      fence(
+        'test QA-1: Sort',
+        '  steps:',
+        '    - name: Receive',
+        '      do: Send a message.',
+        '      expect: it is sorted',
+      ),
+      '',
+    ].join('\n');
+    const schemas = schemasOf(text);
+    const [block] = blocksOf(text, schemas);
+    const value = decodeBlock(text, block, schemas.get('test')!);
+    expect(value.raw).toContain('steps');
+    expect(value.fields.steps).toContain('do: Send a message.');
+  });
+
   test('entries are edited, added, removed and reordered by key', ({ expect }) => {
     const entries = (value: BlockValue) => value.fields.req as Entry[];
     const reordered = edit(SPEC, 1, (value) => ({

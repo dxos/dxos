@@ -21,6 +21,11 @@ describe('parseFieldType', () => {
     ['ProseList', { kind: 'list' }],
     ['Step | Step[]', { kind: 'list' }],
     ['planned | in-progress | operational', { kind: 'literal', options: ['planned', 'in-progress', 'operational'] }],
+    ['PlankRefChain', { kind: 'ref', to: ['plank'], many: true, chain: true }],
+    ['NodeRef | TypeRef', { kind: 'ref', to: ['node', 'type'], many: false }],
+    ['TypeRef | Literal', { kind: 'raw' }],
+    ['number', { kind: 'number' }],
+    ['Date', { kind: 'identifier' }],
     ['OpInvocation', { kind: 'raw' }],
   ])('%s', (expr, type) => {
     expect(parseFieldType(expr)).toEqual(type);

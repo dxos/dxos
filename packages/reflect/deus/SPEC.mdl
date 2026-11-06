@@ -109,9 +109,9 @@ feat F-9: Block schemas
 
   req F-9.1: `resolveBlockSchemas` returns every block kind a spec can use: the `ext` blocks of the dialects it extends, transitively, then its own appendix's, a later definition of a kind replacing an earlier one. `extends` on an `ext` block inherits the parent's fields; a field it redeclares replaces the parent's.
   req F-9.2: `lang/code.mdl` (`org.dxos.spec.code`) defines the standard package blocks: `type`, `op`, `feat`, `scenario`, `component`, `service` and `module`.
-  req F-9.3: An `ext` block may state `role` (`anchor`, `structure`, `verification`, `context`), `label`, `hue` and `icon`. A field typed `Ref<kind>` or `Ref<kind>[]` is a reference to blocks of that kind; `Ref<spec>` is a reference to a spec.
+  req F-9.3: An `ext` block may state `role` (`anchor`, `structure`, `verification`, `context`), `label`, `hue` and `icon`. A field typed `Ref<kind>` or `Ref<kind>[]` is a reference to blocks of that kind; `Ref<spec>` is a reference to a spec. A union of single references (`NodeRef | TypeRef`) is a reference to a block of any of its kinds, and a `<Kind>RefChain` field (a deck's `chain`) is an ordered list written `A > B` however many items it holds.
   req F-9.4: A block's fields decode to a form value and patch back as text changes, each confined to the source range of the field, row, list item or keyed line that changed. Lines outside it keep their bytes; a note stays in its column; wrapped prose keeps its unchanged lines and rewraps the rest at the source's width and indent.
-  req F-9.5: A field no codec reads is edited as its source text, verbatim.
+  req F-9.5: A field no codec reads is edited as its source text, verbatim. So is a list whose items are mappings (a test's `steps`), which one line of text per item cannot hold.
   req F-9.6: A kind with a `label` is numbered: its blocks and keyed lines carry a stable key as their id, and tools draw the positional label (`F-3`, `F-3.2`) from document order. `rekey` gives a key to each item with no id, a positional id, or a duplicate one, and rewrites references and `<spec id>#<id>` citations to it.
   req F-9.7: A spec's `## Extensions` table is derived from the kinds it resolves.
   req F-9.8: Every block of every `.mdl` file in the repository decodes, patches back unchanged as no change, and takes a prose, row and keyed-line edit that reads back as made.
@@ -759,4 +759,13 @@ decision D-75: A key is five characters from lowercase letters and digits withou
   for: user:wittjosiah
   affects: [F-9.6]
   why: Short enough to read in a citation, never mistaken for a positional label or a number, and unambiguous to type.
+```
+
+```mdl
+decision D-76: A union of single references is a reference to any of its kinds; a deck's `chain` is a `PlankRefChain`, an ordered list that decodes from `A > B` and is always written with arrows; a list of mappings is edited as text; `Date` is a one-line value and lowercase `number` and `boolean` are scalars; SQL `columns` are a `ColumnMap`, so their SQL types are not read as spec types. Fills in [D-69].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3, F-9.5]
+  why: A form drew every standard block kind in turn; these were the field types it drew as the wrong control, and folding a step's lines into one item would have lost them on the next edit.
 ```

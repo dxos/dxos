@@ -28,7 +28,7 @@ export const isBoundField = (field: FieldSchema, value: BlockValue): boolean =>
 
 /** Whether the form's values carry a field; the card writes the rest (bound text, entries, rows, references) itself. */
 export const isFormField = (field: FieldSchema, value: BlockValue): boolean =>
-  !isBoundField(field, value) && !['keyed', 'map', 'ref', 'typeExpr'].includes(field.type.kind);
+  !isBoundField(field, value) && !['keyed', 'list', 'map', 'ref', 'typeExpr'].includes(field.type.kind);
 
 const fieldSchema = (field: FieldSchema, value: BlockValue): Schema.Top => {
   if (isBoundField(field, value)) {

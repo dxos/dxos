@@ -30,6 +30,8 @@ const WIDTH = 100;
 const ROW = /^([\w-]+|"[^"]*")(\?)?:[ \t]*(.*?)(?:([ \t]+)#[ \t]*(.*?))?[ \t]*$/d;
 const COMMENT = /^#/;
 const TRAILING_COMMENT = /[ \t]+#.*$/;
+const CHAIN = /[ \t]+>[ \t]+/;
+const KEY_LINE = /^[\w-]+:([ \t]|$)/;
 
 type Codec = 'text' | 'scalar' | 'list' | 'rows' | 'entries' | 'raw';
 
@@ -56,6 +58,9 @@ const codecOf = ({ type }: FieldSchema): Codec => {
       return 'raw';
   }
 };
+
+/** Whether a list field is an ordered chain, written `A > B` however many items it holds. */
+const isChain = ({ type }: FieldSchema) => type.kind === 'ref' && !!type.chain;
 
 const isEmpty = (value: FieldValue | undefined) =>
   value === undefined || (typeof value === 'string' ? value.trim() === '' : value.length === 0);
@@ -117,7 +122,7 @@ const splitTop = (text: string): string[] => {
 
 /** A list's items with the source range of each, in the style it is written. */
 type ListSource =
-  | { style: 'flow' | 'inline'; items: string[] }
+  | { style: 'flow' | 'inline' | 'chain'; items: string[] }
   | { style: 'bullets'; items: { text: string; from: number; to: number }[] }
   | { style: 'none'; items: [] };
 
@@ -125,7 +130,13 @@ const listSource = (field: SourceField): ListSource | undefined => {
   const inline = field.inline.text.replace(TRAILING_COMMENT, '');
   if (inline && field.lines.length === 0) {
     const flow = inline.match(/^\[(.*)\]$/);
-    return flow ? { style: 'flow', items: splitTop(flow[1]) } : { style: 'inline', items: splitTop(inline) };
+    if (flow) {
+      return { style: 'flow', items: splitTop(flow[1]) };
+    }
+    // An ordered chain, as a deck's levels are written: `MailboxPlank > MessagePlank`.
+    return CHAIN.test(inline)
+      ? { style: 'chain', items: inline.split(CHAIN).map((item) => item.trim()) }
+      : { style: 'inline', items: splitTop(inline) };
   }
   if (!inline && field.lines.length === 0) {
     return { style: 'none', items: [] };
@@ -142,6 +153,9 @@ const listSource = (field: SourceField): ListSource | undefined => {
     const bullet = text.match(/^-[ \t]+(.*)$/);
     if (bullet) {
       items.push({ text: bullet[1], from: line.from + line.indent, to: line.to });
+    } else if (items.length > 0 && KEY_LINE.test(items[items.length - 1].text) && KEY_LINE.test(text)) {
+      // An item of several `key: value` lines (a test's step) is a mapping, which one line of text cannot hold.
+      return undefined;
     } else if (items.length > 0) {
       const last = items[items.length - 1];
       last.text = `${last.text} ${text}`;
@@ -329,7 +343,9 @@ const printField = (field: FieldSchema, value: FieldValue, indent: string): stri
     case 'text':
       return printProse(value as string, `${name} `, deeper);
     case 'list':
-      return `${name} [${(value as readonly string[]).join(', ')}]`;
+      return isChain(field)
+        ? `${name} ${(value as readonly string[]).join(' > ')}`
+        : `${name} [${(value as readonly string[]).join(', ')}]`;
     case 'rows':
       return [name, ...(value as readonly Row[]).map((row) => `${deeper}${printRow(row)}`)].join('\n');
     case 'entries':
@@ -405,21 +421,35 @@ const patchScalar = (text: string, field: SourceField, next: string): Change[] =
   return [{ from: field.inline.from, to: field.to, insert: ` ${next}` }];
 };
 
-const patchList = (text: string, field: SourceField, next: readonly string[], indent: string): Change[] | undefined => {
+const patchList = (
+  text: string,
+  field: SourceField,
+  next: readonly string[],
+  indent: string,
+  chain: boolean,
+): Change[] | undefined => {
   const list = listSource(field);
   if (!list) {
     return undefined;
   }
   switch (list.style) {
     case 'flow':
-    case 'inline': {
+    case 'inline':
+    case 'chain': {
       const value = field.inline.text.replace(TRAILING_COMMENT, '');
-      const printed = list.style === 'flow' ? `[${next.join(', ')}]` : next.join(', ');
+      const printed =
+        list.style === 'flow' ? `[${next.join(', ')}]` : next.join(chain || list.style === 'chain' ? ' > ' : ', ');
       const change = minimalChange(field.inline.from, value, printed);
       return change ? [change] : [];
     }
     case 'none':
-      return [{ from: field.inline.from, to: field.inline.to, insert: ` [${next.join(', ')}]` }];
+      return [
+        {
+          from: field.inline.from,
+          to: field.inline.to,
+          insert: chain ? ` ${next.join(' > ')}` : ` [${next.join(', ')}]`,
+        },
+      ];
     case 'bullets': {
       const lead = list.items[0] ? pad(list.items[0].from - lineStart(text, list.items[0].from)) : indent;
       const changes: Change[] = [];
@@ -654,7 +684,7 @@ export const patchBlock = (text: string, block: SourceBlock, schema: BlockSchema
         case 'scalar':
           return patchScalar(text, source, value as string);
         case 'list':
-          return patchList(text, source, value as readonly string[], deeper);
+          return patchList(text, source, value as readonly string[], deeper, isChain(field));
         case 'rows':
           return patchRows(text, source, value as readonly Row[], deeper);
         default:

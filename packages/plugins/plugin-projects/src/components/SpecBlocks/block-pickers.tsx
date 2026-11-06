@@ -33,7 +33,7 @@ export const blockOptions = (
     }));
 
 /** The built-in type names a type expression may use besides the spec's `type` blocks. */
-const PRIMITIVES = ['any', 'boolean', 'number', 'string'];
+const PRIMITIVES = ['any', 'boolean', 'Date', 'number', 'ReactNode', 'string', 'unknown', 'void'];
 
 /** What a type expression may name: the built-in types, then the spec's `type` blocks. */
 export const typeOptions = (blocks: SpecBlocks): RefOption[] => [
@@ -103,7 +103,7 @@ export const TypePicker = ({ value, options, readonly, actions, onChange, 'data-
     );
   }
   return (
-    <span className='inline-flex items-baseline' data-testid={testId}>
+    <span className='group inline-flex items-baseline' data-testid={testId}>
       <ObjectPicker
         value={name || undefined}
         options={unknown ? [...options, { id: name, label: name, hue: 'red' }] : options}
@@ -117,6 +117,8 @@ export const TypePicker = ({ value, options, readonly, actions, onChange, 'data-
       {name && (list || actions) && (
         <PickerButton
           empty={!list}
+          // Off, the toggle shows on hover, so a type that is not a list never reads as one.
+          className={list ? undefined : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'}
           aria-pressed={list}
           title={t('spec-block.type-list.label')}
           onClick={() => write(name, !list)}
@@ -127,6 +129,17 @@ export const TypePicker = ({ value, options, readonly, actions, onChange, 'data-
     </span>
   );
 };
+
+/** A block named with its kind, as the app dialect writes references (`op:Sort`, `type:Message`). */
+const PREFIXED = /^([a-z][\w-]*):(.+)$/;
+
+/** A name a block of the spec could have; anything else (a path, a `github:` key, a `user:`) is outside the spec. */
+const LOCAL = /^[\w.-]+$/;
+
+/** Whether a reference field names blocks of this spec, so a picker can offer them; `ActorRef` names people instead. */
+export const isPickedRef = (field: FieldSchema, { schemas }: SpecBlocks) =>
+  isSpecReference(field) ||
+  (field.type.kind === 'ref' && (field.type.to.length === 0 || field.type.to.some((kind) => schemas.has(kind))));
 
 export type RefFieldProps = {
   view: EditorView;
@@ -140,7 +153,7 @@ export type RefFieldProps = {
 
 /**
  * A `Ref<kind>` field as a picker over the blocks it may name, or over the space's specs for `Ref<spec>`; a list of
- * references as chips. A block name the spec does not hold is flagged.
+ * references as chips. A block name the spec does not hold is flagged; a name outside the spec shows as written.
  */
 export const RefField = ({ view, locator, blocks, block, field, held, readonly }: RefFieldProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
@@ -157,26 +170,40 @@ export const RefField = ({ view, locator, blocks, block, field, held, readonly }
   );
 
   const names = [held ?? []].flat().map(String).filter(Boolean);
-  // A block named by its positional label (`F-1`) shows as its option, as does a spec named in another form.
-  const ids = names.map(
-    (name) =>
-      options.find((option) =>
-        spec ? parseCitation(option.id).spec === parseCitation(name).spec : option.id === name || option.label === name,
-      )?.id ?? name,
-  );
-  // Specs outside the space are not listed, so only a block name can be told to be missing.
-  const missing = ids.filter((id) => !options.some((option) => option.id === id));
+  // Written with kinds when the field takes several or the source already writes them.
+  const prefixed = kinds.length > 1 || names.some((name) => blocks.schemas.has(name.match(PREFIXED)?.[1] ?? ''));
+  // Each name as the option it picks: a block by its key or its positional label (`F-1`), a spec in any form it is cited.
+  const parsed = names.map((name) => {
+    if (spec) {
+      const id = options.find((option) => parseCitation(option.id).spec === parseCitation(name).spec)?.id;
+      return { id: id ?? name, name, local: false };
+    }
+    const match = name.match(PREFIXED);
+    const key = match && blocks.schemas.has(match[1]) ? match[2] : name;
+    const id = options.find((option) => option.id === key || option.label === key)?.id;
+    return { id: id ?? key, name, local: !id && LOCAL.test(key) };
+  });
+  const ids = parsed.map(({ id }) => id);
+  const unknown = parsed.filter(({ id }) => !options.some((option) => option.id === id));
   const all = [
     ...options,
-    ...missing.map((id) => ({
+    ...unknown.map(({ id, name, local }) => ({
       id,
-      label: id,
-      ...(!spec && { hue: 'red' as const, description: t('spec-block.unknown-ref.message') }),
+      label: name,
+      ...(local && { hue: 'red' as const, description: t('spec-block.unknown-ref.message') }),
     })),
   ];
-  const write = (next: readonly string[]) =>
-    updateBlock(view, locator, setField(field.name, many ? (next.length > 0 ? [...next] : undefined) : next[0]));
+  const kindOf = (id: string) => blocks.items.find((item) => !item.entry && item.key === id)?.kind;
+  const nameOf = (id: string) => {
+    const kind = kindOf(id);
+    return kind && prefixed ? `${kind}:${id}` : (parsed.find((entry) => entry.id === id)?.name ?? id);
+  };
+  const write = (next: readonly string[]) => {
+    const written = next.map(nameOf);
+    updateBlock(view, locator, setField(field.name, many ? (written.length > 0 ? written : undefined) : written[0]));
+  };
   const labelOf = (id: string) => all.find((option) => option.id === id)?.label ?? id;
+  const flagged = (id: string) => unknown.some((entry) => entry.id === id && entry.local);
 
   if (readonly) {
     return (
@@ -204,11 +231,7 @@ export const RefField = ({ view, locator, blocks, block, field, held, readonly }
       value={id}
       options={all}
       trigger={
-        <PickerButton
-          empty={!id}
-          unknown={!!id && !spec && missing.includes(id)}
-          data-testid={`spec-block.${field.name}`}
-        >
+        <PickerButton empty={!id} unknown={!!id && flagged(id)} data-testid={`spec-block.${field.name}`}>
           {id ? labelOf(id) : t('spec-block.ref.placeholder')}
         </PickerButton>
       }

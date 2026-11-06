@@ -82,7 +82,7 @@ feat F-4: A project's specs
               row, and prose it cannot place shows as a note pointing to the source view. A reference field is picked
               from the blocks of the kinds it names (from the space's specs for `Ref<spec>`) and a type, in a field or a
               map row, from the built-in types and the spec's `type` blocks, so neither can be mistyped; a name the spec
-              does not hold is flagged. A map row's comment shows as its note, without the `#`.
+              does not hold is flagged. A map row's comment shows as its note, without the `#`. A list shows one item per line; a reference written with its kind (`op:Sort`) keeps it, and a name outside the spec (a path, a `github:` key, a `user:`) shows as written and is not flagged. A field that names no block kind of the spec (`ActorRef`) is text. Every prose field but `desc` carries its name.
   req F-4.15: An agent reads and writes a spec's blocks with `GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`,
               naming a block by key or positional label. A write is checked against the kind's schema and changes only
               the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
@@ -2459,9 +2459,19 @@ decision D-216: A block form is laid out compactly, as the feature section was: 
 ```mdl
 decision D-217: A block form picks references and types rather than taking them as text: a `Ref<kind>` field from the spec's blocks of that kind (chips for a list), `Ref<spec>` from the space's specs, and a type expression from the built-in types and the spec's `type` blocks, with a list toggle. A name the spec does not hold is flagged; an expression a picker cannot hold stays text. Amends [F-4.14].
   date: 2026-11-06
-  by: user:wittjosiah
+  by: agent:claude-code
+  for: user:wittjosiah
   affects: [F-4.14]
   why: A structured form is worth its room only if it stops mistakes; a reference typed as text can name a block that does not exist.
   rejected:
     - Checking typed names after the fact (a lint mark on free text), which still lets the mistake be made.
+```
+
+```mdl
+decision D-218: Every standard block kind draws as a reasonable form: a list one item per line, a reference with its kind keeps it, a name outside the spec is not flagged, a reference to no block kind of the spec is text, a field's name labels every prose field but `desc`, and an `ext` block's field types are text. Amends [F-4.14].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user asked to see the form of every block type, to check that each works; a story with one block of each kind showed these as the ones that did not.
 ```
