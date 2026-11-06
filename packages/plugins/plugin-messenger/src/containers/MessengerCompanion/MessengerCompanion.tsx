@@ -52,12 +52,18 @@ export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) =>
         return;
       }
 
+      // A notification can name the companion its object opens with (`~comments`, say), so it lands on what it is about.
+      const companion = message.properties?.companion;
       void EffectEx.runPromise(
         loadLink(client, ref).pipe(
           Effect.flatMap((object) =>
-            Effect.promise(() =>
-              invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] }),
-            ),
+            Effect.promise(async () => {
+              const path = GraphPath.getObjectPathFromObject(object);
+              await invokePromise(LayoutOperation.Open, { subject: [path] });
+              if (typeof companion === 'string') {
+                await invokePromise(LayoutOperation.UpdateCompanion, { subject: companion, anchor: path });
+              }
+            }),
           ),
         ),
       ).catch((error) => log.warn('failed to open notification link', { error }));
