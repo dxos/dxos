@@ -399,6 +399,87 @@ test QA-10: Two peers see each other's carets in every project editor
       expect: each requirement row shows the other peer's caret with that peer's name
 ```
 
+```mdl
+test QA-11: Two people write a chess plugin's spec with the agent
+  desc: |
+    Alice and Bob turn a few bullets into the spec for a Composer chess plugin. They write the draft together in real
+    time, give it structure by hand in two views at once, ask the agent to flesh it out, draw the feature map's
+    dependencies, and settle two questions in comments while Alice is away. The spec they end with matches
+    plugin-chess's own (`org.dxos.plugin.chess`): its features, their requirements, and `type` and `op` blocks. Walked
+    by the autocue flow `packages/plugins/plugin-projects/autocue/chess-spec.mjs`, recorded side by side.
+  actors: human
+  covers: [F-4.8, F-4.10, F-4.13]
+  status: passing            # 2026-11-05, recorded by autocue/chess-spec.mjs
+  given:
+    - alice: a booted app named "Alice", with plugin-code on
+    - bob: a second browser profile named "Bob", with plugin-code on, joined to Alice's space by invitation
+    - the Assistant's model is one the EDGE ai-service serves, and a comment thread's agent answers an @mention
+    - no "Chess" project exists in the space
+  steps:
+    - name: Create the project and its spec
+      do: Alice creates the project "Chess", adds the spec "Chess plugin" on its Specs tab and checks Software in
+        Extensions.
+      expect: the Specs tab shows the empty spec, and the view toggle offers its text, Canvas and Kanban
+    - name: Write the draft
+      do: Alice types a line saying what the plugin is and two bullets under it.
+      expect: the spec's text holds the line and the two bullets
+    - name: Bob joins the draft
+      do: Bob opens "Chess" on its Specs tab.
+      expect: each plank heading shows the other person among its viewers, and Bob's spec shows Alice's caret with her
+        name
+    - name: Type at the same time
+      do: Alice adds a bullet while Bob adds two of his own at the end.
+      expect: both texts hold all five bullets, and each shows the other's caret where they are typing
+    - name: Features from the text and from the map at once
+      do: Bob switches to Canvas. Alice turns her first two bullets into features with `/feature`, naming them
+        "Gameboard" and "Make Move", while Bob adds "Start Game" from the `+` in an empty cell.
+      expect: Bob's canvas shows the three cards as they are made, and Alice's text embeds all three features
+      note: A sentence before `/feature` becomes the feature's description, so each bullet keeps its words.
+    - name: Ask the agent to flesh it out
+      do: Alice opens the Assistant in the companion, picks `/feature-map` and asks it to turn the draft into the full
+        spec for a Composer chess plugin, with requirements for every feature and the plugin's types and operations as
+        `type` and `op` blocks.
+      expect: |
+        features for the remaining bullets appear in both people's views as the agent makes them. When the agent
+        finishes, the spec holds at least six features, Gameboard, Make Move and Start Game among them, every feature
+        has requirements, the spec's text embeds every feature and holds `type` and `op` blocks, and Bob's canvas
+        shows a card for each feature
+      note: The agent names the features it adds, so only the three made by hand are checked by name.
+    - name: Draw the dependencies
+      do: On the canvas, Bob draws an arrow from "Make Move" to "Gameboard", then one from "Make Move" to "Move
+        Validation".
+      expect: each arrow shows on Bob's canvas, and Alice's space records that Make Move needs Gameboard and Move
+        Validation
+      note: A card's ports show on hover only while nothing is selected, so Bob clicks the empty canvas first.
+    - name: Alice comments on two features and leaves
+      do: Alice comments on "Gameboard"'s description, "What does the board show when the game is over?", and on "Make
+        Move"'s, "Who checks a move, the board or the engine?", then closes her tab.
+      expect: both threads show in Alice's Comments before she leaves
+      note: Commenting on a feature follows it. Comments has no bell for a feature, so this is the only way to follow
+        one.
+    - name: Bob answers both
+      do: Bob answers on "Gameboard", "Nothing yet: no requirement covers a finished game.", and on "Make Move", "Move
+        Validation does; Make Move needs it, as the map shows."
+      expect: each answer shows under its question in Bob's Comments
+    - name: Alice comes back to two notifications
+      do: Alice opens Composer again.
+      expect: Alice's notifications tab shows a badge of two, and the panel holds a notification for each feature
+    - name: Alice replies to one
+      do: Alice opens the "Make Move" notification and replies "Thanks, that settles it."
+      expect: the notification opens "Make Move" with its comments, and the reply shows in Bob's thread
+    - name: Alice asks the agent in the other thread
+      do: Alice opens the "Gameboard" notification and replies "@Kai add a requirement that a finished game shows its
+        result and takes no more moves".
+      expect: "Gameboard" gains a requirement
+    - name: Resolve the thread
+      do: Alice resolves the "Gameboard" thread.
+      expect: the thread leaves Active comments on both sides
+    - name: Read the finished spec
+      do: Both scroll through the spec's text from the top.
+      expect: the summary and bullets, the features each with requirements, and the `type` and `op` blocks, as in
+        plugin-chess's spec
+```
+
 ## Changelog
 
 ```mdl
@@ -2212,4 +2293,22 @@ decision D-209: QA-9 starts once the peers share the space and both have checked
   supersedes: D-203
   affects: [QA-9]
   why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
+```
+
+```mdl
+decision D-210: QA-11 checks that two people can write a plugin's spec together in one project: both edit its text at once, one adds features in the text while the other adds them on the feature map, the agent adds features, requirements and `type` and `op` blocks that both see as they appear, dependencies are drawn on the map, and comments made while one person is offline wait as notifications. The spec it ends with matches plugin-chess's. Its agent steps run on a live model, not recorded responses.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-11]
+```
+
+```mdl
+decision D-211: In QA-11, Alice follows the two features by commenting on them, since Comments has no bell for a feature, and Bob answers while she is away. Being away is closing her tab, not losing the network: the app comes back to the notifications either way. She asks for the missing requirement by @mentioning the thread's agent, Kai, rather than in a chat. Fills in [D-210].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-11]
+  why: A comment notifies the followers of the feature it is on, and following the project does not cover its features. Composer has no control that takes it offline, so the browser's network is cut instead. The thread's own agent sees the comment it answers.
+  rejected:
+    - Following the project alone, which leaves Alice with no notifications.
 ```
