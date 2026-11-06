@@ -580,9 +580,19 @@ describe('code mode records the operations an eval ran', () => {
           `const Score = yield* Database.resolve('${SCORE_KEY}');\nyield* print(yield* Operation.invoke(Score, { title: 'abcd' }));`,
         );
 
+        // `invokePromise` on the same service is recorded too, and once: it does not go through the wrapped `invoke`.
+        yield* call(
+          EffectDialect,
+          'promise',
+          `const Score = yield* Database.resolve('${SCORE_KEY}');\nconst service = yield* Operation.Service;\n` +
+            `const outcome = yield* Effect.promise(() => service.invokePromise(Score, { title: 'abcde' }));\n` +
+            'yield* print(outcome.data);',
+        );
+
         expect(evaluations.map(({ toolCallId, invocations }) => ({ toolCallId, invocations }))).toEqual([
           { toolCallId: 'plain', invocations: [{ operationKey: SCORE_KEY, result: '3' }] },
           { toolCallId: 'effect', invocations: [{ operationKey: SCORE_KEY, result: '4' }] },
+          { toolCallId: 'promise', invocations: [{ operationKey: SCORE_KEY, result: '5' }] },
         ]);
       },
       Effect.provide(TestLayer),
