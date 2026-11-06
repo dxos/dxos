@@ -46,14 +46,16 @@ const M2 = { id: 'M-2', features: ['New poll page', 'Poll page'] };
 const HEATMAP = 'Heat map and best slot';
 const DESIGN_DOC = 'One Durable Object per poll';
 
-const TIE_BREAK = 'F-3.2';
-const NEW_TIE_BREAK =
-  'The best slot is the one the most respondents are free for; on a tie, the one whose next slot keeps the most of the same respondents free, so the meeting can run over; then the earliest. With no marks there is no best slot.';
+const POLL_PAGE = 'Poll page';
+const ROSTER = 'F-5.6';
+const ROSTER_PREFIX = 'Below the grids a roster';
+const NEW_ROSTER =
+  'Below the grids a roster lists every respondent as a tag with how many slots they marked, most marks first and ties in the order they answered, and marks the reader; before anyone answers it says "Nobody has answered yet".';
 
 // Plans have left out the milestone's check, or its links, which the instructions ask for, so the prompt names both.
 const planPrompt = (milestone) =>
   `Plan ${milestone} from the spec: a task per feature, then Check ${milestone} linked to each of those features.`;
-const REVALIDATE_PROMPT = `I changed ${TIE_BREAK} on "${HEATMAP}". Revalidate it.`;
+const REVALIDATE_PROMPT = `I changed ${ROSTER} on "${POLL_PAGE}". Revalidate it.`;
 
 const FINISHED = ['done', 'review'];
 
@@ -160,24 +162,6 @@ const snapshot = (page) =>
 
 const tasksOf = (state, milestone) => state.tasks.filter((task) => task.milestone.startsWith(milestone));
 const allOperational = (state, names) => names.every((name) => state.features[name]?.status === 'operational');
-
-/** The spec's text in the take's space. */
-const specText = (page) =>
-  page
-    .evaluate(async (key) => {
-      const space = dxos
-        .spaces()
-        .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
-      const specs = space
-        ? await space.db
-            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.projects.spec')))
-            .run()
-            .catch(() => [])
-        : [];
-      const spec = specs.find((candidate) => candidate.name === 'Availability Poll');
-      return (await spec?.content?.load?.())?.content ?? '';
-    }, TAKE_SPACE)
-    .catch(() => '');
 
 /** The Specs tab's views of the spec: its text, or its features as a map. */
 const SPEC_VIEWS = { document: 'document', features: 'canvas' };
@@ -709,7 +693,15 @@ const checkT1 = async () => {
   const poll = (await api(`/api/polls/${id}`)).body ?? {};
   const best = poll.slots?.find((slot) => slot.id === poll.best);
   const checks = [
-    ['respondents', poll.respondents?.map((respondent) => respondent.name).join(', '), 'Ana, Ben, Chika'],
+    // The order is the page's to choose, and the bonus change moves it.
+    [
+      'respondents',
+      poll.respondents
+        ?.map((respondent) => respondent.name)
+        .sort()
+        .join(', '),
+      'Ana, Ben, Chika',
+    ],
     ['free counts', poll.slots?.map((slot) => slot.free.length).join(' '), T1.free.join(' ')],
     ['best slot', best && `${best.id}, ${minuteOf(best.start)}`, `${T1.best.id}, ${T1.best.start}`],
   ];
@@ -750,10 +742,17 @@ const openWindow = (page, { title, url }) =>
       bar.append(label);
       frame.append(bar);
       if (url) {
+        // The agent's pages take about half the frame's width, so the page is laid out smaller and scaled up to fill
+        // it; CSS zoom would misplace its tooltips.
+        const view = document.createElement('div');
+        view.style.cssText = 'flex:1;position:relative;overflow:hidden';
         const iframe = document.createElement('iframe');
         iframe.src = url;
-        iframe.style.cssText = 'flex:1;border:0;background:#0d1117';
-        frame.append(iframe);
+        iframe.style.cssText =
+          'position:absolute;top:0;left:0;width:calc(100% / 1.5);height:calc(100% / 1.5);border:0;' +
+          'background:#0d1117;transform:scale(1.5);transform-origin:0 0';
+        view.append(iframe);
+        frame.append(view);
         // The page is another site, which reaches the recording only when this page repaints; a title bar pixel that
         // changes every frame keeps the video in step with it.
         const pulse = document.createElement('span');
@@ -813,12 +812,125 @@ const openBrowser = async (page, { title, url }) => {
 };
 
 /**
- * Pulls the milestone's build from the sandbox and serves it here, fast-forwarded; then runs T-1 against it in a
- * terminal, and shows its new poll page and the T-1 poll as Ben in a browser.
+ * Tags the cells of the grid in the poll page's card titled `title` as `data-autocue-cell="<prefix>-<column>-<row>"`,
+ * and returns the grid's size, or nothing when the page has no such grid. The agent writes the page, so a grid's cells
+ * are found as the card's largest set of equal boxes at least 2rem tall, which F-5.2 asks for, holding no day or time.
  */
-const tryLocally = async (demo, page, milestone) => {
+const tagCells = (page, title, prefix) =>
+  page
+    .locator(inWindow('body'))
+    .evaluate(
+      (body, { title, prefix }) => {
+        const heading = [...body.querySelectorAll('*')].find(
+          (element) => element.childElementCount === 0 && element.textContent.trim().startsWith(title),
+        );
+        let card = heading;
+        while (card?.parentElement && card.getBoundingClientRect().height < 120) {
+          card = card.parentElement;
+        }
+        if (!card) {
+          return undefined;
+        }
+        const sizes = {};
+        for (const element of card.querySelectorAll('*')) {
+          const { width, height } = element.getBoundingClientRect();
+          if (height >= 24 && width >= 30 && !/\d{2}:\d{2}|[A-Z][a-z]{2} \d/.test(element.textContent)) {
+            (sizes[`${Math.round(width)}x${Math.round(height)}`] ??= []).push(element);
+          }
+        }
+        const cells = Object.values(sizes).sort((a, b) => b.length - a.length)[0] ?? [];
+        if (cells.length < 4) {
+          return undefined;
+        }
+        const edges = (axis) =>
+          [...new Set(cells.map((cell) => Math.round(cell.getBoundingClientRect()[axis])))].sort((a, b) => a - b);
+        const [xs, ys] = [edges('x'), edges('y')];
+        for (const cell of cells) {
+          const { x, y } = cell.getBoundingClientRect();
+          cell.dataset.autocueCell = `${prefix}-${xs.indexOf(Math.round(x))}-${ys.indexOf(Math.round(y))}`;
+        }
+        return { columns: xs.length, rows: ys.length };
+      },
+      { title, prefix },
+    )
+    .catch(() => undefined);
+
+const cell = (prefix, column, row) => inWindow(`[data-autocue-cell="${prefix}-${column}-${row}"]`);
+
+/** Scrolls the poll page's roster into view and holds on it. */
+const showRoster = async (demo, page, caption) => {
+  await page
+    .locator(inWindow(':text("Respondents")'))
+    .first()
+    .scrollIntoViewIfNeeded()
+    .catch(() => {});
+  await demo.caption({ ...caption, hold: BEAT * 4 });
+  await page.waitForTimeout(BEAT * 4);
+};
+
+/**
+ * Walks the T-1 poll as Ben, slowly enough to read: the two grids, a hover on the best slot for who is free, a drag down
+ * Tuesday that marks it in one save, and the roster. A page without the grids, such as M-1's, is held on instead.
+ */
+const showPoll = async (demo, page) => {
+  const yours = await tagCells(page, 'Your availability', 'yours');
+  const group = await tagCells(page, 'Group availability', 'group');
+  await demo.caption(
+    group
+      ? {
+          value: "Ben's grid beside the group's",
+          subtitle: 'Each slot shaded by how many are free; the best slot outlined',
+          hold: BEAT * 4,
+        }
+      : {
+          value: 'The heat map and the best slot',
+          subtitle: "M-1's plain page; M-2 lays it out to the spec",
+          hold: BEAT * 4,
+        },
+  );
+  await page.waitForTimeout(BEAT * 4);
+  if (group) {
+    // T-1's best slot, s3, is Monday at 11:00: the first day's third row.
+    await demo.hover({ selector: cell('group', 0, 2), label: 'Mon 11:00' });
+    await demo.caption({ value: 'Hover a slot to see who is free', subtitle: 'Mon 11:00: all three', hold: BEAT * 3 });
+    await page.waitForTimeout(BEAT * 3);
+  }
+  if (yours?.columns > 1) {
+    await demo.caption({
+      value: 'Ben drags down Tuesday',
+      subtitle: 'Every cell it crosses is marked, then saved once',
+      hold: BEAT * 4,
+    });
+    await demo.drag({
+      from: cell('yours', 1, 0),
+      to: cell('yours', 1, yours.rows - 1),
+      label: 'Tuesday',
+      steps: 30,
+      stepDelay: 40,
+    });
+    await page.waitForTimeout(BEAT * 4);
+  }
+  if (group) {
+    await showRoster(demo, page, {
+      value: 'Everyone who answered',
+      subtitle: 'How many slots each marked; Ben is the reader',
+    });
+  }
+};
+
+/**
+ * Pulls the milestone's build from the sandbox and serves it here, fast-forwarded; then runs T-1 against it in a
+ * terminal and opens the T-1 poll as Ben in a browser, after the new poll page unless `newPage` is false. `poll` walks
+ * the T-1 poll.
+ */
+const tryLocally = async (
+  demo,
+  page,
+  milestone,
+  { caption = `Try ${milestone} on this machine`, newPage = true, poll = showPoll } = {},
+) => {
   await demo.caption({
-    value: `Try ${milestone} on this machine`,
+    value: caption,
     subtitle: "The agent's code, pulled from its sandbox",
     // The Gantt chart's captions sit at the top, where the served pages have their headings.
     position: 'bottom',
@@ -844,16 +956,32 @@ const tryLocally = async (demo, page, milestone) => {
   }
   await printLine(page, { text: passed ? 'T-1 passed' : 'T-1 FAILED', ok: passed });
   await page.waitForTimeout(BEAT * 3);
-  await openBrowser(page, { title: `${LOCAL}/  —  the new poll page`, url: `${LOCAL}/` });
-  await demo.caption({ value: 'The new poll page', subtitle: 'In a browser, served from the build on this machine' });
-  await page.waitForTimeout(BEAT * 3);
+  if (newPage) {
+    await openBrowser(page, { title: `${LOCAL}/  —  the new poll page`, url: `${LOCAL}/` });
+    await demo.caption({
+      value: 'The new poll page',
+      subtitle:
+        milestone === M1.id
+          ? 'A title, a slot length and the slots, plainly'
+          : 'A title and slot length, then the days and hours',
+      hold: BEAT * 4,
+    });
+    await page.waitForTimeout(BEAT * 2);
+    const title = inWindow('input:not([type]), input[type="text"]');
+    if (await visible(page.locator(title), 5_000)) {
+      await demo.click({ selector: `${title} >> nth=0`, label: 'Title' });
+      await page.keyboard.type('Team offsite', { delay: 80 });
+      await page.waitForTimeout(BEAT * 3);
+    }
+  }
   if (id) {
     await openBrowser(page, { title: `${LOCAL}/p/${id.slice(0, 12)}…  —  the T-1 poll`, url: `${LOCAL}/p/${id}` });
     await demo.caption({
       value: 'The T-1 poll, as Ben',
-      subtitle: 'Three respondents: the heat map and the best slot',
+      subtitle: 'Ana and Chika have answered; Ben gives his name',
+      hold: BEAT * 3,
     });
-    await page.waitForTimeout(BEAT);
+    await page.waitForTimeout(BEAT * 2);
     // The page asks a visitor's name first; the agent builds the form, so the first text field is the best guess.
     const name = page.locator(inWindow('input:not([type]), input[type="text"]')).first();
     if (await visible(name, 5_000)) {
@@ -866,7 +994,8 @@ const tryLocally = async (demo, page, milestone) => {
         await demo.click({ selector: `${inWindow('button')} >> nth=0`, label: 'Continue' });
       }
     }
-    await page.waitForTimeout(BEAT * 4);
+    await page.waitForTimeout(BEAT);
+    await poll(demo, page);
   }
   await closeWindow(page);
   if (!passed) {
@@ -1163,17 +1292,24 @@ export const steps = [
     },
   },
   {
-    name: 'Change the tie-break',
+    name: 'Change the roster order',
     done: async ({ page }) =>
-      (await snapshot(page)).features[HEATMAP]?.requirements.some(
-        ({ id, text }) => id === TIE_BREAK && text === NEW_TIE_BREAK,
+      (await snapshot(page)).features[POLL_PAGE]?.requirements.some(
+        ({ id, text }) => id === ROSTER && text === NEW_ROSTER,
       ) ?? false,
     run: async ({ demo, page }) => {
+      // As before M-2: the agents' work so far has slowed the page, and the revalidation runs on a fresh one.
+      await demo.speed({ factor: FAST });
+      await page.reload();
+      await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 300_000 });
+      await page.waitForTimeout(BEAT * 4);
+      await demo.speed({ factor: 1 });
       await demo.caption({
-        value: 'Change a requirement',
-        subtitle: `${TIE_BREAK}: a tie goes to the slot that can run over`,
+        value: 'Now change the spec',
+        subtitle: `${ROSTER}: the roster lists the most marks first`,
+        hold: BEAT * 3,
       });
-      await openFeature(demo, page, HEATMAP);
+      await openFeature(demo, page, POLL_PAGE);
       // The requirement is a text field of the feature's form, found by its current text.
       const field = page.locator(`${COMPANION} :is(textarea, input[type="text"], input:not([type]))`);
       const count = await field.count();
@@ -1185,19 +1321,20 @@ export const steps = [
               .nth(candidate)
               .inputValue()
               .catch(() => '')
-          ).startsWith('The best slot is')
+          ).startsWith(ROSTER_PREFIX)
         ) {
           index = candidate;
           break;
         }
       }
       if (index < 0) {
-        throw new Error(`no field holds ${TIE_BREAK} in the feature companion`);
+        throw new Error(`no field holds ${ROSTER} in the feature companion`);
       }
       await field.nth(index).scrollIntoViewIfNeeded();
+      await page.waitForTimeout(BEAT * 2);
       await field.nth(index).click();
       await page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
-      await page.keyboard.type(NEW_TIE_BREAK, { delay: 20 });
+      await page.keyboard.type(NEW_ROSTER, { delay: 20 });
       await page.keyboard.press('Tab');
       await page.waitForFunction(
         async ({ key, text }) => {
@@ -1209,33 +1346,40 @@ export const steps = [
             Object.values(feature.requirements ?? {}).some((requirement) => requirement.text === text),
           );
         },
-        { key: TAKE_SPACE, text: NEW_TIE_BREAK },
+        { key: TAKE_SPACE, text: NEW_ROSTER },
         { timeout: 10_000 },
       );
-      await page.waitForTimeout(BEAT * 2);
+      await demo.caption({ value: 'The requirement changes; the code does not, yet', hold: BEAT * 3 });
+      await page.waitForTimeout(BEAT * 3);
     },
   },
   {
     name: 'Revalidate',
     done: async ({ page }) => {
       const state = await snapshot(page);
-      return state.features[HEATMAP]?.status === 'failing' && state.tasks.some((task) => !task.assigned);
+      return state.features[POLL_PAGE]?.status === 'failing' && state.tasks.some((task) => !task.assigned);
     },
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Ask the agent to revalidate it' });
+      await demo.caption({ value: 'Ask the agent to verify it again' });
+      await freshChat(page);
       await ask(demo, page, REVALIDATE_PROMPT);
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
       await openProjectTab(demo, page, 'features');
-      await waitFor(demo, page, (state) => state.features[HEATMAP]?.status === 'failing', 30, 'the revalidation');
-      await demo.caption({ value: 'The Worker no longer meets it: failing' });
-      await page.waitForTimeout(BEAT * 2);
+      await demo.caption({
+        value: 'The agent reruns T-2 under the new requirement',
+        subtitle: 'Fast-forwarded',
+        position: 'top',
+      });
+      await waitFor(demo, page, (state) => state.features[POLL_PAGE]?.status === 'failing', 30, 'the revalidation');
+      await demo.caption({
+        value: 'The Worker no longer meets it: failing',
+        subtitle: 'Its roster is still in the order people answered',
+        hold: BEAT * 4,
+      });
+      await page.waitForTimeout(BEAT * 3);
       // The fix task is the one filed after the change, unassigned until it is delegated.
       await waitFor(demo, page, (state) => state.tasks.some((task) => !task.assigned), 15, 'the fix task');
-      const text = await specText(page);
-      if (!/best slot is s8/.test(text)) {
-        throw new Error("the revalidation left T-3's best slot at s3");
-      }
     },
   },
   {
@@ -1243,42 +1387,66 @@ export const steps = [
     done: async ({ page }) => {
       const state = await snapshot(page);
       return (
-        state.features[HEATMAP]?.status === 'operational' && state.tasks.every((task) => FINISHED.includes(task.status))
+        state.features[POLL_PAGE]?.status === 'operational' &&
+        state.tasks.every((task) => FINISHED.includes(task.status))
       );
     },
     run: async ({ demo, page }) => {
+      await openProjectTab(demo, page, 'tasks');
+      await demo.caption({ value: 'The agent filed one task for the fix', hold: BEAT * 3 });
+      await page.waitForTimeout(BEAT * 2);
       await demo.caption({ value: 'Hand the fix to the agent' });
       const fix = (await snapshot(page)).tasks.filter((task) => !task.assigned).map((task) => task.title);
       await delegate(demo, page, fix);
       await demo.caption({
-        value: 'It changes the code, checks again and redeploys',
+        value: 'It changes the code, reruns T-2 and redeploys',
         subtitle: 'Fast-forwarded',
         position: 'top',
       });
-      await openProjectTab(demo, page, 'features');
+      await showGantt(demo, page);
       await waitFor(
         demo,
         page,
         (state) =>
-          state.features[HEATMAP]?.status === 'operational' &&
+          state.features[POLL_PAGE]?.status === 'operational' &&
           state.tasks.filter((task) => fix.includes(task.title)).every((task) => FINISHED.includes(task.status)),
-        20,
+        30,
         'the fix',
       );
-      await page.waitForTimeout(BEAT * 2);
-      await acceptMilestone(demo, page, M1.id);
+      await openProjectTab(demo, page, 'features');
+      await demo.caption({ value: 'Verified again: Poll page is operational', hold: BEAT * 3 });
+      await page.waitForTimeout(BEAT * 3);
+      await acceptMilestone(demo, page, M2.id, { value: 'Sign off the fix' });
+      await page.waitForTimeout(BEAT);
     },
   },
   {
-    name: 'Hold on the feature map',
-    narration: 'Five features operational, checked before each deploy; flight options are left to build.',
+    name: 'Try the fix locally',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Five features operational; flight options are yours to build' });
-      await openProjectTab(demo, page, 'features');
-      await page.waitForTimeout(BEAT * 3);
-      await demo.caption({ value: 'The spec records the change', subtitle: "T-3's best slot is now s8" });
+      await tryLocally(demo, page, M2.id, {
+        caption: 'Try the fix on this machine',
+        newPage: false,
+        poll: (demo, page) =>
+          showRoster(demo, page, {
+            value: 'The roster now leads with the most marks',
+            subtitle: 'Ben marked 4 slots, so he comes before Ana and Chika',
+          }),
+      });
+    },
+  },
+  {
+    name: 'Hold on the spec',
+    run: async ({ demo, page }) => {
       await openProjectTab(demo, page, 'document');
-      await scrollDocumentTo(page, 'decision D-2');
+      await demo.caption({ value: 'The spec records the change', subtitle: `${ROSTER}, T-2 and the Changelog` });
+      await scrollDocumentTo(page, POLL_PAGE, { exact: true, delay: 100 });
+      await page.waitForTimeout(BEAT * 4);
+      await scrollDocumentTo(page, 'Changelog', { delay: 100 });
+      await demo.caption({
+        value: 'M-1 and M-2 operational, the change verified',
+        subtitle: 'Time zones and flight options are the next milestones',
+        hold: BEAT * 4,
+      });
       await page.waitForTimeout(BEAT * 4);
     },
   },
