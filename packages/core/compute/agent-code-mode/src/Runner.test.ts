@@ -10,7 +10,6 @@ import { expect } from 'vitest';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
@@ -69,7 +68,7 @@ const runner = Effect.fnUntraced(function* () {
   return Runner.make({ sandbox: Sandbox.inProcess, runtime, operations: [ScoreOperation] });
 });
 
-describe('code-mode ScriptRunner', () => {
+describe('code-mode script runner', () => {
   it.effect(
     'runs an inline snippet in each dialect it serves',
     Effect.fnUntraced(
@@ -118,7 +117,7 @@ describe('code-mode ScriptRunner', () => {
         const error = yield* run
           .run({ source: Operation.inlineScript('const x = 1;', 'typescript') })
           .pipe(Effect.flip);
-        expect(error._tag).toBe('ScriptRunnerError');
+        expect(error._tag).toBe('ScriptError');
         expect(error.message).toContain('typescript');
       },
       Effect.provide(TestLayer),
@@ -156,7 +155,7 @@ describe('code-mode ScriptRunner', () => {
           source: Operation.inlineScript("print('from an operation');", 'plain'),
         });
         const run = yield* runner();
-        expect((yield* run.run(ScriptRunner.requestOf(operation))).output).toBe('from an operation');
+        expect((yield* run.run(Operation.scriptRequest(operation))).output).toBe('from an operation');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

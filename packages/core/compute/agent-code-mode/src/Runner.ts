@@ -4,13 +4,13 @@
 
 // @import-as-namespace
 
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Result from 'effect/Result';
 
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import type { Database } from '@dxos/echo';
 
@@ -20,7 +20,7 @@ import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { evaluate } from './eval-tool.ts';
 import type * as Sandbox from './Sandbox.ts';
 
-/** The dialects code mode serves, keyed by the name a {@link ScriptRunner.Request} names them by. */
+/** The dialects code mode serves, keyed by the name an `Operation.ScriptRequest` names them by. */
 export const DIALECTS: Partial<Record<Operation.ScriptDialect, Dialect>> = {
   plain: PlainDialect,
   effect: EffectDialect,
@@ -45,22 +45,22 @@ export type Options = {
 };
 
 /**
- * A {@link ScriptRunner.Runner} over code mode's dialects and sandboxes.
+ * A {@link Operation.ScriptRunner} over code mode's dialects and sandboxes.
  *
  * This is the seam between the two: a script's dialect names which of code mode's languages its body
  * is written in, and everything the body is written AGAINST — the database, the skills' operations —
  * is the runner's, because a request is serializable and a workspace is not.
  */
-export const make = (options: Options): ScriptRunner.Runner => {
+export const make = (options: Options): Operation.ScriptRunner => {
   const dialects = options.dialects ?? DIALECTS;
   return {
-    run: (request) =>
+    run: (request, runtime) =>
       Effect.gen(function* () {
-        const { code, dialect } = yield* ScriptRunner.resolveSource(request.source);
+        const { code, dialect } = yield* Operation.resolveScriptSource(request.source);
         const resolved = dialects[dialect];
         if (resolved === undefined) {
           return yield* Effect.fail(
-            new ScriptRunner.RunnerError({
+            new Operation.ScriptError({
               message: `Code mode does not serve dialect "${dialect}"; it serves ${Object.keys(dialects).join(', ')}.`,
               dialect,
             }),
@@ -79,7 +79,9 @@ export const make = (options: Options): ScriptRunner.Runner => {
             bindings: (context) => ({ ...resolved.bindings(context), input: request.input }),
           },
           sandbox: options.sandbox,
-          runtime: options.runtime,
+          // The script's own process over the backend's defaults, so an operation the code invokes
+          // and a process it spawns belong to that process rather than to whoever asked for the script.
+          runtime: runtime === undefined ? options.runtime : Context.merge(options.runtime, runtime.context),
           operations: options.operations,
           ...(options.skills !== undefined ? { skills: options.skills } : {}),
           ...(maxOutput !== undefined ? { maxOutput } : {}),
@@ -95,7 +97,7 @@ export const make = (options: Options): ScriptRunner.Runner => {
   };
 };
 
-/** Installs a code-mode runner as the ambient {@link ScriptRunner.Service}. */
+/** Installs a code-mode runner as the runtime's script backend. */
 export const layer = (options: Options): Layer.Layer<ScriptRunner.Service> => ScriptRunner.layer(make(options));
 
 /**

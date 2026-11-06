@@ -89,6 +89,19 @@ export const layer: Layer.Layer<
         location?.kind === 'edge'
           ? Effect.suspend(() => remoteControl('attach')({ spaceId: location.space, pid }))
           : local.attach<I, O, Rpcs>(pid),
+      // A remote runtime runs the script operations IT hosts, reached by key through the operation
+      // invoker (`Operation.invoke(script, input, { on: 'edge' })`), so there is no remote process to
+      // spawn from here: this manager runs a script on the runtime it owns.
+      runScript: (
+        op: Operation.ScriptDefinition.Any,
+        input?: unknown,
+        { location, ...options }: Process.SpawnOptions & Process.LocationOptions = {},
+      ): Effect.Effect<Operation.ScriptResult> =>
+        location?.kind === 'edge'
+          ? Effect.die(
+              new Error(`Script operation '${op.meta.key}' cannot be spawned remotely; invoke it with { on: 'edge' }.`),
+            )
+          : local.runScript(op, input, options),
     } satisfies Process.Manager;
   }),
 );

@@ -12,7 +12,6 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -237,66 +236,3 @@ const undeclaredTopLevelKeys = (typeAst: SchemaAST.AST, input: unknown): string[
 };
 
 const CONTENTLESS_INPUT_TAGS: ReadonlySet<string> = new Set(['Any', 'Unknown', 'Void', 'Undefined', 'Null', 'Never']);
-
-//
-// Script operations.
-//
-
-/**
- * Runs a script operation as a process, through the runtime's own {@link ScriptRunner.Service}.
- *
- * The counterpart of {@link make} for the script kind, and the reason there is no script process of
- * its own: a script operation is an operation, so it runs under ITS key, in the same tree, with the
- * same lifecycle — the process manager is the script runner. A runtime hosting the operation (EDGE)
- * therefore resolves it by that key like any other.
- *
- * The output is the run's {@link ScriptRunner.Result} — what the script printed, and its error when
- * it failed. The operation's own `output` schema describes the value a dialect that returns one
- * produces, which no dialect does yet; it is carried for the registry record, not for this process.
- */
-export const makeScript = (
-  op: Operation.ScriptDefinition.Any,
-): Operation.Durable<unknown, ScriptRunner.Result, ScriptRunner.Service> =>
-  Operation.makeDurable({
-    key: DXN.getName(op.meta.key),
-    name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : String(op.meta.key),
-    input: Schema.Unknown,
-    output: ScriptRunner.Result,
-    services: [ScriptRunner.Service],
-    // A script interrupted mid-run cannot be resumed: its evaluation state belongs to the runtime
-    // that was running it, which a restart has already lost.
-    resumable: false,
-  }).pipe(
-    Operation.withDurableHandler((ctx) =>
-      Effect.gen(function* () {
-        const runner = yield* ScriptRunner.Service;
-        return {
-          onInput: (input: unknown) =>
-            Effect.gen(function* () {
-              const dialect = yield* ScriptRunner.dialectOf(op.source);
-              yield* Trace.write(Trace.OperationStart, {
-                key: String(op.meta.key),
-                name: op.meta.name,
-                icon: op.meta.icon,
-              });
-              const result = yield* runner.run(ScriptRunner.requestOf(op, input));
-              ctx.submitOutput(result);
-              ctx.succeed();
-              yield* Trace.write(Trace.OperationEnd, {
-                key: String(op.meta.key),
-                name: op.meta.name,
-                icon: op.meta.icon,
-                outcome: result.error === undefined ? 'success' : 'failure',
-                ...(result.error !== undefined ? { error: result.error } : {}),
-              });
-              log('script operation ran', { key: String(op.meta.key), dialect, failed: result.error !== undefined });
-            }).pipe(
-              // A runner failure (no backend for the dialect, a source that will not resolve) is the
-              // deployment's fault, not the script's, so it terminates the process rather than being
-              // reported as output a caller would read as the script's own error.
-              Effect.catchTag('ScriptRunnerError', (error) => Effect.die(error)),
-            ),
-        };
-      }),
-    ),
-  );

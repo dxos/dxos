@@ -12,7 +12,6 @@ import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import type * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
@@ -125,11 +124,11 @@ export const evaluate = Effect.fnUntraced(function* ({
  * sandbox. Rebuilt per turn, since a skill enabled mid-request changes what the operations are.
  *
  * `runner` is how the turn reaches another runtime: given one, every call becomes a
- * {@link ScriptRunner.Request} — the model's code as an inline script in the turn's dialect — and the
+ * `Operation.ScriptRequest` — the model's code as an inline script in the turn's dialect — and the
  * runner decides where it runs. Without one the code is evaluated here, against `sandbox`.
  */
 export const makeEvalToolkit = (
-  options: EvalToolkitOptions & { readonly runner?: ScriptRunner.Runner },
+  options: EvalToolkitOptions & { readonly runner?: Operation.ScriptRunner },
 ): OpaqueToolkit.OpaqueToolkit =>
   OpaqueToolkit.make(
     EvalToolkitDefinition,
@@ -140,7 +139,7 @@ export const makeEvalToolkit = (
   );
 
 /**
- * One call answered by a {@link ScriptRunner.Runner}, in the `eval` tool's own terms: the text the
+ * One call answered by a {@link Operation.ScriptRunner}, in the `eval` tool's own terms: the text the
  * model sees, failed when the code failed.
  *
  * A runner failure (no backend for the dialect, a runtime that refused) is reported the same way
@@ -148,7 +147,7 @@ export const makeEvalToolkit = (
  * deployment.
  */
 const runThroughRunner = (
-  runner: ScriptRunner.Runner,
+  runner: Operation.ScriptRunner,
   options: EvalToolkitOptions,
   code: string,
 ): Effect.Effect<string, string> =>
@@ -166,7 +165,7 @@ const runThroughRunner = (
         Effect.flatMap((result) =>
           result.error === undefined ? Effect.succeed(result.output) : Effect.fail(result.output),
         ),
-        Effect.catchTag('ScriptRunnerError', (error) => Effect.fail(`Error: ${error.message}`)),
+        Effect.catchTag('ScriptError', (error) => Effect.fail(`Error: ${error.message}`)),
       );
   });
 

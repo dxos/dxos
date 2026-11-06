@@ -17,7 +17,6 @@ import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 
 import * as Operation from '@dxos/compute/Operation';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Obj, Registry } from '@dxos/echo';
@@ -767,6 +766,7 @@ export const runScript = (
   options: ScriptOptions,
 ): Effect.Effect<ScriptResult> =>
   scriptRunner(registry, host, gate, options)
+    // No process is handed over: this server answers a script's calls through its own host.
     .run({
       source: Operation.inlineScript(code, Operation.ScriptDialects.Effect),
       ...(spaceId !== undefined ? { spaceId } : {}),
@@ -775,11 +775,11 @@ export const runScript = (
     .pipe(
       // A runner failure here is this server's own misconfiguration, and the caller is a model: it
       // reads the message as the script's failure rather than losing the turn to a tool error.
-      Effect.catchTag('ScriptRunnerError', (error) => Effect.succeed({ output: '', error: error.message })),
+      Effect.catchTag('ScriptError', (error) => Effect.succeed({ output: '', error: error.message })),
     );
 
 /**
- * This server's script execution as a {@link ScriptRunner.Runner}: the same sandbox, dispatch and
+ * This server's script execution as a {@link Operation.ScriptRunner}: the same sandbox, dispatch and
  * skill gate, behind the API every other script caller uses.
  *
  * Only the `effect` dialect: the program is written against this host's three verbs as effects, which
@@ -790,13 +790,13 @@ export const scriptRunner = (
   host: HostShape,
   gate: SkillGate,
   { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
-): ScriptRunner.Runner => ({
+): Operation.ScriptRunner => ({
   run: (request) =>
     Effect.gen(function* () {
-      const { code, dialect } = yield* ScriptRunner.resolveSource(request.source);
+      const { code, dialect } = yield* Operation.resolveScriptSource(request.source);
       if (dialect !== Operation.ScriptDialects.Effect) {
         return yield* Effect.fail(
-          new ScriptRunner.RunnerError({
+          new Operation.ScriptError({
             message: `This server runs the "${Operation.ScriptDialects.Effect}" dialect only, not "${dialect}".`,
             dialect,
           }),
@@ -824,13 +824,11 @@ export const scriptRunner = (
 });
 
 /** The request's space as this server's branded id; a value that is not one is the caller's mistake. */
-const decodeScriptSpaceId = (
-  spaceId: string | undefined,
-): Effect.Effect<SpaceId | undefined, ScriptRunner.RunnerError> =>
+const decodeScriptSpaceId = (spaceId: string | undefined): Effect.Effect<SpaceId | undefined, Operation.ScriptError> =>
   spaceId === undefined
     ? Effect.succeed(undefined)
     : Schema.decodeUnknownEffect(SpaceId)(spaceId).pipe(
-        Effect.mapError(() => new ScriptRunner.RunnerError({ message: `Not a space id: ${spaceId}` })),
+        Effect.mapError(() => new Operation.ScriptError({ message: `Not a space id: ${spaceId}` })),
       );
 
 const ScriptInvokeArguments = Schema.Struct({
