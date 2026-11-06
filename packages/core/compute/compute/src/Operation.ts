@@ -835,35 +835,42 @@ export const makeScript = <const P extends Types.NoExcessProperties<ScriptProps,
 export const isScript = (value: unknown): value is ScriptDefinition.Any =>
   typeof value === 'object' && value !== null && ScriptDefinitionTypeId in value;
 
-/** Meta key under which a script operation's dialect rides on a persisted record. */
-const SCRIPT_DIALECT_META_KEY = 'org.dxos.operation.script.dialect';
+/**
+ * Annotation carrying a script operation's inline snippet on its persisted record.
+ *
+ * An annotation rather than a field on {@link PersistentOperation}: that schema is rendered into
+ * agent prompts field by field, so a new field there changes what every agent reads about every
+ * operation record — a cost a value only script operations carry should not impose.
+ */
+export const InlineScriptAnnotation = Annotation.make({
+  id: 'org.dxos.operation.script.inline',
+  schema: InlineScript,
+});
 
 /**
- * Serializes a script operation to its registry record: a snippet lands in `binding`-free
- * `scriptSource`, an object source in `source`, and the dialect in the record's foreign keys — the
- * one place a record can carry a value the schema does not name.
+ * Serializes a script operation to its registry record: a snippet rides as the
+ * {@link InlineScriptAnnotation}, an object source in the record's own `source` ref.
  */
 export const serializeScript = (operation: ScriptDefinition.Any, options?: Obj.MakeOptions): PersistentOperation => {
+  const annotations = { ...(operation.meta.annotations ?? {}) };
+  if (isInlineScript(operation.source)) {
+    Annotation.setDictionary(annotations, InlineScriptAnnotation, operation.source);
+  }
   const record = serialize(
     make({
       input: operation.input,
       output: operation.output,
-      meta: operation.meta,
+      meta: { ...operation.meta, annotations },
       services: [],
     }),
     options,
   );
-  Obj.update(record, (record) => {
-    if (isInlineScript(operation.source)) {
-      record.scriptSource = operation.source.code;
-      Obj.getMeta(record).keys = [
-        ...Obj.getMeta(record).keys,
-        { source: SCRIPT_DIALECT_META_KEY, id: operation.source.dialect },
-      ];
-    } else {
-      record.source = operation.source.script;
-    }
-  });
+  const { source } = operation;
+  if (isScriptRef(source)) {
+    Obj.update(record, (record) => {
+      record.source = source.script;
+    });
+  }
   return record;
 };
 
@@ -873,24 +880,17 @@ export const serializeScript = (operation: ScriptDefinition.Any, options?: Obj.M
  */
 export const deserializeScript = (record: PersistentOperation): ScriptDefinition.Any | undefined => {
   const definition = deserialize(record);
-  const dialect = Obj.getMeta(record).keys.find((key) => key.source === SCRIPT_DIALECT_META_KEY)?.id;
-  if (record.scriptSource !== undefined) {
-    return makeScript({
-      meta: definition.meta,
-      input: definition.input,
-      output: definition.output,
-      source: inlineScript(record.scriptSource, isDialect(dialect) ? dialect : Dialects.TypeScript),
-    });
+  const inline = Option.getOrUndefined(Annotation.get(record, InlineScriptAnnotation));
+  const source = inline ?? (record.source !== undefined ? scriptRef(record.source) : undefined);
+  if (source === undefined) {
+    return undefined;
   }
-  if (record.source !== undefined) {
-    return makeScript({
-      meta: definition.meta,
-      input: definition.input,
-      output: definition.output,
-      source: scriptRef(record.source),
-    });
-  }
-  return undefined;
+  return makeScript({
+    meta: definition.meta,
+    input: definition.input,
+    output: definition.output,
+    source,
+  });
 };
 
 /** Whether `value` names a known {@link Dialect}. */
@@ -1020,12 +1020,6 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
      * Match the Context.Tag keys of the services the operation handler declares.
      */
     services: Schema$.optional(Schema$.Array(Schema$.String)),
-
-    /**
-     * Inline script body of a script operation (see {@link ScriptDefinition}); its dialect rides on the
-     * record's foreign keys. Absent for a compiled operation and for one whose script is the `source` object.
-     */
-    scriptSource: Schema$.optional(Schema$.String),
 
     // Local binding to a function name.
     // TODO(dmaretskyi): Add this field to Operation.Definition.
