@@ -10,7 +10,7 @@ import * as Combobox from '@dxos/react-ui/Combobox';
 import { type FormFieldRendererProps } from '#types';
 
 import { type OptionsLookup, type OptionsLookupEntry } from '../../annotations.ts';
-import { pickValues, useAsyncFieldEffect, useFormValues } from '../../hooks/index.ts';
+import { lookupKey, pickValues, useAsyncFieldEffect, useFormValues } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
 
@@ -48,7 +48,7 @@ export const ComboboxField = ({
     }
     return subset;
   }, [values, lookup.deps, jsonPath, query]);
-  const key = useMemo(() => JSON.stringify(lookupValues), [lookupValues]);
+  const key = useMemo(() => lookupKey(lookup, lookupValues), [lookup, lookupValues]);
   const { data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(() => lookup.load(lookupValues), key);
 
   const value = getValue() ?? '';
