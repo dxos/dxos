@@ -1245,6 +1245,9 @@ export class QueryExecutor extends Resource {
       const feedNamespace = await this._runInRuntime(feedStore.getFeedNamespace({ spaceId, feedId }));
       if (feedNamespace !== undefined) {
         storeFeeds.set(feedId, { spaceId, feedNamespace });
+      } else {
+        // Empty is right for a feed with no blocks yet, but the index answer is also empty for one whose blocks this host lacks.
+        log('feed to read from the store has no row there; answering from the index', { spaceId, feedId });
       }
     };
     // A walk reads the branch tree of the store, which the index does not hold.
