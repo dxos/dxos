@@ -83,6 +83,24 @@ describe('graphLayout', () => {
     expect(Object.keys(view.layers ?? {})).toEqual(['backdrop', 'graph']);
   });
 
+  test("an edge's connector reaches the link the viewport draws", ({ expect }) => {
+    const connector = {
+      head: 'arrow' as const,
+      route: [
+        { x: 0, y: 48 },
+        { x: 0, y: 112 },
+      ],
+    };
+    const graph: GraphModel = {
+      ...GRAPH,
+      edges: GRAPH.edges.map((edge) => (edge.id === 'app->ui' ? { ...edge, connector } : edge)),
+    };
+    const layout = graphLayout(graph, { lattice: LATTICE });
+    const view = toRenderList2D(graphDocument(layout), layout);
+    expect(view.links['app->ui'].connector).toEqual(connector);
+    expect(view.links['ui->model'].connector).toBeUndefined();
+  });
+
   test('a placed node is pinned where it was placed, and the rest keep their slots', ({ expect }) => {
     const arranged = graphLayout(GRAPH, { lattice: LATTICE });
     const placed = graphLayout(GRAPH, { lattice: LATTICE }, { store: { x: 1024, y: 0 } });

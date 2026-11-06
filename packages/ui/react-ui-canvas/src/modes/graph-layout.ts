@@ -114,7 +114,13 @@ export const graphLayout = (
       ...(edge.text !== undefined ? { label: edge.text } : {}),
       ...(link?.layer !== undefined ? { layer: link.layer } : {}),
       ...(edge.style ? { overrides: edge.style } : {}),
-      props: { canvas: { type: link?.type ?? 'smart', ...(ends ? { ends } : {}) } },
+      props: {
+        canvas: {
+          type: link?.type ?? 'smart',
+          ...(ends ? { ends } : {}),
+          ...(edge.connector ? { connector: edge.connector } : {}),
+        },
+      },
     };
   });
   graph.nodes.forEach((node, index) => {
