@@ -316,8 +316,10 @@ export const ignoreSender = (mailbox: Mailbox, email: string): void => {
     return;
   }
 
+  // Assigned whole rather than `(mailbox.messageFilters ??= []).push(...)`: a `??=` expression evaluates to the
+  // array it assigned, not the one the object stores, so on a mailbox with no filters the push was lost.
   Obj.update(mailbox, (mailbox) => {
-    (mailbox.messageFilters ??= []).push({ from: email });
+    mailbox.messageFilters = [...(mailbox.messageFilters ?? []), { from: email }];
   });
 };
 

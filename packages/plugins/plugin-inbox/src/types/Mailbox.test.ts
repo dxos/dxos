@@ -59,6 +59,34 @@ describe('Mailbox tags', () => {
   });
 });
 
+describe('Mailbox sender filters', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  // A mailbox starts with no `messageFilters`: the first ignored sender has to create the list AND land in it.
+  test('ignoreSender stores the filter on a mailbox that has none yet', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, Mailbox.Mailbox, TagIndex.TagIndex] });
+    const mailbox = db.add(Mailbox.make());
+    await db.flush();
+    expect(mailbox.messageFilters).toBeUndefined();
+
+    Mailbox.ignoreSender(mailbox, 'news@a.io');
+    expect(mailbox.messageFilters).toEqual([{ from: 'news@a.io' }]);
+
+    // Idempotent, and a second sender is appended.
+    Mailbox.ignoreSender(mailbox, 'news@a.io');
+    Mailbox.ignoreSender(mailbox, 'digest@b.io');
+    expect(mailbox.messageFilters).toEqual([{ from: 'news@a.io' }, { from: 'digest@b.io' }]);
+  });
+});
+
 describe('identity addresses', () => {
   test('recognizes a mailbox named after the account it syncs, and nothing else', ({ expect }) => {
     expect(Mailbox.identityAddresses({ name: 'rich@example.com' })).toEqual(['rich@example.com']);
