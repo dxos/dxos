@@ -80,6 +80,32 @@ export class Greeter extends Context.Service<
   }
 >()('@dxos/plugin-host-cloudflare/testing/Greeter') {}
 
+/** The key a host serves the {@link Greeter} under as plain data, for the plugin's {@link GreeterAdapter}. */
+export const GREETER_WIRE_KEY = '@dxos/plugin-host-cloudflare/testing/GreeterWire';
+
+/** Builds the {@link Greeter} from its wire service, decoding what crosses, as plugin-agent builds its brain. */
+const GreeterAdapter: Capabilities.HostServiceAdapter = {
+  host: GREETER_WIRE_KEY,
+  service: Greeter.key,
+  make: (wire) => {
+    const send = (method: string, ...args: readonly unknown[]): Effect.Effect<unknown, Error> => {
+      const call = wire[method];
+      return call === undefined ? Effect.fail(new TestFailure({ message: `No ${method}.` })) : call(...args);
+    };
+    return Greeter.of({
+      greet: (name) =>
+        send('greet', name).pipe(
+          Effect.flatMap((value) => Schema.decodeUnknownEffect(Schema.String)(value)),
+          Effect.map((greeting) => `${greeting} (adapted)`),
+        ),
+      names: () =>
+        Stream.fromIterableEffect(
+          send('names').pipe(Effect.flatMap((value) => Schema.decodeUnknownEffect(Schema.Array(Schema.String))(value))),
+        ),
+    });
+  },
+};
+
 /** Greets everyone the {@link Greeter} names. */
 export const Greet = Operation.make({
   meta: { key: DXN.make('com.example.operation.hostTest.greet'), name: 'Greet' },
@@ -213,6 +239,11 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
           ),
         ),
       ),
+    ),
+  ),
+  Plugin.addModule(
+    Capability.inlineModule('TestHostServiceAdapter', { provides: [Capabilities.HostServiceAdapter] }, () =>
+      Effect.succeed(Capability.contribute(Capabilities.HostServiceAdapter, GreeterAdapter)),
     ),
   ),
   Plugin.addModule(
