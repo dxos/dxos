@@ -98,7 +98,7 @@ change (port, env, restart), state the intent and ask.
 stops answering (or answers while pegging a core) and the reflex is to restart it
 — which destroys the only record of why. `serve` arms a watcher that captures
 automatically; if the server was started another way, run
-`bash tools/storybook-react/diagnose.sh` BEFORE restarting. Report the path it
+`bash tools/storybook-react/scripts/diagnose.sh` BEFORE restarting. Report the path it
 writes. Note also that more than one storybook may be alive: an orphaned keeper
 from a dead session was found restarting one for five days, so the server you are
 measuring may be competing with another for CPU and file watchers.
