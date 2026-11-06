@@ -587,8 +587,8 @@ feat F-8: Presence and Sync Status
   req F-8.17: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
   req F-8.19: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
   req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
-  req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, scrolled to the plank at its front, each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path, whenever it changes, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
-  req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
+  req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, leaving out any this deck has no URL binding for, scrolled to the plank at its front (or, when that plank is left out and the deck holds every other plank it can bind, to the first of the leader's planks after it that the deck holds, else the last before it), each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path when this deck has a URL binding for it and at the object's own path otherwise, whenever it changes, first closing any planks stacked after it, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
+  req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
 ```
 
@@ -1384,6 +1384,29 @@ decision D-59: Scrolling the deck itself, outside any plank, ends a follow, and 
   why: Both move what the follower shows away from the leader, so the next leader move would jump them back.
   rejected:
     - End the follow when the follower's own sent location stops matching the leader's; a follower's location trails while mirrored planks mount, sits a line off in a deck of another width, and has another front plank in a wider deck, so the follow would end itself.
+```
+
+```mdl
+decision D-60: A leader who goes offline sends nothing, so the follower sees them attend nothing only once their presence expires, and the five seconds count from then; [D-51]'s five seconds hold for a leader who leaves the space, which sends that it attends nothing. Fills in [D-51].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.22]
+  why: The follower learns of the leader only from presence messages, and an offline leader's last one stays fresh until it expires.
+  rejected:
+    - A heartbeat every few seconds from a followed leader, so a follower notices within seconds; it adds a second liveness rule for one case, and a follower watching a frozen view for a minute loses nothing.
+```
+
+```mdl
+decision D-61: A follower shows what of the leader's view its own deck can represent. A mirrored plank this deck has no URL binding for (a type from a plugin the follower lacks) is left out, not retried, since no retry adds the binding; when it is the leader's front, the deck slides to a held plank of theirs once it holds every plank it can bind, the first after the front, else the last before it, so attention lands on a plank of the leader's. A flat follower opens the leader's path only when this deck binds it, else the object's own path, so the deck is never emptied; it closes the planks stacked after a held object first, as a breadcrumb would, because Open leaves a held plank where it is. Back and Forward in history end a follow, as any other navigation of the follower's does. Fills in [D-57], [D-58].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21, F-8.22]
+  why: The deck drops a path it cannot represent and keeps an unloaded one under a placeholder, so only an unbindable plank goes missing, and it stays missing. History traversal re-projects the URL straight into the deck, which no input listener sees.
+  rejected:
+    - Retrying a deck that came out short of the leader's; with an unbindable plank it never converges and kept the mounting window open for the whole follow.
+    - Choosing the stand-in from the follower's deck before the leader's planks reach it; that slid the follower to its own plank, then again to the leader's.
 ```
 
 ## Appendix: Extension Definitions

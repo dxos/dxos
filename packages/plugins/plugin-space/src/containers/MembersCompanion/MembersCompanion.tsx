@@ -96,7 +96,6 @@ export const MembersCompanion = () => {
               rowId: `${eid}/${member.identityKey}`,
               sessions,
               now,
-              defaultSessionId: sessions[0].sessionId,
             },
           ]);
         }

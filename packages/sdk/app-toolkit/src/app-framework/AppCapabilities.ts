@@ -85,8 +85,9 @@ export type Layout = Readonly<{
    */
   flat?: boolean;
   /**
-   * The first item of the layout with at least half its width in view; the current item when {@link flat}. Where the
-   * layout is scrolled to, independent of its width.
+   * The first item of the layout with at least half its width in view; the current item when {@link flat}, and the
+   * first item when the layout lays items side by side but is not scrolled. Where the layout is scrolled to,
+   * independent of its width. Unset while the layout has not yet measured the items it now shows.
    */
   front?: string;
 }>;

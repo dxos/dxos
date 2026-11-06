@@ -24,8 +24,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperati
       }
       const deck = yield* DeckCapabilities.getDeck();
       const { workspace } = yield* currentNavigation();
-      // No intent: the write focuses whichever plank attention falls to.
-      yield* navigateDeck({ workspace, active: subject, companionPlanks: deck.companionPlanks });
+      // No intent: the write focuses whichever plank attention falls to; an empty one focuses none.
+      yield* navigateDeck({
+        workspace,
+        active: subject,
+        companionPlanks: deck.companionPlanks,
+        intent: input.focus === false ? {} : undefined,
+      });
     }),
   ),
 );

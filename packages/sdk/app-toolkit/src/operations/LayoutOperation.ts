@@ -400,6 +400,9 @@ export const Set = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.Array(Schema.String.annotate({ description: 'Ids of the items to set.' })),
+    focus: Schema.optional(
+      Schema.Literal(false).annotate({ description: 'Focus no item; by default the item attention falls to.' }),
+    ),
   }),
   output: Schema.Void,
 });

@@ -222,8 +222,11 @@ export const EphemeralDeckState = Schema.Struct({
   currentUndoId: Schema.optional(Schema.String),
   /** A component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(ScrollIntoView),
-  /** The first plank of a sliding deck not folded into its left pile, as last measured. */
-  front: Schema.optional(Schema.String),
+  /**
+   * The deck's front as last measured: the first plank of a sliding deck not folded into its left pile (none when the
+   * deck is not sliding), and the planks it was measured among, joined by newlines.
+   */
+  front: Schema.optional(Schema.Struct({ id: Schema.optional(Schema.String), planks: Schema.String })),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 

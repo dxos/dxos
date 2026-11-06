@@ -78,12 +78,11 @@ export default Capability.makeModule(
       const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
       const [settingsAtom] = get(settingsCapabilityAtom);
       const flat = platform === 'mobile' || (settingsAtom ? !!get(settingsAtom).flatten : false);
-      // A deck that is not sliding measures no front, and shows its planks from the first.
-      const front = flat
-        ? open.active.at(-1)
-        : ephemeral.front && open.active.includes(ephemeral.front)
-          ? ephemeral.front
-          : open.active[0];
+      // A sliding deck's front holds only for the planks it was measured among: until the deck measures the planks it
+      // now shows, it has none, rather than one it may be nowhere near. A deck that is not sliding measures none and
+      // shows its planks from the first.
+      const measured = ephemeral.front?.planks === open.active.join('\n') ? ephemeral.front : undefined;
+      const front = flat ? open.active.at(-1) : measured && (measured.id ?? open.active[0]);
       return {
         mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,

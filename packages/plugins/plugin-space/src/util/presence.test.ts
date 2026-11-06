@@ -8,6 +8,7 @@ import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 import {
+  FOLLOW_BROADCAST_INTERVAL,
   LOCATION_BROADCAST_INTERVAL,
   PRESENCE_EXPIRY,
   PRESENCE_RETENTION,
@@ -334,6 +335,32 @@ describe('makeLocationScheduler', () => {
       scheduler.dispose();
       vi.advanceTimersByTime(LOCATION_BROADCAST_INTERVAL);
       expect(send).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('reads its interval when a send is scheduled, so a session that gains a follower speeds up', ({ expect }) => {
+    vi.useFakeTimers();
+    try {
+      let followed = false;
+      const locations: Record<string, { selection: string }> = {};
+      const send = vi.fn();
+      const scheduler = makeLocationScheduler(
+        [key],
+        (key) => locations[key],
+        send,
+        () => (followed ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL),
+      );
+
+      followed = true;
+      locations[key] = { selection: 'a:b' };
+      scheduler.schedule(key);
+      vi.advanceTimersByTime(FOLLOW_BROADCAST_INTERVAL - 1);
+      expect(send).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(1);
+      expect(send).toHaveBeenCalledTimes(1);
+      scheduler.dispose();
     } finally {
       vi.useRealTimers();
     }

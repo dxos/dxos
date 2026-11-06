@@ -791,7 +791,7 @@ const useFoldedPlanks = ({
   getPlankTiles,
   isSliding,
   expose,
-  plankCount,
+  plankIds,
   maxPlankWidthPx,
   scrollIntentRef,
   onFront,
@@ -800,11 +800,12 @@ const useFoldedPlanks = ({
   getPlankTiles: () => HTMLElement[];
   isSliding: boolean;
   expose: boolean;
-  plankCount: number;
+  /** The planks' ids, so a plank replaced in place, which neither scrolls nor changes the count, re-measures. */
+  plankIds: string;
   maxPlankWidthPx: number;
   scrollIntentRef: RefObject<string | undefined>;
   /** Called with the first plank not folded into the left pile, or undefined while the deck is not sliding. */
-  onFront: (id: string | undefined) => void;
+  onFront: (id: string | undefined, plankIds: string) => void;
 }) => {
   const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
   const wasExposedRef = useRef(expose);
@@ -815,7 +816,7 @@ const useFoldedPlanks = ({
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport || !isSliding) {
-      onFront(undefined);
+      onFront(undefined, plankIds);
       return;
     }
 
@@ -882,7 +883,7 @@ const useFoldedPlanks = ({
           !folded[index] && Math.min(rect.right, vpRect.right) - Math.max(rect.left, vpRect.left) >= rect.width / 2
         );
       });
-      onFront(tiles[frontIndex]?.getAttribute('data-object-id') ?? undefined);
+      onFront(tiles[frontIndex]?.getAttribute('data-object-id') ?? undefined, plankIds);
 
       // A plank the user asked to see (a spine click, or a navigation) is focused as soon as the scroll
       // starts, while it is still folded in the pile. Hold that focus until the plank has actually
@@ -959,7 +960,7 @@ const useFoldedPlanks = ({
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, expose, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef, onFront]);
+  }, [isSliding, expose, plankIds, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef, onFront]);
 };
 
 /**
@@ -1459,13 +1460,25 @@ export const DeckPlanks = () => {
   const stackRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
 
-  // Written only when it changes, which is when a plank crosses the pile, not every scroll frame.
+  // The deck being left stays mounted while it fades, and keys pressed meanwhile are for the entered one.
+  const live = useIsLiveDeck();
+
+  // Written only when it changes, which is when a plank crosses the pile, not every scroll frame. Only the live deck
+  // writes, so a fading one cannot overwrite it; becoming live changes this callback, which re-runs the fold pass.
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const onFront = useCallback(
-    (front: string | undefined) =>
-      registry.update(ephemeralAtom, (ephemeral) => (ephemeral.front === front ? ephemeral : { ...ephemeral, front })),
-    [registry, ephemeralAtom],
+    (id: string | undefined, planks: string) => {
+      if (!live) {
+        return;
+      }
+      registry.update(ephemeralAtom, (ephemeral) =>
+        ephemeral.front?.id === id && ephemeral.front?.planks === planks
+          ? ephemeral
+          : { ...ephemeral, front: { id, planks } },
+      );
+    },
+    [registry, ephemeralAtom, live],
   );
 
   // The plank a scroll-into-view is currently travelling to, shared between the scroller and the fold
@@ -1504,7 +1517,7 @@ export const DeckPlanks = () => {
     getPlankTiles,
     isSliding,
     expose,
-    plankCount: planks.length,
+    plankIds: planks.join('\n'),
     maxPlankWidthPx,
     scrollIntentRef,
     onFront,
@@ -1514,8 +1527,6 @@ export const DeckPlanks = () => {
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
   const captureExposeGeometry = useExposeFlip({ stackRef, getPlankTiles, expose });
-  // The deck being left stays mounted while it fades, and keys pressed meanwhile are for the entered one.
-  const live = useIsLiveDeck();
   const toggleFullscreen = useFullscreen(fullscreenId, live);
   const { invokePromise } = Hooks.useOperationInvoker();
 

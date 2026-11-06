@@ -8,11 +8,12 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as PathResolution from '@dxos/app-graph/PathResolution';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { type EID } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -41,6 +42,8 @@ type Shown = {
   front?: string;
   anchors: Map<string, string>;
   revealUntil: number;
+  /** Set when navigating to it paused the follow, so the next update navigates again. */
+  retry?: boolean;
 };
 
 /** Whether an event happened inside a plank or companion of an object, as opposed to the sidebars or a popover. */
@@ -102,6 +105,12 @@ export default Capability.makeModule(
           : state,
       );
 
+    // Whether this deck has a URL binding for a graph path; the deck drops a path it cannot represent.
+    const isBound = (path: string) => {
+      const [builder] = registry.get(appGraphAtom);
+      return !!builder && Option.isSome(PathResolution.representNode(builder, path));
+    };
+
     const findOpenPath = (key: EID.EID) =>
       registry.get(layoutAtom).active.find((path) => getPresenceKeyFromPath(path) === key);
 
@@ -123,51 +132,78 @@ export default Capability.makeModule(
       return true;
     };
 
+    const pauseFor = (target: Shown, err: unknown) =>
+      Effect.sync(() => {
+        log.warn('follow could not open what the leader shows', { err });
+        target.retry = true;
+        setPaused(true);
+      });
+
     // Opens what the leader shows unless this deck shows it already; an attended object this session cannot load
-    // pauses the follow.
+    // pauses the follow. A leader on the space's Home attends the space itself, whose key names no object.
     const navigate = (spaceId: string, target: Shown) =>
       Effect.gen(function* () {
         const space = client.spaces.get().find((space) => space.id === spaceId);
-        const object = space
-          ? yield* Effect.tryPromise(() => space.db.makeRef(target.key).load()).pipe(
-              Effect.catch(() => Effect.succeed(undefined)),
-            )
-          : undefined;
-        if (!Obj.isObject(object)) {
+        const isHome = !EID.getEntityId(target.key);
+        const object =
+          space && !isHome
+            ? yield* Effect.tryPromise(() => space.db.makeRef(target.key).load()).pipe(
+                Effect.catch(() => Effect.succeed(undefined)),
+              )
+            : undefined;
+        if (!space || (!isHome && !Obj.isObject(object))) {
+          target.retry = true;
           setPaused(true);
           return;
         }
 
-        setPaused(false);
         const layout = registry.get(layoutAtom);
         if (target.planks) {
           const workspace = GraphPath.getSpacePath(spaceId);
           if (layout.workspace !== workspace) {
             yield* invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
           }
-          if (!isSamePlanks(registry.get(layoutAtom).active, target.planks)) {
-            yield* invoke(LayoutOperation.Set, { subject: [...target.planks] });
+          // The deck leaves out a plank it cannot bind, so a deck short only of those already shows the leader's.
+          if (!isSamePlanks(registry.get(layoutAtom).active, target.planks.filter(isBound))) {
+            yield* invoke(LayoutOperation.Set, { subject: [...target.planks], focus: false });
           }
         } else {
-          // A flat deck shows its front plank; without the leader's path, any path to the object will do.
-          const path = target.path ?? GraphPath.getObjectPathFromObject(object);
-          const shownPath = target.path ?? findOpenPath(target.key);
+          // A flat deck shows its front plank, at the leader's path where this deck has a URL binding for it, since the
+          // deck drops a path it cannot represent; otherwise any path to the object will do, its own one when opening.
+          const leaderPath = target.path && isBound(target.path) ? target.path : undefined;
+          const path =
+            leaderPath ??
+            (Obj.isObject(object) ? GraphPath.getObjectPathFromObject(object) : GraphPath.getSpaceHomePath(spaceId));
+          const shownPath = leaderPath ?? findOpenPath(target.key);
           if (!shownPath || layout.front !== shownPath) {
-            yield* invoke(LayoutOperation.Open, { subject: [path] });
+            // A flat deck shows its last plank, and Open leaves a plank it already holds where it is, so the
+            // planks stacked after the leader's object come off first, as a breadcrumb would.
+            const index = layout.active.findIndex((plank) => getPresenceKeyFromPath(plank) === target.key);
+            if (index >= 0 && index < layout.active.length - 1) {
+              yield* invoke(LayoutOperation.Set, { subject: layout.active.slice(0, index + 1), focus: false });
+            }
+            yield* invoke(LayoutOperation.Open, { subject: [path], focus: false });
           }
         }
+
+        // Unpausing only once the deck has the leader's view keeps a failing retry from re-entering `update` at
+        // once, and the planks it opened mount from now, however long the pause was.
+        target.revealUntil = Date.now() + MOUNT_TIMEOUT;
+        setPaused(false);
       }).pipe(
-        Effect.catch((err) =>
-          Effect.sync(() => {
-            log.warn('follow could not open what the leader shows', { err });
-            setPaused(true);
-          }),
-        ),
+        // A failed operation can reach here as a defect; an interrupt is a newer target or a stop, not a failure.
+        Effect.catch((err) => pauseFor(target, err)),
+        Effect.catchDefect((err) => pauseFor(target, err)),
       );
 
     const update = () => {
       const { following, viewersByObject, peerDecks } = registry.get(ephemeralAtom);
       if (!following) {
+        // A navigation still loading what the leader showed would otherwise land after the follow ended.
+        if (navigating) {
+          Effect.runFork(Fiber.interrupt(navigating));
+          navigating = undefined;
+        }
         shown = undefined;
         lostSince = undefined;
         return;
@@ -190,8 +226,13 @@ export default Capability.makeModule(
       // A leader that sent no deck is followed as a flat deck follows, by the object they attend.
       const planks = !layout.flat && deck && deck.planks.length > 0 ? deck.planks : undefined;
       const path = deck?.planks.find((plank) => getPresenceKeyFromPath(plank) === focus.key);
-      if (!shown || focus.key !== shown.key || path !== shown.path || !isSamePlanks(planks, shown.planks)) {
+      // A pause keeps what is shown and only navigates again: an object the leader just made may not have replicated.
+      const changed = !shown || focus.key !== shown.key || path !== shown.path || !isSamePlanks(planks, shown.planks);
+      if (!shown || changed) {
         shown = { key: focus.key, path, planks, anchors: new Map(), revealUntil: now + MOUNT_TIMEOUT };
+      }
+      if (changed || shown.retry) {
+        shown.retry = false;
         if (navigating) {
           Effect.runFork(Fiber.interrupt(navigating));
         }
@@ -200,8 +241,19 @@ export default Capability.makeModule(
 
       // Planks opened for the leader mount late, so their scroll and anchors are sent again until they have.
       const mounting = now < shown.revealUntil;
-      const front = planks && deck?.front;
-      if (front && layout.active.includes(front) && (front !== shown.front || (mounting && layout.front !== front))) {
+      // The leader's front when this deck holds it. A front this deck has no binding for is never held, so once the deck
+      // holds every plank of theirs it can bind, it slides to one of theirs it holds, the first after the front, else
+      // the last before it; until then the deck still shows its own planks and does not slide.
+      const frontIndex = planks && deck?.front ? planks.indexOf(deck.front) : -1;
+      const holdsLeaderDeck = !!planks?.every((plank) => layout.active.includes(plank) || !isBound(plank));
+      const front =
+        planks && frontIndex >= 0
+          ? (holdsLeaderDeck
+              ? [...planks.slice(frontIndex), ...planks.slice(0, frontIndex).reverse()]
+              : [planks[frontIndex]]
+            ).find((plank) => layout.active.includes(plank))
+          : undefined;
+      if (front && (front !== shown.front || (mounting && layout.front !== front))) {
         shown.front = front;
         Effect.runFork(
           invoke(LayoutOperation.ScrollIntoView, { subject: front, focus: false }).pipe(
@@ -271,6 +323,13 @@ export default Capability.makeModule(
     window.addEventListener('wheel', onPointer, listenerOptions);
     window.addEventListener('touchmove', onPointer, listenerOptions);
     window.addEventListener('keydown', onKeyDown, listenerOptions);
+    // Going back or forward in history is the follower's own navigation; the follow's own writes push, which fires none.
+    const onPopState = () => {
+      if (isFollowing()) {
+        stop();
+      }
+    };
+    window.addEventListener('popstate', onPopState);
 
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
@@ -282,6 +341,7 @@ export default Capability.makeModule(
         window.removeEventListener('wheel', onPointer, listenerOptions);
         window.removeEventListener('touchmove', onPointer, listenerOptions);
         window.removeEventListener('keydown', onKeyDown, listenerOptions);
+        window.removeEventListener('popstate', onPopState);
         if (navigating) {
           yield* Fiber.interrupt(navigating);
         }
