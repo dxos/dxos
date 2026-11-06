@@ -34,28 +34,31 @@ describe('mail canary profile', { tags: ['sync-e2e'], timeout: 25 * 60_000, retr
     const config = loadConfig();
     const waits = edgeWaits(config);
     const dataRoot = mkdtempSync(join(tmpdir(), `${PROFILE_FIXTURE}-`));
-    await EffectEx.runPromise(
-      Effect.gen(function* () {
-        yield* signIn(phrase, { profile: false, wait: waits.open });
-        const space = yield* CanarySpace.open(config.spaceId, waits);
-        log.info('canary space open; reading it');
-        // Documents matched with EDGE and feeds pulled, so a run starts from a replicated space.
-        yield* space.snapshot();
-      }).pipe(
-        // A replication that stalls fails with a reason instead of running into the task's timeout.
-        Effect.timeoutOrElse({
-          duration: Duration.sum(waits.open, waits.read),
-          orElse: () => Effect.fail(new CanaryError({ message: 'the canary space did not replicate in time' })),
-        }),
-        Effect.provide(previewClientLayer(dataRoot)),
-      ),
-    );
+    try {
+      await EffectEx.runPromise(
+        Effect.gen(function* () {
+          yield* signIn(phrase, { profile: false, wait: waits.open });
+          const space = yield* CanarySpace.open(config.spaceId, waits);
+          log.info('canary space open; reading it');
+          // Documents matched with EDGE and feeds pulled, so a run starts from a replicated space.
+          yield* space.snapshot();
+        }).pipe(
+          // A replication that stalls fails with a reason instead of running into the task's timeout.
+          Effect.timeoutOrElse({
+            duration: Duration.sum(waits.open, waits.read),
+            orElse: () => Effect.fail(new CanaryError({ message: 'the canary space did not replicate in time' })),
+          }),
+          Effect.provide(previewClientLayer(dataRoot)),
+        ),
+      );
 
-    // Packed after the layer's scope closed the client, so the SQLite file is complete.
-    mkdirSync(OUT_DIR, { recursive: true });
-    const archive = packProfile(dataRoot, OUT_DIR);
-    // The data root holds the device's private key; only the archive, pushed encrypted, should outlive the export.
-    rmSync(dataRoot, { recursive: true, force: true });
-    log.info('profile exported', { archive });
+      // Packed after the layer's scope closed the client, so the SQLite file is complete.
+      mkdirSync(OUT_DIR, { recursive: true });
+      const archive = packProfile(dataRoot, OUT_DIR);
+      log.info('profile exported', { archive });
+    } finally {
+      // The data root holds the device's private key; only the archive, pushed encrypted, should outlive the export.
+      rmSync(dataRoot, { recursive: true, force: true });
+    }
   });
 });

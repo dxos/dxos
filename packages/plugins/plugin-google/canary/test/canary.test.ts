@@ -113,11 +113,12 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: testTimeout, retry: 0 }, 
         Effect.provide(previewClientLayer(dataRoot)),
         Effect.result,
       ),
-    );
-    // The unpacked copy holds the device's private key.
-    if (dataRoot) {
-      rmSync(dataRoot, { recursive: true, force: true });
-    }
+    ).finally(() => {
+      // The unpacked copy holds the device's private key, so it goes even when the run throws.
+      if (dataRoot) {
+        rmSync(dataRoot, { recursive: true, force: true });
+      }
+    });
     const report: CanaryReport = Result.isSuccess(result)
       ? result.success
       : { startedAt, spaceId: config.spaceId, checks: [couldNotRun('RUN', 'The canary ran', result.failure.message)] };

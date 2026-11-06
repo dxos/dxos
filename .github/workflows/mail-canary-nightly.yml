@@ -58,8 +58,12 @@ jobs:
           KEY_FILE="$RUNNER_TEMP/fixtures.key"
           trap 'rm -f "$KEY_FILE"' EXIT
           (umask 077 && printf '%s\n' "$AGE_KEY" > "$KEY_FILE")
-          DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs pull enron-pool --scope agents
-          DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs pull mail-canary-profile --scope agents
+          # Each pull is tried even when the other fails; the step still reports the failure.
+          status=0
+          for name in enron-pool mail-canary-profile; do
+            DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs pull "$name" --scope agents || status=1
+          done
+          exit "$status"
 
       # Settings live in packages/plugins/plugin-google/canary/canary.yml; only credentials come from here.
       - name: Run canary

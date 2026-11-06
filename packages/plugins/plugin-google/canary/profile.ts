@@ -3,7 +3,7 @@
 //
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -18,7 +18,13 @@ export const PROFILE_EXTENSION = 'tgz';
 /** Unpacks the profile into a new directory and returns it, so the fixture itself stays as exported. */
 export const unpackProfile = (archive: string): string => {
   const dataRoot = mkdtempSync(join(tmpdir(), `${PROFILE_FIXTURE}-`));
-  execFileSync('tar', ['-xzf', archive, '-C', dataRoot]);
+  try {
+    execFileSync('tar', ['-xzf', archive, '-C', dataRoot]);
+  } catch (error) {
+    // A partial unpack can hold the device's private key.
+    rmSync(dataRoot, { recursive: true, force: true });
+    throw error;
+  }
   return dataRoot;
 };
 
