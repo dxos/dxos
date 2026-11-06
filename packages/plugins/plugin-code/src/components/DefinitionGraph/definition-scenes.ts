@@ -3,6 +3,7 @@
 //
 
 import { Dsl, Semantic, SemanticEngine } from '@dxos/diagram';
+import { type LatticeSpec, quantize } from '@dxos/react-ui-canvas';
 import { type Shape } from '@dxos/scene';
 
 import { type DefinitionEdge, type DefinitionGrouping, type DefinitionModel } from '../SpecModel/index.ts';
@@ -11,8 +12,24 @@ export type Point = { x: number; y: number };
 export type Size = { width: number; height: number };
 
 /** One card size and cell pitch for every level, shared with the canvas so the engine's positions land on cards 1:1. */
-export const CARD: Size = { width: 224, height: 72 };
-export const PITCH: Size = { width: 288, height: 152 };
+export const CARD: Size = { width: 272, height: 112 };
+export const PITCH: Size = { width: 352, height: 192 };
+
+/**
+ * Where a moved card lands: on 32px steps, at least 16px from its neighbours. Every side's midpoint then sits on the
+ * router's 8px grid, so an arrow rerouted after a move leaves and meets its cards square. A card spans whole cells
+ * (9 by 4) and the engine's pitch whole steps, so the engine's layout lies on the lattice too.
+ */
+export const LATTICE: LatticeSpec = { width: 16, height: 16, gutterX: 16, gutterY: 16 };
+
+/** The lattice centre nearest a card centred at `center`. */
+const onLattice = (center: Point): Point => {
+  const { x, y, width, height } = quantize(
+    { x: center.x - CARD.width / 2, y: center.y - CARD.height / 2, ...CARD },
+    LATTICE,
+  );
+  return { x: x + width / 2, y: y + height / 2 };
+};
 
 /** A card on a level: a cluster, or a block (`ref`) under an id unique on the level. */
 export type SceneNode =
@@ -317,5 +334,14 @@ export const placeScene = (scene: DefinitionScene): PlacedScene => {
       });
     }
   }
-  return { positions, frames, routes };
+  // One shift puts the engine's layout on the lattice, routes and all; a card the shift misses is snapped alone.
+  const first = Object.values(positions)[0];
+  const snapped = first && onLattice(first);
+  const [dx, dy] = snapped ? [snapped.x - first.x, snapped.y - first.y] : [0, 0];
+  const shift = ({ x, y }: Point): Point => ({ x: x + dx, y: y + dy });
+  return {
+    positions: Object.fromEntries(Object.entries(positions).map(([id, center]) => [id, onLattice(shift(center))])),
+    frames: frames.map((frame) => ({ ...frame, center: shift(frame.center) })),
+    routes: Object.fromEntries(Object.entries(routes).map(([id, route]) => [id, route.map(shift)])),
+  };
 };

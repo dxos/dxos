@@ -3,11 +3,12 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { createContext, useContext, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { VERDICT_STATUSES, type VerdictStatus } from '@dxos/deus/review';
 import {
   type CreateProps,
+  DRILL_ANIMATION_MS,
   type GraphLayoutOptions,
   type GraphModel,
   type GraphShape,
@@ -28,7 +29,7 @@ import { type DefinitionEdge, type DefinitionGroup, STATUS_STYLE, kindStyle } fr
 import {
   CARD,
   type DefinitionScene,
-  PITCH,
+  LATTICE,
   type PlacedFrame,
   type SceneNode,
   blockScene,
@@ -55,6 +56,8 @@ const frameShape = (frame: PlacedFrame): GraphShape => ({
   label: frame.label,
   layer: BACKDROP_LAYER.id,
   locked: true,
+  // Borderless, so a frame takes no lattice cells and a card can be moved into it.
+  style: { border: false },
   fields: { element: frame.element, ...(frame.heading && { heading: frame.heading }) },
 });
 
@@ -104,7 +107,7 @@ const VerdictCounts = ({ view, groups }: { view: DefinitionViewModel; groups: re
 /** The corner mark of a card that opens a level, with how many blocks that level shows around it. */
 const OpenMark = ({ count }: { count?: number }) => (
   <span
-    className='absolute top-1.5 end-2 flex items-center gap-0.5 text-xs text-description'
+    className='absolute top-3 end-4 flex items-center gap-0.5 text-xs text-description'
     data-testid='definition-canvas.opens'
   >
     {count !== undefined && count}
@@ -124,12 +127,12 @@ const CardView = ({ node }: NodeViewProps) => {
     const cluster = view.grouping.clusters.find(({ id }) => id === card.cluster);
     return (
       <div
-        className='dx-cover relative flex flex-col justify-center gap-0.5 px-3 rounded-md border border-separator bg-group-surface cursor-zoom-in'
+        className='dx-cover flex flex-col justify-center gap-1.5 px-4 py-3 overflow-hidden rounded-md border border-separator bg-group-surface cursor-zoom-in'
         data-testid='definition-canvas.cluster'
         data-cluster={card.cluster}
       >
         <OpenMark />
-        <span className={mx('truncate font-medium', cluster?.hub !== undefined && 'font-mono')}>
+        <span className={mx('truncate pe-8 font-medium', cluster?.hub !== undefined && 'font-mono')}>
           {cluster?.hub === undefined
             ? t('definition-map.cluster.unshared.label')
             : t('definition-map.cluster.label', { hub: cluster.hub })}
@@ -155,7 +158,7 @@ const CardView = ({ node }: NodeViewProps) => {
   return (
     <div
       className={mx(
-        'dx-cover relative flex flex-col justify-center gap-0.5 px-3 rounded-md border bg-base-surface',
+        'dx-cover flex flex-col justify-center gap-1.5 px-4 py-3 overflow-hidden rounded-md border bg-base-surface',
         opens && 'cursor-zoom-in',
         card.focused ? 'border-2 border-accent-text' : 'border-separator',
         (definition.external || card.outside) && 'border-dashed',
@@ -218,10 +221,9 @@ const createRegistry = (opens: (id: string) => boolean, open: (id: string) => vo
     defaultNodePrototypes,
   );
 
-/** Cards and pitch match the engine's, so its positions land on cards the same size. */
+/** Cards keep the engine's size, and a moved card lands on the lattice the engine's layout lies on. */
 const LAYOUT: GraphLayoutOptions = {
-  size: CARD,
-  pitch: PITCH,
+  lattice: LATTICE,
   layers: [BACKDROP_LAYER, CARD_LAYER],
   link: { ends: { end: 'arrow' }, layer: CARD_LAYER.id },
 };
@@ -229,25 +231,57 @@ const LAYOUT: GraphLayoutOptions = {
 /** What a canvas level shows: the whole spec, one cluster, or one block and what touches it. */
 export type CanvasLevel = { kind: 'spec' } | { kind: 'cluster'; cluster: string } | { kind: 'block'; focus: string };
 
-export type DefinitionCanvasProps = {
-  view: DefinitionViewModel;
-  /** Every edge, mentions included, for the block level. */
-  edges: readonly DefinitionEdge[];
-  level: CanvasLevel;
-  /** How far down the trail the level is, so a level opened deeper grows into view and one backed out to shrinks. */
-  depth: number;
-  /** Double-clicking a cluster opens it. */
-  onOpenCluster: (id: string) => void;
-  /** Double-clicking a block opens its level. */
-  onOpen: (id: string) => void;
-};
+const levelKey = (level: CanvasLevel) =>
+  level.kind === 'spec' ? 'spec' : level.kind === 'cluster' ? level.cluster : level.focus;
 
 /**
- * The definitions on a canvas, one level at a time. The semantic engine places the level's cards and frames and
- * routes its arrows; the canvas draws them, pans and zooms. Double-clicking a cluster opens it, and a block opens
- * what touches it.
+ * How a level comes into view: through the card the camera is zooming into, out of the one backed out of, or at once.
+ * A level zoomed out of fades while the camera is still moving, and the level it opens comes forward under it.
  */
-export const DefinitionCanvas = ({ view, edges, level, depth, onOpenCluster, onOpen }: DefinitionCanvasProps) => {
+type Motion = 'enter' | 'return' | 'leave';
+
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const MOTION: Record<Motion, { keyframes: Keyframe[]; options: KeyframeAnimationOptions }> = {
+  enter: {
+    keyframes: [
+      { opacity: 0, transform: 'scale(0.85)' },
+      { opacity: 1, transform: 'none' },
+    ],
+    options: {
+      delay: DRILL_ANIMATION_MS * 0.5,
+      duration: DRILL_ANIMATION_MS * 0.6,
+      easing: 'ease-out',
+      fill: 'backwards',
+    },
+  },
+  return: {
+    keyframes: [
+      { opacity: 0, transform: 'scale(1.08)' },
+      { opacity: 1, transform: 'none' },
+    ],
+    options: { duration: 300, easing: 'ease-out' },
+  },
+  leave: {
+    keyframes: [{ opacity: 1 }, { opacity: 0 }],
+    options: {
+      delay: DRILL_ANIMATION_MS * 0.4,
+      duration: DRILL_ANIMATION_MS * 0.5,
+      easing: 'ease-in',
+      fill: 'forwards',
+    },
+  },
+};
+
+type LevelViewProps = Pick<DefinitionCanvasProps, 'view' | 'edges' | 'level' | 'onOpen' | 'onOpenCluster'> & {
+  touches: ReadonlyMap<string, number>;
+  motion?: Motion;
+  /** Called once a leaving level has faded out. */
+  onLeft?: () => void;
+};
+
+/** One level on its own canvas, so the level zoomed out of keeps its camera while the next one comes in under it. */
+const LevelView = ({ view, edges, level, touches, motion, onLeft, onOpen, onOpenCluster }: LevelViewProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const scene = useMemo<DefinitionScene>(() => {
     switch (level.kind) {
@@ -265,15 +299,6 @@ export const DefinitionCanvas = ({ view, edges, level, depth, onOpenCluster, onO
   }, [view, edges, level, t]);
   const placed = useMemo(() => placeScene(scene), [scene]);
   const nodes = useMemo(() => new Map(scene.nodes.map((node) => [node.id, node])), [scene]);
-  const touches = useMemo(() => {
-    const neighbours = new Map<string, Set<string>>();
-    const add = (from: string, to: string) => neighbours.set(from, (neighbours.get(from) ?? new Set()).add(to));
-    for (const { from, to } of edges) {
-      add(from, to);
-      add(to, from);
-    }
-    return new Map([...neighbours].map(([id, set]) => [id, set.size]));
-  }, [edges]);
 
   const callbacks = useRef({ onOpen, onOpenCluster, nodes, touches });
   // After commit, so a render React discards never leaves its callbacks behind.
@@ -326,7 +351,7 @@ export const DefinitionCanvas = ({ view, edges, level, depth, onOpenCluster, onO
       ...LAYOUT,
       shape: (node) => {
         const frame = frames.get(node.id);
-        return frame ? frameShape(frame) : { type: CARD_TYPE, layer: CARD_LAYER.id };
+        return frame ? frameShape(frame) : { type: CARD_TYPE, size: CARD, layer: CARD_LAYER.id };
       },
     };
   }, [placed]);
@@ -338,31 +363,131 @@ export const DefinitionCanvas = ({ view, edges, level, depth, onOpenCluster, onO
     [placed],
   );
   const context = useMemo(() => ({ view, nodes, touches }), [view, nodes, touches]);
-  const levelKey = level.kind === 'spec' ? 'spec' : level.kind === 'cluster' ? level.cluster : level.focus;
 
-  // The camera zooms into the card that opens a level; the level then comes forward, or recedes when backed out to.
+  // Each motion runs to its end: a level that has come in is not jumped back when the level above it has gone.
   const container = useRef<HTMLDivElement>(null);
-  const shown = useRef({ levelKey, depth });
+  const animation = useRef<Animation>(undefined);
+  const left = useRef(onLeft);
+  left.current = onLeft;
   useLayoutEffect(() => {
-    const previous = shown.current;
-    shown.current = { levelKey, depth };
-    if (previous.levelKey === levelKey || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!motion) {
       return;
     }
-    container.current?.animate(
-      [
-        { opacity: 0, transform: `scale(${depth < previous.depth ? 1.08 : 0.92})` },
-        { opacity: 1, transform: 'none' },
-      ],
-      { duration: 300, easing: 'ease-out' },
-    );
-  }, [levelKey, depth]);
+    if (reducedMotion()) {
+      motion === 'leave' && left.current?.();
+      return;
+    }
+    const { keyframes, options } = MOTION[motion];
+    animation.current?.cancel();
+    animation.current = container.current?.animate(keyframes, options);
+    if (animation.current && motion === 'leave') {
+      animation.current.onfinish = () => left.current?.();
+    }
+  }, [motion]);
+  useLayoutEffect(() => () => animation.current?.cancel(), []);
 
   return (
     <CardContext.Provider value={context}>
-      <div ref={container} className='dx-fill relative' data-testid='definition-canvas' data-level={level.kind}>
-        <Graph2DView key={levelKey} graph={graph} layout={layout} nodes={registry} positions={positions} />
+      <div
+        ref={container}
+        className={mx('dx-cover', motion === 'leave' && 'pointer-events-none')}
+        data-testid='definition-canvas.level'
+        data-leaving={motion === 'leave' ? '' : undefined}
+      >
+        <Graph2DView graph={graph} layout={layout} nodes={registry} positions={positions} guides={false} />
       </div>
     </CardContext.Provider>
+  );
+};
+
+export type DefinitionCanvasProps = {
+  view: DefinitionViewModel;
+  /** Every edge, mentions included, for the block level. */
+  edges: readonly DefinitionEdge[];
+  level: CanvasLevel;
+  /** How far down the trail the level is, so a level backed out to comes back toward the viewer. */
+  depth: number;
+  /** Double-clicking a cluster opens it. */
+  onOpenCluster: (id: string) => void;
+  /** Double-clicking a block opens its level. */
+  onOpen: (id: string) => void;
+};
+
+/**
+ * The definitions on a canvas, one level at a time. The semantic engine places the level's cards and frames and
+ * routes its arrows; the canvas draws them, pans and zooms. Double-clicking a cluster opens it, and a block opens
+ * what touches it, as the camera zooms into the card.
+ */
+export const DefinitionCanvas = ({ view, edges, level, depth, onOpenCluster, onOpen }: DefinitionCanvasProps) => {
+  const touches = useMemo(() => {
+    const neighbours = new Map<string, Set<string>>();
+    const add = (from: string, to: string) => neighbours.set(from, (neighbours.get(from) ?? new Set()).add(to));
+    for (const { from, to } of edges) {
+      add(from, to);
+      add(to, from);
+    }
+    return new Map([...neighbours].map(([id, set]) => [id, set.size]));
+  }, [edges]);
+
+  // The level a card was opened from stays on top, zooming and fading, while the opened one comes in under it.
+  const [leaving, setLeaving] = useState<CanvasLevel>();
+  const shownLevel = useRef(level);
+  useLayoutEffect(() => {
+    shownLevel.current = level;
+  }, [level]);
+  const handleOpenCluster = useCallback(
+    (id: string) => {
+      setLeaving(shownLevel.current);
+      onOpenCluster(id);
+    },
+    [onOpenCluster],
+  );
+  const handleOpen = useCallback(
+    (id: string) => {
+      setLeaving(shownLevel.current);
+      onOpen(id);
+    },
+    [onOpen],
+  );
+  const handleLeft = useCallback(() => setLeaving(undefined), []);
+  const key = levelKey(level);
+  const outgoing = leaving && levelKey(leaving) !== key ? leaving : undefined;
+
+  // A level backed out to, rather than opened from a card, comes back toward the viewer.
+  const [returned, setReturned] = useState<string>();
+  const previous = useRef({ key, depth });
+  useLayoutEffect(() => {
+    const was = previous.current;
+    previous.current = { key, depth };
+    was.key !== key && setReturned(depth < was.depth ? key : undefined);
+  }, [key, depth]);
+  const motion: Motion | undefined = outgoing ? 'enter' : returned === key ? 'return' : undefined;
+
+  return (
+    <div className='dx-fill relative overflow-hidden' data-testid='definition-canvas' data-level={level.kind}>
+      <LevelView
+        key={key}
+        view={view}
+        edges={edges}
+        level={level}
+        touches={touches}
+        motion={motion}
+        onOpen={handleOpen}
+        onOpenCluster={handleOpenCluster}
+      />
+      {outgoing && (
+        <LevelView
+          key={levelKey(outgoing)}
+          view={view}
+          edges={edges}
+          level={outgoing}
+          touches={touches}
+          motion='leave'
+          onLeft={handleLeft}
+          onOpen={handleOpen}
+          onOpenCluster={handleOpenCluster}
+        />
+      )}
+    </div>
   );
 };
