@@ -18,6 +18,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | Term        | URI                            |
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
 | `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |

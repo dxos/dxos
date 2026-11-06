@@ -516,8 +516,15 @@ for await (const frame of framesOf(decoder.stdout)) {
   const range = speedAt(index);
   const skipped = range !== undefined && range.factor > 1 && (index - range.from) % range.factor !== 0;
   if (staticRun <= cap && !skipped) {
+    // An encoder that exits never drains, so its exit ends the wait too.
     if (!encoder.stdin.write(frame)) {
-      await once(encoder.stdin, 'drain');
+      const drained = await Promise.race([
+        once(encoder.stdin, 'drain').then(() => true),
+        encoderClosed.then(() => false),
+      ]);
+      if (!drained) {
+        break;
+      }
     }
     outputFrameOf.set(index, kept);
     kept++;

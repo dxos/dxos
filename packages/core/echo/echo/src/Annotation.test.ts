@@ -525,7 +525,9 @@ describe('Annotation', () => {
       expect(Option.getOrThrow(registry.get(wholeAtom))).toEqual({ typeA: ['x'] });
     });
 
-    test('atom hands a nested value changed in place to its readers as a new value', ({ expect }) => {
+    test('atom hands a nested value changed in place to its readers as a new value, and keeps an unchanged one', ({
+      expect,
+    }) => {
       const LayoutAnnotation = Annotation.make({
         id: 'org.dxos.test.layout',
         schema: Schema.Struct({ positions: Schema.Record(Schema.String, Schema.Struct({ x: Schema.Number })) }),
@@ -537,7 +539,10 @@ describe('Annotation', () => {
       });
 
       const layoutAtom = Annotation.atom(obj, LayoutAnnotation);
-      registry.subscribe(layoutAtom, () => {});
+      let fires = 0;
+      registry.subscribe(layoutAtom, () => {
+        fires++;
+      });
       const before = Option.getOrThrow(registry.get(layoutAtom)).positions;
       Annotation.update(obj, LayoutAnnotation, (layout) => {
         layout.positions.b = { x: 1 };
@@ -546,6 +551,12 @@ describe('Annotation', () => {
       const after = Option.getOrThrow(registry.get(layoutAtom)).positions;
       expect(after).toEqual({ a: { x: 0 }, b: { x: 1 } });
       expect(after).not.toBe(before);
+
+      const changes = fires;
+      Obj.update(obj, (obj) => {
+        obj.name = 'B';
+      });
+      expect(fires).toBe(changes);
     });
   });
 

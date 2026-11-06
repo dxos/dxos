@@ -157,7 +157,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             ...prev,
             variant: linked,
           }));
-          companionPlanks = openCompanionPlank(companionPlanks, flatten, main);
+          // Beside the subject, which an open beside an origin places before the deck's last plank.
+          const subject = input.subject[0] && next.includes(input.subject[0]) ? input.subject[0] : main;
+          companionPlanks = openCompanionPlank(companionPlanks, flatten, subject);
         }
         const holder = input.subject[0];
         const plankNames =

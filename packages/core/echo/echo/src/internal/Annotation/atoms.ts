@@ -9,7 +9,7 @@ import { assertArgument } from '@dxos/invariant';
 
 import type * as Annotation from '../../Annotation.ts';
 import type * as Entity from '../../Entity.ts';
-import { snapshotDeep, snapshotEquals } from '../common/atom-snapshot.ts';
+import { snapshotDeep, snapshotDeepEquals } from '../common/atom-snapshot.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
 import { isEntity } from '../Entity/index.ts';
 import { get as getAnnotation } from './entity-dictionary.ts';
@@ -17,8 +17,8 @@ import { get as getAnnotation } from './entity-dictionary.ts';
 /**
  * Atom family for an annotation value on an entity instance.
  * Mirrors the object-property atom family: re-emits a fresh reference whenever the entity changes
- * (so an in-place array mutation is observed) and dedupes primitive values via `!==`. The snapshot is
- * deep, so a record nested in the value is a new reference too once it changes in place.
+ * (so an in-place array mutation is observed) and dedupes unchanged content. The snapshot is deep, so a
+ * record nested in the value is a new reference too once it changes in place.
  */
 const annotationFamily = Atom.family(
   ([target, annotation]: readonly [Entity.Unknown, Annotation.Annotation<any>]): Atom.Atom<Option.Option<any>> => {
@@ -63,7 +63,7 @@ const annotationPropertyFamily = Atom.family(
       const unsubscribe = subscribe(target, () => {
         const next = read();
         // Content comparison — `read()` snapshots, so identity never matches for arrays/objects.
-        if (!snapshotEquals(next, previous)) {
+        if (!snapshotDeepEquals(next, previous)) {
           previous = next;
           get.setSelf(next);
         }
@@ -75,9 +75,9 @@ const annotationPropertyFamily = Atom.family(
   },
 );
 
-/** Equal when both empty, or both present with shallow-equal content (see `snapshotEquals`). */
+/** Equal when both empty, or both present with equal content at every depth. */
 const sameOption = <T>(a: Option.Option<T>, b: Option.Option<T>): boolean =>
-  Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : snapshotEquals(a.value, b.value);
+  Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : snapshotDeepEquals(a.value, b.value);
 
 /**
  * Reactive atom for an annotation value on an entity instance. Emits a deep snapshot (fresh references

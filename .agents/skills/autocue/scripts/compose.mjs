@@ -28,10 +28,13 @@ const FFPROBE = process.env.FFPROBE_PATH ?? 'ffprobe';
 
 const BACKGROUND = '0x111111';
 
-/** Labels and captions are drawn with `drawtext`, which Homebrew's `ffmpeg` lacks and `ffmpeg-full` has. */
+/**
+ * Labels and captions are drawn with `drawtext`, which Homebrew's `ffmpeg` lacks and `ffmpeg-full` has, and centred
+ * with its `text_align`, which needs FFmpeg 6.1 or later.
+ */
 export const canCompose = () => {
-  const result = spawnSync(FFMPEG, ['-hide_banner', '-filters'], { encoding: 'utf8' });
-  return result.status === 0 && result.stdout.includes('drawtext');
+  const result = spawnSync(FFMPEG, ['-hide_banner', '-h', 'filter=drawtext'], { encoding: 'utf8' });
+  return result.status === 0 && result.stdout.includes('text_align');
 };
 
 /** Seconds of media in a file; a VFR screencast has no reliable stream duration, so the container's is read. */

@@ -14,6 +14,7 @@ describe('lineText', () => {
     expect(lineText('- [x] Done task')).toBe('Done task');
     expect(lineText('> Quoted')).toBe('Quoted');
     expect(lineText('## Heading')).toBe('Heading');
+    expect(lineText('> - [ ] Quoted task')).toBe('Quoted task');
   });
 
   test('keeps prose that only looks like a marker', ({ expect }) => {

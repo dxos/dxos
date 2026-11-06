@@ -20,8 +20,11 @@ export type SlashCommand = {
 /** The commands each extension package contributes; `slashCommands` lists them all. */
 export const slashCommand = Facet.define<SlashCommand>();
 
-/** A Markdown block's marker at the start of a line: a heading, a quote, or a list item with its task box. */
-const BLOCK_MARKER = /^(?:#{1,6}\s+|>\s*|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)/;
+/**
+ * The Markdown block markers at the start of a line: headings, quotes, and list items with their task boxes, stacked
+ * as in a quoted list item (`> - `).
+ */
+const BLOCK_MARKER = /^(?:#{1,6}\s+|>\s*|(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?)+/;
 
 /** The text of a line, without the marker that makes it a list item, quote or heading. */
 export const lineText = (text: string): string => text.trim().replace(BLOCK_MARKER, '').trim();
@@ -66,8 +69,8 @@ export type BlockTemplateProps = {
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * A command that writes a dialect block's structure in place, fenced as `mdl`. Text before the slash becomes the
- * block's title; otherwise the cursor waits where the title goes.
+ * A command that writes a dialect block's structure in place of its line, fenced as `mdl`. Text before the slash
+ * becomes the block's title; otherwise the cursor waits where the title goes.
  */
 export const blockTemplate = ({ name, kind, prefix, fields }: BlockTemplateProps): Extension[] => [
   slashCommand.of({
@@ -82,7 +85,8 @@ export const blockTemplate = ({ name, kind, prefix, fields }: BlockTemplateProps
       }
       const head = `${kind}${id}${prefix ? ':' : ''} `;
       const body = fields.map((field) => `  ${field}`).join('\n');
-      const start = before ? line.from : from;
+      // The block replaces the line's marker too, so a fence never opens after `> ` or `- `.
+      const start = line.from;
       const opening = '```mdl\n';
       const insert = `${opening}${head}${before}\n${body}\n\`\`\``;
       const cursor = before
