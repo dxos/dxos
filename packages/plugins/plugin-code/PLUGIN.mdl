@@ -217,7 +217,7 @@ component SpecArticle
 component SpecViewContent
   desc: |
     One of the views this plugin contributes to a spec's companion tabs (`ProjectCapabilities.SpecView`):
-    Definitions, Data model and API in Structure; decisions by person and decision threads in
+    Definitions, Related, Data model and API in Structure; decisions by person and decision threads in
     Decisions; Review and Code in Review. It shares plugin-projects' `SpecSession` with the
     spec's editor, wherever each is shown: a chip in the editor's margin opens its view's tab,
     and a view moves the editor to an item. An answer goes through the open editor, else into
@@ -1132,14 +1132,15 @@ feat F-25: Definitions
   uses: [SpecViewContent]
   req F-25.1: Definitions groups a spec by what names its blocks: each anchor is a group of the structure it names, and
               groups gather into clusters around the block most of them share.
-  req F-25.2: Definitions draws the whole spec as a canvas, a map or an outline, picked from a switch beside its trail;
-              it opens as a map where there is room for one and as an outline where there is not.
+  req F-25.2: Definitions draws the whole spec as a canvas, with no layout of its own to pick.
   req F-25.3: The canvas opens a level at a time: a card per cluster, then one cluster's groups, then one block and
               everything it touches. Double-clicking a card opens its level, and the canvas's trail goes back up.
   req F-25.4: Every block draws with the icon and colour its dialect declares, and every link with the ends of the
               relationship its field declares.
   req F-25.5: The Video package gives a spec the video dialect, so a script's scenes, shots and cast group and draw by
               the same rules as software.
+  req F-25.6: Related, Structure's second view, centres on the block nearest the editor's cursor, with what names it
+              above and what it names below, and moves to another block as the cursor does.
 ```
 
 ## Acceptance
@@ -1604,7 +1605,7 @@ test QA-6: Arrow through a spec's features
 ```mdl
 test QA-7: Walk a spec's structure on the canvas
   desc: |
-    Definitions in a spec's Structure companion, switched to the canvas, opened a level at a time by double-clicking:
+    Definitions in a spec's Structure companion, a canvas opened a level at a time by double-clicking:
     the spec's clusters, one cluster's features, then one feature and everything it touches. A script in the video
     dialect draws by the same rules in its own icons and colours. Walked by the autocue flow `spec-canvas` against
     Composer.
@@ -1619,10 +1620,8 @@ test QA-7: Walk a spec's structure on the canvas
   steps:
     - name: Open the Structure companion
       do: Open the companion's Structure tab.
-      expect: Definitions draws the spec as a map, with a switch for Canvas, Map and Outline beside its trail
-    - name: Switch to the canvas
-      do: Click Canvas.
-      expect: the canvas draws a card per cluster, CoderSkill among them, with arrows between clusters that share blocks
+      expect: Definitions draws a card per cluster, CoderSkill among them, with arrows between clusters that share
+        blocks
     - name: Open a cluster
       do: Double-click the CoderSkill cluster.
       expect: the canvas zooms into a frame per feature holding what only it names, each block in its dialect's icon
@@ -1641,6 +1640,59 @@ test QA-7: Walk a spec's structure on the canvas
       do: Double-click the maya cluster.
       expect: a frame per scene, each scene's shots, voiceover and captions joined to it by filled diamonds, in the
         video dialect's icons and colours
+```
+
+```mdl
+test QA-8: Tour a spec's companion tabs
+  desc: |
+    Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
+    editor's cursor from block to block, then Data model and API; Decisions by person and as threads; Review and Code.
+    Walked by the autocue flow `spec-companions` against Composer.
+  actors: human
+  covers: [F-25.2, F-25.6]
+  status: passing            # 2026-11-06, recorded by autocue/spec-companions.mjs
+  given:
+    - composer serves plugin-code, enabled
+    - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec, with the review of 2026-10-27
+      (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it
+    - the Specs tab shows "CodePlugin" with the cursor on its first line, the sidebar closed and the companion 62rem wide
+  steps:
+    - name: Open Definitions
+      do: Open the companion's Structure tab.
+      expect: Definitions draws a card per cluster
+    - name: Open a cluster
+      do: Double-click the CoderSkill cluster.
+      expect: a frame per feature holding what only it names
+    - name: Open Related
+      do: Pick Related in Structure's toolbar.
+      expect: Related centres on the plugin block, the one at the cursor
+    - name: Put the cursor in a feature
+      do: Click F-8's id in the editor.
+      expect: Related centres on F-8, with what it names below it and QA-1 as what checks it
+    - name: Move the cursor to the next feature
+      do: Press the down arrow until the cursor leaves F-8.
+      expect: Related centres on F-9 once the cursor is in its block
+    - name: Move the cursor to a type
+      do: Click CodeProject's id in the editor.
+      expect: Related centres on CodeProject, with the features naming it above it
+    - name: Open Data model
+      do: Pick Data model in Structure's toolbar.
+      expect: the spec's types and their fields
+    - name: Open API
+      do: Pick API in Structure's toolbar.
+      expect: the spec's operations, with the services each needs
+    - name: Open Decisions by person
+      do: Open the companion's Decisions tab and pick By person.
+      expect: the spec's decisions grouped by who made them
+    - name: Open the decision threads
+      do: Pick Threads in Decisions' toolbar.
+      expect: decisions threaded by what each replaces and fills in
+    - name: Open Review
+      do: Open the companion's Review tab.
+      expect: the review's summary, a count per status and a card per verdict
+    - name: Open Code
+      do: Show the done verdicts, then open compileEntry from buildProject's verdict menu.
+      expect: Code shows `compiler/build.ts` with compileEntry highlighted
 ```
 
 ## Changelog
@@ -2461,6 +2513,25 @@ decision D-92: Definitions has a Canvas, Map and Outline switch beside its trail
   why: The canvas was reachable only through the `layout` prop, which no surface passed, and a spec could not take the video dialect in the app.
   rejected:
     - Making the canvas the default where there is room: that changes what every spec opens on, which was not asked for.
+```
+
+```mdl
+decision D-93: Definitions is the canvas alone. Related is Structure's second view, and it centres on the block nearest the editor's cursor and shifts as the cursor moves. Replaces the switch of [D-92].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-25.2, F-25.6]
+  why: The companion tabs group the views and each tab's toolbar picks one; a switch inside a view is a third picker.
+```
+
+```mdl
+decision D-94: The map and outline layouts are removed. The editor writes its cursor to an atom per spec session, which Related reads, so Related follows the editor wherever each is shown. A card clicked in Related stays centred until the cursor moves to another block. Fills in [D-93].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecViewContent]
+  why: Only the canvas and Related were kept, and a pick that the next cursor move overrides keeps clicking useful without the view losing the cursor.
+  rejected:
+    - Keeping the map and outline as more Structure views: four views of one graph in the toolbar, and only the canvas and Related were asked for.
 ```
 
 ## Appendix: Extension Definitions

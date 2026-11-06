@@ -156,6 +156,7 @@ const CardFace = ({ card, opens }: { card: SceneNode; opens: boolean }) => {
       )}
       data-testid='definition-canvas.card'
       data-definition={card.ref}
+      data-change={change}
       data-focused={card.focused ? '' : undefined}
       data-opens={opens ? '' : undefined}
     >

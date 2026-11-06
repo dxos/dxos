@@ -2,277 +2,34 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React from 'react';
 
-import { type ReviewModel, reviewAnnotations, statusOf } from '@dxos/deus/review';
-import { type SpecIndex } from '@dxos/deus/spec-index';
-import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { type DecisionModel, buildChangelogGraph } from '../ChangelogGraph/index.ts';
-import {
-  type DefinitionModel,
-  type SpecTexts,
-  buildDefinitionGraph,
-  diffDefinitionGraphs,
-  groupDefinitions,
-  specDeclarations,
-} from '../SpecModel/index.ts';
-import { DEFAULT_FACTS, type DefinitionFacts } from './definition-facts.ts';
+import { type DefinitionModel } from '../SpecModel/index.ts';
 import { DefinitionCanvas } from './DefinitionCanvas.tsx';
-import { type DefinitionViewModel } from './DefinitionChip.tsx';
-import { DefinitionMap } from './DefinitionMap.tsx';
-import { DefinitionOutline } from './DefinitionOutline.tsx';
-import { DefinitionRelated } from './DefinitionRelated.tsx';
+import { type DefinitionViewOptions, useDefinitionView } from './useDefinitionView.ts';
 
-/** Below this width (px) the whole spec is an outline rather than a map. */
-const MAP_MIN_WIDTH = 720;
-
-export type DefinitionLayout = 'canvas' | 'map' | 'outline';
-
-const LAYOUTS: readonly { id: DefinitionLayout; icon: string }[] = [
-  { id: 'canvas', icon: 'ph--flow-arrow--regular' },
-  { id: 'map', icon: 'ph--squares-four--regular' },
-  { id: 'outline', icon: 'ph--list-bullets--regular' },
-];
-
-const isLayout = (value: string): value is DefinitionLayout => LAYOUTS.some(({ id }) => id === value);
-
-export type DefinitionGraphProps = {
-  /** The text of a `.mdl` spec; its `## Changelog` gives the decisions a block's view lists. */
-  content: string;
-  /** Other specs this one names by `github:` key, so their blocks can be described. */
-  specs?: SpecTexts;
-  /** Resolves `<spec id>#<item>` references to other specs' files; without it only `github:` keys name them. */
-  index?: SpecIndex;
-  /** The latest compliance review; its verdicts badge the blocks. */
-  review?: ReviewModel;
-  /** The base version of `content`; when given, each block is marked with what changed since it (diff mode). */
-  base?: string;
-  /** The dialects whose block types the spec is written in; those its frontmatter extends by default. */
-  dialects?: readonly string[];
-  /** The fields a card shows beside its kind, and how; a feature's status by default. */
-  facts?: DefinitionFacts;
+export type DefinitionGraphProps = DefinitionViewOptions & {
   /** An external block opens its spec or code; a local one is shown in the spec. */
   onActivate?: (definition: DefinitionModel) => void;
-  /** The block a map or outline opens on; the whole spec by default. */
-  defaultFocus?: string;
-  /** Fixes the whole spec as a canvas, a map or an outline; without it the reader picks, a map when there is room. */
-  layout?: DefinitionLayout;
 };
 
 /**
- * A spec's definitions, grouped by what names them. The whole spec is a map of clusters of groups where there is
- * room and an outline where there is not; either opens a block's related view, which centres on it and draws
- * everything it touches, and the trail of blocks opened is a breadcrumb back to the whole spec. As a canvas, the levels
- * nest: the clusters, one cluster's groups, then a block, each drilled into by zooming into its card, with the canvas's
- * own trail.
+ * A spec's definitions on a canvas, grouped by what names them. Its levels nest: the clusters, one cluster's groups,
+ * then a block, each drilled into by double-clicking its card, with the canvas's own trail back up.
  */
-export const DefinitionGraph = ({
-  content,
-  specs,
-  index,
-  review,
-  base,
-  dialects,
-  facts = DEFAULT_FACTS,
-  onActivate,
-  defaultFocus,
-  layout,
-}: DefinitionGraphProps) => {
+export const DefinitionGraph = ({ onActivate, ...options }: DefinitionGraphProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const annotations = useMemo(() => reviewAnnotations(review), [review]);
-  const factFields = useMemo(() => new Set(Object.keys(facts)), [facts]);
-  const declarations = useMemo(() => specDeclarations(content, dialects), [content, dialects]);
-  const current = useMemo(
-    () => buildDefinitionGraph(content, { specs, annotations, index, declarations, factFields }),
-    [content, specs, annotations, index, declarations, factFields],
-  );
-  const diff = useMemo(
-    () =>
-      base === undefined
-        ? undefined
-        : diffDefinitionGraphs(
-            current,
-            buildDefinitionGraph(base, { specs, annotations, index, declarations, factFields }),
-            { current: content, base },
-          ),
-    [current, content, base, specs, annotations, index, declarations, factFields],
-  );
-  const full = diff ?? current;
-  const grouping = useMemo(() => groupDefinitions(full), [full]);
-  const decisions = useMemo(
-    () => buildChangelogGraph(content).nodes.filter((node): node is DecisionModel => node.kind === 'decision'),
-    [content],
-  );
-  const view = useMemo<DefinitionViewModel>(() => {
-    const byId = new Map(full.definitions.map((definition) => [definition.id, definition]));
-    return {
-      byId,
-      grouping,
-      statusOf: (id) => statusOf(review, id),
-      changeOf: (id) => diff?.changes.get(id),
-      factsOf: (id) =>
-        Object.entries(byId.get(id)?.facts ?? {}).map(([field, value]) => ({
-          field,
-          value,
-          ...(facts[field]?.[value] && { style: facts[field][value] }),
-        })),
-    };
-  }, [full, grouping, review, diff, facts]);
-
-  const [trail, setTrail] = useState<string[]>(() => (defaultFocus ? [defaultFocus] : []));
-  const clusterById = useMemo(() => new Map(grouping.clusters.map((cluster) => [cluster.id, cluster])), [grouping]);
-  const top = trail.at(-1);
-  const focus = top !== undefined && view.byId.has(top) ? top : undefined;
-  const [selected, setSelected] = useState<string>();
-  /** Opens a block or a cluster, cutting the trail back to it when it is already on it. */
-  const push = useCallback(
-    (id: string) =>
-      setTrail((trail) => [...trail.slice(0, trail.indexOf(id) === -1 ? trail.length : trail.indexOf(id)), id]),
-    [],
-  );
-  const handleOpen = useCallback(
-    (id: string) => {
-      const definition = view.byId.get(id);
-      if (definition?.external) {
-        onActivate?.(definition);
-      } else if (definition && id !== top) {
-        push(id);
-      }
-    },
-    [view, top, onActivate, push],
-  );
-  const crumbLabel = (id: string) => {
-    const cluster = clusterById.get(id);
-    return cluster === undefined
-      ? id
-      : cluster.hub === undefined
-        ? t('definition-map.cluster.unshared.label')
-        : t('definition-map.cluster.label', { hub: cluster.hub });
-  };
-  const handleShow = useCallback(
-    (id: string) => {
-      const definition = view.byId.get(id);
-      definition && onActivate?.(definition);
-    },
-    [view, onActivate],
-  );
-
-  const root = useRef<HTMLDivElement>(null);
-  const [wide, setWide] = useState(false);
-  useLayoutEffect(() => {
-    const element = root.current;
-    if (!element) {
-      return;
-    }
-    const observer = new ResizeObserver(([entry]) => setWide(entry.contentRect.width >= MAP_MIN_WIDTH));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-  const [picked, setPicked] = useState<DefinitionLayout>();
-  const shown: DefinitionLayout = layout ?? picked ?? (wide ? 'map' : 'outline');
-
+  const { view, edges } = useDefinitionView(options);
   return (
-    <Layout.Flex
-      column
-      classNames='dx-fill'
-      ref={root}
-      data-testid='definition-graph'
-      data-layout={shown === 'canvas' ? shown : focus ? 'related' : shown}
-    >
-      {(shown !== 'canvas' || layout === undefined) && (
-        <Layout.Flex align='center' gap='sm' classNames='px-2 py-1 min-h-[2.5rem]'>
-          {/* A canvas has its own trail, of the levels it has drilled into. */}
-          {shown !== 'canvas' && (
-            <Breadcrumb.Root aria-label={t('definition-graph.breadcrumb.label')} classNames='min-w-0'>
-              <Breadcrumb.List>
-                <Breadcrumb.Item>
-                  {top !== undefined ? (
-                    <Breadcrumb.Link asChild>
-                      <button type='button' onClick={() => setTrail([])} data-testid='definition-graph.crumb.spec'>
-                        {t('definition-graph.crumb.spec.label')}
-                      </button>
-                    </Breadcrumb.Link>
-                  ) : (
-                    <Breadcrumb.Current>{t('definition-graph.crumb.spec.label')}</Breadcrumb.Current>
-                  )}
-                </Breadcrumb.Item>
-                {trail.map((id, position) => (
-                  <React.Fragment key={`${position}:${id}`}>
-                    <Breadcrumb.Separator />
-                    <Breadcrumb.Item>
-                      {position === trail.length - 1 ? (
-                        <Breadcrumb.Current classNames='font-mono'>{crumbLabel(id)}</Breadcrumb.Current>
-                      ) : (
-                        <Breadcrumb.Link asChild>
-                          <button
-                            type='button'
-                            className='font-mono'
-                            onClick={() => setTrail((trail) => trail.slice(0, position + 1))}
-                            data-testid='definition-graph.crumb'
-                          >
-                            {crumbLabel(id)}
-                          </button>
-                        </Breadcrumb.Link>
-                      )}
-                    </Breadcrumb.Item>
-                  </React.Fragment>
-                ))}
-              </Breadcrumb.List>
-            </Breadcrumb.Root>
-          )}
-          {layout === undefined && (
-            <ToggleGroup.Root
-              type='single'
-              value={shown}
-              onValueChange={(next) => isLayout(next) && setPicked(next)}
-              aria-label={t('definition-graph.layout.label')}
-              classNames='ms-auto'
-            >
-              {LAYOUTS.map(({ id, icon }) => (
-                <ToggleGroup.Item
-                  key={id}
-                  value={id}
-                  icon={icon}
-                  label={t(`definition-graph.layout.${id}.label`)}
-                  iconOnly
-                  data-testid={`definition-graph.layout.${id}`}
-                />
-              ))}
-            </ToggleGroup.Root>
-          )}
-        </Layout.Flex>
-      )}
-      <p className='px-2 pb-1 text-xs text-description' data-testid='definition-graph.hint'>
-        {t(shown !== 'canvas' && focus ? 'definition-graph.hint.related' : `definition-graph.hint.${shown}`)}
+    <Layout.Flex column classNames='dx-fill' data-testid='definition-graph'>
+      <p className='px-2 py-1 text-xs text-description' data-testid='definition-graph.hint'>
+        {t('definition-graph.hint')}
       </p>
-      {shown === 'canvas' ? (
-        <DefinitionCanvas view={view} edges={full.edges} onActivate={onActivate} />
-      ) : (
-        <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
-          <ScrollArea.Viewport classNames='px-2 pb-2'>
-            {focus ? (
-              <DefinitionRelated
-                view={view}
-                edges={full.edges}
-                decisions={decisions}
-                focus={focus}
-                onOpen={handleOpen}
-                onShow={onActivate && handleShow}
-              />
-            ) : shown === 'map' ? (
-              <DefinitionMap view={view} selected={selected} onSelect={setSelected} onOpen={handleOpen} />
-            ) : (
-              <DefinitionOutline view={view} onOpen={handleOpen} />
-            )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      )}
+      <DefinitionCanvas view={view} edges={edges} onActivate={onActivate} />
     </Layout.Flex>
   );
 };

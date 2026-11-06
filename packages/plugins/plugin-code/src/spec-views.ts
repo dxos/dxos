@@ -7,6 +7,7 @@ import type * as SpecSession from '@dxos/plugin-projects/SpecSession';
 /** The views of a spec this plugin draws for any spec, by the companion tab each is one of. */
 export const SPEC_VIEWS = [
   { id: 'definitions', group: 'structure', icon: 'ph--tree-structure--regular' },
+  { id: 'related', group: 'structure', icon: 'ph--crosshair--regular' },
   { id: 'data', group: 'structure', icon: 'ph--database--regular' },
   { id: 'api', group: 'structure', icon: 'ph--plugs-connected--regular' },
   { id: 'log', group: 'decisions', icon: 'ph--users-three--regular' },

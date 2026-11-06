@@ -3,7 +3,7 @@
 //
 
 /**
- * Definitions in a spec's Structure companion, on the canvas: the spec's clusters, one cluster's features with the
+ * Definitions in a spec's Structure companion: the spec's clusters, one cluster's features with the
  * blocks only each names, then one block with everything it touches, each opened by double-clicking its card. A script
  * in the video dialect draws the same way, in its own icons and colours.
  *
@@ -41,13 +41,11 @@ const EXTENSIONS = '[data-testid="projectsPlugin.specExtensions"]';
 const PICKER = '[data-testid="projectsPlugin.specPicker"]';
 const SPECS = '[role="listbox"][aria-label="Specs"]';
 const STRUCTURE = '[data-testid="deck.companion.tab.spec-structure"]';
-const GRAPH = `${COMPANION} [data-testid="definition-graph"]`;
 const CLUSTER = `${COMPANION} [data-testid="definition-canvas.cluster"]`;
 const TRAIL_SPEC = `${COMPANION} [data-testid="breadcrumb-root"]`;
 const row = (name) => `${SPECS} [role="group"]:has(> [data-part="legend"]:text-is("${name}"))`;
 const field = (name, label) =>
   `${row(name)} [data-scope="field"][data-part="root"]:has(label:text-is("${label}")) :is(input, [contenteditable="true"])`;
-const layout = (id) => `${COMPANION} [data-testid="definition-graph.layout.${id}"]`;
 const cluster = (hub) => `${COMPANION} [data-cluster="cluster:${hub}"]`;
 const card = (id) => `${COMPANION} [data-testid="definition-canvas.card"][data-definition="${id}"]`;
 
@@ -252,17 +250,8 @@ export const steps = [
       if (!page.url().endsWith('/companion/spec-structure')) {
         await demo.click({ selector: STRUCTURE, label: 'Structure' });
       }
-      await page.locator(layout('canvas')).waitFor({ state: 'visible', timeout: 15_000 });
-      await demo.sleep({ ms: LOOK });
-    },
-  },
-  {
-    name: 'Switch to the canvas',
-    narration: 'On the canvas, each cluster is a card, gathered around the block its features share.',
-    run: async ({ demo, page }) => {
-      await caption(demo, 2, 'Canvas: a card per cluster of features');
-      await demo.click({ selector: layout('canvas'), label: 'Canvas' });
       await page.locator(cluster('CoderSkill')).waitFor({ state: 'visible', timeout: 20_000 });
+      await caption(demo, 1, 'A card per cluster of features');
       await demo.sleep({ ms: LOOK + 1_000 });
     },
   },
@@ -270,11 +259,11 @@ export const steps = [
     name: 'Open a cluster',
     narration: 'Double-clicking a cluster zooms into it: a frame per feature, holding what only it names.',
     run: async ({ demo, page }) => {
-      await caption(demo, 3, 'Double-click a cluster to open its features');
+      await caption(demo, 2, 'Double-click a cluster to open its features');
       await open(demo, page, cluster('CoderSkill'), 'CoderSkill');
       await page.locator(CLUSTER).first().waitFor({ state: 'detached', timeout: 15_000 });
       await page.locator(`${card('F-8')}[data-opens]`).waitFor({ state: 'visible', timeout: 30_000 });
-      await caption(demo, 3, "Each block wears its dialect's icon and colour");
+      await caption(demo, 2, "Each block wears its dialect's icon and colour");
       await demo.sleep({ ms: LOOK + 1_000 });
     },
   },
@@ -282,13 +271,13 @@ export const steps = [
     name: 'Open a block',
     narration: 'A block opens onto everything it touches, each link drawn with its relationship.',
     run: async ({ demo, page }) => {
-      await caption(demo, 4, 'Double-click a feature: everything it touches');
+      await caption(demo, 3, 'Double-click a feature: everything it touches');
       await open(demo, page, card('F-8'), 'F-8');
       await page
         .locator(`${COMPANION} [data-testid="definition-canvas.card"][data-focused]`)
         .waitFor({ state: 'visible', timeout: 15_000 });
       await demo.sleep({ ms: LOOK });
-      await caption(demo, 4, 'Dashed arrows are its uses: needed, not owned');
+      await caption(demo, 3, 'Dashed arrows are its uses: needed, not owned');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -296,7 +285,7 @@ export const steps = [
     name: 'Back to the whole spec',
     narration: "The canvas's trail goes back up a level at a time.",
     run: async ({ demo, page }) => {
-      await caption(demo, 5, 'The trail goes back to the whole spec');
+      await caption(demo, 4, 'The trail goes back to the whole spec');
       await demo.click({ selector: TRAIL_SPEC, label: 'All groups' });
       await page.locator(cluster('CoderSkill')).waitFor({ state: 'visible', timeout: 15_000 });
       await demo.sleep({ ms: LOOK });
@@ -306,12 +295,8 @@ export const steps = [
     name: 'Open the launch video',
     narration: 'A script in the video dialect groups by the same rules: scenes gather around the cast they share.',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, 'A video script groups by the same rules');
+      await caption(demo, 5, 'A video script groups by the same rules');
       await pickSpec(page, VIDEO_SPEC, demo);
-      await page.locator(layout('canvas')).waitFor({ state: 'visible', timeout: 15_000 });
-      if ((await page.locator(CLUSTER).count()) === 0) {
-        await demo.click({ selector: layout('canvas'), label: 'Canvas' });
-      }
       await page.locator(cluster('maya')).waitFor({ state: 'visible', timeout: 20_000 });
       await demo.sleep({ ms: LOOK + 1_000 });
     },
@@ -320,7 +305,7 @@ export const steps = [
     name: "Open a character's cluster",
     narration: 'Each scene composes its shots, voiceover and captions, drawn as filled diamonds.',
     run: async ({ demo, page }) => {
-      await caption(demo, 7, 'Each scene composes its shots and voiceover');
+      await caption(demo, 6, 'Each scene composes its shots and voiceover');
       await open(demo, page, cluster('maya'), 'Maya');
       await page.locator(CLUSTER).first().waitFor({ state: 'detached', timeout: 15_000 });
       await demo.sleep({ ms: LOOK + 2_000 });

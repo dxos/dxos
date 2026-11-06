@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomSet } from '@effect/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
@@ -30,12 +30,14 @@ import {
   DataModelGraph,
   DecisionLog,
   DecisionThreads,
+  DefinitionFocus,
   DefinitionGraph,
   type DefinitionModel,
   ReviewPanel,
   SPEC_INDEX,
   answerQuestion,
   pendingReveal,
+  specCursor,
   toUserHandle,
 } from '#components';
 import { SpecReviews } from '#sync';
@@ -140,6 +142,7 @@ export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewC
     model;
   const { codePath, baseText } = model;
   const { evidence, selectedVerdict, selectedReview, selectedDecision } = session;
+  const cursor = useAtomValue(specCursor(id));
   // The review view shows the current status or one review; the editor's chips always show the current status.
   const history = useMemo(
     () => reviews.map(({ id, date, by, commit }) => ({ id, label: `${date} · ${by} · ${commit.slice(0, 7)}` })),
@@ -233,6 +236,18 @@ export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewC
       {view === 'definitions' && (
         <DefinitionGraph
           content={text}
+          dialects={dialects}
+          base={baseText}
+          specs={specs}
+          index={SPEC_INDEX}
+          review={review}
+          onActivate={activate}
+        />
+      )}
+      {view === 'related' && (
+        <DefinitionFocus
+          content={text}
+          cursor={cursor}
           dialects={dialects}
           base={baseText}
           specs={specs}

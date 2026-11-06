@@ -41,7 +41,15 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { SPEC_INDEX, decisionGutter, pendingReveal, reviewGutter, sourceLinks } from '#components';
+import {
+  SPEC_INDEX,
+  decisionGutter,
+  pendingReveal,
+  reviewGutter,
+  sourceLinks,
+  specCursor,
+  trackCursor,
+} from '#components';
 
 import { CodeNamespace } from '../../namespace.ts';
 import { type SpecViewId } from '../../spec-views.ts';
@@ -151,6 +159,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     // Another article that opened this spec at an item left it pending; the text may arrive after mount.
     const pending = useAtomValue(pendingReveal);
     const setPendingReveal = useAtomSet(pendingReveal);
+    const setCursor = useAtomSet(specCursor(id));
     useEffect(() => {
       if (pending && key && pending.path === key.path && SpecSession.reveal(id, pending.item)) {
         setPendingReveal(undefined);
@@ -169,6 +178,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           mdl(isReviewFile ? {} : { index: SPEC_INDEX }),
           sourceLinks((target) => void open(target), SPEC_INDEX),
           ViewPlugin.define((editor) => ({ destroy: SpecSession.registerEditor(id, editor) })),
+          trackCursor(setCursor),
           decisions.length > 0 &&
             decisionGutter(decisions, (item) =>
               // A question is answered in the log, which lists it; a decision shows in the graph.
@@ -207,6 +217,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       [
         id,
         identity,
+        setCursor,
         space,
         spec?.id,
         target,
