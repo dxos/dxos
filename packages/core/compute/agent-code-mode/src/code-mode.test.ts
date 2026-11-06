@@ -549,6 +549,36 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
 // No model in the loop, so not tagged `model-fixture`: this runs with every test run.
 describe('code mode records the operations an eval ran', () => {
   it.effect(
+    'a large result is not stored, and is not serialized past the cap',
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        let serialized = 0;
+        const large = Array.from({ length: 100_000 }, () => ({
+          toJSON: () => {
+            serialized++;
+            return 'x';
+          },
+        }));
+        const evaluations: Evaluation[] = [];
+        yield* evaluate({
+          code: "await ops.score({ title: 'x' });",
+          dialect: PlainDialect,
+          sandbox: Sandbox.inProcess,
+          runtime,
+          operations: [{ ...ScoreOperation, invoke: () => Effect.succeed(large) }],
+          onEvaluated: (evaluation) => evaluations.push(evaluation),
+        });
+
+        expect(evaluations.map(({ invocations }) => invocations)).toEqual([[{ operationKey: SCORE_KEY }]]);
+        expect(serialized).toBeLessThan(1_000);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'on both dialects, keyed by the eval call, including what ran before a failure',
     Effect.fnUntraced(
       function* (_) {
