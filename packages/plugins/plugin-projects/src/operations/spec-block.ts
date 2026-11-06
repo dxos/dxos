@@ -34,8 +34,12 @@ export type SpecDocument = {
   items: readonly SpecItem[];
 };
 
-export const readDocument = (spec: Spec.Spec, text: TextType.Text, content = text.content): SpecDocument => {
-  const schemas = specSchemas(content, spec.dialects);
+export const readDocument = (
+  { dialects }: Pick<Spec.Spec, 'dialects'>,
+  text: TextType.Text,
+  content = text.content,
+): SpecDocument => {
+  const schemas = specSchemas(content, dialects);
   return { text, content, schemas, items: specItems(content, schemas) };
 };
 

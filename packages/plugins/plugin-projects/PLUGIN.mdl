@@ -70,8 +70,8 @@ feat F-4: A project's specs
   req F-4.12: A spec's text draws object links and embeds as a Markdown document does, and takes the editor extensions
               other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
               packages add their own editing on top.
-  req F-4.13: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
-              each with the peer's name.
+  req F-4.13: A spec's text, and each block form drawn in it, shows the carets of the other peers editing it, each
+              with the peer's name.
   req F-4.14: A spec's text opens in preview, where each block of a kind its schemas define is drawn as a form over that
               kind's fields, and offers readonly and source views. The text is the only store: a form edit changes only
               the source of the field it edits, and the title, the prose and each prose field are editors of their own
@@ -2428,5 +2428,13 @@ decision D-222: The generic block operations `GetSpecBlocks`, `SetSpecBlock` and
   by: user:wittjosiah
   affects: [F-4.15]
   why: With blocks in the text, one set of operations checked against each kind's schema covers every kind.
+```
+
+```mdl
+decision D-215: A spec's carets show in its text and in each block form drawn in it; a feature is a `feat` block of the text, drawn as one of those forms. Amends [F-4.13].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.13]
 ```
 

@@ -14,6 +14,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Text } from '@dxos/schema';
 import { Task, Thread } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -296,6 +297,7 @@ export const GetSpecBlocks = Operation.make({
     icon: 'ph--list-bullets--regular',
   },
   services: [Database.Service],
+  types: [Spec.Spec, Text.Text],
   input: Schema.Struct({
     spec: Ref.Ref(Spec.Spec),
     kind: Schema.optional(Schema.String.annotate({ description: 'Only blocks of this kind, such as `feat`.' })),
@@ -316,6 +318,7 @@ export const SetSpecBlock = Operation.make({
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service],
+  types: [Spec.Spec, Text.Text],
   input: Schema.Struct({
     spec: Ref.Ref(Spec.Spec),
     block: Schema.optional(Schema.String.annotate({ description: 'The key or label of the block.' })),
@@ -336,6 +339,7 @@ export const DeleteSpecBlock = Operation.make({
     icon: 'ph--trash--regular',
   },
   services: [Database.Service],
+  types: [Spec.Spec, Text.Text],
   input: Schema.Struct({ spec: Ref.Ref(Spec.Spec), block: Schema.String }),
   output: Schema.Void,
 }).pipe(Operation.mutation('destructive'));
