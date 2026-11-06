@@ -917,13 +917,15 @@ const LinkText = ({ path, text, backdrop, textClass, fontSize }: LinkTextProps) 
       return;
     }
     const room = at.room === undefined ? Infinity : at.room - LINK_TEXT_PAD.x * 2 - LINK_TEXT_CLEARANCE * 2;
-    if (text.length === 0 || element.getComputedTextLength() <= room) {
+    // Text not laid out yet (as in a hidden tab) has no characters to measure, so it is shown whole.
+    const chars = element.getNumberOfChars();
+    if (chars === 0 || element.getComputedTextLength() <= room) {
       setShown(text);
       return;
     }
     // The ellipsis takes about one character's width of what it replaces.
-    const ellipsis = element.getComputedTextLength() / text.length;
-    let count = text.length - 1;
+    const ellipsis = element.getComputedTextLength() / chars;
+    let count = chars - 1;
     while (count > 0 && element.getSubStringLength(0, count) + ellipsis > room) {
       count--;
     }
