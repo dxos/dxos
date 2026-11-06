@@ -502,7 +502,11 @@ export class ClientReplicant {
     const edgeUrl = this.#config.edgeUrl;
     const client = this.#getClient();
     const identity = client.halo.identity.get();
-    invariant(identity, 'no identity to delete');
+    if (!identity) {
+      // A setup that failed before this replicant minted an identity created nothing here, so only
+      // spaces it was asked to delete count as left behind — it cannot authenticate to delete them.
+      return { accepted: [], refused: [...spaceIds] };
+    }
 
     const accepted: string[] = [];
     const refused: string[] = [];
