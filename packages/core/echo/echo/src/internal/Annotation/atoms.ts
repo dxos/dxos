@@ -9,7 +9,7 @@ import { assertArgument } from '@dxos/invariant';
 
 import type * as Annotation from '../../Annotation.ts';
 import type * as Entity from '../../Entity.ts';
-import { snapshotEquals, snapshotForComparison } from '../common/atom-snapshot.ts';
+import { snapshotDeep, snapshotEquals } from '../common/atom-snapshot.ts';
 import { subscribe } from '../common/proxy/reactive.ts';
 import { isEntity } from '../Entity/index.ts';
 import { get as getAnnotation } from './entity-dictionary.ts';
@@ -17,11 +17,12 @@ import { get as getAnnotation } from './entity-dictionary.ts';
 /**
  * Atom family for an annotation value on an entity instance.
  * Mirrors the object-property atom family: re-emits a fresh reference whenever the entity changes
- * (so an in-place array mutation is observed) and dedupes primitive values via `!==`.
+ * (so an in-place array mutation is observed) and dedupes primitive values via `!==`. The snapshot is
+ * deep, so a record nested in the value is a new reference too once it changes in place.
  */
 const annotationFamily = Atom.family(
   ([target, annotation]: readonly [Entity.Unknown, Annotation.Annotation<any>]): Atom.Atom<Option.Option<any>> => {
-    const read = (): Option.Option<any> => Option.map(getAnnotation(target, annotation), snapshotForComparison);
+    const read = (): Option.Option<any> => Option.map(getAnnotation(target, annotation), snapshotDeep);
 
     return Atom.make<Option.Option<any>>((get) => {
       let previous = read();
@@ -52,7 +53,7 @@ const annotationPropertyFamily = Atom.family(
   ]): Atom.Atom<any> => {
     const read = (): unknown =>
       getAnnotation(target, annotation).pipe(
-        Option.map((value) => snapshotForComparison(value[key])),
+        Option.map((value) => snapshotDeep(value[key])),
         Option.getOrUndefined,
       );
 
@@ -79,8 +80,8 @@ const sameOption = <T>(a: Option.Option<T>, b: Option.Option<T>): boolean =>
   Option.isNone(a) || Option.isNone(b) ? Option.isNone(a) && Option.isNone(b) : snapshotEquals(a.value, b.value);
 
 /**
- * Reactive atom for an annotation value on an entity instance. Emits a shallow snapshot (a fresh
- * reference for objects/arrays) so dependent atoms recompute on change. Mirrors {@link makeProperty}.
+ * Reactive atom for an annotation value on an entity instance. Emits a deep snapshot (fresh references
+ * for objects and arrays at every depth) so dependent atoms recompute on change. Mirrors {@link makeProperty}.
  */
 export const makeAtom = <T>(
   target: Entity.Unknown,

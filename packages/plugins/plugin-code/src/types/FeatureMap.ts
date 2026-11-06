@@ -138,15 +138,30 @@ export const setFeatures = (spec: Spec.Spec, features: readonly Feature.Feature[
   }
 };
 
-/** Records where the user dropped a feature's card. */
-export const setPosition = (spec: Spec.Spec, id: string, position: Position): void => {
+/** Records where features' cards sit on the canvas, by feature id, in one change. */
+export const setPositions = (spec: Spec.Spec, positions: Record<string, Position>): void => {
   if (getLayout(spec)) {
     Annotation.update(spec, LayoutAnnotation, (layout) => {
-      layout.positions[id] = position;
+      Object.assign(layout.positions, positions);
     });
   } else {
     Obj.update(spec, (spec) => {
-      Annotation.set(spec, LayoutAnnotation, { positions: { [id]: position } });
+      Annotation.set(spec, LayoutAnnotation, { positions: { ...positions } });
+    });
+  }
+};
+
+/** Records where the user dropped a feature's card. */
+export const setPosition = (spec: Spec.Spec, id: string, position: Position): void =>
+  setPositions(spec, { [id]: position });
+
+/** Forgets every card's position, so the canvas lays the map out afresh. */
+export const clearPositions = (spec: Spec.Spec): void => {
+  if (getLayout(spec)) {
+    Annotation.update(spec, LayoutAnnotation, (layout) => {
+      for (const id of Object.keys(layout.positions)) {
+        delete layout.positions[id];
+      }
     });
   }
 };

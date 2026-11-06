@@ -19,11 +19,6 @@ export type FeatureCanvasCellsProps = {
   onCreate?: (position: Point) => void;
   /** An existing feature moved into the cell centred on `position`. */
   onAdd?: (position: Point) => void;
-  /**
-   * Fixes the cards where they are drawn, by feature id, before a feature is placed: a new card changes the automatic
-   * layout's extent, which would move the cards around the cell it was placed in.
-   */
-  onPin?: (centers: Record<string, Point>) => void;
 };
 
 const ADD_TEST_ID = 'feature-canvas.add';
@@ -77,7 +72,7 @@ const useHoveredCell = (consumerName: string) => {
  * A `+` in the empty cell under the pointer, which adds a feature there: a new one or an existing one. Drawn in scene
  * coordinates as the viewport's overlay; only the button takes the pointer, so empty cells still pan and select.
  */
-export const FeatureCanvasCells = ({ onCreate, onAdd, onPin }: FeatureCanvasCellsProps) => {
+export const FeatureCanvasCells = ({ onCreate, onAdd }: FeatureCanvasCellsProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const { atoms, draw, readonly } = useCanvasServices(FeatureCanvasCells.displayName);
   const { displayScene } = useCanvasGesture(FeatureCanvasCells.displayName);
@@ -102,12 +97,8 @@ export const FeatureCanvasCells = ({ onCreate, onAdd, onPin }: FeatureCanvasCell
     action?.();
   }, []);
 
-  // Placing fixes the cards where they are drawn first, so the new card's cell stays next to the ones it was beside.
   const place = (add: () => void) => {
-    pending.current = () => {
-      onPin?.(Object.fromEntries(Object.values(displayScene.nodes).map((node) => [node.id, node.center])));
-      add();
-    };
+    pending.current = add;
   };
 
   if (!lattice || readonly || (!onCreate && !onAdd)) {

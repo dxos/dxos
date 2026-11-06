@@ -28,6 +28,12 @@ const FFPROBE = process.env.FFPROBE_PATH ?? 'ffprobe';
 
 const BACKGROUND = '0x111111';
 
+/** Labels and captions are drawn with `drawtext`, which Homebrew's `ffmpeg` lacks and `ffmpeg-full` has. */
+export const canCompose = () => {
+  const result = spawnSync(FFMPEG, ['-hide_banner', '-filters'], { encoding: 'utf8' });
+  return result.status === 0 && result.stdout.includes('drawtext');
+};
+
 /** Seconds of media in a file; a VFR screencast has no reliable stream duration, so the container's is read. */
 export const probeDuration = (file) => {
   const result = spawnSync(
@@ -55,6 +61,21 @@ const probeSize = (file) => {
   }
   return { width, height };
 };
+
+/** Greedy word wrap to at most `limit` characters a line; a single longer word keeps its own line. */
+/** Step names mark code with backticks, which drawtext and a VTT cue would show as they are. */
+const plainText = (text) => text.replace(/`([^`]*)`/g, '$1');
+
+const wrapLines = (text, limit) =>
+  text.split(/\s+/).reduce((lines, word) => {
+    const last = lines.at(-1);
+    if (last !== undefined && last.length + 1 + word.length <= limit) {
+      lines[lines.length - 1] = `${last} ${word}`;
+    } else {
+      lines.push(word);
+    }
+    return lines;
+  }, []);
 
 /** `drawtext` needs a font file wherever fontconfig is absent from the ffmpeg build; `FONT_FILE` overrides. */
 const findFont = () => {
@@ -91,10 +112,15 @@ const filterPath = (file) => file.replace(/\\/g, '\\\\').replace(/:/g, '\\:').re
  * }} options
  * @returns {Promise<{ file: string, mp4?: string, vtt?: string, seconds: number, size: { width: number, height: number } }>}
  */
-export const composeSideBySide = async ({ inputs, captions = [], out, gap = 16, fps = 25, crf = 30, mp4 = false }) => {
+export const composeSideBySide = async ({ inputs, captions: given = [], out, gap = 16, fps = 25, crf = 30, mp4 = false }) => {
   if (inputs.length < 2) {
     throw new Error('side-by-side needs at least two inputs');
   }
+  const captions = given.map((caption) => ({
+    ...caption,
+    text: plainText(caption.text),
+    subtitle: caption.subtitle && plainText(caption.subtitle),
+  }));
   const textDir = path.join(path.dirname(out), `${path.basename(out, path.extname(out))}.text`);
   mkdirSync(textDir, { recursive: true });
 
@@ -104,8 +130,19 @@ export const composeSideBySide = async ({ inputs, captions = [], out, gap = 16, 
   // Bands scale with the frame so a 2x recording does not get 1x-sized text.
   const unit = Math.max(1, Math.round(height / 900));
   const header = 44 * unit;
-  const footer = captions.length ? 76 * unit : 0;
   const scaledGap = gap * unit;
+  // drawtext does not wrap, so a caption is broken into lines that fit the stacked width and the footer
+  // grows to hold the longest one.
+  const captionSize = 26 * unit;
+  const lineHeight = Math.round(captionSize * 1.3);
+  const stackedWidth = inputs.length * width + (inputs.length - 1) * scaledGap;
+  const lineChars = Math.floor((stackedWidth - 96 * unit) / (captionSize * 0.66));
+  const captionLines = captions.map((caption) => wrapLines(caption.text, lineChars));
+  const subtitled = captions.some((caption) => caption.subtitle);
+  const footerHeight =
+    26 * unit + Math.max(...captionLines.map((lines) => lines.length)) * lineHeight + (subtitled ? 22 * unit : 0);
+  // yuv420p needs an even frame height.
+  const footer = captions.length ? 2 * Math.ceil(footerHeight / 2) : 0;
   const font = findFont();
   const fontOption = font ? `fontfile='${filterPath(font)}':` : '';
 
@@ -139,15 +176,16 @@ export const composeSideBySide = async ({ inputs, captions = [], out, gap = 16, 
     const end = index < captions.length - 1 ? captions[index + 1].ms / 1000 : totalSeconds;
     const enable = `enable='between(t,${start.toFixed(3)},${end.toFixed(3)})'`;
     const titleFile = path.join(textDir, `caption-${index}.txt`);
-    writeFileSync(titleFile, caption.text);
+    const lines = captionLines[index];
+    writeFileSync(titleFile, lines.join('\n'));
     const filters = [
-      `drawtext=${fontOption}expansion=none:textfile='${filterPath(titleFile)}':fontcolor=white:fontsize=${26 * unit}:x=(w-tw)/2:y=h-${footer}+${caption.subtitle ? 12 * unit : 24 * unit}:${enable}`,
+      `drawtext=${fontOption}expansion=none:textfile='${filterPath(titleFile)}':fontcolor=white:fontsize=${captionSize}:line_spacing=${lineHeight - captionSize}:text_align=C:x=(w-tw)/2:y=h-${footer}+${12 * unit}:${enable}`,
     ];
     if (caption.subtitle) {
       const subtitleFile = path.join(textDir, `subtitle-${index}.txt`);
       writeFileSync(subtitleFile, caption.subtitle);
       filters.push(
-        `drawtext=${fontOption}expansion=none:textfile='${filterPath(subtitleFile)}':fontcolor=0xaaaaaa:fontsize=${18 * unit}:x=(w-tw)/2:y=h-${footer}+${46 * unit}:${enable}`,
+        `drawtext=${fontOption}expansion=none:textfile='${filterPath(subtitleFile)}':fontcolor=0xaaaaaa:fontsize=${18 * unit}:x=(w-tw)/2:y=h-${footer}+${16 * unit + lines.length * lineHeight}:${enable}`,
       );
     }
     return filters;

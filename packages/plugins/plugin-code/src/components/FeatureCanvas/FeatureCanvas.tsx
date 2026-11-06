@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import {
   type Arrangement,
@@ -16,11 +16,15 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
+  pinGraph,
 } from '@dxos/react-ui-canvas';
 import { Graph2DView } from '@dxos/react-ui-canvas-editor';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import { type Node, type Point, nodeBase } from '@dxos/scene';
 
+import { CodeNamespace } from '../../namespace.ts';
 import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
 import { FeatureCanvasCells, type FeatureCanvasCellsProps } from './FeatureCanvasCells.tsx';
 
@@ -124,7 +128,7 @@ const toGraph = (features: readonly FeatureModel[]): GraphModel => {
 
 export type FeatureCanvasProps = {
   features: readonly FeatureModel[];
-  /** Positions the user dragged, by feature id; the rest are laid out by dependency rank. */
+  /** Where each card sits, by feature id. A card without one is laid out by dependency rank, then pinned there. */
   positions?: Record<string, Point>;
   onPositionsChange?: (positions: Record<string, Point>) => void;
   /** The box selected by a click; a press on the background or Escape clears it. */
@@ -141,6 +145,8 @@ export type FeatureCanvasProps = {
   onCreate?: (position: Point) => void;
   /** An existing feature moved into the empty cell centred on a point. */
   onAdd?: (position: Point) => void;
+  /** Lays every card out afresh by dependency rank: the canvas offers it when given. */
+  onArrange?: () => void;
   /** A box to select from outside, as for a feature just created. */
   selectedId?: string;
   /** How boxes take their lattice cells (see `Arrangement`); fewest crossing arrows by default. */
@@ -168,20 +174,37 @@ export const FeatureCanvas = ({
   onRemove,
   onCreate,
   onAdd,
+  onArrange,
   selectedId,
   arrange = 'crossings',
   force,
   lattice = true,
 }: FeatureCanvasProps) => {
+  const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  // Pinning keeps the drawn cards where they are, so a card placed in a cell does not move the layout around it.
-  const handlePin = useCallback(
-    (centers: Record<string, Point>) => onPositionsChange?.({ ...centers, ...positions }),
-    [onPositionsChange, positions],
+  // The cell a feature is being added to, which its card takes when it appears.
+  const placing = useRef<Point | undefined>(undefined);
+  const handleCreate = useMemo(
+    () =>
+      onCreate &&
+      ((position: Point) => {
+        placing.current = position;
+        onCreate(position);
+      }),
+    [onCreate],
+  );
+  const handleAdd = useMemo(
+    () =>
+      onAdd &&
+      ((position: Point) => {
+        placing.current = position;
+        onAdd(position);
+      }),
+    [onAdd],
   );
   const nodeContext = useMemo(
-    () => ({ lookup, cells: { onCreate, onAdd, onPin: handlePin } }),
-    [lookup, onCreate, onAdd, handlePin],
+    () => ({ lookup, cells: { onCreate: handleCreate, onAdd: handleAdd } }),
+    [lookup, handleCreate, handleAdd],
   );
   const graph = useMemo(() => toGraph(features), [features]);
 
@@ -206,11 +229,36 @@ export const FeatureCanvas = ({
     [lattice, arrange, force?.attraction, force?.repulsion, force?.range],
   );
 
-  // A single selected box is the selected feature; an arrow, several boxes or none select nothing.
-  const handleSelectionChange = useCallback((ids: readonly string[]) => {
-    const [id] = ids;
-    callbacks.current.onSelect?.(ids.length === 1 && !id.includes(EDGE_SEPARATOR) ? id : undefined);
-  }, []);
+  // The layout arranges each card once: a card without a position is pinned where the layout first draws it, so a later
+  // edit (an arrow, another card) moves none of them. Only `onPositionsChange` can keep a position.
+  const pinned = useMemo(() => {
+    const unpinned = graph.nodes.filter(({ id }) => !positions[id]);
+    if (!onPositionsChange || unpinned.length === 0) {
+      return positions;
+    }
+    return pinGraph(
+      graph,
+      layout,
+      positions,
+      placing.current && unpinned.length === 1 ? { [unpinned[0].id]: placing.current } : {},
+    );
+  }, [graph, layout, positions, onPositionsChange]);
+  useEffect(() => {
+    if (pinned !== positions) {
+      placing.current = undefined;
+      onPositionsChange?.(pinned);
+    }
+  }, [pinned, positions, onPositionsChange]);
+
+  // A single selected box is the selected feature; an arrow, one just drawn (the editor selects it under an id of its
+  // own), several boxes or none select nothing.
+  const handleSelectionChange = useCallback(
+    (ids: readonly string[]) => {
+      const [id] = ids;
+      callbacks.current.onSelect?.(ids.length === 1 && lookup(id) ? id : undefined);
+    },
+    [lookup],
+  );
   const selection = useMemo(() => (selectedId && lookup(selectedId) ? [selectedId] : undefined), [selectedId, lookup]);
 
   const handleLink = useCallback((from: string, to: string) => callbacks.current.onLink?.(from, to), []);
@@ -231,14 +279,27 @@ export const FeatureCanvas = ({
         graph={graph}
         layout={layout}
         nodes={nodes}
-        positions={positions}
+        positions={pinned}
         onPositionsChange={onPositionsChange}
         onLink={onLink ? handleLink : undefined}
         onDelete={onUnlink || onRemove ? handleDelete : undefined}
         selection={selection}
         onSelectionChange={handleSelectionChange}
         Overlay={FeatureCells}
-      />
+      >
+        {onArrange && (
+          <div className='absolute bottom-2 right-2'>
+            <Button.Root
+              variant='ghost'
+              iconOnly
+              icon='ph--magic-wand--regular'
+              label={t('feature-canvas.arrange.label')}
+              onClick={onArrange}
+              data-testid='feature-canvas.arrange'
+            />
+          </div>
+        )}
+      </Graph2DView>
     </FeatureNodeContext.Provider>
   );
 };

@@ -225,6 +225,7 @@ export const translations = [
         'feature-section.dependencies.placeholder': 'Add a feature this needs',
         'feature-section.description.placeholder': 'What the feature does when complete',
         'feature-article.relations.label': 'Relations',
+        'feature-canvas.arrange.label': 'Arrange',
         'feature-map.mode.label': 'View',
         'feature-map.mode.canvas.label': 'Canvas',
         'feature-map.mode.kanban.label': 'Kanban',
