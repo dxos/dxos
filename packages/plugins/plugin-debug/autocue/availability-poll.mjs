@@ -954,28 +954,37 @@ const showGrids = async (demo, page, caption) => {
 
 /**
  * Walks the T-1 poll as Ben, slowly enough to read: the two grids, a hover on the best slot for who is free, a drag down
- * Tuesday that marks it in one save, and the roster. A page without the grids, such as M-1's, is held on instead.
+ * Tuesday that marks it in one save, and the roster. M-1's plain page shows who is free in a native tooltip, which a
+ * recording does not capture, so its walk has no hover; a page without the grids is held on instead.
  */
-const showPoll = async (demo, page) => {
+const showPoll = async (demo, page, milestone) => {
+  const plain = milestone === M1.id;
   const yours = await tagCells(page, 'Your availability', 'yours');
   const group = await tagCells(page, 'Group availability', 'group');
   await demo.caption(
-    group
+    group && plain
       ? {
-          value: "Ben's grid beside the group's",
-          subtitle: 'Each slot shaded by how many are free; the best slot outlined',
+          value: "Ben's grid and the group's heat map",
+          subtitle: "It works, on the browser's default styles",
           hold: BEAT * 4,
           position: 'top',
         }
-      : {
-          value: 'The heat map and the best slot',
-          subtitle: "M-1's plain page; M-2 lays it out to the spec",
-          hold: BEAT * 4,
-          position: 'top',
-        },
+      : group
+        ? {
+            value: "Ben's grid beside the group's",
+            subtitle: 'Each slot shaded by how many are free; the best slot outlined',
+            hold: BEAT * 4,
+            position: 'top',
+          }
+        : {
+            value: 'The heat map and the best slot',
+            subtitle: "M-1's plain page; M-2 lays it out to the spec",
+            hold: BEAT * 4,
+            position: 'top',
+          },
   );
   await page.waitForTimeout(BEAT * 4);
-  if (group) {
+  if (group && !plain) {
     // T-1's best slot, s3, is Monday at 11:00: the first day's third row.
     await demo.hover({ selector: cell('group', 0, 2), label: 'Mon 11:00' });
     await demo.caption({
@@ -1087,7 +1096,7 @@ const tryLocally = async (
       }
     }
     await page.waitForTimeout(BEAT);
-    await poll(demo, page);
+    await poll(demo, page, milestone);
   }
   await closeWindow(page);
   if (!passed) {
