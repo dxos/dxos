@@ -4,13 +4,13 @@
 
 import { type Extension } from '@codemirror/state';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { Suspense, useContext, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import type * as Spec from '@dxos/compute/Spec';
-import { Obj } from '@dxos/echo';
+import * as Spec from '@dxos/compute/Spec';
+import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject, useResolveRef } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import {
   type EditorToolbarState,
@@ -56,6 +56,17 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
     const [dialects = EMPTY] = useObject(spec, 'dialects');
     // The field editors in the block cards publish their carets on the spec editor's channel.
     const awareness = useMemo(() => new SharedAwareness(), [spec]);
+    // Read through a ref, so a spec added or renamed reaches the pickers without rebuilding the editor.
+    const specs = useQuery(space?.db, Filter.type(Spec.Spec));
+    const specsRef = useRef(specs);
+    specsRef.current = specs;
+    const specOptions = useCallback(
+      () =>
+        specsRef.current
+          .filter((candidate) => candidate.id !== spec.id)
+          .map((candidate) => ({ id: candidate.id, name: candidate.name })),
+      [spec],
+    );
     const { parentRef, view } = useTextEditor(() => {
       if (!text) {
         return {};
@@ -82,6 +93,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
             readonly: viewMode === 'readonly',
             awareness,
             fieldExtensions,
+            specs: specOptions,
           }),
           formattingListener((formatting: EditorToolbarState) =>
             registry.set(state, { ...registry.get(state), ...formatting }),
@@ -103,6 +115,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
       dialects,
       awareness,
       fieldExtensions,
+      specOptions,
     ]);
 
     useEffect(() => setController(createEditorController(view)), [view, setController]);

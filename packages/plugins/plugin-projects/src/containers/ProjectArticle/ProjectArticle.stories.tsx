@@ -82,6 +82,26 @@ const SPEC_CONTENT = [
   '```',
   '',
   '```mdl',
+  'feat p4m8d: Agent replies',
+  '  status: planned',
+  '  desc: An agent drafts a reply to each message it can answer.',
+  '  req h2vqc: A draft waits in the thread until someone sends it.',
+  '```',
+  '',
+  '```mdl',
+  'type Message: One email in the inbox',
+  '  fields:',
+  '    subject: string',
+  '    sender: string',
+  '```',
+  '',
+  '```mdl',
+  'type Folder: Where sorted mail lands',
+  '  fields:',
+  '    name: string',
+  '```',
+  '',
+  '```mdl',
   'op Sort: Moves a message to its folder',
   '  desc: Reads the message, picks a folder by its rules, and moves it there.',
   '  input:',
@@ -465,7 +485,16 @@ export const SpecBlockForms: Story = {
     };
     await waitFor(() => expect(featureCard()).toHaveTextContent('Sorted inbox'), { timeout: 30_000 });
     await expect(featureCard()).toHaveTextContent('F-1.2');
-    await expect(canvas.getAllByTestId('spec-block').map((element) => element.dataset.kind)).toEqual(['feat', 'op']);
+    await expect(canvas.getAllByTestId('spec-block').map((element) => element.dataset.kind)).toEqual([
+      'feat',
+      'feat',
+      'type',
+      'type',
+      'op',
+    ]);
+    // A typed map row names its type with a picker over the spec's types.
+    const op = canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'op');
+    await expect(within(op!).getByTestId('spec-block.input.0.type')).toHaveTextContent('Message');
 
     const requirement = () => {
       const content = within(featureCard())

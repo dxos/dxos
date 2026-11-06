@@ -4,7 +4,7 @@
 
 import { type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { type ReactNode, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   type BlockPart,
@@ -16,10 +16,15 @@ import {
   decodeBlock,
   mintKey,
   partSource,
-  patchBlock,
   patchPart,
 } from '@dxos/deus/schema';
-import { Form, type FormExtensionsField, type FormFieldOverride, InputEditor } from '@dxos/react-ui-form';
+import {
+  Form,
+  type FormExtensionsField,
+  type FormFieldOverride,
+  InputEditor,
+  type RefOption,
+} from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -34,11 +39,12 @@ import { hues } from '@dxos/ui-types';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { focusBlockEffect, isFocusRequested } from './block-commands.ts';
 import { PROSE, TITLE, blockFormSchema, fromFormValues, isBoundField, toFormValues } from './block-form.ts';
+import { RefField, TypePicker, isPickedType, parseTypeName, typeOptions } from './block-pickers.tsx';
+import { readBlock, setField, updateBlock, useSpecBlocks } from './block-value.ts';
 import { type PartSource, partBinding } from './part-binding.ts';
 import {
   type BlockLocator,
   type SpecBlocks,
-  blockListeners,
   findBlock,
   labelOf,
   specBlocksConfig,
@@ -46,21 +52,6 @@ import {
 } from './spec-blocks-state.ts';
 
 export type SpecBlockCardProps = WidgetProps<{ locator: BlockLocator }>;
-
-/** The spec's blocks in the editor's current state, re-read on each change. */
-const useSpecBlocks = (view: EditorView): SpecBlocks =>
-  useSyncExternalStore(
-    useCallback(
-      (onChange: () => void) => {
-        const listeners = view.plugin(blockListeners)?.listeners;
-        const listener = () => onChange();
-        listeners?.add(listener);
-        return () => listeners?.delete(listener);
-      },
-      [view],
-    ),
-    () => view.state.field(specBlocksField),
-  );
 
 /** One block of a spec drawn as a form over its kind's schema, editing the block's text in place. */
 export const SpecBlockCard = ({ view, locator }: SpecBlockCardProps) => {
@@ -167,19 +158,8 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
   );
 
   const handleValuesChanged = useCallback(
-    (next: Record<string, unknown>) => {
-      const current = view.state.field(specBlocksField);
-      const source = findBlock(current, { kind, id, index });
-      if (!source) {
-        return;
-      }
-      const text = view.state.doc.toString();
-      const before = decodeBlock(text, source, schema);
-      const changes = patchBlock(text, source, schema, fromFormValues(schema, before, next));
-      if (changes.length > 0) {
-        view.dispatch({ changes, userEvent: 'input' });
-      }
-    },
+    (next: Record<string, unknown>) =>
+      updateBlock(view, { kind, id, index }, (before) => fromFormValues(schema, before, next)),
     [view, schema, kind, id, index],
   );
 
@@ -199,9 +179,11 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
   const tags = schema.fields.filter((field) => field.type.kind === 'literal').map(({ name }) => name);
   const keyed = schema.fields.filter((field) => field.type.kind === 'keyed');
   const rows = schema.fields.filter((field) => field.type.kind !== 'literal' && field.type.kind !== 'keyed');
+  const types = useMemo(() => typeOptions(blocks), [blocks]);
   const refs = schema.fields.flatMap((field) =>
     field.type.kind === 'ref' ? [value.fields[field.name] ?? []].flat().map(String) : [],
   );
+  const refLabel = (name: string) => blocks.items.find((item) => !item.entry && item.key === name)?.label ?? name;
   // An empty inline prose row would sit beside a kind's own prose field (`desc`) and offer a second place to write it.
   const hasProseField = schema.fields.some((field) => field.type.kind === 'prose');
   const entries = keyed.reduce((count, { name }) => count + ((value.fields[name] ?? []) as readonly Entry[]).length, 0);
@@ -235,7 +217,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                   {folded &&
                     refs.map((name) => (
                       <Tag.Tag key={name} data-testid='spec-block.ref'>
-                        {name}
+                        {refLabel(name)}
                       </Tag.Tag>
                     ))}
                   {folded && entries > 0 && (
@@ -265,28 +247,51 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                 {rows
                   .filter((field) => active || !isEmpty(value.fields[field.name]))
                   .map((field) =>
-                    field.type.kind === 'map' && !isBoundField(field, value) ? (
+                    isBoundField(field, value) && field.type.kind !== 'prose' ? (
+                      <FieldRow key={field.name} name={field.name}>
+                        <Form.Fields include={[field.name]} layout='inline' />
+                      </FieldRow>
+                    ) : field.type.kind === 'map' ? (
                       <Rows
                         key={field.name}
                         view={view}
                         locator={locator}
                         name={field.name}
+                        typeOptions={field.type.value === 'type' ? types : undefined}
                         actions={active}
                         readonly={!!readonly}
                       />
+                    ) : field.type.kind === 'ref' ? (
+                      <FieldRow key={field.name} name={field.name}>
+                        <RefField
+                          view={view}
+                          locator={locator}
+                          blocks={blocks}
+                          block={block}
+                          field={field}
+                          held={value.fields[field.name]}
+                          readonly={!!readonly}
+                        />
+                      </FieldRow>
+                    ) : field.type.kind === 'typeExpr' ? (
+                      <FieldRow key={field.name} name={field.name}>
+                        <TypeValue
+                          value={String(value.fields[field.name] ?? '')}
+                          options={types}
+                          readonly={!!readonly}
+                          actions={active}
+                          testId={`spec-block.${field.name}`}
+                          onChange={(next) => updateBlock(view, locator, setField(field.name, next))}
+                        />
+                      </FieldRow>
                     ) : field.type.kind === 'prose' ? (
                       <Card.Row key={field.name}>
                         <Form.Fields include={[field.name]} />
                       </Card.Row>
                     ) : (
-                      <Card.Row key={field.name} align='start'>
-                        <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
-                          <FieldName>{field.name}</FieldName>
-                          <div className='grow min-w-0'>
-                            <Form.Fields include={[field.name]} layout='inline' />
-                          </div>
-                        </Layout.Flex>
-                      </Card.Row>
+                      <FieldRow key={field.name} name={field.name}>
+                        <Form.Fields include={[field.name]} layout='inline' />
+                      </FieldRow>
                     ),
                   )}
                 {keyed.map(({ name }) => (
@@ -325,6 +330,53 @@ const FieldName = ({ children, ...props }: { 'children': string; 'data-testid'?:
     {children}
   </span>
 );
+
+/** One field as a line: its name small, then its value. */
+const FieldRow = ({ name, children }: { name: string; children: ReactNode }) => (
+  <Card.Row align='start'>
+    <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
+      <FieldName>{name}</FieldName>
+      <div className='grow min-w-0'>{children}</div>
+    </Layout.Flex>
+  </Card.Row>
+);
+
+/** A type expression: picked when it names one type (or a list of it), otherwise edited as its text. */
+const TypeValue = ({
+  value,
+  options,
+  readonly,
+  actions,
+  testId,
+  onChange,
+}: {
+  value: string;
+  options: RefOption[];
+  readonly: boolean;
+  actions: boolean;
+  testId: string;
+  onChange: (value: string | undefined) => void;
+}) => {
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
+  return isPickedType(value) ? (
+    <TypePicker
+      value={value}
+      options={options}
+      readonly={readonly}
+      actions={actions}
+      data-testid={testId}
+      onChange={onChange}
+    />
+  ) : (
+    <RowInput
+      value={value}
+      placeholder={t('spec-block.type.placeholder')}
+      readonly={readonly}
+      classNames='w-full'
+      onCommit={(next) => onChange(next || undefined)}
+    />
+  );
+};
 
 /**
  * Whether the card holds focus or took the last press. Only focus or a press elsewhere in the spec's editor ends it, so
@@ -371,25 +423,11 @@ const Entries = ({ view, locator, name, actions, readonly }: EntriesProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const blocks = useSpecBlocks(view);
   const block = findBlock(blocks, locator);
-  const schema = block && blocks.schemas.get(block.kind);
-  const value = block && schema ? decodeBlock(view.state.doc.toString(), block, schema) : undefined;
-  const entries = (value?.fields[name] ?? []) as readonly Entry[];
-
-  const update = (change: (entries: readonly Entry[]) => readonly Entry[]) => {
-    const current = view.state.field(specBlocksField);
-    const source = findBlock(current, locator);
-    const kind = source && current.schemas.get(source.kind);
-    if (!source || !kind) {
-      return;
-    }
-    const text = view.state.doc.toString();
-    const before = decodeBlock(text, source, kind);
-    const next = change((before.fields[name] ?? []) as readonly Entry[]);
-    view.dispatch({
-      changes: patchBlock(text, source, kind, { ...before, fields: { ...before.fields, [name]: next } }),
-      userEvent: 'input',
-    });
-  };
+  const entries = (readBlock(view, locator)?.fields[name] ?? []) as readonly Entry[];
+  const update = (change: (entries: readonly Entry[]) => readonly Entry[]) =>
+    updateBlock(view, locator, (value) =>
+      setField(name, change((value.fields[name] ?? []) as readonly Entry[]))(value),
+    );
 
   if (!block) {
     return null;
@@ -439,30 +477,18 @@ const Entries = ({ view, locator, name, actions, readonly }: EntriesProps) => {
   );
 };
 
-/** A map field (`name?: Type  # note`) as one line per row, each part edited where it stands in the line. */
-const Rows = ({ view, locator, name, actions, readonly }: EntriesProps) => {
-  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  const blocks = useSpecBlocks(view);
-  const block = findBlock(blocks, locator);
-  const schema = block && blocks.schemas.get(block.kind);
-  const value = block && schema ? decodeBlock(view.state.doc.toString(), block, schema) : undefined;
-  const rows = (value?.fields[name] ?? []) as readonly Row[];
+type RowsProps = EntriesProps & {
+  /** The spec's `type` blocks, for a map whose values are type expressions. */
+  typeOptions?: RefOption[];
+};
 
-  const update = (change: (rows: readonly Row[]) => readonly Row[]) => {
-    const current = view.state.field(specBlocksField);
-    const source = findBlock(current, locator);
-    const kind = source && current.schemas.get(source.kind);
-    if (!source || !kind) {
-      return;
-    }
-    const text = view.state.doc.toString();
-    const before = decodeBlock(text, source, kind);
-    const next = change((before.fields[name] ?? []) as readonly Row[]);
-    view.dispatch({
-      changes: patchBlock(text, source, kind, { ...before, fields: { ...before.fields, [name]: next } }),
-      userEvent: 'input',
-    });
-  };
+/** A map field (`name?: Type  # note`) as one line per row: its name, its type picked or its text, then its note. */
+const Rows = ({ view, locator, name, typeOptions, actions, readonly }: RowsProps) => {
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
+  useSpecBlocks(view);
+  const rows = (readBlock(view, locator)?.fields[name] ?? []) as readonly Row[];
+  const update = (change: (rows: readonly Row[]) => readonly Row[]) =>
+    updateBlock(view, locator, (value) => setField(name, change((value.fields[name] ?? []) as readonly Row[]))(value));
   const set = (index: number, row: Partial<Row>) =>
     update((current) => current.map((candidate, at) => (at === index ? { ...candidate, ...row } : candidate)));
 
@@ -490,21 +516,33 @@ const Rows = ({ view, locator, name, actions, readonly }: EntriesProps) => {
               >
                 {row.optional ? '?:' : ':'}
               </button>
-              <RowInput
-                value={row.value}
-                placeholder={t('spec-block.row-value.placeholder')}
-                readonly={readonly}
-                classNames='w-auto shrink-0 [field-sizing:content]'
-                onCommit={(next) => set(index, { value: next })}
-              />
-              <span className='text-description'>#</span>
-              <RowInput
-                value={row.note ?? ''}
-                placeholder={t('spec-block.row-note.placeholder')}
-                readonly={readonly}
-                classNames='grow text-description'
-                onCommit={(next) => set(index, { note: next || undefined })}
-              />
+              {typeOptions && parseTypeName(row.value) ? (
+                <TypePicker
+                  value={row.value}
+                  options={typeOptions}
+                  readonly={readonly}
+                  actions={actions}
+                  data-testid={`spec-block.${name}.${index}.type`}
+                  onChange={(next) => set(index, { value: next ?? '' })}
+                />
+              ) : (
+                <RowInput
+                  value={row.value}
+                  placeholder={t(typeOptions ? 'spec-block.type.placeholder' : 'spec-block.row-value.placeholder')}
+                  readonly={readonly}
+                  classNames='w-auto shrink-0 [field-sizing:content]'
+                  onCommit={(next) => set(index, { value: next })}
+                />
+              )}
+              {(row.note || actions) && (
+                <RowInput
+                  value={row.note ?? ''}
+                  placeholder={t('spec-block.row-note.placeholder')}
+                  readonly={readonly}
+                  classNames='grow ms-2 text-description'
+                  onCommit={(next) => set(index, { note: next || undefined })}
+                />
+              )}
               {actions && (
                 <Card.Action
                   icon='ph--x--regular'

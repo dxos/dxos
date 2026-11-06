@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type BlockSchema, type BlockValue, type FieldSchema, type FieldValue, type Row } from '@dxos/deus/schema';
+import { type BlockSchema, type BlockValue, type FieldSchema, type FieldValue } from '@dxos/deus/schema';
 import { Format } from '@dxos/echo';
 
 /** Form keys for a block's header title and inline prose; not MDL field names, which start with a letter. */
@@ -25,6 +25,10 @@ const Text = Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Te
 /** Whether a field is edited as text bound to its source, rather than through the form's values. */
 export const isBoundField = (field: FieldSchema, value: BlockValue): boolean =>
   value.raw.includes(field.name) || ['code', 'prose', 'raw'].includes(field.type.kind);
+
+/** Whether the form's values carry a field; the card writes the rest (bound text, entries, rows, references) itself. */
+export const isFormField = (field: FieldSchema, value: BlockValue): boolean =>
+  !isBoundField(field, value) && !['keyed', 'map', 'ref', 'typeExpr'].includes(field.type.kind);
 
 const fieldSchema = (field: FieldSchema, value: BlockValue): Schema.Top => {
   if (isBoundField(field, value)) {
@@ -89,7 +93,7 @@ export const toFormValues = (schema: BlockSchema, value: BlockValue): Record<str
   ),
 });
 
-/** The block value the form's values state; bound fields, the title and the prose keep the block's own. */
+/** The block value the form's values state; the fields the form does not carry, the title and the prose keep the block's own. */
 export const fromFormValues = (
   schema: BlockSchema,
   value: BlockValue,
@@ -99,22 +103,11 @@ export const fromFormValues = (
   fields: Object.fromEntries(
     schema.fields.map((field): [string, FieldValue | undefined] => {
       const current = values[field.name];
-      if (isBoundField(field, value) || field.type.kind === 'keyed') {
+      if (!isFormField(field, value)) {
         return [field.name, value.fields[field.name]];
       }
       if (current === undefined || current === null) {
         return [field.name, undefined];
-      }
-      if (field.type.kind === 'map') {
-        return [
-          field.name,
-          (current as readonly Partial<Row>[]).map(({ name = '', optional = false, value = '', note }) => ({
-            name,
-            optional,
-            value,
-            ...(note && { note }),
-          })),
-        ];
       }
       return [field.name, Array.isArray(current) ? current.map(String) : String(current)];
     }),

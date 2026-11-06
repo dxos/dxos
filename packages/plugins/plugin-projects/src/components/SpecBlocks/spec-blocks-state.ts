@@ -22,7 +22,12 @@ export type SpecBlocksConfig = {
   awareness?: SharedAwareness;
   /** Added to each field editor, bound to the spec's text through the field: comments on the part, for one. */
   fieldExtensions?: Extension[];
+  /** The specs a `Ref<spec>` field may cite, read when its picker draws. */
+  specs?: () => readonly SpecOption[];
 };
+
+/** A spec a `Ref<spec>` field may cite, by object id. */
+export type SpecOption = { id: string; name: string };
 
 export const specBlocksConfig = Facet.define<SpecBlocksConfig, SpecBlocksConfig>({
   combine: (values) => values[0] ?? { dialects: [] },
