@@ -212,7 +212,8 @@ export type DocumentEditCommands = {
    * Drops a copy of the nodes `ids` and the links between them `delta` away, as one undo step, and selects it; an
    * anonymous Object placed again this way joins the library. False when nothing was copied.
    */
-  duplicate: (ids: Iterable<ElementId>, delta: Point) => boolean;
+  /** Copies `ids` one step aside; without a `delta`, by the drawn major cell, as the duplicate shortcut does. */
+  duplicate: (ids: Iterable<ElementId>, delta?: Point) => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -758,8 +759,10 @@ export const createCanvasController = ({
     },
     duplicate: (ids, delta) => {
       const scene = currentScene();
+      const { major } = grid();
+      const step = delta ?? { x: major, y: major };
       const selected = [...ids];
-      const copy = capabilities().create ? duplicateSelection(scene, selected, delta, newId) : undefined;
+      const copy = capabilities().create ? duplicateSelection(scene, selected, step, newId) : undefined;
       if (!copy) {
         return false;
       }

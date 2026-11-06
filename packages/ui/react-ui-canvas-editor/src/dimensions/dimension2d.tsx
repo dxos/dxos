@@ -53,7 +53,6 @@ import {
 import {
   type Layer,
   type LayoutIntent,
-  MAJOR_GRID,
   type Scene,
   type ViewId,
   findLayout,
@@ -326,9 +325,8 @@ export const createDimension2D =
           },
           'duplicate': {
             enabled: selected(() => true),
-            run: run((engine) =>
-              engine.controller.document.duplicate(registry.get(canvas.selection), { x: MAJOR_GRID, y: MAJOR_GRID }),
-            ),
+            // No offset: the engine steps by the major cell its own grid draws, not by the default one.
+            run: run((engine) => void engine.controller.document.duplicate(registry.get(canvas.selection))),
           },
           'delete': { enabled: selected(() => true), run: run((engine) => void engine.controller.selection.delete()) },
           // Restacking is an update, which `document.order` refuses without: the command shows what it can do.

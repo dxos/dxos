@@ -955,7 +955,8 @@ export const usePointerMachine = ({
       pendingRef.current = { type: drag.type, node };
       return node;
     },
-    [nodeRegistry, scene.nodes, cell],
+    // `topOfView` reads the links too, so a link added since would otherwise leave a stale key behind.
+    [nodeRegistry, scene.nodes, scene.links, cell],
   );
 
   /**
