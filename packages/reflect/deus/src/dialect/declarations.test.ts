@@ -23,6 +23,8 @@ const DIALECT = [
   uri: org.dxos.mdl.op@1.0
   desc: An op.
   role: structure
+  icon: ph--lightning--regular
+  hue: orange
   links:
     input: depends-on`),
 ].join('\n');
@@ -55,11 +57,14 @@ describe('declarationsOf', () => {
   uri: org.dxos.mdl.query@1.0
   extends: op
   desc: A read-only op.
+  hue: cyan
   links:
     output: references`);
     expect(declarationsOf([DIALECT, child]).get('query')).toEqual({
       role: 'structure',
       links: { input: 'depends-on', output: 'references' },
+      icon: 'ph--lightning--regular',
+      hue: 'cyan',
     });
   });
 

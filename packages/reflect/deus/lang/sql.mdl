@@ -52,6 +52,8 @@ ext table
     A SQL table a component owns. The identifier is the table name; the inline prose is what one row
     is. Columns, keys and indexes are the schema after the spec's changes.
   role: structure
+  icon: ph--table--regular
+  hue: red
   fields:
     store: Prose                # the database, and its migration-history table in parentheses
     columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL

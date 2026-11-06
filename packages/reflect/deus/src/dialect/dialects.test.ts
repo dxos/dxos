@@ -22,6 +22,8 @@ describe('dialectTexts', () => {
     expect(declarationsOf(dialectTexts(['org.dxos.spec.video'])).get('shot')).toEqual({
       role: 'structure',
       links: { assets: 'aggregates', scene: 'part-of' },
+      icon: 'ph--video-camera--regular',
+      hue: 'blue',
     });
   });
 });

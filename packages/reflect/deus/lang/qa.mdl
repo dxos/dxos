@@ -67,6 +67,8 @@ ext test
     An end-to-end case against the running application, executed by a human tester or an
     agent. Three stages of ordered steps, each step with its own success criterion.
   role: verification
+  icon: ph--check-square--regular
+  hue: teal
   fields:
     desc?:     Prose
     actors?:   human | agent | both     # default both; see the invoke rule below
@@ -216,6 +218,8 @@ ext suite
     tests stay standalone blocks, and a suite lists them by id — `QA-1` for a test in the same
     document, `markdown:QA-1` for another plugin's (`app:QA-1` for the application spec).
   role: verification
+  icon: ph--stack--regular
+  hue: lime
   fields:
     desc?:   Prose
     tags?:   TagList        # `run --tag nightly` selects every suite carrying the tag

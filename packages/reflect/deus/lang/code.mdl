@@ -39,12 +39,16 @@ ext feat
   nesting: self
   inline-prose: true
   role: anchor
+  icon: ph--star--regular
+  hue: emerald
   fields:
     desc?: Prose
     req: RequirementList
     depends?: FeatRef[]          # features this one needs first
+    uses?: BlockRef[]            # the blocks this feature needs, other than features
   links:
     depends: depends-on
+    uses: depends-on
 ```
 
 ```mdl
@@ -52,6 +56,8 @@ ext type
   uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   role: structure
+  icon: ph--cube--regular
+  hue: blue
   fields:
     desc?: Prose
     fields?: FieldMap            # a field typed `Ref<X>` points at X; any other names a part
@@ -69,6 +75,8 @@ ext op
   uri: org.dxos.mdl.op@1.1
   desc: A named operation with typed inputs, outputs, and declared errors.
   role: structure
+  icon: ph--lightning--regular
+  hue: orange
   fields:
     key?: NSID
     desc?: Prose
@@ -90,6 +98,8 @@ ext component
   uri: org.dxos.mdl.component@1.0
   desc: A UI component with props, internal state, slots, actions, and events.
   role: structure
+  icon: ph--browser--regular
+  hue: pink
   fields:
     desc?: Prose
     props?: FieldMap
@@ -110,6 +120,8 @@ ext service
   uri: org.dxos.mdl.service@1.0
   desc: An external or system-level dependency providing named operations.
   role: structure
+  icon: ph--plug--regular
+  hue: yellow
   fields:
     desc?: Prose
     loading?: eager | lazy
@@ -126,6 +138,8 @@ ext capability
   uri: org.dxos.mdl.capability@1.0
   desc: A typed slot in the app-framework Capability registry; `multi: true` marks a contributable collection.
   role: structure
+  icon: ph--puzzle-piece--regular
+  hue: indigo
   fields:
     desc?: Prose
     type: TypeRef
@@ -141,6 +155,8 @@ ext module
   uri: org.dxos.mdl.module@1.0
   desc: An ESM namespace module, re-exported from index.ts as `export * as <Name>`.
   role: structure
+  icon: ph--package--regular
+  hue: indigo
   fields:
     desc?: Prose
     api: ApiMap                  # public members reached as `<Name>.<member>`
@@ -153,6 +169,8 @@ ext db
   uri: org.dxos.mdl.db@1.0
   desc: A store and what it holds.
   role: structure
+  icon: ph--database--regular
+  hue: red
   fields:
     desc?: Prose
     backend?: Prose
@@ -168,6 +186,8 @@ ext scenario
   uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   role: verification
+  icon: ph--path--regular
+  hue: cyan
   fields:
     covers?: RefList             # the features and requirements it checks
     given?: Step | Step[]

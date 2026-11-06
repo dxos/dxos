@@ -157,6 +157,8 @@ ext ext
     inline-prose?:  Boolean       # first non-key line treated as prose value
     role?:          Role          # what instances are to the spec's structure (see Roles and Links)
     links?:         LinkMap       # fields whose values name other blocks, and how (see Roles and Links)
+    icon?:          Icon          # how tools draw instances (see Roles and Links)
+    hue?:           Hue           # the colour tools tag instances with (see Roles and Links)
     syntax?:        CodeBlock     # reference syntax (non-normative)
     example?:       CodeBlock     # usage example (non-normative)
 ```
@@ -212,7 +214,10 @@ ext type
 3. An `ext` that `extends` another takes the parent's role and links; its own override them.
 4. A spec's own `ext` block for a type its dialect declares overrides the dialect's role, and its
    links override the dialect's field by field.
-5. A name in a field with no link, or in prose, is a mention: it relates the blocks without saying how.
+5. A name in a field with no link, or in prose, is not a link: tools relate blocks only through linked fields.
+
+An `ext` may also give an `icon` and a `hue`, which tools that draw the spec use for its instances. An `ext`
+that extends another takes the parent's icon and hue unless it gives its own.
 
 ---
 
@@ -237,6 +242,8 @@ They are the vocabulary of the meta-language.
 | `TagList`    | Space or comma-separated tag identifiers                     |
 | `Role`       | `anchor \| structure \| verification \| context`              |
 | `LinkMap`    | Field names to relationships: `field: relationship`, one per line |
+| `Icon`       | A Phosphor icon name, e.g. `ph--star--regular`               |
+| `Hue`        | A theme hue, e.g. `emerald`, or `neutral`                    |
 
 ---
 

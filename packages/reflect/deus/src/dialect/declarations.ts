@@ -23,11 +23,15 @@ export const RELATIONSHIPS = [
 ] as const;
 export type Relationship = (typeof RELATIONSHIPS)[number];
 
-/** A block type's role and links, as its `ext` blocks declare them. */
+/** A block type's role, links and look, as its `ext` blocks declare them. */
 export type Declaration = {
   role?: Role;
   /** Relationship by field name. */
   links: Readonly<Record<string, Relationship>>;
+  /** A Phosphor icon name. */
+  icon?: string;
+  /** A theme hue. */
+  hue?: string;
 };
 
 const isRole = (value: string | undefined): value is Role => ROLES.some((role) => role === value);
@@ -36,9 +40,9 @@ const isRelationship = (value: string): value is Relationship =>
   RELATIONSHIPS.some((relationship) => relationship === value);
 
 /**
- * The block types the texts declare, by name. Later texts override earlier ones: a role replaces the earlier role and
- * links override field by field, so the spec's own text goes last. An `ext` that `extends` another declared before it
- * starts from the parent's declaration.
+ * The block types the texts declare, by name. Later texts override earlier ones: a role, icon or hue replaces the
+ * earlier one and links override field by field, so the spec's own text goes last. An `ext` that `extends` another
+ * declared before it starts from the parent's declaration.
  */
 export const declarationsOf = (texts: readonly string[]): Map<string, Declaration> => {
   const declarations = new Map<string, Declaration>();
@@ -60,9 +64,13 @@ export const declarationsOf = (texts: readonly string[]): Map<string, Declaratio
         }
       }
       const declaredRole = isRole(role) ? role : base?.role;
+      const icon = fields.get('icon')?.inline ?? base?.icon;
+      const hue = fields.get('hue')?.inline ?? base?.hue;
       declarations.set(id, {
         ...(declaredRole && { role: declaredRole }),
         links: { ...base?.links, ...links },
+        ...(icon && { icon }),
+        ...(hue && { hue }),
       });
     }
   }

@@ -19,7 +19,7 @@ const INDEXED_CHECKS = ['mdl/ref', 'mdl/uses'];
 
 export type LintOptions = {
   files: readonly string[];
-  /** Keep one check, e.g. `mdl/decision`; the block-type check still knows only the built-in types. */
+  /** Keep one check, e.g. `mdl/decision`. */
   only: Option.Option<string>;
 };
 

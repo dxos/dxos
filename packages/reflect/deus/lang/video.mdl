@@ -37,6 +37,8 @@ ext scene
   desc: One part of the video and what it must leave the viewer with. The inline prose is its name.
   inline-prose: true
   role: anchor
+  icon: ph--film-slate--regular
+  hue: emerald
   fields:
     duration: Duration           # seconds, e.g. `12s`
     goal: Prose                  # what the viewer knows or feels when it ends
@@ -53,6 +55,8 @@ ext shot
   desc: One continuous take of a scene.
   inline-prose: true
   role: structure
+  icon: ph--video-camera--regular
+  hue: blue
   fields:
     scene: SceneRef
     camera: Prose                # framing and movement
@@ -69,6 +73,8 @@ ext voiceover
   desc: A line spoken over a scene. The inline prose is the line.
   inline-prose: true
   role: structure
+  icon: ph--microphone--regular
+  hue: orange
   fields:
     scene: SceneRef
     at: Timecode                 # from the start of the scene
@@ -86,6 +92,8 @@ ext caption
   desc: Text on screen. The inline prose is the text.
   inline-prose: true
   role: structure
+  icon: ph--closed-captioning--regular
+  hue: cyan
   fields:
     scene: SceneRef
     at: Timecode
@@ -101,6 +109,8 @@ ext character
   desc: Someone who appears or speaks in the video. The inline prose is who they are.
   inline-prose: true
   role: structure
+  icon: ph--user--regular
+  hue: pink
   fields:
     voice?: Prose                # how they sound, for casting
 ```
@@ -111,6 +121,8 @@ ext asset
   desc: Material the script uses but does not make: footage, a logo, a track.
   inline-prose: true
   role: context
+  icon: ph--image--regular
+  hue: amber
   fields:
     source: Prose                # where it comes from, and its licence
 ```
@@ -121,6 +133,8 @@ ext screening
   desc: A showing of a cut to an audience, and what it must show.
   inline-prose: true
   role: verification
+  icon: ph--projector-screen--regular
+  hue: teal
   fields:
     covers: SceneRef[]
     audience: Prose

@@ -80,6 +80,8 @@ ext feature
     A goal state of the product. The identifier is a stable kebab-case id, dotted by area
     (`echo.feed-retention`); the inline prose is the feature's name.
   role: anchor
+  icon: ph--star--regular
+  hue: emerald
   fields:
     status: planned | in-progress | prototype | operational | failing
     specs: RefList          # repo-relative spec paths, each optionally #<item id>

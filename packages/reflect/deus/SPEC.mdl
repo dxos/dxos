@@ -47,9 +47,10 @@ feat F-2: Every spec change adds a decision
 ```mdl
 feat F-3: Linting
   req F-3.1: The editor linter and `deus lint` report decisions that break F-1.1 or F-1.3.
-  req F-3.2: `deus lint --only <source>` restricts output to one check, so the block-type check (which knows only built-in types) does not hide decision errors.
+  req F-3.2: `deus lint --only <source>` restricts output to one check.
   req F-3.3: `.agents/skills/mdl/scripts/check-decisions.ts` asks TypeSafe System One whether each decision a branch adds breaks F-1.8, giving it the spec's name and introduction so a spec whose system is itself a process is judged on that system. A probability of 0.8 or more fails. It runs in CI as "Check spec decisions" and passes with a notice when `TYPESAFE_API_KEY` is not set.
   req F-3.4: Each block has its own ```` ```mdl ```` fence. The editor linter and `deus lint` report a second block header inside one fence as an `mdl/block` error: a line after the fence's first line, at column 0, whose first word is a built-in block type or a term in the document's `## Extensions` table.
+  req F-3.5: A block type is known when it is built in, listed in the document's `## Extensions` table, or declared by an `ext` block in it; any other is an `mdl/block-type` error.
 ```
 
 ```mdl
@@ -96,7 +97,9 @@ feat F-8: Dialects declare roles and links
   req F-8.3: In a `composes` or `aggregates` field, a value written as `Ref<X>` or `Ref(X)` references X without holding it.
   req F-8.4: A spec's own `ext` for a block type its dialect declares overrides the dialect's role, and its links field by field. An `ext` that extends another starts from the parent's role and links.
   req F-8.5: `@dxos/deus/dialect` bundles the dialects in `lang/` by id, resolves ids to their texts together with every dialect they extend, and reads the declarations from texts.
-  req F-8.6: The code dialect (`lang/code.mdl`) declares the blocks software specs are written in. The video dialect (`lang/video.mdl`) is a sample second dialect, with an example script in `lang/examples/launch-video.mdl`.
+  req F-8.6: The code dialect (`lang/code.mdl`) declares the blocks software specs are written in. The video dialect (`lang/video.mdl`) is a sample second dialect, with an example script in `lang/examples/launch-video.mdl`. A `feat` names the blocks it needs, other than features, in `uses`, a `depends-on` link.
+  req F-8.7: An `ext` may give an `icon` (a Phosphor name) and a `hue` (a theme hue) for tools that draw its instances; an `ext` that extends another takes the parent's unless it gives its own.
+  req F-8.8: A name in a field with no link, or in prose, is not a link.
 ```
 
 ## Changelog
@@ -669,4 +672,23 @@ decision D-66: Roles and links are fields of `ext`. A link names a relationship 
   rejected:
     - Inferring links from field types (`TypeRef`, `RefList`); they are written inconsistently (`URI[]`, `ServiceList`, `FieldMap`), and a type says nothing about owning.
     - Adding roles and links to each spec's appendix; seventy copies to keep in step.
+```
+
+```mdl
+decision D-67: A name in prose, or in a field with no link, should not link blocks. Editors for the structured fields will keep their ids matching, but nothing catches or fixes a typo in prose. Each dialect draws and lints the same way: the video dialect gets icons and colours as the software one does, and lint treats any dialect's block types alike.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-3, F-8]
+```
+
+```mdl
+decision D-68: `feat` gains `uses`, a `depends-on` link to the blocks it needs other than features. A one-time migration wrote each feature's `uses` from the names its prose held, sorted: 446 of 727 features gained one. An `ext` may give an `icon` and a `hue`, inherited like its role. Lint knows a block type that is built in, listed in the spec's Extensions table, or declared by an `ext` block in it. Replaces the mentions of [D-66]; fills in [D-67].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.2, F-3.5, F-8.6, F-8.7, F-8.8]
+  why: Features named their ops and types only in requirement prose, so dropping mentions without a field would have left 11 of 766 group members in the repo's specs; with `uses`, 763 remain.
+  rejected:
+    - Keeping typed `op:x` references in prose as links; they stay in prose, where a structured editor cannot keep them in step.
+    - Lint reading the dialects a spec extends; `deus lint` runs the sources under node, which cannot import the dialect texts the browser bundles.
 ```
