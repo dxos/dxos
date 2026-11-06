@@ -196,6 +196,9 @@ const openProjectTab = async (demo, page, tab) => {
   if ((await page.locator(selector).first().getAttribute('aria-selected')) !== 'true') {
     await demo.click({ selector: `${selector} >> nth=0`, label: 'Specs' });
   }
+  // The companion button's tooltip, left up by the pointer that closed the companion, covers the view toggles.
+  const plank = await page.locator('[data-testid="deck.plank"]').first().boundingBox();
+  await page.mouse.move(plank.x + plank.width / 2, plank.y + plank.height / 2);
   const toggle = `[data-testid="projectsPlugin.specView.${view}"]`;
   await page.locator(toggle).first().waitFor({ state: 'visible', timeout: 15_000 });
   if ((await page.locator(toggle).first().getAttribute('aria-checked')) !== 'true') {
@@ -239,21 +242,22 @@ const DOCUMENT = '[data-testid="projectsPlugin.spec.document"]';
 /**
  * Wheels the spec's text down a notch at a time, so the camera follows, until a line holding `text` (or, when `exact`,
  * a line of just `text`, such as a feature card's name) is in the upper part of the view or the text ends; the editor
- * draws only the lines near the view, so the line cannot be scrolled to.
+ * draws only the lines near the view, so the line cannot be scrolled to. `delay` between notches sets the pace.
  */
-const scrollDocumentTo = async (page, text, { exact = false } = {}) => {
+const scrollDocumentTo = async (page, text, { exact = false, delay = 250 } = {}) => {
   const box = await page.locator(DOCUMENT).first().boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   const line = page.locator(`${DOCUMENT} .cm-line:${exact ? 'text-is' : 'has-text'}("${text}")`);
   let last;
   for (let notch = 0; notch < 200; notch++) {
     const top = (await line.count()) > 0 ? (await line.first().boundingBox())?.y : undefined;
-    if (top !== undefined && (top < box.y + box.height * 0.4 || top === last)) {
+    const above = top !== undefined && top < box.y;
+    if (top !== undefined && !above && (top < box.y + box.height * 0.4 || top === last)) {
       return;
     }
     last = top;
-    await page.mouse.wheel(0, 120);
-    await page.waitForTimeout(100);
+    await page.mouse.wheel(0, above ? -120 : 120);
+    await page.waitForTimeout(delay);
   }
 };
 
@@ -433,10 +437,10 @@ const acceptMilestone = async (demo, page, milestone, caption) => {
 };
 
 /**
- * The review the milestone's check recorded, in the Spec companion's Review view, then its verdicts on the spec's
- * feature cards, scrolled to the milestone's first feature.
+ * The review the milestone's check recorded, in the Spec companion's Review view, read card by card, then its verdicts
+ * on the spec's feature cards from the first feature to the milestone's last.
  */
-const readReview = async (demo, page, milestone) => {
+const readReview = async (demo, page, milestone, { features = milestone.features } = {}) => {
   await openProjectTab(demo, page, 'document');
   // The companion button reopens the last tab, which after a delegation is the build chat and its claim URL; the
   // Spec companion opens directly instead, and the project gets an empty chat in case anything shows the chat tab.
@@ -453,21 +457,54 @@ const readReview = async (demo, page, milestone) => {
   await demo.caption({
     value: `The agent's review of ${milestone.id}`,
     subtitle: 'A verdict for each requirement and the scenario',
+    hold: BEAT * 4,
   });
-  await page.waitForTimeout(BEAT * 4);
-  await demo.caption({ value: 'The verdicts show in the spec itself', subtitle: 'On each requirement it judged' });
-  await scrollDocumentTo(page, milestone.features[0], { exact: true });
-  await page.waitForTimeout(BEAT * 4);
+  // The current status takes each item's verdict from its newest review, so the counts cover every milestone so far.
+  const statuses = await page
+    .getByTestId('verdict-card')
+    .evaluateAll((cards) => cards.map((card) => card.getAttribute('data-status')));
+  const done = statuses.filter((status) => status === 'done').length;
+  const open = statuses.length - done;
+  await demo.caption(
+    open > 0
+      ? {
+          value: `${done} done, ${open} untested`,
+          subtitle: 'Untested: built, but no check covers it yet',
+          hold: BEAT * 3,
+        }
+      : { value: `All ${done} verdicts done`, subtitle: 'A check covers every requirement', hold: BEAT * 3 },
+  );
+  await wheel(page, `${DECK_COMPANION} [data-testid="review-panel"]`, 8, { delay: 600 });
+  await page.waitForTimeout(BEAT);
+  await demo.caption({
+    value: 'The verdicts show in the spec itself',
+    subtitle: 'A tag on each requirement it judged',
+    hold: BEAT * 2,
+  });
+  // The text above the features is not what this beat reads, so the scroll to them is quick.
+  await scrollDocumentTo(page, features[0], { exact: true, delay: 100 });
+  await page.waitForTimeout(BEAT * 3);
+  for (const feature of features.slice(1)) {
+    await scrollDocumentTo(page, feature, { exact: true });
+    await page.waitForTimeout(BEAT * 2);
+  }
+  if (open === 0) {
+    await demo.caption({
+      value: 'Nothing left untested',
+      subtitle: 'Every requirement built so far is checked',
+      hold: BEAT * 3,
+    });
+  }
   await closeCompanion(page);
 };
 
-/** Wheels the plank's content down `notches` at a time, so the camera follows the scroll. */
-const wheel = async (page, selector, notches) => {
+/** Wheels the plank's content down `notches` at a time, `delay` ms apart, so the camera follows the scroll. */
+const wheel = async (page, selector, notches, { delay = 120 } = {}) => {
   const box = await page.locator(selector).first().boundingBox();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   for (let notch = 0; notch < notches; notch++) {
     await page.mouse.wheel(0, 120);
-    await page.waitForTimeout(120);
+    await page.waitForTimeout(delay);
   }
 };
 
@@ -918,8 +955,8 @@ export const steps = [
       await demo.caption({
         value: 'A When2meet-style poll on Cloudflare Workers',
         subtitle: 'Respondents mark the hours they are free; the poll finds the best slot',
+        hold: BEAT * 3,
       });
-      await page.waitForTimeout(BEAT * 3);
       await page
         .locator(`${ARTIFACTS} :text-is("${DESIGN_DOC}")`)
         .first()
@@ -936,8 +973,8 @@ export const steps = [
       await demo.caption({
         value: 'Each poll is its own Durable Object',
         subtitle: "One writer per poll, so two saves can't lose each other's marks",
+        hold: BEAT * 4,
       });
-      await page.waitForTimeout(BEAT * 4);
       await wheel(page, '[data-testid="deck.plank"] .cm-content', 4);
       await page.waitForTimeout(BEAT * 2);
     },
@@ -946,16 +983,28 @@ export const steps = [
     name: 'Open the spec',
     run: async ({ demo, page }) => {
       await openProjectTab(demo, page, 'document');
-      await demo.caption({ value: 'The spec stages the work as milestones', subtitle: 'This take builds M-1 and M-2' });
+      await demo.caption({ value: 'The spec, as the agent reads it', subtitle: 'Features, milestones and scenarios' });
+      await scrollDocumentTo(page, M1.features[0], { exact: true });
+      await demo.caption({
+        value: 'Each feature lists its requirements',
+        subtitle: 'F-1: a poll lives in a Durable Object of its own',
+        hold: BEAT * 4,
+      });
       // The milestones are a table, whose cells are not editor lines, so the scroll stops on the line above it.
       await scrollDocumentTo(page, 'The work ships in this order');
-      await page.waitForTimeout(BEAT * 3);
       await demo.caption({
-        value: 'Each milestone ends in a scenario',
-        subtitle: 'T-1: three respondents, eight slots',
+        value: 'The spec stages the work as milestones',
+        subtitle: 'This take builds M-1 and M-2',
+        hold: BEAT * 4,
       });
       await scrollDocumentTo(page, 'scenario T-1: One zone');
-      await page.waitForTimeout(BEAT * 3);
+      await demo.caption({
+        value: 'Each milestone ends in a scenario',
+        subtitle: 'T-1: three respondents, eight slots, one best slot',
+        hold: BEAT * 4,
+      });
+      await wheel(page, DOCUMENT, 3, { delay: 600 });
+      await page.waitForTimeout(BEAT * 2);
     },
   },
   {
@@ -969,8 +1018,8 @@ export const steps = [
       await demo.caption({
         value: 'A feature: its requirements and status',
         subtitle: 'The status moves as the work is checked',
+        hold: BEAT * 4,
       });
-      await page.waitForTimeout(BEAT * 4);
       await closeCompanion(page);
     },
   },
@@ -1088,7 +1137,7 @@ export const steps = [
   {
     name: 'Read the M-2 review',
     run: async ({ demo, page }) => {
-      await readReview(demo, page, M2);
+      await readReview(demo, page, M2, { features: [...M1.features, ...M2.features] });
     },
   },
   {

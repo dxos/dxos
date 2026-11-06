@@ -163,7 +163,12 @@ covers it, \`untested\` when only the code does it), a \`note:\` naming the file
 \`evidence: []\` and \`tests: []\`. Make no showcase. \`Check M-2\` reads pages rather than the API: its \
 \`check.mjs\` builds both pages for SSR as the render check does, creates T-1's poll and marks on \`localhost:8787\`, \
 prerenders \`Home\` and \`Poll\` with \`{ id, poll, name: 'Ben' }\` under the render check's stubs, reads each \
-page's text as \`html.replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ')\`, and checks each line of T-2 against it.
+page's text as \`html.replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ')\`, and checks each line of T-2 against it. \
+\`Check M-2\` also closes what earlier checks left open: for each requirement of M-1's and M-2's features that the \
+scenarios do not cover, \`check.mjs\` gets a check that exercises it (a request for an API rule, such as a 400; a \
+prerender for a page's text; a call of the function behind an interaction, such as the drag's paint or the page's \
+refresh), and the code is fixed until each passes. Its review has a verdict for every requirement of M-1's and M-2's \
+features and one for T-2, all \`done\`.
 
 Deploying. \`cd /workspace/poll && wrangler deploy --temporary\` mints a temporary account and prints the Worker URL and \
 a claim URL. The claim URL is a bearer credential for the account: give it to me directly and file it nowhere. \
