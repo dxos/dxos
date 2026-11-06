@@ -4,6 +4,7 @@
 
 import * as Tool from 'effect/ai/Tool';
 import * as Toolkit from 'effect/ai/Toolkit';
+import * as Cause from 'effect/Cause';
 import type * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -65,6 +66,17 @@ export type EvalToolkitOptions = {
   readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
+  /**
+   * Told, when an evaluation ends (failed or not), which operations its code ran: an `eval` result says only what the
+   * code printed, so this is how the turn records what the call actually did.
+   */
+  readonly onEvaluated?: (evaluation: Evaluation) => void;
+};
+
+/** What one evaluation did: its program, and the operations the program ran in order. */
+export type Evaluation = {
+  readonly code: string;
+  readonly invocations: readonly ContentBlock.Invocation[];
 };
 
 /** One evaluation, as {@link evaluate} runs it: the program, plus everything that binds it to a workspace. */
@@ -87,16 +99,18 @@ export const evaluate = Effect.fnUntraced(function* ({
   skills,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
+  onEvaluated,
 }: EvaluateOptions) {
   const printer = makePrinter(maxOutput);
+  const invocations: ContentBlock.Invocation[] = [];
   const result = yield* sandbox
     .evaluate({
       code: dialect.wrap(code),
       dialect,
-      context: { runtime, operations, skills, print: printer.print },
+      context: { runtime, operations: recordInvocations(operations, invocations), skills, print: printer.print },
       timeout,
     })
-    .pipe(Effect.result);
+    .pipe(Effect.result, Effect.ensuring(Effect.sync(() => onEvaluated?.({ code, invocations }))));
 
   if (Result.isFailure(result)) {
     // A tool failure reaches the model as a failed result, not a failed turn, so it can still
@@ -130,6 +144,38 @@ export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.Opaq
       [EVAL_TOOL_NAME]: ({ code }: { code: string }) => evaluate({ ...options, code }),
     }),
   );
+
+/**
+ * The operations, each recording its calls into `invocations` as it runs. Only an operation-backed call is recorded:
+ * an MCP tool has no key a reader of the history could match.
+ */
+const recordInvocations = (
+  operations: readonly SandboxOperation[],
+  invocations: ContentBlock.Invocation[],
+): SandboxOperation[] =>
+  operations.map((operation) => {
+    const operationKey = operation.definition && String(operation.definition.meta.key);
+    return operationKey === undefined
+      ? operation
+      : {
+          ...operation,
+          invoke: (input: unknown) =>
+            operation.invoke(input).pipe(
+              Effect.tap((output) => Effect.sync(() => invocations.push({ operationKey, result: encode(output) }))),
+              Effect.tapCause((cause) =>
+                Effect.sync(() => invocations.push({ operationKey, error: Cause.pretty(cause).split('\n')[0] })),
+              ),
+            ),
+        };
+  });
+
+const encode = (value: unknown): string | undefined => {
+  try {
+    return typeof value === 'string' ? value : JSON.stringify(value);
+  } catch {
+    return undefined;
+  }
+};
 
 /** How a tool call is shown, where its tool name alone says nothing about what it does. */
 export type CallLabel = Pick<ContentBlock.ToolCall, 'displayName' | 'displayIcon'>;
@@ -174,7 +220,7 @@ const operationNames = ({ name, definition }: SandboxOperation): string[] => [
 ];
 
 /** The `code` argument of an eval call. */
-const evalCode = (input: string): string => {
+export const evalCode = (input: string): string => {
   try {
     const parsed: unknown = JSON.parse(input);
     if (typeof parsed === 'object' && parsed !== null && 'code' in parsed && typeof parsed.code === 'string') {

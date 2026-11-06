@@ -163,10 +163,26 @@ export const ToolResult = Schema.TaggedStruct('toolResult', {
    */
   providerExecuted: Schema.Boolean,
 
+  /**
+   * The operations a code-mode `eval` ran, in order. Its tool name says nothing about what it did, so a reader of the
+   * history that asks which operations ran (an end-request hook) looks here. Never sent to the model.
+   */
+  invocations: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend(() => Invocation)))),
+
   ...Base.fields,
 });
 
 export type ToolResult = Schema.Schema.Type<typeof ToolResult>;
+
+/** One operation a code-mode `eval` ran: the operation's key and what it returned, as a tool result would hold it. */
+export const Invocation = Schema.Struct({
+  operationKey: Schema.String,
+  /** The result, JSON-encoded. */
+  result: Schema.optional(Schema.String),
+  error: Schema.optional(Schema.String),
+});
+
+export interface Invocation extends Schema.Schema.Type<typeof Invocation> {}
 
 /**
  * Tool Result as set of content blocks.

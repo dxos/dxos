@@ -26,7 +26,14 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import { type CallLabel, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
+import {
+  type CallLabel,
+  EVAL_TOOL_NAME,
+  type Evaluation,
+  evalCode,
+  labelEvalCall,
+  makeEvalToolkit,
+} from './eval-tool.ts';
 import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -127,11 +134,12 @@ const runCodeModeTurn = ({
         Effect.gen(function* () {
           // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
           let labelCall = labelEvalCall([]);
+          const evaluations = makeEvaluationLog();
           const request = new AiRequest.Request({
             onOutput: (message) =>
               message.id === promptId
                 ? Effect.void
-                : append([labelEvalCalls(message, labelCall)]).pipe(Effect.provide(runtime)),
+                : append([annotateEvalBlocks(message, labelCall, evaluations)]).pipe(Effect.provide(runtime)),
           });
 
           yield* request.begin({
@@ -165,6 +173,7 @@ const runCodeModeTurn = ({
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
+                onEvaluated: evaluations.add,
               });
               const system = yield* formatSystemPrompt({
                 system: [
@@ -215,20 +224,58 @@ const runCodeModeTurn = ({
   );
 
 /**
- * Labels the message's `eval` calls before it reaches the feed, which is what the thread renders: a
- * code-mode turn's every call is an eval, and the label is the only thing that tells them apart.
+ * The request's evaluations, matched to the `eval` results they produced. A results message carries only the call
+ * id, so the call's code is noted when the call is written and the evaluation of that code is the one taken; the
+ * tool calls of a message run one at a time, so evaluations of the same code arrive in call order.
  */
-const labelEvalCalls = (
+const makeEvaluationLog = () => {
+  const codeOf = new Map<string, string>();
+  const pending: Evaluation[] = [];
+  return {
+    add: (evaluation: Evaluation): void => {
+      pending.push(evaluation);
+    },
+    noteCall: (block: ContentBlock.ToolCall): void => {
+      codeOf.set(block.toolCallId, evalCode(block.input));
+    },
+    take: (block: ContentBlock.ToolResult): Evaluation | undefined => {
+      const code = codeOf.get(block.toolCallId);
+      const index = pending.findIndex((evaluation) => evaluation.code === code);
+      return index < 0 ? undefined : pending.splice(index, 1)[0];
+    },
+  };
+};
+
+/** What an `eval` block is annotated with: a call's label, or the operations a result's evaluation ran. */
+type EvalAnnotation = CallLabel | Pick<ContentBlock.ToolResult, 'invocations'>;
+
+/**
+ * Annotates the message's `eval` blocks before it reaches the feed, which is what the thread renders and what a
+ * hook reads: a call is labelled after the operations its code names, and a result records the operations its code
+ * actually ran — every code-mode call is an eval, and these are the only things that tell them apart.
+ */
+const annotateEvalBlocks = (
   message: Message.Message,
   labelCall: (block: ContentBlock.ToolCall) => CallLabel | undefined,
+  evaluations: ReturnType<typeof makeEvaluationLog>,
 ): Message.Message => {
-  const labels = message.blocks.map((block) => (block._tag === 'toolCall' ? labelCall(block) : undefined));
-  if (labels.some((label) => label !== undefined)) {
+  const annotations = message.blocks.map((block): EvalAnnotation | undefined => {
+    if (block._tag === 'toolCall' && block.name === EVAL_TOOL_NAME) {
+      evaluations.noteCall(block);
+      return labelCall(block);
+    }
+    if (block._tag === 'toolResult' && block.name === EVAL_TOOL_NAME) {
+      const invocations = evaluations.take(block)?.invocations ?? [];
+      return invocations.length > 0 ? { invocations: [...invocations] } : undefined;
+    }
+    return undefined;
+  });
+  if (annotations.some((annotation) => annotation !== undefined)) {
     Obj.update(message, (message) => {
       message.blocks.forEach((block, index) => {
-        const label = labels[index];
-        if (block._tag === 'toolCall' && label !== undefined) {
-          Object.assign(block, label);
+        const annotation = annotations[index];
+        if (annotation !== undefined) {
+          Object.assign(block, annotation);
         }
       });
     });
