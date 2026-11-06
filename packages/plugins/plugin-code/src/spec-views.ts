@@ -4,17 +4,24 @@
 
 import type * as SpecSession from '@dxos/plugin-projects/SpecSession';
 
-/** The views of a spec this plugin draws for any spec, by the companion tab each is one of. */
+/** The dialect of types, operations, services and components, which the views reading code need. */
+export const CODE_DIALECT = 'org.dxos.spec.code';
+
+/**
+ * The views of a spec this plugin draws, by the companion tab each is one of, and the dialects a spec must use to be
+ * offered each: Definitions, Related and the decisions read any dialect's blocks; the rest read code, as a review
+ * checks a spec's items against code.
+ */
 export const SPEC_VIEWS = [
-  { id: 'definitions', group: 'structure', icon: 'ph--tree-structure--regular' },
-  { id: 'related', group: 'structure', icon: 'ph--crosshair--regular' },
-  { id: 'data', group: 'structure', icon: 'ph--database--regular' },
-  { id: 'api', group: 'structure', icon: 'ph--plugs-connected--regular' },
-  { id: 'log', group: 'decisions', icon: 'ph--users-three--regular' },
-  { id: 'decisions', group: 'decisions', icon: 'ph--graph--regular' },
-  { id: 'review', group: 'review', icon: 'ph--seal-check--regular' },
-  { id: 'code', group: 'review', icon: 'ph--file-code--regular' },
-] as const satisfies readonly { id: string; group: SpecSession.Group; icon: string }[];
+  { id: 'definitions', group: 'structure', icon: 'ph--tree-structure--regular', dialects: [] },
+  { id: 'related', group: 'structure', icon: 'ph--crosshair--regular', dialects: [] },
+  { id: 'data', group: 'structure', icon: 'ph--database--regular', dialects: [CODE_DIALECT] },
+  { id: 'api', group: 'structure', icon: 'ph--plugs-connected--regular', dialects: [CODE_DIALECT] },
+  { id: 'log', group: 'decisions', icon: 'ph--users-three--regular', dialects: [] },
+  { id: 'decisions', group: 'decisions', icon: 'ph--graph--regular', dialects: [] },
+  { id: 'review', group: 'review', icon: 'ph--seal-check--regular', dialects: [CODE_DIALECT] },
+  { id: 'code', group: 'review', icon: 'ph--file-code--regular', dialects: [CODE_DIALECT] },
+] as const satisfies readonly { id: string; group: SpecSession.Group; icon: string; dialects: readonly string[] }[];
 
 export type SpecViewId = (typeof SPEC_VIEWS)[number]['id'];
 

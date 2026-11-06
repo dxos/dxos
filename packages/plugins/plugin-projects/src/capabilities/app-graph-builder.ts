@@ -20,12 +20,13 @@ import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { ProjectCapabilities, ProjectOperation, SpecSession } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView, SpecSession } from '#types';
 
 import { artifacts } from '../artifacts.ts';
 import { ProjectsNamespace } from '../namespace.ts';
@@ -99,11 +100,10 @@ const makeSpecCompanion = (group: SpecSession.Group) =>
  */
 const createSpecCompanionExtension = Effect.fnUntraced(function* () {
   const viewsAtom = yield* Capability.atom(ProjectCapabilities.SpecView);
-  const groupsFor = (views: readonly ProjectCapabilities.SpecView[], dialects?: readonly string[]) =>
+  const viewStateAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
+  const groupsFor = (views: readonly ProjectCapabilities.SpecView[], dialects: readonly string[]) =>
     SpecSession.GROUPS.filter((group) =>
-      views.some(
-        (view) => view.group === group && (!dialects || view.dialects.every((dialect) => dialects.includes(dialect))),
-      ),
+      views.some((view) => view.group === group && view.dialects.every((dialect) => dialects.includes(dialect))),
     );
   const specCompanions = yield* AppGraphBuilder.createTypeExtension({
     id: 'specCompanions',
@@ -112,14 +112,19 @@ const createSpecCompanionExtension = Effect.fnUntraced(function* () {
     connector: (spec, get) =>
       Effect.succeed(groupsFor(get(viewsAtom), get(Obj.atom(spec)).dialects).map(makeSpecCompanion)),
   });
-  // A project shows any of its specs, so it offers every group with a view.
+  // A project offers the groups of the spec its Specs tab shows, the first while none is picked.
   const projectCompanions = yield* AppGraphBuilder.createTypeExtension({
     id: 'projectSpecCompanions',
     relation: AppNode.companion,
     type: Project.Project,
     connector: (project, get) => {
       const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
-      return Effect.succeed(specs.length > 0 ? groupsFor(get(viewsAtom)).map(makeSpecCompanion) : []);
+      const [viewState] = get(viewStateAtom);
+      const picked = viewState ? get(viewState.atom(ProjectView.aspect, project.id)).spec : undefined;
+      const shown = specs.find(({ id }) => id === picked) ?? specs[0];
+      return Effect.succeed(
+        shown ? groupsFor(get(viewsAtom), get(Obj.atom(shown)).dialects).map(makeSpecCompanion) : [],
+      );
     },
   });
   return [...specCompanions, ...projectCompanions];

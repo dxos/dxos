@@ -26,13 +26,13 @@ const VIDEO_DIALECT = 'org.dxos.spec.video';
  */
 export default Capability.makeModule(() =>
   Effect.succeed([
-    ...SPEC_VIEWS.map(({ id, group, icon }) =>
+    ...SPEC_VIEWS.map(({ id, group, icon, dialects }) =>
       Capability.contribute(ProjectCapabilities.SpecView, {
         id,
         group,
         icon,
         label: [`spec-view.${id}.label`, { ns: CodeNamespace.key }],
-        dialects: [],
+        dialects,
       }),
     ),
     ...FEATURE_VIEWS.map(({ id, icon }) =>

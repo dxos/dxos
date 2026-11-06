@@ -218,7 +218,8 @@ component SpecViewContent
   desc: |
     One of the views this plugin contributes to a spec's companion tabs (`ProjectCapabilities.SpecView`):
     Definitions, Related, Data model and API in Structure; decisions by person and decision threads in
-    Decisions; Review and Code in Review. It shares plugin-projects' `SpecSession` with the
+    Decisions; Review and Code in Review. Data model, API, Review and Code read code, so only a spec using the code
+    dialect is offered them; the others read any dialect's blocks. It shares plugin-projects' `SpecSession` with the
     spec's editor, wherever each is shown: a chip in the editor's margin opens its view's tab,
     and a view moves the editor to an item. An answer goes through the open editor, else into
     the spec's text.
@@ -1634,12 +1635,21 @@ test QA-7: Walk a spec's structure on the canvas
       do: Click the home of the canvas's trail.
       expect: the canvas draws the spec's clusters again
     - name: Open the launch video
-      do: Pick "Launch video" from the spec dropdown.
-      expect: the canvas draws the script's clusters, around maya and around narrator
+      do: Open the Structure tab, then pick "Launch video" from the spec dropdown.
+      expect: Definitions draws the script's clusters, around maya and around narrator; Structure offers only
+        Definitions and Related, and there is no Review tab
     - name: Open a character's cluster
       do: Double-click the maya cluster.
-      expect: a frame per scene, each scene's shots, voiceover and captions joined to it by filled diamonds, in the
-        video dialect's icons and colours
+      expect: a frame per scene holding what only it names, SC-2 marked as opening a level
+    - name: Open a scene
+      do: Double-click SC-2.
+      expect: SC-2 is centred, with the scenes and screenings that name it and the shots, lines and cast it names
+    - name: Put the cursor in a scene
+      do: Pick Related, then click SC-3's header line in the editor.
+      expect: Related centres on SC-3
+    - name: Open the script's decisions
+      do: Open the Decisions tab and pick By person.
+      expect: the script's two decisions, under the agent that made them
 ```
 
 ```mdl
@@ -1647,14 +1657,16 @@ test QA-8: Tour a spec's companion tabs
   desc: |
     Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
     editor's cursor from block to block, then Data model and API; Decisions by person and as threads; Review and Code.
-    The same tabs on a script in the video dialect then show which views work for any dialect and which read code.
+    A script in the video dialect then offers only the views that read any dialect, and Definitions drills into it as
+    it does into code.
     Walked by the autocue flow `spec-companions` against Composer.
   actors: human
   covers: [F-25.2, F-25.5, F-25.6]
   status: passing            # 2026-11-06, recorded by autocue/spec-companions.mjs
   given:
     - composer serves plugin-code, enabled
-    - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec, with the review of 2026-10-27
+    - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec and which uses the Software
+      package, with the review of 2026-10-27
       (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it
     - the project also owns "Launch video", whose text is deus's `lang/examples/launch-video.mdl` and which uses the
       Video package
@@ -2550,6 +2562,25 @@ decision D-94: The map and outline layouts are removed. The editor writes its cu
   why: Only the canvas and Related were kept, and a pick that the next cursor move overrides keeps clicking useful without the view losing the cursor.
   rejected:
     - Keeping the map and outline as more Structure views: four views of one graph in the toolbar, and only the canvas and Related were asked for.
+```
+
+```mdl
+decision D-95: A view that reads code is not offered for a spec that does not use the code dialect.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [SpecViewContent]
+  why: A script in the video dialect showed Data model, API and Code as empty views.
+```
+
+```mdl
+decision D-96: Data model, API, Review and Code need the code dialect; Definitions, Related and the decisions need none. Review counts as code because a verdict says how far the code meets an item, with `github:` keys as its evidence and tests. Fills in [D-95].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecViewContent]
+  why: The review dialect is written against code, so a review of a script has nothing to cite.
+  rejected:
+    - Keeping Review for any dialect: its statuses (`untested`, `partial`) and fields (`evidence`, `tests`) only mean something for code.
 ```
 
 ## Appendix: Extension Definitions

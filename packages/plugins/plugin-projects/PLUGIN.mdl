@@ -52,7 +52,8 @@ feat F-4: A project's specs
   req F-4.8: The Specs tab shows the spec's text. The spec's other views are in its companion tabs, Structure,
              Decisions and Review, beside the spec and beside a project with specs: each view a plugin contributes
              (`ProjectCapabilities.SpecView`) to a tab's group for dialects the spec uses, drawn by that plugin's
-             `ProjectSurface.SpecView` surface. A tab shows a toggle between its views when it has more than one, and
+             `ProjectSurface.SpecView` surface. A tab with no view for the spec's dialects is not offered; beside a
+             project, the spec is the one its Specs tab shows. A tab shows a toggle between its views when it has more than one, and
              the toolbar a plugin draws through `ProjectSurface.SpecToolbar`. A package is a set of dialects a
              plugin contributes (`ProjectCapabilities.SpecPackage`). The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
              checking one adds its dialects and unchecking removes them.
@@ -2285,4 +2286,13 @@ decision D-212: QA-6 walks a spec through its companion tabs, and the autocue fl
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-4.8]
+```
+
+```mdl
+decision D-213: A project's companion tabs follow the spec its Specs tab shows, read from the project's view state, as a spec's own tabs follow its dialects. It carries out plugin-code's D-95 beside a project.
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The project offered every group any spec could use, so a video script kept a Review tab with nothing in it.
 ```
