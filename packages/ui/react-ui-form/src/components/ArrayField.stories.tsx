@@ -129,6 +129,38 @@ export const Test: Story = {
   },
 };
 
+/** Empty arrays: one whose override gives a placeholder shows it in place of its rows, until a row is added. */
+const EmptyStory = (_: PaneArgs) => {
+  const [values, setValues] = useState<ArrayValues>({ tags: [], steps: [], contacts: [] });
+  return (
+    <Layout.Container>
+      <Form.Root
+        schema={ArraySchema}
+        values={values}
+        fieldOverrides={{ tags: { placeholder: 'No tags yet.' } }}
+        onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+      >
+        <Form.Content>
+          <Form.Fields />
+        </Form.Content>
+      </Form.Root>
+    </Layout.Container>
+  );
+};
+
+export const Empty: Story = {
+  render: EmptyStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('No tags yet.')).toBeTruthy();
+    // An array with no placeholder of its own shows nothing, not its label or description.
+    await expect(canvas.getAllByText(/yet\./)).toHaveLength(1);
+    await userEvent.click(canvas.getByTestId('tags.add'));
+    await waitFor(() => expect(canvas.queryByText('No tags yet.')).toBeNull());
+    await expect(within(canvas.getByRole('listbox', { name: 'Tags' })).getAllByRole('option')).toHaveLength(1);
+  },
+};
+
 // The form owns its organizations: add creates one, and each row is its fields inline.
 const OwnedSchema = Schema.Struct({
   organizations: Schema.Array(Ref.Ref(Organization)).pipe(

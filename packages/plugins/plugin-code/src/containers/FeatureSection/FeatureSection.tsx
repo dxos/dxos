@@ -18,7 +18,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 import { CodeCapabilities, Feature } from '#types';
 
 import { type FeatureLookup, RequirementEditor, RequirementId, RowIcon } from '../../components/FeatureCard/index.ts';
-import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useRequirementVerdicts } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 import { FeatureValues, useFeatureValues } from '../FeatureArticle/index.ts';
 
@@ -41,28 +41,30 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const { hasAttention } = useAttention(attendableId);
   const attended = !attendableId || hasAttention;
-  const { values, onValuesChanged } = useFeatureValues(subject);
+  const { extensions, onValuesChanged } = useFeatureValues(subject);
   // Read through the object, so a block id set by an import shows without a remount.
   const [snapshot] = useObject(subject);
   const blockId = snapshot && Feature.getBlockId(snapshot);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
+  const verdicts = useRequirementVerdicts(subject);
   const feature = graph.lookup(subject.id);
   const dependsOn = useMemo(() => feature?.dependsOn ?? [], [feature]);
   const editing = useFeatureEditing(db);
   const [collapsed, setCollapsed] = useCollapsed(subject.id);
   const options = useDependencyOptions(db, subject.id, dependsOn, graph.lookup, attended);
-  const requirements = values.requirements ?? [];
+  const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
   const inert = attended ? undefined : true;
 
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      name: { presentation: 'title' },
+      name: { presentation: 'title', collaborative: true },
       // A status once picked is never cleared, so the tag offers no "None".
       status: { required: true },
       // The schema's guidance wraps at a section's width; the placeholder is one line.
       description: {
         presentation: 'plain',
+        collaborative: true,
         hideLabel: true,
         placeholder: t('feature-section.description.placeholder'),
       },
@@ -82,7 +84,8 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
     <Form.Root
       db={db}
       schema={FeatureValues}
-      values={values}
+      values={snapshot}
+      extensions={extensions}
       fieldOverrides={fieldOverrides}
       onValuesChanged={onValuesChanged}
     >
@@ -136,17 +139,18 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
             </Card.Row>
             {!collapsed && (
               <>
-                {(attended || values.description) && (
+                {(attended || snapshot?.description) && (
                   <Card.Row inert={inert}>
                     <Form.Fields include={['description']} />
                   </Card.Row>
                 )}
                 <RequirementEditor
-                  requirements={requirements}
+                  feature={subject}
+                  extensions={extensions}
                   variant='plain'
                   actions={attended}
                   inert={inert}
-                  onChange={(requirements) => onValuesChanged({ ...values, requirements })}
+                  verdicts={verdicts}
                 />
                 {(attended || dependsOn.length > 0) && (
                   <Card.Row

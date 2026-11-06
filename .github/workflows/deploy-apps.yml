@@ -508,7 +508,8 @@ jobs:
             exit 1
           fi
           # Every plugin is attempted; the step still fails when any one did.
-          moon exec --on-failure continue :publish-edge-release
+          # `--upstream none`: the bundles were built in the step above, so no build task runs with the admin key.
+          moon exec --upstream none --on-failure continue :publish-edge-release
 
       - name: Notify Discord — plugin publish failed
         if: failure() && !cancelled()

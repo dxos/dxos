@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Spec from '@dxos/compute/Spec';
-import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Text } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
@@ -183,7 +183,7 @@ export const number = async (spec: Spec.Spec): Promise<void> => {
   for (const feature of features) {
     const current = Feature.getBlockId(feature);
     const blockId = current ?? `F-${next++}`;
-    const requirements = feature.requirements ?? [];
+    const requirements = Feature.getRequirements(feature);
     const numbered = Feature.numberRequirements(blockId, requirements);
     const renumbered = numbered.some((requirement, index) => requirement.id !== requirements[index].id);
     if (!current || renumbered) {
@@ -191,9 +191,13 @@ export const number = async (spec: Spec.Spec): Promise<void> => {
         if (!current) {
           Feature.setSources(feature, [...Feature.getSources(feature), FeatureSpec.getSource('', blockId)]);
         }
-        if (renumbered) {
-          feature.requirements = numbered;
-        }
+        // Only the ids, so the records and the cursors into their text stay.
+        numbered.forEach(({ key, id }) => {
+          const record = feature.requirements?.[key];
+          if (record) {
+            record.id = id;
+          }
+        });
       });
     }
   }
@@ -233,10 +237,12 @@ export const expand = async (spec: Spec.Spec, { base }: ExpandOptions = {}): Pro
     owned.delete(id);
     const blockId = Feature.getBlockId(feature) ?? `F-${next++}`;
     const block = blocks.get(blockId);
+    const { name, description, status } = feature;
+    const fields = { name, description, status, requirements: Feature.getRequirements(feature) };
     const insert =
       fenced !== undefined && block
-        ? FeatureSpec.update(fenced.slice(block.from, block.to), feature)
-        : FeatureSpec.print(blockId, feature);
+        ? FeatureSpec.update(fenced.slice(block.from, block.to), fields)
+        : FeatureSpec.print(blockId, fields);
     return [{ from, to, insert }];
   });
   return FeatureEmbed.apply(text, changes);
@@ -324,19 +330,34 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
         }
         FeatureMap.attach(spec, feature);
       }
+      // Keys are the space's own, so only the spec's fields are compared; text is edited in place so comments on it
+      // stay anchored.
+      const unkeyed = (list: readonly Feature.Requirement[]) => list.map(({ id, text }) => ({ id, text }));
+      const requirementsChanged =
+        JSON.stringify(unkeyed(Feature.getRequirements(feature))) !== JSON.stringify(unkeyed(requirements));
       if (
         feature.name !== name ||
         (feature.description ?? '') !== (description ?? '') ||
-        JSON.stringify(feature.requirements ?? []) !== JSON.stringify(requirements) ||
+        requirementsChanged ||
         (status ?? FeatureSpec.DEFAULT_STATUS) !== feature.status
       ) {
         Obj.update(feature, (feature) => {
-          feature.name = name;
-          feature.description = description;
-          feature.requirements = requirements;
+          if (feature.name !== name) {
+            Text.update(feature, 'name', name);
+          }
+          if ((feature.description ?? '') !== (description ?? '')) {
+            if (typeof feature.description === 'string' && description !== undefined) {
+              Text.update(feature, 'description', description);
+            } else {
+              feature.description = description;
+            }
+          }
           // A block without a `status:` line is planned, as export reads it.
           feature.status = status ?? FeatureSpec.DEFAULT_STATUS;
         });
+        if (requirementsChanged) {
+          Feature.setRequirements(feature, requirements);
+        }
         result.updated.push(feature.id);
       }
     } else {

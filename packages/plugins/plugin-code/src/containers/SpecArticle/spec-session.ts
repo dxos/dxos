@@ -23,6 +23,8 @@ export type SpecSessionState = {
   /** The code file the code view shows. */
   codeTarget?: SourceKey;
   selectedVerdict?: string;
+  /** The review the review view shows; undefined shows each item's newest verdict across the spec's reviews. */
+  selectedReview?: string;
   selectedDecision?: string;
   /** What the editor compares the spec with; undefined outside diff mode. */
   diff?: DiffAgainst;

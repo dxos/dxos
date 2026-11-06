@@ -22,6 +22,7 @@ import * as Theme from '@dxos/react-ui/Theme';
 
 import { ProjectCapabilities } from '#types';
 
+import { useDataExtensions } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
@@ -42,6 +43,8 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
     [t('skills.label'), skills],
     [t('context.label'), objects],
   ]);
+  // Carets only: the instructions' `Ref<Text>` editor binds its text itself.
+  const presence = useDataExtensions(instructions, { text: false });
 
   return (
     <Form.FieldSet label={t('config.label')} data-testid='projectsPlugin.config'>
@@ -50,7 +53,9 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
         label={t('agent-config.label')}
         summary={agentSummary}
       >
-        {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
+        {instructions && (
+          <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} extensions={presence} />
+        )}
         {/* Standing context (inputs bound into every project session), kept apart from Artifacts (outputs the project owns). */}
         {instructions && (
           <Form.FieldSet label={t('context.label')}>

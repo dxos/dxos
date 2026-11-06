@@ -82,24 +82,26 @@ export const resolveImport = (dir: string, specifier: string): string | undefine
   }
 };
 
-const importFrom = (dir: string, specifier: string) =>
-  Effect.gen(function* () {
-    const entry = resolveImport(dir, specifier);
-    if (entry === undefined) {
-      return yield* Effect.fail(
-        new PublishError({
-          message: `${specifier} is not installed in the plugin project: install it, or set publish.buildCommand.`,
-          context: { dir },
-        }),
-      );
-    }
-    return yield* Effect.tryPromise({
-      try: () => import(/* @vite-ignore */ pathToFileURL(entry).href),
-      catch: (error) => new PublishError({ message: `Failed to load ${specifier}.`, context: { entry }, cause: error }),
-    });
+const importFrom = Effect.fnUntraced(function* (dir: string, specifier: string) {
+  const entry = resolveImport(dir, specifier);
+  if (entry === undefined) {
+    return yield* Effect.fail(
+      new PublishError({
+        message: `${specifier} is not installed in the plugin project: install it, or set publish.buildCommand.`,
+        context: { dir },
+      }),
+    );
+  }
+  return yield* Effect.tryPromise({
+    try: () => import(/* @vite-ignore */ pathToFileURL(entry).href),
+    catch: (error) => new PublishError({ message: `Failed to load ${specifier}.`, context: { entry }, cause: error }),
   });
+});
 
-/** Runs `effect` with `dir` as the working directory and `env` set, restoring both after. */
+/**
+ * Runs `effect` with `dir` as the working directory and `env` set, restoring both after. The whole environment is
+ * restored, since the build itself sets keys too (Vite sets `NODE_ENV`).
+ */
 const withProcessScope = <A, E, R>(
   dir: string,
   env: Readonly<Record<string, string>>,
@@ -107,7 +109,7 @@ const withProcessScope = <A, E, R>(
 ) =>
   Effect.acquireUseRelease(
     Effect.sync(() => {
-      const previous = { cwd: process.cwd(), env: Object.keys(env).map((key) => [key, process.env[key]] as const) };
+      const previous = { cwd: process.cwd(), env: { ...process.env } };
       process.chdir(dir);
       Object.assign(process.env, env);
       return previous;
@@ -115,13 +117,12 @@ const withProcessScope = <A, E, R>(
     () => effect,
     (previous) =>
       Effect.sync(() => {
-        for (const [key, value] of previous.env) {
-          if (value === undefined) {
+        for (const key of Object.keys(process.env)) {
+          if (!(key in previous.env)) {
             delete process.env[key];
-          } else {
-            process.env[key] = value;
           }
         }
+        Object.assign(process.env, previous.env);
         process.chdir(previous.cwd);
       }),
   );
@@ -131,7 +132,7 @@ const withProcessScope = <A, E, R>(
  * with the project's `vite.config.*`, or `composerPlugin` alone into `outDir` when it has none. The compiled `dx` does
  * not carry Vite, so it is loaded from the project, which also keeps the build on the project's own Vite version.
  */
-export const buildInProcess = ({
+export const buildInProcess = Effect.fnUntraced(function* ({
   dir,
   outDir,
   env,
@@ -139,24 +140,23 @@ export const buildInProcess = ({
   dir: string;
   outDir: string;
   env: Readonly<Record<string, string>>;
-}): Effect.Effect<void, PublishError> =>
-  Effect.gen(function* () {
-    const vite: typeof Vite = yield* importFrom(dir, 'vite');
-    const hasViteConfig = VITE_CONFIG_FILES.some((file) => existsSync(join(dir, file)));
-    // `composerPlugin` reads `dx.config.ts` and the EDGE host entry from the working directory and environment.
-    yield* withProcessScope(
-      dir,
-      env,
-      Effect.gen(function* () {
-        let config: Vite.InlineConfig = { root: dir };
-        if (!hasViteConfig) {
-          const { composerPlugin }: typeof VitePlugin = yield* importFrom(dir, '@dxos/app-framework/vite-plugin');
-          config = { root: dir, configFile: false, plugins: composerPlugin(), build: { outDir, emptyOutDir: true } };
-        }
-        yield* Effect.tryPromise({
-          try: () => vite.build(config),
-          catch: (error) => new PublishError({ message: 'Vite build failed.', context: { dir }, cause: error }),
-        });
-      }),
-    );
-  });
+}) {
+  const vite: typeof Vite = yield* importFrom(dir, 'vite');
+  const hasViteConfig = VITE_CONFIG_FILES.some((file) => existsSync(join(dir, file)));
+  // `composerPlugin` reads `dx.config.ts` and the EDGE host entry from the working directory and environment.
+  yield* withProcessScope(
+    dir,
+    env,
+    Effect.gen(function* () {
+      let config: Vite.InlineConfig = { root: dir };
+      if (!hasViteConfig) {
+        const { composerPlugin }: typeof VitePlugin = yield* importFrom(dir, '@dxos/app-framework/vite-plugin');
+        config = { root: dir, configFile: false, plugins: composerPlugin(), build: { outDir, emptyOutDir: true } };
+      }
+      yield* Effect.tryPromise({
+        try: () => vite.build(config),
+        catch: (error) => new PublishError({ message: 'Vite build failed.', context: { dir }, cause: error }),
+      });
+    }),
+  );
+});
