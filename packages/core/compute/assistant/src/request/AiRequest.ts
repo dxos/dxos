@@ -40,7 +40,7 @@ import { markWork } from '@dxos/util';
 
 import { getOperationFromTool } from '../tool-runtime/services.ts';
 import { type AiAssistantError } from '../util/index.ts';
-import { formatSystemPrompt, formatUserPrompt } from './format.ts';
+import { formatSystemPrompt, formatUserPrompt, turnDefinitions } from './format.ts';
 import { GenerationObserver } from './observer.ts';
 
 export type RunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
@@ -556,10 +556,7 @@ export class Request {
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
-      const definitions = PromptDefinition.merge(
-        extraDefinitions,
-        toolkit ? PromptDefinition.fromToolkit(toolkit.toolkit) : [],
-      );
+      const definitions = turnDefinitions(extraDefinitions, toolkit?.toolkit);
       const system = yield* formatSystemPrompt({
         system: systemTemplate,
         skills,

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -18,6 +19,15 @@ import { trim } from '@dxos/util';
 import { AiAssistantError } from '../util/index.ts';
 import type * as AiRequest from './AiRequest.ts';
 import { ArtifactDiffResolver } from './artifact-diff.ts';
+
+/**
+ * The definitions a turn's system prompt carries: the caller's, then those the toolkit's tools refer to.
+ */
+export const turnDefinitions = (
+  definitions: AiRequest.RunProps['definitions'] = [],
+  toolkit?: Toolkit.Any,
+): PromptDefinition.PromptDefinition[] =>
+  PromptDefinition.merge(definitions, toolkit ? PromptDefinition.fromToolkit(toolkit) : []);
 
 /**
  * Formats the system prompt.

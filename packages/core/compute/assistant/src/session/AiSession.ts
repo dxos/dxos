@@ -17,7 +17,6 @@ import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { PromptDefinition } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
@@ -33,7 +32,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 
-import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
+import { AiRequest, type GenerationObserver, formatSystemPrompt, turnDefinitions } from '../request/index.ts';
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
 import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
@@ -56,9 +55,9 @@ export type RunProps<R = never> = {
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
   /**
    * System prompt sections that tool parameters refer to, added to the ones the turn's tools declare
-   * (see {@link PromptDefinition.fromToolkit}).
+   * (see {@link turnDefinitions}).
    */
-  definitions?: readonly PromptDefinition.PromptDefinition[];
+  definitions?: AiRequest.RunProps['definitions'];
 
   /**
    * The MCP servers to connect, read at the start of every iteration so a server added during the
@@ -261,7 +260,7 @@ export class Session extends Resource {
       const formatSystem = (
         currentSkills: Skill.Skill[],
         currentObjects: Obj.Unknown[],
-        definitions: readonly PromptDefinition.PromptDefinition[],
+        definitions: AiRequest.RunProps['definitions'] = [],
       ) =>
         Effect.gen({ self: this }, function* () {
           const currentSources = sources(currentSkills);
@@ -301,7 +300,7 @@ export class Session extends Resource {
         prompt: params.prompt,
         sender: params.sender,
         system: params.system,
-        systemPrompt: yield* formatSystem(skills, objects, params.definitions ?? []),
+        systemPrompt: yield* formatSystem(skills, objects, params.definitions),
       });
 
       markWork('session.request-begun');
@@ -331,10 +330,7 @@ export class Session extends Resource {
 
         markWork('session.toolkit-built');
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
-        const definitions = PromptDefinition.merge(
-          params.definitions ?? [],
-          PromptDefinition.fromToolkit(toolkit.toolkit),
-        );
+        const definitions = turnDefinitions(params.definitions, toolkit.toolkit);
         const system = yield* formatSystem(currentSkills, this.context.getObjects(), definitions);
         markWork('session.system-prompt-built');
 
