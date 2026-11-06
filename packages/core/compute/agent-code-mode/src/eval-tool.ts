@@ -167,8 +167,9 @@ export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.Opaq
   );
 
 /**
- * Results longer than this are not stored on the message: a query's output would be copied into the feed for nothing,
- * since what reads `invocations` (the reply reminder) needs only a send's small result, which names where it posted.
+ * Results longer than this are not stored on the message, and not serialized past it: what reads `invocations` (the
+ * reply reminder) needs only a send's small result, which names where it posted, so a large output (a query's) costs
+ * no more than this to record.
  */
 const MAX_INVOCATION_RESULT = 1_000;
 
@@ -182,10 +183,8 @@ type Recorder = {
 
 const makeRecorder = (invocations: ContentBlock.Invocation[]): Recorder => {
   const succeeded = (operationKey: string, output: unknown) => {
-    const result = encode(output);
-    invocations.push(
-      result !== undefined && result.length <= MAX_INVOCATION_RESULT ? { operationKey, result } : { operationKey },
-    );
+    const result = encodeSmall(output);
+    invocations.push(result !== undefined ? { operationKey, result } : { operationKey });
   };
   // The first line names the failure; the rest is a trace no reader of the history needs.
   const failed = (operationKey: string, message: string) =>
@@ -227,9 +226,28 @@ const recordingService = (service: Operation.OperationService, recorder: Recorde
     }),
 });
 
-const encode = (value: unknown): string | undefined => {
+/** Thrown by {@link encodeSmall}'s replacer to stop serializing once the budget is spent. */
+const TOO_LARGE = Symbol('too-large');
+
+/**
+ * `value` as JSON when that is at most {@link MAX_INVOCATION_RESULT} characters, else `undefined`. Serialization stops
+ * as soon as the budget is spent, so recording a large output does bounded work rather than encoding it whole.
+ */
+const encodeSmall = (value: unknown): string | undefined => {
+  if (typeof value === 'string') {
+    return value.length <= MAX_INVOCATION_RESULT ? value : undefined;
+  }
+  let budget = MAX_INVOCATION_RESULT;
   try {
-    return typeof value === 'string' ? value : JSON.stringify(value);
+    const json = JSON.stringify(value, (key: string, child: unknown) => {
+      // Counts the key and a primitive's own length (a few characters for anything else) as each node is visited.
+      budget -= key.length + (typeof child === 'string' ? child.length : 4);
+      if (budget < 0) {
+        throw TOO_LARGE;
+      }
+      return child;
+    });
+    return json !== undefined && json.length <= MAX_INVOCATION_RESULT ? json : undefined;
   } catch {
     return undefined;
   }
