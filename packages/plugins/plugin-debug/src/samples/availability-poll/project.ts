@@ -167,8 +167,10 @@ page's text as \`html.replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ')\`, and c
 \`Check M-2\` also closes what earlier checks left open: for each requirement of M-1's and M-2's features that the \
 scenarios do not cover, \`check.mjs\` gets a check that exercises it (a request for an API rule, such as a 400; a \
 prerender for a page's text; a call of the function behind an interaction, such as the drag's paint or the page's \
-refresh), and the code is fixed until each passes. Its review has a verdict for every requirement of M-1's and M-2's \
-features and one for T-2, all \`done\`.
+refresh), and the code is fixed until each passes. An interaction whose logic sits inside a component, such as a drag \
+that paints cells and saves once with a "Saving…" state, first moves into an exported function that \`check.mjs\` \
+calls. Its review has a verdict for every requirement of M-1's and M-2's features and one for T-2, all \`done\`; \
+\`untested\` is not a verdict this review gives.
 
 Deploying. \`cd /workspace/poll && wrangler deploy --temporary\` mints a temporary account and prints the Worker URL and \
 a claim URL. The claim URL is a bearer credential for the account: give it to me directly and file it nowhere. \
