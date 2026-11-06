@@ -22,6 +22,7 @@ import {
   diffDefinitionGraphs,
   groupDefinitions,
 } from '../SpecModel/index.ts';
+import { type CanvasLevel, DefinitionCanvas } from './DefinitionCanvas.tsx';
 import { type DefinitionViewModel } from './DefinitionChip.tsx';
 import { DefinitionMap } from './DefinitionMap.tsx';
 import { DefinitionOutline } from './DefinitionOutline.tsx';
@@ -30,7 +31,7 @@ import { DefinitionRelated } from './DefinitionRelated.tsx';
 /** Below this width (px) the whole spec is an outline rather than a map. */
 const MAP_MIN_WIDTH = 720;
 
-export type DefinitionLayout = 'map' | 'outline';
+export type DefinitionLayout = 'canvas' | 'map' | 'outline';
 
 export type DefinitionGraphProps = {
   /** The text of a `.mdl` spec; its `## Changelog` gives the decisions a block's view lists. */
@@ -47,16 +48,17 @@ export type DefinitionGraphProps = {
   roles?: BlockRoles;
   /** An external block opens its spec or code; a local one is shown in the spec. */
   onActivate?: (definition: DefinitionModel) => void;
-  /** The block it opens centred on; the whole spec by default. */
+  /** The block, or on a canvas the cluster, it opens on; the whole spec by default. */
   defaultFocus?: string;
-  /** The whole spec as a map or an outline; by default a map when there is room for one. */
+  /** The whole spec as a canvas, a map or an outline; by default a map when there is room for one. */
   layout?: DefinitionLayout;
 };
 
 /**
  * A spec's definitions, grouped by what names them. The whole spec is a map of clusters of groups where there is
  * room and an outline where there is not; either opens a block's related view, which centres on it and draws
- * everything it touches. The trail of blocks opened is a breadcrumb back to the whole spec.
+ * everything it touches. As a canvas, it opens one level at a time: the clusters, one cluster's groups, then a block.
+ * The trail of clusters and blocks opened is a breadcrumb back to the whole spec.
  */
 export const DefinitionGraph = ({
   content,
@@ -102,19 +104,36 @@ export const DefinitionGraph = ({
   );
 
   const [trail, setTrail] = useState<string[]>(() => (defaultFocus ? [defaultFocus] : []));
-  const focus = trail.findLast((id) => view.byId.has(id));
+  const clusterById = useMemo(() => new Map(grouping.clusters.map((cluster) => [cluster.id, cluster])), [grouping]);
+  const top = trail.at(-1);
+  const focus = top !== undefined && view.byId.has(top) ? top : undefined;
   const [selected, setSelected] = useState<string>();
+  /** Opens a block or a cluster, cutting the trail back to it when it is already on it. */
+  const push = useCallback(
+    (id: string) =>
+      setTrail((trail) => [...trail.slice(0, trail.indexOf(id) === -1 ? trail.length : trail.indexOf(id)), id]),
+    [],
+  );
   const handleOpen = useCallback(
     (id: string) => {
       const definition = view.byId.get(id);
       if (definition?.external) {
         onActivate?.(definition);
-      } else if (definition && id !== focus) {
-        setTrail((trail) => [...trail.slice(0, trail.indexOf(id) === -1 ? trail.length : trail.indexOf(id)), id]);
+      } else if (definition && id !== top) {
+        push(id);
       }
     },
-    [view, focus, onActivate],
+    [view, top, onActivate, push],
   );
+  const handleOpenCluster = useCallback((id: string) => id !== top && push(id), [top, push]);
+  const crumbLabel = (id: string) => {
+    const cluster = clusterById.get(id);
+    return cluster === undefined
+      ? id
+      : cluster.hub === undefined
+        ? t('definition-map.cluster.unshared.label')
+        : t('definition-map.cluster.label', { hub: cluster.hub });
+  };
   const handleShow = useCallback(
     (id: string) => {
       const definition = view.byId.get(id);
@@ -135,6 +154,14 @@ export const DefinitionGraph = ({
     return () => observer.disconnect();
   }, []);
   const shown: DefinitionLayout = layout ?? (wide ? 'map' : 'outline');
+  const level: CanvasLevel =
+    top === undefined
+      ? { kind: 'spec' }
+      : clusterById.has(top)
+        ? { kind: 'cluster', cluster: top }
+        : focus
+          ? { kind: 'block', focus }
+          : { kind: 'spec' };
 
   return (
     <Layout.Flex
@@ -142,13 +169,13 @@ export const DefinitionGraph = ({
       classNames='dx-fill'
       ref={root}
       data-testid='definition-graph'
-      data-layout={focus ? 'related' : shown}
+      data-layout={shown === 'canvas' ? shown : focus ? 'related' : shown}
     >
       <Layout.Flex align='center' gap='sm' classNames='px-2 py-1 min-h-[2.5rem]'>
         <Breadcrumb.Root aria-label={t('definition-graph.breadcrumb.label')} classNames='min-w-0'>
           <Breadcrumb.List>
             <Breadcrumb.Item>
-              {focus ? (
+              {top !== undefined ? (
                 <Breadcrumb.Link asChild>
                   <button type='button' onClick={() => setTrail([])} data-testid='definition-graph.crumb.spec'>
                     {t('definition-graph.crumb.spec.label')}
@@ -163,7 +190,7 @@ export const DefinitionGraph = ({
                 <Breadcrumb.Separator />
                 <Breadcrumb.Item>
                   {position === trail.length - 1 ? (
-                    <Breadcrumb.Current classNames='font-mono'>{id}</Breadcrumb.Current>
+                    <Breadcrumb.Current classNames='font-mono'>{crumbLabel(id)}</Breadcrumb.Current>
                   ) : (
                     <Breadcrumb.Link asChild>
                       <button
@@ -172,7 +199,7 @@ export const DefinitionGraph = ({
                         onClick={() => setTrail((trail) => trail.slice(0, position + 1))}
                         data-testid='definition-graph.crumb'
                       >
-                        {id}
+                        {crumbLabel(id)}
                       </button>
                     </Breadcrumb.Link>
                   )}
@@ -183,26 +210,36 @@ export const DefinitionGraph = ({
         </Breadcrumb.Root>
       </Layout.Flex>
       <p className='px-2 pb-1 text-xs text-description' data-testid='definition-graph.hint'>
-        {t(focus ? 'definition-graph.hint.related' : `definition-graph.hint.${shown}`)}
+        {t(shown !== 'canvas' && focus ? 'definition-graph.hint.related' : `definition-graph.hint.${shown}`)}
       </p>
-      <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
-        <ScrollArea.Viewport classNames='px-2 pb-2'>
-          {focus ? (
-            <DefinitionRelated
-              view={view}
-              edges={full.edges}
-              decisions={decisions}
-              focus={focus}
-              onOpen={handleOpen}
-              onShow={onActivate && handleShow}
-            />
-          ) : shown === 'map' ? (
-            <DefinitionMap view={view} selected={selected} onSelect={setSelected} onOpen={handleOpen} />
-          ) : (
-            <DefinitionOutline view={view} onOpen={handleOpen} />
-          )}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      {shown === 'canvas' ? (
+        <DefinitionCanvas
+          view={view}
+          edges={full.edges}
+          level={level}
+          onOpenCluster={handleOpenCluster}
+          onOpen={handleOpen}
+        />
+      ) : (
+        <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
+          <ScrollArea.Viewport classNames='px-2 pb-2'>
+            {focus ? (
+              <DefinitionRelated
+                view={view}
+                edges={full.edges}
+                decisions={decisions}
+                focus={focus}
+                onOpen={handleOpen}
+                onShow={onActivate && handleShow}
+              />
+            ) : shown === 'map' ? (
+              <DefinitionMap view={view} selected={selected} onSelect={setSelected} onOpen={handleOpen} />
+            ) : (
+              <DefinitionOutline view={view} onOpen={handleOpen} />
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      )}
     </Layout.Flex>
   );
 };

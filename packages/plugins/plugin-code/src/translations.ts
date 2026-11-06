@@ -99,8 +99,13 @@ export const translations = [
         'spec-panel.hide.label': 'Hide panel',
         'spec-panel.show.label': 'Show panel',
         'spec-panel.resize.label': 'Resize panel',
+        'definition-canvas.above.label': 'Names it',
+        'definition-canvas.below.label': 'It names',
+        'definition-canvas.builds-on.label': 'builds on',
+        'definition-canvas.checks.label': 'Checked by',
         'definition-graph.breadcrumb.label': 'Focus',
         'definition-graph.crumb.spec.label': 'All groups',
+        'definition-graph.hint.canvas': 'Double-click a cluster to open it, or a block to see everything it touches',
         'definition-graph.hint.map':
           'Select a group to light what it shares; click a block to see everything it touches',
         'definition-graph.hint.outline':

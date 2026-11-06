@@ -56,6 +56,44 @@ export const Navigate: Story = {
   },
 };
 
+/** The spec on a canvas: a card per cluster, placed by the semantic engine, with how many blocks each names in another. */
+export const Canvas: Story = {
+  args: { content: CODE_SPEC, layout: 'canvas' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { clusters } = groupDefinitions(buildDefinitionGraph(CODE_SPEC));
+    await waitFor(
+      () => expect(canvas.getAllByTestId('definition-canvas.cluster')).toHaveLength(clusters.length),
+      TIMEOUT,
+    );
+  },
+};
+
+/** One cluster on the canvas: a frame per feature holding what only it names, and the blocks they share outside. */
+export const CanvasCluster: Story = {
+  args: { content: CODE_SPEC, layout: 'canvas', defaultFocus: 'cluster:CoderSkill' },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      () =>
+        expect(
+          canvasElement.querySelector('[data-testid="definition-canvas.card"][data-definition="F-8"]'),
+        ).not.toBeNull(),
+      TIMEOUT,
+    );
+  },
+};
+
+/** One block on the canvas: what names SourceFile above it, its checks framed, and what it names below. */
+export const CanvasBlock: Story = {
+  args: { content: CODE_SPEC, layout: 'canvas', defaultFocus: 'SourceFile' },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      () => expect(canvasElement.querySelector('[data-testid="definition-canvas.card"][data-focused]')).not.toBeNull(),
+      TIMEOUT,
+    );
+  },
+};
+
 /** The same spec in a narrow panel: pointing at a shared block brackets every group naming it. */
 export const Outline: Story = {
   args: { content: CODE_SPEC, layout: 'outline' },
