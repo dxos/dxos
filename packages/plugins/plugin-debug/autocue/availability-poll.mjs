@@ -1356,7 +1356,8 @@ export const steps = [
         subtitle: 'Fast-forwarded',
         position: 'top',
       });
-      await waitFor(demo, page, (state) => state.features[POLL_PAGE]?.status === 'failing', 30, 'the revalidation');
+      // Revalidating has taken 22 minutes, and the fix 40: each reruns T-2, and the fix rebuilds and redeploys.
+      await waitFor(demo, page, (state) => state.features[POLL_PAGE]?.status === 'failing', 45, 'the revalidation');
       await demo.caption({
         value: 'The Worker no longer meets it: failing',
         subtitle: 'Its roster is still in the order people answered',
@@ -1395,7 +1396,7 @@ export const steps = [
         (state) =>
           state.features[POLL_PAGE]?.status === 'operational' &&
           state.tasks.filter((task) => fix.includes(task.title)).every((task) => FINISHED.includes(task.status)),
-        30,
+        60,
         'the fix',
       );
       await openProjectTab(demo, page, 'features');
