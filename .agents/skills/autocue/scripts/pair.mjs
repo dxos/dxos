@@ -373,11 +373,15 @@ try {
   // `stop` is what writes each pane's video, so it runs even after a failure: the take up to the failing step
   // is the evidence of where it went wrong.
   // Read from a live page, so before the browser closes; `pack.mjs` needs it to bundle the take.
+  // A failed read must not skip the stops and the close below, which save the take.
   const recording = await recordingInfo({
     page: peerList[0].page,
     flowFile: path.resolve(options.flow),
     appUrl: options.url,
     target: 'browser',
+  }).catch((error) => {
+    console.error('could not read the recording metadata:', error);
+    return undefined;
   });
   const stopped = await Promise.all(peerList.map((peer) => peer.recorder.stop().catch((error) => ({ error }))));
   await browser.close();
@@ -393,7 +397,7 @@ try {
     })),
     steps: captions,
     speed: speedChanges,
-    flow: recording.flow,
+    flow: recording?.flow,
     recording,
     results,
   };
