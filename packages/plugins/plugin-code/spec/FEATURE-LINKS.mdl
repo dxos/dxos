@@ -314,3 +314,10 @@ decision D-13: A feature is a `feat` block of its spec's text, not an object, so
   affects: [F-6, QA-1]
   why: The text is the only store for features; where a block's code links live is a design question of its own.
 ```
+
+```mdl
+decision D-14: Approve [D-13]. Code links stay unmet until code cites a feature; no code carries an `@feature` tag today.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-6]
+```
