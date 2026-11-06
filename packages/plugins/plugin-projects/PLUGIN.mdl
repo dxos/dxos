@@ -340,6 +340,48 @@ test QA-5: Showcase clip
 ```
 
 ```mdl
+test QA-6: Read a spec in its companion tabs
+  desc: |
+    A project's Specs tab shows a spec's text alone, and its other views are in three companion tabs: Structure,
+    Decisions and Review. The spec is plugin-code's, whose types, components and decisions fill every view. Walked by
+    the autocue flow `packages/plugins/plugin-projects/autocue/spec-companion.mjs`.
+  actors: human
+  covers: [F-4.7, F-4.8]
+  status: unverified
+  given:
+    - an identity exists, with a space open
+    - plugin-code and plugin-projects enabled
+    - a project "Code plugin" owns one spec, "CodePlugin", whose text is plugin-code's PLUGIN.mdl without its front
+      matter
+  steps:
+    - name: Open the Specs tab
+      do: Open the project "Code plugin" on its Specs tab.
+      expect: the tab shows the spec's text and no view toggle, and the toolbar holds the spec dropdown and Extensions
+    - name: Open the Structure tab
+      do: Open the companion and its Structure tab.
+      expect: the companion's tabs include Structure, Decisions and Review, and Structure draws the spec's definitions
+        with a toggle of Definitions, Data model and API
+    - name: Switch the Structure views
+      do: Click Data model, then API.
+      expect: each draws in the tab, and the spec's text stays in the main area
+    - name: Give the spec the software package
+      do: Open Extensions on the Specs tab and check Software.
+      expect: the Structure toggle offers Canvas and Board after API
+    - name: Show the canvas and the board
+      do: Click Canvas, then Board.
+      expect: each draws in the Structure tab
+    - name: Open the Decisions tab
+      do: Click the Decisions tab, then Decisions in its toggle.
+      expect: the tab lists the spec's changelog and then draws its decisions
+    - name: Show a decision from the margin
+      do: Click the first decision chip in the margin.
+      expect: the Decisions tab shows that decision selected
+    - name: Open the Review tab
+      do: Click the Review tab.
+      expect: the tab says the spec has no review yet, with a toggle of Review and Code
+```
+
+```mdl
 test QA-9: Two peers edit a project's notes
   desc: |
     Two peers already sharing a space open the same project, and each sees the other's caret in the overview's Notes,
@@ -2235,4 +2277,12 @@ decision D-211: `ProjectCapabilities.SpecView` gains `group`, the tab it is one 
   why: The editor and the views can be in different plugins and on different planks, so the state they share belongs to the plugin that owns both seams; plugins never import each other's components.
   rejected:
     - A registry per tab, which makes a plugin with views in several tabs contribute to several capabilities.
+```
+
+```mdl
+decision D-212: QA-6 walks a spec through its companion tabs, and the autocue flow `spec-companion` records it, so the move of [D-210] has a demo a reviewer can watch.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
 ```
