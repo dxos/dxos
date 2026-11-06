@@ -1,0 +1,1027 @@
+---
+id: org.dxos.scene
+name: Scene
+version: 0.1.0
+---
+
+One data structure for 2D drawings and 3D scenes. The editor, the assistant and the animator all read and write it.
+It has three aspects: a Model of reusable objects, a Layout of positioned elements that place them, and a Scene that
+views a layout through a camera. `@dxos/scene` holds the schemas, validation, arrangement and the ECHO form;
+`@dxos/diagram` holds its text form (the `scene`, `layout` and `model` blocks of `.dx`); react-ui-canvas-editor's `SceneEditor`
+edits it in both dimensions, through `LayoutIntent`s and `ModelIntent`s only; react-ui-canvas draws it; plugin-canvas
+makes it an animator stage. This spec states the data and its edits; how the editor behaves is the editor's spec. The design is `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Types
+
+```mdl
+type Model
+  desc: >
+    `Model<O, S>`: a library of reusable objects of type O and the drawing's named styles of type S, with no
+    positions; `Model2D` and `Model3D` are its ECHO objects (typenames `org.dxos.type.scene.model2d` and `.model3d`),
+    keyed by `key` because ECHO reserves `id`.
+  fields:
+    name?: string
+    objects: Record<string, O>
+    styles?: Record<string, S>        # NamedStyle2D | NamedStyle3D, by key
+    catalogs?: Ref<StyleCatalog>[]    # searched in order after the model's own styles
+```
+
+```mdl
+type Object
+  desc: >
+    A reusable definition an element places: a type, a size (2D `size`, 3D `scale`), a named style with overrides,
+    and props. A composite object's `parts` is a nested Layout in its own local units, drawn through the transform of
+    each element that places it.
+  fields:
+    id: string
+    type: string
+    style?: string                    # a named style; overrides win over it
+    overrides?: Style2D | Style3D
+    size?: Size2                      # 2D
+    scale?: Vec3                      # 3D
+    props?: Record<string, any>
+    parts?: Ref<Layout2D | Layout3D>  # an id in record form
+```
+
+```mdl
+type Layout
+  desc: >
+    `Layout<E, S>`: elements of type E positioned in one coordinate space, placing objects of its model;
+    `Layout2D` and `Layout3D` are its ECHO objects (`org.dxos.type.scene.layout2d` and `.layout3d`), keyed as Model
+    is. Element records keep any field beyond the shared base, for the kind registry to validate.
+  fields:
+    name?: string
+    model?: Ref<Model2D | Model3D>    # an id in record form
+    elements: Record<string, E>
+    styles?: Record<string, Partial<S>>  # the layout's overrides of the model's named styles
+    layers?: Record<string, Layer>
+    kind?: 'view' | 'composite'       # a composite is a model object's parts
+    anonymous?: boolean               # a composite the Group command made, kept out of the library
+    arrange?: Arrangement             # places the layout's unplaced, unpinned elements
+    lattice?: Lattice                 # 2D only
+    constraints?: Constraint[]        # 2D only
+    props?: Record<string, any>       # renderer-specific fields
+```
+
+```mdl
+type Scene
+  desc: >
+    `Scene<C>`: a layout seen through a camera of type C; several scenes may share one layout. `Scene2D` and `Scene3D`
+    are its ECHO objects (`org.dxos.type.scene.scene2d` and `.scene3d`), keyed as Model is. The camera is the
+    authored view; a viewer's own camera is view state ([D-47]).
+  fields:
+    name?: string
+    theme?: string
+    layout: Ref<Layout2D | Layout3D>  # an id in record form
+    camera: C                         # Camera2D | Camera3D
+```
+
+```mdl
+type BaseElement
+  desc: >
+    Every item in a layout, in either dimension, with the canvas element base's names ([D-93]): a shape, a link, a
+    label or a placed object. An element places a model `object` or has a `type` of its own; its own fields win over
+    the object's. A link is an element with endpoints.
+  fields:
+    id: string                        # fixed when the element is created
+    object?: string                   # the model object it places
+    type?: string                     # its own type, when it places no object
+    z?: string                        # paint order, a fractional index
+    layer?: string
+    hidden?: boolean
+    locked?: boolean
+    label?: string
+    style?: string                    # a named style: the layout's, the model's or a catalog's (`catalog:key`)
+    source?: Endpoint                 # a link's ends
+    target?: Endpoint
+    pinned?: boolean                  # placed by a person; arranging leaves it
+    dsl?: DslIdentity                 # the DSL statement that made it ([D-97])
+    props?: Record<string, any>       # kind-specific fields
+```
+
+```mdl
+type Endpoint
+  desc: A link end: an element and an optional port on it, or a free point.
+  fields:
+    node?: string
+    port?: string
+    point?: Vec2 | Vec3
+```
+
+```mdl
+type Element2D
+  desc: >
+    BaseElement with 2D geometry, in canvas pixels. On an element that places a composite, `scale` maps the parts'
+    units to the layout's and `fit` says whether the parts fill the frame instead.
+  fields:
+    center?: Vec2
+    size?: Size2
+    rotation?: number                 # degrees
+    scale?: Vec2
+    fit?: 'none' | 'frame'
+    overrides?: Style2D
+```
+
+```mdl
+type Element3D
+  desc: BaseElement with 3D geometry, in scene units; `scale` is the element's size.
+  fields:
+    center?: Vec3
+    scale?: Vec3
+    rotation?: Vec3                   # Euler degrees
+    fit?: 'none' | 'frame'
+    overrides?: Style3D
+```
+
+```mdl
+type Arrangement
+  desc: How a layout places its elements that have no position yet (ring, grid), kept so it can be re-run.
+  fields:
+    kind: string
+    params?: Record<string, any>
+```
+
+```mdl
+type Style2D
+  desc: >
+    A 2D look ([D-92]): the canvas node style (hue, tone, fill, border, rounded, guide, font and alignment) extended
+    with the diagram vocabulary, so one set serves both. Hues include the theme-independent `black` and `white`.
+  fields:
+    hue?: string
+    lineStyle?: string                # the canvas line styles, or 'sketchy'
+    pattern?: boolean                 # a hatched fill
+    weight?: 's' | 'm' | 'l' | 'xl'   # scales stroke and text together
+```
+
+```mdl
+type Style3D
+  desc: A 3D look ([D-92]): a material over the theme's hue and tone.
+  fields:
+    hue?: string
+    tone?: 0 | 1 | 2 | 3
+    surface?: 'solid' | 'tint' | 'glass' | 'none'
+    border?: boolean
+    rounded?: boolean
+    opacity?: number
+    metalness?: number
+    roughness?: number
+    emissive?: number
+```
+
+```mdl
+type StyleCatalog
+  desc: >
+    A reusable set of named styles that drawings reference by `catalog:key` (ECHO,
+    `org.dxos.type.scene.styleCatalog`); a theme's defaults are a catalog too. `resolveStyle` reads an element's look
+    nearest first, field by field: its overrides, the layout's override of its named style, the model's definition,
+    each catalog in order, then the defaults.
+  fields:
+    key: string
+    name: string
+    dim: '2d' | '3d'
+    styles: Record<string, Style2D | Style3D>
+```
+
+```mdl
+type Camera2D
+  desc: Where a 2D view looks: the scene point at the view's centre and the zoom.
+  fields:
+    center: Vec2
+    zoom: number
+```
+
+```mdl
+type Camera3D
+  desc: Where a 3D view looks from; angles in degrees, yaw 0 from the front, pitch above the horizon.
+  fields:
+    target: Vec3
+    yaw: number
+    pitch: number
+    distance: number
+    fov: number
+    projection: string              # perspective | orthographic
+```
+
+## Features
+
+```mdl
+feat F-1: One model for 2D and 3D
+
+  req F-1.1: A drawing is a Model of objects, Layouts of elements and Scenes over layouts, each one ECHO object whose records live inside it; types are shared only where 2D and 3D share properties.
+  req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are endpoints on other elements of its layout, or free points.
+  req F-1.3: Element ids are never positional, and the id `camera` is reserved for the animator's camera target.
+  req F-1.4: A composite object's parts are a nested layout in its own local units; the element that places it carries the transform (centre, scale, rotation, and `fit: frame` to fill its frame instead), and parts draw through it with strokes and text scaled too.
+  req F-1.5: A group is a composite placed by an instance: its members live in an anonymous composite layout placed with fit `none`, so they keep their places; a layout's arrangement places its unplaced elements and can be re-run, and a pinned element is not moved.
+  req F-1.6: A solid is an operation tree (union, difference, extrude) over operand elements, recomputed when drawn.
+  req F-1.7: A layout (its elements and its own fields) changes only through `LayoutIntent`s, applied by one pure reducer, and a model only through `ModelIntent`s, which refuse an intent with its problems and leave the document unchanged. A `layout` intent writes a 2D layout's `lattice` and `constraints` in the same batch as the elements they place.
+```
+
+```mdl
+feat F-2: The text form
+
+  req F-2.1: Records print to `.dx` text and parse back to the same records; printing a parsed canonical document returns the same text.
+  req F-2.2: Text that gives a group's arrangement but not its members' positions is arranged when parsed.
+  req F-2.3: Parsing reports duplicate ids, the reserved id, kinds from the other dimension, unbound links, missing members, missing layouts, models and objects, and cycles through parts.
+```
+
+```mdl
+feat F-3: Drawing and animation
+
+  req F-3.1: 2D scenes draw through react-ui-canvas, 3D scenes through Babylon, and a 2D scene may also be drawn in 3D on the ground plane.
+  req F-3.2: A renderer skips a link whose end is missing and stops at a parts layout already on its path.
+  req F-3.3: Each scene type is an animator stage whose targets are the drawn elements of its layout, keyed by their annotated paths; playback never writes the stored layout.
+```
+
+## Changelog
+
+```mdl
+decision D-1: Share a type between 2D and 3D only where they share properties; embedding one dimension in the other is a separate mechanism, not a reason to share a root type.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-1.1]
+```
+
+```mdl
+decision D-2: Do not distinguish nodes from links: every item in a scene is one kind of record, as in tldraw.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [Element, F-1.2]
+```
+
+```mdl
+decision D-3: The record is called Element, the container Scene, and reusable parts Component and Instance.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [Element, Scene2D, Scene3D]
+```
+
+```mdl
+decision D-4: A scene is stored as records inside one ECHO object.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [Scene2D, Scene3D, F-1.1]
+```
+
+```mdl
+decision D-5: The records are the source of truth; the DSL is a lossless text form of them.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-6: A solid is stored as an operation tree over operand elements and recomputed when loaded, not as a baked mesh.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-1.6]
+```
+
+```mdl
+decision D-7: Both groups and child scenes exist: a group keeps its members in its parent's coordinates, a child scene has its own and is a separate object.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-1.4, F-1.5]
+```
+
+```mdl
+decision D-8: A 2D scene can be rendered through a 3D projection.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-3.1]
+```
+
+```mdl
+decision D-9: A link's ends are Bindings (element id and optional anchor); moving an element moves what is bound to it. Fills in [D-2].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.2]
+  why: With one record kind, a link's geometry must come from what it connects, as tldraw's bindings do.
+```
+
+```mdl
+decision D-10: Paint order is `order` and `z` is depth; element ids are fixed at creation and never positional. Fills in [D-2].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Element, F-1.3]
+  why: Animator tracks and DSL edits refer to element ids, and a 3D z cannot share a name with paint order.
+```
+
+```mdl
+decision D-11: Layout intent is stored on groups as an arrangement, alongside the positions it produces; a hand-placed element is pinned. Fills in [D-5].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.5, F-2.2]
+  why: Storing positions keeps renderers and the animator free of layout; storing intent lets layout be re-run.
+```
+
+```mdl
+decision D-12: Each scene and each component is its own ECHO object, and a child scene is reached by Ref. Fills in [D-4].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4]
+  why: Undo, sharing and an animator shot each bind to one scene.
+```
+
+```mdl
+decision D-13: A child scene keeps its own units, scaled to 80% of its frame; a link binds only within its own scene. Fills in [D-7].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4]
+  why: The same rule canvas portals use, so a nested scene reads the same in 2D and 3D.
+```
+
+```mdl
+decision D-14: Style tokens are shared and a theme resolves them per renderer; glass in the presentation theme is a rim shell. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Style, F-3.1]
+  why: The tokens have the same meaning in both dimensions; only how they look differs.
+```
+
+```mdl
+decision D-15: A lifted 2D scene maps canvas (x, y) to (x/100, 0, −y/100), so its top-down view matches the canvas. Fills in [D-8].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.1]
+  why: Canvas y runs down the screen, which is −z seen from above at yaw 0.
+```
+
+```mdl
+decision D-16: The plugin still owns a canvas object, which carries its additional metadata, but the editing, rendering and animation mechanism depends only on `Scene`.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+```
+
+```mdl
+decision D-17: One canvas object type serves both dimensions: its root Ref points at a `Scene2D` or a `Scene3D`, and the editor picks the viewport from the root.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+```
+
+```mdl
+decision D-18: 3D move, rotate and scale handles are Babylon's `GizmoManager` gizmos.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-19: The 3D viewer orbits, zooms and pans with the mouse; inside an animator stage the animation drives the camera.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-20: Every drawing is a `Drawing`, so one query finds them all and a user can convert one format into another. `Drawing.content` is a Ref to one content type, each owned by its plugin: `Excalidraw`, `TLDraw` or `Canvas`. plugin-canvas's `Canvas` holds its metadata, including named style classes, and `Canvas.content` is a Ref to a `Scene2D` or `Scene3D`.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+  supersedes: D-17
+```
+
+```mdl
+decision D-21: plugin-spacetime is deleted within stage 3, once each of its tools has a test in the new editor; its objects are not migrated.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-22: plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free, lattice, constrained and scored.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D]
+```
+
+```mdl
+decision D-23: The fields every element shares are the type `BaseElement`; `Element2D` and `Element3D` add their geometry to it.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [BaseElement, Element2D, Element3D]
+```
+
+```mdl
+decision D-24: A 3D element's location is `center`, as a 2D element's is, not `position`.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Element3D]
+```
+
+```mdl
+decision D-25: Both dimensions share one generic `Scene<E, C>` type, over the element and camera types; `Scene2D` and `Scene3D` are built from it.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene, Scene2D, Scene3D]
+```
+
+```mdl
+decision D-26: `Drawing.canvas` is widened rather than replaced: its Ref accepts the existing `Drawing.Canvas`, which tldraw and excalidraw drawings keep unchanged and unmigrated, or plugin-canvas's typed `Canvas`. Only `dxos.org/scene/2` drawings migrate, to a `Canvas` and a `Scene2D`. The `Canvas` and Scene parts of [D-20] stand.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+  supersedes: D-20
+```
+
+```mdl
+decision D-27: A drawing separates three aspects: the Model (reusable objects), the Layout (positioned elements, each placing a model object or defining its shape inline) and the Scene (a layout plus a camera). A 3D animation has one model and several scenes with differently placed elements; a 2D drawing's zoom levels are scenes over one layout. plugin-canvas's `Canvas` holds the model, its layouts and its scenes.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+  supersedes: D-25
+```
+
+```mdl
+decision D-28: An animator shot stages a Scene; playback samples the timeline and renders the layout with those values applied, and never writes them back, so scenes that share a layout are unaffected.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-29: A child scene becomes a composite object: an object's `parts` is its own nested layout, which an element placing the object shows fitted to its frame, and which drill-in opens.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-30: The group arranger type (ring, grid) is renamed from `Layout` to `Arrangement`, and an element's `layout` field to `arrange`, so `Layout` names the positioned-elements aspect of [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: [D-27] gives `Layout` a new meaning, and two types of one name in one package would be read for each other.
+  rejected: Naming the new aspect `Arrangement` instead, which the user called layout.
+```
+
+```mdl
+decision D-31: In text an element names the model object it places where a kind would go, so an object id may not also be a kind; in records an element has `object` or `kind`, and resolving it applies the object's kind, size, style and props, its own fields winning and style and props merging. Fills in [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [BaseElement, F-2.1]
+  why: The object is the element's type, so it reads in the kind's place, and an element that sets nothing looks exactly like its object.
+  rejected: A separate `object=` attribute, which `object` cannot be since it is a keyword of the DSL; a new statement for placing objects.
+```
+
+```mdl
+decision D-32: In ECHO a Scene holds a Ref to its Layout, a Layout to its Model, and a composite object to its parts Layout; a document is stored layouts first, then models, then each layout's model Ref, then scenes. Fills in [D-27] and [D-29].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Model, Layout, Scene]
+  why: A model's parts usually lead back to layouts that use the model, so the Refs form cycles that only setting a Ref after both objects exist can make.
+```
+
+```mdl
+decision D-33: A document's text and record form lists scenes, then layouts, then models, with ids unique per kind; the first scene is the root. Fills in [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.1]
+  why: A reader meets what is shown before what it is made of; scenes and layouts often share a name, which separate namespaces allow.
+```
+
+```mdl
+decision D-34: A layout carries renderer-specific `props`, as an element does; a canvas View written as a layout keeps every field the scene model has no slot for under `props.canvas`, so it reads back unchanged. A canvas portal or instance becomes an element placing a composite object (`view:<scene>`, `instance:<composite>`) whose parts is the inner View. Fills in [D-29].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout2D]
+  why: The canvas has more node types and fields than the scene model names; keeping the rest lets a canvas move onto layouts without losing any of it.
+```
+
+```mdl
+decision D-35: The 2D kinds include every built-in canvas node type (cloud, polyline, generator, diagram), so a layout written from a canvas validates. Fills in [D-34].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Validation would otherwise report every migrated cloud or polyline as a kind a 2D scene cannot hold.
+```
+
+```mdl
+decision D-36: plugin-canvas's `Canvas` keeps the drawing's settings and named style classes; the drawing's content lives in the model, layouts and scenes it lists, and the first scene is the one the drawing opens at. Fills in [D-26] and [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Settings and style classes belong to the drawing as a whole, not to one layout; everything else has a scene type already.
+```
+
+```mdl
+decision D-37: A scene canvas migrates as one Layout2D and one Scene2D per View, the root View's first, with the objects its portals and instances place in one Model2D; each scene's camera centres on what its layout holds at zoom 1, since v2 content stored no viewport. The legacy canvas is kept, unreferenced. Fills in [D-36].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A View is both an arrangement and a place a portal opens, so it needs a layout and a scene; keeping the legacy canvas loses nothing if a migration has to be redone.
+  rejected: Removing the legacy canvas once migrated.
+```
+
+```mdl
+decision D-38: An element's `props` keys belong to their writers: the canvas keeps its own fields under `props.canvas` and the illustrator's DSL identity under `props.dsl`, and a write by one keeps the others' keys. Fills in [D-34].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The canvas editor and the illustrator's commands both write the same elements; neither may drop what the other keeps.
+```
+
+```mdl
+decision D-39: A projection's own model (the constrained projection's constraints, the dynamic projection's graph and overlay) lives in its layout's props, so it persists with the arrangement it constrains and undo patches it; a canvas's settings name the mode it opens in. Fills in [D-34].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Every react-ui-canvas mode must run on Layout2D before the switch (D-22), and those modes are their models.
+```
+
+```mdl
+decision D-40: A migrated or converted canvas records what it was created from with a `CreatedFrom` relation; a peer that migrated in parallel adopts the winning canvas and replays its edits into it.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-41: `CreatedFrom` is a generic relation in `@dxos/types` (`org.dxos.relation.createdFrom`), beside `HasSubject` and `AnchoredTo`, with a free `reason` string and a `createdAt` date. Fills in [D-40].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Provenance is not specific to canvases, and `@dxos/types` is where relations every plugin may use already live; plugin-canvas and plugin-illustrator register it in their schema lists.
+  rejected: A relation inside plugin-canvas, which plugin-illustrator's conversions could not use without depending on it.
+```
+
+```mdl
+decision D-42: The winner is the canvas the drawing references. Each other canvas created from the same legacy canvas has every element, layout name, camera and setting field it changed from the legacy content replayed into the winner where the winner still holds the legacy value; where both changed a field, the winner's value stands. Elements only the loser added are added; elements the winner deleted stay deleted; layouts only the loser made are not replayed. The loser is then removed with its scenes, layouts, model and relation. Fills in [D-40].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Both copies came from the same records, so element ids match and the legacy content is a common base for a three-way, field-level merge.
+  rejected: Copying the loser's elements wholesale, which would undo the winner's edits.
+```
+
+```mdl
+decision D-43: A conversion records `CreatedFrom` only when it makes a copy; a conversion that replaces its source removes the source, so there is nothing left to point at.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A relation to a removed object dangles.
+```
+
+```mdl
+decision D-44: Reconciling a parallel migration also adopts what only the losing canvas made: its layouts and scenes whose keys neither the legacy content nor the winner has move onto the winner, with the model objects the winner lacks (the loser's whole model when the winner has none), so a View a peer made during the race is kept. Otherwise as [D-42].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-42
+  why: Dropping a peer's new View lost user work the replay of edited fields was meant to keep.
+  rejected: Copying the loser's layouts, which would break the Refs between a composite object's parts and its model.
+```
+
+```mdl
+decision D-45: Layouts are edited by `LayoutIntent`s (create, delete, update, reorder, group, ungroup, bind, move, rotate, scale, batch): one pure reducer, `applyIntent`, with geometry by dimension. Deleting an element removes the links bound to it and its group memberships; moving a member of an arranged group pins it; an intent that changes nothing returns the same layout. 2D keeps react-ui-canvas's own `Intent` in stage 3.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: The 3D editor, undo and the assistant need one vocabulary of edits that is pure and testable without a renderer.
+```
+
+```mdl
+decision D-46: Models are edited by `ModelIntent`s (define, update, remove, extract) through `applyModelIntent`, which returns the problems that refused an intent and leaves the document unchanged then; removing an object an element still places is refused, and `extract` turns elements into one element placing a new composite object whose parts layout holds them, rebinding links that crossed out of them to that element. The Library panel is the canvas model's objects: each places with a click, and a composite's parts open for editing. Fills in [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: The Library, "make object" and the assistant need one checked way to change a model that never leaves an element placing nothing.
+```
+
+```mdl
+decision D-47: An editor's camera is the viewer's own view state (react-ui-attention); orbiting never writes the scene's camera, which is the authored view: the first view with no view state, and what the animator and presentations use.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+```
+
+```mdl
+decision D-48: A gizmo scale sets the scale it ends at rather than multiplying, since the reducer sees only the stored element and an element may take its scale from its object; a move of an element with no centre places it at the delta, where it was drawn from. Element writes to ECHO are field by field, never a whole element, so a peer's concurrent edit to another field merges. Fills in [D-45].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: Multiplying a stored scale shrank an element whose object scaled it; replacing a whole element made a new Automerge map, which drops a peer's concurrent edit to its other fields.
+```
+
+```mdl
+decision D-49: An object may not be placed inside its own parts, directly or through another composite (`placesCycle`); the editor refuses such a place. Drilled into a composite that several elements place, the editor edits through the frame last clicked; parts that no element places are not drawn, so nothing is created in them. `extract` brings a selected group's members with it, keeps a selected link with an end left outside outside (bound to the new element), and has outside groups name the new element instead of what it took. Fills in [D-46].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: Each case left a layout inside itself, an element edited through a frame the user did not pick, or a group or link naming elements that had moved away.
+```
+
+```mdl
+decision D-50: Reconciling a parallel migration points every Ref it moves or copies (a composite's parts, an adopted scene's layout) at the winner's layout of the same key when that layout was not adopted, and never moves the winner's root layout off a model of its own. Fills in [D-44].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The loser's own layouts are removed with it, so a Ref left pointing at one dangles; repointing the root layout to the loser's model made the winner's own placed objects resolve to nothing.
+```
+
+```mdl
+decision D-51: A 3D canvas offers no "Copy as" targets: a variant may declare which canvases it can copy (`convertible`), and copying reads a 2D layout, which a 3D canvas does not have.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Offering the copy made an empty drawing in the other format.
+```
+
+```mdl
+decision D-52: Solids are edited with three more `LayoutIntent`s: `join` (union), `subtract` (difference: base, then tool) and `extrude` (target, face, distance). Each adds an inline `solid` element whose operation tree is in `props`, as the `.dx` `solid` statement writes it, and hides its operands; deleting a solid shows its operands again unless another solid still builds from them. A solid naming itself, a missing operand or an existing id is refused. Fills in [F-1.6] and [D-45].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.6]
+  why: The operands stay in the layout so the solid can be re-evaluated and taken apart, but drawing them as well as the solid would show both.
+```
+
+```mdl
+decision D-53: One SceneArticle edits both 2D and 3D scenes, adapting its viewport and tools to the scene's dimension.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-54: The 3D editor uses the canvas's floating panels as the 2D canvas does: tools on the left, actions at the bottom, the inspectors on the right, and a display panel with a ground-grid toggle and the look.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-55: A canvas shown as a card, section or slide draws no grid or guides.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-56: The 3D grid and look are the viewer's view state, like the camera ([D-47]); the grid is shown until turned off. A card, section or slide also shows no editing chrome, in both dimensions. Fills in [D-54] and [D-55].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The grid and look are how one person looks at the scene, so they must not move another viewer's view; a picture of a scene has nothing to edit.
+```
+
+```mdl
+decision D-57: react-ui-canvas's tool rail is generic over the host's tool value (`ToolRail`), and its display panel offers named themes and a subset of grids for a view without a theme registry, so the 3D view reuses both rather than forking them. Fills in [D-54].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One component per panel keeps the two views alike as either changes.
+```
+
+```mdl
+decision D-58: A 3D selection is drawn in the 2D canvas's selection colour (the theme's focus colour), as a silhouette outline and a thin world-aligned bounding box per selected element.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-59: The 3D editor has the 2D canvas's camera bar (fit, actual size, zoom in and out, and the zoom as a percentage of the authored view) and its read-only lock, one lock per canvas shared by both dimensions; locked, only select and orbit work. A vector field shows its axes on one row.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-60: A shape created in 3D rests on the ground rather than being centred on it, its centre half its unit height above the point clicked; the ground grid is drawn as faint minor lines one unit apart with a major line every fourth, fading towards its edge, and drawn with lines rather than Babylon's GridMaterial, which needs a dependency the workspace does not have. The 3D Properties steppers move a centre one grid unit, a rotation 15 degrees and a scale 0.1. Fills in [D-54] and [D-59].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A shape through the ground plane shows the grid across it; the 2D canvas has no rotation or scale steppers to match, so these are new values.
+```
+
+```mdl
+decision D-61: Copying a selection puts it on the system clipboard as `.dx` text (beside the in-app copy), so it pastes across canvases, into documents and to the assistant, and `.dx` text pastes back in; in both dimensions.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-62: Pasting 2D elements into a 3D scene lifts them onto the ground plane by the lift rule of [D-15]; pasting 3D elements into a 2D scene flattens them to the top-down view.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-63: A canvas's undo history lasts for the session: it survives closing and reopening the article but is not persisted, and a remote edit is skipped rather than undone. Make object is undoable through an inverse model intent. In both dimensions.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-64: In 3D, a gizmo move snaps to the ground grid's minor unit, a rotation to 15 degrees and a scale to 0.1, and a new object is placed on a grid point; snapping follows the viewer's grid toggle (no grid, no snap), and holding Alt turns it off for that gesture.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-65: The 3D Properties form's style fields are the 2D canvas's own field components and layout (colour picker, tone, surface, border and rounded toggles, opacity, line style), shared from react-ui-canvas and generalised where needed rather than copied.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-66: 2D and 3D scenes share one inspector panel, which docks in both.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-67: The panel and the view sit in one shared frame (`InspectorPanel.Frame`), and the dock choice is the canvas's view state, so a viewer's choice holds in either dimension; a 3D canvas's undo history lasts for the session, kept per canvas. Fills in [D-63] and [D-66].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One frame keeps the panel's placement identical; keying the history by the canvas object keeps it across reopening without persisting it.
+```
+
+```mdl
+decision D-68: The 3D inspector's Properties section is the 2D canvas's own section definition, so it stacks first and, docked, fills the panel's upper half above the Library, exactly as in 2D. Fills in [D-66].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A 3D Properties section with no pane fell into the docked panel's lower half, leaving the upper half empty.
+```
+
+```mdl
+decision D-69: A copy puts the selection on the system clipboard as `.dx` text with every placed model object folded in, so the text reads anywhere without the model; the session also keeps the copy, so a paste between canvases works where the system clipboard cannot be read, lifted or flattened into the dimension it lands in. Pastes step one grid unit further each time (3D: along x and z; 2D: the canvas's own step). Fills in [D-61] and [D-62].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Text with object references would not resolve outside the canvas it came from.
+```
+
+```mdl
+decision D-70: Every editing feature is decided for both dimensions first, in behaviour (tools, shortcuts, selection, panels, inspectors, undo, clipboard, snapping, roles, cursors) and in implementation (one shared component, helper or intent generalised over the dimension; never a copy of one dimension's piece for the other). Only the viewport and genuinely dimension-specific geometry differ, and a request naming one dimension applies to both unless it is inherently dimension-specific.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-71: Without the app's history, a 2D canvas keeps its engine's undo stacks for the session, as a 3D canvas does, so reopening its article keeps the steps; the stacks hold each change by its source's role, so the reopened view patches its own store. Fills in [D-63].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A change bound to the first mount's store could not be undone through a later mount's.
+```
+
+```mdl
+decision D-72: Cmd/Ctrl+D duplicates the selection one step aside in both dimensions; plain D stays the 2D debug toggle. 2D keeps its engine's duplicate, which carries portals and composites in its View records, rather than the scene copy helper. Fills in [D-70].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The 2D engine's duplicate already handles promoted composites and portal Views, which the record-level helper does not see.
+```
+
+```mdl
+decision D-73: Both dimensions' Properties forms commit a typed value once, on blur or Enter, and Escape puts back the saved value; steppers, pickers, toggles and swatches commit at once, and an outside change does not overwrite a field mid-edit.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-74: Commit-on-blur is an opt-in `commitOn: 'blur'` of the form library, which both inspectors set, and a number input reports whether a change came from a stepper or typing. Fills in [D-73].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One form behaviour for every inspector, rather than each field kind special-cased in the canvas.
+```
+
+```mdl
+decision D-75: 2D and 3D share the Views, Objects and Layers inspectors over the scene model; the 3D Library becomes the shared Objects inspector.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-76: The shared inspectors take rows built per dimension: 2D builds them from its View store, 3D from the scene document (the layout tree with a composite's parts read-only under it, the model's objects with their placement counts, the layout's layers). A 3D layout keeps its layers where a 2D one does (`props.canvas.layers`), and a hidden layer's elements, with the links bound to them, are neither drawn nor picked. Layers have no lock in either dimension, as 2D has none. Fills in [D-75].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One component per inspector, fed by an adapter, keeps both dimensions' panels identical without changing 2D's engine.
+```
+
+```mdl
+decision D-77: Holding Cmd turns a left-button drag into the hand tool in both dimensions: pan in 2D, orbit in 3D (Cmd+Shift pans); a Cmd-click that does not move keeps its meaning, the grab cursor shows while Cmd is held, and it works on a locked canvas.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-78: One rule decides it for both (`isHandDrag`, the command key with the left button) and one hook shows its cursor (`useCommandHeld`). In 2D the drag pans from the canvas's empty space; a Cmd-drag that starts on an element keeps the 2D engine's copy-drag, which the command key already meant there. Fills in [D-77].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Taking Cmd-drag from elements would remove 2D's copy-drag with no other gesture for it; on empty space nothing else used it.
+```
+
+```mdl
+decision D-79: Both rails group their tools alike: the fixed tools (Select, the hand), the transform tools (3D: Move, Rotate, Scale, then Extrude), and one create group of the shapes followed by Link (2D: rectangle, oval and the other shapes; 3D: cube, sphere, cylinder, cone).
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-80: Rectangle, oval and link (2D) and cube, sphere and link (3D) are create tools; in both dimensions, with a create tool, a click or Shift-click on an element selects or toggles it as Select does, and a drag on it moves it in 2D, so a create tool makes an element only on empty space.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-81: One shared context menu serves both dimensions: right-click on the view or a selection offers Cut, Copy, Paste, Duplicate, Delete, Undo and Redo with their shortcuts, and the selection's commands where they apply (Group, Ungroup, Make object), enabled from the same command state the shortcuts and the actions bar use; a right-click on an unselected element selects it first; locked, only Copy is enabled; a card, section or slide has none. Right-click in 3D opens it, so 3D pans with Shift (Shift-drag with Orbit, Cmd+Shift-drag, Shift with the middle button).
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-82: The menu's items come from one builder (`sceneMenuItems`) and render in one component (`SceneContextMenu`) on the menu primitive 2D's context menu already used; a view adds only what is its own (2D: a control point, an instance's Edit object and Make unique, Back). Fills in [D-81].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Generalising 2D's existing menu keeps one menu and one list of commands without moving 2D's commands into the action graph first.
+```
+
+```mdl
+decision D-83: Each view keeps one table of its scene commands (`SceneCommands`: run and enabled per command) that its actions bar, shortcuts, app edit commands and context menu all read; the menu's states come from that table (`commandMenuItems`). In 3D, the editor reports a right-click with where and on what, having selected an unselected element first. Fills in [D-81].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Four surfaces each deciding "is Delete enabled" drift apart; one table makes them agree by construction.
+```
+
+```mdl
+decision D-84: Each viewer opens one of the canvas's scenes, kept by key in the canvas's view state (shared by both dimensions; the first scene when unset or gone); the Views inspector picks, adds (over the open scene's layout, at its camera) and deletes scenes the same way in 2D and 3D, keeping the last one. Fills in [D-75].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A canvas with several scenes needs one place to switch between them, and the open scene is this viewer's choice, not the drawing's.
+```
+
+```mdl
+decision D-85: The 3D Properties form edits an element's layer with 2D's layer field, and Make object and Import mesh sit in the shared Objects inspector's toolbar rather than the actions bar; a layer lock waits until 2D has one, so both dimensions gain it together. Fills in [D-75].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Each of these is the same control in both dimensions; locking layers only in 3D would break the parity rule.
+```
+
+```mdl
+decision D-86: In 3D a double-click selects the face of a plain element it lands on; on a composite it still opens its parts.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-87: A selected face is the element and the axis its picked normal snaps to, held by the view (not stored); it is drawn as a translucent pane in the selection colour over that side of the element's bounds, shown read-only in Properties as `+Y` and so on, used by Extrude wherever its drag starts, and cleared by Escape, a click on another element or an extrusion. 2D has no counterpart: its shapes have no faces, and a link's ends are already picked by the Link tool. Fills in [D-86].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Faces exist only in 3D, so the parity rule leaves 2D unchanged; snapping to the axis keeps a face stable on rounded and mesh surfaces.
+```
+
+```mdl
+decision D-88: In 3D a create tool sizes a shape by a drag, as 2D does: a drag on empty ground sweeps the base, releasing fixes it, moving the pointer then sets the height, and a click fixes that and makes the shape; Escape cancels; a plain click places the default size.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-89: The base is swept with 2D's own `boundsFromPoints` over the ground's x and z, both corners snapped to the grid step (none with Alt or snapping off); the height is the pointer's rise over the screen length of one unit up at the base, snapped and at least one step; the shape stands on the ground at that height, previewed as it will land. A sphere takes the base's larger extent as its diameter and skips the height step. Fills in [D-88].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Sharing 2D's sweep keeps one rule for what a drag spans; a sphere's height is its diameter, so a second step would only contradict the base.
+```
+
+```mdl
+decision D-90: The 2D element base lives in this package: react-ui-canvas's node and link base fields, `NodeStyle`, ports, endpoints, markers, layers, style classes and every node type not tied to `@dxos/diagram`, moved with their names and shapes; react-ui-canvas imports them. The diagram-coupled types follow when `@dxos/diagram`'s shapes move (plan 0.5), and the `class`/`style` rename lands with the data model (plan A.1). Fills in COMMON-CORE decision 12.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: A pure move keeps phase 0 mechanical and every consumer green; the renames and the diagram types each belong with the task that changes their data.
+```
+
+```mdl
+decision D-91: The diagram's graphical primitives and their style vocabulary (`Box`, `Circle`, `Polyline`, `Curve`, `Arc`, `Text`, `Arrow`, `Portal`, `Color`, `Fill`, `Stroke`, `Weight`, element refs) live in this package as `Shape`; `@dxos/diagram` keeps only its world objects and commands until plan 0.5 retires them. Fills in COMMON-CORE decision 11.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: `@dxos/diagram` depends on this package, so the engines can emit scene elements only once the shapes they draw are defined here.
+```
+
+```mdl
+decision D-92: Styles are one mechanism with a property set per dimension: `Style2D` (the canvas `NodeStyle` plus `sketchy`, `pattern`, `weight` and the `black`/`white` hues) and `Style3D` (hue, tone, surface, border, rounded, opacity, metalness, roughness, emissive). An element names a style (`style`, the canvas's former `class`) and carries its own `overrides`; `resolveStyle` reads element overrides, then the layout's override of the named style, the model's definition, each catalog in order and the defaults, field by field. A `catalog:key` reference resolves in that catalog only. `StyleCatalog` is an ECHO object models reference. Lift and flatten map `fill` to `surface` (a fill at tone 3 to `tint`). Fills in COMMON-CORE decisions 6, 19 and 20.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-14
+  affects: [Style, F-3.1]
+  why: The resolution order is shared, but 3D materials and 2D strokes have no common property set; one struct over both would let each dimension store fields it cannot draw.
+```
+
+```mdl
+decision D-93: 3D elements and objects use the canvas element base's names: `type` (was `kind`), `z` (was `order`), `source`/`target` endpoints `{ node, port, point }` (were `from`/`to` bindings) and `overrides` for the element's own style. The stored endpoint is one struct, not the canvas's port/point union, because ECHO stores only discriminated unions. Groups keep `members`/`arrange` until they become composites placed by instances. The `.dx` grammar is unchanged; the reader and printer map its words onto the new names. Fills in COMMON-CORE decision 12.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: One element base for both dimensions lets the editor core, clipboard and inspectors read either; keeping the text grammar keeps every `.dx` file and exemplar valid.
+```
+
+```mdl
+decision D-94: A layout carries the canvas View's own fields as typed fields: `layers` (by id), `kind` (`view` or `composite`), `anonymous`, and in 2D `lattice` and `constraints`; `props` holds only renderer and projection extras. A layout's `elements` store validates the shared element base and keeps any other field, and a `KindRegistry` validates each registered kind's own fields; an unregistered kind is kept as stored. A canvas node's `class` is the element's `style`. Layers move from `props.canvas.layers` ([D-76]) to `layers` in both dimensions. Fills in COMMON-CORE decisions 13 and 14.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: Typed fields let both dimensions' inspectors read layers without knowing the 2D adapter's layout; keeping unknown fields lets a plugin define a kind without changing this package.
+```
+
+```mdl
+decision D-95: A canvas's style classes are its 2D model's named styles (`NamedStyle2D`: a `Style2D` with a display name), not a field of the Canvas; the canvas store maps them to and from its classes, and the canvas engine's class resolution is `resolveStyle` over them. A canvas View read from its layout keeps each node's own overrides, since the engine applies the class itself. Migrating a scene/2 drawing writes its classes straight into the model. `resolveStyle` sets only defined fields and leaves a style's name out of the look. Fills in [D-92].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: One home for named styles in both dimensions lets catalogs and the editor core resolve every look the same way.
+```
+
+```mdl
+decision D-96: A group is a composite placed by an instance (COMMON-CORE decisions 17 and 18): its members live in an anonymous composite layout (`kind: composite`, `anonymous`) that a `group` object of the layout's model places with fit `none`, so the members stay where they are relative to the instance; a link to a member ends on the group's port named by that member. Arrangers belong to layouts: a composite's `arrange` places its unplaced, unpinned elements, and moving an element of an arranged layout pins it. Group and Ungroup are model intents. The `.dx` grammar is unchanged: the reader turns `element g group members=… arrange=…` into the composite (making a model for a layout that names none) and the printer writes it back as members followed by the `group` line, so every exemplar round-trips. `members` and element `arrange` are removed.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: One grouping mechanism in both dimensions, the canvas's composites, lets the editor core treat a group like any other instance; keeping the text grammar keeps every file valid.
+```
+
+```mdl
+decision D-97: An element's DSL identity is a typed `dsl` field of the shared element base (`DslIdentity`: object, element, part, ref, index, portal), not an untyped `props.dsl` entry, and a write that does not carry it keeps the element's stored one. The canvas's layout writer writes elements as one `LayoutIntent` batch (`layoutChanges` from the stored elements to the written ones, applied by `applyLayoutIntent` field by field), and `applyLayoutIntent` takes a layout of either dimension. Fills in [D-92].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: The illustrator's compile path then lands on the canvas through the same intent vocabulary as every editor write, and the identity that keeps a recompile from duplicating elements is part of the shared data rather than a convention.
+  rejected: Moving the command-to-element translation into `@dxos/diagram` now; it depends on react-ui-canvas node helpers, so it moves with the 2D viewport in phase C.
+```
+
+```mdl
+decision D-98: The types state the shared element base, the per-dimension styles and catalogs, the layout's typed fields and the composite transform as [D-90] to [D-97] decided them, and [F-1.7] states the intent vocabulary of [D-45] and [D-46]. Editing behaviour is not a requirement of this spec: the editor's spec states it and cites the editor decisions from [D-53] to [D-89] that this log records.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Model, Object, Layout, Scene, BaseElement, Endpoint, Element2D, Element3D, Style2D, Style3D, StyleCatalog, Camera2D, F-1.2, F-1.4, F-1.5, F-1.7]
+  why: The body still described the element base those decisions replaced (`kind`, `order`, `from`/`to` bindings, `members`, shared style tokens), and the editor's specs need one place that states the data they edit.
+  rejected:
+    - Restating the element base in the editor's spec, which would give the data two descriptions that drift apart.
+```
+
+```mdl
+decision D-99: Approve the theme-independent `black` and `white` hues of [D-92].
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [Style2D]
+```
+
+```mdl
+decision D-100: A layout's own fields are written through a layout-field intent, undone together with the elements, starting with a 2D layout's constraints (R-12 option 1).
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-1.7]
+```
+
+```mdl
+decision D-101: The layout-field intent is `{ kind: 'layout', patch: LayoutPatch }`, where `LayoutPatch` holds the 2D fields `lattice` and `constraints`: a key with a value sets the field, a key set to `undefined` unsets it, an absent key leaves it, and a batch's patches merge in order. `applyIntent` applies it with the element intents; a 3D layout has neither field, so it ignores the intent and `isLayoutIntent` refuses it for 3D. Fills in [D-100] and [D-45].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.7]
+  why: One patch over named fields gives every layout field one write path, typed by its own schema, and leaves room for `layers` without another intent kind.
+  rejected:
+    - A path-and-value update on the layout, which loses the field types.
+    - One intent kind per field, which grows the vocabulary with every mode.
+```
+
+```mdl
+decision D-102: react-ui-canvas-editor's `SceneEditor` edits the scene model and react-ui-canvas draws it; react-ui-scene is removed, as the scene UI is now a surface package and an editor package.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Scene]
+  why: The scene UI split into a surface and an editor application, and this spec names where each lives.
+```

@@ -7,8 +7,7 @@ import React from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
+import { DebugNamespace } from '../../namespace.ts';
 import { type DebugPanelMode } from './view-state.ts';
 
 export type DebugPanelHeaderProps = Pick<Button.RootProps, 'size'> & {
@@ -23,7 +22,7 @@ export type DebugPanelHeaderProps = Pick<Button.RootProps, 'size'> & {
  * of its own. The button says what it does next, so the icon flips with the mode.
  */
 export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPanelHeaderProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DebugNamespace.key);
   const floating = mode === 'floating';
   return (
     <>

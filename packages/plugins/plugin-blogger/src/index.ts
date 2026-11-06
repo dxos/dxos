@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as BloggerPlugin from './BloggerPlugin.ts';
+export * as BloggerPlugin from '#meta';
 export * from '#types';

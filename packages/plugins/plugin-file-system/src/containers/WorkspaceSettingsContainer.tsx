@@ -19,9 +19,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { useActiveFileSystemWorkspace } from '#hooks';
-import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
 
+import { FileSystemNamespace } from '../namespace.ts';
 import { writeComposerConfig } from '../util.ts';
 
 const WorkspaceSettingsSchema = Schema.Struct({
@@ -31,7 +31,7 @@ const WorkspaceSettingsSchema = Schema.Struct({
 
 /** Renders nothing until a filesystem workspace is active; the workspace comes from context. */
 export const WorkspaceSettingsContainer = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(FileSystemNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const workspace = useActiveFileSystemWorkspace();

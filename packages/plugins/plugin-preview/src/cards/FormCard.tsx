@@ -15,7 +15,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { meta } from '#meta';
+import { PreviewNamespace } from '../namespace.ts';
 
 export type FormCardProps = AppSurface.ObjectCardProps & {
   projection?: ProjectionModel;
@@ -30,7 +30,7 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PreviewNamespace.key);
   const [snapshot] = useObject(subject);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values
   // omitted — which reads as a preview rather than a form. Editable cards keep the

@@ -29,7 +29,7 @@ Of 3 items: 1 done, 0 untested, 2 partial, 0 diverged, 0 missing.
 ```mdl
 verdict CanvasPlugin: The plugin adds exactly the thirteen listed modules and depends on the illustrator plugin, as dx.config.ts declares.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-canvas/src/plugin.tsx#CanvasPlugin, github:dxos/dxos/packages/plugins/plugin-canvas/dx.config.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/capabilities/index.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-canvas/dx.config.ts, github:dxos/dxos/packages/plugins/plugin-canvas/dx.config.ts, github:dxos/dxos/packages/plugins/plugin-canvas/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-canvas/src/plugin.test.ts]
   note: |
     `plugin.test.ts` boots the plugin with the illustrator it depends on and checks that its modules activate on

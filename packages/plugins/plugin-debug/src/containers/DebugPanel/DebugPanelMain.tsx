@@ -11,9 +11,9 @@ import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
 
+import { DebugNamespace } from '../../namespace.ts';
 import { useDebugPanelContext } from './DebugPanelContext.ts';
 
 /** Pages that stay mounted once visited: their buffers are the point of the tool. */
@@ -24,7 +24,7 @@ const KEEP_MOUNTED: ReadonlySet<unknown> = new Set([DebugNodes.Console, DebugNod
  * their buffers while another tool is shown; every other page mounts only while selected.
  */
 export const DebugPanelMain = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DebugNamespace.key);
   const { contextId, nodeId, select } = useDebugPanelContext();
   const { graph } = ToolkitHooks.useAppGraph();
   const handleNavigate = useCallback(
@@ -90,7 +90,7 @@ type DebugPanelPageProps = {
 
 /** One tool's article surface; the `div` is its show/hide element, not layout. */
 const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugPanelPageProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DebugNamespace.key);
   const node = GraphHooks.useNode(graph, nodeId);
   const data = useMemo<DebugSurface.PageData | undefined>(
     () =>

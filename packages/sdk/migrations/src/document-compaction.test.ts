@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Filter, Obj } from '@dxos/echo';
+import { DatabaseImpl } from '@dxos/echo-client';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -46,7 +47,9 @@ describe('document compaction', () => {
       // The re-created root and linked documents carry the space identifiers.
       // Epoch credentials and root links store automerge URLs as plain strings, so the
       // branded AnyDocumentId casts below are the only way to hand them back to the repo.
-      const repo = space.internal.db._repo;
+      const db = space.internal.db;
+      invariant(db instanceof DatabaseImpl);
+      const repo = db._repo;
       const rootUrl = String(epochsAfter[epochsAfter.length - 1]?.assertion.automergeRoot);
       const rootHandle = repo.find<DatabaseDirectory>(rootUrl as AnyDocumentId);
       await rootHandle.whenReady();

@@ -58,14 +58,14 @@ Other notes:
 verdict FileSystemPlugin: The plugin adds exactly the seven listed modules, under the spec's id.
   status: done
   evidence:
-    [github:dxos/dxos/packages/plugins/plugin-file-system/src/plugin.tsx#FileSystemPlugin,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#AppGraphBuilder,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#Markdown,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#OperationHandler,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#PluginAsset,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#ReactSurface,
+    [github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts,
      github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/index.ts#State,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#Translations]
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-file-system/src/plugin.test.ts]
   note: |
     The module list and order match `plugin.tsx`. Two module descriptions are loose: `Markdown` is a save-to-disk
@@ -333,7 +333,7 @@ verdict F-5.1: The registered Markdown extension is a save-to-disk listener; the
   status: diverged
   evidence:
     [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/markdown-extension.ts#extensionProvider,
-     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#Markdown]
+     github:dxos/dxos/packages/plugins/plugin-file-system/dx.config.ts]
   note: The outcome the requirement wants (same editor surface) holds, but not because of the extension. The `ExtensionProvider` is a `listener` that writes edits back to disk. Reword the requirement.
 ```
 

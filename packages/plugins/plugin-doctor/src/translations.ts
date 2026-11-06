@@ -4,12 +4,12 @@
 
 import * as Translations from '@dxos/app-toolkit/Translations';
 
-import { meta } from '#meta';
+import { DoctorNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [DoctorNamespace.key]: {
         'plugin.name': 'Doctor',
         'diagnostics-tab.label': 'Diagnostics',
         'run-diagnostics.label': 'Run diagnostics',

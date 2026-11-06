@@ -41,6 +41,7 @@ const SPEC_FILES = {
   'inbox': 'packages/plugins/plugin-inbox/PLUGIN.mdl',
   'markdown': 'packages/plugins/plugin-markdown/PLUGIN.mdl',
   'presenter': 'packages/plugins/plugin-presenter/PLUGIN.mdl',
+  'projects': 'packages/plugins/plugin-projects/PLUGIN.mdl',
 };
 
 /**

@@ -94,13 +94,13 @@ decides whether the code or the spec changes.
    ---
    spec: github:dxos/dxos/packages/plugins/plugin-x/PLUGIN.mdl
    commit: <git rev-parse HEAD>
-   date: <YYYY-MM-DD>
+   date: <YYYY-MM-DDTHH:MMZ, the UTC time now>
    by: agent:claude-code
    ---
    ```
 
    Then `# Review: <spec name>`, a summary paragraph (what is solid, what is missing, the biggest
-   divergence), the `## Extensions` table declaring `verdict` (`org.dxos.mdl.verdict@1.0`), and
+   divergence; the Review view counts the statuses, so leave the counts out), the `## Extensions` table declaring `verdict` (`org.dxos.mdl.verdict@1.0`), and
    `## Verdicts` with one fenced `mdl` block per item, in spec order:
 
    ````markdown

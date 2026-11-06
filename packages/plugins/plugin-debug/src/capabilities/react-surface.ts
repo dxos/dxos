@@ -10,14 +10,13 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as Position from '@dxos/util/Position';
 
 import { DebugPanelDrawer, DebugPanelStatus, DebugStatus, LoggerPanel, StatsPanel, Wireframe } from '#containers';
-import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
 
-import { DebugCapabilities } from '../types/Debug.ts';
+import { DebugNamespace } from '../namespace.ts';
+import { DebugCapabilities, type DebugPluginOptions } from '../types/Debug.ts';
 import {
   DebugConsoleArticle,
   DebugSettingsSurface,
@@ -26,12 +25,8 @@ import {
   SpaceObjectsSurface,
 } from './DebugSurfaces.tsx';
 
-type ReactSurfaceOptions = {
-  logStore?: IdbLogStore;
-};
-
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
+  Effect.fnUntraced(function* ({ logStore }: DebugPluginOptions) {
     const registry = yield* Capabilities.AtomRegistry;
     const settingsAtom = yield* DebugCapabilities.Settings;
     const fileUploader = (yield* Capability.getAll(AppCapabilities.FileUploader))[0];
@@ -39,7 +34,7 @@ export default Capability.makeModule(
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, DebugNamespace.key),
         component: DebugSettingsSurface,
         props: ({ data: { subject } }) => ({ subject, logStore, onUpload: fileUploader }),
       }),

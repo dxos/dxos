@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type NodeViewProps, TextPart } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
 import { ClassNode } from '#types';

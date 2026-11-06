@@ -15,10 +15,10 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as MeetingOperation from '@dxos/plugin-meeting/MeetingOperation';
 
-import { meta } from '#meta';
 import { defaultMeetingName } from '#recorder';
 import { MeetingRecorderCapabilities, MeetingRecorderOperation } from '#types';
 
+import { MeetingRecorderNamespace } from '../namespace.ts';
 import { DETECTED_TOAST_ID } from './handle-detection.ts';
 
 const handler: Operation.WithHandler<typeof MeetingRecorderOperation.Start> = MeetingRecorderOperation.Start.pipe(
@@ -76,10 +76,10 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.Start> = Me
       yield* Operation.invoke(LayoutOperation.AddToast, {
         id: DETECTED_TOAST_ID,
         icon: 'ph--record--regular',
-        title: ['recording-started.title', { ns: meta.profile.key }],
+        title: ['recording-started.title', { ns: MeetingRecorderNamespace.key }],
         description: [
           systemAudio ? 'recording-started.description' : 'recording-started-mic-only.description',
-          { ns: meta.profile.key },
+          { ns: MeetingRecorderNamespace.key },
         ],
         duration: 4_000,
       }).pipe(Effect.ignore);

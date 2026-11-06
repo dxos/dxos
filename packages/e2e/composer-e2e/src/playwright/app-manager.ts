@@ -201,19 +201,19 @@ export class AppManager {
 
   /** Waits until boot has navigated to the default space's Home and stopped navigating. */
   async waitForDefaultWorkspace(): Promise<void> {
-    await this.#waitForBoot(DEFAULT_WORKSPACE_URL);
+    await this.waitForBoot(DEFAULT_WORKSPACE_URL);
   }
 
   /** The same, for a device that has just joined an existing identity. */
   async waitForJoinedWorkspace(): Promise<void> {
-    await this.#waitForBoot(JOINED_WORKSPACE_URL);
+    await this.waitForBoot(JOINED_WORKSPACE_URL);
   }
 
   /**
    * Arrive at `url`, then wait for boot to stop navigating away from it. Boot navigates more than
    * once, so the test waits for the URL to stop moving rather than for its first arrival.
    */
-  async #waitForBoot(url: RegExp): Promise<void> {
+  async waitForBoot(url: RegExp): Promise<void> {
     let lastNavigation = Date.now();
     const onNavigated = (frame: Frame) => {
       if (frame === this.page.mainFrame()) {
@@ -696,12 +696,27 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // A type either shows its form or creates at once and closes the dialog; wait for whichever happens.
+    // A type shows its form, shows a panel of its own (a project's template picker), or creates at once and closes
+    // the dialog; wait for whichever happens.
     const objectForm = this.page.getByTestId('create-object-form');
+    const projectName = this.page.getByTestId('create-project-panel.name-input');
     const openDialog = this.page.locator('[data-scope="dialog"][data-part="content"][data-state="open"]');
     await expect
-      .poll(async () => (await objectForm.isVisible()) || !(await openDialog.isVisible()), { timeout: 30_000 })
+      .poll(
+        async () =>
+          (await objectForm.isVisible()) || (await projectName.isVisible()) || !(await openDialog.isVisible()),
+        { timeout: 30_000 },
+      )
       .toBe(true);
+    if (await projectName.isVisible()) {
+      // The Default template is preselected.
+      if (name) {
+        await projectName.fill(name);
+      }
+      await openDialog.getByTestId('save-button').click();
+      await projectName.waitFor({ state: 'detached', timeout: 30_000 });
+      return;
+    }
     if (!(await objectForm.isVisible())) {
       return;
     }

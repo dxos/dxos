@@ -209,7 +209,8 @@ export const steps = [
         },
         { spaceId, repository: REPOSITORY },
       );
-      await demo.click({ text: 'Checked out for coding agents that run in the cloud.', label: 'Repositories' });
+      await demo.click({ selector: '[data-testid="projectsPlugin.config.software.disclosure"]', label: 'Software' });
+      await demo.click({ text: 'Checked out for coding agents that run in the cloud', label: 'Repositories' });
       const option = `[data-scope="combobox"][role="option"]:has-text("${REPOSITORY.split('/')[1]}")`;
       await page.locator(option).first().waitFor({ timeout: 10_000 });
       await demo.click({ selector: option, label: REPOSITORY });
@@ -221,7 +222,9 @@ export const steps = [
             .spaces(spaceId)
             .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
             .run();
-          return (projects.findLast((project) => project.name === title)?.repositories ?? []).length;
+          const project = projects.findLast((project) => project.name === title);
+          return (project ? (dxos.Obj.getMeta(project).annotations['org.dxos.annotation.repositories'] ?? []) : [])
+            .length;
         },
         { spaceId, title: PROJECT_TITLE },
       );
@@ -255,14 +258,17 @@ export const steps = [
   {
     name: 'Assign the task to Claude Code (cloud)',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Assign it to Claude Code (cloud)', subtitle: 'From the task’s menu' });
+      await demo.caption({ value: 'Assign it to Claude Code (cloud)', subtitle: 'From the task’s assignee picker' });
       const row = `[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`;
       await demo.hover({ selector: row });
-      await demo.click({ selector: `${row} >> [data-testid="taskList.item.actions"]`, label: 'Task actions' });
+      await demo.click({
+        selector: `${row} >> :is([data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"])`,
+        label: 'Assignee',
+      });
       await page.waitForTimeout(1_500);
       await demo.click({
-        selector: '[role="menuitem"]:has-text("Assign to Claude Code (EDGE)")',
-        label: 'Assign to Claude Code (EDGE)',
+        selector: '[role="menuitem"]:has-text("Claude Code (EDGE)")',
+        label: 'Claude Code (EDGE)',
       });
       await page.waitForTimeout(LINGER);
     },

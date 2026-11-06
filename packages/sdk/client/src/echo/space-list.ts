@@ -312,7 +312,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     trace.events.emit(ClientTraceEvents.spaceCreate, { spaceId: spaceProxy.id, origin: options?.origin ?? 'unknown' });
 
     await cancelWithContext(ctx, spaceProxy._databaseInitialized.wait());
-    spaceProxy.db.add(Obj.make(SpaceProperties, meta ?? {}), { placeIn: 'root-doc' });
+    spaceProxy.db.add(Obj.make(SpaceProperties, meta ?? {}));
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

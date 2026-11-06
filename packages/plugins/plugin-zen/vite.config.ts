@@ -7,19 +7,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    ZenPlugin: 'src/ZenPlugin.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
-    meta: 'src/meta.ts',
     translations: 'src/translations.ts',
     Dream: 'src/types/Dream.ts',
     Sequence: 'src/types/Sequence.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  assetsAsFiles: true,
   test: { node: true },
 });

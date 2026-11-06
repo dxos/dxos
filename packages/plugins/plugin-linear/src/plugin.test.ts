@@ -8,17 +8,18 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { LinearPlugin } from '#plugin';
+import * as LinearPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), LinearPlugin()] });
+import { LinearNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), LinearPlugin.make()] });
+
+const moduleId = (name: string) => `${LinearNamespace.key}.module.${name}`;
 
 describe('LinearPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), LinearPlugin()],
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), LinearPlugin.make()],
     });
 
     // The harness fires every plugin's start event after startup, so both start-gated modules are active.

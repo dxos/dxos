@@ -14,20 +14,12 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": "./src/capabilities/index.ts",
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/capabilities.mjs"
-    },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/HeyGenPlugin.workerd.mjs",
+      "node": "./dist/lib/HeyGenPlugin.node.mjs",
+      "default": "./dist/lib/HeyGenPlugin.mjs"
     },
     "#services": {
       "source": "./src/services/index.ts",
@@ -47,8 +39,10 @@
       "import": "./dist/lib/ns/HeyGenEvents.mjs"
     },
     "./HeyGenPlugin": {
-      "source": "./src/HeyGenPlugin.ts",
-      "types": "./dist/types/src/HeyGenPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/HeyGenPlugin.workerd.mjs",
+      "node": "./dist/lib/HeyGenPlugin.node.mjs",
       "import": "./dist/lib/HeyGenPlugin.mjs"
     }
   },

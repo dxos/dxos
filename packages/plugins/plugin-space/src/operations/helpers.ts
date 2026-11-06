@@ -3,10 +3,10 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Obj, Type } from '@dxos/echo';
+import { DXN, Filter, type Obj, Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 
-import { SpaceCapabilities } from '#types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities.ts';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -24,3 +24,13 @@ export const resolveIdentitySpec = Effect.fnUntraced(function* (typename: string
   const specs = yield* Capability.getAll(SpaceCapabilities.IdentitySpec);
   return specs.find((spec) => Type.getTypename(spec.type) === typename);
 });
+
+/**
+ * The key filter for a type a caller names: a bare typename (`org.example.type`), or a DXN, as an encoded object
+ * carries it (`dxn:org.example.type:0.1.0`), whose version pins that registration. A malformed DXN is matched as
+ * written, so it finds no type rather than an unpinned version of one.
+ */
+export const typeKeyFilter = (typename: string): Filter.Any => {
+  const dxn = DXN.tryMake(typename);
+  return dxn === undefined ? Filter.key(typename) : Filter.key(DXN.getName(dxn), { version: DXN.getVersion(dxn) });
+};

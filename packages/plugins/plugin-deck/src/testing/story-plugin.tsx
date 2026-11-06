@@ -30,8 +30,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Loading } from '@dxos/react-ui/testing';
 import * as Position from '@dxos/util/Position';
 
-import { OperationHandler } from '#capabilities';
-import { meta as pluginMeta } from '#meta';
+import DeckConfig, { meta as pluginMeta } from '#meta';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
 random.seed(1234);
@@ -287,7 +286,7 @@ export const DeckStoryPlugin = Plugin.define(pluginMeta).pipe(
     ],
     activate: storyDeckState,
   }),
-  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Plugin.getModule(DeckConfig, 'OperationHandler')),
   Plugin.addModule(storySurfaces),
   Plugin.addModule(storyGraphBuilder),
   Plugin.make,

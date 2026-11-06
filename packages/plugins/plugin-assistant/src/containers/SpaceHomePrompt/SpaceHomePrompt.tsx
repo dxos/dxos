@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as Chat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
@@ -23,10 +23,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type ChatEvent, ChatPrompt } from '#components';
 import { bindMentions, usePresets, usePromptActions, useSkills } from '#hooks';
-import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
 import { makeSkillCommands, runDraftCommand } from '../../commands/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import { getChatPath } from '../../paths.ts';
 import { bindChatDefaults, contributesPluginManager } from '../../util/default-skills.ts';
 
@@ -35,7 +35,7 @@ type SpaceScopedProps = {
 };
 
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
 
   const registry = useRegistry();
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
@@ -47,7 +47,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     if (!space) {
       return undefined;
     }
-    const feed = Feed.make();
+    const feed = TrajectoryStore.makeFeed();
     return { feed, chat: Chat.make({ feed: Ref.make(feed) }) };
   }, [space, draftGeneration]);
   const chat = draft?.chat;

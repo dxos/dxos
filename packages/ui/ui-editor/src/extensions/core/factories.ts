@@ -16,7 +16,6 @@ import {
   highlightActiveLine,
   keymap,
   lineNumbers,
-  placeholder,
 } from '@codemirror/view';
 import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -31,6 +30,7 @@ import { hexToHue, isTruthy } from '@dxos/util';
 import { baseTheme, createFontTheme, editorGutter } from '../../styles/index.ts';
 import { automerge } from '../collab/automerge/index.ts';
 import { SpaceAwarenessProvider, awareness } from '../collab/awareness/index.ts';
+import { emptyPlaceholder } from '../completion/placeholder.ts';
 import { focus } from '../state/focus.ts';
 import { scrollPastEnd } from '../streaming/scrolling/index.ts';
 
@@ -147,7 +147,7 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.history && history(),
     props.lineNumbers && [lineNumbers(), editorGutter],
     props.lineWrapping && EditorView.lineWrapping,
-    props.placeholder && placeholder(props.placeholder),
+    props.placeholder && emptyPlaceholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     // `EditorState.readOnly` is advisory — CodeMirror doesn't auto-reject doc-changing
     // transactions. Some extensions (e.g. `@codemirror/lang-markdown`'s Enter handler that
@@ -232,6 +232,12 @@ export const defaultStyles = {
   light: vscodeLightStyle,
 };
 
+// Built once: every `HighlightStyle.define` call mints a new stylesheet, which restyles the whole document.
+const defaultHighlightStyles = {
+  dark: HighlightStyle.define(defaultStyles.dark),
+  light: HighlightStyle.define(defaultStyles.light),
+};
+
 /**
  * https://codemirror.net/examples/styling
  */
@@ -248,7 +254,7 @@ export const createThemeExtensions = ({
     EditorView.darkTheme.of(themeMode === 'dark'),
     createFontTheme({ monospace }),
     syntaxHighlightingProp &&
-      syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
+      syntaxHighlighting(themeMode === 'dark' ? defaultHighlightStyles.dark : defaultHighlightStyles.light),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
     (slots.scroller?.className || scrollbarThin) &&

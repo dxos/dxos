@@ -3,4 +3,4 @@
 //
 
 export * as HeyGenEvents from './HeyGenEvents.ts';
-export * as HeyGenPlugin from './HeyGenPlugin.ts';
+export * as HeyGenPlugin from '#meta';

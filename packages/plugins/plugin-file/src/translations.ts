@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { File } from '@dxos/types';
 
-import { meta } from '#meta';
+import { FileNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete file',
         'object-deleted.label': 'File deleted',
       },
-      [meta.profile.key]: {
+      [FileNamespace.key]: {
         'plugin.name': 'File',
         'file-input.placeholder': 'Drop an image, video, or PDF here, or click to browse.',
         'pdf-error.message': 'This PDF could not be displayed.',

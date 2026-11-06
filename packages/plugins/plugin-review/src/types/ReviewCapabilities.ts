@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { EditorView } from '@codemirror/view';
 import type * as Deferred from 'effect/Deferred';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
@@ -12,7 +13,7 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { meta } from '#meta';
+import { ReviewNamespace } from '../namespace.ts';
 
 /** Which version of an object the local user is viewing. Never replicated. */
 export type VersionSelection =
@@ -92,7 +93,7 @@ export const defaultReviewRenderPolicy: ReviewRenderPolicyFn = (mode) =>
     : { showSuggestions: true, showComments: true, editable: true };
 
 export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>()(
-  `${meta.profile.key}.capability.reviewRenderPolicy`,
+  `${ReviewNamespace.key}.capability.reviewRenderPolicy`,
 );
 
 /**
@@ -103,7 +104,7 @@ export type HistoryProvider = Readonly<{
   id: string;
   getTarget: (object: Obj.Unknown) => Text.Text | undefined;
 }>;
-export const HistoryProvider = Capability.make<HistoryProvider>()(`${meta.profile.key}.capability.historyProvider`);
+export const HistoryProvider = Capability.make<HistoryProvider>()(`${ReviewNamespace.key}.capability.historyProvider`);
 
 export interface ThreadModel {
   root: Thread.Thread;
@@ -122,4 +123,9 @@ export type CommentState = {
    * `currentObjectId` (`util/comment-state.ts`), never by string equality.
    */
   current?: string | undefined;
+  /**
+   * The comment-taking editor the reader focused last and the URI of the object its threads anchor to. It outlives the
+   * editor's blur, since a click on a comment button takes the focus; the editor clears it when it is destroyed.
+   */
+  focused?: { subject: string; view: EditorView };
 };

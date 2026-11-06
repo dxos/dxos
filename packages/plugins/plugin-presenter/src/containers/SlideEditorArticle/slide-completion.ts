@@ -13,6 +13,16 @@ export type SlideCompletionOptions = {
   describeLayout: (layout: LayoutName) => string;
 };
 
+// Built once: every `EditorView.baseTheme` call mints a new stylesheet, which restyles the whole document.
+const slideCompletionTheme = EditorView.baseTheme({
+  '.cm-tooltip-autocomplete .cm-completionLabel': { display: 'inline-block', minWidth: '16ch' },
+  '.cm-tooltip-autocomplete .cm-completionDetail': {
+    marginLeft: '1em',
+    fontStyle: 'normal',
+    color: 'var(--color-fg-subtle)',
+  },
+});
+
 /**
  * Completes frontmatter values in the slide editor: the layouts after `layout:`.
  */
@@ -36,13 +46,6 @@ export const slideCompletion = ({ describeLayout }: SlideCompletionOptions): Ext
     EditorState.languageData.of(() => [{ autocomplete: source }]),
     autocompletion({ icons: false }),
     // Two columns: the value at a fixed width (the longest layout name), then its display name.
-    EditorView.baseTheme({
-      '.cm-tooltip-autocomplete .cm-completionLabel': { display: 'inline-block', minWidth: '16ch' },
-      '.cm-tooltip-autocomplete .cm-completionDetail': {
-        marginLeft: '1em',
-        fontStyle: 'normal',
-        color: 'var(--color-fg-subtle)',
-      },
-    }),
+    slideCompletionTheme,
   ];
 };

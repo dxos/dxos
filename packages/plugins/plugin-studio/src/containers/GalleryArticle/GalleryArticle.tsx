@@ -21,10 +21,10 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { GalleryImage } from '#components';
-import { meta } from '#meta';
 import { MediaArtifact } from '#types';
 
 import { useMediaArtifactCoverSource } from '../../hooks/useMediaArtifactCoverSource.ts';
+import { StudioNamespace } from '../../namespace.ts';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
@@ -66,7 +66,7 @@ export type GalleryArticleProps = AppSurface.ObjectArticleProps<Collection.Colle
  * renders the outline and emits tile clicks.
  */
 export const GalleryArticle = ({ role, subject: collection, attendableId }: GalleryArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(StudioNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(collection);
 
@@ -127,7 +127,7 @@ export const GalleryArticle = ({ role, subject: collection, attendableId }: Gall
         .action(
           'create',
           {
-            label: ['create.label', { ns: meta.profile.key }],
+            label: ['create.label', { ns: StudioNamespace.key }],
             icon: 'ph--plus--regular',
             iconOnly: false,
             disabled: !db,
@@ -137,7 +137,7 @@ export const GalleryArticle = ({ role, subject: collection, attendableId }: Gall
         .action(
           'delete',
           {
-            label: ['delete.label', { ns: meta.profile.key }],
+            label: ['delete.label', { ns: StudioNamespace.key }],
             icon: 'ph--trash--regular',
             iconOnly: false,
             disabled: selectedIds.size === 0,

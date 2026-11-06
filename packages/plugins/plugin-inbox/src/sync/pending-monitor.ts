@@ -16,7 +16,11 @@ import { createSyncLabel, createSyncProgressKey } from './mail-sync.ts';
  */
 export const PENDING_SYNC_TIMEOUT_MS = 70_000;
 
-/** Error a pending sync meter shows when no run took it over in time. */
+/**
+ * Error a pending sync meter shows when no run took it over in time.
+ * TODO(mykola): A successful sync can end here too, since EDGE progress is best effort; see the TODO in
+ *  plugin-client's `trace-progress.ts`.
+ */
 export const PENDING_SYNC_TIMEOUT_ERROR = 'Timed out: sync reported no progress';
 
 /**

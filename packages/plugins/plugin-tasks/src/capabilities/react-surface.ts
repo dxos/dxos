@@ -22,8 +22,9 @@ import {
   TaskRow,
   TaskSetArticle,
 } from '#containers';
-import { QUICK_ENTRY_DIALOG } from '#meta';
 import { Journal } from '#types';
+
+import { QUICK_ENTRY_DIALOG } from '../constants.ts';
 
 /**
  * The section role, typed for an embedded outline: same NSID (role identity is structural), plus the
@@ -33,8 +34,12 @@ import { Journal } from '#types';
 const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
   Role.make('org.dxos.role.section');
 
-const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { showDescription?: boolean }>> =
-  Role.make('org.dxos.role.section');
+const TaskSetSection: Role.Role<
+  AppSurface.SectionData<
+    TaskSetType.TaskSet,
+    { showDescription?: boolean; scope?: readonly string[]; onTaskCreated?: (task: Task.Task) => Promise<void> }
+  >
+> = Role.make('org.dxos.role.section');
 
 /**
  * An object shown beside the one it relates to — a task under the email it was extracted from. Typed
@@ -101,11 +106,13 @@ export default Capability.makeModule(() =>
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
         component: TaskSetArticle,
-        props: ({ role, data: { subject, attendableId, showDescription } }) => ({
+        props: ({ role, data: { subject, attendableId, showDescription, scope, onTaskCreated } }) => ({
           role,
           subject,
           attendableId,
           showDescription,
+          scope,
+          onTaskCreated,
         }),
       }),
       Surface.create({

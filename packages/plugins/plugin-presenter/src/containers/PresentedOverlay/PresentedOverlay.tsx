@@ -13,13 +13,14 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import { Deck, PopupWindow, SpeakerNotes } from '#components';
 import { type SlideSource } from '#deck';
 import { useElapsed, useSlideLabel, useSpeakerLines } from '#hooks';
-import { meta } from '#meta';
 import { type Presentation, PresenterCapabilities, PresenterSurface } from '#types';
+
+import { PresenterNamespace } from '../../namespace.ts';
 
 const slideOf = (source: SlideSource | undefined) => (source && 'slide' in source ? source.slide : undefined);
 
 /** Keys a speaker presses in the notes window that move the deck. */
-const DECK_KEYS = new Set([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
+const DECK_KEYS = new Set([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '[', ']', 'Home', 'End']);
 
 export type PresentedOverlayProps = {
   presentation: Presentation.Presentation;
@@ -30,7 +31,7 @@ export type PresentedOverlayProps = {
  * other plugins' overlays, and the events other plugins follow the presentation by.
  */
 export const PresentedOverlay = ({ presentation }: PresentedOverlayProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const { slides, index, slide, step, focusRef } = Deck.useDeckContext(PresentedOverlay.displayName);
   const settings = AppHooks.useOptionalAtomCapability(PresenterCapabilities.Settings);
   const notes = settings?.notes ?? 'off';
@@ -57,7 +58,14 @@ export const PresentedOverlay = ({ presentation }: PresentedOverlayProps) => {
       if (DECK_KEYS.has(event.key)) {
         event.preventDefault();
         focusRef.current?.dispatchEvent(
-          new KeyboardEvent('keydown', { key: event.key, shiftKey: event.shiftKey, bubbles: true }),
+          new KeyboardEvent('keydown', {
+            key: event.key,
+            shiftKey: event.shiftKey,
+            altKey: event.altKey,
+            metaKey: event.metaKey,
+            ctrlKey: event.ctrlKey,
+            bubbles: true,
+          }),
         );
       }
     },

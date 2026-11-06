@@ -19,12 +19,12 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Grounding } from '#command';
 import { CommandBar, type CommandOutcome, type Fact, NodeDetails } from '#components';
 import { Kind, Semantic } from '#graph';
-import { meta } from '#meta';
 import { CodeGraph, CodeGraphOperation } from '#types';
 
 // Imported directly rather than through the barrel: the canvas engine and the illustrator renderer are large.
 import { CodeGraphCanvas, framePositions } from '../../components/CodeGraphCanvas/index.ts';
 import { CodeGraphDiagram } from '../../components/CodeGraphDiagram/index.ts';
+import { CodeGraphNamespace } from '../../namespace.ts';
 import { useSpeechCommand } from './useSpeechCommand.ts';
 
 type Point = Semantic.Point;
@@ -81,7 +81,7 @@ const useSemanticLayout = (
 export type CodeGraphArticleProps = AppSurface.ObjectArticleProps<CodeGraph.CodeGraph>;
 
 export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CodeGraphNamespace.key);
   const [graph] = useObject(subject);
   const { invokePromise } = Hooks.useOperationInvoker();
   const layout = graph.layout ?? 'illustrator';
@@ -345,7 +345,7 @@ const useToolbarActions = ({
         .group(
           'layout',
           {
-            label: ['layout.label', { ns: meta.profile.key }],
+            label: ['layout.label', { ns: CodeGraphNamespace.key }],
             variant: 'toggleGroup',
             selectCardinality: 'single',
             value: layout,
@@ -354,7 +354,7 @@ const useToolbarActions = ({
             for (const { value, icon } of LAYOUTS) {
               group.action(
                 value,
-                { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon, iconOnly: true },
+                { label: [`layout-${value}.label`, { ns: CodeGraphNamespace.key }], icon, iconOnly: true },
                 () => onLayoutChange(value),
               );
             }
@@ -363,7 +363,7 @@ const useToolbarActions = ({
         .switch(
           'group-by-package',
           {
-            label: ['group-by-package.label', { ns: meta.profile.key }],
+            label: ['group-by-package.label', { ns: CodeGraphNamespace.key }],
             icon: 'ph--package--regular',
             iconOnly: true,
             checked: grouped,
@@ -375,7 +375,7 @@ const useToolbarActions = ({
         .action(
           'reset-positions',
           {
-            label: ['reset-positions.label', { ns: meta.profile.key }],
+            label: ['reset-positions.label', { ns: CodeGraphNamespace.key }],
             // Spins while the illustrator lays the graph out, the one wait this view has.
             icon: pending ? 'ph--spinner--regular' : 'ph--arrow-counter-clockwise--regular',
             spin: pending,

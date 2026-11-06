@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Terra, TerraObject } from '#types';
+
+import { TerraNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -33,7 +34,7 @@ export const translations = [
         'delete-object.label': 'Delete Terra object',
         'object-deleted.label': 'Terra object deleted',
       },
-      [meta.profile.key]: {
+      [TerraNamespace.key]: {
         'plugin.name': 'Terra',
         'play.label': 'Play',
         'pause.label': 'Pause',

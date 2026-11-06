@@ -9,9 +9,8 @@ import { Dsl } from '@dxos/diagram';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
+import * as IllustratorPlugin from '#meta';
 import { Drawing, DrawingOperation, LegacySketch } from '#types';
-
-import * as IllustratorPlugin from './IllustratorPlugin.ts';
 
 describe('IllustratorPlugin in workerd', () => {
   test('activates headless and contributes its skill, operations and types', async ({ expect }) => {
@@ -32,7 +31,7 @@ describe('IllustratorPlugin in workerd', () => {
   });
 
   test('loads the SVG variant without its surfaces', async ({ expect }) => {
-    const module = await import('#svg-variant');
+    const module = await import('./capabilities/svg-variant.node.ts');
     expect(module.default).toBeDefined();
   });
 

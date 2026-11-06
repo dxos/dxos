@@ -8,13 +8,9 @@ export default defineConfig({
   entry: {
     'ns/SettingsAction': 'src/SettingsAction.ts',
     'index': 'src/index.ts',
-    'SettingsPlugin': 'src/SettingsPlugin.ts',
-    'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
-    'capabilities': 'src/capabilities/index.ts',
     'containers': 'src/containers/index.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'SettingsPath': 'src/types/SettingsPath.ts',
     'types': 'src/types/index.ts',

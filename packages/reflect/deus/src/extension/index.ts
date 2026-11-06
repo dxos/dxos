@@ -6,8 +6,10 @@ export { mdl, mdlBlockDescription } from './language.ts';
 export { type MdlBlock, parseMdlBlocks } from './blocks.ts';
 export {
   type ChangelogEntry,
+  type ChangelogQuestion,
   type LintOptions,
   MISSING_DECISION,
+  type QuestionOption,
   checkChangelogChange,
   duplicateSpecMessage,
   isTrivialEdit,

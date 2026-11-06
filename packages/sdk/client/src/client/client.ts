@@ -28,7 +28,7 @@ import {
   serveClientServicesOverIFrame,
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
@@ -142,6 +142,11 @@ export class Client {
   /** Resolves when `initialize()` completes, so consumers can suspend on a forked init. */
   private readonly _initializedTrigger = new Trigger();
 
+  private _servicesReady = false;
+
+  /** Resolves when the services answer, which a boot-cached client reaches after `initialize()` completes. */
+  private readonly _servicesReadyTrigger = new Trigger();
+
   private _resetting = false;
 
   private _runtime?: ClientRuntime;
@@ -228,16 +233,29 @@ export class Client {
   }
 
   /**
-   * Returns true if the client has been initialized. Initialize by calling `.initialize()`.
+   * Whether the client is ready: `initialize()` has completed and the client can be used.
+   * With {@link ClientOptions.bootCache} that can be from the cache, before the services answer;
+   * see {@link servicesReady}.
    */
   get initialized() {
     return this._initialized;
   }
 
   /**
-   * Resolves once `initialize()` has completed. Waits indefinitely unless `timeout` is given, in
-   * which case it rejects with `TimeoutError` — opt-in because most consumers only want the
-   * completion signal, and bounding the session is the caller's job (see the app entry point).
+   * Whether the client services are open and answering. Implies {@link initialized}.
+   */
+  get servicesReady() {
+    return this._servicesReady;
+  }
+
+  /**
+   * Resolves once the client is ready (milestone `client.ready`): `initialize()` has completed, and
+   * identity, spaces and queries can be used. With {@link ClientOptions.bootCache} that can be from
+   * the cache, before the services answer. An app waits on this to render.
+   *
+   * Waits indefinitely unless `timeout` is given, in which case it rejects with `TimeoutError` —
+   * opt-in because most consumers only want the completion signal, and bounding the session is the
+   * caller's job (see the app entry point).
    *
    * This is the completion signal, not the error channel: a failing `initialize()` rejects at its
    * own call site, and this promise stays pending.
@@ -247,12 +265,18 @@ export class Client {
   }
 
   /**
-   * Resolves once the services are open. Without {@link ClientOptions.bootCache} that is when
-   * `initialize()` completes; with it, `initialize()` can complete from the cache well before.
+   * Resolves once the client services are open and answering (milestone `client.services-ready`),
+   * never before {@link waitUntilInitialized}. Without {@link ClientOptions.bootCache} both resolve
+   * together; with it, this can come well after. Wait on this only for what the cache cannot stand in
+   * for: observability, releasing a resource the services take over, or acting on a result only the
+   * services can report.
+   *
+   * Rejects when services the client opened from the cache fail to open, since `initialize()` has
+   * already returned and cannot report it, and with `ContextDisposedError` when the client is destroyed
+   * first; `timeout` behaves as in {@link waitUntilInitialized}.
    */
-  async waitUntilServicesOpen(): Promise<void> {
-    await this.waitUntilInitialized();
-    await this._bootCache?.whenServicesOpen();
+  waitUntilServicesReady({ timeout }: { timeout?: number } = {}): Promise<void> {
+    return this._servicesReadyTrigger.wait({ timeout });
   }
 
   /**
@@ -529,7 +553,31 @@ export class Client {
     markMilestone('client.ready');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
+    this._signalServicesReady(this._ctx, this._bootCache);
     return this;
+  }
+
+  /** Wakes {@link waitUntilServicesReady} once the services answer, unless the client was destroyed first. */
+  private _signalServicesReady(ctx: Context, bootCache: BootCacheServices | undefined): void {
+    const ready = () => {
+      if (ctx.disposed) {
+        return;
+      }
+      this._servicesReady = true;
+      this._servicesReadyTrigger.wake();
+      markMilestone('client.services-ready');
+    };
+    if (!bootCache) {
+      ready();
+      return;
+    }
+    bootCache.whenServicesOpen().then(ready, (error) => {
+      if (!ctx.disposed) {
+        this._servicesReadyTrigger.throw(
+          error instanceof Error ? error : new Error('client services failed to open', { cause: error }),
+        );
+      }
+    });
   }
 
   /** Writes the boot cache once the app has settled, then periodically and whenever the page is hidden. */
@@ -786,6 +834,10 @@ export class Client {
     // `waitUntilInitialized()` resolve for a client that is not initialized, which spins
     // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
     this._initializedTrigger.reset();
+    this._servicesReady = false;
+    // A waiter on services that never opened would otherwise hang on a promise nothing settles.
+    this._servicesReadyTrigger.throw(new ContextDisposedError());
+    this._servicesReadyTrigger.reset();
   }
 
   async [Symbol.asyncDispose]() {

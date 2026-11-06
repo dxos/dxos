@@ -34,7 +34,8 @@ import { Organization, Person, Task } from '@dxos/types';
 import { sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '#components';
-import { meta } from '#meta';
+
+import { DebugNamespace } from '../../namespace.ts';
 
 // TODO(burdon): Make extensible.
 const staticTypes = [Markdown.Document, Drawing.Drawing, Sheet.Sheet, ComputeGraph];
@@ -51,7 +52,7 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
   ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
     const invoker = Hooks.useOperationInvoker();
     const { invokePromise } = invoker;
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(DebugNamespace.key);
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
@@ -133,15 +134,18 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
       }
       const { data } = await invokePromise(SpaceOperation.RemoveAllObjects, undefined, {
         spaceId: space.id,
-        notify: { error: ['remove-all-objects.error.title', { ns: meta.profile.key }] },
+        notify: { error: ['remove-all-objects.error.title', { ns: DebugNamespace.key }] },
       });
       if (data) {
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}/remove-all-objects`,
+          id: `${DebugNamespace.key}/remove-all-objects`,
           icon: 'ph--trash--regular',
           duration: TOAST_DURATION,
-          title: ['remove-all-objects.toast.title', { ns: meta.profile.key }],
-          description: ['remove-all-objects.toast.description', { ns: meta.profile.key, count: data.objectIds.length }],
+          title: ['remove-all-objects.toast.title', { ns: DebugNamespace.key }],
+          description: [
+            'remove-all-objects.toast.description',
+            { ns: DebugNamespace.key, count: data.objectIds.length },
+          ],
         });
       }
       await updateInfo();
@@ -153,18 +157,18 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
       }
       const { data } = await invokePromise(SpaceOperation.CollectGarbage, undefined, {
         spaceId: space.id,
-        notify: { error: ['collect-garbage.error.title', { ns: meta.profile.key }] },
+        notify: { error: ['collect-garbage.error.title', { ns: DebugNamespace.key }] },
       });
       if (data) {
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}/collect-garbage`,
+          id: `${DebugNamespace.key}/collect-garbage`,
           icon: 'ph--recycle--regular',
           duration: TOAST_DURATION,
-          title: ['collect-garbage.toast.title', { ns: meta.profile.key }],
+          title: ['collect-garbage.toast.title', { ns: DebugNamespace.key }],
           description:
             data.removedDocuments === 0
-              ? ['collect-garbage.toast.empty.description', { ns: meta.profile.key }]
-              : ['collect-garbage.toast.description', { ns: meta.profile.key, count: data.removedDocuments }],
+              ? ['collect-garbage.toast.empty.description', { ns: DebugNamespace.key }]
+              : ['collect-garbage.toast.description', { ns: DebugNamespace.key, count: data.removedDocuments }],
         });
       }
       await updateInfo();
@@ -297,7 +301,7 @@ const useSpaceGeneratorMenu = ({
   );
 
 // Stable key for the test progress monitor within the shared registry.
-const TEST_PROGRESS_NAME = `${meta.profile.key}.test-progress`;
+const TEST_PROGRESS_NAME = `${DebugNamespace.key}.test-progress`;
 
 type ProgressGeneratorProps = Util.ThemedClassName;
 

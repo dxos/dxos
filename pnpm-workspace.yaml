@@ -280,10 +280,10 @@ catalog:
   '@types/platform': ^1.3.4
   '@types/postcss-import': ^14.0.3
   '@types/randombytes': ^2.0.0
-  '@types/react': ~19.2.17
-  '@types/react-dom': ~19.2.3
+  '@types/react': ~19.3.0
+  '@types/react-dom': ~19.3.0
   '@types/react-syntax-highlighter': ^15.5.13
-  '@types/react-test-renderer': ^19.1.0
+  '@types/react-test-renderer': ^19.3.0
   '@types/react-virtualized': ^9.22.3
   '@types/readable-stream': ^2.3.9
   '@types/seedrandom': ^3.0.5
@@ -363,6 +363,7 @@ catalog:
   buffer-from: ^0.1.1
   bytes: ^3.1.2
   cbor-x: ^1.5.4
+  capnweb: ^0.12.0
   chai: ^4.4.1
   chai-dom: ^1.11.0
   chalk: ^4.1.2
@@ -398,6 +399,7 @@ catalog:
   date-fns: ^3.6.0
   debounce: ^2.2.0
   debug: ^4.3.4
+  decode-named-character-reference: ^1.0.2
   deep-equal: ^2.2.3
   defuddle: ^0.18.1
   del: ^5.1.0
@@ -412,6 +414,7 @@ catalog:
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
+  es-module-lexer: ^2.0.0
   esbuild: 0.28.2
   esbuild-plugin-glsl: ^1.4.2
   esbuild-plugin-inline-image: ^0.0.9
@@ -449,6 +452,7 @@ catalog:
   glslify: ^7.1.1
   handlebars: 4.7.8
   happy-dom: ^20.0.0
+  hash-wasm: ^4.12.0
   hast-util-to-jsx-runtime: ^2.3.6
   html-to-image: ^1.11.13
   husky: ^8.0.0
@@ -516,6 +520,7 @@ catalog:
   mermaid: ^10.9.4
   micromark: ^4.0.1
   micromark-extension-directive: ^3.0.0
+  micromark-extension-gfm: ^3.0.0
   mini-virtual-list: ^0.3.2
   miniflare: ^4.20260714.0
   minimatch: ^10.2.3
@@ -576,23 +581,23 @@ catalog:
   random-access-storage: ^1.3.0
   randombytes: ^2.1.0
   re-resizable: ^6.9.17
-  react: ~19.2.7
+  react: ~19.3.1
   react-aria-components: ^1.17.0
   react-charts: beta
   react-day-picker: ^9.4.0
-  react-dom: ~19.2.7
+  react-dom: ~19.3.1
   react-drag-drop-files: ^2.3.8
   react-dropzone: ^14.2.3
   react-error-boundary: ^4.0.13
   react-i18next: ^11.18.6
-  react-is: ~19.2.7
+  react-is: ~19.3.1
   react-json-tree: ^0.18.0
   react-leaflet: ^5.0.0
   react-markdown: ^10.1.0
   react-resize-detector: ^11.0.1
   react-router-dom: ^6.30.3
   react-syntax-highlighter: ^15.6.1
-  react-test-renderer: ~19.2.7
+  react-test-renderer: ~19.3.1
   react-use: ^17.5.1
   react-virtualized: ^9.22.6
   react-window: ^2.2.3
@@ -611,7 +616,7 @@ catalog:
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
   safe-compare: ~1.1.4
-  scheduler: ^0.27.0
+  scheduler: ^0.28.0
   seedrandom: ^3.0.5
   semver: ^7.7.4
   serve: ^14.2.5
@@ -640,6 +645,7 @@ catalog:
   tm-grammars: ^1.32.22
   todomvc-app-css: ^2.4.2
   todomvc-common: ^1.0.5
+  tokenx: ^1.3.0
   tone: ^15.1.22
   topojson-client: ^3.1.0
   topojson-simplify: ^3.0.3
@@ -682,6 +688,9 @@ catalog:
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
   vitest: 4.1.10
+  vscode-languageclient: ^9.0.1
+  vscode-languageserver: ^9.0.1
+  vscode-languageserver-textdocument: ^1.0.12
   vscode-oniguruma: ^2.0.1
   vscode-textmate: ^9.3.2
   wait-on: ^8.0.3

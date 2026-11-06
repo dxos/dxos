@@ -25,14 +25,15 @@ import * as Util from '@dxos/react-ui/Util';
 
 import { type SlideSource } from '#deck';
 import { useDeckTheme, useSlideClicks } from '#hooks';
-import { meta } from '#meta';
 import { type SlideTheme, SlideViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { ExitButton, PageNumber as PageNumberComponent, Pager as PagerComponent } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { Slide } from '../Slide/index.ts';
 import { SlideGrid, type SlideGridProps } from '../SlideGrid/index.ts';
 import { SlideThemeProvider } from '../SlideTheme/index.ts';
+import { countColumns, moveByRow } from './grid-rows.ts';
 
 // TODO(burdon): Factor the Deck and Slide families out to a react-ui-presenter package.
 
@@ -57,8 +58,34 @@ const KEY_OWNERS = [
 const ACTIVATABLE =
   'button, a[href], summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [role="tab"], [role="option"]';
 
+/** Where a key moves the grid's current slide; undefined for a key the grid leaves alone. */
+/** Option makes `[` and `]` on some layouts (German on a Mac), and elsewhere Alt never reports them as those keys. */
+const isAltChord = ({ altKey, key }: { altKey: boolean; key: string }): boolean => altKey && key !== '[' && key !== ']';
+
+const gridTarget = (key: string, index: number, count: number, grid: Element): number | undefined => {
+  switch (key) {
+    case 'ArrowDown':
+      return moveByRow(index, count, countColumns(grid), 1);
+    case 'ArrowUp':
+      return moveByRow(index, count, countColumns(grid), -1);
+    case ']':
+      return index + 1;
+    case '[':
+      return index - 1;
+  }
+};
+
+/** The grid's own controls keep Space; a thumbnail tile (`role="option"`) does not, so Space presents from it. */
+const GRID_CONTROLS = 'button, a[href]';
+
 /** Keys typed into slide content (inputs, editors, arrow-driven widgets) must not turn the page. */
 const isEditable = (target: EventTarget) => target instanceof Element && target.closest(KEY_OWNERS) !== null;
+
+/** As `isEditable`, for a thumbnail grid: the grid's own listbox gives way, while a control inside a thumbnail does not. */
+const ownsKeysInGrid = (target: EventTarget) => {
+  const owner = target instanceof Element ? target.closest(KEY_OWNERS) : null;
+  return owner !== null && owner.getAttribute('role') !== 'listbox';
+};
 
 //
 // Root
@@ -139,7 +166,13 @@ const DeckRoot = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLElement>) => {
-      if (isEditable(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+      // Cmd (Ctrl elsewhere) belongs to the browser and app except on the two arrows that jump to the deck's ends.
+      const command = event.metaKey || event.ctrlKey;
+      if (
+        isEditable(event.target) ||
+        isAltChord(event) ||
+        (command && event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+      ) {
         return;
       }
       // Arrow keys inside a toolbar move between its buttons (roving focus), so only `f` applies there.
@@ -154,15 +187,37 @@ const DeckRoot = ({
         setStepState({ index: clamped, step: 0 });
         onIndexChange(clamped);
       };
+      const nextSlide = (nextStep = 0) => {
+        if (index < count - 1) {
+          event.preventDefault();
+          setStepState({ index: index + 1, step: nextStep });
+          onIndexChange(index + 1);
+        } else {
+          // Past the last slide there is nowhere to go, and its revealed steps must stay revealed.
+          event.preventDefault();
+        }
+      };
+      const previousSlide = () => {
+        event.preventDefault();
+        if (index > 0) {
+          setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
+          onIndexChange(index - 1);
+        }
+      };
       const forward = () => {
         if (step < clicks) {
           event.preventDefault();
           setStepState({ index, step: step + 1 });
-        } else if (index < count - 1) {
-          go(index + 1);
         } else {
-          // Past the last slide there is nowhere to go, and its revealed steps must stay revealed.
+          nextSlide();
+        }
+      };
+      const backward = () => {
+        if (step > 0) {
           event.preventDefault();
+          setStepState({ index, step: step - 1 });
+        } else {
+          previousSlide();
         }
       };
       switch (event.key) {
@@ -178,27 +233,20 @@ const DeckRoot = ({
           setFullscreen(!fullscreen);
           return;
         case 'ArrowLeft':
-          if (event.shiftKey) {
-            return go(0);
-          }
-          if (step > 0) {
-            event.preventDefault();
-            setStepState({ index, step: step - 1 });
-            return;
-          }
-          event.preventDefault();
-          if (index > 0) {
-            setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
-            onIndexChange(index - 1);
-          }
-          return;
+          return command || event.shiftKey ? go(0) : previousSlide();
         case 'ArrowRight':
-          return event.shiftKey ? go(count - 1) : forward();
-        case 'Home':
+          return command || event.shiftKey ? go(count - 1) : nextSlide();
         case 'ArrowUp':
+          return backward();
+        case 'ArrowDown':
+          return forward();
+        case '[':
+          return previousSlide();
+        case ']':
+          return nextSlide(Number.POSITIVE_INFINITY);
+        case 'Home':
           return go(0);
         case 'End':
-        case 'ArrowDown':
           return go(count - 1);
       }
     },
@@ -454,8 +502,8 @@ type DeckGridProps = {
  * Every slide as a thumbnail; the current one is selected, and a double-click opens it (or presents from it).
  */
 const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
-  ({ size, onMove, onOpen, onAddSlide, contextMenuId, ...props }, forwardedRef) => {
-    const { slides, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
+  ({ size, onMove, onOpen, onAddSlide, contextMenuId, onKeyDownCapture, ...props }, forwardedRef) => {
+    const { slides, count, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
     return (
       <div
@@ -463,6 +511,25 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
         ref={ref}
         tabIndex={-1}
         data-testid='presenter.deck'
+        // Capture, so one path handles these keys whether the grid or a listbox tile has focus.
+        onKeyDownCapture={(event) => {
+          onKeyDownCapture?.(event);
+          if (ownsKeysInGrid(event.target) || event.metaKey || event.ctrlKey || isAltChord(event)) {
+            return;
+          }
+          const present =
+            event.key === ' ' && !(event.target instanceof Element && event.target.closest(GRID_CONTROLS));
+          const next = gridTarget(event.key, index, count, event.currentTarget);
+          if (present || next !== undefined) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (present) {
+              setFullscreen(true);
+            } else if (next !== undefined) {
+              setIndex(SlideViewState.clamp(next, count));
+            }
+          }
+        }}
       >
         <SlideThemeProvider settings={themeSettings}>
           <SlideGrid
@@ -520,7 +587,7 @@ DeckPageNumber.displayName = 'Deck.PageNumber';
 
 /** Presents the deck from the current slide. */
 const DeckPlayButton = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const { setFullscreen } = useDeckContext('Deck.PlayButton');
   return (
     <Button.Root

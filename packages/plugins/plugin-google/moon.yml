@@ -7,23 +7,21 @@ tags:
   - ts-test-workerd
   - pack
 tasks:
-  check-module-structure:
-    # A provider plugin is headless: no React, no UI packages. Fail if the plugin entry ever reaches
-    # one, so the constraint is enforced rather than assumed.
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --export ./GooglePlugin
-      --to "@dxos/react-ui"
-      --to react
-      --conditions workerd,worker
-      --conditions node
-      --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
+  # The nightly Gmail sync canary (canary/README.md): the `sync-e2e` suite `test` skips. Uncached, since it
+  # writes to a real mailbox; `Check` never names it, and `runInCI: false` would refuse its own workflow.
+  mail-canary:
+    extends: test
+    args:
+      - canary/test/canary.test.ts
+      # Streams the logs as they happen, so a run that times out or is cancelled still shows how far it got.
+      - --disableConsoleIntercept
+    env:
+      VITEST_TAGS_FILTER: sync-e2e
+      # Identity recovery logs its device credential at info, and the job log is public: info only from the canary.
+      LOG_FILTER: warn,plugin-google/canary:info
     options:
-      timeout: 60
+      cache: false
+      # Without it moon holds the output until the task ends, and the logs of a run that hangs never show.
+      outputStyle: stream
+      # A backstop above `runTimeoutMinutes` in canary/canary.yml; `test` would stop the run after 10 minutes.
+      timeout: 3900

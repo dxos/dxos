@@ -18,6 +18,7 @@ import {
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
@@ -243,9 +244,8 @@ describe('Reactive Object with ECHO database', () => {
   test('object with nested reactive records can be added to the database', async () => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
 
-    // A nested struct value is a reactive record whose target prototype carries the per-object
-    // instance state (not `Object.prototype`); ingestion must accept it rather than reject it as a
-    // class instance.
+    // A nested struct value is a reactive record whose target prototype is the shared typed behaviour
+    // prototype (not `Object.prototype`); ingestion must accept it rather than reject it as a class instance.
     const obj = db.add(
       Obj.make(TestSchema.Example, {
         string: 'foo',
@@ -255,6 +255,16 @@ describe('Reactive Object with ECHO database', () => {
     );
     expect(obj.nested?.field).to.eq('bar');
     expect(obj.nestedArray?.map((item) => item.field)).to.deep.eq(['a', 'b']);
+
+    // Only the root swaps handler on `db.add`; its nested records must still read and write through the database.
+    Obj.update(obj, (obj) => {
+      invariant(obj.nested && obj.nestedArray);
+      obj.nested.field = 'baz';
+      obj.nestedArray[1].field = 'c';
+    });
+    expect(obj.nested?.field).to.eq('baz');
+    expect(obj.nestedArray?.map((item) => item.field)).to.deep.eq(['a', 'c']);
+    expect(Obj.getSnapshot(obj).nested?.field).to.eq('baz');
   });
 
   test('existing proxy objects can be passed to create', async () => {

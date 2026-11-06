@@ -63,15 +63,25 @@
       "types": "./dist/types/src/session/Harness.d.ts",
       "import": "./dist/lib/session/Harness.mjs"
     },
+    "./Legacy": {
+      "source": "./src/session/Legacy.ts",
+      "types": "./dist/types/src/session/Legacy.d.ts",
+      "import": "./dist/lib/session/Legacy.mjs"
+    },
     "./SessionLink": {
       "source": "./src/session/SessionLink.ts",
       "types": "./dist/types/src/session/SessionLink.d.ts",
       "import": "./dist/lib/session/SessionLink.mjs"
     },
-    "./SkillHooks": {
-      "source": "./src/session/SkillHooks.ts",
-      "types": "./dist/types/src/session/SkillHooks.d.ts",
-      "import": "./dist/lib/session/SkillHooks.mjs"
+    "./TrajectoryCache": {
+      "source": "./src/session/TrajectoryCache.ts",
+      "types": "./dist/types/src/session/TrajectoryCache.d.ts",
+      "import": "./dist/lib/session/TrajectoryCache.mjs"
+    },
+    "./TrajectoryStore": {
+      "source": "./src/session/TrajectoryStore.ts",
+      "types": "./dist/types/src/session/TrajectoryStore.d.ts",
+      "import": "./dist/lib/session/TrajectoryStore.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -98,8 +108,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "lodash.defaultsdeep": "catalog:"

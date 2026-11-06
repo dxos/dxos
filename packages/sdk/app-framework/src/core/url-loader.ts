@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -197,7 +198,14 @@ const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
       return result;
     }
   }
-  throw new Error('Remote module default export is not a Plugin or a zero-arg plugin factory.');
+  // A `Plugin.config` entry, or the manifest a build makes of one, exports `{ meta, make }`.
+  if (typeof exported === 'object' && exported !== null && 'make' in exported && typeof exported.make === 'function') {
+    const result: unknown = exported.make();
+    if (Plugin.isPlugin(result)) {
+      return result;
+    }
+  }
+  throw new Error('Remote module default export is not a Plugin, a zero-arg plugin factory or a plugin config.');
 };
 
 /**
@@ -226,6 +234,31 @@ const loadStylesheets = (
     }
   });
 
+/**
+ * Builds a plugin from the modules its manifest lists, without importing any code: each body is imported, through the
+ * asset cache, when its module activates.
+ */
+const fromDefinition = (
+  pluginId: string,
+  manifestUrl: string,
+  definition: Plugin.Manifest,
+  cache: PluginAssetCache.Cache,
+): Plugin.Plugin => {
+  // A local adapter is a chunk beside the body, relative to the manifest; a bare one resolves through the import map.
+  const loaders = Object.fromEntries(
+    definition.modules
+      .flatMap(({ url, adapter }) => [url, ...(adapter?.url.startsWith('.') ? [adapter.url] : [])])
+      .map((url) => [
+        url,
+        () =>
+          EffectEx.runPromise(cache.resolve(pluginId, new URL(url, manifestUrl).toString())).then(
+            (resolved) => import(/* @vite-ignore */ resolved),
+          ),
+      ]),
+  );
+  return Plugin.fromManifest(definition, loaders).make();
+};
+
 const loadFromManifest = (
   manifestUrl: string,
   cache: PluginAssetCache.Cache,
@@ -253,15 +286,18 @@ const loadFromManifest = (
         manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
       yield* cache.cache(manifest.key, cachedUrls).pipe(wrapCacheError);
     }
-    const entryUrl = manifest.dev
-      ? manifest.entryUrl
-      : yield* cache.resolve(manifest.key, manifest.entryUrl).pipe(wrapCacheError);
-    const mod = yield* Effect.tryPromise({
-      try: () => import(/* @vite-ignore */ entryUrl),
-      catch: (cause) =>
-        new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'import-failed' }, cause }),
-    });
-    const plugin = normalizePluginExport(mod);
+    const plugin = manifest.definition
+      ? fromDefinition(manifest.key, manifestUrl, manifest.definition, cache)
+      : normalizePluginExport(
+          yield* Effect.tryPromise({
+            try: () =>
+              EffectEx.runPromise(
+                manifest.dev ? Effect.succeed(manifest.entryUrl) : cache.resolve(manifest.key, manifest.entryUrl),
+              ).then((entryUrl) => import(/* @vite-ignore */ entryUrl)),
+            catch: (cause) =>
+              new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'import-failed' }, cause }),
+          }),
+        );
     if (!plugin.meta.profile.key || !plugin.meta.profile.name) {
       return yield* Effect.fail(
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'meta-missing' } }),

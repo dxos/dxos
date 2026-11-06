@@ -19,8 +19,80 @@ template, which builds with the dev shell of a vite server.
 
 | Term       | URI                         |
 |------------|-----------------------------|
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
 | `test`     | `org.dxos.mdl.test@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Features
+
+```mdl
+feat F-4: A project's specs
+  req F-4.1: A project owns any number of top-level specs (`Project.specs`), and each spec has at most one owner. A
+             plugin may make an object of its own type a spec's owner, such as a feature its spec breaks down.
+  req F-4.2: A spec (`@dxos/compute`'s `Spec`) holds a name, a description, its dialects and its document. The document
+             is the spec; any other view is a lens over it. A spec is part of its project, not a type of its own in a
+             space, so Create object does not offer it. Its document holds no front matter: the name is the spec's,
+             edited in the nav tree or the overview.
+  req F-4.3: A spec's dialects name the dialect specs whose blocks its document uses, as data on the spec, not in its
+             text. A spec with none uses the core and changelog blocks only.
+  req F-4.4: What a dialect reads out of a document is kept as typed annotations on the spec, defined by the plugin
+             that contributes the dialect.
+  req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
+             spec. It opens on the spec picked last, or the project's first.
+  req F-4.6: The nav tree lists each spec under the project's Specs branch at `project/<id>/specs/<spec>`, and a spec a
+             project owns opens as the project's article on that spec. Another plugin nests levels of its own beneath a
+             spec with `ProjectGraph.makeLevelNode`, at `…/specs/<spec>/<level>/…`, each node holding its object. A
+             level opens as the project's article narrowed to it, through the `ProjectSurface.Level` surface; its
+             Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
+             level's own spec, or offers Add spec when it has none.
+  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: the spec dropdown, the
+             view toggle and the Extensions menu on the Specs tab; Delegate to agent and the Gantt toggle on the Tasks
+             tab. The Overview has no tools there. It has no overflow menu and no button to start a session, which is
+             the assistant companion's.
+  req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
+             the spec uses, drawn by that plugin's `ProjectSurface.SpecView` surface. A package is a set of dialects a
+             plugin contributes (`ProjectCapabilities.SpecPackage`). The view toggle shows only when a spec has more
+             than one view. The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
+             checking one adds its dialects and unchecking removes them.
+  req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
+              block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
+              of its kind already in the text; text before the slash becomes the block's title.
+  req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
+              owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
+              and the list's `+` creates a spec, its row open for the name.
+  req F-4.12: A spec's text draws object links and embeds as a Markdown document does, and takes the editor extensions
+              other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
+              packages add their own editing on top.
+  req F-4.13: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
+              each with the peer's name.
+```
+
+```mdl
+feat F-5: A project's overview
+  req F-5.1: The overview opens on the project's name as its title, its status as a tag in the top right corner and
+             its description below, each edited in place with no edit button. The name and description start at the
+             same left edge as the section headings. The tag shows the status's capitalized name and its icon in its colour.
+  req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config, with more
+             space between two sections than between the rows inside one. Every section's content starts and ends on
+             the same left and right edges as its heading.
+  req F-5.3: Artifacts shows at most six, and Show all shows the rest. Its heading carries the add button, as the
+             Specs heading does.
+  req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled, and opens the Tasks tab
+             filtered to the tasks under it.
+  req F-5.7: The Specs heading carries the add button on its own row, and each spec is a row directly under it at the
+             same level of nesting as a Config group.
+  req F-5.8: An empty Notes invites notes, plans and next steps where they are typed, and an empty Artifacts or Specs
+             says the project has none yet.
+  req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
+             instructions, skills and context), then the groups other plugins declare.
+  req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
+             writable atom holding the project's value, which the overview's form renders and writes with no UI of the
+             plugin's own. Groups with the same id merge, their fields sorted by each field's order, and a field
+             whose `enabled` atom is false is hidden. A field may carry an action, a button at the end of its control
+             that sets its value.
+  req F-5.9: The project's name and description, the overview's Notes and the agent's instructions show the carets of
+             the other peers editing them, each with the peer's name.
+```
 
 ## QA
 
@@ -50,15 +122,15 @@ test QA-1: Build a plugin with an agent in the desktop app
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
       invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox", text: "World Clock" }
       capture: sandboxes
       expect: |
-        a "World Clock" sandbox exists, all five tasks are done, and the chat shows a "Load plugin" prompt whose
+        a "World Clock" sandbox exists, all five tasks are in `review`, and the chat shows a "Load plugin" prompt whose
         URL is `http://localhost:<port>/files/<key>/manifest.json`
       assert: return $result.results.length === 1
       note: |
@@ -90,12 +162,15 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
     The browser variant of QA-1. The agent works the same parent task and four subtasks in a Sandbox on EDGE, and the
     last one publishes the build with `dx registry publish --private`, authenticated by the account token the sandbox
     was given when the agent created it. Nothing is loaded by URL: World Clock appears in Plugins → Registry, listed
-    only to this identity, and the reader installs it there. Walked by the autocue flow
+    only to this identity, and the reader installs it there. The template seeds the plugin's `PLUGIN.mdl`, the
+    bundle ships it, and the registry opens it as the plugin's specification, so the spec round-trips from the
+    project to the registry. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/composer-plugin-registry.mjs`.
   actors: both
   status: verified
   given:
-    - an identity exists and is associated with an account on the EDGE it talks to
+    - an identity exists and is associated with an account on the EDGE it talks to; on dev or preview a `test+…@dxos.org` email
+      binds one with no invitation (the flow does this off camera)
     - space: a space is open (the default "My Space" is fine)
     - Composer is a production bundle (remote plugins install only from a bundle), built from a commit of `main` that
       pkg.pr.new has published or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one, and with a `dx` that has
@@ -107,8 +182,8 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to publish the plugin
       do: Watch the subtasks tick off.
@@ -128,6 +203,15 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
     - name: Open the Clocks page and add two timezones
       do: Click Clocks under the WORLD CLOCK group, then add two timezones with the plus card.
       expect: the page shows the map above three ticking clock cards and the plus card
+    - name: Open World Clock's specification from the registry
+      do: Open Plugins → Registry, click the World Clock card, then click Open Specification.
+      expect: |
+        the spec opens beside the plugin with its definitions sidebar listing the `Zone` and `Clock` types, the
+        `ClocksArticle` component and feature F-1, and its text is the `PLUGIN.mdl` the template seeded
+        (`worldClockSpec`, with the key the project was given)
+      note: |
+        The spec reaches the registry only through the published bundle: `dx.config.ts` names it with `spec`, and the
+        plugin contributes its text as a `pluginAsset`. Open Specification is absent when either is missing.
 ```
 
 ```mdl
@@ -172,11 +256,11 @@ test QA-3: Read a project's tasks as details
 test QA-4: Plan a project and hand its tasks to an agent
   desc: |
     The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
-    one in, and select tasks for the agent. Walked by the autocue flow
+    one in, assign one from its row, let a coding session take one, and select tasks for the agent. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/plan-a-project.mjs`; it stops short of delegating, so no model is
     needed.
   actors: human
-  status: passing            # 2026-10-09, recorded by autocue/plan-a-project.mjs
+  status: passing            # 2026-11-02, recorded by autocue/plan-a-project.mjs
   given:
     - an identity exists, on a fresh profile
     - space: the default space is open on its Home
@@ -191,16 +275,42 @@ test QA-4: Plan a project and hand its tasks to an agent
       expect: both fields keep what was typed
     - name: Break the work into tasks
       do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
-        from the Add task row, pressing Enter after each.
-      expect: the three tasks list in the order added
+        from the Add task row, pressing Enter after each. Before adding the last, set its priority to Low from the
+        row's Priority tag.
+      expect: |
+        the three tasks list in the order added. Each row shows its priority beside its status, ahead of the title,
+        and ends in an assignee placeholder; "Hire a roastery assistant" shows Low, and the Priority tag reads unset
+        again once it is added
     - name: Fill in a task
       do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
       expect: |
         the task opens in a "Task" tab beside the project, and its Activity records the priority and status
-        changes
+        changes. Its row in the list shows the title only, not the description
+    - name: Assign a task from its row
+      do: Point at "Order green beans", click the assignee placeholder at the end of its row, and pick yourself.
+      expect: |
+        the picker lists the people, then a separator and the agents. The row shows your avatar in place of the
+        placeholder, and the task does not open
+    - name: A coding session takes a task
+      do: |
+        From a coding session connected over MCP, claim "Hire a roastery assistant" with `tasks-update`, passing
+        status Started, `remoteSession` with the session's id, and the person `whoami` names as `assignee`.
+      invoke: |
+        org.dxos.operation.tasks.update {
+          task: <"Hire a roastery assistant">, status: "started",
+          assignee: { identityDid: $whoami.identityDid, name: $whoami.displayName },
+          remoteSession: { sessionId: "qa-4", title: "Hire a roastery assistant" }
+        }
+      expect: |
+        the row shows you as its assignee with the agent badge on your avatar, and its status is Started. Opening the
+        task shows one Assignee row naming you, delegated to Claude Code: the agent, not the session's title
+      note: Without `assignee` the claim is refused, since no person would answer for the task.
     - name: Select tasks for the agent
-      do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
-      expect: the two rows are selected and the button is enabled
+      do: |
+        Tick "Order green beans", then tick "Hire a roastery assistant", then point at "Delegate selected tasks to
+        agent".
+      expect: |
+        every row shows its checkbox, beside its mnemonic button. The two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
 ```
 
@@ -228,35 +338,65 @@ test QA-5: Showcase clip
 ```
 
 ```mdl
-test QA-6: Walk a spec's feature map
+test QA-9: Two peers edit a project's notes
   desc: |
-    A spec is the feature map the sidebar lists. A feature nests by owning a spec of its own, which the map zooms
-    into. Walked by the autocue flow `spec-map` against the SpecFeatures story, whose seed puts eight features on one
-    spec and gives "Provider sync" two subfeatures.
+    Two peers already sharing a space open the same project, and each sees the other's caret in the overview's Notes,
+    with the other's name. Automated at the end of the document-caret test, which shares its invitation and covers
+    the late joiner.
   actors: human
-  status: passing            # 2026-10-27, recorded by autocue/spec-map.mjs
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
   given:
-    - storybook serves plugin-projects
-    - the seeded spec "Inbox and agents" names a project and holds eight features
+    - host: a booted app with an identity, a space shared with the guest, and a project "Launch plan" in it
+    - guest: a second browser profile with its own identity, joined to the host's space
   steps:
-    - name: Open a spec's feature map
-      do: Open the spec.
-      expect: the canvas shows eight feature cards with an arrow per dependency
-    - name: Select a feature
-      do: Click the "Provider sync" card.
-      expect: the companion shows its description, requirements and its subfeatures IMAP and Gmail
-    - name: Zoom into the feature's own spec
-      do: Double-click the "Provider sync" card.
-      expect: the canvas shows its two subfeatures, and the trail reads All features › Provider sync
-    - name: Add a subfeature
-      do: Click New feature.
-      expect: a third card appears on the nested spec and the companion shows "New feature"
-    - name: Zoom back out
-      do: Click "All features" in the trail.
-      expect: the eight top-level cards return, and "Provider sync" counts three subfeatures
-    - name: View the map by status
-      do: Click the Kanban toggle.
-      expect: one column per status, the eight features sorted into them
+    - name: Open the project on the host
+      do: Open "Launch plan" on the host.
+      expect: the host shows the project's Notes
+    - name: Open the project on the guest
+      do: Open "Launch plan" on the guest.
+      expect: the guest shows the project's Notes
+    - name: Focus the notes on the host
+      do: Put the cursor in the host's Notes.
+      expect: the guest's Notes shows the host's caret with the host's name
+    - name: Focus the notes on the guest
+      do: Put the cursor in the guest's Notes.
+      expect: the host's Notes shows the guest's caret with the guest's name
+```
+
+```mdl
+test QA-10: Two peers see each other's carets in every project editor
+  desc: |
+    Alice and Bob share a project and each sees the other's named caret in the project's name and description, the
+    overview's Notes, the agent's instructions, the spec's prose, and a feature's name, description and requirement
+    inside the spec. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/project-cursors.mjs`,
+    recorded side by side.
+  actors: human
+  status: passing            # 2026-11-05, recorded by autocue/project-cursors.mjs
+  given:
+    - alice: a booted app named "Alice", with plugin-code on and a space holding a "Launch plan" project whose spec has
+      prose and one feature, "Landing page", with a description and one requirement
+    - bob: a second browser profile named "Bob", with plugin-code on, joined to Alice's space with "Launch plan" open
+  steps:
+    - name: Project name and description
+      do: Bob types in the project's description, then Alice puts her cursor at the end of its name.
+      expect: Alice's description shows Bob's caret and Bob's name shows Alice's, each with that peer's name
+    - name: Notes
+      do: Alice types in the overview's Notes, then Bob puts his cursor there.
+      expect: each Notes shows the other peer's caret with that peer's name
+    - name: Agent instructions
+      do: Both open Config > Agent; Bob types in the instructions, then Alice puts her cursor there.
+      expect: each instructions editor shows the other peer's caret with that peer's name
+    - name: Spec prose
+      do: Both open the Specs tab; Alice puts her cursor at the end of the prose, then Bob types after it.
+      expect: each spec shows the other peer's caret with that peer's name
+    - name: Feature name and description
+      do: Bob puts his cursor at the end of "Landing page"'s name, then Alice types at the end of its description.
+      expect: Alice's feature name shows Bob's caret and Bob's description shows Alice's, each with that peer's name
+    - name: Feature requirement
+      do: Alice types at the end of the feature's requirement, then Bob puts his cursor there.
+      expect: each requirement row shows the other peer's caret with that peer's name
 ```
 
 ## Changelog
@@ -282,4 +422,1794 @@ decision D-3: `Demonstrates` 0.2.0 takes any object as its source, and plugin-pr
   why: plugin-presenter depends on this plugin through plugin-studio, so this plugin cannot import the `Presentation` type without a dependency cycle.
   rejected:
     - Moving `Presentation` into a package both plugins import, which moves the deck's whole type module for one relation.
+```
+
+```mdl
+decision D-4: The Composer Plugin template's World Clock carries a spec that round-trips: the project that builds the plugin starts from it, and after the plugin is published to the private registry and installed, the registry's Open Specification shows it. QA-2 walks the round trip.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [QA-2]
+```
+
+```mdl
+decision D-5: The template seeds the spec's text and the agent writes it unchanged, rather than writing its own. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  why: A fixed text makes the round trip checkable, since the registry must show exactly what the project started from.
+  rejected:
+    - The agent writes the spec from the task text, which differs on every run, so nothing can be compared.
+```
+
+```mdl
+decision D-6: World Clock is published under the key `org.example.plugin.worldClock`, which the spec's `id` names. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  why: The registry attaches a spec to the plugin whose key matches the asset's `pluginId`, and the spec names that key.
+```
+
+```mdl
+decision D-7: Each project from the template gets its own plugin key, `org.example.plugin.worldClock` and six random hex digits, which the task text and the spec's `id` both carry. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-6
+  why: Registry keys are global, so the fixed key was claimed by its first publisher and refused to every later one as "owned by another identity".
+  rejected:
+    - Let the agent pick a key: the spec's `id` would then differ from the text the template seeded.
+```
+
+```mdl
+decision D-8: The minted key's suffix is eight random hex digits rather than six. Fills in [D-4].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-7
+  why: Six digits give 16.8 million keys, so a thousand projects collide with about a 3% chance, and a collision refuses the later publisher.
+```
+
+```mdl
+decision D-9: A project owns its spec: `Project.spec` is a ref that makes the project the spec's ECHO parent, and the spec no longer names the project. A project has at most one spec, and a breakdown spec belongs to its feature, so no project can own it. Replaces the part of [D-1] where a spec names its project.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [QA-6]
+  supersedes: D-1
+  why: Deleting a project takes its spec with it, and a project reads its spec directly instead of querying for the spec that names it.
+```
+
+```mdl
+decision D-10: A project article shows one level of the project's spec: the project's own, or the breakdown of a feature beneath it. Every level is a nav-tree node under the project's Spec branch, addressed by the lineage of features above it, and opens the same article with Overview, Spec and Tasks narrowed to that level. A level's Spec tab shows only its own spec, never a slice of its parent's, and offers Add spec while there is none. The map's controls sit in the article's toolbar, and its views are Canvas, Kanban and Document, the last offering to write the spec's document while it has none.
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: Three stacked toolbars (the project's, the map's and its trail) left little room for the map. A level as a node puts the trail in the plank heading, keeps the selected tab as the reader goes down, and makes a feature deep in the map feel like part of the project.
+```
+
+```mdl
+decision D-11: The Spec branch only groups the feature levels and is not selectable; the project's own spec is the project node's Spec tab. The map's views (Document, Canvas, Kanban, in that order) sit centred in the article's toolbar, and Add new feature and Add existing feature sit in its overflow, grouped above Create artifact. The Document view renders the spec's document as a section, which this plugin contributes as a plain MDL editor, so the view never depends on another plugin; it is also the article for a document no richer plugin renders. Refines [D-10].
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: The spec is a part of the project, not a page of its own, and the document is the spec, with the map and board drawn from it. Adding features is occasional next to reading them.
+```
+
+```mdl
+decision D-12: Every spec holds its document: `Spec` 0.2.0 makes `document` required, a new spec is made with one headed by its name, and the 0.1.0 migration gives each spec without one a new document. The Spec tab opens on the Document view. Importing a `.mdl` file into a spec writes the spec's own document and moves the file's path to it, unless the spec lies beneath the one already holding that path. Refines [D-1] and [D-11].
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: The document is the spec; a spec without one has nothing to read, and the map and board are drawn from it.
+```
+
+```mdl
+decision D-13: A feature level's nav-tree node holds the feature itself, so it gets every companion an object gets, such as the assistant, properties and debug. The project is found from the feature, through the specs above it. The article for a feature that a project tracks is that project's article narrowed to the feature; a feature no project tracks keeps its own article. The Spec branch holds no object, so it stays a group that opens nothing, and the deck leaves it out of a level's breadcrumbs. Refines [D-10] and [D-11].
+  date: 2026-10-30
+  by: user:wittjosiah
+  why: A feature is an object, so its level should behave like one; a level that wrapped the feature lost the assistant, properties and debug companions.
+
+decision D-14: A feature's assistant chat runs in its project's context. The chat binds the spec that lists the feature and the project that tracks it, along with the project's skills, context objects and instructions. A feature no project tracks binds only its spec.
+  date: 2026-10-30
+  by: user:wittjosiah
+  why: A question about a feature is usually a question about its spec and project, so the assistant should not have to be told where the feature lives.
+```
+
+```mdl
+decision D-15: A spec's document is where its features are kept. In ECHO the document holds an embed of each feature object, never a `feat` block, and the objects hold what each feature says. Importing a file maps each `feat` block into a feature object and puts the object's embed in place of the block. An embed is a block the editor does not let the reader enter, so its id cannot be corrupted, but it can be moved, reordered, copied and pasted. Features are added from the canvas or the board, or with a `/feature` command in the editor.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-1, F-2, F-3]
+  why: The document, the map and the board are views of the same features, so they must agree with each other rather than refer to one another.
+  rejected:
+    - Keeping the `feat` blocks in the document beside the objects, which then drift apart.
+```
+
+```mdl
+decision D-16: A spec's document enforces no structure. A spec may start as a wall of prose and gain structure over time; helpers such as slash commands, and later an auto-format, offer structure without requiring it. Refines [D-15].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-1.3, F-2.6, QA-7]
+```
+
+```mdl
+decision D-17: `Spec.features` stays. The spec is each feature's ECHO parent, so deleting a spec deletes its features, and a parent needs a ref; the text could count as one in principle, but it is too loose. Refines [D-15].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-1.1]
+```
+
+```mdl
+decision D-18: An exported `feat` block states the feature's status in a `status:` line. Deleting a feature's embed deletes the feature, and undo restores it. `DependsOn` stays an ECHO relation for now. Refines [D-15].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.3, F-3.3]
+```
+
+```mdl
+decision D-19: plugin-code's two-way file sync writes a spec's document through export and reads its file through import, so the file in the repository keeps its `feat` blocks. plugin-code's spec article draws the feature cards as well, through a capability this plugin contributes. Refines [D-15].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.8, F-3.5]
+```
+
+```mdl
+decision D-20: The document's embeds decide the spec's features. An embedded feature on no spec, deleted, or on a spec whose document no longer embeds it is claimed; one whose own spec's document still embeds it is a reference. A feature whose embed an edit took out moves to another spec whose document embeds it, or is deleted. A pasted embed of a feature the document already embeds becomes a copy. A feature the spec holds that its document never embedded is embedded at the end of its `## Features` section, or of the document. Fills in [D-15] and [D-17].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.4, F-1.5, F-2.4, F-2.5]
+  why: A cut and a paste across two documents arrive as two separate edits in either order, so a removal moves the feature when another document embeds it. Seeds, migrations and other plugins add features by ref alone, so dropping what the text does not name would delete them.
+  rejected:
+    - Removing from the spec every feature its text does not embed.
+```
+
+```mdl
+decision D-21: Importing a file takes a feature's name and description from it, as well as its requirements and status. Exporting writes against the file text last synced: the block of a feature that has not changed is copied as it was, a changed one has only its changed lines rewritten, and a block with no `status:` line reads as planned. Fills in [D-19].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1, F-3.4]
+  why: With the sync two-way, edits made in the app reach the file, so the file is current whenever it is read. Reprinting every block would flatten `when:`/`then:` requirements and wrapped lines across the repository on the first push.
+  rejected:
+    - Keeping a hand-edited name or description over the file's on import, which a pull would then push back over the file.
+```
+
+```mdl
+decision D-22: `Feature` 0.4.0 records where a feature was read in from as foreign keys, source `github.com/dxos/dxos` and id `path#F-n`, in place of its `specs` field. The migrations from 0.2.0 and 0.3.0 move the field and put the feature's embed in place of its `feat` block, or at the end of its spec's document when the block is gone. Fills in [D-15].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Import finds the feature a block was read in from by a foreign-key query, wherever the feature has moved since.
+```
+
+```mdl
+decision D-23: This plugin defines and contributes `ProjectCapabilities.SpecDocumentCodec`, at startup, and `ProjectCapabilities.SpecDocumentExtensions`, a factory of editor extensions rather than a hook, once the app is idle; plugin-code consumes both. Fills in [D-19].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.8, F-3.5]
+  why: plugin-code already depends on this plugin, which owns specs and their documents (org.dxos.plugin.code D-35). A sync pass before the codec arrives would read the file's `feat` blocks into the document as text. A factory can arrive after an editor opens, which rebuilds it, where a hook that arrives late breaks React's hook order.
+```
+
+```mdl
+decision D-24: A feature embedded in a spec's document is drawn as an editable section of the feature, and its card is the read-only version. The section shows the feature's form, so it can be edited in place, as if the document were all Markdown. An embed is deleted the way other embeds are: Backspace with the cursor after it. Refines [D-15] and [D-19].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.1, F-2.3, F-2.7, F-2.9]
+```
+
+```mdl
+decision D-25: The section holds the feature's core fields: name, description, requirements and status; subfeatures, dependencies and tasks stay in the companion. It is inert until it has attention, like other section embeds. After `/feature` the new section takes the cursor so it can be filled in place, and the companion does not open. Fills in [D-24].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.6, F-2.7]
+```
+
+```mdl
+decision D-26: `/feature` after a sentence (text ending in `.`, `!` or `?`) makes the sentence the new feature's description and puts the cursor in its name; after a phrase, the phrase is the name and the cursor goes to the description. Fills in [D-25].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.6]
+  why: A paragraph of prose is what a feature describes, not its name; making it the description is what turns unstructured text into a structured feature, and the name is then the one field left to write.
+  rejected:
+    - Always naming the feature by the line, which names a feature after a whole paragraph.
+```
+
+```mdl
+decision D-27: A feature contributes a `section` surface holding its form, and embeds in a spec's document draw it inside the same inert-until-attended frame as other section embeds, with Escape returning the cursor to the text. Fills in [D-24] and [D-25].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.7, F-2.9]
+  why: One form serves the spec's document, plugin-code's spec page and any Markdown document that embeds a feature; the companion's detail shares the same fields, so the two cannot drift.
+```
+
+```mdl
+decision D-28: A spec file synced from a GitHub repository is read into features embedded in its document, as a file synced from a local checkout is. Refines [D-19].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-3.5]
+```
+
+```mdl
+decision D-29: The codec makes a new spec of a document no object owns when a file read into it holds a `feat` block, and leaves a document of prose alone. The codec is `SpecText.codec`, which the capability contributes. Fills in [D-28].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.6]
+  why: Both syncs make a bare document for a file they find, with nothing that owns it; the codec only handles a spec's document, so without this a file's blocks would stay text. A file with no `feat` block has nothing to be a spec of.
+  rejected:
+    - Making plugin-code create the spec, which would put plugin-projects' notion of a spec into plugin-code.
+```
+
+```mdl
+decision D-30: A feature's section shows everything the feature's spec block would show if it were written in the document, including the features it depends on.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-2.10]
+```
+
+```mdl
+decision D-31: The section shows the block id above the form, and lists the features the feature depends on with the same add and remove actions as its article. Dependents, tasks and showcases stay in the article and the companion. Fills in [D-30].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.10]
+  why: The block id and the dependencies are what the request names that the form lacked; the other relations are not part of the block.
+  rejected:
+    - Embedding the whole article, which adds tasks, showcases and code links to every section in the document.
+```
+
+```mdl
+decision D-32: Import reads a `desc:` field as the description and keeps each field of a structured requirement (`when:`, `then:`, `errors:`) on a line of its own; export writes the description as a `desc:` field. A fence that holds several `feat` blocks is split into one fence per block. Fills in [D-30].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.10, F-3.1, F-3.3, F-3.7]
+  why: The section showed what import read, and import read a `desc:` field as prose starting with "desc:", joined a structured requirement's fields into one run-on line, and read only the first block of a fence, folding the rest into its last requirement.
+  rejected:
+    - Embedding a grouped fence's blocks inside the fence, where the editor does not draw embeds.
+```
+
+```mdl
+decision D-33: The features a feature depends on stay `DependsOn` relations and are not written into its `feat` block, which has no field for them. Fills in [D-30].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.10, F-3.3]
+  why: The `feat` dialect defines `desc` and `req` only, so a written `depends:` line would be outside the language every other spec reader uses.
+  rejected:
+    - Adding a `depends:` field to the `feat` dialect in this change.
+```
+
+```mdl
+decision D-34: QA-7 ends by making "Instant inbox" depend on "Search" from its section. Fills in [D-31].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-7, F-2.10]
+  why: The walk already has two features in one document, so a dependency between them is one more step, and it is the part of the section the earlier steps never reach.
+```
+
+```mdl
+decision D-35: Approve [D-33]: a feature's dependencies stay in ECHO only. An embed puts the structured ECHO object in the text in place of its fields as unstructured text, so the text duplicates none of its data.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-2.10, F-3.3]
+```
+
+```mdl
+decision D-36: Every feature and requirement in a spec is numbered in the app, as it is in the `.mdl` text, not only those synced from a file or added by a seed. A spec in Composer is the MDL text made structured and must stay fully compatible with it. Numbers might follow the features' positions and need not be stored, though they may need to be.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-1.6, F-2.10]
+```
+
+```mdl
+decision D-37: Ids are stored and never renumbered. A feature made in the app takes the next `F-n` after the highest in its spec when the spec is synced, and a requirement added to it takes the next id under the feature. A feature or requirement that moves or goes leaves the others' ids as they were. Fills in [D-36].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.6, QA-7]
+  why: Specs, decisions and `@feature` tags in code cite features and requirements by id, so an id must name the same thing after a reorder. The `feat` dialect stores ids in the text for the same reason.
+  rejected:
+    - Numbering by position, which renumbers every feature after one that moves and breaks what cites them.
+```
+
+```mdl
+decision D-38: An id the app gives a feature names no file until import reads its block in from one; import then maps that block to the feature numbered with its id. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1, F-3.2]
+  why: An id recorded with the file's path would mark the feature as read in from the file, so importing the file before its block was written out would delete a feature added in the app. An id never written back left a file pulled after an export with a block no feature matched, which import then made a second feature of.
+```
+
+```mdl
+decision D-39: Import reads a block without a `status:` line as planned, as export does, so a file that drops the line sets the feature to planned. Supersedes the import half of [D-21].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Import kept the feature's status when the line was gone, and export, reading the missing line as planned, then wrote the old status back, so the file and the feature never agreed.
+  rejected:
+    - Export omitting `status:` only for planned features while import keeps the old status, which leaves the same loop.
+```
+
+```mdl
+decision D-40: A `desc:` block scalar (`desc: |` or `desc: >`) is read as its prose, without the indicator. Fills in [D-21].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: Repository specs such as org.dxos.plugin.code's F-14 write long descriptions as block scalars, and the indicator was read in as the first character of the description.
+```
+
+```mdl
+decision D-41: `/feature` is offered only for a slash at the start of a line or after a space. Fills in [D-25].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.6]
+  why: A slash inside a path such as `packages/` offered the completion, and Enter at the end of the line then accepted it, turning the paragraph into a feature.
+```
+
+```mdl
+decision D-42: A feature holds one block of a file. When two blocks of a file name the same feature, the first keeps it and drops its other sources in that file, and each later block becomes a new feature. Fills in [D-15].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1]
+  why: A feature migrated from 0.3.0 can record two blocks of one file. Both blocks mapped to it, the later one's fields overwrote the earlier one's, and export wrote only the first embed back, losing the other block's text.
+  rejected:
+    - Merging the two blocks into one feature, which loses one block's name and requirements on export.
+```
+
+```mdl
+decision D-43: A spec is one document. The canvas, the board and any other view are lenses over it, such as canvas positions or a kanban pivot, and the view toggle shows only when a spec has more than one view.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-44: Each dialect is one bundle, and the blocks it defines map to plugin capabilities when the text is synced. Composer's editor stays fully compatible with MDL as plain text.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+```
+
+```mdl
+decision D-45: What a dialect adds to a spec is kept as ECHO annotations on the spec, so it is strongly typed.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.4]
+```
+
+```mdl
+decision D-46: A spec declares its dialects as structured data, not in its text, and the sync to the text form uses them. A presentation dialect's blocks are inserted as templates by slash commands such as `/slide`, with no views of their own.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+  why: The dialects of coding and of presentation are not mixed in one spec.
+```
+
+```mdl
+decision D-47: A project has several top-level specs. The project article's Specs tab picks the current spec from a dropdown in its toolbar. Only feature specs nest, so a presentation spec is a top-level spec. Replaces the part of [D-9] where a project has at most one spec.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.1, F-4.5]
+  supersedes: D-9
+```
+
+```mdl
+decision D-48: `Spec` is generic, so it moves to `@dxos/compute`.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-49: A spec level's nav path is `project/<id>/specs/<spec>/<feature>/…`, the same however many specs the project has.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.6]
+```
+
+```mdl
+decision D-50: A spec that lists no dialects uses the core and changelog blocks only.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.3]
+```
+
+```mdl
+decision D-51: The spec document folds into the spec: a spec's text is its own `content`, and `SpecDocument` goes away. Replaces the part of [D-12] where a spec refers to a separate document.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-1, F-4.2]
+  supersedes: D-12
+```
+
+```mdl
+decision D-52: `Spec` 0.3.0 (`org.dxos.type.projects.spec`) holds `name`, `description`, `dialects` and `content`, a `Text` it owns. `Project` 0.7.0 holds `specs`, a list of refs, in place of `spec`. The migrations move a 0.6.0 project's spec into the list, move a 0.2.0 spec's document's `Text` and file links onto the spec and delete the document, and make a spec of each `SpecDocument` no spec held. A migrated spec lists no dialects. Fills in [D-47], [D-48] and [D-51].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-4.2]
+  why: Moving the `Text` rather than copying it keeps its id, its history and the cursors anchored in it. No dialect registry exists yet to say which dialects an old spec used, and none listed reads as core and changelog only ([D-50]).
+  rejected:
+    - Copying the document's text into a new `Text` on the spec.
+    - Listing the `feat` dialect on every migrated spec.
+```
+
+```mdl
+decision D-53: The spec's features are the `org.dxos.projects.features` annotation, a list of feature refs in the document's order, and its canvas layout is the `org.dxos.projects.layout` annotation. The refs keep the spec each feature's ECHO parent, so deleting the spec still deletes its features. Fills in [D-45]. Replaces the part of [D-17] where the features are a field of `Spec`.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.1, F-4.4]
+  supersedes: D-17
+  why: The ids carry this plugin's namespace, which owns them, and leave `Spec` free of anything a dialect adds.
+  rejected:
+    - A generic `Spec.items` field, which would type every dialect's objects the same.
+```
+
+```mdl
+decision D-54: A breakdown spec takes the dialects of the spec its feature is on, when made by `op:CreateSpec` or when a feature is first broken down. Fills in [D-46].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.3]
+  why: A feature's breakdown is written in the same language as the spec it came from.
+```
+
+```mdl
+decision D-55: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project that already has a spec; a spec given to a project joins the end of its specs. The Specs tab opens on the spec last picked, kept in the project's view state, or the project's first spec, and Add spec opens the spec form and selects the new spec. Fills in [D-47].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.1, F-4.5]
+  why: The pick is a reader's place, like the selected tab, so it lives with the view state and not on the project.
+```
+
+```mdl
+decision D-56: The codec takes a spec only when its document embeds a feature or the file holds a `feat` block, and otherwise leaves the spec to the plain text sync. `ProjectCapabilities.SpecDocumentCodec` and `SpecDocumentExtensions` are renamed `SpecCodec` and `SpecExtensions` and take a `Spec`. Fills in [D-51]. Replaces [D-29], since no document exists apart from a spec.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.8, F-3.5, F-3.6]
+  supersedes: D-29
+  why: Every synced spec now passes through the codec. Taking a prose spec would skip the plain three-way text merge it had before.
+```
+
+```mdl
+decision D-57: A spec's nav-tree node holds the spec itself, as a feature level holds its feature, so it gets every companion an object gets. A spec a project owns opens as that project's article on the spec, with the feature companion beside it; a spec no project owns keeps its own article. The Specs branch holds no object and opens nothing. Fills in [D-47] and [D-49], following [D-13].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6]
+  why: A spec is an object, like a feature, so its level should behave like one rather than wrap the project and the spec.
+  rejected:
+    - A spec node holding the project and the spec, which loses the companions an object gets.
+```
+
+```mdl
+decision D-58: A QA walk shows a project's several specs working, so the change can be seen in the app.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-59: QA-8 opens a project holding a feature map and a spec of prose, lists both on the Overview, switches between them from the Specs tab's dropdown, adds a third spec from it, and ends on the feature map's canvas. Fills in [D-58].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: A prose spec next to a feature map shows that a spec need not hold features, and the canvas at the end shows the features still read from the spec after they moved into an annotation.
+```
+
+```mdl
+decision D-60: Creating a spec asks for its name, which is required and heads the new spec's document. Fills in [D-55].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: The spec form opened by Add spec had no field to show, so the dialog stayed empty and no spec could be added.
+  rejected:
+    - Creating an unnamed spec at once, which leaves a picker entry with no label.
+```
+
+```mdl
+decision D-61: The project article's toolbar is contextual: the tabs stay on the left, and what follows them changes with the tab shown.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-62: The toolbar has no button to start a session: that is the assistant companion's, which already has a place.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-63: Assign to agent and the Gantt chart toggle are relevant only to the task list, so they show only on the Tasks tab.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-64: Create artifact is not in the overflow menu, and it shows only on the Overview.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-65: On the Specs tab the toolbar holds the dropdown that picks the spec, the toggle between the spec's views, and a multi-select menu of the extensions the spec has.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7, F-4.8]
+```
+
+```mdl
+decision D-66: Adding a feature is not a toolbar action: the canvas has a plus button in each of its cells that adds a feature there.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-67: A spec has only the views its extensions give. A spec without the features extension, such as "Launch talk", has no canvas or kanban view.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.8]
+```
+
+```mdl
+decision D-68: The feature map's canvas has no up or home button. Those belong to a diagram that nests scenes within one object.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-69: The extensions are the spec's dialects. Plugins contribute the dialects a spec can use as `ProjectCapabilities.SpecDialect`, and the Extensions menu lists them and checks the ones in `Spec.dialects`. This plugin contributes the features dialect, `org.dxos.spec.features`, from the module that contributes its editor extensions. Fills in [D-65] and [D-67].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The dialect is what a spec already records about the blocks its text uses, so the menu edits data the spec has rather than a new field.
+  rejected:
+    - A separate list of enabled views on the spec, which could disagree with the dialects its text uses.
+```
+
+```mdl
+decision D-70: A spec in the features dialect offers its text, the canvas and the board; any other spec offers its text alone, and the view toggle hides. Its editor draws feature embeds as sections and offers `/feature` only in the dialect. Fills in [D-67].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8, F-2.6]
+  why: Without the dialect the text holds no feature blocks, so neither the map's views nor `/feature` apply to it.
+```
+
+```mdl
+decision D-71: Adding a feature to a spec, from the canvas, `/feature`, an operation or a file read in, turns the features dialect on. `FeatureMap.make` makes a spec in the dialect, and the `Spec` 0.2.0 migration gives it to every spec it migrates, all of which were feature maps. Fills in [D-67].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: An agent adds features through the feature operations without knowing about dialects, and a spec holding features must keep its map.
+  rejected:
+    - Refusing to add a feature to a spec outside the dialect, which would make every agent check the dialect first.
+```
+
+```mdl
+decision D-72: The canvas's plus sits in each empty cell next to the cards, or in the centre cell of an empty map, faint until pointed at, and opens a menu of New feature and Add existing feature, which place the feature in that cell. Placing it first fixes every card where it is drawn, since a new card changes the automatic layout's extent and would shift the cards around that cell. The canvas shows even when the spec holds no features. Fills in [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.9]
+  why: Only the button takes the pointer, so the empty cells still pan and select; one button per cell with a menu keeps the grid quiet.
+  rejected:
+    - A plus shown only while the pointer is over a cell, which needs the cells to take the pointer and so stops panning from them.
+    - Two buttons per cell, which doubles the marks on the grid.
+```
+
+```mdl
+decision D-73: The board offers no way to add a feature: its empty state points to the canvas and the spec's text. Fills in [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.9]
+  why: Adding moved off the toolbar, and a new card's column is its status, which the companion sets once it is named.
+```
+
+```mdl
+decision D-74: The project tour drops its step on starting a session from the toolbar. Fills in [D-62].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The step pointed at the button D-62 removes.
+```
+
+```mdl
+decision D-75: QA-8 also checks each tab's tools, that "Launch talk" has no view toggle until Features is checked in Extensions, and that the canvas adds a feature in an empty cell and has no up or home button. Fills in [D-61] to [D-68].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 is the walk of a project's specs, so it carries the toolbar and the views those decisions change.
+```
+
+```mdl
+decision D-76: The extension is the Software package: a plugin contributes a package of extensions for the software dialect, and features are one part of that dialect, not the extension itself.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.8]
+```
+
+```mdl
+decision D-77: The canvas's plus is on every cell, not only the cells around the existing cards, and shows only on hover.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-78: A sample video dialect, with a "Launch video" spec, shows that specs are extensible, in place of the release notes spec. The video dialect has no other views for now, but has slash commands for its different parts.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8, F-4.10]
+```
+
+```mdl
+decision D-79: The software dialect offers a slash command not only for a feature but for its other pieces too. Those that create no objects insert the block's template structure inline.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.10]
+```
+
+```mdl
+decision D-80: Plugins contribute packages as `ProjectCapabilities.SpecPackage`, each an id, a label and its dialects, in place of `ProjectCapabilities.SpecDialect`. The software package holds the features, app, plugin, QA and SQL dialects (`FeatureMap.SOFTWARE_DIALECTS`). The Extensions menu checks a package when the spec uses all its dialects; checking adds the missing ones and unchecking removes them all. Fills in [D-76].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-69
+  affects: [F-4.8]
+  why: The spec still records its dialects, which say what its text uses, while a person turns a plugin's whole set on or off.
+  rejected:
+    - A menu entry per dialect, which leaves a person to know which dialects go together.
+    - A field on the spec naming its packages, which could disagree with its dialects.
+```
+
+```mdl
+decision D-81: Adding a feature to a spec, from the canvas, `/feature`, an operation or a file read in, gives it the whole software package. `FeatureMap.make` makes a spec with the package, and the `Spec` 0.2.0 migration gives it to every spec it migrates. Fills in [D-76].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-71
+  affects: [F-4.8]
+  why: Features are one part of the software dialect, so a spec holding them is a software spec, and the menu shows the package checked.
+  rejected:
+    - Adding the features dialect alone, which leaves the package unchecked in the menu.
+```
+
+```mdl
+decision D-82: A package's editor extensions contribute slash commands to the `slashCommand` facet, and one completion lists every contributed command. `blockTemplate` makes a command that writes a fenced `mdl` block with its fields empty, numbered after the blocks with its prefix, and text before the slash becomes its title. The software package adds `/type`, `/op`, `/scenario` (`T-n`), `/test` (`QA-n`) and `/table`. An editor rebuilds its extensions from the dialects it renders. Fills in [D-78] and [D-79].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.10, F-2.6]
+  why: One completion keeps every package's commands in one list, and numbering after the existing blocks keeps ids unique in the text.
+  rejected:
+    - A completion per package, which would show competing lists for one slash.
+```
+
+```mdl
+decision D-83: The plus shows in the empty cell under the pointer, anywhere on the grid, and stays while its menu is open. It opens a menu of New feature and Add existing feature, which place the feature in that cell, first fixing every card where it is drawn, since a new card changes the automatic layout's extent. The canvas shows even when the spec holds no features. Fills in [D-77].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-72
+  affects: [F-4.9]
+  why: The canvas reads the pointer from its scene view, so the cells never take the pointer and still pan and select.
+  rejected:
+    - A faint plus drawn in every cell at once, which fills an unbounded grid with marks.
+```
+
+```mdl
+decision D-84: The sample Video package is a testing plugin, `VideoPackagePlugin`, contributing the video dialect (`org.dxos.spec.video`) with `/scene` (`SC-n`), `/shot` (`SH-n`), `/voiceover` (`VO-n`) and `/caption` (`CA-n`) and no views. QA-8 checks Software on "Launch talk", adds "Launch video", checks Video on it and writes a scene with `/scene`. QA-6 and QA-8 point at an empty cell before clicking its plus. Fills in [D-76] to [D-79].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-75
+  affects: [QA-6, QA-8]
+  why: A package from a plugin other than this one shows that the menu and the slash commands are open to any plugin.
+  rejected:
+    - Contributing the video package from this plugin, which would ship a sample in the product.
+```
+
+```mdl
+decision D-85: Specs are a part of their project, not a separate top-level user type, so the Create object dialog does not offer Spec. Add spec opening the generic Create object form with the type set to Spec is fine.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2]
+```
+
+```mdl
+decision D-86: A spec in Composer has no front matter: what front matter holds goes into the object's structured data. Its name is the object's name, edited in the nav tree or the overview, and the rest of the front matter is editable from the overview. Text that already starts with front matter stays; newly created specs stop getting it.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.2, F-4.11]
+```
+
+```mdl
+decision D-87: The project overview shows each spec as a nested form within the project's form, where its data is edited. The form edits the spec in place, and a button on it opens the spec on the Specs tab; there is no spec overview yet.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-88: `Spec` drops its user-type annotation, so neither Create object nor the nav tree's type sections list it; Add spec still opens the Spec form, which the dialog resolves from every create entry. `Spec.make` starts with empty text and `FeatureMap.make` with `## Features` and its embeds; `Spec.makeContent` goes. Fills in [D-85] and [D-86].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.2]
+  why: The annotation is what marks a type as one a person creates and browses on its own in a space.
+  rejected:
+    - Filtering Spec out of the dialog's list alone, which would leave it in the nav tree's type sections.
+    - Stripping front matter from existing texts, which [D-86] leaves as they are.
+```
+
+```mdl
+decision D-89: Each spec's form edits `name` and `description`, picked from the `Spec` schema, and reads them once per spec, as the project's form does. Below it are the feature counts and Open spec, which shows the spec on the Specs tab. Fills in [D-87].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.11]
+  why: A form per spec keeps the overview one form of forms, and a name and description are the fields a spec of any dialect has.
+  rejected:
+    - Keeping the name as a button that opens the spec, which leaves nowhere to edit it.
+```
+
+```mdl
+decision D-90: QA-8 expects a form per spec with Open spec on the Overview, and an empty document for a new spec. Fills in [D-86] and [D-87].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 walks the overview and Add spec, which those decisions change.
+  rejected:
+    - A separate test for the overview's forms, which would repeat QA-8's first step.
+```
+
+```mdl
+decision D-91: The project's overview is one form built from the form primitives off the schema, with nothing custom to specs: the specs nest within it inside a boundary, as nested forms do by default, and are a list whose items are collapsed and expand to show each spec's fields, using the forms' own handling of lists.
+  date: 2026-10-30
+  by: user:wittjosiah
+  supersedes: D-87
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-92: The spec shown for "Inbox and agents" mixes unstructured prose in with its structured features, rather than only inlining the features, and the demo shows the spec evolving from less structure to more, such as the `/feature` slash command.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-93: Add spec keeps its dialog only if it is the global Create object dialog and it works without Spec being a user type. Otherwise the dialog and the dropdown's Add spec go, and new specs are added only from the overview.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.5]
+```
+
+```mdl
+decision D-94: Both conditions of [D-93] hold, so Add spec stays: it opens the global Create object dialog, which pins to the top of the screen in the app and is centred only in storybook, and the dialog resolves the Spec form from every create entry, not only user types.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.5]
+  why: `OpenObjectForm` opens the shared object form dialog with `blockAlign: 'start'`, and the SpecPicker story adds a spec through it with Spec not a user type.
+  rejected:
+    - Dropping the dropdown's Add spec as well, which [D-93] asks for only if a condition fails.
+```
+
+```mdl
+decision D-95: `Project.specs` carries `FormCreateAnnotation` for Spec in place of hiding it from forms, and `Spec` a `FactoryAnnotation` that makes its text. react-ui-form's array field again handles an owned array of refs: its `+` creates the target through the form's `onCreate`, and each row renders the target inline as a collapsible group named by the target's label ("Untitled" while empty), folded unless the row was just created. The overview's form is controlled by the project and writes back only the edited path. The feature counts and Open spec go. Fills in [D-91].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-89
+  affects: [F-4.11]
+  why: The owned-ref array is the form's own list for objects a parent owns; the Ark cutover dropped its add and inline rows, so restoring them serves any schema. A controlled form shows a spec added from the Specs tab, which a form read once would overwrite.
+  rejected:
+    - Re-annotating `specs` only in the overview's picked schema, a second schema for one form.
+    - Keeping the counts and Open spec beside each row, content the form primitives do not have.
+    - Deleting a spec when its row is removed; removing a row only drops the ref, as for any array.
+```
+
+```mdl
+decision D-96: The seeded "Inbox and agents" opens with a paragraph and a list of goals, embeds its features under Accounts, Mail and Work with notes between them, and ends with two ideas. QA-8 unfolds a spec and types its description, adds "Launch video" with the overview's `+`, and turns the idea "A morning digest of what agents did overnight" into a feature with `/feature`. Fills in [D-91] and [D-92].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-90
+  affects: [QA-8]
+  why: A phrase on a line of its own shows `/feature` naming a feature from prose, and the canvas then counts it.
+  rejected:
+    - Seeding the prose for every story that uses the sample features, which the other stories' checks do not need.
+```
+
+```mdl
+decision D-97: An object that links a spec document the `Spec` 0.2.0 migration deletes, such as a code project's `spec`, links the spec that took the document's text in its place. Refines [D-52].
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-98: Before the migration deletes a held document, it finds every object that refers to the document and points each such ref, in a top-level field or a list of refs, at the spec. It does this through references in the database, not a list of the types that may link a document, so plugin-projects needs no knowledge of code projects. Fills in [D-97].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Plugins that hold refs to specs depend on plugin-projects, not the other way round, and a reverse-reference query finds their objects without naming their types.
+  rejected:
+    - A `CodeProject` migration in plugin-code, which runs after the document is gone and cannot tell which spec held it.
+```
+
+```mdl
+decision D-99: The feature map is code-specific, so it lives in plugin-code, and plugin-projects keeps only what is generic. The whole feature stack moves: the feature map and its views, the software package, the `Feature` type, its articles, operations, task links and migrations.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [F-1, F-2, F-3, F-4, QA-6, QA-7, QA-8]
+```
+
+```mdl
+decision D-100: A plugin adds views to a spec by contributing `ProjectCapabilities.SpecView` for its dialects and drawing them through the `ProjectView.SpecView` surface. The Specs tab's toggle lists the text first, then each view the spec's dialects allow. Fills in [D-99].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The canvas and the board were this plugin's own views; a capability and a surface let plugin-code supply them without this plugin naming features.
+  rejected:
+    - Keeping the canvas and board toggles here and hiding them without plugin-code, which leaves feature code in this plugin.
+```
+
+```mdl
+decision D-101: Another plugin nests levels beneath a spec with `ProjectGraph.makeLevelNode`, and a level opens as the project article narrowed to it through the `ProjectView.Level` surface, with the nesting plugin's `ProjectView.LevelOverview` surface as its Overview. The project a level belongs to is the nearest project among its ECHO parents. Fills in [D-99].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6]
+  why: A feature's level is a depth of the project's article; the article stays here and the feature fills in what it shows at that depth.
+  rejected:
+    - Exporting the project article's component for plugin-code to render, which plugins reach only through surfaces.
+```
+
+```mdl
+decision D-102: At the project's own level, Add spec on an empty Specs tab opens the object form for a new spec, as the overview's `+` does. At a level another plugin nests, that plugin decides what Add spec makes. Fills in [D-99].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6]
+  why: The button used the feature operation that makes a spec, which is no longer this plugin's.
+```
+
+```mdl
+decision D-103: plugin-code's feature migrations list this plugin's `Project` 0.6.0 migration first, the same object this plugin contributes, so it runs before the spec migrations in whichever order the plugins load. Fills in [D-99].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The client runs every plugin's migrations as one list, deduplicated by identity, in an order this plugin does not control.
+  rejected:
+    - Leaving the order to plugin load order, which would run the spec migrations against projects not yet migrated.
+```
+
+```mdl
+decision D-104: The `SpecView`, `Level` and `LevelOverview` surface roles are role tokens in `ProjectSurface`, beside `Settings`, and the plugins that render them declare them by token in their `dx.config`. Fills in [D-100] and [D-101].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6, F-4.8]
+  why: Role tokens live in `ProjectSurface`, apart from the view state in `ProjectView`, and a plugin declares the roles it renders by token rather than by string.
+```
+
+```mdl
+decision D-105: A task's assignee is the person who answers for it, and a separate delegate is the agent doing the work, as in Linear. Handing tasks to an agent sets the delegate and leaves the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+```
+
+```mdl
+decision D-106: A coding session that picks up a task over MCP makes the person it works for the assignee and itself the delegate, and the project skill says so.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-107: The task row takes Linear as its model: priority beside status, an assignee control on every row, the estimate only when set, and selection checkboxes that show on hover.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-108: A session's claim names the person from `whoami` as `assignee`, and `tasks-update` refuses a claim that would leave no person as the task's assignee. Fills in [D-106].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The operation cannot read the identity an MCP grant was issued to, so the session has to say whom it works for.
+  rejected:
+    - Leaving the assignee empty and the session as delegate, which leaves nobody to review the work.
+```
+
+```mdl
+decision D-109: QA-4 assigns a task from its row's placeholder, has a coding session claim a task through `tasks-update`, and checks that selection checkboxes show on hover until one is ticked. "Assign to agent" is "Delegate to agent" throughout. Fills in [D-105] to [D-107].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+  why: QA-4 walks a project's task list without a model, and both the row's assignee control and a session's claim work without one.
+```
+
+```mdl
+decision D-110: A task's assignee and its delegate are one picker, in the task row and in the task's properties: the people, then a separator and the agents. Picking an agent delegates the task to it and makes you the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-111: Picking a person in the assignee picker takes the task back from any agent, and No assignee clears both. An agent is listed by its name, with Default agent for the reader's default, and the task row's menu no longer offers delegation. Fills in [D-110].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The picker holds one answer to who has the task, so a person picked over an agent replaces it rather than sharing the task with it.
+  rejected:
+    - Keeping the delegate when a person is picked, which leaves an agent at work for someone who did not hand it the task.
+```
+
+```mdl
+decision D-112: QA-4 sets the last new task's priority from the Add task row's Priority pill before adding it, and expects the pill to read unset once the task is added.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The Add task row's properties are pills on a schema form now, and no other step sets a property before the task exists.
+```
+
+```mdl
+decision D-113: A task delegated to an agent names the agent ("delegated to Claude"), not the title of the session or run doing the work.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-114: Rows in a task list do not show task descriptions; a description shows only in the task's detail view, as in Linear, so the list stays compact and easy to scan.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-115: The Add task row is one form to create a task: the title and description are fields of the same form as the task's other properties.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-116: An agent is named by its harness's name, which for a coding session is "Claude Code". Fills in [D-113].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: A session records the harness it runs in, not the model, and the model can change within a session.
+  rejected:
+    - The model's name, which a session does not record.
+```
+
+```mdl
+decision D-117: Show task descriptions stays a setting, off by default, for a reader who wants descriptions in rows. Fills in [D-114].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A reader who turned the setting on keeps the rows they chose; everyone else gets title-only rows.
+  rejected:
+    - Removing the setting, which would take descriptions away from a reader who asked for them.
+```
+
+```mdl
+decision D-118: QA-4 expects the delegate to read "Claude Code", and a task given a description to keep a title-only row. Fills in [D-113], [D-114] and [D-116].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Fill in a task is the one step that gives a task a description, and A coding session takes a task the one that delegates.
+```
+
+```mdl
+decision D-119: Tasks stored with an agent as their assignee are left as they are. They are not migrated; each changes when a person reassigns it.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-120: When an agent hands a task back and finishes it, the task goes to review, not done.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-121: A task assigned to an agent with a person among its reviewers reads as the agent's own task, and its finish waits on that reviewer. Fills in [D-119].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Such a task is valid as stored, and the review gate already holds its finish for the named reviewer.
+  rejected:
+    - Reading it as a delegation from the reviewer, which guessed at intent and changed how a task read after a write.
+```
+
+```mdl
+decision D-122: Picking an agent for a task a person already answers for keeps that person as the assignee; you become the assignee only of a task no person answers for. Fills in [D-110].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Replacing the assignee would take the task away from whoever answers for it just because someone else started the agent.
+  rejected:
+    - Always making the person who picks the agent the assignee.
+```
+
+```mdl
+decision D-123: An agent that finishes a task marks it for review, not done.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-124: A task has no reviewers. The assignee reviews the work when a delegate finishes it. A task can also be set to review while it waits on review outside the app.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-121
+```
+
+```mdl
+decision D-125: Any finish without a person's sign-off lands in review when a person answers for the task, before or after the edit; only an agent's own task closes on its done. Fills in [D-123] and [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A write cannot tell an agent from a person, and a person's own done already signs off through AcceptTask. Gating on the delegate alone let an agent clear it and then finish.
+  rejected:
+    - Sending every agent finish to review, which would leave an agent's own checklist items unable to close.
+```
+
+```mdl
+decision D-126: A task created already finished goes to review only when it is created delegated. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The create form lets a person pick Done for their own task, and creating a task cannot tell who is asking.
+```
+
+```mdl
+decision D-127: A task created already finished goes to review whenever a person answers for it, as an edit does. The create form signs off a person's own Done through AcceptTask. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-126
+  why: Relaxing the create operation let an agent create a person's task already done; the form, not the operation, knows a person is asking.
+```
+
+```mdl
+decision D-128: A sub-task filed under a delegated task, naming no assignee or delegate of its own, joins the parent's delegation: it takes the parent's assignee and delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A delegated tree is one unit of work; a sub-task the agent files while working it would otherwise close on the agent's done with no sign-off.
+```
+
+```mdl
+decision D-129: A task in review satisfies the tasks that depend on it, so dependents start while the person who answers for it has not yet signed off.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-130: A sub-task filed under a delegated task, naming no assignee or delegate of its own, takes the parent's person assignee and no delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-128
+  why: The person who answers for the tree is what makes the sub-task's finish wait on sign-off. Copying the delegate wrote half a claim: a chat delegate's checklist never listed the task, and a finished parent's session got new work.
+  rejected:
+    - Running the claim cascade at creation, which would also have to add the task to a chat's checklist and decide whether a finished parent's claim is still live.
+```
+
+```mdl
+decision D-131: A sub-task filed under a delegated task with no assignee of its own takes the parent's person assignee, whether or not it names a delegate; the owner check then runs on that result. Fills in [D-130].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session filing a step it holds was refused for want of an assignee its parent already had, and the retry named whoever `whoami` returned, splitting the tree between two people.
+```
+
+```mdl
+decision D-132: A coding session's claim (`tasks-update` with `remoteSession`) names its person only on a task nobody answers for yet. On a task with a person assignee, a different person is ignored; clearing the assignee or naming an agent is refused. Fills in [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session passes the person it works for on every claim, so a claim on someone else's task reassigned it and sent its finish to the wrong reviewer.
+```
+
+```mdl
+decision D-133: A delegate must be an agent (`role: assistant`). Naming the task's own assignee as delegate stays allowed, since that hands the task back. Fills in [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A person stored as delegate drew an agent badge on a task no agent works, and the supervisor and review gate read the field as an agent.
+```
+
+```mdl
+decision D-134: A session's check-in lists only its unfinished tasks: a task in review waits on its person, not on the session. Fills in [D-123].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Every finish a person answers for lands in review, so the reminder of open work listed finished tasks until someone signed them off.
+```
+
+```mdl
+decision D-135: Any agent claim, a coding session's or an edit naming an agent as delegate, names its person only on a task nobody answers for yet; a session's delegate is always stored as an agent. Supersedes [D-132] and fills in [D-133].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-132
+  why: Keyed on `remoteSession` alone, the rule missed the skill's other documented claim (naming the session as delegate), and a caller's role overrode the session's.
+```
+
+```mdl
+decision D-136: A request for a sub-agent is exactly `{ role: 'assistant' }`, one predicate (`Task.isSubAgentRequest`) read by the supervisor and the planning tool's unassign. An agent named by a session, identity or contact is a concrete delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Three readings disagreed, and the widest let a conversation's unassign release another agent's claim.
+```
+
+```mdl
+decision D-137: A sub-task filed with a delegate under any parent a person answers for takes that person as assignee when it names none. Fills in [D-131].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Under D-130 the step below a delegated task is owned but not delegated, so a session filing a held step one level further down was refused again.
+```
+
+```mdl
+decision D-138: A session's check-in drops a task in review only when a person answers for it; the session's own task held in review stays listed, since nobody else will close it. Supersedes [D-134].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-134
+```
+
+```mdl
+decision D-139: An agent claim on a step nobody answers for takes the person who answers for its tree's root, before the person the claim names; the claim cascade then carries that person to the tree. Fills in [D-135].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Asked of the claimed step alone, the rule kept the session's person on an unowned step of someone else's tree, so one unit of work answered to two people.
+```
+
+```mdl
+decision D-140: A step answers to its own person, else the nearest person up its tree. One `Task` helper owns that rule, and creating a task, an agent's claim, the claim cascade and a session's question each store its result on the step.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [Task]
+```
+
+```mdl
+decision D-141: A sub-task filed with no assignee takes the person its parent answers to (`Task.answerer`), whether or not the tree is delegated; one filed with a delegate takes that person over one the caller names. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-137
+  why: Asked only under a delegated parent, a step two levels down had no person and closed without review.
+```
+
+```mdl
+decision D-142: An agent claim takes the person the claimed step answers to, so an owned middle step wins over an unowned root; the claim cascade gives each member with no person the nearest one up its own tree, and the claim's person only where there is none. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-139
+  why: Asked of the root, a claim under an owned middle step fell through to the session's person and wrote them over the whole tree.
+```
+
+```mdl
+decision D-143: A session's question (`AskQuestion` with `remoteSession`) is a claim: the task takes the person it answers to and the session holds its tree. On a task no person answers for it is refused before anything is filed. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The question path delegated the task with no person behind it, so its finish closed unreviewed and the rest of the tree stayed unclaimed.
+  rejected:
+    - Filing the question without delegating, which leaves the session's check-in blind to the task it is blocked on.
+```
+
+```mdl
+decision D-144: An agent claim on a task a person answers for keeps that person and ignores a different person the edit names, for a direct delegate edit as for a session; the operation description says so, and a reassignment goes in its own edit. Fills in [D-142].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session also claims by naming itself as delegate and passes `whoami` every time, so the edit cannot tell a deliberate reassignment from that habit.
+  rejected:
+    - Refusing the edit when the named person differs, which fails every session working someone else's task.
+```
+
+```mdl
+decision D-145: An agent claim writes the person only on a step with no person of its own; a step that has one is left unwritten. A claim that also re-parents the step takes the person of the tree it moves into. Fills in [D-142].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Writing the same person back on every claim raced a person's reassignment made on another replica, and a re-parenting claim read the old tree while its cascade wrote the new one.
+```
+
+```mdl
+decision D-146: Delegating a task to a chat (`DelegateTaskToChat`) and the planning tool's claim each give a step with no assignee the nearest person up its tree; the delegating person fills in only where the tree has nobody. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Both still read the step alone, so the delegating person, or nobody, answered for a step of someone else's tree, and the agent's finish skipped review.
+  rejected:
+    - Making `DelegateTaskToChat` claim the whole tree as `UpdateTask` does; a person delegates the tasks they chose.
+```
+
+```mdl
+decision D-147: The planning tool's claim gives the nearest person up the tree to a step another agent was left holding, as every other claim does; only a task the conversation made for itself is left as it is. Fills in [D-146].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Keyed on any assignee, the planning tool left a legacy agent-held step unowned where `UpdateTask`, `AskQuestion` and `DelegateTaskToChat` gave it the tree's person.
+```
+
+```mdl
+decision D-148: Who a step answers to is `Task.owner`, with no second helper: a step with no person of its own takes its parent's `Task.owner`, which the stored rule has already written there.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-140
+  affects: [Task]
+```
+
+```mdl
+decision D-149: Where [D-141], [D-142], [D-146] and [D-147] give a step the nearest person up its tree, each now gives it its parent's person. The claim cascade still runs root first, so a member reads a parent it has just written; a member whose parent has no person takes the claim's person. Fills in [D-148].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Task]
+  why: Every writer stores the person on each step it touches, so one level up already holds the answer a walk would find.
+  rejected:
+    - Keeping a walk inside `Task.owner`, which makes every read inherit and leaves the stored person optional.
+```
+
+```mdl
+decision D-150: Selection checkboxes show on every row at all times, beside the mnemonic button, in place of the hover-only checkboxes of [D-107]. The caret and the indent guides stay ahead of them.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-4]
+  supersedes: D-107
+```
+
+```mdl
+decision D-151: QA-1 expects the agent to leave its five tasks in `review`, as QA-2 does, since the delegating person answers for each of them. Fills in [D-123] and [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-1]
+```
+
+```mdl
+decision D-152: `Task` 0.7.0 holds `delegate` in place of `reviewers`. The migration from 0.6.0 makes the reviewer of a task assigned to an agent its assignee, and the agent its delegate. Fills in [D-124].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [Task]
+  supersedes: D-119
+```
+
+```mdl
+decision D-153: The migration takes the first person among a task's reviewers, drops the reviewers of a task a person is assigned, and takes a 0.5.0 task straight to 0.7.0 with the same conversion. It runs before the 0.5.0 pass, so that pass finds every migrated task at 0.7.0. Fills in [D-152].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Task]
+  why: The assignee of a delegated task signs it off ([D-124]), so a second person reviewing a person's own task has no field to go to.
+  rejected:
+    - Chaining 0.5.0 through a frozen 0.6.0 type, which would make the hierarchy and set passes check for two task versions.
+
+decision D-154: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-155: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-154] and [D-45].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: This plugin is on by default and must migrate every project, so it writes the annotation and has to import it. plugin-github and plugin-claude are not on by default, and either one importing the other's annotation would make one depend on the other.
+  rejected:
+    - The annotation in plugin-github, which syncs repositories and resolves issue numbers. A space without plugin-github would keep its projects at 0.7.0, and plugin-claude would depend on plugin-github to check repositories out.
+    - The annotation in plugin-claude, which checks repositories out. plugin-github would depend on plugin-claude to resolve an issue number.
+    - Keeping one `repositories` field on `Project`, which leaves a coding concept in the type every project has.
+```
+
+```mdl
+decision D-156: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-154].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Nothing in the app wrote the field, and delegating a task was its only reader.
+  rejected:
+    - An annotation plugin-assistant owns for a per-project session default. It waits until a person wants that default and decides where it is edited.
+```
+
+```mdl
+decision D-157: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-155].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: `repo` was the repository a project named first, and plugin-code's spec migrations recognize a spec's owner only as a current `Project`.
+```
+
+```mdl
+decision D-158: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2, F-5.3]
+```
+
+```mdl
+decision D-159: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-160: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-161: The project's name and description are edited in place, not behind an edit button.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-162: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-159] and [D-160].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5, F-5.6]
+  why: A writable atom hides where a value lives, so an annotation on the project and state kept on one device are the same kind of field, and the form needs no knowledge of either.
+  rejected:
+    - A surface per group, which needs the contributor's own UI and lets only one plugin fill a group.
+    - A capability declaring the group and surfaces filling it, which still needs the contributor's own UI.
+    - Fields that name an annotation, which cannot hold a value kept on one device, such as a code folder.
+```
+
+```mdl
+decision D-163: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-161].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The override says how one use of a field reads, which the schema cannot, and react-ui-form takes no classes of its own.
+```
+
+```mdl
+decision D-164: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-158].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.3]
+  why: Six fills two rows of the masonry at a plank's usual width.
+```
+
+```mdl
+decision D-165: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-159].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The counts are what tell a reader whether a group is worth opening.
+```
+
+```mdl
+decision D-166: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-158].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: The overview already narrows to its level, and its Tasks tab lists the same tasks.
+```
+
+```mdl
+decision D-167: The project's status is shown as a pill in the top right corner of the overview, using the form's pill presentation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-168: The project's name and description line up with the headings of the overview's sections (Notes, Artifacts, Specs).
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-169: The status pill is required, so it offers no "None", and it sits at the end of the name's row. Supersedes the four-column row of [D-163]. Fills in [D-167].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A project always has a status, and the name takes the rest of the row so a long name never pushes the pill.
+```
+
+```mdl
+decision D-170: react-ui's Input and Textarea gain a `plain` variant with no well and no inline inset, and `title` drops the inset too; the form's `plain` and `title` appearances use them. Fills in [D-168].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The inset was what pushed the text right of the headings, and react-ui-form takes no classes of its own.
+  rejected:
+    - Insetting the section headings to match, which would misalign them with every other form.
+```
+
+```mdl
+decision D-171: Each project status has a colour, and its name is capitalized wherever the UI shows it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-172: The gap between two of the overview's sections is wide enough that Artifacts, Milestones, Specs and Config never read as cramped together.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-173: The Specs add button sits on the Specs heading's row, so no gap opens between the heading and the specs, and the specs line up with the Config groups at the same level of nesting.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.7]
+```
+
+```mdl
+decision D-174: The overview keeps one consistent edge down its left side and its right side.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-175: `Project`'s schema annotates its status with an option table, as `Task` does: Active in green, Paused in amber, Blocked in rose and Ended in neutral, each with an icon. The form's pill takes the title, icon and hue from it. Fills in [D-171].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The form already reads option titles and hues from the schema, so every picker and pill of the status agrees with no code in the plugin.
+  rejected:
+    - Translations for the names, which the form's select does not read, and which would leave the colours in plugin code.
+```
+
+```mdl
+decision D-176: A form section after another leaves three gaps above its heading, where rows inside a section leave one. A description edited in place is as tall as its text rather than three lines. Fills in [D-172].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.2]
+  why: The rule lives on the section heading, so every form with sections gets the same rhythm without spacing of its own.
+```
+
+```mdl
+decision D-177: react-ui-form's field override takes `appearance: 'section'` for an array, which renders the array as a section of its own with its label as the heading and its add button in the heading's actions. A form's array rows drop the list row's leading inset, so a row's fields start on the section's edge. Fills in [D-173] and [D-174].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.7]
+  why: Wrapping the list in another section left the list's own header row, add button and all, under the section's heading.
+  rejected:
+    - The add button in a section's actions, written by the plugin, which would duplicate how the form creates an owned object.
+```
+
+```mdl
+decision D-178: The overview's Notes section shows no description; once the notes have content it only takes up space.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-179: Opening a milestone from the overview shows the Tasks tab filtered to that milestone's tasks.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.4]
+```
+
+```mdl
+decision D-180: A milestone row ends in an open button, on the right edge where a spec row's buttons sit, and the filter is the task list's own milestone filter (its per-device view state), which keeps a task by its effective milestone and keeps the ancestors of a match. Fills in [D-179].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: A button on the row's right edge keeps the name on the headings' left edge, and react-ui exports no in-app link. The effective milestone is the one the row's progress counts, so the filtered list holds the tasks the count names. A filter the task list owns can be changed or cleared from its own toolbar.
+  rejected:
+    - The whole row as a ghost button, whose inset moves the row off the headings' left edge.
+    - A `milestone:` term in the list's query, since a query value cannot name a milestone by reference and a milestone's name can hold spaces.
+    - Grouping the list by milestone, which shows every milestone rather than the one opened.
+```
+
+```mdl
+decision D-181: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker, such as plugin-claude's folder picker, without UI of its own. Fills in [D-160].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.6]
+  why: An action is data the form renders, so [D-160] holds. The function returns a value and leaves the write to the form, so the field's atom stays the one write path.
+  rejected:
+    - A custom field component from the plugin, which [D-160] rules out.
+    - A function that writes the atom itself, which gives the field a second write path.
+```
+
+```mdl
+decision D-182: A config field has an `order`, and a group's fields sort by it, those with equal orders keeping contribution order. Fills in [D-159].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.6]
+  why: Contribution order follows plugin load order, which would put plugin-claude's code folder above plugin-code's repositories in Software.
+```
+
+```mdl
+decision D-183: react-ui-form's field `appearance` folds into its presentation. `title`, `plain` and `section` are presentations, a field override takes a `presentation` of its own in place of the form's layout, and `title` and `plain` hide the field's label, so the overview's name and description no longer hide theirs separately. Replaces the `appearance` of [D-163], [D-170] and [D-177].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-184: An override's presentation applies to its field alone, so an object's or an array's nested fields keep the form's layout. `section` on a field other than an array shows it as `compact`. Fills in [D-183].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: An array shown as a section holds rows that are ordinary fields, and a section has no meaning for a scalar, whose label and control `compact` already show.
+```
+
+```mdl
+decision D-185: plugin-code, not plugin-claude, renders a project's repositories, in the overview's Software group, and plugin-claude adds only the code folder there. Replaces the plugin-claude rendering of [D-155].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-186: `Project.status` stays optional, so a project made without one, or migrated without one, shows an empty pill until a status is picked. The pill offers no "None", so a status once picked is never cleared. Corrects the rationale of [D-169].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A default status would need a schema change and a migration for every existing project, and an empty pill already reads as unset.
+  rejected:
+    - Defaulting `status` to `active` in `Project.make` and the migration, which writes a status to every project nobody chose one for.
+```
+
+```mdl
+decision D-187: The form's pill presentation renders as react-ui's `Tag`, so the Add task row's properties and the overview's status look the same as a task row's tags, with no visual style of their own.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-188: The presentation is renamed `tag`. The tag stays neutral and shows the chosen option's icon in its hue, and an unset field shows its label and glyph in the tag's usual colour. Fills in [D-187].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A task row's own tags are neutral unless the tag has a hue of its own, and the icon already carries the option's colour; the unset glyph tells an unset field apart without a muted style the tag does not have.
+  rejected:
+    - Hueing the whole tag with the option's colour, which turns the Add task row into a row of coloured blocks.
+    - Keeping the name `pill` for a presentation that no longer draws one.
+```
+
+```mdl
+decision D-189: The task list's create row is one line laid out on the list's own columns, each field in the track where the rows show it, and a list row and the create row are the same components in the chat's list and the project's list, configured by props.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-190: `TaskList.Root` takes the title line's cells as one ordered `columns` list, which the rows and the create row both lay out on. Status, priority and estimate are one field component, a bare glyph in a list row and a `Tag` in the create row, one block wide in either; the create row leads with the status field. The project list keeps priority and status ahead of the title, with the estimate in a track of its own; the chat's list puts status ahead of the title and priority and estimate after it. Fills in [D-189].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A fixed track is what lines the create row up with the rows, since the create row sits outside the scrolling tree in a grid of its own; tags in every row would fill a long list with chips.
+  rejected:
+    - Tags in the list rows too, which turns a list of hundreds of rows into a grid of filled chips.
+    - Labelled tags in the create row, whose varying widths cannot sit in the rows' tracks.
+```
+
+```mdl
+decision D-191: Approve [D-190].
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-192: Only the chat prompt's create row is one line on its list's columns. The project task list's create row keeps its stacked layout (title, description, then the property tags), with the tags restyled as `Tag`s by [D-187], and its rows are unchanged. Corrects [D-189].
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-189
+```
+
+```mdl
+decision D-193: `TaskList.Editor` lays the create row on the list's columns only when it is `inline`, which the chat passes; otherwise it stacks the title and description above labelled tags. `DEFAULT_COLUMNS` has no estimate column, so the project list shows a set estimate as muted text beside its artifacts, and a list that names an estimate column, as the chat's does, shows the estimate field there instead. Fills in [D-192].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-190
+  why: One prop keeps the rows and the create row the same components in both hosts while leaving the project list's look as it was.
+```
+
+```mdl
+decision D-194: The property tags in a task create row and the project overview's status are outlined rather than filled, so they do not stand out in dark mode.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-195: react-ui's `Tag` takes `variant: 'outline'`, which draws the tag's hue as a ring in its border colour and text in its text colour, on no fill; a `Select` trigger rendered as a tag and the stacked create row's assignee tag use it. Fills in [D-194].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A variant of the one component keeps a single tag style with two weights, and following the hue keeps it usable for a hued tag.
+  rejected:
+    - Recolouring the neutral hue's surface, which would change every neutral tag and callout in the app.
+```
+
+```mdl
+decision D-196: An inline create row shows status, priority, estimate and assignee as the list rows' own bare glyphs, not as tags, so it reads as one more row of the list.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-197: A task's estimate with no value shows the estimate's ruler glyph, not the asterisk unset priority shows, so the two empty cells read apart.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-198: The spec editor draws object embeds with plugin-markdown's extension, `MarkdownCapabilities.ObjectEmbeds`, and takes every `MarkdownCapabilities.ExtensionProvider`, so a spec is Markdown with what other plugins add to it, plus its packages' editing. The software package no longer draws feature embeds itself.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-4.12]
+  why: A spec should inherit what Markdown documents gain, such as a diagram, rather than a stricter editor redrawing each addition; one embed definition then serves both editors.
+```
+
+```mdl
+decision D-199: Create artifact is the add button on the overview's Artifacts heading, as Add spec is on Specs, and leaves the toolbar, which has no Overview tools. A feature's level shows no Artifacts section, so it offers no Create artifact.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-4.7, F-5.3]
+  supersedes: D-64
+  why: An action reads best beside the list it adds to, and the overview's sections already work that way. Artifacts belong to the project, so a feature's level, which does not list them, would hide whatever it added.
+```
+
+```mdl
+decision D-200: The overview's empty Notes, Artifacts and Specs sections say what goes in them, rather than showing a bare heading. An empty array field in a form shows its override's placeholder in place of its rows, which is how Specs says so.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-5.8]
+```
+
+```mdl
+decision D-201: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-4.13, F-5.9]
+```
+
+```mdl
+decision D-202: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-201].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.13, F-5.9]
+  why: These are the CodeMirror editors a project's views mount over shared text. A task's description is left out because it commits through `UpdateTask` on blur to write the task's history, which editing in place would bypass.
+  rejected:
+    - Turning the project's description into a markdown editor so it carries carets, which changes how the field looks and behaves.
+```
+
+```mdl
+decision D-203: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-201].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-9, F-5.9]
+  why: Notes is on the Overview of a project just made from the Default template, so the test needs no setup beyond creating it, and the late joiner is the case that failed before the awareness fix.
+```
+
+```mdl
+decision D-204: QA-10 walks two peers through every editor with carets ([D-202]) in one take, recorded side by side by an autocue flow. Fills in [D-201].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-10, F-5.9]
+  why: QA-9 automates the Notes alone; the instructions, the spec's prose and a feature's description need a spec with the Software package, so they are covered by a recorded walkthrough rather than another e2e test.
+```
+
+```mdl
+decision D-205: Every collaborative text field in a project that takes comments also shows the other peers' carets.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-4.13, F-5.9]
+```
+
+```mdl
+decision D-206: The editors with carets are the project's name and description, a spec's text in either of its views, the feature sections embedded in it (the feature's name, description and requirement rows), the overview's Notes and the agent's instructions. Each collaborative string is its own awareness channel, and a spec's two views share one. Fills in [D-201] and [D-205].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-202
+  affects: [F-4.13, F-5.9]
+  why: These are the fields comments anchor into, plus the instructions, which already had carets. The project's name and description and a feature's fields are now collaborative strings edited in place, so they take the carets through the same binding. A spec's name and description, which the overview's Specs rows edit, are plain fields that take no comments, so they show no carets.
+```
+
+```mdl
+decision D-207: QA-10 walks two peers through every editor with carets ([D-206]) in one take, adding the project's name and description and a feature's name and requirement to its steps. The two feature fields are split across peers so each field's caret shows only in that field. Fills in [D-205].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-204
+  affects: [QA-10, F-4.13, F-5.9]
+  why: A recorded walkthrough already covers the editors that need a spec with the Software package; the new caret sites sit in the same views, so they join the same take rather than a separate test.
+```
+
+```mdl
+decision D-208: QA-9 is automated inside the document-caret collaboration test, over its invitation, rather than by a test with an invitation of its own.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-9]
+```
+
+```mdl
+decision D-209: QA-9 starts once the peers share the space and both have checked the document: the host makes the project with the document, before the invitation, and each peer then opens it. The late joiner stays the document's to check. Fills in [D-208].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-203
+  affects: [QA-9]
+  why: A project made after the document check did not open on the host. Made first, it sits in its own section, so the guest's document list and the host's first object stay as the document steps expect.
 ```

@@ -8,7 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { CreatedFrom } from '@dxos/types';
 
 import { convertByScene } from '#model';
 import { Drawing, DrawingOperation, IllustratorCapabilities, IllustratorError } from '#types';
@@ -23,7 +24,7 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
         return yield* Effect.fail(new IllustratorError.SameVariant({ context: { variant: variantId } }));
       }
       const variants = yield* Capability.getAll(IllustratorCapabilities.VariantProvider);
-      const to = variants.find((entry) => entry.id === variantId);
+      const to = IllustratorCapabilities.findVariant(variants, variantId);
       if (!to) {
         return yield* Effect.fail(new UnknownDrawingVariantError(variantId));
       }
@@ -43,9 +44,23 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
         // A hidden canvas no drawing references is orphaned; one another drawing still uses must stay.
         const sharing = yield* Database.query(Filter.type(Drawing.Drawing, { canvas: Ref.make(source) })).run;
         if (sharing.length === 0) {
-          yield* Database.remove(source);
+          // A typed canvas owns other objects (a scene canvas its layouts, say), which its variant removes with it.
+          if (from.canvasType !== undefined && from.removeCanvas) {
+            yield* from.removeCanvas(source);
+          } else {
+            yield* Database.remove(source);
+          }
         }
       } else {
+        // The source stays, so the copy records it as what it was made from; a replaced source is removed instead.
+        yield* Database.add(
+          CreatedFrom.make({
+            [Relation.Source]: target,
+            [Relation.Target]: source,
+            reason: 'conversion',
+            createdAt: new Date().toISOString(),
+          }),
+        );
         result = Drawing.make({ name: drawing.name, canvas: target });
         // Filed beside the source, else where a new drawing goes by default, so it shows in the navigator.
         const [beside] = yield* Database.query(ContainerModel.containing(drawing)).run;

@@ -19,23 +19,22 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useInputSurfaceLookup } from '#hooks';
-import { meta } from '#meta';
 import { SpaceOperation, SpaceSchema } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { getTemplateIcon, getTemplateIconGlyph } from '../../util/index.ts';
 
-export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
+export const CREATE_SPACE_DIALOG = `${SpaceNamespace.key}.CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceSchema.SpaceForm>;
 const initialValues: FormValues = { private: false, edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invoke } = Hooks.useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
@@ -52,6 +51,7 @@ export const CreateSpaceDialog = () => {
     [contributed],
   );
   const [template, setTemplate] = useState<string | undefined>(undefined);
+  const [values, setValues] = useState<Partial<FormValues>>(initialValues);
 
   useEffect(() => {
     EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
@@ -63,14 +63,24 @@ export const CreateSpaceDialog = () => {
   );
 
   // Selecting a template seeds the fields it has an opinion about, leaving anything the user has
-  // already typed alone would make the defaults unreachable — so this overwrites, and re-keys the
-  // form so it re-reads them.
-  const values = useMemo<FormValues>(() => {
-    const selected = templates.find(({ id }) => id === template);
-    return selected
-      ? { ...initialValues, template: selected.id, name: selected.label, icon: selected.icon, hue: selected.hue }
-      : initialValues;
-  }, [templates, template]);
+  // already typed alone would make the defaults unreachable — so this overwrites. The form stays mounted,
+  // since remounting it would reset the scroll position of the list being clicked.
+  const handleSelectTemplate = useCallback(
+    (id: string) => {
+      const selected = templates.find((candidate) => candidate.id === id);
+      setTemplate(id);
+      if (selected) {
+        setValues({
+          ...initialValues,
+          template: selected.id,
+          name: selected.label,
+          icon: selected.icon,
+          hue: selected.hue,
+        });
+      }
+    },
+    [templates],
+  );
 
   const handleCreateSpace = useCallback(
     (data: FormValues) => {
@@ -90,9 +100,9 @@ export const CreateSpaceDialog = () => {
           Effect.gen(function* () {
             log.catch(Cause.squash(cause));
             yield* invoke(LayoutOperation.AddToast, {
-              id: `${meta.profile.key}.create-space-failed`,
+              id: `${SpaceNamespace.key}.create-space-failed`,
               icon: 'ph--warning--regular',
-              title: ['create-space-dialog.error.message', { ns: meta.profile.key }],
+              title: ['create-space-dialog.error.message', { ns: SpaceNamespace.key }],
             });
           }),
         ),
@@ -108,10 +118,9 @@ export const CreateSpaceDialog = () => {
           below the scrolling fields while still reading the form's context. */}
       <Form.Root
         testId='create-space-form'
-        // Re-keyed on the selection so the template's defaults replace what the form already holds.
-        key={template ?? 'none'}
         schema={SpaceSchema.SpaceForm}
-        defaultValues={values}
+        values={values}
+        onValuesChanged={setValues}
         fieldProvider={inputSurfaceLookup}
         onSave={handleCreateSpace}
         onCancel={handleCancel}
@@ -123,41 +132,37 @@ export const CreateSpaceDialog = () => {
           </Dialog.CloseTrigger>
         </Dialog.Header>
         <Dialog.Body>
-          {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second
-              gutter inside the one Dialog.Body already propagates and inset the fields twice. */}
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              <Form.Content>
-                <Form.Fields layoutName={SpaceSchema.SPACE_FORM_CREATE_LAYOUT} />
-                {templates.length > 0 && (
-                  <Form.FieldSet
-                    aria-labelledby='create-space-templates'
-                    label={t('create-space-dialog.templates.label')}
-                    description={t('create-space-dialog.templates.description')}
-                  >
-                    <Listbox.Root
-                      value={template}
-                      onValueChange={setTemplate}
-                      items={templates.map(({ id, label, description, glyph }) => ({
-                        value: id,
-                        label,
-                        description,
-                        icon: glyph,
-                      }))}
-                    >
-                      {/* The dialog body scrolls, so the list does not: unscrolled, it inherits the dialog's columns
-                          rather than insetting its rows in a gutter of its own. */}
-                      <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
-                        {templates.map(({ id }) => (
-                          <Listbox.Item key={id} id={id} />
-                        ))}
-                      </Listbox.Content>
-                    </Listbox.Root>
-                  </Form.FieldSet>
-                )}
-              </Form.Content>
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
+          {/* Dialog.Body is the one scroller, so its thumb sits at the dialog's edge. */}
+          <Form.Content>
+            <Form.Fields layoutName={SpaceSchema.SPACE_FORM_CREATE_LAYOUT} />
+            {templates.length > 0 && (
+              <Form.FieldSet
+                aria-labelledby='create-space-templates'
+                label={t('create-space-dialog.templates.label')}
+                description={t('create-space-dialog.templates.description')}
+              >
+                <Listbox.Root
+                  value={template}
+                  onValueChange={handleSelectTemplate}
+                  selectionStyle='outline'
+                  items={templates.map(({ id, label, description, glyph }) => ({
+                    value: id,
+                    label,
+                    description,
+                    icon: glyph,
+                  }))}
+                >
+                  {/* The dialog body scrolls, so the list does not: unscrolled, it inherits the dialog's columns
+                      rather than insetting its rows in a gutter of its own. */}
+                  <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
+                    {templates.map(({ id }) => (
+                      <Listbox.Item key={id} id={id} />
+                    ))}
+                  </Listbox.Content>
+                </Listbox.Root>
+              </Form.FieldSet>
+            )}
+          </Form.Content>
         </Dialog.Body>
         <Dialog.Footer>
           <Form.Actions submitLabel={t('create-space-dialog.create.label')} />

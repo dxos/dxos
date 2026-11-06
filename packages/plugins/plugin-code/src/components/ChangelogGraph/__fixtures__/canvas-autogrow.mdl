@@ -116,3 +116,33 @@ decision D-11: Approve [D-10].
   date: 2026-10-07
   by: user:alice
 ```
+
+```mdl
+question Q-1: Does the canvas shrink when nodes are removed?
+  date: 2026-10-08
+  by: agent:claude-code
+  for: user:alice
+  affects: [F-2.1]
+  context: [D-1] grows the bounds; nothing says whether they ever shrink.
+  options:
+    - Never: bounds only grow, so the view never jumps under the reader.
+    - On drop: bounds fit the content again after each edit.
+```
+
+```mdl
+decision D-12: Never.
+  date: 2026-10-09
+  by: user:alice
+  answers: Q-1
+```
+
+```mdl
+question Q-2: Is the grow animated when the camera is zoomed out past the major grid?
+  date: 2026-10-09
+  by: agent:claude-code
+  for: user:alice
+  affects: [F-2.2]
+  options:
+    - Always: one code path, and the snap reads the same at every zoom.
+    - Only when the grid is drawn: an animation nobody can see costs a frame for nothing.
+```

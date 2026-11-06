@@ -4,12 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { reduceIntent } from '../engine/index.ts';
-import { type Link, type View, endpointNode } from '../model/index.ts';
+import { type Link, endpointNode } from '@dxos/scene';
+
+import { type RenderList2D } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
 import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
 
-const fixture = (): View => {
+const fixture = (): RenderList2D => {
   const { views, root } = createViewTree(1, 'r');
   const scene = views.find((scene) => scene.id === root);
   if (!scene) {
@@ -42,7 +43,7 @@ describe('clipboard', () => {
     }
     // Two nodes and the a→b link between them.
     expect(copy.ids).toHaveLength(3);
-    const after = reduceIntent(scene, copy.intent);
+    const after = copy.edit(scene);
     expect(Object.keys(after.nodes)).toHaveLength(Object.keys(scene.nodes).length + 2);
     expect(after.nodes['scene:r/a'].center).toEqual(scene.nodes['scene:r/a'].center);
     const [copyOfA] = copy.ids;
@@ -60,7 +61,7 @@ describe('clipboard', () => {
       throw new Error('nothing copied');
     }
     let counter = 0;
-    const { intent, ids } = pasteFragment({
+    const { edit, ids } = pasteFragment({
       clipboard,
       offset: { x: 64, y: 64 },
       createId: (prefix) => `${prefix}-${++counter}`,
@@ -68,7 +69,7 @@ describe('clipboard', () => {
       linkZ: (index) => `l${index}`,
     });
     expect(ids).toEqual(['ellipse-1', 'rect-2', 'spline-3']);
-    const next = reduceIntent(scene, intent);
+    const next = edit(scene);
     expect(Object.keys(next.nodes).length).toBe(6);
     // Offsets are read against the fixture, whose coordinates are a layout and change with it.
     const origin = scene.nodes['scene:r/b'].center;
@@ -90,7 +91,7 @@ describe('clipboard', () => {
       throw new Error('nothing copied');
     }
     let counter = 0;
-    const { intent } = pasteFragment({
+    const { edit } = pasteFragment({
       clipboard,
       offset: { x: 64, y: 64 },
       createId: (prefix) => `${prefix}-${++counter}`,
@@ -98,7 +99,7 @@ describe('clipboard', () => {
       linkZ: (index) => `l${index}`,
       layer: 'top',
     });
-    const next = reduceIntent(scene, intent);
+    const next = edit(scene);
     expect(
       [next.nodes['ellipse-1'], next.nodes['rect-2'], next.links['spline-3']].map((element) => element.layer),
     ).toEqual(['top', 'top', 'top']);
@@ -124,13 +125,13 @@ describe('clipboard', () => {
     if (!clipboard) {
       throw new Error('nothing copied');
     }
-    const { intent } = pasteFragment({
+    const { edit } = pasteFragment({
       clipboard,
       offset: { x: 64, y: 32 },
       createId: (prefix) => `${prefix}-x`,
       nodeZ: () => 'n',
       linkZ: () => 'l',
     });
-    expect(reduceIntent(withFree, intent).links['line-x']?.target).toEqual({ point: { x: 64, y: 32 } });
+    expect(edit(withFree).links['line-x']?.target).toEqual({ point: { x: 64, y: 32 } });
   });
 });

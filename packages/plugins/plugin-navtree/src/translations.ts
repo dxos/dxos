@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { NavTreeNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [NavTreeNamespace.key]: {
         'app-menu.label': 'App menu',
         'open-commands.label': 'Search commands',
         'commands-dialog.title': 'Commands',

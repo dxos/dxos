@@ -16,13 +16,13 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 
-import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { PasskeyError } from '#types';
 
 import { useAccountUrl } from '../../hooks/index.ts';
+import { ClientNamespace } from '../../namespace.ts';
 
-export const MANAGE_CREDENTIALS_DIALOG = `${meta.profile.key}.ManageCredentialsDialog`;
+export const MANAGE_CREDENTIALS_DIALOG = `${ClientNamespace.key}.ManageCredentialsDialog`;
 
 const supportsPasskeys = NativePasskey.getPasskeySupport() !== 'none';
 
@@ -45,7 +45,7 @@ const KIND_ICONS: Record<Identity.RecoveryKind, string> = {
 };
 
 export const RecoveryCredentialsContainer = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ClientNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(

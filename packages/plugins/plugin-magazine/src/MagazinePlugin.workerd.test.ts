@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 
+import * as MagazinePlugin from '#meta';
 import { FeedOperation, Magazine } from '#types';
-
-import * as MagazinePlugin from './MagazinePlugin.ts';
 
 describe('MagazinePlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

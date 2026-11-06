@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { type SourceKey, parseReview } from '@dxos/deus/review';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { type SourceKey } from '#sync';
 import { translations } from '#translations';
 
 import ECHO_QUERY_SPEC from '../../../../../core/echo/echo-client/spec/QUERY.mdl?spec';
@@ -28,7 +28,6 @@ import GITHUB_SYNC_SPEC from '../../../../plugin-github/spec/SYNC.mdl?spec';
 import { type SpecFile, resolveSpecText, useSpecTexts } from '../../testing/index.ts';
 import CANVAS_AUTOGROW_SPEC from '../ChangelogGraph/__fixtures__/canvas-autogrow.mdl?spec';
 import INBOX_SYNC_SPEC from '../ChangelogGraph/__fixtures__/inbox-sync.mdl?spec';
-import { parseReview } from '../SpecModel/index.ts';
 import { SpecChangelog, type SpecChangelogProps } from './SpecChangelog.tsx';
 
 type SpecFileChangelogProps = Omit<SpecChangelogProps, 'content' | 'review'> & {
@@ -111,7 +110,12 @@ const STORY_DIR = 'packages/plugins/plugin-code/src/components/SpecChangelog/';
 const SOURCES: Record<string, string> = Object.fromEntries(
   Object.entries(
     import.meta.glob<string>(
-      ['../../../../plugin-code/src/**/*.{ts,tsx}', '../../../../plugin-file-system/src/**/*.{ts,tsx}'],
+      [
+        '../../../../plugin-code/dx.config.ts',
+        '../../../../plugin-code/src/**/*.{ts,tsx}',
+        '../../../../plugin-file-system/dx.config.ts',
+        '../../../../plugin-file-system/src/**/*.{ts,tsx}',
+      ],
       { query: '?raw', import: 'default', eager: true },
     ),
   ).map(([file, text]) => [new URL(file, `file:///${STORY_DIR}`).pathname.slice(1), text]),

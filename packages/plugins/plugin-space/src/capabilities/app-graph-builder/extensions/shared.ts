@@ -16,23 +16,23 @@ import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 import { osTranslations } from '@dxos/ui-theme';
 import { type Label } from '@dxos/ui-types/translations';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../../namespace.ts';
 
 //
 // Virtual Node Types
 //
 
-export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
-export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
+export const DATABASE_SECTION_TYPE = `${SpaceNamespace.key}.database`;
+export const COLLECTIONS_SECTION_TYPE = `${SpaceNamespace.key}.collections`;
 /** Tags every type node under the Database section — both static (compile-time) and database (dynamic) schemas. */
-export const SCHEMA_NODE_TYPE = `${meta.profile.key}.static-schema`;
+export const SCHEMA_NODE_TYPE = `${SpaceNamespace.key}.static-schema`;
 
 //
 // Constants
 //
 
 /** Shared translation namespace descriptor. */
-export const META_NS: { ns: string } = { ns: meta.profile.key };
+export const META_NS: { ns: string } = { ns: SpaceNamespace.key };
 
 //
 // Stable Callbacks
@@ -69,8 +69,10 @@ export const EXPOSE_OBJECT_LABEL: Label = ['expose-object.label', META_NS];
 export const MIGRATE_SPACE_LABEL: Label = ['migrate-space.label', META_NS];
 export const NEW_TYPE_LABEL: Label = ['new-type.label', META_NS];
 export const PENDING_SPACE_LABEL: Label = ['pending-space.label', META_NS];
+export const PRINT_OBJECT_LABEL: Label = ['print-object.label', META_NS];
 export const REMOVE_FROM_COLLECTION_LABEL: Label = ['remove-from-collection.label', META_NS];
 export const RENAME_SPACE_LABEL: Label = ['rename-space.label', META_NS];
+export const SAVE_OBJECT_LABEL: Label = ['save-object.label', META_NS];
 export const SHOW_ORIGINAL_LABEL: Label = ['show-original.label', META_NS];
 export const SETTINGS_PANEL_LABEL: Label = ['settings-panel.label', META_NS];
 export const SNAPSHOT_BY_SCHEMA_LABEL: Label = ['snapshot-by-schema.label', META_NS];

@@ -4,7 +4,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Bootstrap a single workspace package on npm so `publish-all.yml` can release it from then on.
+// Bootstrap workspace packages on npm so `publish-all.yml` can release it from then on.
 // npm's OIDC trusted publisher can only be attached to a package that already exists on the
 // registry, so a new package needs one manual publish followed by a trusted-publisher setup:
 //   1. If the package is not on the registry yet: build it, stamp `version` to 0.0.0 (the
@@ -14,14 +14,16 @@
 //      for a browser 2FA confirmation, so run this in an interactive terminal. Without `--trust` the
 //      script prints the manual settings and opens the package's npm access page.
 // Already-published packages skip step 1, so re-running for a package that only lacks a trusted
-// publisher is safe. Credentials stay with npm and never pass through this script, except with `--op`:
+// publisher is safe. Several packages run in the order given (dependencies first), on one npm session, and the
+// run stops at the first that fails. Credentials stay with npm and never pass through this script, except with `--op`:
 // it logs in as the npm-bot account from 1Password (`op` CLI) and answers every 2FA prompt with a fresh
 // TOTP code, so the flow runs unattended; the session token lives in a temporary npmrc and is revoked on exit.
 //
 // Usage:
-//   node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--op] [--dry-run] [--no-build] [--no-open]
+//   node scripts/publish-package.mjs <package-name|package-dir>... [--trust] [--op] [--dry-run] [--no-build] [--no-open]
 //
 // Examples:
+//   node scripts/publish-package.mjs @dxos/animation @dxos/scene --trust
 //   node scripts/publish-package.mjs @dxos/plugin-discord --dry-run
 //   node scripts/publish-package.mjs @dxos/plugin-discord --trust
 //   node scripts/publish-package.mjs @dxos/plugin-discord --trust --op
@@ -47,13 +49,13 @@ const NPM_TRUST_MIN_VERSION = [11, 15, 0];
 
 // The npm-bot account (see the npm-publishing skill).
 const OP_NPM_BOT = {
-  username: 'op://CI/NPM bot/username',
-  password: 'op://CI/NPM bot/password',
-  otp: 'op://CI/NPM bot/one-time password?attribute=otp',
+  username: 'op://eng-ops/com.npmjs/BOT_USERNAME',
+  password: 'op://eng-ops/com.npmjs/BOT_PASSWORD',
+  otp: 'op://eng-ops/com.npmjs/BOT_TOTP?attribute=otp',
 };
 
 const USAGE =
-  'Usage: node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--op] [--dry-run] [--no-build] [--no-open]';
+  'Usage: node scripts/publish-package.mjs <package-name|package-dir>... [--trust] [--op] [--dry-run] [--no-build] [--no-open]';
 
 const usage = () => {
   console.error(USAGE);
@@ -62,7 +64,7 @@ const usage = () => {
 
 const parseArgs = (argv) => {
   const options = { dryRun: false, build: true, open: true, trust: false, op: false };
-  let target;
+  const targets = [];
   for (const arg of argv) {
     if (arg === '--dry-run') {
       options.dryRun = true;
@@ -77,17 +79,14 @@ const parseArgs = (argv) => {
     } else if (arg.startsWith('--')) {
       console.error(`Unknown option: ${arg}`);
       usage();
-    } else if (target === undefined) {
-      target = arg;
     } else {
-      console.error(`Unexpected argument: ${arg}`);
-      usage();
+      targets.push(arg);
     }
   }
-  if (!target) {
+  if (targets.length === 0) {
     usage();
   }
-  return { target, ...options };
+  return { targets, ...options };
 };
 
 // Resolve a package name (e.g. `@dxos/progress`) or a directory to its package.json path.
@@ -341,8 +340,8 @@ const bootstrapPublish = ({ packageJsonPath, packageDir, pkg, access, dryRun, bu
   }
 };
 
-const main = async () => {
-  const { target, dryRun, build, open, trust, op } = parseArgs(process.argv.slice(2));
+/** Bootstraps one package: publishes it if it is not on npm, then configures or prints its trusted publisher. */
+const bootstrap = async (target, { dryRun, build, open, trust, op }) => {
   const packageJsonPath = await resolvePackageJson(target);
   const packageDir = dirname(packageJsonPath);
   const pkg = readPackageJson(packageJsonPath);
@@ -369,9 +368,10 @@ const main = async () => {
   const published = await isOnRegistry(pkg.name);
   console.log(`Registry: ${published ? 'already published' : 'not published'}`);
 
+  // An `--op` session outlives one package, so it is started once for the run.
   if (!dryRun && (!published || trust)) {
     if (op) {
-      await startOpSession();
+      session ?? (await startOpSession());
     } else {
       ensureNpmAuth(pkg.name.split('/')[0]);
     }
@@ -399,8 +399,15 @@ const main = async () => {
       openUrl(settingsUrl);
     }
   }
+};
 
-  if (dryRun) {
+const main = async () => {
+  const { targets, ...options } = parseArgs(process.argv.slice(2));
+  for (const [index, target] of targets.entries()) {
+    index > 0 && console.log('');
+    await bootstrap(target, options);
+  }
+  if (options.dryRun) {
     console.log('\nDry run complete — nothing was published or configured.');
   } else {
     console.log('\npublish-all.yml releases future versions from the next changeset release.');

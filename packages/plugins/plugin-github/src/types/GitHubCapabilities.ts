@@ -13,9 +13,8 @@ import { Obj, Ref, type Type } from '@dxos/echo';
 import type * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { type Issue, type PullRequest, Repo } from '@dxos/types';
 
-import { meta } from '#meta';
-
 import { type GitHubLink } from '../extensions/index.ts';
+import { GitHubNamespace } from '../namespace.ts';
 
 /**
  * Where a previewed link's repository, pull request or issue comes from. The plugin's default fetches it from
@@ -27,7 +26,7 @@ export type GitHubLinkSource = (
   context: PreviewCapabilities.PreviewLinkContext,
 ) => Effect.Effect<Repo.Repo | Issue.Issue | PullRequest.PullRequest | undefined>;
 
-export const LinkSource = Capability.make<GitHubLinkSource>()(`${meta.profile.key}.capability.linkSource`);
+export const LinkSource = Capability.make<GitHubLinkSource>()(`${GitHubNamespace.key}.capability.linkSource`);
 
 /** The input of a {@link FileMapping}'s `import` operation. */
 export const FileImportInput = Schema.Struct({
@@ -54,6 +53,8 @@ export interface FileImportOutput extends Schema.Schema.Type<typeof FileImportOu
 export const FileExportInput = Schema.Struct({
   object: Ref.Ref(Obj.Unknown),
   path: Schema.String,
+  /** The file as GitHub holds it for this space: the blob last synced, or last pushed while that is unmerged. */
+  base: Schema.optional(Schema.String),
 });
 export interface FileExportInput extends Schema.Schema.Type<typeof FileExportInput> {}
 
@@ -73,6 +74,8 @@ export type FileMapping = {
   readonly id: string;
   /** Repository-relative globs the mapping claims, e.g. `['**' + '/*.mdl']`: `**` spans directories, `*` stays within one. */
   readonly match: readonly string[];
+  /** Globs within `match` the mapping leaves to others, e.g. `['**' + '/*.review.mdl']`. */
+  readonly exclude?: readonly string[];
   /** The ECHO type a matched file becomes. */
   readonly type: Type.AnyObj;
   /** Pull: create the object, or apply a remote change to it. */
@@ -83,4 +86,4 @@ export type FileMapping = {
   readonly maxBytes?: number;
 };
 
-export const FileMapping = Capability.make<FileMapping>()(`${meta.profile.key}.capability.fileMapping`);
+export const FileMapping = Capability.make<FileMapping>()(`${GitHubNamespace.key}.capability.fileMapping`);

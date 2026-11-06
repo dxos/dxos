@@ -20,8 +20,10 @@ import { type Message } from '@dxos/types';
 
 import { type InvitationRenderer, NotificationsPanel } from '#components';
 import { loadLink } from '#materializer';
-import { MESSENGER_COMPANION, meta } from '#meta';
 import { MessengerCapabilities } from '#types';
+
+import { MESSENGER_COMPANION } from '../../constants.ts';
+import { MessengerNamespace } from '../../namespace.ts';
 
 const renderInvitation: InvitationRenderer = ({ data, sender }) => (
   <Surface.Surface type={AppSurface.SpaceInvitation} data={{ ...data, sender }} limit={1} />
@@ -37,7 +39,7 @@ export type MessengerCompanionProps = {
 };
 
 export const MessengerCompanion = ({ attendableId }: MessengerCompanionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MessengerNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = Hooks.useCapability(ClientCapabilities.Client);
   const containers = Hooks.useOptionalAtomCapability(MessengerCapabilities.NotificationsContainers);

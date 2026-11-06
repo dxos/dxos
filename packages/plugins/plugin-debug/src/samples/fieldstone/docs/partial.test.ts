@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { addressFromA1Notation } from '@dxos/compute-hyperformula/types';
+import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Canvas from '@dxos/plugin-canvas/Canvas';
 import type * as Sheet from '@dxos/plugin-sheet/Sheet';
@@ -114,7 +115,7 @@ describe('Alien Labs docs', () => {
       expect(count(typeOf(drawings.orgChart.id))).toBe(5);
       for (const drawing of Object.values(drawings)) {
         const canvas = objects.get(drawing.id)?.canvas?.['/'].replace('echo:///', '');
-        expect(canvas && objects.get(canvas)?.schema).toBe(Canvas.SCENE_SCHEMA);
+        expect(canvas && typeOf(canvas)).toContain(Type.getTypename(Canvas.Canvas));
       }
 
       const references = Object.values(docs).map((doc) => {

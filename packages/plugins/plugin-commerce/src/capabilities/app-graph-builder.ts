@@ -16,9 +16,9 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
+import { CommerceNamespace } from '../namespace.ts';
 import { getProvidersSectionId } from '../paths.ts';
 
 export default Capability.makeModule(
@@ -44,7 +44,7 @@ export default Capability.makeModule(
               type: 'providers', // TODO(burdon): Const.
               data: 'providers-root', // TODO(burdon): Const.
               properties: {
-                label: ['providers.label', { ns: meta.profile.key }],
+                label: ['providers.label', { ns: CommerceNamespace.key }],
                 icon: 'ph--globe--regular',
                 role: 'branch',
                 position: Position.first,
@@ -78,7 +78,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(search)?.spaceId },
                 ),
               properties: {
-                label: ['run-search.label', { ns: meta.profile.key }],
+                label: ['run-search.label', { ns: CommerceNamespace.key }],
                 icon: 'ph--shopping-cart--regular',
                 disposition: 'list-item',
               },
@@ -114,7 +114,7 @@ export default Capability.makeModule(
                   { provider: Ref.make(provider) },
                   { spaceId: Obj.getDatabase(provider)?.spaceId },
                 ),
-              label: ['regenerate.label', { ns: meta.profile.key }],
+              label: ['regenerate.label', { ns: CommerceNamespace.key }],
               icon: 'ph--sparkle--regular',
             }),
             {

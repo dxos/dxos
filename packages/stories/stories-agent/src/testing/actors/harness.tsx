@@ -135,7 +135,7 @@ export const withActors = <T,>({ flow, bars = true }: WithActorsProps<T>): Decor
           plugins={() => [
             ...CorePlugins.make(),
             StorybookPlugin.make({}),
-            SpacePlugin({}),
+            SpacePlugin.make({}),
             MarkdownPlugin.make(),
             ReviewPlugin.make({ agentIdentity: { name: 'Review' } }),
             StagePlugin({ hue: spec.hue }),

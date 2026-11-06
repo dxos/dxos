@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type Database } from '@dxos/echo';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
-import { meta } from '#meta';
+import { PreviewNamespace } from '../namespace.ts';
 
 export type PreviewLinkContext = {
   /** The database of the space the activating document belongs to, when one is known. */
@@ -54,7 +54,7 @@ export type PreviewLinkIcon = { icon: string; classNames?: string };
  * every resolver and shows the first answer, so a plugin that can turn a URL into an object needs
  * only this and a `CardContent` surface for the object's type.
  */
-export const LinkResolver = Capability.make<PreviewLinkResolver[]>()(`${meta.profile.key}.capability.linkResolver`);
+export const LinkResolver = Capability.make<PreviewLinkResolver[]>()(`${PreviewNamespace.key}.capability.linkResolver`);
 
 /** Whether any contributed resolver answers for the URL: what a renderer asks before making a link an anchor. */
 export const isPreviewLink = (resolvers: readonly PreviewLinkResolver[], url: string): boolean =>

@@ -16,7 +16,7 @@ import * as Input from '@dxos/react-ui/Input';
 
 import { Ibkr } from '#types';
 
-import { meta } from '../../meta.ts';
+import { IbkrNamespace } from '../../namespace.ts';
 import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from '../../sync.ts';
 
 export type PortfolioPropertiesProps = AppSurface.ObjectPropertiesProps<Ibkr.Portfolio>;
@@ -27,7 +27,7 @@ export type PortfolioPropertiesProps = AppSurface.ObjectPropertiesProps<Ibkr.Por
  * enables/disables it thereafter. The user keeps a single trigger per space.
  */
 export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(IbkrNamespace.key);
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);
 

@@ -11,7 +11,7 @@ const DATABASE = 'dxos-boot-cache';
  * The cache format's version, used as the IndexedDB version: bump it whenever the shape of what is stored
  * changes, and every cache written before is discarded rather than read.
  */
-export const BOOT_CACHE_VERSION = 1;
+export const BOOT_CACHE_VERSION = 2;
 const STORE = 'entries';
 const STREAMS_KEY = 'streams';
 const SPACE_PREFIX = 'space:';

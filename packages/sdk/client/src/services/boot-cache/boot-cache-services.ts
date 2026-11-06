@@ -140,9 +140,14 @@ export class BootCacheServices implements ClientServicesProvider {
     this.#provider.onReconnect?.(callback);
   };
 
-  /** Resolves once the wrapped services are open, which {@link open} can return ahead of. */
+  /**
+   * Resolves once the wrapped services are open, which {@link open} can return ahead of; rejects with
+   * {@link ServicesUnavailableError} when they fail to.
+   */
   whenServicesOpen(): Promise<void> {
-    return this.#providerOpened.promise;
+    return this.#providerOpened.promise.catch((cause) => {
+      throw new ServicesUnavailableError({ cause });
+    });
   }
 
   /** Whether this session opened from a snapshot rather than waiting for the services. */

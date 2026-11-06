@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Book } from '#types';
+
+import { LibraryNamespace } from './namespace.ts';
 
 export const translations = [
   ...formTranslations,
@@ -24,7 +25,7 @@ export const translations = [
         'delete-object.label': 'Delete book',
         'object-deleted.label': 'Book deleted',
       },
-      [meta.profile.key]: {
+      [LibraryNamespace.key]: {
         'plugin.name': 'Library',
         'search-book.label': 'Search books',
         'search-book.placeholder': 'Search the BookHive catalog…',

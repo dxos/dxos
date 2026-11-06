@@ -17,7 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 # Embeds a W3C WebDriver server (autocue's `--target tauri` on macOS). Automation builds only: it
 # lets any local process drive the app, so release builds must never enable it.
-webdriver = ["dep:tauri-plugin-wdio-webdriver"]
+webdriver = ["dep:tauri-plugin-wdio-webdriver", "tauri/macos-proxy"]
 
 [build-dependencies]
 tauri-build = { version = "2.5", features = [] }

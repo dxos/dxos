@@ -2,12 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { JmapNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.jmap',
+    key: JmapNamespace.key,
     name: 'JMAP',
     author: 'DXOS',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-jmap',
@@ -29,4 +41,31 @@ export default Config2.make({
     icon: { key: 'ph--envelope-simple-open--regular', hue: 'green' },
     tags: ['alpha', 'connector'],
   },
+  modules: [
+    Capability.lazyModule(
+      'JmapConnector',
+      { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'JmapMailSend',
+      // Read by the inbox compose/reply views and by the assistant's send skill.
+      {
+        provides: [InboxCapabilities.MailSendOperation],
+        activatesOn: ActivationEvent.oneOf(InboxEvents.Start, AppActivationEvents.AssistantStart),
+      },
+      () => import('./src/capabilities/mail-send.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

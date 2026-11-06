@@ -35,7 +35,7 @@ T-3 is covered by `model-resolver.test.ts` except that the space slice staying u
 ```mdl
 verdict F-1.1: The connector entry for typesafe.ai takes a pasted API key.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.ts#createTypeSafeConnectorEntry, github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/index.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.ts#createTypeSafeConnectorEntry, github:dxos/dxos/packages/plugins/plugin-typesafe/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-typesafe/src/capabilities/connector.test.ts]
 ```
 

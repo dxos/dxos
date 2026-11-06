@@ -7,17 +7,16 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { type PublicKey } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Database, Obj } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { type ComplexMap, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../namespace.ts';
 
 export * as Settings from './Settings.ts';
 
-export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
+export const SPACE_DIRECTORY_HANDLE = `${SpaceNamespace.key}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
 
@@ -92,12 +91,7 @@ export type PluginState = {
   /**
    * Which objects are currently being viewed by which peers.
    */
-  viewersByObject: Record<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
-
-  /**
-   * Which peers are currently viewing which objects.
-   */
-  viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
+  viewersByObject: Record<ObjectId, Record<string, ObjectViewerProps>>;
 
   /**
    * Cached space names, used when spaces are closed or loading.

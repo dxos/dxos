@@ -18,8 +18,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-
+import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
 import { createPromptExtension } from './app-graph-builder.ts';
 
 describe('prompt extension', () => {

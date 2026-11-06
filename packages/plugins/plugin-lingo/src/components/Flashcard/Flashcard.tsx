@@ -10,8 +10,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { type Word } from '#types';
+
+import { LingoNamespace } from '../../namespace.ts';
 
 export type FlashcardProps = Util.ThemedClassName<{
   word: Word.Word;
@@ -26,7 +27,7 @@ export type FlashcardProps = Util.ThemedClassName<{
  * Self-grading rather than typed input — recall, not spelling, is what the schedule measures.
  */
 export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: FlashcardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LingoNamespace.key);
 
   return (
     <Layout.Flex column center gap='xl' classNames={['p-8', classNames]}>

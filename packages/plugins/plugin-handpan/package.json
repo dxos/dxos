@@ -19,19 +19,6 @@
       "types": "./dist/types/src/audio/index.d.ts",
       "default": "./dist/lib/audio.mjs"
     },
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -48,14 +35,11 @@
       "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/HandpanPlugin.workerd.mjs",
+      "node": "./dist/lib/HandpanPlugin.node.mjs",
+      "default": "./dist/lib/HandpanPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -77,8 +61,10 @@
     },
     "./package.json": "./package.json",
     "./HandpanPlugin": {
-      "source": "./src/HandpanPlugin.ts",
-      "types": "./dist/types/src/HandpanPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/HandpanPlugin.workerd.mjs",
+      "node": "./dist/lib/HandpanPlugin.node.mjs",
       "import": "./dist/lib/HandpanPlugin.mjs"
     }
   },

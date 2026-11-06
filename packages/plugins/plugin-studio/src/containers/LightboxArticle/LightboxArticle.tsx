@@ -27,8 +27,9 @@ import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } fro
 import * as Card from '@dxos/react-ui/Card';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
 import { Lightbox, MediaArtifact } from '#types';
+
+import { StudioNamespace } from '../../namespace.ts';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
@@ -135,7 +136,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
         const { error } = await invokePromise(
           ProjectOperation.ArtifactAdd,
           { project: Ref.make(project), object: Ref.make(artifact) },
-          { spaceId: db.spaceId, notify: { error: ['add-artifact.error.title', { ns: meta.profile.key }] } },
+          { spaceId: db.spaceId, notify: { error: ['add-artifact.error.title', { ns: StudioNamespace.key }] } },
         );
         if (error) {
           return;
@@ -159,7 +160,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
         .action(
           'add-artifact',
           {
-            label: ['add-artifact.label', { ns: meta.profile.key }],
+            label: ['add-artifact.label', { ns: StudioNamespace.key }],
             icon: 'ph--plus--regular',
             disposition: 'toolbar',
           },
@@ -169,7 +170,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
         .action(
           'center',
           {
-            label: ['center.label', { ns: meta.profile.key }],
+            label: ['center.label', { ns: StudioNamespace.key }],
             icon: 'ph--crosshair--regular',
             disposition: 'toolbar',
             disabled: !hasAttention,
@@ -179,7 +180,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
         .action(
           'zoom',
           {
-            label: ['zoom.label', { ns: meta.profile.key }],
+            label: ['zoom.label', { ns: StudioNamespace.key }],
             icon: zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular',
             disposition: 'toolbar',
             disabled: !hasAttention,

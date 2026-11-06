@@ -14,8 +14,9 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { BookingSearch } from '#containers';
-import { meta } from '#meta';
 import { Segment, Trip } from '#types';
+
+import { TripNamespace } from '../../namespace.ts';
 
 type ViewMode = 'form' | 'search';
 
@@ -28,7 +29,7 @@ type ViewMode = 'form' | 'search';
 export type SegmentArticleProps = AppSurface.ArticleProps<Segment.Segment, {}, Trip.Trip>;
 
 export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TripNamespace.key);
   const type = Obj.getType(segment);
   const echoSchema = type && Type.getSchema(type);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);

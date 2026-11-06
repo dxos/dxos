@@ -18,7 +18,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { ScriptNamespace } from '../../namespace.ts';
 
 type State = 'pending';
 
@@ -39,7 +39,7 @@ export type TestPanelProps = Util.ThemedClassName<{
 // TODO(burdon): Need persistent history (currently lost when switching tabs).
 export const TestPanel = Util.composable<HTMLDivElement, TestPanelProps>(
   ({ classNames, onInvoke, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(ScriptNamespace.key);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const [input, setInput] = useState('');

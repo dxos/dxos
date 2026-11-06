@@ -13,9 +13,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { type SlideSource } from '#deck';
 import { useSlideLabel } from '#hooks';
-import { meta } from '#meta';
 import { type SlideViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { Slide } from '../Slide/index.ts';
 
 /** Thumbnail width bounds at each grid size (px): the grid drops a column below `min` and stops growing at `max`. */
@@ -56,7 +56,7 @@ export const SlideGrid = ({
   onAdd,
   contextMenuId,
 }: SlideGridProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   // An object linked twice yields two slides with one id, so options are keyed by position.
   const items = useMemo(
     () => slides.map((_, slideIndex) => ({ value: String(slideIndex), label: String(slideIndex + 1) })),
@@ -97,6 +97,8 @@ export const SlideGrid = ({
       items={items}
       tileWidth={TILE_WIDTH[size]}
       value={String(index)}
+      // The keyboard cursor follows the current slide, so a slide changed from outside the listbox leaves no second tile marked.
+      highlightedValue={String(index)}
       onValueChange={select}
       onHighlightChange={select}
       classNames='dx-grow'
@@ -165,7 +167,8 @@ const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: Sl
       data-testid={`presenter.slide-grid.${tile.index}`}
       data-hidden={hidden || undefined}
       {...(contextMenuId ? AppNode.contextMenuProps(contextMenuId) : {})}
-      classNames={mx('text-xs', (isDragging || hidden) && 'opacity-50')}
+      // The current slide is the grid's one outlined tile, so the pointer only tints the tile under it.
+      classNames={mx('text-xs hover:not-aria-selected:outline-none', (isDragging || hidden) && 'opacity-50')}
       onDoubleClick={() => onPresent?.(tile.index)}
     >
       {/* Thumbnails are pictures of the slide; their controls must not take clicks from the grid. */}

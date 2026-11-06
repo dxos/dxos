@@ -4,8 +4,9 @@
 
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
+import { type ReviewModel, type VerdictStatus, reviewAnnotations, statusOf } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
-import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas/scene';
+import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -14,26 +15,21 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { LatticeGraph } from '../LatticeGraph/index.ts';
 import {
   type ChangeKind,
   type DefinitionModel,
   KIND_GROUPS,
   type KindGroup,
-  type ReviewModel,
   type SpecTexts,
   STATUS_STYLE,
-  type VerdictStatus,
   buildDefinitionGraph,
   diffDefinitionGraphs,
   groupOf,
   hiddenKinds,
   kindStyle,
-  reviewAnnotations,
   selectDefinitions,
-  statusOf,
 } from '../SpecModel/index.ts';
 
 /** QA blocks name most of the design, so they start hidden to keep the design legible. */
@@ -72,7 +68,7 @@ type DefinitionCardProps = {
 };
 
 const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { icon, hue } = kindStyle(definition.kind);
   const { external } = definition;
   return (
@@ -101,7 +97,7 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
           </Card.Title>
           {status && (
             <Layout.Block rail='end'>
-              <Icon.Icon icon={STATUS_STYLE[status].icon} classNames={STATUS_TEXT[status]} />
+              <Icon.Icon icon={STATUS_STYLE[status].icon} classNames={STATUS_STYLE[status].text} />
             </Layout.Block>
           )}
         </Card.Header>
@@ -136,15 +132,6 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
   );
 };
 
-/** Status icon colours, matching the review gutter. */
-const STATUS_TEXT: Record<VerdictStatus, string> = {
-  done: 'text-success-text',
-  untested: 'text-info-text',
-  partial: 'text-warning-text',
-  diverged: 'text-orange-text',
-  missing: 'text-error-text',
-};
-
 type KindLegendProps = {
   /** Every kind in the spec, shown or not, so a hidden group still lists what it holds. */
   kinds: string[];
@@ -159,7 +146,7 @@ type KindLegendProps = {
 
 /** One switch per group, each beside the kinds it holds. */
 const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange, changes }: KindLegendProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
       column

@@ -1,0 +1,157 @@
+{
+  "layout": {
+    "id": "root",
+    "dim": "2d",
+    "elements": {
+      "box": {
+        "id": "box",
+        "type": "rect",
+        "z": "V",
+        "center": {
+          "x": 100,
+          "y": 50
+        },
+        "size": {
+          "width": 200,
+          "height": 100
+        },
+        "label": "Box",
+        "overrides": {
+          "hue": "blue",
+          "tone": 1,
+          "lineStyle": "dashed"
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "oval": {
+        "id": "oval",
+        "type": "ellipse",
+        "z": "l",
+        "center": {
+          "x": 460,
+          "y": 40
+        },
+        "size": {
+          "width": 120,
+          "height": 80
+        },
+        "label": "Oval",
+        "overrides": {
+          "hue": "red",
+          "tone": 3,
+          "fontSize": 26
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "arrow": {
+        "id": "arrow",
+        "type": "link",
+        "z": "t",
+        "source": {
+          "node": "box"
+        },
+        "target": {
+          "node": "oval"
+        },
+        "label": "calls",
+        "overrides": {
+          "hue": "teal"
+        },
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      }
+    }
+  },
+  "parts": [],
+  "objects": [],
+  "intents": [
+    {
+      "kind": "create",
+      "element": {
+        "id": "box",
+        "type": "rect",
+        "z": "V",
+        "center": {
+          "x": 100,
+          "y": 50
+        },
+        "size": {
+          "width": 200,
+          "height": 100
+        },
+        "label": "Box",
+        "overrides": {
+          "hue": "blue",
+          "tone": 1,
+          "lineStyle": "dashed"
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "oval",
+        "type": "ellipse",
+        "z": "l",
+        "center": {
+          "x": 460,
+          "y": 40
+        },
+        "size": {
+          "width": 120,
+          "height": 80
+        },
+        "label": "Oval",
+        "overrides": {
+          "hue": "red",
+          "tone": 3,
+          "fontSize": 26
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "arrow",
+        "type": "link",
+        "z": "t",
+        "source": {
+          "node": "box"
+        },
+        "target": {
+          "node": "oval"
+        },
+        "label": "calls",
+        "overrides": {
+          "hue": "teal"
+        },
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "skipped": {},
+  "approximated": {}
+}

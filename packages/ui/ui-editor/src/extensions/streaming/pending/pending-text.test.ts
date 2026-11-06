@@ -32,6 +32,8 @@ describe('pendingText extension', () => {
     view.dispatch({ effects: setPendingInterim.of(' and') });
     expect(view.state.field(pendingTextState)).toEqual({
       anchor: 6,
+      to: 6,
+      layout: 'line',
       final: 'world',
       interim: ' and',
       placeholder: undefined,
@@ -70,6 +72,44 @@ describe('pendingText extension', () => {
     view.destroy();
   });
 
+  test('a paragraph commit is separated from its neighbours by blank lines', ({ expect }) => {
+    const view = createView('one\ntwo');
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 4, layout: 'paragraph' }) });
+    view.dispatch({ effects: appendPendingText.of('new') });
+    expect(commitPending(view)).toBe(true);
+    expect(view.state.doc.toString()).toBe('one\n\nnew\n\ntwo');
+    view.destroy();
+  });
+
+  test('a paragraph committed at a blank line adds only the missing newlines', ({ expect }) => {
+    const view = createView('one\n\ntwo');
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 4, layout: 'paragraph' }) });
+    view.dispatch({ effects: appendPendingText.of('new') });
+    expect(commitPending(view)).toBe(true);
+    expect(view.state.doc.toString()).toBe('one\n\nnew\n\ntwo');
+    view.destroy();
+  });
+
+  test('a paragraph commit replaces its range and stands apart from the text around it', ({ expect }) => {
+    const view = createView('one\ntwo three\nfour');
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 4, to: 13, layout: 'paragraph' }) });
+    view.dispatch({ effects: appendPendingText.of('new') });
+    expect(commitPending(view)).toBe(true);
+    expect(view.state.doc.toString()).toBe('one\n\nnew\n\nfour');
+    view.destroy();
+  });
+
+  test('an inline commit replaces its range without adding newlines', ({ expect }) => {
+    const view = createView('the quick fox');
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 4, to: 9, layout: 'inline' }) });
+    view.dispatch({ effects: appendPendingText.of('slow') });
+    view.dispatch({ changes: { from: 0, insert: 'See ' } });
+    expect(view.state.field(pendingTextState)).toMatchObject({ anchor: 8, to: 13 });
+    expect(commitPending(view)).toBe(true);
+    expect(view.state.doc.toString()).toBe('See the slow fox');
+    view.destroy();
+  });
+
   test('cancel discards pending text and leaves the document unchanged', ({ expect }) => {
     const view = createView('hello ');
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 6 }) });
@@ -92,6 +132,8 @@ describe('pendingText extension', () => {
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 6, placeholder: 'Recording…' }) });
     expect(view.state.field(pendingTextState)).toEqual({
       anchor: 6,
+      to: 6,
+      layout: 'line',
       final: '',
       interim: '',
       placeholder: 'Recording…',
