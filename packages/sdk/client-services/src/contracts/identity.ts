@@ -6,7 +6,8 @@ import * as EffectContext from 'effect/Context';
 
 import { type Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
-import { type EchoHost } from '@dxos/echo-host';
+import { type EchoHost, type EdgeAutomergeReplicator } from '@dxos/echo-host';
+import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type PublicKey } from '@dxos/keys';
 import { type Device } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type IdentityRecord } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -53,6 +54,13 @@ export type CreateIdentityOptions = {
   deviceProfile?: DeviceProfileDocument;
 };
 
+/** Edge services the identity manager is handed after construction, since they depend on the identity. */
+export type EdgeServices = {
+  /** Narrowed to the calls the HALO makes, so a test can stand in for edge without a full client. */
+  edgeHttpClient?: Pick<EdgeHttpClient, 'getSpaceRoot' | 'migrateSpaceRoot'>;
+  echoEdgeReplicator?: EdgeAutomergeReplicator;
+};
+
 /**
  * The peer's identity state machine, as its consumers use it.
  */
@@ -65,6 +73,9 @@ export interface Manager {
   updateProfile(profile: ProfileDocument): Promise<ProfileDocument>;
   updateDeviceProfile(profile: DeviceProfileDocument): Promise<Device>;
   setEchoHost(echoHost: EchoHost): Promise<void>;
+  setEdgeServices(services: EdgeServices): Promise<void>;
+  /** Has edge migrate the HALO onto a space root document and adopts it; resolves to the root URL. */
+  migrateHaloRootOnEdge(ctx: Context): Promise<string>;
   createIdentity(options?: CreateIdentityOptions, ctx?: Context): Promise<Identity>;
   prepareIdentity(
     params: JoinIdentityProps,
