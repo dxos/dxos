@@ -52,6 +52,9 @@ const REVIEW_TEXT = readFileSync(
 /** What the demo adds to F-4's requirements. */
 const REQUIREMENT = 'Settings name the credentials a build still needs.';
 
+/** The input the demo adds to verifySpec. */
+const INPUT = 'strict';
+
 /** Time to read a caption before the gesture it describes. */
 const READ = 2_500;
 
@@ -123,23 +126,36 @@ const setView = async (page, label, demo) => {
 
 /**
  * Scrolls the spec down (or up, with `direction` -1) until the form labelled `label` is drawn, then brings its top into
- * view smoothly.
+ * view smoothly. The spec draws only the cards near the view, so a scroll can land past one it had not measured; the
+ * search turns back at either end and lands on the card again until its top is in view.
  */
 const revealForm = async (page, label, direction = 1) => {
-  for (let tries = 0; tries < 200 && (await page.locator(form(label)).count()) === 0; tries++) {
-    await page
-      .locator(SCROLLER)
-      .evaluate(
-        (scroller, direction) => scroller.scrollBy({ top: direction * scroller.clientHeight * 0.8 }),
-        direction,
-      );
-    await page.waitForTimeout(40);
+  const target = page.locator(form(label)).first();
+  const scroller = page.locator(SCROLLER);
+  for (let tries = 0; tries < 400; tries++) {
+    if ((await page.locator(form(label)).count()) === 0) {
+      const moved = await scroller.evaluate((scroller, direction) => {
+        const before = scroller.scrollTop;
+        scroller.scrollBy({ top: direction * scroller.clientHeight * 0.8 });
+        return scroller.scrollTop !== before;
+      }, direction);
+      if (!moved) {
+        direction = -direction;
+      }
+      await page.waitForTimeout(40);
+      continue;
+    }
+    const inView = await target.evaluate((element) => {
+      const { top } = element.getBoundingClientRect();
+      return top >= 0 && top < window.innerHeight * 0.5;
+    });
+    if (inView) {
+      return;
+    }
+    await target.evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+    await page.waitForTimeout(900);
   }
-  await page
-    .locator(form(label))
-    .first()
-    .evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'smooth' }));
-  await page.waitForTimeout(900);
+  throw new Error(`${label} never came into view`);
 };
 
 /** Scrolls the spec by `top` pixels, smoothly. */
@@ -401,7 +417,7 @@ export const steps = [
       await page.locator(added).waitFor({ state: 'visible', timeout: 10_000 });
       await demo.click({ selector: added, label: `F-4.${rows + 1}` });
       await page.keyboard.press('ControlOrMeta+A');
-      await page.keyboard.type(REQUIREMENT, { delay: 35 });
+      await page.keyboard.type(REQUIREMENT, { delay: 8 });
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -473,12 +489,38 @@ export const steps = [
     },
   },
   {
+    name: "Add an operation's input",
+    narration: "An operation's inputs are rows too: a name, a type picked from a list, and a switch for optional.",
+    run: async ({ demo, page }) => {
+      await revealForm(page, 'verifySpec');
+      await caption(demo, 8, "An operation's input: name it, pick its type");
+      await edit(demo, page, 'verifySpec');
+      const operation = form('verifySpec');
+      const rows = await page.locator(`${operation} [data-testid^="input["][data-testid$="]"]`).count();
+      await demo.click({ selector: `${operation} [data-testid="input.add"]`, label: 'Add input' });
+      const added = `${operation} [data-testid="input[${rows}]"]`;
+      const name = `${added} :is(input, [contenteditable="true"])`;
+      await page.locator(name).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.click({ selector: name, label: 'Name' });
+      await page.keyboard.press('ControlOrMeta+A');
+      await page.keyboard.type(INPUT, { delay: 8 });
+      await page.keyboard.press('Tab');
+      await demo.click({ selector: `${added} [data-scope="combobox"][data-part="trigger"]`, label: 'Type' });
+      await page.locator(option('boolean')).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: 1_000 });
+      await demo.click({ selector: option('boolean'), label: 'boolean' });
+      await page.keyboard.press('Escape');
+      await demo.click({ selector: `${added} [data-scope="switch"][data-part="control"]`, label: 'Optional' });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
     name: 'Open Definitions',
     narration:
       "Structure's first view, Definitions, draws the spec as clusters of features around the blocks they share.",
     run: async ({ demo, page }) => {
       await demo.title({ value: "A spec's companion tabs", subtitle: 'Structure, Decisions and Review' });
-      await caption(demo, 8, 'Structure › Definitions: the spec as clusters');
+      await caption(demo, 9, 'Structure › Definitions: the spec as clusters');
       await demo.click({ selector: '[data-testid="plankHeading.companion"] >> nth=0', label: 'Companion' });
       await openTab(demo, page, 'structure', 'Structure');
       if ((await page.locator(CLUSTER).count()) === 0 && (await page.locator(view('definitions')).count()) > 0) {
@@ -492,7 +534,7 @@ export const steps = [
     name: 'Open a cluster',
     narration: 'Double-clicking a cluster opens its features, each framing what only it names.',
     run: async ({ demo, page }) => {
-      await caption(demo, 9, 'Double-click a cluster to open its features');
+      await caption(demo, 10, 'Double-click a cluster to open its features');
       await open(demo, page, cluster('CoderSkill'), 'CoderSkill');
       await page.locator(CLUSTER).first().waitFor({ state: 'detached', timeout: 15_000 });
       await page.locator(card('F-8')).waitFor({ state: 'visible', timeout: 30_000 });
@@ -503,7 +545,7 @@ export const steps = [
     name: 'Open Related',
     narration: "Related, Structure's second view, centres on the block nearest the editor's cursor.",
     run: async ({ demo, page }) => {
-      await caption(demo, 10, 'Structure › Related: the block at the cursor');
+      await caption(demo, 11, 'Structure › Related: the block at the cursor');
       await openView(demo, page, 'related', 'Related', '[data-testid="definition-related.focus"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -512,7 +554,7 @@ export const steps = [
     name: 'Press a feature',
     narration: 'Pressing a feature puts the cursor in it, and Related centres on it, with what it names below.',
     run: async ({ demo, page }) => {
-      await caption(demo, 11, 'Press F-8: Related centres on it');
+      await caption(demo, 12, 'Press F-8: Related centres on it');
       await revealForm(page, 'F-8');
       await edit(demo, page, 'F-8');
       await waitForRelated(page, 'F-8');
@@ -523,7 +565,7 @@ export const steps = [
     name: 'Press the next feature',
     narration: 'As the cursor moves to the next block, Related moves with it.',
     run: async ({ demo, page }) => {
-      await caption(demo, 12, 'Press F-9: Related follows');
+      await caption(demo, 13, 'Press F-9: Related follows');
       await revealForm(page, 'F-9');
       await edit(demo, page, 'F-9');
       await waitForRelated(page, 'F-9');
@@ -534,7 +576,7 @@ export const steps = [
     name: 'Press a type',
     narration: 'In a type, Related shows the features that name it above.',
     run: async ({ demo, page }) => {
-      await caption(demo, 13, 'Press a type: the features naming it');
+      await caption(demo, 14, 'Press a type: the features naming it');
       await revealForm(page, 'CodeProject', -1);
       await edit(demo, page, 'CodeProject');
       await waitForRelated(page, 'CodeProject');
@@ -545,7 +587,7 @@ export const steps = [
     name: 'Open Data model',
     narration: "Data model lists the spec's types and their fields.",
     run: async ({ demo, page }) => {
-      await caption(demo, 14, "Structure › Data model: the spec's types");
+      await caption(demo, 15, "Structure › Data model: the spec's types");
       await openView(demo, page, 'data', 'Data model', '[data-testid="data-model.type"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -554,7 +596,7 @@ export const steps = [
     name: 'Open API',
     narration: "API lists the spec's operations and services.",
     run: async ({ demo, page }) => {
-      await caption(demo, 15, "Structure › API: the spec's operations");
+      await caption(demo, 16, "Structure › API: the spec's operations");
       await openView(demo, page, 'api', 'API', '[data-testid="api-surface.op"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -563,7 +605,7 @@ export const steps = [
     name: 'Open Board',
     narration: "Board, the software dialect's last Structure view, shows the spec's features by status.",
     run: async ({ demo, page }) => {
-      await caption(demo, 16, 'Structure › Board: the features by status');
+      await caption(demo, 17, 'Structure › Board: the features by status');
       await openView(demo, page, 'kanban', 'Board', '[data-testid="board-column"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -572,7 +614,7 @@ export const steps = [
     name: 'Open Decisions at the cursor',
     narration: 'At cursor, the first Decisions view, shows what holds on the item at the cursor.',
     run: async ({ demo, page }) => {
-      await caption(demo, 17, 'Decisions › At cursor: what holds on F-20.4');
+      await caption(demo, 18, 'Decisions › At cursor: what holds on F-20.4');
       await revealForm(page, 'F-20');
       await demo.click({ selector: `${form('F-20')} [data-testid="req[3].text"] .cm-content`, label: 'F-20.4' });
       await openTab(demo, page, 'decisions', 'Decisions');
@@ -586,7 +628,7 @@ export const steps = [
     name: 'Open the Ledger',
     narration: 'The Ledger opens on a card per block, the most recently decided first.',
     run: async ({ demo, page }) => {
-      await caption(demo, 18, 'Decisions › Ledger: a card per block');
+      await caption(demo, 19, 'Decisions › Ledger: a card per block');
       await openView(demo, page, 'ledger', 'Ledger', LEDGER_BLOCK);
       await demo.sleep({ ms: LOOK });
     },
@@ -595,7 +637,7 @@ export const steps = [
     name: 'Open a block',
     narration: 'A block opens its threads: the decisions on it that cite one another.',
     run: async ({ demo, page }) => {
-      await caption(demo, 19, 'Open SpecViewContent: its threads');
+      await caption(demo, 20, 'Open SpecViewContent: its threads');
       await demo.click({
         selector: `${COMPANION} ${LEDGER_BLOCK}[data-block="SpecViewContent"]`,
         label: 'SpecViewContent',
@@ -608,7 +650,7 @@ export const steps = [
     name: 'Open a thread',
     narration: 'A thread shows what holds now, then its decisions by day, with approval at the top.',
     run: async ({ demo, page }) => {
-      await caption(demo, 20, 'Open a thread: what holds now, then each day');
+      await caption(demo, 21, 'Open a thread: what holds now, then each day');
       await demo.click({ selector: `${COMPANION} ${LEDGER_THREAD} >> nth=0`, label: 'Thread' });
       await page
         .locator(`${COMPANION} [data-testid="decision-ledger.holds-now"]`)
@@ -620,7 +662,7 @@ export const steps = [
     name: 'Open Review',
     narration: "Review shows the spec's latest compliance review, a verdict per item.",
     run: async ({ demo, page }) => {
-      await caption(demo, 21, 'Review › the latest compliance review');
+      await caption(demo, 22, 'Review › the latest compliance review');
       await openTab(demo, page, 'review', 'Review');
       await openView(
         demo,
@@ -636,7 +678,7 @@ export const steps = [
     name: 'Open Code',
     narration: 'A verdict opens the code it cites in Code, at its symbol.',
     run: async ({ demo, page }) => {
-      await caption(demo, 22, 'Review › Code: the source a verdict cites');
+      await caption(demo, 23, 'Review › Code: the source a verdict cites');
       await demo.click({ selector: `${COMPANION} [data-testid="review-panel.count.done"]`, label: 'Done' });
       // buildProject's verdict cites the function that compiles a project.
       const verdict = `${COMPANION} [data-testid="verdict-card"]:has(:text-is("buildProject"))`;
@@ -656,12 +698,12 @@ export const steps = [
     narration:
       'A script in the video dialect offers only the views that read any dialect, such as Definitions and Related.',
     run: async ({ demo, page }) => {
-      await caption(demo, 23, 'A video script: only the views for any dialect');
+      await caption(demo, 24, 'A video script: only the views for any dialect');
       await openTab(demo, page, 'structure', 'Structure');
       await pickSpec(page, VIDEO_SPEC, demo);
       await openView(demo, page, 'definitions', 'Definitions', '[data-cluster="cluster:maya"]');
       await page.locator(view('data')).waitFor({ state: 'detached', timeout: 10_000 });
-      await caption(demo, 23, "No Data model, API, Board or Code: they are software's");
+      await caption(demo, 24, "No Data model, API, Board or Code: they are software's");
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -669,7 +711,7 @@ export const steps = [
     name: "Open a character's cluster",
     narration: 'Definitions drills into a script as it does into code: a frame per scene, holding its shots and lines.',
     run: async ({ demo, page }) => {
-      await caption(demo, 24, "Double-click maya's cluster: a frame per scene");
+      await caption(demo, 25, "Double-click maya's cluster: a frame per scene");
       await open(demo, page, cluster('maya'), 'Maya');
       await page.locator(CLUSTER).first().waitFor({ state: 'detached', timeout: 15_000 });
       await page.locator(`${card('SC-2')}[data-opens]`).waitFor({ state: 'visible', timeout: 30_000 });
@@ -681,7 +723,7 @@ export const steps = [
     narration:
       'A scene opens onto everything it touches: its shots, voiceover and captions, its cast and its screenings.',
     run: async ({ demo, page }) => {
-      await caption(demo, 25, 'Double-click SC-2: everything it touches');
+      await caption(demo, 26, 'Double-click SC-2: everything it touches');
       await open(demo, page, card('SC-2'), 'SC-2');
       await page
         .locator(`${COMPANION} [data-testid="definition-canvas.card"][data-focused]`)
@@ -693,7 +735,7 @@ export const steps = [
     name: 'Press a scene',
     narration: 'Related follows the cursor through the script as it does through code.',
     run: async ({ demo, page }) => {
-      await caption(demo, 26, 'Related: follows the cursor into SC-3');
+      await caption(demo, 27, 'Related: follows the cursor into SC-3');
       await openView(demo, page, 'related', 'Related', '[data-testid="definition-related.focus"]');
       await revealForm(page, 'SC-3');
       await edit(demo, page, 'SC-3');
@@ -705,7 +747,7 @@ export const steps = [
     name: "Open the script's decisions",
     narration: 'Every dialect extends the changelog, so Decisions reads the script the same way.',
     run: async ({ demo, page }) => {
-      await caption(demo, 27, "Decisions: any dialect — the script's changelog");
+      await caption(demo, 28, "Decisions: any dialect — the script's changelog");
       await openTab(demo, page, 'decisions', 'Decisions');
       await openView(demo, page, 'ledger', 'Ledger', LEDGER_BLOCK);
       await demo.sleep({ ms: LOOK });

@@ -74,7 +74,7 @@ uses org.dxos.spec.review: The review dialect whose verdicts the spec viewer rea
 ## Extensions
 
 The following extension dialects are used in this document.
-Each extension is defined in the Appendix or resolved via its URI.
+Each extension is resolved via its URI.
 
 | Term        | URI                            |
 |-------------|--------------------------------|
@@ -1464,7 +1464,7 @@ test QA-7: Walk a spec's structure on the canvas
 test QA-8: Read a spec as text and as forms, then tour its companion tabs
   desc: |
     The spec as plain text, then as a form per block, with a requirement added and dragged to the top, a dependency
-    picked, a status picked and a type's field switched; then, still as forms, every view of the spec's companion
+    picked, a status picked, a type's field switched and an input added to an operation; then, still as forms, every view of the spec's companion
     tabs, in order: Structure's Definitions and Related, with Related following the card pressed from block to block, then the software dialect's Data model, API and Board; Decisions at the
     cursor and the Ledger, a level at a time; Review, and the software dialect's Code. Definitions, Related,
     Decisions and Review are plugin-projects' (its F-6, F-7 and F-8).
@@ -1501,11 +1501,14 @@ test QA-8: Read a spec as text and as forms, then tour its companion tabs
       do: Open F-4's Depends picker and pick F-1.
       expect: Depends shows F-1
     - name: Set a feature's status
-      do: Pick prototype in F-4's status tag.
-      expect: the tag shows prototype
+      do: Pick Prototype in F-4's status tag.
+      expect: the tag shows Prototype with its icon, in the status's hue
     - name: Edit a type's field
       do: Press CodeProject's form, flip the first field's Optional switch and open its Type list.
       expect: the switch flips, and the list offers the spec's types
+    - name: Add an operation's input
+      do: Press verifySpec's form, add an input, name it strict, pick boolean as its type and switch it to optional.
+      expect: verifySpec's inputs hold spec and strict, strict a boolean marked optional
     - name: Open Definitions
       do: Open the companion's Structure tab.
       expect: Definitions draws a card per cluster
@@ -2612,91 +2615,13 @@ decision D-117: QA-8 stays in the forms once it switches to them: it edits a fea
     - Editing the plugin block's dependencies, a list of ids, which shows the least of what the forms do.
 ```
 
-## Appendix: Extension Definitions
-
-Extension block types used in this document are defined below using
-the core `ext` primitive — the only construct the base language provides.
-
 ```mdl
-ext type
-  uri: org.dxos.mdl.type@1.0
-  desc: A named data structure with typed fields and optional literals.
-  fields:
-    desc?: Prose
-    fields?: FieldMap
-    literals?: UnionList
-    extends?: TypeRef[]
-```
-
-```mdl
-ext feat
-  uri: org.dxos.mdl.feat@1.1
-  desc: A named feature grouping one or more requirements.
-  nesting: self
-  inline-prose: true
-  role: anchor
-  label: F
-  icon: ph--star--regular
-  hue: emerald
-  fields:
-    status?: planned | in-progress | prototype | operational | failing
-    desc?: Prose
-    req: RequirementList
-    depends?: FeatRef[]          # features this one needs first
-    uses?: BlockRef[]            # the blocks this feature needs, other than features
-    spec?: Ref<spec>             # the spec that breaks this feature down
-  links:
-    depends: depends-on
-    uses: depends-on
-```
-
-```mdl
-ext scenario
-  uri: org.dxos.mdl.scenario@1.0
-  desc: An acceptance scenario expressed as given / when / then steps.
-  fields:
-    given?: Step | Step[]
-    when?: Step | Step[]
-    then: Step | Step[]
-    tags?: TagList
-```
-
-```mdl
-ext component
-  uri: org.dxos.mdl.component@1.0
-  desc: A UI component with props, state, slots, actions, and events.
-  fields:
-    desc?: Prose
-    props?: FieldMap
-    state?: FieldMap
-    slots?: FieldMap
-    actions?: ActionMap
-    emits?: EventMap
-    layout?: CodeBlock
-```
-
-```mdl
-ext op
-  uri: org.dxos.mdl.op@1.0
-  desc: A named operation with typed inputs, outputs, and declared errors.
-  fields:
-    desc?: Prose
-    input?: FieldMap
-    output?: TypeExpr
-    errors?: ErrorMap
-    effects?: EffectList
-    requires?: ServiceList
-    note?: Prose
-```
-
-```mdl
-ext service
-  uri: org.dxos.mdl.service@1.0
-  desc: An external or system-level dependency providing named operations.
-  fields:
-    desc?: Prose
-    loading?: eager | lazy
-    ops?: OpMap
-    errors?: ErrorMap
-    note?: Prose
+decision D-118: QA-8 adds an input to an operation as well, types its text faster, and expects F-4's status tag in its icon and hue. The spec drops its appendix of extension definitions, so `type`, `op`, `component`, `service` and `scenario` resolve by URI to the code dialect, with its icons, hues and roles. Amends [D-117].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: The user asked for one more block edited and faster typing. The appendix's older definitions had no hue or icon and an `op` without `key`, so the forms showed this spec without the colours they take from a dialect.
+  rejected:
+    - Bringing the appendix up to the dialect's definitions, a copy that drifts again.
 ```
