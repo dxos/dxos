@@ -306,6 +306,11 @@ const ROW_MOTION = { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' };
 
 type RowPlace = { top: number; follow: boolean };
 
+const getTranslateY = (element: HTMLElement) => {
+  const { transform } = getComputedStyle(element);
+  return transform && transform !== 'none' ? new DOMMatrixReadOnly(transform).m42 : 0;
+};
+
 /** Where each person's first row sits in the list, and whether it is in the follow. */
 const measureRows = (root: HTMLElement): Map<string, RowPlace & { element: HTMLElement }> => {
   const rootTop = root.getBoundingClientRect().top;
@@ -314,7 +319,8 @@ const measureRows = (root: HTMLElement): Map<string, RowPlace & { element: HTMLE
     const key = element.dataset.member;
     if (key && !rows.has(key)) {
       rows.set(key, {
-        top: element.getBoundingClientRect().top - rootTop,
+        // Its place in the layout, without a slide already running, so a render mid-slide does not start another.
+        top: element.getBoundingClientRect().top - rootTop - getTranslateY(element),
         follow: element.hasAttribute('data-follow'),
         element,
       });
