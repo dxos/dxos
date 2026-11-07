@@ -304,28 +304,53 @@ const PointerToggle = ({ value, onValueChange }: PointerToggleProps) => {
 
 const ROW_MOTION = { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' };
 
+type RowPlace = { top: number; follow: boolean };
+
+/** Where each person's first row sits in the list, and whether it is in the follow. */
+const measureRows = (root: HTMLElement): Map<string, RowPlace & { element: HTMLElement }> => {
+  const rootTop = root.getBoundingClientRect().top;
+  const rows = new Map<string, RowPlace & { element: HTMLElement }>();
+  for (const element of root.querySelectorAll<HTMLElement>('[data-member]')) {
+    const key = element.dataset.member;
+    if (key && !rows.has(key)) {
+      rows.set(key, {
+        top: element.getBoundingClientRect().top - rootTop,
+        follow: element.hasAttribute('data-follow'),
+        element,
+      });
+    }
+  }
+  return rows;
+};
+
 /**
  * Slides a person's rows from where they were to where they are, and fades in the follow's wash on rows that just
  * joined it, so following someone reads as their row rising to the top and changing state.
  */
 const useRowMotion = (ref: RefObject<HTMLElement | null>) => {
-  const previous = useRef(new Map<string, { top: number; follow: boolean }>());
+  const previous = useRef(new Map<string, RowPlace>());
+
+  // A resize (the companion opening, rows rewrapping) moves rows without a render, so their places are taken again.
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      previous.current = new Map([...measureRows(root)].map(([key, { top, follow }]) => [key, { top, follow }]));
+    });
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [ref]);
+
   useLayoutEffect(() => {
     const root = ref.current;
     if (!root) {
       return;
     }
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const rootTop = root.getBoundingClientRect().top;
-    const next = new Map<string, { top: number; follow: boolean }>();
-    for (const element of root.querySelectorAll<HTMLElement>('[data-member]')) {
-      const key = element.dataset.member;
-      if (!key || next.has(key)) {
-        continue;
-      }
-      const top = element.getBoundingClientRect().top - rootTop;
-      const follow = element.hasAttribute('data-follow');
-      next.set(key, { top, follow });
+    const rows = measureRows(root);
+    for (const [key, { top, follow, element }] of rows) {
       const before = previous.current.get(key);
       if (still || !before) {
         continue;
@@ -338,7 +363,7 @@ const useRowMotion = (ref: RefObject<HTMLElement | null>) => {
         element.animate([{ backgroundColor: 'transparent' }, { backgroundColor }], ROW_MOTION);
       }
     }
-    previous.current = next;
+    previous.current = new Map([...rows].map(([key, { top, follow }]) => [key, { top, follow }]));
   });
 };
 
