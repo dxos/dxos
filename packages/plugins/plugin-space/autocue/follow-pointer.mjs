@@ -81,6 +81,11 @@ const closeSidebar = async (peer) => {
     await peer.click(sidebar(peer.page).getByTestId('deck.toggleComplementarySidebar'));
   }
   const closeCompanion = peer.page.getByTestId('plankHeading.closeCompanion').filter({ visible: true });
+  // A document's help companion opens a moment after its plank does.
+  await closeCompanion
+    .first()
+    .waitFor({ timeout: 2_000 })
+    .catch(() => {});
   for (let attempt = 0; attempt < 5 && (await closeCompanion.count()) > 0; attempt++) {
     await peer.click(closeCompanion.first());
   }
@@ -334,6 +339,7 @@ export const steps = [
     name: 'The leader points at the plan; Bob sees the pointer',
     subtitle: 'QA-7 step 4: at the same spot of the same plank in his deck',
     run: async ({ peers: { bob }, sleep }) => {
+      await closeSidebar(leader);
       await glideUntilShown(
         leader,
         bob,
