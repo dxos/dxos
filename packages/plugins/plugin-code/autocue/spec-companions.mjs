@@ -3,9 +3,9 @@
 //
 
 /**
- * A spec as plain text and then as forms, a form per block, with a few of its fields edited; then every view of its
- * companion tabs, in order: Structure's Definitions and Related, with Related following the
- * editor's cursor, then the software dialect's Data model, API and Board; Decisions at the cursor and the Ledger, a
+ * A spec as plain text and then as forms, a form per block, with a few of its fields edited; then, still as forms,
+ * every view of its companion tabs, in order: Structure's Definitions and Related, with Related following the card
+ * pressed, then the software dialect's Data model, API and Board; Decisions at the cursor and the Ledger, a
  * level at a time; Review, and the software dialect's Code. A script in the video dialect then offers only the views
  * that read any dialect, and Definitions drills into it as it does into code.
  *
@@ -33,8 +33,13 @@ const FEATURE_STATUSES = {
   'F-6': 'failing',
 };
 
-/** A spec's text without the front matter the spec's own fields replace. */
-const body = (path) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^---\n[\s\S]*?\n---\n+/, '');
+/** A spec's text headed by its name, in place of the front matter the spec's own fields replace. */
+const body = (path) => {
+  const text = readFileSync(new URL(path, import.meta.url), 'utf8');
+  const name = text.match(/^---\n[\s\S]*?^name: (.+)$/m)?.[1];
+  const rest = text.replace(/^---\n[\s\S]*?\n---\n+/, '');
+  return name ? `# ${name}\n\n${rest}` : rest;
+};
 const CODE_TEXT = body('../PLUGIN.mdl').replace(/^(feat (F-\d+):.*)$/gm, (header, _, id) =>
   FEATURE_STATUSES[id] ? `${header}\n  status: ${FEATURE_STATUSES[id]}` : header,
 );
@@ -65,15 +70,6 @@ const view = (id) => `${COMPANION} [data-testid="spec-companion.view.${id}"]`;
 const RELATED = `${COMPANION} [data-testid="definition-related.focus"]`;
 const LEDGER_BLOCK = '[data-testid="decision-ledger.block"]';
 const LEDGER_THREAD = '[data-testid="decision-ledger.thread"]';
-const line = (text) => `${EDITOR} .cm-line:has-text("${text}")`;
-/**
- * A block's id in its header line, clear of the chips floated at the line's end; a dialect's header the editor does
- * not highlight is the line itself.
- */
-const blockId = async (page, text, id) => {
-  const span = `${line(text)} .cm-mdl-block-id:text-is("${id}")`;
-  return (await page.locator(span).count()) > 0 ? span : line(text);
-};
 const CLUSTER = `${COMPANION} [data-testid="definition-canvas.cluster"]`;
 const row = (name) => `${SPECS} [role="group"]:has(> [data-part="legend"]:text-is("${name}"))`;
 const field = (name, label) =>
@@ -81,6 +77,7 @@ const field = (name, label) =>
 const SCROLLER = `${DOCUMENT} [data-testid="spec-article.spec"]`;
 const VIEW_MODE = `${DOCUMENT} [data-testid="editor.toolbar.viewMode"]`;
 const FORMS = `${DOCUMENT} [data-testid="spec-block"]`;
+const REQUIREMENT_TEXT = '[data-testid^="req["][data-testid$="].text"]';
 const form = (label) => `${FORMS}:has([data-testid="spec-block.label"]:text-is("${label}"))`;
 /** A menu's item only: a form's list rows are options and items too. */
 const option = (text) =>
@@ -113,31 +110,6 @@ const openView = async (demo, page, id, label, ready) => {
 const waitForRelated = (page, id) =>
   page.locator(`${RELATED}[data-definition="${id}"]`).waitFor({ state: 'visible', timeout: 10_000 });
 
-/**
- * Scrolls the editor down (or up, with `direction` -1) until the line holding `text` is drawn, then centres it; the
- * editor draws only the lines in view.
- */
-const scrollToLine = async (page, text, direction = 1) => {
-  for (let tries = 0; tries < 200 && (await page.locator(line(text)).count()) === 0; tries++) {
-    await page.evaluate(
-      ([editor, direction]) => {
-        let scroller = document.querySelector(editor);
-        while (scroller && scroller.scrollHeight <= scroller.clientHeight) {
-          scroller = scroller.parentElement;
-        }
-        scroller?.scrollBy({ top: direction * scroller.clientHeight * 0.8 });
-      },
-      [EDITOR, direction],
-    );
-    await page.waitForTimeout(50);
-  }
-  await page
-    .locator(line(text))
-    .first()
-    .evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-  await page.waitForTimeout(800);
-};
-
 /** Picks the Specs tab's view: `Plain text` is the spec's text, `Markdown` a form per block. */
 const setView = async (page, label, demo) => {
   const click = (selector, label) => (demo ? demo.click({ selector, label }) : page.locator(selector).first().click());
@@ -149,10 +121,18 @@ const setView = async (page, label, demo) => {
     .waitFor({ state: label === 'Plain text' ? 'detached' : 'visible', timeout: 10_000 });
 };
 
-/** Scrolls the spec until the form labelled `label` is drawn, then brings its top into view smoothly. */
-const revealForm = async (page, label) => {
+/**
+ * Scrolls the spec down (or up, with `direction` -1) until the form labelled `label` is drawn, then brings its top into
+ * view smoothly.
+ */
+const revealForm = async (page, label, direction = 1) => {
   for (let tries = 0; tries < 200 && (await page.locator(form(label)).count()) === 0; tries++) {
-    await page.locator(SCROLLER).evaluate((scroller) => scroller.scrollBy({ top: scroller.clientHeight * 0.8 }));
+    await page
+      .locator(SCROLLER)
+      .evaluate(
+        (scroller, direction) => scroller.scrollBy({ top: direction * scroller.clientHeight * 0.8 }),
+        direction,
+      );
     await page.waitForTimeout(40);
   }
   await page
@@ -408,56 +388,56 @@ export const steps = [
     },
   },
   {
-    name: 'Add a dependency',
-    narration: "A list is rows: adding one writes a new entry into the block's text.",
+    name: 'Add a requirement',
+    narration: "A feature's requirements are a list: a new one is labelled after the last.",
     run: async ({ demo, page }) => {
-      await caption(demo, 3, 'A list field: add a row and type into it');
-      const plugin = form('CodePlugin');
-      await edit(demo, page, 'CodePlugin');
-      const rows = await page.locator(`${plugin} [data-testid^="dependsOn["]`).count();
-      await demo.click({ selector: `${plugin} [data-testid="dependsOn.add"]`, label: 'Add' });
-      const added = `${plugin} [data-testid="dependsOn[${rows}]"]`;
-      await page.locator(added).first().waitFor({ state: 'visible', timeout: 10_000 });
-      await demo.click({ selector: added, label: 'New row' });
+      await revealForm(page, 'F-4');
+      await caption(demo, 3, 'Requirements: add one, labelled after the last');
+      const feature = form('F-4');
+      await edit(demo, page, 'F-4');
+      const rows = await page.locator(`${feature} ${REQUIREMENT_TEXT}`).count();
+      await demo.click({ selector: `${feature} [data-testid="req.add"]`, label: 'Add requirement' });
+      const added = `${feature} [data-testid="req[${rows}].text"] .cm-content`;
+      await page.locator(added).waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.click({ selector: added, label: `F-4.${rows + 1}` });
       await page.keyboard.press('ControlOrMeta+A');
-      await page.keyboard.type('org.dxos.plugin.github', { delay: 45 });
+      await page.keyboard.type(REQUIREMENT, { delay: 35 });
       await demo.sleep({ ms: LOOK });
     },
   },
   {
-    name: "Edit a type's field",
-    narration: "A type's fields are rows of their own: a name, a switch for optional, and a type picked from a list.",
+    name: 'Move it to the top',
+    narration: 'Dragging a requirement reorders the lines, and every label follows its position.',
     run: async ({ demo, page }) => {
-      await revealForm(page, 'CodeProject');
-      await caption(demo, 4, "A type's fields: a switch, and a type from a list");
-      await edit(demo, page, 'CodeProject');
-      const field = `${form('CodeProject')} [data-testid="fields[0]"]`;
-      await demo.click({ selector: `${field} [data-scope="switch"][data-part="control"]`, label: 'Optional' });
-      await demo.sleep({ ms: 1_500 });
-      await demo.click({ selector: `${field} [data-scope="combobox"][data-part="trigger"]`, label: 'Type' });
-      await page.locator(option('Spec')).first().waitFor({ state: 'visible', timeout: 10_000 });
-      await demo.sleep({ ms: 2_000 });
-      await page.keyboard.press('Escape');
-      await demo.sleep({ ms: 1_500 });
+      await caption(demo, 4, 'Drag it to the top: the labels follow the order');
+      const handles = page.locator(`${form('F-4')} [data-drag-handle]`);
+      const last = await handles.last().boundingBox();
+      const first = await handles.first().boundingBox();
+      await demo.drag({
+        fromXY: { x: last.x + last.width / 2, y: last.y + last.height / 2 },
+        toXY: { x: first.x + first.width / 2, y: first.y + 2 },
+        steps: 30,
+        stepDelay: 25,
+        label: 'Drag to the top',
+      });
+      await page
+        .locator(`${form('F-4')} [data-testid="req[0].text"]:has-text("${REQUIREMENT}")`)
+        .waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: LOOK });
     },
   },
   {
-    name: 'Add a requirement',
-    narration: "A feature's requirements are keyed lines; a new one is labelled after the last.",
+    name: 'Pick a feature it depends on',
+    narration: "A reference picks from the spec's own blocks: here, the features F-4 needs first.",
     run: async ({ demo, page }) => {
-      await revealForm(page, 'F-4');
-      await caption(demo, 5, 'Keyed lines: a new requirement gets the next label');
-      const feature = form('F-4');
-      await edit(demo, page, 'F-4');
-      const rows = await page.locator(`${feature} [data-testid^="req["][data-testid$="].text"]`).count();
-      await demo.click({ selector: `${feature} [data-testid="req.add"]`, label: 'Add requirement' });
-      const added = `${feature} [data-testid="req[${rows}].text"] .cm-content`;
-      await page.locator(added).waitFor({ state: 'visible', timeout: 10_000 });
-      await page.locator(added).evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-      await demo.sleep({ ms: 900 });
-      await demo.click({ selector: added, label: `F-4.${rows + 1}` });
-      await page.keyboard.press('ControlOrMeta+A');
-      await page.keyboard.type(REQUIREMENT, { delay: 35 });
+      await caption(demo, 5, "A reference: pick from the spec's features");
+      const depends = `${form('F-4')} [data-testid="depends"]`;
+      await demo.click({ selector: `${depends} [data-scope="combobox"][data-part="trigger"]`, label: 'Depends' });
+      await page.locator(option('F-1')).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: 1_200 });
+      await demo.click({ selector: option('F-1'), label: 'F-1' });
+      await page.keyboard.press('Escape');
+      await page.locator(`${depends}:has-text("F-1")`).waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -467,8 +447,6 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 6, "A choice: F-4's status, from the dialect's set");
       const status = `${form('F-4')} [data-testid="status"]`;
-      await page.locator(status).evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-      await demo.sleep({ ms: 900 });
       await demo.click({ selector: status, label: 'Status' });
       await page.locator(option('prototype')).first().waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: 1_200 });
@@ -478,20 +456,20 @@ export const steps = [
     },
   },
   {
-    name: 'Back to the text',
-    narration: 'Underneath, the spec is still text, and each edit wrote only its own line.',
+    name: "Edit a type's field",
+    narration: "A type's fields are rows of their own: a name, a switch for optional, and a type picked from a list.",
     run: async ({ demo, page }) => {
-      await caption(demo, 7, 'Plain text again: each edit wrote its own line');
-      await setView(page, 'Plain text', demo);
-      await page.locator(SCROLLER).evaluate((scroller) => (scroller.scrollTop = 0));
-      await page.locator(line('dependsOn: [')).first().waitFor({ state: 'visible', timeout: 10_000 });
-      await demo.sleep({ ms: LOOK });
-      await scrollToLine(page, REQUIREMENT);
-      await demo.sleep({ ms: LOOK });
-      await page.locator(SCROLLER).evaluate((scroller) => (scroller.scrollTop = 0));
-      await page.locator(EDITOR).first().click();
-      await page.keyboard.press('ControlOrMeta+Home');
-      await page.waitForTimeout(1_000);
+      await revealForm(page, 'CodeProject', -1);
+      await caption(demo, 7, "A type's fields: a switch, and a type from a list");
+      await edit(demo, page, 'CodeProject');
+      const field = `${form('CodeProject')} [data-testid="fields[0]"]`;
+      await demo.click({ selector: `${field} [data-scope="switch"][data-part="control"]`, label: 'Optional' });
+      await demo.sleep({ ms: 1_500 });
+      await demo.click({ selector: `${field} [data-scope="combobox"][data-part="trigger"]`, label: 'Type' });
+      await page.locator(option('Spec')).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: 2_000 });
+      await page.keyboard.press('Escape');
+      await demo.sleep({ ms: 1_500 });
     },
   },
   {
@@ -531,40 +509,34 @@ export const steps = [
     },
   },
   {
-    name: 'Put the cursor in a feature',
-    narration: 'Clicking into a feature centres Related on it, with what it names below.',
+    name: 'Press a feature',
+    narration: 'Pressing a feature puts the cursor in it, and Related centres on it, with what it names below.',
     run: async ({ demo, page }) => {
-      await caption(demo, 11, 'Click into F-8: Related centres on it');
-      await scrollToLine(page, 'feat F-8:');
-      await demo.click({ selector: await blockId(page, 'feat F-8:', 'F-8'), label: 'F-8' });
+      await caption(demo, 11, 'Press F-8: Related centres on it');
+      await revealForm(page, 'F-8');
+      await edit(demo, page, 'F-8');
       await waitForRelated(page, 'F-8');
       await demo.sleep({ ms: LOOK });
     },
   },
   {
-    name: 'Move the cursor to the next feature',
-    narration: 'As the cursor moves down into the next block, Related moves with it.',
+    name: 'Press the next feature',
+    narration: 'As the cursor moves to the next block, Related moves with it.',
     run: async ({ demo, page }) => {
-      await caption(demo, 12, 'Arrow down into F-9: Related follows');
-      for (let lines = 0; lines < 40; lines++) {
-        await page.keyboard.press('ArrowDown');
-        await page.waitForTimeout(180);
-        if ((await page.locator(`${RELATED}[data-definition="F-9"]`).count()) > 0) {
-          break;
-        }
-      }
+      await caption(demo, 12, 'Press F-9: Related follows');
+      await revealForm(page, 'F-9');
+      await edit(demo, page, 'F-9');
       await waitForRelated(page, 'F-9');
       await demo.sleep({ ms: LOOK });
     },
   },
   {
-    name: 'Move the cursor to a type',
+    name: 'Press a type',
     narration: 'In a type, Related shows the features that name it above.',
     run: async ({ demo, page }) => {
-      await caption(demo, 13, 'Click into a type: the features naming it');
-      // The block's header line, not a feature's `uses:` that names it.
-      await scrollToLine(page, 'type CodeProject', -1);
-      await demo.click({ selector: await blockId(page, 'type CodeProject', 'CodeProject'), label: 'CodeProject' });
+      await caption(demo, 13, 'Press a type: the features naming it');
+      await revealForm(page, 'CodeProject', -1);
+      await edit(demo, page, 'CodeProject');
       await waitForRelated(page, 'CodeProject');
       await demo.sleep({ ms: LOOK });
     },
@@ -600,12 +572,12 @@ export const steps = [
     name: 'Open Decisions at the cursor',
     narration: 'At cursor, the first Decisions view, shows what holds on the item at the cursor.',
     run: async ({ demo, page }) => {
-      await caption(demo, 17, 'Decisions › At cursor: what holds on F-22.4');
-      await scrollToLine(page, 'req F-22.4:');
-      await demo.click({ selector: await blockId(page, 'req F-22.4:', 'F-22.4'), label: 'F-22.4' });
+      await caption(demo, 17, 'Decisions › At cursor: what holds on F-20.4');
+      await revealForm(page, 'F-20');
+      await demo.click({ selector: `${form('F-20')} [data-testid="req[3].text"] .cm-content`, label: 'F-20.4' });
       await openTab(demo, page, 'decisions', 'Decisions');
       await page
-        .locator(`${COMPANION} [data-testid="decision-cursor"][data-focus="F-22.4"]`)
+        .locator(`${COMPANION} [data-testid="decision-cursor"][data-focus="F-20.4"]`)
         .waitFor({ state: 'visible', timeout: 15_000 });
       await demo.sleep({ ms: LOOK });
     },
@@ -687,10 +659,6 @@ export const steps = [
       await caption(demo, 23, 'A video script: only the views for any dialect');
       await openTab(demo, page, 'structure', 'Structure');
       await pickSpec(page, VIDEO_SPEC, demo);
-      // The cursor steps below click the script's lines.
-      if ((await page.locator(FORMS).count()) > 0) {
-        await setView(page, 'Plain text');
-      }
       await openView(demo, page, 'definitions', 'Definitions', '[data-cluster="cluster:maya"]');
       await page.locator(view('data')).waitFor({ state: 'detached', timeout: 10_000 });
       await caption(demo, 23, "No Data model, API, Board or Code: they are software's");
@@ -722,13 +690,13 @@ export const steps = [
     },
   },
   {
-    name: 'Put the cursor in a scene',
+    name: 'Press a scene',
     narration: 'Related follows the cursor through the script as it does through code.',
     run: async ({ demo, page }) => {
       await caption(demo, 26, 'Related: follows the cursor into SC-3');
       await openView(demo, page, 'related', 'Related', '[data-testid="definition-related.focus"]');
-      await scrollToLine(page, 'scene SC-3');
-      await demo.click({ selector: await blockId(page, 'scene SC-3', 'SC-3'), label: 'SC-3' });
+      await revealForm(page, 'SC-3');
+      await edit(demo, page, 'SC-3');
       await waitForRelated(page, 'SC-3');
       await demo.sleep({ ms: LOOK });
     },

@@ -4,6 +4,12 @@ name: CodePlugin
 version: 0.1.0
 ---
 
+A plugin for AI-assisted Composer plugin development. Hosts authored DEUS specs
+(`.mdl` files), couples them to a `CodeProject`, and provides a Coder skill
+that lets the assistant verify a spec, write source files into the project,
+and (eventually) dispatch a build agent. The build/sandbox itself is a
+separate EDGE service (out of scope until phase 2).
+
 ```mdl
 plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code they describe.
   id: org.dxos.plugin.code
@@ -24,12 +30,6 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
 ```
-
-A plugin for AI-assisted Composer plugin development. Hosts authored DEUS specs
-(`.mdl` files), couples them to a `CodeProject`, and provides a Coder skill
-that lets the assistant verify a spec, write source files into the project,
-and (eventually) dispatch a build agent. The build/sandbox itself is a
-separate EDGE service (out of scope until phase 2).
 
 Phase 1 shipped: rename, schema, skill scaffold, settings, credential
 wiring, and stub `verifySpec` / `runBuildAgent` operations.
@@ -1452,8 +1452,8 @@ test QA-7: Walk a spec's structure on the canvas
     - name: Open a scene
       do: Double-click SC-2.
       expect: SC-2 is centred, with the scenes and screenings that name it and the shots, lines and cast it names
-    - name: Put the cursor in a scene
-      do: Pick Related, then click SC-3's header line in the editor.
+    - name: Press a scene
+      do: Pick Related, then press SC-3's form.
       expect: Related centres on SC-3
     - name: Open the script's decisions
       do: Open the Decisions tab and pick Ledger.
@@ -1463,9 +1463,9 @@ test QA-7: Walk a spec's structure on the canvas
 ```mdl
 test QA-8: Read a spec as text and as forms, then tour its companion tabs
   desc: |
-    The spec as plain text, then as a form per block, with a list row added, a type's field switched, a requirement
-    added and a status picked; then every view of the spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
-    editor's cursor from block to block, then the software dialect's Data model, API and Board; Decisions at the
+    The spec as plain text, then as a form per block, with a requirement added and dragged to the top, a dependency
+    picked, a status picked and a type's field switched; then, still as forms, every view of the spec's companion
+    tabs, in order: Structure's Definitions and Related, with Related following the card pressed from block to block, then the software dialect's Data model, API and Board; Decisions at the
     cursor and the Ledger, a level at a time; Review, and the software dialect's Code. Definitions, Related,
     Decisions and Review are plugin-projects' (its F-6, F-7 and F-8).
     A script in the video dialect then offers only the views that read any dialect, and Definitions drills into it as
@@ -1487,25 +1487,25 @@ test QA-8: Read a spec as text and as forms, then tour its companion tabs
   steps:
     - name: Read the spec as text
       do: Scroll the spec down and back.
-      expect: the plugin block and the blocks after it as MDL text
+      expect: the title and description, then the plugin block and the blocks after it as MDL text
     - name: Switch to the forms
       do: Pick Markdown in the toolbar's view menu.
-      expect: each block drawn as a form, the plugin block's id, dependencies and modules as fields
-    - name: Add a dependency
-      do: Press the plugin form, then its add button under DependsOn, and type `org.dxos.plugin.github`.
-      expect: a third row holding the id
-    - name: Edit a type's field
-      do: Press CodeProject's form, flip the first field's Optional switch and open its Type list.
-      expect: the switch flips, and the list offers the spec's types
+      expect: each block drawn as a form, the plugin block headed by CodePlugin with its purpose under it
     - name: Add a requirement
-      do: Press F-4's form, then Add requirement, and type a requirement.
+      do: Press F-4's form, then the add button at the top right of its requirements, and type a requirement.
       expect: a row labelled F-4.7 holding the text
+    - name: Move it to the top
+      do: Drag the new requirement's handle above F-4.1.
+      expect: the new requirement is labelled F-4.1, and the others follow it
+    - name: Pick a feature it depends on
+      do: Open F-4's Depends picker and pick F-1.
+      expect: Depends shows F-1
     - name: Set a feature's status
       do: Pick prototype in F-4's status tag.
       expect: the tag shows prototype
-    - name: Back to the text
-      do: Pick Plain text in the view menu.
-      expect: the text holds `org.dxos.plugin.github` in `dependsOn:`, and F-4's `status: prototype` and new requirement
+    - name: Edit a type's field
+      do: Press CodeProject's form, flip the first field's Optional switch and open its Type list.
+      expect: the switch flips, and the list offers the spec's types
     - name: Open Definitions
       do: Open the companion's Structure tab.
       expect: Definitions draws a card per cluster
@@ -1514,15 +1514,15 @@ test QA-8: Read a spec as text and as forms, then tour its companion tabs
       expect: a frame per feature holding what only it names
     - name: Open Related
       do: Pick Related in Structure's toolbar.
-      expect: Related centres on the plugin block, the one at the cursor
-    - name: Put the cursor in a feature
-      do: Click F-8's id in the editor.
+      expect: Related centres on CodeProject, the block at the cursor
+    - name: Press a feature
+      do: Press F-8's form.
       expect: Related centres on F-8, with what it names below it and QA-1 as what checks it
-    - name: Move the cursor to the next feature
-      do: Press the down arrow until the cursor leaves F-8.
-      expect: Related centres on F-9 once the cursor is in its block
-    - name: Move the cursor to a type
-      do: Click CodeProject's id in the editor.
+    - name: Press the next feature
+      do: Press F-9's form.
+      expect: Related centres on F-9
+    - name: Press a type
+      do: Press CodeProject's form.
       expect: Related centres on CodeProject, with the features naming it above it
     - name: Open Data model
       do: Pick Data model in Structure's toolbar.
@@ -1534,8 +1534,8 @@ test QA-8: Read a spec as text and as forms, then tour its companion tabs
       do: Pick Board in Structure's toolbar.
       expect: a column per status, the spec's features sorted into them
     - name: Open Decisions at the cursor
-      do: Click F-22.4's id in the editor, then open the companion's Decisions tab.
-      expect: At cursor shows the decisions that hold on F-22.4, then those that hold on F-22
+      do: Click into F-20.4's text in F-20's form, then open the companion's Decisions tab.
+      expect: At cursor shows the decisions that hold on F-20.4, then those that hold on F-20
     - name: Open the Ledger
       do: Pick Ledger in Decisions' toolbar.
       expect: a card per block, the most recently decided first, under a count of the decisions not yet approved
@@ -1560,8 +1560,8 @@ test QA-8: Read a spec as text and as forms, then tour its companion tabs
     - name: Open a scene
       do: Double-click SC-2.
       expect: SC-2 is centred, with its shots, voiceover, caption and cast and the screenings that name it
-    - name: Put the cursor in a scene
-      do: Pick Related, then click SC-3's header line in the editor.
+    - name: Press a scene
+      do: Pick Related, then press SC-3's form.
       expect: Related centres on SC-3
     - name: Open the script's decisions
       do: Open the Decisions tab and pick Ledger.
@@ -2599,6 +2599,17 @@ decision D-116: QA-8 presses a form before editing it, since a form at rest read
   for: user:wittjosiah
   affects: [QA-8]
   why: plugin-projects' block forms became as dense as the feature section ([D-229] there): their pickers and add buttons show once pressed, and a choice field is a tag beside the title.
+```
+
+```mdl
+decision D-117: QA-8 stays in the forms once it switches to them: it edits a feature's requirements, dependencies and status and a type's field, and the companion steps press cards rather than click lines of text. The spec opens with its description, before the plugin block. Amends [D-116].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: plain text is there to show that every block kind has a form; going back to it hid that. The plugin block is the least interesting to edit, and a pressed card or a focused field now moves the spec's cursor (plugin-projects' [D-230]), so Related and At cursor follow the forms.
+  rejected:
+    - Editing the plugin block's dependencies, a list of ids, which shows the least of what the forms do.
 ```
 
 ## Appendix: Extension Definitions
