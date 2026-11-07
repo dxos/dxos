@@ -33,7 +33,7 @@ type Item = { id: string; index: number };
 
 export type ArrayFieldProps = {
   label: string;
-  /** Leave the header's text empty while the list keeps `label` as its name, for a host whose heading already says it. */
+  /** Drop the header for a host whose heading already names the list (which keeps `label` as its name); the add button follows the rows. */
   hideLabel?: boolean;
   section?: boolean;
   /** Shown in place of the rows while there are none; only a field override sets it. */
@@ -214,7 +214,21 @@ export const ArrayField = ({
     );
   }
 
-  // A header with no text and no add button would be an empty line.
+  // The host's heading names the list, so the add button follows the rows: they stay where they were before it showed.
+  if (hideLabel) {
+    return (
+      <>
+        {list}
+        {addButton && (
+          <Field.Header>
+            <span />
+            {addButton}
+          </Field.Header>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       {(!hideLabel || addButton) && (

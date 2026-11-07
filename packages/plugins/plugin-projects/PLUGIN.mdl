@@ -80,8 +80,10 @@ feat F-4: A project's specs
               numbered block's label and title, the name of a structure or context block (a type, an op, a plugin), or
               an anchor's or check's id and title, and the choice fields as tags; then a row per field, a value beside its
               name and prose on a line of its own. A keyed field is a list of lines, each beside its label, and a map a
-              list of rows, each read at rest as its source writes it and, once pressed, as a name, a value and, for a
-              typed row, an optional switch; both are reordered by a handle and added to from the list's top right.
+              list of rows, each read as its source writes it (`name?: value`), with the names in a column as wide as
+              the longest; once pressed the name and value are edited in place and a typed row's `?` toggles it
+              optional. Both are reordered by a handle and added to from below the list, and every list keeps its
+              rows' columns and heights at rest and pressed.
               Colour carries the source view's highlighting: a label or id is in its kind's hue, a type in the type
               kind's, and a map row's description is muted; a choice shows the icon and hue its package's `facts` give
               it, as a feature's status does on its cards; a picker's option is one line, a block's title muted after
@@ -2557,4 +2559,16 @@ decision D-232: A block form takes focus as an embed does (arrows stop on it, En
   rejected:
     - Rewriting references to a renamed block, which needs a rename refactor across the spec's prose and fields; left for a follow-up.
     - Keeping every empty row mounted and collapsed at rest, which costs a field per empty row in every card for an effect the slide gives.
+```
+
+```mdl
+decision D-233: A map row reads as its source writes it, `name?: value`, at rest and pressed: the name and value are edited in place in the same columns, a typed row's `?` toggles it optional, and a list keeps the gutter its handles take and the height of its controls at rest, with its add button below the rows. Amends [D-232].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: Pressing a type's card turned each `subject: string` line into a name input, a type picker in a well and an Optional switch, and the list's handles and add header pushed every row right and down.
+  rejected:
+    - Shrinking the pressed controls to the resting line height, which would make the handles and remove buttons smaller than everywhere else.
+    - Keeping the add button in a header above the rows, which moves every row down when the card is pressed.
 ```

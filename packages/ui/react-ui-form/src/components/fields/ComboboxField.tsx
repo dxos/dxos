@@ -88,7 +88,7 @@ export const ComboboxField = ({
         onBlur();
       }}
     >
-      <Combobox.Control>
+      <Combobox.Control data-variant={presentation === 'plain' ? 'plain' : undefined}>
         <Combobox.Input placeholder={placeholder} />
         <Combobox.Trigger />
       </Combobox.Control>

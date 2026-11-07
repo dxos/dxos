@@ -20,6 +20,11 @@
     padding-inline-end: 0;
     background: var(--color-input-bg);
   }
+  /* Text edited in place, as a `plain` Input is: no well and no inset; the caret stays at the end. */
+  .dx-combobox-control[data-variant='plain'] {
+    background: transparent;
+    padding-inline-start: 0;
+  }
   /*
    * A wrapping row (a multiple selection's chips): one inset of padding round lines one tag tall, so a single line is
    * control-tall; the caret takes a tag-tall cell at the end of the last line.

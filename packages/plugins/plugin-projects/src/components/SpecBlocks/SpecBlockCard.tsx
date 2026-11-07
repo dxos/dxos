@@ -38,6 +38,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Util from '@dxos/react-ui/Util';
 import { type WidgetProps } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { hues } from '@dxos/ui-types';
 
 import { ProjectsNamespace } from '../../namespace.ts';
@@ -52,6 +53,7 @@ import {
   formOptionsKey,
   fromFormValues,
   isBoundField,
+  isOrderedField,
   newFormItem,
   toFormValues,
 } from './block-form.ts';
@@ -250,7 +252,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
   // A list element of a keyed field or a table is one line, rather than a group of its parts: a keyed line's text
   // beside the label the spec cites it by, and a table row as the source writes it until the card is pressed.
   const line = useCallback<FormFieldProvider>(
-    ({ fieldProps: { path = [], getValue, readonly: fixed } }) => {
+    ({ fieldProps: { path = [], type, getValue, onValueChange, onBlur, readonly: fixed } }) => {
       const [name, at] = path;
       const field =
         path.length === 2 && typeof at === 'number'
@@ -270,34 +272,58 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
         );
       }
       if (field?.type.kind === 'map') {
+        // A row reads as its source writes it, `name?: value`, in the same columns at rest and pressed: the names in a
+        // column as wide as the longest, then the `?` that marks an optional row (its switch once pressed), then the value.
         const row = (getValue() ?? {}) as Partial<Row>;
-        // Only a row whose value is a type can be optional; any other row's value is a description.
         const typed = field.type.value === 'type';
-        return fixed ? (
-          <span className='block truncate'>
-            {row.name}
-            <span className='text-description'>{row.optional ? '?:' : ':'} </span>
-            {typed ? (
-              <span style={hueText(blocks.schemas.get('type')?.hue)}>{row.value}</span>
-            ) : (
-              <span className='text-description'>{row.value}</span>
-            )}
-          </span>
-        ) : (
-          <Layout.Flex align='center' gap='sm' data-testid={`${name}[${at}]`}>
-            <Layout.Container gutter='none' classNames={typed ? 'basis-1/3 min-w-0' : 'basis-1/4 min-w-0'}>
-              <Form.Fields path={[name, at]} include={['name']} layout='plain' />
-            </Layout.Container>
-            <Layout.Container gutter='none' classNames='grow basis-0 min-w-0'>
-              <Form.Fields path={[name, at]} include={['value']} layout={typed ? 'inline' : 'plain'} />
-            </Layout.Container>
-            {(typed || row.optional) && <Form.Fields path={[name, at]} include={['optional']} layout='inline' />}
+        const names = ((values[name] ?? []) as readonly Partial<Row>[]).map((other) => other.name?.length ?? 0);
+        const width = `${Math.max(MIN_NAME, ...names) + 1}ch`;
+        return (
+          <Layout.Flex align='center' data-testid={`${name}[${at}]`}>
+            <div className='shrink-0' style={{ width }}>
+              {fixed ? (
+                <span className='block truncate'>{row.name}</span>
+              ) : (
+                <Form.Fields path={[name, at]} include={['name']} layout='plain' />
+              )}
+            </div>
+            <span className='shrink-0 w-[2ch] text-description'>
+              {typed && !fixed ? (
+                <button
+                  type='button'
+                  className={mx('rounded-sm', !row.optional && 'opacity-30 hover:opacity-100')}
+                  aria-pressed={!!row.optional}
+                  aria-label={t('spec-block.optional.label')}
+                  title={t('spec-block.optional.label')}
+                  data-testid={`${name}[${at}].optional`}
+                  onClick={() => {
+                    onValueChange(type, { ...row, optional: !row.optional });
+                    onBlur();
+                  }}
+                >
+                  ?
+                </button>
+              ) : (
+                <span className={row.optional ? undefined : 'invisible'}>?</span>
+              )}
+              :
+            </span>
+            <div
+              className={mx('grow basis-0 min-w-0', !typed && 'text-description')}
+              style={typed ? hueText(blocks.schemas.get('type')?.hue) : undefined}
+            >
+              {fixed ? (
+                <span className='block truncate'>{row.value}</span>
+              ) : (
+                <Form.Fields path={[name, at]} include={['value']} layout='plain' />
+              )}
+            </div>
           </Layout.Flex>
         );
       }
       return undefined;
     },
-    [blocks, block, schema],
+    [blocks, block, schema, values, t],
   );
 
   const handleValuesChanged = useCallback(
@@ -385,7 +411,13 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                       {field && !describing.includes(key) ? (
                         <Layout.Flex align='baseline' gap='sm'>
                           <span className={FIELD_LABEL}>{fieldTitle(field.name)}</span>
-                          <Layout.Container gutter='none' classNames='grow basis-0 min-w-0'>
+                          <Layout.Container
+                            gutter='none'
+                            classNames={mx(
+                              'grow basis-0 min-w-0',
+                              !active && isOrderedField(field, value, blocks) && AT_REST_LIST,
+                            )}
+                          >
                             <Form.Fields include={[key]} fieldProvider={line} />
                           </Layout.Container>
                         </Layout.Flex>
@@ -414,6 +446,10 @@ const NAMED_ROLES: readonly BlockRole[] = ['context', 'structure'];
 
 /** How long a card takes to grow or shrink, and a row it adds to fade in. */
 const MOTION_MS = 160;
+
+/** A list at rest keeps the gutter its drag handles take and the height of its controls once pressed, so no row moves. */
+const AT_REST_LIST =
+  '[&_.dx-listbox-content]:ps-(--dx-block-size) [&_.dx-listbox-item]:min-h-(--dx-block-size) [&_.dx-listbox-item]:items-center';
 
 const REVEAL = 'transition-opacity duration-[160ms] ease-out starting:opacity-0 motion-reduce:transition-none';
 
@@ -509,6 +545,9 @@ const hueText = (hue: string | undefined): CSSProperties | undefined =>
 
 /** The field a kind describes a block in besides its prose, as the language's kinds name it. */
 const DESCRIPTION = 'desc';
+
+/** The fewest characters a map's name column holds, so a short name leaves room to type. */
+const MIN_NAME = 4;
 
 /** A block's name heading its card, at a title's size. */
 const NAME = 'text-xl font-medium';

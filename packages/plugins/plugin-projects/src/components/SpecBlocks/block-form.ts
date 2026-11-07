@@ -132,6 +132,12 @@ export const isBoundField = (field: FieldSchema, value: BlockValue): boolean =>
 
 const Ordered = Annotation.FormOrderedAnnotation.set(true);
 
+/** Whether a field is edited as an ordered list, whose rows take drag handles while editable. */
+export const isOrderedField = (field: FieldSchema, value: BlockValue, blocks: SpecBlocks): boolean =>
+  !isBoundField(field, value) &&
+  (['keyed', 'list', 'map'].includes(field.type.kind) ||
+    (field.type.kind === 'ref' && !!field.type.many && !isPickedRef(field, blocks)));
+
 const fieldSchema = (field: FieldSchema, value: BlockValue, context: BlockFormContext): Schema.Top => {
   if (isBoundField(field, value)) {
     return Text;

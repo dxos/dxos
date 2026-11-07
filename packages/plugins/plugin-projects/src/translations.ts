@@ -167,6 +167,7 @@ export const translations = [
         'spec-block.name.label': 'Name',
         'spec-block.new-entry.text': 'New requirement.',
         'spec-block.new-item.text': 'New item',
+        'spec-block.optional.label': 'Optional',
         'spec-block.prose.placeholder': 'Describe it',
         'spec-block.stray-prose.message_one': 'One line after the fields shows only in the source view.',
         'spec-block.stray-prose.message_other': '{{count}} lines after the fields show only in the source view.',
