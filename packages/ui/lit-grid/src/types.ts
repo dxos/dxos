@@ -191,7 +191,20 @@ export class DxEditRequest extends Event {
 export type DxGridPlaneRange = { start: DxGridPlanePosition; end: DxGridPlanePosition };
 export type DxGridRange = { start: DxGridPosition; end: DxGridPosition };
 
+/**
+ * Another user's selection, drawn as an outlined range with their name on it. Both ends are in `start`'s plane.
+ */
+export type DxGridRemoteSelection = DxGridRange & {
+  /** Identifies whose selection it is, e.g. a peer id. */
+  id: string;
+  label: string;
+  /** CSS colors for the outline and label background, and for the label text. */
+  color: string;
+  textColor?: string;
+};
+
 export class DxGridCellsSelect extends Event {
+  public readonly range: DxGridRange;
   public readonly start: string;
   public readonly end: string;
   public readonly minCol: number;
@@ -200,6 +213,7 @@ export class DxGridCellsSelect extends Event {
   public readonly maxRow: number;
   constructor({ start, end }: DxGridRange) {
     super('dx-grid-cells-select');
+    this.range = { start, end };
     this.start = toPlaneCellIndex(start);
     this.end = toPlaneCellIndex(end);
     this.minCol = Math.min(start.col, end.col);

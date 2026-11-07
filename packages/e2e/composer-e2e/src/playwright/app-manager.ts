@@ -90,6 +90,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',
   Project: 'org.dxos.type.project',
+  Sheet: 'org.dxos.type.sheet',
   Table: 'org.dxos.type.table',
 };
 
@@ -672,13 +673,24 @@ export class AppManager {
     await this.#expandRow(this.getObjectLinks().nth(nth), timeout);
   }
 
-  async expandSection(testId: string, timeout = 15_000): Promise<void> {
+  async expandSection(testId: string | RegExp, timeout = 15_000): Promise<void> {
     const section = this.currentWorkspace.getByTestId(testId).first();
     await section.waitFor({ state: 'attached', timeout });
     await this.#expandRow(section, timeout);
   }
 
-  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+  /** `typename` picks the type a type-backed object (a Table) views, from the form's type select, at any version. */
+  async createObject({
+    type,
+    name,
+    nth,
+    typename,
+  }: {
+    type: string;
+    name?: string;
+    nth?: number;
+    typename?: string;
+  }): Promise<void> {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
@@ -723,6 +735,10 @@ export class AppManager {
 
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
+    }
+    if (typename) {
+      await objectForm.getByTestId('typename').click();
+      await this.page.locator(`[role="option"][data-value^="dxn:${typename}:"]`).click();
     }
     // The form's Create sits in the dialog's footer, outside the form element.
     await openDialog.getByTestId('save-button').click();
