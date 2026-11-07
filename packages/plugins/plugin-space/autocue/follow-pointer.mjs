@@ -75,6 +75,12 @@ const plank = (page) => page.getByTestId('deck.plank').first();
 const textbox = (page) => plank(page).getByTestId('composer.markdownRoot').getByRole('textbox');
 const sidebar = (page) => page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
 const membersTab = (page) => page.locator('[id$="trigger-members"]');
+/** Collapses the complementary sidebar, whichever companion it shows, so the plank keeps the room. */
+const closeSidebar = async (peer) => {
+  if ((await sidebar(peer.page).getAttribute('data-state')) === 'expanded') {
+    await peer.click(sidebar(peer.page).getByTestId('deck.toggleComplementarySidebar'));
+  }
+};
 const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.row');
 
 const followRow = (page) => sidebar(page).locator('[data-member][data-follow]');
@@ -301,7 +307,7 @@ export const steps = [
       await followHeading(bob.page).waitFor({ state: 'attached', timeout: TIMEOUT });
       await sleep(2_500);
       // The side panel would crowd the plank the two point at.
-      await bob.click(membersTab(bob.page));
+      await closeSidebar(bob);
     },
     pace: 1_500,
   },
@@ -316,7 +322,7 @@ export const steps = [
       await followersGroup(leader.page).waitFor({ timeout: TIMEOUT });
       await followHeading(leader.page).waitFor({ state: 'attached', timeout: TIMEOUT });
       await sleep(2_500);
-      await leader.click(membersTab(leader.page));
+      await closeSidebar(leader);
     },
     pace: 1_500,
   },
@@ -366,7 +372,7 @@ export const steps = [
       await bob.click(membersTab(bob.page));
       await bob.click(followRow(bob.page).getByTestId('spacePlugin.presence.pointerLaser'));
       await sleep(800);
-      await bob.click(membersTab(bob.page));
+      await closeSidebar(bob);
       const box = await plank(bob.page).boundingBox();
       // A loop and a sweep, so the tail shows it follows the path rather than trailing at a fixed angle.
       for (let step = 0; step <= 48; step++) {
