@@ -159,9 +159,6 @@
     },
     {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-video"
     }
   ]
 }

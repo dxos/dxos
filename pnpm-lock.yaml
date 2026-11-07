@@ -10645,9 +10645,6 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
-      '@dxos/plugin-video':
-        specifier: workspace:*
-        version: link:../plugin-video
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
