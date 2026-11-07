@@ -76,10 +76,11 @@ feat F-4: A project's specs
               kind's fields, and offers readonly and source views. The text is the only store: a form edit changes only
               the source of the field it edits, and the title, the prose and each prose field are editors of their own
               over their source, showing the other peers' carets and the comments anchored in them. A form is one
-              react-ui-form `Form` over a schema generated from the kind: a header row with the block's label and kind
-              icon, then the title and a field per block field. Empty fields and the add and remove actions show only
-              while the form has focus, a form folds to its title, and prose it cannot place shows as a note pointing
-              to the source view. A reference field is a combobox over the blocks of the kinds it names (over the
+              react-ui-form `Form` over a schema generated from the kind, as dense as its source: a header row with the
+              block's label, its title and its choice fields as tags, then a row per field, a value beside its name and
+              prose on a line of its own, and a line per keyed entry and per map row. At rest a form reads as text;
+              once pressed or focused it shows its empty fields, its pickers and the add and remove actions. A form
+              folds to its header, and prose it cannot place shows as a note pointing to the source view. A reference field is a combobox over the blocks of the kinds it names (over the
               space's specs for `Ref<spec>`), and a list of references is chips; a type, in a field or a map row, is a
               combobox over the built-in types and the spec's `type` blocks. A map row's comment shows as its note,
               without the `#`. A list shows one item per row; a keyed entry is an editor of its own labelled by its
@@ -2497,4 +2498,15 @@ decision D-228: A block form is one react-ui-form `Form` over a schema generated
   why: The user asked that every block form be a single form over an Effect schema, using react-ui-form elements and none of the custom controls. A combobox takes a typed name, so a name the spec does not hold is no longer flagged, and a type expression has no list toggle.
   rejected:
     - Keeping the compact custom rows of [D-224] beside the standard fields, which leaves two ways to draw one field.
+```
+
+```mdl
+decision D-229: A block form is as dense as the feature section was: the header row holds the label, the title and the choice fields as tags; a value sits beside its name, a keyed entry is one line with its label, and a map row is one line; at rest the form reads as text, and pressing it shows its pickers and actions. It stays one `Form`, laid out from slices of its fields. Amends [D-228].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user asked that the forms be as dense and easy to read as the feature embeds on main, using the form's presentations while keeping the form structure. The standard layout gave each field a label row and each keyed entry and map row a framed group.
+  rejected:
+    - A presentation that puts each label beside its control in react-ui-form, which would change every form in the app for one host's layout.
 ```

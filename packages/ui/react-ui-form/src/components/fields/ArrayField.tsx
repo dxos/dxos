@@ -214,12 +214,15 @@ export const ArrayField = ({
     );
   }
 
+  // A header with no text and no add button would be an empty line.
   return (
     <>
-      <Field.Header>
-        <Typography.Text truncate>{hideLabel ? '' : label}</Typography.Text>
-        {addButton}
-      </Field.Header>
+      {(!hideLabel || addButton) && (
+        <Field.Header>
+          <Typography.Text truncate>{hideLabel ? '' : label}</Typography.Text>
+          {addButton}
+        </Field.Header>
+      )}
       {list}
     </>
   );

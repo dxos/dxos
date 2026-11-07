@@ -175,7 +175,7 @@ const fieldSchema = (field: FieldSchema, value: BlockValue, context: BlockFormCo
 };
 
 /** A field's label: its name as a phrase (`adds-fields` → `Adds fields`). */
-const fieldTitle = (name: string) => name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, ' ');
+export const fieldTitle = (name: string) => name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, ' ');
 
 /** A block kind as a form's schema: its title, its inline prose when it takes it, then its fields in order. */
 export const blockFormSchema = (schema: BlockSchema, value: BlockValue, context: BlockFormContext) => {

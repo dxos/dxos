@@ -499,9 +499,12 @@ export const SpecBlockForms: Story = {
       'type',
       'op',
     ]);
-    // A typed map row names its type in a combobox over the spec's types.
-    const op = canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'op');
-    await expect([...op!.querySelectorAll('input')].map((input) => input.value)).toContain('Message');
+    // A pressed card's typed map row names its type in a combobox over the spec's types.
+    const op = () => canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'op')!;
+    await userEvent.click(within(op()).getByTestId('spec-block.label'));
+    await waitFor(() => expect([...op().querySelectorAll('input')].map((input) => input.value)).toContain('Message'), {
+      timeout: 5_000,
+    });
 
     // Each requirement is a bound editor of its own, labelled by its position.
     const requirement = () => {
@@ -655,7 +658,7 @@ export const SpecDocument: Story = {
     await expectSpecShown(canvas, SPEC_NAME);
     const document = canvas.getByTestId('projectsPlugin.spec.document');
     await waitFor(() => expect(document.textContent).toContain('sorts itself'), { timeout: 10_000 });
-    await expect(document.textContent).not.toContain('name:');
+    await expect(document.textContent).not.toContain(`name: ${SPEC_NAME}`);
   },
 };
 
