@@ -89,6 +89,13 @@ describe('order', () => {
     });
   });
 
+  test('an element written without a key sorts at the bottom, as the layer paints it', ({ expect }) => {
+    // A bare string comparison leaves `undefined` neither above nor below, so it would fall to the id tiebreak
+    // and sort against a key like '1' by name — the paint and the hit test would then disagree.
+    expect(sortByZ([{ id: 'keyed', z: '1' }, { id: 'unkeyed' }]).map(({ id }) => id)).toEqual(['unkeyed', 'keyed']);
+    expect(sortByZ([{ id: 'a', z: 'a1' }, { id: 'b' }, { id: 'a0' }]).map(({ id }) => id)).toEqual(['a0', 'b', 'a']);
+  });
+
   test('a stored key no key fits past renumbers the group, keeping the order it settles in', ({ expect }) => {
     // 'a0' has a trailing zero, so nothing can be keyed under it; the whole group is renumbered instead.
     const elements = [

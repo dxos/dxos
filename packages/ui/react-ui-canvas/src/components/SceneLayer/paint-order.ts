@@ -7,7 +7,7 @@ import { type Node } from '@dxos/scene';
 import { type LinkGeometry, sortByZ } from '../../utils/index.ts';
 
 /** One of a layer's elements as the paint order holds it: a node, or a link with the geometry it was routed to. */
-type LayerElement = { id: string; z: string; node?: Node; link?: LinkGeometry };
+type LayerElement = { id: string; z?: string; node?: Node; link?: LinkGeometry };
 
 /** A run of consecutive elements of one kind: a run of links shares one `<svg>`, a run of nodes its frames. */
 export type LayerRun = { kind: 'links'; links: LinkGeometry[] } | { kind: 'nodes'; nodes: Node[] };
@@ -20,8 +20,8 @@ export type LayerRun = { kind: 'links'; links: LinkGeometry[] } | { kind: 'nodes
  */
 export const paintRuns = (nodes: readonly Node[], links: readonly LinkGeometry[]): LayerRun[] => {
   const own: LayerElement[] = [
-    ...nodes.map((node) => ({ id: node.id, z: node.z ?? '', node })),
-    ...links.map((link) => ({ id: link.link.id, z: link.link.z ?? '', link })),
+    ...nodes.map((node) => ({ id: node.id, z: node.z, node })),
+    ...links.map((link) => ({ id: link.link.id, z: link.link.z, link })),
   ];
   const runs: LayerRun[] = [];
   for (const { node, link } of sortByZ(own)) {

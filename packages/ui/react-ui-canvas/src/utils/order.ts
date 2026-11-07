@@ -12,6 +12,9 @@ const DIGITS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 export type Ordered = { id: string; z: string };
 
+/** An element as an order read: one written without a key sorts at the bottom. */
+export type MaybeOrdered = { id: string; z?: string };
+
 /**
  * A key strictly between `a` and `b` (each a base-62 fraction in (0, 1) without trailing zeros);
  * `undefined` stands for the open end on that side.
@@ -45,9 +48,17 @@ const midpoint = (a: string, b: string | undefined): string => {
   return DIGITS[digitA] + midpoint(a.slice(1), undefined);
 };
 
-/** Elements in paint order (bottom first). */
-export const sortByZ = <T extends Ordered>(elements: readonly T[]): T[] =>
-  [...elements].sort((left, right) => (left.z < right.z ? -1 : left.z > right.z ? 1 : left.id < right.id ? -1 : 1));
+/**
+ * Elements in paint order (bottom first). One written without a key sorts at the bottom, as it draws first: every
+ * reader of the order — the layer's paint, the hit test, a restack — must agree, or a click lands on something other
+ * than what it hit.
+ */
+export const sortByZ = <T extends MaybeOrdered>(elements: readonly T[]): T[] =>
+  [...elements].sort((left, right) => {
+    const a = left.z ?? '';
+    const b = right.z ?? '';
+    return a < b ? -1 : a > b ? 1 : left.id < right.id ? -1 : 1;
+  });
 
 /** A key above every element, so a new one paints on top. */
 export const topZ = (elements: readonly Ordered[]): string => {
@@ -79,9 +90,6 @@ export const initialKeys = (count: number): string[] => {
   }
   return keys;
 };
-
-/** An element as an order read: one written without a key sorts at the bottom. */
-export type MaybeOrdered = { id: string; z?: string };
 
 /**
  * The keys that lift `ids` above every other element of their group, or drop them below it, keeping their order among
