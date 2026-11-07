@@ -294,19 +294,18 @@ const dispatch = async (
           return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string.`));
         }
         const host = yield* McpServer.host({ skills, spaceIds });
-        const answer = yield* McpServer.runScript(
-          registry,
-          host,
-          gate,
-          {
-            code: args.code,
-            spaceId: SpaceId.isValid(args.spaceId) ? args.spaceId : undefined,
+        // Through the script API, as `dx mcp serve --code-mode` runs it: the eval grades the same
+        // path a real client takes, request shape included.
+        const runner = McpServer.scriptRunner(registry, host, gate, { sandbox: McpServer.inProcessScriptSandbox });
+        const answer = yield* runner
+          .run({
+            source: Operation.inlineScript(args.code, Operation.ScriptDialects.Effect),
+            ...(SpaceId.isValid(args.spaceId) ? { spaceId: args.spaceId } : {}),
             skillTokens: Array.isArray(args.skillTokens)
               ? args.skillTokens.filter((token): token is string => typeof token === 'string')
               : [],
-          },
-          { sandbox: McpServer.inProcessScriptSandbox },
-        );
+          })
+          .pipe(Effect.mapError((error) => McpServer.failure('operation_failed', error.message)));
         return new ScriptAnswer(answer);
       }
       default:

@@ -147,6 +147,8 @@ export const fromStack = (
     spawn: (definition, options) => Effect.flatMap(manager, (stackManager) => stackManager.spawn(definition, options)),
     handles: (options) => Effect.flatMap(manager, (stackManager) => stackManager.handles(options)),
     attach: (pid, options) => Effect.flatMap(manager, (stackManager) => stackManager.attach(pid, options)),
+    runScript: (op, input, options) =>
+      Effect.flatMap(manager, (stackManager) => stackManager.runScript(op, input, options)),
   };
 };
 

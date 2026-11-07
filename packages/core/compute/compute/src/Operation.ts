@@ -30,6 +30,7 @@ import type { Operation } from './index.ts';
 import type * as Process from './Process.ts';
 import type * as StorageService from './StorageService.ts';
 import type * as Trace from './Trace.ts';
+import type * as Script from './types/Script.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -700,6 +701,265 @@ const sanitizeRpcs = <Rpcs extends Rpc.Any>(
   }
   return provided;
 };
+
+//
+// Script operations.
+//
+
+/**
+ * Language an inline script snippet is written in.
+ *
+ * Carried by the snippet rather than by the runtime, because one runtime serves several: a code-mode
+ * turn writes `plain` or `effect` against the same host that runs a `typescript` module.
+ */
+export const ScriptDialect = Schema$.Literals(['plain', 'effect', 'javascript', 'typescript']);
+export type ScriptDialect = Schema$.Schema.Type<typeof ScriptDialect>;
+
+/** Named {@link ScriptDialect} values, so a caller names one without spelling the literal. */
+export const ScriptDialects = {
+  /** Code-mode's plain dialect: `await`-style bindings over the workspace. */
+  Plain: 'plain',
+  /** Code-mode's Effect dialect: the body of an `Effect.gen` generator. */
+  Effect: 'effect',
+  JavaScript: 'javascript',
+  TypeScript: 'typescript',
+} as const satisfies Record<string, ScriptDialect>;
+
+/**
+ * A snippet carried by the operation itself, in the dialect it is written in.
+ *
+ * Declared as a type here and as a schema in `ScriptRunner`, because the schema of a {@link ScriptRef}
+ * needs the `Script` object type, whose module reaches the whole `@dxos/schema` barrel: the kind is on
+ * every app's boot path through this module, and the schema is not.
+ */
+export type InlineScript = {
+  readonly _tag: 'inline';
+  readonly code: string;
+  readonly dialect: ScriptDialect;
+};
+
+/**
+ * A script stored in ECHO as a `Script` object.
+ *
+ * The dialect is the object's own (its editor compiles TypeScript), so unlike {@link InlineScript} it
+ * is not restated here — a snippet has no object to ask.
+ */
+export type ScriptRef = {
+  readonly _tag: 'object';
+  readonly script: Ref.Ref<Script.Script>;
+};
+
+/** Where a script operation's code comes from: a snippet it carries, or an ECHO object it points at. */
+export type ScriptSource = InlineScript | ScriptRef;
+
+/** A snippet source in `dialect`. */
+export const inlineScript = (code: string, dialect: ScriptDialect = ScriptDialects.TypeScript): InlineScript => ({
+  _tag: 'inline',
+  code,
+  dialect,
+});
+
+/** A source pointing at a `Script` object. */
+export const scriptRef = (script: Ref.Ref<Script.Script>): ScriptRef => ({ _tag: 'object', script });
+
+export const isInlineScript = (source: ScriptSource): source is InlineScript => source._tag === 'inline';
+export const isScriptRef = (source: ScriptSource): source is ScriptRef => source._tag === 'object';
+
+/**
+ * A script that could not be run: an unsupported dialect, a source that would not resolve, or a
+ * runtime with no way to run scripts at all.
+ *
+ * A failure the SCRIPT raised is not one of these — that is a {@link ScriptResult} carrying `error`,
+ * since the caller (a model writing code, a person at `dx eval`) is meant to read it and write
+ * different code rather than see the call fail.
+ */
+export class ScriptError extends Schema$.TaggedError<ScriptError>('ScriptError')('ScriptError', {
+  message: Schema$.String,
+  dialect: Schema$.optional(ScriptDialect),
+}) {}
+
+/** The host calls one run made: how many, and the wall time spent waiting on them. */
+export const ScriptStats = Schema$.Struct({
+  calls: Schema$.Number,
+  callMs: Schema$.Number,
+});
+export type ScriptStats = Schema$.Schema.Type<typeof ScriptStats>;
+
+/**
+ * One run, as a runtime's script backend receives it.
+ *
+ * Every field but the source is a scalar, so the same request runs in this process, on a worker, or
+ * on EDGE without being rebuilt (`ScriptRunner.Request` is its schema). What a request cannot carry
+ * is the workspace: the bindings the code runs against are the backend's, built wherever it lives.
+ */
+export type ScriptRequest = {
+  readonly source: ScriptSource;
+  /**
+   * Input handed to the script, bound under `input` by a backend whose dialect can carry it. A
+   * backend that evaluates out of process builds its bindings on the far side and may not, so a
+   * script that must have its input should read it from the database instead.
+   */
+  readonly input?: unknown;
+  /** Space the script's calls default to; absent runs against the backend's own default. */
+  readonly spaceId?: string;
+  /** Wall-clock bound on the run, in milliseconds. */
+  readonly timeoutMs?: number;
+  /** Characters of printed output returned before truncation. */
+  readonly maxOutput?: number;
+  /** Skill tokens the caller already holds, which the script's `invoke` presents for it. */
+  readonly skillTokens?: readonly string[];
+};
+
+/**
+ * What a run produced: what the script printed, why it failed when it did, and the calls it made.
+ *
+ * This is a script operation's default `output`, so `Operation.invoke` on one answers with it.
+ */
+export const ScriptResult = Schema$.Struct({
+  output: Schema$.String,
+  /** Present exactly when the script itself failed; `output` then holds what it printed first. */
+  error: Schema$.optional(Schema$.String),
+  stats: Schema$.optional(ScriptStats),
+});
+export type ScriptResult = Schema$.Schema.Type<typeof ScriptResult>;
+
+/**
+ * What a script's body may reach: the operation invoker and the process manager of the process the
+ * script is running as.
+ *
+ * The running script's own, not the caller's, which is what makes a script's calls and the processes
+ * it spawns belong to the script's process — a script delegates work the way a handler does.
+ */
+export type ScriptRequirements = Service | Process.ManagerService;
+
+/**
+ * The process a script is running as, as its backend sees it.
+ *
+ * Passed rather than required, so a backend that evaluates code against the workspace can hand the
+ * script its own process (`program.pipe(Effect.provide(runtime.context))`) while one that answers
+ * through its own host — an MCP server, a remote isolate — declares `run(request)` alone and stays
+ * requirement-free.
+ */
+export interface ScriptRuntime {
+  readonly context: Context.Context<ScriptRequirements>;
+}
+
+/**
+ * Runs scripts for a runtime.
+ *
+ * Not a client-facing API: a caller invokes a script operation like any other operation, and the
+ * runtime it runs on reaches for this. Several backends implement it — in-process evaluation, a
+ * worker thread that can be terminated, a workerd isolate that contains the code — which is why the
+ * runtime takes it as a dependency rather than embedding one.
+ */
+export interface ScriptRunner {
+  readonly run: (request: ScriptRequest, runtime?: ScriptRuntime) => Effect.Effect<ScriptResult, ScriptError>;
+}
+
+/**
+ * The dialect a source is written in. A {@link ScriptRef} is TypeScript: a `Script` object is what the
+ * script editor writes, and it compiles TypeScript.
+ */
+export const scriptDialectOf = (source: ScriptSource): ScriptDialect =>
+  isInlineScript(source) ? source.dialect : ScriptDialects.TypeScript;
+
+/** The request that runs `operation` on `input`. */
+export const scriptRequest = (
+  operation: ScriptDefinition.Any,
+  input?: unknown,
+  options?: Omit<ScriptRequest, 'source' | 'input' | 'timeoutMs'>,
+): ScriptRequest => ({
+  ...options,
+  source: operation.source,
+  ...(input !== undefined ? { input } : {}),
+  ...(operation.timeout !== undefined ? { timeoutMs: operation.timeout } : {}),
+});
+
+export const ScriptDefinitionTypeId = '~@dxos/operation/ScriptDefinition' as const;
+export type ScriptDefinitionTypeId = typeof ScriptDefinitionTypeId;
+
+/**
+ * The third kind of operation, beside a non-durable {@link Definition} with a handler and a
+ * {@link Durable} one: an operation whose body is a script.
+ *
+ * It IS a {@link Definition} — `Operation.invoke(script, input, { on })` is the whole client API —
+ * and carries no handler at all. The code is data, so the definition crosses a boundary whole and the
+ * runtime that runs it is picked at call time; a runtime that cannot run scripts says so when asked,
+ * rather than the caller needing a different verb.
+ */
+export interface ScriptDefinition<I, O> extends Definition<I, O> {
+  readonly [ScriptDefinitionTypeId]: {
+    readonly _Script: Types.Covariant<ScriptSource>;
+  };
+
+  readonly source: ScriptSource;
+
+  /** Wall-clock bound on one run, in milliseconds; absent leaves the bound to the runtime. */
+  readonly timeout?: number;
+}
+
+export declare namespace ScriptDefinition {
+  export type Any = ScriptDefinition<any, any>;
+
+  export type Input<T extends Any> = Definition.Input<T>;
+  export type Output<T extends Any> = Definition.Output<T>;
+}
+
+/**
+ * Props {@link makeScript} takes. `input` defaults to `Unknown` and `output` to {@link ScriptResult},
+ * since a script answers with what it printed and no dialect returns a typed value yet.
+ */
+export type ScriptProps = {
+  readonly meta: Definition<any, any>['meta'];
+  readonly source: ScriptSource;
+  readonly timeout?: number;
+  readonly input?: Schema$.Codec<any, any, never, never>;
+  readonly output?: Schema$.Codec<any, any, never, never>;
+};
+
+/**
+ * Creates a script operation, which is invoked like any other operation.
+ *
+ * @example
+ * ```ts
+ * const result = yield* Operation.invoke(
+ *   Operation.makeScript({
+ *     meta: { key: DXN.make('example.hello') },
+ *     source: Operation.inlineScript('yield* print("hi")', Operation.ScriptDialects.Effect),
+ *   }),
+ *   undefined,
+ *   { on: 'local' },
+ * );
+ * ```
+ */
+export const makeScript = <const P extends Types.NoExcessProperties<ScriptProps, P>>(
+  props: P,
+): ScriptDefinition<
+  P['input'] extends Schema$.Codec<any, any, any, any> ? Schema$.Schema.Type<P['input']> : unknown,
+  P['output'] extends Schema$.Codec<any, any, any, any> ? Schema$.Schema.Type<P['output']> : ScriptResult
+> =>
+  ({
+    [DefinitionTypeId]: {},
+    [ScriptDefinitionTypeId]: {},
+    ...props,
+    input: props.input ?? Schema$.Unknown,
+    output: props.output ?? ScriptResult,
+    executionMode: 'async',
+    types: [],
+    services: [],
+    pipe() {
+      // eslint-disable-next-line prefer-rest-params
+      return Pipeable.pipeArguments(this, arguments);
+    },
+  }) as any;
+
+/** Whether an operation is the script kind, which a runtime runs rather than looking up a handler for. */
+export const isScript = (value: unknown): value is ScriptDefinition.Any =>
+  typeof value === 'object' && value !== null && ScriptDefinitionTypeId in value;
+
+/** Whether `value` names a known {@link ScriptDialect}. */
+export const isScriptDialect = (value: unknown): value is ScriptDialect =>
+  typeof value === 'string' && (ScriptDialect.literals as readonly string[]).includes(value);
 
 //
 // Tool projection

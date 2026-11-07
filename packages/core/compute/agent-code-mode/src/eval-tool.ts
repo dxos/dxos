@@ -11,7 +11,7 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
@@ -122,14 +122,52 @@ export const evaluate = Effect.fnUntraced(function* ({
 /**
  * The toolkit a code-mode turn hands the model: one `eval` tool over the turn's dialect and
  * sandbox. Rebuilt per turn, since a skill enabled mid-request changes what the operations are.
+ *
+ * `runner` is how the turn reaches another runtime: given one, every call becomes a
+ * `Operation.ScriptRequest` — the model's code as an inline script in the turn's dialect — and the
+ * runner decides where it runs. Without one the code is evaluated here, against `sandbox`.
  */
-export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.OpaqueToolkit =>
+export const makeEvalToolkit = (
+  options: EvalToolkitOptions & { readonly runner?: Operation.ScriptRunner },
+): OpaqueToolkit.OpaqueToolkit =>
   OpaqueToolkit.make(
     EvalToolkitDefinition,
     EvalToolkitDefinition.toLayer({
-      [EVAL_TOOL_NAME]: ({ code }: { code: string }) => evaluate({ ...options, code }),
+      [EVAL_TOOL_NAME]: ({ code }: { code: string }) =>
+        options.runner !== undefined ? runThroughRunner(options.runner, options, code) : evaluate({ ...options, code }),
     }),
   );
+
+/**
+ * One call answered by a {@link Operation.ScriptRunner}, in the `eval` tool's own terms: the text the
+ * model sees, failed when the code failed.
+ *
+ * A runner failure (no backend for the dialect, a runtime that refused) is reported the same way
+ * rather than failing the turn: the model can read it and the conversation survives a misconfigured
+ * deployment.
+ */
+const runThroughRunner = (
+  runner: Operation.ScriptRunner,
+  options: EvalToolkitOptions,
+  code: string,
+): Effect.Effect<string, string> =>
+  Effect.suspend(() => {
+    const dialect = options.dialect.name;
+    if (!Operation.isScriptDialect(dialect)) {
+      return Effect.fail(`Error: dialect "${dialect}" cannot be run by a script runner.`);
+    }
+    return runner
+      .run({
+        source: Operation.inlineScript(code, dialect),
+        ...(options.maxOutput !== undefined ? { maxOutput: options.maxOutput } : {}),
+      })
+      .pipe(
+        Effect.flatMap((result) =>
+          result.error === undefined ? Effect.succeed(result.output) : Effect.fail(result.output),
+        ),
+        Effect.catchTag('ScriptError', (error) => Effect.fail(`Error: ${error.message}`)),
+      );
+  });
 
 /** How a tool call is shown, where its tool name alone says nothing about what it does. */
 export type CallLabel = Pick<ContentBlock.ToolCall, 'displayName' | 'displayIcon'>;

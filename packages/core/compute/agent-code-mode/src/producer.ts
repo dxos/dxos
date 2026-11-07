@@ -28,6 +28,7 @@ import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
 import { type CallLabel, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import { describeTypes } from './fields.ts';
+import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -157,7 +158,7 @@ const runCodeModeTurn = ({
               );
               const operations = yield* projectOperations(skills, mcps);
               labelCall = labelEvalCall(operations);
-              const toolkit = makeEvalToolkit({
+              const evalOptions = {
                 dialect,
                 sandbox,
                 runtime,
@@ -165,6 +166,17 @@ const runCodeModeTurn = ({
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
+              };
+              // Through the script API rather than straight into the sandbox: the turn states what to
+              // run and the runner says where, which is what lets a deployment move code mode off
+              // this thread without touching the turn loop. The turn's own dialect is registered under
+              // its name, since a producer may hand the model a variant of it (extra bindings) and the
+              // runner must evaluate THAT one, not the canonical entry.
+              const toolkit = makeEvalToolkit({
+                ...evalOptions,
+                ...(Operation.isScriptDialect(dialect.name)
+                  ? { runner: Runner.make({ ...evalOptions, dialects: { [dialect.name]: dialect } }) }
+                  : {}),
               });
               const system = yield* formatSystemPrompt({
                 system: [
