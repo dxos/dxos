@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { IfElseInput, IfElseOutput, IfInput, IfOutput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
@@ -41,7 +42,7 @@ export type IfElseShape = Schema.Schema.Type<typeof IfElseShape>;
 export type CreateIfProps = CreateShapeProps<IfShape> & { if?: string };
 
 export const createIf = (props: CreateIfProps) =>
-  createShape<IfShape>({ type: 'if', size: { width: 192, height: getHeight(IfInput) }, ...props });
+  createShape<IfShape>({ type: 'if', size: { width: 3 * MAJOR_GRID, height: getHeight(IfInput) }, ...props });
 
 export const ifNodeDef = defineComputeNode<IfShape>({
   type: 'if',
@@ -57,7 +58,11 @@ export const ifNodeDef = defineComputeNode<IfShape>({
 export type CreateIfElseProps = CreateShapeProps<IfShape> & { if?: string };
 
 export const createIfElse = (props: CreateIfElseProps) =>
-  createShape<IfElseShape>({ type: 'if-else', size: { width: 192, height: getHeight(IfElseInput) }, ...props });
+  createShape<IfElseShape>({
+    type: 'if-else',
+    size: { width: 3 * MAJOR_GRID, height: getHeight(IfElseInput) },
+    ...props,
+  });
 
 export const ifElseNodeDef = defineComputeNode<IfElseShape>({
   type: 'if-else',

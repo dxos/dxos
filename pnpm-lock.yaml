@@ -7368,6 +7368,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -17955,6 +17958,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -18031,6 +18037,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../../core/halo/halo
+      '@dxos/halo-adapter-client':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-adapter-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -19004,6 +19016,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -19016,9 +19031,15 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-grid':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-grid
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
@@ -19041,9 +19062,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -21082,6 +21100,9 @@ importers:
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -21097,6 +21118,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/i18n':
         specifier: workspace:*
         version: link:../../common/i18n
@@ -25300,9 +25324,15 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.13
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../common/display-name
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../lit-grid
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
@@ -25312,10 +25342,19 @@ importers:
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
       '@lit/react':
         specifier: 'catalog:'
         version: 1.0.8(@types/react@19.3.0)
     devDependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -25334,6 +25373,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.3.0
         version: 19.3.0(@types/react@19.3.0)
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
       react:
         specifier: ~19.3.1
         version: 19.3.1
@@ -26797,9 +26839,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

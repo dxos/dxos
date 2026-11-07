@@ -26,7 +26,7 @@ export const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number 
 export type Size = Schema.Schema.Type<typeof Size>;
 
 /** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
-export const DEFAULT_GRID = 16;
+export const DEFAULT_GRID = 12;
 
 /** Major lines every N minor lines; the grid draws both and snapping uses the major one. */
 export const MAJOR_GRID_RATIO = 4;
@@ -127,7 +127,7 @@ export const LineStyle = Schema.Struct({ ...lineStyleFields, fontSize: fontSizeF
 export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
 
 /** A shape's text size in scene units when its style sets none. */
-export const DEFAULT_FONT_SIZE = 24;
+export const DEFAULT_FONT_SIZE = 20;
 
 /** A link caption's text size in scene units when its style sets none. */
 export const LINK_FONT_SIZE = 14;

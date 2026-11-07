@@ -125,9 +125,10 @@ const seedBasic: Seed = (_db, content, scene) => {
       ends: { end: 'arrow' },
     },
   });
-  content[nodeKey('a')] = box('a', -384, 'a1');
+  // Six cells apart, so the gap between two boxes is half a box: close enough to read as a chain.
+  content[nodeKey('a')] = box('a', -6 * DEFAULT_CELL, 'a1');
   content[nodeKey('b')] = box('b', 0, 'a2');
-  content[nodeKey('c')] = box('c', 384, 'a3');
+  content[nodeKey('c')] = box('c', 6 * DEFAULT_CELL, 'a3');
   content[linkKey('a-b')] = link('a', 'b', 'a4');
   content[linkKey('b-c')] = link('b', 'c', 'a5');
 };

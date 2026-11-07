@@ -34,6 +34,7 @@ import {
   improveSlots,
   initialKeys,
   latticeEnds,
+  nominalSize,
   routeCost,
   withTitle,
 } from '../utils/index.ts';
@@ -102,9 +103,10 @@ export type DynamicOptions = {
 };
 
 /** Multiples of the major grid, so a laid-out graph is already snapped. */
+/** In major cells, so a graph laid out without a lattice lands on the grid whatever the drawing's grid is. */
 const DEFAULTS: Required<Pick<DynamicOptions, 'pitch' | 'size'>> = {
-  pitch: { width: 256, height: 192 },
-  size: { width: 192, height: 128 },
+  pitch: nominalSize({ width: 4, height: 3 }),
+  size: nominalSize({ width: 3, height: 2 }),
 };
 
 export const DYNAMIC_VIEW_ID = 'dynamic';

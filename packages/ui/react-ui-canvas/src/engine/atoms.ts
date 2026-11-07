@@ -108,6 +108,8 @@ export type CanvasAtoms = {
   tool: Atom.Writable<Tool>;
   /** The link type a port drag creates under the select tool: smart until a link tool is picked, then the last one. */
   linkType: Atom.Writable<LinkType>;
+  /** The background grid drawn. */
+  grid: Atom.Writable<boolean>;
   /** Grid shown and moves/resizes snapped to it. */
   snap: Atom.Writable<boolean>;
   /** Guides shown: on a lattice, its cells. */
@@ -146,6 +148,7 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('smart')),
+  grid: Atom.keepAlive(Atom.make<boolean>(true)),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
   guides: Atom.keepAlive(Atom.make<boolean>(true)),
   axes: Atom.keepAlive(Atom.make<boolean>(false)),
