@@ -328,6 +328,7 @@ export const createDataExtensions = <T>({
               darkColor: `var(--color-${hue}-border)`,
               lightColor: `var(--color-${hue}-border)`,
               displayName: identity.displayName ?? generateName(peerId),
+              hue,
             },
           }),
         ),

@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { ScopeComponent } from './Scope.tsx';
@@ -25,7 +27,7 @@ export type CreateScopeProps = CreateShapeProps<ScopeShape>;
 export const createScope = (props: CreateScopeProps) =>
   createShape<ScopeShape>({
     type: 'scope',
-    size: { width: 128, height: 128 },
+    size: { width: 2 * MAJOR_GRID, height: 2 * MAJOR_GRID },
     classNames: 'rounded-full border-primary-800',
     ...props,
   });

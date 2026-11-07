@@ -210,6 +210,40 @@
       }
     }
 
+    /* Another user's selection: an outline in their color with their name on a tab at its top-start corner. */
+    .dx-grid__remote-selection {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 var(--dx-grid-focus-indicator-width) var(--dx-grid-remote-selection-color);
+      background: color-mix(in srgb, var(--dx-grid-remote-selection-color) 12%, transparent);
+    }
+
+    .dx-grid__remote-selection__label {
+      position: absolute;
+      inset-inline-start: 0;
+      inset-block-end: 100%;
+      max-inline-size: 12rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-inline: 0.25rem;
+      font-size: 0.625rem;
+      line-height: 1rem;
+      border-start-start-radius: 2px;
+      border-start-end-radius: 2px;
+      /* A collaborator sends this color; `background-color` takes no image, so it cannot make this client fetch one. */
+      background-color: var(--dx-grid-remote-selection-color);
+      color: var(--dx-grid-remote-selection-text, var(--color-grid-fg));
+    }
+
+    /* The plane clips above its first rendered row, so a selection there wears its tab underneath. */
+    .dx-grid__remote-selection[data-label-position='below'] > .dx-grid__remote-selection__label {
+      inset-block-end: auto;
+      inset-block-start: 100%;
+      border-radius: 0 0 2px 2px;
+    }
+
     .dx-grid__row--cta__cell {
       transition: background-color 100ms linear;
       & > .dx-grid__cell__content {
