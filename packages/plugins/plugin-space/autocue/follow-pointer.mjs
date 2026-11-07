@@ -143,37 +143,14 @@ const createDocument = async (page, name, text) => {
     await dialog.getByTestId('save-button').click();
     await form.waitFor({ state: 'detached', timeout: TIMEOUT });
   }
-  // A document is created at once as "New document"; wait for its plank to replace the last one before typing,
-  // then rename it through its navtree actions.
-  const untitled = objectLink(page, 'New document');
-  await untitled.waitFor({ timeout: TIMEOUT });
+  // A document is created at once as "New document" and opens in a plank; it takes its name from its first heading.
   await plank(page).getByText('New document').first().waitFor({ timeout: TIMEOUT });
   await textbox(page).waitFor({ timeout: TIMEOUT });
   await textbox(page).fill(text);
   // `fill` leaves the whole text selected, which the other peer would see as Alice's selection.
   await page.keyboard.press('ControlOrMeta+Home');
-  // A document takes its name from its first heading, which may already be the name asked for.
-  const named = await objectLink(page, name)
-    .waitFor({ timeout: 5_000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!named) {
-    await untitled.hover();
-    await untitled
-      .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
-      .first()
-      .click();
-    await page.getByTestId('spacePlugin.renameObject').last().click();
-    const popover = page.locator('[data-scope="popover"][data-part="content"]');
-    const field = popover.getByRole('textbox', { name: 'Name' });
-    await field.fill(name);
-    await field.press('Escape');
-    // Escape can land before the popover takes it; it covers the create button until it closes.
-    for (let attempt = 0; attempt < 5 && (await popover.isVisible().catch(() => false)); attempt++) {
-      await page.keyboard.press('Escape');
-      await page.waitForTimeout(300);
-    }
-  }
+  // The navtree can hold the new row in a collapsed Collections section.
+  await expandRow(currentWorkspace(page).getByTestId('spacePlugin.collectionsSection').first());
   await objectLink(page, name).waitFor({ timeout: TIMEOUT });
   await clearChrome({ page });
 };
