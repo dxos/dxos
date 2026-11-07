@@ -111,6 +111,17 @@ describe('order', () => {
     expect(sortByZ([{ id: 'a', z: 'a1' }, { id: 'b' }, { id: 'a0' }]).map(({ id }) => id)).toEqual(['a0', 'b', 'a']);
   });
 
+  test('an id of its own keeps its entry, whatever the id is', ({ expect }) => {
+    // Assigned to an object literal, `__proto__` sets the prototype instead of a key: the element would then
+    // drop silently out of the edit.
+    const elements = [
+      { id: 'a', z: 'a1' },
+      { id: '__proto__', z: 'a2' },
+    ];
+    expect(Object.keys(orderToEnd(elements, ['__proto__'], 'back'))).toEqual(['__proto__']);
+    expect(Object.keys(orderToEnd(elements, ['a'], 'front'))).toEqual(['a']);
+  });
+
   test('a stored key no key fits past renumbers the group, keeping the order it settles in', ({ expect }) => {
     // 'a0' has a trailing zero, so nothing can be keyed under it; the whole group is renumbered instead.
     const elements = [

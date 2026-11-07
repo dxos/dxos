@@ -130,6 +130,37 @@ describe('layoutSource', () => {
     expect(root.grid).toBeUndefined();
   });
 
+  test('a grid pitch under one, or not finite, is refused, since snapping divides by it', () => {
+    const root = db.add(Obj.make(Scene.Layout2D, { key: 'root', elements: {}, grid: 32 }));
+    // `Infinity` passes `>= 1`, and `Math.round(v / Infinity) * Infinity` is `NaN` just as a zero pitch is.
+    for (const grid of [0, -8, Number.POSITIVE_INFINITY, Number.NaN]) {
+      applyLayoutIntent(root, { kind: 'layout', patch: { grid } });
+      expect(root.grid, String(grid)).toBe(32);
+    }
+    applyLayoutIntent(root, { kind: 'layout', patch: { grid: 12 } });
+    expect(root.grid).toBe(12);
+  });
+
+  test('a batch carrying a refused pitch writes none of it, not even the elements it moves', () => {
+    const root = db.add(
+      Obj.make(Scene.Layout2D, {
+        key: 'root',
+        elements: { a: { id: 'a', type: 'rect', center: { x: 0, y: 0 } } },
+        grid: 32,
+      }),
+    );
+    applyLayoutIntent(root, {
+      kind: 'batch',
+      intents: [
+        { kind: 'move', ids: ['a'], delta: { x: 48, y: 0 } },
+        { kind: 'layout', patch: { grid: 0 } },
+      ],
+    });
+    // The move was computed against a pitch the layout never took, so it would leave the batch applied in part.
+    expect(root.elements.a.center).toEqual({ x: 0, y: 0 });
+    expect(root.grid).toBe(32);
+  });
+
   test('a layout intent writes what a new layout is (a composite, its anonymity) with its elements, and undo unsets it', () => {
     const group = db.add(Obj.make(Scene.Layout2D, { key: 'group', elements: {} }));
     const source = layoutSource(group);
