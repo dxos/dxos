@@ -106,7 +106,7 @@ export class Channel<T, I extends JsonValue = JsonValue> {
   readonly #channel: string;
   readonly #peer: Peer;
   readonly #decodeValue: (value: unknown) => Option.Option<T>;
-  readonly #encodeValue: (value: T) => I;
+  readonly #encodeValue: (value: T) => Option.Option<I>;
   readonly #timing: Timing;
   readonly #remote = new Map<string, RemoteSession<T> & { seenAt: number; expires: boolean }>();
 
@@ -115,6 +115,8 @@ export class Channel<T, I extends JsonValue = JsonValue> {
   /** Whether there is local state to post at all: nothing is sent before the first update. */
   #active = false;
   #local?: T;
+  /** `#local` as sent, encoded once per change rather than on every heartbeat. */
+  #encoded?: I;
   #changedAt = 0;
   #lastPost = Number.NEGATIVE_INFINITY;
   #pending?: ReturnType<typeof setTimeout>;
@@ -124,7 +126,7 @@ export class Channel<T, I extends JsonValue = JsonValue> {
     this.#channel = channel;
     this.#peer = peer;
     this.#decodeValue = Schema.decodeUnknownOption(schema);
-    this.#encodeValue = Schema.encodeSync(schema);
+    this.#encodeValue = Schema.encodeOption(schema);
     this.#timing = timing;
   }
 
@@ -175,6 +177,7 @@ export class Channel<T, I extends JsonValue = JsonValue> {
     // A reopened channel is a new session and must not re-announce the old one's value.
     this.#active = false;
     this.#local = undefined;
+    this.#encoded = undefined;
     if (this.#remote.size > 0) {
       this.#remote.clear();
       this.changed.emit();
@@ -201,11 +204,23 @@ export class Channel<T, I extends JsonValue = JsonValue> {
       return;
     }
 
+    let encoded: I | undefined;
+    if (value !== undefined) {
+      // A schema can refine what its TypeScript type allows; a thrown encode would escape the throttle timer.
+      const result = this.#encodeValue(value);
+      if (Option.isNone(result)) {
+        log.warn('awareness value does not match its schema', { channel: this.#channel });
+        return;
+      }
+      encoded = result.value;
+    }
+
     if (moved || !this.#active) {
       this.#changedAt = performance.now();
     }
     this.#active = true;
     this.#local = value;
+    this.#encoded = encoded;
     this.#schedule();
   }
 
@@ -345,7 +360,7 @@ export class Channel<T, I extends JsonValue = JsonValue> {
           lightColor: info.lightColor,
           ...(info.hue !== undefined ? { hue: info.hue } : {}),
         },
-        ...(this.#local !== undefined ? { position: this.#encodeValue(this.#local) } : {}),
+        ...(this.#encoded !== undefined ? { position: this.#encoded } : {}),
       },
       sessionId: this.#sessionId,
       age: performance.now() - this.#changedAt,

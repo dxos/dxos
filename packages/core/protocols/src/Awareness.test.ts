@@ -228,7 +228,21 @@ describe('Awareness.Channel', () => {
       age: 0,
     });
     await vi.advanceTimersByTimeAsync(NETWORK_DELAY * 2);
-    expect(values(guest)).toEqual([]);
+    expect(guest.getSessions()).toEqual([]);
+  });
+
+  test('a local value its schema rejects is not sent', async ({ expect }) => {
+    const network = new TestNetwork();
+    const Positive = Schema.Struct({ x: Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0))) });
+    const host = network.createChannelOf('host', Positive);
+    const guest = network.createChannelOf('guest', Positive);
+    await vi.advanceTimersByTimeAsync(LISTEN_DELAY * 2);
+
+    host.update({ x: 1 });
+    await vi.advanceTimersByTimeAsync(throttle);
+    expect(() => host.update({ x: -1 })).not.toThrow();
+    await vi.advanceTimersByTimeAsync(heartbeat);
+    expect(guest.getSessions().map(({ value }) => value)).toEqual([{ x: 1 }]);
   });
 
   test('a withdrawn value is re-announced, so a lost withdraw heals', async ({ expect }) => {
