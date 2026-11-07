@@ -52,6 +52,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AvailabilityPollSpace": {
+      "source": "./src/samples/availability-poll/AvailabilityPollSpace.ts",
+      "types": "./dist/types/src/samples/availability-poll/AvailabilityPollSpace.d.ts",
+      "import": "./dist/lib/AvailabilityPollSpace.mjs"
+    },
     "./Debug": {
       "source": "./src/types/Debug.ts",
       "types": "./dist/types/src/types/Debug.d.ts",
@@ -261,6 +266,7 @@
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-sandbox": "workspace:*",

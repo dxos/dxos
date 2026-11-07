@@ -258,7 +258,7 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
  * be spending on the task.
  */
 const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
-  describeTypes(db),
+  describeTypes(db.registry),
 );
 
 /**

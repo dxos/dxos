@@ -11510,6 +11510,9 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
+      '@dxos/diagram':
+        specifier: workspace:*
+        version: link:../../common/diagram
       '@dxos/plugin-progress':
         specifier: workspace:*
         version: link:../plugin-progress
