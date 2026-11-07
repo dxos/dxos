@@ -1,5 +1,194 @@
 # @dxos/plugin-space
 
+## 0.17.0
+
+### Minor Changes
+
+- c9c3867: Add `ExportOperation.Print` and `ExportOperation.Save` with a per-type `AppCapabilities.Exporter` capability. Objects whose type contributes an exporter get "Print…" and "Save as file…" on their article menu. Markdown saves `.md`, sheets save `.csv`, tables save `.dx.json`, and 2D canvas drawings save `.svg`. Print opens the browser print dialog, which can save a PDF. `@dxos/util` gains `printHtml`, `htmlTable` and `escapeHtml`.
+- 97de470: A space can now be migrated off its hypercore control feed onto an Automerge space root that EDGE mints, with `space.internal.migrateSpaceRoot()` or the new "Credential storage → Migrate" button in Composer's space settings. Every other member adopts that same root the next time it opens the space, and `space.internal.data.spaceRootUrl` reports the root a device has adopted. `EdgeHttpClient` gains `migrateSpaceRoot` and `getSpaceRoot`.
+
+### Patch Changes
+
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- 38ebf5e: Tables and sheets show other people's selected cells and ranges. Each one is outlined in the person's member hue and tagged with their name, the same name and color their Markdown cursor shows. A selection stays on its rows when anyone sorts, filters or inserts rows, and focusing a header or a table's draft row clears yours for everyone else. Selecting a commented sheet cell opens its thread only when you move to it, not when someone else's edit shifts its row.
+
+  `react-ui-grid` adds `GridSelectionModel`, the selection state both tables and sheets now use, with cells named by row and column id through a `GridAddressing`. `Grid.Root` takes an `awareness` channel and `Grid.Content` takes `addressing`. `useGridAwareness` creates that channel, a `@dxos/protocols/Awareness` channel on `awareness.selection.<id>` whose value is the selection's corner cells by id, and the grid shows one selection per member. The sheet's cursor and range now come from this model.
+
+  `dx-grid` draws `remoteSelections`, and its `dx-grid-cells-select` event carries the `range` with its plane. It adds `getSelection()`, `getFocusedCell()` and `moveSelection(range, { focus })`, and `refocus(axis, delta)` now moves the selection with focus.
+
+  In the Database section, a type that has a view (such as a table) now shows its caret before it is first expanded. A member who joins a space can now open a table from its type there.
+
+- 1a06754: `queryTypes` called with both `typenames` and `limit` now returns the named types. It used to apply `limit` to the whole sorted type list before picking out the named ones, so a named type sorting past the limit came back as `{ types: [] }`.
+- f071de2: The record view and Related panel find related objects by querying the record's references and relations directly, instead of watching every object in the space.
+- 7e07e49: Peers viewing the same object show up again. Each plank header shows an avatar for every other member viewing it, the navtree glyph counts them, and a space's row counts the peers viewing the space itself. Avatars keep one order for a given set of peers. Their rings match the attention glyph: accent for a peer attending the object, neutral gray for one who only has it open. Leaving a workspace clears your presence on what it showed. The avatar `current` status now rings with `--color-accent-bg` instead of `--color-focus`.
+- e67aa80: `ColorPicker.HueGrid` is a hue-only variant of the color picker whose value is a theme hue's name, and `HuePicker` now opens it in a popover, so every hue fits the grid and the reset button no longer covers a swatch; `HuePicker`'s `onReset` takes no event. `NumberInput` gains `stepper='start'` (the pair before the input), `stepper='split'` (decrement before the input, increment after), `stepperOnHover` (the stepper sits opposite the number and shows only while the row is hovered or focused), `align='end'` for right-aligned figures, and `slider`, a button that opens a slider over `min`..`max`. The space's Database section hides a type whose plugin is disabled (its objects stay reachable), and an object whose plugin is disabled offers a "Find plugin" button that opens the plugin registry filtered by its type. The dev-server variant of the "Composer Plugin" project template has its own id and label, so it no longer appears as a duplicate of plugin-projects' template.
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [c8d6d86]
+- Updated dependencies [f142d06]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [7a8b279]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [416201f]
+- Updated dependencies [3aef671]
+- Updated dependencies [13bc40d]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [841c4f7]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/react-ui-masonry@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-table@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/react-ui-pickers@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/cli-util@0.17.0
+  - @dxos/extractor@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/migrations@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-query@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-settings@0.17.0
+  - @dxos/plugin-status-bar@0.17.0
+  - @dxos/shell@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/react-ui-dashboard@0.17.0
+  - @dxos/react-ui-dnd@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/halo@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/display-name@0.17.0
+  - @dxos/halo-react@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/progress@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

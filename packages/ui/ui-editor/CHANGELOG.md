@@ -1,5 +1,92 @@
 # @dxos/ui-editor
 
+## 0.17.0
+
+### Minor Changes
+
+- 09d8716: Pending text can now stream in a whole paragraph with blank lines around it or an inline correction that replaces a range, and its confirm/cancel buttons float above the preview once the text settles. The typewriter cursor stays at the end of streamed text, and a menu now closes when a click outside it lands on an element that is redrawn.
+- 4be51c3: Plugin `workerd` (EDGE) builds no longer bundle editor extensions, CLI commands, local-client layer specs, UI state or defuddle's DOM build: those modules now list `['browser', 'node', 'tauri']`, and markdown's Scroll To Anchor operation registers only in the browser. `@dxos/ui-editor/hunks` exports the word-level diff helpers (`cherryPickHunk`, `revertHunk`, `computeWordHunks`) without a CodeMirror dependency; **Breaking:** `@dxos/ui-editor/headless` no longer exports `cherryPickHunk` and `revertHunk`; import them from `@dxos/ui-editor/hunks` (or the package root) instead.
+- bdb73fb: `diffView` takes `orientation: 'changes'` to read the editor's document as the newer version, with a line-first diff that stays precise on long documents, and `collapseUnchanged` to fold unchanged runs. Smart links on a lattice route about six times faster with the same result, and dragging a node no longer re-runs the graph's arrangement.
+
+### Patch Changes
+
+- 73ed632: Collaborator cursors now reach a peer that joins a document after the others last moved. `SpaceAwarenessProvider` queries for peers only once its listener is registered, answers a peer's first post with its own state, and re-sends its state every 15 seconds for peers whose connection came up after its last post. Remote state is kept per session (each open editor), so a person with a document open on two devices or in two tabs shows one caret, from whichever session moved last, instead of the two overwriting each other. A session is dropped when it closes, or within a minute of its last post.
+
+  An empty editor shows one placeholder at a time: the commands hint ("Press / for commands") replaces the editor's placeholder instead of rendering beside it. `createBasicExtensions` uses the new `emptyPlaceholder`, which gives way while a `placeholder` hint shows. Placeholders also sort after other widgets at their position, so a collaborator's caret in an empty document draws where the document starts rather than after the placeholder text. `placeholderWidget` builds that decoration for other extensions.
+
+  On macOS, `setupPage` gives each Playwright WebKit context its own home directory, so each context gets its own OPFS. Before this, two peers in one test shared one identity.
+
+- 0590c11: New Demo space template: sixteen chess games at every stage, a world map of every Cloudflare data centre with a globe tour from Los Angeles to Sydney, a voxel creeper, a voxel town, and a spacetime scene of three race cars and a fire truck. `@dxos/plugin-spacetime` is now public, with a `SpacetimePresets` entry that builds a preset model (fire truck, race car, taxi) as a stored mesh. A game now has an optional `description`, which chess keeps set to the current FEN so tables and cards show each position; chess cards draw their board full width again, and the move list drops its focus ring. A map's `coordinates` are its globe tour route; the globe gets a light street-map palette, small dark-blue markers, a red tour route and a margin at rest, and flat-map pins shrink to 60%. The DXOS Architecture template's metrics sheet gains a pie of the busiest plugins' PR share. Refs to the same object from different clients in one page no longer share a cached atom, so each client resolves a ref through its own database (previously every client's editor bound to whichever client loaded the object first). Replicated comments now show up on every peer: the editor retries an anchor whose cursor cites edits not yet received, and comment sync re-reads anchors when a thread arrives after its anchor. Many clients editing one document replicate much faster: sync no longer rebuilds Automerge changes on every message to check a peer's initial heads (patched `@automerge/automerge-repo`), and a query from objects to typed relations on them (`select(...).targetOf(Type)`, as comment threads use) re-runs only when those objects, relations of that type, or the relations' endpoints change, rather than on every write in the space. A masonry grid now has the same gap on all four sides: inside a padded `Masonry.Content` it adds the gap above and below as well as at the sides, and a non-scrolling grid (`scroll={false}`) adds none, leaving the perimeter to its host. Padding of `p-3` is now the equivalent `p-trim-md` token. A toolbar now insets both ends by the same gap, whether the edge item is a labelled control or an icon-only button, plugin-theme registers the menu translations so the overflow button reads "More", and a project's pipeline toggle reads "Hide pipeline" while the chart is shown.
+- 39f6b21: The `changes` orientation of `diffView` tints an inserted line once rather than twice, so syntax colours on added lines stay legible.
+- a8e68c5: A spec's features are embedded in its document as `![name](echo:///id)`, drawn as editable sections, and the text decides which features the spec holds and in what order. `/feature` at the end of a paragraph makes it a feature, and moving, deleting or undoing an embed does the same to the feature. Every feature gets a block id (`F-n`) and every requirement an id under it as soon as it exists, and ids are kept when features move. The local and GitHub file syncs read and write `feat` blocks through the new `SpecDocumentCodec` capability, and export rewrites only the blocks that changed. Breaking: `Feature` is now 0.4.0, and its `specs` field moved to meta foreign keys (`Feature.getSources`, `Feature.getBlockId`), with a migration. `deus changelog check` reads a fence holding several decisions as one entry each. `StubWidget` no longer accepts another widget's DOM, which kept a kept-alive widget from rendering twice.
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [caa28b3]
+- Updated dependencies [cb058b9]
+- Updated dependencies [a458aef]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [c80b89d]
+- Updated dependencies [6a41aa7]
+- Updated dependencies [f3dde57]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [500360c]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [5b4830e]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [ece15ab]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [c9c3867]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/nlp@0.17.0
+  - @dxos/display-name@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

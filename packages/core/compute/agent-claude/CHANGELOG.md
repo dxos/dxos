@@ -1,5 +1,58 @@
 # @dxos/agent-claude
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [d105c19]
+- Updated dependencies [7a8b279]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [908c301]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [592fdad]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [841c4f7]
+- Updated dependencies [901c1e4]
+- Updated dependencies [df65316]
+  - @dxos/assistant@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

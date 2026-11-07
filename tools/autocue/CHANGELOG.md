@@ -1,5 +1,12 @@
 # @dxos/autocue
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [8ad08cb]
+  - @dxos/brand@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

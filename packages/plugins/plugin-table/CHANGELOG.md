@@ -1,5 +1,128 @@
 # @dxos/plugin-table
 
+## 0.17.0
+
+### Minor Changes
+
+- 38ebf5e: Tables and sheets show other people's selected cells and ranges. Each one is outlined in the person's member hue and tagged with their name, the same name and color their Markdown cursor shows. A selection stays on its rows when anyone sorts, filters or inserts rows, and focusing a header or a table's draft row clears yours for everyone else. Selecting a commented sheet cell opens its thread only when you move to it, not when someone else's edit shifts its row.
+
+  `react-ui-grid` adds `GridSelectionModel`, the selection state both tables and sheets now use, with cells named by row and column id through a `GridAddressing`. `Grid.Root` takes an `awareness` channel and `Grid.Content` takes `addressing`. `useGridAwareness` creates that channel, a `@dxos/protocols/Awareness` channel on `awareness.selection.<id>` whose value is the selection's corner cells by id, and the grid shows one selection per member. The sheet's cursor and range now come from this model.
+
+  `dx-grid` draws `remoteSelections`, and its `dx-grid-cells-select` event carries the `range` with its plane. It adds `getSelection()`, `getFocusedCell()` and `moveSelection(range, { focus })`, and `refocus(axis, delta)` now moves the selection with focus.
+
+  In the Database section, a type that has a view (such as a table) now shows its caret before it is first expanded. A member who joins a space can now open a table from its type there.
+
+- c9c3867: Add `ExportOperation.Print` and `ExportOperation.Save` with a per-type `AppCapabilities.Exporter` capability. Objects whose type contributes an exporter get "Print…" and "Save as file…" on their article menu. Markdown saves `.md`, sheets save `.csv`, tables save `.dx.json`, and 2D canvas drawings save `.svg`. Print opens the browser print dialog, which can save a PDF. `@dxos/util` gains `printHtml`, `htmlTable` and `escapeHtml`.
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [812ae94]
+- Updated dependencies [cb058b9]
+- Updated dependencies [710da43]
+- Updated dependencies [cab57d0]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [b97d8ea]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [d45bf58]
+- Updated dependencies [f82b258]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [908c301]
+- Updated dependencies [78e96da]
+- Updated dependencies [416201f]
+- Updated dependencies [13bc40d]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [38ebf5e]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [9471682]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [27b3290]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [aedf119]
+- Updated dependencies [8554a26]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f071de2]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [4510d8c]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [8e2f718]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/plugin-search@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/react-ui-grid@0.17.0
+  - @dxos/react-ui-table@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/halo-react@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

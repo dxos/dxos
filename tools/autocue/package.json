@@ -1,6 +1,6 @@
 {
   "name": "@dxos/autocue",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "autocue's on-screen UI and video ident: plain-DOM components the skill injects into recorded pages (with React wrappers for storybook), and the DXOS ident cards rendered with Remotion.",
   "homepage": "https://dxos.org",

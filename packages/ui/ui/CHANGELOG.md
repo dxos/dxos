@@ -1,5 +1,15 @@
 # @dxos/ui
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [cb058b9]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [1a0fff1]
+  - @dxos/ui-types@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

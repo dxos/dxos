@@ -1,5 +1,81 @@
 # @dxos/react-ui-mosaic
 
+## 0.17.0
+
+### Minor Changes
+
+- c8d6d86: `Mosaic.Stack` takes `keepDragged` to keep the dragged tile mounted, and `Mosaic.Tile` takes `nativeDragPreview` to turn off the browser's drag image, so a tile that holds state can stay on its axis during a drag, and `reorderOnEnter` to give way to a forward drag as soon as the pointer enters it. A tile also stays registered as a drag source while its container scrolls, so a drop during an autoscroll now reaches it. Fixed-height markdown rows are available to the chat editor. In `TaskList`, an unset priority draws the high bars in a neutral tone and an unset estimate draws a dot.
+
+  `ThreadCard` shows a chat's thread (lane) as a card. A lane row now renders through the `AssistantSurface.ThreadCard` role, so a plugin can replace the card, and `Chat.Chat` objects have a card surface. `Chat.Event` adds `focus-prompt`, which puts the cursor in the prompt.
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [df16fba]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [908c301]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [d00cc85]
+- Updated dependencies [768db81]
+- Updated dependencies [10b3963]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-syntax-highlighter@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/react-ui-dnd@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

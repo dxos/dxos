@@ -1,6 +1,6 @@
 {
   "name": "@dxos/mdl-language-server",
-  "version": "0.1.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Language server for DEUS `.mdl` specs: diagnostics, completion, go-to-definition, links, hovers and review verdicts.",
   "homepage": "https://dxos.org",
