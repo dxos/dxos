@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { combinedSource, patchSource, recordChanges } from '@dxos/react-ui-canvas/headless';
 import { Scene } from '@dxos/scene';
 
-import { applyLayoutIntent, layoutSource } from './layout-source.ts';
+import { applyLayoutIntent, layoutRecord, layoutSource } from './layout-source.ts';
 import { plain } from './records.ts';
 
 describe('layoutSource', () => {
@@ -115,6 +115,19 @@ describe('layoutSource', () => {
     expect(plain(root.constraints)).toEqual(after);
     expect(root.lattice?.width).toBe(64);
     expect(root.elements.b.center).toEqual({ x: 0, y: 128 });
+  });
+
+  test('a layout intent writes the drawing grid, and undo unsets it', () => {
+    const root = db.add(Obj.make(Scene.Layout2D, { key: 'root', elements: {} }));
+    const source = layoutSource(root);
+    const [change] = recordChanges([source], () => applyLayoutIntent(root, { kind: 'layout', patch: { grid: 32 } }));
+    expect(root.grid).toBe(32);
+    expect(layoutRecord(root)).toMatchObject({ grid: 32 });
+    if (!change) {
+      throw new Error('The change was recorded.');
+    }
+    patchSource(source, { from: change.after, to: change.before, paths: change.paths });
+    expect(root.grid).toBeUndefined();
   });
 
   test('a layout intent writes what a new layout is (a composite, its anonymity) with its elements, and undo unsets it', () => {

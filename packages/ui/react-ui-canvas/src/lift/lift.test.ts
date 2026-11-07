@@ -21,8 +21,8 @@ describe('liftScene', () => {
     expect(doc.scenes[0].dim).toBe('3d');
     const layout = doc.layouts[0];
     const b = layout.dim === '3d' ? resolveLayout3D(doc, layout).b : undefined;
-    expect(b).toMatchObject({ type: 'cube', center: { x: 256 / PIXELS_PER_UNIT, y: 0 } });
-    expect(b?.scale?.x).toBeCloseTo(128 / PIXELS_PER_UNIT);
+    expect(b).toMatchObject({ type: 'cube', center: { x: 192 / PIXELS_PER_UNIT, y: 0 } });
+    expect(b?.scale?.x).toBeCloseTo(96 / PIXELS_PER_UNIT);
   });
 
   test("keeps links, labels and composites' parts", () => {

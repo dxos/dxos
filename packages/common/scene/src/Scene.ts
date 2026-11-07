@@ -217,8 +217,10 @@ export const Constraint = Schema.Struct({
 });
 export type Constraint = Schema.Schema.Type<typeof Constraint>;
 
-/** The fields only a 2D layout has: its lattice and constraints (the modes that place its elements). */
+/** The fields only a 2D layout has: its grid, lattice and constraints (the modes that place its elements). */
 const layout2DFields = {
+  /** The drawing's grid pitch in scene px, which snapping, nudging and the drawn grid all derive from (`DEFAULT_GRID` when unset). */
+  grid: Schema.optional(Schema.Number),
   lattice: Schema.optional(Lattice),
   constraints: Schema.optional(Schema.Array(Constraint)),
 };
