@@ -75,10 +75,14 @@ const plank = (page) => page.getByTestId('deck.plank').first();
 const textbox = (page) => plank(page).getByTestId('composer.markdownRoot').getByRole('textbox');
 const sidebar = (page) => page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
 const membersTab = (page) => page.locator('[id$="trigger-members"]');
-/** Collapses the complementary sidebar, whichever companion it shows, so the plank keeps the room. */
+/** Collapses the complementary sidebar and any plank companion (a document's help), so the plank keeps the room. */
 const closeSidebar = async (peer) => {
   if ((await sidebar(peer.page).getAttribute('data-state')) === 'expanded') {
     await peer.click(sidebar(peer.page).getByTestId('deck.toggleComplementarySidebar'));
+  }
+  const closeCompanion = peer.page.getByTestId('plankHeading.closeCompanion').filter({ visible: true });
+  for (let attempt = 0; attempt < 5 && (await closeCompanion.count()) > 0; attempt++) {
+    await peer.click(closeCompanion.first());
   }
 };
 const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.row');
@@ -437,9 +441,12 @@ export const steps = [
     name: 'The leader types in the plan',
     subtitle: 'Bob’s view keeps the leader’s place while the text arrives',
     run: async ({ peers: { bob }, sleep }) => {
-      await leader.click(plank(leader.page).getByText('Owners note 2', { exact: false }).first());
+      // A heading is one short line, so End lands at its end; a wrapped note's End stops mid-sentence.
+      await leader.click(plank(leader.page).getByText('Owners', { exact: true }).first());
       await leader.page.keyboard.press('End');
-      await leader.page.keyboard.type(' Bob, can you take pricing?', { delay: 70 });
+      await leader.page.keyboard.press('Enter');
+      await leader.page.keyboard.press('Enter');
+      await leader.page.keyboard.type('Bob, can you take pricing?', { delay: 70 });
       await waitFor(async () => (await textbox(bob.page).innerText()).includes('can you take pricing'), {
         what: 'the leader’s words in Bob’s view',
       });
