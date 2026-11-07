@@ -267,10 +267,12 @@ export const steps = [
     run: async ({ peers, sleep }) => {
       const { bob } = peers;
       const last = presenceRows(bob.page).last();
-      const name = (await last.innerText()).split('\n')[0].trim();
-      leader = peers[name.toLowerCase()];
+      // The row's text starts with the avatar's glyph, so find the name in it.
+      const text = await last.innerText();
+      const name = ['Alice', 'Carol'].find((candidate) => text.includes(candidate));
+      leader = name && peers[name.toLowerCase()];
       if (!leader) {
-        throw new Error(`no peer named ${name}`);
+        throw new Error(`no peer named in "${text}"`);
       }
       await last.hover();
       await sleep(600);
