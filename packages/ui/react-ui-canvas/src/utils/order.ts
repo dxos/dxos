@@ -124,15 +124,17 @@ export const orderToEnd = (
     const fresh = initialKeys(settled.length);
     return Object.fromEntries(settled.map((element, index) => [element.id, fresh[index]]));
   };
-  const keys: Record<string, string> = {};
+  // A Map, not a literal: an id is the caller's, and one like `__proto__` sets the prototype of an object rather
+  // than a key on it, so the element would silently drop out of the edit.
+  const keys = new Map<string, string>();
   try {
     if (place === 'front') {
       let previous = rest[rest.length - 1].z;
       for (const element of moving) {
         previous = between(previous === '' ? undefined : previous, undefined);
-        keys[element.id] = previous;
+        keys.set(element.id, previous);
       }
-      return keys;
+      return Object.fromEntries(keys);
     }
     const limit = rest[0].z;
     // Nothing to go under, so the group is renumbered from the bottom with the moved elements first.
@@ -142,9 +144,9 @@ export const orderToEnd = (
     let next = limit;
     for (let index = moving.length - 1; index >= 0; index--) {
       next = between(undefined, next);
-      keys[moving[index].id] = next;
+      keys.set(moving[index].id, next);
     }
-    return keys;
+    return Object.fromEntries(keys);
   } catch {
     // No key fits past the edge the group is moving to (a stored key with a trailing zero): renumber it whole.
     return renumber();

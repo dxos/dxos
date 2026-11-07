@@ -30,6 +30,7 @@ const isHeads = (value: unknown): value is readonly string[] =>
 
 const isElement3D = Schema.is(Scene.Element3D);
 const isElement2D = Schema.is(Scene.Element2D);
+const isGridPitch = Schema.is(Scene.GridPitch);
 const isLattice = Schema.is(Scene.Lattice);
 const isConstraints = Schema.is(Schema.Array(Scene.Constraint));
 const isLayoutKind = Schema.is(Scene.LayoutKind);
@@ -47,7 +48,8 @@ const writeLayoutField = (layout: Obj.Mutable<Scene.Layout2D>, field: keyof Layo
   } else if (field === 'name') {
     typeof next === 'string' && (layout.name = next);
   } else if (field === 'grid') {
-    typeof next === 'number' && (layout.grid = next);
+    // Snapping divides by the pitch, so anything under one would put every drop and nudge at `NaN`.
+    isGridPitch(next) && (layout.grid = next);
   } else {
     typeof next === 'boolean' && (layout.anonymous = next);
   }

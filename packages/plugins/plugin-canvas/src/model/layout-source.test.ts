@@ -130,6 +130,16 @@ describe('layoutSource', () => {
     expect(root.grid).toBeUndefined();
   });
 
+  test('a grid pitch under one is refused, since snapping divides by it', () => {
+    const root = db.add(Obj.make(Scene.Layout2D, { key: 'root', elements: {}, grid: 32 }));
+    applyLayoutIntent(root, { kind: 'layout', patch: { grid: 0 } });
+    expect(root.grid).toBe(32);
+    applyLayoutIntent(root, { kind: 'layout', patch: { grid: -8 } });
+    expect(root.grid).toBe(32);
+    applyLayoutIntent(root, { kind: 'layout', patch: { grid: 12 } });
+    expect(root.grid).toBe(12);
+  });
+
   test('a layout intent writes what a new layout is (a composite, its anonymity) with its elements, and undo unsets it', () => {
     const group = db.add(Obj.make(Scene.Layout2D, { key: 'group', elements: {} }));
     const source = layoutSource(group);

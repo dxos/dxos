@@ -10,6 +10,7 @@ import {
   type Dimension,
   Element2D,
   Element3D,
+  GridPitch,
   Lattice,
   LayoutKind,
   type LayoutRecord,
@@ -37,7 +38,7 @@ export type LayoutPatch = {
 };
 
 export const LayoutPatch: Schema.Codec<LayoutPatch> = Schema.Struct({
-  grid: Schema.optional(Schema.Number),
+  grid: Schema.optional(GridPitch),
   lattice: Schema.optional(Lattice),
   constraints: Schema.optional(Schema.Array(Constraint)),
   kind: Schema.optional(LayoutKind),

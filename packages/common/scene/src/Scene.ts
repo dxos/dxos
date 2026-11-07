@@ -200,6 +200,12 @@ const elementRecord = <E extends Schema.Struct<Schema.Struct.Fields>>(element: E
 export const LayoutKind = Schema.Literals(['view', 'composite']);
 export type LayoutKind = Schema.Schema.Type<typeof LayoutKind>;
 
+/**
+ * A grid pitch in scene px. At least one: snapping divides by the pitch, so a zero or negative one would put every
+ * drop and nudge at `NaN`.
+ */
+export const GridPitch = Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(1)));
+
 /** Lattice mode's grid: shapes span whole cells and links route along the gutters between them. */
 export const Lattice = Schema.Struct({
   width: Schema.Number,
@@ -220,7 +226,7 @@ export type Constraint = Schema.Schema.Type<typeof Constraint>;
 /** The fields only a 2D layout has: its grid, lattice and constraints (the modes that place its elements). */
 const layout2DFields = {
   /** The drawing's grid pitch in scene px, which snapping, nudging and the drawn grid all derive from (`DEFAULT_GRID` when unset). */
-  grid: Schema.optional(Schema.Number),
+  grid: Schema.optional(GridPitch),
   lattice: Schema.optional(Lattice),
   constraints: Schema.optional(Schema.Array(Constraint)),
 };
