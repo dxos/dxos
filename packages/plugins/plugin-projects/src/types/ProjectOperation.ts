@@ -254,8 +254,8 @@ export const ScrollToAnchor = Operation.make({
   },
   input: Schema.Struct({
     subject: Schema.String.annotate({ description: 'Attendable id of the commented object.' }),
-    cursor: Schema.String.annotate({ description: 'The anchor to reveal.' }),
-    id: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
+    anchor: Schema.String.annotate({ description: 'The anchor to reveal.' }),
+    thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to mark current.' })),
   }),
   output: Schema.Void,
 }).pipe(Operation.mutation('none'));

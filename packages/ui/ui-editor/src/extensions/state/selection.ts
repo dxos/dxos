@@ -44,7 +44,8 @@ export type EditorStateStore = {
   getState: (id: string) => EditorSelectionState | undefined;
 };
 
-const stateRestoreAnnotation = 'org.dxos.cm.state-restore';
+/** User event of a transaction that restores a stored selection and scroll position. */
+export const STATE_RESTORE_EVENT = 'org.dxos.cm.state-restore';
 
 /** Window after a restore during which scroll events are not recorded. */
 const RESTORE_SUPPRESS_MS = 500;
@@ -67,7 +68,7 @@ export const createEditorStateTransaction = ({ scrollTo, selection }: EditorSele
     // `scrollTo` is the position that was at the top of the viewport, so restore it there
     // exactly; a y-margin would offset every restore by that margin.
     effects: scrollTo != null ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
-    annotations: Transaction.userEvent.of(stateRestoreAnnotation),
+    annotations: Transaction.userEvent.of(STATE_RESTORE_EVENT),
   };
 };
 
@@ -88,7 +89,7 @@ export const restoreEditorState = (view: EditorView, state: EditorSelectionState
       view.dispatch({
         selection: state.selection,
         scrollIntoView: false,
-        annotations: Transaction.userEvent.of(stateRestoreAnnotation),
+        annotations: Transaction.userEvent.of(STATE_RESTORE_EVENT),
       });
     }
     return;
@@ -168,7 +169,7 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
       },
     }),
     EditorView.updateListener.of(({ view, transactions }) => {
-      if (transactions.some((tr) => tr.isUserEvent(stateRestoreAnnotation))) {
+      if (transactions.some((tr) => tr.isUserEvent(STATE_RESTORE_EVENT))) {
         suppressUntil = performance.now() + RESTORE_SUPPRESS_MS;
         cancelPending();
         return;

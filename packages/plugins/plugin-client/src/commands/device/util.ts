@@ -3,15 +3,16 @@
 //
 
 import { Doc, FormBuilder } from '@dxos/cli-util';
-import { type Device, Device_PresenceState, DeviceKind, DeviceType } from '@dxos/client/halo';
+import { type Device, Device_PresenceState, DeviceKind, DeviceType, getDeviceLabel } from '@dxos/client/halo';
 import { requirePublicKey } from '@dxos/protocols/buf';
 
 const maybeTruncateKey = (key: { toHex(): string; truncate(): string }, truncate = false) =>
   truncate ? key.truncate() : key.toHex();
 
 const getDeviceTitle = (device: Device): string => {
-  if (device.profile?.label) {
-    return device.profile.label;
+  const label = getDeviceLabel(device.profile);
+  if (label) {
+    return label;
   }
   const platform = device.profile?.platform ?? 'Unknown';
   const os = device.profile?.os ?? 'Unknown';

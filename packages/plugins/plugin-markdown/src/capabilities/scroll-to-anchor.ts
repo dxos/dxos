@@ -16,7 +16,7 @@ const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ subject, cursor, id }) {
+    Effect.fnUntraced(function* ({ subject, anchor, thread }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
       // Views register under `attendableId ?? documentId`, and callers hold one or the other — a
       // companion knows its context plank's attendable id, the graph knows the object URI. Accept
@@ -32,17 +32,17 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
       // When a thread ref is supplied, delegate to the shared editor helper which
       // scrolls (only if not already visible) and marks the comment current. The helper matches by
       // the thread's bare entity id (how the comment-sync extension keys its ranges), not its URI.
-      if (id) {
-        const thread = yield* Effect.promise(() => id.load());
-        scrollCommentIntoView(entry.view, thread.id, SCROLL_OPTIONS);
+      if (thread) {
+        const { id } = yield* Effect.promise(() => thread.load());
+        scrollCommentIntoView(entry.view, id, SCROLL_OPTIONS);
         return;
       }
 
       // A change proposed at a single offset (a pure insertion) anchors as a zero-width range, which
       // resolves only if both ends map; fall back to the start alone so those still reveal.
-      const [from] = cursor.split(':');
+      const [from] = anchor.split(':');
       const range =
-        Cursor.getRangeFromCursor(entry.view.state, cursor) ??
+        Cursor.getRangeFromCursor(entry.view.state, anchor) ??
         Cursor.getRangeFromCursor(entry.view.state, `${from}:${from}`);
       if (!range) {
         return;

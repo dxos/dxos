@@ -222,8 +222,8 @@ const CommentsPanel = ({ attendableId, subject, targets }: CommentsPanelProps) =
       if (!mainText) {
         return;
       }
-      const cursor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
-      void invokePromise(MarkdownOperation.ScrollToAnchor, { subject: attendableId ?? subjectId, cursor });
+      const anchor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
+      void invokePromise(MarkdownOperation.ScrollToAnchor, { subject: attendableId ?? subjectId, anchor });
     },
     [mainText, invokePromise, attendableId, subjectId, setReviewView],
   );

@@ -13,11 +13,11 @@ import { ProjectOperation } from '#types';
 // Each text field is its own editor, so the thread's comment mark finds the editor that shows it.
 const handler: Operation.WithHandler<typeof ProjectOperation.ScrollToAnchor> = ProjectOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ id }) {
-      if (!id || typeof document === 'undefined') {
+    Effect.fnUntraced(function* ({ thread: threadRef }) {
+      if (!threadRef || typeof document === 'undefined') {
         return;
       }
-      const thread = yield* Effect.promise(() => id.load());
+      const thread = yield* Effect.promise(() => threadRef.load());
       const mark = document.querySelector(`[data-comment-id="${CSS.escape(thread.id)}"]`);
       const editor = mark?.closest<HTMLElement>('.cm-editor');
       const view = editor && EditorView.findFromDOM(editor);

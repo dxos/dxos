@@ -183,6 +183,7 @@ const config: Plugin.PluginConfig = Plugin.config({
           AppCapabilities.AnchorSort,
           AppCapabilities.CommentConfig,
           AppCapabilities.CommentScope,
+          AppCapabilities.Locator,
         ],
         activatesOn: ProjectsEvents.Start,
       },
