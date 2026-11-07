@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: live cursors on drawings is a feature of its own, apart from the protocol channel in awareness-channel.md
 '@dxos/app-toolkit': minor
 '@dxos/plugin-tldraw': minor
 ---
