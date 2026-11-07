@@ -55,7 +55,8 @@ export const useAwareness = <T, I extends JsonValue>(
   const space = object ? getSpace(object) : undefined;
   const objectId = object?.id;
   const identityKey = identity?.identityKey;
-  const name = identityKey ? (identity?.displayName ?? generateName(identityKey)) : undefined;
+  // A cleared display name is stored as an empty string, which would otherwise keep the member off the channel.
+  const name = identityKey ? identity?.displayName || generateName(identityKey) : undefined;
   const hue = identityKey ? (readHue(identity?.data?.hue) ?? hexToHue(identityKey)) : undefined;
 
   const [channel, setChannel] = useState<Awareness.Channel<T, I>>();
