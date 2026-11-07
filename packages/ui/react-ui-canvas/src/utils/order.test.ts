@@ -39,6 +39,21 @@ describe('order', () => {
     expect(sortByZ([elements[3], elements[0], elements[4]]).map(({ id }) => id)).toEqual(['c0', 'c3', 'c4']);
   });
 
+  test('topZ goes above a stored key `between` cannot split, and above none at all', ({ expect }) => {
+    // A link stored with a trailing zero would otherwise throw here, before the paste or the drop wrote anything.
+    for (const stored of ['a0', 'z0', 'zz0']) {
+      const top = topZ([
+        { id: 'a', z: 'a1' },
+        { id: 'stored', z: stored },
+      ]);
+      expect(top > stored, stored).toBe(true);
+      expect(top.endsWith('0'), stored).toBe(false);
+    }
+    // An element written without a key is the bottom, so the first key is the open one.
+    expect(topZ([{ id: 'a' }]) > '').toBe(true);
+    expect(topZ([])).toBe(topZ([{ id: 'a' }]));
+  });
+
   test('rejects inverted or zero-terminated keys', ({ expect }) => {
     expect(() => between('b', 'a')).toThrow();
     expect(() => between('a0')).toThrow();

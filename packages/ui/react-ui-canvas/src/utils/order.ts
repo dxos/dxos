@@ -61,14 +61,17 @@ export const sortByZ = <T extends MaybeOrdered>(elements: readonly T[]): T[] =>
   });
 
 /** A key above every element, so a new one paints on top. */
-export const topZ = (elements: readonly Ordered[]): string => {
-  let max: string | undefined;
+export const topZ = (elements: readonly MaybeOrdered[]): string => {
+  let max = '';
   for (const element of elements) {
-    if (max === undefined || element.z > max) {
-      max = element.z;
+    const z = element.z ?? '';
+    if (z > max) {
+      max = z;
     }
   }
-  return between(max, undefined);
+  // `between` cannot split a key with a trailing zero, which a stored element may still carry; a digit appended to
+  // one is above it, and valid, so the new element lands on top either way.
+  return max.endsWith('0') ? `${max}1` : between(max === '' ? undefined : max, undefined);
 };
 
 /**
@@ -76,8 +79,8 @@ export const topZ = (elements: readonly Ordered[]): string => {
  * goes above both.
  */
 export const topOfView = (view: {
-  nodes: Readonly<Record<string, Ordered>>;
-  links: Readonly<Record<string, Ordered>>;
+  nodes: Readonly<Record<string, MaybeOrdered>>;
+  links: Readonly<Record<string, MaybeOrdered>>;
 }): string => topZ([...Object.values(view.nodes), ...Object.values(view.links)]);
 
 /** Keys for `count` elements in paint order, evenly spread from the open bottom. */
