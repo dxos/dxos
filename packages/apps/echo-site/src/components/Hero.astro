@@ -1,0 +1,26 @@
+---
+import art from '../../node_modules/@dxos/brand/assets/backgrounds/bg-echo.svg?raw';
+import Snippet from './Snippet.astro';
+
+// The art's icon sits left of center, so a square panel crops from the right.
+const cropped = art.replace('<svg ', '<svg preserveAspectRatio="xMinYMid slice" ');
+---
+<section class="echo-hero not-content">
+  <div class="copy">
+    <div class="label-mono">Eventually consistent hierarchical object store</div>
+    <h1>The data model for apps and agents.</h1>
+    <p class="lede">
+      A typed object graph on the device. Plugins code against it, agents keep their memory in it and read its schema,
+      and data from other systems meets in it. Writes land before the call returns, and peers merge when they connect.
+    </p>
+    <div class="install-chip">pnpm add @dxos/echo</div>
+    <div class="actions">
+      <a class="button primary" href="/echo/why-echo/">Why ECHO?</a>
+      <a class="button" href="/echo/learn/defining-types/">Start the learning path</a>
+    </div>
+  </div>
+  <div class="art" aria-hidden="true" set:html={cropped} />
+</section>
+<div class="echo-hero-code">
+  <Snippet file="hero" title="task.ts" />
+</div>

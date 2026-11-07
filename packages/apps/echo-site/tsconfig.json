@@ -1,0 +1,19 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "exclude": [
+    "dist"
+  ],
+  "include": [
+    ".astro/types.d.ts",
+    "astro.config.ts",
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../ui/brand"
+    }
+  ]
+}

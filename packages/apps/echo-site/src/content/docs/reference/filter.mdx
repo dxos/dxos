@@ -1,0 +1,56 @@
+---
+title: Filter
+description: Predicate builders that compile to a query AST.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../components/Snippet.astro';
+
+```ts
+import { Filter } from '@dxos/echo';
+```
+
+Build a predicate, then pass it to `db.query` directly or through `Query.select`. Every builder is O(1): it creates an AST
+node and matches nothing until the query runs.
+
+| Member                                | Signature                               | Summary                               |
+| ------------------------------------- | --------------------------------------- | ------------------------------------- |
+| [`type`](#match-by-type)              | `(type, props?) => Filter<T>`           | Objects of a type, optionally by props |
+| [`props`](#match-by-type)             | `(props) => Filter<T>`                  | Objects whose fields match            |
+| [`eq` `neq`](#compare-a-field)        | `(value) => Filter<T>`                  | Equal, not equal                      |
+| [`gt` `gte` `lt` `lte`](#compare-a-field) | `(value) => Filter<T>`              | Ordered comparison                    |
+| [`between`](#compare-a-field)         | `(from, to) => Filter<T>`               | From inclusive, to exclusive          |
+| [`contains`](#compare-a-field)        | `(value) => Filter<readonly T[]>`       | Array field holds the value           |
+| [`and` `or` `not`](#combine-filters)  | `(...filters) => Filter<T>`             | Boolean combinators                   |
+| [`text`](#search-text)                | `(text, options?) => Filter`            | Full-text or vector search            |
+| [`created` `updated`](#filter-by-time) | `({ after?, before? }) => Filter`      | Timestamp range                       |
+
+## Match by type
+
+`type` takes an ECHO type and an optional props shape, so field names and value types are checked. `props` matches on shape alone.
+
+<Snippet file="filter" region="type" />
+
+## Compare a field
+
+Comparators go in the props shape, on the field they test.
+
+<Snippet file="filter" region="compare" />
+
+## Combine filters
+
+<Snippet file="filter" region="combine" />
+
+## Search text
+
+`options.type` selects `full-text` or `vector`.
+
+<Snippet file="filter" region="text" />
+
+## Filter by time
+
+Both bounds accept a number of milliseconds or a `Date`. With both set, the filter is the AND of the two.
+
+<Snippet file="filter" region="time" />
