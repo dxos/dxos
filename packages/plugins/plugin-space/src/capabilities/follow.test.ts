@@ -564,5 +564,7 @@ const ephemeralState = () =>
     following: undefined,
     sessionId: 'local-session',
     followedSpaces: [],
+    peerFollowing: {},
+    pointerStyle: 'cursor',
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);

@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Space } from '@dxos/client/echo';
+import { generateName } from '@dxos/display-name';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { EID } from '@dxos/keys';
@@ -19,8 +20,10 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 
-import { SpaceCapabilities, SpaceOperation } from '#types';
+import { type FollowState, useFollowGroup } from '#hooks';
+import { SpaceCapabilities, SpaceOperation, type SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
 import { getFreshSessions } from '../../util/index.ts';
@@ -42,6 +45,7 @@ export const MembersCompanion = () => {
   const identity = useIdentity();
   const members = useMembers(space?.id);
   const now = useNow();
+  const follow = useFollowGroup(space?.id, now);
   const [showSessions, setShowSessions] = useShowSessions();
   const following = space && ephemeral?.following?.spaceId === space.id ? ephemeral.following : undefined;
   const stopFollowing = useCallback(
@@ -168,6 +172,14 @@ export const MembersCompanion = () => {
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               <Layout.Container padBlock>
+                {follow && (
+                  <FollowBar
+                    follow={follow}
+                    members={members}
+                    pointerStyle={ephemeral?.pointerStyle ?? 'cursor'}
+                    onPointerStyleChange={(pointerStyle) => updateEphemeral((state) => ({ ...state, pointerStyle }))}
+                  />
+                )}
                 <Listbox.Root
                   items={[
                     ...getPresenceOptions(leader ? [leader] : [], false, t),
@@ -216,6 +228,71 @@ export const MembersCompanion = () => {
         )}
       </Panel.Body>
     </Panel.Root>
+  );
+};
+
+type FollowBarProps = {
+  follow: FollowState;
+  members: ReturnType<typeof useMembers>;
+  pointerStyle: SpaceSchema.PointerStyle;
+  onPointerStyleChange: (pointerStyle: SpaceSchema.PointerStyle) => void;
+};
+
+const isPointerStyle = (value: string): value is SpaceSchema.PointerStyle => value === 'cursor' || value === 'laser';
+
+/**
+ * The follow this session takes part in, in the leader's hue: whom it follows, or who follows it, and how its own
+ * pointer draws for them.
+ */
+const FollowBar = ({ follow: { group, hue }, members, pointerStyle, onPointerStyleChange }: FollowBarProps) => {
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  const nameOf = (identityKey: string) => {
+    const member = members.find((member) => member.identityKey === identityKey);
+    return member?.displayName ?? generateName(identityKey);
+  };
+  const followerNames = [...new Set(group.followers.map((follower) => nameOf(follower.identityKey)))];
+  const label = group.leading
+    ? t('follow-bar-followed.label', {
+        count: followerNames.length,
+        names: new Intl.ListFormat(undefined, { type: 'conjunction' }).format(followerNames),
+      })
+    : t('follow-bar-following.label', { name: nameOf(group.leader) });
+
+  return (
+    <div
+      className='flex items-center gap-2 mx-2 mb-2 ps-3 pe-1 py-1 rounded-md'
+      style={{ backgroundColor: `var(--color-${hue}-surface)`, color: `var(--color-${hue}-fg)` }}
+      data-testid='spacePlugin.followBar'
+      data-leading={group.leading}
+    >
+      <Icon.Icon icon='ph--link-simple--regular' />
+      <span className='grow truncate text-sm' data-testid='spacePlugin.followBar.label'>
+        {label}
+      </span>
+      <ToggleGroup.Root
+        type='single'
+        value={pointerStyle}
+        aria-label={t('pointer-style.label')}
+        onValueChange={(value) => isPointerStyle(value) && onPointerStyleChange(value)}
+      >
+        <ToggleGroup.Item
+          value='cursor'
+          variant='ghost'
+          icon='ph--cursor--regular'
+          iconOnly
+          label={t('pointer-cursor.label')}
+          data-testid='spacePlugin.followBar.cursor'
+        />
+        <ToggleGroup.Item
+          value='laser'
+          variant='ghost'
+          icon='ph--crosshair-simple--regular'
+          iconOnly
+          label={t('pointer-laser.label')}
+          data-testid='spacePlugin.followBar.laser'
+        />
+      </ToggleGroup.Root>
+    </div>
   );
 };
 

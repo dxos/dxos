@@ -121,6 +121,9 @@ export type FollowTarget = {
   sessionId?: string;
 };
 
+/** How a session's pointer draws for the others in its follow: an arrow, or a glowing dot with a trail. */
+export type PointerStyle = 'cursor' | 'laser';
+
 /** A peer's caret and top of view in an object, as anchors in the object type's own format. */
 export type PeerLocation = {
   selection?: string;

@@ -62,7 +62,9 @@ const PaneToolbar = Util.slottable<HTMLDivElement>(({ children, asChild, ...prop
       {...Util.composableProps(props, {
         style: iconSize(5),
         // `dx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
-        classNames: 'dx-scope flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
+        // Positioned and isolated, so a NavbarEnd surface can paint a layer behind the heading's content.
+        classNames:
+          'dx-scope relative isolate flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
       })}
       data-size='lg'
       ref={forwardedRef}

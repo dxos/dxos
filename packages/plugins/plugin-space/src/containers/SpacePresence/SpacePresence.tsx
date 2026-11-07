@@ -5,6 +5,7 @@
 import React, {
   type ComponentProps,
   type ComponentPropsWithoutRef,
+  type CSSProperties,
   type ReactNode,
   forwardRef,
   useCallback,
@@ -35,6 +36,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { toLocalizedString } from '@dxos/ui-types/translations';
 import { hexToFallback } from '@dxos/util';
 
+import { useFollowGroup } from '#hooks';
 import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
@@ -91,6 +93,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
   const spaceMembers = useMembers(spaceId);
   const now = useNow();
   const [showSessions, setShowSessions] = useShowSessions();
+  const follow = useFollowGroup(spaceId, now);
   const viewers = (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
   // Ready before the list opens, so its rows' actions do not appear after it.
   useExpandPeerNodes(spaceId ? getPeerNodeIds(spaceId, viewers, now) : []);
@@ -109,27 +112,47 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
     })
     .toSorted(byIdentityKey);
 
+  // Someone in this session's follow is on the object, so the heading shows the follow in the leader's hue.
+  const followHue =
+    follow && members.some((member) => member.identityKey && follow.members.has(member.identityKey))
+      ? follow.hue
+      : undefined;
+
   return (
-    <FullPresence
-      members={members}
-      showSessions={showSessions}
-      renderActions={(member, sessionId) =>
-        spaceId && member.identityKey ? (
-          <PeerActions
-            spaceId={spaceId}
-            identityKey={member.identityKey}
-            presenceKey={presenceKey}
-            sessionId={sessionId}
-          />
-        ) : null
-      }
-      headerAction={
-        <>
-          <SessionsToggle pressed={showSessions} onPressedChange={setShowSessions} />
-          <SeeEveryoneButton />
-        </>
-      }
-    />
+    <>
+      {followHue && (
+        <span
+          aria-hidden
+          className='dx-cover -z-10 pointer-events-none'
+          style={{
+            backgroundColor: `var(--color-${followHue}-surface)`,
+            boxShadow: `inset 0 -2px 0 var(--color-${followHue}-border)`,
+          }}
+          data-testid='spacePlugin.presence.followHeading'
+        />
+      )}
+      <FullPresence
+        members={members}
+        follow={followHue && follow ? { hue: followHue, members: follow.members } : undefined}
+        showSessions={showSessions}
+        renderActions={(member, sessionId) =>
+          spaceId && member.identityKey ? (
+            <PeerActions
+              spaceId={spaceId}
+              identityKey={member.identityKey}
+              presenceKey={presenceKey}
+              sessionId={sessionId}
+            />
+          ) : null
+        }
+        headerAction={
+          <>
+            <SessionsToggle pressed={showSessions} onPressedChange={setShowSessions} />
+            <SeeEveryoneButton />
+          </>
+        }
+      />
+    </>
   );
 };
 
@@ -197,6 +220,8 @@ export type MemberPresenceProps = Util.ThemedClassName<{
   renderActions?: (member: Member, sessionId?: string) => ReactNode;
   /** A control at the end of the list's header, e.g. a link to everyone in the space. */
   headerAction?: ReactNode;
+  /** The follow this session takes part in: its members' avatars ring in the leader's hue. */
+  follow?: { hue: string; members: ReadonlySet<string> };
 }>;
 
 const OVERFLOW_TRIGGER = 'overflow';
@@ -219,7 +244,7 @@ const AvatarTrigger = forwardRef<HTMLButtonElement, AvatarTriggerProps>(
 
 /** Avatars of the members on an object; clicking any opens the full list, with the clicked member's row highlighted. */
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 'md', showSessions, renderActions, headerAction } = props;
+  const { size = 'md', showSessions, renderActions, headerAction, follow } = props;
   const members = UiHooks.useDefaultValue(props.members, () => []);
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   // The row of the avatar that opened the list; the list seeds its own selection from it on every open.
@@ -248,7 +273,13 @@ export const FullPresence = (props: MemberPresenceProps) => {
           {members.slice(0, 3).map((member, i) => (
             <Popover.Trigger key={member.identityKey} asChild value={member.rowId}>
               <AvatarTrigger tooltip={getName(member)}>
-                <PresenceAvatar member={member} match={isAttending(member)} index={members.length - i} size={size} />
+                <PresenceAvatar
+                  member={member}
+                  match={isAttending(member)}
+                  index={members.length - i}
+                  size={size}
+                  followHue={member.identityKey && follow?.members.has(member.identityKey) ? follow.hue : undefined}
+                />
               </AvatarTrigger>
             </Popover.Trigger>
           ))}
@@ -411,13 +442,19 @@ type PresenceAvatarProps = {
   showName?: boolean;
   match?: boolean;
   index?: number;
+  /** In this session's follow: a ring in the leader's hue, whatever the member attends. */
+  followHue?: string;
   onClick?: () => void;
 };
 
 const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
-  ({ member, showName, match, index, onClick, size }, forwardedRef) => {
+  ({ member, showName, match, index, followHue, onClick, size }, forwardedRef) => {
     // Rows leave `match` unset and draw no ring: its gap is painted in the surface colour, which shows on hover.
-    const status = match === undefined ? undefined : match ? 'current' : 'inactive';
+    const status = followHue ? 'current' : match === undefined ? undefined : match ? 'current' : 'inactive';
+    const style: CSSProperties & Record<'--dx-avatar-ring', string | undefined> = {
+      ...(index ? { zIndex: index } : {}),
+      '--dx-avatar-ring': followHue ? `var(--color-${followHue}-border)` : undefined,
+    };
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
     const name = getName(member);
     const nameId = UiHooks.useId('presence-name');
@@ -428,7 +465,8 @@ const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
         data-testid='spacePlugin.presence.member'
         data-status={status}
         size={size}
-        {...(index ? { style: { zIndex: index } } : {})}
+        style={style}
+        {...(followHue && { 'data-follow': true })}
         onClick={onClick}
         fallback={member.data?.emoji || fallbackValue.emoji}
         {...(showName ? { 'aria-labelledby': nameId } : { label: name })}

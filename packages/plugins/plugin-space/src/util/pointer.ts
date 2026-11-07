@@ -28,6 +28,8 @@ export const FollowPointer = Schema.Struct({
   plank: Schema.optional(Schema.String),
   x: Schema.optional(Schema.Number),
   y: Schema.optional(Schema.Number),
+  /** How the pointer draws; a cursor when absent. */
+  style: Schema.optional(Schema.Literals(['cursor', 'laser'])),
 });
 
 export type FollowPointer = Schema.Schema.Type<typeof FollowPointer>;

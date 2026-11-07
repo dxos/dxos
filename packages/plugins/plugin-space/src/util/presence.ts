@@ -15,8 +15,14 @@ export type ObjectViewers = Record<string, Record<string, SpaceSchema.ObjectView
 /** {@link ObjectViewers}, per presence key. */
 export type ViewersByObject = Record<string, ObjectViewers>;
 
+/** Space → identity → session → a value that session reported in the space. */
+export type PeerSessions<T> = Record<string, Record<string, Record<string, T>>>;
+
 /** Space → identity → session → that session's deck in the space. */
-export type PeerDecks = Record<string, Record<string, Record<string, SpaceSchema.PeerDeck>>>;
+export type PeerDecks = PeerSessions<SpaceSchema.PeerDeck>;
+
+/** Space → identity → session → whom that session follows in the space. */
+export type PeerFollowing = PeerSessions<FollowingTarget>;
 
 export const PRESENCE_BROADCAST_INTERVAL = 30_000;
 
@@ -276,13 +282,35 @@ export const applyPeerDeck = (
       }
     : peerDecks;
 
-/** `peerDecks` without the sessions no longer listed on any object of the deck's space. */
-export const prunePeerDecks = (peerDecks: PeerDecks, viewersByObject: ViewersByObject): PeerDecks =>
+/** Records whom `peer`'s session follows in `spaceId`, or forgets it once the session's message names nobody. */
+export const applyPeerFollowing = (
+  peerFollowing: PeerFollowing,
+  spaceId: string,
+  peer: string,
+  { sessionId = peer, following }: ViewingMessage,
+): PeerFollowing => {
+  const peers = peerFollowing[spaceId] ?? {};
+  const sessions = peers[peer] ?? {};
+  if (following) {
+    return { ...peerFollowing, [spaceId]: { ...peers, [peer]: { ...sessions, [sessionId]: following } } };
+  }
+  if (!sessions[sessionId]) {
+    return peerFollowing;
+  }
+  const { [sessionId]: _, ...restSessions } = sessions;
+  const { [peer]: __, ...restPeers } = peers;
+  const nextPeers = Object.keys(restSessions).length > 0 ? { ...restPeers, [peer]: restSessions } : restPeers;
+  const { [spaceId]: ___, ...restSpaces } = peerFollowing;
+  return Object.keys(nextPeers).length > 0 ? { ...restSpaces, [spaceId]: nextPeers } : restSpaces;
+};
+
+/** Per-session values without the sessions no longer listed on any object of their space. */
+export const prunePeerSessions = <T>(bySpace: PeerSessions<T>, viewersByObject: ViewersByObject): PeerSessions<T> =>
   Object.fromEntries(
-    Object.entries(peerDecks).flatMap(([spaceId, peers]) => {
+    Object.entries(bySpace).flatMap(([spaceId, peers]) => {
       const listed = Object.entries(viewersByObject).filter(([key]) => isInSpace(key, spaceId));
-      const kept = Object.entries(peers).flatMap(([peer, decks]) => {
-        const sessions = Object.entries(decks).filter(([sessionId]) =>
+      const kept = Object.entries(peers).flatMap(([peer, values]) => {
+        const sessions = Object.entries(values).filter(([sessionId]) =>
           listed.some(([, viewers]) => viewers[peer]?.[sessionId]),
         );
         return sessions.length > 0 ? [[peer, Object.fromEntries(sessions)]] : [];
@@ -419,6 +447,99 @@ export const getPeerFocus = (
   }
   return focus && { key: focus.key, sessionId: focus.sessionId, location: focus.location };
 };
+
+/** A session in a follow, by identity and session. */
+export type FollowSession = { identityKey: string; sessionId: string };
+
+/** The follow this session takes part in within one space: one leader and every follower of theirs. */
+export type FollowGroup = {
+  spaceId: string;
+  /** The leader's hex identity key. */
+  leader: string;
+  /** The leader session the follow tracks right now, when known. */
+  leaderSessionId?: string;
+  /** Whether this session is the leader. */
+  leading: boolean;
+  /** Every session following the leader other than this one. */
+  followers: FollowSession[];
+};
+
+export type GetFollowGroupProps = {
+  spaceId: string;
+  identityKey: string;
+  sessionId: string;
+  following?: SpaceSchema.FollowTarget;
+  peerFollowing: PeerFollowing;
+  viewersByObject: ViewersByObject;
+  now: number;
+};
+
+// Follow targets are kept as long as the session is retained, which outlasts its presence.
+const isSessionFresh = (
+  viewersByObject: ViewersByObject,
+  spaceId: string,
+  peer: string,
+  sessionId: string,
+  now: number,
+) =>
+  Object.entries(viewersByObject).some(([key, viewers]) => {
+    const session = viewers[peer]?.[sessionId];
+    return !!session && isInSpace(key, spaceId) && isFresh(session, now);
+  });
+
+/**
+ * The follow this session takes part in within the space: the one it follows, with that leader's other followers, or
+ * else the one it leads, when any fresh session names it. Undefined when it takes part in none.
+ */
+export const getFollowGroup = ({
+  spaceId,
+  identityKey,
+  sessionId,
+  following,
+  peerFollowing,
+  viewersByObject,
+  now,
+}: GetFollowGroupProps): FollowGroup | undefined => {
+  const peers = Object.entries(peerFollowing[spaceId] ?? {});
+  const followersOf = (matches: (target: FollowingTarget) => boolean): FollowSession[] =>
+    peers.flatMap(([peer, sessions]) =>
+      Object.entries(sessions)
+        .filter(
+          ([session, target]) =>
+            !(peer === identityKey && session === sessionId) &&
+            matches(target) &&
+            isSessionFresh(viewersByObject, spaceId, peer, session, now),
+        )
+        .map(([session]) => ({ identityKey: peer, sessionId: session })),
+    );
+
+  if (following?.spaceId === spaceId) {
+    const leaderSessionId =
+      following.sessionId ?? getPeerFocus(viewersByObject, spaceId, following.identityKey, now)?.sessionId;
+    return {
+      spaceId,
+      leader: following.identityKey,
+      ...(leaderSessionId && { leaderSessionId }),
+      leading: false,
+      followers: followersOf(
+        (target) =>
+          target.identityKey === following.identityKey &&
+          (target.sessionId === undefined || leaderSessionId === undefined || target.sessionId === leaderSessionId),
+      ),
+    };
+  }
+
+  const followers = followersOf((target) => isFollowTargetOf(target, identityKey, sessionId));
+  return followers.length > 0
+    ? { spaceId, leader: identityKey, leaderSessionId: sessionId, leading: true, followers }
+    : undefined;
+};
+
+/** The identity keys in a follow group other than `identityKey`: the leader and every follower. */
+export const getFollowGroupMembers = (group: FollowGroup, identityKey: string): ReadonlySet<string> =>
+  new Set(
+    [group.leader, ...group.followers.map((follower) => follower.identityKey)].filter((key) => key !== identityKey),
+  );
 
 export type LocationScheduler = {
   /** Notes that `key`'s location may have changed; a change goes out with the next send. */

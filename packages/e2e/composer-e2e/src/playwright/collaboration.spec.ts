@@ -534,18 +534,27 @@ test.describe('Collaboration tests', () => {
       const rows = sidebar.getByTestId('spacePlugin.presence.row');
       await host.openCompanion('members');
       await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
-      const frame = host.page.getByTestId('spacePlugin.followOverlay.frame');
-      await expect(frame).toBeVisible();
-      await expect(host.page.getByTestId('spacePlugin.followOverlay.label')).toContainText('Following');
+
+      // Both sides show the follow: the Members tab's dot, the follow block in Members, and the plank heading.
+      const hostBar = host.page.getByTestId('spacePlugin.followBar');
+      await expect(hostBar).toHaveAttribute('data-leading', 'false');
+      await expect(hostBar.getByTestId('spacePlugin.followBar.label')).toContainText('Following');
+      await expect(host.page.getByTestId('spacePlugin.presence.followHeading').first()).toBeAttached();
+      await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
+      await guest.openCompanion('members');
+      const guestBar = guest.page.getByTestId('spacePlugin.followBar');
+      await expect(guestBar).toHaveAttribute('data-leading', 'true');
+      await expect(guestBar.getByTestId('spacePlugin.followBar.label')).toContainText('following you');
+      await expect(guest.page.getByTestId('spacePlugin.presence.followHeading').first()).toBeAttached();
 
       // The guest posts only once it sees the host's follow, so it keeps moving until the host draws its pointer.
-      await moveOverPlank(guest, 0.5, 0.5);
       const guestPointer = host.page.getByTestId('spacePlugin.followOverlay.pointer');
       await expect(async () => {
         await moveOverPlank(guest, 0.5, 0.5);
         await expect(guestPointer).toHaveCount(1, { timeout: 1_000 });
       }).toPass({ timeout: 30_000 });
       await expect(guestPointer).not.toHaveAttribute('data-name', '');
+      await expect(guestPointer).toHaveAttribute('data-style', 'cursor');
       await expect.poll(() => getPointerPosition(host), { timeout: 10_000 }).toEqual({ x: 50, y: 50 });
 
       // Moving the follower's mouse is no input that ends the follow, and the leader sees it.
@@ -555,13 +564,19 @@ test.describe('Collaboration tests', () => {
         await expect(hostPointer).toHaveCount(1, { timeout: 1_000 });
       }).toPass({ timeout: 30_000 });
       await expect.poll(() => getPointerPosition(guest), { timeout: 10_000 }).toEqual({ x: 30, y: 80 });
-      await expect(frame).toBeVisible();
-      await expect(host.getCompanionTab('members')).toHaveAttribute('data-badge', '');
+      await expect(hostBar).toBeVisible();
 
-      await host.page.getByTestId('spacePlugin.followOverlay.stop').click();
-      await expect(frame).toHaveCount(0);
+      // The follower switches its pointer to the laser; the leader sees it draw as one.
+      await hostBar.getByTestId('spacePlugin.followBar.laser').click();
+      await moveOverPlank(host, 0.4, 0.7);
+      await expect(hostPointer).toHaveAttribute('data-style', 'laser', { timeout: 10_000 });
+      await expect(hostBar).toBeVisible();
+
+      await rows.first().getByTestId('spacePlugin.presence.stopFollowing').click();
+      await expect(hostBar).toHaveCount(0);
       await expect(guestPointer).toHaveCount(0);
       await expect(hostPointer).toHaveCount(0, { timeout: 30_000 });
+      await expect(guestBar).toHaveCount(0, { timeout: 30_000 });
       await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
     },
   );

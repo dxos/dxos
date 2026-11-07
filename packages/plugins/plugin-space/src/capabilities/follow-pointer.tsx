@@ -6,21 +6,18 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { generateName } from '@dxos/display-name';
-import { useMembers } from '@dxos/halo-react';
-import { SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Awareness from '@dxos/protocols/Awareness';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { hexToHue } from '@dxos/util';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { FollowOverlay, type ShownPointer } from '../components/FollowOverlay/index.ts';
 import { SpaceNamespace } from '../namespace.ts';
@@ -53,7 +50,7 @@ const isSamePointers = (a: readonly ShownPointer[], b: readonly ShownPointer[]) 
 
 /**
  * Shares the pointer among the sessions in a follow, on one awareness channel per space, open only while this session
- * follows someone there or is followed there, and draws the frame and the pointers over the window.
+ * follows someone there or is followed there, and draws the pointers of the sessions it shares a follow with.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -69,9 +66,10 @@ export default Capability.makeModule(
     const getIdentity = () => Option.getOrUndefined(haloIdentity.getSnapshot());
 
     const getValue = (spaceId: string): FollowPointer => {
-      const { sessionId, following } = registry.get(ephemeralAtom);
+      const { sessionId, following, pointerStyle } = registry.get(ephemeralAtom);
       return {
         sessionId,
+        ...(pointerStyle === 'laser' && { style: pointerStyle }),
         ...(following?.spaceId === spaceId && {
           following: {
             identityKey: following.identityKey,
@@ -107,6 +105,7 @@ export default Capability.makeModule(
                       plank: value.plank,
                       x: value.x,
                       y: value.y,
+                      style: value.style ?? 'cursor',
                     },
                   ]
                 : [],
@@ -155,12 +154,18 @@ export default Capability.makeModule(
       });
     };
 
-    let previous: { following?: string; followedSpaces: readonly string[] } | undefined;
+    let previous:
+      | { following?: string; followedSpaces: readonly string[]; pointerStyle: SpaceSchema.PointerStyle }
+      | undefined;
     const sync = () => {
-      const { following, followedSpaces } = registry.get(ephemeralAtom);
+      const { following, followedSpaces, pointerStyle } = registry.get(ephemeralAtom);
       const key = following && `${following.spaceId}/${following.identityKey}/${following.sessionId ?? ''}`;
-      if (previous?.following !== key || previous?.followedSpaces !== followedSpaces) {
-        previous = { following: key, followedSpaces };
+      if (
+        previous?.following !== key ||
+        previous?.followedSpaces !== followedSpaces ||
+        previous?.pointerStyle !== pointerStyle
+      ) {
+        previous = { following: key, followedSpaces, pointerStyle };
         const spaceIds = new Set([...(following ? [following.spaceId] : []), ...followedSpaces]);
         for (const [spaceId, { dispose }] of channels) {
           if (!takesPartInFollow(spaceId, following, followedSpaces)) {
@@ -173,7 +178,7 @@ export default Capability.makeModule(
             open(spaceId);
           }
         }
-        // A retargeted follow keeps its channel but names someone else.
+        // A retargeted follow keeps its channel but names someone else, and a new pointer style goes out at once.
         post();
       }
       refresh();
@@ -213,28 +218,7 @@ export default Capability.makeModule(
       }),
     );
 
-    const Root = () => {
-      const [ephemeral, updateEphemeral] = Hooks.useAtomCapabilityState(SpaceCapabilities.EphemeralState);
-      const pointers = useAtomValue(pointersAtom);
-      const following = ephemeral?.following;
-      const members = useMembers(following && SpaceId.isValid(following.spaceId) ? following.spaceId : undefined);
-      const leader = useMemo(() => {
-        if (!following) {
-          return undefined;
-        }
-        const member = members.find((member) => member.identityKey === following.identityKey);
-        const hue = member?.data?.hue;
-        return {
-          name: member?.displayName ?? generateName(following.identityKey),
-          hue: typeof hue === 'string' && hue ? hue : hexToHue(following.identityKey),
-        };
-      }, [following, members]);
-      const stop = useCallback(
-        () => updateEphemeral((state) => ({ ...state, following: undefined })),
-        [updateEphemeral],
-      );
-      return <FollowOverlay leader={leader} pointers={pointers} onStop={stop} />;
-    };
+    const Root = () => <FollowOverlay pointers={useAtomValue(pointersAtom)} />;
 
     return Capability.contribute(Capabilities.ReactRoot, { id: `${SpaceNamespace.key}.follow-pointer`, root: Root });
   }),

@@ -42,9 +42,12 @@ const JUMP_LABEL: Label = ['presence-jump.label', { ns: SpaceNamespace.key }];
 const GO_TO_LABEL: Label = ['presence-go-to.label', { ns: SpaceNamespace.key }];
 const FOLLOW_LABEL: Label = ['presence-follow.label', { ns: SpaceNamespace.key }];
 
-/** The Members tab's dot while this session follows someone. */
-const followingBadge = Atom.family((ephemeralAtom: Atom.Atom<SpaceCapabilities.SpaceEphemeralState>) =>
-  Atom.make((get): true | undefined => (get(ephemeralAtom).following ? true : undefined)),
+/** The Members tab's dot while this session follows someone or someone follows it. */
+const followBadge = Atom.family((ephemeralAtom: Atom.Atom<SpaceCapabilities.SpaceEphemeralState>) =>
+  Atom.make((get): true | undefined => {
+    const { following, followedSpaces } = get(ephemeralAtom);
+    return following || followedSpaces.length > 0 ? true : undefined;
+  }),
 );
 
 const isPeerNodeData = Schema.is(SpaceSchema.PeerNodeData);
@@ -76,7 +79,7 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
             data: null,
             // After Notifications (-2), ahead of the unordered companions.
             position: -1,
-            ...(ephemeralAtom && { badge: followingBadge(ephemeralAtom) }),
+            ...(ephemeralAtom && { badge: followBadge(ephemeralAtom) }),
           }),
         ]);
       },

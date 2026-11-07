@@ -5,10 +5,9 @@
 import React, { useEffect, useState } from 'react';
 
 import { Attention } from '@dxos/react-ui-attention/types';
-import * as Button from '@dxos/react-ui/Button';
-import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { SpaceNamespace } from '../../namespace.ts';
+import { type SpaceSchema } from '#types';
+
 import { type PlankPosition, fromPlankPosition } from '../../util/pointer.ts';
 
 /** A pointer to draw: whose it is, and where in which plank. */
@@ -19,13 +18,11 @@ export type ShownPointer = PlankPosition & {
   /** A palette hue such as `red`. */
   hue: string;
   plank: string;
+  style: SpaceSchema.PointerStyle;
 };
 
 export type FollowOverlayProps = {
-  /** Set while this session follows someone: the frame and its label show. */
-  leader?: { name: string; hue: string };
   pointers: readonly ShownPointer[];
-  onStop?: () => void;
 };
 
 type Placed = { key: string; left: number; top: number };
@@ -73,42 +70,63 @@ const usePlaced = (pointers: readonly ShownPointer[]): Placed[] => {
   return placed;
 };
 
-/**
- * Draws over the whole window, taking no input but Stop: while following, a frame in the leader's colour labelled with
- * their name; and the pointers of the sessions this one shares a follow with.
- */
-export const FollowOverlay = ({ leader, pointers, onStop }: FollowOverlayProps) => {
-  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+const Cursor = ({ color, name }: { color: string; name: string }) => (
+  <>
+    <svg width='18' height='18' viewBox='0 0 18 18' className='block'>
+      <path d='M1 1 L1 15 L5 11 L8 17 L10.5 16 L7.5 10 L13 10 Z' fill={color} stroke='white' strokeWidth='1.25' />
+    </svg>
+    <span
+      className='absolute left-4 top-4 px-1.5 py-0.5 rounded-sm text-xs text-white whitespace-nowrap'
+      style={{ backgroundColor: color }}
+    >
+      {name}
+    </span>
+  </>
+);
+
+// The trail sits up and to the left, where a pointer moving down the page has just been.
+const LASER_TRAIL = [
+  { offset: 30, size: 5, opacity: 0.2 },
+  { offset: 21, size: 7, opacity: 0.35 },
+  { offset: 12, size: 9, opacity: 0.55 },
+];
+
+const Laser = ({ color, name }: { color: string; name: string }) => (
+  <>
+    {LASER_TRAIL.map(({ offset, size, opacity }) => (
+      <span
+        key={offset}
+        className='absolute rounded-full'
+        style={{
+          left: -offset - size / 2,
+          top: -offset * 0.66 - size / 2,
+          width: size,
+          height: size,
+          opacity,
+          backgroundColor: color,
+        }}
+      />
+    ))}
+    <span
+      className='absolute -left-1.5 -top-1.5 size-3 rounded-full bg-white'
+      style={{ boxShadow: `0 0 0 3px ${color}, 0 0 16px 6px ${color}` }}
+    />
+    <span
+      className='absolute left-3 top-2 px-1 rounded-sm text-[10px] text-white whitespace-nowrap opacity-80'
+      style={{ backgroundColor: color }}
+    >
+      {name}
+    </span>
+  </>
+);
+
+/** Draws, over the whole window and taking no input, the pointers of the sessions this one shares a follow with. */
+export const FollowOverlay = ({ pointers }: FollowOverlayProps) => {
   const placed = usePlaced(pointers);
   const byKey = new Map(pointers.map((pointer) => [pointer.key, pointer]));
 
   return (
     <div className='fixed inset-0 z-50 pointer-events-none' data-testid='spacePlugin.followOverlay'>
-      {leader && (
-        <div
-          className='dx-cover border-4'
-          style={{ borderColor: hueColor(leader.hue) }}
-          data-testid='spacePlugin.followOverlay.frame'
-        >
-          <div
-            className='absolute top-0 left-1/2 -translate-x-1/2 flex items-center gap-2 ps-3 pe-1 py-1 rounded-b-md text-sm text-white pointer-events-auto'
-            style={{ backgroundColor: hueColor(leader.hue) }}
-          >
-            <span data-testid='spacePlugin.followOverlay.label'>
-              {t('follow-overlay.label', { name: leader.name })}
-            </span>
-            <Button.Root
-              variant='ghost'
-              compact
-              size='sm'
-              icon='ph--stop--regular'
-              label={t('presence-stop-following.label')}
-              data-testid='spacePlugin.followOverlay.stop'
-              onClick={onStop}
-            />
-          </div>
-        </div>
-      )}
       {placed.map(({ key, left, top }) => {
         const pointer = byKey.get(key);
         if (!pointer) {
@@ -123,21 +141,13 @@ export const FollowOverlay = ({ leader, pointers, onStop }: FollowOverlayProps) 
             data-testid='spacePlugin.followOverlay.pointer'
             data-name={pointer.name}
             data-plank={pointer.plank}
+            data-style={pointer.style}
           >
-            <svg width='18' height='18' viewBox='0 0 18 18' className='block'>
-              <path
-                d='M1 1 L1 15 L5 11 L8 17 L10.5 16 L7.5 10 L13 10 Z'
-                fill={color}
-                stroke='white'
-                strokeWidth='1.25'
-              />
-            </svg>
-            <span
-              className='absolute left-4 top-4 px-1.5 py-0.5 rounded-sm text-xs text-white whitespace-nowrap'
-              style={{ backgroundColor: color }}
-            >
-              {pointer.name}
-            </span>
+            {pointer.style === 'laser' ? (
+              <Laser color={color} name={pointer.name} />
+            ) : (
+              <Cursor color={color} name={pointer.name} />
+            )}
           </div>
         );
       })}

@@ -38,6 +38,7 @@ import {
   PRESENCE_BROADCAST_INTERVAL,
   PRESENCE_EXPIRY,
   applyPeerDeck,
+  applyPeerFollowing,
   applyViewingMessage,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
@@ -46,7 +47,7 @@ import {
   isSameFollowTarget,
   makeLocationScheduler,
   parseViewingMessage,
-  prunePeerDecks,
+  prunePeerSessions,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
@@ -397,8 +398,12 @@ export default Capability.makeModule(
                 return {
                   ...ephemeral,
                   viewersByObject,
-                  peerDecks: prunePeerDecks(
+                  peerDecks: prunePeerSessions(
                     applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
+                    viewersByObject,
+                  ),
+                  peerFollowing: prunePeerSessions(
+                    applyPeerFollowing(ephemeral.peerFollowing, space.id, peer, viewing),
                     viewersByObject,
                   ),
                 };
