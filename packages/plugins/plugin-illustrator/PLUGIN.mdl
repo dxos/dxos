@@ -380,13 +380,22 @@ decision D-5: Collaborators' pointers show on the core drawing types, tldraw and
   date: 2026-11-04
   by: user:wittjosiah
   affects: [QA-5, VariantProvider]
-  why: tldraw and svg (the architecture diagrams) are the core drawing types. One channel (`@dxos/app-toolkit/Awareness`) gives them the same throttling, expiry and member hue. The svg article shares pointers in viewBox coordinates through `RemoteCursorLayer`, while its card shows none. Canvas, conductor boards, the 3D canvas and excalidraw are out of scope.
+  why: tldraw and svg (the architecture diagrams) are the core drawing types. One shared channel gives them the same throttling, expiry and member hue. The svg article shares pointers in viewBox coordinates through `RemoteCursorLayer`, while its card shows none. Canvas, conductor boards, the 3D canvas and excalidraw are out of scope.
 ```
 
 ```mdl
-decision D-6: Pointers travel on `Awareness.Channel` in `@dxos/protocols`, the channel markdown cursors use; `app-toolkit` defines the pointer's `Point` schema and its timing. Refines [D-5].
+decision D-6: Pointers travel on `Awareness.Channel` in `@dxos/protocols`, the channel markdown cursors use, in their wire format. Refines [D-5].
   date: 2026-11-06
   by: user:wittjosiah
   affects: [QA-5]
-  why: The drawing channel and the editor's collaboration cursors were two implementations of one protocol. The channel carries any surface's value through a schema the surface passes, so the pointer type stays with the drawing surfaces that read it.
+  why: The drawing channel and the editor's collaboration cursors were two implementations of one protocol; the markdown wire format serves as the generic one.
+```
+
+```mdl
+decision D-7: `app-toolkit` defines the pointer's `Point` schema and its timing, a 50 ms throttle, a 5 s heartbeat and a 60 s idle withdraw. Fills in [D-6].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-5]
+  why: The shared channel defines no coordinates and defaults to the text cursor's timing, so the pointer type and its pace stay with the drawing surfaces that read them.
 ```
