@@ -24,6 +24,7 @@ import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
 import {
+  type PluginConfigPluginOptions,
   bootLoaderPlugin,
   hotModulesPlugin,
   importMapPlugin,
@@ -234,6 +235,12 @@ const NODE_BUILTIN_STUBS = {
   net: ['createServer'],
   os: ['networkInterfaces'],
 } as const;
+
+/**
+ * The dedicated worker's build hosts the worker modules of every plugin, so a module the tab sends it
+ * shares the worker's chunks: one instance of `effect`'s identities and the RPC router across the worker.
+ */
+const PLUGIN_CONFIG: PluginConfigPluginOptions = { workerHost: 'src/workers/dedicated-worker.ts' };
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
@@ -589,14 +596,22 @@ export default defineConfig((env) => ({
   worker: {
     format: 'es' as const,
 
-    plugins: () => [...sharedPlugins(env)],
-    // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
-    // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
-    rolldownOptions: { experimental: { chunkOptimization: false } },
+    plugins: () => [pluginConfigPlugin(PLUGIN_CONFIG), ...sharedPlugins(env)],
+    rolldownOptions: {
+      // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+      // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+      experimental: { chunkOptimization: false },
+      output: {
+        // The client services module the worker hosts reaches `HubHttpClient` only through a lazy module, so default
+        // splitting gives it a chunk of its own, which edge-client's barrel chunk re-exports while it imports
+        // `BaseHttpClient` back from that barrel: a chunk cycle that runs the subclass first.
+        codeSplitting: { groups: [{ name: 'edge-client', test: /[\\/]edge-client[\\/]/ }] },
+      },
+    },
   },
   plugins: [
     // Serves each `Plugin.config`-defined `dx.config.ts` as its build-time manifest.
-    pluginConfigPlugin(),
+    pluginConfigPlugin(PLUGIN_CONFIG),
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     rearmWatchPlugin(),

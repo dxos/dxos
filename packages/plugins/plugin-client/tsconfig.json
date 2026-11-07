@@ -43,6 +43,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/sql-sqlite"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -68,6 +71,9 @@
     },
     {
       "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/mesh/network-manager"
     },
     {
       "path": "../../core/protocols"

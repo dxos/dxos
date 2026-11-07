@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { basename, dirname, relative } from 'node:path';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { basename, dirname, join, relative } from 'node:path';
 import type * as Vite from 'vite';
 import { type RunnableDevEnvironment, type Plugin as VitePlugin } from 'vite';
 
@@ -142,6 +143,49 @@ export type PluginConfigPluginOptions = {
   apply?: 'build' | 'serve';
   /** Called with each config a library build emits, so a caller can map module bodies to the chunks they become. */
   onLibraryManifest?: (manifest: { configFile: string; modules: readonly LibraryModule[] }) => void;
+  /**
+   * The app's plugin-worker entry (relative to the project root), whose build hosts every
+   * `plugin-worker` module of the app's plugins as a dynamically imported chunk, so a module the tab
+   * sends shares the worker's chunks. Pass the same options to the instance in `worker.plugins`.
+   */
+  workerHost?: string;
+};
+
+/** The runtime a worker module runs in (see `Capability.workerModule`). */
+const WORKER_ENVIRONMENT = 'plugin-worker';
+
+/**
+ * Output file of each module body built into the worker host's build, recorded by that build for the
+ * page's. Module scope: the page's build and the worker bundles it spawns each run their own instance.
+ */
+const hostedFiles = new Map<string, string>();
+
+/** Worker module bodies in placeholder order; a placeholder names its body by index. */
+const placeholderBodies: string[] = [];
+
+const PLACEHOLDER_RE = /__DX_WORKER_MODULE_(\d+)__/g;
+
+const placeholderFor = (file: string): string => {
+  let index = placeholderBodies.indexOf(file);
+  if (index === -1) {
+    index = placeholderBodies.push(file) - 1;
+  }
+  return `__DX_WORKER_MODULE_${index}__`;
+};
+
+/** Where the worker host's entry lists the loaders of the module bodies built into its build. */
+const HOSTED_GLOBAL = '__dxWorkerModules';
+
+/**
+ * The `dx.config.ts` of each of the app's own dependencies that can declare a worker module; the
+ * worker host's build runs before the page has loaded any config, so it reads them from disk.
+ */
+const findWorkerConfigs = (root: string): string[] => {
+  const { dependencies = {}, devDependencies = {} } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  return [...Object.keys(dependencies), ...Object.keys(devDependencies)]
+    .map((name) => join(root, 'node_modules', name, 'dx.config.ts'))
+    .filter((file) => existsSync(file) && /workerModule|plugin-worker/.test(readFileSync(file, 'utf8')))
+    .map((file) => realpathSync(file));
 };
 
 /**
@@ -150,7 +194,11 @@ export type PluginConfigPluginOptions = {
  * and the URL of each body. Module bodies become their own chunks; bodies for other environments are
  * never emitted. In dev the config is re-evaluated on every load, so edits hot-reload.
  */
-export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPluginOptions = {}): VitePlugin => {
+export const pluginConfigPlugin = ({
+  apply,
+  onLibraryManifest,
+  workerHost,
+}: PluginConfigPluginOptions = {}): VitePlugin => {
   let evaluator: Promise<RunnableDevEnvironment> | undefined;
   const getEvaluator = (root: string) =>
     (evaluator ??= (async () => {
@@ -205,12 +253,86 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
     return run;
   };
 
+  /** The worker host's entry, when this instance runs in its build. */
+  let hostEntry: string | undefined;
+  /** This build's single input, when it is a worker bundle. */
+  let workerInput: string | undefined;
+  /** Worker module bodies built into this worker host's build. */
+  const hostedBodies = new Set<string>();
+
   return {
     name: 'dx-plugin-config',
     enforce: 'pre',
     apply,
+    configResolved(config) {
+      hostEntry = config.isWorker && workerHost ? join(config.root, workerHost) : undefined;
+    },
+    options(options) {
+      workerInput = typeof options.input === 'string' ? options.input : undefined;
+    },
     watchChange(id) {
       changed.add(id);
+    },
+    // A dynamic import from the worker entry, rather than an extra entry chunk: Vite takes a worker
+    // build's first output chunk as the worker. Recorded on a global so tree-shaking keeps it; a
+    // dynamically imported chunk keeps all of its exports.
+    async transform(code, id) {
+      if (!hostEntry || id !== hostEntry || id !== workerInput) {
+        return null;
+      }
+      const { root } = this.environment.config;
+      for (const file of findWorkerConfigs(root)) {
+        const config = await evaluate(root, file);
+        if (!isPluginConfig(config)) {
+          continue;
+        }
+        for (const module of config.modules) {
+          const loader = module?.[Capability.LoaderTag];
+          const bodySpecifier =
+            module?.environments?.includes(WORKER_ENVIRONMENT) && loader && readModuleRef(await loader());
+          const body = bodySpecifier ? (await this.resolve(bodySpecifier, file))?.id : undefined;
+          if (body) {
+            hostedBodies.add(body);
+          }
+        }
+      }
+      const loaders = [...hostedBodies].map((body) => `() => import(${JSON.stringify(body)})`).join(', ');
+      return { code: `${code}\n;(globalThis.${HOSTED_GLOBAL} ??= []).push(${loaders});\n`, map: null };
+    },
+    generateBundle(_, bundle) {
+      for (const file of Object.values(bundle)) {
+        if (
+          file.type === 'chunk' &&
+          file.isDynamicEntry &&
+          file.facadeModuleId &&
+          hostedBodies.has(file.facadeModuleId)
+        ) {
+          hostedFiles.set(file.facadeModuleId, file.fileName);
+        }
+      }
+    },
+    renderChunk(code, chunk) {
+      if (!code.includes('__DX_WORKER_MODULE_')) {
+        return null;
+      }
+      let missing: string | undefined;
+      const out = code.replace(PLACEHOLDER_RE, (match, index) => {
+        const body = placeholderBodies[Number(index)];
+        const fileName = body && hostedFiles.get(body);
+        if (!fileName) {
+          missing = body ?? `#${index}`;
+          return match;
+        }
+        const path = relative(dirname(chunk.fileName), fileName).split('\\').join('/');
+        return path.startsWith('.') ? path : `./${path}`;
+      });
+      if (missing) {
+        return this.error(
+          `Worker module '${missing}' was not built into a worker: is \`workerHost\` set, and its worker started from this build?`,
+        );
+      }
+      // No source map: only placeholder literals change, which shifts columns on their own lines alone.
+      return { code: out, map: null };
     },
     async load(id) {
       const file = id.split('?')[0];
@@ -228,12 +350,35 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
       const query = new URLSearchParams(id.split('?')[1] ?? '');
       // An app boots with each plugin's metadata only; its module list loads when the plugin is enabled.
       if (!library && !query.has(MODULES_PARAM)) {
+        // Data only: the tab sends these to its plugin worker, and the page never loads their bodies.
+        const workerModules: string[] = [];
+        for (const module of config.modules) {
+          if (!module?.environments?.includes(WORKER_ENVIRONMENT)) {
+            continue;
+          }
+          const name = Capability.getModuleTag(module);
+          const loader = module[Capability.LoaderTag];
+          const bodySpecifier = loader ? readModuleRef(await loader()) : undefined;
+          const body = bodySpecifier ? (await this.resolve(bodySpecifier, file))?.id : undefined;
+          if (!name || !body) {
+            this.error(`Cannot resolve the body of worker module '${name ?? '?'}' in ${file}.`);
+          }
+          // In a build the body is a chunk of the worker host's build, named once that build has run.
+          const path = this.environment.mode === 'build' ? placeholderFor(body) : `/@fs${body}`;
+          workerModules.push(
+            `{ id: ${JSON.stringify(name)}, url: workerModuleUrl(${JSON.stringify(path)}), requires: ${JSON.stringify(toManifestTags(module.requires))}, provides: ${JSON.stringify(toManifestTags(module.provides))} }`,
+          );
+        }
         return [
           "import * as Plugin from '@dxos/app-framework/Plugin';",
           `const plugin = ${JSON.stringify(config.plugin)};`,
           'export const meta = Plugin.getMetaFromConfig({ plugin });',
+          // Through a function: a literal `new URL('...', import.meta.url)` would be taken for an asset reference.
+          ...(workerModules.length > 0
+            ? ['const workerModuleUrl = (path) => new URL(path, import.meta.url).href;']
+            : []),
           // Relative, so the dev server's hot-module transform takes the module list for the plugin's definition.
-          `export const make = Plugin.lazy(meta, () => import(${JSON.stringify(`./${basename(file)}?${MODULES_PARAM}`)}));`,
+          `export const make = Plugin.lazy(meta, () => import(${JSON.stringify(`./${basename(file)}?${MODULES_PARAM}`)}), { workerModules: [${workerModules.join(', ')}] });`,
           'export default { plugin, meta, make };',
           // An edit re-creates the plugin through its module list; its importers keep the `make` they hold.
           ...(this.environment.mode === 'dev' ? ['if (import.meta.hot) { import.meta.hot.accept(); }'] : []),

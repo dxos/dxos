@@ -13,3 +13,4 @@ export * as PluginManagerProvider from './PluginManagerProvider.ts';
 export * as SharedPackages from './SharedPackages.ts';
 export * as Surface from './Surface.ts';
 export * as Translations from './Translations.ts';
+export * from './worker/index.ts';
