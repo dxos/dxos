@@ -314,7 +314,7 @@ const createNote = ({
 }: Omit<NoteShape, 'type' | 'size'> & Partial<Pick<NoteShape, 'size'>>): NoteShape => ({
   id,
   type: 'note',
-  size: { width: 256, height: 128 },
+  size: { width: 4 * MAJOR_GRID, height: 2 * MAJOR_GRID },
   ...rest,
 });
 
@@ -347,7 +347,9 @@ const snapToGrid = (model: CanvasGraphModel<ComputeShape>): CanvasGraphModel<Com
 /** A rectangle in grid cells scaled to pixels; the size is kept only when both extents are non-zero. */
 const position = (
   { x, y, width = 0, height = 0 }: Point & Partial<Size>,
-  snap = 32,
+  // The fixtures' unit: half a major cell, so a circuit is written in cells rather than pixels and holds its
+  // spacing whatever the drawing's grid is.
+  snap = MAJOR_GRID / 2,
 ): { center: Point; size?: Size } => {
   const center = { x: Math.min(x, x + width) * snap, y: Math.min(y, y + height) * snap };
   if (width && height) {

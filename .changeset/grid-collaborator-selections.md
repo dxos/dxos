@@ -1,5 +1,4 @@
 ---
-# multiple-changesets: stacked on dxos/dxos#14438, whose protocol channel is its own changelog entry; this one is the grid feature built on it.
 '@dxos/lit-grid': minor
 '@dxos/react-ui-grid': minor
 '@dxos/react-ui-table': minor
