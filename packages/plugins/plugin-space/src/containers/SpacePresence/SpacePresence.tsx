@@ -270,7 +270,12 @@ export const FullPresence = (props: MemberPresenceProps) => {
       }
     >
       <Popover.Anchor asChild>
-        <div ref={groupRef} className='dx-avatar-group' data-testid='spacePlugin.presence'>
+        {/* A row of overlapping avatars; the `dx-avatar-group` rule only styles lit avatars. */}
+        <div
+          ref={groupRef}
+          className='dx-avatar-group inline-flex items-center [&>*+*]:-ms-2'
+          data-testid='spacePlugin.presence'
+        >
           {members.slice(0, 3).map((member, i) => (
             <Popover.Trigger key={member.identityKey} asChild value={member.rowId}>
               <AvatarTrigger tooltip={getName(member)}>

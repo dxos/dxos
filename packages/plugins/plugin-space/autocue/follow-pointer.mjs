@@ -6,7 +6,8 @@
  * Alice, Bob and Carol share a plan. Bob follows whoever sits last in his Members list: their row rises to the top,
  * takes the follow's indigo and swaps Follow for his pointer controls, and the leader sees him under "Following you".
  * Each sees the other's pointer on the same spot of the plan; Bob switches his to a laser whose tail traces its path.
- * Stop ends it on both sides. Recorded side by side, three panes; the third person sees no pointers.
+ * The leader points across the navtree, types and opens the notes, and Bob's deck goes along; Bob typing ends it.
+ * Recorded side by side, three panes; the third person sees no pointers.
  *
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-7
  * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4176 (EDGE signaling)
@@ -25,6 +26,7 @@
 
 const SPACE = 'Launch';
 const PLAN = 'Launch plan';
+const NOTES = 'Notes';
 const TIMEOUT = 60_000;
 
 const PLAN_TEXT = [
@@ -80,14 +82,31 @@ const followersGroup = (page) => sidebar(page).getByTestId('spacePlugin.presence
 const followHeading = (page) => page.getByTestId('spacePlugin.presence.followHeading').first();
 const pointers = (page) => page.getByTestId('spacePlugin.followOverlay.pointer');
 
-/** Glides the mouse through spots of the plan's plank, given as fractions of its box, resting on each. */
-const glide = async (peer, spots, sleep, rest = 700) => {
-  const box = await plank(peer.page).boundingBox();
+// Where each peer's mouse last went, so a move glides from there.
+const mouseAt = new WeakMap();
+
+/** Moves the mouse in small steps and the recording's cursor with it, so each pane shows its own pointer moving. */
+const moveMouse = async (peer, x, y, steps = 12) => {
+  const from = mouseAt.get(peer) ?? { x, y };
+  for (let step = 1; step <= steps; step++) {
+    const point = { x: from.x + ((x - from.x) * step) / steps, y: from.y + ((y - from.y) * step) / steps };
+    await peer.page.mouse.move(point.x, point.y);
+    await peer.page.evaluate((point) => globalThis.__demoOverlay?.moveCursor(point.x, point.y), point);
+  }
+  mouseAt.set(peer, { x, y });
+};
+
+/** Glides the mouse through spots of an element's box, given as fractions of it, resting on each. */
+const glideOver = async (peer, locator, spots, sleep, rest = 700) => {
+  const box = await locator.boundingBox();
   for (const [x, y] of spots) {
-    await peer.page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 18 });
+    await moveMouse(peer, box.x + box.width * x, box.y + box.height * y);
     await sleep(rest);
   }
 };
+
+/** Glides the mouse through spots of the plank, given as fractions of its box, resting on each. */
+const glide = (peer, spots, sleep, rest) => glideOver(peer, plank(peer.page), spots, sleep, rest);
 
 /** Glides until the other peer draws this one's pointer: a session posts only once it knows it is in a follow. */
 const glideUntilShown = async (peer, other, spots, sleep) => {
@@ -235,6 +254,7 @@ export const steps = [
       await page.getByText(SPACE).first().waitFor({ timeout: TIMEOUT });
 
       await createDocument(page, PLAN, `# Launch plan\n\n${PLAN_TEXT}`);
+      await createDocument(page, NOTES, '# Notes\n\nQuestions to settle before launch.\n');
       const sharedWorkspace = workspaceOf(page);
       await expandRow(currentWorkspace(page).getByTestId('spacePlugin.settings').first());
       await currentWorkspace(page)
@@ -279,21 +299,26 @@ export const steps = [
       await bob.click(last.getByTestId('spacePlugin.presence.follow'));
       await followRow(bob.page).waitFor({ timeout: TIMEOUT });
       await followHeading(bob.page).waitFor({ state: 'attached', timeout: TIMEOUT });
+      await sleep(2_500);
+      // The side panel would crowd the plank the two point at.
+      await bob.click(membersTab(bob.page));
     },
-    pace: 3_000,
+    pace: 1_500,
   },
   {
     name: 'The leader sees Bob following',
     subtitle: 'QA-7 step 3: an indigo dot on Members, Bob under “Following you”, the same indigo on the heading',
-    run: async () => {
+    run: async ({ sleep }) => {
       await waitFor(async () => (await membersTab(leader.page).getAttribute('data-badge')) !== null, {
         what: 'the dot on the leader’s Members tab',
       });
       await leader.click(membersTab(leader.page));
       await followersGroup(leader.page).waitFor({ timeout: TIMEOUT });
       await followHeading(leader.page).waitFor({ state: 'attached', timeout: TIMEOUT });
+      await sleep(2_500);
+      await leader.click(membersTab(leader.page));
     },
-    pace: 3_000,
+    pace: 1_500,
   },
   {
     name: 'The leader points at the plan; Bob sees the pointer',
@@ -342,15 +367,17 @@ export const steps = [
       // A loop and a sweep, so the tail shows it follows the path rather than trailing at a fixed angle.
       for (let step = 0; step <= 48; step++) {
         const angle = (step / 48) * Math.PI * 2;
-        await bob.page.mouse.move(
+        await moveMouse(
+          bob,
           box.x + box.width * (0.5 + 0.18 * Math.cos(angle)),
           box.y + box.height * (0.45 + 0.14 * Math.sin(angle)),
+          2,
         );
-        await sleep(40);
+        await sleep(30);
       }
       for (let step = 0; step <= 24; step++) {
-        await bob.page.mouse.move(box.x + box.width * (0.25 + 0.5 * (step / 24)), box.y + box.height * 0.65);
-        await sleep(40);
+        await moveMouse(bob, box.x + box.width * (0.25 + 0.5 * (step / 24)), box.y + box.height * 0.65, 2);
+        await sleep(30);
       }
       await waitFor(async () => (await pointers(leader.page).getAttribute('data-style')) === 'laser', {
         what: 'Bob’s pointer to draw as a laser on the leader’s screen',
@@ -360,18 +387,83 @@ export const steps = [
     pace: 2_000,
   },
   {
-    name: 'Bob stops following',
-    subtitle: 'QA-7 step 7: the row goes back to its place, and both pointers and the indigo go',
-    run: async ({ peers: { bob } }) => {
-      await bob.click(followRow(bob.page).getByTestId('spacePlugin.presence.stopFollowing'));
-      await waitFor(async () => (await followRow(bob.page).count()) === 0, { what: 'Bob’s follow row to go' });
-      await waitFor(async () => (await followersGroup(leader.page).count()) === 0, {
-        what: 'the leader’s followers group to go',
+    name: 'The leader points across the navtree',
+    subtitle: 'Pointers cover the whole window: over a navtree row, each sees it on the same row',
+    run: async ({ peers: { bob }, sleep }) => {
+      const tree = currentWorkspace(leader.page);
+      await glideOver(leader, tree.getByTestId('spacePlugin.collectionsSection').first(), [[0.5, 0.5]], sleep, 400);
+      await glideOver(
+        leader,
+        objectLink(leader.page, PLAN),
+        [
+          [0.3, 0.5],
+          [0.7, 0.5],
+        ],
+        sleep,
+        500,
+      );
+      await glideOver(
+        leader,
+        objectLink(leader.page, NOTES),
+        [
+          [0.4, 0.5],
+          [0.6, 0.5],
+        ],
+        sleep,
+        700,
+      );
+      await waitFor(
+        async () =>
+          (await pointers(bob.page).count()) > 0 &&
+          (await pointers(bob.page).first().getAttribute('data-anchor')) === 'row',
+        {
+          what: 'the leader’s pointer over a row of Bob’s navtree',
+        },
+      );
+    },
+    pace: 1_500,
+  },
+  {
+    name: 'The leader types in the plan',
+    subtitle: 'Bob’s view keeps the leader’s place while the text arrives',
+    run: async ({ peers: { bob }, sleep }) => {
+      await leader.click(plank(leader.page).getByText('Owners note 2', { exact: false }).first());
+      await leader.page.keyboard.press('End');
+      await leader.page.keyboard.type(' Bob, can you take pricing?', { delay: 70 });
+      await waitFor(async () => (await textbox(bob.page).innerText()).includes('can you take pricing'), {
+        what: 'the leader’s words in Bob’s view',
       });
+      await sleep(1_000);
+    },
+    pace: 1_500,
+  },
+  {
+    name: 'The leader opens the notes; Bob’s deck goes with them',
+    subtitle: 'Following carries navigation',
+    run: async ({ peers: { bob } }) => {
+      await leader.click(objectLink(leader.page, NOTES));
+      await waitFor(async () => (await textbox(bob.page).innerText()).includes('Questions to settle'), {
+        what: 'the notes in Bob’s deck',
+      });
+      await leader.click(plank(leader.page).getByText('Questions to settle', { exact: false }).first());
+      await leader.page.keyboard.press('End');
+      await leader.page.keyboard.type(' Who signs off?', { delay: 70 });
+    },
+    pace: 2_000,
+  },
+  {
+    name: 'Bob clicks in and types; his own input ends the follow',
+    subtitle: 'F-8.22 today: a follower typing in a plank stops following',
+    run: async ({ peers: { bob }, sleep }) => {
+      await bob.click(plank(bob.page).getByText('Who signs off?', { exact: false }).first());
+      await bob.page.keyboard.press('End');
+      await bob.page.keyboard.type(' I can.', { delay: 70 });
+      await waitFor(async () => (await followHeading(bob.page).count()) === 0, { what: 'Bob’s follow to end' });
       await waitFor(
         async () => (await pointers(leader.page).count()) === 0 && (await pointers(bob.page).count()) === 0,
         { what: 'both pointers to go' },
       );
+      await sleep(1_000);
     },
     pace: 3_000,
   },

@@ -12,7 +12,8 @@ export const POINTER_CHANNEL_KIND = 'pointer';
 
 /**
  * A session's pointer while it takes part in a follow; see `FollowPointer` in PLUGIN.mdl.
- * The position is a fraction of the plank's box, so it lands on the same spot of a plank sized differently.
+ * The position is a fraction of the box of what it is over: a plank, else a navtree row, else the window. Each peer
+ * finds the same plank or row by its graph path, so the pointer lands on the same spot of it however it is sized.
  */
 export const FollowPointer = Schema.Struct({
   /** The sender's presence session, as in its viewing message. */
@@ -24,8 +25,10 @@ export const FollowPointer = Schema.Struct({
       sessionId: Schema.optional(Schema.String),
     }),
   ),
-  /** Graph path of the plank under the pointer; absent while it is over none. */
+  /** Graph path of the plank under the pointer. */
   plank: Schema.optional(Schema.String),
+  /** Graph path of the navtree row under the pointer, when it is over no plank. */
+  row: Schema.optional(Schema.String),
   x: Schema.optional(Schema.Number),
   y: Schema.optional(Schema.Number),
   /** How the pointer draws; a cursor when absent. */
@@ -37,6 +40,17 @@ export type FollowPointer = Schema.Schema.Type<typeof FollowPointer>;
 export type Box = { left: number; top: number; width: number; height: number };
 
 export type PlankPosition = { x: number; y: number };
+
+/** What a pointer is placed against: a plank or a navtree row, by graph path, or the window. */
+export type PointerAnchor = { kind: 'plank' | 'row'; id: string } | { kind: 'window' };
+
+/** The anchor a received pointer names. */
+export const getPointerAnchor = ({ plank, row }: Pick<FollowPointer, 'plank' | 'row'>): PointerAnchor =>
+  plank !== undefined
+    ? { kind: 'plank', id: plank }
+    : row !== undefined
+      ? { kind: 'row', id: row }
+      : { kind: 'window' };
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 
