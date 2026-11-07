@@ -252,19 +252,17 @@ const scrollDocumentTo = async (page, text, { exact = false, delay = 250 } = {})
 
 /**
  * Puts the spec's line holding `find` at the top of the view in one move, so the camera cuts to it rather than following
- * a scroll; `line` is that line's rendered text, for the wheel when the editor is not reachable. `last` takes the text's
- * last occurrence. The editor is laid out at full height inside the plank, so the plank's scroller moves, a pass at a
- * time while the lines it brings into view replace their estimated heights.
+ * a scroll, and holds it there for `hold` ms; `line` is that line's rendered text, for the wheel when the editor is not
+ * reachable. The editor is laid out at full height inside the plank, so the plank's scroller moves. A write to a feature
+ * resets that scroller to the top, so every frame of the hold puts the line back.
  */
-const jumpDocumentTo = async (page, find, line, { last = false } = {}) => {
-  const jumped = await page
-    .locator(`${DOCUMENT} .cm-content`)
-    .first()
-    .evaluate(
-      async (content, { find, last }) => {
-        const view = content.cmTile?.root?.view;
+const jumpDocumentTo = async (page, find, line, { hold = 10_000 } = {}) => {
+  const jumped = await page.evaluate(
+    async ({ selector, find, hold }) => {
+      const place = () => {
+        const view = document.querySelector(selector)?.cmTile?.root?.view;
         const text = view?.state.doc.toString() ?? '';
-        const at = last ? text.lastIndexOf(find) : text.indexOf(find);
+        const at = text.indexOf(find);
         let scroller = view?.dom.parentElement;
         while (
           scroller &&
@@ -273,21 +271,41 @@ const jumpDocumentTo = async (page, find, line, { last = false } = {}) => {
           scroller = scroller.parentElement;
         }
         if (at < 0 || !scroller) {
+          return undefined;
+        }
+        const offset = view.documentTop + view.lineBlockAt(at).top - scroller.getBoundingClientRect().top - 24;
+        if (Math.abs(offset) >= 4) {
+          scroller.scrollTop += offset;
+        }
+        return Math.abs(offset) < 4;
+      };
+      globalThis.__autocueUnpin?.();
+      const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      // The lines brought into view replace their estimated heights, so it takes a pass or two to settle.
+      for (let pass = 0; pass < 6; pass++) {
+        const placed = place();
+        if (placed === undefined) {
           return false;
         }
-        const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        for (let pass = 0; pass < 6; pass++) {
-          const offset = view.documentTop + view.lineBlockAt(at).top - scroller.getBoundingClientRect().top - 24;
-          if (Math.abs(offset) < 4) {
-            break;
-          }
-          scroller.scrollTop += offset;
-          await frame();
+        if (placed) {
+          break;
         }
-        return true;
-      },
-      { find, last },
-    );
+        await frame();
+      }
+      const until = Date.now() + hold;
+      let request;
+      const keep = () => {
+        if (Date.now() < until) {
+          place();
+          request = requestAnimationFrame(keep);
+        }
+      };
+      request = requestAnimationFrame(keep);
+      globalThis.__autocueUnpin = () => cancelAnimationFrame(request);
+      return true;
+    },
+    { selector: `${DOCUMENT} .cm-content`, find, hold },
+  );
   if (!jumped) {
     await scrollDocumentTo(page, line, { exact: true, delay: 30 });
   }
@@ -1555,14 +1573,6 @@ export const steps = [
         hold: BEAT * 4,
       });
       await page.waitForTimeout(BEAT * 4);
-      // The agent's decision for the change is the Changelog's newest.
-      await jumpDocumentTo(page, 'decision D-', 'Changelog', { last: true });
-      await demo.caption({
-        value: 'The spec records the change',
-        subtitle: 'The newest decision in its Changelog',
-        hold: BEAT * 3,
-      });
-      await page.waitForTimeout(BEAT * 3);
       await demo.caption({
         value: 'M-1 and M-2 operational, the change verified',
         subtitle: 'Time zones and flight options are the next milestones',
