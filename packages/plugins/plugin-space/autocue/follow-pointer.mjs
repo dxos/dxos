@@ -3,9 +3,9 @@
 //
 
 /**
- * Bob follows Alice, and each sees the other's pointer: a frame in Alice's colour names her on Bob's screen, her
- * pointer lands on the same spot of the plan in his deck, and his pointer shows on hers while he points something
- * out. Moving his mouse keeps the follow; Stop in the frame ends it. Recorded side by side.
+ * Bob follows Alice, and both see it: Members names the follow in Alice's colour on each side, and the plan's
+ * heading takes that colour. Her pointer lands on the same spot of the plan in his deck, his shows on hers, and he
+ * switches his to a laser. Moving his mouse keeps the follow; Stop in Members ends it. Recorded side by side.
  *
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-7
  * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4176 (EDGE signaling)
@@ -73,7 +73,8 @@ const sidebar = (page) => page.locator('[data-scope="main"][data-part="complemen
 const membersTab = (page) => page.locator('[id$="trigger-members"]');
 const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.row');
 
-const frame = (page) => page.getByTestId('spacePlugin.followOverlay.frame');
+const followBar = (page) => page.getByTestId('spacePlugin.followBar');
+const followHeading = (page) => page.getByTestId('spacePlugin.presence.followHeading').first();
 const pointers = (page) => page.getByTestId('spacePlugin.followOverlay.pointer');
 
 /** Glides the mouse through spots of the plan's plank, given as fractions of its box, resting on each. */
@@ -239,22 +240,34 @@ export const steps = [
   },
   {
     name: 'Bob opens Members and follows Alice',
-    subtitle: 'QA-7 step 2: a frame in Alice’s colour names her, with Stop',
+    subtitle: 'QA-7 step 2: Members opens under “Following Alice”, and the plan’s heading takes her colour',
     run: async ({ peers: { bob } }) => {
       await bob.click(membersTab(bob.page));
       const follow = presenceRows(bob.page).getByTestId('spacePlugin.presence.follow').first();
       await follow.waitFor({ state: 'attached', timeout: TIMEOUT });
       await presenceRows(bob.page).first().hover();
       await bob.click(follow);
-      await frame(bob.page).waitFor({ timeout: TIMEOUT });
-      // The companion would cover the plank the two point at.
-      await bob.click(membersTab(bob.page));
+      await followBar(bob.page).waitFor({ timeout: TIMEOUT });
+      await followHeading(bob.page).waitFor({ state: 'attached', timeout: TIMEOUT });
+    },
+    pace: 3_000,
+  },
+  {
+    name: 'Alice sees Bob following her',
+    subtitle: 'QA-7 step 3: the dot on her Members tab, “Bob is following you”, and the same colour on her heading',
+    run: async ({ peers: { alice } }) => {
+      await waitFor(async () => (await membersTab(alice.page).getAttribute('data-badge')) !== null, {
+        what: 'the dot on Alice’s Members tab',
+      });
+      await alice.click(membersTab(alice.page));
+      await followBar(alice.page).waitFor({ timeout: TIMEOUT });
+      await followHeading(alice.page).waitFor({ state: 'attached', timeout: TIMEOUT });
     },
     pace: 3_000,
   },
   {
     name: 'Alice points at the plan; Bob sees her pointer',
-    subtitle: 'QA-7 step 3: at the same spot of the same plank in his deck',
+    subtitle: 'QA-7 step 4: at the same spot of the same plank in his deck',
     run: async ({ peers: { alice, bob }, sleep }) => {
       await glideUntilShown(
         alice,
@@ -272,7 +285,7 @@ export const steps = [
   },
   {
     name: 'Bob points back; Alice sees his pointer',
-    subtitle: 'QA-7 step 4: moving his mouse keeps the follow',
+    subtitle: 'QA-7 step 5: moving his mouse keeps the follow',
     run: async ({ peers: { alice, bob }, sleep }) => {
       await glideUntilShown(
         bob,
@@ -284,49 +297,41 @@ export const steps = [
         ],
         sleep,
       );
-      if (!(await frame(bob.page).isVisible())) {
+      if (!(await followBar(bob.page).isVisible())) {
         throw new Error('the follow ended when Bob moved his mouse');
       }
     },
     pace: 2_000,
   },
   {
-    name: 'Alice scrolls on; both keep pointing',
-    subtitle: 'Bob’s view follows hers, and each pointer stays on its spot of the plank',
+    name: 'Bob switches his pointer to the laser',
+    subtitle: 'QA-7 step 6: Alice sees a glowing dot with a trail',
     run: async ({ peers: { alice, bob }, sleep }) => {
-      await glide(alice, [[0.5, 0.4]], sleep, 200);
-      for (let tick = 0; tick < 8; tick++) {
-        await alice.page.mouse.wheel(0, 120);
-        await sleep(200);
-      }
-      await sleep(1_000);
-      await Promise.all([
-        glide(
-          alice,
-          [
-            [0.35, 0.3],
-            [0.55, 0.36],
-          ],
-          sleep,
-        ),
-        glide(
-          bob,
-          [
-            [0.4, 0.8],
-            [0.6, 0.72],
-          ],
-          sleep,
-        ),
-      ]);
+      await bob.click(followBar(bob.page).getByTestId('spacePlugin.followBar.laser'));
+      await glide(
+        bob,
+        [
+          [0.4, 0.4],
+          [0.6, 0.45],
+          [0.45, 0.6],
+          [0.55, 0.35],
+        ],
+        sleep,
+        500,
+      );
+      await waitFor(async () => (await pointers(alice.page).getAttribute('data-style')) === 'laser', {
+        what: 'Bob’s pointer to draw as a laser on Alice’s screen',
+      });
     },
     pace: 2_000,
   },
   {
-    name: 'Bob clicks Stop in the frame',
-    subtitle: 'QA-7 step 5: the frame and both pointers go',
+    name: 'Bob stops following',
+    subtitle: 'QA-7 step 7: both pointers, both follow blocks and the heading colour go',
     run: async ({ peers: { alice, bob } }) => {
-      await bob.click(bob.page.getByTestId('spacePlugin.followOverlay.stop'));
-      await waitFor(async () => (await frame(bob.page).count()) === 0, { what: 'the frame to go' });
+      await bob.click(presenceRows(bob.page).first().getByTestId('spacePlugin.presence.stopFollowing'));
+      await waitFor(async () => (await followBar(bob.page).count()) === 0, { what: 'Bob’s follow block to go' });
+      await waitFor(async () => (await followBar(alice.page).count()) === 0, { what: 'Alice’s follow block to go' });
       await waitFor(
         async () => (await pointers(alice.page).count()) === 0 && (await pointers(bob.page).count()) === 0,
         {
