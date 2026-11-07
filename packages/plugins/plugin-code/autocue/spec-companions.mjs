@@ -3,13 +3,14 @@
 //
 
 /**
- * Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
+ * A spec as plain text and then as forms, a form per block, with a few of its fields edited; then every view of its
+ * companion tabs, in order: Structure's Definitions and Related, with Related following the
  * editor's cursor, then the software dialect's Data model, API and Board; Decisions at the cursor and the Ledger, a
  * level at a time; Review, and the software dialect's Code. A script in the video dialect then offers only the views
  * that read any dialect, and Definitions drills into it as it does into code.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-8
- * @app composer-app via `moon run composer-app:serve -- --port 5180 --strictPort`
+ * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 5180 --strictPort`
  *
  *   node .agents/skills/autocue/scripts/driver.mjs --port 7336 --url http://localhost:5180 --out /tmp/demo
  *   node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out spec-companions.webm \
@@ -23,24 +24,28 @@ const PROJECT = 'Composer specs';
 const CODE_SPEC = 'CodePlugin';
 const VIDEO_SPEC = 'Launch video';
 
-/** Features of plugin-code's map, one or more per status, for the Board to sort. */
-const BOARD_FEATURES = [
-  ['Two-way spec sync', 'operational'],
-  ['Diff mode', 'operational'],
-  ['Spec questions', 'prototype'],
-  ["A project's repositories", 'prototype'],
-  ['Local build & run', 'failing'],
-  ['Spec reviews in ECHO', 'planned'],
-];
+/** Statuses for plugin-code's features, one or more per status, for the Board to sort; the rest read as planned. */
+const FEATURE_STATUSES = {
+  'F-1': 'operational',
+  'F-2': 'operational',
+  'F-3': 'prototype',
+  'F-5': 'prototype',
+  'F-6': 'failing',
+};
 
 /** A spec's text without the front matter the spec's own fields replace. */
 const body = (path) => readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^---\n[\s\S]*?\n---\n+/, '');
-const CODE_TEXT = body('../PLUGIN.mdl');
+const CODE_TEXT = body('../PLUGIN.mdl').replace(/^(feat (F-\d+):.*)$/gm, (header, _, id) =>
+  FEATURE_STATUSES[id] ? `${header}\n  status: ${FEATURE_STATUSES[id]}` : header,
+);
 const VIDEO_TEXT = body('../../../reflect/deus/lang/examples/launch-video.mdl');
 const REVIEW_TEXT = readFileSync(
   new URL('../src/containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl', import.meta.url),
   'utf8',
 );
+
+/** What the demo adds to F-4's requirements. */
+const REQUIREMENT = 'Settings name the credentials a build still needs.';
 
 /** Time to read a caption before the gesture it describes. */
 const READ = 2_500;
@@ -73,6 +78,18 @@ const CLUSTER = `${COMPANION} [data-testid="definition-canvas.cluster"]`;
 const row = (name) => `${SPECS} [role="group"]:has(> [data-part="legend"]:text-is("${name}"))`;
 const field = (name, label) =>
   `${row(name)} [data-scope="field"][data-part="root"]:has(label:text-is("${label}")) :is(input, [contenteditable="true"])`;
+const SCROLLER = `${DOCUMENT} [data-testid="spec-article.spec"]`;
+const VIEW_MODE = `${DOCUMENT} [data-testid="editor.toolbar.viewMode"]`;
+const FORMS = `${DOCUMENT} [data-testid="spec-block"]`;
+const form = (label) => `${FORMS}:has([data-testid="spec-block.label"]:text-is("${label}"))`;
+/** A menu's item only: a form's list rows are options and items too. */
+const option = (text) =>
+  `:is([data-scope="combobox"], [data-scope="select"])[data-part="item"]:visible:has-text("${text}")`;
+/** Presses a card, which shows its empty fields and its add and remove actions; at rest it reads as text. */
+const edit = async (demo, page, label) => {
+  await demo.click({ selector: `${form(label)} [data-testid="spec-block.label"]`, label: 'Edit' });
+  await page.waitForTimeout(300);
+};
 const cluster = (hub) => `${COMPANION} [data-cluster="cluster:${hub}"]`;
 const card = (id) => `${COMPANION} [data-testid="definition-canvas.card"][data-definition="${id}"]`;
 
@@ -119,6 +136,36 @@ const scrollToLine = async (page, text, direction = 1) => {
     .first()
     .evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
   await page.waitForTimeout(800);
+};
+
+/** Picks the Specs tab's view: `Plain text` is the spec's text, `Markdown` a form per block. */
+const setView = async (page, label, demo) => {
+  const click = (selector, label) => (demo ? demo.click({ selector, label }) : page.locator(selector).first().click());
+  await click(VIEW_MODE, 'Editor view');
+  await click(`[role="menu"] >> [role^="menuitem"]:has-text("${label}")`, label);
+  await page
+    .locator(FORMS)
+    .first()
+    .waitFor({ state: label === 'Plain text' ? 'detached' : 'visible', timeout: 10_000 });
+};
+
+/** Scrolls the spec until the form labelled `label` is drawn, then brings its top into view smoothly. */
+const revealForm = async (page, label) => {
+  for (let tries = 0; tries < 200 && (await page.locator(form(label)).count()) === 0; tries++) {
+    await page.locator(SCROLLER).evaluate((scroller) => scroller.scrollBy({ top: scroller.clientHeight * 0.8 }));
+    await page.waitForTimeout(40);
+  }
+  await page
+    .locator(form(label))
+    .first()
+    .evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+  await page.waitForTimeout(900);
+};
+
+/** Scrolls the spec by `top` pixels, smoothly. */
+const glide = async (page, top) => {
+  await page.locator(SCROLLER).evaluate((scroller, top) => scroller.scrollBy({ top, behavior: 'smooth' }), top);
+  await page.waitForTimeout(900);
 };
 
 /** Whether the Specs tab's editor holds any of `marks`; it draws only the lines in view, so the first few will do. */
@@ -314,30 +361,6 @@ export const steps = [
     },
   },
   {
-    name: "Prep (off camera): put features on plugin-code's map",
-    setup: true,
-    run: async ({ page }) => {
-      // The Board lists the spec's feature objects; the `feat` blocks in its text are not features of the map.
-      await page.evaluate(
-        async ([name, features]) => {
-          const project = composer.graph._model
-            .filterNodes(() => true)
-            .find(({ id }) => /\/org\.dxos\.type\.project\/[^/]+$/.test(id)).data.data;
-          const spec = project.specs.find((ref) => ref.target?.name === name) ?? project.specs[0];
-          const spaceId = location.pathname.split('/')[2];
-          for (const [feature, status] of features) {
-            await composer.invoke(
-              'org.dxos.operation.code.createFeature',
-              { name: feature, status, spec },
-              { spaceId },
-            );
-          }
-        },
-        [CODE_SPEC, BOARD_FEATURES],
-      );
-    },
-  },
-  {
     name: "Prep (off camera): show plugin-code's spec",
     setup: true,
     run: async ({ page }) => {
@@ -357,9 +380,118 @@ export const steps = [
         composer.invoke('org.dxos.operation.deck.updatePlankSize', { id: 'companion', size: 62 }),
       );
       await pickSpec(page, CODE_SPEC);
+      await setView(page, 'Plain text');
       await page.locator(EDITOR).first().click();
       await page.keyboard.press('ControlOrMeta+Home');
       await page.waitForTimeout(2_000);
+    },
+  },
+  {
+    name: 'Read the spec as text',
+    narration: "The spec starts as text: plugin-code's own PLUGIN.mdl, its blocks written in MDL.",
+    run: async ({ demo, page }) => {
+      await demo.title({ value: 'A spec, as text and as forms', subtitle: 'Then its companion tabs' });
+      await caption(demo, 1, 'Plain text: the spec as written, in MDL');
+      await demo.sleep({ ms: LOOK });
+      await glide(page, 700);
+      await demo.sleep({ ms: LOOK });
+      await glide(page, -700);
+    },
+  },
+  {
+    name: 'Switch to the forms',
+    narration: 'The Markdown view draws each block as a form over a schema generated from its kind.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 2, 'Markdown view: the same spec, a form per block');
+      await setView(page, 'Markdown', demo);
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Add a dependency',
+    narration: "A list is rows: adding one writes a new entry into the block's text.",
+    run: async ({ demo, page }) => {
+      await caption(demo, 3, 'A list field: add a row and type into it');
+      const plugin = form('CodePlugin');
+      await edit(demo, page, 'CodePlugin');
+      const rows = await page.locator(`${plugin} [data-testid^="dependsOn["]`).count();
+      await demo.click({ selector: `${plugin} [data-testid="dependsOn.add"]`, label: 'Add' });
+      const added = `${plugin} [data-testid="dependsOn[${rows}]"]`;
+      await page.locator(added).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.click({ selector: added, label: 'New row' });
+      await page.keyboard.press('ControlOrMeta+A');
+      await page.keyboard.type('org.dxos.plugin.github', { delay: 45 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: "Edit a type's field",
+    narration: "A type's fields are rows of their own: a name, a switch for optional, and a type picked from a list.",
+    run: async ({ demo, page }) => {
+      await revealForm(page, 'CodeProject');
+      await caption(demo, 4, "A type's fields: a switch, and a type from a list");
+      await edit(demo, page, 'CodeProject');
+      const field = `${form('CodeProject')} [data-testid="fields[0]"]`;
+      await demo.click({ selector: `${field} [data-scope="switch"][data-part="control"]`, label: 'Optional' });
+      await demo.sleep({ ms: 1_500 });
+      await demo.click({ selector: `${field} [data-scope="combobox"][data-part="trigger"]`, label: 'Type' });
+      await page.locator(option('Spec')).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: 2_000 });
+      await page.keyboard.press('Escape');
+      await demo.sleep({ ms: 1_500 });
+    },
+  },
+  {
+    name: 'Add a requirement',
+    narration: "A feature's requirements are keyed lines; a new one is labelled after the last.",
+    run: async ({ demo, page }) => {
+      await revealForm(page, 'F-4');
+      await caption(demo, 5, 'Keyed lines: a new requirement gets the next label');
+      const feature = form('F-4');
+      await edit(demo, page, 'F-4');
+      const rows = await page.locator(`${feature} [data-testid^="req["][data-testid$="].text"]`).count();
+      await demo.click({ selector: `${feature} [data-testid="req.add"]`, label: 'Add requirement' });
+      const added = `${feature} [data-testid="req[${rows}].text"] .cm-content`;
+      await page.locator(added).waitFor({ state: 'visible', timeout: 10_000 });
+      await page.locator(added).evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+      await demo.sleep({ ms: 900 });
+      await demo.click({ selector: added, label: `F-4.${rows + 1}` });
+      await page.keyboard.press('ControlOrMeta+A');
+      await page.keyboard.type(REQUIREMENT, { delay: 35 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: "Set a feature's status",
+    narration: "A feature's status is a choice from the dialect's set, which the Board sorts features by.",
+    run: async ({ demo, page }) => {
+      await caption(demo, 6, "A choice: F-4's status, from the dialect's set");
+      const status = `${form('F-4')} [data-testid="status"]`;
+      await page.locator(status).evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+      await demo.sleep({ ms: 900 });
+      await demo.click({ selector: status, label: 'Status' });
+      await page.locator(option('prototype')).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: 1_200 });
+      await demo.click({ selector: option('prototype'), label: 'prototype' });
+      await page.locator(`${status}:has-text("prototype")`).waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Back to the text',
+    narration: 'Underneath, the spec is still text, and each edit wrote only its own line.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 7, 'Plain text again: each edit wrote its own line');
+      await setView(page, 'Plain text', demo);
+      await page.locator(SCROLLER).evaluate((scroller) => (scroller.scrollTop = 0));
+      await page.locator(line('dependsOn: [')).first().waitFor({ state: 'visible', timeout: 10_000 });
+      await demo.sleep({ ms: LOOK });
+      await scrollToLine(page, REQUIREMENT);
+      await demo.sleep({ ms: LOOK });
+      await page.locator(SCROLLER).evaluate((scroller) => (scroller.scrollTop = 0));
+      await page.locator(EDITOR).first().click();
+      await page.keyboard.press('ControlOrMeta+Home');
+      await page.waitForTimeout(1_000);
     },
   },
   {
@@ -368,7 +500,7 @@ export const steps = [
       "Structure's first view, Definitions, draws the spec as clusters of features around the blocks they share.",
     run: async ({ demo, page }) => {
       await demo.title({ value: "A spec's companion tabs", subtitle: 'Structure, Decisions and Review' });
-      await caption(demo, 1, 'Structure › Definitions: the spec as clusters');
+      await caption(demo, 8, 'Structure › Definitions: the spec as clusters');
       await demo.click({ selector: '[data-testid="plankHeading.companion"] >> nth=0', label: 'Companion' });
       await openTab(demo, page, 'structure', 'Structure');
       if ((await page.locator(CLUSTER).count()) === 0 && (await page.locator(view('definitions')).count()) > 0) {
@@ -382,7 +514,7 @@ export const steps = [
     name: 'Open a cluster',
     narration: 'Double-clicking a cluster opens its features, each framing what only it names.',
     run: async ({ demo, page }) => {
-      await caption(demo, 2, 'Double-click a cluster to open its features');
+      await caption(demo, 9, 'Double-click a cluster to open its features');
       await open(demo, page, cluster('CoderSkill'), 'CoderSkill');
       await page.locator(CLUSTER).first().waitFor({ state: 'detached', timeout: 15_000 });
       await page.locator(card('F-8')).waitFor({ state: 'visible', timeout: 30_000 });
@@ -393,7 +525,7 @@ export const steps = [
     name: 'Open Related',
     narration: "Related, Structure's second view, centres on the block nearest the editor's cursor.",
     run: async ({ demo, page }) => {
-      await caption(demo, 3, 'Structure › Related: the block at the cursor');
+      await caption(demo, 10, 'Structure › Related: the block at the cursor');
       await openView(demo, page, 'related', 'Related', '[data-testid="definition-related.focus"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -402,7 +534,7 @@ export const steps = [
     name: 'Put the cursor in a feature',
     narration: 'Clicking into a feature centres Related on it, with what it names below.',
     run: async ({ demo, page }) => {
-      await caption(demo, 4, 'Click into F-8: Related centres on it');
+      await caption(demo, 11, 'Click into F-8: Related centres on it');
       await scrollToLine(page, 'feat F-8:');
       await demo.click({ selector: await blockId(page, 'feat F-8:', 'F-8'), label: 'F-8' });
       await waitForRelated(page, 'F-8');
@@ -413,7 +545,7 @@ export const steps = [
     name: 'Move the cursor to the next feature',
     narration: 'As the cursor moves down into the next block, Related moves with it.',
     run: async ({ demo, page }) => {
-      await caption(demo, 5, 'Arrow down into F-9: Related follows');
+      await caption(demo, 12, 'Arrow down into F-9: Related follows');
       for (let lines = 0; lines < 40; lines++) {
         await page.keyboard.press('ArrowDown');
         await page.waitForTimeout(180);
@@ -429,7 +561,8 @@ export const steps = [
     name: 'Move the cursor to a type',
     narration: 'In a type, Related shows the features that name it above.',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, 'Click into a type: the features naming it');
+      await caption(demo, 13, 'Click into a type: the features naming it');
+      // The block's header line, not a feature's `uses:` that names it.
       await scrollToLine(page, 'type CodeProject', -1);
       await demo.click({ selector: await blockId(page, 'type CodeProject', 'CodeProject'), label: 'CodeProject' });
       await waitForRelated(page, 'CodeProject');
@@ -440,7 +573,7 @@ export const steps = [
     name: 'Open Data model',
     narration: "Data model lists the spec's types and their fields.",
     run: async ({ demo, page }) => {
-      await caption(demo, 7, "Structure › Data model: the spec's types");
+      await caption(demo, 14, "Structure › Data model: the spec's types");
       await openView(demo, page, 'data', 'Data model', '[data-testid="data-model.type"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -449,7 +582,7 @@ export const steps = [
     name: 'Open API',
     narration: "API lists the spec's operations and services.",
     run: async ({ demo, page }) => {
-      await caption(demo, 8, "Structure › API: the spec's operations");
+      await caption(demo, 15, "Structure › API: the spec's operations");
       await openView(demo, page, 'api', 'API', '[data-testid="api-surface.op"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -458,7 +591,7 @@ export const steps = [
     name: 'Open Board',
     narration: "Board, the software dialect's last Structure view, shows the spec's features by status.",
     run: async ({ demo, page }) => {
-      await caption(demo, 9, 'Structure › Board: the features by status');
+      await caption(demo, 16, 'Structure › Board: the features by status');
       await openView(demo, page, 'kanban', 'Board', '[data-testid="board-column"]');
       await demo.sleep({ ms: LOOK });
     },
@@ -467,7 +600,7 @@ export const steps = [
     name: 'Open Decisions at the cursor',
     narration: 'At cursor, the first Decisions view, shows what holds on the item at the cursor.',
     run: async ({ demo, page }) => {
-      await caption(demo, 10, 'Decisions › At cursor: what holds on F-22.4');
+      await caption(demo, 17, 'Decisions › At cursor: what holds on F-22.4');
       await scrollToLine(page, 'req F-22.4:');
       await demo.click({ selector: await blockId(page, 'req F-22.4:', 'F-22.4'), label: 'F-22.4' });
       await openTab(demo, page, 'decisions', 'Decisions');
@@ -481,7 +614,7 @@ export const steps = [
     name: 'Open the Ledger',
     narration: 'The Ledger opens on a card per block, the most recently decided first.',
     run: async ({ demo, page }) => {
-      await caption(demo, 11, 'Decisions › Ledger: a card per block');
+      await caption(demo, 18, 'Decisions › Ledger: a card per block');
       await openView(demo, page, 'ledger', 'Ledger', LEDGER_BLOCK);
       await demo.sleep({ ms: LOOK });
     },
@@ -490,7 +623,7 @@ export const steps = [
     name: 'Open a block',
     narration: 'A block opens its threads: the decisions on it that cite one another.',
     run: async ({ demo, page }) => {
-      await caption(demo, 12, 'Open SpecViewContent: its threads');
+      await caption(demo, 19, 'Open SpecViewContent: its threads');
       await demo.click({
         selector: `${COMPANION} ${LEDGER_BLOCK}[data-block="SpecViewContent"]`,
         label: 'SpecViewContent',
@@ -503,7 +636,7 @@ export const steps = [
     name: 'Open a thread',
     narration: 'A thread shows what holds now, then its decisions by day, with approval at the top.',
     run: async ({ demo, page }) => {
-      await caption(demo, 13, 'Open a thread: what holds now, then each day');
+      await caption(demo, 20, 'Open a thread: what holds now, then each day');
       await demo.click({ selector: `${COMPANION} ${LEDGER_THREAD} >> nth=0`, label: 'Thread' });
       await page
         .locator(`${COMPANION} [data-testid="decision-ledger.holds-now"]`)
@@ -515,7 +648,7 @@ export const steps = [
     name: 'Open Review',
     narration: "Review shows the spec's latest compliance review, a verdict per item.",
     run: async ({ demo, page }) => {
-      await caption(demo, 14, 'Review › the latest compliance review');
+      await caption(demo, 21, 'Review › the latest compliance review');
       await openTab(demo, page, 'review', 'Review');
       await openView(
         demo,
@@ -531,7 +664,7 @@ export const steps = [
     name: 'Open Code',
     narration: 'A verdict opens the code it cites in Code, at its symbol.',
     run: async ({ demo, page }) => {
-      await caption(demo, 15, 'Review › Code: the source a verdict cites');
+      await caption(demo, 22, 'Review › Code: the source a verdict cites');
       await demo.click({ selector: `${COMPANION} [data-testid="review-panel.count.done"]`, label: 'Done' });
       // buildProject's verdict cites the function that compiles a project.
       const verdict = `${COMPANION} [data-testid="verdict-card"]:has(:text-is("buildProject"))`;
@@ -551,12 +684,16 @@ export const steps = [
     narration:
       'A script in the video dialect offers only the views that read any dialect, such as Definitions and Related.',
     run: async ({ demo, page }) => {
-      await caption(demo, 16, 'A video script: only the views for any dialect');
+      await caption(demo, 23, 'A video script: only the views for any dialect');
       await openTab(demo, page, 'structure', 'Structure');
       await pickSpec(page, VIDEO_SPEC, demo);
+      // The cursor steps below click the script's lines.
+      if ((await page.locator(FORMS).count()) > 0) {
+        await setView(page, 'Plain text');
+      }
       await openView(demo, page, 'definitions', 'Definitions', '[data-cluster="cluster:maya"]');
       await page.locator(view('data')).waitFor({ state: 'detached', timeout: 10_000 });
-      await caption(demo, 16, "No Data model, API, Board or Code: they are software's");
+      await caption(demo, 23, "No Data model, API, Board or Code: they are software's");
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -564,7 +701,7 @@ export const steps = [
     name: "Open a character's cluster",
     narration: 'Definitions drills into a script as it does into code: a frame per scene, holding its shots and lines.',
     run: async ({ demo, page }) => {
-      await caption(demo, 17, "Double-click maya's cluster: a frame per scene");
+      await caption(demo, 24, "Double-click maya's cluster: a frame per scene");
       await open(demo, page, cluster('maya'), 'Maya');
       await page.locator(CLUSTER).first().waitFor({ state: 'detached', timeout: 15_000 });
       await page.locator(`${card('SC-2')}[data-opens]`).waitFor({ state: 'visible', timeout: 30_000 });
@@ -576,7 +713,7 @@ export const steps = [
     narration:
       'A scene opens onto everything it touches: its shots, voiceover and captions, its cast and its screenings.',
     run: async ({ demo, page }) => {
-      await caption(demo, 18, 'Double-click SC-2: everything it touches');
+      await caption(demo, 25, 'Double-click SC-2: everything it touches');
       await open(demo, page, card('SC-2'), 'SC-2');
       await page
         .locator(`${COMPANION} [data-testid="definition-canvas.card"][data-focused]`)
@@ -588,7 +725,7 @@ export const steps = [
     name: 'Put the cursor in a scene',
     narration: 'Related follows the cursor through the script as it does through code.',
     run: async ({ demo, page }) => {
-      await caption(demo, 19, 'Related: follows the cursor into SC-3');
+      await caption(demo, 26, 'Related: follows the cursor into SC-3');
       await openView(demo, page, 'related', 'Related', '[data-testid="definition-related.focus"]');
       await scrollToLine(page, 'scene SC-3');
       await demo.click({ selector: await blockId(page, 'scene SC-3', 'SC-3'), label: 'SC-3' });
@@ -600,7 +737,7 @@ export const steps = [
     name: "Open the script's decisions",
     narration: 'Every dialect extends the changelog, so Decisions reads the script the same way.',
     run: async ({ demo, page }) => {
-      await caption(demo, 20, "Decisions: any dialect — the script's changelog");
+      await caption(demo, 27, "Decisions: any dialect — the script's changelog");
       await openTab(demo, page, 'decisions', 'Decisions');
       await openView(demo, page, 'ledger', 'Ledger', LEDGER_BLOCK);
       await demo.sleep({ ms: LOOK });

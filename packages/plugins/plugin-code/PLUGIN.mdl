@@ -79,7 +79,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | Term        | URI                            |
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
-| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.1`       |
 | `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
@@ -1017,6 +1017,8 @@ feat F-20: Feature blocks in the editor
   req F-20.2: `/feat` writes a new `feat` block in place (org.dxos.plugin.projects#F-4.10).
   req F-20.3: A `feat` block's `depends:` names the features it depends on by key or label, and its `spec:` cites the spec that
              breaks it down by object id (`echo:///<id>`) or spec id.
+  req F-20.4: SpecArticle draws a spec's blocks as forms too, and its toolbar's view menu switches to Plain text and
+             back. Diff mode draws the text.
 ```
 
 ```mdl
@@ -1459,9 +1461,10 @@ test QA-7: Walk a spec's structure on the canvas
 ```
 
 ```mdl
-test QA-8: Tour a spec's companion tabs
+test QA-8: Read a spec as text and as forms, then tour its companion tabs
   desc: |
-    Every view of a spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
+    The spec as plain text, then as a form per block, with a list row added, a type's field switched, a requirement
+    added and a status picked; then every view of the spec's companion tabs, in order: Structure's Definitions and Related, with Related following the
     editor's cursor from block to block, then the software dialect's Data model, API and Board; Decisions at the
     cursor and the Ledger, a level at a time; Review, and the software dialect's Code. Definitions, Related,
     Decisions and Review are plugin-projects' (its F-6, F-7 and F-8).
@@ -1469,18 +1472,40 @@ test QA-8: Tour a spec's companion tabs
     it does into code.
     Walked by the autocue flow `spec-companions` against Composer.
   actors: human
-  covers: [F-22.4]
+  covers: [F-20.1, F-20.4, F-22.4]
   status: passing            # 2026-11-06, recorded by autocue/spec-companions.mjs
   given:
     - composer serves plugin-code and plugin-video, enabled
     - the project "Composer specs" owns the spec "CodePlugin", whose text is this spec and which uses the software
       dialect, with the review of 2026-10-27
-      (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it, and six
-      features on its map, at least one per status
+      (`containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl`) recorded against it, and five of
+      its features given a status, at least one per status
     - the project also owns "Launch video", whose text is deus's `lang/examples/launch-video.mdl` and which uses
       plugin-video's Video package
-    - the Specs tab shows "CodePlugin" with the cursor on its first line, the sidebar closed and the companion 62rem wide
+    - the Specs tab shows "CodePlugin" as plain text with the cursor on its first line, the sidebar closed and the
+      companion 62rem wide
   steps:
+    - name: Read the spec as text
+      do: Scroll the spec down and back.
+      expect: the plugin block and the blocks after it as MDL text
+    - name: Switch to the forms
+      do: Pick Markdown in the toolbar's view menu.
+      expect: each block drawn as a form, the plugin block's id, dependencies and modules as fields
+    - name: Add a dependency
+      do: Press the plugin form, then its add button under DependsOn, and type `org.dxos.plugin.github`.
+      expect: a third row holding the id
+    - name: Edit a type's field
+      do: Press CodeProject's form, flip the first field's Optional switch and open its Type list.
+      expect: the switch flips, and the list offers the spec's types
+    - name: Add a requirement
+      do: Press F-4's form, then Add requirement, and type a requirement.
+      expect: a row labelled F-4.7 holding the text
+    - name: Set a feature's status
+      do: Pick prototype in F-4's status tag.
+      expect: the tag shows prototype
+    - name: Back to the text
+      do: Pick Plain text in the view menu.
+      expect: the text holds `org.dxos.plugin.github` in `dependsOn:`, and F-4's `status: prototype` and new requirement
     - name: Open Definitions
       do: Open the companion's Structure tab.
       expect: Definitions draws a card per cluster
@@ -2558,6 +2583,24 @@ decision D-114: With the canvas gone ([D-102]), the Board is the one view that d
   why: The canvas was where features were added, linked and removed; with it removed, those edits are the block form's and the block operations'.
 ```
 
+```mdl
+decision D-115: SpecArticle draws a spec's blocks as plugin-projects' forms, with Plain text in its toolbar's view menu; diff mode keeps the text. This spec's own `ext feat` is the code dialect's 1.1, so its features have a status, dependencies and positional labels. QA-8 starts in the text, edits the forms, then tours the companion tabs. Fills in [D-113].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.1, F-20.4]
+  why: With plugin-code enabled, SpecArticle takes the Specs tab, so a spec's forms never showed there; and the local `ext feat` at 1.0 had no status or label, so the forms and the Board could not read a feature's status.
+```
+
+```mdl
+decision D-116: QA-8 presses a form before editing it, since a form at rest reads as text, and sets F-4's status through the tag in its header. Fills in [D-115].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: plugin-projects' block forms became as dense as the feature section ([D-229] there): their pickers and add buttons show once pressed, and a choice field is a tag beside the title.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -2576,12 +2619,24 @@ ext type
 
 ```mdl
 ext feat
-  uri: org.dxos.mdl.feat@1.0
+  uri: org.dxos.mdl.feat@1.1
   desc: A named feature grouping one or more requirements.
+  nesting: self
+  inline-prose: true
+  role: anchor
+  label: F
+  icon: ph--star--regular
+  hue: emerald
   fields:
+    status?: planned | in-progress | prototype | operational | failing
     desc?: Prose
     req: RequirementList
-  nesting: self
+    depends?: FeatRef[]          # features this one needs first
+    uses?: BlockRef[]            # the blocks this feature needs, other than features
+    spec?: Ref<spec>             # the spec that breaks this feature down
+  links:
+    depends: depends-on
+    uses: depends-on
 ```
 
 ```mdl
