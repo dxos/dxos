@@ -2279,9 +2279,6 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-react
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../packages/common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../packages/common/keys
@@ -2330,9 +2327,6 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../packages/ui/react-ui-attention
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../packages/ui/react-ui-editor
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../packages/ui/react-ui-table
@@ -2342,9 +2336,6 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../packages/sdk/types
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../packages/ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../packages/ui/ui-theme

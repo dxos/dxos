@@ -13,9 +13,6 @@
       "path": "../packages/common/async"
     },
     {
-      "path": "../packages/common/invariant"
-    },
-    {
       "path": "../packages/common/keys"
     },
     {
@@ -97,13 +94,7 @@
       "path": "../packages/ui/react-ui-attention"
     },
     {
-      "path": "../packages/ui/react-ui-editor"
-    },
-    {
       "path": "../packages/ui/react-ui-table"
-    },
-    {
-      "path": "../packages/ui/ui-editor"
     },
     {
       "path": "../packages/ui/ui-theme"
