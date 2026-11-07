@@ -14,11 +14,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { Text } from '@dxos/schema';
 import { Repo } from '@dxos/types';
-
-import { Feature, FeatureMap, SpecText } from '#types';
 
 import exportSpecFile from './export-spec-file.ts';
 import importSpecFile from './import-spec-file.ts';
@@ -27,17 +24,8 @@ import { loadSpecText } from './spec-file.ts';
 const BODY = ['F-1: one', 'F-2: two', 'F-3: three', ''].join('\n');
 const SPEC = ['---', 'id: org.example', '---', '', BODY].join('\n');
 
-const FEATURES = ['# Mail', '', '```mdl', 'feat F-1: Sync', '```', '', '```mdl', 'feat F-2: Compose', '```', ''].join(
-  '\n',
-);
-
 const capabilities = () => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
-  manager.contribute({
-    module: 'test',
-    interface: ProjectCapabilities.SpecCodec,
-    implementation: SpecText.codec,
-  });
   return manager;
 };
 
@@ -54,7 +42,7 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Repo.Repo, Spec.Spec, Feature.Feature, Text.Text]);
+    graph.registry.add([Repo.Repo, Spec.Spec, Text.Text]);
     const repo = db.add(Repo.make({ owner: 'dxos', name: 'composer' }));
     const run = <A, E>(effect: Effect.Effect<A, E, Database.Service | Capability.Service>) =>
       effect.pipe(
@@ -101,48 +89,5 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
     expect(text.content).toBe(BODY.replace('F-1: one', 'F-1: one, local').replace('F-3: three', 'F-3: three, remote'));
     const exported = await run(exportSpecFile.handler({ object: merged.object, path: 'PLUGIN.mdl', base: remote }));
     expect(exported.content).toBe(file);
-  });
-
-  test('a file of feat blocks becomes a spec of features, and a remote change merges with a local edit', async ({
-    expect,
-  }) => {
-    const { repo, run } = await setup();
-    const path = 'packages/plugins/plugin-mail/PLUGIN.mdl';
-    const created = await run(importSpecFile.handler({ repository: Ref.make(repo), path, content: FEATURES }));
-    const spec = await run(Database.load(created.object));
-    invariant(Spec.instanceOf(spec), 'Missing spec.');
-    const [sync, compose] = await Ref.loadAll(FeatureMap.getFeatures(spec));
-    expect([sync.name, compose.name]).toEqual(['Sync', 'Compose']);
-    expect(await SpecText.read(spec)).not.toContain('feat F-1');
-
-    // A Composer user renames F-1; meanwhile the file's F-2 was renamed on GitHub.
-    Obj.update(sync, (sync) => {
-      sync.name = 'Sync, local';
-    });
-    const remote = FEATURES.replace('feat F-2: Compose', 'feat F-2: Compose, remote');
-    const merged = await run(
-      importSpecFile.handler({
-        repository: Ref.make(repo),
-        path,
-        content: remote,
-        base: FEATURES,
-        object: created.object,
-        heads: created.heads,
-      }),
-    );
-
-    expect([sync.name, compose.name]).toEqual(['Sync, local', 'Compose, remote']);
-    const exported = await run(exportSpecFile.handler({ object: merged.object, path, base: remote }));
-    expect(exported.content).toBe(remote.replace('feat F-1: Sync', 'feat F-1: Sync, local'));
-  });
-
-  test('a spec of features is not exported without the file as GitHub holds it, so its blocks keep their form', async ({
-    expect,
-  }) => {
-    const { db, run } = await setup();
-    const spec = db.add(Spec.make({ name: 'plugin-mail/PLUGIN.mdl', content: '' }));
-    await SpecText.codec.read(spec, FEATURES, { path: 'packages/plugins/plugin-mail/PLUGIN.mdl' });
-    const exported = run(exportSpecFile.handler({ object: Ref.make(spec), path: 'PLUGIN.mdl' }));
-    await expect(exported).rejects.toThrow('No synced file text');
   });
 });

@@ -39,8 +39,11 @@ feat F-4: A project's specs
              that contributes the dialect.
   req F-4.5: The project article's Specs tab shows one spec, picked from a dropdown in its toolbar that also offers Add
              spec. It opens on the spec picked last, or the project's first.
-  req F-4.6: The nav tree lists each spec under the project's Specs branch at `project/<id>/specs/<spec>`, and a spec a
-             project owns opens as the project's article on that spec. Another plugin nests levels of its own beneath a
+  req F-4.6: The nav tree lists the project's specs under its Specs branch at `project/<id>/specs/<spec>`, and a spec a
+             project owns opens as the project's article on that spec. A spec that a `Ref<spec>` field of another
+             spec's block cites, by object id (`echo:///<id>`) or spec id, sits beneath each spec citing it at
+             `…/specs/<spec>/<cited>`, not at the top; a cycle stops before a spec repeats, and a spec that only a cycle
+             reaches is listed at the top. Another plugin nests levels of its own beneath a
              spec with `ProjectGraph.makeLevelNode`, at `…/specs/<spec>/<level>/…`, each node holding its object. A
              level opens as the project's article narrowed to it, through the `ProjectSurface.Level` surface; its
              Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
@@ -57,17 +60,51 @@ feat F-4: A project's specs
              the toolbar a plugin draws through `ProjectSurface.SpecToolbar`. A package is a set of dialects a
              plugin contributes (`ProjectCapabilities.SpecPackage`). The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
              checking one adds its dialects and unchecking removes them.
-  req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
-              block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
-              of its kind already in the text; text before the slash becomes the block's title.
+  req F-4.10: A spec's text offers a slash command for each block kind its dialects and its own `ext` blocks define. A
+              command writes the block in place, fenced as `mdl`, with a fresh key as the id of a numbered kind and
+              its required fields empty; text before the slash becomes the block's title, and the block's form takes
+              the focus.
   req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
               owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
               and the list's `+` creates a spec, its row open for the name.
   req F-4.12: A spec's text draws object links and embeds as a Markdown document does, and takes the editor extensions
               other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
               packages add their own editing on top.
-  req F-4.13: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
-              each with the peer's name.
+  req F-4.13: A spec's text, and each block form drawn in it, shows the carets of the other peers editing it, each
+              with the peer's name.
+  req F-4.14: A spec's text opens in preview, where each block of a kind its schemas define is drawn as a form over that
+              kind's fields, and offers readonly and source views. The text is the only store: a form edit changes only
+              the source of the field it edits, and the title, the prose and each prose field are editors of their own
+              over their source, showing the other peers' carets and the comments anchored in them. A form is one
+              react-ui-form `Form` over a schema generated from the kind, as dense as its source: a header row with a
+              numbered block's label and title, the name of a structure or context block (a type, an op, a plugin), or
+              an anchor's or check's id and title, and the choice fields as tags; then a row per field, a value beside its
+              name and prose on a line of its own. A keyed field is a list of lines, each beside its label, and a map a
+              list of rows, each read as its source writes it (`name?: value`), with the names in a column as wide as
+              the longest; once pressed the name and value are edited in place and a typed row's `?` toggles it
+              optional. Both are reordered by a handle and added to from below the list, and every list keeps its
+              rows' columns and heights at rest and pressed.
+              Colour carries the source view's highlighting: a label or id is in its kind's hue, a type in the type
+              kind's, and a map row's description is muted; a choice shows the icon and hue its package's `facts` give
+              it, as a feature's status does on its cards; a picker's option is one line, a block's title muted after
+              its id. A named block's name is edited in place and renames the block on Enter or on leaving it, leaving
+              references to it as written. A named block's header text describes it on the line below; of its
+              description, prose and `desc`, an empty form offers only the first; every other field is labelled. A form
+              is a block the arrows stop on, as an embed is: Enter goes into its first field and Escape comes back out.
+              At rest a form reads as text; once pressed or focused it shows its empty fields, its pickers and the add,
+              remove and reorder actions, and puts the spec's cursor in its block, as a focused field puts it at its
+              caret. A form slides between its heights and fades in the rows it adds, and no press inside it changes
+              whether it is active. A press on a picker's body opens it. A form
+              folds to its header, and prose it cannot place shows as a note pointing to the source view. A reference field is a combobox over the blocks of the kinds it names (over the
+              space's specs for `Ref<spec>`), and a list of references is chips; a type, in a field or a map row, is a
+              combobox over the built-in types and the spec's `type` blocks. A comment in a block is no part of its form,
+              and an edit keeps a map row's comment. A list shows one item per row; a keyed entry is an editor of its own labelled by its
+              position. A reference written with its kind (`op:Sort`) keeps it, and a name outside the spec (a path, a
+              `github:` key, a `user:`) shows as written. A field that names no block kind of the spec (`ActorRef`) is
+              text.
+  req F-4.15: An agent reads and writes a spec's blocks with `GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock`,
+              naming a block by key or positional label. A write is checked against the kind's schema and changes only
+              the parts it names; a new block of a numbered kind, and each new keyed entry, gets a fresh key.
 ```
 
 ```mdl
@@ -2377,4 +2414,161 @@ decision D-217: A spec that names no dialects is read with the core and changelo
   for: user:wittjosiah
   affects: [F-6.6, F-4.3]
   why: A software fallback in a generic view made every dialect-less spec look like software, which F-4.3 already rules out.
+```
+
+```mdl
+decision D-218: A spec's blocks are drawn as forms over their kinds' schemas, read from the `ext` blocks of its dialects and its own. The text stays the only store, and the editor has preview, readonly and source views as a Markdown document does.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.14]
+  why: Feature objects copied what the text already says, and the copies drifted. Edits through the form keep the text's comments and alignment.
+```
+
+```mdl
+decision D-219: A form's title, prose and prose fields are editors bound to their source range, so carets and comments show inside them as they do in the text.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.14]
+  why: Feature fields showed carets on main, and the inline form had to keep parity.
+```
+
+```mdl
+decision D-220: A numbered kind's id is a stable random key and its `F-n` label is positional, drawn and never written. Slash commands write the key and only the required fields, then focus the block's form. Replaces the numbering of [D-82].
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.10]
+  why: A positional id renumbered on every insert, breaking comments, links and task relations that cited it.
+```
+
+```mdl
+decision D-221: Specs stay flat on the project. The nav tree nests a spec beneath every spec whose `Ref<spec>` field cites it, read from the text and cached per spec; a cycle stops before a spec repeats.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.6]
+  why: A breakdown is a `spec:` field on the parent `feat` block, so nesting follows the text instead of an owner link.
+```
+
+```mdl
+decision D-222: The generic block operations `GetSpecBlocks`, `SetSpecBlock` and `DeleteSpecBlock` replace the per-feature operations for every dialect.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-4.15]
+  why: With blocks in the text, one set of operations checked against each kind's schema covers every kind.
+```
+
+```mdl
+decision D-223: A spec's carets show in its text and in each block form drawn in it; a feature is a `feat` block of the text, drawn as one of those forms. Amends [F-4.13].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.13]
+```
+
+```mdl
+decision D-224: A block form is laid out compactly, as the feature section was: a header row of label, title and choice tags; a row per field with its name inline; a line per keyed entry and per map row; empty fields and actions only while focused; foldable to its header. Amends [F-4.14].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The standard form gives every field a labelled well, so a block of three lines took a screen. The form should read close to its source while keeping fields typed and checked.
+  rejected:
+    - The standard form with the compact presentation, which still boxes each map row and each list.
+```
+
+```mdl
+decision D-225: A block form picks references and types rather than taking them as text: a `Ref<kind>` field from the spec's blocks of that kind (chips for a list), `Ref<spec>` from the space's specs, and a type expression from the built-in types and the spec's `type` blocks, with a list toggle. A name the spec does not hold is flagged; an expression a picker cannot hold stays text. Amends [F-4.14].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: A structured form is worth its room only if it stops mistakes; a reference typed as text can name a block that does not exist.
+  rejected:
+    - Checking typed names after the fact (a lint mark on free text), which still lets the mistake be made.
+```
+
+```mdl
+decision D-226: Every standard block kind draws as a reasonable form: a list one item per line, a reference with its kind keeps it, a name outside the spec is not flagged, a reference to no block kind of the spec is text, a field's name labels every prose field but `desc`, and an `ext` block's field types are text. Amends [F-4.14].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user asked to see the form of every block type, to check that each works; a story with one block of each kind showed these as the ones that did not.
+```
+
+```mdl
+decision D-227: A row or item added to a block form gets a fresh name (`name`, `name2`, …) and takes focus with its text selected, and a row's name is never set empty; each dialect has a story that draws one block of every kind it defines. Amends [F-4.14].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: An added map row was written as a bare `:` line, which does not parse, so the row vanished; the user asked for a story per dialect that shows every block kind as its form.
+```
+
+```mdl
+decision D-228: A block form is one react-ui-form `Form` over a schema generated from its kind, built only from the form's own fields: comboboxes for references and types, chips for a list of references, array rows for lists, map rows and keyed entries. The custom row, item, entry, type and reference controls are deleted. Replaces [D-224]; amends [D-225] and [D-227].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user asked that every block form be a single form over an Effect schema, using react-ui-form elements and none of the custom controls. A combobox takes a typed name, so a name the spec does not hold is no longer flagged, and a type expression has no list toggle.
+  rejected:
+    - Keeping the compact custom rows of [D-224] beside the standard fields, which leaves two ways to draw one field.
+```
+
+```mdl
+decision D-229: A block form is as dense as the feature section was: the header row holds the label, the title and the choice fields as tags; a value sits beside its name, a keyed entry is one line with its label, and a map row is one line; at rest the form reads as text, and pressing it shows its pickers and actions. It stays one `Form`, laid out from slices of its fields. Amends [D-228].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user asked that the forms be as dense and easy to read as the feature embeds on main, using the form's presentations while keeping the form structure. The standard layout gave each field a label row and each keyed entry and map row a framed group.
+  rejected:
+    - A presentation that puts each label beside its control in react-ui-form, which would change every form in the app for one host's layout.
+```
+
+```mdl
+decision D-230: A structure or context block (a type, an op, a plugin) is headed by its name, and its header's text describes it below, while an anchor or a check keeps its title; a block offers one place to describe it; a keyed field is react-ui-form's list, with handles and an add button at its top right; and a pressed form or focused field moves the spec's cursor. Amends [D-229].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user read `plugin CodePlugin: Authors, …` as a plugin titled CodePlugin with a description, not a label beside a title; a feature offered both "Describe it" and "Desc"; requirements should reorder like any list; and the views that follow the cursor stopped following it once the spec showed as forms.
+  rejected:
+    - Custom rows for keyed lines with an add row under them, which gave a list no handles and a second way to add.
+```
+
+```mdl
+decision D-231: A block's comments stay out of its form; a map is a list of rows like a keyed field; and a form takes the source view's colours: ids and labels in their kind's hue, types in the type kind's, a choice styled by its package's `facts`, and a picker's options on one line each. Amends [D-230].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user found the forms ran together and were harder to read than the highlighted source, missed a feature status's title case, icon and hue, found the Depends options two lines tall, and wanted comments ignored rather than shown as notes.
+  rejected:
+    - Showing a map row's comment as a note under it, which took room and read as part of the row.
+    - Colouring every map value as a type, which put errors' and actions' descriptions in the type hue.
+```
+
+```mdl
+decision D-232: A block form takes focus as an embed does (arrows stop on it, Enter goes in, Escape comes out); every field but what describes the block is labelled; a named block's name is edited in place and renames only the block; and a form changes size by sliding, fading in the rows it adds, with no press inside it deactivating it. Amends [D-231].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user found focus trapped in the forms when arrowing through a spec, unlike an embed on main; the requirements had no label; a type's, op's or plugin's name could not be edited; and going from rest to active jumped and flickered, a press on a multi-select's body deactivating the card for a moment.
+  rejected:
+    - Rewriting references to a renamed block, which needs a rename refactor across the spec's prose and fields; left for a follow-up.
+    - Keeping every empty row mounted and collapsed at rest, which costs a field per empty row in every card for an effect the slide gives.
+```
+
+```mdl
+decision D-233: A map row reads as its source writes it, `name?: value`, at rest and pressed: the name and value are edited in place in the same columns, a typed row's `?` toggles it optional, and a list keeps the gutter its handles take and the height of its controls at rest, with its add button below the rows. Amends [D-232].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: Pressing a type's card turned each `subject: string` line into a name input, a type picker in a well and an Optional switch, and the list's handles and add header pushed every row right and down.
+  rejected:
+    - Shrinking the pressed controls to the resting line height, which would make the handles and remove buttons smaller than everywhere else.
+    - Keeping the add button in a header above the rows, which moves every row down when the card is pressed.
 ```

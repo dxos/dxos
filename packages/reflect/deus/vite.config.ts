@@ -11,6 +11,7 @@ export default defineConfig({
     'extension': 'src/extension/index.ts',
     'parse': 'src/extension/parse.ts',
     'review': 'src/review/index.ts',
+    'schema': 'src/schema/index.ts',
     'spec-index': 'src/spec-index/index.ts',
     'cli': 'src/cli/index.ts',
   },

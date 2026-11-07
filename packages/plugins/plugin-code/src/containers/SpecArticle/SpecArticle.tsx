@@ -39,6 +39,7 @@ import {
   editorClassNames,
   widgetHost,
 } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { isTruthy } from '@dxos/util';
 
 import { SPEC_INDEX, decisionGutter, pendingReveal, reviewGutter, sourceLinks } from '#components';
@@ -114,6 +115,13 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     // spec anchor into the text the editor is bound to.
     const binding = useMemo(() => (target ? { object: target, path: ['content'] } : undefined), [target]);
     const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t, binding });
+    const fieldExtensions = ProjectHooks.useSpecFieldExtensions(spec, binding);
+    const [viewMode, setViewMode] = useState<EditorViewMode>('preview');
+    // Diff mode compares the text, so it keeps the blocks as text.
+    const forms = ProjectHooks.useSpecBlockForms(spec, {
+      viewMode: baseText === undefined ? viewMode : 'source',
+      fieldExtensions,
+    });
 
     useEffect(() => {
       if (defaultDiff) {
@@ -180,6 +188,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               read: readLatest,
             }),
           diagramPreview(),
+          forms.extension,
           widgetHost({ setWidgets }),
           ...contributed,
           baseText !== undefined &&
@@ -197,6 +206,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               text: Doc.createAccessor(target, ['content']),
               messenger: space,
               identity,
+              wrapAwareness: forms.wrapAwareness,
             }),
         ].filter(isTruthy),
       [
@@ -217,6 +227,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         baseText,
         fold,
         contributed,
+        forms,
       ],
     );
 
@@ -228,9 +239,13 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     );
 
     return (
-      <Editor.Root extensions={extensions} widgets={widgets}>
+      <Editor.Root extensions={extensions} widgets={widgets} viewMode={viewMode}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Header>{!readOnly && <SpecToolbar role={role} attendableId={attendableId} />}</Panel.Header>
+          <Panel.Header>
+            {!readOnly && (
+              <SpecToolbar role={role} attendableId={attendableId} onViewModeChange={spec ? setViewMode : undefined} />
+            )}
+          </Panel.Header>
           <Panel.Body>
             {/* Inside the body: a portal anchor beside the panel would be a row of the host's grid. */}
             <Editor.Blocks />
@@ -277,8 +292,15 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 
 SpecArticle.displayName = 'SpecArticle';
 
-/** The editor's toolbar, with the toolbar actions other plugins give the spec's node, such as commenting. */
-const SpecToolbar = ({ role, attendableId }: Pick<SpecArticleProps, 'role' | 'attendableId'>) => {
+/**
+ * The editor's toolbar, with the toolbar actions other plugins give the spec's node, such as commenting, and the choice
+ * of text or a form per block.
+ */
+const SpecToolbar = ({
+  role,
+  attendableId,
+  onViewModeChange,
+}: Pick<SpecArticleProps, 'role' | 'attendableId'> & { onViewModeChange?: (mode: EditorViewMode) => void }) => {
   const { graph } = ToolkitHooks.useAppGraph();
   const customActions = useMemo(
     () =>
@@ -287,5 +309,12 @@ const SpecToolbar = ({ role, attendableId }: Pick<SpecArticleProps, 'role' | 'at
         : undefined,
     [graph, attendableId],
   );
-  return <Editor.Toolbar role={role} attendableId={attendableId} customActions={customActions} />;
+  return (
+    <Editor.Toolbar
+      role={role}
+      attendableId={attendableId}
+      customActions={customActions}
+      onViewModeChange={onViewModeChange}
+    />
+  );
 };

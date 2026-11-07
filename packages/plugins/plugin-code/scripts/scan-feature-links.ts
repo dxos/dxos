@@ -3,9 +3,8 @@
 //
 
 /**
- * Prints every `@feature` JSDoc tag in the TypeScript files git tracks as `{ "links": [...] }`, the input of the
- * `org.dxos.operation.code.importFeatureLinks` operation. Tags that cannot name a feature go to stderr and make
- * the script exit 1.
+ * Prints every `@feature` JSDoc tag in the TypeScript files git tracks as `{ "links": [...] }`. Tags that cannot name
+ * a feature go to stderr and make the script exit 1.
  *
  * Usage: `bun packages/plugins/plugin-code/scripts/scan-feature-links.ts [<path>...]`, from anywhere in the
  * repository; paths limit the scan to those directories.

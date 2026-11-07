@@ -8,9 +8,12 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Feature from '@dxos/plugin-code/Feature';
-import * as FeatureEmbed from '@dxos/plugin-code/FeatureEmbed';
 
 import { SPEC_PATH } from './spec.ts';
+
+/** The `feat` block headers of a spec text, in order. */
+const featHeaders = (text: string) =>
+  [...text.matchAll(/^feat (F-\d+): (.*)$/gm)].map(([, id, title]) => `${id} ${title}`);
 import * as WorkerSpace from './WorkerSpace.ts';
 
 /** A task as the archive serializes it: refs become `{ '/': 'echo:///<id>' }`. */
@@ -33,21 +36,11 @@ type Archived = {
   'content'?: string | { '/': string };
   'spec'?: { '/': string };
   'specs'?: Array<{ '/': string }>;
+  'item'?: string;
   '@relationSource'?: string;
   '@relationTarget'?: string;
-  '@meta'?: {
-    keys?: Array<{ source: string; id: string }>;
-    annotations?: { 'org.dxos.projects.features'?: Array<{ '/': string }> };
-  };
+  '@meta'?: { keys?: Array<{ source: string; id: string }> };
 };
-
-/** The refs to the features an archived spec holds, from its features annotation. */
-const featuresOf = (entity: Archived | undefined) =>
-  entity?.['@meta']?.annotations?.['org.dxos.projects.features'] ?? [];
-
-/** The spec blocks an archived feature was read in from, as its foreign keys. */
-const sourcesOf = (entity: Archived): string[] =>
-  (entity['@meta']?.keys ?? []).filter(({ source }) => source === Feature.SPEC_KEY_SOURCE).map(({ id }) => id);
 
 /** The archive's tasks, in the order they were written. */
 const taskArchive = async (definition: ReturnType<typeof WorkerSpace.make>): Promise<ArchivedTask[]> => {
@@ -78,8 +71,8 @@ describe('Worker template', () => {
       expect(countOf('type.instructions')).toBe(1);
       expect(countOf('type.taskSet')).toBe(1);
       expect(countOf('type.task:')).toBe(3);
-      // Four features, and the endpoint's two subfeatures.
-      expect(countOf('type.feature:')).toBe(6);
+      // The features are blocks of the specs' text, not objects.
+      expect(countOf('type.feature:')).toBe(0);
       // The map, and the spec that breaks the endpoint down; each owns its text.
       expect(countOf('type.projects.spec:')).toBe(2);
       // The URL and the response body are what the run produces, so the space ships no documents.
@@ -87,62 +80,49 @@ describe('Worker template', () => {
     },
   );
 
-  // The feature map is the plan seen from what the Worker must do: one feature per block the finished spec will have,
-  // each depending on the one before it.
+  // The feature map is the plan seen from what the Worker must do: one feat block per block the finished spec will
+  // have, each needing the one before it.
   test(
-    'the feature map files a feature per spec block, and opens the spec in the space',
+    'the feature map states a feat block per planned block, and opens the spec in the space',
     { timeout: 120_000 },
     async ({ expect }) => {
       const { json } = await EffectEx.runPromise(buildArchive(WorkerSpace.make()));
       const objects: Archived[] = JSON.parse(json).objects;
       const ofType = (typename: string) => objects.filter((object) => object['@type']?.includes(typename));
       const [project] = ofType('type.project:');
-      const all = ofType('type.feature:');
       const byRef = (ref: { '/': string } | undefined) =>
         objects.find((object) => `echo:///${object.id}` === ref?.['/']);
-      const map = byRef(project.specs?.[0]);
-      const features = featuresOf(map).flatMap((ref) => byRef(ref) ?? []);
-      const tasks = ofType('type.task:');
+      const textOf = (spec: Archived | undefined) => {
+        const content = spec?.content;
+        return String(typeof content === 'object' ? byRef(content)?.content : '');
+      };
+      const [map, breakdown] = (project.specs ?? []).map(byRef);
+      const text = textOf(map);
 
-      expect(features.map((feature) => feature.name)).toEqual([
-        'Greeting endpoint',
-        'Deploy without an account',
-        'Verified response',
-        'Claimed account',
+      expect(featHeaders(text)).toEqual([
+        'F-1 Greeting endpoint',
+        'F-2 Deploy without an account',
+        'F-3 Verified response',
+        'F-4 Claimed account',
       ]);
-      expect(features.every((feature) => feature.status === 'planned')).toBe(true);
-      expect(map?.['@type']).toContain('type.projects.spec:');
-      expect(features.map(sourcesOf)).toEqual(['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]));
+      expect(text.match(/^  status: planned$/gm)).toHaveLength(4);
+      expect(text.match(/^  depends: \[F-\d\]$/gm)).toHaveLength(3);
       // The endpoint's parts are features of their own, on the spec that breaks it down.
-      const subfeatures = featuresOf(byRef(features[0].spec)).flatMap((ref) => byRef(ref) ?? []);
-      expect(subfeatures.map((feature) => feature.name)).toEqual(['JSON greeting', 'UTC time']);
-      expect(all).toHaveLength(features.length + subfeatures.length);
-
-      // Each feature needs the one before it.
-      const dependsOn = ofType('relation.dependsOn');
-      expect(dependsOn.map((relation) => [relation['@relationSource'], relation['@relationTarget']])).toEqual(
-        features.slice(1).map((feature, index) => [`echo:///${feature.id}`, `echo:///${features[index].id}`]),
-      );
+      expect(text).toContain(`spec: echo:///${breakdown?.id}`);
+      expect(featHeaders(textOf(breakdown))).toEqual(['F-1 JSON greeting', 'F-2 UTC time']);
 
       // Only the diagram is seeded against a feature, the endpoint it draws; the agent links the tasks it files.
-      const implementsLinks = ofType('relation.implements').map((relation) => [
-        relation['@relationSource'],
-        relation['@relationTarget'],
-      ]);
-      const diagram = tasks.find((task) => task.title === 'Draw the proposed architecture');
-      expect(implementsLinks).toEqual([[`echo:///${diagram?.id}`, `echo:///${features[0].id}`]]);
+      const diagram = ofType('type.task:').find((task) => task.title === 'Draw the proposed architecture');
+      expect(
+        ofType('relation.implementsItem').map((relation) => [
+          relation['@relationSource'],
+          relation['@relationTarget'],
+          relation.item,
+        ]),
+      ).toEqual([[`echo:///${diagram?.id}`, `echo:///${map?.id}`, 'F-1']]);
 
-      // The map is the space's copy of the path the features cite, so their cards open it instead of GitHub.
+      // The map is the space's copy of the path the spec was read from.
       expect(map?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
-      // F-1 is embedded where its block stood, and F-2 to F-4, which have no block yet, after it.
-      const content = map?.content;
-      const text = typeof content === 'object' ? byRef(content)?.content : undefined;
-      expect(typeof text).toBe('string');
-      expect(FeatureEmbed.parse(String(text)).map(({ id }) => id)).toEqual(features.map(({ id }) => id));
-      expect(text).not.toMatch(/^feat F-/m);
-      for (const feature of features) {
-        expect(Feature.getSpecPath(sourcesOf(feature)[0] ?? '')).toBe(SPEC_PATH);
-      }
     },
   );
 

@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import React, { useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Spec from '@dxos/compute/Spec';
@@ -20,33 +20,44 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
-import { FeatureMap } from '#types';
 
 import { FeatureCompanion } from '../FeatureCompanion/index.ts';
-import { SpecFeatures } from './SpecFeatures.tsx';
+import { SpecMap } from './SpecFeatures.tsx';
 
 type StoryArgs = { attendableId: string };
 
+/** The board beside its companion; a zoom shows the breakdown in place, as a level of the project would. */
+const MapStory = ({ root, attendableId }: StoryArgs & { root: Spec.Spec }) => {
+  const [spec, setSpec] = useState(root);
+  return (
+    <Layout.Grid classNames='dx-fill grid-cols-[1fr_24rem] divide-x divide-separator'>
+      <Panel.Root>
+        <Panel.Body>
+          <SpecMap spec={spec} attendableId={attendableId} onZoom={setSpec} />
+        </Panel.Body>
+      </Panel.Root>
+      <FeatureCompanion spec={spec} attendableId={attendableId} onZoom={setSpec} />
+    </Layout.Grid>
+  );
+};
+
 const DefaultStory = ({ attendableId }: StoryArgs) => {
   const [space] = useSpaces();
-  // The seeded spec is the project's; the subfeatures' specs are owned by their features.
-  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !FeatureMap.getOwner(spec));
+  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find(({ name }) => name === 'Inbox and agents');
   if (!spec) {
     return <Loading data={{ db: !!space?.db, spec: !!spec }} />;
   }
 
-  // Marks the subtree attendable, as the deck's plank does, so the toolbar is live; the companion sits beside the map
-  // with the plank's id, as the deck places it.
+  // Marks the subtree attendable, as the deck's plank does; the companion sits beside the map with the plank's id, as
+  // the deck places it.
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <Layout.Grid classNames='dx-fill grid-cols-[1fr_24rem] divide-x divide-separator'>
-        <SpecFeatures spec={spec} attendableId={attendableId} />
-        <FeatureCompanion spec={spec} attendableId={attendableId} />
-      </Layout.Grid>
+      <MapStory root={spec} attendableId={attendableId} />
     </AttendableContainer>
   );
 };
@@ -112,6 +123,17 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+/** A click on a card selects its feature, and the companion shows it in full: the ideal and its requirements. */
+export const SelectShowsCompanion: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = await canvas.findByText('Provider sync', undefined, { timeout: 10_000 });
+    await userEvent.click(card);
+    const detail = within(await canvas.findByTestId('feature-companion', undefined, { timeout: 5_000 }));
+    await expect(await detail.findAllByTestId('feature-card.requirement')).toHaveLength(3);
+  },
+};
 
 /** Kanban: a column per status, and dragging a card to another column sets the feature's status. */
 export const Kanban: Story = {

@@ -31,13 +31,17 @@ type Hour
     rain: number           # precipitation probability, percent
     wind: number           # km/h
     gusts: number          # km/h
+```
 
+```mdl
 type Verdict
   desc: Whether to ride in the next three hours, and why.
   fields:
     level: go | maybe | no-go
     reasons: string[]      # one line a rider reads per rule that fired
+```
 
+```mdl
 type Forecast
   desc: The JSON body of `GET /api/forecast`.
   fields:
@@ -58,17 +62,23 @@ feat F-1: Go / no-go
   req F-1.1: The verdict covers the next three hours of `type:Hour`.
   req F-1.2: Rain over 50% or wind over 35 km/h is no-go; rain over 25% or wind over 25 km/h is maybe.
   req F-1.3: Every rule that fired is listed as a reason; with none, the reason says the ride looks good.
+```
 
+```mdl
 feat F-2: Hourly forecast
   desc: The next twelve hours as one chart.
 
   req F-2.1: Temperature as a line over rain chance as bars, one column per hour, wind under each hour.
+```
 
+```mdl
 feat F-3: Best window
   desc: When to go if not now.
 
   req F-3.1: The two consecutive daylight hours with the least rain, wind and cold, today or tomorrow.
+```
 
+```mdl
 feat F-4: Daylight
   desc: How long until it gets dark.
 
@@ -81,7 +91,9 @@ feat F-4: Daylight
 scenario T-1: The page answers
   when: a rider opens the Worker URL
   then: the verdict, the chart, the best window and the daylight cards show, from a forecast fetched on that request
+```
 
+```mdl
 scenario T-2: A change ships
   given: the page is deployed
   when: a feature's requirements change and the Worker is redeployed
@@ -98,6 +110,14 @@ decision D-1: The Ride Check template seeds this spec with four features written
   by: agent:claude-code
   for: user:dmaretskyi
   why: A deployed page with live data shows the whole loop — spec, diagram, deploy, edit, redeploy — in a way a JSON greeting cannot.
+```
+
+```mdl
+decision D-2: The template writes the feature map into this text: each feat block carries its status, the three cards that read the verdict's forecast need [F-1], and [F-1] cites the spec that breaks it down. The appendix defines `feat` at 1.1 so those fields parse. Revises [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The spec's text is the source of truth for its features; there are no feature objects to file against it.
 ```
 
 ---
@@ -120,12 +140,14 @@ ext type
 
 ```mdl
 ext feat
-  uri: org.dxos.mdl.feat@1.0
+  uri: org.dxos.mdl.feat@1.1
   desc: A named feature grouping one or more requirements.
   fields:
+    status?: planned | in-progress | prototype | operational | failing
     desc?: Prose
-    req: RequirementList
-  nesting: self              # feat blocks may contain feat blocks
+    depends?: Ref<feat>[]       # features this one needs first; no cycles
+    spec?: Ref<spec>            # the spec that breaks this feature down
+    req: RequirementList        # req <key>: one testable sentence
 ```
 
 ```mdl

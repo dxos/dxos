@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
@@ -16,6 +17,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 import * as Typography from '@dxos/react-ui/Typography';
 
+import { OptionsLookupAnnotation, optionsLookup } from '../annotations.ts';
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { Organization } from '../testing/schema.ts';
 import { Form } from './Form.tsx';
@@ -233,5 +235,65 @@ export const Owned: Story = {
     const created = canvas.getByRole('group', { name: 'Initech' });
     await userEvent.type(within(created).getByRole('textbox', { name: 'Full name' }), ' Ltd');
     await expect(await canvas.findByRole('group', { name: 'Initech Ltd' })).toBeInTheDocument();
+  },
+};
+
+const PLANETS = ['Mercury', 'Venus', 'Earth', 'Mars'];
+
+const LookupSchema = Schema.Struct({
+  route: Schema.Array(
+    Schema.String.pipe(
+      OptionsLookupAnnotation.set(
+        optionsLookup<{}>()([], () => Effect.succeed(PLANETS.map((value) => ({ value, secondaryLabel: 'Planet' })))),
+      ),
+    ),
+  )
+    .pipe(Annotation.ArrayPresentationAnnotation.set({ display: 'tag', ordered: true }))
+    .annotate({ title: 'Route' }),
+});
+
+type LookupValues = { route: readonly string[] };
+
+/** An array of looked-up strings presented as `tag`: one selection of chips, which keeps a value the lookup lacks. */
+const LookupTagsStory = (_: PaneArgs) => {
+  const [values, setValues] = useState<LookupValues>({ route: ['Earth', 'Pluto'] });
+  return (
+    <Layout.Container>
+      <Form.Root
+        schema={LookupSchema}
+        values={values}
+        onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+      >
+        <Form.Content>
+          <Form.Fields />
+        </Form.Content>
+      </Form.Root>
+      <Typography.Text truncate data-testid='values'>
+        {JSON.stringify(values)}
+      </Typography.Text>
+    </Layout.Container>
+  );
+};
+
+/** 1. Test: chips show the held values, an unknown one included, and picking from the lookup appends one. */
+export const LookupTags: Story = {
+  render: LookupTagsStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+
+    // 2. Each held value is a chip; one the lookup does not offer keeps its chip.
+    await expect(await canvas.findByText('Earth')).toBeInTheDocument();
+    await expect(canvas.getByText('Pluto')).toBeInTheDocument();
+
+    // 3. Picking an offered value appends it.
+    const trigger = canvasElement.querySelector<HTMLElement>('[data-scope="combobox"][data-part="trigger"]');
+    invariant(trigger);
+    await userEvent.click(trigger);
+    const popup = await body.findByRole('dialog');
+    await userEvent.click(await within(popup).findByRole('option', { name: /Mars/ }));
+    await waitFor(() =>
+      expect(JSON.parse(canvas.getByTestId('values').textContent ?? '{}').route).toEqual(['Earth', 'Pluto', 'Mars']),
+    );
   },
 };

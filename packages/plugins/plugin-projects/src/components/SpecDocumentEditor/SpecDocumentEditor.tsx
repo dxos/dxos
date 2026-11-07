@@ -21,8 +21,9 @@ import {
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 import { type WidgetState, formattingListener, widgetHost } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { useCaretIdentity } from '../../hooks/index.ts';
+import { useCaretIdentity, useSpecBlockForms } from '../../hooks/index.ts';
 import { createMdlExtensions } from './extensions.ts';
 
 const SPEC_DOCUMENT_EDITOR_NAME = 'SpecDocumentEditor';
@@ -31,14 +32,18 @@ export type SpecDocumentEditorProps = {
   spec: Spec.Spec;
   /** Added after the MDL ones, such as {@link featureEmbeds}; their React widgets render here. */
   extensions?: Extension[];
+  /** Added to the field editors of the block cards, bound to the spec's text through their fields. */
+  fieldExtensions?: Extension[];
+  /** `preview` draws each block as a form over its kind's schema, `readonly` as one that does not edit, `source` as text. */
+  viewMode?: EditorViewMode;
 };
 
 /**
- * A spec's `.mdl` text, live-bound to its ECHO content and highlighted as MDL. Renders inside an `Editor.Root`, so an
- * `Editor.Toolbar` beside it edits this text.
+ * A spec's `.mdl` text, live-bound to its ECHO content and highlighted as MDL, its blocks drawn as forms outside the
+ * `source` view. Renders inside an `Editor.Root`, so an `Editor.Toolbar` beside it edits this text.
  */
 export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEditorProps>(
-  ({ classNames, spec, extensions, ...props }, forwardedRef) => {
+  ({ classNames, spec, extensions, fieldExtensions, viewMode = 'preview', ...props }, forwardedRef) => {
     const themeMode = Hooks.useThemeMode();
     const registry = useContext(RegistryContext);
     const { setController, state } = useEditorContext(SPEC_DOCUMENT_EDITOR_NAME);
@@ -47,6 +52,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
     const text = useResolveRef(spec.content);
     const identity = useCaretIdentity();
     const space = getSpace(spec);
+    const forms = useSpecBlockForms(spec, { viewMode, fieldExtensions });
     const { parentRef, view } = useTextEditor(() => {
       if (!text) {
         return {};
@@ -58,13 +64,16 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
           createMdlExtensions({
             themeMode,
             lineWrapping: true,
+            readOnly: viewMode === 'readonly',
             data: {
               id: Obj.getURI(spec),
               text: Doc.createAccessor(text, ['content']),
               messenger: space,
               identity,
+              wrapAwareness: forms.wrapAwareness,
             },
           }),
+          forms.extension,
           formattingListener((formatting: EditorToolbarState) =>
             registry.set(state, { ...registry.get(state), ...formatting }),
           ),
@@ -72,7 +81,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
           extensions ?? [],
         ],
       };
-    }, [themeMode, spec, text, extensions, registry, state, space, identity]);
+    }, [themeMode, spec, text, extensions, registry, state, space, identity, viewMode, forms]);
 
     useEffect(() => setController(createEditorController(view)), [view, setController]);
 

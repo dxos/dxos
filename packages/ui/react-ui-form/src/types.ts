@@ -65,6 +65,12 @@ export type FormFieldOverride = {
   /** A button at the end of a text control that sets its value. */
   action?: FormFieldAction;
   /**
+   * An array's value for the row its add button creates, from the rows it has. A host that stores a new row differently
+   * from the schema's empty value (a minted key, default text) gives the stored value here, so the form holds no edit
+   * the source never matches.
+   */
+  newItem?: (values: readonly unknown[]) => unknown;
+  /**
    * Edits the string through the binding the form's `extensions` give the field's editor (`createDataExtensions`), so
    * its edits reach the object directly rather than `onValuesChanged`.
    */
@@ -208,6 +214,8 @@ export type RefOption = {
   label: string;
   /** Optional secondary line shown beneath the label in the picker list. */
   description?: string;
+  /** Muted text after the label on its line in the picker list, such as a title beside an id. */
+  detail?: string;
   /** Optional leading icon in the picker list (e.g. the object's type icon). */
   icon?: string;
   /** The icon's hue name (e.g. a type's `IconAnnotation` hue); a name that is no hue is ignored. */

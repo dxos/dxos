@@ -33,11 +33,13 @@ type Item = { id: string; index: number };
 
 export type ArrayFieldProps = {
   label: string;
-  /** Leave the header's text empty while the list keeps `label` as its name, for a host whose heading already says it. */
+  /** Drop the header for a host whose heading already names the list (which keeps `label` as its name); the add button follows the rows. */
   hideLabel?: boolean;
   section?: boolean;
   /** Shown in place of the rows while there are none; only a field override sets it. */
   placeholder?: string;
+  /** The row the add button creates, in place of the element type's empty value; only a field override sets it. */
+  newItem?: (values: readonly unknown[]) => unknown;
   fieldProps: FormFieldStateProps;
 } & FormFieldDispatchProps;
 
@@ -53,6 +55,7 @@ export const ArrayField = ({
   hideLabel,
   section,
   placeholder,
+  newItem,
   readonly,
   layout,
   fieldProps,
@@ -102,14 +105,17 @@ export const ArrayField = ({
   const handleAdd = useCallback(() => {
     let value: unknown;
     try {
-      value =
-        elementType && SchemaEx.isNestedType(elementType) ? defaultObject(elementType) : getDefaultValue(elementType);
+      value = newItem
+        ? newItem(values ?? [])
+        : elementType && SchemaEx.isNestedType(elementType)
+          ? defaultObject(elementType)
+          : getDefaultValue(elementType);
     } catch (err) {
       log.catch(err);
       return;
     }
     onValueChange(type, [...(values ?? []), value]);
-  }, [elementType, onValueChange, type, values]);
+  }, [elementType, newItem, onValueChange, type, values]);
 
   const handleRemove = useCallback(
     (index: number) => {
@@ -208,12 +214,29 @@ export const ArrayField = ({
     );
   }
 
+  // The host's heading names the list, so the add button follows the rows: they stay where they were before it showed.
+  if (hideLabel) {
+    return (
+      <>
+        {list}
+        {addButton && (
+          <Field.Header>
+            <span />
+            {addButton}
+          </Field.Header>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
-      <Field.Header>
-        <Typography.Text truncate>{hideLabel ? '' : label}</Typography.Text>
-        {addButton}
-      </Field.Header>
+      {(!hideLabel || addButton) && (
+        <Field.Header>
+          <Typography.Text truncate>{hideLabel ? '' : label}</Typography.Text>
+          {addButton}
+        </Field.Header>
+      )}
       {list}
     </>
   );

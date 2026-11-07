@@ -6,12 +6,10 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
-import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
@@ -76,6 +74,18 @@ const config: Plugin.PluginConfig = Plugin.config({
       'FeatureMigrations',
       { provides: [ClientCapabilities.Migration] },
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
+    // Feature objects fold into their specs' text as each space loads, so no surface reads them.
+    // `SchemaRegistered` pulls the idle-gated type registration ahead of it: the spaces load first on a cold boot.
+    Capability.lazyModule(
+      'FeatureFold',
+      {
+        requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
+        provides: [],
+        activatesOn: ClientEvents.SpacesAvailable,
+        environments: ['browser', 'node', 'tauri'],
+      },
+      () => import('./src/capabilities/feature-fold.ts', { with: { type: 'module-url' } }),
     ),
     // Registered at startup so a GitHub file sync on EDGE, where no UI event fires, finds the mapping.
     Capability.lazyModule(
@@ -148,19 +158,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    // Eager, as the migrations are: a spec synced to its file before the codec arrives would take the file's `feat`
-    // blocks in as text.
-    Capability.lazyModule(
-      'SpecCodec',
-      { provides: [ProjectCapabilities.SpecCodec] },
-      () => import('./src/capabilities/spec-codec.ts', { with: { type: 'module-url' } }),
-    ),
-    // Off the boot path: an editor that opened before they arrive is rebuilt with the cards.
+    // Off the boot path.
     Capability.lazyModule(
       'SpecExtensions',
       {
         provides: [
-          ProjectCapabilities.SpecExtensions,
           ProjectCapabilities.SpecPackage,
           ProjectCapabilities.SpecSourcesProvider,
           ProjectCapabilities.SpecView,
@@ -179,24 +181,6 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
       () => import('./src/capabilities/spec-sync.ts', { with: { type: 'module-url' } }),
-    ),
-    Capability.lazyModule(
-      'FeatureComments',
-      {
-        provides: [
-          AppCapabilities.AnchorResolver,
-          AppCapabilities.AnchorSort,
-          AppCapabilities.CommentConfig,
-          AppCapabilities.CommentScope,
-        ],
-        activatesOn: ProjectsEvents.Start,
-      },
-      () => import('./src/capabilities/feature-comments.ts', { with: { type: 'module-url' } }),
-    ),
-    Capability.lazyModule(
-      'FeatureSubjectContext',
-      { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
-      () => import('./src/capabilities/feature-subject-context.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'FeatureTemplates',

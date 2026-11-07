@@ -50,12 +50,15 @@ const CREATE_VALUE = '\u0000nx-combobox-create';
 type ComboboxOption = Select.Option & {
   /** A second line under the label, in the description tone. */
   description?: string;
+  /** Muted text after the label on its line, such as a title beside an id; the query matches it too. */
+  detail?: string;
 };
 
 type ComboboxFilter = (option: ComboboxOption, query: string) => boolean;
 
-/** Case-insensitive substring match on the label. */
-const containsFilter: ComboboxFilter = (option, query) => option.label.toLowerCase().includes(query.toLowerCase());
+/** Case-insensitive substring match on the label or the detail. */
+const containsFilter: ComboboxFilter = (option, query) =>
+  [option.label, option.detail].some((text) => text?.toLowerCase().includes(query.toLowerCase()));
 
 //
 // Root
@@ -273,11 +276,26 @@ type ComboboxControlProps = ThemedClassName<ComboboxPrimitive.ControlProps> & {
   wrap?: boolean;
 };
 
-/** A control-sized row; without children it holds the text `Input` and a trailing caret `Trigger`. */
+/**
+ * A control-sized row; without children it holds the text `Input` and a trailing caret `Trigger`. A press on the row
+ * outside its buttons goes to its input, as a press on an input's padding does, or else to its caret.
+ */
 const ComboboxControl = forwardRef<HTMLDivElement, ComboboxControlProps>(
-  ({ classNames, wrap, children, ...props }, forwardedRef) => (
+  ({ classNames, wrap, children, onMouseDown, ...props }, forwardedRef) => (
     <ComboboxPrimitive.Control
       {...props}
+      onMouseDown={(event) => {
+        onMouseDown?.(event);
+        if (event.defaultPrevented || !(event.target instanceof Element) || event.target.closest('button, input')) {
+          return;
+        }
+        const input = event.currentTarget.querySelector('input');
+        const trigger = event.currentTarget.querySelector<HTMLElement>('[data-part="trigger"]');
+        if (input || trigger) {
+          event.preventDefault();
+          input ? input.focus() : trigger?.click();
+        }
+      }}
       data-wrap={wrap ? '' : undefined}
       className={mx(recipes.comboboxControl(), classNames)}
       ref={forwardedRef}
@@ -670,7 +688,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         {children ?? (
           <>
             {item.icon && <ComboboxItemIcon />}
-            <ComboboxItemText />
+            <ComboboxItemText classNames='truncate' />
             {item.description && <ComboboxItemDescription />}
             <ComboboxItemIndicator />
           </>
@@ -748,7 +766,12 @@ const ComboboxItemText = forwardRef<HTMLDivElement, ComboboxItemTextProps>(
     const item = useItem('ItemText');
     return (
       <ComboboxPrimitive.ItemText {...props} className={mx(classNames)} ref={forwardedRef}>
-        {children ?? item.label}
+        {children ?? (
+          <>
+            {item.label}
+            {item.detail && <span className='ms-2 text-description'>{item.detail}</span>}
+          </>
+        )}
       </ComboboxPrimitive.ItemText>
     );
   },

@@ -10569,9 +10569,6 @@ importers:
       '@dxos/plugin-projects':
         specifier: workspace:*
         version: link:../plugin-projects
-      '@dxos/plugin-registry':
-        specifier: workspace:*
-        version: link:../plugin-registry
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -10651,9 +10648,6 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
-      '@dxos/plugin-video':
-        specifier: workspace:*
-        version: link:../plugin-video
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
@@ -16364,6 +16358,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../../core/compute/extractor-lib
@@ -16460,6 +16457,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

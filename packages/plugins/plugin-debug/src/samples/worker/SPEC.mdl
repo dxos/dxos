@@ -72,6 +72,14 @@ decision D-2: The seeded spec states `type:Greeting` and [F-1] in full and only 
   rejected: Seeding every feat block with placeholder requirements, which the dialect would accept but which reads as a finished spec.
 ```
 
+```mdl
+decision D-3: The template writes the feature map into this text: each feat block carries its status and its needs, and the endpoint's block cites the spec that breaks it down. The appendix defines `feat` at 1.1 so those fields parse. Revises [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The spec's text is the source of truth for its features; there are no feature objects to file against it.
+```
+
 ---
 
 ## Appendix: Extension Definitions
@@ -92,12 +100,14 @@ ext type
 
 ```mdl
 ext feat
-  uri: org.dxos.mdl.feat@1.0
+  uri: org.dxos.mdl.feat@1.1
   desc: A named feature grouping one or more requirements.
   fields:
+    status?: planned | in-progress | prototype | operational | failing
     desc?: Prose
-    req: RequirementList
-  nesting: self              # feat blocks may contain feat blocks
+    depends?: Ref<feat>[]       # features this one needs first; no cycles
+    spec?: Ref<spec>            # the spec that breaks this feature down
+    req: RequirementList        # req <key>: one testable sentence
 ```
 
 ```mdl

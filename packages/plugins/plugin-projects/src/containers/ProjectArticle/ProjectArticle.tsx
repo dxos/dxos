@@ -51,10 +51,17 @@ import { type Milestone, Task, type TaskSet } from '@dxos/types';
 import { ObjectGallery, ProjectPipeline } from '#components';
 import { ProjectCapabilities, ProjectOperation, ProjectSurface, ProjectView } from '#types';
 
-import { useFieldExtensions, useProjectSpecs, useRefTargets, useSelectedSpec } from '../../hooks/index.ts';
+import {
+  useFieldExtensions,
+  useProjectSpecs,
+  useRefTargets,
+  useSelectedSpec,
+  useSpecNesting,
+} from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
 import * as ProjectGraph from '../../ProjectGraph.ts';
+import { specLineage } from '../../util/spec-references.ts';
 import { ConfigSection } from './ConfigSection.tsx';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
@@ -136,6 +143,7 @@ export const ProjectArticle = ({
   // The level's spec: the selected one of the project's, or the one breaking a nested level down; the Specs tab offers
   // to add it.
   const specs = useProjectSpecs(subject);
+  const nesting = useSpecNesting(specs);
   const selectedSpec = useSelectedSpec(subject, level ? undefined : levelSpec);
   const spec = level ? levelSpec : selectedSpec;
   // At a spec's own level of the nav tree, picking another spec opens that one's level instead.
@@ -143,14 +151,15 @@ export const ProjectArticle = ({
     (next: Spec.Spec) => {
       updateView((prev) => ({ ...prev, tab: 'spec', spec: next.id }));
       if (levelSpec && next.id !== levelSpec.id && db) {
+        const [root, ...lineage] = specLineage(nesting, next.id) ?? [next.id];
         void invokePromise(LayoutOperation.Open, {
-          subject: [ProjectGraph.getSpecLevelPath(db.spaceId, subject.id, next.id)],
+          subject: [ProjectGraph.getSpecLevelPath(db.spaceId, subject.id, root, lineage)],
           pivotId: attendableId,
           disposition: 'auto',
         });
       }
     },
-    [updateView, levelSpec, db, invokePromise, subject.id, attendableId],
+    [updateView, levelSpec, db, invokePromise, subject.id, attendableId, nesting],
   );
   const dialectActions = useSpecPackageActions(spec);
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.

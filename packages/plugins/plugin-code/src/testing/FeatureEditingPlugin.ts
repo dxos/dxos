@@ -11,6 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 
 import { CodeCapabilities } from '#types';
 
@@ -22,18 +23,17 @@ import { CodeOperationHandlerSet } from '../operations/index.ts';
 const OperationHandler = Capability.inlineModule(
   'FeatureEditingOperationHandler',
   { provides: [Capabilities.OperationHandler] },
-  () => Effect.succeed([Capability.contribute(Capabilities.OperationHandler, CodeOperationHandlerSet)]),
+  () =>
+    Effect.succeed([
+      Capability.contribute(Capabilities.OperationHandler, CodeOperationHandlerSet),
+      Capability.contribute(Capabilities.OperationHandler, ProjectOperationHandlerSet.handlers),
+    ]),
 );
 
 const SpecEditing = Capability.inlineModule(
   'FeatureEditingSpecExtensions',
   {
-    provides: [
-      ProjectCapabilities.SpecExtensions,
-      ProjectCapabilities.SpecPackage,
-      ProjectCapabilities.SpecSourcesProvider,
-      ProjectCapabilities.SpecView,
-    ],
+    provides: [ProjectCapabilities.SpecPackage, ProjectCapabilities.SpecSourcesProvider, ProjectCapabilities.SpecView],
   },
   () => SpecExtensions(),
 );

@@ -29,6 +29,7 @@ import {
   GeoPointField,
   HueField,
   InlineRefField,
+  LookupArrayField,
   MarkdownField,
   NumberField,
   PasswordField,
@@ -205,6 +206,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         hideLabel={override?.hideLabel}
         section={presentation === 'section'}
         placeholder={override?.placeholder}
+        newItem={override?.newItem}
         {...props}
         readonly={readonly || presentation === 'static'}
       />
@@ -314,6 +316,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         ) : (
           <AsyncSelectField {...fieldProps} lookup={resolution.lookup} />
         );
+      case 'lookupArray':
+        return <LookupArrayField {...fieldProps} lookup={resolution.lookup} ordered={resolution.ordered} />;
       case 'autofill':
         return <AutofillField {...fieldProps} autofill={resolution.autofill} />;
       case 'hue':

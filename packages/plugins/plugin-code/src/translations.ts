@@ -156,6 +156,7 @@ export const translations = [
         'feature-companion.label': 'Feature',
         'feature-companion.empty.message': 'Select a feature on the map to see its details.',
         'feature-article.zoom.label': 'Show subfeatures on the map',
+        'feature-companion.break-down.label': 'Break down',
         'feature-article.open.label': 'Open in a plank',
         'feature-article.add-subfeature.placeholder': 'Add a subfeature…',
         'feature-card.dependents.title': 'Needed by',
