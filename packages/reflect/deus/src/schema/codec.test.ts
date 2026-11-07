@@ -59,9 +59,21 @@ const blocksOf = (text: string, schemas: ReadonlyMap<string, BlockSchema>) =>
   parseSourceBlocks(text, { keyed: (kind) => keyedFields(schemas.get(kind)) });
 
 /** The spec with one block edited through its value, and that block read back. */
+/** A text's schemas and blocks, parsed once: the repository tests edit every block of a spec in turn. */
+const parsed = new Map<string, { schemas: ReadonlyMap<string, BlockSchema>; blocks: readonly SourceBlock[] }>();
+const parse = (text: string) => {
+  let result = parsed.get(text);
+  if (!result) {
+    const schemas = schemasOf(text);
+    result = { schemas, blocks: blocksOf(text, schemas) };
+    parsed.set(text, result);
+  }
+  return result;
+};
+
 const edit = (text: string, index: number, change: (value: BlockValue) => BlockValue) => {
-  const schemas = schemasOf(text);
-  const block = blocksOf(text, schemas)[index];
+  const { schemas, blocks } = parse(text);
+  const block = blocks[index];
   const schema = schemas.get(block.kind)!;
   const next = change(decodeBlock(text, block, schema));
   const out = applyChanges(text, patchBlock(text, block, schema, next));
@@ -276,8 +288,8 @@ const eachBlock = (
   ) => void,
 ) => {
   for (const { text } of corpus) {
-    const schemas = schemasOf(text);
-    blocksOf(text, schemas).forEach((block, index) => {
+    const { schemas, blocks } = parse(text);
+    blocks.forEach((block, index) => {
       const schema = schemas.get(block.kind);
       if (schema) {
         visit(text, block, schema, index, schemas);
@@ -286,7 +298,8 @@ const eachBlock = (
   }
 };
 
-describe('patchBlock over the repository', () => {
+// The corpus grows with the repository's specs, so a sweep outlasts the default timeout on a slow runner.
+describe('patchBlock over the repository', { timeout: 60_000 }, () => {
   test('an unchanged value changes nothing', ({ expect }) => {
     let blocks = 0;
     const failures: string[] = [];
