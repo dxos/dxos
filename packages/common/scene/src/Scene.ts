@@ -201,10 +201,11 @@ export const LayoutKind = Schema.Literals(['view', 'composite']);
 export type LayoutKind = Schema.Schema.Type<typeof LayoutKind>;
 
 /**
- * A grid pitch in scene px. At least one: snapping divides by the pitch, so a zero or negative one would put every
- * drop and nudge at `NaN`.
+ * A grid pitch in scene px. A finite number, at least one: snapping divides by the pitch, so a zero or negative one
+ * would put every drop and nudge at `NaN`, and `Infinity` — which `Schema.Number` admits and `>= 1` accepts — would
+ * too, since `Math.round(v / Infinity) * Infinity` is `0 * Infinity`.
  */
-export const GridPitch = Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(1)));
+export const GridPitch = Schema.Finite.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(1)));
 
 /** Lattice mode's grid: shapes span whole cells and links route along the gutters between them. */
 export const Lattice = Schema.Struct({
