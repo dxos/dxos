@@ -38,9 +38,9 @@ const PLAN_TEXT = [
   'Rollback',
   'Retrospective',
 ]
-  .map((section, index) =>
+  .map((section) =>
     [
-      `## ${index + 1}. ${section}`,
+      `## ${section}`,
       '',
       ...Array.from({ length: 6 }, (_, line) => `${section} note ${line + 1}: what we decided and who owns it.`),
       '',
@@ -152,7 +152,12 @@ const createDocument = async (page, name, text) => {
   await textbox(page).fill(text);
   // `fill` leaves the whole text selected, which the other peer would see as Alice's selection.
   await page.keyboard.press('ControlOrMeta+Home');
-  {
+  // A document takes its name from its first heading, which may already be the name asked for.
+  const named = await objectLink(page, name)
+    .waitFor({ timeout: 5_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!named) {
     await untitled.hover();
     await untitled
       .getByTestId(/navtree\.treeItem\.actionsLevel\d+/)
