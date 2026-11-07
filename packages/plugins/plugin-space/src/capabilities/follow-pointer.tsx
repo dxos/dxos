@@ -32,13 +32,24 @@ import {
   toPlankPosition,
 } from '../util/index.ts';
 
-/** The innermost attendable around the pointer naming an object: a plank or its companion, found by the same id. */
-const findPlank = (target: EventTarget | null): Element | undefined => {
-  let element = target instanceof Element ? target.closest(Attention.ATTENDABLE_SELECTOR) : null;
+/**
+ * What content the pointer is over, found by the same id on every screen in the follow: a plank's companion, named by the
+ * plank it accompanies, else the innermost attendable naming an object. Undefined over chrome.
+ */
+const findPlank = (target: EventTarget | null): { plank: string; companion: boolean; element: Element } | undefined => {
+  if (!(target instanceof Element)) {
+    return undefined;
+  }
+  const companion = target.closest('[data-companion-of]');
+  const companionOf = companion?.getAttribute('data-companion-of');
+  if (companion && companionOf) {
+    return { plank: companionOf, companion: true, element: companion };
+  }
+  let element = target.closest(Attention.ATTENDABLE_SELECTOR);
   while (element) {
     const id = element.getAttribute(Attention.ATTENDABLE_ATTRIBUTE);
     if (id && getPresenceKeyFromPath(id) !== undefined) {
-      return element;
+      return { plank: id, companion: false, element };
     }
     element = element.parentElement?.closest(Attention.ATTENDABLE_SELECTOR) ?? null;
   }
@@ -61,7 +72,7 @@ export default Capability.makeModule(
 
     const pointersAtom = Atom.make<readonly ShownPointer[]>([]).pipe(Atom.keepAlive);
     const channels = new Map<string, { channel: Awareness.Channel<FollowPointer>; dispose: () => void }>();
-    let local: { plank: string; position: PlankPosition } | undefined;
+    let local: { plank: string; companion: boolean; position: PlankPosition } | undefined;
 
     const getIdentity = () => Option.getOrUndefined(haloIdentity.getSnapshot());
 
@@ -77,7 +88,11 @@ export default Capability.makeModule(
           },
         }),
         ...(local &&
-          GraphPath.getSpaceIdFromPath(local.plank) === spaceId && { plank: local.plank, ...local.position }),
+          GraphPath.getSpaceIdFromPath(local.plank) === spaceId && {
+            plank: local.plank,
+            ...(local.companion && { companion: true }),
+            ...local.position,
+          }),
       };
     };
 
@@ -103,6 +118,7 @@ export default Capability.makeModule(
                       name: info.displayName || generateName(peerId),
                       hue: info.hue ?? hexToHue(peerId),
                       plank: value.plank,
+                      companion: value.companion ?? false,
                       x: value.x,
                       y: value.y,
                       style: value.style ?? 'cursor',
@@ -193,10 +209,9 @@ export default Capability.makeModule(
         return;
       }
       // Over chrome (the navtree, sidebars, toolbars) the pointer has no position, so peers draw none.
-      const plank = findPlank(event.target);
-      const id = plank?.getAttribute(Attention.ATTENDABLE_ATTRIBUTE);
-      const position = plank && toPlankPosition(plank.getBoundingClientRect(), event.clientX, event.clientY);
-      local = id && position ? { plank: id, position } : undefined;
+      const found = findPlank(event.target);
+      const position = found && toPlankPosition(found.element.getBoundingClientRect(), event.clientX, event.clientY);
+      local = found && position ? { plank: found.plank, companion: found.companion, position } : undefined;
       post();
     };
     const onMouseOut = (event: MouseEvent) => {

@@ -18,6 +18,8 @@ export type ShownPointer = PlankPosition & {
   /** A palette hue such as `red`. */
   hue: string;
   plank: string;
+  /** Over the plank's companion rather than the plank. */
+  companion: boolean;
   style: SpaceSchema.PointerStyle;
 };
 
@@ -32,8 +34,10 @@ type Placed = Point & { key: string; trail: (Point & { age: number })[] };
 const hueColor = (hue: string) => `var(--color-${hue}-border)`;
 
 // The same plank can be open twice (a companion, a stacked section); the one with a box is the one on screen.
-const findPlankBox = (plank: string): Box | undefined => {
-  const selector = `[${Attention.ATTENDABLE_ATTRIBUTE}="${CSS.escape(plank)}"]`;
+const findPlankBox = (plank: string, companion: boolean): Box | undefined => {
+  const selector = companion
+    ? `[data-companion-of="${CSS.escape(plank)}"]`
+    : `[${Attention.ATTENDABLE_ATTRIBUTE}="${CSS.escape(plank)}"]`;
   for (const element of document.querySelectorAll(selector)) {
     const box = element.getBoundingClientRect();
     if (box.width > 0 && box.height > 0) {
@@ -70,7 +74,7 @@ const usePlaced = (pointers: readonly ShownPointer[]): Placed[] => {
     const place = () => {
       const now = performance.now();
       const next = pointers.flatMap((pointer): Placed[] => {
-        const box = findPlankBox(pointer.plank);
+        const box = findPlankBox(pointer.plank, pointer.companion);
         if (!box) {
           shown.current.delete(pointer.key);
           trails.current.delete(pointer.key);
@@ -188,6 +192,7 @@ export const FollowOverlay = ({ pointers }: FollowOverlayProps) => {
             data-testid='spacePlugin.followOverlay.pointer'
             data-name={pointer.name}
             data-plank={pointer.plank}
+            {...(pointer.companion && { 'data-companion': true })}
             data-style={pointer.style}
           >
             {pointer.style === 'laser' ? (

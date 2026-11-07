@@ -88,7 +88,8 @@ type FollowPointer
   fields:
     sessionId: SessionId        # the sender's presence session, as in its viewing message
     following?: { identityKey: IdentityKeyHex, sessionId?: SessionId }  # whom the sender follows in the space
-    plank?: string              # graph path of the plank or companion under the pointer; absent over chrome
+    plank?: string              # graph path of the plank under the pointer, or whose companion it is over; absent over chrome
+    companion?: boolean         # over that plank's companion rather than the plank
     x?: number                  # 0 to 1 across the box of that plank or companion
     y?: number                  # 0 to 1 down that box
     style?: cursor | laser      # how the pointer draws; a cursor when absent
@@ -1767,6 +1768,15 @@ decision D-97: The deck publishes on its layout the planks it shows with their c
   affects: [F-8.14, F-8.21, F-8.25, FollowPointer, PeerDeck]
   supersedes: D-92
   why: A companion's pane is an attendable keyed by its plank's object, so once both decks show the same companion a pointer in it lands in the same place, as one in a plank does.
+```
+
+```mdl
+decision D-98: A companion's pane has no attention of its own, so the deck marks it with the plank it accompanies, and a pointer over it names that plank with `companion` set; a receiver places it in the same plank's companion. Fills in [D-97].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25, FollowPointer]
+  why: The companion shares its plank's attention, so no attendable id tells it apart; the plank it accompanies does, and both decks show it beside the same plank once the follow mirrors companions.
 ```
 
 ## Appendix: Extension Definitions

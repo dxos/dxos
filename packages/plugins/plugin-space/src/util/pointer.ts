@@ -25,8 +25,10 @@ export const FollowPointer = Schema.Struct({
       sessionId: Schema.optional(Schema.String),
     }),
   ),
-  /** Graph path of the plank or companion under the pointer; absent while it is over neither. */
+  /** Graph path of the plank under the pointer, or of the plank whose companion it is over; absent over chrome. */
   plank: Schema.optional(Schema.String),
+  /** Set when the pointer is over the plank's companion rather than the plank. */
+  companion: Schema.optional(Schema.Boolean),
   x: Schema.optional(Schema.Number),
   y: Schema.optional(Schema.Number),
   /** How the pointer draws; a cursor when absent. */
