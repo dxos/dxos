@@ -76,10 +76,17 @@ const plank = (page) => page.getByTestId('deck.plank').first();
 const textbox = (page) => plank(page).getByTestId('composer.markdownRoot').getByRole('textbox');
 const sidebar = (page) => page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
 const membersTab = (page) => page.locator('[id$="trigger-members"]');
-/** Collapses the complementary sidebar and any plank companion (a document's help), so the plank keeps the room. */
-const closeSidebar = async (peer) => {
+/**
+ * Collapses the complementary sidebar so the plank keeps the room, and with `companions` any plank companion (a
+ * document's help). A follower leaves companions alone: the follow mirrors the leader's, and a click in its deck would
+ * end the follow.
+ */
+const closeSidebar = async (peer, { companions = false } = {}) => {
   if ((await sidebar(peer.page).getAttribute('data-state')) === 'expanded') {
     await peer.click(sidebar(peer.page).getByTestId('deck.toggleComplementarySidebar'));
+  }
+  if (!companions) {
+    return;
   }
   const closeCompanion = peer.page.getByTestId('plankHeading.closeCompanion').filter({ visible: true });
   // A document's help companion opens a moment after its plank does.
@@ -332,7 +339,7 @@ export const steps = [
       await followersGroup(leader.page).waitFor({ timeout: TIMEOUT });
       await followHeading(leader.page).waitFor({ state: 'attached', timeout: TIMEOUT });
       await sleep(2_500);
-      await closeSidebar(leader);
+      await closeSidebar(leader, { companions: true });
     },
     pace: 1_500,
   },
@@ -340,7 +347,7 @@ export const steps = [
     name: 'The leader points at the plan; Bob sees the pointer',
     subtitle: 'QA-7 step 4: at the same spot of the same plank in his deck',
     run: async ({ peers: { bob }, sleep }) => {
-      await closeSidebar(leader);
+      await closeSidebar(leader, { companions: true });
       await glideUntilShown(
         leader,
         bob,
