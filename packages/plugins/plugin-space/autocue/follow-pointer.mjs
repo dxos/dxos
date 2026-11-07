@@ -412,10 +412,10 @@ export const steps = [
     subtitle: 'Companions are content: the follow mirrors which one is open, and pointers work in it',
     run: async ({ peers: { bob }, sleep }) => {
       await leader.click(plank(leader.page).getByTestId('plankHeading.companion'));
-      const companion = (page) => page.getByTestId('deck.plank').nth(1);
-      await waitFor(async () => (await bob.page.getByTestId('deck.plank').count()) > 1, {
-        what: 'the companion beside Bob’s plank',
-      });
+      // A companion's pane is attended by its node id, `<plank>/~<tab>`.
+      const companion = (page) => page.locator('[data-attendable-id*="/~"]').filter({ visible: true }).first();
+      const companionCount = (page) => page.locator('[data-attendable-id*="/~"]').filter({ visible: true }).count();
+      await waitFor(async () => (await companionCount(bob.page)) > 0, { what: 'the companion beside Bob’s plank' });
       await sleep(800);
       await glideUntilShown(
         leader,
@@ -430,9 +430,7 @@ export const steps = [
       );
       await sleep(1_000);
       await leader.click(leader.page.getByTestId('plankHeading.closeCompanion').filter({ visible: true }).first());
-      await waitFor(async () => (await bob.page.getByTestId('deck.plank').count()) === 1, {
-        what: 'Bob’s companion to close',
-      });
+      await waitFor(async () => (await companionCount(bob.page)) === 0, { what: 'Bob’s companion to close' });
     },
     pace: 1_500,
   },
