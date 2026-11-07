@@ -4,6 +4,7 @@
 
 export * from './assistant.ts';
 export * from './deck.ts';
+export * from './grid.ts';
 export * from './inbox.ts';
 export * from './markdown.ts';
 export * from './presenter.ts';
