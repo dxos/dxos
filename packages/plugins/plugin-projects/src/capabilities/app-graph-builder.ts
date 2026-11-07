@@ -20,17 +20,19 @@ import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { ProjectOperation } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import { artifacts } from '../artifacts.ts';
 import { ProjectsNamespace } from '../namespace.ts';
 import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from '../paths.ts';
 import * as ProjectGraph from '../ProjectGraph.ts';
+import * as SpecSession from '../SpecSession.ts';
 import { inboxResearch } from '../templates/index.ts';
 
 /**
@@ -68,6 +70,7 @@ export default Capability.makeModule(
     const taskExtensions = yield* createProjectTasksExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
     const specExtensions = yield* createProjectSpecExtension();
+    const specCompanionExtensions = yield* createSpecCompanionExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
       ...actionExtensions,
@@ -79,9 +82,54 @@ export default Capability.makeModule(
       ...artifactsActionExtensions,
       ...taskExtensions,
       ...mailboxExtensions,
+      ...specCompanionExtensions,
     ]);
   }),
 );
+
+const makeSpecCompanion = (group: SpecSession.Group) =>
+  AppNode.makeCompanion({
+    variant: SpecSession.companionVariant(group),
+    label: SpecSession.companionLabel(group),
+    icon: SpecSession.companionIcon[group],
+    data: SpecSession.companionVariant(group),
+  });
+
+/**
+ * A spec's companion tabs, one per group that some plugin contributes a view to for the spec's dialects: beside the
+ * spec, and beside a project with specs (for whichever its Specs tab shows).
+ */
+const createSpecCompanionExtension = Effect.fnUntraced(function* () {
+  const viewsAtom = yield* Capability.atom(ProjectCapabilities.SpecView);
+  const viewStateAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
+  const groupsFor = (views: readonly ProjectCapabilities.SpecView[], dialects: readonly string[]) =>
+    SpecSession.GROUPS.filter((group) =>
+      views.some((view) => view.group === group && view.dialects.every((dialect) => dialects.includes(dialect))),
+    );
+  const specCompanions = yield* AppGraphBuilder.createTypeExtension({
+    id: 'specCompanions',
+    relation: AppNode.companion,
+    type: Spec.Spec,
+    connector: (spec, get) =>
+      Effect.succeed(groupsFor(get(viewsAtom), get(Obj.atom(spec)).dialects).map(makeSpecCompanion)),
+  });
+  // A project offers the groups of the spec its Specs tab shows, the first while none is picked.
+  const projectCompanions = yield* AppGraphBuilder.createTypeExtension({
+    id: 'projectSpecCompanions',
+    relation: AppNode.companion,
+    type: Project.Project,
+    connector: (project, get) => {
+      const specs = get(Obj.atomReactive(get(Obj.atom(project)).specs ?? [])).filter(Spec.instanceOf);
+      const [viewState] = get(viewStateAtom);
+      const picked = viewState ? get(viewState.atom(ProjectView.aspect, project.id)).spec : undefined;
+      const shown = specs.find(({ id }) => id === picked) ?? specs[0];
+      return Effect.succeed(
+        shown ? groupsFor(get(viewsAtom), get(Obj.atom(shown)).dialects).map(makeSpecCompanion) : [],
+      );
+    },
+  });
+  return [...specCompanions, ...projectCompanions];
+});
 
 /**
  * "Set up project" on the primary mailbox node (`systemTag: 'inbox'`, so it appears once, not on

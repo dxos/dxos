@@ -217,6 +217,7 @@ type Camera3D
 
 ```mdl
 feat F-1: One model for 2D and 3D
+  uses: [Model]
 
   req F-1.1: A drawing is a Model of objects, Layouts of elements and Scenes over layouts, each one ECHO object whose records live inside it; types are shared only where 2D and 3D share properties.
   req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are endpoints on other elements of its layout, or free points.

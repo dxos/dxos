@@ -573,6 +573,7 @@ runnables, disabled by default, surfaced in the automations companion.
 
 ```mdl
 feat F-1: Mailbox
+  uses: [Mailbox, SystemTags]
   req F-1.1: Messages sync into an append-only feed; the article lists them paged and
     thread-grouped, newest first, interactive during initial sync (no empty-state flash).
   req F-1.2: Tags, stars, and read state live in the TagIndex sidecar keyed by canonical
@@ -590,6 +591,7 @@ feat F-2: Reading chain
 
 ```mdl
 feat F-3: Provider sync
+  uses: [MailSyncProvider]
   req F-3.1: Sync is idempotent, resumable, capped per run, and cancellable; progress reports
     via the #sync monitor and the mailbox statusbar.
   req F-3.2: A provider is a MailSyncProvider layer; adding one requires no harness changes.
@@ -605,12 +607,14 @@ feat F-4: Compose & send
 
 ```mdl
 feat F-5: Calendar & draft events
+  uses: [Calendar]
   req F-5.1: Events sync into the calendar feed; draft events are local Events parented to the
     calendar and become remote events on save.
 ```
 
 ```mdl
 feat F-6: Extraction & enrichment
+  uses: [ExtractedFrom]
   req F-6.1: Extractors are contributed capabilities; extraction records ExtractedFrom provenance.
   req F-6.2: The enrich cascade (deterministic → classify → summarize → analyze) is idempotent
     and cancellable; each tier is individually invocable and capped.

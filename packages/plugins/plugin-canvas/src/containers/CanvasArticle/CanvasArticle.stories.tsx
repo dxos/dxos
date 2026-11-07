@@ -15,13 +15,13 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { random } from '@dxos/random';
 import { DEFAULT_CELL, fromRenderLists2D } from '@dxos/react-ui-canvas';
+import { linkKey, nodeKey } from '@dxos/react-ui-canvas/headless';
 import { createNestedDeepTree } from '@dxos/react-ui-canvas/testing';
 import { type Scene, toEcho } from '@dxos/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import * as CanvasPlugin from '#meta';
-import { linkKey, nodeKey } from '#model';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 

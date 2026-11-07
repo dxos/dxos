@@ -24,18 +24,15 @@ import {
   flattenPath,
   viewLinkGeometry,
 } from '@dxos/react-ui-canvas';
+import { canvasRecordOf, linkKey, nodeKey, readViews } from '@dxos/react-ui-canvas/headless';
 import { type NodeStyle, fromEcho } from '@dxos/scene';
 
 import {
   CanvasLayoutBuilder,
   addCanvas,
-  canvasRecordOf,
   editCanvasContent,
-  linkKey,
-  nodeKey,
   openScene,
   readCanvasContent,
-  readViews,
   setLayoutLattice,
 } from '#model';
 

@@ -159,6 +159,7 @@ component Editor
 
 ```mdl
 feat F-1: Dream creation and editing
+  uses: [Dream, Editor]
 
   req F-1.1: Users MUST be able to create a new Dream object from the Composer
     Create Object dialog.
@@ -171,6 +172,7 @@ feat F-1: Dream creation and editing
 
 ```mdl
 feat F-2: Mixer layer management
+  uses: [Dream, Mixer, Sequence]
 
   req F-2.1: Users MUST be able to add a new Sequence layer to a Dream;
     new layers default to a sample source (rain, volume 0.5, unmuted).
@@ -187,6 +189,7 @@ feat F-2: Mixer layer management
 
 ```mdl
 feat F-3: Playback
+  uses: [Dream]
 
   req F-3.1: Pressing play MUST start all non-muted layers simultaneously
     through a shared AudioContext. All layers route through a master GainNode.
@@ -204,6 +207,7 @@ feat F-3: Playback
 
 ```mdl
 feat F-4: Binaural beat generator
+  uses: [GeneratorSource]
 
   req F-4.1: GeneratorSource layers MUST synthesise binaural beats using
     two sine oscillators routed through a ChannelMerger (left: baseFrequency,
@@ -235,6 +239,7 @@ feat F-5: Sample playback
 
 ```mdl
 feat F-6: Sleep fade
+  uses: [Dream]
 
   req F-6.1: When Dream.duration > 0, the master gain MUST ramp linearly to zero
     over the last SLEEP_FADE_SECONDS (30 s) of playback, or over the whole Dream

@@ -271,6 +271,7 @@ op SyncPosts
 
 ```mdl
 feat F-1: Publications Section
+  uses: [AddPost, AddPublication, Post, Publication]
 
   req F-1.1: A "Publications" section is contributed under each space's content group (mirroring plugin-studio's Studio section) while that space contains at least one Publication, listing its Publication objects as branch nodes.
   req F-1.2: "+ Publication" on the Publications section invokes op:AddPublication targeting that space's database.
@@ -280,6 +281,7 @@ feat F-1: Publications Section
 
 ```mdl
 feat F-2: Publication Authoring
+  uses: [AddPost, Post, PostCard, Publication, PublicationArticle]
 
   req F-2.1: component:PublicationArticle defaults to the gallery view: a Masonry grid of component:PostCard, one per Post.
   req F-2.2: Toggling the toolbar view swaps to the instructions view — the Publication's shared instructions document, rendered via the markdown article Surface.
@@ -289,6 +291,7 @@ feat F-2: Publication Authoring
 
 ```mdl
 feat F-3: Post Authoring
+  uses: [AddPost, Post, PostArticle, PostCard]
 
   req F-3.1: op:AddPost creates a Post with an outline document, a single empty body document, and status = draft.
   req F-3.2: component:PostArticle shows the outline form on top and the single body document below (markdown Surface).
@@ -297,18 +300,21 @@ feat F-3: Post Authoring
 
 ```mdl
 feat F-4: Comments on the Post body
+  uses: [Post]
 
   req F-4.1: Post.content is a Markdown.Document, so comments anchor to it automatically via the AnchoredTo relation (plugin-comments). The postComments graph extension contributes the comments companion (anchored to the body doc) and a hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
 ```
 
 ```mdl
 feat F-5: Agent Instructions per Publication
+  uses: [Publication]
 
   req F-5.1: `Publication.instructions` is a Text.Text the author edits directly, carrying the base instructions the assistant agent reads for that Publication. Agent consumption of these instructions is Phase 2 and is NOT built here.
 ```
 
 ```mdl
 feat F-6: Publisher Connection and Bidirectional Sync
+  uses: [Post, Publication, PublicationArticle, PublisherService, SyncPosts]
 
   req F-6.1: type:Publication carries a ConnectorAuthAnnotation resolving the registered service:PublisherService connectorId(s); plugin-connector contributes a "Connect <publisher>" action (surfaced in component:PublicationArticle's toolbar) until a Connection for that connectorId exists in the space.
   req F-6.2: op:SyncPosts pushes each unlinked local Post to the publisher (createDraft), stamping the returned id as a foreign key and setting status = published.

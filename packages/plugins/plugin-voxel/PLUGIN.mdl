@@ -295,6 +295,7 @@ feat F-3: Hue Selection
 
 ```mdl
 feat F-4: Generate Shape
+  uses: [generateShape, ModelType]
 
   req F-4.1:
     when: user clicks the "Generate shape" toolbar button
@@ -331,6 +332,7 @@ feat F-5: Game of Life Simulation
 
 ```mdl
 feat F-6: World Persistence
+  uses: [VoxelArticle, World]
 
   req F-6.1:
     when: a voxel is added or removed interactively
@@ -348,6 +350,7 @@ feat F-6: World Persistence
 
 ```mdl
 feat F-7: Camera and Navigation
+  uses: [VoxelCard]
 
   req F-7.1:
     when: editor opens

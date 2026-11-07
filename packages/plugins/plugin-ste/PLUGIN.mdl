@@ -47,6 +47,7 @@ op Verify
 
 ```mdl
 feat F-1: STE skill
+  uses: [Verify]
 
   req F-1.1: The STE skill is registered while the plugin is enabled, and absent when it is not.
   req F-1.2:
@@ -56,6 +57,7 @@ feat F-1: STE skill
 
 ```mdl
 feat F-2: Verify tool
+  uses: [Verify]
 
   req F-2.1: Sentences longer than 20 words (procedural) or 25 words (descriptive) are errors.
   req F-2.2: Semicolons, contractions, "should/would/may/might/shall", "has/have/had" + participle,

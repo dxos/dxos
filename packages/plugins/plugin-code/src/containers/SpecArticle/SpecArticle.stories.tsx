@@ -234,8 +234,8 @@ export const Companion: Story = {
     const chips = await waitFor(() => canvas.getAllByTestId('spec-changelog.gutter-chip'), { timeout: 10_000 });
     await userEvent.click(chips[0]);
     await waitFor(() =>
-      expect(canvasElement.querySelector('[data-testid="spec-article.panel"]')?.getAttribute('data-view')).toMatch(
-        /^(decisions|log)$/,
+      expect(canvasElement.querySelector('[data-testid="spec-article.panel"]')?.getAttribute('data-view')).toBe(
+        'ledger',
       ),
     );
   },

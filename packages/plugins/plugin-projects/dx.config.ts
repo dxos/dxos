@@ -109,6 +109,15 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
+      'SpecViews',
+      {
+        provides: [ProjectCapabilities.SpecView],
+        activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/spec-views.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
       'SubjectContext',
       { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
       () => import('./src/capabilities/subject-context.ts', { with: { type: 'module-url' } }),

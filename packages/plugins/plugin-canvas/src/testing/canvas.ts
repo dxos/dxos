@@ -4,12 +4,12 @@
 
 import { type ContentMap } from '@dxos/diagram';
 import { type Database } from '@dxos/echo';
+import { rootOf } from '@dxos/react-ui-canvas/headless';
 
 import { type Canvas } from '#types';
 
 import { editCanvasContent } from '../model/canvas-content.ts';
 import { makeCanvas } from '../model/canvas-document.ts';
-import { rootOf } from '../model/content.ts';
 
 /**
  * Adds a 2D `Canvas` with `settings` and its objects to `db`, then lets `seed` fill its open scene through content

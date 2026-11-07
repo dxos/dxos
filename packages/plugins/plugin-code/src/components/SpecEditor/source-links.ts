@@ -8,8 +8,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { findSpecRefs, specDependencies, specReferenceFilter } from '@dxos/deus/extension';
 import { type SourceKey, findSourceKeys } from '@dxos/deus/review';
 import { type SpecIndex, frontmatter } from '@dxos/deus/spec-index';
-
-import { resolveSpecRef } from './spec-ref.ts';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 
 /** A span of the spec that names another spec or file: openable, or broken with the reason. */
 export type SourceLink = { from: number; to: number } & ({ target: SourceKey } | { error: string });
@@ -35,7 +34,7 @@ export const findSourceLinks = (text: string, index?: SpecIndex): SourceLink[] =
     const isReference = specReferenceFilter(index);
     const selfId = frontmatter(text).id;
     const resolve = (from: number, to: number, id: string, item?: string): SourceLink => {
-      const resolved = resolveSpecRef(index, id, item);
+      const resolved = SpecModel.resolveSpecRef(index, id, item);
       return 'error' in resolved ? { from, to, error: resolved.error } : { from, to, target: resolved };
     };
     for (const { id, item, from, to } of findSpecRefs(text)) {

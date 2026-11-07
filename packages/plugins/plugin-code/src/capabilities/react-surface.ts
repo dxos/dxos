@@ -10,13 +10,14 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
+import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 
-import { CodeArticle, CodeSettings, SpecArticle, SpecCompanion } from '#containers';
+import { CodeArticle, CodeSettings, SpecArticle, SpecSourceToolbar, SpecViewContent } from '#containers';
 import { CodeProject } from '#types';
 
-import { SPEC_COMPANION } from '../constants.ts';
 import { CodeNamespace } from '../namespace.ts';
 import { isPluginSpecSubject } from '../plugin-spec.ts';
+import { isSpecView } from '../spec-views.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -28,24 +29,27 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject } }) => ({ role, content: subject.content, sourceKey: subject.sourceKey }),
       }),
       Surface.create({
-        // A section, ahead of plugin-projects' plain editor: a spec's article is its feature map, and its text view
-        // embeds the spec as a section.
+        // Ahead of plugin-projects' plain editor: the section a project's Specs tab embeds, and the article of a spec
+        // no project owns (a project's own spec is one of its levels).
         id: 'specArticle',
-        filter: AppSurface.object(AppSurface.Section, Spec.Spec),
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Section, Spec.Spec),
+          AppSurface.object(AppSurface.Article, Spec.Spec, ({ subject }) => Project.getOwner(subject) === undefined),
+        ),
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
-        id: 'specCompanion',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, SPEC_COMPANION),
-          AppSurface.oneOf(
-            AppSurface.companion(AppSurface.Article, Spec.Spec),
-            AppSurface.companion(AppSurface.Article, Project.Project),
-          ),
-        ),
-        component: SpecCompanion,
-        props: ({ data: { companionTo } }) => ({ companionTo }),
+        id: 'specView',
+        filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => isSpecView(view)),
+        component: SpecViewContent,
+        props: ({ data: { subject, view } }) => ({ spec: subject, view: isSpecView(view) ? view : 'data' }),
+      }),
+      Surface.create({
+        id: 'specToolbar',
+        filter: Surface.makeFilter(ProjectSurface.SpecToolbar),
+        component: SpecSourceToolbar,
+        props: ({ data: { subject } }) => ({ spec: subject }),
       }),
       Surface.create({
         id: 'codeArticle',

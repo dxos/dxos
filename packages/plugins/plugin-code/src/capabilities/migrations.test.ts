@@ -33,6 +33,7 @@ import {
   makeSpecContent,
   makeSpecOwners,
   specDocuments,
+  specSoftwareDialect,
 } from './migrations.ts';
 
 /** Stands in for another plugin's object that links a spec's document, as a code project does. */
@@ -261,7 +262,7 @@ describe('feature migrations', () => {
     expect,
   }) => {
     const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
-    graph.registry.add([LegacySpec.SpecV2, LegacySpec.Document, Spec.Spec, Feature.Feature, Linker]);
+    graph.registry.add([LegacySpec.SpecV2, LegacySpec.SpecV3, LegacySpec.Document, Spec.Spec, Feature.Feature, Linker]);
     const document = db.add(LegacySpec.makeDocument('Inbox'));
     Obj.update(document, (document) => {
       Obj.getMeta(document).keys.push({ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' });
@@ -280,10 +281,10 @@ describe('feature migrations', () => {
     Obj.setParent(sync, legacy);
     const linker = db.add(Obj.make(Linker, { spec: Ref.make(document), specs: [Ref.make(document)] }));
     await db.flush();
-    await db.runMigrations([makeSpecContent()]);
+    await db.runMigrations([makeSpecContent(), specSoftwareDialect]);
 
     const [spec] = await db.query(Filter.type(Spec.Spec)).run();
-    expect(spec).toMatchObject({ id: legacy.id, name: 'Inbox', dialects: [...FeatureMap.SOFTWARE_DIALECTS] });
+    expect(spec).toMatchObject({ id: legacy.id, name: 'Inbox', dialects: [FeatureMap.SOFTWARE_DIALECT] });
     expect((await spec.content.load()).id).toBe(text.id);
     expect(Obj.getParent(text)?.id).toBe(spec.id);
     expect(Obj.getMeta(spec).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);
@@ -295,13 +296,13 @@ describe('feature migrations', () => {
 
   test('a spec document no spec held, under either typename, becomes a spec of its own', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
-    graph.registry.add([LegacySpec.PreRenameDocument, LegacySpec.Document, Spec.Spec]);
+    graph.registry.add([LegacySpec.PreRenameDocument, LegacySpec.Document, LegacySpec.SpecV3, Spec.Spec]);
     const renamed = db.add(
       Obj.make(LegacySpec.PreRenameDocument, { name: 'a/PLUGIN.mdl', content: Ref.make(Text.make({ content: 'A' })) }),
     );
     const current = db.add(LegacySpec.makeDocument('b/PLUGIN.mdl'));
     await db.flush();
-    await db.runMigrations([documentRename, specDocuments]);
+    await db.runMigrations([documentRename, specDocuments, specSoftwareDialect]);
 
     const specs = await db.query(Filter.type(Spec.Spec)).run();
     expect(specs.map(({ id, name }) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))).toEqual([
@@ -311,6 +312,32 @@ describe('feature migrations', () => {
     expect(await SpecText.read(specs.find(({ id }) => id === renamed.id)!)).toBe('A');
   });
 
+  test("a 0.3.0 spec lists the software dialect in place of the software package's, keeping its others", async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
+    graph.registry.add([LegacySpec.SpecV3, Spec.Spec]);
+    const content = () => Ref.make(Text.make({ content: '' }));
+    const software = db.add(
+      Obj.make(LegacySpec.SpecV3, {
+        name: 'Inbox',
+        dialects: ['org.dxos.spec.review', ...LegacySpec.SOFTWARE_DIALECTS_V3, 'org.dxos.spec.video'],
+        content: content(),
+      }),
+    );
+    const plain = db.add(Obj.make(LegacySpec.SpecV3, { name: 'Notes', dialects: [], content: content() }));
+    await db.flush();
+    await db.runMigrations([specSoftwareDialect]);
+
+    const specs = new Map((await db.query(Filter.type(Spec.Spec)).run()).map((spec) => [spec.id, spec.dialects]));
+    expect(specs.get(software.id)).toEqual([
+      'org.dxos.spec.review',
+      FeatureMap.SOFTWARE_DIALECT,
+      'org.dxos.spec.video',
+    ]);
+    expect(specs.get(plain.id)).toEqual([]);
+  });
+
   test('one pass takes a 0.6.0 project and its 0.1.0 spec to the current versions', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
     graph.registry.add([
@@ -318,6 +345,7 @@ describe('feature migrations', () => {
       LegacyProject.ProjectV7,
       LegacySpec.Spec,
       LegacySpec.SpecV2,
+      LegacySpec.SpecV3,
       LegacySpec.Document,
       Project.Project,
       Spec.Spec,
@@ -339,6 +367,7 @@ describe('feature migrations', () => {
       LegacyProject.projectRepositories,
       makeSpecOwners(),
       makeSpecContent(),
+      specSoftwareDialect,
     ]);
 
     const [migrated] = await db.query(Filter.type(Project.Project)).run();

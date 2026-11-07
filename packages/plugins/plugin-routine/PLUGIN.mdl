@@ -227,6 +227,7 @@ op RunPromptInNewChat
 
 ```mdl
 feat F-1: Trigger Management
+  uses: [AutomationPanel]
 
   req F-1.1: User can create a Trigger in any space via AutomationPanel.
   req F-1.2: User can edit an existing Trigger's function, spec, and input.
@@ -271,6 +272,7 @@ feat F-2: Trigger Dispatch
 
 ```mdl
 feat F-3: Force Run and Cursor Reset
+  uses: [AutomationPanel]
 
   req F-3.1:
     when: timer trigger is enabled and space.properties.triggersDisabled !== true
@@ -313,6 +315,7 @@ feat F-5: Trace Sink
 
 ```mdl
 feat F-6: Create Trigger From Template
+  uses: [CreateTriggerFromTemplate]
 
   req F-6.1:
     when: op:CreateTriggerFromTemplate is invoked

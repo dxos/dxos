@@ -311,6 +311,7 @@ op AnalyzeText
 
 ```mdl
 feat F-1: Vocabulary
+  uses: [AddWord, Language, Vocabulary, Word]
   desc: Word lists as ECHO objects, scoped to a language.
 
   req F-1.1: User can create a Language and a Vocabulary via the plugin's create menu.
@@ -331,6 +332,7 @@ feat F-2: Flashcards
 
 ```mdl
 feat F-3: Reading companion
+  uses: [Analysis, Settings]
   desc: A read-only pane beside any object whose text the plugin can reach.
 
   req F-3.1: Offered on Markdown documents, Text objects, and any type registered under
@@ -360,6 +362,7 @@ feat F-4: Structural selection
 
 ```mdl
 feat F-5: Analysis caching
+  uses: [Analysis]
   desc: One Analysis per subject and language, reused until the text diverges.
 
   req F-5.1: Analysis is matched by filtering on the subject AND language refs.

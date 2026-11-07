@@ -19,13 +19,18 @@ import {
   ProjectArticle,
   ProjectArtifactsArticle,
   ProjectChatsArticle,
+  SpecCompanion,
+  SpecCompanionPanel,
   SpecDocumentArticle,
   SpecLevelArticle,
+  SpecView,
 } from '#containers';
 import { ProjectSurface } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
+import { isSpecView } from '../companion-views.ts';
 import { MOVE_TASK_DIALOG } from '../constants.ts';
+import * as SpecSession from '../SpecSession.ts';
 
 /** A spec a project owns is a level of the project: the project article on that spec. */
 const isProjectSpec = (value: unknown): value is Spec.Spec =>
@@ -53,6 +58,33 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Spec.Spec, ({ subject }) => isProjectSpec(subject)),
         component: SpecLevelArticle,
         props: ({ role, data }) => ({ role, ...data }),
+      }),
+      // A spec's companion tabs, beside the spec and beside a project showing one.
+      ...SpecSession.GROUPS.map((group) =>
+        Surface.create({
+          id: `spec.companion.${group}`,
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, SpecSession.companionVariant(group)),
+            AppSurface.oneOf(
+              AppSurface.companion(AppSurface.Article, Spec.Spec),
+              AppSurface.companion(AppSurface.Article, Project.Project),
+            ),
+          ),
+          component: SpecCompanion,
+          props: ({ data: { companionTo, attendableId } }) => ({ companionTo, group, attendableId }),
+        }),
+      ),
+      Surface.create({
+        id: 'spec.view',
+        filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => isSpecView(view)),
+        component: SpecView,
+        props: ({ data: { subject, view } }) => ({ spec: subject, view: isSpecView(view) ? view : 'definitions' }),
+      }),
+      Surface.create({
+        id: 'spec.companion.panel',
+        filter: Surface.makeFilter(ProjectSurface.SpecCompanion),
+        component: SpecCompanionPanel,
+        props: ({ data }) => data,
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
       // one is a request to see the set, not only to expand the tree.

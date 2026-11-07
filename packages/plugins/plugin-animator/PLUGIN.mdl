@@ -413,6 +413,7 @@ op Render
 
 ```mdl
 feat F-1: Neutral animation core
+  uses: [AnimatableKind]
 
   req F-1.1: Timelines, keys, easing, interpolation, the clock and the effect runtime live in `@dxos/animation`, and the timeline UI and clock hooks in `@dxos/react-ui-animation`; neither depends on any plugin.
   req F-1.2: react-ui-canvas imports both packages and keeps no copy or re-export of what moved.
@@ -423,6 +424,7 @@ feat F-1: Neutral animation core
 
 ```mdl
 feat F-2: Animations and shots
+  uses: [Animation]
 
   req F-2.1: An Animation is an ECHO object whose shots reference stage objects; playing it never writes to those objects.
   req F-2.2: Shots play in order, each for its duration, joined by its transition.
@@ -442,6 +444,7 @@ feat F-3: Declarative scripts
 
 ```mdl
 feat F-4: Stages
+  uses: [AnimatorCapabilities.Stage]
 
   req F-4.1: A plugin becomes animatable by contributing an `AnimatorCapabilities.Stage`; the animator holds no knowledge of its object model.
   req F-4.2: The canvas stage renders `Drawing.Canvas` scenes with a 2D pan and zoom camera and draws `2d` and `overlay` effects.
@@ -465,6 +468,7 @@ feat F-5: Effects
 
 ```mdl
 feat F-6: Playback and export
+  uses: [Animation]
 
   req F-6.1: The animator owns the clock; no stage or effect reads wall-clock time.
   req F-6.2: Export sets the clock to `n / fps` for each frame and captures it only after the stage reports `onFrameDrawn` for that time.
@@ -477,6 +481,7 @@ feat F-6: Playback and export
 
 ```mdl
 feat F-7: plugin-studio
+  uses: [Animation]
 
   req F-7.1: The animator contributes a studio `GenerationService` provider of kind `video` whose result is a `video/mp4` Variant.
   req F-7.2: A long render uses studio's enqueue and await with a persisted job id, so it survives a reload.

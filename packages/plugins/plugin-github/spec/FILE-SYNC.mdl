@@ -411,6 +411,7 @@ feat F-2: Change detection
 
 ```mdl
 feat F-3: Pull
+  uses: [FileMarker]
 
   req F-3.1:
     when: a matched path is added
@@ -435,6 +436,7 @@ feat F-3: Pull
 
 ```mdl
 feat F-4: Push
+  uses: [VersionLink]
 
   req F-4.1:
     when: a bound object's content differs from its content at marker.heads
@@ -459,6 +461,7 @@ feat F-4: Push
 
 ```mdl
 feat F-5: Markers and version tracking
+  uses: [FileMarker, VersionLink]
 
   req F-5.1: Cursor.spec.token and every FileMarker the pass wrote advance in one Obj.update, so a crash leaves either the old state or the new one.
 
@@ -469,6 +472,7 @@ feat F-5: Markers and version tracking
 
 ```mdl
 feat F-6: Deus specs
+  uses: [ExportSpecFile, ImportSpecFile, org.dxos.plugin.code]
 
   req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpecFile and ExportSpecFile.
 

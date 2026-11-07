@@ -37,7 +37,7 @@ const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {
   note: 'note',
 };
 
-const MARKERS = ['arrow', 'circle', 'triangle'] as const;
+const MARKERS = ['arrow', 'circle', 'diamond', 'diamond-filled', 'triangle'] as const;
 
 /** A 2D style as react-ui-canvas's node style: the diagram-only values (sketchy, pattern, weight) have no node field. */
 const nodeStyle = (style: Style2D | undefined): NodeStyle | undefined => {

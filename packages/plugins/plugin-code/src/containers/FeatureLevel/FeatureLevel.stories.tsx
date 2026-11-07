@@ -19,11 +19,12 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { VideoPackagePlugin } from '@dxos/plugin-projects/testing';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import * as VideoPlugin from '@dxos/plugin-video/VideoPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -45,7 +46,7 @@ type StoryArgs = {
   featureName?: string;
 };
 
-/** Opens the project, or one of its features, through the article surface, as the deck does. */
+/** Opens the project, or one of its features, with its Structure companion beside it, as the deck does. */
 const DefaultStory = ({ attendableId, featureName }: StoryArgs) => {
   const [space] = useSpaces();
   const project = useQuery(space?.db, Filter.type(Project.Project)).find((entry) => entry.name === PROJECT_NAME);
@@ -58,8 +59,13 @@ const DefaultStory = ({ attendableId, featureName }: StoryArgs) => {
   }
 
   return (
-    <AttendableContainer id={attendableId} classNames='contents'>
+    <AttendableContainer id={attendableId} classNames='grid grid-cols-2 dx-fill'>
       <Surface.Surface type={AppSurface.Article} data={{ subject, attendableId }} limit={1} />
+      <Surface.Surface
+        type={AppSurface.Article}
+        data={{ subject: SpecSession.companionVariant('structure'), companionTo: subject, attendableId }}
+        limit={1}
+      />
     </AttendableContainer>
   );
 };
@@ -69,27 +75,9 @@ const showTab = async (canvas: ReturnType<typeof within>, tab: string) => {
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 30_000 }));
 };
 
-const showCanvas = async (canvas: ReturnType<typeof within>) => {
-  await userEvent.click(await canvas.findByTestId('projectsPlugin.specView.canvas', undefined, { timeout: 10_000 }));
-  await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-};
-
-/** Points at the empty cell left of the leftmost card, so its `+` shows, and returns that button. */
-const showAdd = async (container: HTMLElement) => {
-  const view = within(container).getByTestId('scene-view');
-  const card = within(container)
-    .getAllByTestId('feature-canvas-node')
-    .map((node) => node.getBoundingClientRect())
-    .reduce((left, rect) => (rect.left < left.left ? rect : left));
-  // A cell's pitch is its card's width and a quarter more for the gutter.
-  view.dispatchEvent(
-    new PointerEvent('pointermove', {
-      bubbles: true,
-      clientX: card.left + card.width / 2 - card.width * 1.25,
-      clientY: card.top + card.height / 2,
-    }),
-  );
-  return within(container).findByTestId('feature-canvas.add', undefined, { timeout: 5_000 });
+const showBoard = async (canvas: ReturnType<typeof within>) => {
+  await userEvent.click(await canvas.findByTestId('spec-companion.view.kanban', undefined, { timeout: 10_000 }));
+  await waitFor(() => expect(canvas.getAllByTestId('board-column').length).toBeGreaterThan(0), { timeout: 10_000 });
 };
 
 /** Opens the spec picker and shows the spec named `name`. */
@@ -142,7 +130,7 @@ const meta = {
         TasksPlugin.make(),
         FeatureEditingPlugin.make(),
         // A second plugin's extension package, beside the software one.
-        VideoPackagePlugin.make(),
+        VideoPlugin.make(),
       ],
     }),
     // The deck provides the drag-and-drop root in the app; the Kanban view needs one here.
@@ -165,10 +153,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The project's Specs tab: a spec in the software package shows its features embedded in its text, and the map's views
- * join the toggle; the canvas's `+` adds a new feature or moves an existing one.
+ * The project's Specs tab: a spec in the software dialect shows its features embedded in its text, and its board joins
+ * its Structure companion.
  */
-export const AddFeature: Story = {
+export const SoftwareSpec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await showTab(canvas, 'spec');
@@ -176,34 +164,11 @@ export const AddFeature: Story = {
     await waitFor(() => expect(within(document).getAllByTestId('markdown.embed').length).toBeGreaterThan(0), {
       timeout: 10_000,
     });
-    await showCanvas(canvas);
-    await userEvent.click(await showAdd(canvasElement));
-    const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
-    const items = within(menu)
-      .getAllByRole('menuitem')
-      .map((item) => item.getAttribute('data-testid'));
-    await expect(items).toEqual(['feature-map.new-feature', 'feature-map.add-feature']);
+    await showBoard(canvas);
   },
 };
 
-/** The `+` in an empty cell of the canvas moves a feature from elsewhere onto the level's map, picked in a dialog. */
-export const AddExistingFeature: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await showTab(canvas, 'spec');
-    await showCanvas(canvas);
-    await userEvent.click(await showAdd(canvasElement));
-    await userEvent.click(await screen.findByTestId('feature-map.add-feature'));
-    const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
-    // The map's own features are not offered; a subfeature from beneath one is.
-    await expect(within(dialog).queryByText('Provider sync')).toBeNull();
-    await userEvent.click(await within(dialog).findByText('IMAP', undefined, { timeout: 10_000 }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), { timeout: 10_000 });
-    await expect(canvas.findByText('IMAP', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-  },
-};
-
-/** Checking the Software package in the Extensions menu gives a spec of prose the map's views. */
+/** Checking the Software package in the Extensions menu gives a spec of prose its board. */
 export const SoftwarePackage: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -213,12 +178,12 @@ export const SoftwarePackage: Story = {
     await userEvent.keyboard('{Escape}');
 
     await pickSpec(canvas, TALK_SPEC_NAME);
-    await expect(canvas.queryByTestId('projectsPlugin.specView.canvas')).toBeNull();
+    await expect(canvas.queryByTestId('spec-companion.view.kanban')).toBeNull();
     const software = await findPackage(canvas, 'Software');
     await expect(software.getAttribute('aria-checked')).toBe('false');
     await userEvent.click(software);
     await expect(
-      canvas.findByTestId('projectsPlugin.specView.canvas', undefined, { timeout: 10_000 }),
+      canvas.findByTestId('spec-companion.view.kanban', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
   },
 };
@@ -233,8 +198,14 @@ export const WithBreakdown: Story = {
       canvas.findByTestId('feature-article.subfeatures', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
     await showTab(canvas, 'spec');
-    await showCanvas(canvas);
-    await expect(canvas.findByText('Gmail', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await showBoard(canvas);
+    await waitFor(
+      () =>
+        expect(canvas.getAllByTestId('feature-kanban.card').some((card) => card.textContent?.includes('Gmail'))).toBe(
+          true,
+        ),
+      { timeout: 10_000 },
+    );
   },
 };
 
@@ -248,7 +219,7 @@ export const WithoutBreakdown: Story = {
     await expect(within(empty).getByText(/no spec of its own/)).toBeTruthy();
     await userEvent.click(within(empty).getByTestId('projectsPlugin.addSpec'));
     await expect(
-      canvas.findByTestId('projectsPlugin.specView.canvas', undefined, { timeout: 10_000 }),
+      canvas.findByTestId('spec-companion.view.kanban', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
   },
 };

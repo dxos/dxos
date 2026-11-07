@@ -137,6 +137,7 @@ op SelectObject
 
 ```mdl
 feat F-1: Local Object Search
+  uses: [OpenSearch, SearchDialog]
 
   req F-1.1: User can open SearchDialog from anywhere in Composer via the OpenSearch operation.
 
@@ -168,6 +169,7 @@ feat F-2: Global Filter Integration
 
 ```mdl
 feat F-3: Deck Companion Search Panel
+  uses: [SearchArticle, SearchDialog]
 
   req F-3.1:
     when: user opens the deck companion panel with role deck-companion--search
@@ -180,6 +182,7 @@ feat F-3: Deck Companion Search Panel
 
 ```mdl
 feat F-4: Mailbox Message Search
+  uses: [SearchArticle, SearchDialog]
 
   req F-4.1:
     when: user types a query in the mailbox search box

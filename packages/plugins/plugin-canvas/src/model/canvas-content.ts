@@ -12,13 +12,7 @@
 import { type ContentMap, applyCommands } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import type * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
-import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type RenderList2D, type RenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { Scene, fromEcho } from '@dxos/scene';
-
-import { Canvas } from '#types';
-
-import { openScene } from './canvas-document.ts';
+import { SceneHandler } from '@dxos/react-ui-canvas';
 import {
   canvasRecordOf,
   clone,
@@ -27,9 +21,15 @@ import {
   linkKey,
   nodeKey,
   readViews,
+  toRenderList2D,
   writeViews,
-} from './content.ts';
-import { SceneHandler } from './handler.ts';
+} from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, type RenderLists2D } from '@dxos/react-ui-canvas/headless';
+import { Scene, fromEcho } from '@dxos/scene';
+
+import { Canvas } from '#types';
+
+import { openScene } from './canvas-document.ts';
 import { type DecorateLayout, makeLayoutWriter } from './layout-writer.ts';
 import { same } from './records.ts';
 

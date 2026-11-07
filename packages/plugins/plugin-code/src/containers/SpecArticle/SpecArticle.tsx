@@ -18,6 +18,7 @@ import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 import { getSpace } from '@dxos/react-client/echo';
 import { Attention } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
@@ -42,9 +43,7 @@ import { isTruthy } from '@dxos/util';
 
 import { SPEC_INDEX, decisionGutter, pendingReveal, reviewGutter, sourceLinks } from '#components';
 
-import { SPEC_COMPANION } from '../../constants.ts';
 import { CodeNamespace } from '../../namespace.ts';
-import { type SpecSessionState, registerEditor, reveal } from './spec-session.ts';
 import { SpecPanel, useOpenSource } from './SpecPanel.tsx';
 import { useSpecModel } from './useSpecModel.ts';
 import { type DiffAgainst } from './useSpecSources.ts';
@@ -134,13 +133,13 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       }
     }, []);
 
-    // A margin click shows its item in the panel, opening the plank's companion when the panel is there.
+    // A margin click shows its item in a view, opening the view's companion tab when the panel is not on the page.
     const show = useCallback(
-      (patch: Partial<SpecSessionState>) => {
-        setSession((current) => ({ ...current, ...patch }));
+      (group: SpecSession.Group, view: string, patch: Partial<SpecSession.State>) => {
+        setSession((current) => ({ ...current, ...patch, focus: group, views: { ...current.views, [group]: view } }));
         if (!panel && attendableId) {
           void invokePromise(LayoutOperation.UpdateCompanion, {
-            subject: Attention.linkedSegment(SPEC_COMPANION),
+            subject: Attention.linkedSegment(SpecSession.companionVariant(group)),
             anchor: attendableId,
           });
         }
@@ -151,8 +150,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     // Another article that opened this spec at an item left it pending; the text may arrive after mount.
     const pending = useAtomValue(pendingReveal);
     const setPendingReveal = useAtomSet(pendingReveal);
+    const setCursor = useAtomSet(SpecSession.cursor(id));
     useEffect(() => {
-      if (pending && key && pending.path === key.path && reveal(id, pending.item)) {
+      if (pending && key && pending.path === key.path && SpecSession.reveal(id, pending.item)) {
         setPendingReveal(undefined);
       }
     }, [pending, id, key, text, setPendingReveal]);
@@ -168,18 +168,14 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           decorateMarkdown(),
           mdl(isReviewFile ? {} : { index: SPEC_INDEX }),
           sourceLinks((target) => void open(target), SPEC_INDEX),
-          ViewPlugin.define((editor) => ({ destroy: registerEditor(id, editor) })),
+          ViewPlugin.define((editor) => ({ destroy: SpecSession.registerEditor(id, editor) })),
+          SpecSession.trackCursor(setCursor),
           decisions.length > 0 &&
-            decisionGutter(decisions, (item) =>
-              // A question is answered in the log, which lists it; a decision shows in the graph.
-              show({
-                selectedDecision: item,
-                view: decisions.some(({ id, kind }) => id === item && kind === 'question') ? 'log' : 'decisions',
-              }),
-            ),
+            // The ledger opens a decision's thread, or lists a question among the questions.
+            decisionGutter(decisions, (item) => show('decisions', 'ledger', { selectedDecision: item })),
           review &&
             reviewGutter(review, {
-              onSelect: (verdict) => show({ selectedVerdict: verdict, selectedReview: undefined, view: 'review' }),
+              onSelect: (verdict) => show('review', 'review', { selectedVerdict: verdict, selectedReview: undefined }),
               onOpen: (target) => void open(target),
               read: readLatest,
             }),
@@ -206,6 +202,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       [
         id,
         identity,
+        setCursor,
         space,
         spec?.id,
         target,

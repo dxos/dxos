@@ -10,8 +10,8 @@ import * as SpecReview from '@dxos/compute/SpecReview';
 import { type Verdict } from '@dxos/deus/review';
 import { Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import * as SpecModel from '@dxos/plugin-projects/SpecModel';
 
-import { SpecReviews } from '#sync';
 import { type Feature, FeatureMap } from '#types';
 
 /** Each of a feature's requirements' newest verdict across the reviews of the spec it is on, by requirement id. */
@@ -23,7 +23,7 @@ export const useRequirementVerdicts = (feature: Feature.Feature): Readonly<Recor
     useMemo(
       () =>
         Atom.make((get) => {
-          const current = SpecReviews.currentModel(reviews.map((review) => get(Obj.atom(review))));
+          const current = SpecModel.currentReviewModel(reviews.map((review) => get(Obj.atom(review))));
           // Null-prototype, so a requirement id such as `constructor` reads no inherited value.
           return Object.assign(
             Object.create(null) as Record<string, Verdict>,

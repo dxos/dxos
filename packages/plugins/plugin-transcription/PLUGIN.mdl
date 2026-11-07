@@ -209,6 +209,7 @@ op normalizeSentences
 
 ```mdl
 feat F-1: Recording Lifecycle
+  uses: [TranscriptionArticle]
 
   req F-1.1: User can start microphone capture from TranscriptionArticle toolbar.
   req F-1.2: User can stop microphone capture; final buffered chunks are flushed and transcribed.
@@ -217,6 +218,7 @@ feat F-1: Recording Lifecycle
 
 ```mdl
 feat F-2: Audio Chunking and Transcription
+  uses: [Transcription]
 
   req F-2.1:
     when: user is speaking and chunk count reaches transcribeAfterChunksAmount
@@ -237,6 +239,7 @@ feat F-2: Audio Chunking and Transcription
 
 ```mdl
 feat F-3: Transcript Persistence
+  uses: [Message, Transcript, TranscriptionArticle]
 
   req F-3.1:
     when: aligned segments are produced
@@ -254,6 +257,7 @@ feat F-3: Transcript Persistence
 
 ```mdl
 feat F-4: Transcript Display
+  uses: [Transcript, Transcription]
 
   req F-4.1:
     when: a Transcript object is opened
@@ -266,6 +270,7 @@ feat F-4: Transcript Display
 
 ```mdl
 feat F-5: AI Summary
+  uses: [summarizeTranscript]
 
   req F-5.1:
     when: op:summarizeTranscript is invoked
@@ -282,6 +287,7 @@ feat F-5: AI Summary
 
 ```mdl
 feat F-6: Skill Integration
+  uses: [openTranscript, summarizeTranscript]
 
   req F-6.1: Skill exposes op:openTranscript and op:summarizeTranscript as AI tools.
   req F-6.2: An AI assistant can open a transcript by Ref and return formatted text to the user.
@@ -290,6 +296,7 @@ feat F-6: Skill Integration
 
 ```mdl
 feat F-7: On-device Streaming Transcription (Whistle story)
+  uses: [Transcription]
 
   req F-7.1:
     when: the user presses Record, or holds Space outside a text field

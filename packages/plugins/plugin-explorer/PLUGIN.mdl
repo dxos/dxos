@@ -130,6 +130,7 @@ op buildFilter
 
 ```mdl
 feat F-1: Graph Object
+  uses: [createGraph]
 
   req F-1.1: A Graph object stores a name, a View ref, and a compiled QueryAST.
   req F-1.2:
@@ -143,6 +144,7 @@ feat F-1: Graph Object
 
 ```mdl
 feat F-2: Live Graph Model
+  uses: [buildFilter, ExplorerArticle]
 
   req F-2.1:
     when: ExplorerArticle mounts with a valid Graph subject
@@ -164,6 +166,7 @@ feat F-2: Live Graph Model
 
 ```mdl
 feat F-3: Visualization Variants
+  uses: [Visualization]
 
   req F-3.1:
     when: variant tab is selected

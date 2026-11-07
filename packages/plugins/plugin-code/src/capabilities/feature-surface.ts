@@ -11,26 +11,25 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 
 import {
-  AddFeatureDialog,
   FeatureArticle,
   FeatureCardContent,
   FeatureCompanion,
   FeatureLevelArticle,
   FeatureLevelCompanion,
   FeatureLevelOverview,
-  FeatureMapArticle,
   FeatureSection,
+  FeatureSpecCompanion,
   FeatureSpecView,
   ProjectFeatureCompanion,
   SpecLevelCompanion,
 } from '#containers';
 import { Feature, FeatureMap } from '#types';
 
-import { ADD_FEATURE_DIALOG, FEATURE_COMPANION } from '../constants.ts';
-import { type AddFeatureDialogProps } from '../containers/AddFeatureDialog/index.ts';
-import { SPEC_MAP_VIEWS } from '../containers/FeatureLevel/FeatureLevel.tsx';
+import { FEATURE_COMPANION } from '../constants.ts';
+import { isFeatureView } from '../spec-views.ts';
 
 const isTracked = (feature: Feature.Feature) => FeatureMap.findProject(feature) !== undefined;
 
@@ -41,16 +40,10 @@ const isProjectSpec = (value: unknown): value is Spec.Spec =>
 const isFreeSpec = (value: unknown): value is Spec.Spec =>
   Spec.instanceOf(value) && Project.getOwner(value) === undefined;
 
-/** The feature map's surfaces: features, the map of a spec no project owns, and the views and levels a project's specs gain. */
+/** The feature map's surfaces: features, and the views and levels a spec using the features dialect gains. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
-        id: 'feature.mapArticle',
-        filter: AppSurface.object(AppSurface.Article, Spec.Spec, ({ subject }) => isFreeSpec(subject)),
-        component: FeatureMapArticle,
-        props: ({ role, data }) => ({ role, ...data }),
-      }),
       Surface.create({
         id: 'feature.article',
         filter: AppSurface.object(AppSurface.Article, Feature.Feature, ({ subject }) => !isTracked(subject)),
@@ -102,6 +95,22 @@ export default Capability.makeModule(() =>
         component: FeatureLevelCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, feature: companionTo, attendableId }),
       }),
+      // The companion tabs of a feature's level, which are those of the spec breaking it down.
+      ...SpecSession.GROUPS.map((group) =>
+        Surface.create({
+          id: `feature.level.spec.${group}`,
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, SpecSession.companionVariant(group)),
+            AppSurface.companion(AppSurface.Article, Feature.Feature),
+          ),
+          component: FeatureSpecCompanion,
+          props: ({ data: { companionTo, attendableId } }) => ({
+            feature: companionTo,
+            group,
+            attendableId: attendableId ?? companionTo.id,
+          }),
+        }),
+      ),
       Surface.create({
         id: 'feature.level.overview',
         filter: Surface.makeFilter(ProjectSurface.LevelOverview, ({ subject }) => Feature.instanceOf(subject)),
@@ -110,7 +119,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'feature.specView',
-        filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => SPEC_MAP_VIEWS.some((mode) => mode === view)),
+        filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => isFeatureView(view)),
         component: FeatureSpecView,
         props: ({ data }) => data,
       }),
@@ -125,12 +134,6 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.CardContent, Feature.Feature),
         component: FeatureCardContent,
         props: ({ data: { subject } }) => ({ subject }),
-      }),
-      Surface.create({
-        id: ADD_FEATURE_DIALOG,
-        filter: AppSurface.component<AddFeatureDialogProps>(AppSurface.Dialog, ADD_FEATURE_DIALOG),
-        component: AddFeatureDialog,
-        props: ({ data: { props } }) => ({ ...props }),
       }),
     ]),
   ),

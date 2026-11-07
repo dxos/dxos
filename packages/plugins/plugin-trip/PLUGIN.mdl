@@ -441,6 +441,7 @@ op ExtractMessage
 
 ```mdl
 feat TravelMessageExtractor
+  uses: [Account, Booking, ExtractedFrom, MessageExtractor, Provider, Segment, Trip]
   desc: >
     plugin-trip's MessageExtractor impl. Matches confirmation emails for
     travel providers, dispatches to a per-provider parser, produces a
@@ -553,6 +554,7 @@ scenario extract-message operation
 
 ```mdl
 feat TripCalendarSource
+  uses: [CalendarEventLike, CalendarEventSource, Segment]
   desc: >
     plugin-trip's CalendarEventSource impl. Projects Segments into
     CalendarEventLike values on demand; no materialised events are
@@ -569,6 +571,7 @@ feat TripCalendarSource
 
 ```mdl
 feat TripMapMarkers
+  uses: [Trip]
   desc: >
     plugin-trip contributes a MapCapabilities.MarkerProvider (from @dxos/plugin-map) that plots a
     Trip's segments: one marker per segment (keyed by segment id) plus origin→destination arcs for

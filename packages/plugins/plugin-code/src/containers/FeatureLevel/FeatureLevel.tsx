@@ -8,20 +8,25 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import type * as Project from '@dxos/compute/Project';
+import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
+import type * as SpecSession from '@dxos/plugin-projects/SpecSession';
 import { type Task } from '@dxos/types';
 
-import { CodeOperation, Feature, FeatureMap, type FeatureMapView } from '#types';
+import { CodeOperation, Feature, FeatureMap } from '#types';
 
 import { useFeatureGraph, useOpenSpecLevel, useSpecTreeIds } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
+import { isFeatureView } from '../../spec-views.ts';
 
 // Lazy: the canvas engine is large, and only the map's own views need it.
 const SpecMap = lazy(() => import('../SpecFeatures/index.ts').then((module) => ({ default: module.SpecMap })));
+const SpecFeatures = lazy(() =>
+  import('../SpecFeatures/index.ts').then((module) => ({ default: module.SpecFeatures })),
+);
 
 // Lazy: only a feature's level shows it.
 const FeatureDetail = lazy(() =>
@@ -125,25 +130,62 @@ export const FeatureLevelOverview = ({ subject: feature, project, attendableId }
   );
 };
 
-/** The Specs tab's map views: a spec's features on a canvas or by status, at the level the tab is at. */
-export const SPEC_MAP_VIEWS: readonly FeatureMapView.Mode[] = ['canvas', 'kanban'];
-
 export type FeatureSpecViewProps = ProjectSurface.SpecViewData;
 
-/** A spec's feature map as a view of the project's Specs tab; a double-click on a card opens the feature's level. */
-export const FeatureSpecView = ({ subject, view, project, level, attendableId }: FeatureSpecViewProps) => {
-  const openLevel = useOpenSpecLevel(project, attendableId);
-  const feature = Feature.instanceOf(level) ? level : undefined;
-  const lineage = useMemo(() => (feature ? FeatureMap.getLineage(feature).map(({ id }) => id) : []), [feature]);
-  const handleZoom = useCallback((id: string) => openLevel(feature ?? subject, id), [openLevel, feature, subject]);
-  const mode = SPEC_MAP_VIEWS.find((mode) => mode === view);
-  if (!mode) {
+/**
+ * A spec's feature map as a view in its Structure tab. Beneath a project, a double-click on a card opens the feature's
+ * level; a spec no project tracks zooms in place.
+ */
+export const FeatureSpecView = ({ subject, view, project, attendableId }: FeatureSpecViewProps) => {
+  const owner = FeatureMap.getOwner(subject);
+  const tracker = project ?? (owner ? FeatureMap.findProject(owner) : Project.getOwner(subject));
+  if (!isFeatureView(view)) {
     return null;
   }
 
   return (
     <Suspense fallback={null}>
-      <SpecMap spec={subject} mode={mode} attendableId={attendableId} exclude={lineage} onZoom={handleZoom} />
+      {tracker ? (
+        <ProjectSpecMap spec={subject} project={tracker} owner={owner} attendableId={attendableId} />
+      ) : (
+        <SpecFeatures spec={subject} attendableId={attendableId} />
+      )}
     </Suspense>
+  );
+};
+
+type ProjectSpecMapProps = {
+  spec: Spec.Spec;
+  project: Project.Project;
+  /** The feature the spec breaks down. */
+  owner?: Feature.Feature;
+  attendableId: string;
+};
+
+const ProjectSpecMap = ({ spec, project, owner, attendableId }: ProjectSpecMapProps) => {
+  const openLevel = useOpenSpecLevel(project, attendableId);
+  const handleZoom = useCallback((id: string) => openLevel(owner ?? spec, id), [openLevel, owner, spec]);
+  return <SpecMap spec={spec} attendableId={attendableId} onZoom={handleZoom} />;
+};
+
+export type FeatureSpecCompanionProps = {
+  feature: Feature.Feature;
+  group: SpecSession.Group;
+  attendableId: string;
+};
+
+/** A companion tab of a feature's level: the tab of the spec breaking the feature down. */
+export const FeatureSpecCompanion = ({ feature, group, attendableId }: FeatureSpecCompanionProps) => {
+  const breakdown = useResolveRef(useObject(feature, 'spec')[0]);
+  if (!Spec.instanceOf(breakdown)) {
+    return null;
+  }
+
+  return (
+    <Surface.Surface
+      type={ProjectSurface.SpecCompanion}
+      data={{ subject: breakdown, group, project: FeatureMap.findProject(feature), attendableId }}
+      limit={1}
+    />
   );
 };
