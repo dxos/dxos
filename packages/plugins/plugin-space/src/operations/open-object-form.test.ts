@@ -112,7 +112,9 @@ const ephemeralState = () =>
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},
+    peerDecks: {},
     mergePreview: undefined,
+    following: undefined,
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);
 

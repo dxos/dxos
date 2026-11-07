@@ -154,11 +154,12 @@ op restoreAxis
 ```mdl
 op scrollToAnchor
   key: org.dxos.operation.sheet.scrollToAnchor
-  desc: Programmatically scrolls and highlights a cell range in an active grid instance.
+  desc: Programmatically scrolls and highlights a cell range in an active grid instance; it is the sheet's `Locator` reveal.
   input:
     subject: string              # attendable ID of the target sheet
-    cursor: string               # comment anchor (see [F-7.3])
-    ref?: any                    # active refs for highlight overlay
+    anchor: string               # cell-range anchor (see [F-7.3])
+    follow?: boolean             # scroll the range's first cell to the top left without moving the focused cell
+    thread?: any                 # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
 ```
@@ -271,7 +272,7 @@ feat F-6: Markdown Integration
 feat F-7: Anchor Navigation
 
   req F-7.1:
-    when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor
+    when: op:scrollToAnchor is invoked with a sheet attendable ID and anchor
     then: the corresponding SheetArticle scrolls to the target cell and applies the active-ref highlight
 
   req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus: by the range's top-left cell, row first, with anchors that no longer resolve last.
@@ -513,6 +514,31 @@ decision D-2: Anchors stored before [D-1], in A1 notation or `col,row,col,row`, 
 ```
 
 ---
+
+```mdl
+decision D-3: Revealing an anchor moves out of the comment config into a per-type `Locator`, which comments and peer presence both use.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [op:scrollToAnchor, F-7.1]
+```
+
+```mdl
+decision D-4: The sheet publishes the anchor of its cell selection to the `ViewLocation` view-state aspect, and no viewport. Fills in [D-3].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: The selection anchor is the same form comments use, so the reveal needs no new case.
+```
+
+```mdl
+decision D-5: With `follow`, the reveal scrolls the anchor's first cell to the top left and leaves the focused cell and the comment highlight alone, for following a peer (plugin-space F-8.20). Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: Following must not move the follower's focus, and the grid offers no scroll that keeps a cell merely in view.
+```
 
 ## Appendix: Extension Definitions
 

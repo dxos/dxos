@@ -28,6 +28,19 @@ export const SPACE_TYPE = 'org.dxos.type.space';
  */
 export const SPACE_HOME_NODE_TYPE = 'org.dxos.space.home';
 
+/** Type of a peer's hidden graph node; plugins contribute actions on a peer (jump to them, go to their object) here. */
+export const PEER_NODE_TYPE = 'org.dxos.space.peer';
+
+/** Data of a {@link PEER_NODE_TYPE} node. */
+export const PeerNodeData = Schema.Struct({
+  spaceId: Schema.String,
+  identityKey: Schema.String,
+  /** Set on a session's node under its peer's; the peer's own node acts on its most recently moved session. */
+  sessionId: Schema.optional(Schema.String),
+});
+
+export type PeerNodeData = Schema.Schema.Type<typeof PeerNodeData>;
+
 /** Type for the per-space virtual "Settings" section. Single source of truth is `AppNodeMatcher.SETTINGS_SECTION_TYPE`. */
 export const SETTINGS_SECTION_TYPE = AppNodeMatcher.SETTINGS_SECTION_TYPE;
 
@@ -80,9 +93,45 @@ export type SpacePluginOptions = {
   observability?: boolean;
 };
 
+/** One session's view of an object: a tab or app instance of a peer. */
 export type ObjectViewerProps = {
   lastSeen: number;
+  /** When the session last opened the object, came back to it, or moved its anchor there. */
+  movedAt: number;
   currentlyAttended: boolean;
+  device?: SessionDevice;
+  /** Where the peer is in the object, for each object open in their deck; see `ViewLocation` in react-ui-attention. */
+  location?: PeerLocation;
+};
+
+/** The device a session runs on, from its HALO device profile; the receiver names it. */
+export type SessionDevice = {
+  /** A label someone gave the device. */
+  label?: string;
+  /** The browser, or `App` for the native and mobile apps. */
+  platform?: string;
+  os?: string;
+  kind?: 'browser' | 'native' | 'mobile' | 'agent' | 'unknown';
+};
+
+/** Whom a session follows: a peer's most recently moved session, or one session of theirs. */
+export type FollowTarget = {
+  spaceId: string;
+  identityKey: string;
+  sessionId?: string;
+};
+
+/** A peer's caret and top of view in an object, as anchors in the object type's own format. */
+export type PeerLocation = {
+  selection?: string;
+  viewport?: string;
+};
+
+/** A session's deck in one space: the graph paths of its planks there, in order. */
+export type PeerDeck = {
+  planks: string[];
+  /** The plank its deck is scrolled to; see `front` on `AppCapabilities.Layout`. */
+  front?: string;
 };
 
 export type ObjectId = string;
@@ -91,7 +140,7 @@ export type PluginState = {
   /**
    * Which objects are currently being viewed by which peers.
    */
-  viewersByObject: Record<ObjectId, Record<string, ObjectViewerProps>>;
+  viewersByObject: Record<ObjectId, Record<string, Record<string, ObjectViewerProps>>>;
 
   /**
    * Cached space names, used when spaces are closed or loading.

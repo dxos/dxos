@@ -42,6 +42,7 @@ const SPEC_FILES = {
   'markdown': 'packages/plugins/plugin-markdown/PLUGIN.mdl',
   'presenter': 'packages/plugins/plugin-presenter/PLUGIN.mdl',
   'projects': 'packages/plugins/plugin-projects/PLUGIN.mdl',
+  'space': 'packages/plugins/plugin-space/PLUGIN.mdl',
 };
 
 /**

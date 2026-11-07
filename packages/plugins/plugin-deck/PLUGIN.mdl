@@ -24,6 +24,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -442,6 +443,13 @@ feat F-1: Deck Presentations
     when: viewing plank controls
     then: the reordering controls (increment-start / increment-end) are hidden pending a
           reordering UX revisit
+
+  req F-1.10:
+    when: a sliding deck scrolls, or a plank folds into or out of its left pile
+    then: the layout's `front` names the first plank not folded with at least half its width in view; a deck that is not
+          sliding names its first plank, and a flat deck (flattened, or mobile) its current one,
+          with the layout's `flat` set; a sliding deck whose planks changed since it last measured names none until it
+          measures the planks it shows
 ```
 
 ```mdl
@@ -908,6 +916,30 @@ test QA-2: Sidebar and companion toggles
       do: Click the companion toggle again.
       invoke: [op:UpdateCompanion] { open: false }
       expect: the companion pane closes
+```
+
+## Changelog
+
+```mdl
+decision D-1: The deck reports where it is scrolled as its front plank, the first one not folded with at least half its width in view, and whether it shows only its current plank, through `front` and `flat` on the layout. A follower in plugin-space mirrors a leader's deck scroll with them.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.10]
+  why: The scroll offset depends on the viewport's width and the planks' sizes; the plank at the front reads the same in another deck. The fold pass already measures every plank's place in the viewport. A plank that slides off the left edge without folding leaves a sliver, so being unfolded is not enough.
+  rejected: Expose the scroll offset in pixels.
+```
+
+```mdl
+decision D-2: A sliding deck re-measures its front when its planks change, not only their number, so a plank replaced in place is measured, and it keeps the planks each measurement was taken among; until it has measured the planks it shows (after a plank closes, before or at the front, a reorder, or the deck starting to slide), `front` is unset rather than naming a plank it may be nowhere near. Fills in [D-1].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.10]
+  why: The layout is broadcast the moment it changes, before the fold pass runs, so a stale fallback reached followers as the leader's front and slid them to the first plank and back.
+  rejected:
+    - Name the first plank while the front is stale; the first plank can be far from where the deck is scrolled.
+    - Withhold only a front plank that closed; a plank closing before it shifts the deck just as far.
 ```
 
 ---

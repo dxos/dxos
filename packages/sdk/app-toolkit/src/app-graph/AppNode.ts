@@ -329,8 +329,8 @@ export const makeDeckCompanion = <TData = any>({
   position?: Position.Position;
   joyride?: string;
   mount?: DeckCompanionMount;
-  /** Count shown on the companion's rail tab while greater than zero (e.g. unread items). */
-  badge?: Atom.Atom<number | undefined>;
+  /** Count shown on the companion's rail tab while greater than zero (e.g. unread items); `true` shows a dot. */
+  badge?: Atom.Atom<number | true | undefined>;
 }): AppGraphNode.NodeArg<TData> => ({
   id,
   type: DECK_COMPANION_TYPE,

@@ -20,7 +20,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import type { Database, Obj, Type } from '@dxos/echo';
+import type { Database, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
@@ -80,6 +80,16 @@ export type Layout = Readonly<{
    * Identifier of the item which should be scrolled into view.
    */
   scrollIntoView: string | undefined;
+  /**
+   * Whether the layout shows only its current item (a flattened deck, or mobile) rather than items side by side.
+   */
+  flat?: boolean;
+  /**
+   * The first item of the layout with at least half its width in view; the current item when {@link flat}, and the
+   * first item when the layout lays items side by side but is not scrolled. Where the layout is scrolled to,
+   * independent of its width. Unset while the layout has not yet measured the items it now shows.
+   */
+  front?: string;
 }>;
 
 /**
@@ -411,7 +421,6 @@ export type CommentConfig = Readonly<{
   id: string;
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
-  scrollToAnchor?: Operation.Definition.Any;
   /** The anchor a new comment on `selection` stores, when the object's anchors are not the selection's own form. */
   anchorFromSelection?: (obj: any, selection: Selection.Selection | undefined) => string | undefined;
 }>;
@@ -420,6 +429,33 @@ export type CommentConfig = Readonly<{
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/** Input of a {@link Locator}'s `reveal` operation. */
+export type RevealInput = {
+  /** Attendable id of the view, or the object's URI. */
+  subject: string;
+  /** Position in the type's own anchor format (the format comments and presence locations use). */
+  anchor: string;
+  /** Scroll the anchor to the top of the view and leave the caret and focus alone; presence follow reveals each move this way. */
+  follow?: boolean;
+  /** Comment thread to mark current, when revealing a comment. */
+  thread?: Ref.Ref<Thread.Thread>;
+};
+
+/**
+ * Reveals a position in an object, contributed per typename by plugins whose objects have anchors.
+ * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view,
+ * or with `follow` only scrolls.
+ */
+export type Locator = Readonly<{
+  id: string;
+  reveal: Operation.Definition<RevealInput, void>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const Locator = Capability$.make<Locator>()('org.dxos.app-framework.capability.locator');
 
 /**
  * The comments of graph nodes that cover more than one commentable object (a project and its specs, a level of a spec):

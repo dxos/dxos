@@ -400,6 +400,9 @@ export const Set = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.Array(Schema.String.annotate({ description: 'Ids of the items to set.' })),
+    focus: Schema.optional(
+      Schema.Literal(false).annotate({ description: 'Focus no item; by default the item attention falls to.' }),
+    ),
   }),
   output: Schema.Void,
 });
@@ -418,7 +421,6 @@ export const ScrollIntoView = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.optional(Schema.String.annotate({ description: 'The id of the item to scroll into view.' })),
-    cursor: Schema.optional(Schema.String.annotate({ description: 'A cursor to scroll to within the item.' })),
     ref: Schema.optional(Schema.String.annotate({ description: 'A reference id for the scroll target.' })),
     focus: Schema.optional(
       Schema.Union([Schema.Boolean, Schema.Literal('content')]).annotate({
