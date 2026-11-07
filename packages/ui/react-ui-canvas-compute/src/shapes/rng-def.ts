@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { RandomComponent } from './RNG.tsx';
@@ -27,7 +29,7 @@ export type CreateRandomProps = CreateShapeProps<RandomShape>;
 export const createRandom = (props: CreateRandomProps) =>
   createShape<RandomShape>({
     type: 'rng',
-    size: { width: 64, height: 64 },
+    size: { width: MAJOR_GRID, height: MAJOR_GRID },
     ...props,
   });
 

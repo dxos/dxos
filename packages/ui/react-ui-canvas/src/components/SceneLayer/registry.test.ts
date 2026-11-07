@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type NodeBase, NoteNode, RectNode, isBuiltinNode, nodeBase } from '@dxos/scene';
+import { MAJOR_GRID, type NodeBase, NoteNode, RectNode, isBuiltinNode, nodeBase } from '@dxos/scene';
 
 import { type CreateProps, type NodeDef, type NodeRegistry, createNodeRegistry, nodeDef } from '../../model/index.ts';
 import { createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';
@@ -35,17 +35,18 @@ const registry: NodeRegistry = { ...defaultNodeRegistry, function: functionDef }
 
 describe('registry', () => {
   test("a host type's schema is its registry entry's; the engine handles the node as a `NodeBase`", ({ expect }) => {
-    const fn = functionDef.create({
-      id: 'f',
-      z: 'a',
-      center: { x: 64, y: 64 },
-      size: nominalSize(functionDef.defaultSize),
-    });
+    const size = nominalSize(functionDef.defaultSize);
+    const center = { x: MAJOR_GRID, y: MAJOR_GRID };
+    const fn = functionDef.create({ id: 'f', z: 'a', center, size });
     expect(Schema.is(functionDef.schema)(fn)).toBe(true);
     // A built-in schema rejects the host type; the engine still handles the node as a `NodeBase`.
     expect(Schema.is(RectNode)(fn)).toBe(false);
     expect(isBuiltinNode(fn)).toBe(false);
-    expect(nodeBounds(fn)).toEqual({ x: 0, y: 32, width: 128, height: 64 });
+    expect(nodeBounds(fn)).toEqual({
+      x: center.x - size.width / 2,
+      y: center.y - size.height / 2,
+      ...size,
+    });
   });
 
   test('the registry supplies the ports, frame and definition of a host node', ({ expect }) => {
