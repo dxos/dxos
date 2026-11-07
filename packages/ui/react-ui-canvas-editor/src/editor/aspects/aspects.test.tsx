@@ -133,6 +133,55 @@ describe('SceneEditor aspects', () => {
     expect(reorder?.kind === 'reorder' && reorder.order > 'a3').toBe(true);
   });
 
+  test('an element stored without a key is keyed by the restack, as the view had been drawing it', () => {
+    const intents: { layout: string; intent: LayoutIntent }[] = [];
+    let table: CommandTable | undefined;
+    // `b` has no key, so the view mints one and draws it above `a`; a restack that read the stored value as the
+    // bottom would send it to the back and write nothing.
+    const unkeyed: Scene.SceneDocument = {
+      ...ORDERED,
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          elements: {
+            a: { id: 'a', type: 'rect', z: '1' },
+            b: { id: 'b', type: 'rect' },
+            c: { id: 'c', type: 'rect' },
+          },
+        },
+      ],
+    };
+    const Probe = () => {
+      const selection = useSceneSelection('Probe');
+      table = useAtomValue(useSceneCommands('Probe').atoms.table);
+      useEffect(() => selection.commands.select(['b']), []);
+      return null;
+    };
+    render(
+      <SceneEditor.Root
+        config={CONFIG}
+        document={unkeyed}
+        scene='s'
+        onIntent={(layout, intent) => intents.push({ layout, intent })}
+        display={DISPLAY}
+      >
+        <Probe />
+      </SceneEditor.Root>,
+    );
+    act(() => table?.get('send-to-back')?.run?.());
+    const batch = intents[0]?.intent;
+    const reorders = batch?.kind === 'batch' ? batch.intents : [];
+    const keys = new Map(
+      reorders.flatMap((intent) => (intent.kind === 'reorder' ? [[intent.id, intent.order] as const] : [])),
+    );
+    // `b` is keyed under `a`'s stored key, and `c`, which the view had also been drawing on a minted key, is
+    // written where it was drawn rather than left to be read as the bottom next time.
+    expect([...keys.keys()].sort()).toEqual(['b', 'c']);
+    expect(keys.get('b')! < '1').toBe(true);
+    expect(keys.get('c')! > '1').toBe(true);
+  });
+
   test('a 3D scene offers no restack, since it draws by depth rather than in a stored order', () => {
     let table: CommandTable | undefined;
     const Probe = () => {

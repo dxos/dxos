@@ -4,7 +4,7 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 
-import { orderToEnd } from '@dxos/react-ui-canvas';
+import { initialKeys, orderToEnd } from '@dxos/react-ui-canvas';
 import { type Scene, findLayout, resolveLayout } from '@dxos/scene';
 
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from '../clipboard.ts';
@@ -93,6 +93,16 @@ export const createCommandsAspect = <C>(
   };
   /** A link is an element with ends; the two paint in groups of their own, as the engine stacks them. */
   /** Restacks the selection within the open layout: one reorder per element that moves, in one batch (one undo step). */
+  /** The keys the first restack writes for the elements the view had been drawing on a minted one. */
+  const mintedEntries = (
+    elements: readonly Scene.Element[],
+    keyed: readonly { id: string; z?: string }[],
+  ): [string, string][] =>
+    elements.flatMap((element, index) => {
+      const z = keyed[index]?.z;
+      return element.z === undefined && z !== undefined ? [[element.id, z] as [string, string]] : [];
+    });
+
   const orderSelection = (place: 'front' | 'back') => () => {
     const open = registry.get(atoms.layout);
     const record = open === undefined ? undefined : findLayout(registry.get(atoms.document), open);
@@ -101,9 +111,18 @@ export const createCommandsAspect = <C>(
       return;
     }
     const selection = registry.get(editorSelection.atoms.selection);
+    const elements = Object.values(record.elements);
+    // The view mints a key for an element stored without one, so it can draw above a low stored key while a restack
+    // would read it as the bottom and write nothing. The first restack mints them for real, in the order the view
+    // laid them out, and the two agree from then on.
+    const minted = elements.some(({ z }) => z === undefined) ? initialKeys(elements.length) : undefined;
+    const keyed = elements.map((element, index) => ({ ...element, z: element.z ?? minted?.[index] }));
     // Nodes and links share one paint order, so they restack against each other: a shape brought to the front
     // goes over the links too, and a link sent to the back goes under the shapes.
-    const keys = orderToEnd(Object.values(record.elements), selection, place);
+    const keys = {
+      ...Object.fromEntries(minted ? mintedEntries(elements, keyed) : []),
+      ...orderToEnd(keyed, selection, place),
+    };
     const intents = Object.entries(keys).map(([id, order]) => ({ kind: 'reorder' as const, id, order }));
     intents.length > 0 && intent(open, { kind: 'batch', intents });
   };
