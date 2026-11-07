@@ -125,7 +125,8 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
           aria-hidden
           className='dx-cover -z-10 pointer-events-none'
           style={{
-            backgroundColor: `var(--color-${followHue}-surface)`,
+            // A light wash keeps the title and controls readable over it.
+            backgroundColor: `color-mix(in oklab, var(--color-${followHue}-border) 18%, transparent)`,
             boxShadow: `inset 0 -2px 0 var(--color-${followHue}-border)`,
           }}
           data-testid='spacePlugin.presence.followHeading'
