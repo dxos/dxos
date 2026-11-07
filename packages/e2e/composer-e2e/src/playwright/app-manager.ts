@@ -428,6 +428,8 @@ export class AppManager {
   async createSpaceInvitation(): Promise<string> {
     this._invitationCode = new Trigger<string>();
     this._authCode = new Trigger<string>();
+    // The lazy contact picker mounts above the invite button and pushes it down; a click before then misses.
+    await expect(this.page.getByTestId('contactPicker')).toBeVisible();
     await this.page.getByTestId('membersContainer.createInvitation.more').click();
     await this.page.getByTestId('membersContainer.inviteOne').click();
     await this.page.getByTestId('membersContainer.createInvitation').click();
