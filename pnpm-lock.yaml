@@ -21076,6 +21076,9 @@ importers:
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../common/display-name
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -21091,6 +21094,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../../core/halo/halo-react
       '@dxos/i18n':
         specifier: workspace:*
         version: link:../../common/i18n
