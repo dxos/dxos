@@ -4,7 +4,7 @@
 
 import { type EditorState } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import React, { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type CSSProperties, type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   type BlockPart,
@@ -100,16 +100,17 @@ const isEmpty = (value: unknown) => value === undefined || value === '' || (Arra
 
 const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  const { readonly, specs } = view.state.facet(specBlocksConfig);
+  const { readonly, specs, facts } = view.state.facet(specBlocksConfig);
   const value = decodeBlock(view.state.doc.toString(), block, schema);
   const context = useMemo<BlockFormContext>(
     () => ({
       blocks,
       block,
       specs,
+      facts,
       defaults: { item: t('spec-block.new-item.text'), entry: t('spec-block.new-entry.text') },
     }),
-    [blocks, block, specs, t],
+    [blocks, block, specs, facts, t],
   );
   const raw = value.raw.join(',');
   const optionsKey = formOptionsKey(schema, context);
@@ -196,7 +197,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
             hidden: !active && isEmpty(values[formKey(field.name)]),
             newItem: newFormItem(field, context),
             ...(!isTagField(field, value) &&
-              ['beside', 'keyed'].includes(fieldRow(field, value)) && { hideLabel: true }),
+              ['beside', 'keyed', 'stacked'].includes(fieldRow(field, value)) && { hideLabel: true }),
             ...(isBoundField(field, value) && {
               collaborative: true,
               presentation: 'plain',
@@ -232,24 +233,57 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
     [schema, raw, readonly, active, named, blocks, block, context, JSON.stringify(values), t],
   );
 
-  // A keyed field's line is its text beside the label the spec cites it by, rather than a group of its key and text.
-  const keyedLine = useCallback<FormFieldProvider>(
-    ({ fieldProps: { path = [], getValue } }) => {
+  // A list element of a keyed field or a table is one line, rather than a group of its parts: a keyed line's text
+  // beside the label the spec cites it by, and a table row as the source writes it until the card is pressed.
+  const line = useCallback<FormFieldProvider>(
+    ({ fieldProps: { path = [], getValue, readonly: fixed } }) => {
       const [name, at] = path;
-      if (path.length !== 2 || typeof at !== 'number' || !keyed.some((field) => formKey(field.name) === name)) {
-        return undefined;
+      const field =
+        path.length === 2 && typeof at === 'number'
+          ? schema.fields.find((candidate) => formKey(candidate.name) === name)
+          : undefined;
+      if (field?.type.kind === 'keyed') {
+        const key = (getValue() as Partial<Entry> | undefined)?.key ?? '';
+        return (
+          <Layout.Flex align='baseline' gap='sm'>
+            <span className={LABEL} style={hueText(schema.hue)}>
+              {labelOf(blocks, block, key) ?? key}
+            </span>
+            <Layout.Container gutter='none' classNames='grow basis-0 min-w-0'>
+              <Form.Fields path={[name, at]} include={['text']} layout='plain' />
+            </Layout.Container>
+          </Layout.Flex>
+        );
       }
-      const key = (getValue() as Partial<Entry> | undefined)?.key ?? '';
-      return (
-        <Layout.Flex align='baseline' gap='sm'>
-          <span className={LABEL}>{labelOf(blocks, block, key) ?? key}</span>
-          <Layout.Container gutter='none' classNames='grow basis-0 min-w-0'>
-            <Form.Fields path={[name, at]} include={['text']} layout='plain' />
-          </Layout.Container>
-        </Layout.Flex>
-      );
+      if (field?.type.kind === 'map') {
+        const row = (getValue() ?? {}) as Partial<Row>;
+        // Only a row whose value is a type can be optional; any other row's value is a description.
+        const typed = field.type.value === 'type';
+        return fixed ? (
+          <span className='block truncate'>
+            {row.name}
+            <span className='text-description'>{row.optional ? '?:' : ':'} </span>
+            {typed ? (
+              <span style={hueText(blocks.schemas.get('type')?.hue)}>{row.value}</span>
+            ) : (
+              <span className='text-description'>{row.value}</span>
+            )}
+          </span>
+        ) : (
+          <Layout.Flex align='center' gap='sm' data-testid={`${name}[${at}]`}>
+            <Layout.Container gutter='none' classNames={typed ? 'basis-1/3 min-w-0' : 'basis-1/4 min-w-0'}>
+              <Form.Fields path={[name, at]} include={['name']} layout='plain' />
+            </Layout.Container>
+            <Layout.Container gutter='none' classNames='grow basis-0 min-w-0'>
+              <Form.Fields path={[name, at]} include={['value']} layout={typed ? 'inline' : 'plain'} />
+            </Layout.Container>
+            {(typed || row.optional) && <Form.Fields path={[name, at]} include={['optional']} layout='inline' />}
+          </Layout.Flex>
+        );
+      }
+      return undefined;
     },
-    [blocks, block, keyed],
+    [blocks, block, schema],
   );
 
   const handleValuesChanged = useCallback(
@@ -273,18 +307,6 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
   const stray = block.fields.length > 0 ? block.prose.filter((line) => line.from > block.fields[0].from).length : 0;
   const tags = schema.fields.filter((field) => isTagField(field, value)).map(({ name }) => formKey(name));
   const rows = bodyRows(schema, value, named);
-
-  const handleAddRow = (field: FieldSchema) =>
-    updateBlock(view, { kind, id, index }, (before) => {
-      const rows = (before.fields[field.name] ?? []) as readonly Row[];
-      const row = newFormItem(field, context)?.(rows) as Row;
-      return { ...before, fields: { ...before.fields, [field.name]: [...rows, row] } };
-    });
-  const handleRemoveRow = (field: FieldSchema, at: number) =>
-    updateBlock(view, { kind, id, index }, (before) => {
-      const rows = ((before.fields[field.name] ?? []) as readonly Row[]).filter((_, candidate) => candidate !== at);
-      return { ...before, fields: { ...before.fields, [field.name]: rows.length > 0 ? rows : undefined } };
-    });
 
   return (
     <Form.Root
@@ -321,7 +343,7 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                 </span>
               ) : (
                 <Layout.Flex align='center' gap='sm'>
-                  <span className={LABEL} title={block.kind} data-testid='spec-block.label'>
+                  <span className={LABEL} style={hueText(schema.hue)} title={block.kind} data-testid='spec-block.label'>
                     {label ?? block.kind}
                   </span>
                   <Layout.Flex column grow>
@@ -336,21 +358,9 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                   return isEmpty(values[key]) && !active ? null : (
                     <Card.Row key={key} span='end'>
                       <Layout.Container gutter='none'>
-                        <Form.Fields include={[key]} fieldProvider={keyedLine} />
+                        <Form.Fields include={[key]} fieldProvider={line} />
                       </Layout.Container>
                     </Card.Row>
-                  );
-                }
-                if (row === 'stacked' && field) {
-                  return (
-                    <MapRows
-                      key={key}
-                      field={field}
-                      rows={(value.fields[field.name] ?? []) as readonly Row[]}
-                      editable={active}
-                      onAdd={handleAddRow}
-                      onRemove={handleRemoveRow}
-                    />
                   );
                 }
                 if (describing.includes(key) ? !isShown(key) : !active && isEmpty(values[key])) {
@@ -359,11 +369,11 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
                 // Each row is a template root of its own, so its fields lay out in the row rather than the form's tracks.
                 return (
                   <Card.Row key={key} span='end'>
-                    {row === 'beside' && field ? (
+                    {(row === 'beside' || row === 'stacked') && field ? (
                       <Layout.Flex align='baseline' gap='sm'>
                         <span className={FIELD_LABEL}>{fieldTitle(field.name)}</span>
                         <Layout.Container gutter='none' classNames='grow basis-0 min-w-0'>
-                          <Form.Fields include={[key]} />
+                          <Form.Fields include={[key]} fieldProvider={line} />
                         </Layout.Container>
                       </Layout.Flex>
                     ) : (
@@ -387,6 +397,10 @@ const BlockForm = ({ view, locator, blocks, block, schema }: BlockFormProps) => 
 };
 
 const NAMED_ROLES: readonly BlockRole[] = ['context', 'structure'];
+
+/** Text in a kind's hue, as the source view colours ids, so a label reads as its kind's; plain for no hue. */
+const hueText = (hue: string | undefined): CSSProperties | undefined =>
+  hues.some((candidate) => candidate === hue) ? { color: `var(--color-${hue}-text)` } : undefined;
 
 /** The field a kind describes a block in besides its prose, as the language's kinds name it. */
 const DESCRIPTION = 'desc';
@@ -481,75 +495,4 @@ const useActive = (ref: RefObject<HTMLElement | null>, scope: HTMLElement): bool
     };
   }, [ref, scope]);
   return active;
-};
-
-type MapRowsProps = {
-  field: FieldSchema;
-  rows: readonly Row[];
-  /** Draws each row as its fields, with the add and remove actions; at rest a row reads as the source writes it. */
-  editable: boolean;
-  onAdd: (field: FieldSchema) => void;
-  onRemove: (field: FieldSchema, at: number) => void;
-};
-
-/** A table's rows (a type's fields), one line each beside the table's label. */
-const MapRows = ({ field, rows, editable, onAdd, onRemove }: MapRowsProps) => {
-  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  const name = formKey(field.name);
-  if (!editable && rows.length === 0) {
-    return null;
-  }
-  return (
-    <>
-      {rows.map((row, at) => (
-        <Card.Row
-          key={at}
-          span='end'
-          trailing={
-            editable && (
-              <Card.Action
-                icon='ph--x--regular'
-                label={t('spec-block.remove-row.label')}
-                onClick={() => onRemove(field, at)}
-              />
-            )
-          }
-        >
-          <Layout.Flex align='baseline' gap='sm'>
-            <span className={FIELD_LABEL}>{at === 0 && fieldTitle(field.name)}</span>
-            {editable ? (
-              <Layout.Flex align='center' gap='sm' classNames='grow min-w-0' data-testid={`${name}[${at}]`}>
-                <Layout.Container gutter='none' classNames='basis-1/4 min-w-0'>
-                  <Form.Fields path={[name, at]} include={['name']} layout='plain' />
-                </Layout.Container>
-                <Layout.Container gutter='none' classNames='basis-1/4 min-w-0'>
-                  <Form.Fields path={[name, at]} include={['value']} layout='inline' />
-                </Layout.Container>
-                <Form.Fields path={[name, at]} include={['optional']} layout='inline' />
-                <Layout.Container gutter='none' classNames='grow basis-0 min-w-0'>
-                  <Form.Fields path={[name, at]} include={['note']} layout='plain' />
-                </Layout.Container>
-              </Layout.Flex>
-            ) : (
-              <Card.Text truncate>
-                {row.name}
-                {row.optional && '?'}
-                <span className='text-description'>: {row.value}</span>
-                {row.note && <span className='text-description'> — {row.note}</span>}
-              </Card.Text>
-            )}
-          </Layout.Flex>
-        </Card.Row>
-      ))}
-      {editable && (
-        <Card.Row
-          leading={<Icon.Icon icon='ph--plus--regular' size='xs' tone='muted' />}
-          onClick={() => onAdd(field)}
-          data-testid={`${name}.add`}
-        >
-          <Card.Text variant='muted'>{t('spec-block.add-row.label', { name: fieldTitle(field.name) })}</Card.Text>
-        </Card.Row>
-      )}
-    </>
-  );
 };

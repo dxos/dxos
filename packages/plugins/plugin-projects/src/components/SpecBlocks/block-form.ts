@@ -18,8 +18,10 @@ import {
   parseCitation,
 } from '@dxos/deus/schema';
 import { Annotation, Format } from '@dxos/echo';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { OptionsLookupAnnotation, type OptionsLookupEntry, optionsLookup } from '@dxos/react-ui-form';
 
+import type * as ProjectCapabilities from '../../types/ProjectCapabilities.ts';
 import { type SpecBlocks } from './spec-blocks-state.ts';
 
 /** Form keys for a block's header title and inline prose; not MDL field names, which start with a letter. */
@@ -37,6 +39,8 @@ export type BlockFormContext = {
   specs?: () => readonly { id: string; name?: string }[];
   /** The text an item, a row's name or a keyed line added from the form starts with. */
   defaults: { item: string; entry: string };
+  /** A style per value of a choice field, by field name. */
+  facts?: ProjectCapabilities.SpecFacts;
 };
 
 const Text = Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text));
@@ -67,6 +71,7 @@ export const blockOptions = (
       label: label ?? key,
       secondaryLabel: block.title,
       icon: schemas.get(kind)?.icon,
+      hue: schemas.get(kind)?.hue,
     }));
 
 /** What a type expression may name: the built-in types, then the spec's `type` blocks by name. */
@@ -138,7 +143,17 @@ const fieldSchema = (field: FieldSchema, value: BlockValue, context: BlockFormCo
     case 'number':
       return Schema.Number;
     case 'literal':
-      return Schema.Literals(type.options);
+      // Each choice as a title, with its package's icon and hue where it has one (`in-progress` → In progress).
+      return Schema.Literals(type.options).annotate({
+        [PropertyMetaAnnotationId]: {
+          singleSelect: {
+            options: type.options.map((id) => {
+              const style = context.facts?.[field.name]?.[id];
+              return { id, title: fieldTitle(id), color: style?.hue, icon: style?.icon };
+            }),
+          },
+        },
+      });
     case 'ref': {
       if (!isPickedRef(field, context.blocks)) {
         return type.many ? Schema.Array(Schema.String).pipe(Ordered) : Schema.String;
@@ -164,7 +179,6 @@ const fieldSchema = (field: FieldSchema, value: BlockValue, context: BlockFormCo
             ? Picked(typeOptions(context))
             : Schema.String
           ).annotate({ title: type.value === 'type' ? 'Type' : 'Value' }),
-          note: Schema.optional(Schema.String).annotate({ title: 'Note' }),
         }),
       ).pipe(Ordered);
     case 'keyed':
@@ -209,7 +223,9 @@ export const formOptionsKey = (schema: BlockSchema, context: BlockFormContext): 
         ? refOptions(field, context)
         : field.type.kind === 'typeExpr' || field.type.kind === 'map'
           ? typeOptions(context)
-          : null,
+          : field.type.kind === 'literal'
+            ? (context.facts?.[field.name] ?? null)
+            : null,
     ),
   );
 
@@ -241,6 +257,8 @@ export const toFormValues = (
         case 'list':
           return [key, strings(current)];
         case 'map':
+          // A row's comment stays in the source; the form shows what the row states.
+          return [key, (current as readonly Row[]).map(({ note: _, ...row }) => row)];
         case 'keyed':
           return [key, current];
         default:
@@ -327,14 +345,25 @@ export const fromFormValues = (
         case 'map': {
           const rows = current as readonly Partial<Row>[];
           const kept = rows.filter((row) => row.name);
+          const previous = (before ?? []) as readonly Row[];
+          // A row keeps its comment: the comment of the row with its name, or, with no row added or removed, of the
+          // row it renames.
+          const noteOf = (row: Partial<Row>, at: number) =>
+            (
+              previous.find((candidate) => candidate.name === row.name) ??
+              (previous.length === rows.length ? previous[at] : undefined)
+            )?.note;
           return [
             field.name,
-            rows.map((row) => ({
-              name: row.name || freshName(kept),
-              optional: !!row.optional,
-              value: row.value ?? '',
-              ...(row.note && { note: row.note }),
-            })),
+            rows.map((row, at) => {
+              const note = noteOf(row, at);
+              return {
+                name: row.name || freshName(kept),
+                optional: !!row.optional,
+                value: row.value ?? '',
+                ...(note && { note }),
+              };
+            }),
           ];
         }
         case 'keyed': {

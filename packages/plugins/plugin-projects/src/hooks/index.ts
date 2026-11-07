@@ -10,4 +10,5 @@ export * from './useRefTargets.ts';
 export * from './useSpecBlockForms.ts';
 export * from './useSpecBlocks.ts';
 export * from './useSpecExtensions.ts';
+export * from './useSpecFacts.ts';
 export * from './useSpecReviews.ts';

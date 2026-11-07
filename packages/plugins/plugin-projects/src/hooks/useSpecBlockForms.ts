@@ -12,6 +12,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { SharedAwareness, specBlocks } from '../components/SpecBlocks/index.ts';
+import { useSpecFacts } from './useSpecFacts.ts';
 
 export type UseSpecBlockFormsOptions = {
   /** `preview` draws each block as a form over its kind's schema, `readonly` as one that does not edit, `source` as text. */
@@ -33,6 +34,7 @@ export const useSpecBlockForms = (
 ): SpecBlockForms => {
   const [dialects = EMPTY] = useObject(spec, 'dialects');
   const awareness = useMemo(() => new SharedAwareness(), [spec]);
+  const facts = useSpecFacts(dialects);
   // Read through a ref, so a spec added or renamed reaches the pickers without rebuilding the editor.
   const specs = useQuery(spec && getSpace(spec)?.db, Filter.type(Spec.Spec));
   const specsRef = useRef(specs);
@@ -54,11 +56,12 @@ export const useSpecBlockForms = (
             awareness,
             fieldExtensions,
             specs: specOptions,
+            facts,
           })
         : [],
       wrapAwareness: awareness.wrap,
     }),
-    [spec, dialects, viewMode, awareness, fieldExtensions, specOptions],
+    [spec, dialects, viewMode, awareness, fieldExtensions, specOptions, facts],
   );
 };
 

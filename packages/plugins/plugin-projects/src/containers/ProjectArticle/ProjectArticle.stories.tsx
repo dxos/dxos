@@ -549,7 +549,7 @@ export const SpecBlockForms: Story = {
     });
     await waitFor(() => expect(text()).toContain(': A muted sender is archived.\n'), { timeout: 5_000 });
     await userEvent.click(within(featureCard()).getByTestId('status'));
-    await userEvent.click(await screen.findByRole('option', { name: 'prototype' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Prototype' }));
     await waitFor(() => expect(text()).toContain('  status: prototype\n'), { timeout: 5_000 });
     await expect(text()).toContain(': A muted sender is archived.\n');
   },

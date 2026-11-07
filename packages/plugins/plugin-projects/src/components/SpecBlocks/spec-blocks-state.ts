@@ -7,6 +7,7 @@ import { type EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { type BlockSchema, type DialectRegistry, type SourceBlock, type SpecItem, specItems } from '@dxos/deus/schema';
 
+import type * as ProjectCapabilities from '../../types/ProjectCapabilities.ts';
 import { specSchemas } from '../../util/spec-schemas.ts';
 import { type SharedAwareness } from './shared-awareness.ts';
 
@@ -24,6 +25,8 @@ export type SpecBlocksConfig = {
   fieldExtensions?: Extension[];
   /** The specs a `Ref<spec>` field may cite, read when its picker draws. */
   specs?: () => readonly SpecOption[];
+  /** A style per value of a choice field, by field name, from the spec's packages: a feature's status, for one. */
+  facts?: ProjectCapabilities.SpecFacts;
 };
 
 /** A spec a `Ref<spec>` field may cite, by object id. */
