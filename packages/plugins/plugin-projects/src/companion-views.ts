@@ -5,7 +5,7 @@
 import type * as Translations from '@dxos/app-toolkit/Translations';
 
 import { ProjectsNamespace } from './namespace.ts';
-import type * as SpecSession from './types/SpecSession.ts';
+import type * as SpecSession from './SpecSession.ts';
 
 const IDS = ['definitions', 'related', 'cursor', 'ledger', 'review'] as const;
 

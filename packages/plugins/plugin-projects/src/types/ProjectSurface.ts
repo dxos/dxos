@@ -10,7 +10,7 @@ import type * as Spec from '@dxos/compute/Spec';
 import type { Obj } from '@dxos/echo';
 import type { Task } from '@dxos/types';
 
-import type * as SpecSession from './SpecSession.ts';
+import type * as SpecSession from '../SpecSession.ts';
 
 /** A view of a spec in one of its companion tabs, for the specs using the contributor's dialects. */
 export type SpecViewData = {

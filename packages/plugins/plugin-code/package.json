@@ -224,7 +224,6 @@
   "dependencies": {
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/lang-markdown": "catalog:",
-    "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
@@ -263,7 +262,6 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
-    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",

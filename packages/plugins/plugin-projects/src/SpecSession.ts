@@ -11,7 +11,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Translations from '@dxos/app-toolkit/Translations';
 import { type SourceKey } from '@dxos/deus/review';
 
-import { ProjectsNamespace } from '../namespace.ts';
+import { ProjectsNamespace } from './namespace.ts';
 
 /** The companion tabs of a spec, each switching between the views contributed to it. */
 export const GROUPS = ['structure', 'decisions', 'review'] as const;
