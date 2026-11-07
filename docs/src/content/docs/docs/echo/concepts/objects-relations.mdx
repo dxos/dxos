@@ -1,0 +1,41 @@
+---
+title: Objects and relations
+description: Entities, the reserved fields, and parent and child ownership.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+An object is the unit of data in ECHO, like a document or a row in other databases, and it always belongs to one space.
+
+## Model
+
+An object has fields with values, and references to other objects. References let objects form trees and graphs.
+
+Field values are JavaScript strings, numbers, booleans and `null`, and objects and arrays of those. The top level of an object is always a JavaScript object, never a single number or string.
+
+Every object also carries fields that ECHO manages:
+
+| Field | How to read it |
+| --- | --- |
+| Id | `obj.id` |
+| Type | `Obj.getTypename(obj)` |
+| Metadata, such as keys from other systems | `Obj.getMeta(obj)` |
+| Whether it was removed | `Obj.isDeleted(obj)` |
+
+An object either has a type, declared as in [Defining types](/docs/echo/learn/defining-types/), or is an `Expando` that accepts any fields.
+
+## Behavior
+
+- `Obj.make` creates an object with an id and the DXN of its type. <SpecCite item="org.dxos.echo#F-3.1" />
+- A change to an object's field notifies `Obj.subscribe` listeners and re-runs query subscriptions. <SpecCite item="org.dxos.echo#F-3.2" />
+- Serializing an object and reading it back keeps its id, type, metadata and references. <SpecCite item="org.dxos.echo#F-3.4" />
+- A reference stores the DXN of its target and loads the target only when read. <SpecCite item="org.dxos.echo#F-4.1" />
+- Removing an object marks it as removed. It stays in the change history until the next [epoch](/docs/additional-resources/glossary#epoch), so a peer that wrote while offline can still reconcile its changes.
+
+## Limits
+
+<Aside type="caution">
+  This page is a first pass ported from the earlier ECHO guides. It does not yet describe relations or parent and
+  child ownership, and the removal behavior does not cite a spec item.
+</Aside>

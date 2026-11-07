@@ -1,0 +1,17 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+import { snippetSource, snippetWithContext } from '../echo/snippets.ts';
+
+interface Props {
+  file: string;
+  region?: string;
+  title?: string;
+  lang?: string;
+  /** Numbers cost width that a side-by-side column cannot spare. */
+  numbered?: boolean;
+}
+
+const { file, region, title, lang = 'ts', numbered = true } = Astro.props;
+---
+<Code code={snippetWithContext(file, region)} lang={lang} title={title} meta={`twoslash showLineNumbers=${numbered}`} />

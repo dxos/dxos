@@ -1,0 +1,4 @@
+/* The react-ui theme for the demos: the workspace entry, plus the demo sources it does not scan. */
+@import '../../../packages/ui/ui-theme/src/workspace.css';
+
+@source '../demos/**/*.{ts,tsx}';

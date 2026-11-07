@@ -1,0 +1,38 @@
+---
+title: Welcome
+description: What ECHO is and how these docs are organized.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+ECHO, the **E**ventually **C**onsistent **H**ierarchical **O**bject store, is a peer-to-peer graph database for TypeScript.
+
+## Model
+
+- Peers replicate data with [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). There is no central authority: the data lives with the clients.
+- Peers connect to each other over [WebRTC](https://en.wikipedia.org/wiki/WebRTC).
+- Several writers can change the same data at once, including structured objects and collaborative text.
+- A peer can write while offline. Its changes merge when it rejoins the network.
+
+Data lives in [spaces](/docs/echo/concepts/spaces/), and each unit of data is an [object](/docs/echo/concepts/objects-relations/). [Why ECHO?](/docs/echo/why-echo/) makes the case for this design.
+
+## How these docs are organized
+
+- **Learn** builds one app step by step, from [Installation](/docs/echo/learn/installation/) to [Sharing a space](/docs/echo/learn/sharing/):
+  1. Install `@dxos/client` and create a client.
+  2. Set up an identity with [HALO](/docs/halo/introduction).
+  3. Create or join a space.
+  4. Add, change and query objects.
+- **Core concepts** describe one idea each, for a reader who has finished Learn.
+- **Guides** cover a framework, such as [React](/docs/echo/guides/react/).
+- **Reference** covers one module per page, such as [Filter](/docs/echo/reference/filter/).
+
+## Behavior
+
+Each concept page states what ECHO guarantees, and each claim cites an item in the ECHO spec.
+
+## Limits
+
+<Aside type="caution">
+  These docs are being written. A page marked planned in the sidebar shows its scope but has no content yet.
+</Aside>

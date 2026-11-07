@@ -1,0 +1,51 @@
+---
+title: Mutating objects
+description: Change objects with Obj.update and observe the change.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page you will add an object to a space, watch it, change it, and remove it.
+
+<Steps>
+
+1. **Add an object.** `db.add` starts tracking the object and returns it. The `Task` type comes from [Defining types](/docs/echo/learn/defining-types/).
+
+   <Snippet file="mutating" region="add" />
+
+   The write queues in the client and starts reaching the space's other peers on the next tick.
+
+2. **Watch it.** `Obj.subscribe` calls back after each change to the object and returns a function that stops the subscription.
+
+   <Snippet file="mutating" region="subscribe" />
+
+3. **Change it.** Fields change inside `Obj.update`. The callback gets a mutable view of the object.
+
+   <Snippet file="mutating" region="update" />
+
+   The subscriber from step 2 has run, so `titles` holds both titles. Peers that edit the same task concurrently merge with this change.
+
+4. **Store an object without a type.** `Expando` accepts any fields, for data whose shape you have not declared yet.
+
+   <Snippet file="mutating" region="expando" />
+
+5. **Remove an object.** `db.remove` works the same for typed and untyped objects.
+
+   <Snippet file="mutating" region="remove" />
+
+   <Aside type="note">
+     ECHO does not delete a removed object at once. It marks the object as removed and keeps it in the change history
+     until the next [epoch](/docs/additional-resources/glossary#epoch), so a peer that wrote while offline can still
+     reconcile its changes when it reconnects.
+   </Aside>
+
+</Steps>
+
+## What you can do now
+
+You can add, watch, change and remove objects, typed or untyped.
+
+## Next
+
+[Querying](/docs/echo/learn/querying/): find the objects you added.

@@ -12,7 +12,7 @@ import createIdentity from './snippets-typescript/create-identity.ts?raw';
 import createIdentityDisplayName from './snippets-typescript/create-identity-displayname.ts?raw';
 import deviceJoin from './snippets-typescript/device-join.ts?raw';
 
-To create or join a [space](/docs/echo/typescript/api) in ECHO, the user must first establish a [HALO identity](/docs/halo/introduction). This can be done by creating a **new identity** or accepting a **device join invitation**.
+To create or join a [space](/docs/echo/learn/sharing/) in ECHO, the user must first establish a [HALO identity](/docs/halo/introduction). This can be done by creating a **new identity** or accepting a **device join invitation**.
 
 ## Obtaining identity
 
@@ -31,7 +31,7 @@ Create a new identity:
   <Code code={createIdentityDisplayName.slice(34)} lang="ts" mark={[8]} />
 </Aside>
 
-Before data can be manipulated, a [`space`](/docs/echo/typescript/api) must be obtained.
+Before data can be manipulated, a [`space`](/docs/echo/learn/sharing/) must be obtained.
 
 ## Receiving a device join invitation
 
@@ -41,5 +41,5 @@ You can accept a device join invitation by providing the invitation code and the
 <Code code={deviceJoin.slice(34)} lang="ts" />
 
 <Aside type="tip" title="Device join invitation">
-  Your client instance needs to be [configured](/docs/echo/typescript/config) correctly to talk to a [signaling service](/docs/additional-resources/glossary#signaling-service).
+  Your client instance needs to be [configured](/docs/echo/learn/installation/#configure-the-client) correctly to talk to a [signaling service](/docs/additional-resources/glossary#signaling-service).
 </Aside>

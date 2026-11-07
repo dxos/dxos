@@ -18,7 +18,7 @@ A collection of [Clients](#client) connected to a DXOS [identity](#identity). Ev
 
 _Device_ doesn't refer to a physical machine, there can be multiple devices per computer.
 
-### [ECHO](/docs/echo/introduction)
+### [ECHO](/docs/echo/welcome/)
 
 Eventually Consistent Hierarchical Object Store supporting multiple concurrent writers and latent offline writers.
 
@@ -42,7 +42,7 @@ A special generated code or URL containing one which is used for peers to identi
 
 The set of peer networking technologies behind ECHO and HALO. MESH doesn't create a direct connection between each [device](#device), but maintains a network so that all devices can reach each other, perhaps through intermediaries.
 
-### [Object](/docs/echo/introduction#objects)
+### [Object](/docs/echo/concepts/objects-relations/)
 
 A unit of data in a [space](#space), a bag of properties and values with a type and identity.
 
@@ -62,7 +62,7 @@ A service provided by DXOS KUBEs which helps peers locate each other on the netw
 
 A flat representation of a specific state of an ECHO [space](#space). An ECHO [space](#space) is made of feeds of mutations which are collapsed into a snapshot for the purposes of catching up a peer or downloading the state of the database without the log of changes.
 
-### [Space](/docs/echo/introduction#spaces)
+### [Space](/docs/echo/concepts/spaces/)
 
 An ECHO replication domain containing objects which all the peers in the space replicate continuously.
 

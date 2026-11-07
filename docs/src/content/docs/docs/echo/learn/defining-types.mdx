@@ -1,0 +1,41 @@
+---
+title: Defining types
+description: Declare an object type and a relation type, then create instances of both.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page you will have a small graph: two people, a task assigned to one of them, and a relation between them.
+
+<Steps>
+
+1. **Declare an object type.** `DXN.make` names the type and its version. The name is global, so use a domain you control.
+
+   <Snippet file="types-object" region="person" />
+
+   `Person` is now a schema and a TypeScript type. Hover it in your editor to see the instance shape.
+
+2. **Create instances.** `Obj.make` takes props typed by the schema. An object can exist outside a database until you add it.
+
+   <Snippet file="types-object" region="instance" />
+
+   Leave out `name` and the compiler rejects the call.
+
+3. **Point one object at another.** A `Ref.Ref` field stores a reference, not a copy.
+
+   <Snippet file="types-object" region="task" />
+
+   `review.assignee` holds a reference to `ada`. Editing `ada` later does not touch `review`.
+
+4. **Declare a relation.** A relation is an entity with typed endpoints. Use one when the link has its own fields, or when you want to query it from either end.
+
+   <Snippet file="types-object" region="relation" />
+
+   `mentors` connects `grace` to `ada` and carries its own `since` field.
+
+</Steps>
+
+## What you can do now
+
+You can declare object and relation types, and create instances that the compiler checks against their schema.
