@@ -319,6 +319,7 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
             darkColor: `var(--color-${hue}-border)`,
             lightColor: `var(--color-${hue}-border)`,
             displayName: identity.displayName ?? generateName(peerId),
+            hue,
           },
         }),
       ),
