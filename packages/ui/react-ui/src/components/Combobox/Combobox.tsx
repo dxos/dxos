@@ -50,12 +50,15 @@ const CREATE_VALUE = '\u0000nx-combobox-create';
 type ComboboxOption = Select.Option & {
   /** A second line under the label, in the description tone. */
   description?: string;
+  /** Muted text after the label on its line, such as a title beside an id; the query matches it too. */
+  detail?: string;
 };
 
 type ComboboxFilter = (option: ComboboxOption, query: string) => boolean;
 
-/** Case-insensitive substring match on the label. */
-const containsFilter: ComboboxFilter = (option, query) => option.label.toLowerCase().includes(query.toLowerCase());
+/** Case-insensitive substring match on the label or the detail. */
+const containsFilter: ComboboxFilter = (option, query) =>
+  [option.label, option.detail].some((text) => text?.toLowerCase().includes(query.toLowerCase()));
 
 //
 // Root
@@ -670,7 +673,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         {children ?? (
           <>
             {item.icon && <ComboboxItemIcon />}
-            <ComboboxItemText />
+            <ComboboxItemText classNames='truncate' />
             {item.description && <ComboboxItemDescription />}
             <ComboboxItemIndicator />
           </>
@@ -748,7 +751,12 @@ const ComboboxItemText = forwardRef<HTMLDivElement, ComboboxItemTextProps>(
     const item = useItem('ItemText');
     return (
       <ComboboxPrimitive.ItemText {...props} className={mx(classNames)} ref={forwardedRef}>
-        {children ?? item.label}
+        {children ?? (
+          <>
+            {item.label}
+            {item.detail && <span className='ms-2 text-description'>{item.detail}</span>}
+          </>
+        )}
       </ComboboxPrimitive.ItemText>
     );
   },

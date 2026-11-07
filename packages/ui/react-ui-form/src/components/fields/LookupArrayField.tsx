@@ -9,6 +9,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
+import { hues } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps, type RefOption } from '#types';
@@ -48,11 +49,13 @@ export const LookupArrayField = ({
   const { data } = useAsyncFieldEffect<readonly OptionsLookupEntry[]>(() => lookup.load(subset), key);
   const ids = (getValue() ?? []).map(String);
   const options = useMemo<RefOption[]>(() => {
-    const loaded = (data ?? []).map(({ value, label, secondaryLabel, icon }) => ({
+    const loaded = (data ?? []).map(({ value, label, secondaryLabel, icon, hue }) => ({
       id: value,
       label: label ?? value,
-      description: secondaryLabel,
+      detail: secondaryLabel,
       icon,
+      iconHue: hue,
+      hue: hues.find((candidate) => candidate === hue),
     }));
     const missing = ids.filter((id) => !loaded.some((option) => option.id === id));
     return [...loaded, ...missing.map((id) => ({ id, label: id }))];
@@ -63,9 +66,14 @@ export const LookupArrayField = ({
       <Typography.Text tone='muted'>{t('empty-readonly-ref-field.label')}</Typography.Text>
     ) : (
       <Button.Group>
-        {ids.map((id) => (
-          <Tag.Tag key={id}>{options.find((option) => option.id === id)?.label ?? id}</Tag.Tag>
-        ))}
+        {ids.map((id) => {
+          const option = options.find((candidate) => candidate.id === id);
+          return (
+            <Tag.Tag key={id} hue={hues.find((hue) => hue === option?.hue)}>
+              {option?.label ?? id}
+            </Tag.Tag>
+          );
+        })}
       </Button.Group>
     );
   }

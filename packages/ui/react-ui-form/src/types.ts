@@ -214,6 +214,8 @@ export type RefOption = {
   label: string;
   /** Optional secondary line shown beneath the label in the picker list. */
   description?: string;
+  /** Muted text after the label on its line in the picker list, such as a title beside an id. */
+  detail?: string;
   /** Optional leading icon in the picker list (e.g. the object's type icon). */
   icon?: string;
   /** The icon's hue name (e.g. a type's `IconAnnotation` hue); a name that is no hue is ignored. */

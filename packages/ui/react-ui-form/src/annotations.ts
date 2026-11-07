@@ -14,7 +14,14 @@ import {
 } from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
-export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
+export type OptionsLookupEntry = {
+  value: string;
+  label?: string;
+  secondaryLabel?: string;
+  icon?: string;
+  /** The hue of the option's chip and icon; a name that is no hue is ignored. */
+  hue?: string;
+};
 
 /**
  * Loads a select field's options dynamically from a declared subset of the form values, so a select can
