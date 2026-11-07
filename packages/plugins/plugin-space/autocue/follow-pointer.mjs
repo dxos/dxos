@@ -362,7 +362,11 @@ export const steps = [
     name: 'Bob switches his pointer to the laser',
     subtitle: 'QA-7 step 6: a glowing dot whose tail traces where it went',
     run: async ({ peers: { bob }, sleep }) => {
+      // The switch lives in Members, closed while pointing, so Bob opens it for the switch and closes it again.
+      await bob.click(membersTab(bob.page));
       await bob.click(followRow(bob.page).getByTestId('spacePlugin.presence.pointerLaser'));
+      await sleep(800);
+      await bob.click(membersTab(bob.page));
       const box = await plank(bob.page).boundingBox();
       // A loop and a sweep, so the tail shows it follows the path rather than trailing at a fixed angle.
       for (let step = 0; step <= 48; step++) {
