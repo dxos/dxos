@@ -1,5 +1,13 @@
 # @dxos/random
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [c9c3867]
+  - @dxos/util@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

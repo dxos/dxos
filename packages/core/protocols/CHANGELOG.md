@@ -1,5 +1,40 @@
 # @dxos/protocols
 
+## 0.17.0
+
+### Minor Changes
+
+- a458aef: Add `@dxos/protocols/Awareness`, a gossip channel that shares a small, frequently changing value about an object (a caret, a pointer, a cell selection) with the other clients in its space. The surface defines the value's schema in its own coordinates; the channel throttles posts, re-announces state for late joiners and drops sessions that leave or stop answering. The editor's `SpaceAwarenessProvider` now runs on it and keeps its wire format, so text cursors work between old and new clients, and its posts now carry the member's `hue`.
+- 908c301: A plugin bundle on EDGE resolves types other plugins publish. A registry query for types by key (`Filter.and(Filter.type(Type.Type), Filter.key(typename))` over `Scope.registry()`) asks the type sources registered with `HypergraphImpl.registerTypeSource` (`@dxos/echo-client`) for the types the in-process registry lacks, and caches what they return there; with no source installed it behaves as before. `PluginProtocol.Env` gains `TYPE_REGISTRY`, EDGE's registry of published types, which the plugin host installs as a type source, so `space.queryObjects`, `space.addObject` and `space.addRelation` find types other plugins publish with the same query on a client and on EDGE.
+- 78e96da: Plugin bundles on EDGE now get what operation-service gives a handler. `PluginProtocol.InvocationScope` carries the request context (conversation, origin, caller, trace sink and pids, cancellation, test id seed), the services only EDGE holds (`services`, a `ServiceHost` stub with service descriptors) and other plugins' operations (`operations`, an `OperationHost` stub). The protocol is versioned: `PluginProtocol.PROTOCOL_VERSION` is 2, `isSupported` and `scopeFor` let EDGE speak each bundle's version, `Catalog.protocolVersion` records it, and the main module `PluginLoader.workerCode` generates answers `protocolVersion()` from the vendored host (1 for a host that predates versioning).
+
+  EDGE's plugin loader ships only the modules that run on workerd, leaving out browser-only bodies and the UI packages they vendor, and a plugin chunk that declares its own top-level `Map` (such as plugin-map's ECHO type) now loads instead of failing with "is not a constructor".
+
+  Agent operations declare the types they write but plugin-agent does not register, so they run on EDGE, where a plugin bundle registers only its own types; before this, `agent.create` on EDGE failed with `Schema not registered Schema: org.dxos.type.instructions`.
+
+  `dx` initializes the ECHO client only when a command first uses it, so a command that never uses it (such as `dx plugin list` or `dx registry publish --upload-only --edge-url <url>`) no longer waits for or fails with initialization. Breaking: `ClientService` now provides a handle rather than the client; resolve the client with `yield* ClientService.client`. `ClientService.layer` stays eager; the new `ClientService.layerLazy` initializes the client on first use. `ClientPlugin` gains `initializeOnUse`, which the CLI sets, and loses `awaitInitialization`.
+
+- 5b4830e: Composer plugins run on EDGE. `@dxos/protocols` gains `PluginProtocol`, the typed contract between EDGE and a plugin's Dynamic Worker, and `@dxos/edge-compute/plugin-loader` turns one plugin bundle into the modules that worker loads; each plugin runs alone, with no other plugin's bundle beside it. `dx registry publish` checks the bundle with `@dxos/plugin-builder`'s `check-bundle` when the plugin installs it, and gains `--channel` and `--upload-only`. `@dxos/app-framework/vite-plugin/config` loads a `dx.config.ts` without pulling in Vite.
+- ece15ab: Add the `IdentityAdmin` credential: an identity makes another identity its admin, one admin per credential, and keeps the grant in its HALO. `createIdentityAdminCredential` issues one, and `verifyIdentityAdmin` checks that the administered identity signed it.
+
+### Patch Changes
+
+- 500360c: Functions hosted on EDGE can fork feed branches. `FeedService.insertIntoFeed` in `@dxos/functions-runtime-cloudflare` now passes on the block ids and predecessors that EDGE's queue service reports, instead of returning nothing, so `Feed.fork` confirms a branch on EDGE as it does on a client. `EdgeFunctionEnv.QueueService.insertIntoQueue` may resolve to that `InsertIntoFeedResponse`.
+- Updated dependencies [034e231]
+- Updated dependencies [3aef671]
+- Updated dependencies [c9c3867]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/timeframe@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

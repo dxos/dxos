@@ -1,5 +1,12 @@
 # @dxos/brand
 
+## 0.17.0
+
+### Patch Changes
+
+- 8ad08cb: The background SVGs in `assets/backgrounds` are rebuilt with the icon in its own group, normalized size and placement, and line, icon and fill colors that can be set through the `--dx-bg-lines`, `--dx-bg-icon` and `--dx-bg-fill` CSS variables when the SVG is inlined.
+- @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

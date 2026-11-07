@@ -1,5 +1,124 @@
 # @dxos/react-ui-form
 
+## 0.17.0
+
+### Minor Changes
+
+- e8029c3: Canvas undo and redo patch the store instead of restoring snapshots. Every edit is a commit of a `CanvasHistory` that records the store's heads before and after and the paths it wrote; undo writes a path back only while nobody has changed it since, and returns the view to the View path and selection the edit was made in. `Canvas.Root` takes `history` (from `useCanvasHistory`, or a `CreateHistory`); without one the canvas keeps a local history, so ⌘Z, ⇧⌘Z and the toolbar work standalone. Breaking: `Projection.snapshot`/`restore`, `withUndo`, `recordViews`, `recordStoreStep` and `CanvasAtoms.undo` are removed; a projection with a model of its own exposes it as `model` (a `VersionedSource`) and may implement `restored()`, and `useViewProjection` now takes `history`. `ViewStore.versions`, `VersionedSource`, `recordChanges` and `patchSource` are exported from `headless`.
+
+  In plugin-canvas, a canvas in Composer records its edits on the app's `HistoryTracker` as `CanvasOperation.Patch`, scoped to the canvas, and agents can edit a canvas with `CanvasOperation.Apply` (intents); both are undoable, and `Apply` refuses a malformed intent (`isIntent`, exported from `headless`) or a canvas with no version history before it writes. The ECHO-backed store reads its past through Automerge heads. In app-framework, `UndoMapping` gains `merge` (fold merged invocations into one forward and re-derive the inverse) and `toast` (false records an entry without the deck's undo toast).
+
+  Drawing conversion copies by default: `DrawingOperation.Convert` writes a new drawing beside the source (`replace: true` converts in place, as drawing.sh does) and names it in its output, and Composer's menu offers "Copy as …" for each variant, opening the copy. A plugin can register an `IllustratorCapabilities.Converter` for a pair of variants, which `Convert` uses over the generic scene replay (`IllustratorModel.convertByScene`). plugin-canvas registers one for tldraw to canvas that converts a DSL-managed drawing generically and maps a hand-drawn one shape by shape; breaking: `CanvasOperation.ImportTldraw` and its "Copy as canvas" action are removed in its favour.
+
+  The canvas's Snap and Lattice toggles move to the bottom-right bar beside the grid and guides, and the centre action bar hides on a canvas too narrow for it. A link's `style.fontSize` sets its caption's size (unset is `LINK_FONT_SIZE`, 14), and a caption on a straight sloped line is shortened only when it does not fit the line's run. A rounded regular polygon rounds its corners by the look's rounded radius; a `NodeDef.silhouette` is given that radius in px. A polygon's `params.fit` sets how it sits in its frame: `frame` (the default) fills the frame, `circle` puts its vertices on the circle that fits it; `polygonPath` takes an options bag. The bottom-right bar ends with the theme picker. A form field override can control a nested group's `open` state (`onOpenChange`); the canvas properties panel takes `groups`, and plugin-canvas keeps which groups are open in its view state. Breaking: `ThemePanel` is renamed `DisplayPanel`. Breaking: a polygon's `sides` and `fit` and a cloud's `bumps` move into the node's `params` (`PolygonParams`, `CloudParams`), shown as the type's own group in the properties panel; stored drawings read in the new shape through `withLegacyParams`.
+
+- 416201f: An array field shows its field override's `placeholder` in place of its rows while it is empty. A project's overview uses it to say when it has no specs, says the same for empty Notes and Artifacts, and adds artifacts from the Artifacts heading instead of the toolbar.
+- 80818bc: A project's repositories are one ordered list, the `Repo.RepositoriesAnnotation` on the project, read with `Repo.getRepositories` and written with `Repo.setRepositories`. The first repository is the one bare issue numbers resolve against and the one a cloud coding agent starts in. plugin-code edits the list in the overview's Software group, above plugin-claude's code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once. Agents edit the list with plugin-code's `CodeOperation.UpdateProjectRepositories` (tool `code-update-project-repositories`), the one tool of its new Project Repositories skill (`org.dxos.skill.code.repositories`).
+
+  The project overview puts the most-used parts first. The name and description are edited in place, with the status as a pill in the top right corner, and both line up with the section headings. `Project`'s status carries an option table (title, hue and icon), so the pill reads Active, Paused, Blocked or Ended in its colour. Then come Notes, Artifacts (six at most until Show all), Milestones (each with its tasks' progress, and a button that opens the Tasks tab filtered to that milestone) and Specs, then a Config section of folded groups, each with a summary of what it holds. The project's own Agent group holds the instructions, skills and context. Other plugins declare groups with `ProjectCapabilities.ConfigGroup`: each field is a schema plus a function from the project to a writable atom, and the overview's form renders and writes it with no UI of the plugin's own. plugin-code declares Software with the project's repositories, and plugin-claude adds the project's code folder on this device, which the desktop app can still choose with its folder picker. A config field's `order` sorts the fields of a group several plugins fill.
+
+  plugin-tasks' task list has a milestone filter beside its sort and grouping, kept per device with the rest of the list's view state. It keeps the tasks under the milestone, sub-tasks that inherit it included, with the ancestors of each.
+
+  react-ui-form's `FormPresentation` gains `title` and `plain`, which render a text field alone as a page's title or as body text, and `section`, which renders an array as a section of its own, its add button on the heading's row. A field override takes a `presentation` of its own in place of the form's `layout`. react-ui's Input has `title` and `plain` variants for it, and Textarea a `plain` one: no well and no inset, and a plain Textarea is as tall as its text. A form's sections leave a wider gap between each other than between their rows, and a form's array rows start on the form's edge. An array field whose label is hidden keeps the label as its list's accessible name, and a text field drawn with no label takes it as its control's. A field override also takes an `action` (`FormFieldAction`): a button at the end of a text control that sets the field's value from what its function returns.
+
+  Breaking:
+
+  - `Project` 0.8.0 drops `repo`, `repositories` and `session`. plugin-projects' migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. Migrated projects cannot be read by an older build.
+  - Delegating a task no longer seeds the chat's session config from its project, since `Project.session` is gone.
+  - `Project`'s schema no longer has a Repositories field. The overview shows the list, in its Software group, only while plugin-code is enabled, which enabling plugin-claude also does.
+  - A generic object update no longer reaches a project's repositories. The GitHub skill points an agent at the Project Repositories skill instead.
+  - `ProjectSurface.Settings` is gone. Declare a `ProjectCapabilities.ConfigGroup` instead.
+
+- 8554a26: A project's editors show the other peers' carets: the project's name and description, a spec's text and its embedded feature sections, the overview's Notes and the agent's instructions. Breaking: `@dxos/react-ui-form` removes `CollaborativeTextEditor` (now `InputEditor`, which takes `extensions` or a `value` and `onChange`), `useCollaborativeText`, `Form.Root`'s `object` and `CollaborativeAnnotation`, so a host binds a collaborative field by setting `fieldOverrides.collaborative` and passing `createDataExtensions` through the form's `extensions`; `@dxos/ui-types` removes `CollaborativeAnnotationId`.
+- 8a66e4e: You can comment on the text of a Composer spec's features (name, description, each requirement) and on a project's name, description and notes, as well as on the whole object. A comment anchors to a span of one string field, written as an Automerge ref path such as `requirements/<key>/text/[a-b]` by the new `PathAnchor` helpers in `@dxos/types`. A plugin declares which objects a comments companion covers with `AppCapabilities.CommentScope`. `Form.Root` takes `object`, a live ECHO object: a field carrying the `CollaborativeAnnotation` (or `fieldOverrides.collaborative`) edits that object's string in place through Automerge, while other fields report through `onValuesChanged`. `Form.Root`'s `markdownExtensions` is now `extensions`, which also takes a function of the field's path, and a `MarkdownCapabilities.ExtensionProvider` receives the field as `binding`, which is how comment marks reach form fields. `Feature` 0.5.0 stores requirements by key, and the `featureRequirements` migration upgrades 0.4.0 features.
+- 10b3963: The chat prompt's task list adds a task in one line again: `TaskList.Editor`'s `inline` lays the create row on the list's own columns, each field the rows' own glyph under the column it edits. An empty estimate shows a ruler rather than the asterisk an empty priority shows. `TaskList.Root` takes the title line's cells as an ordered `columns` list (default `DEFAULT_COLUMNS`), which the rows and an inline create row share; the chat puts status ahead of the title and priority and estimate after it. The project list's create row keeps its stacked layout. Form fields with the `tag` presentation, and the project overview's status, render as react-ui's `Tag` in its new `outline` variant, which draws the hue as a ring and text on no fill.
+
+  Breaking: `TaskList.Root`'s `showAssignees` is removed (leave `assignee` out of `columns`), `Button`'s `pill` is removed, `Select.Trigger`'s `pill` becomes `tag`, which renders the trigger as a `Tag`, and the `pill` form presentation becomes `tag`.
+
+### Patch Changes
+
+- b97d8ea: A feature embedded in a spec is a compact section: a header row of fold toggle, block id, name and status, then its description, requirements and a "Needs" picker. Empty rows and the add and remove actions show only while the section has attention. Folded, a section shows only its header row, with the block ids of the features it needs and its requirement count; which sections are folded is kept on the device. `MarkdownField` draws the `title` and `plain` presentations in place, with no well and one line that grows with its text, as `TextField` does.
+- 13bc40d: Feature maps are editable in Composer: create a feature on the map and name it in place, add an existing one from the toolbar, edit a card's name and description inline, set status or remove a feature from its card menu, draw and delete dependency arrows and remove boxes on the canvas, and add dependencies and link tasks from the feature article. Every edit runs the same operation an agent uses, and a refused edit (a dependency that would close a cycle) shows its message as a toast. The canvas dynamic projection accepts `onLink` and `onDelete` hooks, so a host can apply those edits to its own model instead of the projection's graph. `ObjectPicker` no longer pins its popup to a custom trigger's width, so a picker behind an icon button is readable.
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [cb058b9]
+- Updated dependencies [73ed632]
+- Updated dependencies [df16fba]
+- Updated dependencies [d8b13ad]
+- Updated dependencies [1924a44]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f7e965a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [908c301]
+- Updated dependencies [f37ae92]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [09d8716]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [c9c3867]
+- Updated dependencies [80818bc]
+- Updated dependencies [b8cc7e7]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [7e07e49]
+- Updated dependencies [b159f41]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [a8e68c5]
+- Updated dependencies [8a66e4e]
+- Updated dependencies [d00cc85]
+- Updated dependencies [768db81]
+- Updated dependencies [10b3963]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [901c1e4]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-query@0.17.0
+  - @dxos/lit-ui@0.17.0
+  - @dxos/ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

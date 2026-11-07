@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-ste",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Simplified Technical English (ASD-STE100): an assistant skill and a check tool",
   "homepage": "https://dxos.org",

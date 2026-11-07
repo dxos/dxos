@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-meeting-recorder",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Detects meetings in other apps and records them into Meeting objects with live transcripts.",
   "homepage": "https://dxos.org",
