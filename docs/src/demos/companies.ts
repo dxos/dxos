@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import { Organization, Person } from '@dxos/types';
 
-/** The schemas `seedCompanies` writes. */
+/** The schemas `companies` writes. */
 export const companySchemas = [Organization.Organization, Person.Person];
 
 type Company = { name: string; status: string; description: string; people: string[] };
@@ -46,15 +47,18 @@ const COMPANIES: Company[] = [
   },
 ];
 
-/** Six companies across the pipeline's stages, each with the people who work there. */
-export const seedCompanies = Effect.fnUntraced(function* () {
-  for (const { name, status, description, people } of COMPANIES) {
-    const website = `https://${name.split(' ')[0].toLowerCase()}.example`;
-    const organization = yield* Database.add(
-      Organization.make({ name, description, website, status: status as Organization.Organization['status'] }),
-    );
-    for (const fullName of people) {
-      yield* Database.add(Person.make({ fullName, organization: Ref.make(organization) }));
+/** Six companies across the pipeline's stages, each with the people who work there; several demos show them. */
+export const companies = SampleSpace.partial('echo-demo-companies', {
+  schemas: companySchemas,
+  run: Effect.fnUntraced(function* () {
+    for (const { name, status, description, people } of COMPANIES) {
+      const website = `https://${name.split(' ')[0].toLowerCase()}.example`;
+      const organization = yield* Database.add(
+        Organization.make({ name, description, website, status: status as Organization.Organization['status'] }),
+      );
+      for (const fullName of people) {
+        yield* Database.add(Person.make({ fullName, organization: Ref.make(organization) }));
+      }
     }
-  }
+  }),
 });

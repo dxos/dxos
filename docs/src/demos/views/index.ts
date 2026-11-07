@@ -14,14 +14,13 @@ import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 
-import { companySchemas, seedCompanies } from '../companies.ts';
+import { companySchemas } from '../companies.ts';
 import * as Demo from '../Demo.ts';
 
 const partial = SampleSpace.partial('echo-demo-views', {
   schemas: [...companySchemas, View.View, Table.Table, Kanban.Kanban],
   run: () =>
     Effect.gen(function* () {
-      yield* seedCompanies();
       const jsonSchema = JsonSchema.toJsonSchema(Organization.Organization);
       const query = Query.select(Filter.type(Organization.Organization));
       const makeView = (fields: string[], pivotFieldName?: string) =>

@@ -8,11 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Trigger } from '@dxos/async';
-import { type Client, type ClientServicesProvider } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type SpaceId } from '@dxos/keys';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { type Demo } from './Demo.ts';
 
@@ -42,36 +43,79 @@ const listed = (client: Client, spaceId: SpaceId): Promise<Space> =>
 
 export type RuntimeState = {
   readonly spaceId?: SpaceId;
-  /** The id of each seeded subject, which every peer resolves in its own replica. */
-  readonly subjects?: Record<string, string>;
+  /** The id of each object a demo seeded, by demo id and subject key; every peer resolves it in its own replica. */
+  readonly subjects?: Record<string, Record<string, string>>;
   /** Which peers have the space ready in their own client. */
   readonly joined: readonly boolean[];
+  readonly online: readonly boolean[];
   readonly error?: string;
 };
 
+export type DemoRuntimeOptions = {
+  readonly title: string;
+  /** Content more than one demo shows, seeded once before the demos' own. */
+  readonly shared: readonly SampleSpace.Partial<unknown>[];
+  readonly demos: readonly Demo[];
+  /** Demos seeded once the second peer has joined, whose space opens more slowly the more content it holds. */
+  readonly late?: readonly Demo[];
+};
+
 /**
- * Two in-memory peers sharing one space: the first creates it and seeds the demo's partial, the second joins by
- * invitation. Both join when the demo opens, even one-up, so showing the second peer is instant.
+ * The page's two in-memory peers and the one space every demo shows: the first peer creates the space and seeds
+ * it while the second joins by invitation. Both start when the runtime is made, so the demos are ready by the time
+ * they are seen.
  */
 export class DemoRuntime {
-  readonly services: ClientServicesProvider[];
+  readonly clients: Client[];
   readonly #definition;
   readonly #host = new Trigger<Space>();
+  readonly #guest = new Trigger();
   readonly #listeners = new Set<() => void>();
-  #state: RuntimeState = { joined: PEERS.map(() => false) };
+  #state: RuntimeState = { joined: PEERS.map(() => false), online: PEERS.map(() => true) };
 
-  constructor(readonly demo: Demo) {
+  constructor({ title, shared, demos, late = [] }: DemoRuntimeOptions) {
     const builder = new TestBuilder();
-    this.services = PEERS.map(() => builder.createLocalClientServices());
+    this.clients = PEERS.map(() => new Client({ services: builder.createLocalClientServices() }));
     this.#definition = SampleSpace.make({
-      space: { name: demo.title },
-      partials: { content: demo.partial },
-      build: ({ content }) => content(),
+      space: { name: title },
+      partials: {
+        ...Object.fromEntries(shared.map((partial) => [partial.name, partial])),
+        ...Object.fromEntries([...demos, ...late].map((demo) => [demo.id, demo.partial])),
+      },
+      // Runs the partials themselves rather than the untyped runners, to keep each demo's subjects typed. Each demo
+      // shows as soon as its own content is in, without waiting for the rest or the flush.
+      build: () =>
+        Effect.gen({ self: this }, function* () {
+          for (const partial of shared) {
+            yield* partial.run();
+          }
+          const seed = (demo: Demo) =>
+            demo.partial.run().pipe(
+              Effect.map((seeded) =>
+                Object.fromEntries(Object.entries(seeded).map(([key, object]) => [key, object.id])),
+              ),
+              Effect.tap((ids) =>
+                Effect.sync(() => this.#update({ subjects: { ...this.#state.subjects, [demo.id]: ids } })),
+              ),
+            );
+          for (const demo of demos) {
+            yield* seed(demo);
+          }
+          yield* Effect.promise(() => this.#guest.wait());
+          for (const demo of late) {
+            yield* seed(demo);
+          }
+        }),
     });
-  }
-
-  get schemas() {
-    return this.#definition.schemas;
+    this.clients.forEach((_, index) =>
+      Effect.runFork(
+        this.#join(index).pipe(
+          Effect.catchCause((cause) =>
+            Effect.sync(() => this.#update({ error: `${PEERS[index].name}: ${String(cause)}` })),
+          ),
+        ),
+      ),
+    );
   }
 
   getState = (): RuntimeState => this.#state;
@@ -83,45 +127,47 @@ export class DemoRuntime {
     };
   };
 
-  /** Gives peer `index` its identity and puts it in the demo's space. */
-  join = (client: Client, index: number) => {
+  /** Connects or disconnects a peer in every demo at once, since they all show the same peer. */
+  setOnline(index: number, online: boolean) {
+    this.#update({ online: this.#state.online.map((current, i) => (i === index ? online : current)) });
+    void this.clients[index].mesh.updateConfig(online ? ConnectionState.ONLINE : ConnectionState.OFFLINE);
+  }
+
+  /** Gives peer `index` its identity and puts it in the space. */
+  #join(index: number) {
     const runtime = this;
+    const client = this.clients[index];
     const peer = PEERS[index];
     return Effect.gen(function* () {
-      yield* Effect.promise(() => client.waitUntilInitialized());
-      if (!client.halo.identity.get()) {
-        yield* Effect.promise(() =>
-          client.halo.createIdentity(
-            create(ProfileDocumentSchema, { displayName: peer.name, data: { hue: peer.hue } }),
-          ),
-        );
-      }
-      yield* Effect.promise(() => client.addTypes([...runtime.schemas]));
-      if (!AppSpace.getSettingsSpace(client)) {
-        yield* AppSpace.setupIdentitySpaces(client);
-      }
+      yield* Effect.promise(() => client.initialize());
+      yield* Effect.promise(() =>
+        client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: peer.name, data: { hue: peer.hue } })),
+      );
+      yield* Effect.promise(() => client.addTypes([...runtime.#definition.schemas]));
+      yield* AppSpace.setupIdentitySpaces(client);
 
+      // The second peer joins while the first seeds, and receives the content as it is written.
       if (index === 0) {
-        const space = yield* Effect.promise(() => client.spaces.create({ name: runtime.demo.title }));
+        const space = yield* Effect.promise(() => client.spaces.create({ name: runtime.#definition.space.name }));
         yield* Effect.promise(() => space.waitUntilReady());
-        const seeded = yield* SampleSpace.applyTo(runtime.#definition, space);
-        yield* Effect.promise(() => space.db.flush({ indexes: true }));
-        runtime.#update({
-          spaceId: space.id,
-          subjects: Object.fromEntries(Object.entries(seeded).map(([key, object]) => [key, object.id])),
-        });
+        runtime.#update({ spaceId: space.id });
+        runtime.#joined(index);
         runtime.#host.wake(space);
+        yield* SampleSpace.applyTo(runtime.#definition, space);
       } else {
         const host = yield* Effect.promise(() => runtime.#host.wait());
         yield* Effect.promise(() => Promise.all(performInvitation({ host, guest: client.spaces })));
         const space = yield* Effect.promise(() => listed(client, host.id));
         yield* Effect.promise(() => space.waitUntilReady());
+        runtime.#joined(index);
+        runtime.#guest.wake();
       }
-      runtime.#update({ joined: runtime.#state.joined.map((joined, i) => joined || i === index) });
-    }).pipe(
-      Effect.tapCause((cause) => Effect.sync(() => runtime.#update({ error: `${peer.name}: ${String(cause)}` }))),
-    );
-  };
+    });
+  }
+
+  #joined(index: number) {
+    this.#update({ joined: this.#state.joined.map((joined, i) => joined || i === index) });
+  }
 
   #update(state: Partial<RuntimeState>) {
     this.#state = { ...this.#state, ...state };

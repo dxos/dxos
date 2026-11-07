@@ -22,9 +22,8 @@ import { ClientPluginManager } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { ClientProvider, useClient } from '@dxos/react-client';
+import { ClientProvider } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
-import { ConnectionState } from '@dxos/react-client/mesh';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Input from '@dxos/react-ui/Input';
 import * as Select from '@dxos/react-ui/Select';
@@ -58,8 +57,7 @@ const DemoStagePlugin = Plugin.define(
 type Layout = 'one' | 'two';
 
 /** A demo's two peers, with a toolbar to show one or both. */
-export const DemoFrame = ({ demo }: { demo: Demo }) => {
-  const runtime = useMemo(() => new DemoRuntime(demo), [demo]);
+export const DemoFrame = ({ demo, runtime }: { demo: Demo; runtime: DemoRuntime }) => {
   const state = useSyncExternalStore(runtime.subscribe, runtime.getState);
   const [layout, setLayout] = useState<Layout>(demo.layout.length > 1 ? 'two' : 'one');
   const [views, setViews] = useState<string[]>(() => PEERS.map((_, index) => demo.layout[index] ?? demo.layout[0]));
@@ -85,6 +83,7 @@ export const DemoFrame = ({ demo }: { demo: Demo }) => {
           {PEERS.map((peer, index) => (
             <PeerPane
               key={peer.name}
+              demo={demo}
               runtime={runtime}
               state={state}
               index={index}
@@ -101,6 +100,7 @@ export const DemoFrame = ({ demo }: { demo: Demo }) => {
 };
 
 type PeerPaneProps = {
+  demo: Demo;
   runtime: DemoRuntime;
   state: RuntimeState;
   index: number;
@@ -110,22 +110,24 @@ type PeerPaneProps = {
   hidden: boolean;
 };
 
-/** One peer: its own client and plugin app, kept mounted while hidden so it stays in sync. */
-const PeerPane = ({ runtime, state, index, peer, view, onViewChange, hidden }: PeerPaneProps) => {
-  const { demo } = runtime;
+/** One peer: its client under this demo's plugin app, kept mounted while hidden so it stays in sync. */
+const PeerPane = ({ demo, runtime, state, index, peer, view, onViewChange, hidden }: PeerPaneProps) => {
   return (
     <div
       className={`grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] bg-base-surface ${hidden ? 'hidden' : ''}`}
       inert={hidden}
     >
-      <ClientProvider services={runtime.services[index]}>
-        <PeerBar peer={peer} demo={demo} view={view} onViewChange={onViewChange} />
+      <ClientProvider client={runtime.clients[index]}>
+        <PeerBar
+          peer={peer}
+          demo={demo}
+          view={view}
+          onViewChange={onViewChange}
+          online={state.online[index]}
+          onOnlineChange={(online) => runtime.setOnline(index, online)}
+        />
         <ClientPluginManager
           id={`${demo.id}-${index}`}
-          clientOptions={{
-            types: [...runtime.schemas],
-            onClientInitialized: ({ client }) => runtime.join(client, index),
-          }}
           plugins={() => [
             ...CorePlugins.make(),
             StorybookPlugin.make({}),
@@ -134,7 +136,7 @@ const PeerPane = ({ runtime, state, index, peer, view, onViewChange, hidden }: P
             ...demo.plugins(),
           ]}
         >
-          {state.joined[index] && <PeerArticle spaceId={state.spaceId} subjectId={state.subjects?.[view]} />}
+          {state.joined[index] && <PeerArticle spaceId={state.spaceId} subjectId={state.subjects?.[demo.id]?.[view]} />}
         </ClientPluginManager>
       </ClientProvider>
     </div>
@@ -146,17 +148,16 @@ const PeerBar = ({
   demo,
   view,
   onViewChange,
+  online,
+  onOnlineChange,
 }: {
   peer: Peer;
   demo: Demo;
   view: string;
   onViewChange: (view: string) => void;
+  online: boolean;
+  onOnlineChange: (online: boolean) => void;
 }) => {
-  const client = useClient();
-  const [online, setOnline] = useState(true);
-  useEffect(() => {
-    void client.mesh.updateConfig(online ? ConnectionState.ONLINE : ConnectionState.OFFLINE);
-  }, [client, online]);
   const items = Object.entries(demo.views).map(([value, label]) => ({ value, label: label ?? value }));
 
   return (
@@ -181,7 +182,7 @@ const PeerBar = ({
         classNames='text-sm'
         label={online ? 'Online' : 'Offline'}
         checked={online}
-        onCheckedChange={({ checked }) => setOnline(checked)}
+        onCheckedChange={({ checked }) => onOnlineChange(checked)}
       />
     </div>
   );

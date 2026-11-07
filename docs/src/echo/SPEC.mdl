@@ -62,6 +62,7 @@ template landing: The front door
     - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip, two actions, ECHO background art
     - Sample: the smallest complete example
     - Guarantees: four cards, each a behavior with its spec citation
+    - Live: the live demos [F-7.5]
     - Architecture: one diagram of the packages
     - Routes: cards into the learning path, concepts and reference
 ```
@@ -515,7 +516,7 @@ feat F-2: Brand and visual style
 
   req F-2.11:
     when: the landing page renders
-    then: its hero shows the ECHO background art from `@dxos/brand`
+    then: its hero shows the ECHO background art from `@dxos/brand`, centred on the art's icon
 
   req F-2.12:
     when: a list renders
@@ -620,8 +621,18 @@ feat F-7: Relationship to dxos.org
   req F-7.5:
     when: a reader is on `/echo`
     then: it shows live demos, in order: a collaborative editor, a table and board over one data set, a graph
-          explorer, and an architecture diagram; each runs two peers, Alice and Bob, in one space in the page,
-          shows one or both, and has a switch per peer that takes it offline
+          explorer, and an architecture diagram; they share two peers, Alice and Bob, and one space in the page;
+          each shows one or both peers, and has a switch per peer that takes it offline
+
+  req F-7.6:
+    when: a reader opens `/echo`
+    then: the demos start as the page loads, and each shows its content as soon as that content is in the space,
+          without waiting for the other demos
+
+  req F-7.7:
+    when: a reader is on `/echo`
+    then: the demos and the architecture diagram are dark, like the page, whatever theme the reader's system
+          prefers
 ```
 
 ```mdl
@@ -1273,6 +1284,68 @@ decision D-56: The architecture diagram demo opens with one peer.
   date: 2026-11-06
   by: user:wittjosiah
   affects: [F-7.5]
+```
+
+```mdl
+decision D-57: The hero's ECHO art is centred in its panel.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-2.11]
+```
+
+```mdl
+decision D-58: The `/echo` demos are ready as soon as possible after the page opens, and sit just before the Architecture section, so they have longer to load before a reader scrolls to them.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.6]
+```
+
+```mdl
+decision D-59: The architecture diagram and every demo on `/echo` are dark whatever the reader's system prefers: the Webflow page is always dark, and a light demo stands out against it.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.7]
+```
+
+```mdl
+decision D-60: The hero crops the art to the square around its icon. Fills in [D-57].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.11]
+  why: The icon is centred at (480, 540) of the art's 1920 by 1080 frame; the panel showed the frame's left 1080 units, whose centre is 60 units right of the icon.
+```
+
+```mdl
+decision D-61: The demos share two peers, Alice and Bob, each one in-memory client under every demo's plugin app, and one space that holds every demo's content. Alice creates the space and Bob joins it by invitation while Alice seeds it: first the content several demos show, then each demo's partial, with the diagram, the largest, last. A demo shows its objects as soon as they are written. A peer's online switch applies to that peer in every demo. A demo names the object each peer opens, a peer can switch between a demo's objects, and the page lists its demos by id, in order. Fills in [D-58].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-54
+  affects: [F-7.5, F-7.6]
+  why: A runtime per demo started eight clients and twenty spaces and ran four invitations; on a production build the demos were ready about 5.1 s after navigation, 3.7 s of it after the script loaded. Bob also waited for the seed's final flush, 1.5 s, before his invitation started.
+  rejected:
+    - One space per demo on the shared clients: an invitation per demo, where one is enough.
+```
+
+```mdl
+decision D-62: The graph demo keeps to the companies and their people with its Graph's saved query, which the explorer applies when it opens a graph. Fills in [D-61].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-11]
+  why: The shared space also holds the document, the board, the table and the diagram's shapes, and the explorer drew every object in the space, 85 nodes.
+  rejected:
+    - A space of its own for the graph demo: a second invitation.
+```
+
+```mdl
+decision D-63: The demos set the theme plugin's appearance setting to dark before they start. The architecture diagram adds dark rules for the `dark:` classes its renderer emits but does not compile, on the demo frames' surface colour. Fills in [D-59].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.7]
+  why: The theme plugin follows the system preference unless its setting says otherwise, and on a light system it removes the page's dark class; the diagram renderer compiles only its light rules.
 ```
 
 ## Appendix: Extension Definitions

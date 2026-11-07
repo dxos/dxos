@@ -13,8 +13,8 @@ import WebflowLayout from '../../layouts/WebflowLayout.astro';
 import '../../styles/tokens.generated.css';
 import '../../styles/fonts.css';
 
-// The art's icon sits left of center, so a square panel crops from the right.
-const cropped = art.replace('<svg ', '<svg preserveAspectRatio="xMinYMid slice" ');
+// The art's icon is centred at (480, 540) of its 1920×1080 frame, so the square panel shows the square around it.
+const cropped = art.replace('viewBox="0 0 1920 1080"', 'viewBox="0 60 960 960"');
 
 /** The live demos shown, in order, by id in `DEMOS`. */
 const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
@@ -57,20 +57,6 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   <section class="echo-section">
     <div class="container-large">
       <div class="echo-section-header">
-        <div class="all-caps echo-eyebrow">Live</div>
-        <h2 class="heading-style-h2">Two peers, one space</h2>
-      </div>
-      <div class="echo-demos">
-        {DEMO_ORDER.map((id) => (
-          <div class="echo-demo dx-island"><EchoDemo id={id} client:only="react" /></div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <section class="echo-section">
-    <div class="container-large">
-      <div class="echo-section-header">
         <div class="all-caps echo-eyebrow">Why it exists</div>
         <h2 class="heading-style-h2">One graph for apps, agents and external data</h2>
       </div>
@@ -106,10 +92,25 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   <section class="echo-section">
     <div class="container-large">
       <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Live</div>
+        <h2 class="heading-style-h2">Two peers, one space</h2>
+      </div>
+      <div class="echo-demos">
+        {DEMO_ORDER.map((id) => (
+          <div class="echo-demo dx-island"><EchoDemo id={id} client:only="react" /></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
         <div class="all-caps echo-eyebrow">Architecture</div>
         <h2 class="heading-style-h2">How the packages fit</h2>
       </div>
       <Diagram
+        dark
         name="packages"
         alt="The @dxos packages in your process, echo-react, echo and echo-client, reach echo-host, index-core and EDGE through QueryService."
       />
@@ -267,8 +268,9 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
     width: 100%;
     max-width: 60rem;
     padding: 1rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
     border-radius: 0.5rem;
-    background: #ffffff;
+    background: oklch(0.205 0.001 190);
   }
 
   @media (max-width: 991px) {

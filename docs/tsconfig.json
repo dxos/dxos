@@ -16,6 +16,9 @@
       "path": "../packages/common/keys"
     },
     {
+      "path": "../packages/common/log"
+    },
+    {
       "path": "../packages/common/node-std"
     },
     {
@@ -59,6 +62,9 @@
     },
     {
       "path": "../packages/plugins/plugin-testing"
+    },
+    {
+      "path": "../packages/plugins/plugin-theme"
     },
     {
       "path": "../packages/sdk/app-framework"

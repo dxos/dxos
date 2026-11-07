@@ -2,13 +2,29 @@
 interface Props {
   name: string;
   alt: string;
+  /** Draws the diagram on a dark ground, for a page that is always dark. */
+  dark?: boolean;
 }
 
-const { name, alt } = Astro.props;
-const sources = import.meta.glob<string>('../assets/diagrams/*.dx.svg', { query: '?url', import: 'default', eager: true });
-const src = sources[`../assets/diagrams/${name}.dx.svg`];
-if (!src) {
+const { name, alt, dark } = Astro.props;
+const urls = import.meta.glob<string>('../assets/diagrams/*.dx.svg', { query: '?url', import: 'default', eager: true });
+const sources = import.meta.glob<string>('../assets/diagrams/*.dx.svg', { query: '?raw', import: 'default', eager: true });
+const path = `../assets/diagrams/${name}.dx.svg`;
+if (!urls[path]) {
   throw new Error(`Unknown diagram: ${name}`);
 }
+
+// The renderer tags elements with Tailwind `dark:` variants but compiles only the light rules; these supply the dark
+// ones, on the demo frames' surface colour.
+const DARK_RULES = `
+  svg { color: #e5e5e5; background: oklch(0.205 0.001 190); --surface-bg: oklch(0.205 0.001 190); }
+  .dark\\:fill-neutral-200 { fill: #e5e5e5; }
+  .dark\\:stroke-neutral-200 { stroke: #e5e5e5; }
+  .dark\\:text-neutral-200 { color: #e5e5e5; }
+  .dark\\:text-neutral-400 { color: #a3a3a3; }
+`;
+const src = dark
+  ? `data:image/svg+xml,${encodeURIComponent(sources[path].replace('</style>', `${DARK_RULES}</style>`))}`
+  : urls[path];
 ---
 <img class="diagram" src={src} alt={alt} />

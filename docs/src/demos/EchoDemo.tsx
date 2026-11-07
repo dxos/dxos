@@ -10,7 +10,7 @@ import React from 'react';
 import '@dxos/react-ui/theme.css';
 
 import { DemoFrame } from './DemoFrame.tsx';
-import { DEMOS } from './registry.ts';
+import { DEMOS, pageRuntime } from './registry.ts';
 
 /** A live demo island: `<EchoDemo id='editor' client:only='react' />`. */
 export const EchoDemo = ({ id }: { id: string }) => {
@@ -19,5 +19,5 @@ export const EchoDemo = ({ id }: { id: string }) => {
     throw new Error(`No demo "${id}"`);
   }
 
-  return <DemoFrame demo={demo} />;
+  return <DemoFrame demo={demo} runtime={pageRuntime()} />;
 };
