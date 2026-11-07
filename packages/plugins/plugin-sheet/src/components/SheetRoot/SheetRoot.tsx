@@ -13,9 +13,9 @@ import {
 } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
 import {
-  type AwarenessProvider,
   Grid,
   type GridAddressing,
+  type GridAwareness,
   type GridContentProps,
   type GridEditing,
   toRange,
@@ -60,7 +60,7 @@ export type SheetRootProps = {
   attendableId: string;
   readonly?: boolean;
   ignoreAttention?: boolean;
-  awareness?: AwarenessProvider;
+  awareness?: GridAwareness;
 } & Pick<SheetContextValue, 'onInfo'>;
 
 export const SheetRoot = ({

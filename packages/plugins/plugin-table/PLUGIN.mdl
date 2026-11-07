@@ -385,7 +385,7 @@ test QA-4: A collaborator's selection follows its row
 ## Changelog
 
 ```mdl
-decision D-1: Collaborators' cell selections are published as field id and row object id over the object's `awareness.<id>` channel, the one Markdown cursors use, and drawn in each member's hue with their name.
+decision D-1: Collaborators' cell selections are published as field id and row object id on a `@dxos/protocols/Awareness` channel of their own, `awareness.selection.<id>`, and drawn in each member's hue with their name, the name and hue their Markdown cursor carries.
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -393,6 +393,7 @@ decision D-1: Collaborators' cell selections are published as field id and row o
   why: Each client sorts and filters its own view, so a row index names a different row on each side; the object id does not.
   rejected:
     - Publish visual row and column indexes: a peer's sort would move the outline onto another row.
+    - Reuse the Markdown cursors' `awareness.<id>` channel with cell ids written as JSON into the caret's anchor and head strings: the editor and the grid on one object read each other's values.
 ```
 
 ```mdl

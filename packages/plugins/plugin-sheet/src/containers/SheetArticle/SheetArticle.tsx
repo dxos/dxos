@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useIdentity } from '@dxos/halo-react';
 import { type Space, getSpace } from '@dxos/react-client/echo';
-import { useAwarenessProvider } from '@dxos/react-ui-grid';
+import { useGridAwareness } from '@dxos/react-ui-grid';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
@@ -50,7 +50,7 @@ const SheetArticleInner = ({
   // A slide shows the sheet as a picture: the used range fitted to the slide, with no status bar and no one's selection.
   const slide = role === AppSurface.Slide.role;
   const identity = useIdentity();
-  const awareness = useAwarenessProvider({ id: sheet.id, messenger: slide ? undefined : space, identity });
+  const awareness = useGridAwareness({ id: sheet.id, messenger: slide ? undefined : space, identity });
   if (!graph) {
     return null;
   }

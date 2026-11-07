@@ -4,6 +4,7 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 
 import { type DxGridPosition, type DxGridRange, type DxGridRemoteSelection } from '@dxos/lit-grid';
 
@@ -11,13 +12,15 @@ import { type DxGridPosition, type DxGridRange, type DxGridRemoteSelection } fro
  * A cell named by the identity of its column and row, so it stays the same cell when rows are sorted, filtered or
  * inserted.
  */
-export type GridCellId = { col: string; row: string };
+export const GridCellId = Schema.Struct({ col: Schema.String, row: Schema.String });
+export type GridCellId = typeof GridCellId.Type;
 
 /**
  * A selection by cell identity. `anchor` is where it started, which is the focused cell, and `head` is the cell it was
  * extended to. It spans the rectangle between their current positions.
  */
-export type GridSelection = { anchor: GridCellId; head: GridCellId };
+export const GridSelection = Schema.Struct({ anchor: GridCellId, head: GridCellId });
+export type GridSelection = typeof GridSelection.Type;
 
 /**
  * Translates between a grid's visual positions and cell identities. Cells without one (headers, controls, draft rows)

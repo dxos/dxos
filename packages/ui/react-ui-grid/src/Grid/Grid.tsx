@@ -27,10 +27,10 @@ import {
   isSameCell,
 } from '@dxos/lit-grid';
 import { useControllableState } from '@dxos/react-hooks';
-import { type AwarenessProvider } from '@dxos/ui-editor';
 
 import {
   type GridAddressing,
+  type GridAwareness,
   type GridSelection,
   GridSelectionModel,
   bindAwareness,
@@ -84,7 +84,7 @@ type GridRootProps = PropsWithChildren<
     defaultEditing: GridEditing;
     onEditingChange: (nextEditing: GridEditing) => void;
     /** Shares the local selection with collaborators and shows theirs. */
-    awareness: AwarenessProvider;
+    awareness: GridAwareness;
   }>
 >;
 

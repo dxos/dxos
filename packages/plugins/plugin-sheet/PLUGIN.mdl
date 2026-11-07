@@ -542,14 +542,15 @@ decision D-2: Anchors stored before [D-1], in A1 notation or `col,row,col,row`, 
 ```
 
 ```mdl
-decision D-3: Collaborators' selections are published by cell id over the object's `awareness.<id>` channel, the one Markdown cursors use, and drawn in each member's hue with their name.
+decision D-3: Collaborators' selections are published by cell id on a `@dxos/protocols/Awareness` channel of their own, `awareness.selection.<id>`, and drawn in each member's hue with their name, the name and hue their Markdown cursor carries.
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-5.4]
-  why: Ids keep a selection on its cells when a peer inserts or moves rows, and one channel per object means a member's cursor looks the same in every editor.
+  why: Ids keep a selection on its cells when a peer inserts or moves rows; the shared channel brings sessions, heartbeats and expiry, and a channel id of its own keeps grid selections and text cursors on one object apart.
   rejected:
     - Publish A1 positions: they point at whatever cell moved into place on the other side.
+    - Reuse the Markdown cursors' `awareness.<id>` channel with cell ids written as JSON into the caret's anchor and head strings: the editor and the grid on one object read each other's values.
 ```
 
 ```mdl

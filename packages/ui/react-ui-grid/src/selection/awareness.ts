@@ -4,74 +4,66 @@
 
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { type AwarenessProvider, type AwarenessState } from '@dxos/ui-editor';
+import * as Awareness from '@dxos/protocols/Awareness';
 
-import { type GridCellId, type GridPeerSelection, type GridSelectionModel } from './selection-model.ts';
+import { type GridPeerSelection, GridSelection, type GridSelectionModel } from './selection-model.ts';
 
-// The awareness position's `anchor` and `head` are opaque strings; a grid puts a cell identity in each.
+/** The awareness channel a grid's selection travels on, with the selection's corner cells by id as its value. */
+export type GridAwareness = Awareness.Channel<GridSelection>;
 
-export const encodeCellId = ({ col, row }: GridCellId): string => JSON.stringify([col, row]);
+/** Channel id for the selections on one object's grid. */
+export const gridAwarenessChannelId = (objectId: string) => Awareness.channelId('selection', objectId);
 
-export const decodeCellId = (value: string | undefined): GridCellId | undefined => {
-  if (!value) {
-    return undefined;
-  }
+/** Creates the channel for a grid of `objectId`, as `peer`; `Grid.Root` opens it while mounted. */
+export const createGridAwareness = ({
+  messenger,
+  objectId,
+  peer,
+  timing,
+}: Pick<Awareness.ChannelProps<GridSelection, typeof GridSelection.Encoded>, 'messenger' | 'peer' | 'timing'> & {
+  objectId: string;
+}): GridAwareness =>
+  new Awareness.Channel({ messenger, channel: gridAwarenessChannelId(objectId), peer, schema: GridSelection, timing });
 
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return Array.isArray(parsed) && parsed.length === 2 && parsed.every((part) => typeof part === 'string')
-      ? { col: parsed[0], row: parsed[1] }
-      : undefined;
-  } catch {
-    return undefined;
-  }
-};
-
-export const toPeerSelection = ({ peerId, info, position }: AwarenessState): GridPeerSelection | undefined => {
-  const anchor = decodeCellId(position?.anchor);
-  const head = decodeCellId(position?.head);
-  if (!anchor || !head) {
-    return undefined;
-  }
-
-  return {
+export const toPeerSelection = ({
+  peerId,
+  info,
+  value,
+}: Awareness.RemoteSession<GridSelection>): GridPeerSelection | undefined =>
+  value && {
     peerId,
     name: info.displayName,
     color: info.hue ? `var(--color-${info.hue}-border)` : info.darkColor,
     textColor: info.hue ? `var(--color-${info.hue}-fg)` : undefined,
-    selection: { anchor, head },
+    selection: value,
   };
-};
 
 /**
- * Opens `provider`, publishes the model's local selection on it and mirrors collaborators' selections into the model.
- * Returns the function that undoes it, which closes the provider so collaborators drop this user's selection.
+ * Opens `channel`, publishes the model's local selection on it and mirrors collaborators' selections into the model,
+ * one per member however many tabs they have open. Returns the function that undoes it, which closes the channel so
+ * collaborators drop this user's selection.
  */
 export const bindAwareness = (
   registry: Registry.AtomRegistry,
   model: GridSelectionModel,
-  provider: AwarenessProvider,
+  channel: GridAwareness,
 ): (() => void) => {
-  provider.open();
+  channel.open();
 
-  const publish = () => {
-    const selection = model.getLocal();
-    provider.update(
-      selection ? { anchor: encodeCellId(selection.anchor), head: encodeCellId(selection.head) } : undefined,
-    );
-  };
+  const publish = () => channel.update(model.getLocal());
   const receive = () => {
-    model.setPeers(provider.getRemoteStates().flatMap((state) => toPeerSelection(state) ?? []));
+    const sessions = Awareness.latestPerPeer(channel.getSessions(), { prefer: ({ value }) => value !== undefined });
+    model.setPeers(sessions.flatMap((session) => toPeerSelection(session) ?? []));
   };
 
   publish();
   receive();
   const unsubscribeLocal = registry.subscribe(model.local, publish);
-  const unsubscribeRemote = provider.remoteStateChange.on(receive);
+  const unsubscribeRemote = channel.changed.on(receive);
   return () => {
     unsubscribeLocal();
     unsubscribeRemote();
-    provider.close();
+    channel.close();
     model.setPeers([]);
   };
 };

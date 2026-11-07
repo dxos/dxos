@@ -12,7 +12,6 @@ import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
-  type AwarenessProvider,
   DxEditRequest,
   type DxGridAxisMeta,
   type DxGridElement,
@@ -20,6 +19,7 @@ import {
   type DxGridPlaneRange,
   Grid,
   type GridAddressing,
+  type GridAwareness,
   type GridContentProps,
   closestCell,
   gridSeparatorBlockEnd,
@@ -57,7 +57,7 @@ export type TableContentProps = {
   ignoreAttention?: boolean;
   attendableId?: string;
   /** Shares each user's cell selection with the table's other viewers. */
-  awareness?: AwarenessProvider;
+  awareness?: GridAwareness;
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;

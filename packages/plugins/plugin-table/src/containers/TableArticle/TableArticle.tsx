@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import * as SearchHooks from '@dxos/plugin-search/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { getSpace } from '@dxos/react-client/echo';
-import { useAwarenessProvider } from '@dxos/react-ui-grid';
+import { useGridAwareness } from '@dxos/react-ui-grid';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
   Table as TableComponent,
@@ -191,7 +191,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
 
     const presentation = useMemo(() => (model ? new TablePresentation(registry, model) : undefined), [registry, model]);
     const identity = useIdentity();
-    const awareness = useAwarenessProvider({ id: object.id, messenger: getSpace(object), identity });
+    const awareness = useGridAwareness({ id: object.id, messenger: getSpace(object), identity });
 
     const handleRowClick = useCallback(
       (row: any) => {
