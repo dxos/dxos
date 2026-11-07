@@ -8,7 +8,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { type SpaceSchema } from '#types';
 
-import { type Box, type PlankPosition, type PointerAnchor, fromPlankPosition } from '../../util/pointer.ts';
+import { type Box, type PlankPosition, fromPlankPosition } from '../../util/pointer.ts';
 
 /** A pointer to draw: whose it is, and where in which plank. */
 export type ShownPointer = PlankPosition & {
@@ -17,7 +17,7 @@ export type ShownPointer = PlankPosition & {
   name: string;
   /** A palette hue such as `red`. */
   hue: string;
-  anchor: PointerAnchor;
+  plank: string;
   style: SpaceSchema.PointerStyle;
 };
 
@@ -32,14 +32,8 @@ type Placed = Point & { key: string; trail: (Point & { age: number })[] };
 const hueColor = (hue: string) => `var(--color-${hue}-border)`;
 
 // The same plank can be open twice (a companion, a stacked section); the one with a box is the one on screen.
-const findAnchorBox = (anchor: PointerAnchor): Box | undefined => {
-  if (anchor.kind === 'window') {
-    return { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
-  }
-  const selector =
-    anchor.kind === 'plank'
-      ? `[${Attention.ATTENDABLE_ATTRIBUTE}="${CSS.escape(anchor.id)}"]`
-      : `[data-tree-row][data-object-id="${CSS.escape(anchor.id)}"]`;
+const findPlankBox = (plank: string): Box | undefined => {
+  const selector = `[${Attention.ATTENDABLE_ATTRIBUTE}="${CSS.escape(plank)}"]`;
   for (const element of document.querySelectorAll(selector)) {
     const box = element.getBoundingClientRect();
     if (box.width > 0 && box.height > 0) {
@@ -76,7 +70,7 @@ const usePlaced = (pointers: readonly ShownPointer[]): Placed[] => {
     const place = () => {
       const now = performance.now();
       const next = pointers.flatMap((pointer): Placed[] => {
-        const box = findAnchorBox(pointer.anchor);
+        const box = findPlankBox(pointer.plank);
         if (!box) {
           shown.current.delete(pointer.key);
           trails.current.delete(pointer.key);
@@ -193,8 +187,7 @@ export const FollowOverlay = ({ pointers }: FollowOverlayProps) => {
             style={{ transform: `translate(${left}px, ${top}px)` }}
             data-testid='spacePlugin.followOverlay.pointer'
             data-name={pointer.name}
-            data-anchor={pointer.anchor.kind}
-            {...(pointer.anchor.kind !== 'window' && { [`data-${pointer.anchor.kind}`]: pointer.anchor.id })}
+            data-plank={pointer.plank}
             data-style={pointer.style}
           >
             {pointer.style === 'laser' ? (

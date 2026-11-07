@@ -8,7 +8,6 @@ import {
   type FollowPointer,
   type PointerViewer,
   fromPlankPosition,
-  getPointerAnchor,
   sharesFollow,
   takesPartInFollow,
   toPlankPosition,
@@ -120,13 +119,5 @@ describe('takesPartInFollow', () => {
     expect(takesPartInFollow(SPACE, { spaceId: SPACE, identityKey: LEADER }, [])).toBe(true);
     expect(takesPartInFollow(SPACE, undefined, [SPACE])).toBe(true);
     expect(takesPartInFollow(SPACE, { spaceId: 'space-2', identityKey: LEADER }, ['space-3'])).toBe(false);
-  });
-});
-
-describe('getPointerAnchor', () => {
-  test('places a pointer against its plank, else its navtree row, else the window', ({ expect }) => {
-    expect(getPointerAnchor({ plank: 'root/s/doc', row: 'root/s/doc' })).toEqual({ kind: 'plank', id: 'root/s/doc' });
-    expect(getPointerAnchor({ row: 'root/s/collections' })).toEqual({ kind: 'row', id: 'root/s/collections' });
-    expect(getPointerAnchor({})).toEqual({ kind: 'window' });
   });
 });

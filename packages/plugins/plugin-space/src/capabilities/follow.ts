@@ -44,6 +44,8 @@ type Shown = {
   revealUntil: number;
   /** Set when navigating to it paused the follow, so the next update navigates again. */
   retry?: boolean;
+  /** The leader's companions as last mirrored, so an unchanged report opens nothing again. */
+  companions?: string;
 };
 
 /** Whether an event happened inside a plank or companion of an object, as opposed to the sidebars or a popover. */
@@ -260,6 +262,42 @@ export default Capability.makeModule(
             Effect.catch((err) => Effect.sync(() => log.warn('follow scroll failed', { err }))),
           ),
         );
+      }
+
+      // Companions are content: each plank shown of the leader opens the companion they have open there, in their tab,
+      // and closes one they closed. A flat deck holds the leader's plank at its own path for the same object.
+      if (deck?.companions) {
+        const leaderCompanions = new Set(deck.companions);
+        const variant = deck.companionVariant;
+        const pairs: [string, string | undefined][] = planks
+          ? planks.map((plank) => [plank, plank])
+          : path
+            ? [[path, findOpenPath(focus.key)]]
+            : [];
+        const signature = JSON.stringify([pairs.map(([leaderPlank]) => leaderCompanions.has(leaderPlank)), variant]);
+        if (signature !== shown.companions || mounting) {
+          shown.companions = signature;
+          for (const [leaderPlank, plank] of pairs) {
+            if (!plank || !layout.active.includes(plank)) {
+              continue;
+            }
+            const open = layout.companions?.items.includes(plank) ?? false;
+            const subject = leaderCompanions.has(leaderPlank)
+              ? variant && (!open || layout.companions?.variant !== variant)
+                ? `${plank}/~${variant}`
+                : undefined
+              : open
+                ? null
+                : undefined;
+            if (subject !== undefined) {
+              Effect.runFork(
+                invoke(LayoutOperation.UpdateCompanion, { subject, anchor: plank }).pipe(
+                  Effect.catch((err) => Effect.sync(() => log.warn('follow companion failed', { err }))),
+                ),
+              );
+            }
+          }
+        }
       }
 
       const targets: [string | undefined, SpaceSchema.PeerLocation | undefined][] = planks

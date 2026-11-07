@@ -360,6 +360,28 @@ describe('Follow', () => {
     expect(calls.filter(({ op }) => op === 'set')).toHaveLength(1);
   });
 
+  test('a mirrored plank opens the companion the leader has open, in their tab, and closes it with them', async ({
+    expect,
+  }) => {
+    const { calls, ephemeral, registry, space, object } = await setup({ flat: false });
+    const path = GraphPath.getSpacePath(space.id, BOUND_SEGMENT, object.id);
+    const key = EID.make({ spaceId: space.id, entityId: object.id });
+    lead(registry, ephemeral, space.id, key, path, {
+      planks: [path],
+      front: path,
+      companions: [path],
+      companionVariant: 'comments',
+    });
+    await expect
+      .poll(() => calls.find(({ op }) => op === 'updateCompanion')?.input)
+      .toEqual({ subject: `${path}/~comments`, anchor: path });
+
+    lead(registry, ephemeral, space.id, key, path, { planks: [path], front: path, companions: [] });
+    await expect
+      .poll(() => calls.filter(({ op }) => op === 'updateCompanion').at(-1)?.input)
+      .toEqual({ subject: null, anchor: path });
+  });
+
   test('a leader on the space’s Home is followed there, not paused', async ({ expect }) => {
     const { calls, ephemeral, registry, space } = await setup();
     lead(registry, ephemeral, space.id, getPresenceKeyFromSpace(space.id), GraphPath.getSpaceHomePath(space.id));
@@ -497,6 +519,26 @@ const makeFollowPlugin = (calls: Call[], failOpens: number, unresolved: Readonly
                       record('set', input);
                       // As the deck's navigation does, a plank no URL binding represents is left out.
                       show(input.subject.filter((id) => !unresolved.has(id)));
+                    }),
+                  ),
+                  Operation.withHandler(LayoutOperation.UpdateCompanion, (input) =>
+                    Effect.sync(() => {
+                      record('updateCompanion', input);
+                      // As the deck does: a subject opens its plank's companion in that tab, null closes it.
+                      const { subject, anchor } = input;
+                      const [plank, variant] = subject ? subject.split('/~') : [anchor, undefined];
+                      registry.update(layout, (state) => {
+                        const items = (state.companions?.items ?? []).filter((item) => item !== plank);
+                        return {
+                          ...state,
+                          companions: {
+                            items: subject && plank ? [...items, plank] : items,
+                            ...((variant ?? state.companions?.variant) && {
+                              variant: variant ?? state.companions?.variant,
+                            }),
+                          },
+                        };
+                      });
                     }),
                   ),
                   Operation.withHandler(LayoutOperation.SwitchWorkspace, (input) =>

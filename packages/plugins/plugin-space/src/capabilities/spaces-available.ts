@@ -312,6 +312,13 @@ export default Capability.makeModule(
                   planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
                   ...(layout.front &&
                     GraphPath.getSpaceIdFromPath(layout.front) === space.id && { front: layout.front }),
+                  // Companions are content, so a follower opens the same ones.
+                  ...(layout.companions && {
+                    companions: layout.companions.items.filter(
+                      (path) => GraphPath.getSpaceIdFromPath(path) === space.id,
+                    ),
+                    ...(layout.companions.variant && { companionVariant: layout.companions.variant }),
+                  }),
                 },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.

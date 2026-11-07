@@ -158,8 +158,15 @@ const parseDeck = (value: unknown): SpaceSchema.PeerDeck | undefined => {
   if (typeof value !== 'object' || value === null) {
     return undefined;
   }
-  const { planks, front } = value as Record<string, unknown>;
-  return Array.isArray(planks) ? { planks: planks.filter(isString), ...(isString(front) && { front }) } : undefined;
+  const { planks, front, companions, companionVariant } = value as Record<string, unknown>;
+  return Array.isArray(planks)
+    ? {
+        planks: planks.filter(isString),
+        ...(isString(front) && { front }),
+        ...(Array.isArray(companions) && { companions: companions.filter(isString) }),
+        ...(isString(companionVariant) && { companionVariant }),
+      }
+    : undefined;
 };
 
 const DEVICE_KINDS: ReadonlySet<string> = new Set(['browser', 'native', 'mobile', 'agent', 'unknown']);

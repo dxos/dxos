@@ -6,7 +6,8 @@
  * Alice, Bob and Carol share a plan. Bob follows whoever sits last in his Members list: their row rises to the top,
  * takes the follow's indigo and swaps Follow for his pointer controls, and the leader sees him under "Following you".
  * Each sees the other's pointer on the same spot of the plan; Bob switches his to a laser whose tail traces its path.
- * The leader points across the navtree, types and opens the notes, and Bob's deck goes along; Bob typing ends it.
+ * The leader opens and closes the plan's companion, types and opens the notes, and Bob's deck goes along; Bob typing
+ * ends it.
  * Recorded side by side, three panes; the third person sees no pointers.
  *
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-7
@@ -124,15 +125,15 @@ const glideOver = async (peer, locator, spots, sleep, rest = 700) => {
 const glide = (peer, spots, sleep, rest) => glideOver(peer, plank(peer.page), spots, sleep, rest);
 
 /** Glides until the other peer draws this one's pointer: a session posts only once it knows it is in a follow. */
-const glideUntilShown = async (peer, other, spots, sleep) => {
+const glideUntilShown = async (peer, other, spots, sleep, target = plank) => {
   const deadline = Date.now() + TIMEOUT;
   while ((await pointers(other.page).count()) === 0) {
     if (Date.now() > deadline) {
       throw new Error('timed out waiting for the pointer to show');
     }
-    await glide(peer, spots.slice(0, 1), sleep, 250);
+    await glideOver(peer, target(peer.page), spots.slice(0, 1), sleep, 250);
   }
-  await glide(peer, spots, sleep);
+  await glideOver(peer, target(peer.page), spots, sleep);
 };
 
 /** Expands a navtree row unless it is already open; a row with no children yet keeps its caret disabled. */
@@ -407,39 +408,31 @@ export const steps = [
     pace: 2_000,
   },
   {
-    name: 'The leader points across the navtree',
-    subtitle: 'Pointers cover the whole window: over a navtree row, each sees it on the same row',
+    name: 'The leader opens the plan’s companion; Bob’s opens too',
+    subtitle: 'Companions are content: the follow mirrors which one is open, and pointers work in it',
     run: async ({ peers: { bob }, sleep }) => {
-      const tree = currentWorkspace(leader.page);
-      await glideOver(leader, tree.getByTestId('spacePlugin.collectionsSection').first(), [[0.5, 0.5]], sleep, 400);
-      await glideOver(
+      await leader.click(plank(leader.page).getByTestId('plankHeading.companion'));
+      const companion = (page) => page.getByTestId('deck.plank').nth(1);
+      await waitFor(async () => (await bob.page.getByTestId('deck.plank').count()) > 1, {
+        what: 'the companion beside Bob’s plank',
+      });
+      await sleep(800);
+      await glideUntilShown(
         leader,
-        objectLink(leader.page, PLAN),
+        bob,
         [
-          [0.3, 0.5],
-          [0.7, 0.5],
+          [0.3, 0.3],
+          [0.6, 0.35],
+          [0.45, 0.5],
         ],
         sleep,
-        500,
+        companion,
       );
-      await glideOver(
-        leader,
-        objectLink(leader.page, NOTES),
-        [
-          [0.4, 0.5],
-          [0.6, 0.5],
-        ],
-        sleep,
-        700,
-      );
-      await waitFor(
-        async () =>
-          (await pointers(bob.page).count()) > 0 &&
-          (await pointers(bob.page).first().getAttribute('data-anchor')) === 'row',
-        {
-          what: 'the leader’s pointer over a row of Bob’s navtree',
-        },
-      );
+      await sleep(1_000);
+      await leader.click(leader.page.getByTestId('plankHeading.closeCompanion').filter({ visible: true }).first());
+      await waitFor(async () => (await bob.page.getByTestId('deck.plank').count()) === 1, {
+        what: 'Bob’s companion to close',
+      });
     },
     pace: 1_500,
   },

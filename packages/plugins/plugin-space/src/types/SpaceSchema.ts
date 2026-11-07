@@ -135,6 +135,10 @@ export type PeerDeck = {
   planks: string[];
   /** The plank its deck is scrolled to; see `front` on `AppCapabilities.Layout`. */
   front?: string;
+  /** Its planks in the space whose companion is open; see `companions` on `AppCapabilities.Layout`. */
+  companions?: string[];
+  /** The companion tab its deck shows them in. */
+  companionVariant?: string;
 };
 
 export type ObjectId = string;

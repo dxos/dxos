@@ -90,6 +90,11 @@ export type Layout = Readonly<{
    * independent of its width. Unset while the layout has not yet measured the items it now shows.
    */
   front?: string;
+  /**
+   * The items the layout shows whose companion is open, and the companion tab it shows them in (a linked variant such
+   * as `comments`), so another view of the layout can open the same ones.
+   */
+  companions?: Readonly<{ items: readonly string[]; variant?: string }>;
 }>;
 
 /**

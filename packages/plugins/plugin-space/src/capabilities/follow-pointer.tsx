@@ -25,44 +25,25 @@ import {
   FollowPointer,
   type PlankPosition,
   POINTER_CHANNEL_KIND,
-  type PointerAnchor,
   getPeerFocus,
-  getPointerAnchor,
   getPresenceKeyFromPath,
   sharesFollow,
   takesPartInFollow,
   toPlankPosition,
 } from '../util/index.ts';
 
-/**
- * What the pointer is over that a peer can find by the same id: the innermost attendable naming an object (a plank),
- * else a navtree row; undefined over anything else, which places the pointer against the window.
- */
-const findAnchor = (target: EventTarget | null): { anchor: PointerAnchor; element: Element } | undefined => {
-  if (!(target instanceof Element)) {
-    return undefined;
-  }
-  let element = target.closest(Attention.ATTENDABLE_SELECTOR);
+/** The innermost attendable around the pointer naming an object: a plank or its companion, found by the same id. */
+const findPlank = (target: EventTarget | null): Element | undefined => {
+  let element = target instanceof Element ? target.closest(Attention.ATTENDABLE_SELECTOR) : null;
   while (element) {
     const id = element.getAttribute(Attention.ATTENDABLE_ATTRIBUTE);
     if (id && getPresenceKeyFromPath(id) !== undefined) {
-      return { anchor: { kind: 'plank', id }, element };
+      return element;
     }
     element = element.parentElement?.closest(Attention.ATTENDABLE_SELECTOR) ?? null;
   }
-  const row = target.closest('[data-tree-row][data-object-id]');
-  const id = row?.getAttribute('data-object-id');
-  return row && id ? { anchor: { kind: 'row', id }, element: row } : undefined;
+  return undefined;
 };
-
-const getWindowBox = () => ({ left: 0, top: 0, width: window.innerWidth, height: window.innerHeight });
-
-// A plank or row belongs to the space its graph path names; the window to every space.
-const isAnchorInSpace = (anchor: PointerAnchor, spaceId: string) =>
-  anchor.kind === 'window' || GraphPath.getSpaceIdFromPath(anchor.id) === spaceId;
-
-const toAnchorFields = (anchor: PointerAnchor): Pick<FollowPointer, 'plank' | 'row'> =>
-  anchor.kind === 'plank' ? { plank: anchor.id } : anchor.kind === 'row' ? { row: anchor.id } : {};
 
 const isSamePointers = (a: readonly ShownPointer[], b: readonly ShownPointer[]) =>
   JSON.stringify(a) === JSON.stringify(b);
@@ -80,7 +61,7 @@ export default Capability.makeModule(
 
     const pointersAtom = Atom.make<readonly ShownPointer[]>([]).pipe(Atom.keepAlive);
     const channels = new Map<string, { channel: Awareness.Channel<FollowPointer>; dispose: () => void }>();
-    let local: { anchor: PointerAnchor; position: PlankPosition } | undefined;
+    let local: { plank: string; position: PlankPosition } | undefined;
 
     const getIdentity = () => Option.getOrUndefined(haloIdentity.getSnapshot());
 
@@ -95,7 +76,8 @@ export default Capability.makeModule(
             ...(following.sessionId && { sessionId: following.sessionId }),
           },
         }),
-        ...(local && isAnchorInSpace(local.anchor, spaceId) && { ...toAnchorFields(local.anchor), ...local.position }),
+        ...(local &&
+          GraphPath.getSpaceIdFromPath(local.plank) === spaceId && { plank: local.plank, ...local.position }),
       };
     };
 
@@ -111,7 +93,8 @@ export default Capability.makeModule(
                 : undefined;
             const viewer = { spaceId, identityKey: identity.identityKey ?? '', sessionId, following, leaderSessionId };
             return channel.getSessions().flatMap(({ peerId, info, sessionId: key, value }): ShownPointer[] =>
-              value?.x !== undefined &&
+              value?.plank !== undefined &&
+              value.x !== undefined &&
               value.y !== undefined &&
               sharesFollow(viewer, { identityKey: peerId, pointer: value })
                 ? [
@@ -119,7 +102,7 @@ export default Capability.makeModule(
                       key,
                       name: info.displayName || generateName(peerId),
                       hue: info.hue ?? hexToHue(peerId),
-                      anchor: getPointerAnchor(value),
+                      plank: value.plank,
                       x: value.x,
                       y: value.y,
                       style: value.style ?? 'cursor',
@@ -209,11 +192,11 @@ export default Capability.makeModule(
       if (channels.size === 0 || event.pointerType === 'touch') {
         return;
       }
-      const found = findAnchor(event.target);
-      const anchor: PointerAnchor = found?.anchor ?? { kind: 'window' };
-      const box = found ? found.element.getBoundingClientRect() : getWindowBox();
-      const position = toPlankPosition(box, event.clientX, event.clientY);
-      local = position ? { anchor, position } : undefined;
+      // Over chrome (the navtree, sidebars, toolbars) the pointer has no position, so peers draw none.
+      const plank = findPlank(event.target);
+      const id = plank?.getAttribute(Attention.ATTENDABLE_ATTRIBUTE);
+      const position = plank && toPlankPosition(plank.getBoundingClientRect(), event.clientX, event.clientY);
+      local = id && position ? { plank: id, position } : undefined;
       post();
     };
     const onMouseOut = (event: MouseEvent) => {
