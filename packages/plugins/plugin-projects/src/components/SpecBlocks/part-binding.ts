@@ -114,6 +114,16 @@ export const partBinding = ({ parent, locate, verbatim }: PartBindingOptions): E
         }
       },
     ),
+    // The focused field's caret is the spec editor's cursor, at the character it is at in the spec.
+    EditorView.updateListener.of(({ view, state, selectionSet, focusChanged }) => {
+      const map = (selectionSet || focusChanged) && view.hasFocus ? offsets() : undefined;
+      if (map) {
+        const anchor = map.toSource(state.selection.main.head);
+        if (anchor !== parent.state.selection.main.head) {
+          parent.dispatch({ selection: { anchor } });
+        }
+      }
+    }),
     EditorView.updateListener.of(({ docChanged, state, transactions }) => {
       if (!docChanged || transactions.every((transaction) => transaction.annotation(syncAnnotation))) {
         return;
