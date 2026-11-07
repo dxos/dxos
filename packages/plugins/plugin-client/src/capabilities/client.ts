@@ -208,19 +208,21 @@ export default Capability.makeModule(
 
     // Waiting happens where the client is used, not where the layer is built, so a host's startup never
     // blocks on (or fails with) a client that the work it runs may never touch.
-    const clientServiceLayer = Layer.succeed(ClientService, {
+    const clientHandle = {
       client: Deferred.succeed(used, undefined).pipe(
         Effect.andThen(Deferred.await(initialized)),
         Effect.orDie,
         Effect.as(client),
       ),
-    });
+    };
+    const clientServiceLayer = Layer.succeed(ClientService, clientHandle);
 
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
       Capability.contribute(ClientCapabilities.Client, client),
       Capability.contribute(ClientCapabilities.InitializeTimeout, initializeTimeout),
+      Capability.contribute(ClientCapabilities.ClientHandle, clientHandle),
       Capability.contribute(Capabilities.Layer, clientServiceLayer),
       // HALO service instances for imperative consumers (so plugins read identity/spaces
       // through @dxos/halo instead of the client directly).

@@ -429,6 +429,40 @@ describe('Feed', () => {
       unsubscribe();
     });
 
+    test('a fork at an item whose append is still pending waits for its block', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'pending-fork' }));
+      const a1 = db.add(Obj.make(TestSchema.Person, { name: 'A1' }), { to: feed });
+
+      const branch = await db.forkFeed(feed, Obj.make(TestSchema.Person, { name: 'B1' }), { at: a1 });
+      await db.flush();
+
+      const feedUri = Feed.getFeedUri(feed)?.toString() ?? '';
+      const read = async (branches?: ReadonlyArray<Feed.BranchId | null>) =>
+        (await db.query(Query.select(Filter.type(TestSchema.Person)).from(FeedScope.feed(feedUri, { branches }))).run())
+          .map((item) => item.name)
+          .sort();
+      expect(await read()).toEqual(['A1']);
+      expect(await read([branch])).toEqual(['B1']);
+    });
+
+    test('a fork at a snapshot of an item whose append is still pending is refused', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'pending-snapshot-fork' }));
+      const a1 = db.add(Obj.make(TestSchema.Person, { name: 'A1' }), { to: feed });
+      const snapshot = Obj.getSnapshot(a1);
+      Obj.update(a1, (a1) => {
+        a1.name = 'A1 v2';
+      });
+
+      await expect(db.forkFeed(feed, Obj.make(TestSchema.Person, { name: 'B1' }), { at: snapshot })).rejects.toThrow(
+        'fork point has no block yet',
+      );
+      await db.flush();
+    });
+
     // F-4.1: an edit of a fork base made while the fork is in flight continues its branch, never the root.
     test('an edit of a fork base during its send lands on the branch', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
