@@ -232,7 +232,8 @@
       line-height: 1rem;
       border-start-start-radius: 2px;
       border-start-end-radius: 2px;
-      background: var(--dx-grid-remote-selection-color);
+      /* A collaborator sends this color; `background-color` takes no image, so it cannot make this client fetch one. */
+      background-color: var(--dx-grid-remote-selection-color);
       color: var(--dx-grid-remote-selection-text, var(--color-grid-fg));
     }
 

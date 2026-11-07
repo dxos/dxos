@@ -239,7 +239,7 @@ export const Calendar: Story = {
   ),
 };
 
-const SelectionProbe = () => {
+const SelectionProbe = ({ peerColor = 'red' }: { peerColor?: string }) => {
   const { selection } = useGridContext('SelectionProbe');
   const local = useAtomValue(selection.local);
   return (
@@ -253,7 +253,7 @@ const SelectionProbe = () => {
             {
               peerId: 'peer',
               name: 'Peer',
-              color: 'red',
+              color: peerColor,
               selection: { anchor: { col: 'a', row: 'r3' }, head: { col: 'a', row: 'r3' } },
             },
           ])
@@ -265,7 +265,7 @@ const SelectionProbe = () => {
   );
 };
 
-const SelectionStory = ({ addressed = true }: { addressed?: boolean }) => {
+const SelectionStory = ({ addressed = true, peerColor }: { addressed?: boolean; peerColor?: string }) => {
   // Taller than the viewport, as real sheets and tables are, so a row change does not change the visible range.
   const [rows, setRows] = useState(() => Array.from({ length: 50 }, (_row, index) => `r${index + 1}`));
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
@@ -308,7 +308,7 @@ const SelectionStory = ({ addressed = true }: { addressed?: boolean }) => {
       </button>
       <button>Elsewhere</button>
       <output data-testid='reported'>{reported}</output>
-      <SelectionProbe />
+      <SelectionProbe peerColor={peerColor} />
       <GridCellEditor extensions={extensions} getCellContent={() => ''} />
       <Grid.Content
         ref={setDxGrid}
@@ -843,6 +843,21 @@ export const UnaddressedEditKeepsRange: Story = {
     await waitFor(() => expect(canvas.queryByTestId('grid.cell-editor')).toBeNull());
     await new Promise((resolve) => setTimeout(resolve, 100));
     await expect(canvas.getByTestId('reported').textContent).toBe('1-2');
+  },
+};
+
+/**
+ * A collaborator's color is drawn only as a color: a value that names an image is not loaded.
+ */
+export const PeerColorIsOnlyAColor: Story = {
+  render: () => <SelectionStory peerColor='url("https://example.invalid/label.png")' />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: 'Peer selects' }));
+    const outline = await canvas.findByTestId('dx-grid.remote-selection');
+    const label = outline.querySelector('.dx-grid__remote-selection__label');
+    await expect(label).not.toBeNull();
+    await expect(label && getComputedStyle(label).backgroundImage).toBe('none');
   },
 };
 
