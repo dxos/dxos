@@ -11,9 +11,8 @@ import sprite from 'virtual:autocue-icons';
 import '@dxos/react-ui/theme.css';
 import * as Theme from '@dxos/react-ui/Theme';
 
-import { Player, type PlayerView, isPlayerView } from '../src/player/Player.tsx';
+import { type Manifest, Player, type PlayerView, isPlayerView } from '../src/player/index.ts';
 import { sampleManifest } from '../src/player/testing/sample.ts';
-import { type Manifest } from '../src/player/types.ts';
 
 // The icon registry loads its sprite from `/icons.svg` at the site root, which a bundle under an R2 prefix or inside an
 // Artifact does not have; the page carries the few icons it uses and answers that one request itself.

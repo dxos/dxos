@@ -26,3 +26,9 @@ export const Default: Story = {
 export const SpecView: Story = {
   args: { manifest: sampleManifest, initialView: 'spec' },
 };
+
+/** As a Composer article shows it: filling a bounded container, with keys only while focus is inside. */
+export const Embedded: Story = {
+  decorators: [withLayout({ layout: 'column' })],
+  args: { manifest: sampleManifest, layout: 'embedded' },
+};
