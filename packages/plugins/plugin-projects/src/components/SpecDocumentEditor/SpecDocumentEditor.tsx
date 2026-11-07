@@ -4,13 +4,13 @@
 
 import { type Extension } from '@codemirror/state';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useContext, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import * as Spec from '@dxos/compute/Spec';
-import { Filter, Obj } from '@dxos/echo';
+import type * as Spec from '@dxos/compute/Spec';
+import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
+import { useResolveRef } from '@dxos/echo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import {
   type EditorToolbarState,
@@ -23,8 +23,7 @@ import * as Util from '@dxos/react-ui/Util';
 import { type WidgetState, formattingListener, widgetHost } from '@dxos/ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { useCaretIdentity } from '../../hooks/index.ts';
-import { SharedAwareness, specBlocks } from '../SpecBlocks/index.ts';
+import { useCaretIdentity, useSpecBlockForms } from '../../hooks/index.ts';
 import { createMdlExtensions } from './extensions.ts';
 
 const SPEC_DOCUMENT_EDITOR_NAME = 'SpecDocumentEditor';
@@ -53,20 +52,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
     const text = useResolveRef(spec.content);
     const identity = useCaretIdentity();
     const space = getSpace(spec);
-    const [dialects = EMPTY] = useObject(spec, 'dialects');
-    // The field editors in the block cards publish their carets on the spec editor's channel.
-    const awareness = useMemo(() => new SharedAwareness(), [spec]);
-    // Read through a ref, so a spec added or renamed reaches the pickers without rebuilding the editor.
-    const specs = useQuery(space?.db, Filter.type(Spec.Spec));
-    const specsRef = useRef(specs);
-    specsRef.current = specs;
-    const specOptions = useCallback(
-      () =>
-        specsRef.current
-          .filter((candidate) => candidate.id !== spec.id)
-          .map((candidate) => ({ id: candidate.id, name: candidate.name })),
-      [spec],
-    );
+    const forms = useSpecBlockForms(spec, { viewMode, fieldExtensions });
     const { parentRef, view } = useTextEditor(() => {
       if (!text) {
         return {};
@@ -84,17 +70,10 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
               text: Doc.createAccessor(text, ['content']),
               messenger: space,
               identity,
-              wrapAwareness: awareness.wrap,
+              wrapAwareness: forms.wrapAwareness,
             },
           }),
-          specBlocks({
-            dialects,
-            cards: viewMode !== 'source',
-            readonly: viewMode === 'readonly',
-            awareness,
-            fieldExtensions,
-            specs: specOptions,
-          }),
+          forms.extension,
           formattingListener((formatting: EditorToolbarState) =>
             registry.set(state, { ...registry.get(state), ...formatting }),
           ),
@@ -102,21 +81,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
           extensions ?? [],
         ],
       };
-    }, [
-      themeMode,
-      spec,
-      text,
-      extensions,
-      registry,
-      state,
-      space,
-      identity,
-      viewMode,
-      dialects,
-      awareness,
-      fieldExtensions,
-      specOptions,
-    ]);
+    }, [themeMode, spec, text, extensions, registry, state, space, identity, viewMode, forms]);
 
     useEffect(() => setController(createEditorController(view)), [view, setController]);
 
@@ -139,5 +104,3 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
     );
   },
 );
-
-const EMPTY: readonly string[] = [];
