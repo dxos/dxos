@@ -28,6 +28,8 @@ export const Drawing = {
       .click();
     await dialog.getByTestId('save-button').click();
     await expect(dialog).toHaveCount(0, { timeout: 30_000 });
+    // The app opens the new drawing after the dialog closes; a step that navigates before then is undone by it.
+    await expect(app.deck.plank().locator.getByTestId(SURFACE_TEST_IDS[variant])).toBeVisible({ timeout: 30_000 });
   },
 
   /** The element a variant draws on, where the pointer is tracked. */
