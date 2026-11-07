@@ -234,8 +234,7 @@ export default Capability.makeModule(
         }),
       );
 
-    // One session per running app, so peers tell this tab apart from the same identity's others.
-    const sessionId = PublicKey.random().toHex();
+    const { sessionId } = registry.get(ephemeralAtom);
     const getDevice = (): SpaceSchema.SessionDevice | undefined => {
       const profile = client.halo.device?.profile;
       if (!profile) {
@@ -254,6 +253,18 @@ export default Capability.makeModule(
     // Sessions that follow this one, by space, identity and session, with when they last said so.
     const followers = new Map<string, number>();
     const isFollowed = (now: number) => [...followers.values()].some((lastSeen) => now - lastSeen < PRESENCE_EXPIRY);
+    // The follow pointer posts in the spaces where this session is followed; a lapsed follower drops out here.
+    const syncFollowedSpaces = (now: number) => {
+      for (const [follower, lastSeen] of followers) {
+        if (now - lastSeen >= PRESENCE_EXPIRY) {
+          followers.delete(follower);
+        }
+      }
+      const followedSpaces = [...new Set([...followers.keys()].map((follower) => follower.split('/')[0]))].sort();
+      registry.update(ephemeralAtom, (state) =>
+        state.followedSpaces.join() === followedSpaces.join() ? state : { ...state, followedSpaces },
+      );
+    };
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
@@ -314,7 +325,10 @@ export default Capability.makeModule(
 
       send();
       // Send at interval to allow peers to expire entries if they become disconnected.
-      const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
+      const interval = setInterval(() => {
+        syncFollowedSpaces(Date.now());
+        send();
+      }, PRESENCE_BROADCAST_INTERVAL);
 
       // Moving or scrolling in an open object re-sends to its space, at most once per interval, which is shorter while
       // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
@@ -377,6 +391,7 @@ export default Capability.makeModule(
               } else {
                 followers.delete(follower);
               }
+              syncFollowedSpaces(lastSeen);
               registry.update(ephemeralAtom, (ephemeral) => {
                 const viewersByObject = applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen);
                 return {

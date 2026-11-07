@@ -62,6 +62,30 @@ const getShownPlanks = (app: AppManager) =>
 /** The plank a sliding deck is scrolled to: the first one shown. */
 const getFrontPlank = async (app: AppManager) => (await getShownPlanks(app))[0] ?? undefined;
 
+/** Moves the mouse to a spot of the deck's plank, as fractions of its width and height. */
+const moveOverPlank = async (app: AppManager, x: number, y: number) => {
+  const box = await app.deck.plank().locator.boundingBox();
+  expect(box, 'the deck must show a plank').toBeTruthy();
+  if (box) {
+    await app.page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 4 });
+  }
+};
+
+/** Where the one drawn pointer sits in the plank it names, as whole percentages of that plank's width and height. */
+const getPointerPosition = (app: AppManager) =>
+  app.page.getByTestId('spacePlugin.followOverlay.pointer').evaluate((pointer) => {
+    const plank = [...document.querySelectorAll(`[data-attendable-id="${CSS.escape(pointer.dataset.plank ?? '')}"]`)]
+      .map((element) => element.getBoundingClientRect())
+      .find((box) => box.width > 0 && box.height > 0);
+    const tip = pointer.getBoundingClientRect();
+    return plank
+      ? {
+          x: Math.round(((tip.left - plank.left) / plank.width) * 10) * 10,
+          y: Math.round(((tip.top - plank.top) / plank.height) * 10) * 10,
+        }
+      : undefined;
+  });
+
 // Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
 // there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
 // webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
@@ -491,6 +515,54 @@ test.describe('Collaboration tests', () => {
       await host.expandSection('spacePlugin.collectionsSection');
       await host.getObjectLinks().first().click();
       await expect(badge).not.toHaveAttribute('data-badge');
+    },
+  );
+
+  test(
+    "a follower and its leader see each other's pointers over the same plank",
+    { tag: ['@space:QA-7'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await navigateToNewDocument(guest);
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      const rows = sidebar.getByTestId('spacePlugin.presence.row');
+      await host.openCompanion('members');
+      await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
+      const frame = host.page.getByTestId('spacePlugin.followOverlay.frame');
+      await expect(frame).toBeVisible();
+      await expect(host.page.getByTestId('spacePlugin.followOverlay.label')).toContainText('Following');
+
+      // The guest posts only once it sees the host's follow, so it keeps moving until the host draws its pointer.
+      await moveOverPlank(guest, 0.5, 0.5);
+      const guestPointer = host.page.getByTestId('spacePlugin.followOverlay.pointer');
+      await expect(async () => {
+        await moveOverPlank(guest, 0.5, 0.5);
+        await expect(guestPointer).toHaveCount(1, { timeout: 1_000 });
+      }).toPass({ timeout: 30_000 });
+      await expect(guestPointer).not.toHaveAttribute('data-name', '');
+      await expect.poll(() => getPointerPosition(host), { timeout: 10_000 }).toEqual({ x: 50, y: 50 });
+
+      // Moving the follower's mouse is no input that ends the follow, and the leader sees it.
+      const hostPointer = guest.page.getByTestId('spacePlugin.followOverlay.pointer');
+      await expect(async () => {
+        await moveOverPlank(host, 0.3, 0.8);
+        await expect(hostPointer).toHaveCount(1, { timeout: 1_000 });
+      }).toPass({ timeout: 30_000 });
+      await expect.poll(() => getPointerPosition(guest), { timeout: 10_000 }).toEqual({ x: 30, y: 80 });
+      await expect(frame).toBeVisible();
+      await expect(host.getCompanionTab('members')).toHaveAttribute('data-badge', '');
+
+      await host.page.getByTestId('spacePlugin.followOverlay.stop').click();
+      await expect(frame).toHaveCount(0);
+      await expect(guestPointer).toHaveCount(0);
+      await expect(hostPointer).toHaveCount(0, { timeout: 30_000 });
+      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
     },
   );
 });

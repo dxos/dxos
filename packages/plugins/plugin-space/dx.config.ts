@@ -106,6 +106,21 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       () => import('./src/capabilities/follow.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
+      'FollowPointer',
+      {
+        environments: ['browser', 'tauri'],
+        requires: [
+          Capabilities.AtomRegistry,
+          SpaceCapabilities.EphemeralState,
+          ClientCapabilities.Client,
+          ClientCapabilities.IdentityService,
+        ],
+        provides: [Capabilities.ReactRoot],
+        activatesOn: ClientEvents.SpacesAvailable,
+      },
+      () => import('./src/capabilities/follow-pointer.tsx', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
       'IdentityCreated',
       {
         // `SchemaRegistered` pulls the idle-gated schema registration into this wave; the root

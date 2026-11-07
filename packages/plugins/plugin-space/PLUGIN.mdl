@@ -81,6 +81,17 @@ type FollowTarget
 ```
 
 ```mdl
+type FollowPointer
+  desc: A session's pointer while it takes part in a follow, posted on the space's `awareness.pointer.<spaceId>` awareness channel.
+  fields:
+    sessionId: SessionId        # the sender's presence session, as in its viewing message
+    following?: { identityKey: IdentityKeyHex, sessionId?: SessionId }  # whom the sender follows in the space
+    plank?: string              # graph path of the plank under the pointer; absent while it is over none
+    x?: number                  # 0 to 1 across the plank's box
+    y?: number                  # 0 to 1 down the plank's box
+```
+
+```mdl
 type PluginState
   fields:
     viewersByObject: Record<EID, Record<IdentityKeyHex, Record<SessionId, ObjectViewerProps>>>
@@ -91,6 +102,8 @@ type PluginState
     enabledEdgeReplication: boolean
     showSessions?: boolean      # presence lists show a row per session; kept per device
     following?: FollowTarget & { paused?: boolean }  # ephemeral; paused while the leader views something this session cannot open
+    sessionId: SessionId        # ephemeral; this session's id in its presence messages and pointer
+    followedSpaces: SpaceId[]   # ephemeral; the spaces in which some session follows this one
 ```
 
 ## Components
@@ -590,6 +603,8 @@ feat F-8: Presence and Sync Status
   req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, leaving out any this deck has no URL binding for, scrolled to the plank at its front (or, when that plank is left out and the deck holds every other plank it can bind, to the first of the leader's planks after it that the deck holds, else the last before it), each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path when this deck has a URL binding for it and at the object's own path otherwise, whenever it changes, first closing any planks stacked after it, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
+  req F-8.24: While following, a frame in the leader's colour outlines the follower's window, with a label at its top that names the leader and carries Stop, which ends the follow. The frame takes no input except Stop.
+  req F-8.25: While a session follows someone in a space, or someone follows it there, it posts its pointer on the space's pointer channel at most every 100 ms, as the plank under it and its position as fractions of that plank's box ([FollowPointer]). A session draws, over the whole window, the pointers of the sessions it shares a follow with: the leader session its follow tracks, the sessions that follow it, and the others that follow its leader, each in the member's colour with their name, at the same fractions of the same plank in its own deck. It draws no pointer whose plank it does not show, nor one that has left the sender's planks or window. Moving the pointer ends no follow. Cursors drawn inside objects are unaffected and still show to every peer viewing the object.
 ```
 
 ## Acceptance
@@ -854,6 +869,35 @@ test QA-6: Follow a peer's deck side by side
     - name: Select a shown plank in the navtree
       do: On the host, follow the guest again, then click the first document in the navtree.
       expect: the Members tab's dot clears
+```
+
+```mdl
+test QA-7: See each other's pointers while following
+  desc: While the host follows the guest, a frame names the guest, each sees the other's pointer at the same place in the plank, moving the host's mouse keeps the follow, and Stop in the frame ends it.
+  actors: human
+  covers: [F-8.24, F-8.25]
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower and its leader see each other's pointers over the same plank
+  given:
+    - host: a booted app with a space containing a document, shared with a guest
+    - guest: a second browser profile with its own identity, a member of that space
+  steps:
+    - name: Both open the document
+      do: Open the document on both peers.
+      expect: the host's plank header shows the guest's avatar
+    - name: Follow the guest
+      do: On the host, open the Members companion and click Follow on the guest's row.
+      expect: a frame in the guest's colour outlines the host's window, labelled with the guest's name and Stop
+    - name: The guest points
+      do: On the guest, move the pointer to the middle of the document's plank.
+      expect: the host shows a pointer named for the guest near the middle of the same plank
+    - name: The host points back
+      do: On the host, move the mouse over the lower part of the plank without clicking.
+      expect: the guest shows a pointer named for the host over the lower part of the plank, and the host's frame stays
+    - name: Stop from the frame
+      do: On the host, click Stop in the frame's label.
+      expect: the frame and both pointers disappear, and the Members tab's dot clears
 ```
 
 ---
@@ -1407,6 +1451,77 @@ decision D-61: A follower shows what of the leader's view its own deck can repre
   rejected:
     - Retrying a deck that came out short of the leader's; with an unbindable plank it never converges and kept the mounting window open for the whole follow.
     - Choosing the stand-in from the follower's deck before the leader's planks reach it; that slid the follower to its own plank, then again to the leader's.
+```
+
+```mdl
+decision D-62: While following, the follower sees the leader's pointer over the whole window, and a frame around its viewport, in the leader's colour, labelled with whom it follows and carrying Stop.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.24, F-8.25]
+```
+
+```mdl
+decision D-63: A pointer's position is relative to the plank under it, as the plank's attendable id plus fractions of the plank's box, rather than normalized to the viewport.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.25, FollowPointer]
+  why: The follower already mirrors the leader's planks and their scroll, so a position within a plank survives different window sizes and deck widths, where one normalized to the viewport drifts.
+  rejected:
+    - Normalize the position to the viewport; it drifts when the two decks lay planks out differently.
+```
+
+```mdl
+decision D-64: Pointers travel on the awareness channel every surface's cursors share, with a pointer kind per space, posted only while there is a follow; the viewing message does not change.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.14, F-8.25, FollowPointer]
+  rejected:
+    - Add the pointer to the viewing message, which changes its wire format.
+```
+
+```mdl
+decision D-65: The pointers over the whole window are visible only to the sessions in a follow, the followers and the leader they follow. Cursors drawn inside objects still show to every peer.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.25]
+```
+
+```mdl
+decision D-66: The follower moving its own mouse does not end the follow. The leader sees its followers' pointers as well, so a follower can point things out to the leader.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.22, F-8.25]
+```
+
+```mdl
+decision D-67: Sessions that follow the same leader see each other's pointers as well as the leader's, so a follow and its followers form one group that sees every member's pointer. Fills in [D-65], [D-66].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25]
+  why: A follower pointing something out to the leader is pointing at a view every other follower mirrors too, so hiding it from them hides the point from the people it is about.
+  rejected:
+    - Show a follower's pointer to the leader only; two followers of one leader then point past each other.
+```
+
+```mdl
+decision D-68: A pointer names the sender's presence session and whom it follows, so each receiver decides on its own whether it shares the follow: no list of followers travels. A follower posts from the moment it follows; a leader posts while some session's viewing message names it, which it already tracks to send faster. Of a leader followed by identity, only the session the follow currently tracks is drawn. A pointer over no plank is posted without a position, so the receiver hides it, and leaving the window withdraws it. Fills in [D-63], [D-64].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25, FollowPointer, PluginState]
+  why: The presence session id is what viewing messages and follow targets already use, so a pointer joins the follow state without a second identity. A leader with two tabs would otherwise draw two pointers on its follower's screen.
+  rejected:
+    - Send pointers to everyone and filter only at the receiver; peers outside any follow then post at 10 Hz for nothing.
+```
+
+```mdl
+decision D-69: The frame and pointers draw above the app and take no input, except Stop in the frame's label, which ends the follow as the Members companion's Stop does. The label sits at the top centre of the window. A pointer is an arrow in the member's colour with their name beside it. Fills in [D-62].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.24, F-8.25]
+  why: A frame that took clicks would block the follower's own input, which is how a follow ends.
 ```
 
 ## Appendix: Extension Definitions

@@ -62,6 +62,10 @@ export type SpaceEphemeralState = {
   /** Each peer session's deck as it last reported it, keyed by space id, the peer's hex identity key, then the session id. */
   peerDecks: Record<string, Record<string, Record<string, SpaceSchema.PeerDeck>>>;
   mergePreview: MergePreview | undefined;
+  /** This session's id in its presence messages and follow pointer: one per running app, so peers tell its tabs apart. */
+  sessionId: string;
+  /** The spaces in which some session follows this one. */
+  followedSpaces: readonly string[];
   /** The peer this session follows; `paused` while they view something this session cannot open. */
   following: (SpaceSchema.FollowTarget & { paused?: boolean }) | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
