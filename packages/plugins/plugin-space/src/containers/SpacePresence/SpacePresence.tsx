@@ -105,9 +105,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
       if (!member.online || member.identityKey === identity.identityKey || sessions.length === 0) {
         return [];
       }
-      // A person's row acts on their most recently moved session here, never on one attending another object.
-      const attending = sessions.find((session) => session.currentlyAttended);
-      return [{ ...member, rowId: member.identityKey ?? '', sessions, now, defaultSessionId: attending?.sessionId }];
+      return [{ ...member, rowId: member.identityKey ?? '', sessions, now }];
     })
     .toSorted(byIdentityKey);
 
@@ -116,7 +114,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
       members={members}
       showSessions={showSessions}
       renderActions={(member, sessionId) =>
-        spaceId && member.identityKey && sessionId ? (
+        spaceId && member.identityKey ? (
           <PeerActions
             spaceId={spaceId}
             identityKey={member.identityKey}
@@ -183,8 +181,6 @@ export type Member = Space.Member & {
   sessions: PeerSession[];
   /** When the sessions were read, to tell which are moving. */
   now: number;
-  /** The session the member's row acts on; the row has no actions when unset. */
-  defaultSessionId?: string;
 };
 
 const isAttending = (member: Member) => member.sessions.some((session) => session.currentlyAttended);
@@ -369,7 +365,8 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
     <div
       role='group'
       aria-label={getName(member)}
-      className='rounded-sm [&:is(:hover,:has([data-highlighted]))]:bg-hover-surface-subtle [&>.dx-row]:bg-transparent'
+      // The list's value marks a row `aria-selected`, the keys' row `data-highlighted`; either highlights the group.
+      className='rounded-sm [&:is(:hover,:has([data-highlighted]),:has([aria-selected=true]))]:bg-hover-surface-subtle [&>.dx-row]:bg-transparent'
     >
       <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
         {/* Smaller than the row, so the row's hover and highlight frame it. */}
@@ -377,7 +374,8 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
           <PresenceAvatar member={member} size='sm' />
         </Listbox.ItemIcon>
         <Listbox.ItemText>{getName(member)}</Listbox.ItemText>
-        {!showSessions && renderActions?.(member, member.defaultSessionId)}
+        {/* The person's own actions: Jump and Go to act on their session that last moved here, Follow on the person. */}
+        {!showSessions && renderActions?.(member)}
       </Listbox.Item>
       {showSessions &&
         getSessionRows(member, t).map(({ session, name }) => {

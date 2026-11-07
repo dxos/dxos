@@ -114,6 +114,7 @@ const ephemeralState = () =>
     viewersByObject: {},
     peerDecks: {},
     mergePreview: undefined,
+    following: undefined,
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);
 

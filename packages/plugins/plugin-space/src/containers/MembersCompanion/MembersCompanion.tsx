@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -13,6 +13,7 @@ import { EID } from '@dxos/keys';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -37,11 +38,32 @@ export const MembersCompanion = () => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const space = ToolkitHooks.useActiveSpace();
-  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
+  const [ephemeral, updateEphemeral] = Hooks.useAtomCapabilityState(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const members = useMembers(space?.id);
   const now = useNow();
   const [showSessions, setShowSessions] = useShowSessions();
+  const following = space && ephemeral?.following?.spaceId === space.id ? ephemeral.following : undefined;
+  const stopFollowing = useCallback(
+    () => updateEphemeral((state) => ({ ...state, following: undefined })),
+    [updateEphemeral],
+  );
+
+  // The person this session follows: one row at the top of the list, out of the object groups.
+  const leader = useMemo((): Member | undefined => {
+    const member = following && members.find((member) => member.identityKey === following.identityKey);
+    if (!member || !ephemeral) {
+      return undefined;
+    }
+    const sessions = Object.values(ephemeral.viewersByObject).flatMap((viewers) =>
+      getFreshSessions(viewers[following.identityKey], now).filter((session) => session.currentlyAttended),
+    );
+    return { ...member, rowId: `following/${following.identityKey}`, sessions, now };
+  }, [following, members, ephemeral, now]);
+
+  // Highlighted while followed; the keys can still move the highlight.
+  const [highlighted, setHighlighted] = useState<string>();
+  useEffect(() => setHighlighted(leader?.rowId), [leader?.rowId]);
 
   // A member is listed under each object one of their sessions attends, with the sessions attending it.
   const groups = useMemo(() => {
@@ -55,7 +77,12 @@ export const MembersCompanion = () => {
         continue;
       }
       for (const member of members) {
-        if (!member.online || !member.identityKey || member.identityKey === identity?.identityKey) {
+        if (
+          !member.online ||
+          !member.identityKey ||
+          member.identityKey === identity?.identityKey ||
+          member.identityKey === leader?.identityKey
+        ) {
           continue;
         }
         const sessions = getFreshSessions(viewers[member.identityKey], now).filter(
@@ -69,17 +96,19 @@ export const MembersCompanion = () => {
               rowId: `${eid}/${member.identityKey}`,
               sessions,
               now,
-              defaultSessionId: sessions[0].sessionId,
             },
           ]);
         }
       }
     }
     return byObject;
-  }, [space, ephemeral, members, identity?.identityKey, now]);
+  }, [space, ephemeral, members, identity?.identityKey, leader?.identityKey, now]);
 
   const listed = useMemo(() => [...groups.values()].flat(), [groups]);
-  const online = useMemo(() => new Set(listed.map((member) => member.identityKey)).size, [listed]);
+  const online = useMemo(
+    () => new Set([...listed, ...(leader?.online ? [leader] : [])].map((member) => member.identityKey)).size,
+    [listed, leader],
+  );
 
   // A private space is locked at genesis, so it never has other members and has no members settings.
   const locked = space?.membershipPolicy === MembershipPolicy.LOCKED;
@@ -140,10 +169,34 @@ export const MembersCompanion = () => {
             <ScrollArea.Viewport asChild>
               <Layout.Container padBlock>
                 <Listbox.Root
-                  items={getPresenceOptions(listed, showSessions, t)}
+                  items={[
+                    ...getPresenceOptions(leader ? [leader] : [], false, t),
+                    ...getPresenceOptions(listed, showSessions, t),
+                  ]}
+                  value={highlighted ?? ''}
+                  onValueChange={setHighlighted}
                   data-testid='spacePlugin.membersCompanion'
                 >
                   <Listbox.Content aria-label={t('members-companion.label')}>
+                    {leader && (
+                      <PresenceItems
+                        member={leader}
+                        renderActions={() => (
+                          <>
+                            {following?.paused && (
+                              <span className='text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
+                            )}
+                            <Button.Root
+                              variant='outline'
+                              icon='ph--stop--regular'
+                              label={t('presence-stop-following.label')}
+                              data-testid='spacePlugin.presence.stopFollowing'
+                              onClick={stopFollowing}
+                            />
+                          </>
+                        )}
+                      />
+                    )}
                     {space &&
                       [...groups.entries()].map(([key, group]) => (
                         <ObjectGroup

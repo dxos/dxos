@@ -27,8 +27,8 @@ export type DeckCompanion = AppGraphNode.Node<
     position?: Position.Position;
     joyride?: string;
     mount?: AppNode.DeckCompanionMount;
-    /** Count shown on the rail tab while greater than zero. */
-    badge?: Atom.Atom<number | undefined>;
+    /** Count shown on the rail tab while greater than zero; `true` shows a dot. */
+    badge?: Atom.Atom<number | true | undefined>;
   }
 >;
 

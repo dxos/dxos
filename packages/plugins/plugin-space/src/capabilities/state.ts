@@ -38,6 +38,7 @@ export default Capability.makeModule(
       viewersByObject: {},
       peerDecks: {},
       mergePreview: undefined,
+      following: undefined,
       lastMergeAt: undefined,
     }).pipe(Atom.keepAlive);
 

@@ -19,6 +19,7 @@ export const BooleanField = ({
   type,
   format,
   label,
+  jsonPath,
   readonly,
   presentation,
   indeterminate,
@@ -35,6 +36,7 @@ export const BooleanField = ({
 
   return (
     <Input.Switch
+      data-testid={jsonPath}
       // A switch has no third state: an indeterminate one is dimmed and says so, and the first press sets it.
       indeterminate={indeterminate}
       label={

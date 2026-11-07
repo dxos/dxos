@@ -158,6 +158,7 @@ op scrollToAnchor
   input:
     subject: string              # attendable ID of the target sheet
     anchor: string               # cell-range anchor (see [F-7.3])
+    follow?: boolean             # scroll the range's first cell to the top left without moving the focused cell
     thread?: any                 # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
@@ -528,6 +529,15 @@ decision D-4: The sheet publishes the anchor of its cell selection to the `ViewL
   for: user:wittjosiah
   affects: [op:scrollToAnchor]
   why: The selection anchor is the same form comments use, so the reveal needs no new case.
+```
+
+```mdl
+decision D-5: With `follow`, the reveal scrolls the anchor's first cell to the top left and leaves the focused cell and the comment highlight alone, for following a peer (plugin-space F-8.20). Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: Following must not move the follower's focus, and the grid offers no scroll that keeps a cell merely in view.
 ```
 
 ## Appendix: Extension Definitions

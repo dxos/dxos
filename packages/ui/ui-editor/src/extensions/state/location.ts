@@ -17,7 +17,7 @@ export type EditorLocation = {
 };
 
 /** Longest a change waits before it is reported; later changes in the window replace it. */
-const REPORT_INTERVAL_MS = 250;
+const REPORT_INTERVAL_MS = 100;
 
 /** User event of the selection an editor places when it mounts, which no reader made. */
 export const INITIAL_SELECTION_EVENT = 'org.dxos.cm.initial-selection';

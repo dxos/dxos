@@ -241,7 +241,7 @@ op SuggestEdit
 ```mdl
 op scrollToAnchor
   desc: Reveals an anchor in the editor for the attendable surface; it is the document type's `Locator` reveal, used for comments and peers alike.
-  input: { subject: string, anchor: string, thread?: Ref<Thread> }
+  input: { subject: string, anchor: string, follow?: boolean, thread?: Ref<Thread> }
 ```
 
 ## Features
@@ -658,6 +658,16 @@ decision D-5: The editor publishes its selection and the top of its viewport, as
   affects: [op:scrollToAnchor]
   why: Peers need a location to reveal; an aspect keeps the editor ignorant of presence.
   rejected: Have plugin-space read editor state directly; it would couple presence to CodeMirror.
+```
+
+```mdl
+decision D-6: With `follow`, the reveal scrolls the anchor to the top of the view and leaves the selection and focus alone, for following a peer (plugin-space F-8.20). The editor reports its location every 100 ms rather than 250 ms, so a followed peer's moves go out at the follow rate. Fills in [D-5].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: The person who follows did not ask to move their caret, and their keys stay where they left them.
+  rejected: A separate follow reveal operation.
 ```
 
 ## Appendix: Extension Definitions
