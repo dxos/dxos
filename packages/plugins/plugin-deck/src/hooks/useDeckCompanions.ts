@@ -11,6 +11,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { type ChromaticPalette } from '@dxos/ui-types';
 import { type Label } from '@dxos/ui-types/translations';
 import * as Position from '@dxos/util/Position';
 
@@ -29,6 +30,8 @@ export type DeckCompanion = AppGraphNode.Node<
     mount?: AppNode.DeckCompanionMount;
     /** Count shown on the rail tab while greater than zero; `true` shows a dot. */
     badge?: Atom.Atom<number | true | undefined>;
+    /** Palette hue the badge draws in, in place of the accent. */
+    badgeHue?: ChromaticPalette;
   }
 >;
 

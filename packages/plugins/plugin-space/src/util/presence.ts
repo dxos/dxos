@@ -6,6 +6,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Key, Obj } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { EID } from '@dxos/keys';
+import { type ChromaticPalette } from '@dxos/ui-types';
 
 import { type SpaceSchema } from '#types';
 
@@ -44,6 +45,9 @@ export const LOCATION_BROADCAST_INTERVAL = 1_000;
 export const FOLLOW_BROADCAST_INTERVAL = 100;
 
 /** How long a follower waits for its leader to attend an object in the space again before it stops following. */
+/** The hue that marks every follow, on the leader's screen and each follower's alike. */
+export const FOLLOW_HUE: ChromaticPalette = 'indigo';
+
 export const FOLLOW_LOST_TIMEOUT = 5_000;
 
 export const getPresenceKeyFromPath = (path: string): EID.EID | undefined => {

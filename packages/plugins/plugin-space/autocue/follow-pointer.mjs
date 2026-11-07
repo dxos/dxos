@@ -3,9 +3,10 @@
 //
 
 /**
- * Bob follows Alice, and both see it: Members names the follow in Alice's colour on each side, and the plan's
- * heading takes that colour. Her pointer lands on the same spot of the plan in his deck, his shows on hers, and he
- * switches his to a laser. Moving his mouse keeps the follow; Stop in Members ends it. Recorded side by side.
+ * Alice, Bob and Carol share a plan. Bob follows whoever sits last in his Members list: their row rises to the top,
+ * takes the follow's indigo and swaps Follow for his pointer controls, and the leader sees him under "Following you".
+ * Each sees the other's pointer on the same spot of the plan; Bob switches his to a laser whose tail traces its path.
+ * Stop ends it on both sides. Recorded side by side, three panes; the third person sees no pointers.
  *
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-7
  * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4176 (EDGE signaling)
@@ -16,7 +17,8 @@
  *   VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:bundle-e2e
  *   pnpm exec vite preview --configLoader native --host 127.0.0.1 --port 4176 --strictPort
  *   node .agents/skills/autocue/scripts/pair.mjs \
- *     --flow packages/plugins/plugin-space/autocue/follow-pointer.mjs --url http://127.0.0.1:4176 --out /tmp/pointer
+ *     --flow packages/plugins/plugin-space/autocue/follow-pointer.mjs --url http://127.0.0.1:4176 --out /tmp/pointer \\
+ *     --peers Alice,Bob,Carol --width 1024
  *
  * Keep the file free of imports, since it is loaded from outside the workspace.
  */
@@ -73,7 +75,8 @@ const sidebar = (page) => page.locator('[data-scope="main"][data-part="complemen
 const membersTab = (page) => page.locator('[id$="trigger-members"]');
 const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.row');
 
-const followBar = (page) => page.getByTestId('spacePlugin.followBar');
+const followRow = (page) => sidebar(page).locator('[data-member][data-follow]');
+const followersGroup = (page) => sidebar(page).getByTestId('spacePlugin.presence.followers');
 const followHeading = (page) => page.getByTestId('spacePlugin.presence.followHeading').first();
 const pointers = (page) => page.getByTestId('spacePlugin.followOverlay.pointer');
 
@@ -156,19 +159,59 @@ const createDocument = async (page, name, text) => {
   await clearChrome({ page });
 };
 
+/** Joins `guest` to the space Alice has open, with a fresh single-use invitation from its members settings. */
+const invite = async (alice, guest, sharedWorkspace) => {
+  const { page } = alice;
+  const invitationCode = alice.nextConsoleValue('invitationCode');
+  const authCode = alice.nextConsoleValue('authCode');
+  await page.getByTestId('membersContainer.createInvitation.more').click();
+  await page.getByTestId('membersContainer.inviteOne').click();
+  await page.getByTestId('membersContainer.createInvitation').click();
+
+  await guest.page.getByTestId('spacePlugin.addSpace').click();
+  await guest.page.getByTestId('spacePlugin.joinSpace').click();
+  await guest.page.getByTestId('space-invitation-input').fill(await invitationCode);
+  await guest.page.keyboard.press('Enter');
+  const pin = guest.page.locator("[data-testid='space-auth-code-input']:visible");
+  await pin.waitFor({ timeout: TIMEOUT });
+  await pin.locator('input').first().click();
+  await guest.page.keyboard.type(await authCode, { delay: 50 });
+  await guest.page.getByTestId('space-invitation-authenticator-next').click();
+  await waitFor(() => workspaceOf(guest.page) === sharedWorkspace, { what: 'the guest to reach the space' });
+};
+
+/** Opens the plan and puts the caret in it. */
+const openPlan = async (peer) => {
+  await clearChrome(peer);
+  await expandRow(currentWorkspace(peer.page).getByTestId('spacePlugin.collectionsSection').first());
+  await objectLink(peer.page, PLAN).click();
+  await waitFor(async () => (await textbox(peer.page).innerText()).includes('Launch plan'), {
+    what: 'the plan to open',
+  });
+  await textbox(peer.page).click();
+  for (const toast of await peer.page.getByTestId('toast.close').filter({ visible: true }).all()) {
+    await toast.click().catch(() => {});
+  }
+};
+
+/** The person Bob follows: whoever sat last in his Members list; set by the step that follows them. */
+let leader;
+
 export const steps = [
   {
-    name: 'Both peers boot with their own identity',
+    name: 'Three people boot with their own identity',
     setup: true,
     run: async ({ peers }) => {
       // The notice arrives a moment after boot; give it the chance to appear before clearing it.
       await peers.alice.page.waitForTimeout(3_000);
-      await Promise.all([clearChrome(peers.alice), clearChrome(peers.bob)]);
+      const people = [
+        [peers.alice, 'Alice'],
+        [peers.bob, 'Bob'],
+        [peers.carol, 'Carol'],
+      ];
+      await Promise.all(people.map(([peer]) => clearChrome(peer)));
       await Promise.all(
-        [
-          [peers.alice, 'Alice'],
-          [peers.bob, 'Bob'],
-        ].map(([{ page }, displayName]) =>
+        people.map(([{ page }, displayName]) =>
           page.evaluate(
             (displayName) => globalThis.composer.invoke('org.dxos.operation.client.updateProfile', { displayName }),
             displayName,
@@ -178,9 +221,9 @@ export const steps = [
     },
   },
   {
-    name: `Alice creates "${SPACE}" with a plan and invites Bob`,
+    name: `Alice creates "${SPACE}" with a plan and invites Bob and Carol`,
     setup: true,
-    run: async ({ peers: { alice, bob } }) => {
+    run: async ({ peers: { alice, bob, carol } }) => {
       const { page } = alice;
       await page.getByTestId('spacePlugin.addSpace').click();
       await page.getByTestId('spacePlugin.createSpace').click();
@@ -192,11 +235,6 @@ export const steps = [
       await page.getByText(SPACE).first().waitFor({ timeout: TIMEOUT });
 
       await createDocument(page, PLAN, `# Launch plan\n\n${PLAN_TEXT}`);
-      await objectLink(page, PLAN).click();
-      await waitFor(async () => (await textbox(page).innerText()).includes('Launch plan'), {
-        what: 'Alice to open the plan',
-      });
-
       const sharedWorkspace = workspaceOf(page);
       await expandRow(currentWorkspace(page).getByTestId('spacePlugin.settings').first());
       await currentWorkspace(page)
@@ -205,72 +243,62 @@ export const steps = [
         .getByTestId('treeItem.heading')
         .first()
         .click();
-      const invitationCode = alice.nextConsoleValue('invitationCode');
-      const authCode = alice.nextConsoleValue('authCode');
-      await page.getByTestId('membersContainer.createInvitation.more').click();
-      await page.getByTestId('membersContainer.inviteOne').click();
-      await page.getByTestId('membersContainer.createInvitation').click();
+      await invite(alice, bob, sharedWorkspace);
+      await invite(alice, carol, sharedWorkspace);
 
-      await bob.page.getByTestId('spacePlugin.addSpace').click();
-      await bob.page.getByTestId('spacePlugin.joinSpace').click();
-      const input = bob.page.getByTestId('space-invitation-input');
-      await input.fill(await invitationCode);
-      await bob.page.keyboard.press('Enter');
-      const pin = bob.page.locator("[data-testid='space-auth-code-input']:visible");
-      await pin.waitFor({ timeout: TIMEOUT });
-      await pin.locator('input').first().click();
-      await bob.page.keyboard.type(await authCode, { delay: 50 });
-      await bob.page.getByTestId('space-invitation-authenticator-next').click();
-      await waitFor(() => workspaceOf(bob.page) === sharedWorkspace, { what: "Bob to reach Alice's space" });
-
-      // Alice goes back to the plan; Bob opens it too and puts his caret in it.
       await objectLink(page, PLAN).click();
-      await clearChrome(bob);
-      await expandRow(currentWorkspace(bob.page).getByTestId('spacePlugin.collectionsSection').first());
-      await objectLink(bob.page, PLAN).click();
-      await waitFor(async () => (await textbox(bob.page).innerText()).includes('Launch plan'), {
-        what: 'Bob to open the plan',
-      });
-      await textbox(bob.page).click();
+      await openPlan(bob);
+      await openPlan(carol);
       await textbox(page).click();
-      for (const toast of await bob.page.getByTestId('toast.close').filter({ visible: true }).all()) {
-        await toast.click().catch(() => {});
-      }
     },
   },
   {
-    name: 'Bob opens Members and follows Alice',
-    subtitle: 'QA-7 step 2: Members opens under “Following Alice”, and the plan’s heading takes her colour',
+    name: 'Bob opens Members',
+    subtitle: 'Everyone viewing the plan, each with Jump and Follow',
     run: async ({ peers: { bob } }) => {
       await bob.click(membersTab(bob.page));
-      const follow = presenceRows(bob.page).getByTestId('spacePlugin.presence.follow').first();
-      await follow.waitFor({ state: 'attached', timeout: TIMEOUT });
-      await presenceRows(bob.page).first().hover();
-      await bob.click(follow);
-      await followBar(bob.page).waitFor({ timeout: TIMEOUT });
+      await waitFor(async () => (await presenceRows(bob.page).count()) >= 2, { what: 'both people in Bob’s list' });
+    },
+    pace: 2_500,
+  },
+  {
+    name: 'Bob follows the person at the bottom of his list',
+    subtitle: 'QA-7 step 2: their row rises to the top, turns indigo and swaps Follow for pointer controls and Stop',
+    run: async ({ peers, sleep }) => {
+      const { bob } = peers;
+      const last = presenceRows(bob.page).last();
+      const name = (await last.innerText()).split('\n')[0].trim();
+      leader = peers[name.toLowerCase()];
+      if (!leader) {
+        throw new Error(`no peer named ${name}`);
+      }
+      await last.hover();
+      await sleep(600);
+      await bob.click(last.getByTestId('spacePlugin.presence.follow'));
+      await followRow(bob.page).waitFor({ timeout: TIMEOUT });
       await followHeading(bob.page).waitFor({ state: 'attached', timeout: TIMEOUT });
     },
     pace: 3_000,
   },
   {
-    name: 'Alice sees Bob following her',
-    subtitle: 'QA-7 step 3: the dot on her Members tab, “Bob is following you”, and the same colour on her heading',
-    run: async ({ peers: { alice } }) => {
-      await waitFor(async () => (await membersTab(alice.page).getAttribute('data-badge')) !== null, {
-        what: 'the dot on Alice’s Members tab',
+    name: 'The leader sees Bob following',
+    subtitle: 'QA-7 step 3: an indigo dot on Members, Bob under “Following you”, the same indigo on the heading',
+    run: async () => {
+      await waitFor(async () => (await membersTab(leader.page).getAttribute('data-badge')) !== null, {
+        what: 'the dot on the leader’s Members tab',
       });
-      await alice.click(membersTab(alice.page));
-      await followBar(alice.page).waitFor({ timeout: TIMEOUT });
-      await followHeading(alice.page).waitFor({ state: 'attached', timeout: TIMEOUT });
+      await leader.click(membersTab(leader.page));
+      await followersGroup(leader.page).waitFor({ timeout: TIMEOUT });
+      await followHeading(leader.page).waitFor({ state: 'attached', timeout: TIMEOUT });
     },
     pace: 3_000,
   },
   {
-    name: 'Alice points at the plan; Bob sees her pointer',
+    name: 'The leader points at the plan; Bob sees the pointer',
     subtitle: 'QA-7 step 4: at the same spot of the same plank in his deck',
-    run: async ({ peers: { alice, bob }, sleep }) => {
+    run: async ({ peers: { bob }, sleep }) => {
       await glideUntilShown(
-        alice,
+        leader,
         bob,
         [
           [0.3, 0.25],
@@ -284,12 +312,12 @@ export const steps = [
     pace: 2_000,
   },
   {
-    name: 'Bob points back; Alice sees his pointer',
+    name: 'Bob points back; the leader sees his pointer',
     subtitle: 'QA-7 step 5: moving his mouse keeps the follow',
-    run: async ({ peers: { alice, bob }, sleep }) => {
+    run: async ({ peers: { bob }, sleep }) => {
       await glideUntilShown(
         bob,
-        alice,
+        leader,
         [
           [0.35, 0.7],
           [0.6, 0.75],
@@ -297,7 +325,7 @@ export const steps = [
         ],
         sleep,
       );
-      if (!(await followBar(bob.page).isVisible())) {
+      if ((await followRow(bob.page).count()) === 0) {
         throw new Error('the follow ended when Bob moved his mouse');
       }
     },
@@ -305,38 +333,42 @@ export const steps = [
   },
   {
     name: 'Bob switches his pointer to the laser',
-    subtitle: 'QA-7 step 6: Alice sees a glowing dot with a trail',
-    run: async ({ peers: { alice, bob }, sleep }) => {
-      await bob.click(followBar(bob.page).getByTestId('spacePlugin.followBar.laser'));
-      await glide(
-        bob,
-        [
-          [0.4, 0.4],
-          [0.6, 0.45],
-          [0.45, 0.6],
-          [0.55, 0.35],
-        ],
-        sleep,
-        500,
-      );
-      await waitFor(async () => (await pointers(alice.page).getAttribute('data-style')) === 'laser', {
-        what: 'Bob’s pointer to draw as a laser on Alice’s screen',
+    subtitle: 'QA-7 step 6: a glowing dot whose tail traces where it went',
+    run: async ({ peers: { bob }, sleep }) => {
+      await bob.click(followRow(bob.page).getByTestId('spacePlugin.presence.pointerLaser'));
+      const box = await plank(bob.page).boundingBox();
+      // A loop and a sweep, so the tail shows it follows the path rather than trailing at a fixed angle.
+      for (let step = 0; step <= 48; step++) {
+        const angle = (step / 48) * Math.PI * 2;
+        await bob.page.mouse.move(
+          box.x + box.width * (0.5 + 0.18 * Math.cos(angle)),
+          box.y + box.height * (0.45 + 0.14 * Math.sin(angle)),
+        );
+        await sleep(40);
+      }
+      for (let step = 0; step <= 24; step++) {
+        await bob.page.mouse.move(box.x + box.width * (0.25 + 0.5 * (step / 24)), box.y + box.height * 0.65);
+        await sleep(40);
+      }
+      await waitFor(async () => (await pointers(leader.page).getAttribute('data-style')) === 'laser', {
+        what: 'Bob’s pointer to draw as a laser on the leader’s screen',
       });
+      await sleep(800);
     },
     pace: 2_000,
   },
   {
     name: 'Bob stops following',
-    subtitle: 'QA-7 step 7: both pointers, both follow blocks and the heading colour go',
-    run: async ({ peers: { alice, bob } }) => {
-      await bob.click(presenceRows(bob.page).first().getByTestId('spacePlugin.presence.stopFollowing'));
-      await waitFor(async () => (await followBar(bob.page).count()) === 0, { what: 'Bob’s follow block to go' });
-      await waitFor(async () => (await followBar(alice.page).count()) === 0, { what: 'Alice’s follow block to go' });
+    subtitle: 'QA-7 step 7: the row goes back to its place, and both pointers and the indigo go',
+    run: async ({ peers: { bob } }) => {
+      await bob.click(followRow(bob.page).getByTestId('spacePlugin.presence.stopFollowing'));
+      await waitFor(async () => (await followRow(bob.page).count()) === 0, { what: 'Bob’s follow row to go' });
+      await waitFor(async () => (await followersGroup(leader.page).count()) === 0, {
+        what: 'the leader’s followers group to go',
+      });
       await waitFor(
-        async () => (await pointers(alice.page).count()) === 0 && (await pointers(bob.page).count()) === 0,
-        {
-          what: 'both pointers to go',
-        },
+        async () => (await pointers(leader.page).count()) === 0 && (await pointers(bob.page).count()) === 0,
+        { what: 'both pointers to go' },
       );
     },
     pace: 3_000,

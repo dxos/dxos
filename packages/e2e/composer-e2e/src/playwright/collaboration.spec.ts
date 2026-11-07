@@ -535,16 +535,16 @@ test.describe('Collaboration tests', () => {
       await host.openCompanion('members');
       await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
 
-      // Both sides show the follow: the Members tab's dot, the follow block in Members, and the plank heading.
-      const hostBar = host.page.getByTestId('spacePlugin.followBar');
-      await expect(hostBar).toHaveAttribute('data-leading', 'false');
-      await expect(hostBar.getByTestId('spacePlugin.followBar.label')).toContainText('Following');
+      // Both sides show the follow: the Members tab's dot, the followed person's row in Members, and the plank heading.
+      const hostFollow = sidebar.locator('[data-member][data-follow]');
+      await expect(hostFollow).toHaveCount(1);
+      await expect(hostFollow.getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
       await expect(host.page.getByTestId('spacePlugin.presence.followHeading').first()).toBeAttached();
       await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
       await guest.openCompanion('members');
-      const guestBar = guest.page.getByTestId('spacePlugin.followBar');
-      await expect(guestBar).toHaveAttribute('data-leading', 'true');
-      await expect(guestBar.getByTestId('spacePlugin.followBar.label')).toContainText('following you');
+      const guestFollowers = guest.page.getByTestId('spacePlugin.presence.followers');
+      await expect(guestFollowers).toContainText('Following you');
+      await expect(guestFollowers.locator('[data-member][data-follow]')).toHaveCount(1);
       await expect(guest.page.getByTestId('spacePlugin.presence.followHeading').first()).toBeAttached();
 
       // The guest posts only once it sees the host's follow, so it keeps moving until the host draws its pointer.
@@ -564,19 +564,19 @@ test.describe('Collaboration tests', () => {
         await expect(hostPointer).toHaveCount(1, { timeout: 1_000 });
       }).toPass({ timeout: 30_000 });
       await expect.poll(() => getPointerPosition(guest), { timeout: 10_000 }).toEqual({ x: 30, y: 80 });
-      await expect(hostBar).toBeVisible();
+      await expect(hostFollow).toHaveCount(1);
 
       // The follower switches its pointer to the laser; the leader sees it draw as one.
-      await hostBar.getByTestId('spacePlugin.followBar.laser').click();
+      await hostFollow.getByTestId('spacePlugin.presence.pointerLaser').click();
       await moveOverPlank(host, 0.4, 0.7);
       await expect(hostPointer).toHaveAttribute('data-style', 'laser', { timeout: 10_000 });
-      await expect(hostBar).toBeVisible();
+      await expect(hostFollow).toHaveCount(1);
 
-      await rows.first().getByTestId('spacePlugin.presence.stopFollowing').click();
-      await expect(hostBar).toHaveCount(0);
+      await hostFollow.getByTestId('spacePlugin.presence.stopFollowing').click();
+      await expect(hostFollow).toHaveCount(0);
       await expect(guestPointer).toHaveCount(0);
       await expect(hostPointer).toHaveCount(0, { timeout: 30_000 });
-      await expect(guestBar).toHaveCount(0, { timeout: 30_000 });
+      await expect(guestFollowers).toHaveCount(0, { timeout: 30_000 });
       await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
     },
   );

@@ -27,6 +27,7 @@ import { SpaceCapabilities, SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../../namespace.ts';
 import {
+  FOLLOW_HUE,
   MEMBERS_COMPANION_ID,
   PEER_SEGMENT_PREFIX,
   SESSION_SEGMENT_PREFIX,
@@ -79,7 +80,7 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
             data: null,
             // After Notifications (-2), ahead of the unordered companions.
             position: -1,
-            ...(ephemeralAtom && { badge: followBadge(ephemeralAtom) }),
+            ...(ephemeralAtom && { badge: followBadge(ephemeralAtom), badgeHue: FOLLOW_HUE }),
           }),
         ]);
       },

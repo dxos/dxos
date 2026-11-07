@@ -112,7 +112,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
     })
     .toSorted(byIdentityKey);
 
-  // Someone in this session's follow is on the object, so the heading shows the follow in the leader's hue.
+  // Someone in this session's follow is on the object, so the heading shows the follow.
   const followHue =
     follow && members.some((member) => member.identityKey && follow.members.has(member.identityKey))
       ? follow.hue
@@ -127,7 +127,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
           style={{
             // A light wash keeps the title and controls readable over it.
             backgroundColor: `color-mix(in oklab, var(--color-${followHue}-border) 18%, transparent)`,
-            boxShadow: `inset 0 -2px 0 var(--color-${followHue}-border)`,
+            boxShadow: `inset 0 -1px 0 var(--color-${followHue}-border)`,
           }}
           data-testid='spacePlugin.presence.followHeading'
         />
@@ -221,7 +221,7 @@ export type MemberPresenceProps = Util.ThemedClassName<{
   renderActions?: (member: Member, sessionId?: string) => ReactNode;
   /** A control at the end of the list's header, e.g. a link to everyone in the space. */
   headerAction?: ReactNode;
-  /** The follow this session takes part in: its members' avatars ring in the leader's hue. */
+  /** The follow this session takes part in: its members' avatars ring in its hue. */
   follow?: { hue: string; members: ReadonlySet<string> };
 }>;
 
@@ -384,6 +384,8 @@ export type PresenceItemsProps = {
   showSessions?: boolean;
   /** Controls at the end of a row, e.g. the member's graph actions; `sessionId` is set on a session's row. */
   renderActions?: (member: Member, sessionId?: string) => ReactNode;
+  /** In this session's follow: the rows wash in the follow's hue and the avatar rings in it. */
+  followHue?: string;
 };
 
 /**
@@ -391,7 +393,7 @@ export type PresenceItemsProps = {
  * follows it, with whether the session moved lately and its device; the actions move to those rows. The member's rows
  * hover and highlight as one.
  */
-export const PresenceItems = ({ member, showSessions, renderActions }: PresenceItemsProps) => {
+export const PresenceItems = ({ member, showSessions, renderActions, followHue }: PresenceItemsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   return (
     <div
@@ -399,11 +401,17 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
       aria-label={getName(member)}
       // The list's value marks a row `aria-selected`, the keys' row `data-highlighted`; either highlights the group.
       className='rounded-sm [&:is(:hover,:has([data-highlighted]),:has([aria-selected=true]))]:bg-hover-surface-subtle [&>.dx-row]:bg-transparent'
+      // Lets the list move a person's rows as one when they change place, as joining a follow does.
+      data-member={member.identityKey}
+      {...(followHue && {
+        'data-follow': true,
+        'style': { backgroundColor: `color-mix(in oklab, var(--color-${followHue}-border) 22%, transparent)` },
+      })}
     >
       <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
         {/* Smaller than the row, so the row's hover and highlight frame it. */}
         <Listbox.ItemIcon>
-          <PresenceAvatar member={member} size='sm' />
+          <PresenceAvatar member={member} size='sm' followHue={followHue} />
         </Listbox.ItemIcon>
         <Listbox.ItemText>{getName(member)}</Listbox.ItemText>
         {/* The person's own actions: Jump and Go to act on their session that last moved here, Follow on the person. */}
@@ -443,7 +451,7 @@ type PresenceAvatarProps = {
   showName?: boolean;
   match?: boolean;
   index?: number;
-  /** In this session's follow: a ring in the leader's hue, whatever the member attends. */
+  /** In this session's follow: a ring in the follow's hue, whatever the member attends. */
   followHue?: string;
   onClick?: () => void;
 };

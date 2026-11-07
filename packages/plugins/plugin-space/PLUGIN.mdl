@@ -605,9 +605,9 @@ feat F-8: Presence and Sync Status
   req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
   req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, leaving out any this deck has no URL binding for, scrolled to the plank at its front (or, when that plank is left out and the deck holds every other plank it can bind, to the first of the leader's planks after it that the deck holds, else the last before it), each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path when this deck has a URL binding for it and at the object's own path otherwise, whenever it changes, first closing any planks stacked after it, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
-  req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
-  req F-8.24: While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows a dot, and the companion's list opens under a follow block in the leader's hue: a follower's names the leader ("Following Alice"), a leader's names every follower ("Bob and Carol are following you"), and both carry the session's pointer style, Cursor or Laser. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. The leader's hue marks the follow on every screen in it. The follow is also a state of the presence indicator: on a plank whose viewers include someone in the session's follow, their avatars ring in the leader's hue and the plank's heading takes a tint and underline in it (a spike).
-  req F-8.25: While a session follows someone in a space, or someone follows it there, it posts its pointer on the space's pointer channel at most every 100 ms, as the plank under it and its position as fractions of that plank's box ([FollowPointer]). A session draws, over the whole window, the pointers of the sessions it shares a follow with: the leader session its follow tracks, the sessions that follow it, and the others that follow its leader, each in the member's colour with their name, at the same fractions of the same plank in its own deck, drawn as an arrow or, when the sender chose Laser, as a glowing dot with a short trail. It draws no pointer whose plank it does not show, nor one that has left the sender's planks or window. Moving the pointer ends no follow. Cursors drawn inside objects are unaffected and still show to every peer viewing the object.
+  req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying the pointer style, Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
+  req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows, whose label carries the session's pointer style. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. The follow is also a state of the presence indicator: on a plank whose viewers include someone in the session's follow, their avatars ring in indigo and the plank's heading takes a light indigo wash over a one-pixel indigo underline (a spike).
+  req F-8.25: While a session follows someone in a space, or someone follows it there, it posts its pointer on the space's pointer channel at most every 100 ms, as the plank under it and its position as fractions of that plank's box ([FollowPointer]). A session draws, over the whole window, the pointers of the sessions it shares a follow with: the leader session its follow tracks, the sessions that follow it, and the others that follow its leader, each in the member's colour with their name, at the same fractions of the same plank in its own deck, drawn as an arrow or, when the sender chose Laser, as a glowing dot whose tail traces the path it took. A drawn pointer eases toward each position it is sent rather than jumping. It draws no pointer whose plank it does not show, nor one that has left the sender's planks or window. Moving the pointer ends no follow. Cursors drawn inside objects are unaffected and still show to every peer viewing the object.
 ```
 
 ## Acceptance
@@ -876,7 +876,7 @@ test QA-6: Follow a peer's deck side by side
 
 ```mdl
 test QA-7: See each other's pointers while following
-  desc: While the host follows the guest, both sides show the follow in the guest's hue in Members and in the plank heading, each sees the other's pointer at the same place in the plank, moving the host's mouse keeps the follow, the host's pointer can draw as a laser, and Stop ends it on both sides.
+  desc: While the host follows the guest, both sides show the follow in indigo in Members and in the plank heading, each sees the other's pointer at the same place in the plank, moving the host's mouse keeps the follow, the host's pointer can draw as a laser, and Stop ends it on both sides.
   actors: human
   covers: [F-8.24, F-8.25]
   status: unverified
@@ -891,10 +891,10 @@ test QA-7: See each other's pointers while following
       expect: the host's plank header shows the guest's avatar
     - name: Follow the guest
       do: On the host, open the Members companion and click Follow on the guest's row.
-      expect: the host's Members list opens under "Following <guest>" in the guest's hue, and the plank heading takes that tint with the guest's avatar ringed in it
+      expect: the guest's row rises to the top of the host's list in indigo, with the pointer style and Stop in place of Jump and Follow, and the plank heading takes an indigo wash and underline with the guest's avatar ringed in indigo
     - name: The guest sees the follow
       do: On the guest, open the Members companion.
-      expect: the Members tab showed a dot, the list opens under "<host> is following you" in the guest's own hue, and the guest's plank heading is tinted the same
+      expect: the Members tab showed an indigo dot, the list starts with the host under "Following you" in indigo, and the guest's plank heading takes the same wash
     - name: The guest points
       do: On the guest, move the pointer to the middle of the document's plank.
       expect: the host shows a pointer named for the guest near the middle of the same plank
@@ -902,11 +902,11 @@ test QA-7: See each other's pointers while following
       do: On the host, move the mouse over the lower part of the plank without clicking.
       expect: the guest shows a pointer named for the host over the lower part of the plank, and the host still follows
     - name: The host switches to the laser
-      do: On the host, choose Laser in the follow block, then move the mouse over the plank.
-      expect: the guest shows the host's pointer as a glowing dot with a trail
+      do: On the host, choose Laser on the guest's row, then move the mouse in a loop over the plank.
+      expect: the guest shows the host's pointer as a glowing dot whose tail follows the loop
     - name: Stop
       do: On the host, click Stop on the guest's row.
-      expect: both pointers and both follow blocks disappear, the tints clear, and the Members tab's dot clears on both sides
+      expect: the guest's row returns to its object's group, both pointers disappear, the indigo clears, and the Members tab's dot clears on both sides
 ```
 
 ---
@@ -1634,6 +1634,80 @@ decision D-81: The heading spike marks a plank whose viewers include someone in 
   why: The presence avatars are already on every plank heading, so the follow reads where people are without new chrome, and only on planks the follow shares.
   rejected:
     - A new heading API in plugin-deck for an accent colour; worth it if the spike is kept.
+```
+
+```mdl
+decision D-82: The plank heading's underline stays a different colour but is one pixel thick; a thicker one crowds the sigil.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.24]
+```
+
+```mdl
+decision D-83: Every follow is marked in purple or indigo rather than the leader's colour, and the Members tab's dot in the rail uses the same colour.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.24]
+  supersedes: D-78
+```
+
+```mdl
+decision D-84: The laser's icon must not be the crosshair Jump uses.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.24]
+```
+
+```mdl
+decision D-85: The followed person's row and the follow's controls are one thing. Following someone in the list slides their row to the top, transitions it into the follow's colour and swaps its controls.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.23, F-8.24]
+  supersedes: D-80
+```
+
+```mdl
+decision D-86: The laser's tail traces the path the pointer took, not a tail at a fixed angle.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.25]
+```
+
+```mdl
+decision D-87: The follow's colour is the palette's indigo. The heading keeps an 18% indigo wash over the one-pixel underline. The rail dot takes it through a new `badgeHue` on deck companions, which the deck paints in place of the accent. Fills in [D-82], [D-83].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.24]
+  why: Indigo is distinct from the accent blue of Composer's own selection, and the companion badge had no colour of its own.
+```
+
+```mdl
+decision D-88: The laser's icon is Phosphor's flashlight. Fills in [D-84].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.24]
+  rejected:
+    - Target or crosshair icons, which read as Jump.
+```
+
+```mdl
+decision D-89: A follower's merged row is the leader's row at the top, carrying the pointer style and Stop. A leader, who has no row of its own, gets a "Following you" group at the top holding its followers' rows, with the pointer style on the group's label; those rows carry no actions. A row that changes place slides from where it was over 320 ms and the indigo fades in, except under reduced motion. Fills in [D-85].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.23, F-8.24]
+  why: Moving rows read as the same person going to the top, which a re-render alone does not show.
+```
+
+```mdl
+decision D-90: A drawn pointer eases 35% of the way to its latest position every frame, and a laser's tail is the path it eased along over the last 450 ms, thinning and fading with age. Fills in [D-86].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25]
+  why: Positions arrive at most every 100 ms, so a tail drawn through the raw points would be a few straight jumps; easing gives it the curve the pointer took.
 ```
 
 ## Appendix: Extension Definitions

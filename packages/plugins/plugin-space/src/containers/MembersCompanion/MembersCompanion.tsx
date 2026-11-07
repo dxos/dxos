@@ -2,12 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Space } from '@dxos/client/echo';
-import { generateName } from '@dxos/display-name';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { EID } from '@dxos/keys';
@@ -22,11 +21,11 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 
-import { type FollowState, useFollowGroup } from '#hooks';
+import { useFollowGroup } from '#hooks';
 import { SpaceCapabilities, SpaceOperation, type SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { getFreshSessions } from '../../util/index.ts';
+import { FOLLOW_HUE, getFreshSessions } from '../../util/index.ts';
 import { PeerActions } from '../SpacePresence/PeerActions.tsx';
 import {
   type Member,
@@ -52,6 +51,11 @@ export const MembersCompanion = () => {
     () => updateEphemeral((state) => ({ ...state, following: undefined })),
     [updateEphemeral],
   );
+  const pointerStyle = ephemeral?.pointerStyle ?? 'cursor';
+  const setPointerStyle = useCallback(
+    (pointerStyle: SpaceSchema.PointerStyle) => updateEphemeral((state) => ({ ...state, pointerStyle })),
+    [updateEphemeral],
+  );
 
   // The person this session follows: one row at the top of the list, out of the object groups.
   const leader = useMemo((): Member | undefined => {
@@ -64,6 +68,26 @@ export const MembersCompanion = () => {
     );
     return { ...member, rowId: `following/${following.identityKey}`, sessions, now };
   }, [following, members, ephemeral, now]);
+
+  // The sessions following this one: their own group at the top of the list, out of the object groups.
+  const followers = useMemo((): Member[] => {
+    if (!follow?.group.leading || !ephemeral) {
+      return [];
+    }
+    const keys = new Set(follow.group.followers.map((follower) => follower.identityKey));
+    return members.flatMap((member) => {
+      const identityKey = member.identityKey;
+      if (!identityKey || !keys.has(identityKey)) {
+        return [];
+      }
+      const sessions = Object.values(ephemeral.viewersByObject).flatMap((viewers) =>
+        getFreshSessions(viewers[identityKey], now).filter((session) => session.currentlyAttended),
+      );
+      return [{ ...member, rowId: `followers/${identityKey}`, sessions, now }];
+    });
+  }, [follow, members, ephemeral, now]);
+  const listRef = useRef<HTMLDivElement>(null);
+  useRowMotion(listRef);
 
   // Highlighted while followed; the keys can still move the highlight.
   const [highlighted, setHighlighted] = useState<string>();
@@ -85,7 +109,8 @@ export const MembersCompanion = () => {
           !member.online ||
           !member.identityKey ||
           member.identityKey === identity?.identityKey ||
-          member.identityKey === leader?.identityKey
+          member.identityKey === leader?.identityKey ||
+          followers.some((follower) => follower.identityKey === member.identityKey)
         ) {
           continue;
         }
@@ -106,12 +131,13 @@ export const MembersCompanion = () => {
       }
     }
     return byObject;
-  }, [space, ephemeral, members, identity?.identityKey, leader?.identityKey, now]);
+  }, [space, ephemeral, members, identity?.identityKey, leader?.identityKey, followers, now]);
 
   const listed = useMemo(() => [...groups.values()].flat(), [groups]);
   const online = useMemo(
-    () => new Set([...listed, ...(leader?.online ? [leader] : [])].map((member) => member.identityKey)).size,
-    [listed, leader],
+    () =>
+      new Set([...listed, ...followers, ...(leader?.online ? [leader] : [])].map((member) => member.identityKey)).size,
+    [listed, followers, leader],
   );
 
   // A private space is locked at genesis, so it never has other members and has no members settings.
@@ -172,56 +198,64 @@ export const MembersCompanion = () => {
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               <Layout.Container padBlock>
-                {follow && (
-                  <FollowBar
-                    follow={follow}
-                    members={members}
-                    pointerStyle={ephemeral?.pointerStyle ?? 'cursor'}
-                    onPointerStyleChange={(pointerStyle) => updateEphemeral((state) => ({ ...state, pointerStyle }))}
-                  />
-                )}
-                <Listbox.Root
-                  items={[
-                    ...getPresenceOptions(leader ? [leader] : [], false, t),
-                    ...getPresenceOptions(listed, showSessions, t),
-                  ]}
-                  value={highlighted ?? ''}
-                  onValueChange={setHighlighted}
-                  data-testid='spacePlugin.membersCompanion'
-                >
-                  <Listbox.Content aria-label={t('members-companion.label')}>
-                    {leader && (
-                      <PresenceItems
-                        member={leader}
-                        renderActions={() => (
-                          <>
-                            {following?.paused && (
-                              <span className='text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
-                            )}
-                            <Button.Root
-                              variant='outline'
-                              icon='ph--stop--regular'
-                              label={t('presence-stop-following.label')}
-                              data-testid='spacePlugin.presence.stopFollowing'
-                              onClick={stopFollowing}
-                            />
-                          </>
-                        )}
-                      />
-                    )}
-                    {space &&
-                      [...groups.entries()].map(([key, group]) => (
-                        <ObjectGroup
-                          key={key}
-                          space={space}
-                          objectKey={key}
-                          members={group}
-                          showSessions={showSessions}
+                <div ref={listRef}>
+                  <Listbox.Root
+                    items={[
+                      ...getPresenceOptions(leader ? [leader] : [], false, t),
+                      ...getPresenceOptions(followers, false, t),
+                      ...getPresenceOptions(listed, showSessions, t),
+                    ]}
+                    value={highlighted ?? ''}
+                    onValueChange={setHighlighted}
+                    data-testid='spacePlugin.membersCompanion'
+                  >
+                    <Listbox.Content aria-label={t('members-companion.label')}>
+                      {leader && (
+                        <PresenceItems
+                          member={leader}
+                          followHue={follow?.hue ?? FOLLOW_HUE}
+                          renderActions={() => (
+                            <>
+                              {following?.paused && (
+                                <span className='text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
+                              )}
+                              <PointerToggle value={pointerStyle} onValueChange={setPointerStyle} />
+                              <Button.Root
+                                variant='outline'
+                                icon='ph--stop--regular'
+                                label={t('presence-stop-following.label')}
+                                data-testid='spacePlugin.presence.stopFollowing'
+                                onClick={stopFollowing}
+                              />
+                            </>
+                          )}
                         />
-                      ))}
-                  </Listbox.Content>
-                  <Listbox.Empty icon='ph--users--regular'>{t('members-empty.message')}</Listbox.Empty>
-                </Listbox.Root>
+                      )}
+                      {followers.length > 0 && (
+                        <Listbox.ItemGroup data-testid='spacePlugin.presence.followers'>
+                          <Listbox.ItemGroupLabel classNames='flex items-center gap-2'>
+                            <span className='grow'>{t('presence-following-you.heading')}</span>
+                            <PointerToggle value={pointerStyle} onValueChange={setPointerStyle} />
+                          </Listbox.ItemGroupLabel>
+                          {followers.map((member) => (
+                            <PresenceItems key={member.rowId} member={member} followHue={follow?.hue ?? FOLLOW_HUE} />
+                          ))}
+                        </Listbox.ItemGroup>
+                      )}
+                      {space &&
+                        [...groups.entries()].map(([key, group]) => (
+                          <ObjectGroup
+                            key={key}
+                            space={space}
+                            objectKey={key}
+                            members={group}
+                            showSessions={showSessions}
+                          />
+                        ))}
+                    </Listbox.Content>
+                    <Listbox.Empty icon='ph--users--regular'>{t('members-empty.message')}</Listbox.Empty>
+                  </Listbox.Root>
+                </div>
               </Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -231,69 +265,81 @@ export const MembersCompanion = () => {
   );
 };
 
-type FollowBarProps = {
-  follow: FollowState;
-  members: ReturnType<typeof useMembers>;
-  pointerStyle: SpaceSchema.PointerStyle;
-  onPointerStyleChange: (pointerStyle: SpaceSchema.PointerStyle) => void;
-};
-
 const isPointerStyle = (value: string): value is SpaceSchema.PointerStyle => value === 'cursor' || value === 'laser';
 
-/**
- * The follow this session takes part in, in the leader's hue: whom it follows, or who follows it, and how its own
- * pointer draws for them.
- */
-const FollowBar = ({ follow: { group, hue }, members, pointerStyle, onPointerStyleChange }: FollowBarProps) => {
-  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  const nameOf = (identityKey: string) => {
-    const member = members.find((member) => member.identityKey === identityKey);
-    return member?.displayName ?? generateName(identityKey);
-  };
-  const followerNames = [...new Set(group.followers.map((follower) => nameOf(follower.identityKey)))];
-  const label = group.leading
-    ? t('follow-bar-followed.label', {
-        count: followerNames.length,
-        names: new Intl.ListFormat(undefined, { type: 'conjunction' }).format(followerNames),
-      })
-    : t('follow-bar-following.label', { name: nameOf(group.leader) });
+type PointerToggleProps = {
+  value: SpaceSchema.PointerStyle;
+  onValueChange: (value: SpaceSchema.PointerStyle) => void;
+};
 
+/** How this session's pointer draws for the others in its follow. */
+const PointerToggle = ({ value, onValueChange }: PointerToggleProps) => {
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   return (
-    <div
-      className='flex items-center gap-2 mx-2 mb-2 ps-3 pe-1 py-1 rounded-md'
-      style={{ backgroundColor: `var(--color-${hue}-surface)`, color: `var(--color-${hue}-fg)` }}
-      data-testid='spacePlugin.followBar'
-      data-leading={group.leading}
+    <ToggleGroup.Root
+      type='single'
+      value={value}
+      aria-label={t('pointer-style.label')}
+      onValueChange={(next) => isPointerStyle(next) && onValueChange(next)}
     >
-      <Icon.Icon icon='ph--link-simple--regular' />
-      <span className='grow truncate text-sm' data-testid='spacePlugin.followBar.label'>
-        {label}
-      </span>
-      <ToggleGroup.Root
-        type='single'
-        value={pointerStyle}
-        aria-label={t('pointer-style.label')}
-        onValueChange={(value) => isPointerStyle(value) && onPointerStyleChange(value)}
-      >
-        <ToggleGroup.Item
-          value='cursor'
-          variant='ghost'
-          icon='ph--cursor--regular'
-          iconOnly
-          label={t('pointer-cursor.label')}
-          data-testid='spacePlugin.followBar.cursor'
-        />
-        <ToggleGroup.Item
-          value='laser'
-          variant='ghost'
-          icon='ph--crosshair-simple--regular'
-          iconOnly
-          label={t('pointer-laser.label')}
-          data-testid='spacePlugin.followBar.laser'
-        />
-      </ToggleGroup.Root>
-    </div>
+      <ToggleGroup.Item
+        value='cursor'
+        variant='ghost'
+        icon='ph--cursor--regular'
+        iconOnly
+        label={t('pointer-cursor.label')}
+        data-testid='spacePlugin.presence.pointerCursor'
+      />
+      <ToggleGroup.Item
+        value='laser'
+        variant='ghost'
+        icon='ph--flashlight--regular'
+        iconOnly
+        label={t('pointer-laser.label')}
+        data-testid='spacePlugin.presence.pointerLaser'
+      />
+    </ToggleGroup.Root>
   );
+};
+
+const ROW_MOTION = { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' };
+
+/**
+ * Slides a person's rows from where they were to where they are, and fades in the follow's wash on rows that just
+ * joined it, so following someone reads as their row rising to the top and changing state.
+ */
+const useRowMotion = (ref: RefObject<HTMLElement | null>) => {
+  const previous = useRef(new Map<string, { top: number; follow: boolean }>());
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) {
+      return;
+    }
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const rootTop = root.getBoundingClientRect().top;
+    const next = new Map<string, { top: number; follow: boolean }>();
+    for (const element of root.querySelectorAll<HTMLElement>('[data-member]')) {
+      const key = element.dataset.member;
+      if (!key || next.has(key)) {
+        continue;
+      }
+      const top = element.getBoundingClientRect().top - rootTop;
+      const follow = element.hasAttribute('data-follow');
+      next.set(key, { top, follow });
+      const before = previous.current.get(key);
+      if (still || !before) {
+        continue;
+      }
+      if (before.top !== top) {
+        element.animate([{ transform: `translateY(${before.top - top}px)` }, { transform: 'none' }], ROW_MOTION);
+      }
+      if (follow && !before.follow) {
+        const backgroundColor = getComputedStyle(element).backgroundColor;
+        element.animate([{ backgroundColor: 'transparent' }, { backgroundColor }], ROW_MOTION);
+      }
+    }
+    previous.current = next;
+  });
 };
 
 type ObjectGroupProps = {
