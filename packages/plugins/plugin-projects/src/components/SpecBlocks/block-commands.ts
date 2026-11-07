@@ -9,21 +9,21 @@ import { type BlockSchema, mintKey } from '@dxos/deus/schema';
 import { type SlashCommand, slashCommands, slashCommandSource } from '../SpecDocumentEditor/slash-commands.ts';
 import { type BlockLocator, specBlocksField } from './spec-blocks-state.ts';
 
-/** Asks the card of a block just written to focus its first field. */
-export const focusBlockEffect = StateEffect.define<BlockLocator | undefined>();
+/** Asks a block's card to focus `target`, a selector in the card, or else its first field: a block just written or renamed. */
+export type FocusRequest = BlockLocator & { target?: string };
 
-export const focusRequest = StateField.define<BlockLocator | undefined>({
+export const focusBlockEffect = StateEffect.define<FocusRequest | undefined>();
+
+export const focusRequest = StateField.define<FocusRequest | undefined>({
   create: () => undefined,
   update: (value, transaction) =>
     transaction.effects.reduce((next, effect) => (effect.is(focusBlockEffect) ? effect.value : next), value),
 });
 
-const sameLocator = (a: BlockLocator, b: BlockLocator) => a.kind === b.kind && a.id === b.id && a.index === b.index;
-
-/** Whether a card is the one a command asked to focus. */
-export const isFocusRequested = (state: EditorState, locator: BlockLocator) => {
+/** The focus asked of a card, if any. */
+export const focusRequested = (state: EditorState, { kind, id, index }: BlockLocator): FocusRequest | undefined => {
   const request = state.field(focusRequest, false);
-  return !!request && sameLocator(request, locator);
+  return request && request.kind === kind && request.id === id && request.index === index ? request : undefined;
 };
 
 /**

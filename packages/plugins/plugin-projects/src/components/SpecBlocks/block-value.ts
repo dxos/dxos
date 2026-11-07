@@ -7,6 +7,7 @@ import { useCallback, useSyncExternalStore } from 'react';
 
 import { type BlockValue, decodeBlock, patchBlock } from '@dxos/deus/schema';
 
+import { focusBlockEffect } from './block-commands.ts';
 import { type BlockLocator, type SpecBlocks, blockListeners, findBlock, specBlocksField } from './spec-blocks-state.ts';
 
 /** The spec's blocks in the editor's current state, re-read on each change. */
@@ -37,4 +38,27 @@ export const updateBlock = (view: EditorView, locator: BlockLocator, change: (va
   if (changes.length > 0) {
     view.dispatch({ changes, userEvent: 'input' });
   }
+};
+
+/** A name a block's header can carry: one line, with no colon, which would start its title. */
+export const isBlockName = (name: string) => /^[^\s:][^\n:]*$/.test(name) && name.trim() === name;
+
+/**
+ * Renames the block a locator names, leaving references to it as they are. Its card is drawn anew under its new name,
+ * which focuses `target` (a selector in the card) when given.
+ */
+export const renameBlock = (view: EditorView, locator: BlockLocator, name: string, target?: string) => {
+  const block = findBlock(view.state.field(specBlocksField), locator);
+  if (!block?.header.id || block.id === name || !isBlockName(name)) {
+    return;
+  }
+  const { from, to } = block.header.id;
+  const state = view.state.update({ changes: { from, to, insert: name } }).state;
+  const renamed = state.field(specBlocksField).blocks.filter((other) => other.kind === block.kind && other.id === name);
+  const index = renamed.findIndex((other) => other.header.from === block.header.from);
+  view.dispatch({
+    changes: { from, to, insert: name },
+    effects: target === undefined ? [] : focusBlockEffect.of({ kind: block.kind, id: name, index, target }),
+    userEvent: 'input',
+  });
 };

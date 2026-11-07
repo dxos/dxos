@@ -276,11 +276,26 @@ type ComboboxControlProps = ThemedClassName<ComboboxPrimitive.ControlProps> & {
   wrap?: boolean;
 };
 
-/** A control-sized row; without children it holds the text `Input` and a trailing caret `Trigger`. */
+/**
+ * A control-sized row; without children it holds the text `Input` and a trailing caret `Trigger`. A press on the row
+ * outside its buttons goes to its input, as a press on an input's padding does, or else to its caret.
+ */
 const ComboboxControl = forwardRef<HTMLDivElement, ComboboxControlProps>(
-  ({ classNames, wrap, children, ...props }, forwardedRef) => (
+  ({ classNames, wrap, children, onMouseDown, ...props }, forwardedRef) => (
     <ComboboxPrimitive.Control
       {...props}
+      onMouseDown={(event) => {
+        onMouseDown?.(event);
+        if (event.defaultPrevented || !(event.target instanceof Element) || event.target.closest('button, input')) {
+          return;
+        }
+        const input = event.currentTarget.querySelector('input');
+        const trigger = event.currentTarget.querySelector<HTMLElement>('[data-part="trigger"]');
+        if (input || trigger) {
+          event.preventDefault();
+          input ? input.focus() : trigger?.click();
+        }
+      }}
       data-wrap={wrap ? '' : undefined}
       className={mx(recipes.comboboxControl(), classNames)}
       ref={forwardedRef}

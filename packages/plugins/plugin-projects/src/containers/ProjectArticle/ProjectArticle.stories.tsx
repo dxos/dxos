@@ -552,6 +552,21 @@ export const SpecBlockForms: Story = {
     await userEvent.click(await screen.findByRole('option', { name: 'Prototype' }));
     await waitFor(() => expect(text()).toContain('  status: prototype\n'), { timeout: 5_000 });
     await expect(text()).toContain(': A muted sender is archived.\n');
+
+    // A card is a block the keys stop on: Enter goes into its first field and Escape comes back out to the card.
+    const frame = () => featureCard().closest<HTMLElement>('.dx-focus-item')!;
+    frame().focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(featureCard().querySelector('.cm-content')).toBe(document.activeElement));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(frame()));
+
+    // A type's name, heading its card, renames the block and keeps the focus in the card drawn under the new name.
+    const type = () => canvas.getAllByTestId('spec-block').find((element) => element.dataset.kind === 'type')!;
+    await userEvent.clear(within(type()).getByTestId('spec-block.label'));
+    await userEvent.keyboard('Email{Enter}');
+    await waitFor(() => expect(text()).toContain('type Email: One email in the inbox'), { timeout: 5_000 });
+    await waitFor(() => expect(document.activeElement).toBe(within(type()).getByTestId('spec-block.label')));
   },
 };
 

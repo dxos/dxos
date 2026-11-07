@@ -164,6 +164,7 @@ export const translations = [
         'spec-view.label': 'View',
         'spec-view.document.label': 'Spec text',
         'spec-block.fold.label': 'Fold',
+        'spec-block.name.label': 'Name',
         'spec-block.new-entry.text': 'New requirement.',
         'spec-block.new-item.text': 'New item',
         'spec-block.prose.placeholder': 'Describe it',

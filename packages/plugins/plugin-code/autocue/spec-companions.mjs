@@ -81,7 +81,9 @@ const SCROLLER = `${DOCUMENT} [data-testid="spec-article.spec"]`;
 const VIEW_MODE = `${DOCUMENT} [data-testid="editor.toolbar.viewMode"]`;
 const FORMS = `${DOCUMENT} [data-testid="spec-block"]`;
 const REQUIREMENT_TEXT = '[data-testid^="req["][data-testid$="].text"]';
-const form = (label) => `${FORMS}:has([data-testid="spec-block.label"]:text-is("${label}"))`;
+/** A card by its label (`F-4`), or by its name (`CodeProject`), which heads a named card as an input. */
+const form = (label) =>
+  `${FORMS}:has([data-testid="spec-block.label"]:text-is("${label}"), input[data-testid="spec-block.label"][value="${label}"])`;
 /** A menu's item only: a form's list rows are options and items too. */
 const option = (text) =>
   `:is([data-scope="combobox"], [data-scope="select"])[data-part="item"]:visible:has-text("${text}")`;

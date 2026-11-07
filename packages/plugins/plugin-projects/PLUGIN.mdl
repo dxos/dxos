@@ -85,10 +85,14 @@ feat F-4: A project's specs
               Colour carries the source view's highlighting: a label or id is in its kind's hue, a type in the type
               kind's, and a map row's description is muted; a choice shows the icon and hue its package's `facts` give
               it, as a feature's status does on its cards; a picker's option is one line, a block's title muted after
-              its id. A named block's header text describes it on the line below; of its description, prose
-              and `desc`, an empty form offers only the first. At rest a form reads as text; once pressed or focused it
-              shows its empty fields, its pickers and the add, remove and reorder actions, and puts the spec's cursor
-              in its block, as a focused field puts it at its caret. A form
+              its id. A named block's name is edited in place and renames the block on Enter or on leaving it, leaving
+              references to it as written. A named block's header text describes it on the line below; of its
+              description, prose and `desc`, an empty form offers only the first; every other field is labelled. A form
+              is a block the arrows stop on, as an embed is: Enter goes into its first field and Escape comes back out.
+              At rest a form reads as text; once pressed or focused it shows its empty fields, its pickers and the add,
+              remove and reorder actions, and puts the spec's cursor in its block, as a focused field puts it at its
+              caret. A form slides between its heights and fades in the rows it adds, and no press inside it changes
+              whether it is active. A press on a picker's body opens it. A form
               folds to its header, and prose it cannot place shows as a note pointing to the source view. A reference field is a combobox over the blocks of the kinds it names (over the
               space's specs for `Ref<spec>`), and a list of references is chips; a type, in a field or a map row, is a
               combobox over the built-in types and the spec's `type` blocks. A comment in a block is no part of its form,
@@ -2541,4 +2545,16 @@ decision D-231: A block's comments stay out of its form; a map is a list of rows
   rejected:
     - Showing a map row's comment as a note under it, which took room and read as part of the row.
     - Colouring every map value as a type, which put errors' and actions' descriptions in the type hue.
+```
+
+```mdl
+decision D-232: A block form takes focus as an embed does (arrows stop on it, Enter goes in, Escape comes out); every field but what describes the block is labelled; a named block's name is edited in place and renames only the block; and a form changes size by sliding, fading in the rows it adds, with no press inside it deactivating it. Amends [D-231].
+  date: 2026-11-07
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.14]
+  why: The user found focus trapped in the forms when arrowing through a spec, unlike an embed on main; the requirements had no label; a type's, op's or plugin's name could not be edited; and going from rest to active jumped and flickered, a press on a multi-select's body deactivating the card for a moment.
+  rejected:
+    - Rewriting references to a renamed block, which needs a rename refactor across the spec's prose and fields; left for a follow-up.
+    - Keeping every empty row mounted and collapsed at rest, which costs a field per empty row in every card for an effect the slide gives.
 ```
