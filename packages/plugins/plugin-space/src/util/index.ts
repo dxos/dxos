@@ -4,7 +4,6 @@
 
 export * from './collection-path.ts';
 export * from './object-form.ts';
-export * from './pointer.ts';
 export * from './presence.ts';
 export * from './settings-space.ts';
 export * from './space-display.ts';

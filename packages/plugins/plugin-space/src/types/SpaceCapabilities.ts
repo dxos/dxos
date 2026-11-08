@@ -68,8 +68,6 @@ export type SpaceEphemeralState = {
   followedSpaces: readonly string[];
   /** Whom each peer session follows, keyed by space id, the peer's hex identity key, then the session id. */
   peerFollowing: Record<string, Record<string, Record<string, Omit<SpaceSchema.FollowTarget, 'spaceId'>>>>;
-  /** How this session's pointer draws for the others in its follow. */
-  pointerStyle: SpaceSchema.PointerStyle;
   /** The peer this session follows; `paused` while they view something this session cannot open. */
   following: (SpaceSchema.FollowTarget & { paused?: boolean }) | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */

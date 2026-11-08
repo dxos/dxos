@@ -32,7 +32,6 @@ import { automerge } from '../collab/automerge/index.ts';
 import { SpaceAwarenessProvider, awareness } from '../collab/awareness/index.ts';
 import { emptyPlaceholder } from '../completion/placeholder.ts';
 import { focus } from '../state/focus.ts';
-import { pointerAnchors } from '../state/pointer-anchors.ts';
 import { scrollPastEnd } from '../streaming/scrolling/index.ts';
 
 //
@@ -304,7 +303,7 @@ export type DataExtensionsProps<T> = {
 export const createDataExtensions = <T>({ id, text, messenger, identity }: DataExtensionsProps<T>): Extension[] => {
   const extensions: Extension[] = [];
   if (text) {
-    extensions.push(automerge(text), pointerAnchors());
+    extensions.push(automerge(text));
   }
 
   if (messenger && identity?.identityKey) {

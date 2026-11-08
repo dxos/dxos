@@ -4,7 +4,6 @@
 
 export * from './CardMasonry/index.ts';
 export * from './CreateObjectPanel/index.ts';
-export * from './FollowOverlay/index.ts';
 export * from './ForeignKeys/index.ts';
 export * from './ObjectCard/index.ts';
 export * from './RelatedTypeFilter/index.ts';

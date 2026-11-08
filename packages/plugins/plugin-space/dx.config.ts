@@ -106,20 +106,14 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       () => import('./src/capabilities/follow.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
-      'FollowPointer',
+      'FollowAccent',
       {
         environments: ['browser', 'tauri'],
-        requires: [
-          Capabilities.AtomRegistry,
-          SpaceCapabilities.EphemeralState,
-          ClientCapabilities.Client,
-          ClientCapabilities.IdentityService,
-          AppCapabilities.Layout,
-        ],
-        provides: [Capabilities.ReactRoot, AppCapabilities.HeadingAccent],
+        requires: [SpaceCapabilities.EphemeralState, AppCapabilities.Layout],
+        provides: [AppCapabilities.HeadingAccent],
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/follow-pointer.tsx', { with: { type: 'module-url' } }),
+      () => import('./src/capabilities/follow-accent.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'IdentityCreated',

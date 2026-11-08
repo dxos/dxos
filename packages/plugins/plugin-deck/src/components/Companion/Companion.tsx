@@ -98,8 +98,6 @@ export const Companion = ({
       // Right-clicking the companion lists the selected companion's node actions.
       {...(selected ? AppNode.contextMenuProps(selected) : {})}
       data-testid='deck.companion'
-      // Names the plank it accompanies, since the pane has no attention of its own to be found by.
-      data-companion-of={attendableId}
     >
       {!headless && (
         <Pane.Toolbar accent={accent}>

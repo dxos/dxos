@@ -4,25 +4,10 @@
 
 /**
  * Alice, Bob and Carol share a plan. Bob follows whoever sits last in his Members list: their row rises to the top,
- * takes the follow's indigo and swaps Follow for his pointer controls, and the leader sees him under "Following you".
- * Each sees the other's pointer on the same spot of the plan; Bob switches his to a laser whose tail traces its path.
- * The leader opens and closes the plan's companion, types and opens the notes, and Bob's deck goes along; Bob typing
- * ends it.
- * Recorded side by side, three panes; the third person sees no pointers.
- *
- * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-7
- * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4176 (EDGE signaling)
- *
- * A flow for `pair.mjs`, not `driver.mjs`: every step receives both peers. Built and served from
- * `packages/apps/composer-app`:
- *
- *   VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:bundle-e2e
- *   pnpm exec vite preview --configLoader native --host 127.0.0.1 --port 4176 --strictPort
- *   node .agents/skills/autocue/scripts/pair.mjs \
- *     --flow packages/plugins/plugin-space/autocue/follow-pointer.mjs --url http://127.0.0.1:4176 --out /tmp/pointer \\
- *     --peers Alice,Bob,Carol --width 1024
- *
- * Keep the file free of imports, since it is loaded from outside the workspace.
+ * takes the follow's indigo and swaps Follow for Stop, and the leader sees him under "Following you". Every plank
+ * heading on both screens, companions included, washes in indigo. The leader opens and closes the plan's companion,
+ * types, and opens the notes, and Bob's deck goes along; Bob clicking in to type ends the follow, and the indigo clears.
+ * Recorded side by side, three panes.
  */
 
 const SPACE = 'Launch';
@@ -103,45 +88,6 @@ const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.r
 const followRow = (page) => sidebar(page).locator('[data-member][data-follow]');
 const followersGroup = (page) => sidebar(page).getByTestId('spacePlugin.presence.followers');
 const followHeading = (page) => page.locator('[data-testid="deck.plank"] [data-accent]').first();
-const pointers = (page) => page.getByTestId('spacePlugin.followOverlay.pointer');
-
-// Where each peer's mouse last went, so a move glides from there.
-const mouseAt = new WeakMap();
-
-/** Moves the mouse in small steps and the recording's cursor with it, so each pane shows its own pointer moving. */
-const moveMouse = async (peer, x, y, steps = 12) => {
-  const from = mouseAt.get(peer) ?? { x, y };
-  for (let step = 1; step <= steps; step++) {
-    const point = { x: from.x + ((x - from.x) * step) / steps, y: from.y + ((y - from.y) * step) / steps };
-    await peer.page.mouse.move(point.x, point.y);
-    await peer.page.evaluate((point) => globalThis.__demoOverlay?.moveCursor(point.x, point.y), point);
-  }
-  mouseAt.set(peer, { x, y });
-};
-
-/** Glides the mouse through spots of an element's box, given as fractions of it, resting on each. */
-const glideOver = async (peer, locator, spots, sleep, rest = 700) => {
-  const box = await locator.boundingBox();
-  for (const [x, y] of spots) {
-    await moveMouse(peer, box.x + box.width * x, box.y + box.height * y);
-    await sleep(rest);
-  }
-};
-
-/** Glides the mouse through spots of the plank, given as fractions of its box, resting on each. */
-const glide = (peer, spots, sleep, rest) => glideOver(peer, plank(peer.page), spots, sleep, rest);
-
-/** Glides until the other peer draws this one's pointer: a session posts only once it knows it is in a follow. */
-const glideUntilShown = async (peer, other, spots, sleep, target = plank) => {
-  const deadline = Date.now() + TIMEOUT;
-  while ((await pointers(other.page).count()) === 0) {
-    if (Date.now() > deadline) {
-      throw new Error('timed out waiting for the pointer to show');
-    }
-    await glideOver(peer, target(peer.page), spots.slice(0, 1), sleep, 250);
-  }
-  await glideOver(peer, target(peer.page), spots, sleep);
-};
 
 /** Expands a navtree row unless it is already open; a row with no children yet keeps its caret disabled. */
 const expandRow = async (row) => {
@@ -306,7 +252,8 @@ export const steps = [
   },
   {
     name: 'Bob follows the person at the bottom of his list',
-    subtitle: 'QA-7 step 2: their row rises to the top, turns indigo and swaps Follow for pointer controls and Stop',
+    subtitle:
+      'QA-7 step 2: their row rises to the top, turns indigo and swaps Follow for Stop; every heading turns indigo',
     run: async ({ peers, sleep }) => {
       const { bob } = peers;
       const last = presenceRows(bob.page).last();
@@ -344,97 +291,14 @@ export const steps = [
     pace: 1_500,
   },
   {
-    name: 'The leader points at the plan; Bob sees the pointer',
-    subtitle: 'QA-7 step 4: at the same spot of the same plank in his deck',
+    name: 'The leader opens the plan’s companion; Bob’s opens too',
+    subtitle: 'Companions are content: the follow mirrors which one is open, and its heading takes the indigo too',
     run: async ({ peers: { bob }, sleep }) => {
       await closeSidebar(leader, { companions: true });
-      await glideUntilShown(
-        leader,
-        bob,
-        [
-          [0.3, 0.25],
-          [0.55, 0.32],
-          [0.4, 0.45],
-          [0.6, 0.5],
-        ],
-        sleep,
-      );
-    },
-    pace: 2_000,
-  },
-  {
-    name: 'Bob points back; the leader sees his pointer',
-    subtitle: 'QA-7 step 5: moving his mouse keeps the follow',
-    run: async ({ peers: { bob }, sleep }) => {
-      await glideUntilShown(
-        bob,
-        leader,
-        [
-          [0.35, 0.7],
-          [0.6, 0.75],
-          [0.45, 0.62],
-        ],
-        sleep,
-      );
-      if ((await followRow(bob.page).count()) === 0) {
-        throw new Error('the follow ended when Bob moved his mouse');
-      }
-    },
-    pace: 2_000,
-  },
-  {
-    name: 'Bob switches his pointer to the laser',
-    subtitle: 'QA-7 step 6: a glowing dot whose tail traces where it went',
-    run: async ({ peers: { bob }, sleep }) => {
-      // The switch lives in Members, closed while pointing, so Bob opens it for the switch and closes it again.
-      await bob.click(membersTab(bob.page));
-      await bob.click(followRow(bob.page).getByTestId('spacePlugin.presence.pointerLaser'));
-      await sleep(800);
-      await closeSidebar(bob);
-      const box = await plank(bob.page).boundingBox();
-      // A loop and a sweep, so the tail shows it follows the path rather than trailing at a fixed angle.
-      for (let step = 0; step <= 48; step++) {
-        const angle = (step / 48) * Math.PI * 2;
-        await moveMouse(
-          bob,
-          box.x + box.width * (0.5 + 0.18 * Math.cos(angle)),
-          box.y + box.height * (0.45 + 0.14 * Math.sin(angle)),
-          2,
-        );
-        await sleep(30);
-      }
-      for (let step = 0; step <= 24; step++) {
-        await moveMouse(bob, box.x + box.width * (0.25 + 0.5 * (step / 24)), box.y + box.height * 0.65, 2);
-        await sleep(30);
-      }
-      await waitFor(async () => (await pointers(leader.page).getAttribute('data-style')) === 'laser', {
-        what: 'Bob’s pointer to draw as a laser on the leader’s screen',
-      });
-      await sleep(800);
-    },
-    pace: 2_000,
-  },
-  {
-    name: 'The leader opens the plan’s companion; Bob’s opens too',
-    subtitle: 'Companions are content: the follow mirrors which one is open, and pointers work in it',
-    run: async ({ peers: { bob }, sleep }) => {
       await leader.click(plank(leader.page).getByTestId('plankHeading.companion'));
-      const companion = (page) => page.getByTestId('deck.companion').filter({ visible: true }).first();
       const companionCount = (page) => page.getByTestId('deck.companion').filter({ visible: true }).count();
       await waitFor(async () => (await companionCount(bob.page)) > 0, { what: 'the companion beside Bob’s plank' });
-      await sleep(800);
-      await glideUntilShown(
-        leader,
-        bob,
-        [
-          [0.3, 0.3],
-          [0.6, 0.35],
-          [0.45, 0.5],
-        ],
-        sleep,
-        companion,
-      );
-      await sleep(1_000);
+      await sleep(3_000);
       await leader.click(leader.page.getByTestId('plankHeading.closeCompanion').filter({ visible: true }).first());
       await waitFor(async () => (await companionCount(bob.page)) === 0, { what: 'Bob’s companion to close' });
     },
@@ -473,17 +337,16 @@ export const steps = [
   },
   {
     name: 'Bob clicks in and types; his own input ends the follow',
-    subtitle: 'F-8.22 today: a follower typing in a plank stops following',
+    subtitle: 'The indigo clears on both screens',
     run: async ({ peers: { bob }, sleep }) => {
       await bob.click(plank(bob.page).getByText('Who signs off?', { exact: false }).first());
       await bob.page.keyboard.press('End');
       await bob.page.keyboard.type(' I can.', { delay: 70 });
       await waitFor(async () => (await followHeading(bob.page).count()) === 0, { what: 'Bob’s follow to end' });
-      await waitFor(
-        async () => (await pointers(leader.page).count()) === 0 && (await pointers(bob.page).count()) === 0,
-        { what: 'both pointers to go' },
-      );
-      await sleep(1_000);
+      await waitFor(async () => (await followHeading(leader.page).count()) === 0, {
+        what: 'the leader’s headings to clear',
+      });
+      await sleep(1_500);
     },
     pace: 3_000,
   },

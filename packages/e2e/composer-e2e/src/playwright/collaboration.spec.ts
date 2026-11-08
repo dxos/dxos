@@ -62,80 +62,6 @@ const getShownPlanks = (app: AppManager) =>
 /** The plank a sliding deck is scrolled to: the first one shown. */
 const getFrontPlank = async (app: AppManager) => (await getShownPlanks(app))[0] ?? undefined;
 
-/** Moves the mouse to a spot of the deck's plank, as fractions of its width and height. */
-const moveOverPlank = async (app: AppManager, x: number, y: number) => {
-  const box = await app.deck.plank().locator.boundingBox();
-  expect(box, 'the deck must show a plank').toBeTruthy();
-  if (box) {
-    await app.page.mouse.move(box.x + box.width * x, box.y + box.height * y, { steps: 4 });
-  }
-};
-
-/** Text long enough to wrap differently in windows of different widths, with marker words to point at. */
-const WRAPPED_TEXT = [
-  '# Launch plan',
-  '',
-  Array.from({ length: 4 }, (_, i) => `Opening sentence ${i + 1} sets out what the plan is for and who reads it.`).join(
-    ' ',
-  ),
-  '',
-  [
-    ...Array.from({ length: 5 }, (_, i) => `Context sentence ${i + 1} explains what we decided and why it matters.`),
-    'The Zanzibar milestone',
-    ...Array.from({ length: 4 }, (_, i) => `Closing sentence ${i + 1} lists who owns each part of it.`),
-  ].join(' '),
-  '',
-  Array.from({ length: 3 }, (_, i) => `Final sentence ${i + 1} mentions the Kilimanjaro review date.`).join(' '),
-].join('\n');
-
-/** The middle of the first occurrence of `word` in the deck's plank, in client coordinates. */
-const findWord = (app: AppManager, word: string) =>
-  app.deck.plank().locator.evaluate((plank, word) => {
-    const walker = document.createTreeWalker(plank, NodeFilter.SHOW_TEXT);
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const index = node.textContent?.indexOf(word) ?? -1;
-      if (index >= 0) {
-        const range = document.createRange();
-        range.setStart(node, index);
-        range.setEnd(node, index + word.length);
-        const box = range.getBoundingClientRect();
-        return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
-      }
-    }
-    return undefined;
-  }, word);
-
-/** The word under the tip of the one drawn pointer. */
-const getWordUnderPointer = (app: AppManager) =>
-  app.page.getByTestId('spacePlugin.followOverlay.pointer').evaluate((pointer) => {
-    // The arrow's tip is the top-left corner of its box; the overlay takes no pointer events, so hit-testing sees under it.
-    const { left, top } = pointer.getBoundingClientRect();
-    const range = document.caretRangeFromPoint(left + 1, top + 1);
-    const text = range?.startContainer.textContent ?? '';
-    const offset = range?.startOffset ?? 0;
-    const start = text.slice(0, offset).search(/\S+$/);
-    const end = text.slice(offset).search(/\s|$/);
-    return text.slice(start < 0 ? offset : start, offset + (end < 0 ? 0 : end));
-  });
-
-/** Where the one drawn pointer sits in the plank it names, as whole percentages of that plank's width and height. */
-const getPointerPosition = (app: AppManager) =>
-  app.page.getByTestId('spacePlugin.followOverlay.pointer').evaluate((pointer) => {
-    const plank = [...document.querySelectorAll(`[data-attendable-id="${CSS.escape(pointer.dataset.plank ?? '')}"]`)]
-      .map((element) => element.getBoundingClientRect())
-      .find((box) => box.width > 0 && box.height > 0);
-    const tip = pointer.getBoundingClientRect();
-    return plank
-      ? {
-          x: Math.round(((tip.left - plank.left) / plank.width) * 10) * 10,
-          y: Math.round(((tip.top - plank.top) / plank.height) * 10) * 10,
-        }
-      : undefined;
-  });
-
-// Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
-// there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
-// webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
@@ -566,7 +492,7 @@ test.describe('Collaboration tests', () => {
   );
 
   test(
-    "a follower and its leader see each other's pointers over the same plank",
+    'a follow shows on both sides, in Members and on every plank heading, until it stops',
     { tag: ['@space:QA-7'] },
     async () => {
       test.setTimeout(150_000);
@@ -582,89 +508,29 @@ test.describe('Collaboration tests', () => {
       await host.openCompanion('members');
       await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
 
-      // Both sides show the follow: the Members tab's dot, the followed person's row in Members, and the plank heading.
+      // The follower's row for the leader rises to the top in the follow's hue, with Stop in place of its actions.
       const hostFollow = sidebar.locator('[data-member][data-follow]');
       await expect(hostFollow).toHaveCount(1);
       await expect(hostFollow.getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
-      await expect(host.page.locator('[data-testid="deck.plank"] [data-accent]').first()).toBeAttached();
+      const hostHeadings = host.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(hostHeadings.first()).toHaveAttribute('data-accent', 'indigo');
+
+      // The leader sees it too: the Members dot, its follower under "Following you", and the same heading.
       await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
       await guest.openCompanion('members');
       const guestFollowers = guest.page.getByTestId('spacePlugin.presence.followers');
       await expect(guestFollowers).toContainText('Following you');
       await expect(guestFollowers.locator('[data-member][data-follow]')).toHaveCount(1);
-      await expect(guest.page.locator('[data-testid="deck.plank"] [data-accent]').first()).toBeAttached();
-
-      // The guest posts only once it sees the host's follow, so it keeps moving until the host draws its pointer.
-      const guestPointer = host.page.getByTestId('spacePlugin.followOverlay.pointer');
-      await expect(async () => {
-        await moveOverPlank(guest, 0.5, 0.5);
-        await expect(guestPointer).toHaveCount(1, { timeout: 1_000 });
-      }).toPass({ timeout: 30_000 });
-      await expect(guestPointer).not.toHaveAttribute('data-name', '');
-      await expect(guestPointer).toHaveAttribute('data-style', 'cursor');
-      await expect.poll(() => getPointerPosition(host), { timeout: 10_000 }).toEqual({ x: 50, y: 50 });
-
-      // Moving the follower's mouse is no input that ends the follow, and the leader sees it.
-      const hostPointer = guest.page.getByTestId('spacePlugin.followOverlay.pointer');
-      await expect(async () => {
-        await moveOverPlank(host, 0.3, 0.8);
-        await expect(hostPointer).toHaveCount(1, { timeout: 1_000 });
-      }).toPass({ timeout: 30_000 });
-      await expect.poll(() => getPointerPosition(guest), { timeout: 10_000 }).toEqual({ x: 30, y: 80 });
-      await expect(hostFollow).toHaveCount(1);
-
-      // The follower switches its pointer to the laser; the leader sees it draw as one.
-      await hostFollow.getByTestId('spacePlugin.presence.pointerLaser').click();
-      await moveOverPlank(host, 0.4, 0.7);
-      await expect(hostPointer).toHaveAttribute('data-style', 'laser', { timeout: 10_000 });
-      await expect(hostFollow).toHaveCount(1);
+      const guestHeadings = guest.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(guestHeadings.first()).toHaveAttribute('data-accent', 'indigo');
 
       await hostFollow.getByTestId('spacePlugin.presence.stopFollowing').click();
       await expect(hostFollow).toHaveCount(0);
-      await expect(guestPointer).toHaveCount(0);
-      await expect(hostPointer).toHaveCount(0, { timeout: 30_000 });
-      await expect(guestFollowers).toHaveCount(0, { timeout: 30_000 });
+      await expect(hostHeadings).toHaveCount(0);
       await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
+      await expect(guestFollowers).toHaveCount(0, { timeout: 30_000 });
+      await expect(guestHeadings).toHaveCount(0);
+      await expect(guest.getCompanionTab('members')).not.toHaveAttribute('data-badge', { timeout: 30_000 });
     },
   );
-
-  test('a pointer lands on the word it points at in windows of different sizes', { tag: ['@space:QA-8'] }, async () => {
-    test.setTimeout(150_000);
-
-    await host.page.setViewportSize({ width: 1600, height: 950 });
-    // Both stay at or above the 1024 px width Composer lays out its sidebars at.
-    await guest.page.setViewportSize({ width: 1100, height: 800 });
-    await host.createSpace();
-    await host.createObject({ type: 'Document' });
-    await perfomInvitation(host, guest);
-    await guest.expandSection('spacePlugin.collectionsSection');
-    await navigateToNewDocument(guest);
-    const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-    await expect(async () => {
-      await guestTextbox.focus();
-      await guestTextbox.fill(WRAPPED_TEXT);
-    }).toPass({ timeout: 30_000 });
-    await guest.page.keyboard.press('ControlOrMeta+Home');
-
-    const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
-    await host.openCompanion('members');
-    await sidebar
-      .getByTestId('spacePlugin.presence.row')
-      .getByTestId('spacePlugin.presence.follow')
-      .click({ timeout: 45_000 });
-    await expect(host.page.locator('[data-testid="deck.plank"] [data-accent]').first()).toBeAttached();
-
-    // The guest points at a word in each of two paragraphs, which wrap at different places in the two windows.
-    for (const word of ['Zanzibar', 'Kilimanjaro']) {
-      await expect(async () => {
-        const point = await findWord(guest, word);
-        expect(point, `${word} is on the guest's screen`).toBeTruthy();
-        if (point) {
-          await guest.page.mouse.move(point.x, point.y, { steps: 4 });
-        }
-        await expect(host.page.getByTestId('spacePlugin.followOverlay.pointer')).toHaveCount(1, { timeout: 1_000 });
-      }).toPass({ timeout: 30_000 });
-      await expect.poll(() => getWordUnderPointer(host), { timeout: 10_000 }).toBe(word);
-    }
-  });
 });

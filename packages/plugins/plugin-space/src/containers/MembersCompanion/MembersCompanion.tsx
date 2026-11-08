@@ -19,10 +19,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 
 import { useFollowGroup } from '#hooks';
-import { SpaceCapabilities, SpaceOperation, type SpaceSchema } from '#types';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
 import { FOLLOW_HUE, getFreshSessions } from '../../util/index.ts';
@@ -49,11 +48,6 @@ export const MembersCompanion = () => {
   const following = space && ephemeral?.following?.spaceId === space.id ? ephemeral.following : undefined;
   const stopFollowing = useCallback(
     () => updateEphemeral((state) => ({ ...state, following: undefined })),
-    [updateEphemeral],
-  );
-  const pointerStyle = ephemeral?.pointerStyle ?? 'cursor';
-  const setPointerStyle = useCallback(
-    (pointerStyle: SpaceSchema.PointerStyle) => updateEphemeral((state) => ({ ...state, pointerStyle })),
     [updateEphemeral],
   );
 
@@ -219,7 +213,6 @@ export const MembersCompanion = () => {
                               {following?.paused && (
                                 <span className='text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
                               )}
-                              <PointerToggle value={pointerStyle} onValueChange={setPointerStyle} />
                               <Button.Root
                                 variant='outline'
                                 icon='ph--stop--regular'
@@ -233,10 +226,7 @@ export const MembersCompanion = () => {
                       )}
                       {followers.length > 0 && (
                         <Listbox.ItemGroup data-testid='spacePlugin.presence.followers'>
-                          <Listbox.ItemGroupLabel classNames='flex items-center gap-2'>
-                            <span className='grow'>{t('presence-following-you.heading')}</span>
-                            <PointerToggle value={pointerStyle} onValueChange={setPointerStyle} />
-                          </Listbox.ItemGroupLabel>
+                          <Listbox.ItemGroupLabel>{t('presence-following-you.heading')}</Listbox.ItemGroupLabel>
                           {followers.map((member) => (
                             <PresenceItems key={member.rowId} member={member} followHue={follow?.hue ?? FOLLOW_HUE} />
                           ))}
@@ -262,43 +252,6 @@ export const MembersCompanion = () => {
         )}
       </Panel.Body>
     </Panel.Root>
-  );
-};
-
-const isPointerStyle = (value: string): value is SpaceSchema.PointerStyle => value === 'cursor' || value === 'laser';
-
-type PointerToggleProps = {
-  value: SpaceSchema.PointerStyle;
-  onValueChange: (value: SpaceSchema.PointerStyle) => void;
-};
-
-/** How this session's pointer draws for the others in its follow. */
-const PointerToggle = ({ value, onValueChange }: PointerToggleProps) => {
-  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  return (
-    <ToggleGroup.Root
-      type='single'
-      value={value}
-      aria-label={t('pointer-style.label')}
-      onValueChange={(next) => isPointerStyle(next) && onValueChange(next)}
-    >
-      <ToggleGroup.Item
-        value='cursor'
-        variant='ghost'
-        icon='ph--cursor--regular'
-        iconOnly
-        label={t('pointer-cursor.label')}
-        data-testid='spacePlugin.presence.pointerCursor'
-      />
-      <ToggleGroup.Item
-        value='laser'
-        variant='ghost'
-        icon='ph--flashlight--regular'
-        iconOnly
-        label={t('pointer-laser.label')}
-        data-testid='spacePlugin.presence.pointerLaser'
-      />
-    </ToggleGroup.Root>
   );
 };
 

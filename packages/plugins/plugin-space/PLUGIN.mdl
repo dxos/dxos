@@ -83,20 +83,6 @@ type FollowTarget
 ```
 
 ```mdl
-type FollowPointer
-  desc: A session's pointer while it takes part in a follow, posted on the space's `awareness.pointer.<spaceId>` awareness channel.
-  fields:
-    sessionId: SessionId        # the sender's presence session, as in its viewing message
-    following?: { identityKey: IdentityKeyHex, sessionId?: SessionId }  # whom the sender follows in the space
-    plank?: string              # graph path of the plank under the pointer, or whose companion it is over; absent over chrome
-    companion?: boolean         # over that plank's companion rather than the plank
-    anchor?: { id: string, offset: { x: number, y: number } }  # the spot as the content names it (a text position) and the distance from where it is drawn
-    x?: number                  # 0 to 1 across the box of that plank or companion
-    y?: number                  # 0 to 1 down that box
-    style?: cursor | laser      # how the pointer draws; a cursor when absent
-```
-
-```mdl
 type PluginState
   fields:
     viewersByObject: Record<EID, Record<IdentityKeyHex, Record<SessionId, ObjectViewerProps>>>
@@ -609,9 +595,8 @@ feat F-8: Presence and Sync Status
   req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
   req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, leaving out any this deck has no URL binding for, scrolled to the plank at its front (or, when that plank is left out and the deck holds every other plank it can bind, to the first of the leader's planks after it that the deck holds, else the last before it), each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path when this deck has a URL binding for it and at the object's own path otherwise, whenever it changes, first closing any planks stacked after it, and reveals their anchor in it. Companions are content, so each plank shown of the leader opens the companion they have open there, in their tab, and closes one they closed. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
-  req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying the pointer style, Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
-  req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows, whose label carries the session's pointer style. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light indigo wash over a one-pixel indigo underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in indigo.
-  req F-8.25: While a session follows someone in a space, or someone follows it there, it posts its pointer on the space's pointer channel at most every 100 ms, as the plank or companion under it and its position as fractions of that box ([FollowPointer]); over the navtree or any other chrome it posts no position. A session draws, over the whole window, the pointers of the sessions it shares a follow with: the leader session its follow tracks, the sessions that follow it, and the others that follow its leader, each in the member's colour with their name, on the spot its content anchor names in the same plank or companion of its own deck, so a word pointed at is the word drawn on however each window wraps it, or at the same fractions of that box where the content names no spot, drawn as an arrow or, when the sender chose Laser, as a glowing dot whose tail traces the path it took. A drawn pointer eases toward each position it is sent rather than jumping. It draws no pointer whose plank or companion it does not show, nor one whose named spot is scrolled out of its view, nor one over the sender's chrome or outside their window. Moving the pointer ends no follow. Cursors drawn inside objects are unaffected and still show to every peer viewing the object.
+  req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
+  req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light indigo wash over a one-pixel indigo underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in indigo.
 ```
 
 ## Acceptance
@@ -879,13 +864,13 @@ test QA-6: Follow a peer's deck side by side
 ```
 
 ```mdl
-test QA-7: See each other's pointers while following
-  desc: While the host follows the guest, both sides show the follow in indigo in Members and in the plank heading, each sees the other's pointer at the same place in the plank, moving the host's mouse keeps the follow, the host's pointer can draw as a laser, and Stop ends it on both sides.
+test QA-7: See a follow on both sides
+  desc: While the host follows the guest, both sides show it in indigo, in Members and on every plank heading, and Stop clears it on both.
   actors: human
-  covers: [F-8.24, F-8.25]
+  covers: [F-8.23, F-8.24]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower and its leader see each other's pointers over the same plank
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a follow shows on both sides, in Members and on every plank heading, until it stops
   given:
     - host: a booted app with a space containing a document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -895,45 +880,13 @@ test QA-7: See each other's pointers while following
       expect: the host's plank header shows the guest's avatar
     - name: Follow the guest
       do: On the host, open the Members companion and click Follow on the guest's row.
-      expect: the guest's row rises to the top of the host's list in indigo, with the pointer style and Stop in place of Jump and Follow, and the plank heading takes an indigo wash and underline with the guest's avatar ringed in indigo
+      expect: the guest's row rises to the top of the host's list in indigo, with Stop in place of Jump and Follow, and the host's plank heading takes an indigo wash and underline
     - name: The guest sees the follow
       do: On the guest, open the Members companion.
       expect: the Members tab showed an indigo dot, the list starts with the host under "Following you" in indigo, and the guest's plank heading takes the same wash
-    - name: The guest points
-      do: On the guest, move the pointer to the middle of the document's plank.
-      expect: the host shows a pointer named for the guest near the middle of the same plank
-    - name: The host points back
-      do: On the host, move the mouse over the lower part of the plank without clicking.
-      expect: the guest shows a pointer named for the host over the lower part of the plank, and the host still follows
-    - name: The host switches to the laser
-      do: On the host, choose Laser on the guest's row, then move the mouse in a loop over the plank.
-      expect: the guest shows the host's pointer as a glowing dot whose tail follows the loop
     - name: Stop
       do: On the host, click Stop on the guest's row.
-      expect: the guest's row returns to its object's group, both pointers disappear, the indigo clears, and the Members tab's dot clears on both sides
-```
-
-```mdl
-test QA-8: A pointer lands on what it points at in windows of different sizes
-  desc: With the host's window wider than the guest's, so the document wraps at different places, the pointer the guest aims at a word shows on that same word on the host's screen.
-  actors: human
-  covers: [F-8.25]
-  status: unverified
-  automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a pointer lands on the word it points at in windows of different sizes
-  given:
-    - host: a booted app in a wide window, with a space containing a document whose paragraphs wrap, shared with a guest
-    - guest: a second browser profile in a narrower window, a member of that space
-  steps:
-    - name: Follow the guest
-      do: Open the document on both peers; on the host, follow the guest from the Members companion.
-      expect: the host follows the guest
-    - name: Point at a word mid-paragraph
-      do: On the guest, rest the pointer on a word in the middle of a long paragraph.
-      expect: the host's pointer for the guest rests on the same word, though the paragraph breaks into lines at other words
-    - name: Point at a word further down
-      do: On the guest, rest the pointer on a word in a later paragraph.
-      expect: the host's pointer rests on that word too
+      expect: the indigo clears and the Members tab's dot clears on both sides
 ```
 
 ---
@@ -1837,6 +1790,22 @@ decision D-102: A pointer carries, besides its fractions of the plank's box, an 
   rejected:
     - Fractions of the plank's box alone; they miss as soon as the two windows differ in width.
     - A new capability per object type; content already renders the spot, so the view that renders it can answer for it through the DOM.
+```
+
+```mdl
+decision D-103: Pointers shared across the window during a follow are a dead end, so they go; the rest of the follow's interface stays.
+  date: 2026-11-08
+  by: user:wittjosiah
+  affects: [F-8.23, F-8.24, QA-7]
+  why: No product places pointers over reflowing content in one continuous space; box fractions miss words in windows of other widths, and positions in the content are per type and jump at wrap boundaries.
+```
+
+```mdl
+decision D-104: Removing pointers removes the pointer channel and overlay, the pointer style and its toggle in Members, the content-position protocol in `@dxos/ui-types` and the editor, the deck's marker on companion panes, F-8.25, `FollowPointer` and QA-8. Following someone's row, the "Following you" group, the indigo rail dot and headings, avatar rings and mirrored companions remain; QA-7 now checks the follow shows on both sides. Fills in [D-103].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.23, F-8.24, QA-7]
 ```
 
 ## Appendix: Extension Definitions

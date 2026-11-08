@@ -43,7 +43,6 @@ export default Capability.makeModule(
       sessionId: PublicKey.random().toHex(),
       followedSpaces: [],
       peerFollowing: {},
-      pointerStyle: 'cursor',
       lastMergeAt: undefined,
     }).pipe(Atom.keepAlive);
 

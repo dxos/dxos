@@ -546,6 +546,13 @@ export const getFollowGroup = ({
     : undefined;
 };
 
+/** Whether this session takes part in a follow in a space: it follows someone there, or someone follows it there. */
+export const takesPartInFollow = (
+  spaceId: string,
+  following: SpaceSchema.FollowTarget | undefined,
+  followedSpaces: readonly string[],
+) => following?.spaceId === spaceId || followedSpaces.includes(spaceId);
+
 /** The identity keys in a follow group other than `identityKey`: the leader and every follower. */
 export const getFollowGroupMembers = (group: FollowGroup, identityKey: string): ReadonlySet<string> =>
   new Set(
