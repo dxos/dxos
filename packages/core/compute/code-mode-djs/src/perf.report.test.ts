@@ -13,8 +13,8 @@ import * as DjsSandbox from './DjsSandbox.ts';
 import {
   DjsEffectDialect,
   IN_PROCESS,
-  TASK_DXN,
   Task,
+  TASK_DXN,
   TestLayer,
   runEvaluate,
   testEngine,
