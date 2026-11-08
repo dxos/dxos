@@ -75,24 +75,26 @@ export const openDatabase = async (slug: string, types: readonly Type.AnyObj[]):
     throw new DatabaseBusyError();
   }
 
-  const worker = new Worker(new URL('./opfs-worker.ts', import.meta.url), { type: 'module' });
-  const runtime = ManagedRuntime.make(
-    SqliteClient.layer({ worker: Effect.succeed(worker) }).pipe(Layer.provideMerge(Reactivity.layer), Layer.orDie),
-  );
+  const open = async (): Promise<SqliteDatabase> => {
+    const worker = new Worker(new URL('./opfs-worker.ts', import.meta.url), { type: 'module' });
+    const runtime = ManagedRuntime.make(
+      SqliteClient.layer({ worker: Effect.succeed(worker) }).pipe(Layer.provideMerge(Reactivity.layer), Layer.orDie),
+    );
 
-  const spaceId = await spaceIdForSlug(slug);
-  const scope = await runtime.runPromise(Scope.make());
-  const open = runtime.runPromise(SqliteDatabase.open({ spaceId, types: [...types] }).pipe(Scope.provide(scope)));
+    const spaceId = await spaceIdForSlug(slug);
+    const scope = await runtime.runPromise(Scope.make());
+    return runtime.runPromise(SqliteDatabase.open({ spaceId, types: [...types] }).pipe(Scope.provide(scope)));
+  };
 
-  // The VFS waits for an access handle rather than failing, and a window that cannot have one — one holding the
-  // file outside this page's knowledge, or an origin whose storage is blocked — would otherwise sit blank forever.
+  // The whole sequence, not just the last step: the worker takes its access handle while the layer is built, so a
+  // window that cannot have one — an origin whose storage is blocked, or a handle a closed tab has not released —
+  // never even reaches the open and would otherwise sit blank forever.
   let timer: ReturnType<typeof setTimeout>;
   const expired = new Promise<never>((_resolve, reject) => {
     timer = setTimeout(() => reject(new DatabaseUnavailableError()), OPEN_TIMEOUT_MS);
   });
   try {
-    const db = await Promise.race([open, expired]);
-    return { db };
+    return { db: await Promise.race([open(), expired]) };
   } finally {
     clearTimeout(timer!);
   }
