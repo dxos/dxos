@@ -18,6 +18,7 @@ driven by it: the icons, the type names, the forms and the graph's edges are all
 | Full-text search on the device | the search box — trigram FTS5, in the browser |
 | Opening costs the same at any size | `openDatabase` reads only persisted type rows |
 | A write reaches the other peers at once | one socket per client; the object broadcasts, nothing polls |
+| A delete travels too | `db.remove` is a soft delete, and the row it leaves is sent as a tombstone |
 
 ## What it does not demonstrate
 

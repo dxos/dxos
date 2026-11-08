@@ -121,6 +121,27 @@ const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<stri
   return out;
 };
 
+/**
+ * The deleted objects, as tombstones.
+ *
+ * `db.remove` is a soft delete, so the row stays and `deleted: 'only'` is what reads it back. Without this a
+ * removal would be invisible to sync — gone from the query, so gone from `readLocal`, so nothing to send — and the
+ * record would live on in the store and come back to the next peer that asks for it.
+ */
+const readDeleted = async (db: SqliteDatabase, types: SyncTypes): Promise<SyncRecord[]> => {
+  const out: SyncRecord[] = [];
+  for (const type of types) {
+    const objects = await db.query(Query.select(Filter.type(type)).options({ deleted: 'only' })).run();
+    for (const obj of objects) {
+      const key = keyOf(obj);
+      if (key) {
+        out.push({ key, typename: typename(type), props: {}, refs: {}, deleted: true });
+      }
+    }
+  }
+  return out;
+};
+
 /** Find one local object by its foreign key. */
 const findByKey = async (db: SqliteDatabase, key: string, type: Type.AnyObj): Promise<Obj.Unknown | undefined> => {
   const [found] = await db.query(Query.select(Filter.foreignKeys(type as never, [foreignKey(key)]))).run();
@@ -141,10 +162,16 @@ const findAnyByKey = async (db: SqliteDatabase, key: string, types: SyncTypes): 
 /** What a round trip, or a message, moved; the UI says this out loud. */
 export type SyncResult = { sent: number; received: number; expiresAt: number };
 
-/** The records the store has not agreed to: a fingerprint that differs from the one it last confirmed. */
+/**
+ * The records the store has not agreed to: a fingerprint that differs from the one it last confirmed.
+ *
+ * A tombstone is a record like any other, so a delete travels and settles the same way an edit does: once the store
+ * has agreed to it the fingerprints match and it is not sent again.
+ */
 const changesSince = async (db: SqliteDatabase, types: SyncTypes, state: SyncState) => {
   const local = await readLocal(db, types);
-  const changed = [...local.values()].filter((record) => fingerprint(record) !== state.hashes[record.key]);
+  const deleted = await readDeleted(db, types);
+  const changed = [...local.values(), ...deleted].filter((record) => fingerprint(record) !== state.hashes[record.key]);
   return { local, changed };
 };
 
