@@ -4,6 +4,7 @@
 '@dxos/react-ui-graph': patch
 '@dxos/react-ui': patch
 '@dxos/echo': patch
+'@dxos/react-ui-form': patch
 ---
 
 A grid cell marks the keyboard cursor whether or not it unfurls, so a read-only table shows where the cursor is at all, and a table's cursor takes the app's selection colour rather than the grid's blue ring (the sheet keeps the blue, where a selected range and a focused cell have to read apart). A table's cells also sit on the host's surface, so only the grid lines separate the table from the panel around it. `@dxos/lit-grid` exports `isSameCell`, which `@dxos/react-ui-grid` already imported from the package root. `@dxos/react-ui-graph`'s standalone stylesheet gains the `data-color` node hues, so a consumer without the theme can colour nodes. A list of values prints as one line and, when the cell takes the cursor, wraps downward over the rows beneath (`focusUnfurl: 'block'`, new in `@dxos/lit-grid`) rather than growing sideways on one line.
@@ -15,3 +16,5 @@ In `@dxos/react-ui`, a tile in a collection now reads as a list's rows do: the s
 `@dxos/react-ui-graph` also paints a node the host marks `data-selected`: it keeps its hue — the type is still what it is — and takes the focus ring as its edge, so an app can show which node its detail pane is about without the existing `dx-selected` class repainting the node red.
 
 `@dxos/echo` gains `Format.Markdown`, the string format a form already renders in a Markdown editor and that only had an enum value until now.
+
+A markdown field renders its headings at the body size (`fixedHeight`, which the markdown bundle already offered): a field is a row of a form, so every line of it is the same height whatever the markup says.
