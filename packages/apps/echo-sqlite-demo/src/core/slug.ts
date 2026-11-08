@@ -4,7 +4,7 @@
 
 import { SpaceId } from '@dxos/keys';
 
-import { SLUG_PATTERN, SOURCE, randomSlug } from '../protocol.ts';
+import { SLUG_PATTERN, SOURCE, randomSlug } from './protocol.ts';
 
 /**
  * The slug in the URL names the graph, and a graph exists as soon as it is addressed — there is no

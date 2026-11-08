@@ -5,8 +5,8 @@
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 
-import { SOURCE, type SyncRecord, type SyncResponse } from '../protocol.ts';
 import { Organization, Person, types } from '../schema.ts';
+import { SOURCE, type SyncRecord, type SyncResponse } from './protocol.ts';
 
 /**
  * Two-way sync against the slug's Durable Object.

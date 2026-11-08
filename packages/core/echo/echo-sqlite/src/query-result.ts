@@ -8,9 +8,6 @@ import { type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
 import { type Entity, type QueryResult } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-/** Shared so every pending result returns the same reference. */
-const EMPTY_ENTRIES: readonly QueryResult.Entry<never>[] = Object.freeze([]);
-
 /**
  * A query result backed by an asynchronous executor (a compiled SQL statement).
  *
@@ -35,6 +32,8 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
    * per call is an infinite render loop.
    */
   #entries: QueryResult.Entry<T>[] | undefined;
+  /** Returned before the first execution, so a subscriber reading early gets one stable reference. */
+  readonly #empty: QueryResult.Entry<T>[] = [];
   #flat: T[] | undefined;
   #pending: Promise<void> | undefined;
   #stale = false;
@@ -103,7 +102,7 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
     if (this.#results === undefined) {
       void this.#refresh().catch((error) => log.catch(error));
       // Stable, so a subscriber reading before the first execution does not re-render on every call.
-      return EMPTY_ENTRIES as QueryResult.Entry<T>[];
+      return this.#empty;
     }
     this.#entries ??= this.#results.map((entity) => ({
       id: entity.id,

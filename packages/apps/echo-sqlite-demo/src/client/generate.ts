@@ -6,8 +6,8 @@ import { Obj, Ref } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 import { random } from '@dxos/random';
 
+import { foreignKey } from '../core/index.ts';
 import { Organization, Person } from '../schema.ts';
-import { foreignKey } from './sync.ts';
 
 /**
  * Seeds a graph with organizations and people pointing at them.

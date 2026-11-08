@@ -9,7 +9,7 @@ import { Ref } from '@dxos/echo';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { type GraphController, GraphForceProjector, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
-import type { Organization, Person } from '../schema.ts';
+import type { Organization, Person } from '../../schema.ts';
 
 /**
  * The same objects the list shows, as a force-directed graph.

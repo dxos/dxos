@@ -14,6 +14,7 @@
   "sideEffects": true,
   "type": "module",
   "dependencies": {
+    "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/echo-sqlite": "workspace:*",

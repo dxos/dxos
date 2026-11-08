@@ -22,9 +22,8 @@ import { translations as menuTranslations } from '@dxos/react-ui-menu/translatio
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { App } from './App.tsx';
-import { openDatabase } from './database.ts';
-import { resolveSlug } from './slug.ts';
+import { openDatabase, resolveSlug } from '../core/index.ts';
+import { App } from './components/index.ts';
 
 /** Without these the design system's own labels render as raw keys ("save-button.label"). */
 const translations = [...uiTranslations, ...formTranslations, ...menuTranslations];

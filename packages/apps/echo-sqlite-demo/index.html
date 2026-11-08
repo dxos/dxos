@@ -16,6 +16,16 @@
         height: 100%;
         background: #fafafa;
       }
+      /* Full-bleed on a phone; from `sm` up the panel is inset and framed, so it reads as a card.
+         `border-box` keeps the panel inside the window. */
+      body {
+        box-sizing: border-box;
+      }
+      @media (min-width: 640px) {
+        body {
+          padding: 0.75rem;
+        }
+      }
       @media (prefers-color-scheme: dark) {
         html,
         body {

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { SLUG_PATTERN } from '../protocol.ts';
+import { SLUG_PATTERN } from '../core/protocol.ts';
 import { type SpaceEnv, SpaceObject } from './space-object.ts';
 
 export { SpaceObject };
