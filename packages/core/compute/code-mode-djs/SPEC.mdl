@@ -1,0 +1,433 @@
+---
+id: org.dxos.code-mode-djs
+name: CodeModeDjs
+version: 0.1.0
+---
+
+`@dxos/code-mode-djs` runs code-mode programs — the snippets a model writes for the `eval` tool of
+`@dxos/agent-code-mode` — in [djs](https://github.com/earendil-works/djs), a JavaScript engine
+compiled to WebAssembly whose whole VM state is one byte arena. It is a spike: it exists to find out
+whether djs can replace the worker and in-process sandboxes for the Effect dialect.
+
+Four properties define it:
+
+- **The same programs run unchanged.** A program written for the Effect dialect of
+  `@dxos/agent-code-mode` — `yield* Database.query(...)`, `Obj.update`, `Operation.invoke`, `print`,
+  `DOCS` — runs here with the same names in scope and the same output [F-1].
+- **A session is a VM, not an evaluation.** One VM lives for a conversation. Top-level variables and
+  the live objects they hold survive from one `eval` to the next [F-2].
+- **A VM is bytes.** A session starts as a copy of a prebuilt image that already holds `effect`,
+  `@dxos/echo` and `@dxos/compute` [F-3], and a session can be written out as bytes and read back [F-4].
+- **The boundary is a handful of synchronous calls.** The guest does not run an ECHO client. Its
+  `Database` is a thin working set that asks the host's database for ECHO JSON rows and hands back
+  changed rows, in the row format the working-set export already uses [F-5].
+
+The corpus the end-to-end tests replay is taken from code-mode transcripts [F-6].
+
+## Dependencies
+
+```mdl
+uses org.dxos.echo: The Database, Obj, Ref, Query and Filter API the guest implements and the host executes; the ECHO JSON object format rows travel in.
+```
+
+```mdl
+uses org.dxos.echo-sqlite: The pattern the guest database follows — a Database over a non-resident store that hydrates JSON rows into live objects, observes them with Entity.subscribe and writes them behind.
+```
+
+## Ontology
+
+| Term             | Definition                                                                                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Host**         | The process that owns the conversation: its `Database.Service`, `Operation.Service` and printer.                                                   |
+| **Guest**        | Code running inside the djs VM: the guest runtime and the model's programs.                                                                        |
+| **Guest bundle** | One IIFE script holding `effect`, `@dxos/echo`, `@dxos/compute` and the guest runtime, built ahead of time.                                        |
+| **Base image**   | The arena of a VM that has run the guest bundle and been collected; every session starts as a copy of it.                                          |
+| **Session**      | One VM bound to one host database for the life of a conversation.                                                                                  |
+| **Bridge**       | The host functions a session's guest calls: `types`, `query`, `load`, `write`, `refresh`, `invoke`, `print`, `sleep`.                             |
+| **Row**          | One object crossing the bridge: `{ id, json, version }`, `json` in the ECHO JSON object format (`Obj.toJSON`), `version` the host's change marker. |
+| **Snapshot**     | A session written out as bytes: a header naming the engine build and guest bundle it needs, then the image.                                        |
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `uses`     | `dxos.spec.core/uses`        |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+| `question` | `org.dxos.mdl.question@1.0`  |
+
+## Architecture
+
+```
+ host process                                         djs VM (one per session, wasm)
+ ┌──────────────────────────────┐   sync host calls   ┌──────────────────────────────────┐
+ │ DjsSandbox (Sandbox)         │ ─────────────────▶  │ guest runtime (from base image)  │
+ │  └ Session ── Bridge ────────┼── query/load ─────▶ │  BridgeDatabase (Database)       │
+ │       │        │             │ ◀──── rows ──────── │   working set: live Obj per id   │
+ │       │        ▼             │ ◀──── write ─────── │   dirty set → JSON records       │
+ │       │   host Database      │                     │  Effect dialect bindings         │
+ │       │   Operation.Service  │ ◀──── invoke ────── │  session globals (variables)     │
+ │       ▼                      │ ◀──── print ─────── │  model program (Effect.gen body) │
+ │   snapshot bytes ◀── image ──┼──────────────────── │                                  │
+ └──────────────────────────────┘                     └──────────────────────────────────┘
+```
+
+A host call is synchronous from the guest's side: the VM parks at the call until the host answers,
+also when the host answers with a promise. So `Database.query(...).run` in the guest is one bridge
+call and one hydration, with no message channel, no RPC framing, no Automerge and no replication.
+
+## Features
+
+```mdl
+feat F-1: Effect dialect compatibility
+
+  req F-1.1:
+    when: a program written for the Effect dialect of @dxos/agent-code-mode is evaluated
+    then: it runs as the body of an Effect.gen generator with Effect, Database, Filter, Query, Order,
+          Obj, Relation, Ref, Type, DXN, Operation, Tools, print and DOCS in scope, exactly the names
+          and the prompt that dialect gives the model
+
+  req F-1.2:
+    when: the program queries (Database.query with a Filter or a Query, including Order, limit,
+          relation and reference traversals), resolves (Database.resolve by type DXN, object URI or
+          legacy echo DXN), loads a Ref, adds, updates with Obj.update, removes, or flushes
+    then: the effect on the host database and what the program reads back are the same as under the
+          in-process sandbox
+
+  req F-1.3:
+    when: the program invokes an operation bound by the conversation's skills, by its DXN through
+          Operation.invoke or, for a tool with no operation, through Tools[name]
+    then: the operation runs on the host through Operation.Service, objects in its input arrive as the
+          host's live objects (and as references where its schema takes a Ref), and objects in its
+          output arrive in the guest as live objects of the session's working set
+
+  req F-1.4:
+    when: the program prints
+    then: the host renders each value with the Effect dialect's own printer, so an object prints as the
+          same card (relations, children, referrers and the code that fetches them) and the eval tool
+          output is the same text
+
+  req F-1.5:
+    when: the program fails — a thrown error, a failed effect, a syntax error, an exhausted budget
+    then: the evaluation fails with EvaluationError carrying the message, the printed output before the
+          failure is kept, and the session stays usable
+
+  req F-1.6:
+    when: a host installs the sandbox
+    then: it implements Sandbox.Sandbox of @dxos/agent-code-mode and is paired with a dialect whose
+          instructions are the Effect dialect's, so evaluate, makeEvalToolkit and
+          makeCodeModeTurnProducer use it with no change
+```
+
+```mdl
+feat F-2: Continuity between evaluations
+
+  req F-2.1:
+    when: a program declares a top-level const, let, var, function or class
+    then: the name is bound in the session, and every later program in the session reads and may
+          reassign it
+
+  req F-2.2:
+    when: a later program declares a name an earlier one bound
+    then: the new declaration replaces the old binding; nothing fails as a redeclaration
+
+  req F-2.3:
+    when: a session variable holds an ECHO object across evaluations and the host changed that
+          object in between
+    then: the next evaluation sees the host's current fields before its first statement runs
+
+  req F-2.4:
+    when: an evaluation fails part way
+    then: the bindings it made before the failure are kept
+
+  req F-2.5:
+    when: names declared inside nested blocks or functions
+    then: they stay local to their scope, as JavaScript defines them
+```
+
+```mdl
+feat F-3: Fast start
+
+  req F-3.1:
+    when: the first session of a process is opened
+    then: the engine runs the guest bundle once in a fresh VM, collects it and keeps the arena as the
+          base image
+
+  req F-3.2:
+    when: any later session is opened
+    then: its VM is a copy of the base image with the bridge bound by name; the guest bundle is not
+          parsed or run again, and opening takes a few milliseconds, not tens
+
+  req F-3.3:
+    when: the engine build or the guest bundle changes
+    then: the base image is rebuilt rather than reused
+```
+
+```mdl
+feat F-4: Snapshots
+
+  req F-4.1:
+    when: a session is idle between evaluations
+    then: snapshot() returns a Uint8Array: a header naming the format version, the engine's image
+          descriptor and the guest bundle's hash, followed by the collected arena
+
+  req F-4.2:
+    when: a snapshot is restored against a host database
+    then: the restored session has every session variable, its working set and its type registry, and
+          the next evaluation behaves as it would have in the session that wrote it
+
+  req F-4.3:
+    when: a snapshot is restored by an engine with another build or bundle
+    then: restore fails with an error that names what differs; it never loads the bytes
+
+  req F-4.4:
+    when: a session is snapshotted
+    then: pending writes are flushed to the host first, so the bytes never hold a change the host has not
+          taken
+```
+
+```mdl
+feat F-5: Thin boundary
+
+  req F-5.1:
+    when: the guest needs data
+    then: it calls the bridge, synchronously: query(ast) with the query AST as JSON returns rows,
+          load(uri) returns one row or null, refresh(versions) returns the rows whose host version
+          differs; the host executes the AST with Query.fromAst against its own database
+
+  req F-5.2:
+    when: the guest hydrates a row
+    then: there is one live object per id in the working set, decoded from ECHO JSON with refs resolved
+          through the guest database, as the SQLite database hydrates its rows
+
+  req F-5.3:
+    when: guest objects are added, changed or removed
+    then: they are written to the host as JSON records ({ id, json, deleted }) in one write call, before
+          the next query (read-your-writes), before an operation is invoked, on flush and at the end of
+          every evaluation; the host applies a record to its own live object field by field, or creates
+          the object with the record's id
+
+  req F-5.4:
+    when: a host already holds rows for the objects a session will need (a working-set export)
+    then: seed(rows) places them in the guest working set without a bridge call, because a row's json
+          is the same ECHO JSON a working-set row's objectJson holds
+
+  req F-5.5:
+    when: the guest uses a Database method the bridge does not carry (feeds, branches, history, blobs,
+          migrations)
+    then: the call fails with a message naming the method; nothing silently no-ops
+
+  req F-5.6:
+    when: values cross the bridge
+    then: they are plain data only — rows, records, query ASTs, references as { "/": uri } envelopes;
+          no live object, schema class or function crosses
+```
+
+```mdl
+feat F-6: End-to-end coverage from transcripts
+
+  req F-6.1:
+    when: the test suite runs
+    then: it replays a corpus of programs taken from code-mode transcripts (memoized model
+          conversations and space transcripts) through both this sandbox and the in-process sandbox
+          against equally seeded databases, and asserts the same output and the same database state
+
+  req F-6.2:
+    when: a corpus program depends on a name bound by an earlier program of its conversation
+    then: the corpus keeps the conversation's order and the test replays it in one session
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: A program written for the in-process sandbox runs unchanged
+  given: a database with tasks and the Score operation bound
+  when: the Effect dialect program that resolves Task, queries the open ones, scores each with
+        Operation.invoke and marks the highest done is evaluated
+  then:
+    - the output equals the in-process sandbox's output
+    - the host database holds the same change
+  tags: [F-1]
+```
+
+```mdl
+scenario T-2: Variables survive between evaluations
+  given: a session
+  when: eval 1 runs `const tasks = yield* Database.query(Filter.type(Task)).run` and eval 2 runs
+        `Obj.update(tasks[0], (t) => { t.title = 'x' }); yield* print(tasks.length)`
+  then:
+    - eval 2 prints the count eval 1 read
+    - the host's first task is titled x
+  tags: [F-2]
+```
+
+```mdl
+scenario T-3: Opening a session reuses the base image
+  given: an engine that has opened one session
+  when: twenty more sessions are opened
+  then:
+    - the guest bundle ran exactly once
+    - the mean time to open a session is under 10 ms
+  tags: [F-3]
+```
+
+```mdl
+scenario T-4: A snapshot restores into a new engine
+  given: a session holding a variable with an ECHO object and one with plain data
+  when: it is snapshotted, a new engine is created, and the bytes are restored against the same database
+  then:
+    - both variables read back in the next evaluation
+    - the object variable is live: Obj.update on it reaches the host
+  tags: [F-4]
+```
+
+```mdl
+scenario T-5: A query is one bridge call
+  given: a session and a database of 100 tasks
+  when: a program queries the open tasks and prints their count
+  then:
+    - the bridge receives exactly one query call and no load calls
+    - no ECHO client, Automerge document or RPC channel is created
+  tags: [F-5]
+```
+
+```mdl
+scenario T-6: A runaway loop is stopped and the session survives
+  given: a session with a bound variable
+  when: a program runs `while (true) {}`
+  then:
+    - the evaluation fails with an exhausted budget
+    - the next evaluation still reads the variable
+  tags: [F-1.5, F-2.4]
+```
+
+## Changelog
+
+```mdl
+decision D-1: Spike djs as a code-mode engine in a new package, specified before it is built.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  affects: [F-1, F-2, F-3, F-4, F-5, F-6]
+```
+
+```mdl
+decision D-2: The engine supports the full Effect dialect — database queries, operation invocations, types — with feature parity with the existing Effect dialect invoker.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-3: Variables are preserved between executions.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  affects: [F-2]
+```
+
+```mdl
+decision D-4: Startup is fast: a VM is memoized with the SDK dependencies (effect, echo and the rest) preloaded.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  affects: [F-3]
+```
+
+```mdl
+decision D-5: VM state can be serialized to binary and deserialized.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-6: Overhead is low: instead of the client-services boundary, a thin boundary uses the VM's synchronous callbacks to delegate to the host's existing database rather than build a full database client, possibly on top of the existing working-set serialization format.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  affects: [F-5]
+```
+
+```mdl
+decision D-7: The end-to-end tests cover everything, using code-mode snippets extracted from DXOS space transcripts.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-8: Session variables are top-level declarations rewritten into assignments to VM globals before the program runs. Fills in [D-3].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, F-2.2, F-2.4]
+  why: djs keeps globalThis between runs but a program body's declarations are locals of its function; rewriting only the top level keeps nested scoping intact, lets later programs redeclare a name, and keeps bindings made before a failure, which a capture-on-return scheme loses.
+  rejected:
+    - Returning the locals at the end of the program, which loses them on an early return or a throw.
+    - A with-scope over a proxy, which strict mode and djs do not allow.
+```
+
+```mdl
+decision D-9: The base image is the arena of a VM that ran the guest bundle, copied per session through a public image API added to djs by a pnpm patch. Fills in [D-4].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3]
+  why: djs already starts every VM as a copy of its own base snapshot, so a copy of a VM that loaded the bundle costs about a millisecond against tens for loading it; the package exposes the arena but not a constructor from it, and a patch keeps the access typed and in one reviewed place until upstream offers it.
+  rejected:
+    - Reading the sandbox's private fields, which hides an unstable dependency in casts.
+    - Running the bundle per session, which costs about 60 ms each.
+```
+
+```mdl
+decision D-10: A snapshot is the VM image with a header, not a djs continuation dump. Fills in [D-5].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  why: Continuation dumps refuse weak collections and private fields, which Effect and ECHO hold; the image captures everything and is already binary. Its cost is that it loads only into the same engine build and bundle, which the header makes an explicit check.
+  rejected:
+    - Continuation dumps, which cannot write the guest runtime's state.
+    - Exporting only the session variables as data, which loses closures and live objects.
+```
+
+```mdl
+decision D-11: The bridge carries ECHO JSON rows and records, executes query ASTs on the host with Query.fromAst, and keeps the guest working set coherent with a version per row. Fills in [D-6].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5]
+  why: ECHO JSON is the format a working-set row's objectJson and the SQLite database's bodies already use, so the guest hydrates exactly as the SQLite database does and a host can seed a session from a working-set export; Automerge bytes would need Automerge in the guest, which is what a full client costs.
+  rejected:
+    - Shipping WorkingSetRow Automerge bytes, which needs Automerge wasm inside the VM.
+    - Proxies whose every property read calls the host, which makes Obj.update and printing chatty and breaks identity.
+```
+
+```mdl
+decision D-12: Printing is rendered on the host by the Effect dialect's own printer, from the values the guest encodes. Fills in [D-2].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: The card needs relation, child and referrer counts that only the host database can answer cheaply, and one printer keeps the output identical across sandboxes.
+```
+
+```mdl
+question Q-1: Must a snapshot load into a later djs build, or is same-build enough for the first version?
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  options:
+    - Same build: snapshots are a cache for idle sessions and are dropped on deploy; the conversation's history rebuilds what matters.
+    - Portable: add a data-level export of session variables (plain data and object references) that loads into any build.
+```
+
+```mdl
+question Q-2: Does an operation call block the guest, or may a program run operations concurrently with Effect.all?
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  options:
+    - Block: operations are synchronous host calls, simplest to reason about and to snapshot.
+    - Concurrent: operations are async host functions, so Effect.all with concurrency overlaps them.
+```
