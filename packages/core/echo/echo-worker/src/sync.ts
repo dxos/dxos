@@ -4,6 +4,7 @@
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import {
   type ClientMessage,
@@ -36,6 +37,17 @@ const index = (types: SyncTypes) => new Map(types.map((type) => [typename(type),
 export const foreignKey = (key: string) => ({ source: SOURCE, id: key });
 
 const keyOf = (obj: Obj.Unknown): string | undefined => Obj.getKeys(obj, SOURCE)[0]?.id;
+
+/**
+ * The ref-typed properties a type declares, so a record can say which edge was cleared.
+ *
+ * Absence alone cannot: an object whose ref target is not resident omits the property too, and
+ * treating that as a clear would delete edges on every peer that happens to have the target loaded.
+ */
+const refProperties = (type: Type.AnyObj): string[] =>
+  SchemaEx.getProperties(Type.getSchema(type).ast)
+    .filter((property: SchemaEx.SchemaProperty) => Ref.isRefType(property.type))
+    .map((property: SchemaEx.SchemaProperty) => String(property.name));
 
 export type SyncState = {
   /** The highest version applied from the store. */
@@ -91,11 +103,14 @@ const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<stri
         continue;
       }
       const props: Record<string, unknown> = {};
-      const refs: Record<string, string | string[]> = {};
+      const refs: Record<string, string | string[] | null> = {};
+      /** The properties the object actually holds; the rest of its schema's edges were cleared. */
+      const held = new Set<string>();
       for (const [prop, value] of Object.entries(obj)) {
         if (prop === 'id' || value === undefined) {
           continue;
         }
+        held.add(prop);
         if (Ref.isRef(value)) {
           const targetKey = value.target ? keyOf(value.target) : undefined;
           if (targetKey) {
@@ -115,6 +130,14 @@ const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<stri
           props[prop] = JSON.parse(JSON.stringify(value));
         }
       }
+      // An edge the schema declares and the object does not hold at all was cleared by its writer;
+      // one whose target is merely unloaded is still a `Ref` on the object, so it is omitted instead.
+      for (const property of refProperties(type)) {
+        if (!held.has(property)) {
+          refs[property] = null;
+        }
+      }
+
       out.set(key, { key, typename: name, props, refs });
     }
   }
@@ -237,6 +260,13 @@ const applyRecords = async (
       continue;
     }
     for (const [prop, value] of Object.entries(record.refs)) {
+      if (value === null) {
+        // Cleared by its writer, which is the one thing an omitted property cannot mean.
+        Obj.update(obj, (obj) => {
+          Obj.setValue(obj, [prop], undefined);
+        });
+        continue;
+      }
       const many = Array.isArray(value);
       const targets: Obj.Unknown[] = [];
       for (const targetKey of many ? value : [value]) {

@@ -33,6 +33,7 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "effect": "catalog:"
