@@ -135,17 +135,14 @@ describe('EnsureReplySent', () => {
   );
 
   it.effect(
-    'is silent once a code-mode eval sent in this conversation',
+    'is silent once a code-mode eval sent a message',
     Effect.fnUntraced(
       function* ({ expect }) {
         const conversation = yield* setupChat({
           channel: true,
           messages: () => [
             prompt('Hi'),
-            ...evalCall('eval-1', [
-              { operation: MemoryOperation.Remember, output: {} },
-              { operation: EmailOperation.Send, output: { thread: 'thread' } },
-            ]),
+            ...evalCall('eval-1', [{ operation: MemoryOperation.Remember }, { operation: EmailOperation.Send }]),
             reply('Replied by email.'),
           ],
         });
@@ -161,15 +158,18 @@ describe('EnsureReplySent', () => {
   );
 
   it.effect(
-    'still asks when a code-mode eval sent elsewhere',
+    'still asks when a code-mode eval sent nothing, or its send failed',
     Effect.fnUntraced(
       function* ({ expect }) {
         const conversation = yield* setupChat({
           channel: true,
           messages: () => [
-            prompt('Email Bob that I am late.'),
-            ...evalCall('eval-1', [{ operation: EmailOperation.Send, output: { thread: 'bob' } }]),
-            reply('Told Bob.'),
+            prompt('Hi'),
+            ...evalCall('eval-1', [
+              { operation: MemoryOperation.Remember },
+              { operation: EmailOperation.Send, error: 'Error: mailbox unavailable' },
+            ]),
+            reply('Replied by email.'),
           ],
         });
         const output = yield* Operation.invoke(ConversationSkill.EnsureReplySent, {}).pipe(
@@ -276,7 +276,7 @@ const call = (operation: Operation.Definition.Any, toolCallId: string, output: o
 /** A code-mode `eval` call whose code ran `invoked`, recorded on its result as code mode records it. */
 const evalCall = (
   toolCallId: string,
-  invoked: { operation: Operation.Definition.Any; output: object }[],
+  invoked: { operation: Operation.Definition.Any; error?: string }[],
 ): Message.Message[] => [
   Message.make({
     sender: { role: 'assistant' },
@@ -291,10 +291,9 @@ const evalCall = (
         name: 'eval',
         result: 'done',
         providerExecuted: false,
-        invocations: invoked.map(({ operation, output }) => ({
-          operationKey: operation.meta.key,
-          result: JSON.stringify(output),
-        })),
+        invocations: invoked.map(({ operation, error }) =>
+          error === undefined ? { operationKey: operation.meta.key } : { operationKey: operation.meta.key, error },
+        ),
       },
     ],
   }),

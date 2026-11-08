@@ -127,11 +127,9 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
 
 export type ToolCall = Schema.Schema.Type<typeof ToolCall>;
 
-/** One operation a code-mode `eval` ran: the operation's key and what it returned, as a tool result would hold it. */
+/** One operation a code-mode `eval` ran: the operation's key, and whether it failed. What it returned is not kept. */
 export const Invocation = Schema.Struct({
   operationKey: Schema.String,
-  /** The result, JSON-encoded; left out when too large to be worth storing on the message. */
-  result: Schema.optional(Schema.String),
   /** The first line of the failure. */
   error: Schema.optional(Schema.String),
 });

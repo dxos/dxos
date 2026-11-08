@@ -166,37 +166,26 @@ export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.Opaq
     }),
   );
 
-/**
- * Results longer than this are not stored on the message, and not serialized past it: what reads `invocations` (the
- * reply reminder) needs only a send's small result, which names where it posted, so a large output (a query's) costs
- * no more than this to record.
- */
-const MAX_INVOCATION_RESULT = 1_000;
-
-/** Records operation calls into one evaluation's list: each call's key, and its result or the first line of its failure. */
+/** Records each operation call into one evaluation's list: its key, and the first line of its failure if it failed. */
 type Recorder = {
   /** Records the call `effect` makes once it settles. */
   readonly effect: (operationKey: string) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
   /** Records a call that reported its outcome as `invokePromise` does. */
-  readonly outcome: (operationKey: string, outcome: { readonly data?: unknown; readonly error?: Error }) => void;
+  readonly outcome: (operationKey: string, outcome: { readonly error?: Error }) => void;
 };
 
+/** Which operations ran, not what they returned: serializing every output (a query's) would cost each call. */
 const makeRecorder = (invocations: ContentBlock.Invocation[]): Recorder => {
-  const succeeded = (operationKey: string, output: unknown) => {
-    const result = encodeSmall(output);
-    invocations.push(result !== undefined ? { operationKey, result } : { operationKey });
-  };
   // The first line names the failure; the rest is a trace no reader of the history needs.
-  const failed = (operationKey: string, message: string) =>
-    invocations.push({ operationKey, error: message.split('\n')[0] });
+  const record = (operationKey: string, error?: string) =>
+    invocations.push(error === undefined ? { operationKey } : { operationKey, error: error.split('\n')[0] });
   return {
     effect: (operationKey) => (effect) =>
       effect.pipe(
-        Effect.tap((output) => Effect.sync(() => succeeded(operationKey, output))),
-        Effect.tapCause((cause) => Effect.sync(() => failed(operationKey, Cause.pretty(cause)))),
+        Effect.tap(() => Effect.sync(() => record(operationKey))),
+        Effect.tapCause((cause) => Effect.sync(() => record(operationKey, Cause.pretty(cause)))),
       ),
-    outcome: (operationKey, { data, error }) =>
-      error === undefined ? succeeded(operationKey, data) : failed(operationKey, error.message),
+    outcome: (operationKey, { error }) => record(operationKey, error?.message),
   };
 };
 
@@ -225,42 +214,6 @@ const recordingService = (service: Operation.OperationService, recorder: Recorde
       return outcome;
     }),
 });
-
-/**
- * An encoded reference (`{ "/": uri, target }`) as its URI alone: a reference made from an object carries the whole
- * object as `target`, which would spend the budget on a copy of what the URI already names.
- */
-const withoutInlinedTarget = (value: unknown): unknown =>
-  typeof value === 'object' && value !== null && '/' in value && typeof value['/'] === 'string' && 'target' in value
-    ? { '/': value['/'] }
-    : value;
-
-/** Thrown by {@link encodeSmall}'s replacer to stop serializing once the budget is spent. */
-const TOO_LARGE = Symbol('too-large');
-
-/**
- * `value` as JSON when that is at most {@link MAX_INVOCATION_RESULT} characters, else `undefined`. Serialization stops
- * as soon as the budget is spent, so recording a large output does bounded work rather than encoding it whole.
- */
-const encodeSmall = (value: unknown): string | undefined => {
-  if (typeof value === 'string') {
-    return value.length <= MAX_INVOCATION_RESULT ? value : undefined;
-  }
-  let budget = MAX_INVOCATION_RESULT;
-  try {
-    const json = JSON.stringify(value, (key: string, child: unknown) => {
-      // Counts the key and a primitive's own length (a few characters for anything else) as each node is visited.
-      budget -= key.length + (typeof child === 'string' ? child.length : 4);
-      if (budget < 0) {
-        throw TOO_LARGE;
-      }
-      return withoutInlinedTarget(child);
-    });
-    return json !== undefined && json.length <= MAX_INVOCATION_RESULT ? json : undefined;
-  } catch {
-    return undefined;
-  }
-};
 
 /** How a tool call is shown, where its tool name alone says nothing about what it does. */
 export type CallLabel = Pick<ContentBlock.ToolCall, 'displayName' | 'displayIcon'>;
