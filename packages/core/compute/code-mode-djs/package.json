@@ -46,10 +46,7 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@effect/vitest": "catalog:",
     "esbuild": "catalog:",
     "vitest": "catalog:"

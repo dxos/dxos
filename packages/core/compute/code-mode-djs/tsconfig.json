@@ -7,9 +7,9 @@
     ]
   },
   "include": [
+    "scripts",
     "src",
-    "src/**/*.json",
-    "scripts"
+    "src/**/*.json"
   ],
   "references": [
     {
@@ -28,13 +28,7 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../sdk/types"
-    },
-    {
       "path": "../../echo/echo"
-    },
-    {
-      "path": "../../echo/echo-client"
     },
     {
       "path": "../../echo/echo-protocol"
@@ -44,9 +38,6 @@
     },
     {
       "path": "../agent-runtime"
-    },
-    {
-      "path": "../ai"
     },
     {
       "path": "../assistant"
