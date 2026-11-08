@@ -160,7 +160,9 @@ Requested 2026-11-08. Supersedes the whole-file push/pull transport.
       The DO exists as soon as it is addressed, so there is no create step on either side. A local
       space id is derived from the slug (SHA-256 → 20 bytes → `SpaceId.encode`), and one OPFS file
       holds them all.
-- [x] **Two-way by default**, no buttons: a 2 s poll, one round trip at a time.
+- [x] **Two-way by default**, no buttons: the DO broadcasts every accepted write to the other open
+      sockets, and a peer without a socket falls back to the `POST /api/space/:slug/sync` round
+      trip, which also catches a reconnecting peer up from its last version.
 - [x] **24 h expiry**, a DO alarm set on first write calling `deleteAll` on its own storage. The
       client shows the date.
 - [x] **Generate graph** — 6 organizations and 12 people with employer edges.
@@ -174,7 +176,7 @@ rigorously than two tabs could (two same-origin tabs share one OPFS, so they are
 | Direction           | Result                                                                                                                                               |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Browser → DO        | Generate produced exactly 18 records: 6 organizations, 12 people, all 12 carrying an `employer` ref by foreign key                                   |
-| DO → browser        | A record POSTed by curl appeared in the running UI on the next poll                                                                                  |
+| DO → browser        | A record POSTed by curl appeared in the running UI at once, broadcast over the open socket                                                           |
 | DO → browser, edges | A person POSTed with `refs.employer` pointing at an existing organization's key rendered with its `Cloudflare` pill resolved through `useResolveRef` |
 
 That last row is the one that matters: it proves the foreign-key identity scheme carries references
