@@ -18,6 +18,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@dxos/react-ui/theme.css';
+import { openDatabase, resolveSlug } from '@dxos/echo-worker';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
@@ -25,7 +26,7 @@ import { translations as tableTranslations } from '@dxos/react-ui-table/translat
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { openDatabase, resolveSlug } from '../core/index.ts';
+import { types } from '../schema.ts';
 import { App } from './components/index.ts';
 
 /** Without these the design system's own labels render as raw keys ("save-button.label"). */
@@ -49,7 +50,7 @@ const render = (children: React.ReactNode) =>
 const slug = resolveSlug();
 
 // Opening reads only the persisted type rows, so it costs the same at any space size.
-openDatabase(slug).then(
+openDatabase(slug, types).then(
   ({ db }) => render(<App db={db} slug={slug} />),
   (error) => {
     console.error(error);

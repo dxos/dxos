@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
+import { foreignKey } from '@dxos/echo-worker';
 import { Form, type RefOption, omitId } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -13,7 +14,6 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { foreignKey } from '../../core/index.ts';
 import { Organization, Person, types } from '../../schema.ts';
 
 /**

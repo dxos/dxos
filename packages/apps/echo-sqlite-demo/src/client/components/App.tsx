@@ -8,13 +8,13 @@ import { addEventListener, combine, interval } from '@dxos/async';
 import { Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
+import { sync } from '@dxos/echo-worker';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { sync } from '../../core/index.ts';
-import { Organization, Person } from '../../schema.ts';
+import { Organization, Person, types } from '../../schema.ts';
 import { generate } from '../generate.ts';
 import { DetailForm } from './DetailForm.tsx';
 import { type MasterTab, MasterView } from './MasterView.tsx';
@@ -74,7 +74,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
     }
     syncing.current = true;
     try {
-      const { sent, received, expiresAt: expiry } = await sync(db, slug);
+      const { sent, received, expiresAt: expiry } = await sync(db, slug, types);
       setExpiresAt(expiry);
       if (sent || received) {
         setStatus(`synced ↑${sent} ↓${received}`);

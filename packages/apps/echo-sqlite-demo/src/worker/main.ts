@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { SLUG_PATTERN } from '../core/protocol.ts';
-import { type SpaceEnv, SpaceObject } from './space-object.ts';
+import { SLUG_PATTERN } from '@dxos/echo-worker';
+import { type SpaceEnv, SpaceObject } from '@dxos/echo-worker/worker';
 
 export { SpaceObject };
 

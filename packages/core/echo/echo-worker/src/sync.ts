@@ -5,7 +5,6 @@
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 
-import { Organization, Person, types } from '../schema.ts';
 import { SOURCE, type SyncRecord, type SyncResponse } from './protocol.ts';
 
 /**
@@ -20,20 +19,12 @@ import { SOURCE, type SyncRecord, type SyncResponse } from './protocol.ts';
  * itself and cannot be given.
  */
 
-const typename = (type: (typeof types)[number]) => Type.getTypename(type)!;
+/** The ECHO types a graph holds; every call takes the same set the database was opened with. */
+export type SyncTypes = readonly Type.AnyObj[];
 
-const byTypename = new Map(types.map((type) => [typename(type), type]));
+const typename = (type: Type.AnyObj) => Type.getTypename(type)!;
 
-/** Declared rather than reflected, so the wire format is obvious from reading this file. */
-const SCALARS: Record<string, readonly string[]> = {
-  [typename(Organization)]: ['name'],
-  [typename(Person)]: ['name', 'email'],
-};
-
-const REFS: Record<string, readonly string[]> = {
-  [typename(Organization)]: [],
-  [typename(Person)]: ['employer'],
-};
+const index = (types: SyncTypes) => new Map(types.map((type) => [typename(type), type]));
 
 export const foreignKey = (key: string) => ({ source: SOURCE, id: key });
 
@@ -75,8 +66,13 @@ const saveState = (slug: string, state: SyncState): void => {
 const fingerprint = (record: SyncRecord): string =>
   JSON.stringify([record.typename, record.props, record.refs, record.deleted ?? false]);
 
-/** Every local object of a known type, in wire form. */
-const readLocal = async (db: SqliteDatabase): Promise<Map<string, SyncRecord>> => {
+/**
+ * Every local object of a known type, in wire form.
+ *
+ * Fields are read off the object rather than from a declared list: a `Ref` is an edge, anything
+ * else is a value. Nothing here needs updating when a type gains a field.
+ */
+const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<string, SyncRecord>> => {
   const out = new Map<string, SyncRecord>();
   for (const type of types) {
     const name = typename(type);
@@ -88,21 +84,19 @@ const readLocal = async (db: SqliteDatabase): Promise<Map<string, SyncRecord>> =
         continue;
       }
       const props: Record<string, unknown> = {};
-      for (const prop of SCALARS[name] ?? []) {
-        const value: unknown = Obj.getValue(obj, [prop]);
-        if (value !== undefined) {
-          props[prop] = value;
-        }
-      }
       const refs: Record<string, string> = {};
-      for (const prop of REFS[name] ?? []) {
-        const ref: unknown = Obj.getValue(obj, [prop]);
-        if (Ref.isRef(ref)) {
-          const target = ref.target;
-          const targetKey = target ? keyOf(target) : undefined;
+      for (const [prop, value] of Object.entries(obj)) {
+        if (prop === 'id' || value === undefined) {
+          continue;
+        }
+        if (Ref.isRef(value)) {
+          const targetKey = value.target ? keyOf(value.target) : undefined;
           if (targetKey) {
             refs[prop] = targetKey;
           }
+        } else {
+          // Through JSON, so a live array or nested object leaves its proxy behind.
+          props[prop] = JSON.parse(JSON.stringify(value));
         }
       }
       out.set(key, { key, typename: name, props, refs });
@@ -112,13 +106,20 @@ const readLocal = async (db: SqliteDatabase): Promise<Map<string, SyncRecord>> =
 };
 
 /** Find one local object by its foreign key. */
-const findByKey = async (db: SqliteDatabase, key: string, name: string): Promise<Obj.Unknown | undefined> => {
-  const type = byTypename.get(name);
-  if (!type) {
-    return undefined;
-  }
+const findByKey = async (db: SqliteDatabase, key: string, type: Type.AnyObj): Promise<Obj.Unknown | undefined> => {
   const [found] = await db.query(Query.select(Filter.foreignKeys(type as never, [foreignKey(key)]))).run();
   return found as Obj.Unknown | undefined;
+};
+
+/** The same, when the record's type is not known: a ref names its target's key, not its type. */
+const findAnyByKey = async (db: SqliteDatabase, key: string, types: SyncTypes): Promise<Obj.Unknown | undefined> => {
+  for (const type of types) {
+    const found = await findByKey(db, key, type);
+    if (found) {
+      return found;
+    }
+  }
+  return undefined;
 };
 
 /**
@@ -129,9 +130,11 @@ const findByKey = async (db: SqliteDatabase, key: string, name: string): Promise
 export const sync = async (
   db: SqliteDatabase,
   slug: string,
+  types: SyncTypes,
 ): Promise<{ sent: number; received: number; expiresAt: number }> => {
+  const byTypename = index(types);
   const state = loadState(slug);
-  const local = await readLocal(db);
+  const local = await readLocal(db, types);
 
   // Locally changed = fingerprint differs from what the store last agreed to.
   const changed = [...local.values()].filter((record) => fingerprint(record) !== state.hashes[record.key]);
@@ -157,7 +160,7 @@ export const sync = async (
     if (!type) {
       continue;
     }
-    const existing = await findByKey(db, record.key, record.typename);
+    const existing = await findByKey(db, record.key, type);
     if (record.deleted) {
       if (existing) {
         db.remove(existing);
@@ -179,15 +182,15 @@ export const sync = async (
     if (record.deleted || Object.keys(record.refs).length === 0) {
       continue;
     }
-    const obj = await findByKey(db, record.key, record.typename);
+    const type = byTypename.get(record.typename);
+    const obj = type && (await findByKey(db, record.key, type));
     if (!obj) {
       continue;
     }
     for (const [prop, targetKey] of Object.entries(record.refs)) {
       const targetName = records.find((other) => other.key === targetKey)?.typename;
-      const target =
-        (targetName ? await findByKey(db, targetKey, targetName) : undefined) ??
-        (await findByKey(db, targetKey, typename(Organization)));
+      const targetType = targetName ? byTypename.get(targetName) : undefined;
+      const target = targetType ? await findByKey(db, targetKey, targetType) : await findAnyByKey(db, targetKey, types);
       if (target) {
         Obj.update(obj, (draft) => {
           Obj.setValue(draft, [prop], Ref.make(target as never));

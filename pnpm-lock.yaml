@@ -3207,6 +3207,9 @@ importers:
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../../core/echo/echo-sqlite
+      '@dxos/echo-worker':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-worker
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -6758,6 +6761,28 @@ importers:
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
+
+  packages/core/echo/echo-worker:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/echo-sqlite':
+        specifier: workspace:*
+        version: link:../echo-sqlite
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: 'catalog:'
+        version: 5.20260719.1
 
   packages/core/echo/feed:
     dependencies:

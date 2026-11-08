@@ -1,0 +1,26 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "@cloudflare/workers-types",
+      "wicg-file-system-access"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
+      "path": "../echo"
+    },
+    {
+      "path": "../echo-sqlite"
+    }
+  ]
+}

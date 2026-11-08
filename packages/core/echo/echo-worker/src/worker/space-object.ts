@@ -4,7 +4,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 
-import type { SyncRecord, SyncRequest, SyncResponse } from '../core/protocol.ts';
+import type { SyncRecord, SyncRequest, SyncResponse } from '../protocol.ts';
 
 export type SpaceEnv = {
   /** One object per slug. */

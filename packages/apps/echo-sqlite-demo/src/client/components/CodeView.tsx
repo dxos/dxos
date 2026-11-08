@@ -4,18 +4,18 @@
 
 import React, { useState } from 'react';
 
+import databaseSource from '@dxos/echo-worker/src/database.ts?raw';
+import syncSource from '@dxos/echo-worker/src/sync.ts?raw';
+import workerSource from '@dxos/echo-worker/src/worker/space-object.ts?raw';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import databaseSource from '../../core/database.ts?raw';
-import syncSource from '../../core/sync.ts?raw';
 // The demo's own source, bundled as text. This is the point of the demo: the code on screen is the
 // code running the page, not a transcription that can drift from it.
 import schemaSource from '../../schema.ts?raw';
-import workerSource from '../../worker/space-object.ts?raw';
 import appSource from './App.tsx?raw';
 import formSource from './DetailForm.tsx?raw';
 import graphSource from './GraphView.tsx?raw';

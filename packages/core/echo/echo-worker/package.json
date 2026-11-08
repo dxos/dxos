@@ -1,0 +1,44 @@
+{
+  "name": "@dxos/echo-worker",
+  "version": "0.16.0",
+  "private": true,
+  "description": "An ECHO graph in the browser, synced through a Cloudflare Durable Object",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./worker": {
+      "source": "./src/worker/index.ts",
+      "types": "./dist/types/src/worker/index.d.ts",
+      "import": "./dist/lib/worker.mjs"
+    },
+    "./src/*": "./src/*"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:"
+  }
+}

@@ -4,9 +4,9 @@
 
 import { Obj, Ref } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
+import { foreignKey } from '@dxos/echo-worker';
 import { random } from '@dxos/random';
 
-import { foreignKey } from '../core/index.ts';
 import { Organization, Person } from '../schema.ts';
 
 /**

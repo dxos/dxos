@@ -18,6 +18,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/echo-worker": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/keys": "workspace:*",
