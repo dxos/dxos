@@ -631,8 +631,9 @@ test.describe('Collaboration tests', () => {
   test('a pointer lands on the word it points at in windows of different sizes', { tag: ['@space:QA-8'] }, async () => {
     test.setTimeout(150_000);
 
-    await host.page.setViewportSize({ width: 1400, height: 900 });
-    await guest.page.setViewportSize({ width: 1000, height: 760 });
+    await host.page.setViewportSize({ width: 1600, height: 950 });
+    // Both stay at or above the 1024 px width Composer lays out its sidebars at.
+    await guest.page.setViewportSize({ width: 1100, height: 800 });
     await host.createSpace();
     await host.createObject({ type: 'Document' });
     await perfomInvitation(host, guest);

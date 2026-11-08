@@ -16,6 +16,7 @@ import { generateName } from '@dxos/display-name';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Awareness from '@dxos/protocols/Awareness';
 import { Attention } from '@dxos/react-ui-attention/types';
+import { type AnchorAtPointDetail, DX_ANCHOR_AT_POINT } from '@dxos/ui-types';
 import { hexToHue } from '@dxos/util';
 
 import { SpaceCapabilities, type SpaceSchema } from '#types';
@@ -58,6 +59,16 @@ const findPlank = (target: EventTarget | null): { plank: string; companion: bool
   return undefined;
 };
 
+/** What the content under the pointer names its spot, when it can; see `DX_ANCHOR_AT_POINT`. */
+const getContentAnchor = (event: PointerEvent): FollowPointer['anchor'] => {
+  if (!(event.target instanceof Element)) {
+    return undefined;
+  }
+  const detail: AnchorAtPointDetail = { x: event.clientX, y: event.clientY };
+  event.target.dispatchEvent(new CustomEvent(DX_ANCHOR_AT_POINT, { bubbles: true, detail }));
+  return detail.anchor !== undefined && detail.offset ? { id: detail.anchor, offset: detail.offset } : undefined;
+};
+
 const isSamePointers = (a: readonly ShownPointer[], b: readonly ShownPointer[]) =>
   JSON.stringify(a) === JSON.stringify(b);
 
@@ -75,7 +86,9 @@ export default Capability.makeModule(
 
     const pointersAtom = Atom.make<readonly ShownPointer[]>([]).pipe(Atom.keepAlive);
     const channels = new Map<string, { channel: Awareness.Channel<FollowPointer>; dispose: () => void }>();
-    let local: { plank: string; companion: boolean; position: PlankPosition } | undefined;
+    let local:
+      | { plank: string; companion: boolean; position: PlankPosition; anchor?: FollowPointer['anchor'] }
+      | undefined;
 
     const getIdentity = () => Option.getOrUndefined(haloIdentity.getSnapshot());
 
@@ -95,6 +108,7 @@ export default Capability.makeModule(
             plank: local.plank,
             ...(local.companion && { companion: true }),
             ...local.position,
+            ...(local.anchor && { anchor: local.anchor }),
           }),
       };
     };
@@ -122,6 +136,7 @@ export default Capability.makeModule(
                       hue: info.hue ?? hexToHue(peerId),
                       plank: value.plank,
                       companion: value.companion ?? false,
+                      ...(value.anchor && { anchor: value.anchor }),
                       x: value.x,
                       y: value.y,
                       style: value.style ?? 'cursor',
@@ -214,7 +229,10 @@ export default Capability.makeModule(
       // Over chrome (the navtree, sidebars, toolbars) the pointer has no position, so peers draw none.
       const found = findPlank(event.target);
       const position = found && toPlankPosition(found.element.getBoundingClientRect(), event.clientX, event.clientY);
-      local = found && position ? { plank: found.plank, companion: found.companion, position } : undefined;
+      local =
+        found && position
+          ? { plank: found.plank, companion: found.companion, position, anchor: getContentAnchor(event) }
+          : undefined;
       post();
     };
     const onMouseOut = (event: MouseEvent) => {

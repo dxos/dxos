@@ -90,6 +90,7 @@ type FollowPointer
     following?: { identityKey: IdentityKeyHex, sessionId?: SessionId }  # whom the sender follows in the space
     plank?: string              # graph path of the plank under the pointer, or whose companion it is over; absent over chrome
     companion?: boolean         # over that plank's companion rather than the plank
+    anchor?: { id: string, offset: { x: number, y: number } }  # the spot as the content names it (a text position) and the distance from where it is drawn
     x?: number                  # 0 to 1 across the box of that plank or companion
     y?: number                  # 0 to 1 down that box
     style?: cursor | laser      # how the pointer draws; a cursor when absent
@@ -610,7 +611,7 @@ feat F-8: Presence and Sync Status
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying the pointer style, Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
   req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows, whose label carries the session's pointer style. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light indigo wash over a one-pixel indigo underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in indigo.
-  req F-8.25: While a session follows someone in a space, or someone follows it there, it posts its pointer on the space's pointer channel at most every 100 ms, as the plank or companion under it and its position as fractions of that box ([FollowPointer]); over the navtree or any other chrome it posts no position. A session draws, over the whole window, the pointers of the sessions it shares a follow with: the leader session its follow tracks, the sessions that follow it, and the others that follow its leader, each in the member's colour with their name, at the same fractions of the same plank or companion in its own deck, drawn as an arrow or, when the sender chose Laser, as a glowing dot whose tail traces the path it took. A drawn pointer eases toward each position it is sent rather than jumping. It draws no pointer whose plank or companion it does not show, nor one over the sender's chrome or outside their window. Moving the pointer ends no follow. Cursors drawn inside objects are unaffected and still show to every peer viewing the object.
+  req F-8.25: While a session follows someone in a space, or someone follows it there, it posts its pointer on the space's pointer channel at most every 100 ms, as the plank or companion under it and its position as fractions of that box ([FollowPointer]); over the navtree or any other chrome it posts no position. A session draws, over the whole window, the pointers of the sessions it shares a follow with: the leader session its follow tracks, the sessions that follow it, and the others that follow its leader, each in the member's colour with their name, on the spot its content anchor names in the same plank or companion of its own deck, so a word pointed at is the word drawn on however each window wraps it, or at the same fractions of that box where the content names no spot, drawn as an arrow or, when the sender chose Laser, as a glowing dot whose tail traces the path it took. A drawn pointer eases toward each position it is sent rather than jumping. It draws no pointer whose plank or companion it does not show, nor one whose named spot is scrolled out of its view, nor one over the sender's chrome or outside their window. Moving the pointer ends no follow. Cursors drawn inside objects are unaffected and still show to every peer viewing the object.
 ```
 
 ## Acceptance
@@ -1824,6 +1825,18 @@ decision D-101: The deck takes a heading accent from a new `HeadingAccent` capab
   affects: [F-8.24, QA-8]
   supersedes: D-81
   why: The companion heading is the deck's own toolbar with no surface in it, so only the deck can colour it; one accent for every heading keeps them alike.
+```
+
+```mdl
+decision D-102: A pointer carries, besides its fractions of the plank's box, an anchor in the content's own terms: content that can name a point (the text editor, by its document cursor, an automerge cursor when synced) marks itself and answers two synchronous DOM events from `@dxos/ui-types`, one naming the anchor and offset at a client point and one drawing an anchor back. The receiver draws the pointer where its own content draws that anchor, hides it when that spot is scrolled out of its view, and falls back to the fractions only where no content in the plank resolves the anchor. With plank widths of 1202 and 702 px, none of six pointers aimed at words landed on them by fractions alone, and all six did by anchor. Fills in [D-100].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.25, FollowPointer, QA-8]
+  why: Fractions of a box only match where both views lay the content out alike; text wraps at other words in a window of another width, so only a position in the content itself names the same word.
+  rejected:
+    - Fractions of the plank's box alone; they miss as soon as the two windows differ in width.
+    - A new capability per object type; content already renders the spot, so the view that renders it can answer for it through the DOM.
 ```
 
 ## Appendix: Extension Definitions

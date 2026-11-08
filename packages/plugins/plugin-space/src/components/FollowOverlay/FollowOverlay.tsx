@@ -5,6 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Attention } from '@dxos/react-ui-attention/types';
+import { DX_POINT_AT_ANCHOR, DX_POINTER_ANCHORS_ATTR, type PointAtAnchorDetail } from '@dxos/ui-types';
 
 import { type SpaceSchema } from '#types';
 
@@ -20,6 +21,8 @@ export type ShownPointer = PlankPosition & {
   plank: string;
   /** Over the plank's companion rather than the plank. */
   companion: boolean;
+  /** Where it is in the content, as the content names it; drawn there when this view's content finds it. */
+  anchor?: { id: string; offset: { x: number; y: number } };
   style: SpaceSchema.PointerStyle;
 };
 
@@ -34,17 +37,40 @@ type Placed = Point & { key: string; trail: (Point & { age: number })[] };
 const hueColor = (hue: string) => `var(--color-${hue}-border)`;
 
 // The same plank can be open twice (a companion, a stacked section); the one with a box is the one on screen.
-const findPlankBox = (plank: string, companion: boolean): Box | undefined => {
+const findPlankElement = (plank: string, companion: boolean): Element | undefined => {
   const selector = companion
     ? `[data-companion-of="${CSS.escape(plank)}"]`
     : `[${Attention.ATTENDABLE_ATTRIBUTE}="${CSS.escape(plank)}"]`;
   for (const element of document.querySelectorAll(selector)) {
     const box = element.getBoundingClientRect();
     if (box.width > 0 && box.height > 0) {
-      return box;
+      return element;
     }
   }
   return undefined;
+};
+
+const contains = (box: Box, { left, top }: Point) =>
+  left >= box.left && left <= box.left + box.width && top >= box.top && top <= box.top + box.height;
+
+/**
+ * Where to draw a pointer in its plank: on the spot its content anchor names when content in the plank finds it, nowhere
+ * when that spot is scrolled out of this view, and otherwise at its fractions of the plank's box, which match only where
+ * both views lay the content out alike.
+ */
+export const placePointer = (element: Element, pointer: ShownPointer): Point | undefined => {
+  const box = element.getBoundingClientRect();
+  if (pointer.anchor) {
+    for (const content of element.querySelectorAll(`[${DX_POINTER_ANCHORS_ATTR}]`)) {
+      const detail: PointAtAnchorDetail = { anchor: pointer.anchor.id, offset: pointer.anchor.offset };
+      content.dispatchEvent(new CustomEvent(DX_POINT_AT_ANCHOR, { detail }));
+      if (detail.point) {
+        const point = { left: detail.point.x, top: detail.point.y };
+        return contains(box, point) ? point : undefined;
+      }
+    }
+  }
+  return fromPlankPosition(box, pointer);
 };
 
 /** How long a laser's tail lasts behind it. */
@@ -74,13 +100,18 @@ const usePlaced = (pointers: readonly ShownPointer[]): Placed[] => {
     const place = () => {
       const now = performance.now();
       const next = pointers.flatMap((pointer): Placed[] => {
-        const box = findPlankBox(pointer.plank, pointer.companion);
-        if (!box) {
+        const element = findPlankElement(pointer.plank, pointer.companion);
+        if (!element) {
           shown.current.delete(pointer.key);
           trails.current.delete(pointer.key);
           return [];
         }
-        const target = fromPlankPosition(box, pointer);
+        const target = placePointer(element, pointer);
+        if (!target) {
+          shown.current.delete(pointer.key);
+          trails.current.delete(pointer.key);
+          return [];
+        }
         const last = shown.current.get(pointer.key);
         const point = last
           ? { left: last.left + (target.left - last.left) * EASE, top: last.top + (target.top - last.top) * EASE }

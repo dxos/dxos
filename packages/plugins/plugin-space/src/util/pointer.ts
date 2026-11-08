@@ -31,6 +31,16 @@ export const FollowPointer = Schema.Struct({
   companion: Schema.optional(Schema.Boolean),
   x: Schema.optional(Schema.Number),
   y: Schema.optional(Schema.Number),
+  /**
+   * Where the pointer is in the content itself, as the content names it (a text position), so a view that lays the
+   * content out differently draws it on the same thing; the fractions above stand in where content names nothing.
+   */
+  anchor: Schema.optional(
+    Schema.Struct({
+      id: Schema.String,
+      offset: Schema.Struct({ x: Schema.Number, y: Schema.Number }),
+    }),
+  ),
   /** How the pointer draws; a cursor when absent. */
   style: Schema.optional(Schema.Literals(['cursor', 'laser'])),
 });
