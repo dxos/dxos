@@ -207,10 +207,15 @@ const applyRecords = async (
         Object.assign(existing, record.props);
         // A property the record does not carry was cleared by whoever wrote it, so clear it here
         // too; without this an edit that empties a field never reaches the other peers, and they
-        // push the old value back. Refs are left alone: `readLocal` omits one whose target is not
-        // resident, so an absent ref does not mean it was cleared.
+        // push the old value back.
+        //
+        // Edges are left alone whether single or multi-valued: `readLocal` omits a ref whose target
+        // is not resident, so an absent ref does not mean it was cleared — and `attendees`, an array
+        // of refs, travels in `refs` rather than `props`, so clearing it here would empty the list
+        // on every apply and then push that loss to every peer.
         for (const [property, value] of Object.entries(existing)) {
-          if (property !== 'id' && !(property in record.props) && !Ref.isRef(value)) {
+          const edge = Ref.isRef(value) || (Array.isArray(value) && value.some(Ref.isRef));
+          if (property !== 'id' && !(property in record.props) && !(property in record.refs) && !edge) {
             Obj.setValue(existing, [property], undefined);
           }
         }
@@ -307,9 +312,32 @@ export const sync = async (db: SqliteDatabase, slug: string, types: SyncTypes): 
     throw new Error(`Sync failed: ${response.status}${detail ? ` ${detail}` : ''}`);
   }
   const body = (await response.json()) as SyncResponse;
-  const { received } = await receive(db, slug, types, state, body, local, changed);
+  const { received, reset } = await receive(db, slug, types, state, body, local, changed);
+  if (!reset) {
+    return { sent: changed.length, received, expiresAt: body.expiresAt };
+  }
 
-  return { sent: changed.length, received, expiresAt: body.expiresAt };
+  // The store was reset: this response told us the agreement is void, and the records it carried
+  // were from the empty store, so the local graph is still only here. Send it now rather than
+  // leaving it for whenever something calls again.
+  const after = loadState(slug);
+  const { local: resent, changed: all } = await changesSince(db, types, after);
+  if (all.length === 0) {
+    return { sent: changed.length, received, expiresAt: body.expiresAt };
+  }
+  const retry = await fetch(`/api/space/${slug}/sync`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ since: after.version, records: all }),
+  });
+  if (!retry.ok) {
+    const detail = (await retry.text()).trim();
+    throw new Error(`Sync failed: ${retry.status}${detail ? ` ${detail}` : ''}`);
+  }
+  const second = (await retry.json()) as SyncResponse;
+  await receive(db, slug, types, after, second, resent, all);
+
+  return { sent: changed.length + all.length, received, expiresAt: second.expiresAt };
 };
 
 /** How long to wait before a reconnect, growing to a ceiling so a worker that is down is not hammered. */

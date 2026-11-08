@@ -159,24 +159,30 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
   /**
    * Over the limit, in the one place both transports ask.
    *
-   * Only records that would ADD a live row count: an edit upserts, a tombstone removes an object from
-   * the graph, and both must stay possible at the cap — refusing them would strand a full graph with
-   * no way back under it.
+   * The cap is on the graph, which is the LIVE objects: a tombstone is how an object leaves it, and
+   * an edit upserts, so neither may be refused — refusing them would strand a full graph with no way
+   * back under the cap. A key the store holds only as a tombstone counts when it comes back.
    */
   #refuse(incoming: readonly SyncRecord[]): Response | undefined {
     const live = this.#count();
-    const added = incoming.filter((record) => !record.deleted && !this.#has(record.key)).length;
-    if (live + added > MAX_RECORDS) {
-      return new Response(`Too many records: ${live} + ${added} > ${MAX_RECORDS}`, { status: 413 });
+    const alive = this.#liveKeys();
+    // One pass, and a key repeated in the batch counts once. A malformed entry is skipped here as
+    // `#apply` skips it, rather than throwing and answering 500.
+    const added = new Set<string>();
+    for (const record of incoming) {
+      if (typeof record?.key === 'string' && !record.deleted && !alive.has(record.key)) {
+        added.add(record.key);
+      }
+    }
+    if (live + added.size > MAX_RECORDS) {
+      return new Response(`Too many records: ${live} + ${added.size} > ${MAX_RECORDS}`, { status: 413 });
     }
   }
 
-  /** Whether the store already holds this key, deleted or not; an upsert adds no row. */
-  #has(key: string): boolean {
-    const [row] = this.ctx.storage.sql
-      .exec<{ n: number }>('SELECT COUNT(*) AS n FROM records WHERE key = ?', key)
-      .toArray();
-    return Number(row?.n ?? 0) > 0;
+  /** The keys the store holds as live objects; a tombstone's key is not one of them. */
+  #liveKeys(): Set<string> {
+    const rows = this.ctx.storage.sql.exec<{ key: string }>('SELECT key FROM records WHERE deleted = 0').toArray();
+    return new Set(rows.map((row) => row.key));
   }
 
   /**
@@ -274,8 +280,11 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
     }
   }
 
+  /** The graph's size: live objects only, since a tombstone is an object that left it. */
   #count(): number {
-    const [row] = this.ctx.storage.sql.exec<{ n: number }>('SELECT COUNT(*) AS n FROM records').toArray();
+    const [row] = this.ctx.storage.sql
+      .exec<{ n: number }>('SELECT COUNT(*) AS n FROM records WHERE deleted = 0')
+      .toArray();
     return Number(row?.n ?? 0);
   }
 }
