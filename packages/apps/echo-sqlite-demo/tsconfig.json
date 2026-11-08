@@ -41,9 +41,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/sql-sqlite"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

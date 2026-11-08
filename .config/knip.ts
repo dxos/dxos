@@ -570,6 +570,9 @@ for (const manifest of globSync(
 
 const config: KnipConfig = {
   workspaces,
+  // `.agents/` is agent control state, not code. A project's `parked/` holds spike files kept for
+  // reference outside any package — they import paths that exist only where they came from.
+  ignore: ['.agents/**'],
   // The issue types this repo gates on. Unused exports and types are deliberately excluded: barrel
   // files re-export far more than any one consumer uses, so they are noise here.
   include: ['files', 'dependencies', 'devDependencies', 'unlisted', 'binaries', 'unresolved'],

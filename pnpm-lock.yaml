@@ -3252,9 +3252,6 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/sql-sqlite':
-        specifier: workspace:*
-        version: link:../../common/sql-sqlite
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
