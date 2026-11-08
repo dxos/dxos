@@ -9,6 +9,7 @@ import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { type FactAggregate } from '../internal/sparql/aggregate.ts';
 import { type Fact, Graph, Mapping } from '../types/index.ts';
+import * as Vocab from '../types/Vocab.ts';
 import * as FactAnalyticsLive from './analytics.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 
@@ -206,6 +207,18 @@ const WITHDRAWALS = WITHDRAWN.map((stale, index) =>
 /** A fact the extractor left unscored; `confidence ?? 0` is how both backends must read it. */
 const UNSCORED = fact('u1', { factuality: { value: 'CT+', polarity: '+' } });
 
+/**
+ * One graph holding two statements — the query's subject on one, its predicate on the other — so no single
+ * statement in it matches both. Its IRI sorts before the graph that does match, so a graph-ordered cap meets the
+ * decoy first. A shared `graph` is a supported shape: statements with one provenance carry it once.
+ */
+const DECOY_GRAPH = Vocab.graphIri('a-decoy').value;
+const DECOY: Fact[] = [
+  fact('d1', { graph: DECOY_GRAPH, assertion: assertion('erin', 'works at', 'dxos') }),
+  fact('d2', { graph: DECOY_GRAPH, assertion: assertion('frank', 'met', 'erin') }),
+];
+const MATCH = fact('m1', { graph: Vocab.graphIri('z-match').value, assertion: assertion('erin', 'met', 'grace') });
+
 describe('FactAnalytics backend parity', () => {
   it.effect(
     'fills a capped `current` read, rather than capping before the withdrawn claims are dropped',
@@ -234,6 +247,21 @@ describe('FactAnalytics backend parity', () => {
         expect(statuses.get(Mapping.graphOf(STALE))).toBe('retracted');
         // `has` means "withdrawn" either way round; an active graph would make it mean nothing.
         expect(statuses.has(Mapping.graphOf(KEPT))).toBe(false);
+      }
+    }, Effect.scoped),
+  );
+
+  it.effect(
+    'does not let a graph that matches the constraints separately consume the cap',
+    Effect.fnUntraced(function* () {
+      const { store, memory } = yield* backendsOf([...DECOY, MATCH]);
+      for (const analytics of [store, memory]) {
+        const scope = { subjectEntity: 'erin', predicate: 'met' } as const;
+        // One statement satisfies both constraints, and it is not in the graph the cap meets first.
+        expect(yield* analytics.count(scope)).toBe(1);
+        const found = yield* analytics.facts({ ...scope, limit: 1 });
+        expect(found.length).toBe(1);
+        expect(found[0]?.assertion.object).toMatchObject({ entity: 'grace' });
       }
     }, Effect.scoped),
   );

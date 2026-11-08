@@ -3,7 +3,7 @@
 //
 
 import * as Vocab from '../../types/Vocab.ts';
-import { ONTOLOGY, STANDING_FILTER, confidenceFilter, iriRef, isEntity, statementFilter } from './fact-query.ts';
+import { ONTOLOGY, PROV_DERIVED_FROM, iriRef, isEntity, statementPatterns } from './fact-query.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 //
@@ -54,7 +54,6 @@ export type FactGroup = {
 /** Absent `sx:force` means the fact is a plain assertion (see the Illocution design). */
 const DEFAULT_FORCE = 'assertive';
 
-const PROV_DERIVED_FROM = iriRef(`${Vocab.PROV}wasDerivedFrom`);
 const PROV_ATTRIBUTED_TO = iriRef(`${Vocab.PROV}wasAttributedTo`);
 const SX_FACTUALITY = iriRef(`${Vocab.SX}factuality`);
 const SX_FORCE = iriRef(`${Vocab.SX}force`);
@@ -79,34 +78,6 @@ const entityKeyExpr = (variable: string): string => {
     `IF(STRSTARTS(${term}, ${local}), STRAFTER(${term}, ${local}),`,
     `IF(STRSTARTS(${term}, ${global}), STRAFTER(${term}, ${global}), ${term})))`,
   ].join(' ');
-};
-
-/**
- * Statement-level patterns for a query: every constraint applies to the statement itself (`?s ?p ?o` in `?g`)
- * rather than to its graph, so a count is exact. {@link FactStoreApi.query} cannot do this — it must load whole
- * graphs to reassemble facts, so it finds candidate graphs and re-checks each statement in JS.
- */
-export const statementPatterns = (query: SemanticQuery, predicates?: ReadonlySet<string>): string[] => {
-  const patterns = ['GRAPH ?g { ?s ?p ?o }', statementFilter('?g', '?p', '?o')];
-  if (query.subjectEntity) {
-    patterns.push(`FILTER(${isEntity('?s', query.subjectEntity)})`);
-  }
-  if (predicates) {
-    patterns.push(`FILTER(?p IN (${[...predicates].map(iriRef).join(', ')}))`);
-  }
-  if (query.entity) {
-    patterns.push(`FILTER(${isEntity('?s', query.entity)} || ${isEntity('?o', query.entity)})`);
-  }
-  if (query.source) {
-    patterns.push(`?g ${PROV_DERIVED_FROM} ${JSON.stringify(query.source)} .`);
-  }
-  if (query.minConfidence !== undefined) {
-    patterns.push(...confidenceFilter(query.minConfidence));
-  }
-  if (query.current) {
-    patterns.push(...STANDING_FILTER);
-  }
-  return patterns;
 };
 
 /** The patterns a dimension needs beyond the statement itself, and the expression naming its group key. */
