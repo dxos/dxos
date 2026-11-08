@@ -1,0 +1,24 @@
+layer: library
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+tasks:
+  # The guest runtime runs inside the djs VM, which loads one script rather than modules, so it is
+  # bundled ahead of time into a single IIFE the host reads as text.
+  bundle-guest:
+    command: node --conditions=source scripts/bundle-guest.ts
+    deps:
+      - ^:build
+    inputs:
+      - scripts/bundle-guest.ts
+      - src/guest/**/*
+      - src/protocol.ts
+    outputs:
+      - dist/guest/
+  build:
+    deps:
+      - ~:bundle-guest
+  test:
+    deps:
+      - ~:bundle-guest

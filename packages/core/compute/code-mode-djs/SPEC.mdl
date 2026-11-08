@@ -99,8 +99,9 @@ feat F-1: Effect dialect compatibility
     when: the program invokes an operation bound by the conversation's skills, by its DXN through
           Operation.invoke or, for a tool with no operation, through Tools[name]
     then: the operation runs on the host through Operation.Service, objects in its input arrive as the
-          host's live objects (and as references where its schema takes a Ref), and objects in its
-          output arrive in the guest as live objects of the session's working set
+          host's live objects (and as references where its schema takes a Ref, as the worker sandbox
+          makes them), and objects in its output arrive in the guest as live objects of the session's
+          working set, with their rows, so no load call follows
 
   req F-1.4:
     when: the program prints
@@ -114,10 +115,21 @@ feat F-1: Effect dialect compatibility
           failure is kept, and the session stays usable
 
   req F-1.6:
+    when: an evaluation is given a timeout
+    then: the timeout is not observed; the fuel budget bounds the evaluation instead, stopping it
+          deterministically and leaving the session usable
+
+  req F-1.7:
     when: a host installs the sandbox
     then: it implements Sandbox.Sandbox of @dxos/agent-code-mode and is paired with a dialect whose
-          instructions are the Effect dialect's, so evaluate, makeEvalToolkit and
-          makeCodeModeTurnProducer use it with no change
+          instructions are the Effect dialect's plus a paragraph saying variables persist, so
+          evaluate, makeEvalToolkit and makeCodeModeTurnProducer use it with no change
+
+  req F-1.8:
+    when: the space registers a relation type
+    then: its relations are not rebuilt in the guest — the JSON-schema round trip loses a relation's
+          kind and endpoints — so traversals that end at objects work and a relation itself reaches
+          the guest only as data, as in the worker sandbox
 ```
 
 ```mdl
@@ -155,13 +167,18 @@ feat F-3: Fast start
           base image
 
   req F-3.2:
-    when: any later session is opened
-    then: its VM is a copy of the base image with the bridge bound by name; the guest bundle is not
-          parsed or run again, and opening takes a few milliseconds, not tens
+    when: a session is opened over a database whose set of registered types the engine has not seen
+    then: the engine copies the base image, rebuilds those types inside it, and keeps that arena as the
+          image for the set, keyed by a hash of the types' schemas
 
   req F-3.3:
-    when: the engine build or the guest bundle changes
-    then: the base image is rebuilt rather than reused
+    when: any later session is opened over the same set of types
+    then: its VM is a copy of that image with the bridge bound by name; neither the guest bundle nor the
+          types are rebuilt, and opening takes a few milliseconds, not tens
+
+  req F-3.4:
+    when: the engine build, the guest bundle or the host's registry changes
+    then: the affected image is rebuilt rather than reused
 ```
 
 ```mdl
@@ -290,6 +307,16 @@ scenario T-5: A query is one bridge call
     - the bridge receives exactly one query call and no load calls
     - no ECHO client, Automerge document or RPC channel is created
   tags: [F-5]
+```
+
+```mdl
+scenario T-7: Seeded rows answer without a bridge call
+  given: a session seeded with the rows of three tasks
+  when: a program resolves one of them by its URI
+  then:
+    - it prints the task's title
+    - the bridge receives no query and no load call
+  tags: [F-5.4]
 ```
 
 ```mdl
@@ -431,3 +458,43 @@ question Q-2: Does an operation call block the guest, or may a program run opera
     - Block: operations are synchronous host calls, simplest to reason about and to snapshot.
     - Concurrent: operations are async host functions, so Effect.all with concurrency overlaps them.
 ```
+
+```mdl
+decision D-13: A second image is kept per set of registered types, built from the base image the first time the set is seen. Fills in [D-4].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.2, F-3.3, F-3.4, T-3]
+  why: Copying the base image costs 3 ms, but rebuilding a workspace's types from JSON schema inside the VM cost about 300 ms per session; keyed by a hash of the schemas, it is paid once per set of types, and opening a session measured 6 ms.
+  rejected:
+    - Rebuilding the types per session, which made a session slower to open than the base image was to build.
+    - Rebuilding each type when the guest first needs it, which moves the cost into the first query of every session.
+```
+
+```mdl
+decision D-14: The fuel budget bounds an evaluation, and its timeout is not observed. Fills in [D-2].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.6, T-6]
+  why: djs stops a run that exhausts its fuel between two instructions and the VM stays usable, which keeps the session's variables; a wall-clock bound could only dispose the VM, which loses them.
+```
+
+```mdl
+decision D-15: An object passed where an operation's schema takes a reference is made a reference, as the worker sandbox does; the in-process sandbox rejects it. Fills in [D-2].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: The worker sandbox is the out-of-process sandbox this replaces, and passing the object is the call models get wrong first.
+```
+
+```mdl
+decision D-16: The corpus keeps snippets from space transcripts only after replacing every space and object id and dropping snippets with mail content, links, credentials or long string literals; a difference that is the engine's own (an error's wording, a module namespace's key order) is listed by snippet with its reason. Fills in [D-7].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6]
+  why: The transcripts are of people's spaces and the corpus is committed to a public repository; the listed differences come from V8 against djs, not from the bridge, and listing them keeps every other snippet compared exactly.
+```
+

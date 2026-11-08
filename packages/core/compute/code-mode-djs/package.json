@@ -1,0 +1,57 @@
+{
+  "name": "@dxos/code-mode-djs",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Code mode in djs: the Effect dialect in a snapshottable WebAssembly VM, over a thin bridge to the host database.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": [
+    "./src/guest/polyfills.ts"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist/lib",
+    "dist/types",
+    "dist/guest",
+    "src"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "@dxos/agent-code-mode": "workspace:*",
+    "@dxos/async": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@earendil-works/djs": "catalog:",
+    "acorn": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
+    "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@effect/vitest": "catalog:",
+    "esbuild": "catalog:",
+    "vitest": "catalog:"
+  }
+}
