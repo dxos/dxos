@@ -60,7 +60,7 @@ export const GraphView = ({
   }, [model]);
 
   return (
-    <div className='graph'>
+    <div className='dx-expand min-h-0'>
       <SVG.Root ref={svgRef}>
         <SVG.Markers />
         <SVG.Zoom extent={[1 / 2, 2]}>
@@ -72,7 +72,8 @@ export const GraphView = ({
             arrows
             labels={{ text: (node) => node.data?.label ?? node.id }}
             attributes={{
-              node: (node) => ({ classes: { [`dx-${node.data?.type ?? 'node'}`]: true } }),
+              // `graph.css` paints a node from `data-color`, so this is how a type becomes a colour.
+              node: (node) => ({ data: { color: node.data?.type === 'person' ? 'cyan' : 'orange' } }),
             }}
           />
         </SVG.Zoom>

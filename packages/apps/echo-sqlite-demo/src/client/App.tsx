@@ -9,7 +9,6 @@ import { useQuery } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Organization, Person } from '../schema.ts';
@@ -88,11 +87,15 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
     setStatus('link copied');
   }, []);
 
+  // The list reports the row's id; resolve it back to the object before removing.
   const handleRemove = useCallback(
-    (obj: Person | Organization) => {
-      db.remove(obj);
+    (id: string) => {
+      const obj = [...organizations, ...people].find((candidate) => candidate.id === id);
+      if (obj) {
+        db.remove(obj);
+      }
     },
-    [db],
+    [db, organizations, people],
   );
 
   return (
@@ -124,21 +127,18 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
           <Button.Root icon='ph--sparkle--regular' label='Generate' iconOnly onClick={handleGenerate} />
           <Button.Root icon='ph--link--regular' label='Copy link' iconOnly onClick={handleCopy} />
         </Toolbar.Root>
+        {view === 'list' && <CreateForm db={db} organizations={organizations} />}
       </Panel.Header>
 
-      <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport>
-            {view === 'list' && (
-              <>
-                <CreateForm db={db} organizations={organizations} />
-                <ListView organizations={organizations} people={people} onRemove={handleRemove} />
-              </>
-            )}
-            {view === 'graph' && <GraphView organizations={organizations} people={people} />}
-            {view === 'code' && <CodeView />}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+      <Panel.Body classNames='min-h-0 grid'>
+        {/*
+          Each view owns its body. `Listbox` and `Syntax` bring their own ScrollArea, so wrapping
+          them in another one nests two scrollers of equal height and neither scrolls; the graph
+          needs to fill rather than scroll.
+        */}
+        {view === 'list' && <ListView organizations={organizations} people={people} onRemove={handleRemove} />}
+        {view === 'graph' && <GraphView organizations={organizations} people={people} />}
+        {view === 'code' && <CodeView />}
       </Panel.Body>
 
       <Panel.Footer>

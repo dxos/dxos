@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -36,7 +37,9 @@ export const CodeView = () => {
   const aspect = ASPECTS.find((aspect) => aspect.value === value) ?? ASPECTS[0];
 
   return (
-    <>
+    // `auto 1fr` so the toolbar hugs and the code takes the rest; `min-h-0` lets it shrink
+    // below its content, which is what allows the ScrollArea to scroll at all.
+    <div className='grid grid-rows-[auto_1fr] min-h-0 dx-expand'>
       <Toolbar.Root>
         <Toolbar.Text>Source</Toolbar.Text>
         <Select.Root items={ASPECTS} value={[value]} onValueChange={({ value }) => setValue(value[0])}>
@@ -49,9 +52,13 @@ export const CodeView = () => {
         </Select.Root>
       </Toolbar.Root>
 
-      <SyntaxHighlighter language='tsx' showLineNumbers>
-        {aspect.source}
-      </SyntaxHighlighter>
-    </>
+      <ScrollArea.Root>
+        <ScrollArea.Viewport>
+          <SyntaxHighlighter language='ts' showLineNumbers>
+            {aspect.source}
+          </SyntaxHighlighter>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </div>
   );
 };

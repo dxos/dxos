@@ -8,6 +8,7 @@ import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 import { Form, omitId } from '@dxos/react-ui-form';
 import type { RefOption } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -77,7 +78,7 @@ export const CreateForm = ({
   );
 
   return (
-    <>
+    <Card.Root classNames='m-3 max-w-xl mx-auto'>
       <Toolbar.Root>
         <Toolbar.Text>New</Toolbar.Text>
         <Select.Root items={items} value={[typename]} onValueChange={({ value }) => setTypename(value[0])}>
@@ -105,6 +106,6 @@ export const CreateForm = ({
           <Form.Actions />
         </Form.Content>
       </Form.Root>
-    </>
+    </Card.Root>
   );
 };
