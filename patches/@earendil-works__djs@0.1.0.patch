@@ -1,0 +1,80 @@
+diff --git a/dist/sandbox.d.ts b/dist/sandbox.d.ts
+index 6816cddca3c7a818dcdfa9961c5243d852105a3b..be83bed7473a4dff96514cc0c50050cafd842aa1 100644
+--- a/dist/sandbox.d.ts
++++ b/dist/sandbox.d.ts
+@@ -433,7 +433,7 @@ export declare class Task {
+  * A VM image moving between the main module and the dump module (packaging B, D2635):
+  * the arena as is, with what the sandbox keeps beside it.
+  */
+-interface RawImage {
++export interface RawImage {
+     image: Uint8Array;
+     functions: string[];
+     clock?: number;
+@@ -481,6 +481,8 @@ export declare class Sandbox {
+     static defaultModule(): string | URL;
+     /** A new sandbox; loads (and caches) the default module unless `opts.module` is given. */
+     static create(opts?: SandboxOptions): Promise<Sandbox>;
++    /** DXOS patch: a new sandbox whose VM is a copy of `image` (`Sandbox.image()`), its host functions bound from `opts` by name. */
++    static fromImage(image: SandboxImage, opts?: SandboxOptions): Promise<Sandbox>;
+     /**
+      * Continues a task from its dump (`Task.suspend()`, or a host-driven `Run.dump()`) in
+      * a new sandbox made from `opts` (the same host functions, by name, as the one that
+@@ -684,6 +686,8 @@ export declare class Sandbox {
+      * live examples walk it cell by cell).
+      */
+     heapView(): Uint8Array;
++    /** DXOS patch: the VM as an image, taken between runs after a full collection. Same build only. */
++    image(): SandboxImage;
+     /**
+      * Where the run waits on open host call `id` (D3054): the `await` (or `yield`) of the
+      * innermost suspended activation waiting on the call, directly or through promise
+@@ -754,3 +758,6 @@ export declare class Sandbox {
+     private complete;
+ }
+ export {};
++
++/** DXOS patch: a VM image with what a sandbox keeps beside it. */
++export type SandboxImage = RawImage;
+diff --git a/dist/sandbox.js b/dist/sandbox.js
+index 0259badfcec342684e721037962dd723b96b71fe..10a9cf75aaeab849832fc0c6c1bcf0a003da87c2 100644
+--- a/dist/sandbox.js
++++ b/dist/sandbox.js
+@@ -307,6 +307,10 @@ export class Sandbox {
+     static async create(opts = {}) {
+         return new this({ ...opts, module: opts.module ?? (await loadModule(this.defaultModule())) });
+     }
++    /** DXOS patch: a new sandbox whose VM is a copy of `image` (`Sandbox.image()`), its host functions bound from `opts` by name. */
++    static async fromImage(image, opts = {}) {
++        return new this({ ...opts, module: opts.module ?? (await loadModule(this.defaultModule())) }, image);
++    }
+     /**
+      * Continues a task from its dump (`Task.suspend()`, or a host-driven `Run.dump()`) in
+      * a new sandbox made from `opts` (the same host functions, by name, as the one that
+@@ -1393,6 +1397,26 @@ export class Sandbox {
+         this.alive();
+         return this.arena();
+     }
++    /**
++     * DXOS patch: the VM as an image, taken between runs after a full collection, for
++     * `Sandbox.fromImage` to start new sandboxes from (the mechanism `takeImage` uses for the
++     * dump module). Same build only: the image is the arena as is.
++     */
++    image() {
++        this.alive();
++        if (this.active) {
++            throw new SandboxError("misuse", "an image is taken between runs");
++        }
++        this.collect();
++        return {
++            image: this.arena().slice(),
++            functions: [...this.fnNames],
++            namespaces: [...this.namespaces],
++            fnHandles: [...this.fnHandles],
++            globals: [...this.globalNames],
++            clock: this.clock,
++        };
++    }
+     /**
+      * Where the run waits on open host call `id` (D3054): the `await` (or `yield`) of the
+      * innermost suspended activation waiting on the call, directly or through promise

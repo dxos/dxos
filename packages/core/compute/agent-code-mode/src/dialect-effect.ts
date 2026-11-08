@@ -46,7 +46,6 @@ export const EffectDialect: Dialect = {
     `return await runEffect(Effect.gen(function* () {\n${code}\n}));`,
 
   bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
-    const describe = makeDescriber({ syntax: EFFECT_HINTS, skills });
     return {
       // The namespaces the code is written against, exactly as a module would import them.
       Effect,
@@ -67,22 +66,13 @@ export const EffectDialect: Dialect = {
         ),
       ),
 
-      // Described against the code's own database, so a printed object carries the relations, children
-      // and referrers around it — what the model cannot see by reading its fields.
-      print: (...values: unknown[]) =>
-        Effect.forEach(values, describe).pipe(
-          Effect.map((lines) => print(...lines)),
-          Effect.provideContext(runtime),
-        ),
+      print: makeEffectPrint({ runtime, skills, print }),
 
       /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
       loadDocs,
 
       /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
-      catalog: renderCatalog({
-        operations,
-        types: describeTypes(Context.get(runtime, Database.Service).db),
-      }),
+      catalog: renderCatalog({ operations, types: describeTypes(Context.get(runtime, Database.Service).db) }),
 
       /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
       runEffect: RuntimeProvider.runPromise(Effect.succeed(runtime)),
@@ -143,6 +133,36 @@ export const EffectDialect: Dialect = {
     ${renderEffectTools(operations)}
   `,
 };
+
+/**
+ * The Effect dialect's `print`: each value described against the code's own database, so a printed
+ * object carries the relations, children and referrers around it — what the model cannot see by
+ * reading its fields. Exported for a sandbox that builds the rest of the bindings elsewhere.
+ */
+export const makeEffectPrint = ({
+  runtime,
+  skills,
+  print,
+}: Pick<BindingsContext, 'runtime' | 'skills' | 'print'>): ((...values: unknown[]) => Effect.Effect<void>) => {
+  const describe = makeDescriber({ syntax: EFFECT_HINTS, skills });
+  return (...values) =>
+    Effect.forEach(values, describe).pipe(
+      Effect.map((lines) => print(...lines)),
+      Effect.provideContext(runtime),
+    );
+};
+
+/** The Effect dialect's `DOCS`: the static reference and the turn's catalog, as one plain object. */
+export const loadEffectDocs = ({
+  runtime,
+  operations,
+}: Pick<BindingsContext, 'runtime' | 'operations'>): Effect.Effect<Readonly<Record<string, string>>> =>
+  loadDocs.pipe(
+    Effect.map((docs) => ({
+      ...docs,
+      ...renderCatalog({ operations, types: describeTypes(Context.get(runtime, Database.Service).db) }),
+    })),
+  );
 
 /** The code a printed object's hints show, in this dialect: each fetches the group it counts. */
 const EFFECT_HINTS: HintSyntax = {

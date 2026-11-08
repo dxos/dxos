@@ -1,0 +1,49 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "scripts",
+    "src",
+    "src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../agent-code-mode"
+    },
+    {
+      "path": "../agent-runtime"
+    },
+    {
+      "path": "../assistant"
+    },
+    {
+      "path": "../compute"
+    }
+  ]
+}

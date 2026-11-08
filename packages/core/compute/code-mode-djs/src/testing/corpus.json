@@ -1,0 +1,1373 @@
+[
+  {
+    "id": "docs-b6f70e924c",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/README.md:8",
+    "code": "yield* print(Object.keys(DOCS));\nyield* print(DOCS['queries.md']);\nyield* print(DOCS['operations.md'].slice(0, 400));"
+  },
+  {
+    "id": "docs-e982d3bcfd",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/README.md:45",
+    "code": "const typeKeys = DOCS['catalog/types.md'].match(/dxn:[^\\s`]+/g);\nconst operationKeys = DOCS['catalog/operations.md'].match(/dxn:[^\\s`']+/g) ?? [];\nyield* print(typeKeys.length, 'types;', operationKeys.length, 'operations');\nyield* print(DOCS['catalog/types.md'].split('\\n').filter((line) => line.includes('organization')).join('\\n'));"
+  },
+  {
+    "id": "docs-aeb968ce67",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/README.md:56",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');"
+  },
+  {
+    "id": "docs-17f3eedd61",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:10",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');"
+  },
+  {
+    "id": "docs-3f2b519a20",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:18",
+    "code": "const created = yield* Database.add(Obj.make(Task, { title: 'New', status: 'open' }));\nyield* print('created', created.id);"
+  },
+  {
+    "id": "docs-7bce43d6da",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:28",
+    "code": "Obj.update(task, (task) => {\n  task.status = 'done';\n});"
+  },
+  {
+    "id": "docs-1e2e1e4274",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:36",
+    "code": "yield* Database.remove(task);"
+  },
+  {
+    "id": "docs-b974b50212",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:50",
+    "code": "const Person = yield* Database.resolve('dxn:com.example.type.person:0.1.0');\nconst owner = yield* Database.add(Obj.make(Person, { name: 'Ada' }));\nyield* Database.add(Obj.make(Task, { title: 'Review', status: 'open', owner: Ref.make(owner) }));"
+  },
+  {
+    "id": "docs-1a530d13f4",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:60",
+    "code": "for (const ref of project.tasks) {\n  const loaded = yield* Effect.result(Database.load(ref));\n  if (loaded._tag === 'Failure') {\n    yield* print('missing', ref.uri);\n    continue;\n  }\n  yield* print(loaded.success.title);\n}"
+  },
+  {
+    "id": "docs-b310662644",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:77",
+    "code": "const Assigned = yield* Database.resolve('dxn:com.example.relation.assigned:0.1.0');\nyield* Database.add(Relation.make(Assigned, { [Relation.Source]: owner, [Relation.Target]: task, role: 'reviewer' }));"
+  },
+  {
+    "id": "docs-9451ef8a2d",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/database.md:89",
+    "code": "Obj.setParent(task, project);\nyield* print(Obj.getParent(task)?.name);"
+  },
+  {
+    "id": "docs-d030e4a6eb",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/errors.md:7",
+    "code": "const result = yield* Effect.result(Database.load(ref));\nif (result._tag === 'Success') {\n  yield* print(result.success.title);\n} else {\n  yield* print('failed', String(result.failure));\n}"
+  },
+  {
+    "id": "docs-e1262f68ce",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/errors.md:26",
+    "code": "const exit = yield* Effect.exit(Operation.invoke(Score, { title: 'Write the docs' }));\nyield* print(exit._tag === 'Success' ? exit.value : String(exit.cause));"
+  },
+  {
+    "id": "docs-d8bbb8a14e",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/operations.md:6",
+    "code": "const Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst score = yield* Operation.invoke(Score, { title: 'Write the docs' });"
+  },
+  {
+    "id": "docs-43feb33563",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/operations.md:27",
+    "code": "const exit = yield* Effect.exit(Operation.invoke(Score, { title: 'Write the docs' }));\nif (exit._tag === 'Failure') {\n  yield* print('failed', String(exit.cause));\n} else {\n  yield* print('score', exit.value);\n}"
+  },
+  {
+    "id": "docs-2225f12c3b",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/printing.md:8",
+    "code": "const [task] = yield* Database.query(Filter.type(Task, { title: 'Write' })).run;\nyield* print(task);"
+  },
+  {
+    "id": "docs-366514c379",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/printing.md:13",
+    "code": "com.example.type.task 01J… \"Write\"\n  title: \"Write\"\n  status: \"open\"\n  owner: → com.example.type.person 01J… \"Ada\"\n  parent: → com.example.type.project 01J… \"Launch\"\n  relations: in: assigned ×1\n  referenced by: project.tasks ×1\n  fetch:\n    yield* Database.query(Query.select(Filter.id('01J…')).targetOf('dxn:com.example.relation.assigned:0.1.0')).run  // 1 in assigned\n    yield* Database.query(Query.select(Filter.id('01J…')).referencedBy('dxn:com.example.type.project:0.1.0', 'tasks')).run  // 1 project.tasks"
+  },
+  {
+    "id": "docs-b10c8436a7",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:7",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst open = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open', open.length);"
+  },
+  {
+    "id": "docs-b9fd431b6f",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:18",
+    "code": "Filter.type(Task, { status: 'open' });\nFilter.type(Task, { priority: Filter.gt(3) }); // also gte, lt, lte, neq\nFilter.type(Task, { priority: Filter.between(1, 5) });\nFilter.type(Task, { tags: Filter.contains('urgent') }); // an array field that holds the value"
+  },
+  {
+    "id": "docs-666f6efd0b",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:27",
+    "code": "const [task] = yield* Database.query(Filter.id(id)).run;"
+  },
+  {
+    "id": "docs-9e23426faf",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:36",
+    "code": "Filter.type(Task, { status: Filter.or(Filter.eq('open'), Filter.eq('blocked')) });\nFilter.and(Filter.type(Task), Filter.not(Filter.type(Task, { status: 'done' })));"
+  },
+  {
+    "id": "docs-dfd48d29bd",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:46",
+    "code": "const top =\n  yield* Database.query(Query.select(Filter.type(Task)).orderBy(Order.property('priority', 'desc')).limit(3)).run;"
+  },
+  {
+    "id": "docs-a3a65d9cb0",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:58",
+    "code": "const Person = yield* Database.resolve('dxn:com.example.type.person:0.1.0');\nconst owners = yield* Database.query(Query.select(Filter.type(Task, { status: 'open' })).reference('owner')).run;\nconst adasTasks =\n  yield* Database.query(Query.select(Filter.type(Person, { name: 'Ada' })).referencedBy(Task, 'owner')).run;"
+  },
+  {
+    "id": "docs-21a7a2013f",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:70",
+    "code": "const Assigned = yield* Database.resolve('dxn:com.example.relation.assigned:0.1.0');\nconst assigned = yield* Database.query(Query.select(Filter.id(ada.id)).sourceOf(Assigned)).run;\nconst tasks = yield* Database.query(Query.select(Filter.id(ada.id)).sourceOf(Assigned).target()).run;\nyield* print(assigned.map((relation) => relation.role));"
+  },
+  {
+    "id": "docs-72bec2d461",
+    "origin": "docs",
+    "source": "packages/core/compute/agent-code-mode/src/docs/queries.md:81",
+    "code": "const children = yield* Database.query(Query.select(Filter.id(project.id)).children()).run;\nconst tasksOf = yield* Database.query(Filter.and(Filter.type(Task), Filter.childOf(project))).run;\nconst roots = yield* Database.query(Filter.and(Filter.type(Task), Filter.hasParent(false))).run;"
+  },
+  {
+    "id": "live-0d2437c2ec",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ19",
+    "code": "const EnableSkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.enableSkills');\nconst result = yield* Effect.result(Operation.invoke(EnableSkills, { keys: ['sandbox'] }));\nyield* print(JSON.stringify(result, null, 2));"
+  },
+  {
+    "id": "live-8841f4fce3",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1A",
+    "code": "const QuerySkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.querySkills');\nconst result = yield* Operation.invoke(QuerySkills, {});\nyield* print(JSON.stringify(result, null, 2).slice(0, 3000));"
+  },
+  {
+    "id": "live-9ba2c40875",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1B",
+    "code": "const QuerySkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.querySkills');\nconst result = yield* Operation.invoke(QuerySkills, {});\nconst sandbox = result.find(s => s.name && s.name.toLowerCase().includes('sandbox'));\nyield* print(JSON.stringify(sandbox, null, 2));"
+  },
+  {
+    "id": "live-11d33967dd",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1C",
+    "code": "const QuerySkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.querySkills');\nconst result = yield* Operation.invoke(QuerySkills, {});\nconst sandbox = result.find(s => s.name && s.name.toLowerCase().includes('sandbox'));\nyield* print(Object.keys(sandbox));\nyield* print(JSON.stringify(sandbox.id));\n\nconst EnableSkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.enableSkills');\nconst r2 = yield* Effect.result(Operation.invoke(EnableSkills, { keys: ['Sandbox'] }));\nyield* print(JSON.stringify(r2));\nconst r3 = yield* Effect.result(Operation.invoke(EnableSkills, { keys: [sandbox.id] }));\nyield* print(JSON.stringify(r3));"
+  },
+  {
+    "id": "live-5663046120",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1D",
+    "code": "// search docs for enableSkills key format\nconst files = Object.keys(DOCS);\nfor (const f of files) {\n  if (DOCS[f].includes('enableSkills') || DOCS[f].toLowerCase().includes('skill key')) {\n    console.log(f);\n  }\n}\nconsole.log(DOCS['operations.md'].slice(0,2000));"
+  },
+  {
+    "id": "live-c0251a4a7f",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1E",
+    "code": "yield* print(DOCS['operations.md'].slice(0,3000));"
+  },
+  {
+    "id": "live-e1a7f845b9",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1F",
+    "code": "const QueryPlugins = yield* Database.resolve('dxn:org.dxos.operation.registry.queryPlugins');\nconst plugins = yield* Operation.invoke(QueryPlugins, {});\nconst sandbox = plugins.filter(p => (p.id||'').toLowerCase().includes('sandbox') || (p.name||'').toLowerCase().includes('sandbox'));\nyield* print(JSON.stringify(sandbox, null, 2));"
+  },
+  {
+    "id": "live-69d690e822",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1G",
+    "code": "const QueryPlugins = yield* Database.resolve('dxn:org.dxos.operation.registry.queryPlugins');\nconst plugins = yield* Operation.invoke(QueryPlugins, {});\nyield* print(typeof plugins, JSON.stringify(plugins).slice(0,2000));"
+  },
+  {
+    "id": "live-57892f7b55",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1H",
+    "code": "const QueryPlugins = yield* Database.resolve('dxn:org.dxos.operation.registry.queryPlugins');\nconst plugins = yield* Operation.invoke(QueryPlugins, {});\nconst sandbox = plugins.plugins.filter(p => p.id.toLowerCase().includes('sandbox'));\nyield* print(JSON.stringify(sandbox, null, 2));"
+  },
+  {
+    "id": "live-7ab156452f",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1J",
+    "code": "const EnableSkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.enableSkills');\nconst tries = ['org.dxos.plugin.sandbox', 'org.dxos.skill.sandbox', 'sandbox-skill', 'SANDBOX'];\nfor (const t of tries) {\n  const r = yield* Effect.result(Operation.invoke(EnableSkills, { keys: [t] }));\n  yield* print(t, JSON.stringify(r));\n}"
+  },
+  {
+    "id": "live-d7a59166b8",
+    "origin": "live",
+    "conversation": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1K",
+    "code": "const Create = yield* Database.resolve('dxn:org.dxos.operation.sandbox.create');\nconst sandbox = yield* Operation.invoke(Create, {});\nyield* print(JSON.stringify(sandbox, null, 2));"
+  },
+  {
+    "id": "live-068c17c2b5",
+    "origin": "live",
+    "conversation": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1M",
+    "code": "const drawings = yield* Database.query(Filter.type(types['org.dxos.type.drawing'])).run;\nconst chats = yield* Database.query(Filter.type(types['org.dxos.type.assistant.chat'])).run;\nyield* print('drawings', drawings.length, 'chats', chats.length);"
+  },
+  {
+    "id": "live-ca05cbbd60",
+    "origin": "live",
+    "conversation": "BCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1N",
+    "code": "const message = yield* Database.resolve('echo://BCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC/01JZZZZZZZZZZZZZZZZZZZZZZ1');\nyield* print(message);"
+  },
+  {
+    "id": "live-45df9d50dc",
+    "origin": "live",
+    "conversation": "BCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1P",
+    "code": "const message = yield* Database.resolve('echo://BCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC/01JZZZZZZZZZZZZZZZZZZZZZZ1');\nyield* print(message.blocks[0].text);"
+  },
+  {
+    "id": "live-9c0dfac1e4",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1Q",
+    "code": "const Project = yield* Database.resolve('dxn:org.dxos.type.project:0.6.0');\nconst projects = yield* Database.query(Filter.type(Project)).run;\nyield* print('projects', projects.map(p => ({id: p.id, name: p.name})));"
+  },
+  {
+    "id": "live-07c9e7c1c0",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1R",
+    "code": "const ProjectsGet = yield* Database.resolve('dxn:org.dxos.operation.projects.get');\nconst TasksList = yield* Database.resolve('dxn:org.dxos.operation.tasks.list');\n\nconst project = projects[0];\nconst result = yield* Operation.invoke(ProjectsGet, { project: Ref.make(project) });\nyield* print('project', JSON.stringify(result, null, 2).slice(0, 3000));"
+  },
+  {
+    "id": "live-c32cc2d30c",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1S",
+    "code": "const Project = yield* Database.resolve('dxn:org.dxos.type.project:0.6.0');\nconst projects = yield* Database.query(Filter.type(Project)).run;\nconst project = projects[0];\n\nconst ProjectsGet = yield* Database.resolve('dxn:org.dxos.operation.projects.get');\nconst result = yield* Operation.invoke(ProjectsGet, { project: Ref.make(project) });\nyield* print('project', JSON.stringify(result, null, 2).slice(0, 3000));"
+  },
+  {
+    "id": "live-b406afa598",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1T",
+    "code": "const Project = yield* Database.resolve('dxn:org.dxos.type.project:0.6.0');\nconst projects = yield* Database.query(Filter.type(Project)).run;\nconst project = projects[0];\n\nconst TasksList = yield* Database.resolve('dxn:org.dxos.operation.tasks.list');\nconst taskSet = project.taskSet;\nconst result = yield* Operation.invoke(TasksList, { taskSet, includeSubtasks: true });\nyield* print('tasks', JSON.stringify(result, null, 2).slice(0, 6000));"
+  },
+  {
+    "id": "live-d176ad9ebd",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1V",
+    "code": "const Project = yield* Database.resolve('dxn:org.dxos.type.project:0.6.0');\nconst projects = yield* Database.query(Filter.type(Project)).run;\nconst project = projects[0];\n\nconst TasksList = yield* Database.resolve('dxn:org.dxos.operation.tasks.list');\nconst taskSet = project.taskSet;\nconst result = yield* Operation.invoke(TasksList, { taskSet, includeSubtasks: true });\nfor (const t of result.tasks) {\n  yield* print('---', t.id, t.title, t.status);\n  yield* print(t.description);\n}"
+  },
+  {
+    "id": "live-29276b1706",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1W",
+    "code": "const Sandbox = yield* Database.resolve('dxn:org.dxos.type.sandbox:0.1.0');\nconst sandboxes = yield* Database.query(Filter.type(Sandbox)).run;\nyield* print('sandboxes', sandboxes.map(s => ({id: s.id, name: s.name})));"
+  },
+  {
+    "id": "live-a89b8fb17d",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1X",
+    "code": "const SandboxCreate = yield* Database.resolve('dxn:org.dxos.operation.sandbox.create');\nconst result = yield* Operation.invoke(SandboxCreate, { name: 'World Clock' });\nyield* print('sandbox', JSON.stringify(result, null, 2));"
+  },
+  {
+    "id": "live-8a1626e470",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1Y",
+    "code": "const Sandbox = yield* Database.resolve('dxn:org.dxos.type.sandbox:0.1.0');\nconst sandboxes = yield* Database.query(Filter.type(Sandbox)).run;\nconst sandbox = sandboxes[0];\n\nconst Exec = yield* Database.resolve('dxn:org.dxos.operation.sandbox.exec');\nconst r = yield* Operation.invoke(Exec, {\n  sandbox: Ref.make(sandbox),\n  command: `mkdir -p /root/world-clock && cat > /root/world-clock/package.json <<'EOF'\n{\"name\":\"world-clock\",\"version\":\"0.1.0\",\"private\":true,\"type\":\"module\"}\nEOF\ncat /root/world-clock/package.json`,\n  cwd: '/root/world-clock',\n});\nyield* print(JSON.stringify(r, null, 2));"
+  },
+  {
+    "id": "live-a66a58f330",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ1Z",
+    "code": "const Sandbox = yield* Database.resolve('dxn:org.dxos.type.sandbox:0.1.0');\nconst sandboxes = yield* Database.query(Filter.type(Sandbox)).run;\nconst sandbox = sandboxes[0];\n\nconst Exec = yield* Database.resolve('dxn:org.dxos.operation.sandbox.exec');\nconst r = yield* Operation.invoke(Exec, {\n  sandbox: Ref.make(sandbox),\n  command: `mkdir -p /root/world-clock`,\n});\nyield* print(JSON.stringify(r, null, 2));"
+  },
+  {
+    "id": "live-b72f36e602",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ20",
+    "code": "const Task = yield* Database.resolve('dxn:org.dxos.type.task:0.6.0');\nconst tasks = yield* Database.query(Filter.type(Task)).run;\nfor (const t of tasks) {\n  yield* print(t.id, t.title, t.status);\n}"
+  },
+  {
+    "id": "live-57c6b30fc5",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ21",
+    "code": "// Try resolving the Clock type the plugin registered\ntry {\n  const ClockType = yield* Database.resolve('dxn:org.example.type.worldClock:0.2.0');\n  yield* print('Clock type resolved', JSON.stringify(ClockType).slice(0, 500));\n} catch (e) {\n  yield* print('error resolving', String(e));\n}"
+  },
+  {
+    "id": "live-16148c267a",
+    "origin": "live",
+    "conversation": "BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ22",
+    "code": "// Open the resolve-navigation-targets to confirm the Clocks page shows up as navigable\nconst ResolveNav = yield* Database.resolve('dxn:org.dxos.operation.appToolkit.resolveNavigationTargets');\nconst r = yield* Operation.invoke(ResolveNav, {});\nconst clocksTargets = (r.targets || r).filter ? (r.targets || r).filter(t => JSON.stringify(t).toLowerCase().includes('clock')) : r;\nyield* print(JSON.stringify(clocksTargets, null, 2).slice(0, 2000));"
+  },
+  {
+    "id": "live-d87da81b3b",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ23",
+    "code": "const result = yield* Operation.invoke(ops['dxn:org.dxos.operation.projects.get'], {\n  project: 'echo://BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/01JZZZZZZZZZZZZZZZZZZZZZZ2'\n});\nyield* print(JSON.stringify(result, null, 2));"
+  },
+  {
+    "id": "live-67185488b9",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ24",
+    "code": "const result = yield* Operation.invoke(ops['dxn:org.dxos.operation.projects.get'], {\n  project: { \"/\": \"echo:///01JZZZZZZZZZZZZZZZZZZZZZZ2\" }\n});\nyield* print(JSON.stringify(result, null, 2));"
+  },
+  {
+    "id": "live-4704cca9e1",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ25",
+    "code": "const milestones = yield* Operation.invoke(ops['dxn:org.dxos.operation.tasks.listMilestone'], {\n  project: { \"/\": \"echo:///01JZZZZZZZZZZZZZZZZZZZZZZ2\" }\n});\nconst tasks = yield* Operation.invoke(ops['dxn:org.dxos.operation.tasks.list'], {\n  project: { \"/\": \"echo:///01JZZZZZZZZZZZZZZZZZZZZZZ2\" },\n  includeSubtasks: true\n});\nconst objs = yield* Database.query(Filter.ids('01JZZZZZZZZZZZZZZZZZZZZZZ2')).run;\nyield* print('milestones', JSON.stringify(milestones, null, 2));\nyield* print('tasks', JSON.stringify(tasks, null, 2));\nyield* print('project object', JSON.stringify(objs[0], null, 2));"
+  },
+  {
+    "id": "live-45c1988783",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ26",
+    "code": "const milestones = yield* Operation.invoke(ops['dxn:org.dxos.operation.tasks.listMilestone'], {\n  project: { \"/\": \"echo:///01JZZZZZZZZZZZZZZZZZZZZZZ2\" }\n});\nconst tasks = yield* Operation.invoke(ops['dxn:org.dxos.operation.tasks.list'], {\n  project: { \"/\": \"echo:///01JZZZZZZZZZZZZZZZZZZZZZZ2\" },\n  includeSubtasks: true\n});\nyield* print('milestones', JSON.stringify(milestones, null, 2));\nyield* print('tasks', JSON.stringify(tasks, null, 2));\n\nconst objs = yield* Operation.invoke(ops['dxn:org.dxos.operation.space.getObjects'], {\n  objects: ['echo:///01JZZZZZZZZZZZZZZZZZZZZZZ2']\n});\nyield* print('project detail', JSON.stringify(objs, null, 2));"
+  },
+  {
+    "id": "live-75c13f0400",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ27",
+    "code": "const tasks = yield* Operation.invoke(ops['dxn:org.dxos.operation.tasks.list'], {\n  project: { \"/\": \"echo:///01JZZZZZZZZZZZZZZZZZZZZZZ2\" },\n  includeSubtasks: true\n});\nconst list = tasks.tasks.map(t => ({title: t.title, status: t.status, parent: !!t.parentTask, priority: t.priority}));\nyield* print(JSON.stringify(list, null, 2));\n\nconst objs = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nconst proj = objs.find(o => o.id === '01JZZZZZZZZZZZZZZZZZZZZZZ2');\nyield* print('proj', JSON.stringify(proj, null, 2));"
+  },
+  {
+    "id": "live-6d2d5c9085",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ28",
+    "code": "const projects = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nfor (const p of projects) {\n  yield* print('PROJECT', p.id, p.name, 'taskSet:', p.taskSet ? 'yes' : 'no');\n}"
+  },
+  {
+    "id": "live-544c7b74c4",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ29",
+    "code": "const projects = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nfor (const p of projects) {\n  const ts = yield* Database.load(p.taskSet);\n  const tasks = yield* Effect.all(ts.tasks.map(t => Database.load(t)));\n  yield* print('=== PROJECT', p.name, 'taskSet', ts.id, 'n=', tasks.length);\n  for (const t of tasks) {\n    yield* print(' -', t.id, '|', t.title, '|', t.status ?? '');\n  }\n}"
+  },
+  {
+    "id": "live-27da4f0a0f",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2A",
+    "code": "const projects = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nfor (const p of projects) {\n  const tsR = yield* Effect.result(Database.load(p.taskSet));\n  if (tsR._tag !== 'Success') { yield* print('=== PROJECT', p.name, 'taskSet MISSING'); continue; }\n  const ts = tsR.value;\n  yield* print('=== PROJECT', p.name, 'taskSet', ts.id, 'n=', ts.tasks.length);\n  for (const tr of ts.tasks) {\n    const r = yield* Effect.result(Database.load(tr));\n    if (r._tag !== 'Success') { yield* print('  - <missing>'); continue; }\n    const t = r.value;\n    yield* print(' -', t.id, '|', t.title, '|', t.status ?? '');\n  }\n}"
+  },
+  {
+    "id": "live-96122a21ec",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2B",
+    "code": "const projects = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nconst p = projects[0];\nconst r = yield* Effect.result(Database.load(p.taskSet));\nyield* print('tag', r._tag, 'keys', Object.keys(r));"
+  },
+  {
+    "id": "live-0ab22d92cc",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2C",
+    "code": "const projects = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nfor (const p of projects) {\n  const tsR = yield* Effect.result(Database.load(p.taskSet));\n  if (!tsR.success) { yield* print('=== PROJECT', p.name, 'taskSet MISSING'); continue; }\n  const ts = tsR.success;\n  yield* print('=== PROJECT', p.name, '| taskSet', ts.id, '| n=', ts.tasks.length);\n  for (const tr of ts.tasks) {\n    const r = yield* Effect.result(Database.load(tr));\n    if (!r.success) { yield* print('   - <missing>'); continue; }\n    const t = r.success;\n    yield* print('   -', t.id, '|', t.title, '|', t.status ?? '');\n  }\n}"
+  },
+  {
+    "id": "live-97241ed962",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2D",
+    "code": "const tasks = yield* Database.query(Filter.type(types['org.dxos.type.task'])).run;\nyield* print('total tasks', tasks.length);\nconst re = /index|subduct/i;\nconst hits = tasks.filter(t => re.test((t.title ?? '') + ' ' + (t.description ?? '')));\nfor (const t of hits) yield* print('*', t.id, '|', t.title, '|', t.status ?? '');"
+  },
+  {
+    "id": "live-14f526b8a2",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2E",
+    "code": "const projects = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nconst taskProject = new Map();\nfor (const p of projects) {\n  const tsR = yield* Effect.result(Database.load(p.taskSet));\n  if (!tsR.success) continue;\n  for (const tr of tsR.success.tasks) {\n    const r = yield* Effect.result(Database.load(tr));\n    if (!r.success) continue;\n    taskProject.set(r.success.id, p.name);\n  }\n}\nconst tasks = yield* Database.query(Filter.type(types['org.dxos.type.task'])).run;\nconst re = /indexer|index-core|subduction|re-index|indexing/i;\nconst hits = tasks.filter(t => re.test((t.title ?? '') + ' ' + (t.description ?? '')));\nyield* print('hits', hits.length);\nfor (const t of hits) yield* print('*', t.id, '|', taskProject.get(t.id) ?? 'NO PROJECT', '|', t.title, '|', t.status ?? '');"
+  },
+  {
+    "id": "live-7e9e23e549",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2F",
+    "code": "const projects = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nconst ps = projects.find(x => x.name === 'Platform Stability');\nconst is = projects.find(x => x.name === 'Indexer stability');\nconst psTs = yield* Database.load(ps.taskSet);\nconst isTs = yield* Database.load(is.taskSet);\nconst moveIds = ['01JZZZZZZZZZZZZZZZZZZZZZZ3','01JZZZZZZZZZZZZZZZZZZZZZZ4','01JZZZZZZZZZZZZZZZZZZZZZZ5','01JZZZZZZZZZZZZZZZZZZZZZZ6'];\nconst idxToMove = [];\nfor (let i = 0; i < psTs.tasks.length; i++) {\n  const r = yield* Effect.result(Database.load(psTs.tasks[i]));\n  if (r.success && moveIds.includes(r.success.id)) idxToMove.push(i);\n}\nyield* print('indices', JSON.stringify(idxToMove));\nconst movedRefs = idxToMove.map(i => psTs.tasks[i]);\nObj.update(psTs, (ts) => {\n  for (const i of [...idxToMove].reverse()) ts.tasks.splice(i, 1);\n});\nObj.update(isTs, (ts) => {\n  for (const r of movedRefs) ts.tasks.push(r);\n});\nyield* Database.flush();\nyield* print('PS now', psTs.tasks.length, 'IS now', isTs.tasks.length);"
+  },
+  {
+    "id": "live-1a442b989f",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2G",
+    "code": "const project = types['org.dxos.type.project'];\nconst [proj] = yield* Database.query(Filter.ids('01JZZZZZZZZZZZZZZZZZZZZZZ7')).run;\nyield* print('project', proj ? proj.name : null, proj ? proj.taskSet : null);"
+  },
+  {
+    "id": "live-4d7f75d324",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2H",
+    "code": "const [proj] = yield* Database.query(Filter.type(types['org.dxos.type.project'])).run;\nyield* print('project name', proj.name, 'id', proj.id);\nconst taskSet = yield* Database.load(proj.taskSet);\nyield* print('taskSet tasks count', taskSet.tasks.length);"
+  },
+  {
+    "id": "live-59e5e5c31e",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2J",
+    "code": "const [proj] = projects.filter(p => p.id === '01JZZZZZZZZZZZZZZZZZZZZZZ7');"
+  },
+  {
+    "id": "live-daf09ff84e",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2K",
+    "code": "const allTasks = yield* Database.query(Filter.type(types['org.dxos.type.task'])).run;\nyield* print('total tasks in space', allTasks.length);\n// sort by some notion of recency - check history dates\nconst withDates = allTasks.map(t => {\n  const created = t.history && t.history.find(h => h.event === 'created');\n  return { id: t.id, title: t.title, date: created ? created.date : null, status: t.status };\n});\nwithDates.sort((a,b) => (b.date||'').localeCompare(a.date||''));\nfor (const t of withDates.slice(0, 20)) {\n  yield* print(t.date, t.id, t.title, t.status);\n}"
+  },
+  {
+    "id": "live-fba0684b00",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2M",
+    "code": "const t = allTasks[0];\nyield* print(JSON.stringify(t.history, null, 2));"
+  },
+  {
+    "id": "live-7a0e5b57a8",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2N",
+    "code": "const allTasks = yield* Database.query(Filter.type(types['org.dxos.type.task'])).run;\nconst t = allTasks.find(x => x.id === '01JZZZZZZZZZZZZZZZZZZZZZZ8');\nyield* print(JSON.stringify(t.history, null, 2));\nyield* print('meta', JSON.stringify(Obj.getMeta ? 'has getMeta' : 'no getMeta'));"
+  },
+  {
+    "id": "live-3bf55bc45e",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2P",
+    "code": "// Let's try Obj.getMeta to see creation info\nconst allTasks = yield* Database.query(Filter.type(types['org.dxos.type.task'])).run;\nconst t = allTasks[0];\ntry {\n  const meta = Obj.getMeta(t);\n  yield* print(JSON.stringify(meta, null, 2));\n} catch(e) {\n  yield* print('error', e.message);\n}"
+  },
+  {
+    "id": "live-f9a4748cff",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2Q",
+    "code": "const now = yield* Operation.invoke(ops['dxn:org.dxos.operation.assistantToolkit.getCurrentDate'], {});\nyield* print('now', JSON.stringify(now));\n\nconst allTasks = yield* Database.query(Filter.type(types['org.dxos.type.task'])).run;\nconst createdEvents = [];\nfor (const t of allTasks) {\n  if (t.history) {\n    for (const h of t.history) {\n      if (h.event === 'created') {\n        createdEvents.push({ id: t.id, title: t.title, date: h.date, actor: h.actor ? h.actor.name : null, status: t.status });\n      }\n    }\n  }\n}\ncreatedEvents.sort((a,b)=> (b.date||'').localeCompare(a.date||''));\nyield* print(JSON.stringify(createdEvents.slice(0,20), null, 2));"
+  },
+  {
+    "id": "live-b0c5a0d7f6",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2R",
+    "code": "const results = yield* Database.query(Filter.text('Platform Stability')).run;\nyield* print('count', results.length);\nfor (const r of results) {\n  yield* print(r.id, r.__typename ?? Obj.getTypename?.(r), JSON.stringify(r).slice(0,300));\n}"
+  },
+  {
+    "id": "live-0c39616edd",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2S",
+    "code": "const [project] = yield* Database.query(Filter.id('01JZZZZZZZZZZZZZZZZZZZZZZ9')).run;\nyield* print('name', project.name);\nyield* print('description', project.description);\nyield* print('artifacts count', project.artifacts?.length);\nfor (const ref of project.artifacts ?? []) {\n  const res = yield* Effect.result(Database.load(ref));\n  if (res._tag === 'Failure') { yield* print('missing', ref.dxn?.toString?.() ?? JSON.stringify(ref)); continue; }\n  const o = res.success;\n  yield* print(o.id, Obj.getTypename ? Obj.getTypename(o) : o['@type'], o.name ?? o.title ?? '(no name)');\n}"
+  },
+  {
+    "id": "live-5e0fb5c233",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2T",
+    "code": "const [proj2] = yield* Database.query(Filter.id('01JZZZZZZZZZZZZZZZZZZZZZZ2')).run;\nyield* print(JSON.stringify(proj2, null, 2));"
+  },
+  {
+    "id": "live-d3de7423cc",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2V",
+    "code": "// Search broadly for any object referencing the \"Projects\" project id, to find a \"parent\" relationship\nconst all = yield* Database.query(Filter.everything()).run;\nyield* print('total objects', all.length);\nconst targetId = '01JZZZZZZZZZZZZZZZZZZZZZZ2';\nfor (const o of all) {\n  const s = JSON.stringify(o);\n  if (s.includes(targetId) && o.id !== targetId) {\n    yield* print('ref found in', o.id, Obj.getTypename ? Obj.getTypename(o) : o['@type'], o.name ?? o.title ?? '');\n  }\n}"
+  },
+  {
+    "id": "live-e353809a24",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2W",
+    "code": "const outline = yield* Database.load({dxn: DXN.parse('dxn:echo:@:01JZZZZZZZZZZZZZZZZZZZZZZA')}).pipe(Effect.catchAll(e=>Effect.succeed(null)));\nyield* print('outline?', outline);"
+  },
+  {
+    "id": "live-f0dc2b6fcb",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2X",
+    "code": "const [proj2] = yield* Database.query(Filter.id('01JZZZZZZZZZZZZZZZZZZZZZZ2')).run;\nconst outline = yield* Effect.result(Database.load(proj2.outline));\nyield* print('outline', JSON.stringify(outline));"
+  },
+  {
+    "id": "live-9f7861184f",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2Y",
+    "code": "// Check taskSet and instructions objects of the \"Projects\" project for any parent reference\nconst refs = {\n  instructions: '01JZZZZZZZZZZZZZZZZZZZZZZB',\n  outline: '01JZZZZZZZZZZZZZZZZZZZZZZA',\n  taskSet: '01JZZZZZZZZZZZZZZZZZZZZZZC'\n};\nfor (const [k, id] of Object.entries(refs)) {\n  const [o] = yield* Database.query(Filter.id(id)).run;\n  yield* print(k, JSON.stringify(o));\n}"
+  },
+  {
+    "id": "live-addd7093d6",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ2Z",
+    "code": "const result = yield* Operation.invoke(ops['dxn:org.dxos.operation.space.queryTypes'], {});\nconst relTypes = result.types.filter(t => t.kind === 'relation');\nfor (const t of relTypes) yield* print(t.typename);"
+  },
+  {
+    "id": "live-824fe82e13",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ30",
+    "code": "const result = yield* Effect.result(Operation.invoke(ops['dxn:org.dxos.operation.space.queryObjects'], { limit: 50 }));\nyield* print(JSON.stringify(result, null, 2));"
+  },
+  {
+    "id": "live-40e0adba54",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ31",
+    "code": "const Project = yield* Database.resolve('dxn:org.dxos.type.project:0.6.0');\nconst project = yield* Database.resolve('echo://BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE/01JZZZZZZZZZZZZZZZZZZZZZZD');\nyield* print('name', project.name, 'status', project.status, 'description', project.description);"
+  },
+  {
+    "id": "live-b28911c1ac",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ32",
+    "code": "const GetProject = yield* Database.resolve('dxn:org.dxos.operation.projects.get');\nconst result = yield* Operation.invoke(GetProject, { project: Ref.make(project) });\nyield* print(JSON.stringify(result, null, 2).slice(0, 3000));"
+  },
+  {
+    "id": "live-de3de6dc47",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ33",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\n\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst features = yield* Database.query(Filter.type(Feature)).run;\n\n// group features by their target spec id\nconst bySpec = new Map();\nfor (const f of features) {\n  if (f.spec) {\n    const id = f.spec.target?.id ?? f.spec.id ?? f.spec.dxn?.toString();\n    if (!bySpec.has(id)) bySpec.set(id, []);\n    bySpec.get(id).push(f);\n  }\n}\n\nfunction aggregateStatus(feats) {\n  const statuses = feats.map(f => f.status);\n  if (statuses.includes('failing')) return 'failing';\n  if (statuses.length > 0 && statuses.every(s => s === 'operational')) return 'operational';\n  if (statuses.some(s => s === 'operational' || s === 'prototype')) return 'prototype';\n  return 'planned';\n}\n\nfor (const s of specs) {\n  const feats = bySpec.get(s.id) ?? [];\n  yield* print(s.id, s.name, '-> features:', feats.length, 'agg status:', aggregateStatus(feats));\n}"
+  },
+  {
+    "id": "live-8ad43f95bc",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ34",
+    "code": "const Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst features = yield* Database.query(Filter.type(Feature)).run;\nconst f = features.find(f => f.spec);\nyield* print(f);\nconsole.log(f.spec);"
+  },
+  {
+    "id": "live-96505a8e4d",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ35",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst features = yield* Database.query(Filter.type(Feature)).run;\n\nconst f = features.find(f => f.spec);\nconsole.log('typeof f.spec', typeof f.spec, f.spec.constructor?.name);\nconsole.log('keys', Object.keys(f.spec));\nconsole.log('dxn', f.spec.dxn?.toString?.());"
+  },
+  {
+    "id": "live-d2e5f3af49",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ36",
+    "code": "const Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst features = yield* Database.query(Filter.type(Feature)).run;\n\nconst f = features.find(f => f.spec);\nyield* print('typeof', typeof f.spec);\nyield* print('keys', Object.keys(f.spec));\nyield* print('dxn', f.spec.dxn ? f.spec.dxn.toString() : 'no dxn prop');"
+  },
+  {
+    "id": "live-d3751758bb",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ37",
+    "code": "yield* print(DOCS['database.md']);"
+  },
+  {
+    "id": "live-d335a9380a",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ38",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\n\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst rootIds = ['01JZZZZZZZZZZZZZZZZZZZZZZE','01JZZZZZZZZZZZZZZZZZZZZZZF','01JZZZZZZZZZZZZZZZZZZZZZZG','01JZZZZZZZZZZZZZZZZZZZZZZH'];\nconst rootSpecs = rootIds.map(id => specs.find(s => s.id === id));\n\n// Create one Feature per root spec, pointing to it via `spec`\nconst newFeatures = [];\nfor (const s of rootSpecs) {\n  const feat = yield* Database.add(Obj.make(Feature, {\n    name: s.name,\n    description: `Top-level area covering the \"${s.name}\" spec and its nested features.`,\n    status: 'prototype',\n    spec: Ref.make(s),\n  }));\n  newFeatures.push(feat);\n}\n\nconst dxosSpec = yield* Database.add(Obj.make(Spec, {\n  name: 'DXOS',\n  description: 'Root spec nesting all existing top-level specs as features.',\n  features: newFeatures.map(f => Ref.make(f)),\n}));\n\nyield* Database.flush();\nyield* print('created DXOS spec', dxosSpec.id);\nyield* print(dxosSpec);"
+  },
+  {
+    "id": "live-30d825b6b1",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ39",
+    "code": "const res = yield* Tools[\"mcp__github__search_code\"]({ query: \"filename:PLUGIN.mdl org:dxos\" });\nyield* print(JSON.stringify(res).slice(0, 3000));"
+  },
+  {
+    "id": "live-4a9cc5c321",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3A",
+    "code": "const r1 = yield* Tools[\"mcp__github__get_file_contents\"]({ owner: 'dxos', repo: 'dxos', path: 'packages/plugins/plugin-connector/PLUGIN.mdl' });\nyield* print(typeof r1);\nyield* print(Object.keys(r1));\nyield* print(JSON.stringify(r1, null, 2).slice(0, 2000));"
+  },
+  {
+    "id": "live-9774eb790f",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3B",
+    "code": "const r1 = yield* Tools[\"mcp__github__get_file_contents\"]({ owner: 'dxos', repo: 'dxos', path: 'packages/plugins/plugin-connector/PLUGIN.mdl' });\nyield* print(r1);"
+  },
+  {
+    "id": "live-7d331c9a3e",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3C",
+    "code": "const contents = globalThis.__mdlContents;\nconst text = contents['packages/plugins/plugin-tasks/PLUGIN.mdl'];\nyield* print(text.slice(0, 3000));"
+  },
+  {
+    "id": "live-a9ffd8e4ac",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3D",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\n\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst dxosSpec = specs.find(s => s.id === '01JZZZZZZZZZZZZZZZZZZZZZZJ');\nyield* print('DXOS spec found:', !!dxosSpec, dxosSpec?.name);\n\nconst newSpecIds = ['01JZZZZZZZZZZZZZZZZZZZZZZK','01JZZZZZZZZZZZZZZZZZZZZZZM','01JZZZZZZZZZZZZZZZZZZZZZZN','01JZZZZZZZZZZZZZZZZZZZZZZP'];\nconst newSpecObjs = newSpecIds.map(id => specs.find(s => s.id === id));\n\nconst newFeatures = [];\nfor (const s of newSpecObjs) {\n  const feat = yield* Database.add(Obj.make(Feature, {\n    name: s.name,\n    description: `Top-level area covering the \"${s.name}\" spec (imported from GitHub MDL) and its nested features.`,\n    status: 'prototype',\n    spec: Ref.make(s),\n  }));\n  newFeatures.push(feat);\n}\n\nObj.update(dxosSpec, (d) => {\n  d.features = [...d.features, ...newFeatures.map(f => Ref.make(f))];\n});\n\nyield* Database.flush();\nyield* print('Updated DXOS spec, now has', dxosSpec.features.length, 'features');\nyield* print(dxosSpec);"
+  },
+  {
+    "id": "live-f04d5ac244",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3E",
+    "code": "const QueryObjects = yield* Database.resolve('dxn:org.dxos.operation.space.queryObjects');\nconst res = yield* Operation.invoke(QueryObjects, { text: 'MCP', includeContent: true, limit: 100 });\nyield* print(res);"
+  },
+  {
+    "id": "live-03b517f2d6",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3F",
+    "code": "const QueryObjects = yield* Database.resolve('dxn:org.dxos.operation.space.queryObjects');\nfor (const typename of ['org.dxos.type.projects.spec', 'org.dxos.type.specDocument', 'org.dxos.type.project']) {\n  const res = yield* Operation.invoke(QueryObjects, { typename, includeContent: true, limit: 200 });\n  yield* print('TYPE', typename, 'COUNT', res.results?.length);\n  for (const r of res.results ?? []) {\n    yield* print(r['@'], r.name ?? r.title ?? '', r.id);\n  }\n}"
+  },
+  {
+    "id": "live-c6618727d2",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3G",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nfor (const s of specs) {\n  if (['Operations and skills over MCP', 'MCP spec compliance (2026-07-28)', 'Local Claude Code chat', 'Features'].includes(s.name)) {\n    yield* print(s);\n  }\n}"
+  },
+  {
+    "id": "live-3c85682b77",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3H",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst byName = new Map();\nfor (const s of specs) {\n  const n = s.name ?? '(unnamed)';\n  if (!byName.has(n)) byName.set(n, []);\n  byName.get(n).push(s);\n}\nconst dupes = [...byName.entries()].filter(([n, arr]) => arr.length > 1).sort((a,b) => a[0].localeCompare(b[0]));\nfor (const [name, arr] of dupes) {\n  yield* print('===', name);\n  for (const s of arr.sort((a,b) => a.id.localeCompare(b.id))) {\n    const children = yield* Database.query(Query.select(Filter.id(s.id)).children()).run;\n    const refs = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.feature:0.3.0', 'spec')).run;\n    yield* print(s.id,\n      'parent=', s.parent?.id ?? '-',\n      'project=', s.project?.id ?? '-',\n      'features=', s.features?.length ?? 0,\n      'layout=', Object.keys(s.layout?.positions ?? {}).length,\n      'children=', children.map(c => c.id).join(','),\n      'specRefs=', refs.map(r => r.id).join(',')\n    );\n  }\n}"
+  },
+  {
+    "id": "live-6bffac7e27",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3J",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst byName = new Map();\nfor (const s of specs) {\n  const n = s.name ?? '(unnamed)';\n  if (!byName.has(n)) byName.set(n, []);\n  byName.get(n).push(s);\n}\nconst dupes = [...byName.entries()].filter(([n, arr]) => arr.length > 1).sort((a,b) => a[0].localeCompare(b[0]));\nyield* print('pairs', dupes.length);\nfor (const [name, arr] of dupes) {\n  const rows = [];\n  for (const s of arr) {\n    const refs = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.feature:0.3.0', 'spec')).run;\n    const children = yield* Database.query(Query.select(Filter.id(s.id)).children()).run;\n    const ctx = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.contextBinding:0.1.0')).run;\n    rows.push({ id: s.id, refs: refs.map(r => r.id).join(','), children: children.map(c => c.id).join(','), childCount: children.length, ctx: ctx.length });\n  }\n  rows.sort((a,b) => (a.refs ? 0 : 1) - (b.refs ? 0 : 1));\n  const live = rows[0], dup = rows[1];\n  yield* print(name, '|| live', live.id, 'refs', live.refs || '-', 'children', live.childCount, 'ctx', live.ctx, '|| dup', dup.id, 'refs', dup.refs || '-', 'children', dup.childCount, 'ctx', dup.ctx);\n}"
+  },
+  {
+    "id": "live-75f6ee2477",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3K",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst ContextBinding = yield* Database.resolve('dxn:org.dxos.type.contextBinding:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst byName = new Map();\nfor (const s of specs) {\n  const n = s.name ?? '(unnamed)';\n  if (!byName.has(n)) byName.set(n, []);\n  byName.get(n).push(s);\n}\nconst dupes = [...byName.entries()].filter(([n, arr]) => arr.length > 1);\nconst ctxIds = new Set();\nfor (const [name, arr] of dupes) {\n  for (const s of arr) {\n    const ctxs = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.contextBinding:0.1.0')).run;\n    for (const c of ctxs) ctxIds.add(c.id);\n  }\n}\nyield* print('ctx count', ctxIds.size);\nconst ctxs = yield* Database.query(Filter.type(ContextBinding)).run;\nfor (const c of ctxs) {\n  if (ctxIds.has(c.id)) yield* print(c);\n}"
+  },
+  {
+    "id": "live-c8b69db8c5",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3M",
+    "code": "const QueryObjects = yield* Database.resolve('dxn:org.dxos.operation.space.queryObjects');\nconst res = yield* Operation.invoke(QueryObjects, { typename: 'org.dxos.type.contextBinding', includeContent: true, limit: 100 });\nyield* print(res.results?.length);\nfor (const r of (res.results ?? []).slice(0, 5)) yield* print(r);"
+  },
+  {
+    "id": "live-38c36b859c",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3N",
+    "code": "const id = '01JZZZZZZZZZZZZZZZZZZZZZZG';\nconst refs = yield* Database.query(Query.select(Filter.id(id)).referencedBy('dxn:org.dxos.type.contextBinding:0.1.0')).run;\nyield* print('refs', refs.length);\nfor (const r of refs) {\n  yield* print(r);\n  yield* print('typename', r.__typename, 'id', r.id);\n}"
+  },
+  {
+    "id": "live-e27a667d3b",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3P",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nfor (const s of specs) {\n  if (s.name === 'Project, task and feature operations over MCP') {\n    const refs = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.feature:0.3.0', 'spec')).run;\n    yield* print(s.id, 'refs', refs.length, 'features', (s.features ?? []).map(r => ({ id: r?.id, uri: r?.uri })));\n  }\n}"
+  },
+  {
+    "id": "live-0fe6513b7f",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3Q",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst byName = new Map();\nfor (const s of specs) {\n  const n = s.name ?? '(unnamed)';\n  if (!byName.has(n)) byName.set(n, []);\n  byName.get(n).push(s);\n}\nconst dupes = [...byName.entries()].filter(([n, arr]) => arr.length > 1).sort((a,b) => a[0].localeCompare(b[0]));\nfor (const [name, arr] of dupes) {\n  const rows = [];\n  for (const s of arr) {\n    const refs = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.feature:0.3.0', 'spec')).run;\n    rows.push({ s, refs });\n  }\n  rows.sort((a,b) => (a.refs.length ? 0 : 1) - (b.refs.length ? 0 : 1));\n  const live = rows[0].s, dup = rows[1].s;\n  const lp = Obj.getParent(live); const dp = Obj.getParent(dup);\n  yield* print(name.slice(0, 40), '| live', live.id, 'parent', lp?.id ?? '-', '| dup', dup.id, 'parent', dp?.id ?? '-');\n}"
+  },
+  {
+    "id": "live-fda0f36425",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3R",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst byName = new Map();\nfor (const s of specs) {\n  const n = s.name ?? '(unnamed)';\n  byName.set(n, (byName.get(n) ?? 0) + 1);\n}\nconst dupes = [...byName.entries()].filter(([n,c]) => c > 1);\nyield* print('spec objects', specs.length, 'unique names', byName.size, 'duplicated names', dupes.length);\nfor (const [n,c] of dupes) yield* print('DUP', n, c);\n\nfor (const name of ['MCP', 'Claude Code Integration', 'Project, task and feature operations over MCP']) {\n  const matches = specs.filter(s => s.name === name);\n  for (const s of matches) {\n    const refs = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.feature:0.3.0', 'spec')).run;\n    const children = yield* Database.query(Query.select(Filter.id(s.id)).children()).run;\n    const parent = Obj.getParent(s);\n    yield* print(name, s.id, 'parent', parent?.id ?? '-', 'specRefs', refs.map(r=>r.id).join(','), 'children', children.length, 'features', s.features?.length ?? 0);\n  }\n}"
+  },
+  {
+    "id": "live-8534c8b4e2",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3S",
+    "code": "const ctxIds = [\n  '01JZZZZZZZZZZZZZZZZZZZZZZQ',\n  '01JZZZZZZZZZZZZZZZZZZZZZZR',\n  '01JZZZZZZZZZZZZZZZZZZZZZZS',\n  '01JZZZZZZZZZZZZZZZZZZZZZZT',\n  '01JZZZZZZZZZZZZZZZZZZZZZZV',\n  '01JZZZZZZZZZZZZZZZZZZZZZZW',\n  '01JZZZZZZZZZZZZZZZZZZZZZZX',\n  '01JZZZZZZZZZZZZZZZZZZZZZZY'\n];\nfor (const id of ctxIds) {\n  const [c] = yield* Database.query(Filter.id(id)).run;\n  if (!c) { yield* print(id, 'MISSING'); continue; }\n  const uris = (arr) => (arr ?? []).map(r => r?.uri ?? r?.id ?? String(r));\n  yield* print(id, 'added', uris(c.objects?.added));\n}"
+  },
+  {
+    "id": "live-0465b64e4b",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3T",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nlet orphans = [];\nfor (const s of specs) {\n  const refs = yield* Database.query(Query.select(Filter.id(s.id)).referencedBy('dxn:org.dxos.type.feature:0.3.0', 'spec')).run;\n  const parent = Obj.getParent(s);\n  if (refs.length === 0) orphans.push({ name: s.name, id: s.id, parent: parent?.id ?? '-', project: s.project?.id ?? '-' });\n}\nyield* print('specs', specs.length, 'with no feature.spec ref', orphans.length);\nfor (const o of orphans) yield* print(o);"
+  },
+  {
+    "id": "live-fad20edca0",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3V",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst specIds = new Set(specs.map(s => s.id));\nconst features = yield* Database.query(Filter.type(Feature)).run;\nlet bad = [];\nfor (const f of features) {\n  const p = Obj.getParent(f);\n  if (p && !specIds.has(p.id)) bad.push({ feature: f.name, id: f.id, parent: p?.id ?? '-', parentType: p?.__typename ?? p?.typename ?? '?' });\n}\nyield* print('features', features.length, 'with parent not a current spec', bad.length);\nfor (const b of bad.slice(0, 20)) yield* print(b);"
+  },
+  {
+    "id": "live-c9b77efa22",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3W",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst Project = yield* Database.resolve('dxn:org.dxos.type.project:0.6.0');\nconst root = (yield* Database.query(Filter.type(Spec, { name: 'DXOS' })).run)[0];\nyield* print('ROOT', root.id);\nconst topFeatures = yield* Database.query(Query.select(Filter.id(root.id)).children()).run;\nyield* print('direct children features', topFeatures.length);\nfor (const f of topFeatures) {\n  yield* print('---', f.name, f.id, 'status', f.status, 'spec', f.spec?.id ?? f.spec?.uri ?? '-');\n  if (f.spec) {\n    const [spec] = yield* Database.query(Filter.id(f.spec.id)).run;\n    if (spec) {\n      yield* print('   spec features', (spec.features ?? []).length, 'project', spec.project?.id ?? '-');\n      const specChildren = yield* Database.query(Query.select(Filter.id(spec.id)).children()).run;\n      yield* print('   spec children', specChildren.length, specChildren.map(c => c.name).join(' | '));\n    }\n  }\n}\nconst projects = yield* Database.query(Filter.type(Project)).run;\nyield* print('PROJECTS', projects.length);\nfor (const p of projects) {\n  yield* print(p.id, p.name, 'status', p.status);\n}"
+  },
+  {
+    "id": "live-c91f6df7f9",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3X",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst Project = yield* Database.resolve('dxn:org.dxos.type.project:0.6.0');\nconst root = (yield* Database.query(Filter.type(Spec, { name: 'DXOS' })).run)[0];\nyield* print('ROOT', root.id);\nconst topFeatures = yield* Database.query(Query.select(Filter.id(root.id)).children()).run;\nyield* print('direct children features', topFeatures.length);\nfor (const f of topFeatures) {\n  let spec = null;\n  try { spec = yield* Database.load(f.spec); } catch (e) { spec = null; }\n  yield* print('---', f.name, f.id, 'status', f.status, 'spec', spec?.id ?? '-');\n  if (spec) {\n    const specChildren = yield* Database.query(Query.select(Filter.id(spec.id)).children()).run;\n    yield* print('   spec features', (spec.features ?? []).length, 'project', spec.project?.id ?? '-', 'children', specChildren.length, specChildren.map(c => c.name).join(' | '));\n  }\n}\nconst projects = yield* Database.query(Filter.type(Project)).run;\nyield* print('PROJECTS', projects.length);\nfor (const p of projects) {\n  yield* print(p.id, p.name, 'status', p.status);\n}"
+  },
+  {
+    "id": "live-73884750ef",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3Y",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst spec = (yield* Database.query(Filter.type(Spec, { name: 'Features' })).run)[0];\nyield* print(spec);\nconst children = yield* Database.query(Query.select(Filter.id(spec.id)).children()).run;\nfor (const c of children) {\n  yield* print(c);\n  const cs = yield* Database.query(Query.select(Filter.id(c.id)).children()).run;\n  yield* print('  children', cs.length, cs.map(x => x.name).join(' | '));\n}"
+  },
+  {
+    "id": "live-774e5390d4",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ3Z",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst root = (yield* Database.query(Filter.type(Spec, { name: 'DXOS' })).run)[0];\nyield* print('ROOT', root.id);\nconst rootFeatures = [];\nfor (const ref of (root.features ?? [])) {\n  const f = yield* Database.load(ref);\n  rootFeatures.push(f);\n}\nyield* print('root features', rootFeatures.map(f => f.name).join(' | '));\nfor (const f of rootFeatures) {\n  const spec = yield* Database.load(f.spec);\n  const children = yield* Database.query(Query.select(Filter.id(spec.id)).children()).run;\n  yield* print('---', f.name, 'spec', spec.id, 'children', children.length, children.map(c => c.name).join(' | '));\n}\nconst rootChildren = yield* Database.query(Query.select(Filter.id(root.id)).children()).run;\nyield* print('root children objects', rootChildren.length, rootChildren.map(c => c.name ?? '(unnamed)').join(' | '));"
+  },
+  {
+    "id": "live-240904fcbf",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ40",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst composerSpec = (yield* Database.query(Filter.type(Spec, { name: 'Composer (+ core plugins)' })).run)[0];\nconst autocueSpec = (yield* Database.query(Filter.type(Spec, { name: 'Autocue format' })).run)[0];\nconst autocueFeature = yield* Database.add(Obj.make(Feature, { name: 'Autocue format', status: 'prototype', spec: Ref.make(autocueSpec) }));\nObj.setParent(autocueFeature, composerSpec);\nObj.setParent(autocueSpec, autocueFeature);\nObj.update(composerSpec, (s) => {\n  s.features = [...(s.features ?? []), Ref.make(autocueFeature)];\n});\nyield* Database.flush();\nyield* print('attached Autocue format under Composer', 'feature', autocueFeature.id, 'spec', autocueSpec.id);"
+  },
+  {
+    "id": "live-5450429024",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ41",
+    "code": "const Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst features = yield* Database.query(Filter.type(Feature)).run;\nconst byName = new Map();\nfor (const f of features) {\n  const n = f.name ?? '';\n  if (!byName.has(n)) byName.set(n, []);\n  byName.get(n).push(f);\n}\nconst dupes = [...byName.entries()].filter(([n, arr]) => arr.length > 1);\nfor (const [name, arr] of dupes.slice(0, 12)) {\n  yield* print('===', name);\n  for (const f of arr) {\n    const parent = Obj.getParent(f);\n    const children = yield* Database.query(Query.select(Filter.id(f.id)).children()).run;\n    const refs = yield* Database.query(Query.select(Filter.id(f.id)).referencedBy('dxn:org.dxos.type.projects.spec:0.1.0', 'features')).run;\n    yield* print(f.id, 'parent', parent?.id ?? '-', 'spec', f.spec?.uri ?? '-', 'children', children.length, 'reqs', f.requirements?.length ?? 0, 'code', f.code?.length ?? 0, 'desc', (f.description ?? '').length, 'specRefs', refs.length);\n  }\n}"
+  },
+  {
+    "id": "live-dfc45b3ce4",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ42",
+    "code": "const RelationTypes = [\n  'dxn:org.dxos.relation.dependsOn:0.1.0',\n  'dxn:org.dxos.relation.implements:0.1.0',\n  'dxn:org.dxos.relation.demonstrates:0.2.0'\n];\nconst linked = new Set();\nfor (const dxn of RelationTypes) {\n  const Rel = yield* Database.resolve(dxn);\n  const rels = yield* Database.query(Filter.type(Rel)).run;\n  for (const r of rels) {\n    try {\n      const src = Relation.getSource(r); const tgt = Relation.getTarget(r);\n      if (src?.id) linked.add(src.id);\n      if (tgt?.id) linked.add(tgt.id);\n    } catch (e) { /* ignore */ }\n  }\n}\nyield* print('linked feature ids', linked.size);"
+  },
+  {
+    "id": "live-2bed4e11e9",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ43",
+    "code": "const id = '01JZZZZZZZZZZZZZZZZZZZZZZZ';\nfor (const dxn of ['dxn:org.dxos.relation.dependsOn:0.1.0', 'dxn:org.dxos.relation.implements:0.1.0', 'dxn:org.dxos.relation.demonstrates:0.2.0']) {\n  try {\n    const out = yield* Database.query(Query.select(Filter.id(id)).sourceOf(dxn)).run;\n    yield* print(dxn, 'sourceOf', out.length);\n  } catch (e) {\n    yield* print(dxn, 'ERR', e.message ?? e);\n  }\n}"
+  },
+  {
+    "id": "live-541a460346",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ44",
+    "code": "const id = '01JZZZZZZZZZZZZZZZZZZZZZZZ';\nfor (const dxn of ['dxn:org.dxos.relation.dependsOn:0.1.0', 'dxn:org.dxos.relation.implements:0.1.0', 'dxn:org.dxos.relation.demonstrates:0.2.0']) {\n  const out = yield* Database.query(Query.select(Filter.id(id)).targetOf(dxn)).run;\n  yield* print(dxn, 'targetOf', out.length);\n}"
+  },
+  {
+    "id": "live-d9fd911cc0",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ45",
+    "code": "for (const dxn of ['dxn:org.dxos.relation.dependsOn:0.1.0', 'dxn:org.dxos.relation.implements:0.1.0', 'dxn:org.dxos.relation.demonstrates:0.2.0']) {\n  try {\n    const res = yield* Database.query(Filter.type(dxn)).run;\n    yield* print(dxn, 'Filter.type string', res.length);\n  } catch (e) {\n    yield* print(dxn, 'ERR', e.message ?? e);\n  }\n}"
+  },
+  {
+    "id": "live-e8d54db0c1",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ46",
+    "code": "const linked = new Set();\nfor (const dxn of ['dxn:org.dxos.relation.dependsOn:0.1.0', 'dxn:org.dxos.relation.implements:0.1.0', 'dxn:org.dxos.relation.demonstrates:0.2.0']) {\n  const rels = yield* Database.query(Filter.type(dxn)).run;\n  for (const r of rels) {\n    const src = Relation.getSource(r);\n    const tgt = Relation.getTarget(r);\n    if (src?.id) linked.add(src.id);\n    if (tgt?.id) linked.add(tgt.id);\n  }\n}\nyield* print('linked feature ids', linked.size);"
+  },
+  {
+    "id": "live-3c48553c31",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ47",
+    "code": "const Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst features = yield* Database.query(Filter.type(Feature)).run;\nconst linked = new Set();\nfor (const dxn of ['dxn:org.dxos.relation.dependsOn:0.1.0', 'dxn:org.dxos.relation.implements:0.1.0', 'dxn:org.dxos.relation.demonstrates:0.2.0']) {\n  const rels = yield* Database.query(Filter.type(dxn)).run;\n  for (const r of rels) {\n    const src = Relation.getSource(r);\n    const tgt = Relation.getTarget(r);\n    if (src?.id) linked.add(src.id);\n    if (tgt?.id) linked.add(tgt.id);\n  }\n}\nlet candidates = [];\nfor (const f of features) {\n  const children = yield* Database.query(Query.select(Filter.id(f.id)).children()).run;\n  const hasSpec = !!f.spec;\n  const hasChildren = children.length > 0;\n  const hasCode = (f.code?.length ?? 0) > 0;\n  const hasReqs = (f.requirements?.length ?? 0) > 0;\n  const descLen = (f.description ?? '').length;\n  if (!hasSpec && !hasChildren && !hasCode && !hasReqs && descLen === 0 && !linked.has(f.id)) {\n    candidates.push(f);\n  }\n}\nyield* print('pure empty not linked candidates', candidates.length);\n// parent breakdown\nconst byParent = new Map();\nfor (const f of candidates) {\n  const p = Obj.getParent(f);\n  const pname = p?.name ?? p?.id ?? '-';\n  byParent.set(pname, (byParent.get(pname) ?? 0) + 1);\n}\nyield* print('by parent', [...byParent.entries()].sort((a,b)=>b[1]-a[1]).slice(0,20));"
+  },
+  {
+    "id": "live-8ab76fb050",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ48",
+    "code": "const Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst features = yield* Database.query(Filter.type(Feature)).run;\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nconst specIds = new Set(specs.map(s => s.id));\nlet badParent = 0, emptyRemaining = 0, noRef = 0;\nfor (const f of features) {\n  const p = Obj.getParent(f);\n  if (p && !specIds.has(p.id)) badParent++;\n  const children = yield* Database.query(Query.select(Filter.id(f.id)).children()).run;\n  const refs = yield* Database.query(Query.select(Filter.id(f.id)).referencedBy('dxn:org.dxos.type.projects.spec:0.1.0', 'features')).run;\n  const isEmpty = !f.spec && children.length === 0 && (f.code?.length ?? 0) === 0 && (f.requirements?.length ?? 0) === 0 && (f.description ?? '').length === 0;\n  if (isEmpty) emptyRemaining++;\n  if (refs.length === 0) noRef++;\n}\nyield* print({ features: features.length, badParent, emptyRemaining, noRef });"
+  },
+  {
+    "id": "live-4cf60f39da",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ49",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst conn = (yield* Database.query(Filter.type(Spec, { name: 'Connectors' })).run)[0];\nyield* print('Connectors spec', conn.id);\nfor (const ref of conn.features ?? []) {\n  const f = yield* Database.load(ref);\n  yield* print('  feature', f.name, f.id);\n}\nconst agSpec = (yield* Database.query(Filter.type(Spec, { name: 'Agents use MCP servers from connections' })).run)[0];\nyield* print('Agents spec', agSpec.id, 'parent', Obj.getParent(agSpec)?.id ?? '-');\nconst parentFeature = Obj.getParent(agSpec);\nyield* print('Agents spec parent feature', parentFeature?.id, parentFeature?.name);"
+  },
+  {
+    "id": "live-a7a7ee8bf0",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4A",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst conn = (yield* Database.query(Filter.type(Spec, { name: 'Connectors' })).run)[0];\nconst desiredIds = ['01JZZZZZZZZZZZZZZZZZZZZZ10','01JZZZZZZZZZZZZZZZZZZZZZ11','01JZZZZZZZZZZZZZZZZZZZZZ12','01JZZZZZZZZZZZZZZZZZZZZZ13','01JZZZZZZZZZZZZZZZZZZZZZ14'];\nconst desiredRefs = [];\nfor (const id of desiredIds) {\n  const [f] = yield* Database.query(Filter.id(id)).run;\n  desiredRefs.push(Ref.make(f));\n}\nObj.update(conn, (s) => { s.features = desiredRefs; });\nconst [agents] = yield* Database.query(Filter.id('01JZZZZZZZZZZZZZZZZZZZZZ13')).run;\nObj.setParent(agents, conn);\nyield* Database.flush();\nyield* print('fixed Connectors features', conn.features?.length ?? 0);"
+  },
+  {
+    "id": "live-4215dd56bd",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4B",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nlet dupRefSpecs = [], missingRefSpecs = [];\nfor (const s of specs) {\n  const refs = s.features ?? [];\n  const tails = refs.map(r => (r?.uri ?? '').split('/').pop());\n  const uniq = new Set(tails);\n  if (uniq.size !== tails.length) dupRefSpecs.push({ name: s.name, id: s.id, total: tails.length, unique: uniq.size });\n  for (const ref of refs) {\n    const loaded = yield* Effect.result(Database.load(ref));\n    if (loaded._tag === 'Failure') missingRefSpecs.push({ spec: s.name, id: s.id, ref: ref?.uri ?? String(ref) });\n  }\n}\nyield* print({ specs: specs.length, dupRefSpecs: dupRefSpecs.length, missingRefSpecs: missingRefSpecs.length });\nfor (const d of dupRefSpecs) yield* print('DUP REFS', d);\nfor (const m of missingRefSpecs.slice(0, 20)) yield* print('MISSING REF', m);"
+  },
+  {
+    "id": "live-5219a3d584",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4C",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst featureIds = new Set((yield* Database.query(Filter.type(Feature)).run).map(f => f.id));\nconst specs = yield* Database.query(Filter.type(Spec)).run;\nlet stale = [];\nfor (const s of specs) {\n  const pos = s.layout?.positions ?? {};\n  for (const key of Object.keys(pos)) {\n    if (!featureIds.has(key)) stale.push({ spec: s.name, id: s.id, key });\n  }\n}\nyield* print('stale layout keys', stale.length);\nfor (const x of stale.slice(0, 20)) yield* print(x);"
+  },
+  {
+    "id": "live-6a73814b04",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4D",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst Feature = yield* Database.resolve('dxn:org.dxos.type.feature:0.3.0');\nconst appSpec = (yield* Database.query(Filter.type(Spec, { name: 'App Framework' })).run)[0];\nconst name = 'Sync specs from GitHub .mdl files';\nconst spec = yield* Database.add(Obj.make(Spec, { name, features: [] }));\nconst feature = yield* Database.add(Obj.make(Feature, {\n  name,\n  status: 'planned',\n  spec: Ref.make(spec),\n  requirements: [\n    { text: 'Fetch .mdl specs from GitHub (dxos/dxos and plugin repos).' },\n    { text: 'Parse feature maps and package SPEC.mdl frontmatter.' },\n    { text: 'Classify plugins as core vs community; core under Composer (+ core plugins), everything else under Community plugins.' },\n    { text: 'Create/update features and specs under the existing DXOS hierarchy without duplicating them.' }\n  ]\n}));\nObj.setParent(feature, appSpec);\nObj.setParent(spec, feature);\nObj.update(appSpec, (s) => { s.features = [...(s.features ?? []), Ref.make(feature)]; });\nyield* Database.flush();\nyield* print('created', name, 'spec', spec.id, 'feature', feature.id, 'under', appSpec.name);"
+  },
+  {
+    "id": "live-cc423bd9e4",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4E",
+    "code": "const Spec = yield* Database.resolve('dxn:org.dxos.type.projects.spec:0.1.0');\nconst appSpec = (yield* Database.query(Filter.type(Spec, { name: 'App Framework' })).run)[0];\nconst composerSpec = (yield* Database.query(Filter.type(Spec, { name: 'Composer (+ core plugins)' })).run)[0];\nconst [features] = yield* Database.query(Filter.id('01JZZZZZZZZZZZZZZZZZZZZZ15')).run;\nif (!features) throw new Error('Features feature not found');\nObj.setParent(features, composerSpec);\nconst tail = (r) => (r?.uri ?? '').split('/').pop();\nObj.update(appSpec, (s) => { s.features = (s.features ?? []).filter(r => tail(r) !== features.id); });\nObj.update(composerSpec, (s) => { s.features = [...(s.features ?? []), Ref.make(features)]; });\nyield* Database.flush();\nyield* print('moved Features to Composer');"
+  },
+  {
+    "id": "live-511af05b35",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4F",
+    "code": "const ops = DOCS['catalog/operations.md'] ?? '';\nyield* print(ops.includes('EnableGitHubFileSync'), ops.match(/EnableGitHubFileSync/g)?.length ?? 0);\nyield* print(ops.slice(0, 500));"
+  },
+  {
+    "id": "live-f0da4476bf",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4G",
+    "code": "const keys = Object.keys(Tools).filter(k => k.toLowerCase().includes('github')).sort();\nyield* print(keys.length);\nfor (const k of keys) yield* print(k);"
+  },
+  {
+    "id": "live-c263fe7639",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4H",
+    "code": "const grep = (pattern) =>\n  Object.entries(DOCS).flatMap(([file, text]) =>\n    text.split('\\n').flatMap((line, index) => (pattern.test(line) ? [`${file}:${index + 1}: ${line}`] : [])),\n  );\nyield* print(grep(/EnableGitHubFileSync|FileSync|file.?sync|generateWalkthrough|importPullRequest/i).join('\\n'));"
+  },
+  {
+    "id": "live-29d2bf8503",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4J",
+    "code": "const exit = yield* Effect.exit(Database.resolve('dxn:org.dxos.operation.github.enableFileSync'));\nif (exit._tag === 'Failure') {\n  yield* print('RESOLVE_FAILED', String(exit.cause));\n} else {\n  yield* print('RESOLVED', exit.value);\n}"
+  },
+  {
+    "id": "live-a051c8a5e0",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4K",
+    "code": "const file = yield* Tools[\"mcp__github__get_file_contents\"]({\n  owner: \"dxos\",\n  repo: \"dxos\",\n  path: \"packages/reflect/deus/SPEC.mdl\",\n});\nconsole.log(typeof file);\nconsole.log(file.length);\nconsole.log(file);"
+  },
+  {
+    "id": "live-4a720d9599",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4M",
+    "code": "const QuerySkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.querySkills');\nconst result = yield* Operation.invoke(QuerySkills, { query: 'github sync spec files' });\nyield* print(JSON.stringify(result).slice(0, 3000));"
+  },
+  {
+    "id": "live-66c0f45915",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4N",
+    "code": "const QueryPlugins = yield* Database.resolve('dxn:org.dxos.operation.registry.queryPlugins');\nconst result = yield* Operation.invoke(QueryPlugins, {});\nconst github = result.filter(p => JSON.stringify(p).toLowerCase().includes('github'));\nyield* print(JSON.stringify(github, null, 2).slice(0, 2000));"
+  },
+  {
+    "id": "live-4ee18cf16c",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4P",
+    "code": "// Try resolving as an operation dxn - maybe it has a dxn now that skill is enabled\ntry {\n  const op = yield* Database.resolve('dxn:org.dxos.operation.github.enableFileSync');\n  yield* print('found', JSON.stringify(op));\n} catch (e) {\n  yield* print('error', String(e));\n}"
+  },
+  {
+    "id": "live-3d905dbcad",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4Q",
+    "code": "// Try using the git_url (blob API) via get_commit? No. Let's try passing sha directly.\nconst file = yield* Tools[\"mcp__github__get_file_contents\"]({\n  owner: \"dxos\",\n  repo: \"dxos\",\n  path: \"packages/reflect/deus/SPEC.mdl\",\n  sha: \"92821824b2bddc5cce5096e7cf2d0bf98fce5f62\",\n});\nyield* print(typeof file, file.length, file);"
+  },
+  {
+    "id": "live-bcd2f483ed",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4R",
+    "code": "// Check if some new object got created as side-effect - check most recent objects across types\nconst Text = yield* Database.resolve('dxn:org.dxos.type.text:0.1.0');\nconst texts = yield* Database.query(Filter.type(Text)).run;\nyield* print('text count', texts.length);\n\nconst File = yield* Database.resolve('dxn:org.dxos.type.file:0.2.0');\nconst files = yield* Database.query(Filter.type(File)).run;\nyield* print('file count', files.length);"
+  },
+  {
+    "id": "live-1f9431ec1f",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4S",
+    "code": "yield* print(DOCS['errors.md']);"
+  },
+  {
+    "id": "live-b757d17ab8",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4T",
+    "code": "const tryResolve = function*(dxn) {\n  const r = yield* Effect.result(Database.resolve(dxn));\n  return r;\n};\nconst candidates = [\n  'dxn:org.dxos.operation.github.enableFileSync',\n  'dxn:org.dxos.operation.github.syncFiles',\n  'dxn:org.dxos.operation.github.fileSync',\n  'dxn:org.dxos.operation.github.enable-file-sync',\n];\nfor (const c of candidates) {\n  const res = yield* Effect.result(Database.resolve(c));\n  yield* print(c, res._tag);\n}"
+  },
+  {
+    "id": "live-7a0700cfe7",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4V",
+    "code": "try {\n  const r = yield* Tools['github-enable-file-sync']({});\n  yield* print(JSON.stringify(r));\n} catch(e) {\n  yield* print('err', String(e));\n}"
+  },
+  {
+    "id": "live-1228334894",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4W",
+    "code": "// get_file_contents seems broken/stubbed in this environment returning generic message. Let's try via get_commit full patch to extract the file content from the diff.\nconst idx = commit.indexOf('SPEC.mdl');\nyield* print(idx);\nyield* print(commit.slice(Math.max(0,idx-200), idx+3000));"
+  },
+  {
+    "id": "live-995e108422",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4X",
+    "code": "const QuerySkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.querySkills');\nconst EnableSkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.enableSkills');\nconst result = yield* Operation.invoke(QuerySkills, { query: 'web search fetch url' });\nfor (const s of result) yield* print(s.name, s.tools?.join(','), s.agentCanEnable);"
+  },
+  {
+    "id": "live-2676c86ad1",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4Y",
+    "code": "const EnableSkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.enableSkills');\nfor (const key of ['org.dxos.skill.webSearch', 'org.dxos.skill.web-search', 'org.dxos.skill.assistantToolkit.fetch']) {\n  const r = yield* Operation.invoke(EnableSkills, { keys: [key] });\n  yield* print(key, JSON.stringify(r));\n}"
+  },
+  {
+    "id": "live-80022c3cb5",
+    "origin": "live",
+    "conversation": "BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ4Z",
+    "code": "const Collection = yield* Database.resolve('dxn:org.dxos.type.collection:0.1.0');\nconst collections = yield* Database.query(Filter.type(Collection)).run;\nconst root = collections.find(c => c.id === '01JZZZZZZZZZZZZZZZZZZZZZ16');\n\nconst Document = yield* Database.resolve('dxn:org.dxos.type.document:0.1.0');\nconst docs = yield* Database.query(Filter.type(Document)).run;\nconst doc = docs.find(d => d.id === '01JZZZZZZZZZZZZZZZZZZZZZ17');\n\nObj.update(root, (c) => {\n  c.objects.push(Ref.make(doc));\n});\nyield* Database.flush();\nyield* print('root now has', root.objects.length, 'objects');"
+  },
+  {
+    "id": "live-bfabcd3023",
+    "origin": "live",
+    "conversation": "BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ50",
+    "code": "const ops = DOCS['catalog/operations.md'];\nconst idx = ops.toLowerCase().indexOf('sandbox');\nyield* print('sandbox idx in operations catalog:', idx);\nif (idx >= 0) {\n  yield* print(ops.slice(Math.max(0, idx - 800), idx + 2000));\n} else {\n  yield* print('no sandbox in operations catalog');\n  yield* print(ops.slice(0, 1200));\n}"
+  },
+  {
+    "id": "live-136744b562",
+    "origin": "live",
+    "conversation": "BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ51",
+    "code": "const candidates = [\n  'dxn:org.dxos.operation.sandbox.create',\n  'dxn:org.dxos.operation.sandbox.exec',\n  'dxn:org.dxos.operation.sandbox.createSandbox',\n  'dxn:org.dxos.operation.sandbox.execCommand',\n  'dxn:org.dxos.operation.sandboxCreate',\n  'dxn:org.dxos.operation.sandboxExec',\n];\nfor (const dxn of candidates) {\n  const exit = yield* Effect.exit(Database.resolve(dxn));\n  yield* print(dxn, '->', exit._tag === 'Success' ? 'RESOLVED' : 'not found');\n}"
+  },
+  {
+    "id": "live-76a0046d40",
+    "origin": "live",
+    "conversation": "BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ52",
+    "code": "const QuerySkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.querySkills');\nconst skills = yield* Operation.invoke(QuerySkills, {});\nconst sandbox = skills.find(s => s.name === 'Sandbox');\nyield* print('sandbox id:', sandbox.id, 'name:', sandbox.name);\n\nconst EnableSkills = yield* Database.resolve('dxn:org.dxos.operation.assistantToolkit.enableSkills');\nconst keyCandidates = [\n  sandbox.id,\n  `echo://${sandbox.id}`,\n  `echo:///${sandbox.id}`,\n  'dxn:org.dxos.type.skill:0.2.0',\n  sandbox.name,\n];\nfor (const k of keyCandidates) {\n  const exit = yield* Effect.exit(Operation.invoke(EnableSkills, { keys: [k] }));\n  yield* print(JSON.stringify(k), '->', exit._tag === 'Success' ? JSON.stringify(exit.value) : 'FAILED: ' + String(exit.cause).slice(0, 120));\n}"
+  },
+  {
+    "id": "live-75e5bc25ef",
+    "origin": "live",
+    "conversation": "BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ53",
+    "code": "console.log(DOCS['operations.md'])"
+  },
+  {
+    "id": "live-75dfeb8a09",
+    "origin": "live",
+    "conversation": "BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ54",
+    "code": "const connection = yield* Database.resolve('dxn:echo:BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG:01JZZZZZZZZZZZZZZZZZZZZZ18');\nconst syncMail = yield* Database.resolve('dxn:org.dxos.operation.google.syncMail');\nconst exit = yield* Effect.exit(Operation.invoke(syncMail, { connection: Ref.make(connection) }));\nyield* print('sync exit', exit._tag, exit._tag==='Success'? JSON.stringify(exit.value).slice(0,500): String(exit.cause));"
+  },
+  {
+    "id": "live-a846a98e4c",
+    "origin": "live",
+    "conversation": "BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ55",
+    "code": "const queryTypes = yield* Database.resolve('dxn:org.dxos.operation.space.queryTypes');\nconst r = yield* Operation.invoke(queryTypes, { limit: 500 });\nconst relTypes = r.types.filter(t => t.kind === 'relation');\nfor (const t of relTypes) yield* print(t.typename, t.fields);"
+  },
+  {
+    "id": "live-82e75328c5",
+    "origin": "live",
+    "conversation": "BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ56",
+    "code": "console.log(DOCS['errors.md'].slice(0, 3000))"
+  },
+  {
+    "id": "live-db4ca9209e",
+    "origin": "live",
+    "conversation": "BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ57",
+    "code": "const queryTypes = yield* Database.resolve('dxn:org.dxos.operation.space.queryTypes');\nconst r = yield* Operation.invoke(queryTypes, { limit: 1000 });\nconst names = r.types.map(t=>t.typename);\nyield* print(names.filter(n => /mail|connect/i.test(n)));"
+  },
+  {
+    "id": "live-0d5f27e210",
+    "origin": "live",
+    "conversation": "BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ58",
+    "code": "const names = Object.getOwnPropertyNames(Obj);\nyield* print(names.join(', '));"
+  },
+  {
+    "id": "live-7f75584b52",
+    "origin": "live",
+    "conversation": "BGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+    "order": "01JZZZZZZZZZZZZZZZZZZZZZ59",
+    "code": "const names = Object.getOwnPropertyNames(Database);\nyield* print(names.join(', '));"
+  },
+  {
+    "id": "store-bb62fde194",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/00dc0a064223c491964835c57d698f3f5fb2b150d83ecc82fb275e55dc1673c5.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : r.score;\n  Obj.update(t, (x) => { x.priority = score; });\n  results.push({ id: t.id, title: t.title, score });\n}\nyield* Database.flush();\nyield* print('count', tasks.length);\nyield* print(results);"
+  },
+  {
+    "id": "store-f5a142b086",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/01e76215e3535f09d277c54d63ed710567b1278cd4c0c472406961d0ca4fb0c4.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r);\n  Obj.update(t, (task) => { task.priority = score; });\n  results.push({ id: t.id, title: t.title, score });\n}\nyield* Database.flush();\nresults.sort((a, b) => b.score - a.score);\nyield* print('count', results.length);\nfor (const r of results) yield* print(r.score, r.title, r.id);"
+  },
+  {
+    "id": "store-bda432d539",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/0a1a1f38b9a07b44eccd7e0ab4bab407c567f38ed1b12ce0c21a4a9779ecb8ff.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter((t) => /docs/i.test(t.title));\nyield* print('total tasks', all.length);\nfor (const t of matches) {\n  yield* print('match', t.title, t.status);\n  if (t.status !== 'done') {\n    Obj.update(t, (task) => { task.status = 'done'; });\n  }\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'done' })).run;\nyield* print('done total', after.length);"
+  },
+  {
+    "id": "store-bddb8cb6a2",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/13bb5b6d2213404c3307c5b8cb7dd278ed3b05e6f361f73e70d598897e782fee.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst docs = all.filter(t => /docs/i.test(t.title));\nyield* print('total tasks', all.length);\nfor (const t of docs) {\n  yield* print('match:', t.title, '| status:', t.status);\n}\nfor (const t of docs) {\n  if (t.status !== 'done') Obj.update(t, (x) => { x.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'done' })).run;\nyield* print('done total', after.length);"
+  },
+  {
+    "id": "store-97587c59ce",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/14edc16afb1a2ba5b03f31d0d07bf0d5a5b904825d491d395cfdd847bb98dbab.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst docs = all.filter((t) => /docs/i.test(t.title));\nyield* print('total tasks', all.length);\nyield* print('matching', docs.map((t) => ({ id: t.id, title: t.title, status: t.status })));\nfor (const t of docs) {\n  if (t.status !== 'done') {\n    Obj.update(t, (task) => { task.status = 'done'; });\n  }\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'done' })).run;\nyield* print('done total', after.length);"
+  },
+  {
+    "id": "store-ef6ce294bc",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/18bb6669c08278cef1472f6c5f38d33d68562d7a2349eb428559550f8833c3e0.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nyield* print('total tasks', all.length);\nyield* print('titles+status', JSON.stringify(all.map(t => [t.title, t.status])));"
+  },
+  {
+    "id": "store-932bdcd7d2",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/18bb6669c08278cef1472f6c5f38d33d68562d7a2349eb428559550f8833c3e0.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter(t => t.title.toLowerCase().includes('docs'));\nfor (const t of matches) { Obj.update(t, (x) => { x.status = 'done'; }); }\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', JSON.stringify(matches.map(t => t.title)));\nyield* print('done count', after.filter(t => t.status === 'done').length);\nyield* print('all', JSON.stringify(after.map(t => [t.title, t.status])));"
+  },
+  {
+    "id": "store-61fb45f520",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/1e872b4a675e2889d9f965f91621b6742dd734172cdda9db709e68ac9ed56a3d.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst open = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open count', open.length);\nyield* print('titles', open.map((t) => t.title));"
+  },
+  {
+    "id": "store-84e3a0ea81",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/1e872b4a675e2889d9f965f91621b6742dd734172cdda9db709e68ac9ed56a3d.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst open = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const task of open) {\n  const r = yield* Operation.invoke(Score, { title: task.title });\n  const score = typeof r === 'number' ? r : r.score;\n  Obj.update(task, (t) => { t.priority = score; });\n  results.push({ title: task.title, score, raw: r });\n}\nyield* Database.flush();\nyield* print('results', results);\nconst after = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('stored', after.map((t) => ({ title: t.title, priority: t.priority })));"
+  },
+  {
+    "id": "store-221555ec55",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/1ea82aa0ecd506e91b92382cf669d2121ecbe5026812335b9fd594e2c3a19a8f.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open count', tasks.length);\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  results.push([t.title, r]);\n}\nyield* print('raw results', results);"
+  },
+  {
+    "id": "store-1fef0af3fb",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/1ea82aa0ecd506e91b92382cf669d2121ecbe5026812335b9fd594e2c3a19a8f.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : r.score;\n  Obj.update(t, (x) => { x.priority = score; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('stored', after.map((t) => [t.title, t.priority]));"
+  },
+  {
+    "id": "store-feaae9f3ec",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/36e39ea6629c5a3b8b5d02eca4ed1050ac6c5032cc97afdab41ecaa8447443c6.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst open = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open count', open.length);\nconst results = [];\nfor (const t of open) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r?.result ?? r);\n  results.push({ id: t.id, title: t.title, score });\n  Obj.update(t, (task) => { task.priority = score; });\n}\nyield* Database.flush();\nyield* print('results', results);"
+  },
+  {
+    "id": "store-9a1c52490e",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/38c78331e94ba9b73d45ea8cc94bf7e5b45d3d0095855b3a8d4d09bd7fcc8b32.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst docs = all.filter(t => /docs/i.test(t.title));\nyield* print('matching', docs.map(t => ({ id: t.id, title: t.title, status: t.status })));\nfor (const t of docs) { Obj.update(t, (x) => { x.status = 'done'; }); }\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'done' })).run;\nyield* print('total tasks', all.length, 'done total', after.length);"
+  },
+  {
+    "id": "store-63987dcdbb",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/38e6539110b09e9179ee81c45698541376b31fe70db57c56ef8406cf1458ab00.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter(t => /docs/i.test(t.title));\nfor (const t of matches) {\n  if (t.status !== 'done') Obj.update(t, (task) => { task.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', JSON.stringify(matches.map(t => t.title)));\nyield* print('done count', after.filter(t => t.status === 'done').length);\nyield* print('final', JSON.stringify(after.map(t => [t.title, t.status])));"
+  },
+  {
+    "id": "store-e0f3ec40db",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/390b08d343e48374c7fb565f6c7b43134b1a0fc41f95f0ff2afb5f8412cecc13.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nyield* print('total tasks', all.length);\nyield* print('titles+status', JSON.stringify(all.map((t) => [t.title, t.status])));"
+  },
+  {
+    "id": "store-6517657fdf",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/428feef60749b6838ca4025f699854f3e9d74e69843b8e8c2751613cab1cc1c8.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst docs = all.filter(t => /docs/i.test(t.title));\nyield* print('total tasks', all.length);\nfor (const t of docs) {\n  yield* print('match', t.id, t.title, t.status);\n}"
+  },
+  {
+    "id": "store-00b60d1c6f",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/463f55e358c7b2fae15dd75c310ee0630177a091c97bdc52d553b42ad5406ada.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r?.result);\n  Obj.update(t, (x) => { x.priority = score; });\n  results.push({ title: t.title, score });\n}\nyield* Database.flush();\nyield* print('count', tasks.length);\nyield* print('results', results);"
+  },
+  {
+    "id": "store-bac5975aac",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/4d053c6a5e57d6701300010a3b5b4bad32248ce7a8a6ab2abedb540004230722.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open tasks', tasks.length);\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r);\n  Obj.update(t, (x) => { x.priority = score; });\n  results.push({ id: t.id, title: t.title, score });\n}\nyield* Database.flush();\nyield* print('results', results);"
+  },
+  {
+    "id": "store-2889363ccd",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/4dfd816b9f5546a58f398906c4de33177e1d348c2e7c1d929f919e50be72b70b.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter(t => /docs/i.test(t.title));\nfor (const t of matches) {\n  Obj.update(t, (task) => { task.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', JSON.stringify(matches.map(t => t.title)));\nyield* print('done count', after.filter(t => t.status === 'done').length);\nyield* print('all', JSON.stringify(after.map(t => [t.title, t.status])));"
+  },
+  {
+    "id": "store-abf1494c54",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/54ea72f5866e8e4ae30a3261624771082f5c73c745f41d24158c85507661c1af.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open count', tasks.length);\nyield* print('titles', tasks.map((t) => t.title));"
+  },
+  {
+    "id": "store-2660f0cc6f",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/54ea72f5866e8e4ae30a3261624771082f5c73c745f41d24158c85507661c1af.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const task of tasks) {\n  const result = yield* Operation.invoke(Score, { title: task.title });\n  const score = typeof result === 'number' ? result : result.score;\n  Obj.update(task, (t) => { t.priority = score; });\n  results.push({ title: task.title, score });\n}\nyield* Database.flush();\nyield* print('results', results);\nyield* print('stored', tasks.map((t) => ({ title: t.title, priority: t.priority })));"
+  },
+  {
+    "id": "store-32e4f37328",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/57aa0cd69d8c77334939b41cf844a4210c872a5519dc2005cee41f8a72f90acf.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open count', tasks.length);\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r);\n  Obj.update(t, (task) => { task.priority = score; });\n  results.push({ id: t.id, title: t.title, score });\n}\nyield* Database.flush();\nresults.sort((a, b) => b.score - a.score);\nyield* print('results', results);"
+  },
+  {
+    "id": "store-8c0b2de773",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/5ab1b0007bb552661ffc8312814f955453202ef398d34061b50861d0441f2e77.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : r.score;\n  Obj.update(t, (task) => { task.priority = score; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('stored', after.map((t) => [t.title, t.priority]));"
+  },
+  {
+    "id": "store-90867daac8",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/5ac063dd8faa1ed9d773d5e431f12ff5b3886955033d023af2e42e0eb3a17581.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nfor (const t of all) yield* print('task', t.id, JSON.stringify(t.title), t.status);\nconst docs = all.filter(t => /docs/i.test(t.title));\nfor (const t of docs) Obj.update(t, (x) => { x.status = 'done'; });\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', docs.length, 'done total', after.filter(t => t.status === 'done').length);"
+  },
+  {
+    "id": "store-ccb07200ea",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/6ccf9011056e4508d90763d380fc1341ced2afd1c0154d50bda22ee70b8b6e1b.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst tasks = yield* Database.query(Filter.type(Task)).run;\nconst matches = tasks.filter((t) => /docs/i.test(t.title));\nyield* print('total tasks', tasks.length, 'matching', matches.length);\nfor (const t of matches) {\n  yield* print('match', t.title, t.status);\n  if (t.status !== 'done') {\n    Obj.update(t, (x) => { x.status = 'done'; });\n  }\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'done' })).run;\nyield* print('done total', after.length);"
+  },
+  {
+    "id": "store-421141565a",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/6e8d7e0aa50262918e59beed17a81d723fc7aa0a2b5e776e1f0b5bbba0d890d3.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter(t => /docs/i.test(t.title));\nfor (const t of matches) { Obj.update(t, (x) => { x.status = 'done'; }); }\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', JSON.stringify(matches.map(t => t.title)));\nyield* print('done count', after.filter(t => t.status === 'done').length);\nyield* print('state', JSON.stringify(after.map(t => [t.title, t.status])));"
+  },
+  {
+    "id": "store-2cf31842a0",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/6fdea9218b5287abaceaabad57f27b0c6c62ccedd0b8c8e2075e2d4aa4f610d1.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter(t => /docs/i.test(t.title));\nfor (const t of matches) { Obj.update(t, (x) => { x.status = 'done'; }); }\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', JSON.stringify(matches.map(t => t.title)));\nyield* print('done count', after.filter(t => t.status === 'done').length);\nyield* print('all after', JSON.stringify(after.map(t => [t.title, t.status])));"
+  },
+  {
+    "id": "store-9946bcb323",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/772ba9a8e32bfb3c8572f9d259f19d73880059701bbcd6c05437d002b1b558e9.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nyield* print('total tasks', all.length);\nyield* print('all', all.map((t) => ({ id: t.id, title: t.title, status: t.status })));"
+  },
+  {
+    "id": "store-348f045c93",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/772ba9a8e32bfb3c8572f9d259f19d73880059701bbcd6c05437d002b1b558e9.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter((t) => /docs/i.test(t.title));\nfor (const t of matches) {\n  Obj.update(t, (task) => { task.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', matches.map((t) => t.title));\nyield* print('done count', after.filter((t) => t.status === 'done').length);\nyield* print('after', after.map((t) => ({ title: t.title, status: t.status })));"
+  },
+  {
+    "id": "store-e8bd9e0dab",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/78a78c4df185dc63e0cb55b1b227e991f86119f0f31274ed59c8548e4336c5b9.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matching = all.filter((t) => /docs/i.test(t.title));\nyield* print('total tasks', all.length);\nfor (const t of matching) {\n  yield* print('match', t.title, t.status);\n}\nfor (const t of matching) {\n  if (t.status !== 'done') {\n    Obj.update(t, (task) => { task.status = 'done'; });\n  }\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('done total', after.filter((t) => t.status === 'done').length);"
+  },
+  {
+    "id": "store-b061032fc4",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/78b81672c2251563cf402720062d14e8819ebbc3ccfb6d3ae5de73499321f084.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter(t => /docs/i.test(t.title));\nfor (const t of matches) {\n  Obj.update(t, (task) => { task.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', JSON.stringify(matches.map(t => t.title)));\nyield* print('done count', after.filter(t => t.status === 'done').length);\nyield* print('final', JSON.stringify(after.map(t => [t.title, t.status])));"
+  },
+  {
+    "id": "store-bdd7fabbe6",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/78bc737cf7d1d0d038b324d765b2bbfa2b7eb3b0239455b0156ebbe3981ee4be.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter((t) => t.title.toLowerCase().includes('docs'));\nfor (const t of matches) { Obj.update(t, (task) => { task.status = 'done'; }); }\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', JSON.stringify(matches.map((t) => t.title)));\nyield* print('done count', after.filter((t) => t.status === 'done').length);\nyield* print('all', JSON.stringify(after.map((t) => [t.title, t.status])));"
+  },
+  {
+    "id": "store-6aee16cc03",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/7aa77e5b58f0a724c46ceb8582d6fb1725d497046d761b98a6577bec5e9a6a04.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open count', tasks.length);\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r);\n  Obj.update(t, (task) => { task.priority = score; });\n  results.push({ id: t.id, title: t.title, score });\n}\nyield* Database.flush();\nresults.sort((a, b) => b.score - a.score);\nyield* print('scores', results);"
+  },
+  {
+    "id": "store-e3bf0fe8fc",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/80ff24fad866a3e6c1f8afdf9258d17385fd31d4a2ec4b5a0aa366ab5b0b51ff.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nyield* print('total tasks', all.length);\nfor (const t of all) {\n  yield* print(t.id, JSON.stringify(t.title), t.status);\n}"
+  },
+  {
+    "id": "store-06836b5cb6",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/8452ea0b7dc6030861254f1b8340cee1fb2afb6cb9da71616ec69d0edc333482.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open count', tasks.length);\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r);\n  Obj.update(t, (x) => { x.priority = score; });\n  results.push({ id: t.id, title: t.title, score });\n}\nyield* Database.flush();\nresults.sort((a, b) => b.score - a.score);\nyield* print('results', results);"
+  },
+  {
+    "id": "store-de4046e92c",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/8c6de639105d79bc575c2ea108f1aa6a9ea45a662d23f2ce8a365c22121afc9a.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r);\n  Obj.update(t, (o) => { o.priority = score; });\n  results.push({ id: t.id, title: t.title, score });\n}\nyield* Database.flush();\nyield* print('count', tasks.length);\nyield* print(results);"
+  },
+  {
+    "id": "store-7efc247b17",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/93a8c3cd7e19636831234c0efa87c8e1d130caa0b458bdb6a206d42b61da9272.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open tasks', tasks.length);\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r.score ?? r.result ?? r.output);\n  Obj.update(t, (task) => { task.priority = score; });\n  results.push({ title: t.title, score, id: t.id });\n}\nyield* Database.flush();\nresults.sort((a, b) => b.score - a.score);\nyield* print(results);"
+  },
+  {
+    "id": "store-a0e78aad93",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/9e4a9c6a76a881b489533401abf3eed343c07aa35ea55342c5731053ba2b97af.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : r.score;\n  Obj.update(t, (task) => { task.priority = score; });\n  results.push([t.title, score]);\n}\nyield* Database.flush();\nyield* print('results', results);\nconst after = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('stored', after.map((t) => [t.title, t.priority]));"
+  },
+  {
+    "id": "store-fc0ed8a920",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/9fa4332720e6f3e28a438dc05d9c279159612831a78206ffd273c5829d0fdc77.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst tasks = yield* Database.query(Filter.type(Task)).run;\nconst matched = tasks.filter((t) => /docs/i.test(t.title ?? ''));\nyield* print('total tasks', tasks.length);\nyield* print('matched', matched.map((t) => ({ title: t.title, status: t.status })));\nfor (const t of matched) {\n  if (t.status !== 'done') Obj.update(t, (x) => { x.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('done count', after.filter((t) => t.status === 'done').length);\nyield* print('statuses', after.map((t) => t.status));"
+  },
+  {
+    "id": "store-833bf852d9",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/a8de80b65d3032748442598470e12372a9288b88aa5c10977c494bea144988b3.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('open tasks', tasks.length);\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : (r?.score ?? r);\n  Obj.update(t, (task) => { task.priority = score; });\n  results.push({ title: t.title, score, id: t.id });\n}\nyield* Database.flush();\nresults.sort((a, b) => b.score - a.score);\nyield* print('scored', results);"
+  },
+  {
+    "id": "store-f25b08dfd3",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/acac82eb831f0a8cf49f21c8160430d009f6840953cd91e7d5054d3806290a94.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst docs = all.filter(t => /docs/i.test(t.title));\nyield* print('matching', docs.map(t => ({ id: t.id, title: t.title, status: t.status })));\nfor (const t of docs) {\n  if (t.status !== 'done') Obj.update(t, (x) => { x.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('total tasks', after.length);\nyield* print('done total', after.filter(t => t.status === 'done').length);"
+  },
+  {
+    "id": "store-0c2670cf40",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/baec5f7b7dfb6e9093367347da2feaf63106b5b07bf0b9a92a552f022c213acb.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst Score = yield* Database.resolve('dxn:com.example.operation.score');\nconst tasks = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nconst results = [];\nfor (const t of tasks) {\n  const r = yield* Operation.invoke(Score, { title: t.title });\n  const score = typeof r === 'number' ? r : r.score;\n  Obj.update(t, (task) => { task.priority = score; });\n  results.push({ title: t.title, score, raw: r });\n}\nyield* Database.flush();\nyield* print('results', results);\nconst after = yield* Database.query(Filter.type(Task, { status: 'open' })).run;\nyield* print('stored', after.map((t) => ({ title: t.title, priority: t.priority })));"
+  },
+  {
+    "id": "store-59285a0bca",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/bc245561d777ad77db928fc97a2f8437c589879ca4b1f3d7f48140a1ec78002a.json#response",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst matches = all.filter((t) => /docs/i.test(t.title));\nfor (const t of matches) {\n  Obj.update(t, (task) => { task.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task)).run;\nyield* print('updated', matches.map((t) => t.title));\nyield* print('done count', after.filter((t) => t.status === 'done').length);"
+  },
+  {
+    "id": "store-c72729c226",
+    "origin": "store",
+    "source": ".store/conversations/packages_core_compute_agent-code-mode_src_code-mode/f55422534e827647077c334ac9f7feabc75bae1f9e4b01c061da1ea795c18040.json#prompt",
+    "code": "const Task = yield* Database.resolve('dxn:com.example.type.task:0.1.0');\nconst all = yield* Database.query(Filter.type(Task)).run;\nconst docs = all.filter(t => /docs/i.test(t.title));\nyield* print('matching:', docs.map(t => ({ id: t.id, title: t.title, status: t.status })));\nfor (const t of docs) {\n  if (t.status !== 'done') Obj.update(t, (x) => { x.status = 'done'; });\n}\nyield* Database.flush();\nconst after = yield* Database.query(Filter.type(Task, { status: 'done' })).run;\nyield* print('total tasks:', all.length, 'done:', after.length);"
+  },
+  {
+    "id": "tests-8757139435",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/code-mode.test.ts:312",
+    "code": "yield* Promise.resolve(1);"
+  },
+  {
+    "id": "tests-4745e0cd49",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/code-mode.test.ts:326",
+    "code": "yield* print(mailbox.id);"
+  },
+  {
+    "id": "tests-a4b88bc52a",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/code-mode.test.ts:340",
+    "code": "print('hello');"
+  },
+  {
+    "id": "tests-eea495a8af",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/code-mode.test.ts:342",
+    "code": "yield* print('hello');"
+  },
+  {
+    "id": "tests-3898905cb7",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/code-mode.test.ts:353",
+    "code": "yield* print(Object.keys(DOCS).join(',')); yield* print(DOCS['README.md'].slice(0, 28));"
+  },
+  {
+    "id": "tests-63e42771c1",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/code-mode.test.ts:443",
+    "code": "yield* print('before'); yield* Effect.fail(new ProbeError({ detail: 'nope' }));"
+  },
+  {
+    "id": "tests-564ab85314",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/describe.test.ts:222",
+    "code": "for (const task of yield* Database.query(Filter.type(yield* Database.resolve('dxn:com.example.type.task:0.1.0'))).run) { yield* print(task); }"
+  },
+  {
+    "id": "tests-fc1113da41",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/docs.test.ts:275",
+    "code": "const Score = yield* Database.resolve('dxn:com.example.operation.score');\n          for (const title of ['Write the docs', '']) {\n            const exit = yield* Effect.exit(Operation.invoke(Score, { title }));\n            if (exit._tag === 'Failure') {\n              yield* print('failed', String(exit.cause).includes('ScoreFailed'));\n            } else {\n              yield* print('score', exit.value);\n            }\n          }"
+  },
+  {
+    "id": "tests-9f78c30b58",
+    "origin": "tests",
+    "source": "packages/core/compute/agent-code-mode/src/producer.test.ts:37",
+    "code": "yield* print(yield* Tools['mcp__localhost__get_weather']({ city: 'Paris' }));"
+  }
+]

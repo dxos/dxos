@@ -73,6 +73,10 @@ const AUXILIARY_ENTRY = [
   'src/**/*-processor.js',
   // Function bodies the runtime bundles by path rather than importing.
   'src/functions/**/*.{ts,tsx}',
+  // A sandbox's guest runtime, bundled by a script into one file the host loads as text, and the
+  // stand-ins that script aliases node built-ins to.
+  'src/guest/entry.ts',
+  'src/guest/shims/*.ts',
   // Ambient declarations and module augmentations: TypeScript picks these up from `include`, so
   // nothing ever imports them. Scoped to checked-in locations — a bare `**` would pull the
   // generated `dist/types` tree into the analysis.
@@ -378,6 +382,8 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
  * entry, which clears the finding.
  */
 const TRAVERSAL_MISSED: Record<string, string[]> = {
+  // Imported only by the guest runtime, which reaches the package through its bundle script.
+  'packages/core/compute/code-mode-djs': ['@dxos/async'],
   // `functions/edge-function.ts` calls `SchemaAST.getPropertySignatures`, and reaches the entry only
   // as `src/index.ts` -> `./functions` -> `./edge-function`.
   'packages/core/compute/compute-hyperformula': ['@dxos/effect'],
