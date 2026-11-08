@@ -196,6 +196,59 @@ developer writes. A graph visualisation does demonstrate the graph better than a
 the likely answer is to keep this demo plain and add the graph view behind a toggle, or to build the
 visual version as a separate showcase.
 
+## Phase 3: The assistant on the demo's database (D-6)
+
+Spikes first, each a gate: the cheap one has already answered, and the other three decide how much
+of the plan survives. Build order after that is endpoint, skill, session, UI.
+
+- [x] **S-1 (gate, passed): is the demo's database a `Database.Service`?** `Database.layer(db)`
+      typechecks as `Layer<Database.Service>` against `SqliteDatabase`, with no cast. This is the whole
+      premise of D-6, and it costs nothing.
+
+- [ ] **S-2 (gate): run a real toolkit operation against an `echo-sqlite` database.** Take
+      `MemorySkill`'s `SaveMemory` / `QueryMemories` as they are, resolve them through
+      `ServiceResolver` over `Database.layer(db)` in a node test, and see whether the handlers touch
+      only what echo-sqlite implements (`query`, `add`, `remove`, `flush`) or also want the registry,
+      queues or blobs. Fails → the demo needs its own operations rather than the toolkit's, which is
+      more work but not a blocker.
+
+- [ ] **S-3 (gate for the chat, not the demo): what does a `Feed` serialise to?** D-5's sync carries
+      a foreign key, scalar props and refs. If a feed's blocks are rich text or nested objects, the
+      conversation stays on the device that held it and only the agent's graph writes travel. Answer
+      before claiming "the conversation syncs too" anywhere.
+
+- [ ] **S-4: what does the assistant cost the bundle?** Measure `index-*.js` before and after
+      importing `@dxos/assistant` + `@dxos/ai` + `@dxos/agent-runtime`. The demo's pitch is that it is
+      small; if the cost is severe, the agent moves to the Durable Object and the browser keeps none of
+      it.
+
+- [ ] **A-1: the AI endpoint.** `/api/ai/provider/anthropic/*` on the existing Worker, forwarding
+      with a `wrangler secret`; `AnthropicClient.layerConfig({ apiUrl })` in the client. Per-slug limit
+      in the DO, which already meters that graph. No key reaches the browser.
+
+- [ ] **A-2: the graph skill.** `com.example.skill.graph`, modelled on
+      `assistant-toolkit/src/skills/memory`: `FindRecords` (by type, and the FTS5 search the demo
+      already has), `CreateRecord`, `LinkRecords` (`employer`, `attendees`), with instructions naming
+      the three types. The schema annotations already carry the names and icons, so the instructions
+      read them rather than repeating them.
+
+- [ ] **A-3: the session.** Assemble the layers following
+      `agent-runtime/src/testing/assistant-test-layer.ts`, with `Database.layer(db)` and the Anthropic
+      client from A-1. The agent's writes are ordinary ECHO writes, so the existing push carries them
+      with no sync change.
+
+- [ ] **A-4: the UI.** A Chat tab beside list/masonry/table/graph, composed from
+      `@dxos/react-ui-chat` parts (`ChatEditor`, `ChatStatus`), as the other views are composed from
+      react-ui primitives.
+
+- [ ] **A-5: verify across two clients.** Ask the assistant in one profile to add an event with
+      attendees; it appears in the other without a reload. Then deploy.
+
+**Deferred, and why.** The agent in the Durable Object (D-6 names the cost: an `echo-sqlite`
+instance server-side, which is D-1 option 3). MCP, which `agent-runtime` brings but the demo has no
+use for. Reviewing a tool call before it runs — worth having before anyone points this at data they
+care about, pointless on a graph that expires in 24 hours.
+
 ## Phase 2: Follow-ups owed elsewhere
 
 - [ ] **Memo corrections** (`temp/echo-cloudflare-positioning.md`): the benchmark harness exists and
