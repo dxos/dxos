@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import '@dxos/react-ui-graph/styles/graph.css';
+import '@dxos/react-ui-graph/styles/graph-standalone.css';
 import { Ref } from '@dxos/echo';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { type GraphController, GraphForceProjector, SVG, type SVGContext } from '@dxos/react-ui-graph';
@@ -14,8 +14,9 @@ import type { Organization, Person } from '../schema.ts';
 /**
  * The same objects the list shows, as a force-directed graph.
  *
- * `@dxos/react-ui-graph` brings its own stylesheet, so this needs no Tailwind pipeline — the demo
- * stays a plain Vite app, which is the point of it.
+ * Uses the package's standalone stylesheet: `graph.css` is a Tailwind source, so without the theme
+ * pipeline every fill and stroke is dropped and the graph paints black. The standalone sheet keeps
+ * this demo a plain Vite app, which is the point of it.
  */
 export const GraphView = ({
   organizations,
