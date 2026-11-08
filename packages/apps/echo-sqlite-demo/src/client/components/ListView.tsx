@@ -61,7 +61,11 @@ export const ListView = ({
                 icon='ph--x--regular'
                 variant='ghost'
                 label='Remove'
-                onClick={() => onRemove(entry.value)}
+                // The row selects on click, so removing a record must not reach it.
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRemove(entry.value);
+                }}
               />
             )}
           </Listbox.Item>

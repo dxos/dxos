@@ -16,21 +16,19 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { getTypeIcon, getTypeTitle, types } from '../../schema.ts';
-import { CodeView } from './CodeView.tsx';
 import { GraphView } from './GraphView.tsx';
 import { type Entry, ListView } from './ListView.tsx';
 import { MasonryView } from './MasonryView.tsx';
 import { SearchBar } from './SearchBar.tsx';
 import { TableView } from './TableView.tsx';
 
-export type MasterTab = 'list' | 'masonry' | 'table' | 'graph' | 'code';
+export type MasterTab = 'list' | 'masonry' | 'table' | 'graph';
 
 const TABS: { value: MasterTab; label: string; icon: string }[] = [
   { value: 'list', label: 'List', icon: 'ph--list-bullets--regular' },
   { value: 'masonry', label: 'Masonry', icon: 'ph--kanban--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
   { value: 'graph', label: 'Graph', icon: 'ph--graph--regular' },
-  { value: 'code', label: 'Code', icon: 'ph--code--regular' },
 ];
 
 /** The actions that do not earn a button of their own. */
@@ -53,7 +51,7 @@ const iconOf = (obj: Obj.Unknown): string | undefined => {
  * The master pane: its own toolbar — which type, which view, and the actions — with search under it, over the records.
  *
  * A nested `Panel` gives the header/body rows and the gutter the body's content inherits; every view owns its
- * scrolling (`Listbox.Viewport`, the code view) or fills instead (the graph).
+ * scrolling (`Listbox.Viewport`) or fills instead (the graph).
  */
 export const MasterView = ({
   typename,
@@ -223,7 +221,6 @@ export const MasterView = ({
         )}
         {tab === 'table' && <TableView type={type} rows={rows} onSelect={onSelect} />}
         {tab === 'graph' && <GraphView objects={objects} selected={selected} getEntry={getEntry} onSelect={onSelect} />}
-        {tab === 'code' && <CodeView />}
       </Panel.Body>
     </Panel.Root>
   );

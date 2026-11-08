@@ -3,7 +3,6 @@
 //
 
 export * from './App.tsx';
-export * from './CodeView.tsx';
 export * from './DetailForm.tsx';
 export * from './GraphView.tsx';
 export * from './ListView.tsx';

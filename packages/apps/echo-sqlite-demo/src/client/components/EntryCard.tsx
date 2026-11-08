@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -39,15 +38,8 @@ export const EntryCard = ({
         </Layout.Block>
       )}
       <Card.Title truncate>{entry.label}</Card.Title>
-      {onRemove && (
-        <Button.Root
-          iconOnly
-          icon='ph--x--regular'
-          variant='ghost'
-          label='Remove'
-          onClick={() => onRemove(entry.value)}
-        />
-      )}
+      {/* `Card.Action`, not a Button: its click stays with it, so removing a record does not also select it. */}
+      {onRemove && <Card.Action icon='ph--x--regular' label='Remove' onClick={() => onRemove(entry.value)} />}
     </Card.Header>
     {entry.fields?.map((field, index) => (
       // Two addresses carry the same icon, so position is the only stable key here.

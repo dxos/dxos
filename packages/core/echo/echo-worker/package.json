@@ -23,8 +23,7 @@
       "source": "./src/worker/index.ts",
       "types": "./dist/types/src/worker/index.d.ts",
       "import": "./dist/lib/worker.mjs"
-    },
-    "./src/*": "./src/*"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

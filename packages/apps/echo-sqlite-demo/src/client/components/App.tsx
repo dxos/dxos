@@ -123,7 +123,8 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
       const obj = objects.find((candidate) => candidate.id === id);
       if (obj) {
         db.remove(obj);
-        setSelected(undefined);
+        // Only the record being removed leaves the detail pane; removing another one is not a selection change.
+        setSelected((current) => (current === id ? undefined : current));
       }
     },
     [db, objects],
