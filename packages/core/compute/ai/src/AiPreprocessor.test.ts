@@ -93,7 +93,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
             name: 'eval',
             result: JSON.stringify('sent'),
             providerExecuted: false,
-            invocations: [{ operationKey: 'org.example.operation.send', result: '{"channel":"thread-1"}' }],
+            invocations: [{ operationKey: 'org.example.operation.send' }],
           },
         ]),
       ];
