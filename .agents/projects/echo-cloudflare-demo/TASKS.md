@@ -26,12 +26,12 @@ Spec + decisions: [DESIGN.md](./DESIGN.md).
 
       Two things the spike cost, worth keeping:
 
-                      - The vitest project is **`browser-chromium`**, not `chromium` (`vite.base.config.ts` names it
-                        `browser-${browserName}`).
-                      - `SqliteDatabase.open` defaults `spaceId` to `SpaceId.random()`, and one SQLite file holds
-                        several spaces — so every session of one logical space must be handed the same id. The first
-                        run looked like a persistence failure and was a test bug. A DO-backed demo pins one space
-                        per Durable Object anyway.
+  - The vitest project is **`browser-chromium`**, not `chromium` (`vite.base.config.ts` names it
+    `browser-${browserName}`).
+  - `SqliteDatabase.open` defaults `spaceId` to `SpaceId.random()`, and one SQLite file holds
+    several spaces — so every session of one logical space must be handed the same id. The first
+    run looked like a persistence failure and was a test bug. A DO-backed demo pins one space
+    per Durable Object anyway.
 
 - [ ] **Risk 10: `echo-sqlite` in the Workers runtime.** Better than the planned
       `wrangler deploy --dry-run`: `vite.base.config.ts` already defines an opt-in `workerd` vitest
@@ -40,61 +40,62 @@ Spec + decisions: [DESIGN.md](./DESIGN.md).
       `ctx.storage.sql`, not merely bundle it.
 
       Shape is settled: `WorkerdOptions` takes `main` (the worker entry `SELF` dispatches to, in the
-                      test's own isolate) and `miniflare` (for "a binding the runtime only provides when it is
-                      declared"), so declare `durableObjects` there and point `main` at an entry exporting the DO
-                      class. No DO-in-workerd test exists in this repo yet, so this is a new harness pattern.
 
-                      **PARKED — the workerd vitest project does not start for this package.**
-                      `TypeError: Cannot read properties of undefined (reading 'config')` at the first `describe`,
-                      with `import 0ms`, so the pool environment fails before any module loads.
+  test's own isolate) and `miniflare` (for "a binding the runtime only provides when it is
+  declared"), so declare `durableObjects` there and point `main` at an entry exporting the DO
+  class. No DO-in-workerd test exists in this repo yet, so this is a new harness pattern.
 
-                      The three files live in [`parked/`](./parked/), not in the package, so `echo-sqlite` carries
-                      only working, used code and stays green on both test and typecheck:
+  **PARKED — the workerd vitest project does not start for this package.**
+  `TypeError: Cannot read properties of undefined (reading 'config')` at the first `describe`,
+  with `import 0ms`, so the pool environment fails before any module loads.
 
-                      | File | What it is |
-                      | --- | --- |
-                      | `parked/workerd-do.ts` | the DO class — `SqliteDoClient.SqliteClient.layer({ storage })` + `SqliteDatabase.open`, modelled on edge's `DurableObjectSedimentreeStorage` |
-                      | `parked/echo-sqlite.workerd.test.ts` | RPC into the DO, asserting the graph, the ref traversal and FTS5 |
-                      | `parked/load.workerd.test.ts` | module graph + query compiler only, no DO |
+  The three files live in [`parked/`](./parked/), not in the package, so `echo-sqlite` carries
+  only working, used code and stays green on both test and typecheck:
 
-                      To pick it back up: move the three into `src/testing/`, uncomment `workerd: true` with the DO
-                      binding block in `vite.config.ts`, restore the `@cloudflare/vitest-pool-workers`,
-                      `@cloudflare/workers-types` and `@effect/sql-sqlite-do` devDeps (the catalog entry for the
-                      last one is already added), and add a `types` array to `tsconfig.json` listing those two
-                      `@cloudflare` packages **plus `node` and `wicg-file-system-access`** — a `types` array
-                      overrides the base config's, and dropping those two breaks the node and OPFS suites.
+  | File                                 | What it is                                                                                                                                    |
+  | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `parked/workerd-do.ts`               | the DO class — `SqliteDoClient.SqliteClient.layer({ storage })` + `SqliteDatabase.open`, modelled on edge's `DurableObjectSedimentreeStorage` |
+  | `parked/echo-sqlite.workerd.test.ts` | RPC into the DO, asserting the graph, the ref traversal and FTS5                                                                              |
+  | `parked/load.workerd.test.ts`        | module graph + query compiler only, no DO                                                                                                     |
 
-                      One unresolved detail even then: the DO test's `env.ECHO_SQLITE` would not typecheck. Neither
-                      `declare module 'cloudflare:test' { interface ProvidedEnv … }` nor `interface Env …` nor
-                      `declare global { interface Env … }` merged with the `Env` the pool types use.
+  To pick it back up: move the three into `src/testing/`, uncomment `workerd: true` with the DO
+  binding block in `vite.config.ts`, restore the `@cloudflare/vitest-pool-workers`,
+  `@cloudflare/workers-types` and `@effect/sql-sqlite-do` devDeps (the catalog entry for the
+  last one is already added), and add a `types` array to `tsconfig.json` listing those two
+  `@cloudflare` packages **plus `node` and `wicg-file-system-access`** — a `types` array
+  overrides the base config's, and dropping those two breaks the node and OPFS suites.
 
-                      What was ruled out, each by experiment:
+  One unresolved detail even then: the DO test's `env.ECHO_SQLITE` would not typecheck. Neither
+  `declare module 'cloudflare:test' { interface ProvidedEnv … }` nor `interface Env …` nor
+  `declare global { interface Env … }` merged with the `Env` the pool types use.
 
-                      - *Not this package's code.* A test importing only `vitest` fails identically.
-                      - *Not the harness in general.* `plugin-markdown`'s workerd test passes on this machine.
-                      - *Not the wa-sqlite alias.* Removed it; the browser suite still passes, workerd still fails.
-                        (The alias turned out to be unnecessary and has been dropped from `vite.config.ts`.)
-                      - *Not the `browser` project coexisting.* Failed with the config reduced to
-                        `{ node: true, workerd: true }`.
-                      - *Not a missing `@cloudflare/vitest-pool-workers`.* Hoisted at the repo root, which is where
-                        `vite.base.config.ts` imports it from. Declaring it and `@cloudflare/workers-types` directly
-                        as devDeps — the pattern `plugin-host-cloudflare` uses — changed nothing. They are kept
-                        anyway: `workerd-do.ts` imports `cloudflare:workers` and the parked tests import
-                        `cloudflare:test`, so both are needed for the package to typecheck.
+  What was ruled out, each by experiment:
 
-                      The workerd project is now commented out in `vite.config.ts`. The node project already
-                      excludes `*.workerd.test.ts`, so the three files sit in the tree collected by nothing and the
-                      suite is green; re-enable `workerd: true` to pick the spike back up.
+  - _Not this package's code._ A test importing only `vitest` fails identically.
+  - _Not the harness in general._ `plugin-markdown`'s workerd test passes on this machine.
+  - _Not the wa-sqlite alias._ Removed it; the browser suite still passes, workerd still fails.
+    (The alias turned out to be unnecessary and has been dropped from `vite.config.ts`.)
+  - _Not the `browser` project coexisting._ Failed with the config reduced to
+    `{ node: true, workerd: true }`.
+  - _Not a missing `@cloudflare/vitest-pool-workers`._ Hoisted at the repo root, which is where
+    `vite.base.config.ts` imports it from. Declaring it and `@cloudflare/workers-types` directly
+    as devDeps — the pattern `plugin-host-cloudflare` uses — changed nothing. They are kept
+    anyway: `workerd-do.ts` imports `cloudflare:workers` and the parked tests import
+    `cloudflare:test`, so both are needed for the package to typecheck.
 
-                      Remaining lead for whoever picks it up: `plugin-markdown` sets `jsx: 'react'` and this package
-                      sets no `jsx`; `plugin-host-cloudflare` (the other workerd-tested package) declares
-                      `@cloudflare/vitest-pool-workers` and `@cloudflare/workers-types` directly and sets
-                      `test: { workerd: true }` with no node project.
+  The workerd project is now commented out in `vite.config.ts`. The node project already
+  excludes `*.workerd.test.ts`, so the three files sit in the tree collected by nothing and the
+  suite is green; re-enable `workerd: true` to pick the spike back up.
 
-                      **Not on the critical path.** Option 1 runs ECHO in the browser, and the DO only has to
-                      persist exported bytes — it does not need to run `echo-sqlite`. Doing so would prove the "one
-                      codebase, two runtimes" line and is the increment toward option 3 / gap E, so it is worth
-                      finishing, but Phase 1 does not wait on it.
+  Remaining lead for whoever picks it up: `plugin-markdown` sets `jsx: 'react'` and this package
+  sets no `jsx`; `plugin-host-cloudflare` (the other workerd-tested package) declares
+  `@cloudflare/vitest-pool-workers` and `@cloudflare/workers-types` directly and sets
+  `test: { workerd: true }` with no node project.
+
+  **Not on the critical path.** Option 1 runs ECHO in the browser, and the DO only has to
+  persist exported bytes — it does not need to run `echo-sqlite`. Doing so would prove the "one
+  codebase, two runtimes" line and is the increment toward option 3 / gap E, so it is worth
+  finishing, but Phase 1 does not wait on it.
 
 - [x] **Q-2 answered: FTS5 is present in the browser build.** Twice over — `0001_init` creates an
       `fts5(text, tokenize = 'trigram')` virtual table and ran clean in chromium, and the spike's
