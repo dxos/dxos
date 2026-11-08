@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { type FactAggregate } from '../internal/sparql/aggregate.ts';
-import { type Fact } from '../types/index.ts';
+import { type Fact, Graph, Mapping } from '../types/index.ts';
 import * as FactAnalyticsLive from './analytics.ts';
 import * as FactStoreLive from './fact-store-live.ts';
 
@@ -57,15 +57,18 @@ const CORPUS: Fact[] = [
 const shape = (groups: ReadonlyArray<{ keys: readonly string[]; count: number }>): string[] =>
   groups.map((group) => `${group.keys.join('|')}=${group.count}`).sort();
 
-/** Both analytics backends over the same corpus: the store (SPARQL/SQLite) and the plain fact array (JS). */
-const backends = Effect.gen(function* () {
-  const database = yield* Effect.acquireRelease(SqlStorage.makeMemory(), (open) =>
-    Effect.sync(() => open.close()),
-  ).pipe(Effect.orDie);
-  const store = yield* FactStoreLive.make(database);
-  yield* store.putFacts(CORPUS);
-  return { store: FactAnalyticsLive.fromStore(store), memory: FactAnalyticsLive.fromFacts(CORPUS) };
-});
+/** Both analytics backends over one corpus: the store (SPARQL/SQLite) and the plain fact array (JS). */
+const backendsOf = (facts: readonly Fact[]) =>
+  Effect.gen(function* () {
+    const database = yield* Effect.acquireRelease(SqlStorage.makeMemory(), (open) =>
+      Effect.sync(() => open.close()),
+    ).pipe(Effect.orDie);
+    const store = yield* FactStoreLive.make(database);
+    yield* store.putFacts(facts);
+    return { store: FactAnalyticsLive.fromStore(store), memory: FactAnalyticsLive.fromFacts(facts) };
+  });
+
+const backends = backendsOf(CORPUS);
 
 /** Predicate IRIs are the store's group keys; the local name is enough to assert on. */
 const localNames = (groups: ReadonlyArray<{ keys: readonly string[]; count: number }>): string[] =>
@@ -172,6 +175,74 @@ describe('FactAnalytics', () => {
         // `dxos` is only ever mentioned without a label, so it has none to show.
         expect(labels.has('dxos')).toBe(false);
         expect(yield* analytics.entityLabels([])).toEqual(new Map());
+      }
+    }, Effect.scoped),
+  );
+});
+
+//
+// The two backends answer the same question the same way, or a story written against a fixture does not show
+// what the app shows over a real store.
+//
+
+/**
+ * Seven claims about one subject, five of them withdrawn — and the withdrawn ids sort BEFORE the standing ones,
+ * so a cap applied to graphs in IRI order meets the withdrawn ones first.
+ */
+const CLAIMS: Fact[] = ['a1', 'a2', 'a3', 'a4', 'a5', 'z1', 'z2'].map((id) =>
+  fact(id, { assertion: assertion('carol', 'works at', `org-${id}`) }),
+);
+const WITHDRAWN = CLAIMS.slice(0, 5);
+const STANDING = CLAIMS.slice(5);
+
+/** Each withdrawal is about someone else, so a read scoped to the subject never contains the link. */
+const WITHDRAWALS = WITHDRAWN.map((stale, index) =>
+  Graph.retract(fact(`w${index}`, { assertion: assertion('dave', 'has note', 'withdrawn') }), stale),
+);
+
+/** A fact the extractor left unscored; `confidence ?? 0` is how both backends must read it. */
+const UNSCORED = fact('u1', { factuality: { value: 'CT+', polarity: '+' } });
+
+describe('FactAnalytics backend parity', () => {
+  it.effect(
+    'fills a capped `current` read, rather than capping before the withdrawn claims are dropped',
+    Effect.fnUntraced(function* () {
+      const { store, memory } = yield* backendsOf([...CLAIMS, ...WITHDRAWALS]);
+      for (const analytics of [store, memory]) {
+        const scope = { entity: 'carol', current: true } as const;
+        expect(yield* analytics.count(scope)).toBe(2);
+        // The cap is a window on the standing claims, not on the graphs scanned to find them.
+        for (const limit of [1, 2, 7]) {
+          expect((yield* analytics.facts({ ...scope, limit })).length).toBe(Math.min(limit, 2));
+        }
+        expect((yield* analytics.facts({ ...scope, limit: 2 })).map((found) => found.id).sort()).toEqual(
+          STANDING.map((found) => found.id),
+        );
+      }
+    }, Effect.scoped),
+  );
+
+  it.effect(
+    'reports a standing graph as absent from `statuses`, in both backends',
+    Effect.fnUntraced(function* () {
+      const { store, memory } = yield* backendsOf([...CLAIMS, ...WITHDRAWALS]);
+      for (const analytics of [store, memory]) {
+        const statuses = yield* analytics.statuses();
+        expect(statuses.get(Mapping.graphOf(WITHDRAWN[0]!))).toBe('retracted');
+        // `has` means "withdrawn" either way round; an active graph would make it mean nothing.
+        expect(statuses.has(Mapping.graphOf(STANDING[0]!))).toBe(false);
+      }
+    }, Effect.scoped),
+  );
+
+  it.effect(
+    'counts an unscored fact at confidence zero, rather than dropping it',
+    Effect.fnUntraced(function* () {
+      const { store, memory } = yield* backendsOf([UNSCORED, ...STANDING]);
+      for (const analytics of [store, memory]) {
+        expect(yield* analytics.count({ minConfidence: 0 })).toBe(3);
+        expect(yield* analytics.count({ minConfidence: 0.1 })).toBe(2);
+        expect((yield* analytics.facts({ minConfidence: 0 })).length).toBe(3);
       }
     }, Effect.scoped),
   );

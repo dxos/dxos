@@ -38,7 +38,10 @@ export type EntityMemory = {
   readonly label: string;
   /** Prior statements about the entity across the whole store. */
   readonly total: number;
-  /** The most recent of them, newest first. */
+  /**
+   * The subset loaded for the preview, sorted newest first. A capped store read has no recency order of its own
+   * — `SemanticQuery.limit` caps the graphs by IRI — so this is the loaded subset sorted, not the newest `total`.
+   */
   readonly facts: RDF.Fact[];
 };
 

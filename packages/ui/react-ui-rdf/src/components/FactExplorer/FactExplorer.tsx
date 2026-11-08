@@ -231,9 +231,14 @@ const FactExplorerMatrix = ({ classNames }: FactExplorerMatrixProps) => {
   const { overview, scope, toggle } = useFactExplorerContext('Matrix');
   const matrix: FactMatrix = overview.matrix;
   const template = `minmax(6rem, 10rem) repeat(${matrix.columns.length}, minmax(2.5rem, 1fr))`;
+  // Both axes at once: each is set only where it differs, so narrowing never clears the axis it is narrowing;
+  // clicking the selected cell clears both.
   const select = (entity: string, predicate: string) => {
-    toggle('entity', entity);
-    if (scope.predicate !== predicate) {
+    const selected = scope.entity === entity && scope.predicate === predicate;
+    if (selected || scope.entity !== entity) {
+      toggle('entity', entity);
+    }
+    if (selected || scope.predicate !== predicate) {
       toggle('predicate', predicate);
     }
   };

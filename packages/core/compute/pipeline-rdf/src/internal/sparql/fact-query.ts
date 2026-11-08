@@ -19,6 +19,31 @@ export const iriRef = (iri: string): string =>
 
 export const ONTOLOGY = iriRef(Vocab.ONTOLOGY_GRAPH);
 
+const SX_CONFIDENCE = iriRef(`${Vocab.SX}confidence`);
+const SX_SUPERSEDES = iriRef(`${Vocab.SX}supersedes`);
+const SX_RETRACTS = iriRef(`${Vocab.SX}retracts`);
+/** Spelled in full rather than via a prefix, so a pattern carries no declaration requirement to its caller. */
+const XSD_DECIMAL = '<http://www.w3.org/2001/XMLSchema#decimal>';
+
+/** Every graph that still stands: nothing supersedes or retracts it. */
+export const STANDING_FILTER = [
+  `FILTER NOT EXISTS { ?replacement ${SX_SUPERSEDES} ?g }`,
+  `FILTER NOT EXISTS { ?withdrawal ${SX_RETRACTS} ?g }`,
+];
+
+/**
+ * `?g`'s confidence against a floor, reading an unstated confidence as zero — as the in-memory backend does
+ * (`confidence ?? 0`). A floor of zero or less is therefore no constraint at all, and above zero no unscored
+ * graph can clear it, so requiring the triple is exact. (Stated as two cases rather than one `COALESCE`, whose
+ * arms the compiler would reject as mixed-type.)
+ */
+export const confidenceFilter = (minConfidence: number): string[] => {
+  if (!Number.isFinite(minConfidence)) {
+    throw new TypeError('minConfidence must be a finite number.');
+  }
+  return minConfidence <= 0 ? [] : [`?g ${SX_CONFIDENCE} ?conf .`, `FILTER(${XSD_DECIMAL}(?conf) >= ${minConfidence})`];
+};
+
 const KINDS = Mapping.KIND_CLASSES.map(iriRef).join(', ');
 
 /** Excludes rows that are not statements: the ontology graph, and an entity's label or kind. */
@@ -70,30 +95,43 @@ export const predicateLabels = (
 
 /**
  * Group pattern binding `?g` to every named graph holding a statement that matches each of the query's
- * constraints, with `predicates` the IRIs its predicate names. Confidence is not a constraint here: the caller
- * re-checks every statement (`statementMatches`).
+ * statement-level constraints, with `predicates` the IRIs its predicate names. A graph found by one statement may
+ * hold others, so the caller re-checks each reassembled statement (`statementMatches`).
+ *
+ * `minConfidence` and `current` are graph-level, so they are applied HERE rather than by the caller: they would
+ * otherwise run after {@link graphQuadsSparql}'s `limit`, and a capped read would return fewer facts than the cap
+ * while more matching ones went unloaded.
  */
 export const candidateGraphs = (query: SemanticQuery, predicates?: ReadonlySet<string>): string => {
-  const patterns: string[] = [];
+  // A filter does not bind `?g`, so the two lists stay apart: a query made only of filters still needs a binder.
+  const binders: string[] = [];
+  const filters: string[] = [];
   if (query.subjectEntity) {
-    patterns.push(
+    binders.push(
       `{ GRAPH ?g { ?ss ?sp ?so } ${statementFilter('?g', '?sp', '?so')} FILTER(${isEntity('?ss', query.subjectEntity)}) }`,
     );
   }
   if (predicates) {
-    patterns.push(
+    binders.push(
       `{ GRAPH ?g { ?ps ?pp ?po } FILTER(?g != ${ONTOLOGY} && ?pp IN (${[...predicates].map(iriRef).join(', ')})) }`,
     );
   }
   if (query.source) {
-    patterns.push(`?g ${iriRef(`${Vocab.PROV}wasDerivedFrom`)} ${JSON.stringify(query.source)} .`);
+    binders.push(`?g ${iriRef(`${Vocab.PROV}wasDerivedFrom`)} ${JSON.stringify(query.source)} .`);
   }
   if (query.entity) {
-    patterns.push(
+    binders.push(
       `{ GRAPH ?g { ?es ?ep ?eo } ${statementFilter('?g', '?ep', '?eo')} FILTER(${isEntity('?es', query.entity)} || ${isEntity('?eo', query.entity)}) }`,
     );
   }
-  return patterns.length === 0 ? `?g ${iriRef(Vocab.RDF_TYPE)} ${iriRef(Vocab.SX_GRAPH)} .` : patterns.join('\n');
+  if (query.minConfidence !== undefined) {
+    filters.push(...confidenceFilter(query.minConfidence));
+  }
+  if (query.current) {
+    filters.push(...STANDING_FILTER);
+  }
+  const bound = binders.length === 0 ? [`?g ${iriRef(Vocab.RDF_TYPE)} ${iriRef(Vocab.SX_GRAPH)} .`] : binders;
+  return [...bound, ...filters].join('\n');
 };
 
 /** Group pattern binding `?g` to exactly the given graph IRIs. */

@@ -117,9 +117,12 @@ const FactBeliefAnswer = ({ classNames }: FactBeliefAnswerProps) => {
       <Panel.Body classNames={styles.answerBody()}>
         <p className={styles.question()}>{belief.question}</p>
         {state.pending && <Status.Empty>Asking the store…</Status.Empty>}
+        {!state.pending && state.error && <Status.Empty>{state.error}</Status.Empty>}
         {!state.pending &&
+          !state.error &&
           !answer && (
-            // A retraction leaves no standing answer; saying so beats showing the withdrawn one.
+            // A retraction leaves no standing answer; saying so beats showing the withdrawn one. Only when the
+            // store actually answered — a failed read is not an absence of belief.
             <p className={styles.answerEmpty()}>Nothing stands.</p>
           )}
         {answer && (

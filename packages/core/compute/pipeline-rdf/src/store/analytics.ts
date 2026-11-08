@@ -26,11 +26,14 @@ export type FactAnalytics = {
   readonly facts: (query?: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
   /** Display labels for entity keys; a key the data never labels is absent. */
   readonly entityLabels: (keys: readonly string[]) => Effect.Effect<Map<string, string>, SemanticIndexError>;
-  /** Which graphs a later fact replaced or withdrew, so a history can say WHY a claim no longer stands. */
+  /**
+   * Which graphs a later fact replaced or withdrew, so a history can say WHY a claim no longer stands. A graph
+   * that still stands is ABSENT, in both backends, so `has` reads as "withdrawn" either way round.
+   */
   readonly statuses: () => Effect.Effect<Map<string, Graph.Status>, SemanticIndexError>;
 };
 
-/** Analytics backed by a store, so every count is one SQL statement. */
+/** Analytics backed by a store, so the counting happens in SQLite rather than over materialized facts. */
 export const fromStore = (store: FactStoreApi): FactAnalytics => ({
   count: (query = {}) => store.count(query),
   aggregate: (aggregate) => store.aggregate(aggregate),
@@ -115,6 +118,8 @@ export const fromFacts = (facts: readonly Fact[], ontology: Ontology.Ontology = 
   // that found it, and a correction the scope misses would leave the stale claim standing.
   const statuses = Graph.status(facts);
   const stands = (fact: Fact): boolean => statuses.get(Mapping.graphOf(fact)) === 'active';
+  // Only the graphs that no longer stand, which is what the store reports: `has` means the same in both backends.
+  const withdrawn = new Map([...statuses].filter(([, status]) => status !== 'active'));
 
   const scoped = (query: SemanticQuery): Fact[] => {
     const predicates =
@@ -151,7 +156,7 @@ export const fromFacts = (facts: readonly Fact[], ontology: Ontology.Ontology = 
         return query.limit === undefined ? result : result.slice(0, Math.max(0, Math.trunc(query.limit)));
       }),
 
-    statuses: () => Effect.sync(() => statuses),
+    statuses: () => Effect.sync(() => withdrawn),
 
     entityLabels: (keys) =>
       Effect.sync(() => {

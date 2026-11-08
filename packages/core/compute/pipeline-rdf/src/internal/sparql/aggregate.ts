@@ -3,7 +3,7 @@
 //
 
 import * as Vocab from '../../types/Vocab.ts';
-import { ONTOLOGY, iriRef, isEntity, statementFilter } from './fact-query.ts';
+import { ONTOLOGY, STANDING_FILTER, confidenceFilter, iriRef, isEntity, statementFilter } from './fact-query.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 //
@@ -56,17 +56,10 @@ const DEFAULT_FORCE = 'assertive';
 
 const PROV_DERIVED_FROM = iriRef(`${Vocab.PROV}wasDerivedFrom`);
 const PROV_ATTRIBUTED_TO = iriRef(`${Vocab.PROV}wasAttributedTo`);
-const SX_CONFIDENCE = iriRef(`${Vocab.SX}confidence`);
 const SX_FACTUALITY = iriRef(`${Vocab.SX}factuality`);
 const SX_FORCE = iriRef(`${Vocab.SX}force`);
 const SX_SUPERSEDES = iriRef(`${Vocab.SX}supersedes`);
 const SX_RETRACTS = iriRef(`${Vocab.SX}retracts`);
-
-/** Every graph that still stands: nothing supersedes or retracts it. */
-export const STANDING_FILTER = [
-  `FILTER NOT EXISTS { ?replacement ${SX_SUPERSEDES} ?g }`,
-  `FILTER NOT EXISTS { ?withdrawal ${SX_RETRACTS} ?g }`,
-];
 
 /** The graphs a later fact supersedes, and those it retracts, as `?target` rows. */
 export const SUPERSEDED_SPARQL = `SELECT DISTINCT ?target WHERE { ?g ${SX_SUPERSEDES} ?target }`;
@@ -108,10 +101,7 @@ export const statementPatterns = (query: SemanticQuery, predicates?: ReadonlySet
     patterns.push(`?g ${PROV_DERIVED_FROM} ${JSON.stringify(query.source)} .`);
   }
   if (query.minConfidence !== undefined) {
-    if (!Number.isFinite(query.minConfidence)) {
-      throw new TypeError('minConfidence must be a finite number.');
-    }
-    patterns.push(`?g ${SX_CONFIDENCE} ?conf .`, `FILTER(xsd:decimal(?conf) >= ${query.minConfidence})`);
+    patterns.push(...confidenceFilter(query.minConfidence));
   }
   if (query.current) {
     patterns.push(...STANDING_FILTER);
@@ -168,7 +158,6 @@ export const aggregateSparql = (aggregate: FactAggregate, predicates?: ReadonlyS
   const binds = dimensions.map((entry, index) => `BIND(${entry.expr} AS ?k${index})`);
   const keys = dimensions.map((_entry, index) => `?k${index}`);
   return [
-    'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>',
     `SELECT ${keys.join(' ')} (COUNT(*) AS ?n) WHERE {`,
     ...[...body, ...dimensions.flatMap((entry) => entry.patterns), ...binds].map((line) => `  ${line}`),
     '}',
@@ -180,12 +169,9 @@ export const aggregateSparql = (aggregate: FactAggregate, predicates?: ReadonlyS
 
 /** SPARQL counting the statements a query matches, exactly (no graph over-reach). */
 export const countSparql = (query: SemanticQuery, predicates?: ReadonlySet<string>): string =>
-  [
-    'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>',
-    'SELECT (COUNT(*) AS ?n) WHERE {',
-    ...statementPatterns(query, predicates).map((line) => `  ${line}`),
-    '}',
-  ].join('\n');
+  ['SELECT (COUNT(*) AS ?n) WHERE {', ...statementPatterns(query, predicates).map((line) => `  ${line}`), '}'].join(
+    '\n',
+  );
 
 /**
  * SPARQL for the display label of each entity key: the `rdfs:label` stated inside the graph that mentions it.

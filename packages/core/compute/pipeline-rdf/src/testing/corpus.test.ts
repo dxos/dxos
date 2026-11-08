@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
@@ -13,12 +13,12 @@ import { Mapping, termValue } from '../types/index.ts';
 import { DEMO_CORPUS, beliefDemo, generateCorpus } from './corpus.ts';
 
 describe('generateCorpus', () => {
-  it('is deterministic for a seed, and different across seeds', () => {
+  test('is deterministic for a seed, and different across seeds', () => {
     expect(generateCorpus({ messages: 40, seed: 7 })).toEqual(generateCorpus({ messages: 40, seed: 7 }));
     expect(generateCorpus({ messages: 40, seed: 7 })).not.toEqual(generateCorpus({ messages: 40, seed: 8 }));
   });
 
-  it('is inbox-shaped: many facts over many sources, long-tailed and uneven', () => {
+  test('is inbox-shaped: many facts over many sources, long-tailed and uneven', () => {
     const facts = generateCorpus({ messages: 400 });
     // Several facts per message, so the corpus is an order of magnitude past what a list can show at once.
     expect(facts.length).toBeGreaterThan(800);
@@ -46,7 +46,7 @@ describe('generateCorpus', () => {
     ).toEqual([]);
   });
 
-  it('carries contradicting claims about the same subject and predicate', () => {
+  test('carries contradicting claims about the same subject and predicate', () => {
     const facts = DEMO_CORPUS.filter((fact) => fact.id.startsWith('x-'));
     const alice = facts.filter((fact) => termValue(fact.assertion.subject) === 'alice-chen');
     expect(alice.length).toBe(2);
@@ -92,7 +92,7 @@ describe('generateCorpus', () => {
 });
 
 describe('beliefDemo', () => {
-  it('plants a stale claim in the corpus and keeps the correction out of it', () => {
+  test('plants a stale claim in the corpus and keeps the correction out of it', () => {
     const demo = beliefDemo({ messages: 60 });
     expect(demo.prior).toContain(demo.stale);
     // The correction is the demo's third beat; a store seeded with `prior` has never seen it.
@@ -100,7 +100,7 @@ describe('beliefDemo', () => {
     expect(demo.correction.supersedes).toEqual([Mapping.graphOf(demo.stale)]);
   });
 
-  it('makes the two claims differ on every axis the store records', () => {
+  test('makes the two claims differ on every axis the store records', () => {
     const { stale, correction } = beliefDemo({ messages: 60 });
     expect(termValue(stale.assertion.object)).not.toBe(termValue(correction.assertion.object));
     expect(stale.attribution.agent).not.toBe(correction.attribution.agent);
@@ -145,7 +145,7 @@ describe('beliefDemo', () => {
 });
 
 describe('beliefDemo scripting', () => {
-  it('leaves the subject exactly one claim, so the correction is the thing that changes the answer', () => {
+  test('leaves the subject exactly one claim, so the correction is the thing that changes the answer', () => {
     const demo = beliefDemo({ messages: 400 });
     const about = demo.prior.filter((fact) => termValue(fact.assertion.subject) === demo.subject);
     expect(about).toEqual([demo.stale]);

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { describe, expect, it, test } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
@@ -60,20 +60,20 @@ const backends = Effect.gen(function* () {
 });
 
 describe('supersede and retract', () => {
-  it('links the correction to the graph of the claim it replaces', () => {
+  test('links the correction to the graph of the claim it replaces', () => {
     expect(CORRECTION.supersedes).toEqual([Mapping.graphOf(STALE)]);
     // The builder does not touch the claim it replaces; nothing is deleted or rewritten.
     expect(STALE.supersedes).toBeUndefined();
   });
 
-  it('marks the replaced claim superseded and leaves the rest active', () => {
+  test('marks the replaced claim superseded and leaves the rest active', () => {
     const statuses = Graph.status(CORPUS);
     expect(statuses.get(Mapping.graphOf(STALE))).toBe('superseded');
     expect(statuses.get(Mapping.graphOf(CORRECTION))).toBe('active');
     expect(statuses.get(Mapping.graphOf(OTHER))).toBe('active');
   });
 
-  it('lets a retraction win over a supersession of the same claim', () => {
+  test('lets a retraction win over a supersession of the same claim', () => {
     const withdrawal = Graph.retract(fact('f-withdrawal', 'nothing'), STALE);
     expect(Graph.status([...CORPUS, withdrawal]).get(Mapping.graphOf(STALE))).toBe('retracted');
   });

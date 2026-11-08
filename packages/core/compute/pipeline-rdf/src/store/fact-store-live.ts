@@ -186,7 +186,9 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
   const statuses: FactStoreApi['statuses'] = () => attempt('Failed to read fact statuses')(() => withdrawnGraphs());
 
   // A graph found by one statement may hold others, so each reassembled statement is checked against the query
-  // again; `triplesToFacts` validates via Schema, so malformed stored data fails here too.
+  // again; `triplesToFacts` validates via Schema, so malformed stored data fails here too. The graph-level
+  // constraints (`minConfidence`, `current`) are in `candidateGraphs`, ahead of the cap — re-checking them here
+  // would not recover the facts a cap applied before them had already excluded.
   const query: FactStoreApi['query'] = (semanticQuery) =>
     attempt('Failed to query facts')(() => {
       const ontology = ontologyQuads();
@@ -194,9 +196,8 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
       const quads = rowsToQuads(
         engine.query(graphQuadsSparql(candidateGraphs(semanticQuery, predicates), semanticQuery.limit)),
       );
-      const stale = semanticQuery.current ? withdrawnGraphs() : undefined;
-      const facts = Mapping.triplesToFacts([...quads, ...ontology]).filter(
-        (fact) => statementMatches(fact, semanticQuery, predicates) && !stale?.has(Mapping.graphOf(fact)),
+      const facts = Mapping.triplesToFacts([...quads, ...ontology]).filter((fact) =>
+        statementMatches(fact, semanticQuery, predicates),
       );
       return semanticQuery.limit === undefined ? facts : facts.slice(0, Math.max(0, Math.trunc(semanticQuery.limit)));
     });
