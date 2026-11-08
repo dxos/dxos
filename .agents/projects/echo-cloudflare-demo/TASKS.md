@@ -205,14 +205,20 @@ of the plan survives. Build order after that is endpoint, skill, session, UI.
       typechecks as `Layer<Database.Service>` against `SqliteDatabase`, with no cast. This is the whole
       premise of D-6, and it costs nothing.
 
-- [ ] **S-2 (gate): run a real toolkit operation against an `echo-sqlite` database.** Take
+- [x] **S-2 (gate, passed): a real toolkit operation runs against an `echo-sqlite` database.** The
+      memory skill's handler bodies work verbatim over `Database.layer(db)`, full-text filter included
+      — kept as `echo-sqlite/src/assistant-surface.test.ts`, so the guarantee has a test rather than a
+      note. Original: Take
       `MemorySkill`'s `SaveMemory` / `QueryMemories` as they are, resolve them through
       `ServiceResolver` over `Database.layer(db)` in a node test, and see whether the handlers touch
       only what echo-sqlite implements (`query`, `add`, `remove`, `flush`) or also want the registry,
       queues or blobs. Fails → the demo needs its own operations rather than the toolkit's, which is
       more work but not a blocker.
 
-- [ ] **S-3 (gate for the chat, not the demo): what does a `Feed` serialise to?** D-5's sync carries
+- [x] **S-3 (gate, failed): `echo-sqlite` has no feeds, so the session cannot live here.**
+      `appendToFeed` and its neighbours throw `UnsupportedOperationError`, and `AiSession` is
+      feed-centric. D-6's findings list the three ways out; the choice is the user's, since each buys a
+      different demo. The tools are unaffected. Original: D-5's sync carries
       a foreign key, scalar props and refs. If a feed's blocks are rich text or nested objects, the
       conversation stays on the device that held it and only the agent's graph writes travel. Answer
       before claiming "the conversation syncs too" anywhere.
@@ -222,11 +228,17 @@ of the plan survives. Build order after that is endpoint, skill, session, UI.
       small; if the cost is severe, the agent moves to the Durable Object and the browser keeps none of
       it.
 
-- [ ] **A-1: the AI endpoint.** `/api/ai/provider/anthropic/*` on the existing Worker, forwarding
+- [x] **A-1 (code, unverified): the AI endpoint.** `/api/ai/provider/anthropic/*` forwards to the
+      provider with `env.ANTHROPIC_API_KEY`, streaming the response and storing nothing; a deployment
+      without the secret answers 503 with that sentence. Untested end to end: setting the secret and
+      deploying are the user's. Original: `/api/ai/provider/anthropic/*` on the existing Worker, forwarding
       with a `wrangler secret`; `AnthropicClient.layerConfig({ apiUrl })` in the client. Per-slug limit
       in the DO, which already meters that graph. No key reaches the browser.
 
-- [ ] **A-2: the graph skill.** `com.example.skill.graph`, modelled on
+- [x] **A-2 (done, tested): the graph skill.** `src/assistant/` — three operations (find, create,
+      link), their handlers, and a `Skill` whose instructions list the types and their fields read from
+      the schema. Four tests against a real database cover a record of each type, a refused type, find
+      by type and by text, and both kinds of link. Original: `com.example.skill.graph`, modelled on
       `assistant-toolkit/src/skills/memory`: `FindRecords` (by type, and the FTS5 search the demo
       already has), `CreateRecord`, `LinkRecords` (`employer`, `attendees`), with instructions naming
       the three types. The schema annotations already carry the names and icons, so the instructions

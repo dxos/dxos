@@ -168,6 +168,30 @@ else and under the same 1000-object cap, and a tool call is not reviewed before 
 conversation itself syncs depends on what a `Feed` serialises to (Q-4), and the demo works either
 way — only the graph writes are load-bearing.
 
+### D-6 findings, 2026-11-08
+
+**S-2 passed: the toolkit's handlers run against this backend.** The memory skill's handler bodies —
+`Database.add`, `Entity.toJSON`, `Query.all(...).select(...).limit()`,
+`Filter.text(term, { type: 'full-text' })`, `Database.flush()` — all work over `Database.layer(db)`
+on an `echo-sqlite` database (`echo-sqlite/src/assistant-surface.test.ts`). So an operation written
+for Composer is an operation this demo can run.
+
+**S-3 failed, and it moves the session: `echo-sqlite` has no feeds.** `appendToFeed`, `forkFeed`,
+`deleteFromFeed` and `removeFeedItemsByIds` all throw `UnsupportedOperationError`, and the README
+says so plainly. `AiSession` is feed-centric — its options are `{ feed, runtime }` and it is
+"durable conversation state backed by a Feed" — so the session cannot live in the demo's database
+as D-6 assumed. The tools still can, which is the part that matters; where the conversation lives is
+now the open choice:
+
+- **Messages as ordinary objects.** Add a message type to `schema.ts` and drive the model directly
+  with `@dxos/ai`, without `Session`. One database, the conversation syncs with the graph, and the
+  demo keeps its size. Loses the session's trajectory, summarisation and skill plumbing.
+- **Two databases in the tab.** An ECHO (Automerge) database for the feed beside the SQLite one for
+  the graph, with the tools declaring their own service tag so they still reach the graph. Keeps the
+  whole assistant; costs the `echo-client` stack in the bundle, and the chat does not sync.
+- **Feeds in `echo-sqlite`.** The honest fix, and what D-1 option 3 wants anyway. A project, not a
+  demo step.
+
 ## Open questions
 
 - **Q-4** What does a `Feed` serialise to, and can D-5's sync carry it? A record is a foreign key,
