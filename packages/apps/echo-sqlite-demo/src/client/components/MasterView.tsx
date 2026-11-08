@@ -138,6 +138,12 @@ export const MasterView = ({
   const suggestions = useMemo(() => matches.map((entry) => entry.label), [matches]);
   const keys = useMemo(() => new Set(matches.map((entry) => entry.value)), [matches]);
 
+  /** What the table shows: the objects behind the matches, as one array per render of the inputs. */
+  const rows = useMemo(
+    () => (typename === Type.getTypename(Person) ? people : organizations).filter((object) => keys.has(object.id)),
+    [typename, people, organizations, keys],
+  );
+
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Header asChild>
@@ -178,9 +184,7 @@ export const MasterView = ({
         {tab === 'table' && (
           <TableView
             type={typename === Type.getTypename(Person) ? Person : Organization}
-            rows={(typename === Type.getTypename(Person) ? people : organizations).filter((object) =>
-              keys.has(object.id),
-            )}
+            rows={rows}
             onSelect={onSelect}
           />
         )}

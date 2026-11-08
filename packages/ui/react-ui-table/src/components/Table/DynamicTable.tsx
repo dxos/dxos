@@ -60,9 +60,20 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
     [name, properties, jsonSchemaProp, typeProp],
   );
 
+  // Keyed on the properties' CONTENTS, not their identity: a caller that builds the array inline
+  // rebuilds the table — and with it every cell — on each of its own renders, which reads as a flicker
+  // whenever something outside the table changes (a selection, a filter).
+  const propertiesKey = useMemo(
+    () => properties?.map((property) => `${property.name}:${property.format}:${property.size ?? ''}`).join(),
+    [properties],
+  );
+  const propertiesRef = useRef(properties);
+  propertiesRef.current = properties;
+
   useEffect(() => {
-    setDynamicTable(makeDynamicTable({ registry, type, properties }));
-  }, [registry, type, properties]);
+    setDynamicTable(makeDynamicTable({ registry, type, properties: propertiesRef.current }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registry, type, propertiesKey]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {
