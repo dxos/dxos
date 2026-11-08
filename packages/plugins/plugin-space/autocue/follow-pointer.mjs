@@ -102,7 +102,7 @@ const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.r
 
 const followRow = (page) => sidebar(page).locator('[data-member][data-follow]');
 const followersGroup = (page) => sidebar(page).getByTestId('spacePlugin.presence.followers');
-const followHeading = (page) => page.getByTestId('spacePlugin.presence.followHeading').first();
+const followHeading = (page) => page.locator('[data-testid="deck.plank"] [data-accent]').first();
 const pointers = (page) => page.getByTestId('spacePlugin.followOverlay.pointer');
 
 // Where each peer's mouse last went, so a move glides from there.

@@ -112,48 +112,34 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
     })
     .toSorted(byIdentityKey);
 
-  // Someone in this session's follow is on the object, so the heading shows the follow.
+  // Someone in this session's follow is on the object, so their avatars show the follow.
   const followHue =
     follow && members.some((member) => member.identityKey && follow.members.has(member.identityKey))
       ? follow.hue
       : undefined;
 
   return (
-    <>
-      {followHue && (
-        <span
-          aria-hidden
-          className='dx-cover -z-10 pointer-events-none'
-          style={{
-            // A light wash keeps the title and controls readable over it.
-            backgroundColor: `color-mix(in oklab, var(--color-${followHue}-border) 18%, transparent)`,
-            boxShadow: `inset 0 -1px 0 var(--color-${followHue}-border)`,
-          }}
-          data-testid='spacePlugin.presence.followHeading'
-        />
-      )}
-      <FullPresence
-        members={members}
-        follow={followHue && follow ? { hue: followHue, members: follow.members } : undefined}
-        showSessions={showSessions}
-        renderActions={(member, sessionId) =>
-          spaceId && member.identityKey ? (
-            <PeerActions
-              spaceId={spaceId}
-              identityKey={member.identityKey}
-              presenceKey={presenceKey}
-              sessionId={sessionId}
-            />
-          ) : null
-        }
-        headerAction={
-          <>
-            <SessionsToggle pressed={showSessions} onPressedChange={setShowSessions} />
-            <SeeEveryoneButton />
-          </>
-        }
-      />
-    </>
+    <FullPresence
+      members={members}
+      follow={followHue && follow ? { hue: followHue, members: follow.members } : undefined}
+      showSessions={showSessions}
+      renderActions={(member, sessionId) =>
+        spaceId && member.identityKey ? (
+          <PeerActions
+            spaceId={spaceId}
+            identityKey={member.identityKey}
+            presenceKey={presenceKey}
+            sessionId={sessionId}
+          />
+        ) : null
+      }
+      headerAction={
+        <>
+          <SessionsToggle pressed={showSessions} onPressedChange={setShowSessions} />
+          <SeeEveryoneButton />
+        </>
+      }
+    />
   );
 };
 

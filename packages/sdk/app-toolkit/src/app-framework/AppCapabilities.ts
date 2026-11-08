@@ -104,6 +104,15 @@ export type Layout = Readonly<{
 export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
 
 /**
+ * A palette hue (e.g. `indigo`) every plank heading takes while it is set, such as while the session takes part in a
+ * follow; the layout uses the first contribution that holds one.
+ * @category Capability
+ */
+export const HeadingAccent = Capability$.make<Atom.Atom<string | undefined>>()(
+  'org.dxos.app-framework.capability.heading-accent',
+);
+
+/**
  * @category Capability
  */
 export const Translations = Capability$.make<Readonly<Translations$.Resource[]>>()(

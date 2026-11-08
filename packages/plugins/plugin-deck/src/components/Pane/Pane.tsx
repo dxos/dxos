@@ -54,27 +54,42 @@ PaneRoot.displayName = 'Pane.Root';
 // Toolbar
 //
 
-const PaneToolbar = Util.slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  return (
-    <ark.div
-      asChild={asChild}
-      data-tauri-drag-region='deep'
-      {...Util.composableProps(props, {
-        style: iconSize(5),
-        // `dx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
-        // Positioned and isolated, so a NavbarEnd surface can paint a layer behind the heading's content.
-        classNames:
-          'dx-scope relative isolate flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
-      })}
-      data-size='lg'
-      ref={forwardedRef}
-    >
-      {children}
-    </ark.div>
-  );
-});
+type PaneToolbarProps = {
+  /** A palette hue the heading washes in, with a one-pixel underline, e.g. while the session is in a follow. */
+  accent?: string;
+};
+
+const PaneToolbar = Util.slottable<HTMLDivElement, PaneToolbarProps>(
+  ({ children, asChild, accent, ...props }, forwardedRef) => {
+    return (
+      <ark.div
+        asChild={asChild}
+        data-tauri-drag-region='deep'
+        {...Util.composableProps(props, {
+          style: {
+            ...iconSize(5),
+            // A wash over the header surface rather than in place of it, so the heading stays readable.
+            ...(accent && {
+              backgroundImage: `linear-gradient(${getAccentWash(accent)}, ${getAccentWash(accent)})`,
+              boxShadow: `inset 0 -1px 0 var(--color-${accent}-border)`,
+            }),
+          },
+          // `dx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
+          classNames: 'dx-scope flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
+        })}
+        data-size='lg'
+        {...(accent && { 'data-accent': accent })}
+        ref={forwardedRef}
+      >
+        {children}
+      </ark.div>
+    );
+  },
+);
 
 PaneToolbar.displayName = 'Pane.Toolbar';
+
+const getAccentWash = (accent: string) => `color-mix(in oklab, var(--color-${accent}-border) 18%, transparent)`;
 
 //
 // Content

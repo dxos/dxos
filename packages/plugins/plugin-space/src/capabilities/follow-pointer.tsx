@@ -10,6 +10,7 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { generateName } from '@dxos/display-name';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -22,6 +23,7 @@ import { SpaceCapabilities, type SpaceSchema } from '#types';
 import { FollowOverlay, type ShownPointer } from '../components/FollowOverlay/index.ts';
 import { SpaceNamespace } from '../namespace.ts';
 import {
+  FOLLOW_HUE,
   FollowPointer,
   type PlankPosition,
   POINTER_CHANNEL_KIND,
@@ -69,6 +71,7 @@ export default Capability.makeModule(
     const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
     const client = yield* ClientCapabilities.Client;
     const haloIdentity = yield* ClientCapabilities.IdentityService;
+    const layoutAtom = yield* AppCapabilities.Layout;
 
     const pointersAtom = Atom.make<readonly ShownPointer[]>([]).pipe(Atom.keepAlive);
     const channels = new Map<string, { channel: Awareness.Channel<FollowPointer>; dispose: () => void }>();
@@ -236,6 +239,16 @@ export default Capability.makeModule(
 
     const Root = () => <FollowOverlay pointers={useAtomValue(pointersAtom)} />;
 
-    return Capability.contribute(Capabilities.ReactRoot, { id: `${SpaceNamespace.key}.follow-pointer`, root: Root });
+    // Every plank heading takes the follow's hue while this session follows or is followed in the space it shows.
+    const accentAtom = Atom.make((get): string | undefined => {
+      const { following, followedSpaces } = get(ephemeralAtom);
+      const spaceId = GraphPath.getSpaceIdFromPath(get(layoutAtom).workspace);
+      return spaceId && takesPartInFollow(spaceId, following, followedSpaces) ? FOLLOW_HUE : undefined;
+    });
+
+    return [
+      Capability.contribute(Capabilities.ReactRoot, { id: `${SpaceNamespace.key}.follow-pointer`, root: Root }),
+      Capability.contribute(AppCapabilities.HeadingAccent, accentAtom),
+    ];
   }),
 );

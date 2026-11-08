@@ -912,6 +912,29 @@ test QA-7: See each other's pointers while following
       expect: the guest's row returns to its object's group, both pointers disappear, the indigo clears, and the Members tab's dot clears on both sides
 ```
 
+```mdl
+test QA-8: A pointer lands on what it points at in windows of different sizes
+  desc: With the host's window wider than the guest's, so the document wraps at different places, the pointer the guest aims at a word shows on that same word on the host's screen.
+  actors: human
+  covers: [F-8.25]
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a pointer lands on the word it points at in windows of different sizes
+  given:
+    - host: a booted app in a wide window, with a space containing a document whose paragraphs wrap, shared with a guest
+    - guest: a second browser profile in a narrower window, a member of that space
+  steps:
+    - name: Follow the guest
+      do: Open the document on both peers; on the host, follow the guest from the Members companion.
+      expect: the host follows the guest
+    - name: Point at a word mid-paragraph
+      do: On the guest, rest the pointer on a word in the middle of a long paragraph.
+      expect: the host's pointer for the guest rests on the same word, though the paragraph breaks into lines at other words
+    - name: Point at a word further down
+      do: On the guest, rest the pointer on a word in a later paragraph.
+      expect: the host's pointer rests on that word too
+```
+
 ---
 
 ## Changelog

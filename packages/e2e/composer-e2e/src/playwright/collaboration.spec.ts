@@ -71,6 +71,53 @@ const moveOverPlank = async (app: AppManager, x: number, y: number) => {
   }
 };
 
+/** Text long enough to wrap differently in windows of different widths, with marker words to point at. */
+const WRAPPED_TEXT = [
+  '# Launch plan',
+  '',
+  Array.from({ length: 4 }, (_, i) => `Opening sentence ${i + 1} sets out what the plan is for and who reads it.`).join(
+    ' ',
+  ),
+  '',
+  [
+    ...Array.from({ length: 5 }, (_, i) => `Context sentence ${i + 1} explains what we decided and why it matters.`),
+    'The Zanzibar milestone',
+    ...Array.from({ length: 4 }, (_, i) => `Closing sentence ${i + 1} lists who owns each part of it.`),
+  ].join(' '),
+  '',
+  Array.from({ length: 3 }, (_, i) => `Final sentence ${i + 1} mentions the Kilimanjaro review date.`).join(' '),
+].join('\n');
+
+/** The middle of the first occurrence of `word` in the deck's plank, in client coordinates. */
+const findWord = (app: AppManager, word: string) =>
+  app.deck.plank().locator.evaluate((plank, word) => {
+    const walker = document.createTreeWalker(plank, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const index = node.textContent?.indexOf(word) ?? -1;
+      if (index >= 0) {
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + word.length);
+        const box = range.getBoundingClientRect();
+        return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      }
+    }
+    return undefined;
+  }, word);
+
+/** The word under the tip of the one drawn pointer. */
+const getWordUnderPointer = (app: AppManager) =>
+  app.page.getByTestId('spacePlugin.followOverlay.pointer').evaluate((pointer) => {
+    // The arrow's tip is the top-left corner of its box; the overlay takes no pointer events, so hit-testing sees under it.
+    const { left, top } = pointer.getBoundingClientRect();
+    const range = document.caretRangeFromPoint(left + 1, top + 1);
+    const text = range?.startContainer.textContent ?? '';
+    const offset = range?.startOffset ?? 0;
+    const start = text.slice(0, offset).search(/\S+$/);
+    const end = text.slice(offset).search(/\s|$/);
+    return text.slice(start < 0 ? offset : start, offset + (end < 0 ? 0 : end));
+  });
+
 /** Where the one drawn pointer sits in the plank it names, as whole percentages of that plank's width and height. */
 const getPointerPosition = (app: AppManager) =>
   app.page.getByTestId('spacePlugin.followOverlay.pointer').evaluate((pointer) => {
@@ -539,13 +586,13 @@ test.describe('Collaboration tests', () => {
       const hostFollow = sidebar.locator('[data-member][data-follow]');
       await expect(hostFollow).toHaveCount(1);
       await expect(hostFollow.getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
-      await expect(host.page.getByTestId('spacePlugin.presence.followHeading').first()).toBeAttached();
+      await expect(host.page.locator('[data-testid="deck.plank"] [data-accent]').first()).toBeAttached();
       await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
       await guest.openCompanion('members');
       const guestFollowers = guest.page.getByTestId('spacePlugin.presence.followers');
       await expect(guestFollowers).toContainText('Following you');
       await expect(guestFollowers.locator('[data-member][data-follow]')).toHaveCount(1);
-      await expect(guest.page.getByTestId('spacePlugin.presence.followHeading').first()).toBeAttached();
+      await expect(guest.page.locator('[data-testid="deck.plank"] [data-accent]').first()).toBeAttached();
 
       // The guest posts only once it sees the host's follow, so it keeps moving until the host draws its pointer.
       const guestPointer = host.page.getByTestId('spacePlugin.followOverlay.pointer');
@@ -580,4 +627,43 @@ test.describe('Collaboration tests', () => {
       await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
     },
   );
+
+  test('a pointer lands on the word it points at in windows of different sizes', { tag: ['@space:QA-8'] }, async () => {
+    test.setTimeout(150_000);
+
+    await host.page.setViewportSize({ width: 1400, height: 900 });
+    await guest.page.setViewportSize({ width: 1000, height: 760 });
+    await host.createSpace();
+    await host.createObject({ type: 'Document' });
+    await perfomInvitation(host, guest);
+    await guest.expandSection('spacePlugin.collectionsSection');
+    await navigateToNewDocument(guest);
+    const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
+    await expect(async () => {
+      await guestTextbox.focus();
+      await guestTextbox.fill(WRAPPED_TEXT);
+    }).toPass({ timeout: 30_000 });
+    await guest.page.keyboard.press('ControlOrMeta+Home');
+
+    const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+    await host.openCompanion('members');
+    await sidebar
+      .getByTestId('spacePlugin.presence.row')
+      .getByTestId('spacePlugin.presence.follow')
+      .click({ timeout: 45_000 });
+    await expect(host.page.locator('[data-testid="deck.plank"] [data-accent]').first()).toBeAttached();
+
+    // The guest points at a word in each of two paragraphs, which wrap at different places in the two windows.
+    for (const word of ['Zanzibar', 'Kilimanjaro']) {
+      await expect(async () => {
+        const point = await findWord(guest, word);
+        expect(point, `${word} is on the guest's screen`).toBeTruthy();
+        if (point) {
+          await guest.page.mouse.move(point.x, point.y, { steps: 4 });
+        }
+        await expect(host.page.getByTestId('spacePlugin.followOverlay.pointer')).toHaveCount(1, { timeout: 1_000 });
+      }).toPass({ timeout: 30_000 });
+      await expect.poll(() => getWordUnderPointer(host), { timeout: 10_000 }).toBe(word);
+    }
+  });
 });
