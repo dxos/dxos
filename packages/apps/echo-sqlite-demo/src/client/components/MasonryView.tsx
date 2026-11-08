@@ -21,17 +21,18 @@ export const MasonryView = ({
   onSelect?: (id: string) => void;
   onRemove?: (id: string) => void;
 }) => {
-  const Tile = useCallback(
-    ({ data }: { data: Entry }) => (
-      <EntryCard entry={data} selected={data.value === selected} onSelect={onSelect} onRemove={onRemove} />
-    ),
-    [selected, onSelect, onRemove],
+  const Tile = useCallback(({ data }: { data: Entry }) => <EntryCard entry={data} onRemove={onRemove} />, [onRemove]);
+
+  // The tile carries selection, not the card: `Focus.Item` then draws the same selected edge the list does.
+  const itemProps = useCallback(
+    (id: string) => ({ 'aria-selected': id === selected, 'onClick': () => onSelect?.(id) }),
+    [selected, onSelect],
   );
 
   return (
     <Masonry.Root Tile={Tile}>
       <Masonry.Content>
-        <Masonry.Viewport items={[...entries]} getId={(entry: Entry) => entry.value} />
+        <Masonry.Viewport items={[...entries]} getId={(entry: Entry) => entry.value} itemProps={itemProps} />
       </Masonry.Content>
     </Masonry.Root>
   );

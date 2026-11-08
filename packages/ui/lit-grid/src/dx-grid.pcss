@@ -321,6 +321,13 @@
         }
       }
 
+      /*
+       * The cursor is navigation, not editing: a cell marks it whether or not it unfurls, and
+       * whether or not it is read-only. Without this a grid with `data-focus-unfurl='false'` (a
+       * read-only table) shows nothing at all for the cell the keyboard is on.
+       */
+      &:focus > .dx-grid__cell__content,
+      &:focus-within > .dx-grid__cell__content,
       &:focus-visible > .dx-grid__cell__content {
         border-color: var(--color-grid-focus-ring);
       }

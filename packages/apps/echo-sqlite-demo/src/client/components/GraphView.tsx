@@ -32,7 +32,9 @@ const HUES: Record<string, string | undefined> = {
 export const GraphView = ({
   organizations,
   people,
+  onSelect,
 }: {
+  onSelect?: (id: string) => void;
   organizations: readonly Organization[];
   people: readonly Person[];
 }) => {
@@ -82,6 +84,7 @@ export const GraphView = ({
             projector={projector}
             drag
             arrows
+            onSelect={(node) => onSelect?.(node.id)}
             // A layout node's `data` is the model node, so its own data is one level in.
             labels={{ text: (node) => node.data?.data?.label ?? node.id }}
             attributes={{

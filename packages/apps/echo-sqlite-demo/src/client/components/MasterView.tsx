@@ -147,7 +147,7 @@ export const MasterView = ({
             onSelect={onSelect}
           />
         )}
-        {tab === 'graph' && <GraphView organizations={organizations} people={people} />}
+        {tab === 'graph' && <GraphView organizations={organizations} people={people} onSelect={onSelect} />}
         {tab === 'code' && <CodeView />}
       </Panel.Body>
     </Panel.Root>
