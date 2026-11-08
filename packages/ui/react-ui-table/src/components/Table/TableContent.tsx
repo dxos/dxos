@@ -440,7 +440,9 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
             className={mx(
               // The cursor is the app's selection colour here, as in a list; the grid's own blue ring
               // belongs to the sheet, where a selected range and a focused cell must read apart.
-              '[--dx-grid-base:var(--base-surface)] [--color-grid-focus-ring:var(--color-focus)]',
+              // Cells sit on the host's surface too: a table is a view of a pane's content rather
+              // than a sheet laid over it, so only the grid lines separate it from the panel.
+              '[--dx-grid-base:var(--color-base-surface)] [--color-grid-surface:var(--color-base-surface)] [--color-grid-focus-ring:var(--color-focus)]',
               gridSeparatorInlineEnd,
               gridSeparatorBlockEnd,
             )}
