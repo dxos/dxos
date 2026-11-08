@@ -3195,6 +3195,9 @@ importers:
 
   packages/apps/echo-sqlite-demo:
     dependencies:
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.6
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -3228,6 +3231,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -3252,6 +3258,9 @@ importers:
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

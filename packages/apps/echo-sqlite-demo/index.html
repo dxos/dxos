@@ -16,14 +16,18 @@
         height: 100%;
         background: #fafafa;
       }
-      /* Full-bleed on a phone; from `sm` up the panel is inset and framed, so it reads as a card.
-         `border-box` keeps the panel inside the window. */
+      /* Full-bleed on a phone; from `sm` up the app is inset, framed and capped at a reading width,
+         centred in the window. A grid row of `1fr` is what lets the panel's `height: 100%` resolve. */
       body {
         box-sizing: border-box;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr);
       }
       @media (min-width: 640px) {
         body {
           padding: 0.75rem;
+          grid-template-columns: minmax(0, 70rem);
+          justify-content: center;
         }
       }
       @media (prefers-color-scheme: dark) {

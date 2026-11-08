@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { Ref, Type } from '@dxos/echo';
 import { useLabels } from '@dxos/echo-react';
@@ -17,6 +17,7 @@ import { CodeView } from './CodeView.tsx';
 import { GraphView } from './GraphView.tsx';
 import { type Entry, ListView } from './ListView.tsx';
 import { MasonryView } from './MasonryView.tsx';
+import { SearchBar } from './SearchBar.tsx';
 import { TableView } from './TableView.tsx';
 
 export type MasterTab = 'list' | 'masonry' | 'table' | 'graph' | 'code';
@@ -105,12 +106,29 @@ export const MasterView = ({
     }));
   }, [typename, organizations, people, labels]);
 
+  const [search, setSearch] = useState('');
+  const matches = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (query.length === 0) {
+      return entries;
+    }
+    return entries.filter((entry) =>
+      [entry.label, entry.description, ...(entry.fields?.map((field) => field.value) ?? [])]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(query)),
+    );
+  }, [entries, search]);
+
+  /** The labels of what the query returns, so a completion is always something the data can answer. */
+  const suggestions = useMemo(() => matches.map((entry) => entry.label), [matches]);
+  const keys = useMemo(() => new Set(matches.map((entry) => entry.value)), [matches]);
+
   return (
     <Panel.Root classNames={classNames}>
       <Panel.Header asChild>
         <Toolbar.Root>
           <Select.Root items={typeItems} value={[typename]} onValueChange={({ value }) => onTypenameChange(value[0])}>
-            <Select.Trigger placeholder='Type' aria-label='Type' fixed />
+            <Select.Trigger classNames='shrink-0' placeholder='Type' aria-label='Type' fixed />
             <Select.Content>
               {typeItems.map((item) => (
                 <Select.Item key={item.value} item={item} />
@@ -129,21 +147,25 @@ export const MasterView = ({
             ))}
           </ToggleGroup.Root>
 
-          <Button.Root classNames='ms-auto' icon='ph--plus--regular' label='New' iconOnly onClick={onNew} />
+          <SearchBar classNames='grow min-w-0' text={search} onTextChange={setSearch} suggestions={suggestions} />
+
+          <Button.Root icon='ph--plus--regular' label='New' iconOnly onClick={onNew} />
           <Button.Root icon='ph--sparkle--regular' label='Generate' iconOnly variant='ghost' onClick={onGenerate} />
           <Button.Root icon='ph--link--regular' label='Copy link' iconOnly variant='ghost' onClick={onCopyLink} />
         </Toolbar.Root>
       </Panel.Header>
 
       <Panel.Body>
-        {tab === 'list' && <ListView entries={entries} selected={selected} onSelect={onSelect} onRemove={onRemove} />}
+        {tab === 'list' && <ListView entries={matches} selected={selected} onSelect={onSelect} onRemove={onRemove} />}
         {tab === 'masonry' && (
-          <MasonryView entries={entries} selected={selected} onSelect={onSelect} onRemove={onRemove} />
+          <MasonryView entries={matches} selected={selected} onSelect={onSelect} onRemove={onRemove} />
         )}
         {tab === 'table' && (
           <TableView
             type={typename === Type.getTypename(Person) ? Person : Organization}
-            rows={typename === Type.getTypename(Person) ? people : organizations}
+            rows={(typename === Type.getTypename(Person) ? people : organizations).filter((object) =>
+              keys.has(object.id),
+            )}
             onSelect={onSelect}
           />
         )}
