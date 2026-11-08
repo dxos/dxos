@@ -16,6 +16,12 @@ export type SemanticQuery = {
   readonly source?: string;
   /** Lower bound (inclusive) on factuality confidence. */
   readonly minConfidence?: number;
+  /**
+   * Caps the work a read does: at most this many candidate graphs are loaded and at most this many facts are
+   * returned. It is a cap, not a pager — a store holds no total order over graphs that survives a write, so use
+   * {@link FactStoreApi.count} for the true total and narrow the query rather than paging through it.
+   */
+  readonly limit?: number;
 };
 
 /** The predicate IRI a query's predicate names. */

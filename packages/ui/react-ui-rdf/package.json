@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/effect": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/react-ui-graph": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

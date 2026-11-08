@@ -10,23 +10,23 @@ import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 /** SPARQL IRIREF excludes these characters; a UCHAR escape keeps an arbitrary IRI or key from breaking the query. */
-const iriRef = (iri: string): string =>
+export const iriRef = (iri: string): string =>
   `<${[...iri]
     .map((char) =>
       char <= ' ' || '<>"{}|^`\\'.includes(char) ? `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}` : char,
     )
     .join('')}>`;
 
-const ONTOLOGY = iriRef(Vocab.ONTOLOGY_GRAPH);
+export const ONTOLOGY = iriRef(Vocab.ONTOLOGY_GRAPH);
 
 const KINDS = Mapping.KIND_CLASSES.map(iriRef).join(', ');
 
 /** Excludes rows that are not statements: the ontology graph, and an entity's label or kind. */
-const statementFilter = (graph: string, predicate: string, object: string) =>
+export const statementFilter = (graph: string, predicate: string, object: string) =>
   `FILTER(${graph} != ${ONTOLOGY} && ${predicate} != ${iriRef(Vocab.RDFS_LABEL)} && !(${predicate} = ${iriRef(Vocab.RDF_TYPE)} && ${object} IN (${KINDS})))`;
 
 /** An entity key names its IRI exactly, and a slug also names the graph-local entity of that slug in every graph. */
-const isEntity = (variable: string, key: string): string => {
+export const isEntity = (variable: string, key: string): string => {
   const node = iriRef(Vocab.entityNode(key).value);
   return Vocab.isIri(key)
     ? `${variable} = ${node}`
@@ -101,7 +101,10 @@ export const graphValues = (graphs: readonly string[]): string => `VALUES ?g { $
 
 /**
  * SPARQL loading every quad of the graphs `candidates` binds, as `?g ?s ?p ?o`, and each graph's provenance from
- * the default graph, as `?g ?p ?o` with `?s` unbound.
+ * the default graph, as `?g ?p ?o` with `?s` unbound. A `limit` caps the graphs loaded, ordered by IRI so the
+ * capped set is the same for the same store rather than whichever rows the planner reached first.
  */
-export const graphQuadsSparql = (candidates: string): string =>
-  `SELECT ?g ?s ?p ?o WHERE { { SELECT DISTINCT ?g WHERE { ${candidates} } } { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }`;
+export const graphQuadsSparql = (candidates: string, limit?: number): string => {
+  const cap = limit === undefined ? '' : ` ORDER BY ?g LIMIT ${Math.max(0, Math.trunc(limit))}`;
+  return `SELECT ?g ?s ?p ?o WHERE { { SELECT DISTINCT ?g WHERE { ${candidates} }${cap} } { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }`;
+};

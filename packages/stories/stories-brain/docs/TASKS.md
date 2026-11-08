@@ -42,8 +42,24 @@ Branch `claude/plugin-brain-evals-viz-643a0c`. Not a registry project; tracked h
 - [ ] E1 extraction eval — per-fact P/R/F1 plus entity, attribution and factuality accuracy on labeled threads.
 - [ ] E2 memory eval — facts from thread history vs held-out incoming message; recall@k / MRR of relevant facts.
 - [ ] E3 model ladder — E1 + E2 per model, recorded per model, results JSON.
-- [ ] V1 `FactGraph` — force-directed whole-store graph (`react-ui-graph` `Graph`), factuality-coloured edges.
+- [x] V0 store-side aggregates — `FactStoreApi.count` / `aggregate` / `entityLabels` compiled to SPARQL, plus a
+      `limit` cap on `query`, and `FactAnalytics` over either a store or a fact array. This is the prerequisite
+      every visualization shares: before it, any view had to `query({})` the whole store.
+- [x] V0 `FactExplorer` (`react-ui-rdf`) — aggregate-first overview (predicate + entity rankings, entity ×
+      predicate cross-tab, capped fact list stating the true total), drilling down by click.
+- [x] V0 `FactMemory` (`react-ui-rdf`) — the held-out-message view behind ROADMAP B5: a message the store was
+      never written from, beside what it already knew about the entities it mentions.
+- [x] V0 `generateCorpus` / `splitCorpus` (`pipeline-rdf/testing`) — a deterministic inbox-shaped corpus
+      (~1,000 facts over ~400 messages) the stories are seeded with; no AI, no credentials.
+- [ ] V1 `FactGraph` — force-directed EGO graph (`react-ui-graph` `Graph`), factuality-coloured edges, reached
+      from the explorer's drill-down. Note: a whole-store force graph is not the target — `GraphStress` tops out
+      around 2k nodes and a mailbox hairball is unreadable well before it is slow. The explorer's current graph
+      view is still `FactViewer`'s tidy tree, which discards every cross-link.
 - [ ] V2 gold-vs-predicted overlay (TP/FP/FN) + stories over the corpus.
+- [ ] Wire `FactExplorer` into `plugin-brain`'s `FactsCompanion`, which still does `query({})` on every write
+      (`use-facts.ts`) — the surface the app actually shows.
+- [ ] Timeline view (facts over `generatedAtTime`, banded by source, coloured by factuality). `react-ui-plot`
+      has the marks; it needs a time-bucket dimension on the aggregate.
 
 ## Priorities (triaged with the user 2026-08-13)
 
