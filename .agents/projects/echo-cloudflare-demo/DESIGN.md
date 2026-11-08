@@ -133,70 +133,8 @@ batch.
 `echo-sqlite-demo-spaces` is now unused and can be deleted. Expiry is a DO alarm set 24 hours out
 on first write, which calls `deleteAll` on its own storage.
 
-## Decision D-6: the assistant runs against the demo's own database
-
-Requested 2026-11-08: show the assistant and the ECHO tools on top of this demo. The whole
-integration rests on one fact — `SqliteDatabase implements Database.Database` — so the assistant's
-tools, which declare `services: [Database.Service]`, can be given the demo's database directly:
-
-```ts
-Database.layer(db); // Layer<Database.Service>, no cast; typechecked against SqliteDatabase.
-```
-
-**The agent runs in the tab, not in the Durable Object.** The DO is the tempting host — one per
-graph, already holding storage and sockets, and an agent there would be a peer rather than a feature
-of one tab. It also needs an `echo-sqlite` instance server-side, which is D-1's option 3 and a
-project of its own. In the tab the tools act on the local graph with no new runtime, and the agent's
-writes are ordinary ECHO writes, so they reach the other peers through the sync that already exists.
-The cost is bundle size and a model with write access to the local graph; both are stated below.
-
-**The key stays on the server.** `AnthropicClient.layerConfig({ apiUrl })` already points at a URL
-rather than a provider — EDGE is just one such URL — so the demo's Worker gains
-`/api/ai/provider/anthropic/*`, forwards with a `wrangler secret`, and the browser never holds a
-key. The DO is per graph, so it is also where a rate limit belongs.
-
-**What is reused rather than written.** `@dxos/compute` (Operation, Skill, OperationHandlerSet,
-ServiceResolver), `@dxos/assistant` (Session, AiContext, Chat), `@dxos/agent-runtime` (no
-app-framework, no `@dxos/client` in its dependencies), `@dxos/ai` for the provider, and
-`@dxos/react-ui-chat`, whose dependencies are react-ui packages only. The wiring to copy is
-`agent-runtime/src/testing/assistant-test-layer.ts`, which assembles a working agent purely from
-layers; the demo's version swaps `TestDatabaseLayer` for `Database.layer(db)`. The skill to copy is
-`assistant-toolkit/src/skills/memory`, which is three operations and a handler set.
-
-**What this does not claim.** The model writes through the same last-writer-wins sync as everything
-else and under the same 1000-object cap, and a tool call is not reviewed before it runs. Whether the
-conversation itself syncs depends on what a `Feed` serialises to (Q-4), and the demo works either
-way — only the graph writes are load-bearing.
-
-### D-6 findings, 2026-11-08
-
-**S-2 passed: the toolkit's handlers run against this backend.** The memory skill's handler bodies —
-`Database.add`, `Entity.toJSON`, `Query.all(...).select(...).limit()`,
-`Filter.text(term, { type: 'full-text' })`, `Database.flush()` — all work over `Database.layer(db)`
-on an `echo-sqlite` database (`echo-sqlite/src/assistant-surface.test.ts`). So an operation written
-for Composer is an operation this demo can run.
-
-**S-3 failed, and it moves the session: `echo-sqlite` has no feeds.** `appendToFeed`, `forkFeed`,
-`deleteFromFeed` and `removeFeedItemsByIds` all throw `UnsupportedOperationError`, and the README
-says so plainly. `AiSession` is feed-centric — its options are `{ feed, runtime }` and it is
-"durable conversation state backed by a Feed" — so the session cannot live in the demo's database
-as D-6 assumed. The tools still can, which is the part that matters; where the conversation lives is
-now the open choice:
-
-- **Messages as ordinary objects.** Add a message type to `schema.ts` and drive the model directly
-  with `@dxos/ai`, without `Session`. One database, the conversation syncs with the graph, and the
-  demo keeps its size. Loses the session's trajectory, summarisation and skill plumbing.
-- **Two databases in the tab.** An ECHO (Automerge) database for the feed beside the SQLite one for
-  the graph, with the tools declaring their own service tag so they still reach the graph. Keeps the
-  whole assistant; costs the `echo-client` stack in the bundle, and the chat does not sync.
-- **Feeds in `echo-sqlite`.** The honest fix, and what D-1 option 3 wants anyway. A project, not a
-  demo step.
-
 ## Open questions
 
-- **Q-4** What does a `Feed` serialise to, and can D-5's sync carry it? A record is a foreign key,
-  scalar props and refs; a feed's blocks may be neither. Decides whether the conversation syncs with
-  the graph or stays on the device that held it.
 - **Q-1** Does `echo-sqlite` need synchronous SQL anywhere? The README says `runSync()` "never
   blocks", and it uses `SqlClient` rather than the sync `Storage` interface, so it should not — but
   `transactionSync` exists on `Storage` and the worker protocol's transaction support is unverified.

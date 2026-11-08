@@ -29,9 +29,6 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/errors"
-    },
-    {
       "path": "../../common/graph"
     },
     {
@@ -44,9 +41,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../core/compute/compute"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -57,9 +51,6 @@
     },
     {
       "path": "../../core/echo/echo-worker"
-    },
-    {
-      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-ui"

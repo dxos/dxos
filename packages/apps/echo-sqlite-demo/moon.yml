@@ -3,7 +3,6 @@ language: typescript
 tags:
   - typecheck
   - vite
-  - ts-test
 tasks:
   # `@dxos/*` resolve from source (vite-plugin-import-source), so the whole package graph needs no build.
   bundle:
