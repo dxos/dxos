@@ -18,7 +18,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@dxos/react-ui/theme.css';
-import { DatabaseBusyError, openDatabase, resolveSlug } from '@dxos/echo-worker';
+import { DatabaseBusyError, DatabaseUnavailableError, openDatabase, resolveSlug } from '@dxos/echo-worker';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
@@ -57,14 +57,16 @@ openDatabase(slug, types).then(
     render(
       <div className='p-4 space-y-2'>
         <p className='text-fg'>
-          {error instanceof DatabaseBusyError ? 'This graph is open in another tab.' : 'Could not open the database.'}
+          {error instanceof DatabaseBusyError ? 'The app is open in another tab.' : 'Could not open the database.'}
         </p>
         <p className='text-fg-muted text-sm'>
           {error instanceof DatabaseBusyError
-            ? 'One tab at a time holds the local copy. Close the other tab and reload this one — or open a different graph.'
-            : 'This demo needs OPFS in a dedicated worker. It works in Chrome, Edge and Safari 17+; a private window may block origin storage.'}
+            ? 'One tab at a time holds this browser’s database, whichever graph it shows. Close the other tab and reload this one; to watch two peers sync, open the second in another browser or profile.'
+            : error instanceof DatabaseUnavailableError
+              ? 'The worker never got the file. A private window may block origin storage, and some browsers keep the handle for a moment after a tab holding it closes — reloading often works.'
+              : 'This demo needs OPFS in a dedicated worker. It works in Chrome, Edge and Safari 17+; a private window may block origin storage.'}
         </p>
-        {!(error instanceof DatabaseBusyError) && (
+        {!(error instanceof DatabaseBusyError) && !(error instanceof DatabaseUnavailableError) && (
           <pre className='text-fg-subtle text-xs overflow-x-auto'>{String(error)}</pre>
         )}
       </div>,

@@ -72,6 +72,6 @@ export const ListView = ({
         ))}
       </Listbox.Content>
     </Listbox.Viewport>
-    <Listbox.Empty icon='ph--database--regular'>Nothing here yet — generate a graph, or create a record.</Listbox.Empty>
+    <Listbox.Empty icon='ph--database--regular'>No records</Listbox.Empty>
   </Listbox.Root>
 );
