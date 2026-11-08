@@ -12,6 +12,9 @@ export default defineConfig({
     node: true,
     browser: {
       browsers: ['chromium'],
+      // The default include is every test file bar `*.node.test.ts`, and this package's node suites
+      // are plain `*.test.ts` (they use `node:fs` and `node:crypto`), so name the browser ones.
+      include: ['**/src/**/*.browser.test.{ts,tsx}'],
       // Reached only through the OPFS worker, so vite discovers them once the worker boots.
       optimizeDeps: ['effect/Deferred', 'effect/Fiber', 'effect/Option'],
     },

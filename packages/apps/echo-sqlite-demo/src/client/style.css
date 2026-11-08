@@ -1,0 +1,173 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+:root {
+  --bg: #fbfbfa;
+  --fg: #1b1b1a;
+  --muted: #6b6b68;
+  --line: #e2e2de;
+  --accent: #f6821f;
+  --card: #ffffff;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17171a;
+    --fg: #ededeb;
+    --muted: #9a9a97;
+    --line: #2d2d31;
+    --card: #1f1f23;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    15px/1.5 ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2.5rem 16px 4rem;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin: 2rem 0 0.75rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+p {
+  margin: 0 0 0.75rem;
+}
+
+.note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+input {
+  min-width: 0;
+  flex: 1 1 8rem;
+}
+
+.search {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+button {
+  cursor: pointer;
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  border-top: 1px solid var(--line);
+}
+
+li:first-child {
+  border-top: 0;
+}
+
+.email {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-right: auto;
+}
+
+.pill {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pill.online {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pill.offline {
+  border-color: var(--muted);
+}
+
+.status {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+pre {
+  overflow-x: auto;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  font-size: 0.8rem;
+}
+
+[contenteditable]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}

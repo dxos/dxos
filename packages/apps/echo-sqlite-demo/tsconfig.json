@@ -1,0 +1,41 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": [
+      "@cloudflare/workers-types",
+      "@dxos/typings",
+      "node",
+      "wicg-file-system-access"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../tools/vite-plugin-import-source"
+    },
+    {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/node-std"
+    },
+    {
+      "path": "../../common/sql-sqlite"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/echo/echo-sqlite"
+    }
+  ]
+}

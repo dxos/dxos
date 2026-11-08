@@ -8,6 +8,9 @@ import { type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
 import { type Entity, type QueryResult } from '@dxos/echo';
 import { log } from '@dxos/log';
 
+/** Shared so every pending result returns the same reference. */
+const EMPTY_ENTRIES: readonly QueryResult.Entry<never>[] = Object.freeze([]);
+
 /**
  * A query result backed by an asynchronous executor (a compiled SQL statement).
  *
@@ -23,6 +26,16 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #source: QueryResult.Source;
   readonly #listeners = new Set<(query: QueryResult.QueryResult<T>) => void>();
   #results: Entity.Unknown[] | undefined;
+  /**
+   * The derived arrays, held until the next execution replaces `#results`.
+   *
+   * React's `useSyncExternalStore` compares `getSnapshot()` by identity and throws
+   * "Maximum update depth exceeded" if it differs every call, so `@dxos/echo-react`'s `useQuery`
+   * requires these accessors to be referentially stable between executions — mapping a fresh array
+   * per call is an infinite render loop.
+   */
+  #entries: QueryResult.Entry<T>[] | undefined;
+  #flat: T[] | undefined;
   #pending: Promise<void> | undefined;
   #stale = false;
   #unsubscribe: CleanupFn | undefined;
@@ -82,20 +95,23 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
   }
 
   runSync(): T[] {
-    return this.runSyncEntries().flatMap((entry) => (entry.result === undefined ? [] : [entry.result]));
+    this.#flat ??= this.runSyncEntries().flatMap((entry) => (entry.result === undefined ? [] : [entry.result]));
+    return this.#flat;
   }
 
   runSyncEntries(): QueryResult.Entry<T>[] {
     if (this.#results === undefined) {
       void this.#refresh().catch((error) => log.catch(error));
-      return [];
+      // Stable, so a subscriber reading before the first execution does not re-render on every call.
+      return EMPTY_ENTRIES as QueryResult.Entry<T>[];
     }
-    return this.#results.map((entity) => ({
+    this.#entries ??= this.#results.map((entity) => ({
       id: entity.id,
       // The query AST constrains the result type; the executor only knows `Entity.Unknown`.
       result: entity as T,
       resolution: { source: this.#source, time: 0 },
     }));
+    return this.#entries;
   }
 
   async first(): Promise<T> {
@@ -150,6 +166,8 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
         // "No results yet" reads as empty through the sync accessors, so it is the baseline.
         const previous = this.#results ?? [];
         this.#results = next;
+        this.#entries = undefined;
+        this.#flat = undefined;
         this.#answers++;
         if (previous.length !== next.length || next.some((item, index) => item !== previous[index])) {
           this.#listeners.forEach((listener) => listener(this));

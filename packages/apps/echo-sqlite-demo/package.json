@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/echo-sqlite-demo",
+  "version": "0.16.0",
+  "private": true,
+  "description": "A graph database in the browser (@dxos/echo-sqlite over OPFS), with a Durable Object fronting R2 holding the authoritative copy.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "@dxos/vite-plugin-log": "workspace:*",
+    "@dxos/wa-sqlite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-wasm": "catalog:"
+  }
+}
