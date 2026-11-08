@@ -198,6 +198,20 @@ visual version as a separate showcase.
 
 ## Phase 2: Follow-ups owed elsewhere
 
+- [ ] **The assistant on this demo's database — parked on a decision, not lost.** Built, tested and
+      then reverted off this branch (`747625445ab`) so the PR stays the demo, the sync and the library
+      fixes. The work is two commits, still on origin: `3d96ec525f5` (the plan — DESIGN.md's D-6 and the
+      Phase 3 list) and `d85679b8b9d` (three operations over the graph with their handlers and four
+      tests, a `Skill` whose instructions read the schema, the `/api/ai/provider/anthropic` route, and
+      the S-2 spike kept as `echo-sqlite/src/assistant-surface.test.ts`). Cherry-pick both onto a branch
+      of its own to resume.
+
+  What it is waiting on: `echo-sqlite` has no feeds — `appendToFeed` and its neighbours throw — and
+  `@dxos/assistant`'s `Session` is feed-centric, so the tools can live in the demo's database but
+  the conversation cannot. The three ways out are in the reverted D-6, and each builds a different
+  demo: messages as ordinary ECHO objects with no `Session`; an Automerge database beside the SQLite
+  one; or feeds in `echo-sqlite`. Also needed: `wrangler secret put ANTHROPIC_API_KEY`.
+
 - [ ] **Memo corrections** (`temp/echo-cloudflare-positioning.md`): the benchmark harness exists and
       runs nightly on Depot (§1, demo 6 overstate this), and finding 6 is absent from the gap list
       although it outranks every gap in it.
