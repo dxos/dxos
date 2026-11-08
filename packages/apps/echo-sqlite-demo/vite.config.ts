@@ -3,9 +3,11 @@
 //
 
 import react from '@vitejs/plugin-react';
+import path from 'node:path';
 import { type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
@@ -48,5 +50,18 @@ export default defineConfig({
     format: 'es',
     plugins: () => sharedPlugins(),
   },
-  plugins: [...sharedPlugins(), react({ include: /\.[jt]sx$/, exclude: [/\/node_modules\//] })],
+  plugins: [
+    ...sharedPlugins(),
+    react({ include: /\.[jt]sx$/, exclude: [/\/node_modules\//] }),
+    // `@dxos/react-ui` components and `graph.css` are Tailwind sources, so the theme has to be
+    // compiled. Sources resolve from src (vite-plugin-import-source), so scan src rather than dist.
+    ThemePlugin({
+      content: [
+        path.join(rootDir, 'packages/ui/react-ui/src/**/*.{ts,tsx}'),
+        path.join(rootDir, 'packages/ui/react-ui-list/src/**/*.{ts,tsx}'),
+        path.join(rootDir, 'packages/ui/react-ui-form/src/**/*.{ts,tsx}'),
+        path.join(rootDir, 'packages/ui/react-ui-graph/src/**/*.{ts,tsx}'),
+      ],
+    }),
+  ],
 });

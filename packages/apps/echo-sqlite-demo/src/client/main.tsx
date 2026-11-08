@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import './style.css';
+import '@dxos-theme';
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';

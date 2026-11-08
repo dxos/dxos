@@ -29,6 +29,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/sql-sqlite"
     },
     {
@@ -41,7 +44,22 @@
       "path": "../../core/echo/echo-sqlite"
     },
     {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-graph"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/ui-theme"
     }
   ]
 }

@@ -4,42 +4,47 @@
 
 import { Obj, Ref } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
+import { random } from '@dxos/random';
 
 import { Organization, Person } from '../schema.ts';
 import { foreignKey } from './sync.ts';
 
-/** Enough names that a generated graph looks like a graph rather than a list. */
-const ORGANIZATIONS = ['Cloudflare', 'DXOS', 'Ink & Switch', 'Fly.io', 'Supabase', 'Val Town'];
-
-const FIRST = ['Alice', 'Bob', 'Carol', 'Dan', 'Erin', 'Frank', 'Grace', 'Heidi', 'Ivan', 'Judy', 'Mallory', 'Niaj'];
-
-const LAST = ['Ahmed', 'Bauer', 'Chen', 'Diaz', 'Eriksen', 'Fontaine', 'Gupta', 'Haddad', 'Ikeda', 'Jonsson'];
-
-const pick = <T>(values: readonly T[]): T => values[Math.floor(Math.random() * values.length)];
-
 /**
- * Seeds a graph with a few organizations and people pointing at them.
+ * Seeds a graph with organizations and people pointing at them.
  *
  * Every object gets a foreign key, because that — not the ECHO id — is what sync matches on, so an
  * object created without one can never be correlated with another instance.
+ *
+ * Additive by design: a second call adds a second set rather than replacing the first.
  */
-export const generate = async (db: SqliteDatabase, { people = 12 }: { people?: number } = {}): Promise<number> => {
-  const organizations = ORGANIZATIONS.map((name) =>
-    db.add(Obj.make(Organization, { [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] }, name })),
+export const generate = async (
+  db: SqliteDatabase,
+  { organizations: organizationCount = 5, people: peopleCount = 12 }: { organizations?: number; people?: number } = {},
+): Promise<number> => {
+  const organizations = random.helpers.multiple(
+    () =>
+      db.add(
+        Obj.make(Organization, {
+          [Obj.Meta]: { keys: [foreignKey(random.string.uuid())] },
+          name: random.company.name(),
+        }),
+      ),
+    { count: organizationCount },
   );
 
-  for (let index = 0; index < people; index++) {
-    const name = `${pick(FIRST)} ${pick(LAST)}`;
-    db.add(
-      Obj.make(Person, {
-        [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] },
-        name,
-        email: `${name.toLowerCase().replace(/[^a-z]+/g, '.')}@example.com`,
-        employer: Ref.make(pick(organizations)),
-      }),
-    );
-  }
+  random.helpers.multiple(
+    () =>
+      db.add(
+        Obj.make(Person, {
+          [Obj.Meta]: { keys: [foreignKey(random.string.uuid())] },
+          name: random.person.fullName(),
+          email: random.internet.email(),
+          employer: Ref.make(random.helpers.arrayElement(organizations)),
+        }),
+      ),
+    { count: peopleCount },
+  );
 
   await db.flush();
-  return organizations.length + people;
+  return organizationCount + peopleCount;
 };
