@@ -26,12 +26,12 @@ Spec + decisions: [DESIGN.md](./DESIGN.md).
 
       Two things the spike cost, worth keeping:
 
-                  - The vitest project is **`browser-chromium`**, not `chromium` (`vite.base.config.ts` names it
-                    `browser-${browserName}`).
-                  - `SqliteDatabase.open` defaults `spaceId` to `SpaceId.random()`, and one SQLite file holds
-                    several spaces — so every session of one logical space must be handed the same id. The first
-                    run looked like a persistence failure and was a test bug. A DO-backed demo pins one space
-                    per Durable Object anyway.
+                      - The vitest project is **`browser-chromium`**, not `chromium` (`vite.base.config.ts` names it
+                        `browser-${browserName}`).
+                      - `SqliteDatabase.open` defaults `spaceId` to `SpaceId.random()`, and one SQLite file holds
+                        several spaces — so every session of one logical space must be handed the same id. The first
+                        run looked like a persistence failure and was a test bug. A DO-backed demo pins one space
+                        per Durable Object anyway.
 
 - [ ] **Risk 10: `echo-sqlite` in the Workers runtime.** Better than the planned
       `wrangler deploy --dry-run`: `vite.base.config.ts` already defines an opt-in `workerd` vitest
@@ -40,61 +40,61 @@ Spec + decisions: [DESIGN.md](./DESIGN.md).
       `ctx.storage.sql`, not merely bundle it.
 
       Shape is settled: `WorkerdOptions` takes `main` (the worker entry `SELF` dispatches to, in the
-                  test's own isolate) and `miniflare` (for "a binding the runtime only provides when it is
-                  declared"), so declare `durableObjects` there and point `main` at an entry exporting the DO
-                  class. No DO-in-workerd test exists in this repo yet, so this is a new harness pattern.
+                      test's own isolate) and `miniflare` (for "a binding the runtime only provides when it is
+                      declared"), so declare `durableObjects` there and point `main` at an entry exporting the DO
+                      class. No DO-in-workerd test exists in this repo yet, so this is a new harness pattern.
 
-                  **PARKED — the workerd vitest project does not start for this package.**
-                  `TypeError: Cannot read properties of undefined (reading 'config')` at the first `describe`,
-                  with `import 0ms`, so the pool environment fails before any module loads.
+                      **PARKED — the workerd vitest project does not start for this package.**
+                      `TypeError: Cannot read properties of undefined (reading 'config')` at the first `describe`,
+                      with `import 0ms`, so the pool environment fails before any module loads.
 
-                  The three files live in [`parked/`](./parked/), not in the package, so `echo-sqlite` carries
-                  only working, used code and stays green on both test and typecheck:
+                      The three files live in [`parked/`](./parked/), not in the package, so `echo-sqlite` carries
+                      only working, used code and stays green on both test and typecheck:
 
-                  | File | What it is |
-                  | --- | --- |
-                  | `parked/workerd-do.ts` | the DO class — `SqliteDoClient.SqliteClient.layer({ storage })` + `SqliteDatabase.open`, modelled on edge's `DurableObjectSedimentreeStorage` |
-                  | `parked/echo-sqlite.workerd.test.ts` | RPC into the DO, asserting the graph, the ref traversal and FTS5 |
-                  | `parked/load.workerd.test.ts` | module graph + query compiler only, no DO |
+                      | File | What it is |
+                      | --- | --- |
+                      | `parked/workerd-do.ts` | the DO class — `SqliteDoClient.SqliteClient.layer({ storage })` + `SqliteDatabase.open`, modelled on edge's `DurableObjectSedimentreeStorage` |
+                      | `parked/echo-sqlite.workerd.test.ts` | RPC into the DO, asserting the graph, the ref traversal and FTS5 |
+                      | `parked/load.workerd.test.ts` | module graph + query compiler only, no DO |
 
-                  To pick it back up: move the three into `src/testing/`, uncomment `workerd: true` with the DO
-                  binding block in `vite.config.ts`, restore the `@cloudflare/vitest-pool-workers`,
-                  `@cloudflare/workers-types` and `@effect/sql-sqlite-do` devDeps (the catalog entry for the
-                  last one is already added), and add a `types` array to `tsconfig.json` listing those two
-                  `@cloudflare` packages **plus `node` and `wicg-file-system-access`** — a `types` array
-                  overrides the base config's, and dropping those two breaks the node and OPFS suites.
+                      To pick it back up: move the three into `src/testing/`, uncomment `workerd: true` with the DO
+                      binding block in `vite.config.ts`, restore the `@cloudflare/vitest-pool-workers`,
+                      `@cloudflare/workers-types` and `@effect/sql-sqlite-do` devDeps (the catalog entry for the
+                      last one is already added), and add a `types` array to `tsconfig.json` listing those two
+                      `@cloudflare` packages **plus `node` and `wicg-file-system-access`** — a `types` array
+                      overrides the base config's, and dropping those two breaks the node and OPFS suites.
 
-                  One unresolved detail even then: the DO test's `env.ECHO_SQLITE` would not typecheck. Neither
-                  `declare module 'cloudflare:test' { interface ProvidedEnv … }` nor `interface Env …` nor
-                  `declare global { interface Env … }` merged with the `Env` the pool types use.
+                      One unresolved detail even then: the DO test's `env.ECHO_SQLITE` would not typecheck. Neither
+                      `declare module 'cloudflare:test' { interface ProvidedEnv … }` nor `interface Env …` nor
+                      `declare global { interface Env … }` merged with the `Env` the pool types use.
 
-                  What was ruled out, each by experiment:
+                      What was ruled out, each by experiment:
 
-                  - *Not this package's code.* A test importing only `vitest` fails identically.
-                  - *Not the harness in general.* `plugin-markdown`'s workerd test passes on this machine.
-                  - *Not the wa-sqlite alias.* Removed it; the browser suite still passes, workerd still fails.
-                    (The alias turned out to be unnecessary and has been dropped from `vite.config.ts`.)
-                  - *Not the `browser` project coexisting.* Failed with the config reduced to
-                    `{ node: true, workerd: true }`.
-                  - *Not a missing `@cloudflare/vitest-pool-workers`.* Hoisted at the repo root, which is where
-                    `vite.base.config.ts` imports it from. Declaring it and `@cloudflare/workers-types` directly
-                    as devDeps — the pattern `plugin-host-cloudflare` uses — changed nothing. They are kept
-                    anyway: `workerd-do.ts` imports `cloudflare:workers` and the parked tests import
-                    `cloudflare:test`, so both are needed for the package to typecheck.
+                      - *Not this package's code.* A test importing only `vitest` fails identically.
+                      - *Not the harness in general.* `plugin-markdown`'s workerd test passes on this machine.
+                      - *Not the wa-sqlite alias.* Removed it; the browser suite still passes, workerd still fails.
+                        (The alias turned out to be unnecessary and has been dropped from `vite.config.ts`.)
+                      - *Not the `browser` project coexisting.* Failed with the config reduced to
+                        `{ node: true, workerd: true }`.
+                      - *Not a missing `@cloudflare/vitest-pool-workers`.* Hoisted at the repo root, which is where
+                        `vite.base.config.ts` imports it from. Declaring it and `@cloudflare/workers-types` directly
+                        as devDeps — the pattern `plugin-host-cloudflare` uses — changed nothing. They are kept
+                        anyway: `workerd-do.ts` imports `cloudflare:workers` and the parked tests import
+                        `cloudflare:test`, so both are needed for the package to typecheck.
 
-                  The workerd project is now commented out in `vite.config.ts`. The node project already
-                  excludes `*.workerd.test.ts`, so the three files sit in the tree collected by nothing and the
-                  suite is green; re-enable `workerd: true` to pick the spike back up.
+                      The workerd project is now commented out in `vite.config.ts`. The node project already
+                      excludes `*.workerd.test.ts`, so the three files sit in the tree collected by nothing and the
+                      suite is green; re-enable `workerd: true` to pick the spike back up.
 
-                  Remaining lead for whoever picks it up: `plugin-markdown` sets `jsx: 'react'` and this package
-                  sets no `jsx`; `plugin-host-cloudflare` (the other workerd-tested package) declares
-                  `@cloudflare/vitest-pool-workers` and `@cloudflare/workers-types` directly and sets
-                  `test: { workerd: true }` with no node project.
+                      Remaining lead for whoever picks it up: `plugin-markdown` sets `jsx: 'react'` and this package
+                      sets no `jsx`; `plugin-host-cloudflare` (the other workerd-tested package) declares
+                      `@cloudflare/vitest-pool-workers` and `@cloudflare/workers-types` directly and sets
+                      `test: { workerd: true }` with no node project.
 
-                  **Not on the critical path.** Option 1 runs ECHO in the browser, and the DO only has to
-                  persist exported bytes — it does not need to run `echo-sqlite`. Doing so would prove the "one
-                  codebase, two runtimes" line and is the increment toward option 3 / gap E, so it is worth
-                  finishing, but Phase 1 does not wait on it.
+                      **Not on the critical path.** Option 1 runs ECHO in the browser, and the DO only has to
+                      persist exported bytes — it does not need to run `echo-sqlite`. Doing so would prove the "one
+                      codebase, two runtimes" line and is the increment toward option 3 / gap E, so it is worth
+                      finishing, but Phase 1 does not wait on it.
 
 - [x] **Q-2 answered: FTS5 is present in the browser build.** Twice over — `0001_init` creates an
       `fts5(text, tokenize = 'trigram')` virtual table and ran clean in chromium, and the spike's
@@ -150,6 +150,50 @@ default include excludes `*.node.test.ts` and these are plain `*.test.ts`. Narro
       the demo claims any number.
 - [ ] Deploy to the DXOS account as `echo-sqlite-demo`.
 - [ ] `create-*` template.
+
+## Phase 1b: Two-way sync (D-5)
+
+Requested 2026-11-08. Supersedes the whole-file push/pull transport.
+
+- [x] **Slug names the graph, created on demand.** `/g/<slug>`; `/` mints one and rewrites the URL.
+      The DO exists as soon as it is addressed, so there is no create step on either side. A local
+      space id is derived from the slug (SHA-256 → 20 bytes → `SpaceId.encode`), and one OPFS file
+      holds them all.
+- [x] **Two-way by default**, no buttons: a 2 s poll, one round trip at a time.
+- [x] **24 h expiry**, a DO alarm set on first write calling `deleteAll` on its own storage. The
+      client shows the date.
+- [x] **Generate graph** — 6 organizations and 12 people with employer edges.
+- [x] **R2 dropped.** Rows live in the DO's own SQLite. The bucket `echo-sqlite-demo-spaces` is now
+      unused and can be deleted.
+- [ ] **Richer UI with `react-ui-list` and `react-ui-graph`** — not started; see below.
+
+**Verified on the deployed app** with curl acting as a second peer, which tests the protocol more
+rigorously than two tabs could (two same-origin tabs share one OPFS, so they are one instance):
+
+| Direction           | Result                                                                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser → DO        | Generate produced exactly 18 records: 6 organizations, 12 people, all 12 carrying an `employer` ref by foreign key                                   |
+| DO → browser        | A record POSTed by curl appeared in the running UI on the next poll                                                                                  |
+| DO → browser, edges | A person POSTed with `refs.employer` pointing at an existing organization's key rendered with its `Cloudflare` pill resolved through `useResolveRef` |
+
+That last row is the one that matters: it proves the foreign-key identity scheme carries references
+across instances, and that the two-pass apply (nodes, then edges) wires them correctly.
+
+### Why remote changes go through the ECHO API
+
+echo-sqlite invalidates queries from its own commits only, so importing rows with raw SQL would
+update the database and never reach the UI. Applying with `db.add` / `Obj.update` means the existing
+`useQuery` subscriptions just work — which is what the verification above actually demonstrates.
+
+### Remaining: the graph UI
+
+`react-ui-graph` needs an `SVG` wrapper, a `GraphModel` from `@dxos/graph`, a projector, d3, and
+`@dxos/react-ui` + `@dxos/ui-theme` — i.e. the Tailwind theme pipeline that `drawing-app` carries.
+Worth noting the tension: demo 2's purpose in the memo is _adoptability_ ("under 100 lines, no
+plugin framework"), and pulling in the theme stack makes it look like a DXOS app rather than what a
+developer writes. A graph visualisation does demonstrate the graph better than a list of rows, so
+the likely answer is to keep this demo plain and add the graph view behind a toggle, or to build the
+visual version as a separate showcase.
 
 ## Phase 2: Follow-ups owed elsewhere
 

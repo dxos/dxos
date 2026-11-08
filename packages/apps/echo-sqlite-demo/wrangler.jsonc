@@ -12,12 +12,12 @@
     // Everything else is asset-first; only the space API needs the Worker.
     "run_worker_first": ["/api/*"],
   },
-  // One object per space id: single-threaded, so concurrent pushes queue instead of racing in R2.
+  // One object per slug: single-threaded, so it assigns sync versions in a total order with no
+  // coordination, which is what makes last-writer-wins well defined. Created on demand by the
+  // first request that addresses it, and deleted by its own alarm 24h later.
   "durable_objects": {
     "bindings": [{ "name": "SPACE", "class_name": "SpaceObject" }],
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SpaceObject"] }],
-  // The exported SQLite file per space. R2 rather than DO storage: its KV values cap at 128 KiB.
-  "r2_buckets": [{ "binding": "SPACES", "bucket_name": "echo-sqlite-demo-spaces" }],
   "observability": { "enabled": true },
 }

@@ -171,3 +171,11 @@ pre {
   outline-offset: 2px;
   border-radius: 3px;
 }
+
+.slug {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+}

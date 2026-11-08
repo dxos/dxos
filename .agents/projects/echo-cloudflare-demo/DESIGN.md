@@ -97,6 +97,42 @@ waiting on the harness, and it is honest about what it is: **persistence, not re
 risk 10 clears, the same DO gains an `echo-sqlite` instance over `ctx.storage.sql` and the transport
 becomes feed-based sync — option 3 — without the client changing.
 
+## Decision D-5: two-way sync, with the Durable Object as version authority
+
+Supersedes D-1's "persistence, not replication" and D-4's whole-file transport. Requested
+2026-11-08: a slug in the URL names a graph, created on demand, syncing both ways by default, and
+expiring after 24 hours.
+
+**Rows, not files, with per-object versions assigned by the DO.** The DO keeps its own SQLite table
+of `(key, version, deleted, typename, props)` plus a monotonic counter. One endpoint:
+
+```
+POST /api/space/:slug/sync   { since, records[] }  →  { version, records[] }
+```
+
+The client sends the records it has changed since its last sync and the version it last saw; the DO
+applies them (assigning each a new version), then returns everything above `since`. Conflicts are
+last-writer-wins per object, and the DO's version order _defines_ "last" — which is the feed
+protocol's position authority applied to objects instead of blocks, so this is a step toward
+option 3 rather than a detour from it.
+
+**Identity travels as a foreign key, not the ECHO id.** `Obj.make` mints its own id and takes no
+`id` option, so two instances cannot share one. ECHO's own mechanism for correlating objects across
+sources is `Obj.Meta.keys`, and echo-sqlite supports filtering on meta keys — so each synced object
+carries `{ source: 'echo-sqlite-demo', id: <uuid> }` and sync matches on that.
+
+This also solves a problem the file transport did not have: remote changes must land **through the
+ECHO API** (`db.add` / `Obj.update`), not by writing `echo_entities` behind the database's back.
+echo-sqlite invalidates queries from its own commits only, so raw-SQL imports would never reach the
+UI. Going through the API means the existing `useQuery` subscriptions just update.
+
+Refs are applied in two passes — nodes, then edges — since an edge's target may arrive in the same
+batch.
+
+**R2 is dropped.** Rows live in the DO's own SQLite (10 GB), so the bucket
+`echo-sqlite-demo-spaces` is now unused and can be deleted. Expiry is a DO alarm set 24 hours out
+on first write, which calls `deleteAll` on its own storage.
+
 ## Open questions
 
 - **Q-1** Does `echo-sqlite` need synchronous SQL anywhere? The README says `runSync()` "never

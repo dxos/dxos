@@ -62,4 +62,4 @@ moon run echo-sqlite-demo:bundle && pnpm exec wrangler dev
 moon run echo-sqlite-demo:bundle && pnpm exec wrangler deploy -c packages/apps/echo-sqlite-demo/wrangler.jsonc
 ```
 
-The R2 bucket `echo-sqlite-demo-spaces` must exist in the account.
+Graphs live in a Durable Object per slug and are deleted 24 hours after creation.

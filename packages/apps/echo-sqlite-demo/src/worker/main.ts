@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { SLUG_PATTERN } from '../protocol.ts';
 import { type SpaceEnv, SpaceObject } from './space-object.ts';
 
 export { SpaceObject };
@@ -11,17 +12,21 @@ type Env = SpaceEnv & {
   readonly ASSETS: { fetch(request: Request): Promise<Response> };
 };
 
-const SPACE_PATH = /^\/api\/space\/([A-Z2-7]{32,33})$/;
+const SYNC_PATH = /^\/api\/space\/([^/]+)\/sync$/;
 
 // The Workers runtime requires the handler as the module's default export.
 export default {
   fetch: (request: Request, env: Env): Promise<Response> => {
     const { pathname } = new URL(request.url);
 
-    const match = SPACE_PATH.exec(pathname);
+    const match = SYNC_PATH.exec(pathname);
     if (match) {
-      // Route by space id, so each space gets its own single-writer object.
-      const stub = env.SPACE.get(env.SPACE.idFromName(match[1]));
+      const slug = match[1];
+      if (!SLUG_PATTERN.test(slug)) {
+        return Promise.resolve(new Response('Invalid slug', { status: 400 }));
+      }
+      // Routing by slug is what creates a graph on demand: the object exists once addressed.
+      const stub = env.SPACE.get(env.SPACE.idFromName(slug));
       return stub.fetch(request);
     }
 
@@ -29,6 +34,7 @@ export default {
       return Promise.resolve(new Response('Not found', { status: 404 }));
     }
 
+    // `/g/<slug>` is a client route; `not_found_handling` serves the app for it.
     return env.ASSETS.fetch(request);
   },
 };

@@ -2,31 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FormEvent, useCallback, useEffect, useState } from 'react';
+import React, { type FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 
 import { Organization, Person } from '../schema.ts';
-import { pull, push } from './sync.ts';
+import { generate } from './generate.ts';
+import { foreignKey, sync } from './sync.ts';
+
+/** Two-way sync runs on its own; this is how often it checks. */
+const SYNC_INTERVAL_MS = 2_000;
 
 /**
  * The whole app. Everything below `useQuery` is ordinary React — the database is on the device, so
- * there is no loading state, no fetch, and no network in the path of a read or a write.
+ * there is no loading state and no network in the path of a read or a write. Sync happens beside
+ * it, not in front of it.
  */
-export const App = ({
-  db,
-  checkpoint,
-  release,
-}: {
-  db: SqliteDatabase;
-  checkpoint: () => Promise<void>;
-  release: () => void;
-}) => {
+export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>();
+  const [expiresAt, setExpiresAt] = useState<number>();
   const [online, setOnline] = useState(navigator.onLine);
+  const syncing = useRef(false);
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine);
@@ -42,6 +41,30 @@ export const App = ({
   const people = useQuery(db, search.length > 0 ? Filter.text(search) : Filter.type(Person));
   const organizations = useQuery(db, Filter.type(Organization));
 
+  const runSync = useCallback(async () => {
+    // One round trip at a time; a slow one must not pile up behind the interval.
+    if (syncing.current || !navigator.onLine) {
+      return;
+    }
+    syncing.current = true;
+    try {
+      const { sent, received, expiresAt: expiry } = await sync(db, slug);
+      setExpiresAt(expiry);
+      setStatus(sent || received ? `synced ↑${sent} ↓${received}` : undefined);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : String(error));
+    } finally {
+      syncing.current = false;
+    }
+  }, [db, slug]);
+
+  // Two-way by default: no buttons, just a loop.
+  useEffect(() => {
+    void runSync();
+    const timer = setInterval(() => void runSync(), SYNC_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [runSync]);
+
   const addPerson = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -53,7 +76,14 @@ export const App = ({
         return;
       }
       const employer = organizations.find((org) => org.id === employerId);
-      db.add(Obj.make(Person, { name, email, ...(employer ? { employer: Ref.make(employer) } : {}) }));
+      db.add(
+        Obj.make(Person, {
+          [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] },
+          name,
+          email,
+          ...(employer ? { employer: Ref.make(employer) } : {}),
+        }),
+      );
       event.currentTarget.reset();
     },
     [db, organizations],
@@ -65,25 +95,12 @@ export const App = ({
       const form = new FormData(event.currentTarget);
       const name = String(form.get('name') ?? '').trim();
       if (name.length > 0) {
-        db.add(Obj.make(Organization, { name }));
+        db.add(Obj.make(Organization, { [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] }, name }));
         event.currentTarget.reset();
       }
     },
     [db],
   );
-
-  const run = useCallback(async (label: string, action: () => Promise<number>, reload: boolean) => {
-    setStatus(`${label}…`);
-    try {
-      const bytes = await action();
-      setStatus(`${label}: ${(bytes / 1024).toFixed(0)} KB`);
-      if (reload) {
-        window.location.reload();
-      }
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
-    }
-  }, []);
 
   return (
     <main>
@@ -91,22 +108,33 @@ export const App = ({
         <h1>ECHO on Cloudflare</h1>
         <p>
           A graph database in your browser. Reads and writes are local — <strong>no network</strong> — and a Durable
-          Object holds the authoritative copy.
+          Object per graph syncs them both ways.
         </p>
         <div className='row'>
           <span className={online ? 'pill online' : 'pill offline'}>{online ? 'online' : 'offline'}</span>
-          <button onClick={() => void run('Pushed', () => push(checkpoint), false)}>Push to cloud</button>
-          <button onClick={() => void run('Pulled', () => pull(release), true)}>Pull from cloud</button>
+          <code className='slug'>/g/{slug}</code>
+          <button
+            onClick={() => {
+              void navigator.clipboard?.writeText(window.location.href);
+              setStatus('link copied');
+            }}
+          >
+            Copy link
+          </button>
+          <button onClick={() => void generate(db).then((count) => setStatus(`generated ${count} objects`))}>
+            Generate graph
+          </button>
           {status && <span className='status'>{status}</span>}
         </div>
         <p className='note'>
-          Turn off the network and keep typing: everything still works. Push and pull move the whole database, so this
-          is persistence, not replication — a concurrent edit elsewhere is overwritten.
+          Open that link in another window and the two converge. Go offline and keep typing — the writes land when you
+          come back. Conflicts are last-writer-wins per object, in the order the Durable Object assigns.
+          {expiresAt && ` This graph is deleted ${new Date(expiresAt).toLocaleString()}.`}
         </p>
       </header>
 
       <section>
-        <h2>Organizations</h2>
+        <h2>Organizations · {organizations.length}</h2>
         <form onSubmit={addOrganization} className='row'>
           <input name='name' placeholder='Organization name' aria-label='Organization name' />
           <button type='submit'>Add</button>
@@ -119,7 +147,7 @@ export const App = ({
       </section>
 
       <section>
-        <h2>People</h2>
+        <h2>People · {people.length}</h2>
         <form onSubmit={addPerson} className='row'>
           <input name='name' placeholder='Name' aria-label='Name' />
           <input name='email' placeholder='Email' aria-label='Email' />
@@ -147,7 +175,7 @@ export const App = ({
             <PersonRow key={person.id} person={person} />
           ))}
         </ul>
-        {people.length === 0 && <p className='note'>No matches.</p>}
+        {people.length === 0 && <p className='note'>Nothing here yet — generate a graph, or add someone.</p>}
       </section>
     </main>
   );

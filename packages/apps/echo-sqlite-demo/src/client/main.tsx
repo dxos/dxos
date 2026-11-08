@@ -9,12 +9,16 @@ import { createRoot } from 'react-dom/client';
 
 import { App } from './App.tsx';
 import { openDatabase } from './database.ts';
+import { resolveSlug } from './slug.ts';
 
 const root = createRoot(document.getElementById('root')!);
 
+// The slug names the graph; `/` mints one and rewrites the URL so the address is shareable.
+const slug = resolveSlug();
+
 // Opening reads only the persisted type rows, so it costs the same at any space size.
-openDatabase().then(
-  ({ db, checkpoint, release }) => root.render(<App db={db} checkpoint={checkpoint} release={release} />),
+openDatabase(slug).then(
+  ({ db }) => root.render(<App db={db} slug={slug} />),
   (error) => {
     console.error(error);
     root.render(
