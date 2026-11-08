@@ -15,7 +15,7 @@ export type SpaceEnv = {
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 /** A demo bound; a graph this size is past what the demo is showing. */
-const MAX_RECORDS = 10_000;
+const MAX_RECORDS = 1_000;
 
 type Row = {
   key: string;

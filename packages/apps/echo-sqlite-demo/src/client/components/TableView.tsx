@@ -32,21 +32,23 @@ export const TableView = ({
     [rows],
   );
 
+  // A ref prints its target's label, in a list as much as on its own — `String(ref)` is `Ref([object Object])`.
+  const text = useCallback(
+    (value: unknown): unknown => (Ref.isRef(value) ? ((value.target && Obj.getLabel(value.target)) ?? '') : value),
+    [],
+  );
+
   const data = useMemo(
     () =>
       rows.map((row) =>
         Object.fromEntries(
           Object.entries(row).map(([key, value]) => [
             key,
-            Ref.isRef(value)
-              ? ((value.target && Obj.getLabel(value.target)) ?? '')
-              : Array.isArray(value)
-                ? value.join(', ')
-                : value,
+            Array.isArray(value) ? value.map(text).join(', ') : text(value),
           ]),
         ),
       ),
-    [rows],
+    [rows, text],
   );
 
   const handleRowClick = useCallback((row: { id: string }) => onSelect?.(row.id), [onSelect]);

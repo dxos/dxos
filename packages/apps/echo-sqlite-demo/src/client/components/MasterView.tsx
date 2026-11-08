@@ -2,17 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Ref, Type } from '@dxos/echo';
+import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import { useLabels } from '@dxos/echo-react';
 import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Select from '@dxos/react-ui/Select';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Organization, Person, getTypeIcon, getTypeTitle, types } from '../../schema.ts';
+import { getTypeIcon, getTypeTitle, types } from '../../schema.ts';
 import { CodeView } from './CodeView.tsx';
 import { GraphView } from './GraphView.tsx';
 import { type Entry, ListView } from './ListView.tsx';
@@ -30,10 +33,26 @@ const TABS: { value: MasterTab; label: string; icon: string }[] = [
   { value: 'code', label: 'Code', icon: 'ph--code--regular' },
 ];
 
+/** The actions that do not earn a button of their own. */
+const MENU_ITEMS = [
+  { value: 'generate', label: 'Generate records', icon: 'ph--sparkle--regular' },
+  { value: 'copy-link', label: 'Copy link', icon: 'ph--link--regular' },
+];
+
+const typeOf = (obj: Obj.Unknown): Type.AnyObj | undefined => {
+  const typename = Obj.getTypename(obj);
+  return types.find((type) => Type.getTypename(type) === typename);
+};
+
+const iconOf = (obj: Obj.Unknown): string | undefined => {
+  const type = typeOf(obj);
+  return type && getTypeIcon(type)?.icon;
+};
+
 /**
- * The master pane: its own toolbar — which type, which view, and the actions — over the records.
+ * The master pane: its own toolbar — which type, which view, and the actions — with search under it, over the records.
  *
- * A nested `Panel` gives the toolbar/body rows and the gutter the body's content inherits; every view owns its
+ * A nested `Panel` gives the header/body rows and the gutter the body's content inherits; every view owns its
  * scrolling (`Listbox.Viewport`, the code view) or fills instead (the graph).
  */
 export const MasterView = ({
@@ -41,8 +60,7 @@ export const MasterView = ({
   onTypenameChange,
   tab,
   onTabChange,
-  organizations,
-  people,
+  objects,
   selected,
   onSelect,
   onRemove,
@@ -55,8 +73,8 @@ export const MasterView = ({
   onTypenameChange: (typename: string) => void;
   tab: MasterTab;
   onTabChange: (tab: MasterTab) => void;
-  organizations: readonly Organization[];
-  people: readonly Person[];
+  /** Every record of every type; the chosen type is a filter over them. */
+  objects: readonly Obj.Unknown[];
   selected?: string;
   onSelect?: (id?: string) => void;
   onRemove?: (id: string) => void;
@@ -77,48 +95,50 @@ export const MasterView = ({
 
   // `useQuery` hands out one live object per id, so an edit leaves the array as it was; subscribing to
   // each label is what re-renders a renamed row.
-  const objects = useMemo(() => [...organizations, ...people], [organizations, people]);
   const labels = useLabels(objects);
 
-  // One record in the shape every view takes; the graph looks records up by id through the same map,
-  // so a node's popover shows exactly the card the masonry does.
+  // One record in the shape every view takes, read off the object rather than per type: the label property is the
+  // title and every other field is a row, so a new type in `schema.ts` shows up here with no code. The graph looks
+  // records up by id through the same map, so a node's popover shows exactly the card the masonry does.
   const byId: ReadonlyMap<string, Entry> = useMemo(() => {
-    const personEntry = (person: Person): Entry => {
-      // Read the ref synchronously: both queries are loaded, so the target is resident.
-      const employer = Ref.isRef(person.employer) ? person.employer.target : undefined;
-      const employerLabel = employer && labels.get(employer);
+    const describe = (obj: Obj.Unknown): Entry => {
+      const labelProperty = Entity.labelProperty(obj);
+      const fields: { icon?: string; value: string }[] = [];
+      for (const [property, value] of Object.entries(obj)) {
+        if (property === 'id' || property === labelProperty || value === undefined) {
+          continue;
+        }
+        // A list contributes one row per element, so two addresses read as two rows rather than one joined line.
+        for (const item of Array.isArray(value) ? value : [value]) {
+          if (Ref.isRef(item)) {
+            // Read the ref synchronously: every type is queried, so the target is resident.
+            const target = item.target;
+            if (target) {
+              fields.push({ icon: iconOf(target), value: labels.get(target) ?? '' });
+            }
+          } else if (item !== undefined && item !== null) {
+            fields.push({ value: String(item) });
+          }
+        }
+      }
       return {
-        value: person.id,
-        label: labels.get(person) ?? '',
-        description: employerLabel ? `${person.email[0]} · ${employerLabel}` : person.email[0],
-        icon: getTypeIcon(Person)?.icon,
-        fields: [
-          ...person.email.map((email) => ({ icon: 'ph--envelope-simple--regular', value: email })),
-          ...(employerLabel ? [{ icon: getTypeIcon(Organization)!.icon, value: employerLabel }] : []),
-        ],
+        value: obj.id,
+        label: labels.get(obj) ?? '',
+        description: fields[0]?.value,
+        icon: iconOf(obj),
+        fields,
       };
     };
 
-    const organizationEntry = (org: Organization): Entry => ({
-      value: org.id,
-      label: labels.get(org) ?? '',
-      icon: getTypeIcon(Organization)?.icon,
-      fields: org.website ? [{ icon: 'ph--globe--regular', value: org.website }] : [],
-    });
+    return new Map(objects.map((obj) => [obj.id, describe(obj)] as const));
+  }, [objects, labels]);
 
-    return new Map([
-      ...organizations.map((org) => [org.id, organizationEntry(org)] as const),
-      ...people.map((person) => [person.id, personEntry(person)] as const),
-    ]);
-  }, [organizations, people, labels]);
+  /** The objects of the chosen type, which is what every view but the graph shows. */
+  const ofType = useMemo(() => objects.filter((obj) => Obj.getTypename(obj) === typename), [objects, typename]);
 
   const entries: Entry[] = useMemo(
-    () =>
-      (typename === Type.getTypename(Person) ? people : organizations).flatMap((object) => {
-        const entry = byId.get(object.id);
-        return entry ? [entry] : [];
-      }),
-    [typename, organizations, people, byId],
+    () => ofType.flatMap((obj) => (byId.has(obj.id) ? [byId.get(obj.id)!] : [])),
+    [ofType, byId],
   );
 
   const [search, setSearch] = useState('');
@@ -139,14 +159,17 @@ export const MasterView = ({
   const keys = useMemo(() => new Set(matches.map((entry) => entry.value)), [matches]);
 
   /** What the table shows: the objects behind the matches, as one array per render of the inputs. */
-  const rows = useMemo(
-    () => (typename === Type.getTypename(Person) ? people : organizations).filter((object) => keys.has(object.id)),
-    [typename, people, organizations, keys],
-  );
+  const rows = useMemo(() => ofType.filter((obj) => keys.has(obj.id)), [ofType, keys]);
+
+  const type = useMemo(() => types.find((type) => Type.getTypename(type) === typename) ?? types[0], [typename]);
+
+  /** Stable per record set: the graph bakes it into its renderer, which a new function would rebuild every render. */
+  const getEntry = useCallback((id: string) => byId.get(id), [byId]);
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Header asChild>
+      {/* Two rows: the controls, and the search under them. A Panel header is a column, so they stack. */}
+      <Panel.Header>
         <Toolbar.Root>
           <Select.Root items={typeItems} value={[typename]} onValueChange={({ value }) => onTypenameChange(value[0])}>
             <Select.Trigger classNames='shrink-0' placeholder='Type' aria-label='Type' fixed />
@@ -156,6 +179,11 @@ export const MasterView = ({
               ))}
             </Select.Content>
           </Select.Root>
+
+          <Button.Root icon='ph--plus--regular' label='New' iconOnly onClick={onNew} />
+
+          {/* The views sit at the end, with the actions that do not fit in the menu beyond them. */}
+          <Toolbar.Separator variant='gap' />
 
           <ToggleGroup.Root
             type='single'
@@ -168,11 +196,23 @@ export const MasterView = ({
             ))}
           </ToggleGroup.Root>
 
-          <SearchBar classNames='grow min-w-0' text={search} onTextChange={setSearch} suggestions={suggestions} />
+          <Menu.Root onSelect={({ value }) => (value === 'generate' ? onGenerate?.() : onCopyLink?.())}>
+            <Menu.Trigger asChild>
+              <Button.Root icon='ph--dots-three-vertical--regular' label='More' iconOnly variant='ghost' />
+            </Menu.Trigger>
+            <Menu.Content>
+              {MENU_ITEMS.map((item) => (
+                <Menu.Item key={item.value} item={item} />
+              ))}
+            </Menu.Content>
+          </Menu.Root>
+        </Toolbar.Root>
 
-          <Button.Root icon='ph--plus--regular' label='New' iconOnly onClick={onNew} />
-          <Button.Root icon='ph--sparkle--regular' label='Generate' iconOnly variant='ghost' onClick={onGenerate} />
-          <Button.Root icon='ph--link--regular' label='Copy link' iconOnly variant='ghost' onClick={onCopyLink} />
+        <Toolbar.Root>
+          {/* The editor sits in an Input's own well, so the search reads as a control rather than loose text. */}
+          <Input.Frame classNames='grow min-w-0' end={<Icon.Icon icon='ph--magnifying-glass--regular' />}>
+            <SearchBar classNames='grow min-w-0' text={search} onTextChange={setSearch} suggestions={suggestions} />
+          </Input.Frame>
         </Toolbar.Root>
       </Panel.Header>
 
@@ -181,21 +221,8 @@ export const MasterView = ({
         {tab === 'masonry' && (
           <MasonryView entries={matches} selected={selected} onSelect={onSelect} onRemove={onRemove} />
         )}
-        {tab === 'table' && (
-          <TableView
-            type={typename === Type.getTypename(Person) ? Person : Organization}
-            rows={rows}
-            onSelect={onSelect}
-          />
-        )}
-        {tab === 'graph' && (
-          <GraphView
-            organizations={organizations}
-            people={people}
-            getEntry={(id) => byId.get(id)}
-            onSelect={onSelect}
-          />
-        )}
+        {tab === 'table' && <TableView type={type} rows={rows} onSelect={onSelect} />}
+        {tab === 'graph' && <GraphView objects={objects} selected={selected} getEntry={getEntry} onSelect={onSelect} />}
         {tab === 'code' && <CodeView />}
       </Panel.Body>
     </Panel.Root>

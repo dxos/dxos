@@ -16,7 +16,8 @@ export type Entry = {
   label: string;
   description?: string;
   icon?: string;
-  fields?: { icon: string; value: string }[];
+  /** One row per value under the title; a ref's row carries its target's type icon, a scalar's has none. */
+  fields?: { icon?: string; value: string }[];
 };
 
 /**

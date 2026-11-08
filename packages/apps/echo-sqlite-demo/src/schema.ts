@@ -38,7 +38,22 @@ export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.p
     .annotate({ title: 'Person' }),
 ) {}
 
-export const types = [Organization, Person];
+export class Event extends Type.makeObject<Event>(DXN.make('com.example.type.event', '0.1.0'))(
+  Schema.Struct({
+    title: Schema.String,
+    description: Schema.optional(Format.Markdown),
+    /** A second kind of edge: many people, so the graph is not just a tree of employers. */
+    attendees: Schema.optional(Schema.Array(Ref.Ref(Person))),
+  })
+    .pipe(
+      Annotation.IconAnnotation.set({ icon: 'ph--calendar-dots--regular', hue: 'green' }),
+      // The label is what every view shows for a record, and this type calls it `title`.
+      Annotation.LabelAnnotation.set(['title']),
+    )
+    .annotate({ title: 'Event' }),
+) {}
+
+export const types = [Organization, Person, Event];
 
 /** The glyph and hue a type declares, for a row, a card or a graph node. */
 export const getTypeIcon = (type: Type.AnyEntity): Annotation.IconAnnotation | undefined =>

@@ -9,13 +9,14 @@ import { Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 import { sync } from '@dxos/echo-worker';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Organization, Person, types } from '../../schema.ts';
-import { generate } from '../generate.ts';
+import { Event, Organization, Person, types } from '../../schema.ts';
+import { OBJECT_LIMIT, generate } from '../generate.ts';
 import { DetailForm } from './DetailForm.tsx';
 import { type MasterTab, MasterView } from './MasterView.tsx';
 
@@ -37,6 +38,11 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   const [typename, setTypename] = useState<string>(Type.getTypename(Organization)!);
   const [selected, setSelected] = useState<string>();
   const [status, setStatus] = useState<string>();
+  // What the status light says: green once a round trip succeeds, red while one is failing.
+  const [connection, setConnection] = useState<{ ok: boolean; message: string }>({
+    ok: false,
+    message: 'Connecting…',
+  });
   const [expiresAt, setExpiresAt] = useState<number>();
   const [online, setOnline] = useState(navigator.onLine);
   const syncing = useRef(false);
@@ -64,8 +70,12 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   );
 
   // Reactive, and compiled to one SQL statement each.
-  const people = useQuery(db, Filter.type(Person));
   const organizations = useQuery(db, Filter.type(Organization));
+  const people = useQuery(db, Filter.type(Person));
+  const events = useQuery(db, Filter.type(Event));
+
+  /** Every record, whatever its type: what the views filter and the graph draws whole. */
+  const objects = useMemo(() => [...organizations, ...people, ...events], [organizations, people, events]);
 
   const runSync = useCallback(async () => {
     // One round trip at a time; a slow one must not pile up behind the interval.
@@ -76,11 +86,9 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
     try {
       const { sent, received, expiresAt: expiry } = await sync(db, slug, types);
       setExpiresAt(expiry);
-      if (sent || received) {
-        setStatus(`synced ↑${sent} ↓${received}`);
-      }
+      setConnection({ ok: true, message: `Synced ↑${sent} ↓${received}` });
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : String(error));
+      setConnection({ ok: false, message: error instanceof Error ? error.message : String(error) });
     } finally {
       syncing.current = false;
     }
@@ -93,8 +101,14 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   }, [runSync]);
 
   const handleGenerate = useCallback(() => {
-    void generate(db).then((count) => setStatus(`generated ${count} objects`));
-  }, [db]);
+    // The store caps a graph at the same number, so the app says so rather than letting a sync 413.
+    const budget = OBJECT_LIMIT - objects.length;
+    if (budget <= 0) {
+      setStatus(`limit reached (${OBJECT_LIMIT} objects)`);
+      return;
+    }
+    void generate(db, { budget }).then((count) => setStatus(`generated ${count} objects`));
+  }, [db, objects.length]);
 
   const handleCopyLink = useCallback(() => {
     void navigator.clipboard?.writeText(window.location.href);
@@ -102,20 +116,17 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   }, []);
 
   // The views report a row's id; the form needs the object itself.
-  const subject = useMemo(
-    () => [...organizations, ...people].find((candidate) => candidate.id === selected),
-    [organizations, people, selected],
-  );
+  const subject = useMemo(() => objects.find((candidate) => candidate.id === selected), [objects, selected]);
 
   const handleRemove = useCallback(
     (id: string) => {
-      const obj = [...organizations, ...people].find((candidate) => candidate.id === id);
+      const obj = objects.find((candidate) => candidate.id === id);
       if (obj) {
         db.remove(obj);
         setSelected(undefined);
       }
     },
-    [db, organizations, people],
+    [db, objects],
   );
 
   const handleDelete = useCallback(() => {
@@ -129,6 +140,15 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
     setTypename(next);
     setSelected(undefined);
   }, []);
+
+  /** Everything the status light has to say, since it is the only thing in the status bar. */
+  const tooltip = [
+    online ? connection.message : 'Offline',
+    status,
+    expiresAt && `expires ${new Date(expiresAt).toLocaleTimeString()}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <Panel.Root size='md' classNames='sm:rounded-md sm:border sm:border-separator'>
@@ -148,8 +168,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
               onTypenameChange={handleTypenameChange}
               tab={tab}
               onTabChange={setTab}
-              organizations={organizations}
-              people={people}
+              objects={objects}
               selected={selected}
               onSelect={setSelected}
               onRemove={handleRemove}
@@ -165,7 +184,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
             <DetailForm
               db={db}
               typename={typename}
-              organizations={organizations}
+              objects={objects}
               selected={subject}
               onDone={() => setSelected(undefined)}
               onDelete={handleDelete}
@@ -174,13 +193,21 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
         </Splitter.Root>
       </Panel.Body>
 
+      {/* Not `asChild`: a Toolbar's root is its scroller, and the footer's own row would land on the scroller's child. */}
       <Panel.Footer>
         <Toolbar.Root>
-          <Toolbar.Text>{online ? 'online' : 'offline'}</Toolbar.Text>
-          {status && <Toolbar.Text classNames='text-end'>{status}</Toolbar.Text>}
-          {expiresAt && (
-            <Toolbar.Text classNames='text-end'>expires {new Date(expiresAt).toLocaleTimeString()}</Toolbar.Text>
-          )}
+          <Toolbar.Separator variant='gap' />
+          {/* The whole status bar: one light, whose tooltip is the detail. Clicking it syncs now rather than waiting. */}
+          <Button.Root
+            icon='ph--circle--fill'
+            iconSize='xs'
+            label={tooltip}
+            tooltipSide='top'
+            iconOnly
+            variant='ghost'
+            classNames={online && connection.ok ? 'text-success-text' : 'text-error-text'}
+            onClick={() => void runSync()}
+          />
         </Toolbar.Root>
       </Panel.Footer>
     </Panel.Root>

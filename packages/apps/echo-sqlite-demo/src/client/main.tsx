@@ -18,7 +18,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@dxos/react-ui/theme.css';
-import { openDatabase, resolveSlug } from '@dxos/echo-worker';
+import { DatabaseBusyError, openDatabase, resolveSlug } from '@dxos/echo-worker';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
@@ -56,12 +56,17 @@ openDatabase(slug, types).then(
     console.error(error);
     render(
       <div className='p-4 space-y-2'>
-        <p className='text-fg'>Could not open the database.</p>
-        <p className='text-fg-muted text-sm'>
-          This demo needs OPFS in a dedicated worker. It works in Chrome, Edge and Safari 17+; a private window may
-          block origin storage.
+        <p className='text-fg'>
+          {error instanceof DatabaseBusyError ? 'This graph is open in another tab.' : 'Could not open the database.'}
         </p>
-        <pre className='text-fg-subtle text-xs overflow-x-auto'>{String(error)}</pre>
+        <p className='text-fg-muted text-sm'>
+          {error instanceof DatabaseBusyError
+            ? 'One tab at a time holds the local copy. Close the other tab and reload this one — or open a different graph.'
+            : 'This demo needs OPFS in a dedicated worker. It works in Chrome, Edge and Safari 17+; a private window may block origin storage.'}
+        </p>
+        {!(error instanceof DatabaseBusyError) && (
+          <pre className='text-fg-subtle text-xs overflow-x-auto'>{String(error)}</pre>
+        )}
       </div>,
     );
   },

@@ -21,8 +21,8 @@ export type SyncRecord = {
   readonly typename: string;
   /** Scalar properties only. */
   readonly props: Readonly<Record<string, unknown>>;
-  /** Outgoing references, by property name, to other records' `key`s. */
-  readonly refs: Readonly<Record<string, string>>;
+  /** Outgoing references, by property name, to other records' `key`s; a list for a multi-valued edge. */
+  readonly refs: Readonly<Record<string, string | readonly string[]>>;
   readonly deleted?: boolean;
   /** Assigned by the Durable Object; absent on records a client is sending. */
   readonly version?: number;

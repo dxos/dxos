@@ -20,15 +20,18 @@ import { type Entry } from './ListView.tsx';
 export const EntryCard = ({
   entry,
   selected,
+  border = true,
   onSelect,
   onRemove,
 }: {
   entry: Entry;
   selected?: boolean;
+  /** Off inside a Popover, whose own frame would otherwise be doubled by the card's. */
+  border?: boolean;
   onSelect?: (id: string) => void;
   onRemove?: (id: string) => void;
 }) => (
-  <Card.Root grid border selected={selected} onClick={onSelect && (() => onSelect(entry.value))}>
+  <Card.Root grid border={border} selected={selected} onClick={onSelect && (() => onSelect(entry.value))}>
     <Card.Header>
       {entry.icon && (
         <Layout.Block rail='start'>

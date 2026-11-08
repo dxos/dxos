@@ -84,7 +84,7 @@ const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<stri
         continue;
       }
       const props: Record<string, unknown> = {};
-      const refs: Record<string, string> = {};
+      const refs: Record<string, string | string[]> = {};
       for (const [prop, value] of Object.entries(obj)) {
         if (prop === 'id' || value === undefined) {
           continue;
@@ -93,6 +93,15 @@ const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<stri
           const targetKey = value.target ? keyOf(value.target) : undefined;
           if (targetKey) {
             refs[prop] = targetKey;
+          }
+        } else if (Array.isArray(value) && value.some(Ref.isRef)) {
+          // A multi-valued edge; a target that is not resident contributes nothing rather than a hole.
+          const targetKeys = value.filter(Ref.isRef).flatMap((ref) => {
+            const targetKey = ref.target ? keyOf(ref.target) : undefined;
+            return targetKey ? [targetKey] : [];
+          });
+          if (targetKeys.length > 0) {
+            refs[prop] = targetKeys;
           }
         } else {
           // Through JSON, so a live array or nested object leaves its proxy behind.
@@ -145,7 +154,8 @@ export const sync = async (
     body: JSON.stringify({ since: state.version, records: changed }),
   });
   if (!response.ok) {
-    throw new Error(`Sync failed: ${response.status} ${await response.text()}`);
+    const detail = (await response.text()).trim();
+    throw new Error(`Sync failed: ${response.status}${detail ? ` ${detail}` : ''}`);
   }
   const { version, records, expiresAt } = (await response.json()) as SyncResponse;
 
@@ -168,8 +178,8 @@ export const sync = async (
       continue;
     }
     if (existing) {
-      Obj.update(existing, (draft) => {
-        Object.assign(draft, record.props);
+      Obj.update(existing, (existing) => {
+        Object.assign(existing, record.props);
       });
     } else {
       db.add(Obj.make(type as never, { [Obj.Meta]: { keys: [foreignKey(record.key)] }, ...record.props } as never));
@@ -187,15 +197,29 @@ export const sync = async (
     if (!obj) {
       continue;
     }
-    for (const [prop, targetKey] of Object.entries(record.refs)) {
-      const targetName = records.find((other) => other.key === targetKey)?.typename;
-      const targetType = targetName ? byTypename.get(targetName) : undefined;
-      const target = targetType ? await findByKey(db, targetKey, targetType) : await findAnyByKey(db, targetKey, types);
-      if (target) {
-        Obj.update(obj, (draft) => {
-          Obj.setValue(draft, [prop], Ref.make(target as never));
-        });
+    for (const [prop, value] of Object.entries(record.refs)) {
+      const many = Array.isArray(value);
+      const targets: Obj.Unknown[] = [];
+      for (const targetKey of many ? value : [value]) {
+        const targetName = records.find((other) => other.key === targetKey)?.typename;
+        const targetType = targetName ? byTypename.get(targetName) : undefined;
+        const target = targetType
+          ? await findByKey(db, targetKey, targetType)
+          : await findAnyByKey(db, targetKey, types);
+        if (target) {
+          targets.push(target);
+        }
       }
+      if (targets.length === 0) {
+        continue;
+      }
+      Obj.update(obj, (obj) => {
+        Obj.setValue(
+          obj,
+          [prop],
+          many ? targets.map((target) => Ref.make(target as never)) : Ref.make(targets[0] as never),
+        );
+      });
     }
   }
   await db.flush();
