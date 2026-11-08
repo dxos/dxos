@@ -104,11 +104,20 @@ Supersedes D-1's "persistence, not replication" and D-4's whole-file transport. 
 expiring after 24 hours.
 
 **Rows, not files, with per-object versions assigned by the DO.** The DO keeps its own SQLite table
-of `(key, version, deleted, typename, props)` plus a monotonic counter. One endpoint:
+of `(key, version, deleted, typename, props, refs)` plus a monotonic counter — `refs` is its own
+column because an edge names another record's key rather than being a value. Two transports reach
+it, and both go through the same apply:
 
 ```
-POST /api/space/:slug/sync   { since, records[] }  →  { version, records[] }
+WS   /api/space/:slug/socket  ← hello { since } | push { records[] }  →  records { version, records[] }
+POST /api/space/:slug/sync      { since, records[] }                  →  { version, records[] }
 ```
+
+The socket is the normal path: the object broadcasts every write to every connected client, the
+sender included, so a change reaches the other peers at once and an idle graph costs nothing
+(hibernation). The POST remains for a peer that cannot hold a socket open, and for a script; its
+writes are broadcast too. A delete travels as a tombstone — `db.remove` is a soft delete, and the
+row it leaves is read back and sent like any other record.
 
 The client sends the records it has changed since its last sync and the version it last saw; the DO
 applies them (assigning each a new version), then returns everything above `since`. Conflicts are

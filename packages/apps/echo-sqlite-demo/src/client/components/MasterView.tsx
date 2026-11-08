@@ -84,7 +84,7 @@ export const MasterView = ({
   const typeItems = useMemo(
     () =>
       types.map((type) => ({
-        value: Type.getTypename(type)!,
+        value: Type.getTypename(type),
         label: getTypeTitle(type),
         icon: getTypeIcon(type)?.icon,
       })),

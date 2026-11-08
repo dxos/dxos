@@ -19,9 +19,10 @@ export default defineConfig({
       optimizeDeps: ['effect/Deferred', 'effect/Fiber', 'effect/Option'],
     },
     // The workerd project is OFF while its pool failure is unresolved: it dies before any module
-    // loads, so even a test importing only `vitest` fails to collect. The node project already
-    // excludes `*.workerd.test.ts`, so the three parked files sit in the tree uncollected. Reasons
-    // and the ruled-out list: `src/testing/load.workerd.test.ts`, and TASKS.md risk 10.
+    // loads, so even a test importing only `vitest` fails to collect. The three parked files live
+    // outside the package, in `.agents/projects/echo-cloudflare-demo/parked/`, so nothing collects
+    // them; the reasons and the ruled-out list are in `load.workerd.test.ts` there, and in that
+    // project's TASKS.md risk 10.
     // workerd: true,
   },
 });

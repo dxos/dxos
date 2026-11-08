@@ -54,21 +54,21 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   const registry = useContext(RegistryContext);
   const [dynamicTable, setDynamicTable] = useState<{ object: TableType.Table; projection: ProjectionModel }>();
 
-  // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
-  const { type } = useMemo(
-    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, type: typeProp }),
-    [name, properties, jsonSchemaProp, typeProp],
-  );
-
   // Keyed on the properties' CONTENTS, not their identity: a caller that builds the array inline
   // rebuilds the table — and with it every cell — on each of its own renders, which reads as a flicker
-  // whenever something outside the table changes (a selection, a filter).
-  const propertiesKey = useMemo(
-    () => properties?.map((property) => `${property.name}:${property.format}:${property.size ?? ''}`).join(),
-    [properties],
-  );
+  // whenever something outside the table changes (a selection, a filter). The whole property is in the
+  // key, so a changed title, size, sort or config still rebuilds.
+  const propertiesKey = useMemo(() => JSON.stringify(properties ?? []), [properties]);
   const propertiesRef = useRef(properties);
   propertiesRef.current = properties;
+
+  // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
+  const { type } = useMemo(
+    () =>
+      getBaseSchema({ typename: name, properties: propertiesRef.current, jsonSchema: jsonSchemaProp, type: typeProp }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [name, propertiesKey, jsonSchemaProp, typeProp],
+  );
 
   useEffect(() => {
     setDynamicTable(makeDynamicTable({ registry, type, properties: propertiesRef.current }));

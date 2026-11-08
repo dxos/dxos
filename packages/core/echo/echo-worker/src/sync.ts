@@ -205,6 +205,15 @@ const applyRecords = async (
     if (existing) {
       Obj.update(existing, (existing) => {
         Object.assign(existing, record.props);
+        // A property the record does not carry was cleared by whoever wrote it, so clear it here
+        // too; without this an edit that empties a field never reaches the other peers, and they
+        // push the old value back. Refs are left alone: `readLocal` omits one whose target is not
+        // resident, so an absent ref does not mean it was cleared.
+        for (const [property, value] of Object.entries(existing)) {
+          if (property !== 'id' && !(property in record.props) && !Ref.isRef(value)) {
+            Obj.setValue(existing, [property], undefined);
+          }
+        }
       });
     } else {
       db.add(Obj.make(type as never, { [Obj.Meta]: { keys: [foreignKey(record.key)] }, ...record.props } as never));
@@ -259,20 +268,23 @@ const receive = async (
   response: SyncResponse,
   local: ReadonlyMap<string, SyncRecord>,
   sent: readonly SyncRecord[],
-): Promise<number> => {
+): Promise<{ received: number; reset: boolean }> => {
   // Only records this client has not seen; the ones it just sent come back too, carrying their versions.
   const incoming = response.records.filter(
     (record) => local.get(record.key) === undefined || fingerprint(record) !== state.hashes[record.key],
   );
   await applyRecords(db, types, response.records, incoming);
 
-  // Agreement is now the union, so fingerprint everything the store holds plus what was sent.
-  const hashes: Record<string, string> = { ...state.hashes };
+  // A version below ours means the store was reset — the graph expired and its alarm dropped
+  // everything — so nothing it once agreed to survives: forget the agreement and let the next push
+  // send the whole local graph again, rather than trusting hashes for rows that no longer exist.
+  const reset = response.version < state.version;
+  const hashes: Record<string, string> = reset ? {} : { ...state.hashes };
   for (const record of [...response.records, ...sent]) {
     hashes[record.key] = fingerprint(record);
   }
   saveState(slug, { version: response.version, hashes });
-  return incoming.length;
+  return { received: incoming.length, reset };
 };
 
 /**
@@ -295,7 +307,7 @@ export const sync = async (db: SqliteDatabase, slug: string, types: SyncTypes): 
     throw new Error(`Sync failed: ${response.status}${detail ? ` ${detail}` : ''}`);
   }
   const body = (await response.json()) as SyncResponse;
-  const received = await receive(db, slug, types, state, body, local, changed);
+  const { received } = await receive(db, slug, types, state, body, local, changed);
 
   return { sent: changed.length, received, expiresAt: body.expiresAt };
 };
@@ -397,8 +409,11 @@ export const connect = (
         }
         const state = loadState(slug);
         const local = await readLocal(db, types);
-        const received = await receive(db, slug, types, state, message, local, []);
+        const { received, reset } = await receive(db, slug, types, state, message, local, []);
         onSync?.({ sent: 0, received, expiresAt: message.expiresAt });
+        if (reset) {
+          void push();
+        }
       });
 
     socket.onclose = () => {

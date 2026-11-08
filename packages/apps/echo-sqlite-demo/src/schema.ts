@@ -61,4 +61,4 @@ export const getTypeIcon = (type: Type.AnyEntity): Annotation.IconAnnotation | u
 
 /** The type's own name, falling back to its typename. */
 export const getTypeTitle = (type: Type.AnyEntity): string =>
-  SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(Type.getSchema(type).ast) ?? Type.getTypename(type)!;
+  SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(Type.getSchema(type).ast) ?? Type.getTypename(type);

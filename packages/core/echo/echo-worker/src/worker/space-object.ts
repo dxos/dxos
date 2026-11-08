@@ -17,6 +17,10 @@ const TTL_MS = 24 * 60 * 60 * 1000;
 /** A demo bound; a graph this size is past what the demo is showing. */
 const MAX_RECORDS = 1_000;
 
+/** A record's `props` and `refs` are objects; a client that sends anything else gets an empty one. */
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 type Row = {
   key: string;
   version: number;
@@ -103,7 +107,7 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
     const since = Number.isSafeInteger(body?.since) && body.since >= 0 ? body.since : 0;
     const incoming = Array.isArray(body?.records) ? body.records : [];
 
-    const refused = this.#refuse(incoming.length);
+    const refused = this.#refuse(incoming);
     if (refused) {
       return refused;
     }
@@ -138,7 +142,7 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
 
       case 'push': {
         const incoming = Array.isArray(parsed.records) ? parsed.records : [];
-        if (this.#refuse(incoming.length)) {
+        if (this.#refuse(incoming)) {
           ws.send(JSON.stringify({ type: 'error', message: 'Too many records' }));
           return;
         }
@@ -152,12 +156,27 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
     }
   }
 
-  /** Over the limit, in the one place both transports ask. */
-  #refuse(incoming: number): Response | undefined {
-    const count = this.#count();
-    if (count + incoming > MAX_RECORDS) {
-      return new Response(`Too many records: ${count} + ${incoming} > ${MAX_RECORDS}`, { status: 413 });
+  /**
+   * Over the limit, in the one place both transports ask.
+   *
+   * Only records that would ADD a live row count: an edit upserts, a tombstone removes an object from
+   * the graph, and both must stay possible at the cap — refusing them would strand a full graph with
+   * no way back under it.
+   */
+  #refuse(incoming: readonly SyncRecord[]): Response | undefined {
+    const live = this.#count();
+    const added = incoming.filter((record) => !record.deleted && !this.#has(record.key)).length;
+    if (live + added > MAX_RECORDS) {
+      return new Response(`Too many records: ${live} + ${added} > ${MAX_RECORDS}`, { status: 413 });
     }
+  }
+
+  /** Whether the store already holds this key, deleted or not; an upsert adds no row. */
+  #has(key: string): boolean {
+    const [row] = this.ctx.storage.sql
+      .exec<{ n: number }>('SELECT COUNT(*) AS n FROM records WHERE key = ?', key)
+      .toArray();
+    return Number(row?.n ?? 0) > 0;
   }
 
   /**
@@ -177,6 +196,10 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
           continue;
         }
         version++;
+        // What the store holds, which is what the broadcast must carry: a record from a script may
+        // omit either, or send something that is not an object at all.
+        const props = isPlainObject(record.props) ? record.props : {};
+        const refs = isPlainObject(record.refs) ? record.refs : {};
         this.ctx.storage.sql.exec(
           `INSERT INTO records (key, version, typename, props, refs, deleted) VALUES (?, ?, ?, ?, ?, ?)
              ON CONFLICT(key) DO UPDATE SET
@@ -188,11 +211,18 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
           record.key,
           version,
           record.typename,
-          JSON.stringify(record.props ?? {}),
-          JSON.stringify(record.refs ?? {}),
+          JSON.stringify(props),
+          JSON.stringify(refs),
           record.deleted ? 1 : 0,
         );
-        applied.push({ ...record, version });
+        applied.push({
+          key: record.key,
+          typename: record.typename,
+          props: props,
+          refs: refs,
+          ...(record.deleted ? { deleted: true } : {}),
+          version,
+        });
       }
       this.ctx.storage.kv.put('version', version);
     });

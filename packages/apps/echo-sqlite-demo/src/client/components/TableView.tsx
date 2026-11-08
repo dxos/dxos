@@ -53,7 +53,5 @@ export const TableView = ({
 
   const handleRowClick = useCallback((row: { id: string }) => onSelect?.(row.id), [onSelect]);
 
-  return (
-    <DynamicTable name={Type.getTypename(type)!} properties={properties} rows={data} onRowClick={handleRowClick} />
-  );
+  return <DynamicTable name={Type.getTypename(type)} properties={properties} rows={data} onRowClick={handleRowClick} />;
 };

@@ -325,18 +325,33 @@
        * `block` unfurl: the focused cell keeps the column's width and wraps downward over the rows
        * beneath, for a value of several lines (a list, an address). The inline unfurl above grows a
        * single line sideways instead, which truncates nothing but reads as one long line.
+       *
+       * Nested inside the same focus block, so it carries that block's specificity plus this
+       * attribute and wins. Written beside it instead, it loses: the inline rule has one selector
+       * more, and the first-row rule two, so a block cell would stay one line tall and scroll.
        */
-      &[data-focus-unfurl='block']:is(:focus, :focus-within) > .dx-grid__cell__content {
-        white-space: normal;
-        overflow-wrap: anywhere;
-        text-overflow: clip;
-        inline-size: auto;
-        min-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
-        max-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
-        block-size: auto;
-        min-block-size: calc(100% + var(--dx-grid-focus-indicator-width));
-        /* Capped, so a long value scrolls rather than covering the grid. */
-        max-block-size: min(16rem, 60vh);
+      &:not([data-focus-unfurl='false']):not(.dx-grid__cell--no-focus-unfurl) {
+        &:focus,
+        &:focus-within {
+          &[data-focus-unfurl='block'] > .dx-grid__cell__content {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            text-overflow: clip;
+            inline-size: auto;
+            min-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            max-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            block-size: auto;
+            min-block-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            /* Capped, so a long value scrolls rather than covering the grid. */
+            max-block-size: min(16rem, 60vh);
+          }
+
+          /* The first row has no neighbour line to reach over, and its rule is more specific still. */
+          &[data-focus-unfurl='block'][aria-rowindex='0'] > .dx-grid__cell__content {
+            block-size: auto;
+            min-block-size: 100%;
+          }
+        }
       }
 
       /*

@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
 import { type Connection, connect } from '@dxos/echo-worker';
@@ -65,10 +65,14 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
     [],
   );
 
-  // Reactive, and compiled to one SQL statement each.
-  const organizations = useQuery(db, Filter.type(Organization));
-  const people = useQuery(db, Filter.type(Person));
-  const events = useQuery(db, Filter.type(Event));
+  // Reactive, and compiled to one SQL statement each; ordered by the property each type is named by,
+  // so every view lists its records the way a reader expects rather than in insertion order.
+  const organizations = useQuery(
+    db,
+    Query.select(Filter.type(Organization)).orderBy(Order.property<Organization>('name', 'asc')),
+  );
+  const people = useQuery(db, Query.select(Filter.type(Person)).orderBy(Order.property<Person>('name', 'asc')));
+  const events = useQuery(db, Query.select(Filter.type(Event)).orderBy(Order.property<Event>('title', 'asc')));
 
   /** Every record, whatever its type: what the views filter and the graph draws whole. */
   const objects = useMemo(() => [...organizations, ...people, ...events], [organizations, people, events]);
@@ -94,6 +98,12 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   useEffect(() => {
     void socket.current?.push();
   }, [objects]);
+
+  /** An edit keeps the same live object, so the query need not notify: the save pushes for itself. */
+  const handleSaved = useCallback(() => {
+    setSelected(undefined);
+    void db.flush().then(() => socket.current?.push());
+  }, [db]);
 
   const handleGenerate = useCallback(() => {
     // The store caps a graph at the same number, so the app says so rather than letting a sync 413.
@@ -182,7 +192,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
               typename={typename}
               objects={objects}
               selected={subject}
-              onDone={() => setSelected(undefined)}
+              onDone={handleSaved}
               onDelete={handleDelete}
             />
           </Splitter.Panel>

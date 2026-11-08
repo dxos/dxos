@@ -152,7 +152,7 @@ default include excludes `*.node.test.ts` and these are plain `*.test.ts`. Narro
 - [ ] Deploy to the DXOS account as `echo-sqlite-demo`.
 - [ ] `create-*` template.
 
-## Phase 1b: Two-way sync (D-5)
+## Phase 1b: Two-way sync (D-5), now over a socket
 
 Requested 2026-11-08. Supersedes the whole-file push/pull transport.
 

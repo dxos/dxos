@@ -53,20 +53,22 @@ export const DetailForm = ({
   /** Each candidate as an option, keyed by the URI the field matches a stored Ref against. */
   const getOptions = useCallback<NonNullable<RefFieldDataProps['getOptions']>>(
     (results) =>
-      results.map((result) => {
-        const uri = Entity.getURI(result);
-        const refType = types.find((type) => Type.getTypename(type) === Entity.getTypename(result));
-        return {
-          id: uri,
-          label: Entity.getLabel(result) ?? uri,
-          ...(refType && { icon: getTypeIcon(refType)?.icon }),
-        };
-      }),
+      [...results]
+        .sort((a, b) => (Entity.getLabel(a) ?? '').localeCompare(Entity.getLabel(b) ?? ''))
+        .map((result) => {
+          const uri = Entity.getURI(result);
+          const refType = types.find((type) => Type.getTypename(type) === Entity.getTypename(result));
+          return {
+            id: uri,
+            label: Entity.getLabel(result) ?? uri,
+            ...(refType && { icon: getTypeIcon(refType)?.icon }),
+          };
+        }),
     [],
   );
 
   const useRefType = useCallback<NonNullable<RefFieldDataProps['useType']>>(
-    (_db, typeUri) => types.find((type) => String(typeUri).includes(Type.getTypename(type)!)) ?? type,
+    (_db, typeUri) => types.find((type) => String(typeUri).includes(Type.getTypename(type))) ?? type,
     [type],
   );
 

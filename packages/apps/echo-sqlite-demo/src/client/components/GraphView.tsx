@@ -19,7 +19,7 @@ const CARD_WIDTH = 352;
 
 /** Each type's hue, declared once on the schema. */
 const HUES: Record<string, string | undefined> = Object.fromEntries(
-  types.map((type) => [Type.getTypename(type)!, getTypeIcon(type)?.hue]),
+  types.map((type) => [Type.getTypename(type), getTypeIcon(type)?.hue]),
 );
 
 /**

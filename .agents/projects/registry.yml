@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: echo-cloudflare-demo
+    status: active
+    user: burdon
+    host: burdon-mbp-2024
+    created: 2026-11-08
+    summary: 'A deployable React demo that builds an ECHO graph with @dxos/echo-sqlite, with a Durable Object holding the authoritative copy. Built for the Cloudflare conversation: the artifact that shows what a developer writes, where Composer shows what ECHO can carry. Browser holds the graph (OPFS, main thread), DO persists it — labelled persistence, not replication.'
+    tasks: .agents/projects/echo-cloudflare-demo/TASKS.md
+    design: .agents/projects/echo-cloudflare-demo/DESIGN.md
+    prs: []
+    resume: 'Phase 1b DONE and deployed (https://echo-sqlite-demo.dxos.workers.dev, PR #14462): three types, five views, and sync over a WebSocket — the DO versions each record and broadcasts it, deletes travel as tombstones, and POST /api/space/:slug/sync remains for scripts. NEXT: land #14462 (body rewritten, labels set), then the assistant on the demo database — D-6 and Phase 3, parked on one decision because echo-sqlite has no feeds so AiSession cannot live there; its two commits are 3d96ec525f5 and d85679b8b9d on claude/echo-cloudflare-integration-60a7bb, to cherry-pick onto a branch of its own. Needs wrangler secret put ANTHROPIC_API_KEY. SETTLED EARLIER: echo-sqlite runs on OPFS in chromium, ECHO stays on the main thread over SqliteClient.layer({worker}) because OpfsConfig is worker-only, and the useQuery incompatibility (identity-unstable snapshots) is fixed at source.'
   - name: plugin-animator
     status: active
     user: burdon
@@ -962,13 +972,3 @@ ended:
     notes: .agents/projects/protobufjs-to-buf/EDGE-ASSERTION-TYPE-URL.md
     prs: [12833, 12857, 12990]
     resume: 'DIRECTION SET BY dmaretskyi 2026-08-31: change the consumers, do not re-home the types — codec-protobuf dies with protobuf.js so nothing it exports needs a new address. This SUPERSEDES PR #12857 (closed, not merged), which extracted the transport vocabulary into a new @dxos/codec package and added a Compat<T> type deriving the protobuf.js shape from buf types; both preserved the compat shapes and the unconverted consumers, and the new package needed publishing before anything could land (the packaging trap: private fails check-public-dependencies, public fails check-packages-published). #12833 IS MERGED (b4ceea28) and completed thread #8, the last milestone-sized thread; its two Buffer-view fixes are the reason the DESIGN.md Buffer rule exists. Teardown is now sliced by consumer, see the audit table: A value codecs (DONE this PR — Codec/EncodingOptions out of hypercore/feed-store/client-services, createCodecEncoding takes a structural ValueCodec<T>, packages declaring the dependency 11 -> 8); B the Any envelope (messaging 4, rpc 3, blade-runner 2, gossip 1 — legacy {type_url,value} to buf {$typeName,typeUrl,value}); C the RPC seam (RequestOptions/ServiceBackend/ServiceProvider/ServiceDescriptorLike — MUST fix protobuf-compiler file-generator.ts first or the next prebuild re-adds the import, and lands with B since ServiceBackend.call is typed on Any); D the generated barrel (deleted, not migrated). Two items are real type fixes not import swaps: echo-client repo-proxy.ts initialValue-as-Struct hides an unconstrained create<T> and constraining it ripples through the public API (interfaces are not assignable to Record<string,unknown>), and pipeline/codec.ts is the signed feed-block replication path wanting cross-version fixtures. CI HAZARD carried from #12857: Check/test shard=3 failed on three consecutive heads including a freshly merged base while shards 0-2 were green; Depot exposes no log (empty check output, no Actions run id, get_job_logs 404) and no re-run, and the four storybook suites reproduced locally (plugin-search/inbox/terra/file) all pass in isolation, so it was never root-caused. Also unresolved: the DXOS MCP server is unauthorized in this session, so the space-side project record was never reconciled.'
-  - name: echo-cloudflare-demo
-    status: active
-    user: burdon
-    host: burdon-mbp-2024
-    created: 2026-11-08
-    summary: 'A deployable React demo that builds an ECHO graph with @dxos/echo-sqlite, with a Durable Object holding the authoritative copy. Built for the Cloudflare conversation: the artifact that shows what a developer writes, where Composer shows what ECHO can carry. Browser holds the graph (OPFS, main thread), DO persists it — labelled persistence, not replication.'
-    tasks: .agents/projects/echo-cloudflare-demo/TASKS.md
-    design: .agents/projects/echo-cloudflare-demo/DESIGN.md
-    prs: []
-    resume: 'Phase 0 spikes. CONFIRMED: @effect/sql-sqlite-do wraps a DO ctx.storage.sql as an effect SqlClient and is already in production in edge db-service, and echo-sqlite consumes only the generic SqlClient (the node driver is a devDependency), so it is driver-agnostic; @dxos/echo-react depends only on @dxos/echo + @effect/atom-react and useQuery takes a Database.Queryable, so the hooks bind to echo-sqlite unchanged; FTS5 is present in the browser wa-sqlite build (the 0001_init migration creates an fts5 virtual table and ran clean in chromium). D-2: ECHO runs on the MAIN thread over SqliteClient.layer({worker}) because OpfsConfig is worker-only (AccessHandlePoolVFS needs OPFS sync access handles) — the alternative, SqliteDatabase inside the worker, is the echo-client/echo-host split rebuilt. IN PROGRESS: risk 11, echo-sqlite on OPFS in chromium. The harness runs (project name is browser-chromium, not chromium) and open/add/flush/migrate all succeed with no errors, but the first in-session query returns [] instead of Alice/Bob. A raw-SQL probe on echo_entities was added to separate a write-path failure from a query-compiler one; result pending. NOTE: echo-sqlite had ZERO consumers before this project, so the browser path is entirely unexercised and the memo oversold how cheap adopting it is.'
