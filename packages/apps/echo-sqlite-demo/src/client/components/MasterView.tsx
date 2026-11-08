@@ -12,32 +12,22 @@ import * as Select from '@dxos/react-ui/Select';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Organization, Person, types } from '../../schema.ts';
+import { Organization, Person, getTypeIcon, getTypeTitle, types } from '../../schema.ts';
 import { CodeView } from './CodeView.tsx';
 import { GraphView } from './GraphView.tsx';
 import { type Entry, ListView } from './ListView.tsx';
 import { MasonryView } from './MasonryView.tsx';
 import { TableView } from './TableView.tsx';
 
-export type MasterTab = 'list' | 'cards' | 'masonry' | 'table' | 'graph' | 'code';
+export type MasterTab = 'list' | 'masonry' | 'table' | 'graph' | 'code';
 
 const TABS: { value: MasterTab; label: string; icon: string }[] = [
   { value: 'list', label: 'List', icon: 'ph--list-bullets--regular' },
-  { value: 'cards', label: 'Cards', icon: 'ph--squares-four--regular' },
-  { value: 'masonry', label: 'Masonry', icon: 'ph--columns--regular' },
+  { value: 'masonry', label: 'Masonry', icon: 'ph--kanban--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
   { value: 'graph', label: 'Graph', icon: 'ph--graph--regular' },
   { value: 'code', label: 'Code', icon: 'ph--code--regular' },
 ];
-
-/** The same glyph the graph colours its nodes by, so a row and its node read as the same thing. */
-const ICONS: Record<string, string> = {
-  [Type.getTypename(Organization)!]: 'ph--buildings--regular',
-  [Type.getTypename(Person)!]: 'ph--user--regular',
-};
-
-/** Tiles no narrower than this: one column on a phone, several on a laptop. */
-const TILE_WIDTH = { min: 240 };
 
 /**
  * The master pane: its own toolbar — which type, which view, and the actions — over the records.
@@ -76,10 +66,11 @@ export const MasterView = ({
 }) => {
   const typeItems = useMemo(
     () =>
-      types.map((type) => {
-        const name = Type.getTypename(type)!;
-        return { value: name, label: name.split('.').pop()!, icon: ICONS[name] };
-      }),
+      types.map((type) => ({
+        value: Type.getTypename(type)!,
+        label: getTypeTitle(type),
+        icon: getTypeIcon(type)?.icon,
+      })),
     [],
   );
 
@@ -97,15 +88,20 @@ export const MasterView = ({
         return {
           value: person.id,
           label: labels.get(person) ?? '',
-          description: employerLabel ? `${person.email} · ${employerLabel}` : person.email,
-          icon: ICONS[Type.getTypename(Person)!],
+          description: employerLabel ? `${person.emails[0]} · ${employerLabel}` : person.emails[0],
+          icon: getTypeIcon(Person)?.icon,
+          fields: [
+            ...person.emails.map((email) => ({ icon: 'ph--envelope-simple--regular', value: email })),
+            ...(employerLabel ? [{ icon: getTypeIcon(Organization)!.icon, value: employerLabel }] : []),
+          ],
         };
       });
     }
     return organizations.map((org) => ({
       value: org.id,
       label: labels.get(org) ?? '',
-      icon: ICONS[Type.getTypename(Organization)!],
+      icon: getTypeIcon(Organization)?.icon,
+      fields: org.website ? [{ icon: 'ph--globe--regular', value: org.website }] : [],
     }));
   }, [typename, organizations, people, labels]);
 
@@ -141,15 +137,6 @@ export const MasterView = ({
 
       <Panel.Body>
         {tab === 'list' && <ListView entries={entries} selected={selected} onSelect={onSelect} onRemove={onRemove} />}
-        {tab === 'cards' && (
-          <ListView
-            entries={entries}
-            selected={selected}
-            onSelect={onSelect}
-            onRemove={onRemove}
-            tileWidth={TILE_WIDTH}
-          />
-        )}
         {tab === 'masonry' && (
           <MasonryView entries={entries} selected={selected} onSelect={onSelect} onRemove={onRemove} />
         )}

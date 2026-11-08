@@ -74,7 +74,7 @@ export const DetailForm = ({
           Obj.make(Person, {
             [Obj.Meta]: { keys: [foreignKey(crypto.randomUUID())] },
             name: String(next.name ?? ''),
-            email: String(next.email ?? ''),
+            emails: Array.isArray(next.emails) ? next.emails.map((email) => String(email)) : [],
             ...(employer ? { employer: Ref.make(employer) } : {}),
           }),
         );

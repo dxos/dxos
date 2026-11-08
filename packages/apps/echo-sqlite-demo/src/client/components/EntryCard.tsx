@@ -46,10 +46,13 @@ export const EntryCard = ({
         />
       )}
     </Card.Header>
-    {entry.description && (
-      <Card.Row>
-        <Card.Text variant='muted'>{entry.description}</Card.Text>
+    {entry.fields?.map((field, index) => (
+      // Two addresses carry the same icon, so position is the only stable key here.
+      <Card.Row key={index} icon={field.icon}>
+        <Card.Text variant='muted' truncate>
+          {field.value}
+        </Card.Text>
       </Card.Row>
-    )}
+    ))}
   </Card.Root>
 );

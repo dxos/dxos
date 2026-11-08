@@ -39,7 +39,7 @@ export const generate = async (
         Obj.make(Person, {
           [Obj.Meta]: { keys: [foreignKey(random.string.uuid())] },
           name: random.person.fullName(),
-          email: random.internet.email(),
+          emails: random.helpers.multiple(() => random.internet.email(), { count: { min: 1, max: 2 } }),
           employer: Ref.make(random.helpers.arrayElement(organizations)),
         }),
       ),

@@ -176,11 +176,11 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
 
       <Panel.Footer>
         <Toolbar.Root>
-          <Toolbar.Text>
-            {online ? 'online' : 'offline'} · /g/{slug} · {organizations.length} organizations · {people.length} people
-          </Toolbar.Text>
-          {status && <Toolbar.Text>{status}</Toolbar.Text>}
-          {expiresAt && <Toolbar.Text>expires {new Date(expiresAt).toLocaleTimeString()}</Toolbar.Text>}
+          <Toolbar.Text>{online ? 'online' : 'offline'}</Toolbar.Text>
+          {status && <Toolbar.Text classNames='text-end'>{status}</Toolbar.Text>}
+          {expiresAt && (
+            <Toolbar.Text classNames='text-end'>expires {new Date(expiresAt).toLocaleTimeString()}</Toolbar.Text>
+          )}
         </Toolbar.Root>
       </Panel.Footer>
     </Panel.Root>

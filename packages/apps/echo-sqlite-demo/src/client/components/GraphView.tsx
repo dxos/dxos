@@ -5,11 +5,23 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import '@dxos/react-ui-graph/styles/graph.css';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { type GraphController, GraphForceProjector, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
-import type { Organization, Person } from '../../schema.ts';
+import {
+  type Organization,
+  Organization as OrganizationType,
+  type Person,
+  Person as PersonType,
+  getTypeIcon,
+} from '../../schema.ts';
+
+/** Each type's hue, declared once on the schema. */
+const HUES: Record<string, string | undefined> = {
+  [Type.getTypename(OrganizationType)!]: getTypeIcon(OrganizationType)?.hue,
+  [Type.getTypename(PersonType)!]: getTypeIcon(PersonType)?.hue,
+};
 
 /**
  * The same objects the list shows, as a force-directed graph.
@@ -39,10 +51,10 @@ export const GraphView = ({
   const model = useMemo(() => {
     const model = GraphModel.make();
     for (const org of organizations) {
-      model.addNode({ id: org.id, type: 'organization', data: { label: org.name } });
+      model.addNode({ id: org.id, type: Type.getTypename(OrganizationType)!, data: { label: org.name } });
     }
     for (const person of people) {
-      model.addNode({ id: person.id, type: 'person', data: { label: person.name } });
+      model.addNode({ id: person.id, type: Type.getTypename(PersonType)!, data: { label: person.name } });
       // Read synchronously: both queries are loaded, so the target is resident. A ref whose target
       // is not loaded simply contributes no edge rather than blocking the render.
       const employer = person.employer;
@@ -70,10 +82,11 @@ export const GraphView = ({
             projector={projector}
             drag
             arrows
-            labels={{ text: (node) => node.data?.label ?? node.id }}
+            // A layout node's `data` is the model node, so its own data is one level in.
+            labels={{ text: (node) => node.data?.data?.label ?? node.id }}
             attributes={{
-              // `graph.css` paints a node from `data-color`, so this is how a type becomes a colour.
-              node: (node) => ({ data: { color: node.data?.type === 'person' ? 'cyan' : 'orange' } }),
+              // The stylesheet paints a node from `data-color`, which carries the type's own hue.
+              node: (node) => ({ data: { color: HUES[node.data?.type ?? ''] } }),
             }}
           />
         </SVG.Zoom>

@@ -14,9 +14,9 @@
  * consumer can restyle without forking it. Import ONE of the two, not both: `graph.css` when the
  * theme is present, this when it is not.
  *
- * Not covered: the `data-color` palettes and the radial cluster labels, which only apply when a
- * consumer opts into them. Set `--dx-graph-node-fill` per node via `data-color` yourself, or use
- * the themed sheet.
+ * `data-color` paints a node in one of the annotation hues, as the themed sheet does, but from
+ * plain colour values. Not covered: the radial cluster labels, which only apply when a consumer
+ * opts into them.
  */
 
 :root {
@@ -142,6 +142,46 @@ svg g.dx-graph g.dx-edges g.dx-edge :is(path, line, polyline) {
 
 svg g.dx-graph g.dx-edges g.dx-edge.dx-dashed :is(path, line, polyline) {
   stroke-dasharray: 4 4;
+}
+
+/*
+ * Node hues, keyed by `data-color` — the same names an `IconAnnotation` carries, so a type's glyph
+ * and its node agree. Light values first, with the dark scheme a step deeper.
+ */
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='amber'] circle {
+  fill: #fcd34d;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='cyan'] circle {
+  fill: #67e8f9;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='green'] circle {
+  fill: #86efac;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='violet'] circle {
+  fill: #c4b5fd;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='rose'] circle {
+  fill: #fda4af;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='amber'] circle {
+      fill: #f59e0b;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='cyan'] circle {
+      fill: #06b6d4;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='green'] circle {
+      fill: #22c55e;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='violet'] circle {
+      fill: #8b5cf6;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='rose'] circle {
+      fill: #f43f5e;
+    }
+  }
 }
 
 /*
