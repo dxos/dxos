@@ -30,7 +30,8 @@ export default defineConfig({
     // The Durable Object is not part of this server, so without a worker beside it every sync is a 404 and the
     // status light stays red. Run `pnpm exec wrangler dev --port 8787` here to sync against a local DO.
     proxy: {
-      '/api': { target: 'http://localhost:8787', changeOrigin: true },
+      // `ws`, because the sync socket is an upgrade on the same path.
+      '/api': { target: 'http://localhost:8787', changeOrigin: true, ws: true },
     },
   },
   oxc: {

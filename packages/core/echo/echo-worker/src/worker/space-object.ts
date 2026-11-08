@@ -4,7 +4,7 @@
 
 import { DurableObject } from 'cloudflare:workers';
 
-import type { SyncRecord, SyncRequest, SyncResponse } from '../protocol.ts';
+import type { ClientMessage, ServerMessage, SyncRecord, SyncRequest, SyncResponse } from '../protocol.ts';
 
 export type SpaceEnv = {
   /** One object per slug. */
@@ -34,6 +34,11 @@ type Row = {
  * than a race. This is the feed protocol's position authority applied to objects instead of blocks.
  *
  * Rows live in the object's own SQLite, created on demand by the first sync.
+ *
+ * A client connects a socket and is told about a write as it happens; the POST endpoint remains, so a peer that
+ * cannot hold a socket open — or a script with `curl` — still syncs by asking. Sockets are accepted through the
+ * hibernation API, so an idle graph holds no memory and costs no duration: the runtime wakes the object with the
+ * message and `getWebSockets()` returns the connections it was holding.
  */
 export class SpaceObject extends DurableObject<SpaceEnv> {
   #ready = false;
@@ -74,6 +79,14 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
   }
 
   override async fetch(request: Request): Promise<Response> {
+    if (request.headers.get('upgrade')?.toLowerCase() === 'websocket') {
+      this.#init();
+      const pair = new WebSocketPair();
+      // Hibernation: the runtime holds the socket, not this instance, so an idle object can be evicted.
+      this.ctx.acceptWebSocket(pair[1]);
+      return new Response(null, { status: 101, webSocket: pair[0] });
+    }
+
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405, headers: { allow: 'POST' } });
     }
@@ -90,43 +103,104 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
     const since = Number.isSafeInteger(body?.since) && body.since >= 0 ? body.since : 0;
     const incoming = Array.isArray(body?.records) ? body.records : [];
 
-    const count = this.#count();
-    if (count + incoming.length > MAX_RECORDS) {
-      return new Response(`Too many records: ${count} + ${incoming.length} > ${MAX_RECORDS}`, { status: 413 });
+    const refused = this.#refuse(incoming.length);
+    if (refused) {
+      return refused;
     }
 
-    const expiresAt = this.#expiresAt();
+    const applied = this.#apply(incoming);
+    if (applied.length > 0) {
+      // A socket client hears about this write without asking, which is the point of holding one.
+      this.#broadcast(applied);
+    }
 
-    // One transaction, so a client never observes half a batch.
-    if (incoming.length > 0) {
-      this.ctx.storage.transactionSync(() => {
-        let version = this.ctx.storage.kv.get<number>('version') ?? 0;
-        for (const record of incoming) {
-          if (typeof record?.key !== 'string' || typeof record?.typename !== 'string') {
-            continue;
-          }
-          version++;
-          this.ctx.storage.sql.exec(
-            `INSERT INTO records (key, version, typename, props, refs, deleted) VALUES (?, ?, ?, ?, ?, ?)
+    return Response.json(this.#since(since));
+  }
+
+  /** The hibernation API's callback: a client's `hello` or `push`, as JSON. */
+  override async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+    this.#init();
+
+    let parsed: ClientMessage;
+    try {
+      parsed = JSON.parse(typeof message === 'string' ? message : new TextDecoder().decode(message)) as ClientMessage;
+    } catch {
+      ws.send(JSON.stringify({ type: 'error', message: 'Expected JSON' }));
+      return;
+    }
+
+    switch (parsed?.type) {
+      case 'hello': {
+        const since = Number.isSafeInteger(parsed.since) && parsed.since >= 0 ? parsed.since : 0;
+        ws.send(JSON.stringify(this.#message(this.#since(since))));
+        break;
+      }
+
+      case 'push': {
+        const incoming = Array.isArray(parsed.records) ? parsed.records : [];
+        if (this.#refuse(incoming.length)) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Too many records' }));
+          return;
+        }
+        const applied = this.#apply(incoming);
+        if (applied.length > 0) {
+          // The sender included: the broadcast carries the versions this object assigned.
+          this.#broadcast(applied);
+        }
+        break;
+      }
+    }
+  }
+
+  /** Over the limit, in the one place both transports ask. */
+  #refuse(incoming: number): Response | undefined {
+    const count = this.#count();
+    if (count + incoming > MAX_RECORDS) {
+      return new Response(`Too many records: ${count} + ${incoming} > ${MAX_RECORDS}`, { status: 413 });
+    }
+  }
+
+  /**
+   * Writes the records in one transaction, so a client never observes half a batch, and returns them with the
+   * versions this object assigned — the total order that makes last-writer-wins well defined rather than a race.
+   */
+  #apply(incoming: readonly SyncRecord[]): SyncRecord[] {
+    if (incoming.length === 0) {
+      return [];
+    }
+    this.#expiresAt();
+    const applied: SyncRecord[] = [];
+    this.ctx.storage.transactionSync(() => {
+      let version = this.ctx.storage.kv.get<number>('version') ?? 0;
+      for (const record of incoming) {
+        if (typeof record?.key !== 'string' || typeof record?.typename !== 'string') {
+          continue;
+        }
+        version++;
+        this.ctx.storage.sql.exec(
+          `INSERT INTO records (key, version, typename, props, refs, deleted) VALUES (?, ?, ?, ?, ?, ?)
              ON CONFLICT(key) DO UPDATE SET
                version = excluded.version,
                typename = excluded.typename,
                props = excluded.props,
                refs = excluded.refs,
                deleted = excluded.deleted`,
-            record.key,
-            version,
-            record.typename,
-            JSON.stringify(record.props ?? {}),
-            JSON.stringify(record.refs ?? {}),
-            record.deleted ? 1 : 0,
-          );
-        }
-        this.ctx.storage.kv.put('version', version);
-      });
-    }
+          record.key,
+          version,
+          record.typename,
+          JSON.stringify(record.props ?? {}),
+          JSON.stringify(record.refs ?? {}),
+          record.deleted ? 1 : 0,
+        );
+        applied.push({ ...record, version });
+      }
+      this.ctx.storage.kv.put('version', version);
+    });
+    return applied;
+  }
 
-    const version = this.ctx.storage.kv.get<number>('version') ?? 0;
+  /** Everything above a version, which is both a first sync (`0`) and a catch-up after a reconnect. */
+  #since(since: number): SyncResponse {
     const rows = this.ctx.storage.sql
       .exec<Row>(
         'SELECT key, version, typename, props, refs, deleted FROM records WHERE version > ? ORDER BY version',
@@ -134,9 +208,9 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
       )
       .toArray();
 
-    const response: SyncResponse = {
-      version,
-      expiresAt,
+    return {
+      version: this.ctx.storage.kv.get<number>('version') ?? 0,
+      expiresAt: this.#expiresAt(),
       records: rows.map((row): SyncRecord => ({
         key: row.key,
         version: row.version,
@@ -146,8 +220,28 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
         ...(row.deleted ? { deleted: true } : {}),
       })),
     };
+  }
 
-    return Response.json(response);
+  #message(response: SyncResponse): ServerMessage {
+    return { type: 'records', ...response };
+  }
+
+  /** To every socket this object holds, the sender included: the records as the store now has them. */
+  #broadcast(records: readonly SyncRecord[]): void {
+    const message = JSON.stringify(
+      this.#message({
+        version: this.ctx.storage.kv.get<number>('version') ?? 0,
+        records,
+        expiresAt: this.#expiresAt(),
+      }),
+    );
+    for (const socket of this.ctx.getWebSockets()) {
+      try {
+        socket.send(message);
+      } catch {
+        // A socket closing mid-broadcast is ordinary; the client re-reads from its version on reconnect.
+      }
+    }
   }
 
   #count(): number {

@@ -12,14 +12,15 @@ type Env = SpaceEnv & {
   readonly ASSETS: { fetch(request: Request): Promise<Response> };
 };
 
-const SYNC_PATH = /^\/api\/space\/([^/]+)\/sync$/;
+/** Both transports address the same object: `sync` is one round trip, `socket` stays open. */
+const SPACE_PATH = /^\/api\/space\/([^/]+)\/(sync|socket)$/;
 
 // The Workers runtime requires the handler as the module's default export.
 export default {
   fetch: (request: Request, env: Env): Promise<Response> => {
     const { pathname } = new URL(request.url);
 
-    const match = SYNC_PATH.exec(pathname);
+    const match = SPACE_PATH.exec(pathname);
     if (match) {
       const slug = match[1];
       if (!SLUG_PATTERN.test(slug)) {

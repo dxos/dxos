@@ -4,11 +4,11 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { addEventListener, combine, interval } from '@dxos/async';
+import { addEventListener, combine } from '@dxos/async';
 import { Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
-import { sync } from '@dxos/echo-worker';
+import { type Connection, connect } from '@dxos/echo-worker';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -19,9 +19,6 @@ import { Event, Organization, Person, types } from '../../schema.ts';
 import { OBJECT_LIMIT, generate } from '../generate.ts';
 import { DetailForm } from './DetailForm.tsx';
 import { type MasterTab, MasterView } from './MasterView.tsx';
-
-/** Two-way sync runs on its own; this is how often it checks. */
-const SYNC_INTERVAL_MS = 2_000;
 
 /** The detail pane's share of the split; the master takes the rest. */
 const DETAIL_FRACTION = 0.4;
@@ -45,7 +42,6 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   });
   const [expiresAt, setExpiresAt] = useState<number>();
   const [online, setOnline] = useState(navigator.onLine);
-  const syncing = useRef(false);
 
   // Side by side on a laptop, stacked on a phone.
   const [wide] = Hooks.useMediaQuery('md', { fallback: [true] });
@@ -77,28 +73,27 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   /** Every record, whatever its type: what the views filter and the graph draws whole. */
   const objects = useMemo(() => [...organizations, ...people, ...events], [organizations, people, events]);
 
-  const runSync = useCallback(async () => {
-    // One round trip at a time; a slow one must not pile up behind the interval.
-    if (syncing.current || !navigator.onLine) {
-      return;
-    }
-    syncing.current = true;
-    try {
-      const { sent, received, expiresAt: expiry } = await sync(db, slug, types);
-      setExpiresAt(expiry);
-      setConnection({ ok: true, message: `Synced ↑${sent} ↓${received}` });
-    } catch (error) {
-      setConnection({ ok: false, message: error instanceof Error ? error.message : String(error) });
-    } finally {
-      syncing.current = false;
-    }
+  // The socket is the sync: the store pushes a write as it happens, so nothing here asks on a timer.
+  const socket = useRef<Connection>(undefined);
+  useEffect(() => {
+    const active = connect(db, slug, types, {
+      onSync: ({ received, expiresAt: expiry }) => {
+        setExpiresAt(expiry);
+        setConnection({ ok: true, message: received > 0 ? `Received ${received}` : 'Connected' });
+      },
+      onError: (error) => setConnection({ ok: false, message: error.message }),
+    });
+    socket.current = active;
+    return () => {
+      active.close();
+      socket.current = undefined;
+    };
   }, [db, slug]);
 
-  // Two-way by default: no buttons, just a loop.
+  // A local write is what triggers a push: the queries re-execute on commit, so their results changing is the signal.
   useEffect(() => {
-    void runSync();
-    return interval(() => void runSync(), SYNC_INTERVAL_MS);
-  }, [runSync]);
+    void socket.current?.push();
+  }, [objects]);
 
   const handleGenerate = useCallback(() => {
     // The store caps a graph at the same number, so the app says so rather than letting a sync 413.
@@ -207,7 +202,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
             iconOnly
             variant='ghost'
             classNames={online && connection.ok ? 'text-success-text' : 'text-error-text'}
-            onClick={() => void runSync()}
+            onClick={() => void socket.current?.push()}
           />
         </Toolbar.Root>
       </Panel.Footer>

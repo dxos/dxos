@@ -35,6 +35,22 @@ export type SyncRequest = {
   readonly records: readonly SyncRecord[];
 };
 
+/** What a client sends over the socket. */
+export type ClientMessage =
+  /** Sent on open: "everything you have above this version, please". */
+  | { readonly type: 'hello'; readonly since: number }
+  /** Records changed locally since the last agreement. */
+  | { readonly type: 'push'; readonly records: readonly SyncRecord[] };
+
+/**
+ * What the object sends back: the same shape the POST returns, whether it answers a `hello` or
+ * announces someone else's write, so a client has one path for applying records.
+ */
+export type ServerMessage = { readonly type: 'records' } & SyncResponse;
+
+/** The socket's path under a space, beside `sync`. */
+export const SOCKET_PATH = 'socket';
+
 export type SyncResponse = {
   /** The store's highest version after applying the request. */
   readonly version: number;

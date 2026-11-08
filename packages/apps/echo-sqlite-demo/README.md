@@ -17,11 +17,14 @@ driven by it: the icons, the type names, the forms and the graph's edges are all
 | Reactive queries compiled to SQL | `useQuery(db, Filter.type(Person))`, one `WITH RECURSIVE` statement |
 | Full-text search on the device | the search box — trigram FTS5, in the browser |
 | Opening costs the same at any size | `openDatabase` reads only persisted type rows |
+| A write reaches the other peers at once | one socket per client; the object broadcasts, nothing polls |
 
 ## What it does not demonstrate
 
 **Sync, not convergence.** Every object travels as a record the Durable Object versions, so the last
-writer of a record wins and a concurrent edit to the same record is lost. Real convergence is the
+writer of a record wins and a concurrent edit to the same record is lost. A client holds a socket and
+the object pushes each write to every other one; `POST /api/space/<slug>/sync` remains for a peer
+that cannot hold a socket open, and for a script. Real convergence is the
 feed protocol against an `echo-sqlite` instance inside the Durable Object — see
 `.agents/projects/echo-cloudflare-demo/DESIGN.md`, D-1 and D-4.
 
@@ -35,9 +38,9 @@ rather than waiting on a handle it cannot have.
 ┌────────────────────────────────┐        ┌──────────────────────────────┐
 │ React  ─ useQuery / useObject  │        │ Worker                       │
 │   │                            │        │  ├─ /api/* ──▶ SpaceObject   │
-│ SqliteDatabase (@dxos/echo-    │  PUT   │  │              (one per     │
+│ SqliteDatabase (@dxos/echo-    │  push  │  │              (one per     │
 │   sqlite): query compiler,     ├───────▶│  │               space)      │
-│   hydration, reactivity        │  GET   │  │                 │         │
+│   hydration, reactivity        │ records│  │                 │         │
 │   │ postMessage               ◀├────────┤  │                 ▼         │
 │ OPFS worker ─ SQLite + FTS5    │        │  └─ assets      R2 bucket    │
 └────────────────────────────────┘        └──────────────────────────────┘
