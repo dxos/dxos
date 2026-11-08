@@ -109,7 +109,7 @@ export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPA
  * @category Capability
  */
 export const HeadingAccent = Capability$.make<Atom.Atom<string | undefined>>()(
-  'org.dxos.app-framework.capability.heading-accent',
+  'org.dxos.app-framework.capability.headingAccent',
 );
 
 /**

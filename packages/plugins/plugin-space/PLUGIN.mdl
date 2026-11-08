@@ -609,7 +609,7 @@ feat F-8: Presence and Sync Status
   req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, leaving out any this deck has no URL binding for, scrolled to the plank at its front (or, when that plank is left out and the deck holds every other plank it can bind, to the first of the leader's planks after it that the deck holds, else the last before it), each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path when this deck has a URL binding for it and at the object's own path otherwise, whenever it changes, first closing any planks stacked after it, and reveals their anchor in it. Companions are content, so each plank shown of the leader opens the companion they have open there, in their tab, and closes one they closed. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
   req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank or in the deck around the planks, selects an object in the navtree (even one the deck already shows), presses Escape, goes back or forward in history, attends an object outside what it shows of the leader, or leaves the space's workspace for Settings or another space; and when the leader has attended nothing in the space for five seconds, which their leaving the space amounts to. A leader who goes offline is seen to attend nothing once their presence expires, so that follow ends five seconds after the expiry. The leader going idle ends nothing.
   req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying the pointer style, Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
-  req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows, whose label carries the session's pointer style. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. The follow is also a state of the presence indicator: on a plank whose viewers include someone in the session's follow, their avatars ring in indigo and the plank's heading takes a light indigo wash over a one-pixel indigo underline (a spike).
+  req F-8.24: A follow is marked in indigo on every screen in it. While a session follows someone in a space or someone follows it there, the Members companion's rail tab shows an indigo dot. A follower's list starts with the leader's own row ([F-8.23]); a leader's starts with a "Following you" group of its followers' rows, whose label carries the session's pointer style. Those rows wash in indigo, and joining a follow slides a row from its place to the top as the wash fades in. A leader may have any number of followers, and every session keeps whom each peer session follows, from their viewing messages, so each knows the whole follow. While the session follows or is followed in the space its deck shows, every plank heading there, companions included and in a flat or sliding deck, takes a light indigo wash over a one-pixel indigo underline. The follow is also a state of the presence indicator: the avatars of those in the session's follow ring in indigo.
   req F-8.25: While a session follows someone in a space, or someone follows it there, it posts its pointer on the space's pointer channel at most every 100 ms, as the plank or companion under it and its position as fractions of that box ([FollowPointer]); over the navtree or any other chrome it posts no position. A session draws, over the whole window, the pointers of the sessions it shares a follow with: the leader session its follow tracks, the sessions that follow it, and the others that follow its leader, each in the member's colour with their name, at the same fractions of the same plank or companion in its own deck, drawn as an arrow or, when the sender chose Laser, as a glowing dot whose tail traces the path it took. A drawn pointer eases toward each position it is sent rather than jumping. It draws no pointer whose plank or companion it does not show, nor one over the sender's chrome or outside their window. Moving the pointer ends no follow. Cursors drawn inside objects are unaffected and still show to every peer viewing the object.
 ```
 
@@ -1800,6 +1800,30 @@ decision D-98: A companion's pane has no attention of its own, so the deck marks
   for: user:wittjosiah
   affects: [F-8.25, FollowPointer]
   why: The companion shares its plank's attention, so no attendable id tells it apart; the plank it accompanies does, and both decks show it beside the same plank once the follow mirrors companions.
+```
+
+```mdl
+decision D-99: While following, every plank heading takes the follow's colour, companions included and in a sliding deck as well as a flat one; a companion's heading matches its primary plank's.
+  date: 2026-11-08
+  by: user:wittjosiah
+  affects: [F-8.24]
+```
+
+```mdl
+decision D-100: A pointer lands on what it points at across devices, even when their windows differ in size.
+  date: 2026-11-08
+  by: user:wittjosiah
+  affects: [F-8.25, QA-8]
+```
+
+```mdl
+decision D-101: The deck takes a heading accent from a new `HeadingAccent` capability and washes every primary and companion heading in it; plugin-space holds indigo there while the session follows or is followed in the space the deck shows. The presence surface no longer paints the heading, so the plank toolbar drops its stacking context. QA-8 checks D-100 with two windows of different widths. Fills in [D-99], [D-100].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.24, QA-8]
+  supersedes: D-81
+  why: The companion heading is the deck's own toolbar with no surface in it, so only the deck can colour it; one accent for every heading keeps them alike.
 ```
 
 ## Appendix: Extension Definitions
