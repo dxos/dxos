@@ -6,7 +6,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom';
 
 import '@dxos/react-ui-graph/styles/graph.css';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { combine } from '@dxos/async';
+import { Entity, Obj, Ref, Type } from '@dxos/echo';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { type GraphController, GraphForceProjector, type GraphProps, SVG, type SVGContext } from '@dxos/react-ui-graph';
 
@@ -52,6 +53,15 @@ export const GraphView = ({
     // SVG.Graph owns projector start/stop.
   }, []);
 
+  // An edge is a field, and a field changed in place leaves the query's array as it was — so the
+  // graph would keep drawing the old edges (and the old labels) until something else re-rendered.
+  // Subscribing to the objects themselves is what makes a re-assigned `employer` move its arrow.
+  const [revision, setRevision] = useState(0);
+  useEffect(
+    () => combine(...objects.map((obj) => Entity.subscribe(obj, () => setRevision((revision) => revision + 1)))),
+    [objects],
+  );
+
   const model = useMemo(() => {
     const model = GraphModel.make();
     for (const obj of objects) {
@@ -74,7 +84,9 @@ export const GraphView = ({
       }
     }
     return model;
-  }, [objects]);
+    // `revision` is the signal that a field changed; the objects themselves are read fresh here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [objects, revision]);
 
   // The model is rebuilt per render rather than mutated, so the projector needs telling.
   useEffect(() => {
