@@ -3228,6 +3228,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
@@ -3250,6 +3253,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 5.20260719.1
+      '@dxos/vite-plugin-icons':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-icons
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-import-source

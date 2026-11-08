@@ -8,11 +8,13 @@ import { type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 
 const dirname = import.meta.dirname;
 const rootDir = searchForWorkspaceRoot(process.cwd());
+const phosphorIcons = path.join(rootDir, 'node_modules/@phosphor-icons/core/assets');
 
 // All of these run top-level await, which the wa-sqlite glue relies on.
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
@@ -55,6 +57,15 @@ export default defineConfig({
     react({ include: /\.[jt]sx$/, exclude: [/\/node_modules\//] }),
     // `@dxos/react-ui` components and `graph.css` are Tailwind sources, so the theme has to be
     // compiled. Sources resolve from src (vite-plugin-import-source), so scan src rather than dist.
+    // Icons are sprite references (`ph--plus--regular`); without the sprite every toolbar button
+    // renders as empty space.
+    IconsPlugin({
+      symbolPattern: iconSymbolPattern({ sets: ['ph'] }),
+      assetPath: (_set, name, variant) =>
+        `${phosphorIcons}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+      spriteFile: 'icons.svg',
+      contentPaths: [path.join(rootDir, 'packages/{ui,apps}/**/src/**/*.{ts,tsx}')],
+    }),
     ThemePlugin({
       content: [
         path.join(rootDir, 'packages/ui/react-ui/src/**/*.{ts,tsx}'),
