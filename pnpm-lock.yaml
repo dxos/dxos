@@ -3204,12 +3204,18 @@ importers:
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../../core/echo/echo-sqlite
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-graph
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite

@@ -10,6 +10,7 @@ import type { SqliteDatabase } from '@dxos/echo-sqlite';
 
 import { Organization, Person } from '../schema.ts';
 import { generate } from './generate.ts';
+import { GraphView } from './GraphView.tsx';
 import { foreignKey, sync } from './sync.ts';
 
 /** Two-way sync runs on its own; this is how often it checks. */
@@ -21,6 +22,7 @@ const SYNC_INTERVAL_MS = 2_000;
  * it, not in front of it.
  */
 export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
+  const [view, setView] = useState<'list' | 'graph'>('list');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>();
   const [expiresAt, setExpiresAt] = useState<number>();
@@ -124,6 +126,9 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
           <button onClick={() => void generate(db).then((count) => setStatus(`generated ${count} objects`))}>
             Generate graph
           </button>
+          <button onClick={() => setView(view === 'list' ? 'graph' : 'list')}>
+            {view === 'list' ? 'Graph view' : 'List view'}
+          </button>
           {status && <span className='status'>{status}</span>}
         </div>
         <p className='note'>
@@ -133,50 +138,56 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
         </p>
       </header>
 
-      <section>
-        <h2>Organizations · {organizations.length}</h2>
-        <form onSubmit={addOrganization} className='row'>
-          <input name='name' placeholder='Organization name' aria-label='Organization name' />
-          <button type='submit'>Add</button>
-        </form>
-        <ul>
-          {organizations.map((org) => (
-            <li key={org.id}>{org.name}</li>
-          ))}
-        </ul>
-      </section>
+      {view === 'graph' && <GraphView organizations={organizations} people={people} />}
 
-      <section>
-        <h2>People · {people.length}</h2>
-        <form onSubmit={addPerson} className='row'>
-          <input name='name' placeholder='Name' aria-label='Name' />
-          <input name='email' placeholder='Email' aria-label='Email' />
-          <select name='employer' aria-label='Employer' defaultValue=''>
-            <option value=''>No employer</option>
+      {view === 'list' && (
+        <section>
+          <h2>Organizations · {organizations.length}</h2>
+          <form onSubmit={addOrganization} className='row'>
+            <input name='name' placeholder='Organization name' aria-label='Organization name' />
+            <button type='submit'>Add</button>
+          </form>
+          <ul>
             {organizations.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
+              <li key={org.id}>{org.name}</li>
             ))}
-          </select>
-          <button type='submit'>Add</button>
-        </form>
+          </ul>
+        </section>
+      )}
 
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder='Full-text search (FTS5, in the browser)'
-          aria-label='Search'
-          className='search'
-        />
+      {view === 'list' && (
+        <section>
+          <h2>People · {people.length}</h2>
+          <form onSubmit={addPerson} className='row'>
+            <input name='name' placeholder='Name' aria-label='Name' />
+            <input name='email' placeholder='Email' aria-label='Email' />
+            <select name='employer' aria-label='Employer' defaultValue=''>
+              <option value=''>No employer</option>
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+            <button type='submit'>Add</button>
+          </form>
 
-        <ul>
-          {people.map((person) => (
-            <PersonRow key={person.id} person={person} />
-          ))}
-        </ul>
-        {people.length === 0 && <p className='note'>Nothing here yet — generate a graph, or add someone.</p>}
-      </section>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder='Full-text search (FTS5, in the browser)'
+            aria-label='Search'
+            className='search'
+          />
+
+          <ul>
+            {people.map((person) => (
+              <PersonRow key={person.id} person={person} />
+            ))}
+          </ul>
+          {people.length === 0 && <p className='note'>Nothing here yet — generate a graph, or add someone.</p>}
+        </section>
+      )}
     </main>
   );
 };

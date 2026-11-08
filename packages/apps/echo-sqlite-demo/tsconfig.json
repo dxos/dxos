@@ -20,6 +20,9 @@
       "path": "../../../tools/vite-plugin-log"
     },
     {
+      "path": "../../common/graph"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -36,6 +39,9 @@
     },
     {
       "path": "../../core/echo/echo-sqlite"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
     }
   ]
 }
