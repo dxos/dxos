@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import '@dxos/react-ui-graph/styles/graph.css';
 import { Ref, Type } from '@dxos/echo';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { type GraphController, GraphForceProjector, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import {
   type Organization,
@@ -16,6 +18,8 @@ import {
   Person as PersonType,
   getTypeIcon,
 } from '../../schema.ts';
+import { EntryCard } from './EntryCard.tsx';
+import { type Entry } from './ListView.tsx';
 
 /** Each type's hue, declared once on the schema. */
 const HUES: Record<string, string | undefined> = {
@@ -33,8 +37,11 @@ export const GraphView = ({
   organizations,
   people,
   onSelect,
+  getEntry,
 }: {
   onSelect?: (id: string) => void;
+  /** The record behind a node, shown in a popover while the pointer is over it. */
+  getEntry?: (id: string) => Entry | undefined;
   organizations: readonly Organization[];
   people: readonly Person[];
 }) => {
@@ -73,6 +80,26 @@ export const GraphView = ({
     graphRef.current?.refresh();
   }, [model]);
 
+  // A point under the pointer is the anchor rather than the node itself: the force layout keeps moving
+  // the nodes, and an anchor that moves drags the popover around with it.
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+  const positioning = VirtualAnchor.useVirtualAnchor(anchorRef);
+  const [hovered, setHovered] = useState<Entry>();
+  const handleInspect = useCallback(
+    (node: { id: string } | null, event: MouseEvent) => {
+      if (!node) {
+        setHovered(undefined);
+        return;
+      }
+      if (anchorRef.current) {
+        anchorRef.current.style.left = `${event.clientX}px`;
+        anchorRef.current.style.top = `${event.clientY}px`;
+      }
+      setHovered(getEntry?.(node.id));
+    },
+    [getEntry],
+  );
+
   return (
     <div className='dx-expand min-h-0'>
       <SVG.Root ref={svgRef}>
@@ -85,6 +112,7 @@ export const GraphView = ({
             drag
             arrows
             onSelect={(node) => onSelect?.(node.id)}
+            onInspect={handleInspect}
             // A layout node's `data` is the model node, so its own data is one level in.
             labels={{ text: (node) => node.data?.data?.label ?? node.id }}
             attributes={{
@@ -94,6 +122,18 @@ export const GraphView = ({
           />
         </SVG.Zoom>
       </SVG.Root>
+
+      <div ref={anchorRef} className='fixed w-px h-px pointer-events-none' />
+
+      <Popover.Root
+        open={!!hovered}
+        onOpenChange={({ open }) => !open && setHovered(undefined)}
+        positioning={positioning}
+      >
+        <Popover.Content classNames='dx-card-popover-width'>
+          <Popover.Body>{hovered && <EntryCard entry={hovered} />}</Popover.Body>
+        </Popover.Content>
+      </Popover.Root>
     </div>
   );
 };

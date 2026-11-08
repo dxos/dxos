@@ -322,6 +322,24 @@
       }
 
       /*
+       * `block` unfurl: the focused cell keeps the column's width and wraps downward over the rows
+       * beneath, for a value of several lines (a list, an address). The inline unfurl above grows a
+       * single line sideways instead, which truncates nothing but reads as one long line.
+       */
+      &[data-focus-unfurl='block']:is(:focus, :focus-within) > .dx-grid__cell__content {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
+        inline-size: auto;
+        min-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+        max-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+        block-size: auto;
+        min-block-size: calc(100% + var(--dx-grid-focus-indicator-width));
+        /* Capped, so a long value scrolls rather than covering the grid. */
+        max-block-size: min(16rem, 60vh);
+      }
+
+      /*
        * The cursor is navigation, not editing: a cell marks it whether or not it unfurls, and
        * whether or not it is read-only. Without this a grid with `data-focus-unfurl='false'` (a
        * read-only table) shows nothing at all for the cell the keyboard is on.

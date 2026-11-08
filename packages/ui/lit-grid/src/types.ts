@@ -47,6 +47,13 @@ export type DxGridPointer =
 
 export type DxGridReadonlyValue = boolean | 'no-text-select' | 'text-select';
 
+/**
+ * How a focused cell shows content that does not fit: `true` grows it sideways over its neighbours
+ * on one line, `block` keeps the column's width and wraps downward over the rows beneath (a list of
+ * values, an address), `false` leaves it clipped.
+ */
+export type DxGridFocusUnfurl = boolean | 'block';
+
 export type DxAxisResizeProps = Pick<DxAxisResize, 'axis' | 'plane' | 'index' | 'size'>;
 export type DxAxisResizeInternalProps = DxAxisResizeProps & { delta: number; state: 'dragging' | 'dropped' };
 
@@ -94,7 +101,7 @@ export type DxGridCellValue = {
   /**
    * Controls whether the cell content should unfurl when the cell has focus.
    */
-  focusUnfurl?: boolean;
+  focusUnfurl?: DxGridFocusUnfurl;
 };
 
 export type DxGridAxisMetaProps = {
@@ -102,7 +109,7 @@ export type DxGridAxisMetaProps = {
   description?: string;
   resizeable?: boolean;
   readonly?: DxGridReadonlyValue;
-  focusUnfurl?: boolean;
+  focusUnfurl?: DxGridFocusUnfurl;
   minSize?: number;
   maxSize?: number;
 };

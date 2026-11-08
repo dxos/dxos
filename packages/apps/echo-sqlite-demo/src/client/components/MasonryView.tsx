@@ -23,9 +23,11 @@ export const MasonryView = ({
 }) => {
   const Tile = useCallback(({ data }: { data: Entry }) => <EntryCard entry={data} onRemove={onRemove} />, [onRemove]);
 
-  // The tile carries selection, not the card: `Focus.Item` then draws the same selected edge the list does.
+  // The tile carries selection, not the card: `Focus.Item` then draws the same selected edge the list
+  // does. Activation — a click, or Enter on the tile the arrows moved to — is what selects, so the
+  // arrow keys move the cursor through the grid without changing what the detail pane shows.
   const itemProps = useCallback(
-    (id: string) => ({ 'aria-selected': id === selected, 'onClick': () => onSelect?.(id) }),
+    (id: string) => ({ 'aria-selected': id === selected, 'onActivate': () => onSelect?.(id) }),
     [selected, onSelect],
   );
 

@@ -80,31 +80,46 @@ export const MasterView = ({
   const objects = useMemo(() => [...organizations, ...people], [organizations, people]);
   const labels = useLabels(objects);
 
-  const entries: Entry[] = useMemo(() => {
-    if (typename === Type.getTypename(Person)) {
-      return people.map((person) => {
-        // Read the ref synchronously: both queries are loaded, so the target is resident.
-        const employer = Ref.isRef(person.employer) ? person.employer.target : undefined;
-        const employerLabel = employer && labels.get(employer);
-        return {
-          value: person.id,
-          label: labels.get(person) ?? '',
-          description: employerLabel ? `${person.email[0]} · ${employerLabel}` : person.email[0],
-          icon: getTypeIcon(Person)?.icon,
-          fields: [
-            ...person.email.map((email) => ({ icon: 'ph--envelope-simple--regular', value: email })),
-            ...(employerLabel ? [{ icon: getTypeIcon(Organization)!.icon, value: employerLabel }] : []),
-          ],
-        };
-      });
-    }
-    return organizations.map((org) => ({
+  // One record in the shape every view takes; the graph looks records up by id through the same map,
+  // so a node's popover shows exactly the card the masonry does.
+  const byId: ReadonlyMap<string, Entry> = useMemo(() => {
+    const personEntry = (person: Person): Entry => {
+      // Read the ref synchronously: both queries are loaded, so the target is resident.
+      const employer = Ref.isRef(person.employer) ? person.employer.target : undefined;
+      const employerLabel = employer && labels.get(employer);
+      return {
+        value: person.id,
+        label: labels.get(person) ?? '',
+        description: employerLabel ? `${person.email[0]} · ${employerLabel}` : person.email[0],
+        icon: getTypeIcon(Person)?.icon,
+        fields: [
+          ...person.email.map((email) => ({ icon: 'ph--envelope-simple--regular', value: email })),
+          ...(employerLabel ? [{ icon: getTypeIcon(Organization)!.icon, value: employerLabel }] : []),
+        ],
+      };
+    };
+
+    const organizationEntry = (org: Organization): Entry => ({
       value: org.id,
       label: labels.get(org) ?? '',
       icon: getTypeIcon(Organization)?.icon,
       fields: org.website ? [{ icon: 'ph--globe--regular', value: org.website }] : [],
-    }));
-  }, [typename, organizations, people, labels]);
+    });
+
+    return new Map([
+      ...organizations.map((org) => [org.id, organizationEntry(org)] as const),
+      ...people.map((person) => [person.id, personEntry(person)] as const),
+    ]);
+  }, [organizations, people, labels]);
+
+  const entries: Entry[] = useMemo(
+    () =>
+      (typename === Type.getTypename(Person) ? people : organizations).flatMap((object) => {
+        const entry = byId.get(object.id);
+        return entry ? [entry] : [];
+      }),
+    [typename, organizations, people, byId],
+  );
 
   const [search, setSearch] = useState('');
   const matches = useMemo(() => {
@@ -169,7 +184,14 @@ export const MasterView = ({
             onSelect={onSelect}
           />
         )}
-        {tab === 'graph' && <GraphView organizations={organizations} people={people} onSelect={onSelect} />}
+        {tab === 'graph' && (
+          <GraphView
+            organizations={organizations}
+            people={people}
+            getEntry={(id) => byId.get(id)}
+            onSelect={onSelect}
+          />
+        )}
         {tab === 'code' && <CodeView />}
       </Panel.Body>
     </Panel.Root>
