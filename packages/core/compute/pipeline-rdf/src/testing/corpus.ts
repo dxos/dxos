@@ -21,13 +21,37 @@ const random = (seed: number) => () => {
 
 type Named = { readonly id: string; readonly label: string; readonly type: EntityKind };
 
+/** A list with at least one element, so drawing from it is a value rather than a maybe. */
+type NonEmpty<T> = readonly [T, ...T[]];
+
+/** The element at `index`, wrapping; the head stands in for an index no arithmetic here can actually produce. */
+const wrap = <T>(values: NonEmpty<T>, index: number): T => {
+  const [head] = values;
+  return values[((index % values.length) + values.length) % values.length] ?? head;
+};
+
+/** A fixture entity by id. The throw means the lists below changed under something that names one of them. */
+const byId = (values: NonEmpty<Named>, id: string): Named => {
+  const found = values.find((value) => value.id === id);
+  if (!found) {
+    throw new Error(`Fixture entity not found: ${id}`);
+  }
+  return found;
+};
+
 const named = (label: string, type: EntityKind): Named => ({
   id: label.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
   label,
   type,
 });
 
-const PEOPLE: Named[] = [
+/** Keeps the list non-empty through the map, which would otherwise widen it to an array. */
+const namedList = (type: EntityKind, [first, ...rest]: NonEmpty<string>): NonEmpty<Named> => [
+  named(first, type),
+  ...rest.map((label) => named(label, type)),
+];
+
+const PEOPLE: NonEmpty<Named> = namedList('person', [
   'Alice Chen',
   'Bob Mehta',
   'Carol Dubois',
@@ -44,9 +68,9 @@ const PEOPLE: Named[] = [
   'Noah Fischer',
   'Olivia Costa',
   'Priya Nair',
-].map((label) => named(label, 'person'));
+]);
 
-const ORGS: Named[] = [
+const ORGS: NonEmpty<Named> = namedList('org', [
   'DXOS',
   'Blueyard',
   'Protocol Labs',
@@ -55,9 +79,9 @@ const ORGS: Named[] = [
   'Acme Robotics',
   'Meridian Health',
   'Castalia',
-].map((label) => named(label, 'org'));
+]);
 
-const PROJECTS: Named[] = [
+const PROJECTS: NonEmpty<Named> = namedList('thing', [
   'Composer',
   'Edge Worker',
   'Fact Store',
@@ -68,17 +92,19 @@ const PROJECTS: Named[] = [
   'Billing Migration',
   'Mobile Shell',
   'Replication Audit',
-].map((label) => named(label, 'thing'));
+]);
 
-const PLACES: Named[] = ['Berlin', 'Lisbon', 'London', 'New York', 'Zurich', 'Singapore'].map((label) =>
-  named(label, 'place'),
-);
+const PLACES: NonEmpty<Named> = namedList('place', ['Berlin', 'Lisbon', 'London', 'New York', 'Zurich', 'Singapore']);
 
-const EVENTS: Named[] = ['Q3 Board Meeting', 'Protocol Summit', 'Design Review', 'Offsite', 'Investor Update'].map(
-  (label) => named(label, 'event'),
-);
+const EVENTS: NonEmpty<Named> = namedList('event', [
+  'Q3 Board Meeting',
+  'Protocol Summit',
+  'Design Review',
+  'Offsite',
+  'Investor Update',
+]);
 
-const ROLES = ['Engineering Lead', 'Designer', 'Researcher', 'CTO', 'Operations', 'Analyst'];
+const ROLES: NonEmpty<string> = ['Engineering Lead', 'Designer', 'Researcher', 'CTO', 'Operations', 'Analyst'];
 
 /**
  * The statement shapes the generator draws from. Surface forms are wordings the seed ontology resolves (so the
@@ -87,12 +113,12 @@ const ROLES = ['Engineering Lead', 'Designer', 'Researcher', 'CTO', 'Operations'
  */
 type Template = {
   readonly predicate: string;
-  readonly subject: Named[];
-  readonly object: Named[] | 'role';
+  readonly subject: NonEmpty<Named>;
+  readonly object: NonEmpty<Named> | 'role';
   readonly weight: number;
 };
 
-const TEMPLATES: Template[] = [
+const TEMPLATES: NonEmpty<Template> = [
   { predicate: 'works at', subject: PEOPLE, object: ORGS, weight: 8 },
   { predicate: 'employed by', subject: PEOPLE, object: ORGS, weight: 3 },
   { predicate: 'is on the team', subject: PEOPLE, object: ORGS, weight: 3 },
@@ -114,7 +140,7 @@ const TEMPLATES: Template[] = [
 ];
 
 /** Factuality mix: mostly plain assertions, with hedged, denied and uncommitted facts in realistic proportion. */
-const FACTUALITY: ReadonlyArray<{ value: FactualityValue; weight: number }> = [
+const FACTUALITY: NonEmpty<{ value: FactualityValue; weight: number }> = [
   { value: 'CT+', weight: 68 },
   { value: 'PR+', weight: 16 },
   { value: 'PS+', weight: 8 },
@@ -123,7 +149,7 @@ const FACTUALITY: ReadonlyArray<{ value: FactualityValue; weight: number }> = [
   { value: 'Uu', weight: 2 },
 ];
 
-const QUOTES = [
+const QUOTES: NonEmpty<string> = [
   'Confirmed on the call this morning.',
   'See the thread below for the details.',
   'I think this is right but check with the team.',
@@ -144,9 +170,9 @@ export type CorpusOptions = {
 
 const EXTRACTOR = { id: 'corpus', model: 'ai.claude.model.claude-haiku-4-5', version: '1' };
 
-const pick = <T>(next: () => number, values: readonly T[]): T => values[Math.floor(next() * values.length)]!;
+const pick = <T>(next: () => number, values: NonEmpty<T>): T => wrap(values, Math.floor(next() * values.length));
 
-const weighted = <T extends { weight: number }>(next: () => number, values: readonly T[]): T => {
+const weighted = <T extends { weight: number }>(next: () => number, values: NonEmpty<T>): T => {
   const total = values.reduce((sum, value) => sum + value.weight, 0);
   let roll = next() * total;
   for (const value of values) {
@@ -155,7 +181,8 @@ const weighted = <T extends { weight: number }>(next: () => number, values: read
       return value;
     }
   }
-  return values[values.length - 1]!;
+  // Reached only when the weights sum short of the roll through float error; the last value is the one it meant.
+  return wrap(values, values.length - 1);
 };
 
 const entityTerm = (entity: Named): Term => ({
@@ -181,7 +208,7 @@ export const generateCorpus = ({
   const facts: Fact[] = [];
 
   // A skewed draw: the first few names are mentioned far more often than the rest, as in a real mailbox.
-  const skewed = <T>(values: readonly T[]): T => values[Math.floor(values.length * next() ** 2.2)]!;
+  const skewed = <T>(values: NonEmpty<T>): T => wrap(values, Math.floor(values.length * next() ** 2.2));
 
   for (let message = 0; message < messages; message++) {
     const author = skewed(PEOPLE);
@@ -237,13 +264,13 @@ export const generateCorpus = ({
  */
 const conflicts = (end: number): Fact[] => {
   const cases: ReadonlyArray<[Named, string, Named, Named]> = [
-    [PEOPLE[0]!, 'works at', ORGS[0]!, ORGS[1]!],
-    [PEOPLE[1]!, 'works on', PROJECTS[0]!, PROJECTS[1]!],
-    [EVENTS[0]!, 'located in', PLACES[0]!, PLACES[2]!],
+    [byId(PEOPLE, 'alice-chen'), 'works at', byId(ORGS, 'dxos'), byId(ORGS, 'blueyard')],
+    [byId(PEOPLE, 'bob-mehta'), 'works on', byId(PROJECTS, 'composer'), byId(PROJECTS, 'edge-worker')],
+    [byId(EVENTS, 'q3-board-meeting'), 'located in', byId(PLACES, 'berlin'), byId(PLACES, 'london')],
   ];
   return cases.flatMap(([subject, predicate, first, second], index) =>
     [first, second].map((object, side): Fact => {
-      const author = PEOPLE[(index + side + 2) % PEOPLE.length]!;
+      const author = wrap(PEOPLE, index + side + 2);
       const at = new Date(end - (side + 1) * 36 * 60 * 60 * 1000).toISOString();
       return {
         id: `x-${index}-${side}`,
@@ -379,11 +406,12 @@ export type BeliefDemo = {
   readonly correction: Fact;
 };
 
-const BELIEF_SUBJECT = PEOPLE.find(({ id }) => id === 'hugo-marchand') ?? PEOPLE[7]!;
-const BELIEF_WRONG = ORGS.find(({ id }) => id === 'helios-capital') ?? ORGS[4]!;
-const BELIEF_RIGHT = ORGS[0]!;
-const BELIEF_STALE_AUTHOR = PEOPLE[0]!;
-const BELIEF_CORRECTING_AUTHOR = PEOPLE[1]!;
+// Named rather than indexed: the demo's beats depend on WHICH entity each one is, not on a position.
+const BELIEF_SUBJECT = byId(PEOPLE, 'hugo-marchand');
+const BELIEF_WRONG = byId(ORGS, 'helios-capital');
+const BELIEF_RIGHT = byId(ORGS, 'dxos');
+const BELIEF_STALE_AUTHOR = byId(PEOPLE, 'alice-chen');
+const BELIEF_CORRECTING_AUTHOR = byId(PEOPLE, 'bob-mehta');
 
 const beliefFact = (
   id: string,

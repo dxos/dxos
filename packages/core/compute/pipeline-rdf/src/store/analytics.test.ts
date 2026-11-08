@@ -185,15 +185,18 @@ describe('FactAnalytics', () => {
 // what the app shows over a real store.
 //
 
+const claim = (id: string): Fact => fact(id, { assertion: assertion('carol', 'works at', `org-${id}`) });
+
 /**
  * Seven claims about one subject, five of them withdrawn — and the withdrawn ids sort BEFORE the standing ones,
- * so a cap applied to graphs in IRI order meets the withdrawn ones first.
+ * so a cap applied to graphs in IRI order meets the withdrawn ones first. `STALE` and `KEPT` are the two the
+ * assertions read, named rather than indexed.
  */
-const CLAIMS: Fact[] = ['a1', 'a2', 'a3', 'a4', 'a5', 'z1', 'z2'].map((id) =>
-  fact(id, { assertion: assertion('carol', 'works at', `org-${id}`) }),
-);
-const WITHDRAWN = CLAIMS.slice(0, 5);
-const STANDING = CLAIMS.slice(5);
+const STALE = claim('a1');
+const KEPT = claim('z1');
+const WITHDRAWN: Fact[] = [STALE, claim('a2'), claim('a3'), claim('a4'), claim('a5')];
+const STANDING: Fact[] = [KEPT, claim('z2')];
+const CLAIMS = [...WITHDRAWN, ...STANDING];
 
 /** Each withdrawal is about someone else, so a read scoped to the subject never contains the link. */
 const WITHDRAWALS = WITHDRAWN.map((stale, index) =>
@@ -228,9 +231,9 @@ describe('FactAnalytics backend parity', () => {
       const { store, memory } = yield* backendsOf([...CLAIMS, ...WITHDRAWALS]);
       for (const analytics of [store, memory]) {
         const statuses = yield* analytics.statuses();
-        expect(statuses.get(Mapping.graphOf(WITHDRAWN[0]!))).toBe('retracted');
+        expect(statuses.get(Mapping.graphOf(STALE))).toBe('retracted');
         // `has` means "withdrawn" either way round; an active graph would make it mean nothing.
-        expect(statuses.has(Mapping.graphOf(STANDING[0]!))).toBe(false);
+        expect(statuses.has(Mapping.graphOf(KEPT))).toBe(false);
       }
     }, Effect.scoped),
   );
