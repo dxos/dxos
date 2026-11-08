@@ -132,18 +132,26 @@ export const evaluate = async (program: Program, { operations, docs }: Evaluatio
 /** Places rows the host already holds in the working set. */
 export const seed = (rows: Parameters<BridgeDatabase['seed']>[0]): Promise<void> => requireSession().db.seed(rows);
 
-/** Writes pending changes to the host, ahead of a snapshot. */
-export const flush = (): void => requireSession().db.flushSync();
+/** Writes pending changes to the host and its storage, ahead of a snapshot. */
+export const flush = (): void => requireSession().db.flushSync({ durable: true });
 
-/** A host call whose failure is the program's to handle, as an effect. */
-const callHost = (call: () => Outcome, db: BridgeDatabase): Effect.Effect<unknown, OperationFailed> =>
+/**
+ * A host call as an effect that does nothing until it runs, and whose failure is the program's to
+ * handle. The call is asynchronous on the host, so the program decides how calls are scheduled:
+ * `yield*` one after another, or `Effect.all(calls, { concurrency })` to have them run together.
+ */
+const callHost = (call: () => Promise<Outcome>, db: BridgeDatabase): Effect.Effect<unknown, OperationFailed> =>
   Effect.suspend(() => {
+    // The operation reads the host's database, so it must hold this program's writes first.
     db.flushSync();
-    const outcome = call();
-    return outcome.ok
-      ? Effect.promise(() => decode(outcome.value, db))
-      : Effect.fail(new OperationFailed({ message: outcome.message }));
-  });
+    return Effect.promise(call);
+  }).pipe(
+    Effect.flatMap((outcome) =>
+      outcome.ok
+        ? Effect.promise(() => decode(outcome.value, db))
+        : Effect.fail(new OperationFailed({ message: outcome.message })),
+    ),
+  );
 
 /**
  * `Operation.invoke` in the guest: the definition is a stand-in carrying the key, and the operation

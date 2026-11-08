@@ -65,7 +65,34 @@ export const Complete = Operation.make({
   output: Schema.Struct({ task: Obj.Unknown }),
 });
 
+/** How many `Slow` calls are running now, and the most that ever ran at once. */
+export const slowCalls = { running: 0, peak: 0, started: 0 };
+
+/** Waits on the host's real clock, so a test can see whether calls overlap. */
+export const Slow = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.slow'),
+    name: 'Slow',
+    description: 'Waits the given number of milliseconds and returns them.',
+  },
+  input: Schema.Struct({ ms: Schema.Number }),
+  output: Schema.Number,
+});
+
 const handlers = OperationHandlerSet.make(
+  Slow.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ ms }) {
+        slowCalls.started++;
+        slowCalls.running++;
+        slowCalls.peak = Math.max(slowCalls.peak, slowCalls.running);
+        // A real timer: the test clock would never advance an `Effect.sleep` here.
+        yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+        slowCalls.running--;
+        return ms;
+      }),
+    ),
+  ),
   Score.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ title }) {
@@ -105,6 +132,13 @@ export const OPERATIONS: SandboxOperation[] = [
     description: Complete.meta.description,
     parameters: {},
     definition: Complete,
+    invoke: () => Effect.die(new Error('Called through Operation.invoke only.')),
+  },
+  {
+    name: 'slow',
+    description: Slow.meta.description,
+    parameters: {},
+    definition: Slow,
     invoke: () => Effect.die(new Error('Called through Operation.invoke only.')),
   },
   {

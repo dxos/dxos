@@ -158,20 +158,21 @@ export class BridgeDatabase implements Database.Database {
     // The overloaded `QueryFn` cannot be satisfied by one generic implementation without a cast.
   }) as Database.QueryFn;
 
+  /** The program's own flush: its writes reach the host and the host's storage, as in-process. */
   async flush(): Promise<void> {
-    this.flushSync();
+    this.flushSync({ durable: true });
   }
 
-  /** Writes every pending change to the host in one call. */
-  flushSync(): void {
-    if (this.#dirty.size === 0) {
+  /** Writes every pending change to the host in one call; `durable` also waits for the host's storage. */
+  flushSync({ durable = false }: { durable?: boolean } = {}): void {
+    if (this.#dirty.size === 0 && !durable) {
       return;
     }
     const batch = [...this.#dirty.values()];
     this.#dirty.clear();
     const records = batch.map(toRecord);
     this.counters.writes++;
-    const versions = this.#host().write(records);
+    const versions = this.#host().write(records, durable);
     for (const [id, version] of Object.entries(versions)) {
       this.#versions.set(id, version);
     }

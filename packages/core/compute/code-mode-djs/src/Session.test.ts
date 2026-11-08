@@ -23,6 +23,7 @@ import {
   TestLayer,
   runEvaluate,
   seedTasks,
+  slowCalls,
   testEngine,
 } from './testing/fixtures.ts';
 
@@ -203,7 +204,7 @@ describe('djs session', () => {
            const double = (n) => n * 2;`,
         );
         const { context } = yield* bindingsContext();
-        const bytes = session.snapshot(context);
+        const bytes = yield* Effect.promise(() => session.snapshot(context));
         expect(bytes).toBeInstanceOf(Uint8Array);
 
         const { Engine } = yield* Effect.promise(() => import('./Engine.ts'));
@@ -236,7 +237,7 @@ describe('djs session', () => {
       function* (_) {
         const session = yield* openSession();
         const { context } = yield* bindingsContext();
-        const bytes = session.snapshot(context);
+        const bytes = yield* Effect.promise(() => session.snapshot(context));
         const { Engine } = yield* Effect.promise(() => import('./Engine.ts'));
         const { loadGuestBundle } = yield* Effect.promise(() => import('./GuestBundle.ts'));
         const other = yield* Effect.promise(async () => {
@@ -281,6 +282,36 @@ describe('djs session', () => {
         expect(after.host.load - before.host.load).toEqual(0);
         expect(after.guest.hydrated).toEqual(25);
         expect(after.host.write - before.host.write).toEqual(0);
+      },
+      Effect.scoped,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'operations are effects: the program decides whether they run one at a time or together',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* openSession();
+        const reset = () => Object.assign(slowCalls, { running: 0, peak: 0, started: 0 });
+        yield* run(session, "const Slow = yield* Database.resolve('dxn:com.example.operation.slow');");
+
+        reset();
+        yield* run(session, 'const pending = [1, 2, 3].map(() => Operation.invoke(Slow, { ms: 30 }));');
+        expect(slowCalls.started).toEqual(0);
+
+        reset();
+        expect(yield* run(session, 'yield* print((yield* Effect.all(pending)).length);')).toEqual('3');
+        expect(slowCalls.peak).toEqual(1);
+
+        reset();
+        const started = performance.now();
+        expect(
+          yield* run(session, "yield* print((yield* Effect.all(pending, { concurrency: 'unbounded' })).join(','));"),
+        ).toEqual('30,30,30');
+        expect(slowCalls.peak).toEqual(3);
+        expect(performance.now() - started).toBeLessThan(90);
       },
       Effect.scoped,
       Effect.provide(TestLayer),

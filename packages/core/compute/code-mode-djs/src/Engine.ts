@@ -164,13 +164,14 @@ const sandboxOptions = ({
     functions: {
       [HostFunction.query]: answer((bridge, ast: unknown) => bridge.query(ast)),
       [HostFunction.load]: answer((bridge, uri: unknown) => bridge.load(uri)),
-      [HostFunction.write]: answer((bridge, records: unknown) => bridge.write(records)),
+      [HostFunction.write]: answer((bridge, records: unknown, durable: unknown) => bridge.write(records, durable)),
       [HostFunction.refresh]: answer((bridge, versions: unknown) => bridge.refresh(versions)),
-      [HostFunction.invoke]: answer((bridge, key: unknown, input: unknown) => bridge.invoke(key, input)),
-      [HostFunction.tool]: answer((bridge, name: unknown, input: unknown) => bridge.tool(name, input)),
       [HostFunction.print]: answer((bridge, values: unknown) => bridge.print(values)),
     },
+    // A promise in the guest at once, so the program's own effects decide whether calls overlap.
     asyncFunctions: {
+      [HostFunction.invoke]: answer((bridge, key: unknown, input: unknown) => bridge.invoke(key, input)),
+      [HostFunction.tool]: answer((bridge, name: unknown, input: unknown) => bridge.tool(name, input)),
       [HostFunction.sleep]: (ms: unknown) =>
         new Promise<void>((resolve) => setTimeout(resolve, typeof ms === 'number' && ms > 0 ? ms : 0)),
     },

@@ -126,13 +126,13 @@ export class Session {
   }
 
   /** The session as bytes, for {@link Engine.restore}. Pending writes reach the host first. */
-  snapshot(context: BindingsContext): Uint8Array {
+  async snapshot(context: BindingsContext): Promise<Uint8Array> {
     if (this.#running) {
       throw new Error('A session is snapshotted between evaluations.');
     }
     this.#bridge.bind({ ...context, printValues: makeEffectPrint(context) });
     try {
-      this.#sandbox.run(`${GUEST_GLOBAL}.flush();`);
+      await this.#sandbox.runAsync(`${GUEST_GLOBAL}.flush();`);
     } finally {
       this.#bridge.bind(undefined);
     }

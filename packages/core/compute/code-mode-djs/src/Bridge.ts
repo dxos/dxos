@@ -79,20 +79,33 @@ export class Bridge {
     return entity ? rowOf(entity) : null;
   }
 
-  async write(records: unknown): Promise<Record<string, string>> {
+  async write(records: unknown, durable?: unknown): Promise<Record<string, string>> {
     this.counters.write++;
     const db = this.db;
+    const batch = (Array.isArray(records) ? records : []).filter(isWriteRecord);
+    // One lookup for the whole batch: a query per record was most of what a write cost.
+    const ids = batch.map(({ id }) => id).filter((id) => EntityId.isValid(id));
+    const existing = new Map(
+      ids.length === 0
+        ? []
+        : (
+            await db
+              .query(Query.select(Filter.id(...ids.map((id) => EntityId.make(id)))).options({ deleted: 'include' }))
+              .run()
+          ).map((entity) => [entity.id, entity] as const),
+    );
     const versions: Record<string, string> = {};
-    for (const record of Array.isArray(records) ? records : []) {
-      if (!isWriteRecord(record)) {
-        continue;
-      }
-      const entity = await applyRecord(db, record);
+    for (const record of batch) {
+      const entity = await applyRecord(db, record, existing.get(record.id));
       if (entity) {
         versions[record.id] = rowOf(entity).version;
       }
     }
-    await db.flush();
+    // Only the program's own `Database.flush` waits for storage, as it does in-process; the writes
+    // the guest makes before a query or an operation only need the host's working set to hold them.
+    if (durable === true) {
+      await db.flush();
+    }
     return versions;
   }
 
@@ -154,7 +167,7 @@ export class Bridge {
     const db = this.db;
     return EffectEx.runPromise(
       effect.pipe(
-        Effect.flatMap((value) => Effect.promise(() => db.flush()).pipe(Effect.as(encode(value, db)))),
+        Effect.map((value) => encode(value, db)),
         Effect.match({
           onSuccess: (value): Outcome => ({ ok: true, value }),
           onFailure: (error): Outcome => ({ ok: false, message: describe(error) }),
@@ -210,8 +223,11 @@ const loadById = async (db: Database.Database, id: string): Promise<Entity.Unkno
 };
 
 /** Applies one guest record to the host database: field by field on the host's object, or as a new one. */
-const applyRecord = async (db: Database.Database, record: WriteRecord): Promise<Entity.Unknown | undefined> => {
-  const existing = await loadById(db, record.id);
+const applyRecord = async (
+  db: Database.Database,
+  record: WriteRecord,
+  existing: Entity.Unknown | undefined,
+): Promise<Entity.Unknown | undefined> => {
   if (record.deleted) {
     if (existing && !Entity.isDeleted(existing)) {
       db.remove(existing);

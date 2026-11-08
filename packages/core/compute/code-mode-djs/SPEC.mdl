@@ -103,6 +103,12 @@ feat F-1: Effect dialect compatibility
           makes them), and objects in its output arrive in the guest as live objects of the session's
           working set, with their rows, so no load call follows
 
+  req F-1.9:
+    when: the program calls Operation.invoke or a Tools entry
+    then: it gets an effect that does nothing until the program runs it, and the call is asynchronous
+          on the host, so the program decides the schedule — one after another with yield*, or
+          together with Effect.all and a concurrency option
+
   req F-1.4:
     when: the program prints
     then: the host renders each value with the Effect dialect's own printer, so an object prints as the
@@ -496,5 +502,30 @@ decision D-16: The corpus keeps snippets from space transcripts only after repla
   for: user:dmaretskyi
   affects: [F-6]
   why: The transcripts are of people's spaces and the corpus is committed to a public repository; the listed differences come from V8 against djs, not from the bridge, and listing them keeps every other snippet compared exactly.
+```
+
+```mdl
+decision D-17: Same build.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  answers: Q-1
+  affects: [F-4]
+```
+
+```mdl
+decision D-18: Operation calls return effects, and the script controls their execution.
+  date: 2026-11-08
+  by: user:dmaretskyi
+  answers: Q-2
+  affects: [F-1.3, F-1.9]
+```
+
+```mdl
+decision D-19: Operation and tool calls are asynchronous host functions, flushed before they start, so effects a program runs together overlap on the host. Fills in [D-18].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.9]
+  why: A synchronous host call parks the whole VM, so Effect.all could not overlap two operations whatever concurrency it asked for; as async calls the VM keeps running the program's fibers while the host works.
 ```
 
