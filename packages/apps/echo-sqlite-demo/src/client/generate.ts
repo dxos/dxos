@@ -65,7 +65,7 @@ export const generate = async (
       db.add(
         Obj.make(Event, {
           ...meta(),
-          title: random.commerce.productName(),
+          title: random.todo.title(),
           description: random.lorem.sentence({ min: 6, max: 12 }),
           // The second kind of edge: one event, many people.
           attendees: random.helpers.randomSubset(people, { min: 1, max: 4 }).map((person) => Ref.make(person)),
