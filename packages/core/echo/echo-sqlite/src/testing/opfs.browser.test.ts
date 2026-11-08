@@ -10,6 +10,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 
@@ -69,7 +70,7 @@ const session = <A>(spaceId: SpaceId, body: (db: Db, rows: Probe) => Promise<A>)
         // Diagnostic: what actually reached storage, independent of the query compiler.
         // `sql` is the resolved client, so the statement needs no further context.
         const rows: Probe = () =>
-          Effect.runPromise(
+          EffectEx.runPromise(
             sql<{ space_id: string; type_dxn: string; id: string }>`
             SELECT space_id, type_dxn, id FROM echo_entities
           `.pipe(Effect.orDie),
@@ -77,7 +78,7 @@ const session = <A>(spaceId: SpaceId, body: (db: Db, rows: Probe) => Promise<A>)
         return yield* Effect.promise(() => body(db, rows));
       }).pipe(Effect.provide(layer));
     }),
-  ).pipe(Effect.runPromise);
+  ).pipe(EffectEx.runPromise);
 
 describe('echo-sqlite on OPFS', () => {
   it('builds a graph, queries it, and reads it back in a new session', async () => {
