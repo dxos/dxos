@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EntityKind, type Fact, type FactualityValue, type Term } from '../types/index.ts';
+import { type EntityKind, type Fact, type FactualityValue, Graph, type Term, termValue } from '../types/index.ts';
 
 //
 // A deterministic, inbox-shaped fact corpus: no AI, no credentials, stable across runs. It exists so a view can
@@ -356,4 +356,95 @@ export const entitiesInMessage = (message: IncomingMessage): Array<{ key: string
     }
   }
   return [...seen.entries()].map(([key, label]) => ({ key, label }));
+};
+
+//
+// The scripted case behind the retraction demo: an agent that learned something wrong from a stale thread, and
+// the correction a later message supports. Scripted rather than drawn from the generator, because the point is a
+// claim a viewer can follow by name — and because the demo has to be the same every time it is shown.
+//
+
+export type BeliefDemo = {
+  /** The question put to the store, in words. */
+  readonly question: string;
+  /** Entity key of the subject the question is about. */
+  readonly subject: string;
+  /** The predicate, as a surface form the ontology resolves. */
+  readonly predicate: string;
+  /** What the agent extracted from the mailbox, stale claim included. */
+  readonly prior: Fact[];
+  /** The stale claim, so a demo can point at the thing it is about to correct. */
+  readonly stale: Fact;
+  /** The correction a later message supports. Not in `prior`: applying it is the demo's third beat. */
+  readonly correction: Fact;
+};
+
+const BELIEF_SUBJECT = PEOPLE.find(({ id }) => id === 'hugo-marchand') ?? PEOPLE[7]!;
+const BELIEF_WRONG = ORGS.find(({ id }) => id === 'helios-capital') ?? ORGS[4]!;
+const BELIEF_RIGHT = ORGS[0]!;
+const BELIEF_STALE_AUTHOR = PEOPLE[0]!;
+const BELIEF_CORRECTING_AUTHOR = PEOPLE[1]!;
+
+const beliefFact = (
+  id: string,
+  object: Named,
+  author: Named,
+  over: { value: FactualityValue; confidence: number; at: string; source: string; quote: string },
+): Fact => ({
+  id,
+  assertion: {
+    subject: entityTerm(BELIEF_SUBJECT),
+    predicate: 'works at',
+    object: entityTerm(object),
+    quote: over.quote,
+  },
+  factuality: { value: over.value, polarity: '+', confidence: over.confidence, nature: 'epistemic' },
+  attribution: {
+    agent: author.id,
+    agentLabel: author.label,
+    source: over.source,
+    generatedAtTime: over.at,
+  },
+  recordedAt: over.at,
+  extractor: EXTRACTOR,
+  sourceHash: id,
+});
+
+/**
+ * The demo, over the generated corpus plus one planted claim. The stale claim is hedged (`PR+`) and old, the
+ * correction is certain (`CT+`), newer and from someone else — so the two differ on every axis the store records,
+ * and a viewer can see why one replaces the other rather than being told.
+ */
+export const beliefDemo = (options: CorpusOptions = {}): BeliefDemo => {
+  const stale = beliefFact('belief-stale', BELIEF_WRONG, BELIEF_STALE_AUTHOR, {
+    value: 'PR+',
+    confidence: 0.58,
+    at: '2026-05-30T09:00:00.000Z',
+    source: 'dxn:gmail:msg-0092',
+    quote: `I think ${BELIEF_SUBJECT.label} is at ${BELIEF_WRONG.label} now — he mentioned it a while back.`,
+  });
+  const correction = Graph.supersede(
+    beliefFact('belief-correction', BELIEF_RIGHT, BELIEF_CORRECTING_AUTHOR, {
+      value: 'CT+',
+      confidence: 0.96,
+      at: '2026-10-27T14:00:00.000Z',
+      source: 'dxn:gmail:msg-0135',
+      quote: `Correction — ${BELIEF_SUBJECT.label} joined ${BELIEF_RIGHT.label} in September. ${BELIEF_WRONG.label} was two jobs ago.`,
+    }),
+    stale,
+  );
+
+  // The generator also writes about this person, and an unscripted `works at` of its own would answer the
+  // question before the demo does. Everything it says about them as a SUBJECT is dropped, so the two scripted
+  // claims are the only answers; they stay in the corpus as an object, which is what keeps the store realistic.
+  const prior = generateCorpus(options).filter((fact) => termValue(fact.assertion.subject) !== BELIEF_SUBJECT.id);
+
+  return {
+    question: `Where does ${BELIEF_SUBJECT.label} work?`,
+    subject: BELIEF_SUBJECT.id,
+    predicate: 'works at',
+    prior: [...prior, stale],
+    stale,
+    correction,
+  };
 };

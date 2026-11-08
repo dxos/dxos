@@ -61,12 +61,42 @@ export const assign = (facts: readonly Fact[], { name, ontology = Ontology.DEFAU
     return { ...placed, id: Mapping.idInGraph(placed, graph, ontology) };
   });
 
+/**
+ * Links a correction to what it replaces. The link names the **graph**, not the statement, so a correction
+ * supersedes every statement sharing that provenance — which is what sharing a graph means. A fact extracted on
+ * its own has a graph of its own, so in practice one correction withdraws one claim.
+ *
+ * Nothing is deleted: a `current` read hides the earlier claim, every other read still returns it with its
+ * author and date, which is what makes a retraction auditable rather than a loss.
+ */
+export const supersede = (correction: Fact, ...previous: readonly Fact[]): Fact => ({
+  ...correction,
+  supersedes: [...new Set([...(correction.supersedes ?? []), ...previous.map(Mapping.graphOf)])],
+});
+
+/**
+ * Takes a claim back without replacing it: after this the store holds no standing answer, where
+ * {@link supersede} leaves the correction in its place.
+ */
+export const retract = (withdrawal: Fact, ...previous: readonly Fact[]): Fact => ({
+  ...withdrawal,
+  retracts: [...new Set([...(withdrawal.retracts ?? []), ...previous.map(Mapping.graphOf)])],
+});
+
 /** Whether a graph still holds: another graph can replace it (`supersedes`) or withdraw it (`retracts`). */
 export type Status = 'active' | 'superseded' | 'retracted';
 
 /** The status of every graph the facts mention, by graph IRI. */
 export const status = (facts: readonly Fact[]): Map<string, Status> => {
   const statuses = new Map<string, Status>(facts.map((fact) => [Mapping.graphOf(fact), 'active']));
+  // A link can name a graph that is not in `facts` (a scoped read); record it so the caller can still see it.
+  for (const fact of facts) {
+    for (const target of [...(fact.supersedes ?? []), ...(fact.retracts ?? [])]) {
+      if (!statuses.has(target)) {
+        statuses.set(target, 'active');
+      }
+    }
+  }
   for (const fact of facts) {
     for (const superseded of fact.supersedes ?? []) {
       if (statuses.get(superseded) !== 'retracted') {

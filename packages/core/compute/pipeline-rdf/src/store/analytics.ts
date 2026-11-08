@@ -8,7 +8,7 @@ import { type SemanticIndexError } from '../errors.ts';
 import { type FactAggregate, type FactDimension, type FactGroup } from '../internal/sparql/aggregate.ts';
 import { matchingPredicates } from '../internal/sparql/match.ts';
 import { type SemanticQuery } from '../internal/sparql/query-builder.ts';
-import { type Fact, Mapping, Ontology, termValue } from '../types/index.ts';
+import { type Fact, Graph, Mapping, Ontology, termValue } from '../types/index.ts';
 import { type FactStoreApi } from './fact-store.ts';
 
 //
@@ -26,6 +26,8 @@ export type FactAnalytics = {
   readonly facts: (query?: SemanticQuery) => Effect.Effect<Fact[], SemanticIndexError>;
   /** Display labels for entity keys; a key the data never labels is absent. */
   readonly entityLabels: (keys: readonly string[]) => Effect.Effect<Map<string, string>, SemanticIndexError>;
+  /** Which graphs a later fact replaced or withdrew, so a history can say WHY a claim no longer stands. */
+  readonly statuses: () => Effect.Effect<Map<string, Graph.Status>, SemanticIndexError>;
 };
 
 /** Analytics backed by a store, so every count is one SQL statement. */
@@ -34,6 +36,7 @@ export const fromStore = (store: FactStoreApi): FactAnalytics => ({
   aggregate: (aggregate) => store.aggregate(aggregate),
   facts: (query = {}) => store.query(query),
   entityLabels: (keys) => store.entityLabels(keys),
+  statuses: () => store.statuses(),
 });
 
 /** Absent `illocution` means the fact is a plain assertion; kept in step with the store's aggregate. */
@@ -108,17 +111,23 @@ const keyCombinations = (fact: Fact, by: FactAggregate['by'], ontology: Ontology
  * {@link fromStore}.
  */
 export const fromFacts = (facts: readonly Fact[], ontology: Ontology.Ontology = Ontology.DEFAULT): FactAnalytics => {
+  // Computed over the WHOLE set, never the scoped one: the fact that corrects a claim can be outside the scope
+  // that found it, and a correction the scope misses would leave the stale claim standing.
+  const statuses = Graph.status(facts);
+  const stands = (fact: Fact): boolean => statuses.get(Mapping.graphOf(fact)) === 'active';
+
   const scoped = (query: SemanticQuery): Fact[] => {
     const predicates =
       query.predicate === undefined
         ? undefined
         : matchingPredicates(query.predicate, predicateLabelsOf(facts, ontology), ontology);
-    return facts.filter((fact) => matches(fact, query, predicates, ontology));
+    return facts.filter((fact) => matches(fact, query, predicates, ontology) && (!query.current || stands(fact)));
   };
 
   return {
     count: (query = {}) => Effect.sync(() => scoped(query).length),
 
+    // `scoped` applies `current`, so a count and its aggregate always agree with the list beneath them.
     aggregate: ({ by, scope = {}, limit }) =>
       Effect.sync(() => {
         const counts = new Map<string, FactGroup>();
@@ -141,6 +150,8 @@ export const fromFacts = (facts: readonly Fact[], ontology: Ontology.Ontology = 
         const result = scoped(query);
         return query.limit === undefined ? result : result.slice(0, Math.max(0, Math.trunc(query.limit)));
       }),
+
+    statuses: () => Effect.sync(() => statuses),
 
     entityLabels: (keys) =>
       Effect.sync(() => {

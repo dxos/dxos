@@ -51,6 +51,14 @@ Branch `claude/plugin-brain-evals-viz-643a0c`. Not a registry project; tracked h
       never written from, beside what it already knew about the entities it mentions.
 - [x] V0 `generateCorpus` / `splitCorpus` (`pipeline-rdf/testing`) — a deterministic inbox-shaped corpus
       (~1,000 facts over ~400 messages) the stories are seeded with; no AI, no credentials.
+- [x] V0 retraction semantics — `Graph.supersede` / `Graph.retract` build the link, `SemanticQuery.current` honours
+      it in both backends (SQL `FILTER NOT EXISTS`, JS `Graph.status`), and `FactStoreApi.statuses` reports WHY a
+      claim no longer stands. The schema carried `sx:supersedes` / `sx:retracts` from the start; nothing created
+      them and no query read them.
+- [x] V0 `FactBelief` (`react-ui-rdf`) — one question, the answer that stands, and every claim behind it, a
+      withdrawn one struck through with its author and date. The retraction demo, beats 5/6/8/10.
+- [ ] Multi-device beats of the retraction demo (offline correction, concurrent merge). Needs two peers and real
+      wall-clock setup; the single-store beats land without it.
 - [ ] V1 `FactGraph` — force-directed EGO graph (`react-ui-graph` `Graph`), factuality-coloured edges, reached
       from the explorer's drill-down. Note: a whole-store force graph is not the target — `GraphStress` tops out
       around 2k nodes and a mailbox hairball is unreadable well before it is slow. The explorer's current graph

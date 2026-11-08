@@ -17,6 +17,11 @@ export type SemanticQuery = {
   /** Lower bound (inclusive) on factuality confidence. */
   readonly minConfidence?: number;
   /**
+   * Returns only the claims that still stand: a claim a later fact supersedes or retracts is left out. Off by
+   * default — competing claims are the point of an append-only store, and resolving them is the caller's to do.
+   */
+  readonly current?: boolean;
+  /**
    * Caps the work a read does: at most this many candidate graphs are loaded and at most this many facts are
    * returned. It is a cap, not a pager — a store holds no total order over graphs that survives a write, so use
    * {@link FactStoreApi.count} for the true total and narrow the query rather than paging through it.

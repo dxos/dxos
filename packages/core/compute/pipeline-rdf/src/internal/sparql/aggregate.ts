@@ -59,6 +59,18 @@ const PROV_ATTRIBUTED_TO = iriRef(`${Vocab.PROV}wasAttributedTo`);
 const SX_CONFIDENCE = iriRef(`${Vocab.SX}confidence`);
 const SX_FACTUALITY = iriRef(`${Vocab.SX}factuality`);
 const SX_FORCE = iriRef(`${Vocab.SX}force`);
+const SX_SUPERSEDES = iriRef(`${Vocab.SX}supersedes`);
+const SX_RETRACTS = iriRef(`${Vocab.SX}retracts`);
+
+/** Every graph that still stands: nothing supersedes or retracts it. */
+export const STANDING_FILTER = [
+  `FILTER NOT EXISTS { ?replacement ${SX_SUPERSEDES} ?g }`,
+  `FILTER NOT EXISTS { ?withdrawal ${SX_RETRACTS} ?g }`,
+];
+
+/** The graphs a later fact supersedes, and those it retracts, as `?target` rows. */
+export const SUPERSEDED_SPARQL = `SELECT DISTINCT ?target WHERE { ?g ${SX_SUPERSEDES} ?target }`;
+export const RETRACTED_SPARQL = `SELECT DISTINCT ?target WHERE { ?g ${SX_RETRACTS} ?target }`;
 
 /**
  * SPARQL for the entity key of `variable`: the slug of an entity IRI local to the bound `?g`, else the slug of a
@@ -100,6 +112,9 @@ export const statementPatterns = (query: SemanticQuery, predicates?: ReadonlySet
       throw new TypeError('minConfidence must be a finite number.');
     }
     patterns.push(`?g ${SX_CONFIDENCE} ?conf .`, `FILTER(xsd:decimal(?conf) >= ${query.minConfidence})`);
+  }
+  if (query.current) {
+    patterns.push(...STANDING_FILTER);
   }
   return patterns;
 };

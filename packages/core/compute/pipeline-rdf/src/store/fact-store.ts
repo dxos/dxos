@@ -8,7 +8,7 @@ import type * as Effect from 'effect/Effect';
 import { type SemanticIndexError } from '../errors.ts';
 import { type FactAggregate, type FactGroup } from '../internal/sparql/aggregate.ts';
 import { type SemanticQuery } from '../internal/sparql/query-builder.ts';
-import { type Fact, type Ontology } from '../types/index.ts';
+import { type Fact, type Graph, type Ontology } from '../types/index.ts';
 
 //
 // The FactStore service tag and API surface only. Implementations live in `fact-store-live.ts`
@@ -39,6 +39,12 @@ export interface FactStoreApi {
   readonly aggregate: (aggregate: FactAggregate) => Effect.Effect<FactGroup[], SemanticIndexError>;
   /** Display labels for entity keys, as the graphs mentioning them state them; a key with no label is absent. */
   readonly entityLabels: (keys: readonly string[]) => Effect.Effect<Map<string, string>, SemanticIndexError>;
+  /**
+   * Which graphs a later fact has replaced or withdrawn, by graph IRI. Read from the store rather than derived
+   * from a query's results: the fact that withdrew a claim need not share its subject or predicate, so a scoped
+   * read can hold the stale claim and not the link that explains it.
+   */
+  readonly statuses: () => Effect.Effect<Map<string, Graph.Status>, SemanticIndexError>;
   /** Execute a raw SPARQL `SELECT ?g` and reassemble every statement in the graphs it binds. */
   readonly select: (sparql: string) => Effect.Effect<Fact[], SemanticIndexError>;
   /** Read the ingest cursor (last processed source hash) keyed by source DXN. */
