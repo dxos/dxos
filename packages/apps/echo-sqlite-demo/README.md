@@ -71,8 +71,11 @@ moon run echo-sqlite-demo:bundle && pnpm exec wrangler dev
 
 ## Deploy
 
+`--force`, because `@dxos/*` resolve from source and the task's inputs are this package's files: a
+change in a library it imports leaves the bundle cached, and the deploy ships the previous build.
+
 ```bash
-moon run echo-sqlite-demo:bundle && pnpm exec wrangler deploy -c packages/apps/echo-sqlite-demo/wrangler.jsonc
+moon run echo-sqlite-demo:bundle --force && pnpm exec wrangler deploy -c packages/apps/echo-sqlite-demo/wrangler.jsonc
 ```
 
 Graphs live in a Durable Object per slug and are deleted 24 hours after creation.

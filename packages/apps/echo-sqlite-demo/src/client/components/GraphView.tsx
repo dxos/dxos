@@ -3,6 +3,7 @@
 //
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import '@dxos/react-ui-graph/styles/graph.css';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -133,20 +134,23 @@ export const GraphView = ({
         </SVG.Zoom>
       </SVG.Root>
 
-      {hovered && (
-        <div
-          role='tooltip'
-          className='fixed z-10 pointer-events-none'
-          style={{
-            width: CARD_WIDTH,
-            // Beside the pointer, and inside the window when the node is near an edge.
-            left: Math.max(8, Math.min(hovered.x + 16, window.innerWidth - CARD_WIDTH - 8)),
-            top: Math.min(hovered.y + 16, window.innerHeight - 160),
-          }}
-        >
-          <EntryCard entry={hovered.entry} />
-        </div>
-      )}
+      {/* In a portal: inside the pane it shares a stacking context with the splitter, whose line draws over it. */}
+      {hovered &&
+        createPortal(
+          <div
+            role='tooltip'
+            className='fixed z-50 pointer-events-none'
+            style={{
+              width: CARD_WIDTH,
+              // Beside the pointer, and inside the window when the node is near an edge.
+              left: Math.max(8, Math.min(hovered.x + 16, window.innerWidth - CARD_WIDTH - 8)),
+              top: Math.min(hovered.y + 16, window.innerHeight - 160),
+            }}
+          >
+            <EntryCard entry={hovered.entry} />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
