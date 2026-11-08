@@ -3207,6 +3207,9 @@ importers:
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../../core/echo/echo-sqlite
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -3231,18 +3234,27 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
       effect:
         specifier: 4.0.4
         version: 4.0.4

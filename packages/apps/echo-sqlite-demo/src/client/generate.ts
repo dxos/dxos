@@ -27,6 +27,7 @@ export const generate = async (
         Obj.make(Organization, {
           [Obj.Meta]: { keys: [foreignKey(random.string.uuid())] },
           name: random.company.name(),
+          website: random.internet.url(),
         }),
       ),
     { count: organizationCount },

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { Format, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -15,6 +15,7 @@ import { DXN } from '@dxos/keys';
 export class Organization extends Type.makeObject<Organization>(DXN.make('sh.echo.demo.organization', '0.1.0'))(
   Schema.Struct({
     name: Schema.String,
+    website: Schema.optional(Format.URL),
   }),
 ) {}
 

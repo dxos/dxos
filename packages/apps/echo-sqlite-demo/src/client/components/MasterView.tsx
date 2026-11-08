@@ -16,12 +16,16 @@ import { Organization, Person, types } from '../../schema.ts';
 import { CodeView } from './CodeView.tsx';
 import { GraphView } from './GraphView.tsx';
 import { type Entry, ListView } from './ListView.tsx';
+import { MasonryView } from './MasonryView.tsx';
+import { TableView } from './TableView.tsx';
 
-export type MasterTab = 'list' | 'cards' | 'graph' | 'code';
+export type MasterTab = 'list' | 'cards' | 'masonry' | 'table' | 'graph' | 'code';
 
 const TABS: { value: MasterTab; label: string; icon: string }[] = [
   { value: 'list', label: 'List', icon: 'ph--list-bullets--regular' },
   { value: 'cards', label: 'Cards', icon: 'ph--squares-four--regular' },
+  { value: 'masonry', label: 'Masonry', icon: 'ph--columns--regular' },
+  { value: 'table', label: 'Table', icon: 'ph--table--regular' },
   { value: 'graph', label: 'Graph', icon: 'ph--graph--regular' },
   { value: 'code', label: 'Code', icon: 'ph--code--regular' },
 ];
@@ -32,8 +36,8 @@ const ICONS: Record<string, string> = {
   [Type.getTypename(Person)!]: 'ph--user--regular',
 };
 
-/** Tiles no narrower than this, which is two columns on a phone and five on a laptop. */
-const TILE_WIDTH = { min: 180 };
+/** Tiles no narrower than this: one column on a phone, several on a laptop. */
+const TILE_WIDTH = { min: 240 };
 
 /**
  * The master pane: its own toolbar — which type, which view, and the actions — over the records.
@@ -138,7 +142,23 @@ export const MasterView = ({
       <Panel.Body>
         {tab === 'list' && <ListView entries={entries} selected={selected} onSelect={onSelect} onRemove={onRemove} />}
         {tab === 'cards' && (
-          <ListView entries={entries} selected={selected} onSelect={onSelect} tileWidth={TILE_WIDTH} />
+          <ListView
+            entries={entries}
+            selected={selected}
+            onSelect={onSelect}
+            onRemove={onRemove}
+            tileWidth={TILE_WIDTH}
+          />
+        )}
+        {tab === 'masonry' && (
+          <MasonryView entries={entries} selected={selected} onSelect={onSelect} onRemove={onRemove} />
+        )}
+        {tab === 'table' && (
+          <TableView
+            type={typename === Type.getTypename(Person) ? Person : Organization}
+            rows={typename === Type.getTypename(Person) ? people : organizations}
+            onSelect={onSelect}
+          />
         )}
         {tab === 'graph' && <GraphView organizations={organizations} people={people} />}
         {tab === 'code' && <CodeView />}

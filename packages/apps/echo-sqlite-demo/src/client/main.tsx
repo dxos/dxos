@@ -13,12 +13,15 @@
 // this a Panel computes `display: block` and nothing is laid out.
 import '@dxos-theme';
 
+import { RegistryContext } from '@effect/atom-react';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@dxos/react-ui/theme.css';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
@@ -26,15 +29,20 @@ import { openDatabase, resolveSlug } from '../core/index.ts';
 import { App } from './components/index.ts';
 
 /** Without these the design system's own labels render as raw keys ("save-button.label"). */
-const translations = [...uiTranslations, ...formTranslations, ...menuTranslations];
+const translations = [...uiTranslations, ...formTranslations, ...menuTranslations, ...tableTranslations];
+
+/** The table's column state lives in atoms, which need a registry. */
+const registry = AtomEx.makeRegistry();
 
 const root = createRoot(document.getElementById('root')!);
 
 const render = (children: React.ReactNode) =>
   root.render(
-    <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
-      {children}
-    </Theme.Provider>,
+    <RegistryContext.Provider value={registry}>
+      <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
+        {children}
+      </Theme.Provider>
+    </RegistryContext.Provider>,
   );
 
 // The slug names the graph; `/` mints one and rewrites the URL so the address is shareable.

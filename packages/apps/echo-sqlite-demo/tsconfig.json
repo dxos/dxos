@@ -26,6 +26,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -62,10 +65,16 @@
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-table"
     },
     {
       "path": "../../ui/ui-theme"

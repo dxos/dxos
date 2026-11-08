@@ -6,7 +6,8 @@ import React from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
-import * as Card from '@dxos/react-ui/Card';
+
+import { EntryCard } from './EntryCard.tsx';
 
 /** A row, in the shape `Listbox.Root` takes: the parts read `label`, `description` and `icon` from it. */
 export type Entry = { value: string; label: string; description?: string; icon?: string };
@@ -49,24 +50,12 @@ export const ListView = ({
         {entries.map((entry) =>
           tileWidth ? (
             <Listbox.Item key={entry.value} id={entry.value} highlightOnHover classNames='p-0'>
-              <Card.Root border selected={entry.value === selected}>
-                <Card.Header>
-                  <Card.Title truncate>{entry.label}</Card.Title>
-                </Card.Header>
-                {entry.description && (
-                  <Card.Row>
-                    <Card.Text variant='muted' lines={2}>
-                      {entry.description}
-                    </Card.Text>
-                  </Card.Row>
-                )}
-              </Card.Root>
+              <EntryCard entry={entry} selected={entry.value === selected} onRemove={onRemove} />
             </Listbox.Item>
           ) : (
             <Listbox.Item key={entry.value} id={entry.value} highlightOnHover>
               {entry.icon && <Listbox.ItemIcon />}
               <Listbox.ItemText />
-              {entry.description != null && <Listbox.ItemDescription />}
               {onRemove && (
                 <Button.Root
                   iconOnly
