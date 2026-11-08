@@ -8,9 +8,6 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
   },
-  // Both `@dxos/sql-sqlite` and `@effect/sql-sqlite-wasm` import the upstream wa-sqlite; the DXOS
-  // fork is the one whose VFS the OPFS worker builds on, so everything resolves to it.
-  alias: { '@effect/wa-sqlite': '@dxos/wa-sqlite' },
   test: {
     node: true,
     browser: {
@@ -18,5 +15,10 @@ export default defineConfig({
       // Reached only through the OPFS worker, so vite discovers them once the worker boots.
       optimizeDeps: ['effect/Deferred', 'effect/Fiber', 'effect/Option'],
     },
+    // The workerd project is OFF while its pool failure is unresolved: it dies before any module
+    // loads, so even a test importing only `vitest` fails to collect. The node project already
+    // excludes `*.workerd.test.ts`, so the three parked files sit in the tree uncollected. Reasons
+    // and the ruled-out list: `src/testing/load.workerd.test.ts`, and TASKS.md risk 10.
+    // workerd: true,
   },
 });

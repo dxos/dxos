@@ -6649,18 +6649,12 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
-      '@dxos/wa-sqlite':
-        specifier: 'catalog:'
-        version: 0.2.1
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
-      '@effect/wa-sqlite':
-        specifier: 'catalog:'
-        version: 0.1.2
 
   packages/core/echo/feed:
     dependencies:

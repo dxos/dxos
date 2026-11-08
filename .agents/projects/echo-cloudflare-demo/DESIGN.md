@@ -10,7 +10,7 @@ Ledger: [TASKS.md](./TASKS.md). Positioning context: `temp/echo-cloudflare-posit
 ## Goal
 
 `npm create` → a React app → `wrangler deploy`, in under 100 lines of user code, with no Composer
-plugin framework anywhere in it. The demo must show a *graph* (schema, refs, traversal, full-text),
+plugin framework anywhere in it. The demo must show a _graph_ (schema, refs, traversal, full-text),
 not a table.
 
 ## Architecture
@@ -18,11 +18,11 @@ not a table.
 **Decision D-1: the browser holds the graph; the DO holds the authoritative copy.** Rejected the two
 alternatives:
 
-| Option                                | Proves                                           | Why not (for the first cut)                                        |
-| ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| **Chosen** — browser graph, DO persists | local reads/writes, offline, adoptability        | no multi-client convergence; labelled *persistence, not replication* |
-| Thin client on the DO                 | ECHO as a graph DB on DO SQLite                  | needs a remote `Database.Queryable` proxy; doesn't prove offline    |
-| Both halves, feed-style sync          | the real product                                 | that is gap E — a project, not a demo                              |
+| Option                                  | Proves                                    | Why not (for the first cut)                                          |
+| --------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| **Chosen** — browser graph, DO persists | local reads/writes, offline, adoptability | no multi-client convergence; labelled _persistence, not replication_ |
+| Thin client on the DO                   | ECHO as a graph DB on DO SQLite           | needs a remote `Database.Queryable` proxy; doesn't prove offline     |
+| Both halves, feed-style sync            | the real product                          | that is gap E — a project, not a demo                                |
 
 Three reasons the first option won: it shares no code with the subduction path that finding 6 is
 failing nightly, so it can be built while that is fixed; putting the database on the device is the
@@ -34,7 +34,7 @@ increment toward feed-based sync rather than a detour from it.
 `@dxos/sql-sqlite` is documented "worker-only, no MessagePort" — it uses `AccessHandlePoolVFS`,
 which needs OPFS sync access handles, and those exist only in a worker. Two shapes were possible:
 
-- `SqliteDatabase` *inside* the worker via `layerOpfs`, bridging the ECHO `Database` API to the main
+- `SqliteDatabase` _inside_ the worker via `layerOpfs`, bridging the ECHO `Database` API to the main
   thread. Rejected: that is the client/host split `@dxos/echo-client` already is, rebuilt.
 - `SqliteDatabase` on the **main thread** over `SqliteClient.layer({ worker })`, with SQL crossing
   postMessage. **Chosen** — the query compiler, object hydration, reactivity and `QueryResult` all
@@ -81,6 +81,22 @@ Guardrails, since the demo lands beside production:
 - No changes to any existing worker, binding or `wrangler.jsonc`.
 - Reachable on `*.workers.dev`, which is public by default.
 
+## Decision D-4: the server stores bytes, not objects
+
+With the workerd spike parked (TASKS.md risk 10), the DO cannot run `echo-sqlite` yet — and for
+option 1 it does not need to. The browser owns the graph; the server's whole job is to hold the
+authoritative copy of the exported SQLite file.
+
+So: **a Durable Object per space, fronting R2.** The DO is the per-space authority — one writer,
+serializing uploads and handing out the current version — and R2 holds the bytes. Not DO storage:
+its key-value values cap at 128 KiB, and DO SQLite would need the file chunked across rows, where
+R2 takes a whole object.
+
+That keeps the Cloudflare story intact (a space is a Durable Object, exactly as in option 3) without
+waiting on the harness, and it is honest about what it is: **persistence, not replication**. When
+risk 10 clears, the same DO gains an `echo-sqlite` instance over `ctx.storage.sql` and the transport
+becomes feed-based sync — option 3 — without the client changing.
+
 ## Open questions
 
 - **Q-1** Does `echo-sqlite` need synchronous SQL anywhere? The README says `runSync()` "never
@@ -96,16 +112,54 @@ Guardrails, since the demo lands beside production:
 **F-1 — the two query compilers are independent implementations, not a fork.** They work at
 different AST levels: `echo-sqlite`'s 572-line compiler goes straight from the Query AST
 (`select`, `filter`, `from`, `union`, `set-difference`, `order`, `aggregate`) to one statement, while
-`echo-host`'s 1,678-line compiler consumes a *planned* pipeline (`SelectStep`, `FilterStep`,
+`echo-host`'s 1,678-line compiler consumes a _planned_ pipeline (`SelectStep`, `FilterStep`,
 `FilterDeletedStep`, `TraverseStep`, `AggregateStep`, …) produced by a planner stage `echo-sqlite`
 does not have.
 
 The shared surface is the filter vocabulary — roughly twenty node types (`and`, `or`, `not`, `eq`,
 `neq`, `compare`, `range`, `in`, `contains`, `text-search`, `tag`, `annotation`, `property`,
 `object`, `natural`, `mnemonic`, `rank`, `has-parent`, `child-of`, `in-query`, `feed-cursor`,
-`timestamp`) hand-compiled in both. Counting db-service's 394-line JS copy of the filter *matcher*,
+`timestamp`) hand-compiled in both. Counting db-service's 394-line JS copy of the filter _matcher_,
 the filter semantics have **three** implementations.
 
 This is a better position than "a forked planner" for the two-backends story, and a worse one than
 "one shared compiler": the divergence risk is real and concentrated in those twenty node types.
 Relevant to gap F in the positioning memo.
+
+**F-2 — end-to-end encryption looks more reachable than the memo assumed.** The memo's §3.A worried
+that sealing commit payloads would break subduction's own sync, because the engine might need to
+parse a commit to find its dependencies. The evidence so far points the other way: the server
+already treats the payload as opaque bytes.
+
+db-service's Durable Object schema
+(`packages/services/db-service/src/worker/subduction/do-sedimentree-storage.ts`) is:
+
+| Table           | Columns                                                     |
+| --------------- | ----------------------------------------------------------- |
+| `SedimentreeId` | `id`                                                        |
+| `Commit`        | `sedimentree_id`, `commit_id`, `signed`, **`blob`**         |
+| `Fragment`      | `sedimentree_id`, `fragment_head`, `signed`, **`blob`**     |
+| `Heads`         | `sedimentree_id`, `heads` (sorted 32-byte ids concatenated) |
+| `HeadsDirty`    | `sedimentree_id`, `mark`                                    |
+
+Identity (`commit_id` / `fragment_head`), signature (`signed`) and payload (`blob`) are already
+three separate columns. Three further signals:
+
+- The upstream storage types are `CommitWithBlob` and `FragmentWithBlob` — the naming implies a
+  commit _without_ a blob is a first-class value in `@automerge/automerge-subduction`.
+- `StoredFragmentRecord` is documented as "One `Fragment` row as raw bytes, **without its blob**",
+  so the server routinely handles records with the payload omitted.
+- The heads index (`heads-index.ts`, 71 lines) holds no blob, parent or decode logic of its own: it
+  delegates to a `ComputeHeads` callback, one WASM call per dirty tree.
+
+So the open question is narrower than "can subduction carry sealed payloads" — it is **does the
+Rust engine read the `blob` column to compute heads, or only `commit_id` and `signed`.** The Rust is
+not vendored in either repo (`vendor/` holds hypercore, hyperformula, kbn-handlebars and quickjs;
+`@automerge/automerge-subduction` resolves from the registry), so answering it means reading
+`inkandswitch/subduction`'s `subduction_core` commit type upstream.
+
+If the dependency edges live in `signed` or are derivable from the ids, E2E spaces reduce to
+extending `@dxos/feed`'s existing `Cypher` (AES-256-GCM, per-block nonce, id bound as AAD,
+WebCrypto-only) over the `blob` column and keying it from HALO instead of the operator KEK — a
+contained change rather than a protocol fork. That would make the memo's §3.A materially cheaper
+than it currently claims, and it is worth correcting there either way.
