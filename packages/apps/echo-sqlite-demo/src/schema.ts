@@ -12,14 +12,14 @@ import { DXN } from '@dxos/keys';
  * between them, and the queries, reactivity and full-text search in the app come from these.
  */
 
-export class Organization extends Type.makeObject<Organization>(DXN.make('sh.echo.demo.organization', '0.1.0'))(
+export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
   Schema.Struct({
     name: Schema.String,
     website: Schema.optional(Format.URL),
   }),
 ) {}
 
-export class Person extends Type.makeObject<Person>(DXN.make('sh.echo.demo.person', '0.1.0'))(
+export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
   Schema.Struct({
     name: Schema.String,
     email: Schema.String,
