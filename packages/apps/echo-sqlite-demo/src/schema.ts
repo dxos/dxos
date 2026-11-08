@@ -30,7 +30,7 @@ export class Organization extends Type.makeObject<Organization>(DXN.make('com.ex
 export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
   Schema.Struct({
     name: Schema.String,
-    emails: Schema.Array(Schema.String),
+    email: Schema.Array(Schema.String),
     /** The edge that makes this a graph rather than two tables. */
     employer: Schema.optional(Ref.Ref(Organization)),
   })

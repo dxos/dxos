@@ -88,10 +88,10 @@ export const MasterView = ({
         return {
           value: person.id,
           label: labels.get(person) ?? '',
-          description: employerLabel ? `${person.emails[0]} · ${employerLabel}` : person.emails[0],
+          description: employerLabel ? `${person.email[0]} · ${employerLabel}` : person.email[0],
           icon: getTypeIcon(Person)?.icon,
           fields: [
-            ...person.emails.map((email) => ({ icon: 'ph--envelope-simple--regular', value: email })),
+            ...person.email.map((email) => ({ icon: 'ph--envelope-simple--regular', value: email })),
             ...(employerLabel ? [{ icon: getTypeIcon(Organization)!.icon, value: employerLabel }] : []),
           ],
         };

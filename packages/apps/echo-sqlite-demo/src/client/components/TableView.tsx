@@ -2,26 +2,56 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import type { Obj, Type } from '@dxos/echo';
+import { Format, Obj, Ref, Type } from '@dxos/echo';
 import { DynamicTable } from '@dxos/react-ui-table';
 
 /**
  * Every field of the chosen type as a column.
  *
- * The table is built from the ECHO type itself, so adding a field to `schema.ts` adds a column with
- * nothing to configure here.
+ * Columns are derived from the objects rather than declared: a `Ref` shows its target's label, a
+ * list joins, everything else prints. The table renders a ref as text here because a ref column
+ * needs a view projection that says which property of the target to show, which `DynamicTable`
+ * builds only for a schema it owns.
  */
 export const TableView = ({
   type,
   rows,
   onSelect,
 }: {
-  type: Type.AnyEntity;
+  type: Type.AnyObj;
   rows: readonly Obj.Unknown[];
   onSelect?: (id: string) => void;
 }) => {
-  const handleRowClick = useCallback((row: Obj.Unknown) => onSelect?.(row.id), [onSelect]);
-  return <DynamicTable type={type} rows={[...rows]} onRowClick={handleRowClick} />;
+  const properties = useMemo(
+    () =>
+      [...new Set(rows.flatMap((row) => Object.keys(row)))]
+        .filter((name) => name !== 'id')
+        .map((name) => ({ name, format: Format.TypeFormat.String })),
+    [rows],
+  );
+
+  const data = useMemo(
+    () =>
+      rows.map((row) =>
+        Object.fromEntries(
+          Object.entries(row).map(([key, value]) => [
+            key,
+            Ref.isRef(value)
+              ? ((value.target && Obj.getLabel(value.target)) ?? '')
+              : Array.isArray(value)
+                ? value.join(', ')
+                : value,
+          ]),
+        ),
+      ),
+    [rows],
+  );
+
+  const handleRowClick = useCallback((row: { id: string }) => onSelect?.(row.id), [onSelect]);
+
+  return (
+    <DynamicTable name={Type.getTypename(type)!} properties={properties} rows={data} onRowClick={handleRowClick} />
+  );
 };
