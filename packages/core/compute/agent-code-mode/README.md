@@ -26,7 +26,7 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
    function that runs it through the same handlers as a tool call.
 3. Builds the system prompt: the dialect's instructions (its API, the registered types, the
    operations), then the skills' own instructions and the conversation's objects, as tool calling
-   does.
+   does. In discovery mode it states the API and one skill, Discovery, instead (see below).
 4. Calls the model. A text answer ends the request; an `eval` call runs in the sandbox and the loop
    repeats, up to `maxTurns`.
 
@@ -50,8 +50,8 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 The body of an async function, over a small facade: `query`, `make`, `add`, `update`, `remove`,
 `ref`, `flush`, `relations`, `children`, `referrers`, `describe`, `print`. Every operation and MCP
 tool is a function on `ops`: `await ops['name'](input)`. The prompt gives each input as the JSON
-schema tool calling validates, and states the object-reference format once. Every binding takes and
-returns plain data, which is what lets a sandbox with no database run it.
+schema tool calling validates. Every binding takes and returns plain data, which is what lets a
+sandbox with no database run it.
 
 ### Effect ([`dialect-effect.ts`](./src/dialect-effect.ts))
 
@@ -79,17 +79,38 @@ demand ([`src/docs`](./src/docs)), including the generated `catalog/types.md` an
 
 ## What the model is told
 
+Two modes, chosen by `discovery` on `makeCodeModeTurnProducer`. In both, the model can call the
+operations of the conversation's enabled skills and nothing else: `ops` and `Database.resolve` know
+only those, and a skill enabled mid-request adds its operations on the next model call.
+
+### Listed (the default)
+
 - **Types**: every registered type and its fields. A union of more than four tagged variants is
   shortened to its tags, with a note to print an existing value to see a variant's fields.
-- **Operations**: every operation of the conversation's skills, in full, before every model call.
-  Nothing else can be called: `ops` and `Database.resolve` know only these. There is no search, and
-  a skill enabled from code (the skill manager's `enableSkills`) adds its operations on the next
-  model call.
-- **Skills**: when the skill manager is bound, its section lists every skill in the registry.
+- **Operations**: every operation of the enabled skills, in full, before every model call.
+- **Skills**: each enabled skill's instructions; with the skill manager bound, a list of every skill
+  in the registry.
 
-So the prompt grows with every bound skill. `@dxos/mcp-server` takes the other approach for MCP
-clients: its `runScript` searches operations (`queryOperations`, `loadSkill`) instead of listing
-them.
+So the prompt grows with every enabled skill and every registered type.
+
+### Discovery (`discovery: true`)
+
+The prompt states one skill, Discovery ([`discovery.ts`](./src/discovery.ts)), with its three
+operations: no other skill's instructions, no other operation, no types. The model looks the rest up
+from code:
+
+| Operation         | Listing                                                                                   | Lookup                                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `loadSkill`       | No key: the skills it can use, enabled here or enableable by an agent (`agentCanEnable`). | `key`: the skill's instructions and operations. A skill not yet enabled is enabled by loading it.   |
+| `queryOperations` | `query` searches those skills' operations by what they do; `skill` narrows to one.        | `keys`: each operation's input and the code that calls it, in the dialect's form.                   |
+| `queryTypes`      | `query` searches the registered types.                                                    | `typenames`: their fields.                                                                          |
+
+- A skill that is neither enabled nor enableable never shows up, and nor do its operations.
+- The prompt no longer grows with skills or types. The cost is a lookup call at the start of a
+  request.
+- The turn answers these operations itself, from what it already holds, so no host registers a
+  handler for them; `serveLocally` routes the Effect dialect's `Operation.invoke` to them.
+- It is the shape `@dxos/mcp-server` already gives MCP clients (`queryOperations`, `loadSkill`).
 
 ## Code map
 
@@ -99,7 +120,7 @@ them.
 | `eval-tool.ts`                                         | The `eval` tool: running code, the output cap, error text, call labels, recording. |
 | `Dialect.ts`, `dialect-plain.ts`, `dialect-effect.ts`  | Each dialect's bindings and prompt.                                                |
 | `fields.ts`, `describe.ts`, `format.ts`                | The types section, object cards, printing.                                         |
-| `references.ts`                                        | The plain dialect's once-only reference format.                                    |
+| `discovery.ts`                                         | The Discovery skill and its operations.                                            |
 | `Sandbox.ts`, `WorkerSandbox*.ts`, `WorkerdSandbox.ts` | Where code runs.                                                                   |
 | `docs/`                                                | The Effect dialect's `DOCS`.                                                       |
 
@@ -107,4 +128,5 @@ them.
 
 `code-mode.test.ts` drives real agent turns from recorded model responses under `.store/`:
 `DX_RUN_MODEL_FIXTURE_TESTS=1` replays them, and `DX_UPDATE_MODEL_FIXTURES=1` with
-`DX_ANTHROPIC_API_KEY` re-records a whole file. The other tests need no model.
+`DX_ANTHROPIC_API_KEY` re-records a whole file. `discovery.test.ts` and `producer.test.ts` drive
+turns with a scripted model, and the other tests need no model.

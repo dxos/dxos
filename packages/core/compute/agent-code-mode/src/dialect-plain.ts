@@ -14,13 +14,14 @@ import { type HintSyntax, makeDescriber } from './describe.ts';
 import {
   type BindingsContext,
   type Dialect,
+  DISCOVERED_TYPES,
   type InstructionsContext,
   NO_OPERATIONS,
+  type OperationSignature,
   type SandboxOperation,
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
-import { REFERENCE_FORMAT, REFERENCE_NOTE, compactReferences, hasReferences } from './references.ts';
 
 /**
  * A typename the registry has no object type for — an expected failure of the model's code, so it
@@ -131,7 +132,9 @@ export const PlainDialect: Dialect = {
     };
   },
 
-  instructions: ({ operations, types }: InstructionsContext) => trim`
+  signature: (operation) => plainSignature(operation),
+
+  instructions: ({ operations, types, discovery }: InstructionsContext) => trim`
     ## Code mode
 
     You have exactly one tool, \`eval\`, which runs the body of an async JavaScript function against
@@ -166,7 +169,7 @@ export const PlainDialect: Dialect = {
       an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
       Where an operation's input takes references, pass \`ref(obj)\` too.
 
-    ${renderTypes(types.filter(({ kind }) => kind === 'object'))}
+    ${discovery ? DISCOVERED_TYPES : renderTypes(types.filter(({ kind }) => kind === 'object'))}
 
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,
@@ -196,38 +199,14 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.
 
-  ${
-    // One interpolation, not two side by side: \`trim\` re-indents a value by the text just before it.
-    referencesPrefix(operations) +
-    operations
-      .map((operation) =>
-        renderOperation(
-          operation,
-          (name) => `await ops[${JSON.stringify(name)}](input)`,
-          JSON.stringify(compactReferences(operation)),
-        ),
-      )
-      .join('\n')
-  }
+  ${operations.map((operation) => renderOperation(operation, plainSignature(operation))).join('\n')}
 `;
 
-/** The references note ahead of the list, or nothing, so a prompt with no reference field is unchanged. */
-const referencesPrefix = (operations: readonly SandboxOperation[]): string =>
-  operations.some(hasReferences) ? `${renderReferences()}\n\n` : '';
-
-/**
- * The reference format, stated once: each reference field's schema says only that it is one, rather than repeating
- * the format the tool projection writes into it.
- */
-const renderReferences = (): string =>
-  // Joined rather than a \`trim\` template: the format is several lines, and \`trim\` would not re-indent it mid-line.
-  [
-    '#### References',
-    '',
-    `A field marked "${REFERENCE_NOTE}" takes a string naming the object:`,
-    '',
-    REFERENCE_FORMAT,
-  ].join('\n');
+/** An operation is a function on `ops`, indexed by its tool name, taking the input its JSON schema states. */
+const plainSignature = (operation: SandboxOperation): OperationSignature => ({
+  call: `await ops[${JSON.stringify(operation.name)}](input)`,
+  input: JSON.stringify(operation.parameters),
+});
 
 /** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
 export const camelCase = (name: string): string =>

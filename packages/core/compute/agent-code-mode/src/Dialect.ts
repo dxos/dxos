@@ -88,12 +88,27 @@ export interface Dialect {
 
   /** Names bound in the code's scope, built per evaluation. */
   readonly bindings: (context: BindingsContext) => Record<string, unknown>;
+  /** How code in this dialect calls an operation, and the input it writes; the prompt and discovery both state it. */
+  readonly signature: (operation: SandboxOperation) => OperationSignature;
 }
+
+/** One operation as a dialect states it to the model. */
+export type OperationSignature = {
+  /** The code that calls the operation, or resolves it where calling takes a second step. */
+  readonly call: string;
+  /** Its input, in the form the call takes. */
+  readonly input: string;
+};
 
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
 export type InstructionsContext = {
   readonly operations: readonly SandboxOperation[];
   readonly types: readonly SandboxType[];
+  /**
+   * The model finds types and operations through the Discovery skill rather than in the prompt: `types` is then
+   * empty, and `operations` holds only the skill's own.
+   */
+  readonly discovery?: boolean;
 };
 
 /**
@@ -128,18 +143,15 @@ const ABRIDGED_UNION_NOTE =
 
 const hasAbridgedUnion = ({ fields }: SandboxType): boolean => fields.some(({ type }) => type.includes(ABRIDGED_UNION));
 
-/**
- * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
- * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path.
- */
-export const renderOperation = (
-  operation: SandboxOperation,
-  call: (name: string) => string,
-  input: string = JSON.stringify(operation.parameters),
-): string => trim`
-  - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
+/** One operation's line in the API reference, as the dialect's {@link Dialect.signature} states it. */
+export const renderOperation = (operation: SandboxOperation, { call, input }: OperationSignature): string => trim`
+  - \`${call}\` — ${operation.description ?? 'No description.'}
     input: ${input}
 `;
+
+/** The types section when the model looks types up instead (see {@link InstructionsContext.discovery}). */
+export const DISCOVERED_TYPES =
+  "### Types\n\nTypes are not listed here: find them, and their fields, with the Discovery skill's `queryTypes`.";
 
 /** Shown in place of the operations section when the conversation binds no skills. */
 export const NO_OPERATIONS = '### Operations\n\nNo operations are bound to this conversation.';

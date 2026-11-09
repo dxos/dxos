@@ -15,8 +15,10 @@ import { type HintSyntax, makeDescriber } from './describe.ts';
 import {
   type BindingsContext,
   type Dialect,
+  DISCOVERED_TYPES,
   type InstructionsContext,
   NO_OPERATIONS,
+  type OperationSignature,
   type SandboxOperation,
   renderOperation,
   renderTypes,
@@ -89,7 +91,9 @@ export const EffectDialect: Dialect = {
     };
   },
 
-  instructions: ({ operations, types }: InstructionsContext) => trim`
+  signature: (operation) => effectSignature(operation),
+
+  instructions: ({ operations, types, discovery }: InstructionsContext) => trim`
     ## Code mode
 
     You have exactly one tool, \`eval\`. Its \`code\` is the body of an \`Effect.gen\` generator run
@@ -136,7 +140,7 @@ export const EffectDialect: Dialect = {
     Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
     a function\` and costs a call.
 
-    ${renderTypes(types, ({ dxn }) => dxn)}
+    ${discovery ? DISCOVERED_TYPES : renderTypes(types, ({ dxn }) => dxn)}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
 
@@ -256,23 +260,21 @@ const renderEffectTools = (operations: readonly SandboxOperation[]): string => {
       The conversation's MCP servers add these. They are NOT tools here either: each is an effect on
       \`Tools\`, taking one argument matching its input schema, and a failed call fails the program.
 
-      ${tools.map((tool) => renderOperation(tool, (name) => `yield* Tools[${JSON.stringify(name)}](input)`)).join('\n')}
+      ${tools.map((tool) => renderOperation(tool, effectSignature(tool))).join('\n')}
     `;
 };
 
 /** One line per operation backed by a definition, naming the DXN it resolves by. */
 const renderOperationList = (operations: readonly SandboxOperation[]): string =>
   operations
-    .flatMap((operation) => {
-      const { definition } = operation;
-      return definition
-        ? [
-            renderOperation(
-              operation,
-              () => `yield* Database.resolve('${operationKey(definition)}')`,
-              describeInput(definition.input),
-            ),
-          ]
-        : [];
-    })
+    .flatMap((operation) => (operation.definition ? [renderOperation(operation, effectSignature(operation))] : []))
     .join('\n');
+
+/**
+ * An operation is resolved by its DXN and takes the input its own schema decodes, refs as `Ref<typename>`; a tool no
+ * operation backs is called on `Tools` with the input its JSON schema states.
+ */
+const effectSignature = ({ name, parameters, definition }: SandboxOperation): OperationSignature =>
+  definition
+    ? { call: `yield* Database.resolve('${operationKey(definition)}')`, input: describeInput(definition.input) }
+    : { call: `yield* Tools[${JSON.stringify(name)}](input)`, input: JSON.stringify(parameters) };

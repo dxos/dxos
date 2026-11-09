@@ -3,6 +3,7 @@
 //
 
 import * as Tool from 'effect/ai/Tool';
+import * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -19,13 +20,15 @@ import {
   getOperationFromTool,
 } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import type * as Skill from '@dxos/compute/Skill';
-import { Database, Obj } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
+import { Database, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
+import { type Catalog, makeDiscovery, serveLocally } from './discovery.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
@@ -58,6 +61,12 @@ export type CodeModeOptions = {
    * entirely by what its own code printed, so a host that cannot watch the turn can bound it here.
    */
   maxTurns?: number;
+
+  /**
+   * The prompt states one skill, Discovery, and the model looks up every other skill, operation and type through its
+   * operations instead of reading them in the prompt. The enabled skills' operations stay callable.
+   */
+  discovery?: boolean;
 };
 
 /**
@@ -108,6 +117,8 @@ const runCodeModeTurn = ({
     // The turn's own services, not the producer's database-only runtime: the sandbox runs the
     // model's effects, and `Operation.invoke` resolves its handler through `Operation.Service`.
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+    // What discovery reads skills, operation records and skill instructions through.
+    const services = yield* Effect.context<Database.Service | Operation.Service | Registry.Service>();
 
     // A turn in a thread (a light thread or a fork) sees that thread's prompt, not main's.
     const history =
@@ -157,12 +168,41 @@ const runCodeModeTurn = ({
               const mcps = yield* AiSession.connectMcpServers(
                 params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
               );
-              const operations = yield* projectOperations(skills, mcps);
+              const bound = yield* projectOperations(skills, mcps);
+              const types = yield* registeredTypes;
+              const discovery = options.discovery
+                ? makeDiscovery({
+                    dialect,
+                    enabled: skills,
+                    operations: bound,
+                    types,
+                    catalog: readCatalog.pipe(Effect.provide(services)),
+                    instructionsOf: (skill) =>
+                      Template.processTemplate(skill.instructions).pipe(Effect.provide(services), Effect.orDie),
+                    enable: (skill) =>
+                      Skill.upsert(Skill.getKey(skill)).pipe(
+                        Effect.flatMap((stored) =>
+                          Effect.promise(() => session.context.bind({ skills: [Ref.make(stored)] })),
+                        ),
+                        Effect.provide(services),
+                        Effect.orDie,
+                      ),
+                  })
+                : undefined;
+              // Callable either way; only what the prompt states differs.
+              const operations = discovery === undefined ? bound : [...discovery.operations, ...bound];
               labelCall = labelEvalCall(operations);
               const toolkit = makeEvalToolkit({
                 dialect,
                 sandbox,
-                runtime,
+                runtime:
+                  discovery === undefined
+                    ? runtime
+                    : Context.add(
+                        runtime,
+                        Operation.Service,
+                        serveLocally(Context.get(runtime, Operation.Service), discovery.operations),
+                      ),
                 operations,
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 maxOutput: options.maxOutput,
@@ -171,13 +211,15 @@ const runCodeModeTurn = ({
               });
               const system = yield* formatSystemPrompt({
                 system: [
-                  dialect.instructions({ operations, types: yield* registeredTypes }),
+                  discovery === undefined
+                    ? dialect.instructions({ operations, types })
+                    : dialect.instructions({ operations: discovery.operations, types: [], discovery: true }),
                   options.system,
                   params.system,
                 ]
                   .filter(isPresent)
                   .join('\n\n'),
-                skills,
+                skills: discovery === undefined ? skills : [discovery.skill],
                 objects: session.context.getObjects(),
                 instructions,
               }).pipe(Effect.orDie);
@@ -299,6 +341,12 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
 const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
   describeTypes(db),
 );
+
+/** The registry's skills and operation records, which discovery searches beyond the enabled skills. */
+const readCatalog: Effect.Effect<Catalog, never, Registry.Service> = Effect.all({
+  skills: Registry.runQuery(Filter.type(Skill.Skill)),
+  records: Registry.runQuery(Filter.type(Operation.PersistentOperation)),
+});
 
 /**
  * Projects the skills' tools, and those of the turn's MCP servers, into callable operations. Resolution goes through the ordinary toolkit

@@ -74,6 +74,7 @@ const dialectOver = (bindings: Record<string, unknown>): Dialect => ({
   instructions: () => '',
   wrap: (code) => code,
   bindings: () => bindings,
+  signature: ({ name }) => ({ call: `await ops[${JSON.stringify(name)}](input)`, input: '{}' }),
 });
 
 const setup = () => {
