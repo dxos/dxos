@@ -75,7 +75,7 @@ describe('code-mode script runner', () => {
       function* (_) {
         const run = yield* runner();
         const plain = yield* run.run({
-          source: Operation.inlineScript("print('scored', await ops.score({ title: 'abc' }));", 'plain'),
+          source: Operation.inlineScript("print('scored', await ops.score({ title: 'abc' }));", { dialect: 'plain' }),
         });
         expect(plain.output).toBe('scored 3');
         expect(plain.error).toBeUndefined();
@@ -83,7 +83,7 @@ describe('code-mode script runner', () => {
         const effect = yield* run.run({
           source: Operation.inlineScript(
             `yield* print('scored', yield* Operation.invoke(yield* Database.resolve('${String(Score.meta.key)}'), { title: 'abcd' }));`,
-            'effect',
+            { dialect: 'effect' },
           ),
         });
         expect(effect.output).toBe('scored 4');
@@ -99,7 +99,7 @@ describe('code-mode script runner', () => {
       function* (_) {
         const run = yield* runner();
         const result = yield* run.run({
-          source: Operation.inlineScript("print('before'); throw new Error('boom');", 'plain'),
+          source: Operation.inlineScript("print('before'); throw new Error('boom');", { dialect: 'plain' }),
         });
         expect(result.output).toBe('before\nError: boom');
         expect(result.error).toBe('Error: boom');
@@ -115,7 +115,7 @@ describe('code-mode script runner', () => {
       function* (_) {
         const run = yield* runner();
         const error = yield* run
-          .run({ source: Operation.inlineScript('const x = 1;', 'typescript') })
+          .run({ source: Operation.inlineScript('const x = 1;', { dialect: 'typescript' }) })
           .pipe(Effect.flip);
         expect(error._tag).toBe('ScriptError');
         expect(error.message).toContain('typescript');
@@ -132,7 +132,7 @@ describe('code-mode script runner', () => {
         const runtime = yield* Effect.context<Database.Service | Operation.Service>();
         const run = Runner.make({ sandbox: Sandbox.inProcess, runtime, operations: [] });
         const result = yield* run.run({
-          source: Operation.inlineScript('await new Promise(() => {});', 'plain'),
+          source: Operation.inlineScript('await new Promise(() => {});', { dialect: 'plain' }),
           timeoutMs: 20,
         });
         expect(result.error).toContain('abandoned');
@@ -152,7 +152,7 @@ describe('code-mode script runner', () => {
 
         const operation = Operation.makeScript({
           meta: { key: DXN.make('com.example.script') },
-          source: Operation.inlineScript("print('from an operation');", 'plain'),
+          source: Operation.inlineScript("print('from an operation');", { dialect: 'plain' }),
         });
         const run = yield* runner();
         expect((yield* run.run(Operation.scriptRequest(operation))).output).toBe('from an operation');
@@ -178,7 +178,7 @@ describe('code-mode script runner', () => {
         };
         const runtime = yield* Effect.context<Database.Service | Operation.Service>();
         const run = Runner.make({ sandbox: recording, runtime, operations: [] });
-        yield* run.run({ source: Operation.inlineScript("print('x')", 'plain') });
+        yield* run.run({ source: Operation.inlineScript("print('x')", { dialect: 'plain' }) });
         expect(seen).toEqual(['plain:true']);
       },
       Effect.provide(TestLayer),

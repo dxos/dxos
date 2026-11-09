@@ -511,22 +511,6 @@ export interface Manager {
    * process control.
    */
   attach<I, O, Rpcs extends Rpc.Any = never>(pid: ID, options?: LocationOptions): Effect.Effect<Process<I, O, Rpcs>>;
-
-  /**
-   * Runs a script operation at `options.location`, as a process in that runtime's tree.
-   *
-   * The runtime runs the code itself — a script operation carries no handler — and the run is a
-   * process like any other: it has a pid, a parent, its own permissions and can spawn children.
-   * `Operation.invoke` on a script operation comes here, so a caller normally names
-   * `InvokeOptions.on` rather than this.
-   *
-   * Dies when the location is a runtime that cannot run scripts.
-   */
-  runScript(
-    op: Operation.ScriptDefinition.Any,
-    input?: unknown,
-    options?: SpawnOptions & LocationOptions,
-  ): Effect.Effect<Operation.ScriptResult>;
 }
 
 /**

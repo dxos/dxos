@@ -103,7 +103,7 @@ export const evaluateCommand = Command.make(
     });
     const result = yield* runner
       .run({
-        source: Operation.inlineScript(program, dialectName),
+        source: Operation.inlineScript(program, { dialect: dialectName }),
         ...(Option.isSome(maxOutput) ? { maxOutput: maxOutput.value } : {}),
       })
       .pipe(Effect.mapError((error) => new CliError({ message: error.message })));

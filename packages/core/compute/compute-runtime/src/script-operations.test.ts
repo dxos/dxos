@@ -29,7 +29,7 @@ const KEY = DXN.make('com.example.operation.script');
 
 const Greet = Operation.makeScript({
   meta: { key: KEY, name: 'Greet' },
-  source: Operation.inlineScript("print('hello')", Operation.ScriptDialects.Effect),
+  source: Operation.inlineScript("print('hello')", { dialect: Operation.ScriptDialects.Effect }),
 });
 
 const NESTED_KEY = DXN.make('com.example.operation.fromScript');

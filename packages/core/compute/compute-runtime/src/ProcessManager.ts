@@ -29,11 +29,10 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database, DXN } from '@dxos/echo';
+import { Annotation, Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import type { SpaceId, URI } from '@dxos/keys';
@@ -92,63 +91,6 @@ const makeLoopbackRpcClient = (
 ): Effect.Effect<RpcClient.RpcClient<any>> =>
   RpcTest.makeClient(rpcs).pipe(Effect.provide(rpcHandlers), Effect.provideService(Scope.Scope, scope));
 
-/**
- * The process a script operation runs as, built by the runtime for that operation alone.
- *
- * Not exported: a script operation is run by `Manager.runScript`, so nothing outside needs to name
- * the process behind it. Keyed by the operation, so the run sits in the tree under the key a reader
- * already knows and an EDGE runtime resolves the same operation by.
- */
-const scriptDurable = (
-  op: Operation.ScriptDefinition.Any,
-): Operation.Durable<unknown, Operation.ScriptResult, ScriptRunner.Service | Operation.ScriptRequirements> =>
-  Operation.makeDurable({
-    key: DXN.getName(op.meta.key),
-    name: op.meta.name ?? String(op.meta.key),
-    input: Schema.Unknown,
-    output: Operation.ScriptResult,
-    // The backend, plus what it runs the script against: a script's calls and children are its own
-    // process's, which is what `Operation.ScriptRequirements` names.
-    services: [ScriptRunner.Service, Operation.Service, Process.ManagerService],
-    // A script interrupted mid-run cannot be resumed: its evaluation state belonged to the runtime
-    // that was running it, which a restart has already lost.
-    resumable: false,
-  }).pipe(
-    Operation.withDurableHandler((ctx) =>
-      Effect.gen(function* () {
-        const runner = yield* ScriptRunner.Service;
-        return {
-          onInput: (input: unknown) =>
-            Effect.gen(function* () {
-              yield* Trace.write(Trace.OperationStart, {
-                key: String(op.meta.key),
-                name: op.meta.name,
-                icon: op.meta.icon,
-              });
-              // The script's own process, so what its code invokes and spawns belongs to this
-              // process rather than to whoever asked for the script.
-              const context = yield* Effect.context<Operation.ScriptRequirements>();
-              const result = yield* runner.run(Operation.scriptRequest(op, input), { context });
-              ctx.submitOutput(result);
-              ctx.succeed();
-              yield* Trace.write(Trace.OperationEnd, {
-                key: String(op.meta.key),
-                name: op.meta.name,
-                icon: op.meta.icon,
-                outcome: result.error === undefined ? 'success' : 'failure',
-                ...(result.error !== undefined ? { error: result.error } : {}),
-              });
-            }).pipe(
-              // A backend failure (no runner for the dialect, a source that will not resolve) is the
-              // deployment's fault, not the script's, so it fails the process rather than being
-              // reported as output a caller would read as the script's own error.
-              Effect.catchTag('ScriptError', (error) => Effect.die(error)),
-            ),
-        };
-      }),
-    ),
-  );
-
 const FINISHED_PROCESS_RETENTION = 200;
 
 /**
@@ -205,23 +147,6 @@ export interface Manager {
     definition: Operation.Durable<I, O, any, Rpcs>,
     options?: Process.SpawnOptions,
   ): Effect.Effect<Process.Process<I, O, Rpcs>>;
-
-  /**
-   * Runs a script operation on this runtime, as a process in this manager's own tree.
-   *
-   * The runtime runs it rather than looking a handler up: a script operation carries code, not a
-   * closure. It is a process like any other, so it has a pid, a parent, a guard (its permissions),
-   * storage, and can spawn children — a script that delegates work gets the same tree as a handler
-   * that does.
-   *
-   * Requires the runtime's script backend ({@link ScriptRunner.Service}, resolved like any other
-   * declared service); a runtime with no backend fails the process with what is missing.
-   */
-  runScript(
-    op: Operation.ScriptDefinition.Any,
-    input?: unknown,
-    options?: Process.SpawnOptions,
-  ): Effect.Effect<Operation.ScriptResult>;
 
   /**
    * Attach to an existing process.
@@ -368,14 +293,6 @@ export class Impl implements Manager {
         location?.kind === 'edge'
           ? Effect.die(new Error('A process cannot attach to a remote process.'))
           : this.attach(childPid),
-      runScript: (op, input, { location, ...options } = {}) =>
-        location?.kind === 'edge'
-          ? Effect.die(new Error('A process cannot run a script on a remote runtime.'))
-          : this.runScript(op, input, {
-              origin,
-              ...options,
-              parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
-            }),
     };
     // The handler set is always present, so an operation process can look its handler up.
     let services = Context.make(Process.ManagerService, manager).pipe(
@@ -527,22 +444,6 @@ export class Impl implements Manager {
     options?: Process.SpawnOptions,
   ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
     return this.#spawn(definition, options, undefined);
-  }
-
-  runScript(
-    op: Operation.ScriptDefinition.Any,
-    input?: unknown,
-    options?: Process.SpawnOptions,
-  ): Effect.Effect<Operation.ScriptResult> {
-    return Effect.gen({ self: this }, function* () {
-      const handle = yield* this.#spawn(
-        scriptDurable(op),
-        { name: op.meta.name ?? String(op.meta.key), ...options },
-        undefined,
-      );
-      yield* handle.submitInput(input);
-      return yield* Process.awaitOutput(handle);
-    });
   }
 
   #spawn<I, O, _Rpcs extends Rpc.Any>(

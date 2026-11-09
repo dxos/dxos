@@ -158,7 +158,7 @@ const runThroughRunner = (
     }
     return runner
       .run({
-        source: Operation.inlineScript(code, dialect),
+        source: Operation.inlineScript(code, { dialect }),
         ...(options.maxOutput !== undefined ? { maxOutput: options.maxOutput } : {}),
       })
       .pipe(

@@ -27,7 +27,7 @@ const echoRunner = (label: string): Operation.ScriptRunner => ({
 describe('script operations', () => {
   const script = Operation.makeScript({
     meta: { key: KEY, name: 'Inline Script' },
-    source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect),
+    source: Operation.inlineScript('print(1)', { dialect: Operation.ScriptDialects.Effect }),
   });
 
   test('a script operation is an operation, which is what lets `invoke` take it', ({ expect }) => {
@@ -45,7 +45,7 @@ describe('script operations', () => {
   test('an operation that declares its own output keeps it', ({ expect }) => {
     const typed = Operation.makeScript({
       meta: { key: KEY },
-      source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Plain),
+      source: Operation.inlineScript('print(1)', { dialect: Operation.ScriptDialects.Plain }),
       output: Schema.Number,
     });
     expect(Schema.decodeUnknownSync(Schema.toType(typed.output))(3)).toBe(3);
@@ -78,7 +78,7 @@ describe('Operation.scriptRequest', () => {
   test('carries the operation source, its timeout and the input', ({ expect }) => {
     const operation = Operation.makeScript({
       meta: { key: KEY, name: 'Example' },
-      source: Operation.inlineScript('print(input)', Operation.ScriptDialects.Effect),
+      source: Operation.inlineScript('print(input)', { dialect: Operation.ScriptDialects.Effect }),
       timeout: 5_000,
     });
     expect(Operation.scriptRequest(operation, { a: 1 }, { spaceId: 'SPACE' })).toEqual({
@@ -92,7 +92,7 @@ describe('Operation.scriptRequest', () => {
   test('omits an absent input rather than sending undefined', ({ expect }) => {
     const operation = Operation.makeScript({
       meta: { key: KEY },
-      source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Plain),
+      source: Operation.inlineScript('print(1)', { dialect: Operation.ScriptDialects.Plain }),
     });
     expect(Operation.scriptRequest(operation)).toEqual({ source: operation.source });
   });
@@ -101,7 +101,7 @@ describe('Operation.scriptRequest', () => {
 describe('ScriptRunner.resolveSource', () => {
   test('a snippet resolves to its own code and dialect', async ({ expect }) => {
     const resolved = await EffectEx.runPromise(
-      ScriptRunner.resolveSource(Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect)),
+      ScriptRunner.resolveSource(Operation.inlineScript('print(1)', { dialect: Operation.ScriptDialects.Effect })),
     );
     expect(resolved).toEqual({ code: 'print(1)', dialect: 'effect' });
   });
@@ -119,7 +119,7 @@ describe('ScriptRunner.byDialect', () => {
     const runner = ScriptRunner.byDialect({ plain: echoRunner('plain'), effect: echoRunner('effect') });
     const result = await EffectEx.runPromise(
       // These backends answer from the request alone, so they are handed no process at all.
-      runner.run({ source: Operation.inlineScript('print(1)', Operation.ScriptDialects.Effect) }),
+      runner.run({ source: Operation.inlineScript('print(1)', { dialect: Operation.ScriptDialects.Effect }) }),
     );
     expect(result.output).toBe('effect:print(1)');
   });
@@ -127,7 +127,9 @@ describe('ScriptRunner.byDialect', () => {
   test('fails a dialect no backend claims, naming the ones it serves', async ({ expect }) => {
     const runner = ScriptRunner.byDialect({ effect: echoRunner('effect') });
     const error = await EffectEx.runPromise(
-      runner.run({ source: Operation.inlineScript('x', Operation.ScriptDialects.Plain) }).pipe(Effect.flip),
+      runner
+        .run({ source: Operation.inlineScript('x', { dialect: Operation.ScriptDialects.Plain }) })
+        .pipe(Effect.flip),
     );
     expect(error._tag).toBe('ScriptError');
     expect(error.dialect).toBe('plain');

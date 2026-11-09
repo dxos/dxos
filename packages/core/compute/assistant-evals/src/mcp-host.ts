@@ -299,7 +299,7 @@ const dispatch = async (
         const runner = McpServer.scriptRunner(registry, host, gate, { sandbox: McpServer.inProcessScriptSandbox });
         const answer = yield* runner
           .run({
-            source: Operation.inlineScript(args.code, Operation.ScriptDialects.Effect),
+            source: Operation.inlineScript(args.code, { dialect: Operation.ScriptDialects.Effect }),
             ...(SpaceId.isValid(args.spaceId) ? { spaceId: args.spaceId } : {}),
             skillTokens: Array.isArray(args.skillTokens)
               ? args.skillTokens.filter((token): token is string => typeof token === 'string')

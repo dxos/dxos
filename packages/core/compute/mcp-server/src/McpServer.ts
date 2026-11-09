@@ -769,7 +769,7 @@ export const runScript = (
   scriptRunner(registry, host, gate, options)
     // No process is handed over: this server answers a script's calls through its own host.
     .run({
-      source: Operation.inlineScript(code, Operation.ScriptDialects.Effect),
+      source: Operation.inlineScript(code, { dialect: Operation.ScriptDialects.Effect }),
       ...(spaceId !== undefined ? { spaceId } : {}),
       skillTokens,
     })

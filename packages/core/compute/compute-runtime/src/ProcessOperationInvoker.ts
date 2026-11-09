@@ -32,6 +32,7 @@ import { RemoteRuntimeUnreachableError } from './errors.ts';
 import * as OperationProcess from './OperationProcess.ts';
 import { promptScheduler } from './prompt-scheduler.ts';
 import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
+import * as ScriptProcess from './ScriptProcess.ts';
 
 export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
 
@@ -99,7 +100,10 @@ export const make = ({
         return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
       }
       const parentThread = yield* Trace.CurrentThread;
-      const handle = yield* Process.spawn(OperationProcess.make(op), input, {
+      // A script operation has no handler to look up, so the runtime spawns the process that runs
+      // its code; every other operation spawns the process that runs its handler.
+      const durable = Operation.isScript(op) ? ScriptProcess.make(op) : OperationProcess.make(op);
+      const handle = yield* Process.spawn(durable, input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
         ...(origin !== undefined ? { origin } : {}),
@@ -202,8 +206,10 @@ export const make = ({
     options: Operation.InvokeOptions | undefined,
     detached: boolean,
   ): Effect.Effect<O> =>
-    Operation.isScript(op)
-      ? runScript(op, input, options)
+    Operation.isScript(op) && options?.on === 'edge'
+      ? options.spaceId === undefined
+        ? Effect.die(new Error(`Script operation '${op.meta.key}' requested edge execution without a spaceId.`))
+        : runScriptRemote(op, input, { ...options, spaceId: options.spaceId })
       : goesRemote(options) && options?.spaceId !== undefined && remote !== undefined
         ? invokeRemote(op, input, { ...options, spaceId: options.spaceId }, remote)
         : spawn(op, input, options, detached).pipe(
@@ -215,34 +221,18 @@ export const make = ({
           );
 
   /**
-   * A script operation's run. On EDGE it is one request to the operation host, as any other remote
-   * operation; locally the process manager runs it, which is what puts it in the process tree with a
-   * guard of its own and the ability to spawn children.
+   * A script operation's run on EDGE: one request to the operation host, as any other remote
+   * operation. Locally it needs nothing of its own — `spawn` builds the process that runs the
+   * script's code and the result comes back through {@link Process.awaitOutput} like any output.
    */
-  const runScript = <I, O>(
+  const runScriptRemote = <I, O>(
     op: Operation.ScriptDefinition.Any,
     input: I,
-    options: Operation.InvokeOptions | undefined,
+    options: Operation.InvokeOptions & { spaceId: NonNullable<Operation.InvokeOptions['spaceId']> },
   ): Effect.Effect<O> =>
-    options?.on === 'edge'
-      ? options.spaceId === undefined
-        ? Effect.die(new Error(`Script operation '${op.meta.key}' requested edge execution without a spaceId.`))
-        : remote === undefined
-          ? Effect.die(
-              new Error(`Script operation '${op.meta.key}' cannot run on EDGE: this stack has no operation host.`),
-            )
-          : (invokeRemote(op, input, { ...options, spaceId: options.spaceId }, remote) as Effect.Effect<O>)
-      : (manager.runScript(op, input, {
-          ...(origin !== undefined ? { origin } : {}),
-          ...(options?.spaceId !== undefined || options?.conversation !== undefined
-            ? {
-                environment: {
-                  ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-                  ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
-                },
-              }
-            : {}),
-        }) as Effect.Effect<O>);
+    remote === undefined
+      ? Effect.die(new Error(`Script operation '${op.meta.key}' cannot run on EDGE: this stack has no operation host.`))
+      : (invokeRemote(op, input, options, remote) as Effect.Effect<O>);
 
   const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,

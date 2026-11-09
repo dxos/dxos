@@ -752,11 +752,17 @@ export type ScriptRef = {
 /** Where a script operation's code comes from: a snippet it carries, or an ECHO object it points at. */
 export type ScriptSource = InlineScript | ScriptRef;
 
-/** A snippet source in `dialect`. */
-export const inlineScript = (code: string, dialect: ScriptDialect = ScriptDialects.TypeScript): InlineScript => ({
+/** Options {@link inlineScript} takes. */
+export type InlineScriptOptions = {
+  /** The language the snippet is written in; TypeScript when unsaid. */
+  readonly dialect?: ScriptDialect;
+};
+
+/** A snippet source. */
+export const inlineScript = (code: string, options?: InlineScriptOptions): InlineScript => ({
   _tag: 'inline',
   code,
-  dialect,
+  dialect: options?.dialect ?? ScriptDialects.TypeScript,
 });
 
 /** A source pointing at a `Script` object. */
@@ -925,7 +931,7 @@ export type ScriptProps = {
  * const result = yield* Operation.invoke(
  *   Operation.makeScript({
  *     meta: { key: DXN.make('example.hello') },
- *     source: Operation.inlineScript('yield* print("hi")', Operation.ScriptDialects.Effect),
+ *     source: Operation.inlineScript('yield* print("hi")', { dialect: Operation.ScriptDialects.Effect }),
  *   }),
  *   undefined,
  *   { on: 'local' },
@@ -953,8 +959,17 @@ export const makeScript = <const P extends Types.NoExcessProperties<ScriptProps,
     },
   }) as any;
 
-/** Whether an operation is the script kind, which a runtime runs rather than looking up a handler for. */
-export const isScript = (value: unknown): value is ScriptDefinition.Any =>
+/**
+ * Whether an operation is the script kind, which a runtime runs rather than looking up a handler for.
+ *
+ * Narrows a typed definition to the script kind WITH its own input and output types, so a runtime
+ * that branches on it keeps the operation's codecs — without them the branch could only be reconciled
+ * with a cast.
+ */
+export const isScript: {
+  <I, O>(op: Definition<I, O>): op is ScriptDefinition<I, O>;
+  (value: unknown): value is ScriptDefinition.Any;
+} = (value: unknown): value is ScriptDefinition.Any =>
   typeof value === 'object' && value !== null && ScriptDefinitionTypeId in value;
 
 /** Whether `value` names a known {@link ScriptDialect}. */
