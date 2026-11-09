@@ -26,7 +26,8 @@ describe('lattice', () => {
     expect(minor).toBe(16);
     // A pitch the settings could not show falls back, so the canvas and its form agree.
     expect(latticeGrid({ width: 32, height: 16, gutterX: 8, gutterY: 8 }, 4)).toBe(0);
-    expect(latticeGrid({ width: 4096, height: 2048, gutterX: 2048, gutterY: 2048 }, 4)).toBe(0);
+    // Too coarse a pitch takes the largest one in range that still lands on every cell edge.
+    expect(latticeGrid({ width: 4096, height: 2048, gutterX: 2048, gutterY: 2048 }, 4)).toBe(128);
     for (let index = -2; index <= 2; index++) {
       const { x, y, width, height } = cellBounds({ col: index, row: index, spanX: 2, spanY: 1 }, spec);
       for (const edge of [x, x + width, y, y + height]) {

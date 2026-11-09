@@ -24,16 +24,25 @@ export const GRID_PITCH_RANGE = { minimum: 4, maximum: 128 } as const;
 
 /**
  * The minor grid pitch whose major lines (`ratio` minor cells) run along every cell edge of the lattice: the largest
- * major cell that divides the cells and gutters, since cell edges sit at `k x pitch +/- size / 2`; 0 when no whole
- * major cell does, or its minor pitch is not a whole `GRID_PITCH_RANGE` pitch, so every caller falls back to the same grid.
+ * whole `GRID_PITCH_RANGE` pitch whose major cell divides the cells and gutters, since cell edges sit at
+ * `k x pitch +/- size / 2`; 0 when none does, so every caller falls back to the same grid.
  */
 export const latticeGrid = ({ width, height, gutterX, gutterY }: LatticeSpec, ratio: number): number => {
   const lengths = [width / 2, height / 2, gutterX, gutterY];
   if (!lengths.every((length) => Number.isInteger(length) && length > 0)) {
     return 0;
   }
-  const minor = lengths.reduce(gcd) / ratio;
-  return Number.isInteger(minor) && minor >= GRID_PITCH_RANGE.minimum && minor <= GRID_PITCH_RANGE.maximum ? minor : 0;
+  const major = lengths.reduce(gcd);
+  for (
+    let minor = Math.min(GRID_PITCH_RANGE.maximum, Math.floor(major / ratio));
+    minor >= GRID_PITCH_RANGE.minimum;
+    minor--
+  ) {
+    if (major % (minor * ratio) === 0) {
+      return minor;
+    }
+  }
+  return 0;
 };
 
 /** A shape on the lattice: its first (top-left) cell and how many cells it spans on each axis. */
