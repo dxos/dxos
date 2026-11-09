@@ -17,7 +17,8 @@ describe('Output', () => {
     // The shape `importPullRequest` returns, and the one a caller decodes with `decodeEntities`.
     expect(encoded).toEqual({ person: { '/': expect.any(String) }, imported: false });
     // `noInline` drops the target: an inlined one would carry the whole entity across the boundary.
-    expect(Reflect.get(Reflect.get(encoded as object, 'person') as object, 'target')).toBeUndefined();
+    // `Object()` rather than a cast: `encode` returns `unknown`, and it throws here if the field is absent.
+    expect(Reflect.get(Object(Reflect.get(Object(encoded), 'person')), 'target')).toBeUndefined();
     // The assertion that matters — workerd refuses a `Ref` here, which is the failure this reproduces.
     expect(() => structuredClone(encoded)).not.toThrow();
   });

@@ -9,6 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -139,7 +140,14 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     });
     const contextual = RequestContext.withConversation(
       RequestContext.withCancellation(
-        withCapabilities(HostServices.withHostServices(withOperations, scope.services), activation.capabilities),
+        withCapabilities(
+          HostServices.withHostServices(
+            withOperations,
+            scope.services,
+            activation.capabilities.getAll(Capabilities.HostServiceAdapter),
+          ),
+          activation.capabilities,
+        ),
         cancellation.signal,
       ),
       scope.conversation,

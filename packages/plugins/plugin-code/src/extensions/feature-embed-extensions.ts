@@ -13,10 +13,10 @@ import { Feature, SpecText } from '#types';
 
 import { featureEmbeds } from './feature-embeds.ts';
 
-/** The fields of a new feature's section `/feature` puts the cursor in; the description is the form's only contenteditable. */
+/** The fields of a new feature's section `/feature` puts the cursor in, each an editor bound to the feature. */
 const FIELDS = {
-  name: 'input[data-testid="name"]',
-  description: '[contenteditable="true"]',
+  name: '[data-testid="name"] [contenteditable="true"]',
+  description: '[data-testid="description"] [contenteditable="true"]',
 };
 
 export type FeatureEmbedExtensionsOptions = {
@@ -55,14 +55,9 @@ export const featureEmbedExtensions = (spec: Spec.Spec, { newName }: FeatureEmbe
         if (!Feature.instanceOf(original)) {
           return undefined;
         }
-        const { name, description, requirements, status } = original;
+        const { name, description, status } = original;
         const copy = db.add(
-          Feature.make({
-            name,
-            description,
-            status,
-            requirements: (requirements ?? []).map((requirement) => ({ ...requirement })),
-          }),
+          Feature.make({ name, description, status, requirements: Feature.getRequirements(original) }),
         );
         return Obj.getURI(copy);
       },
@@ -72,7 +67,7 @@ export const featureEmbedExtensions = (spec: Spec.Spec, { newName }: FeatureEmbe
         const feature = db.add(
           Feature.make({
             name: prose || !text ? newName : text,
-            description: prose ? text : undefined,
+            description: prose ? text : '',
             status: 'planned',
           }),
         );

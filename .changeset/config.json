@@ -75,6 +75,8 @@
       "@dxos/echo-react",
       "@dxos/echo-solid",
       "@dxos/echo-sqlite",
+      "@dxos/echo-sqlite-demo",
+      "@dxos/echo-worker",
       "@dxos/edge-client",
       "@dxos/edge-compute",
       "@dxos/effect",

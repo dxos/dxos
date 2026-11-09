@@ -230,6 +230,7 @@
     "@dxos/deus": "workspace:*",
     "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
@@ -258,6 +259,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
@@ -275,7 +277,6 @@
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
-    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",

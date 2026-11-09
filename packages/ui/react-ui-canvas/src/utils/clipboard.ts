@@ -24,7 +24,7 @@ import { type RenderList2D, type RenderLists2D, openedRecord } from '../model/in
 import { promotedBy } from './compose.ts';
 import { type SceneEdit, chainEdits, insertLink, insertNode } from './edits.ts';
 import { unionBounds } from './hit.ts';
-import { between, topZ } from './order.ts';
+import { between, topOfView } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 export type Clipboard = {
@@ -149,13 +149,14 @@ export const duplicateSelection = (
   if (!clipboard) {
     return undefined;
   }
-  let nodeZ = topZ(Object.values(scene.nodes));
-  let linkZ = topZ(Object.values(scene.links));
+  // One cursor for both kinds, so every pasted element lands above the view and above the one pasted before it.
+  let z = topOfView(scene);
+  const next = () => (z = between(z, undefined));
   return pasteFragment({
     clipboard,
     offset,
     createId,
-    nodeZ: () => (nodeZ = between(nodeZ, undefined)),
-    linkZ: () => (linkZ = between(linkZ, undefined)),
+    nodeZ: next,
+    linkZ: next,
   });
 };

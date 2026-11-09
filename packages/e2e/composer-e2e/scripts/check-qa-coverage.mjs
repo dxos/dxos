@@ -36,11 +36,13 @@ const PACKAGE = 'composer-e2e';
 const SPEC_FILES = {
   '': 'packages/apps/composer-app/spec/APP.mdl',
   'review': 'packages/plugins/plugin-review/PLUGIN.mdl',
+  'sheet': 'packages/plugins/plugin-sheet/PLUGIN.mdl',
   'table': 'packages/plugins/plugin-table/PLUGIN.mdl',
   'github': 'packages/plugins/plugin-github/PLUGIN.mdl',
   'inbox': 'packages/plugins/plugin-inbox/PLUGIN.mdl',
   'markdown': 'packages/plugins/plugin-markdown/PLUGIN.mdl',
   'presenter': 'packages/plugins/plugin-presenter/PLUGIN.mdl',
+  'projects': 'packages/plugins/plugin-projects/PLUGIN.mdl',
 };
 
 /**

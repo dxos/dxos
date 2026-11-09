@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
@@ -27,7 +28,7 @@ export type CreateFunctionProps = CreateShapeProps<FunctionShape>;
 export const createFunction = (props: CreateFunctionProps) =>
   createShape<FunctionShape>({
     type: 'function',
-    size: { width: 256, height: 192 },
+    size: { width: 4 * MAJOR_GRID, height: 3 * MAJOR_GRID },
     ...props,
   });
 
