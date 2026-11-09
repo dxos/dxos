@@ -508,7 +508,7 @@ describe('json-to-effect', () => {
         title: 'Email',
         description: 'Email address',
         // TODO(dmaretskyi): omit pattern.
-        pattern: '^[a-zA-Z0-9._%+\'-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+        pattern: "^[a-zA-Z0-9._%+'-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
       });
     });
   });
