@@ -23,7 +23,7 @@ describe('mdl lint', () => {
     expect(
       messages(
         [
-          block('binding DATA_SERVICE: Reads and writes space data.\n  kind: service'),
+          block('binding DATA_SERVICE: Reads and writes space data.\n  type: Service<DataService.Service>'),
           block(
             "actor Scheduler: One space's trigger dispatcher.\n  binding: TRIGGERS_DISPATCHER\n  key: the space id",
           ),

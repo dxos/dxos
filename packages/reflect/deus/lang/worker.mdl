@@ -20,8 +20,8 @@ Together with `service` (an RPC interface, `org.dxos.mdl.service@1.0`) and `tabl
 
 The vocabulary is Cloudflare's, since that is the runtime EDGE workers run on, but each block names a
 role rather than a product: an `actor` is a Durable Object class, a `keyspace` is any key-value or blob
-layout, and a `binding`'s `kind` is where the product name lives. A block type is one word, so a Durable
-Object could not be `durable-object` in any case.
+layout, and a `binding`'s `type` is where the runtime's own type names live. A block type is one word, so a
+Durable Object could not be `durable-object` in any case.
 
 The four are a dialect rather than `ext` blocks a spec defines for itself because the linter accepts only
 the block types it knows: a type one spec defines fails lint there, and every other worker's spec would
@@ -41,10 +41,19 @@ redefine it. Defining them once lets every EDGE worker's spec use the same four.
 - **A `binding` is one name in the worker's environment.** The identifier is the name exactly as the
   worker reads it (`DATA_SERVICE`, `OPERATION_ROUTING`); the inline prose says what the worker uses it
   for — the reason it exists, not a restatement of its name.
-  - `kind:` is the resource behind it: `service` (a service binding, with its entrypoint), `actor` (a
-    Durable Object namespace), `kv`, `r2`, `d1`, `loader` (a Worker Loader), `dispatch` (a
-    Workers-for-Platforms namespace), `email`, `analytics`, `rate-limit`, `version-metadata`, `var` or
-    `secret`.
+  - `type:` is the type the worker's code sees when it reads the binding, as a `TypeExpr`, so a reader
+    knows exactly what a value may be rather than only what sort of thing it is:
+    - **a resource binding** is the runtime's own type for it: `Service<Interface>` for a service binding,
+      naming the RPC interface its entrypoint implements; `DurableObjectNamespace<Class>` for an actor
+      namespace; and `KVNamespace`, `R2Bucket`, `D1Database`, `WorkerLoader`, `DispatchNamespace`,
+      `SendEmail`, `AnalyticsEngineDataset`, `RateLimit` or `WorkerVersionMetadata` for the rest;
+    - **a variable** is its value type, as narrow as the code reads it: a union of literals when it takes
+      one of a fixed set (`'operation-service' | 'plugins'`), a named `type` block when it is structured
+      JSON (`EdgeConfig`), and `number` or `string` otherwise, with a comment for what the type cannot
+      say — a unit (`number  # ms`) or an encoding (`string  # comma-separated plugin keys`);
+    - **a secret** is `Secret<T>`: its value type, marked as one only an operator sets and no
+      configuration file holds. It is the one type this dialect adds, because a secret's value is a
+      string like a variable's but who may see it is not.
   - `target:` names what it points at: the service and entrypoint, the bucket, the namespace, or the
     actor class and the worker that defines it.
   - `envs:` lists, one line per environment, only where the value or target differs between them. A
@@ -92,7 +101,7 @@ ext binding
     One name in a worker's environment: a service, an actor namespace, a store, a variable or a
     secret. The identifier is the name as the worker reads it; the inline prose is what it is for.
   fields:
-    kind: service | actor | kv | r2 | d1 | loader | dispatch | email | analytics | rate-limit | version-metadata | var | secret
+    type: TypeExpr              # what the code sees: `Service<I>`, `DurableObjectNamespace<C>`, a store type, a value type, `Secret<T>`
     target?: Prose              # what it points at: service + entrypoint, bucket, namespace, actor class + worker
     envs?: FieldMap             # `env: value` for each environment where it differs
     reads?: Prose               # the code symbol that declares and reads it
@@ -100,7 +109,7 @@ ext binding
   inline-prose: true
   syntax: |
     binding OPERATION_ROUTING: Where platform operations run.
-      kind: var
+      type: 'operation-service' | 'plugins'
       envs:
         dev: plugins
         production: operation-service
