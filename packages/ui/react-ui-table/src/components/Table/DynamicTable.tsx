@@ -57,8 +57,10 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   // Keyed on the properties' CONTENTS, not their identity: a caller that builds the array inline
   // rebuilds the table — and with it every cell — on each of its own renders, which reads as a flicker
   // whenever something outside the table changes (a selection, a filter). The whole property is in the
-  // key, so a changed title, size, sort or config still rebuilds.
-  const propertiesKey = useMemo(() => JSON.stringify(properties ?? []), [properties]);
+  // key, so a changed title, size, sort or config still rebuilds. Absent is its own key rather than
+  // `[]`, since both `getBaseSchema` and `makeDynamicTable` branch on whether properties were given
+  // at all, so the two produce different tables.
+  const propertiesKey = useMemo(() => (properties ? JSON.stringify(properties) : 'absent'), [properties]);
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
   const { type } = useMemo(
     () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, type: typeProp }),

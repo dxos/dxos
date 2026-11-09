@@ -52,6 +52,8 @@ const refProperties = (type: Type.AnyObj): string[] =>
 export type SyncState = {
   /** The highest version applied from the store. */
   version: number;
+  /** Which incarnation of the store that version belongs to; absent in state saved before the field. */
+  incarnation?: string;
   /** Per-key fingerprint of what was last in agreement with the store. */
   hashes: Record<string, string>;
 };
@@ -64,7 +66,11 @@ export const loadState = (slug: string): SyncState => {
     if (raw) {
       const parsed = JSON.parse(raw) as SyncState;
       if (Number.isSafeInteger(parsed?.version)) {
-        return { version: parsed.version, hashes: parsed.hashes ?? {} };
+        return {
+          version: parsed.version,
+          ...(typeof parsed.incarnation === 'string' && { incarnation: parsed.incarnation }),
+          hashes: parsed.hashes ?? {},
+        };
       }
     }
   } catch {
@@ -310,15 +316,29 @@ const receive = async (
   );
   await applyRecords(db, types, response.records, incoming);
 
-  // A version below ours means the store was reset — the graph expired and its alarm dropped
-  // everything — so nothing it once agreed to survives: forget the agreement and let the next push
-  // send the whole local graph again, rather than trusting hashes for rows that no longer exist.
-  const reset = response.version < state.version;
+  // A store that is not the one our version came from — the graph expired and its alarm dropped
+  // everything — has nothing it once agreed to, so forget the agreement and let the next push send
+  // the whole local graph again rather than trusting hashes for rows that no longer exist.
+  //
+  // The incarnation is what shows this. A lower version does too, but only while no other peer has
+  // written: one that pushed the new store past our saved version hides the expiry behind a version
+  // that looks like progress. It remains the fallback for a store that does not name an incarnation.
+  const incarnation = response.incarnation;
+  const reset =
+    incarnation !== undefined && state.incarnation !== undefined
+      ? incarnation !== state.incarnation
+      : response.version < state.version;
   const hashes: Record<string, string> = reset ? {} : { ...state.hashes };
   for (const record of [...response.records, ...sent]) {
     hashes[record.key] = fingerprint(record);
   }
-  saveState(slug, { version: response.version, hashes });
+  // This response was filtered against a version belonging to the old store, so whatever the new one
+  // holds at or below it was never sent: go back to 0 and the next exchange reads it whole.
+  saveState(slug, {
+    version: reset ? 0 : response.version,
+    ...(incarnation !== undefined && { incarnation }),
+    hashes,
+  });
   return { received: incoming.length, reset };
 };
 
@@ -347,14 +367,13 @@ export const sync = async (db: SqliteDatabase, slug: string, types: SyncTypes): 
     return { sent: changed.length, received, expiresAt: body.expiresAt };
   }
 
-  // The store was reset: this response told us the agreement is void, and the records it carried
-  // were from the empty store, so the local graph is still only here. Send it now rather than
-  // leaving it for whenever something calls again.
+  // The store was reset: this response told us the agreement is void, and it was filtered against a
+  // version belonging to the store that is gone, so it carried neither what the new one already
+  // holds nor any sign that the local graph is now only here. One more trip, from version 0, both
+  // reads the new store whole and sends the local graph — rather than leaving either for whenever
+  // something calls again.
   const after = loadState(slug);
   const { local: resent, changed: all } = await changesSince(db, types, after);
-  if (all.length === 0) {
-    return { sent: changed.length, received, expiresAt: body.expiresAt };
-  }
   const retry = await fetch(`/api/space/${slug}/sync`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -365,9 +384,9 @@ export const sync = async (db: SqliteDatabase, slug: string, types: SyncTypes): 
     throw new Error(`Sync failed: ${retry.status}${detail ? ` ${detail}` : ''}`);
   }
   const second = (await retry.json()) as SyncResponse;
-  await receive(db, slug, types, after, second, resent, all);
+  const { received: again } = await receive(db, slug, types, after, second, resent, all);
 
-  return { sent: changed.length + all.length, received, expiresAt: second.expiresAt };
+  return { sent: changed.length + all.length, received: received + again, expiresAt: second.expiresAt };
 };
 
 /** How long to wait before a reconnect, growing to a ceiling so a worker that is down is not hammered. */
@@ -470,6 +489,9 @@ export const connect = (
         const { received, reset } = await receive(db, slug, types, state, message, local, []);
         onSync?.({ sent: 0, received, expiresAt: message.expiresAt });
         if (reset) {
+          // The agreement is void: read the new store from the start (`receive` put the version back
+          // to 0), then send the local graph, which it has never seen.
+          socket?.send(JSON.stringify({ type: 'hello', since: loadState(slug).version } satisfies ClientMessage));
           void push();
         }
       });

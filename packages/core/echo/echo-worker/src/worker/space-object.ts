@@ -65,6 +65,22 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
     this.#ready = true;
   }
 
+  /**
+   * Names this incarnation of the store, so a client can tell that the one it is talking to is not
+   * the one its saved version came from.
+   *
+   * Expiry drops the storage and versions start again from 0, which the version alone cannot show:
+   * another peer may already have pushed the new store past the version a returning client saved.
+   */
+  #incarnation(): string {
+    let incarnation = this.ctx.storage.kv.get<string>('incarnation');
+    if (incarnation === undefined) {
+      incarnation = crypto.randomUUID();
+      this.ctx.storage.kv.put('incarnation', incarnation);
+    }
+    return incarnation;
+  }
+
   /** Set once, on the first write, so a graph expires 24h after it was created. */
   #expiresAt(): number {
     let createdAt = this.ctx.storage.kv.get<number>('createdAt');
@@ -246,6 +262,7 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
 
     return {
       version: this.ctx.storage.kv.get<number>('version') ?? 0,
+      incarnation: this.#incarnation(),
       expiresAt: this.#expiresAt(),
       records: rows.map((row): SyncRecord => ({
         key: row.key,
@@ -267,6 +284,7 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
     const message = JSON.stringify(
       this.#message({
         version: this.ctx.storage.kv.get<number>('version') ?? 0,
+        incarnation: this.#incarnation(),
         records,
         expiresAt: this.#expiresAt(),
       }),

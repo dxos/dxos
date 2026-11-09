@@ -58,6 +58,14 @@ export const SOCKET_PATH = 'socket';
 export type SyncResponse = {
   /** The store's highest version after applying the request. */
   readonly version: number;
+  /**
+   * Which incarnation of the store that version belongs to, minted with the store and dropped with it.
+   *
+   * A graph expires and its alarm drops the store, so versions start again from 0 — which the version
+   * alone cannot show, since another peer may already have pushed the new store past the version a
+   * returning client saved. Absent from a store that predates the field.
+   */
+  readonly incarnation?: string;
   /** Every record above the request's `since`, including the ones just applied. */
   readonly records: readonly SyncRecord[];
   /** When this graph is deleted, as an epoch millisecond value. */
