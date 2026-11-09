@@ -60,6 +60,7 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@effect/vitest": "catalog:",
@@ -67,6 +68,7 @@
   },
   "peerDependencies": {
     "@dxos/assistant": "workspace:^",
+    "@dxos/assistant-toolkit": "workspace:^",
     "effect": "catalog:"
   }
 }

@@ -4574,6 +4574,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../assistant-toolkit
       '@dxos/link':
         specifier: workspace:*
         version: link:../link

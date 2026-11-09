@@ -12,5 +12,5 @@ export { type BindingsContext, type Dialect, type SandboxOperation } from './Dia
 export { EffectDialect } from './dialect-effect.ts';
 export { PlainDialect } from './dialect-plain.ts';
 export { EVAL_TOOL_NAME, EvalTool, type EvaluateOptions, evaluate, makeEvalToolkit } from './eval-tool.ts';
-export { describeTypes } from './fields.ts';
+export { describeTypes } from '@dxos/assistant/Describe';
 export { type CodeModeOptions, makeCodeModeTurnProducer, projectOperations } from './producer.ts';

@@ -10,10 +10,10 @@ import { latticeConstrain } from './lattice.ts';
 /**
  * A 2D layout's mode, from its own fields: a layout with `constraints` re-relates a shape it drops and re-places every
  * shape by them, writing the new constraints in the same batch (the solver owns placement, so snapping does not free
- * it); otherwise a lattice snaps every frame onto its cells while snapping is on, and a dynamic layout
+ * it); otherwise a lattice snaps every frame onto its cells while snapping to the lattice is on, and a dynamic layout
  * (`arrange: dynamic`) pins what is moved and re-places the rest when its graph changes.
  */
-export const constrain2D: ConstrainIntent = (layout, intent, { snap }) => {
+export const constrain2D: ConstrainIntent = (layout, intent, { snap, lattice = true }) => {
   if (layout.dim !== '2d') {
     return intent;
   }
@@ -26,6 +26,6 @@ export const constrain2D: ConstrainIntent = (layout, intent, { snap }) => {
         }
       : constrained?.intent;
   }
-  const snapped = layout.lattice && snap ? latticeConstrain(layout, intent) : intent;
+  const snapped = layout.lattice && snap && lattice ? latticeConstrain(layout, intent) : intent;
   return snapped && dynamicConstrain(layout, snapped);
 };

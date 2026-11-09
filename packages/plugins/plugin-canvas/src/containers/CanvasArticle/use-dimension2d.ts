@@ -13,6 +13,7 @@ import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type Camera, type CanvasServices, currentLookId } from '@dxos/react-ui-canvas';
 import { type EditorDisplay, createConfig2D } from '@dxos/react-ui-canvas-editor';
+import { type ThemeContextValue, useThemeContext } from '@dxos/react-ui/Theme';
 import { type Node, isViewNode } from '@dxos/scene';
 
 import { generatorCompiler, objectRef, parseLinkedViewId } from '#model';
@@ -27,8 +28,8 @@ import { canvasViewAspect } from './view-state.ts';
 /** The camera a 2D viewer's camera bar resets to: the scene's origin at 1:1. */
 const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
 
-/** The theme a canvas draws when neither it nor the app names one. */
-const FALLBACK_THEME = 'flat';
+/** The theme a canvas draws when neither it nor the app names one: Glass in dark mode, else Flat. */
+const fallbackTheme = (mode: ThemeContextValue['themeMode']): string => (mode === 'dark' ? 'glass-night' : 'flat');
 
 /** The grid a drawing shows when the panel turns one on without naming a kind. */
 const DEFAULT_GRID_KIND = 'lines';
@@ -72,6 +73,7 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   const generators = useCanvasGenerators(db);
   const library = useCanvasLibrary('2d');
   const appSettings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
+  const { themeMode } = useThemeContext();
   // The Properties form's host additions, over the views the 2D canvas holds.
   const useProperties = useCallback(
     (services: CanvasServices) =>
@@ -106,7 +108,7 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   const backgroundGrid = settings?.backgroundGrid ?? 'none';
   const display = useMemo<EditorDisplay>(
     () => ({
-      theme: theme ?? appSettings.theme ?? FALLBACK_THEME,
+      theme: theme ?? appSettings.theme ?? fallbackTheme(themeMode),
       themeOverride: theme,
       grid: backgroundGrid !== 'none',
       // The kind the drawing stores, so the display panel marks the one it draws rather than always the lines.
@@ -115,7 +117,7 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
       guides: guides ?? true,
       axes: axes ?? false,
     }),
-    [theme, backgroundGrid, appSettings.theme, snap, guides, axes],
+    [theme, backgroundGrid, appSettings.theme, themeMode, snap, guides, axes],
   );
   const onDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => {

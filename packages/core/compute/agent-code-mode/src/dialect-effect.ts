@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
+import { describeInput, describeTypes } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, URI } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -20,10 +21,8 @@ import {
   type SandboxOperation,
   renderOperation,
   renderTypes,
-  renderTypeSummary,
 } from './Dialect.ts';
 import { type DocEntry, STATIC_DOCS, loadDocs } from './docs/index.ts';
-import { describeInput, describeTypes } from './fields.ts';
 
 /**
  * The repo's own ECHO API, written as an Effect program: `yield* Database.query(Filter.type(...)).run`.
@@ -82,7 +81,7 @@ export const EffectDialect: Dialect = {
       /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
       catalog: renderCatalog({
         operations,
-        types: describeTypes(Context.get(runtime, Database.Service).db.registry),
+        types: describeTypes(Context.get(runtime, Database.Service).db),
       }),
 
       /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
@@ -137,7 +136,7 @@ export const EffectDialect: Dialect = {
     Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
     a function\` and costs a call.
 
-    ${renderTypeSummary(types, ({ dxn }) => dxn, "`DOCS['catalog/types.md']`")}
+    ${renderTypes(types, ({ dxn }) => dxn)}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
 
@@ -212,11 +211,14 @@ export const fromLegacyEchoDXN = (ref: string): URI.URI => {
 };
 
 const resolveWith = (operations: readonly SandboxOperation[]) => {
+  // Keyed without the `dxn:` prefix: the Skill Manager reports an operation by its registry key, which may omit it.
   const definitions = new Map(
-    operations.flatMap(({ definition }) => (definition ? [[operationKey(definition), definition] as const] : [])),
+    operations.flatMap(({ definition }) =>
+      definition ? [[bareKey(operationKey(definition)), definition] as const] : [],
+    ),
   );
   return (ref: URI.URI | Ref.Ref<Obj.Unknown>, schema?: Type.AnyEntity) => {
-    const definition = typeof ref === 'string' ? definitions.get(ref) : undefined;
+    const definition = typeof ref === 'string' ? definitions.get(bareKey(ref)) : undefined;
     if (definition !== undefined) {
       return Effect.succeed(definition);
     }
@@ -225,10 +227,12 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
   };
 };
 
+const bareKey = (key: string): string => key.replace(/^dxn:/, '');
+
 const renderEffectOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
 
-  The skills above describe their capabilities as tools; in code mode they are NOT tools. Resolve an
+  The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. Resolve an
   operation by its DXN and invoke it the way any other DXOS code does (\`DOCS['operations.md']\` has
   the details):
 
@@ -243,7 +247,7 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
   reference wins. Most of what an operation does to one object is a line of \`Obj\`/\`Database\`
   code; prefer that.
 
-  ${renderOperationList(operations, briefDescription)}
+  ${renderOperationList(operations)}
 `;
 
 /** The tools no operation backs, which `Tools` binds by name; nothing when there are none. */
@@ -262,17 +266,14 @@ const renderEffectTools = (operations: readonly SandboxOperation[]): string => {
 };
 
 /** One line per operation backed by a definition, naming the DXN it resolves by. */
-const renderOperationList = (
-  operations: readonly SandboxOperation[],
-  describe: (description: string | undefined) => string | undefined = (description) => description,
-): string =>
+const renderOperationList = (operations: readonly SandboxOperation[]): string =>
   operations
     .flatMap((operation) => {
       const { definition } = operation;
       return definition
         ? [
             renderOperation(
-              { ...operation, description: describe(operation.description) },
+              operation,
               () => `yield* Database.resolve('${operationKey(definition)}')`,
               describeInput(definition.input),
             ),
@@ -280,17 +281,3 @@ const renderOperationList = (
         : [];
     })
     .join('\n');
-
-/** Longest operation description the prompt carries; `catalog/operations.md` has every one in full. */
-const MAX_PROMPT_DESCRIPTION = 800;
-
-/** A description cut to {@link MAX_PROMPT_DESCRIPTION} at a paragraph or sentence end, saying where the rest is. */
-const briefDescription = (description: string | undefined): string | undefined => {
-  if (description === undefined || description.length <= MAX_PROMPT_DESCRIPTION) {
-    return description;
-  }
-  const head = description.slice(0, MAX_PROMPT_DESCRIPTION);
-  // Descriptions are hard-wrapped, so a single line break can fall mid-sentence.
-  const end = Math.max(head.lastIndexOf('\n\n'), head.lastIndexOf('. ') + 1, head.lastIndexOf('.\n') + 1);
-  return `${(end > MAX_PROMPT_DESCRIPTION / 2 ? head.slice(0, end) : head).trimEnd()} … [cut; \`DOCS['catalog/operations.md']\` has the full text]`;
-};
