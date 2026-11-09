@@ -44,7 +44,14 @@ import {
   useSceneWheel,
   useViewport,
 } from '../../hooks/index.ts';
-import { type ThemeChoice, chooseTheme, defaultThemeRegistry, keyAction, neuVars } from '../../model/index.ts';
+import {
+  type ConstrainContext,
+  type ThemeChoice,
+  chooseTheme,
+  defaultThemeRegistry,
+  keyAction,
+  neuVars,
+} from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
@@ -86,8 +93,8 @@ export const CanvasRoot = ({
   ...props
 }: CanvasRootProps) => {
   const registry = useRegistry();
-  // Read when a write is checked, so the view's snap toggle reaches the mode without rebuilding the store.
-  const snapRef = useRef<() => boolean>(() => true);
+  // Read when a write is checked, so the view's snap and lattice toggles reach the mode without rebuilding the store.
+  const contextRef = useRef<() => ConstrainContext>(() => ({ snap: true }));
   const {
     store,
     root,
@@ -96,7 +103,7 @@ export const CanvasRoot = ({
     document,
     scene,
     constrain,
-    snap: () => snapRef.current(),
+    context: () => contextRef.current(),
     onIntent,
     onModelIntent,
     onTransaction,
@@ -111,7 +118,7 @@ export const CanvasRoot = ({
       {...props}
       store={store}
       root={root}
-      snapRef={snapRef}
+      contextRef={contextRef}
       preview={preview}
       lattice={lattice}
     />
@@ -126,14 +133,14 @@ type CanvasEngineProps = Omit<
 > & {
   store: DrawState;
   root: ViewId;
-  snapRef: { current: () => boolean };
+  contextRef: { current: () => ConstrainContext };
 } & Pick<UseDrawSceneOptions, 'lattice'> & { preview: UseDrawSceneOptions['constrain'] };
 
 const CanvasEngine = ({
   classNames,
   store,
   root,
-  snapRef,
+  contextRef,
   preview,
   lattice,
   capabilities: capabilitiesProp,
@@ -194,7 +201,8 @@ const CanvasEngine = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  snapRef.current = () => registry.get(atoms.snap);
+  // A lattice scene snaps to its cells while they are drawn (its guides), otherwise to the grid.
+  contextRef.current = () => ({ snap: registry.get(atoms.snap), lattice: registry.get(atoms.guides) });
   const history = useCanvasHistory({ registry, atoms, store });
   const draw = useDrawScene({
     store,
