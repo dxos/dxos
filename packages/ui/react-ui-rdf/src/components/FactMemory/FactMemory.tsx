@@ -230,16 +230,12 @@ const FactMemoryPrior = ({ classNames, fact }: FactMemoryPriorProps) => {
   const { assertion, factuality, attribution } = fact;
   return (
     <div className={mx(styles.priorFact(), classNames)}>
-      <span className={styles.priorTriple()}>
-        {formatTerm(assertion.subject)} <span className={styles.priorPredicate()}>{assertion.predicate}</span>{' '}
-        {formatTerm(assertion.object)}
-      </span>
-      <span className={styles.priorMeta()}>
-        <Tag.Tag hue={factualityColor(factuality.value)}>{factuality.value}</Tag.Tag>{' '}
-        {[attribution.agentLabel ?? attribution.agent, formatDate(attribution.generatedAtTime)]
-          .filter(Boolean)
-          .join(' · ')}
-      </span>
+      <span className={styles.priorSubject()}>{formatTerm(assertion.subject)}</span>
+      <span className={styles.priorPredicate()}>{assertion.predicate}</span>
+      <span className={styles.priorObject()}>{formatTerm(assertion.object)}</span>
+      <Tag.Tag hue={factualityColor(factuality.value)}>{factuality.value}</Tag.Tag>
+      <span className={styles.priorAgent()}>{attribution.agentLabel ?? attribution.agent}</span>
+      <span className={styles.priorDate()}>{formatDate(attribution.generatedAtTime)}</span>
     </div>
   );
 };

@@ -19,14 +19,24 @@ const factMemoryStyles = tv({
 
     // What the store already knew.
     memoryList: 'flex flex-col gap-2 py-1',
-    entity: 'shrink-0 flex flex-col dx-card-surface border border-separator-subtle rounded-sm overflow-hidden',
-    entityHeader: 'flex items-center justify-between gap-2 px-3 py-1',
+    /*
+     * The card owns the column track sizes and the inline padding, and each row is a `subgrid` across them, so
+     * subjects, predicates, objects and dates line up down the card however wide any one of them is. The padding
+     * has to sit here rather than on a row: a subgrid item's tracks start inside its own padding box, so a row
+     * that padded itself would step out of the card's columns.
+     */
+    entity:
+      'shrink-0 grid grid-cols-[auto_auto_minmax(0,1fr)_auto_auto_auto] gap-x-2 px-3 py-1 dx-card-surface border border-separator-subtle rounded-sm overflow-hidden',
+    entityHeader: 'col-span-full flex items-center justify-between gap-2 pb-1',
     entityName: 'font-medium truncate',
     entityCount: 'text-xs text-fg-subtle tabular-nums shrink-0',
-    priorFact: 'grid grid-cols-[1fr_auto] items-baseline gap-2 px-3 py-0.5 text-sm',
-    priorTriple: 'truncate',
-    priorPredicate: 'text-fg-muted',
-    priorMeta: 'text-xs text-fg-subtle whitespace-nowrap',
+    priorFact: 'col-span-full grid grid-cols-subgrid items-baseline py-0.5 text-sm',
+    priorSubject: 'truncate',
+    priorPredicate: 'text-fg-muted truncate',
+    priorObject: 'truncate',
+    priorAgent: 'text-xs text-fg-subtle truncate',
+    // Dates are a column of digits read against each other, so they take the figures that align.
+    priorDate: 'text-xs text-fg-subtle tabular-nums whitespace-nowrap',
   },
 });
 
