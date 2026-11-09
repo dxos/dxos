@@ -76,29 +76,26 @@ export interface Dialect {
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
 export type InstructionsContext = {
   readonly operations: readonly SandboxOperation[];
-  readonly types: readonly SandboxType[];
   /**
-   * The model looks types and operations up through the Skill Manager rather than reading them here, as code mode's
-   * turns do: `types` is then empty, and `operations` holds only those the prompt states.
+   * The registered types, listed in the types section. Absent in code mode's turns, where the model looks them up with
+   * the Skill Manager's `queryTypes`.
    */
-  readonly discovery?: boolean;
+  readonly types?: readonly SandboxType[];
 };
-
-/** The types section when the model looks types up instead (see {@link InstructionsContext.discovery}). */
-export const DISCOVERED_TYPES =
-  "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`.";
 
 /**
  * The types section of the API reference, shared by the dialects. `name` renders the identifier a
  * dialect's code names a type by — its typename, or the DXN it resolves.
  */
 export const renderTypes = (
-  types: readonly SandboxType[],
+  types: readonly SandboxType[] | undefined,
   name: (type: SandboxType) => string = ({ typename }) => typename,
 ): string =>
-  types.length === 0
-    ? '### Types\n\nNo types are registered.'
-    : trim`
+  types === undefined
+    ? "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`."
+    : types.length === 0
+      ? '### Types\n\nNo types are registered.'
+      : trim`
       ### Types
 
       Every registered type and its fields (\`?\` marks an optional field). This is the whole schema —

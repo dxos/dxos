@@ -11,8 +11,8 @@ comes back to it.
   dialect, with the code in a Web Worker on its own ECHO client (`composer-app/src/plugin-defs.tsx`).
   Without the chunk or a client it falls back to tool calling, never to running code in the page.
 - **`dx eval`**: runs one program in either dialect. `dx eval --instructions` prints the API
-  reference with the profile's types and operations listed, which an agent finds through discovery
-  instead.
+  reference with the profile's types and operations listed, which an agent looks up through the
+  Skill Manager instead.
 - **`assistant-evals`**: `code-mode.eval.ts` runs the same tasks with tool calling and both dialects.
 
 ## One turn
@@ -122,6 +122,6 @@ The model looks the rest up from code:
 
 `code-mode.test.ts` drives real agent turns from recorded model responses under `.store/`:
 `DX_RUN_MODEL_FIXTURE_TESTS=1` replays them, and `DX_UPDATE_MODEL_FIXTURES=1` with
-`DX_ANTHROPIC_API_KEY` re-records a whole file. `discovery.test.ts` and `producer.test.ts` drive
-turns with a scripted model, and the other tests need no model. The Skill Manager's lookups are
+`DX_ANTHROPIC_API_KEY` re-records a whole file. `producer.test.ts` and `describe.test.ts` drive turns
+with a scripted model, and the other tests need no model. The Skill Manager's lookups are
 tested in `@dxos/assistant-toolkit` (`skill-manager/lookup.test.ts`).

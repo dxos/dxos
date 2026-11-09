@@ -16,7 +16,6 @@ import { type HintSyntax, makeDescriber } from './describe.ts';
 import {
   type BindingsContext,
   type Dialect,
-  DISCOVERED_TYPES,
   type InstructionsContext,
   NO_OPERATIONS,
   type SandboxOperation,
@@ -90,7 +89,7 @@ export const EffectDialect: Dialect = {
     };
   },
 
-  instructions: ({ operations, types, discovery }: InstructionsContext) => trim`
+  instructions: ({ operations, types }: InstructionsContext) => trim`
     ## Code mode
 
     You have exactly one tool, \`eval\`. Its \`code\` is the body of an \`Effect.gen\` generator run
@@ -137,7 +136,7 @@ export const EffectDialect: Dialect = {
     Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
     a function\` and costs a call.
 
-    ${discovery ? DISCOVERED_TYPES : renderTypes(types, ({ dxn }) => dxn)}
+    ${renderTypes(types, ({ dxn }) => dxn)}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
 

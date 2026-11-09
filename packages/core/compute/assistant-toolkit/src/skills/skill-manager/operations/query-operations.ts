@@ -38,11 +38,11 @@ export default QueryOperations.pipe(
       );
       if (keys !== undefined) {
         return candidates
-          .filter(({ row }) => keys.some((key) => sameKey(key, row.key) || key === row.tool))
+          .filter(({ listed }) => keys.some((key) => sameKey(key, listed.key) || key === listed.tool))
           .map(withInput);
       }
-      return ranked(candidates, query, ({ row }) => [row.key, row.name, row.description, row.skill]).map(({ row }) =>
-        brief(row),
+      return ranked(candidates, query, ({ listed }) => [listed.key, listed.name, listed.description, listed.skill]).map(
+        ({ listed }) => brief(listed),
       );
     }),
   ),

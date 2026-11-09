@@ -14,7 +14,6 @@ import { type HintSyntax, makeDescriber } from './describe.ts';
 import {
   type BindingsContext,
   type Dialect,
-  DISCOVERED_TYPES,
   type InstructionsContext,
   NO_OPERATIONS,
   type SandboxOperation,
@@ -131,7 +130,7 @@ export const PlainDialect: Dialect = {
     };
   },
 
-  instructions: ({ operations, types, discovery }: InstructionsContext) => trim`
+  instructions: ({ operations, types }: InstructionsContext) => trim`
     ## Code mode
 
     You have exactly one tool, \`eval\`, which runs the body of an async JavaScript function against
@@ -166,7 +165,7 @@ export const PlainDialect: Dialect = {
       an id or a URI string: \`await make('example.com/type/Task', { title: 'Review', owner: ref(person) })\`.
       Where an operation's input takes references, pass \`ref(obj)\` too.
 
-    ${discovery ? DISCOVERED_TYPES : renderTypes(types.filter(({ kind }) => kind === 'object'))}
+    ${renderTypes(types?.filter(({ kind }) => kind === 'object'))}
 
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,

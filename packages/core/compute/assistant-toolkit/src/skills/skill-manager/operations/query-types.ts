@@ -11,7 +11,7 @@ import { Database } from '@dxos/echo';
 import { ranked } from './catalog.ts';
 import { QueryTypes } from './definitions.ts';
 
-const typeRow = ({ typename, dxn, kind }: TypeDescription) => ({ typename, dxn, kind });
+const listedType = ({ typename, dxn, kind }: TypeDescription) => ({ typename, dxn, kind });
 
 export default QueryTypes.pipe(
   Operation.withHandler(
@@ -21,9 +21,11 @@ export default QueryTypes.pipe(
       if (typenames !== undefined) {
         return types
           .filter(({ typename, dxn }) => typenames.includes(typename) || typenames.includes(dxn))
-          .map((type) => ({ ...typeRow(type), fields: renderFields(type.fields) }));
+          .map((type) => ({ ...listedType(type), fields: renderFields(type.fields) }));
       }
-      return ranked(types, query, ({ typename, fields }) => [typename, ...fields.map(({ name }) => name)]).map(typeRow);
+      return ranked(types, query, ({ typename, fields }) => [typename, ...fields.map(({ name }) => name)]).map(
+        listedType,
+      );
     }),
   ),
 );

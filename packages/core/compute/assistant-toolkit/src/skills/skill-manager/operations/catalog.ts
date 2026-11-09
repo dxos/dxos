@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { Obj } from '@dxos/echo';
 
-import type { OperationRow, SkillRow } from './definitions.ts';
+import type { ListedOperation, ListedSkill } from './definitions.ts';
 
 /** The skills enabled in this conversation, or none where it has no binder. */
 export const enabledSkills: Effect.Effect<Skill.Skill[], never, Harness.HarnessService> = Harness.binder.pipe(
@@ -36,7 +36,7 @@ export const knownSkills = (registered: readonly Skill.Skill[], enabled: readonl
     left.name.localeCompare(right.name),
   );
 
-export const skillRow = (skill: Skill.Skill, enabled: boolean): SkillRow => ({
+export const listedSkill = (skill: Skill.Skill, enabled: boolean): ListedSkill => ({
   key: skillKey(skill),
   name: skill.name,
   ...(skill.description === undefined ? {} : { description: String(skill.description) }),
@@ -44,8 +44,8 @@ export const skillRow = (skill: Skill.Skill, enabled: boolean): SkillRow => ({
   agentCanEnable: skill.agentCanEnable === true,
 });
 
-/** An operation row, with the record it describes. */
-export type OperationCandidate = { readonly row: OperationRow; readonly record: Operation.PersistentOperation };
+/** A listed operation, with the record it describes. */
+export type OperationCandidate = { readonly listed: ListedOperation; readonly record: Operation.PersistentOperation };
 
 /**
  * The operations of `skills`, each once, read from the registry's records (which every host's tools resolve through).
@@ -72,7 +72,7 @@ export const operationCandidates = (
       const found = byTool.get(String(tool));
       if (found !== undefined && !candidates.has(bare(found.key))) {
         candidates.set(bare(found.key), {
-          row: {
+          listed: {
             key: found.key,
             tool: String(tool),
             name: found.record.name,
@@ -89,14 +89,14 @@ export const operationCandidates = (
 };
 
 /**
- * The row with the operation's input, labelled as code passes it (refs as `Ref<typename>`). Left out where the record's
+ * The listed operation with its input, labelled as code passes it (refs as `Ref<typename>`). Left out where the record's
  * schema cannot be rebuilt, which costs only that operation's input.
  */
-export const withInput = ({ row, record }: OperationCandidate): OperationRow => {
+export const withInput = ({ listed, record }: OperationCandidate): ListedOperation => {
   try {
-    return { ...row, input: describeInput(Operation.deserialize(record).input) };
+    return { ...listed, input: describeInput(Operation.deserialize(record).input) };
   } catch {
-    return row;
+    return listed;
   }
 };
 
@@ -132,8 +132,11 @@ export const ranked = <T>(
     .map(({ item }) => item);
 };
 
-/** A row as a list shows it: its description cut to the first sentence, which a lookup by key gives in full. */
-export const brief = (row: OperationRow): OperationRow =>
-  row.description === undefined
-    ? row
-    : { ...row, description: (/^.*?[.!?](?=\s|$)/s.exec(row.description)?.[0] ?? row.description).slice(0, 200) };
+/** An operation as a list shows it: its description cut to the first sentence, which a lookup by key gives in full. */
+export const brief = (listed: ListedOperation): ListedOperation =>
+  listed.description === undefined
+    ? listed
+    : {
+        ...listed,
+        description: (/^.*?[.!?](?=\s|$)/s.exec(listed.description)?.[0] ?? listed.description).slice(0, 200),
+      };

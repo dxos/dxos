@@ -11,7 +11,7 @@ import { Database, Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 /** An operation of a skill, as the lookups below describe it. */
-const OperationRow = Schema.Struct({
+const ListedOperation = Schema.Struct({
   key: Schema.String.annotate({ description: 'The operation key.' }),
   tool: Schema.String.annotate({ description: 'Its tool name.' }),
   name: Schema.optional(Schema.String),
@@ -25,10 +25,10 @@ const OperationRow = Schema.Struct({
   }),
 });
 
-export interface OperationRow extends Schema.Schema.Type<typeof OperationRow> {}
+export interface ListedOperation extends Schema.Schema.Type<typeof ListedOperation> {}
 
 /** A skill, as `query-skills` describes it. */
-const SkillRow = Schema.Struct({
+const ListedSkill = Schema.Struct({
   key: Schema.String,
   name: Schema.String,
   description: Schema.optional(Schema.String),
@@ -37,22 +37,22 @@ const SkillRow = Schema.Struct({
   instructions: Schema.optional(Schema.String).annotate({
     description: "The skill's instructions; given when looked up by key.",
   }),
-  operations: Schema.optional(Schema.Array(OperationRow)).annotate({
+  operations: Schema.optional(Schema.Array(ListedOperation)).annotate({
     description: 'Its operations; given when looked up by key.',
   }),
 });
 
-export interface SkillRow extends Schema.Schema.Type<typeof SkillRow> {}
+export interface ListedSkill extends Schema.Schema.Type<typeof ListedSkill> {}
 
 /** A registered type, as `query-types` describes it. */
-const TypeRow = Schema.Struct({
+const ListedType = Schema.Struct({
   typename: Schema.String,
   dxn: Schema.String.annotate({ description: 'The versioned DXN the type resolves by.' }),
   kind: Schema.Literals(['object', 'relation']),
   fields: Schema.optional(Schema.String).annotate({ description: 'Its fields; given when looked up by typename.' }),
 });
 
-export interface TypeRow extends Schema.Schema.Type<typeof TypeRow> {}
+export interface ListedType extends Schema.Schema.Type<typeof ListedType> {}
 
 export const QuerySkills = Operation.make({
   meta: {
@@ -71,7 +71,7 @@ export const QuerySkills = Operation.make({
     }),
     keys: Schema.optional(Schema.Array(Schema.String)).annotate({ description: 'Skills to return in full.' }),
   }),
-  output: Schema.Array(SkillRow),
+  output: Schema.Array(ListedSkill),
   services: [Registry.Service, Harness.HarnessService],
 });
 
@@ -89,7 +89,7 @@ export const QueryOperations = Operation.make({
     skill: Schema.optional(Schema.String).annotate({ description: "Only this skill's operations." }),
     keys: Schema.optional(Schema.Array(Schema.String)).annotate({ description: 'Operations to return in full.' }),
   }),
-  output: Schema.Array(OperationRow),
+  output: Schema.Array(ListedOperation),
   services: [Registry.Service, Harness.HarnessService],
 });
 
@@ -106,7 +106,7 @@ export const QueryTypes = Operation.make({
       description: 'Types to return with their fields, by typename or DXN.',
     }),
   }),
-  output: Schema.Array(TypeRow),
+  output: Schema.Array(ListedType),
   services: [Database.Service],
 });
 

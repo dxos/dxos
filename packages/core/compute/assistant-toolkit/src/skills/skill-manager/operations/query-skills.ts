@@ -15,11 +15,11 @@ import {
   enabledSkills,
   isEnabled,
   knownSkills,
+  listedSkill,
   operationCandidates,
   ranked,
   sameKey,
   skillKey,
-  skillRow,
 } from './catalog.ts';
 import { QuerySkills } from './definitions.ts';
 
@@ -32,7 +32,7 @@ export default QuerySkills.pipe(
       if (keys === undefined) {
         // Tool names count: a model that lacks an operation knows what it wants to do, not which skill carries it.
         return ranked(skills, query, (skill) => [skillKey(skill), skill.name, skill.description, ...skill.tools]).map(
-          (skill) => skillRow(skill, isEnabled(enabled, skill)),
+          (skill) => listedSkill(skill, isEnabled(enabled, skill)),
         );
       }
       const records = yield* Registry.runQuery(Filter.type(Operation.PersistentOperation));
@@ -42,9 +42,9 @@ export default QuerySkills.pipe(
           // A template that fails to render costs the skill its instructions, not the whole lookup.
           const instructions = yield* Template.processTemplate(skill.instructions).pipe(Effect.option);
           return {
-            ...skillRow(skill, isEnabled(enabled, skill)),
+            ...listedSkill(skill, isEnabled(enabled, skill)),
             ...(Option.isSome(instructions) ? { instructions: instructions.value } : {}),
-            operations: operationCandidates([skill], enabled, records).map(({ row }) => brief(row)),
+            operations: operationCandidates([skill], enabled, records).map(({ listed }) => brief(listed)),
           };
         }),
       );

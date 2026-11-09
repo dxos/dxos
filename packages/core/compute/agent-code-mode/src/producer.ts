@@ -178,11 +178,7 @@ const runCodeModeTurn = ({
                 onEvaluated: evaluations.add,
               });
               const system = yield* formatSystemPrompt({
-                system: [
-                  dialect.instructions({ operations: listed, types: [], discovery: true }),
-                  options.system,
-                  params.system,
-                ]
+                system: [dialect.instructions({ operations: listed }), options.system, params.system]
                   .filter(isPresent)
                   .join('\n\n'),
                 skills: [stated],
