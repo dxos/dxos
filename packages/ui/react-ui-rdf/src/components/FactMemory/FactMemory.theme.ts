@@ -18,15 +18,21 @@ const factMemoryStyles = tv({
     verdict: 'text-sm text-fg-muted',
 
     // What the store already knew.
-    memoryList: 'flex flex-col gap-2 py-1',
     /*
-     * The card owns the column track sizes and the inline padding, and each row is a `subgrid` across them, so
-     * subjects, predicates, objects and dates line up down the card however wide any one of them is. The padding
-     * has to sit here rather than on a row: a subgrid item's tracks start inside its own padding box, so a row
-     * that padded itself would step out of the card's columns.
+     * The LIST owns the column tracks — subject, predicate, object, factuality, author, date — and each card and
+     * each row inside it is a `subgrid` across them, so the columns are the same down the whole list rather than
+     * per card. Every card carries the same inline padding, so they stay aligned with each other.
+     *
+     * Every column sizes to its content, and an empty `1fr` track between the triple and its attribution takes
+     * the slack. That ordering is what makes the row behave at both ends: with room to spare the slack track
+     * grows and the names stay whole, and when the card is narrow it collapses first, after which the name
+     * columns shrink together and truncate. A name column that was itself the flexible one took the entire
+     * shortfall and was crushed to a letter while its neighbours kept their full width.
      */
+    memoryList:
+      'grid grid-cols-[minmax(0,max-content)_minmax(0,max-content)_minmax(0,max-content)_1fr_auto_minmax(0,max-content)_auto] gap-2 py-1',
     entity:
-      'shrink-0 grid grid-cols-[auto_auto_minmax(0,1fr)_auto_auto_auto] gap-x-2 px-3 py-1 dx-card-surface border border-separator-subtle rounded-sm overflow-hidden',
+      'col-span-full grid grid-cols-subgrid shrink-0 px-3 py-1 dx-card-surface border border-separator-subtle rounded-sm',
     entityHeader: 'col-span-full flex items-center justify-between gap-2 pb-1',
     entityName: 'font-medium truncate',
     entityCount: 'text-xs text-fg-subtle tabular-nums shrink-0',
@@ -34,6 +40,8 @@ const factMemoryStyles = tv({
     priorSubject: 'truncate',
     priorPredicate: 'text-fg-muted truncate',
     priorObject: 'truncate',
+    /** Empty: the column that takes the row's slack, so the attribution sits at the end whatever the names do. */
+    priorSlack: '',
     priorAgent: 'text-xs text-fg-subtle truncate',
     // Dates are a column of digits read against each other, so they take the figures that align.
     priorDate: 'text-xs text-fg-subtle tabular-nums whitespace-nowrap',
