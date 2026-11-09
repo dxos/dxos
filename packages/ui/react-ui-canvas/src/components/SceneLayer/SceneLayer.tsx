@@ -1416,6 +1416,8 @@ const LabelPart = ({ node, editing, label }: LabelPartProps) => (
       'whitespace-pre-wrap',
       LINE_ON_GRID,
       alignClasses(node.style, { horizontal: 'center', vertical: 'middle' }),
+      // Held against the top or bottom, the label keeps a minor grid unit off that edge, as it does off the sides.
+      (node.style?.alignVertical ?? 'middle') !== 'middle' && '[&>*]:py-(--dx-minor-grid)',
       // `DEFAULT_FONT_SIZE`, as a static class so Tailwind generates it.
       sizeClass(node, 'text-[20px]'),
     )}
