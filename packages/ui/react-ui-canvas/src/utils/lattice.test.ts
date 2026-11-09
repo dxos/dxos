@@ -9,6 +9,7 @@ import {
   cellBounds,
   collides,
   coveredCells,
+  latticeGrid,
   nearestFree,
   occupancy,
   quantize,
@@ -20,6 +21,17 @@ import { createNode } from './shapes.ts';
 const spec = DEFAULT_LATTICE;
 
 describe('lattice', () => {
+  test('the lattice grid puts a major line on every cell edge', ({ expect }) => {
+    const minor = latticeGrid(spec, 4);
+    expect(minor).toBe(16);
+    for (let index = -2; index <= 2; index++) {
+      const { x, y, width, height } = cellBounds({ col: index, row: index, spanX: 2, spanY: 1 }, spec);
+      for (const edge of [x, x + width, y, y + height]) {
+        expect(Math.abs(edge % (minor * 4))).toBe(0);
+      }
+    }
+  });
+
   test('a one-cell shape is the spec size on its cell; a pitch is a shape plus a gutter', ({ expect }) => {
     expect(cellBounds({ col: 0, row: 0, spanX: 1, spanY: 1 }, spec)).toEqual({
       x: -128,

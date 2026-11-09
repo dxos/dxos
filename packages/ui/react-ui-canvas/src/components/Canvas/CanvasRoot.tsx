@@ -52,7 +52,7 @@ import {
   keyAction,
   neuVars,
 } from '../../model/index.ts';
-import { fitFrame, visibleView } from '../../utils/index.ts';
+import { fitFrame, latticeGrid, visibleView } from '../../utils/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
@@ -151,7 +151,7 @@ const CanvasEngine = ({
   onCameraChange,
   initialDisplay,
   onDisplayChange,
-  grid = DEFAULT_GRID,
+  grid: gridProp,
   margin = DEFAULT_MARGIN,
   fitZoom,
   readonly = false,
@@ -213,6 +213,8 @@ const CanvasEngine = ({
     history,
   });
   const scene = useAtomValue(draw.scene);
+  // A lattice scene's grid runs along its cell edges unless the layout sets its own pitch.
+  const grid = gridProp ?? ((draw.lattice && latticeGrid(draw.lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID);
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
     scene,
