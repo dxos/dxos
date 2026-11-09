@@ -20,8 +20,8 @@ comes back to it, or the value it returns when it prints nothing.
 [`makeCodeModeTurnProducer`](./src/producer.ts) stands in for the tool-calling producer of an agent
 process; the process's queue, alarms and hydration are unchanged. Before every model call it:
 
-1. Re-reads the conversation's skills (one enabled mid-request shows up here) and connects their MCP
-   servers.
+1. Re-reads the conversation's skills (one enabled mid-request shows up here) and connects the
+   conversation's MCP servers.
 2. Turns their tools into the operation list (`projectOperations`): each operation's name,
    description and input schema, the `Operation` definition behind it (none for an MCP tool), and a
    function that runs it through the same handlers as a tool call. The Skill Manager's operations
@@ -87,14 +87,17 @@ other skill's instructions, no other operation, no types. Listing every skill, o
 each operation as a tool, is what tool calling does, which runs when code mode is off
 (`Settings.disableCodeMode`); there the same skill lists every skill in its instructions.
 
-The model looks the rest up from code:
+The model looks the rest up from code, a level of detail at a time:
 
-| Operation         | Listing                                                                                    | Lookup                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| `querySkills`     | Every skill, saying whether it is enabled here and whether an agent may enable it.         | `keys`: the skill's instructions and its operations.                     |
-| `queryOperations` | `query` searches the operations of the skills it can use by what they do; `skill` narrows. | `keys`: each operation's input, refs as `Ref<typename>`.                 |
-| `queryTypes`      | `query` searches the registered types.                                                     | `typenames`: their fields.                                               |
-| `enableSkills`    |                                                                                            | Enables skills an agent may enable; their operations from the next call. |
+| Operation         | Listing (light rows)                                                                                 | Lookup by key (detail for just those)                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `querySkills`     | Every skill, saying whether it is enabled here and whether an agent may enable it; `query` narrows.  | `keys`: the skill's instructions and its operations.                           |
+| `queryOperations` | `query` searches the operations of the skills it can use by what they do; `skill` lists one skill's. | `keys`: each operation's full description and input, refs as `Ref<typename>`.  |
+| `queryTypes`      | Every type's typename, DXN and kind; `query` searches type and field names.                          | `typenames`: their fields, every variant of a union spelled out.               |
+| `enableSkills`    |                                                                                                      | Enables skills an agent may enable; their operations from the next model call. |
+
+A typical request: `querySkills()` to see what is enabled, `querySkills({ keys })` for the rules of
+the skills it touches, `queryOperations({ keys })` for an operation's input, then the call.
 
 - The model can call the Skill Manager's operations, the enabled skills' operations and the
   conversation's MCP tools, and no other operation: `ops` and `Database.resolve` resolve no other.
@@ -103,22 +106,31 @@ The model looks the rest up from code:
 - The conversation's MCP tools are stated in the prompt, since no skill names them.
 - These are ordinary operations answered by the host's handlers, the same ones tool calling uses,
   so every host that runs code mode must register the Skill Manager's handlers.
-- The prompt does not grow with skills or types. The cost is a lookup call at the start of a
-  request.
-- A type's union of more than four tagged variants is shortened to its tags, with a note to print
-  an existing value to see a variant's fields. The type and input labels come from
-  `@dxos/assistant/Describe`, which the Skill Manager's lookups share.
+- The prompt does not grow with skills or types: in this package's recorded scenarios it is about
+  8k characters, against about 134k when everything was listed, at one or two more model calls.
+- A result stays inside the program until the code prints it, so the code picks the part it needs.
+  `print` shows at most 10 items of an array and 200 characters of a string inside an object, and
+  the call's output stops at `maxOutput`.
+- The type and input labels come from `@dxos/assistant/Describe`, which code mode and the Skill
+  Manager share. A list of every type (`dx eval --instructions`, the Effect dialect's
+  `catalog/types.md`) names a union of more than four tagged variants by its tags.
+
+Limits: a lookup has no `limit` and returns every match; skill descriptions are not shortened; and
+a type whose fields hold schemas (such as `org.dxos.type.function`) describes them at tens of
+thousands of characters.
 
 ## Code map
 
-| File                                                   | Holds                                                                              |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `producer.ts`                                          | The turn loop and `projectOperations`.                                             |
-| `eval-tool.ts`                                         | The `eval` tool: running code, the output cap, error text, call labels, recording. |
-| `Dialect.ts`, `dialect-plain.ts`, `dialect-effect.ts`  | Each dialect's bindings and prompt.                                                |
-| `describe.ts`, `format.ts`                             | Object cards and printing.                                                         |
-| `Sandbox.ts`, `WorkerSandbox*.ts`, `WorkerdSandbox.ts` | Where code runs.                                                                   |
-| `docs/`                                                | The Effect dialect's `DOCS`.                                                       |
+| File                                                   | Holds                                                                                             |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `producer.ts`                                          | The turn loop and `projectOperations`.                                                            |
+| `eval-tool.ts`                                         | The `eval` tool: running code, the output cap, error text, call labels, recording.                |
+| `Dialect.ts`, `dialect-plain.ts`, `dialect-effect.ts`  | Each dialect's bindings and prompt.                                                               |
+| `describe.ts`, `format.ts`                             | Object cards and printing.                                                                        |
+| `Sandbox.ts`, `WorkerSandbox*.ts`, `WorkerdSandbox.ts` | Where code runs.                                                                                  |
+| `docs/`                                                | The Effect dialect's `DOCS`.                                                                      |
+| `@dxos/assistant-toolkit` `skill-manager/`             | The Skill Manager: its lookups (`operations/catalog.ts`, `query-*.ts`) and both instruction sets. |
+| `@dxos/assistant` `describe/Describe.ts`               | Type and input labels.                                                                            |
 
 ## Tests
 
