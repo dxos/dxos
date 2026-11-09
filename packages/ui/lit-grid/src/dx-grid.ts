@@ -25,6 +25,7 @@ import {
   type DxGridCellValue,
   type DxGridFixedPlane,
   type DxGridFocusIndicatorVariant,
+  type DxGridFocusUnfurl,
   type DxGridFrozenAxes,
   type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
@@ -1439,7 +1440,7 @@ export class DxGrid extends LitElement {
     return isReadonly(colReadOnly) || isReadonly(rowReadOnly);
   }
 
-  private cellFocusUnfurl(col: number, row: number, plane: DxGridPlane): boolean {
+  private cellFocusUnfurl(col: number, row: number, plane: DxGridPlane): DxGridFocusUnfurl {
     const colPlane = resolveColPlane(plane);
     const rowPlane = resolveRowPlane(plane);
 
@@ -1540,7 +1541,7 @@ export class DxGrid extends LitElement {
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
       data-refs=${cell?.dataRefs ?? nothing}
-      data-focus-unfurl=${focusUnfurl ? nothing : 'false'}
+      data-focus-unfurl=${focusUnfurl === true ? nothing : focusUnfurl === false ? 'false' : focusUnfurl}
       ?data-dx-active=${active}
       data-text-selectable=${textSelectable ? 'true' : 'false'}
       data-dx-grid-action="cell"
