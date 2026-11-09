@@ -73,7 +73,19 @@ proto install
 log "moon setup"
 moon setup
 
-# 6. Workspace deps (non-interactive; skip husky hooks).
+# 6. moon remote-cache client certificate (see tools/moon-cache/README.md). `--worktree` writes
+#    `.moon/certs/`, the path `.moon/workspace.yml` already names, because a container has one
+#    checkout and no shell profile to export MOON_REMOTE_MTLS_* from. Best-effort: without it moon
+#    still builds, only from the local cache.
+if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ] && command -v op >/dev/null 2>&1; then
+  log "moon remote-cache certificate"
+  bash tools/moon-cache/install-certs.sh --worktree --op "${MOON_CACHE_OP_VAULT:-eng-ops}" ||
+    log "moon remote-cache certificate install failed; moon will use the local cache only"
+else
+  log "OP_SERVICE_ACCOUNT_TOKEN or op missing; skipping the moon remote-cache certificate"
+fi
+
+# 7. Workspace deps (non-interactive; skip husky hooks).
 log "pnpm install"
 CI=true HUSKY=0 pnpm install --prefer-offline
 

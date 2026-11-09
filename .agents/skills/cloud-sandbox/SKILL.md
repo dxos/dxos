@@ -82,6 +82,13 @@ body that is not `application/json` answers `415`, so the `--attach` upload to
 `Monitor` around it — it fails identically whether CI is red, green, or still running, so silence
 means nothing. Read run status through the `mcp__github__*` tools, which go through the server side.
 
+### The moon remote cache
+
+Setup installs the cache certificate into `.moon/certs/` when `OP_SERVICE_ACCOUNT_TOKEN` is set
+(`tools/moon-cache/README.md` § Claude Code cloud sessions). moon reports a missing certificate or
+an unreachable cache as one warning and a green build, so check the hydrated-task count that README
+gives before trusting a build time.
+
 ### `moon` itself may not run at all
 
 moon loads its `javascript`/`bun` toolchains as WASM plugins from ghcr, whose blob host

@@ -27,6 +27,15 @@ later. Storing them in the repo would mean repeating this in each of them.
 Without the 1Password CLI, get `ca.pem`, `client.pem` and `client.key` from an admin and pass the
 directory instead of `--op`.
 
+### Claude Code cloud sessions
+
+`.config/claude-code-setup.sh` runs `install-certs.sh --worktree --op` when the cloud environment
+sets `OP_SERVICE_ACCOUNT_TOKEN`; that service account must be able to read `dev.moonrepo` (vault
+`eng-ops`, or set `MOON_CACHE_OP_VAULT`). The certificates land in `.moon/certs/`, so no environment
+variables are needed. If a session has no certificate, run the same command by hand, then confirm
+with the hydration check below — the installer's own probe goes through curl and the egress proxy,
+which proves nothing about moon's gRPC connection.
+
 A local machine only reads the remote cache: `remote.cache.localReadOnly` in `.moon/workspace.yml`
 leaves uploads to CI (moon treats a run with `CI` set as CI). A worktree often has a second moon run
 or a dev server rewriting `dist/` while a build is archived, and an entry uploaded from that state
