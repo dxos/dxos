@@ -11,12 +11,15 @@ export const toMarkdown = (title: string, description: string | undefined, body:
   // MDX imports lead the body, so anything later that looks like one is a code sample.
   const content = body
     .replace(/^(?:\s*import .*\n)+/, '')
-    .replace(/<Snippet\b[^>]*\/>/g, (tag) => {
+    // A snippet inside a list item keeps the item's indent on every line, or the fence ends the item.
+    .replace(/^([ \t]*)(<Snippet\b[^>]*\/>)/gm, (_, indent: string, tag: string) => {
       const file = attribute(tag, 'file');
       if (!file) {
         throw new Error(`Snippet without file: ${tag}`);
       }
-      return `\`\`\`ts\n${snippetSource(file, attribute(tag, 'region'))}\n\`\`\``;
+      return ['```ts', ...snippetSource(file, attribute(tag, 'region')).split('\n'), '```']
+        .map((line) => (line ? `${indent}${line}` : line))
+        .join('\n');
     })
     .replace(/<SpecCite item="([^"]*)" \/>/g, '[$1]')
     .replace(/<Anatomy[\s\S]*?\/>/g, (tag) =>
