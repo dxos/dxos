@@ -1,45 +1,64 @@
 ---
 title: Querying
-description: Select objects with Filter and Query, one-shot and live.
+description: Select the tutorial app's records with Filter and Query, by type, sorted, searched, and live.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
-By the end of this page you will read objects from a space once, by type and by field, and keep a live query running as objects arrive.
+By the end of this page the app will list its records sorted, search them, and find the people who work at an organization.
+
+## Before you start
+
+A query has two parts. A **filter** says which objects match: by type, by field values, by text. A **query** wraps the filter and adds what to do with the matches: their order, a limit, or a step to the objects they reference or that reference them.
+
+A query is a value. Building one runs nothing; `db.query(query)` runs it against the database on the device, so a query never waits on the network. `run` returns the matches once. `subscribe` returns them, then runs again whenever an object that could match changes, whichever peer changed it.
+
+The client returns typed objects only for the types it knows. The app passes its types to the client when it starts, in [Installation](/docs/echo/learn/installation/).
+
+[The Filter reference](/docs/echo/reference/filter/) lists every comparison and combinator.
 
 <Steps>
 
-1. **Register your types.** The client has to know a type before it can return typed objects. Pass types when you create the client, or later with `client.addTypes`.
+1. **List each type, sorted.** `Filter.type` selects the objects of a type, and `orderBy` sorts them by a field.
 
-   <Snippet file="querying" region="types" />
+   <Snippet file="tutorial/queries" region="by-type" />
 
-2. **Read everything.** `db.query` takes a filter and returns a query. `run` resolves to an array of the matching objects.
+2. **Run a query.** The results are typed, so `person.name` is a `string`.
 
-   <Snippet file="querying" region="everything" />
+   <Snippet file="tutorial/steps/querying" region="run" />
 
-3. **Read by type and field.** `Filter.type` takes a type and an optional props shape, so the compiler checks field names and values, and the results are typed.
+3. **Search text.** `Filter.text` matches objects whose text contains the words, whatever their type. The space indexes text as objects are written.
 
-   <Snippet file="querying" region="typed" />
+   <Snippet file="tutorial/queries" region="search" />
 
-   The [Filter reference](/docs/echo/reference/filter/) lists comparisons, combinators, text search and time ranges.
+   <Snippet file="tutorial/steps/querying" region="search" />
 
-4. **Read untyped objects.** Filter `Expando` objects by the fields you gave them.
+4. **Follow references backwards.** `referencedBy` steps from the selected organization to the people whose `employer` points at it.
 
-   <Snippet file="querying" region="untyped" />
+   <Snippet file="tutorial/queries" region="employees" />
 
-5. **Keep the query live.** `subscribe` calls back with the current results each time they change, and returns a function that stops the subscription.
+   <Snippet file="tutorial/steps/querying" region="employees" />
 
-   <Snippet file="querying" region="live" />
+5. **Keep a query live.** `subscribe` calls back with the current results each time they change, and returns a function that stops it.
 
-   The callback runs for the task added after the subscription, before `add` returns.
+   <Snippet file="tutorial/steps/querying" region="live" />
+
+   The callback runs again for the person added after the subscription, before `addPerson` returns.
 
 </Steps>
 
+## Try it
+
+Type in the search box to search every record. The table button shows the records of the chosen type with one column per field. Each list is a live query, so an edit in the form shows up in the list as you save it.
+
+<TutorialEmbed stage="queries" />
+
 ## What you can do now
 
-You can register types, read objects once by type or field, and follow a query as its results change.
+You can select records by type, sort them, search their text, follow references backwards, and keep a query running as the results change.
 
 ## Next
 
-[Sharing a space](/docs/echo/learn/sharing/): replicate the database to a second peer.
+[Sharing a space](/docs/echo/learn/sharing/): replicate the app's space to a second peer.

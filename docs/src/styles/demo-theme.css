@@ -1,4 +1,5 @@
-/* The react-ui theme for the demos: the workspace entry, plus the demo sources it does not scan. */
+/* The react-ui theme for the demos and the tutorial app: the workspace entry, plus the sources it does not scan. */
 @import '../../../packages/ui/ui-theme/src/workspace.css';
 
 @source '../demos/**/*.{ts,tsx}';
+@source '../tutorial/**/*.{ts,tsx}';

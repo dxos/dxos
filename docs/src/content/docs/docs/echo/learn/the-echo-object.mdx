@@ -1,0 +1,44 @@
+---
+title: The ECHO object
+description: What a live object is, and the app the learning path builds, running.
+---
+
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+The learning path builds one app: a contact book of organizations, the people who work at them, and the events they attend. This page explains what the app is made of, and shows it finished.
+
+## What an object is
+
+Everything the app stores is an ECHO object. An object has three parts:
+
+- **An id.** Every peer that holds the object knows it by the same id.
+- **A type.** The type names a schema, which says what fields the object has. The compiler checks the fields, and so does ECHO when it stores them.
+- **Fields.** You read them like the fields of a plain object. A field can hold a reference to another object, which is how a person points at the organization they work for.
+
+Objects live in a space's database, on the device. Reading one never waits on the network. A change is written locally first and then reaches the other peers in the space. When two peers change the same object, ECHO merges their changes rather than keeping only one.
+
+An object is also live: code can subscribe to it, or to a query, and run whenever it changes, wherever the change came from. The app redraws itself this way.
+
+[Objects and relations](/docs/echo/concepts/objects-relations/) describes the model in full.
+
+## The finished app
+
+Pick a type, open a record, and edit it in the form. The table shows the records of one type, and the graph draws every reference between them.
+
+<TutorialEmbed stage="complete" />
+
+Each page of the learning path builds one piece of it:
+
+| Page | What it adds |
+| --- | --- |
+| [Installation](/docs/echo/learn/installation/) | A client, an identity and the app's space |
+| [Defining types](/docs/echo/learn/defining-types/) | Organization, Person and Event, and a form for each |
+| [Mutating objects](/docs/echo/learn/mutating-objects/) | Adding, editing and removing records |
+| [Querying](/docs/echo/learn/querying/) | Sorted lists, search, and the people at an organization |
+| [Sharing a space](/docs/echo/learn/sharing/) | A second peer that follows every edit |
+
+The pages show the app's ECHO code in plain TypeScript. The [React guide](/docs/echo/guides/react/) walks through the components that draw it.
+
+## Next
+
+[Installation](/docs/echo/learn/installation/): install the client and open the app's space.

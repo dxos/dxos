@@ -2,19 +2,58 @@
 // Copyright 2026 DXOS.org
 //
 
-const SOURCES = import.meta.glob<string>('./snippets/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true });
+const SOURCES = {
+  ...import.meta.glob<string>('./snippets/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+  // The tutorial app's own modules, quoted where a page builds that piece of it.
+  ...import.meta.glob<string>('../tutorial/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+};
 
-const readSnippet = (file: string): string => {
+const findSource = (file: string): [path: string, source: string] => {
   const entry = Object.entries(SOURCES).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));
   if (!entry) {
     throw new Error(`Unknown snippet: ${file}`);
   }
-  return entry[1];
+  return entry;
+};
+
+const stripRegions = (source: string) => source.replace(/^\/\/ #(end)?region.*$/gm, '');
+
+/** Joins a relative import onto the importing file's directory: `('app/Form.tsx', '../schema.ts')` is `schema.ts`. */
+const resolve = (from: string, specifier: string): string => {
+  const parts = from.split('/').slice(0, -1);
+  for (const segment of specifier.split('/')) {
+    if (segment === '..') {
+      parts.pop();
+    } else if (segment !== '.') {
+      parts.push(segment);
+    }
+  }
+  return parts.join('/');
+};
+
+/**
+ * The local modules `path` imports, dependencies first, as paths under the tutorial directory. A snippet from the
+ * tutorial app is compiled with these beside it, so its imports resolve the way they do in the app.
+ */
+const localImports = (path: string, seen = new Set<string>()): string[] => {
+  const source = SOURCES[`../tutorial/${path}`];
+  if (!source) {
+    throw new Error(`Unknown tutorial module: ${path}`);
+  }
+  const order: string[] = [];
+  for (const [, specifier] of source.matchAll(/from '(\.{1,2}\/[^']+)'/g)) {
+    const target = resolve(path, specifier);
+    if (!target.startsWith('..') && !seen.has(target) && SOURCES[`../tutorial/${target}`] !== undefined) {
+      seen.add(target);
+      order.push(...localImports(target, seen), target);
+    }
+  }
+  return order;
 };
 
 /** Returns a snippet's visible code: one `// #region` if named, else every region, else the whole file past its imports. */
 export const snippetSource = (file: string, region?: string): string => {
-  const source = readSnippet(file);
+  const [, source] = findSource(file);
   const pattern = region
     ? new RegExp(`// #region ${region}\\n([\\s\\S]*?)// #endregion`)
     : /\/\/ #region\n([\s\S]*?)\/\/ #endregion/;
@@ -25,14 +64,29 @@ export const snippetSource = (file: string, region?: string): string => {
   return match[1].trimEnd();
 };
 
-/** The snippet with the code before its region cut, so a compiler can resolve its types while the page shows only the region. */
+/**
+ * The snippet with the code around its region cut, so a compiler sees the whole module while the page shows only the
+ * region. A region inside a component body needs the code after it to close.
+ */
 export const snippetWithContext = (file: string, region?: string): string => {
-  const source = readSnippet(file);
+  const [path, source] = findSource(file);
   const marker = region ? `// #region ${region}\n` : '// #region\n';
   const start = source.indexOf(marker);
   if (start < 0) {
     throw new Error(`Snippet ${file} has no region ${region ?? '(default)'}`);
   }
-  const before = source.slice(0, start).replace(/^\/\/ #(end)?region.*$/gm, '');
-  return `${before}// ---cut---\n${snippetSource(file, region)}`;
+  const end = source.indexOf('// #endregion', start);
+  const before = stripRegions(source.slice(0, start));
+  const after = stripRegions(source.slice(source.indexOf('\n', end) + 1));
+  const cut = `${before}// ---cut---\n${snippetSource(file, region)}\n// ---cut-after---\n${after}`;
+  if (!path.startsWith('../tutorial/')) {
+    return cut;
+  }
+
+  // Each module the snippet imports goes in as a file of its own, ahead of the snippet's.
+  const self = path.slice('../tutorial/'.length);
+  const files = localImports(self).map(
+    (module) => `// @filename: ${module}\n${stripRegions(SOURCES[`../tutorial/${module}`])}`,
+  );
+  return ['// @allowImportingTsExtensions', '// @noEmit', ...files, `// @filename: ${self}`, cut].join('\n');
 };

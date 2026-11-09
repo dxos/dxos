@@ -2279,6 +2279,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-react
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../packages/common/graph
       '@dxos/keys':
         specifier: workspace:*
         version: link:../packages/common/keys
@@ -2333,6 +2336,15 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../packages/ui/react-ui-attention
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-form
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-graph
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-list
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../packages/ui/react-ui-table

@@ -94,7 +94,7 @@ export default defineConfig({
     },
   },
   integrations: [
-    react({ include: ['**/src/demos/**'] }),
+    react({ include: ['**/src/demos/**', '**/src/tutorial/**'] }),
     starlight({
       title: 'DXOS Documentation',
       lastUpdated: true,

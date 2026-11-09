@@ -1,41 +1,68 @@
 ---
 title: Defining types
-description: Declare an object type and a relation type, then create instances of both.
+description: Declare the tutorial app's types, with references between them, and see the form ECHO derives from each.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
-By the end of this page you will have a small graph: two people, a task assigned to one of them, and a relation between them.
+By the end of this page the app will have its three types: organizations, the people who work at them, and the events they attend.
+
+## Before you start
+
+A type is a schema with a name. ECHO uses the schema three ways:
+
+- The compiler uses it to check the fields of every object you create.
+- ECHO uses it to check what it stores, and to send the type to peers that have not seen it.
+- Code can read it at run time. The app's forms, table and graph are built from the schemas rather than written per type.
+
+The schema is an [Effect Schema](https://effect.website/docs/schema/introduction/). The name is a DXN: a reverse-domain name and a version, such as `com.example.type.person` at `0.1.0`. Use a domain you control, since the name is global.
+
+A field can hold a reference to another object, with `Ref.Ref(Type)`. A reference stores the target's identity, not a copy, so the graph stays consistent when the target changes.
 
 <Steps>
 
-1. **Declare an object type.** `DXN.make` names the type and its version. The name is global, so use a domain you control.
+1. **Declare an organization.** `Type.makeObject` takes the name and the schema, and returns a class that is both the schema and the TypeScript type of its instances.
 
-   <Snippet file="types-object" region="person" />
+   <Snippet file="tutorial/schema" region="organization" />
 
-   `Person` is now a schema and a TypeScript type. Hover it in your editor to see the instance shape.
+   `Format.URL` marks the website as a URL, so a form offers a URL field for it. `IconAnnotation` gives the type an icon and a hue, which the app's list and graph use.
 
-2. **Create instances.** `Obj.make` takes props typed by the schema. An object can exist outside a database until you add it.
+2. **Point a person at an organization.** `employer` is a reference to an `Organization`.
 
-   <Snippet file="types-object" region="instance" />
+   <Snippet file="tutorial/schema" region="person" />
 
-   Leave out `name` and the compiler rejects the call.
+3. **Point an event at many people.** A list of references gives an event its attendees. `LabelAnnotation` says which field names an event, since it has a `title` rather than a `name`.
 
-3. **Point one object at another.** A `Ref.Ref` field stores a reference, not a copy.
+   <Snippet file="tutorial/schema" region="event" />
 
-   <Snippet file="types-object" region="task" />
+4. **List the types.** The client is given this list when the app starts, in [Installation](/docs/echo/learn/installation/).
 
-   `review.assignee` holds a reference to `ada`. Editing `ada` later does not touch `review`.
+   <Snippet file="tutorial/schema" region="types" />
 
-4. **Declare a relation.** A relation is an entity with typed endpoints. Use one when the link has its own fields, or when you want to query it from either end.
+5. **Create instances.** `Obj.make` takes the props the schema allows, and `Ref.make` makes a reference to an object.
 
-   <Snippet file="types-object" region="relation" />
+   <Snippet file="tutorial/steps/types" region="instance" />
 
-   `mentors` connects `grace` to `ada` and carries its own `since` field.
+   Leave out a person's `name` and the compiler rejects the call.
+
+6. **Follow a reference.** `peek` reads the target, if it is loaded, without waiting.
+
+   <Snippet file="tutorial/steps/types" region="follow" />
 
 </Steps>
 
+## Try it
+
+The form beside the list is built from the selected type's schema: a URL field for a website, a picker of organizations for an employer, and a list of people for an event's attendees. Choose a type to see its form, or a record to see its values. Editing comes on the next page.
+
+<TutorialEmbed stage="types" />
+
 ## What you can do now
 
-You can declare object and relation types, and create instances that the compiler checks against their schema.
+You can declare object types with references between them, give a type an icon and a label, and create objects that the compiler checks against their schema.
+
+## Next
+
+[Mutating objects](/docs/echo/learn/mutating-objects/): add, change and remove the app's records.

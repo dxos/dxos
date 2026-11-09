@@ -1,38 +1,51 @@
 ---
 title: Mutating objects
-description: Change objects with Obj.update and observe the change.
+description: Create, change and remove the tutorial app's records, and observe each change.
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
-By the end of this page you will add an object to a space, watch it, change it, and remove it.
+By the end of this page the app will add, edit and remove records, and you will watch a record change.
+
+## Before you start
+
+An object you make with `Obj.make` exists only in memory until you add it to a database. `db.add` starts tracking it: from then on the database stores every change and sends it to the space's other peers.
+
+A tracked object is read like any other, but it is changed only inside `Obj.update`. The callback gets a mutable view of the object. Each update is one change, which peers apply whole, and which notifies subscribers once.
+
+Writes are local. `db.add` and `Obj.update` return once the change is in the local database, and replication runs after. Two peers that change the same object concurrently both keep their edits: ECHO merges them field by field.
 
 <Steps>
 
-1. **Add an object.** `db.add` starts tracking the object and returns it. The `Task` type comes from [Defining types](/docs/echo/learn/defining-types/).
+1. **Write the app's add functions.** Each takes the database and the props of one type, and returns the tracked object.
 
-   <Snippet file="mutating" region="add" />
+   <Snippet file="tutorial/records" region="add" />
 
-   The write queues in the client and starts reaching the space's other peers on the next tick.
+   A person's `employer` is passed as an object and stored as a reference to it.
 
-2. **Watch it.** `Obj.subscribe` calls back after each change to the object and returns a function that stops the subscription.
+2. **Add records.**
 
-   <Snippet file="mutating" region="subscribe" />
+   <Snippet file="tutorial/steps/mutating" region="add" />
 
-3. **Change it.** Fields change inside `Obj.update`. The callback gets a mutable view of the object.
+3. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the subscription.
 
-   <Snippet file="mutating" region="update" />
+   <Snippet file="tutorial/steps/mutating" region="subscribe" />
 
-   The subscriber from step 2 has run, so `titles` holds both titles. Peers that edit the same task concurrently merge with this change.
+4. **Change a record.** The app moves a person to another organization in one update, and its form writes whatever fields the reader changed.
 
-4. **Store an object without a type.** `Expando` accepts any fields, for data whose shape you have not declared yet.
+   <Snippet file="tutorial/records" region="update" />
 
-   <Snippet file="mutating" region="expando" />
+   <Snippet file="tutorial/steps/mutating" region="update" />
 
-5. **Remove an object.** `db.remove` works the same for typed and untyped objects.
+   The subscriber from step 3 has run, so `employers` holds `'Halcyon Robotics'`.
 
-   <Snippet file="mutating" region="remove" />
+5. **Remove a record.**
+
+   <Snippet file="tutorial/records" region="remove" />
+
+   <Snippet file="tutorial/steps/mutating" region="remove" />
 
    <Aside type="note">
      ECHO does not delete a removed object at once. It marks the object as removed and keeps it in the change history
@@ -42,10 +55,16 @@ By the end of this page you will add an object to a space, watch it, change it, 
 
 </Steps>
 
+## Try it
+
+Select a record and change it in the form, or press **New** to add one of the chosen type. The **×** on a row removes it. A person's employer is a picker of the organizations in the space.
+
+<TutorialEmbed stage="records" />
+
 ## What you can do now
 
-You can add, watch, change and remove objects, typed or untyped.
+You can add records to a database, change them inside `Obj.update`, watch them change, and remove them.
 
 ## Next
 
-[Querying](/docs/echo/learn/querying/): find the objects you added.
+[Querying](/docs/echo/learn/querying/): list the records, sorted and searched.

@@ -6,7 +6,13 @@ description: Add the packages and open a database in Node or the browser.
 import { Aside, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page you will have a running `Client` with an identity and a space whose database you can write to.
+By the end of this page the tutorial app will have a running client, an identity, and the space it keeps its records in.
+
+## Before you start
+
+The `Client` is the app's way into ECHO. It holds the databases of the spaces you belong to, on the device, and connects them to the network so peers can replicate them.
+
+A client acts for an identity. The identity owns the spaces it creates, and other peers recognize it when it joins theirs. A space is a database that a set of identities replicate between them, and every object lives in exactly one space. The app keeps all its records in one space, called Contacts.
 
 <Steps>
 
@@ -38,19 +44,11 @@ By the end of this page you will have a running `Client` with an identity and a 
 
    `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin` for Rollup and esbuild. Node needs no bundler setup.
 
-3. **Create a client.** `initialize` opens local storage and connects to the network.
+3. **Open the app's space.** The app does this in one function. `new Client` takes the app's types, which the next page declares. `initialize` opens local storage and connects to the network. The client then needs an identity before it can create a space; [HALO](/docs/halo/typescript) covers identities and devices. Last, it creates the space and waits until its database is ready.
 
-   <Snippet file="installation" region="client" />
+   <Snippet file="tutorial/client" region="client" />
 
-4. **Create an identity.** A space belongs to an identity, so the client needs one before it can create a space. [HALO](/docs/halo/typescript) covers identities and devices.
-
-   <Snippet file="installation" region="identity" />
-
-5. **Create a space.** A space is a database that peers replicate. `space.db` is where objects live.
-
-   <Snippet file="installation" region="space" />
-
-   The space's id prints once its database is ready to read and write.
+   `space.db` is the database the rest of the learning path reads and writes. `services` is for running the client somewhere other than the default, as the embeds on these pages do: each runs its clients in memory in the page.
 
 </Steps>
 
@@ -95,8 +93,8 @@ DX_PERSIST:
 
 ## What you can do now
 
-You can install ECHO, configure a client for the browser or Node, and open a space with an identity.
+You can install ECHO, configure a client for the browser or Node, and open the app's space with an identity.
 
 ## Next
 
-[Defining types](/docs/echo/learn/defining-types/): declare the types of the objects you will store.
+[Defining types](/docs/echo/learn/defining-types/): declare the app's organizations, people and events.

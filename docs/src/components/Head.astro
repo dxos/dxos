@@ -1,8 +1,31 @@
 ---
 import Default from '@astrojs/starlight/components/Head.astro';
 
+import { DOCS_LAYERS } from '../demos/layers.ts';
 import PostHog from './PostHog.astro';
+
+/** SVG geometry, media sizes and table alignment come from attributes, which reverting every property would drop. */
+const attributed = 'svg, svg *, img, video, canvas, iframe, table, table *';
+
+/** Undoes the global preflight across Starlight's page, down to each embed; Starlight's own layers still win. */
+const PAGE_REVERT = `@layer page-revert {
+  @scope (body > .page, body > .sl-skip-link) to (.dx-island) {
+    :scope, :not(${attributed}), :not(${attributed})::before, :not(${attributed})::after { all: revert; }
+    :is(svg, img, video, canvas, iframe) { display: revert; vertical-align: revert; }
+  }
+}`;
 ---
 
+<!-- First in the head, so this order holds over the layers that Starlight and the react-ui theme declare. -->
+<style is:inline set:html={`@layer ${DOCS_LAYERS.join(', ')};\n${PAGE_REVERT}`} />
 <Default />
+<!-- react-ui's dark variant keys on a `dark` class; Starlight's theme picker sets `data-theme`. -->
+<script is:inline>
+  {
+    const root = document.documentElement;
+    const sync = () => root.classList.toggle('dark', root.dataset.theme === 'dark');
+    sync();
+    new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+</script>
 <PostHog />

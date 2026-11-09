@@ -13,6 +13,9 @@
       "path": "../packages/common/async"
     },
     {
+      "path": "../packages/common/graph"
+    },
+    {
       "path": "../packages/common/keys"
     },
     {
@@ -98,6 +101,15 @@
     },
     {
       "path": "../packages/ui/react-ui-attention"
+    },
+    {
+      "path": "../packages/ui/react-ui-form"
+    },
+    {
+      "path": "../packages/ui/react-ui-graph"
+    },
+    {
+      "path": "../packages/ui/react-ui-list"
     },
     {
       "path": "../packages/ui/react-ui-table"

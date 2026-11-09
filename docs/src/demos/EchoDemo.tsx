@@ -7,6 +7,8 @@ import '../styles/island-base.generated.css';
 
 import React from 'react';
 
+// `@dxos/keys` reads `Buffer` as it loads, so the globals go in before anything else.
+import '@dxos/node-std/globals';
 import '@dxos/react-ui/theme.css';
 
 import { DemoFrame } from './DemoFrame.tsx';

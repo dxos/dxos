@@ -80,10 +80,12 @@ template narrative: An argument
 
 ```mdl
 template tutorial: A learning path step
-  purpose: Teach one skill. The reader ends with code that runs.
+  purpose: Teach one skill. The reader ends with code that runs, and sees the piece of the tutorial app it builds.
   parts:
     - Title and a one-sentence outcome
+    - Background: the facts the steps rely on, with a link to the concept page for the rest
     - Steps: numbered, each one action, one snippet and one observable result
+    - Try it: the tutorial app as it stands after this page, live [F-15.1]
     - Recap: what the reader can now do
     - Next: the following step, from the sidebar order
 ```
@@ -144,11 +146,11 @@ page why-echo: Why ECHO?
 
 ```mdl
 page the-echo-object: The ECHO object
-  What a live object is: identity, type, reactive fields.
+  What a live object is, and the app the learning path builds, running.
   route: /learn/the-echo-object/
   group: Learning path
   template: tutorial
-  status: planned
+  status: spike
 ```
 
 ```mdl
@@ -162,7 +164,7 @@ page installation: Installation
 
 ```mdl
 page defining-types: Defining types
-  Declare an object type and a relation type, then create instances of both.
+  Declare the tutorial app's types, with references between them, and see the form ECHO derives from each.
   route: /learn/defining-types/
   group: Learning path
   template: tutorial
@@ -171,7 +173,7 @@ page defining-types: Defining types
 
 ```mdl
 page mutating-objects: Mutating objects
-  Change objects with Obj.update and observe the change.
+  Create, change and remove the tutorial app's records, and observe each change.
   route: /learn/mutating-objects/
   group: Learning path
   template: tutorial
@@ -180,7 +182,7 @@ page mutating-objects: Mutating objects
 
 ```mdl
 page querying: Querying
-  Select objects with Filter and Query, one-shot and live.
+  Select the tutorial app's records with Filter and Query, by type, sorted, searched, and live.
   route: /learn/querying/
   group: Learning path
   template: tutorial
@@ -189,7 +191,7 @@ page querying: Querying
 
 ```mdl
 page sharing: Sharing a space
-  Replicate a database between two peers and watch a conflict merge.
+  Invite a second peer to the tutorial app's space and watch both replicas follow each other's edits.
   route: /learn/sharing/
   group: Learning path
   template: tutorial
@@ -274,7 +276,7 @@ page schema-evolution: Schema evolution
 
 ```mdl
 page guide-react: React
-  useQuery, useObject and useSchema, and the reactivity rules behind them.
+  The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them.
   route: /guides/react/
   group: Guides
   template: tutorial
@@ -659,7 +661,7 @@ feat F-9: Diagrams as canvas applications
 feat F-10: Live schema forms
 
   desc: |
-    A section on Schema shows a live `react-ui-form` form. Planned; the spike does not build it.
+    Defining types shows the live `react-ui-form` form the tutorial app derives from each of its types.
 
   req F-10.1:
     when: a reader opens the section on Schema
@@ -669,7 +671,8 @@ feat F-11: Graph visualizations
 
   desc: |
     A section on the graph shows visualizations from `react-ui-graph` and `plugin-explorer`.
-    `/echo` shows the `plugin-explorer` graph of a demo space; the docs section is planned.
+    `/echo` shows the `plugin-explorer` graph of a demo space; the tutorial app draws its records and references
+    with `react-ui-graph`.
 
   req F-11.1:
     when: a reader opens the section on the graph
@@ -710,6 +713,33 @@ feat F-14: Upfront motivation
     when: the motivation shows code
     then: the sample is checked like every other sample [F-3], and each claim about an agent names the
           skill or operation that does it
+```
+
+```mdl
+feat F-15: The tutorial app
+
+  desc: |
+    The learning path builds one app: a contact book of organizations, the people who work at them and the
+    events they attend. Each page explains what its steps rely on, has the reader build one piece, and ends
+    with the app as it stands, running in the page.
+
+  req F-15.1:
+    when: a reader finishes a learning-path page that builds part of the app
+    then: the page shows the app as it stands after that page, live, in an embed that runs an in-memory client
+          in the page with no server
+
+  req F-15.2:
+    when: a page shows the app's ECHO code
+    then: the code is quoted by region from the module the embed imports, so the code on the page is the code
+          that runs
+
+  req F-15.3:
+    when: a reader opens Sharing a space
+    then: its embed runs two peers in one space, each with a switch that takes it offline; every other embed runs one peer
+
+  req F-15.4:
+    when: an embed renders on a docs page
+    then: it follows the page's light or dark theme, and the page outside the embed keeps its own styles
 ```
 
 ## Acceptance
@@ -1346,6 +1376,68 @@ decision D-63: The demos set the theme plugin's appearance setting to dark befor
   for: user:wittjosiah
   affects: [F-7.7]
   why: The theme plugin follows the system preference unless its setting says otherwise, and on a light system it removes the page's dark class; the diagram renderer compiles only its light rules.
+```
+
+```mdl
+decision D-64: The learning path walks through building one ECHO app, made from the pieces of the echo-sqlite demo app, and embeds what each page has built so far. It teaches building apps with ECHO in general, not the SQLite backend.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-65: Each learning-path page starts with the information its steps need, then gives the reader something to do with it.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-66: The learning-path steps stay plain TypeScript; the embed runs the app built from them, and the React guide walks through the app's React layer. Fills in [D-64].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.1, F-15.2]
+  why: The learning path teaches ECHO, and a Solid guide is planned beside the React one, so the main path should not require React; the embeds still show the app growing page by page.
+  rejected:
+    - The learning path builds a React app step by step, which makes React a requirement for every reader.
+```
+
+```mdl
+decision D-67: The app is a contact book of Organization, Person and Event, the demo app's schema. Its ECHO code lives in modules that the pages quote by region and the embeds import. The ECHO object opens with the finished app; Defining types, Mutating objects and Querying each end with the app as it stands; Sharing a space runs two peers; Installation sets up a client and has no embed. Fills in [D-64] and [D-65].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15, F-10, F-11]
+  why: One running example with references between its types covers types, refs, queries and sharing; quoting the modules the embeds run keeps the pages and the app from drifting apart.
+  rejected:
+    - Keeping the Task examples beside a separate app, which teaches the same calls twice.
+```
+
+```mdl
+decision D-68: An embed on a docs page follows the Starlight theme by mirroring its `data-theme` to the `dark` class react-ui reads, and the page declares a layer order that keeps Starlight above the react-ui preflight outside the embed and the preflight above Starlight inside it. Fills in [D-64].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.4]
+  why: Starlight switches themes with a `data-theme` attribute while react-ui's dark variant keys on a class, and react-ui's global preflight would otherwise restyle the docs page.
+```
+
+```mdl
+decision D-69: The tutorial demonstrates two peers once, on Sharing a space, with controls reduced to fit the space; every other embed runs one peer, and the reader takes it that the rest works across both peers.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15.3]
+```
+
+```mdl
+decision D-70: Sharing's peers sit side by side at the Mutating objects stage: a type picker, a New button, the list and the form, with the form under the list. Fills in [D-69].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.3]
+  why: That stage already leaves out search and the view toggles, so the embed needs no mode of its own, and side by side shows an edit on one peer arriving at the other.
+  rejected: Stacking the peers one above the other, which keeps the full controls but pushes the second peer below the fold.
 ```
 
 ## Appendix: Extension Definitions

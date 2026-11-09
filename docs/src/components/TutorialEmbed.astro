@@ -1,0 +1,30 @@
+---
+import { type Stage } from '../tutorial/app/Contacts.tsx';
+import { ContactsEmbed } from '../tutorial/app/ContactsEmbed.tsx';
+
+interface Props {
+  stage: Stage;
+  peers?: 1 | 2;
+}
+
+const { stage, peers = 1 } = Astro.props;
+---
+
+<div class="tutorial-embed dx-island not-content" data-peers={peers}>
+  <ContactsEmbed stage={stage} peers={peers} client:only="react" />
+</div>
+
+<style>
+  .tutorial-embed {
+    height: 30rem;
+    margin-block: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+  }
+
+  /* Two peers sit side by side, each with its form under its list. */
+  .tutorial-embed[data-peers='2'] {
+    height: 36rem;
+  }
+</style>

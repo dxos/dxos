@@ -25,7 +25,7 @@ export const PEERS: readonly [Peer, Peer] = [
 ];
 
 /** Resolves once `client` lists the space, which an accepted invitation adds a moment later. */
-const listed = (client: Client, spaceId: SpaceId): Promise<Space> =>
+export const listed = (client: Client, spaceId: SpaceId): Promise<Space> =>
   new Promise((resolve) => {
     const space = client.spaces.get(spaceId);
     if (space) {
