@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { createFunctionPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
 import { GptRealtimeComponent } from './GptRealtime.tsx';
@@ -23,7 +25,11 @@ export type GptRealtimeShape = Schema.Schema.Type<typeof GptRealtimeShape>;
 export type CreateGptRealtimeProps = CreateShapeProps<GptRealtimeShape>;
 
 export const createGptRealtime = (props: CreateGptRealtimeProps) =>
-  createShape<GptRealtimeShape>({ type: 'gpt-realtime', size: { width: 256, height: 256 }, ...props });
+  createShape<GptRealtimeShape>({
+    type: 'gpt-realtime',
+    size: { width: 4 * MAJOR_GRID, height: 4 * MAJOR_GRID },
+    ...props,
+  });
 
 export const gptRealtimeNodeDef = defineComputeNode<GptRealtimeShape>({
   type: 'gpt-realtime',

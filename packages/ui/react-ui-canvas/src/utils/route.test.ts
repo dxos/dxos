@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Endpoint, type Link } from '@dxos/scene';
+import { DEFAULT_GRID, type Endpoint, type Link, MAJOR_GRID } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
@@ -15,6 +15,12 @@ import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePat
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
 const ends = { source: { node: 'a' }, target: { node: 'b' }, z: 'z' };
+
+/** A smart link's stub out of a port: half a major cell. */
+const STUB = MAJOR_GRID / 2;
+
+/** A right angle's radius: one minor cell. */
+const RADIUS = DEFAULT_GRID;
 
 describe('route', () => {
   test('each link type routes by its own rule', ({ expect }) => {
@@ -32,16 +38,16 @@ describe('route', () => {
     // Facing ports, so the stubs point at each other and the middle segment joins them.
     expect(smartPoints(from, to)).toEqual([
       { x: 0, y: 0 },
-      { x: 32, y: 0 },
-      { x: 268, y: 0 },
+      { x: STUB, y: 0 },
+      { x: 300 - STUB, y: 0 },
       { x: 300, y: 0 },
     ]);
     // Two ports on the same side leave the same way, so the route doubles back through the middle
     // segment rather than cutting across either node — the elbow the ports imply.
     expect(smartPoints({ point: { x: 0, y: 0 }, side: 'e' }, { point: { x: 0, y: 200 }, side: 'e' })).toEqual([
       { x: 0, y: 0 },
-      { x: 32, y: 0 },
-      { x: 32, y: 200 },
+      { x: STUB, y: 0 },
+      { x: STUB, y: 200 },
       { x: 0, y: 200 },
     ]);
   });
@@ -54,7 +60,7 @@ describe('route', () => {
         { x: 10, y: 10 },
       ]),
     ).toBe('M 0 0 L 10 10');
-    // A right angle is cut one minor cell (16) back along each segment; the corner is the quadratic's control, so the
+    // A right angle is cut one minor cell back along each segment; the corner is the quadratic's control, so the
     // route bends around it and never reaches it.
     expect(
       splinePath([
@@ -62,7 +68,7 @@ describe('route', () => {
         { x: 100, y: 0 },
         { x: 100, y: 100 },
       ]),
-    ).toBe('M 0 0 L 84 0 Q 100 0, 100 16 L 100 100');
+    ).toBe(`M 0 0 L ${100 - RADIUS} 0 Q 100 0, 100 ${RADIUS} L 100 100`);
     // Segments shorter than two radii share what they have, so neighbouring corners never overlap.
     expect(
       splinePath([
@@ -109,7 +115,7 @@ describe('route', () => {
     expect(
       linkPath({ type: 'curve', id: 'c', z: 'a', source: { node: 'n' }, target: { point: free.point } }, port, free),
     ).toMatch(/, 100 37, 100 37$/);
-    expect(smartPoints(port, free)).toEqual([port.point, { x: 32, y: 0 }, free.point]);
+    expect(smartPoints(port, free)).toEqual([port.point, { x: STUB, y: 0 }, free.point]);
   });
 
   test('on a lattice a smart link takes the ports whose gutter route bends least', ({ expect }) => {

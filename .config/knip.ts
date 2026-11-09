@@ -574,6 +574,10 @@ for (const manifest of globSync(
 
 const config: KnipConfig = {
   workspaces,
+  // A project's `parked/` holds spike files kept for reference outside any package — they import
+  // paths that exist only where they came from. Only those: `.agents/` also holds a real workspace
+  // (`skills/composer-forensics/scripts`), which stays covered.
+  ignore: ['.agents/projects/*/parked/**'],
   // The issue types this repo gates on. Unused exports and types are deliberately excluded: barrel
   // files re-export far more than any one consumer uses, so they are noise here.
   include: ['files', 'dependencies', 'devDependencies', 'unlisted', 'binaries', 'unresolved'],

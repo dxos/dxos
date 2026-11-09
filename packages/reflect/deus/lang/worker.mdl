@@ -1,0 +1,197 @@
+---
+id: org.dxos.spec.worker
+name: DSL.Worker
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The worker dialect: the blocks a spec needs to describe a server-side worker — the resources its
+environment binds, the stateful actors it hosts, the HTTP routes it serves, and the key-value layouts
+it keeps. Before this dialect a worker's spec carried these only in prose: a Durable Object was a
+`service` whose `desc` began "A SQLite Durable Object, one per …", a route was an `op` marked
+`status: route` with its path in the description, and the bindings were a sentence listing names. A
+reader could not see what a worker reaches, what it keeps or who may call it, and a review could not
+judge any of it.
+
+Together with `service` (an RPC interface, `org.dxos.mdl.service@1.0`) and `table` (a SQL table,
+`lang/sql.mdl`), the four blocks here cover a worker's whole surface: what it exposes (`service`,
+`route`), what it depends on (`binding`), and what it keeps (`actor`, `table`, `keyspace`).
+
+The vocabulary is Cloudflare's, since that is the runtime EDGE workers run on, but each block names a
+role rather than a product: an `actor` is a Durable Object class, a `keyspace` is any key-value or blob
+layout, and a `binding`'s `type` is where the runtime's own type names live. A block type is one word, so a
+Durable Object could not be `durable-object` in any case.
+
+The four are a dialect rather than `ext` blocks a spec defines for itself because the linter accepts only
+the block types it knows: a type one spec defines fails lint there, and every other worker's spec would
+redefine it. Defining them once lets every EDGE worker's spec use the same four.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `binding`  | `org.dxos.mdl.binding@1.0`   |
+| `actor`    | `org.dxos.mdl.actor@1.0`     |
+| `route`    | `org.dxos.mdl.route@1.0`     |
+| `keyspace` | `org.dxos.mdl.keyspace@1.0`  |
+
+## Model
+
+- **A `binding` is one name in the worker's environment.** The identifier is the name exactly as the
+  worker reads it (`DATA_SERVICE`, `OPERATION_ROUTING`); the inline prose says what the worker uses it
+  for — the reason it exists, not a restatement of its name.
+  - `type:` is the type the worker's code sees when it reads the binding, as a `TypeExpr`, so a reader
+    knows exactly what a value may be rather than only what sort of thing it is:
+    - **a resource binding** is the runtime's own type for it: `Service<Entrypoint>` for a service binding,
+      naming the entrypoint type the binding is declared with — a `WorkerEntrypoint` class, or an interface
+      branded as one (`Rpc.WorkerEntrypointBranded`), as EDGE's protocol services are
+      (`Service<DataService.Service>`); `DurableObjectNamespace<Class>` for an actor
+      namespace; and `KVNamespace`, `R2Bucket`, `D1Database`, `WorkerLoader`, `DispatchNamespace`,
+      `SendEmail`, `AnalyticsEngineDataset`, `RateLimit` or `WorkerVersionMetadata` for the rest;
+    - **a variable** is its value type, as narrow as the code reads it: a union of literals when it takes
+      one of a fixed set (`'operation-service' | 'plugins'`), a named `type` block when it is structured
+      JSON (`EdgeConfig`), and `number` or `string` otherwise, with a comment for what the type cannot
+      say — a unit (`number  # ms`) or an encoding (`string  # comma-separated plugin keys`);
+    - **a secret** is `Secret<T>`: its value type, marked as one only an operator sets and no
+      configuration file holds. It is the one type this dialect adds, because a secret's value is a
+      string like a variable's but who may see it is not.
+  - `target:` names what it points at: the service and entrypoint, the bucket, the namespace, or the
+    actor class and the worker that defines it.
+  - `envs:` lists, one line per environment, only where the value or target differs between them. A
+    binding with no `envs:` is the same everywhere.
+  - `reads:` names the code symbol that declares and reads it, so a reviewer can find the reader and
+    notice a binding nothing reads.
+- **An `actor` is one stateful instance class: on Cloudflare, a Durable Object class.** It extends
+  `service`, so its `ops:` are the methods other code calls on an instance. On top of that it says:
+  - `binding:` — the binding through which callers reach its namespace;
+  - `key:` — what one instance is addressed by, and how a caller derives it (`getByName(spaceId)`).
+    This is the actor's identity; two callers that derive the same key reach the same instance;
+  - `owns:` — what one instance is the single owner of;
+  - `storage:` — `sqlite` or `kv`, the backend its durable state lives in, and `tables:` and
+    `keyspaces:` — the `table` and `keyspace` blocks that state is;
+  - `memory:` — instance fields that live only while the instance is resident, one line each, so a
+    reader knows what an eviction or a hibernation loses;
+  - `alarm:` — what one alarm run does, and when it re-arms. An actor with no alarm has no `alarm:`.
+- **A `route` is one HTTP endpoint.** The identifier is a name for it (`invokeFunction`), so a
+  requirement can cite it as `route:invokeFunction`; `method:` and `path:` say what the router matches,
+  with path parameters as `:name`, and `app:` names the router it is mounted on and any prefix a proxy
+  strips before it arrives. **`auth:` is required**: who may call it, or `none` — a route whose caller is
+  unchecked says so in the block a reviewer reads, not only in the code.
+- **A `keyspace` is a key-value or blob layout one component owns**, the non-SQL sibling of `table`.
+  - `store:` names where it lives: a binding (`KV OPERATION_CATALOG`, `R2 FUNCTION_ASSETS_BUCKET`), an
+    actor's storage (`Scheduler storage`), or `isolate memory`.
+  - `keys:` has one line per key or key pattern: `pattern: ValueType  # meaning`, with variable parts
+    as `<name>` (`trigger-generation/<triggerId>: number`).
+  - `lifetime:` is `durable` (survives a restart), `isolate` (lives while a worker isolate does) or
+    `request`. It defaults to `durable`.
+  - `bound:` states the cap on how large it grows and what enforces it, or why it needs none. A layout
+    that only grows is a slow outage, so the field is the place a reviewer checks.
+  - A keyspace another component writes and this one only reads says so with `owner:`.
+- **Name code by symbol and other specs by id, never by path** (`lang/core.mdl`). A binding's `reads:`
+  and an actor's identifier are symbols; a file moves, a name stays.
+- A `binding`, `actor`, `route` or `keyspace` is a spec item: a requirement cites it as
+  `binding:DATA_SERVICE`, `actor:Scheduler`, `route:invokeFunction` or `keyspace:schedulerState`, and a
+  review can judge it.
+
+## Definitions
+
+```mdl
+ext binding
+  uri: org.dxos.mdl.binding@1.0
+  desc: |
+    One name in a worker's environment: a service, an actor namespace, a store, a variable or a
+    secret. The identifier is the name as the worker reads it; the inline prose is what it is for.
+  fields:
+    type: TypeExpr              # what the code sees: `Service<E>`, `DurableObjectNamespace<C>`, a store type, a value type, `Secret<T>`
+    target?: Prose              # what it points at: service + entrypoint, bucket, namespace, actor class + worker
+    envs?: FieldMap             # `env: value` for each environment where it differs
+    reads?: Prose               # the code symbol that declares and reads it
+    note?: Prose
+  inline-prose: true
+  syntax: |
+    binding OPERATION_ROUTING: Where platform operations run.
+      type: 'operation-service' | 'plugins'
+      envs:
+        dev: plugins
+        production: operation-service
+      reads: OperationRoutingBinding
+```
+
+```mdl
+ext actor
+  uri: org.dxos.mdl.actor@1.0
+  extends: service
+  desc: |
+    A stateful instance class — on Cloudflare, a Durable Object class. The identifier is the class
+    name; the inline prose is what one instance is. Its `ops` are the methods callers invoke on an
+    instance.
+  adds-fields:
+    binding: Identifier         # the binding through which callers reach its namespace
+    key: Prose                  # what one instance is addressed by, and how a caller derives it
+    owns?: Prose                # what one instance is the single owner of
+    storage?: sqlite | kv       # the backend its durable state lives in
+    tables?: RefList            # the `table` blocks of its SQLite storage
+    keyspaces?: RefList         # the `keyspace` blocks of its key-value storage
+    memory?: FieldMap           # `field: TypeExpr  # meaning` — lost on eviction or hibernation
+    alarm?: Prose               # what one alarm run does, and when it re-arms
+  inline-prose: true
+  syntax: |
+    actor Scheduler: One space's trigger dispatcher.
+      binding: TRIGGERS_DISPATCHER
+      key: the space id — `getByName(spaceId)`
+      storage: kv
+      keyspaces: [schedulerState]
+      alarm: Runs due crons, then drains subscription changes and feed triggers; re-arms while work remains.
+      ops:
+        status() → SchedulerStatus
+```
+
+```mdl
+ext route
+  uri: org.dxos.mdl.route@1.0
+  desc: |
+    One HTTP endpoint a worker serves. The identifier is a name for the route; the inline prose is
+    what it does. `auth` is required: who may call it, or `none`.
+  fields:
+    method: GET | POST | PUT | PATCH | DELETE | ALL
+    path: Prose                 # as the router matches it, parameters as `:name`
+    auth: Prose                 # who may call it, or `none`
+    app?: Prose                 # the router it is mounted on, and any prefix a proxy strips
+    input?: FieldMap            # body or query fields
+    output?: TypeExpr
+    errors?: ErrorMap
+    note?: Prose
+  inline-prose: true
+  syntax: |
+    route listProcesses: Lists the processes running in a space.
+      method: GET
+      path: /processes/:spaceId
+      auth: a verifiable presentation from a member of the space
+      output: ProcessInfo[]
+```
+
+```mdl
+ext keyspace
+  uri: org.dxos.mdl.keyspace@1.0
+  desc: |
+    A key-value or blob layout one component owns — a KV namespace, an actor's key-value storage, an
+    R2 prefix, or isolate memory. The non-SQL sibling of `table`. The identifier names the layout; the
+    inline prose is what it holds.
+  fields:
+    store: Prose                # a binding, an actor's storage, or `isolate memory`
+    keys: FieldMap              # `pattern: ValueType  # meaning`; variable parts as `<name>`
+    lifetime?: durable | isolate | request   # default durable
+    bound?: Prose               # the cap on its size and what enforces it, or why it needs none
+    owner?: Prose               # the component that writes it, when this one only reads
+    note?: Prose
+  inline-prose: true
+  syntax: |
+    keyspace operationCatalog: The operation catalog operation-service publishes.
+      store: KV OPERATION_CATALOG
+      keys:
+        operation-catalog/current: CatalogPointer        # the version readers use
+        operation-catalog/snapshot/<version>: Catalog    # immutable once written
+      owner: operation-service
+      bound: one snapshot per published catalog version, each expiring after 30 days
+```

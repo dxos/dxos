@@ -33,6 +33,7 @@ export const TestSkill: Skill.Definition = {
       name: 'Host test',
       description: 'Exercises the plugin host.',
       mcpPrompt: true,
+      agentCanEnable: true,
       tools: Skill.toolDefinitions({ operations: [Reply] }),
     }),
 };

@@ -13,6 +13,8 @@ export type SceneMenuCommand =
   | 'paste'
   | 'duplicate'
   | 'delete'
+  | 'bring-to-front'
+  | 'send-to-back'
   | 'group'
   | 'ungroup'
   | 'make-object';
@@ -27,6 +29,8 @@ export type SceneMenuState = {
   canPaste: boolean;
   canCreate: boolean;
   canDelete: boolean;
+  /** Anything selected to restack. */
+  canOrder: boolean;
   canGroup: boolean;
   canUngroup: boolean;
   canMakeObject: boolean;
@@ -50,21 +54,25 @@ export const SCENE_MENU_LABELS: Record<SceneMenuCommand, string> = {
   'paste': 'Paste',
   'duplicate': 'Duplicate',
   'delete': 'Delete',
+  'bring-to-front': 'Bring to front',
+  'send-to-back': 'Send to back',
   'group': 'Group',
   'ungroup': 'Ungroup',
   'make-object': 'Make object',
 };
 
 export const SCENE_MENU_KEYS: Partial<Record<SceneMenuCommand, KeyAction>> = {
-  undo: 'undo',
-  redo: 'redo',
-  cut: 'cut',
-  copy: 'copy',
-  paste: 'paste',
-  duplicate: 'duplicate',
-  delete: 'delete',
-  group: 'group',
-  ungroup: 'ungroup',
+  'undo': 'undo',
+  'redo': 'redo',
+  'cut': 'cut',
+  'copy': 'copy',
+  'paste': 'paste',
+  'duplicate': 'duplicate',
+  'delete': 'delete',
+  'bring-to-front': 'bringToFront',
+  'send-to-back': 'sendToBack',
+  'group': 'group',
+  'ungroup': 'ungroup',
 };
 
 /**
@@ -82,14 +90,34 @@ export const sceneMenuItems = (state: SceneMenuState): SceneMenuItem[] => {
     'paste': edits && state.canPaste && state.canCreate,
     'duplicate': edits && state.canCreate,
     'delete': edits && state.canDelete,
+    'bring-to-front': edits && state.canOrder,
+    'send-to-back': edits && state.canOrder,
     'group': edits && state.canGroup,
     'ungroup': edits && state.canUngroup,
     'make-object': edits && state.canMakeObject,
   };
   const ids: SceneMenuCommand[] = element
-    ? ['undo', 'redo', 'cut', 'copy', 'paste', 'duplicate', 'delete', 'group', 'ungroup', 'make-object']
+    ? [
+        'undo',
+        'redo',
+        'cut',
+        'copy',
+        'paste',
+        'duplicate',
+        'delete',
+        'bring-to-front',
+        'send-to-back',
+        'group',
+        'ungroup',
+        'make-object',
+      ]
     : ['undo', 'redo', 'paste'];
-  const separated = new Set<SceneMenuCommand>(['cut', 'group', ...(element ? [] : ['paste' as const])]);
+  const separated = new Set<SceneMenuCommand>([
+    'cut',
+    'bring-to-front',
+    'group',
+    ...(element ? [] : ['paste' as const]),
+  ]);
   return ids.map((id) => {
     const key = SCENE_MENU_KEYS[id];
     const binding = key === undefined ? undefined : KEY_BINDINGS[key][0];

@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Meta } from '@storybook/react-vite';
+import { type Decorator, type Meta } from '@storybook/react-vite';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -16,7 +17,11 @@ import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/t
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
+import { Identity, Space } from '@dxos/halo';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
+import { HaloProvider } from '@dxos/halo-react';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -34,12 +39,31 @@ import { SheetArticle } from './SheetArticle.tsx';
 // share one instance.
 const registry = new ComputeGraphRegistry({ computeRuntime: createMockedComputeRuntimeProvider() });
 
+/** `SheetArticle` labels the user's selection with their identity, which the app provides through `HaloProvider`. */
+const withHaloProvider: Decorator = (Story) => {
+  const client = useClient();
+  const services = useMemo(
+    () =>
+      Context.empty().pipe(
+        Context.add(Identity.Service, makeIdentityService(client)),
+        Context.add(Space.Service, makeSpaceService(client)),
+      ),
+    [client],
+  );
+  return (
+    <HaloProvider services={services}>
+      <Story />
+    </HaloProvider>
+  );
+};
+
 const meta = {
   title: 'plugins/plugin-sheet/containers/SheetArticle',
   component: SheetArticle,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    withHaloProvider,
     withClientProvider({ types: [Sheet.Sheet, Sheet.Chart], createSpace: true }),
     withComputeGraphDecorator({ registry }),
     withPluginManager({

@@ -44,11 +44,12 @@ const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> =
 
       // Every plugin's operations: on EDGE the hook runs in operation-service, which has no handler provider.
       const handlers = OperationHandlerSet.merge(...(yield* Capability.getAll(Capabilities.OperationHandler)));
-      const replies = yield* Effect.forEach(succeededCalls(request), ({ operationKey, output }) =>
+      const replies = yield* Effect.forEach(succeededCalls(request), ({ operationKey, output, evaluated }) =>
         OperationHandlerSet.getHandlerByKey(handlers, operationKey).pipe(
           Effect.map((op) => {
             const field = AgentChannels.channelSendField(op);
-            return field !== undefined && isConversation(output?.[field], chat, conversation.thread);
+            // Code mode does not record where a send from an `eval` went, so any such send counts as the reply.
+            return field !== undefined && (evaluated || isConversation(output?.[field], chat, conversation.thread));
           }),
           Effect.orElseSucceed(() => false),
         ),
@@ -63,10 +64,13 @@ export default handler;
 /** A prompt someone wrote, which starts a request; synthetic prompts (a hook's follow-up) continue one. */
 const isPrompt = (message: Message.Message): boolean => message.sender.role === 'user' && textOf(message).length > 0;
 
-/** The request's tool calls that returned a result rather than an error, with their operation and decoded output. */
+/**
+ * The request's operation calls that returned a result rather than an error, with their operation and decoded output:
+ * each tool call, and each operation a code-mode `eval` ran, which is recorded without its output.
+ */
 const succeededCalls = (
   request: readonly Message.Message[],
-): { operationKey: string; output: Record<string, unknown> | undefined }[] => {
+): { operationKey: string; output: Record<string, unknown> | undefined; evaluated: boolean }[] => {
   const blocks = request.flatMap((message) => message.blocks);
   const outputs = new Map(
     blocks.flatMap((block) =>
@@ -80,11 +84,20 @@ const succeededCalls = (
         : [],
     ),
   );
-  return blocks.flatMap((block) =>
+  const calls = blocks.flatMap((block) =>
     block._tag === 'toolCall' && block.operationKey && outputs.has(block.toolCallId)
-      ? [{ operationKey: block.operationKey, output: outputs.get(block.toolCallId) }]
+      ? [{ operationKey: block.operationKey, output: outputs.get(block.toolCallId), evaluated: false }]
       : [],
   );
+  // A code-mode `eval` is one call that may run several operations; its result records which.
+  const evaluated = blocks.flatMap((block) =>
+    block._tag === 'toolResult'
+      ? (block.invocations ?? []).flatMap(({ operationKey, error }) =>
+          error === undefined ? [{ operationKey, output: undefined, evaluated: true }] : [],
+        )
+      : [],
+  );
+  return [...calls, ...evaluated];
 };
 
 /** Whether a send's destination is this conversation: its thread id, or an encoded reference to its chat. */
