@@ -17,6 +17,7 @@ import { useQuery } from '@dxos/echo-react';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
@@ -132,6 +133,8 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        // Draws the feature embeds.
+        MarkdownPlugin.make(),
         // The project article and its levels; the feature stack fills in the views, overviews and embeds.
         ProjectsPlugin.make(),
         // plugin-projects' declared dependencies.
@@ -170,7 +173,7 @@ export const AddFeature: Story = {
     const canvas = within(canvasElement);
     await showTab(canvas, 'spec');
     const document = await canvas.findByTestId('projectsPlugin.spec.document', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(within(document).getAllByTestId('feature-embed').length).toBeGreaterThan(0), {
+    await waitFor(() => expect(within(document).getAllByTestId('markdown.embed').length).toBeGreaterThan(0), {
       timeout: 10_000,
     });
     await showCanvas(canvas);

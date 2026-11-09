@@ -24,7 +24,7 @@ import { Message } from '@dxos/types';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, evaluate, makeEvalToolkit } from './eval-tool.ts';
+import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, type Evaluation, evaluate, makeEvalToolkit } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -544,4 +544,59 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
       { timeout: LanguageModelFixture.isUpdateEnabled() ? 120_000 : 30_000 },
     );
   });
+});
+
+// No model in the loop, so not tagged `model-fixture`: this runs with every test run.
+describe('code mode records the operations an eval ran', () => {
+  it.effect(
+    'on both dialects, keyed by the eval call, including what ran before a failure',
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        const evaluations: Evaluation[] = [];
+        const call = Effect.fnUntraced(function* (dialect: Dialect, toolCallId: string, code: string) {
+          const toolkit = makeEvalToolkit({
+            dialect,
+            sandbox: Sandbox.inProcess,
+            runtime,
+            operations: [ScoreOperation],
+            onEvaluated: (evaluation) => evaluations.push(evaluation),
+          });
+          return yield* callTool(yield* toolkit.handlers, {
+            _tag: 'toolCall',
+            toolCallId,
+            name: EVAL_TOOL_NAME,
+            input: JSON.stringify({ code }),
+            providerExecuted: false,
+          });
+        });
+
+        // The plain dialect reaches the operation through its tool path; the program then fails.
+        yield* call(PlainDialect, 'plain', "print(await ops.score({ title: 'abc' })); throw new Error('boom');");
+        // The Effect dialect reaches it through `Operation.invoke`, which goes to the runtime's `Operation.Service`.
+        yield* call(
+          EffectDialect,
+          'effect',
+          `const Score = yield* Database.resolve('${SCORE_KEY}');\nyield* print(yield* Operation.invoke(Score, { title: 'abcd' }));`,
+        );
+
+        // `invokePromise` on the same service is recorded too, and once: it does not go through the wrapped `invoke`.
+        yield* call(
+          EffectDialect,
+          'promise',
+          `const Score = yield* Database.resolve('${SCORE_KEY}');\nconst service = yield* Operation.Service;\n` +
+            `const outcome = yield* Effect.promise(() => service.invokePromise(Score, { title: 'abcde' }));\n` +
+            'yield* print(outcome.data);',
+        );
+
+        expect(evaluations.map(({ toolCallId, invocations }) => ({ toolCallId, invocations }))).toEqual([
+          { toolCallId: 'plain', invocations: [{ operationKey: SCORE_KEY }] },
+          { toolCallId: 'effect', invocations: [{ operationKey: SCORE_KEY }] },
+          { toolCallId: 'promise', invocations: [{ operationKey: SCORE_KEY }] },
+        ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

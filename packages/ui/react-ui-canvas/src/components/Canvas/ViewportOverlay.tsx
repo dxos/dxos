@@ -77,6 +77,7 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
                 canPaste: clipboard !== undefined,
                 canCreate: capabilities.create === true,
                 canDelete: capabilities.delete === true,
+                canOrder: capabilities.update === true && selection.size > 0,
                 canGroup: capabilities.create === true && capabilities.delete === true && selection.size > 0,
                 canUngroup:
                   selectedInstance !== undefined && capabilities.create === true && capabilities.delete === true,
@@ -100,6 +101,10 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
               return void intents.duplicate(selection, DUPLICATE_STEP);
             case 'delete':
               return void selectionAspect.commands.delete();
+            case 'bring-to-front':
+              return void intents.order(selection, 'front');
+            case 'send-to-back':
+              return void intents.order(selection, 'back');
             case 'group':
               return void selectionAspect.commands.group();
             case 'ungroup':

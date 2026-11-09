@@ -7,7 +7,7 @@ version: 0.1.0
 ```mdl
 plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code they describe.
   id: org.dxos.plugin.code
-  dependsOn: [org.dxos.plugin.projects]
+  dependsOn: [org.dxos.plugin.markdown, org.dxos.plugin.projects]
   modules:
     - AppGraphBuilder: graph nodes for specs and code projects
     - BuildRunState: the state of the running build agent, from CodeEvents.Start
@@ -19,8 +19,8 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - ReactSurface: the spec article surface, and the code project's article and section surfaces
     - Schema: the Spec and CodeProject types
     - Settings: repos to sync and build settings
-    - SkillDefinition: the Coder, Feature Map and Project Repositories skills
-    - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
+    - SkillDefinition: the Coder, Feature Map, Project Repositories and Spec Review skills
+    - SpecFileMapping: the GitHubCapabilities.FileMappings for `**/*.mdl` and `**/*.review.mdl`, so a GitHub file binding syncs specs and imports their reviews (org.dxos.plugin.github.file-sync#F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
 ```
@@ -487,6 +487,32 @@ op exportSpecFile
 ```
 
 ```mdl
+op createSpecReview
+  key: org.dxos.operation.code.createSpecReview
+  desc: |
+    Records a `.review.mdl` text as a review of the spec (F-24.2). Refused when the front matter lacks commit, date
+    or by, or names another file than the one GitHub file sync binds the spec to.
+  input:
+    spec: Ref<Spec>
+    content: string
+  output: { review: Ref<SpecReview>, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
+```mdl
+op importSpecReviewFile
+  key: org.dxos.operation.code.importSpecReviewFile
+  desc: |
+    The import of the `.review.mdl` FileMapping: records the file against the Spec synced from the `.mdl` beside it,
+    and fails when there is none. The mapping has no export.
+  input: FileImportInput
+  output: FileImportOutput
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
+```mdl
 op listLocalSpecs
   key: org.dxos.operation.code.listLocalSpecs
   desc: Lists the `.mdl` specs in every known checkout as source keys, reviews excluded.
@@ -550,6 +576,18 @@ type RepositoriesSkill
     key: org.dxos.skill.code.repositories
     tools:
       - op:updateProjectRepositories
+    instructions: prose
+```
+
+```mdl
+type SpecReviewSkill
+  desc: |
+    Skill key `org.dxos.skill.code.specReview`, named Spec Review, which an agent can enable. Records a `.review.mdl`
+    review of a spec in the space (F-24).
+  fields:
+    key: org.dxos.skill.code.specReview
+    tools:
+      - op:createSpecReview
     instructions: prose
 ```
 
@@ -848,8 +886,9 @@ feat F-16: Compliance review annotations
     The `spec-review` skill writes `<SPEC>.review.mdl` beside a spec: one verdict
     per item, in the review dialect (`org.dxos.spec.review`).
 
-  req F-16.1: SpecArticle reads the review beside the spec from the checkout and
-              re-reads it every 3 seconds.
+  req F-16.1: SpecArticle reads a spec's reviews: a spec in a space reads its SpecReviews from
+              ECHO; a spec read from a checkout reads the review beside it there and re-reads it
+              every 3 seconds.
   req F-16.2: Each reviewed item's declaration line gets a status bar and chip in
               the margin; a chip opens the verdict in the Review view.
   req F-16.3: Each definitions-graph box gets a status badge; a feature shows the
@@ -950,9 +989,15 @@ feat F-20: Feature embeds in the editor
              the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
              sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
              "New feature" until changed, as on an empty line.
-  req F-20.7: A section is inert until it has attention, so the cursor and scrolling pass through it. Its fold toggle
-             is not: one click folds or unfolds it. A click anywhere else gives it attention, its form then edits the
-             feature's name, description, requirements and status in place, and Escape returns the cursor to the text.
+  req F-20.7: A section is inert until it has attention, so scrolling passes through it. A click gives it
+             attention, and its form then edits the feature's name, description, requirements and status in place,
+             and its fold toggle folds or unfolds it. Arrowing through the text stops on a section rather than skipping
+             it. The embed of a missing feature is its source text, marked not found. A selected section has
+             attention and a focus ring. Enter then edits its name, the arrows move on to the next section or the text
+             on either side, Alt with Up or Down moves it as a line, undo undoes the move, and Backspace or Delete
+             deletes it. Escape in a field selects the section again, and Escape on a selected section returns the
+             cursor to the text after it, or before it when none follows. In a read-only document a selected section
+             neither moves nor deletes.
   req F-20.10: A section shows everything the feature's `feat` block says: its block id, name, status, description and
               requirements, a structured requirement with each field on a line of its own. It also lists the features
               the feature depends on, which it can add and remove.
@@ -1024,6 +1069,28 @@ feat F-23: A project's repositories
   req F-23.2: An agent asked to give a project a repository, or to take one away, adds or removes it with
               op:updateProjectRepositories from the Project Repositories skill; a repository already listed keeps its
               place.
+```
+
+```mdl
+feat F-24: Spec reviews in ECHO
+  req F-24.1: A review of a spec is a `SpecReview` object owned by the spec (`@dxos/compute`'s `SpecReview`, typename
+              `org.dxos.type.projects.specReview`): its commit, date and reviewer, its summary, and a verdict per spec
+              item keyed by the item's id.
+  req F-24.2: Recording a review with the same commit, date and reviewer as one the spec has replaces that review's
+              summary and verdicts; any other review is added beside the spec's earlier ones.
+  req F-24.3: Reviews are imported from git and never written back. A `.review.mdl` file is recorded against the spec
+              synced from the file beside it, by the local checkout sync ([F-14]) and by GitHub file sync, which maps
+              it to `SpecReview` and excludes it from the spec mapping.
+  req F-24.4: An agent records a review with op:createSpecReview from the Spec Review skill, given the spec and the
+              review file's text.
+  req F-24.5: Each item shows its newest verdict across the spec's reviews, with the review's date and commit: in the
+              editor's status chip, the Review view's cards, and a chip on each requirement where a feature's page and
+              its section in a spec list them. A feature card shows no verdicts.
+  req F-24.6: The Review view picks a review from the spec's history; it shows the current status by default.
+  req F-24.7: The Review view shows the review's summary as markdown: its first paragraph, with the rest behind a
+              disclosure. Below it, a filter of each status with its count, worst first, stays pinned above the cards
+              and shows only that status's verdicts; each status is a button of its own, its icon beside its count. The summary, filter and cards scroll together under the picker,
+              and the current card shows its note in full.
 ```
 
 ## Acceptance
@@ -1338,7 +1405,7 @@ test QA-4: Grow a spec from prose
   desc: |
     A spec starts as plain prose and takes structure a paragraph at a time, with nothing forced on it: each paragraph
     turned into a feature becomes that feature's description, in a form edited where the paragraph was. Walked by the
-    autocue flow `spec-document` against the FeatureEmbeds story "Prose", whose spec "Mail" is three paragraphs
+    autocue flow `spec-document` against the feature-embeds story "Prose", whose spec "Mail" is three paragraphs
     of prose with no features.
   actors: human
   covers: [F-19.3, F-19.6, F-20.1, F-20.2, F-20.3, F-20.6, F-20.7, F-20.10, F-20.11]
@@ -1355,15 +1422,15 @@ test QA-4: Grow a spec from prose
       expect: the paragraph becomes a feature's section, whose description is the paragraph, with the cursor in its name
     - name: Name it
       do: Type "Search" and press Escape.
-      expect: the section is named "Search" with block id F-19, and the cursor is back in the text, after the section
+      expect: the section is named "Search" with block id F-19, and is selected, ringed in the focus colour
     - name: Turn another paragraph into a feature
       do: Put the cursor at the end of the paragraph "Mail should feel instant…", type " /feature", accept it, type "Instant inbox" and press Escape.
-      expect: a second section, "Instant inbox" with block id F-20, above "Search", with the cursor after it; the last paragraph is still prose
+      expect: a second section, "Instant inbox" with block id F-20, above "Search", and selected; the last paragraph is still prose
     - name: Reorder by moving the embed
       do: Press Alt+Down twice.
       expect: the "Instant inbox" section sits below "Search", the spec lists Search first, and each keeps its block id
     - name: Delete a feature by deleting its embed
-      do: With the cursor still after the "Instant inbox" section, press Backspace.
+      do: With the "Instant inbox" section still selected, press Backspace.
       expect: the section is gone and the spec holds only Search
     - name: Undo restores it
       do: Press Cmd+Z.
@@ -1381,8 +1448,8 @@ test QA-4: Grow a spec from prose
       do: Click the "Instant inbox" section, open its "Needs" picker and pick "Snooze".
       expect: the section's "Needs" row shows "Search" and "Snooze"
     - name: Fold the sections
-      do: In each section, click its fold chevron, without clicking the section first.
-      expect: one click folds each section to its header row; "Search" reads "1 requirement" and "Instant inbox" shows the
+      do: In each section, click the section, then its fold chevron.
+      expect: each section folds to its header row; "Search" reads "1 requirement" and "Instant inbox" shows the
         block ids of "Search" and "Snooze"
 ```
 
@@ -1411,7 +1478,7 @@ test QA-5: Switch between a project's specs
     - name: See the project's specs
       do: Open the project "Inbox" on its Overview.
       expect: the project's form lists its specs under Specs, "Inbox and agents" and then "Launch talk", each a row
-        folded under its name, with a `+` beside the label, and the toolbar offers Create artifact
+        folded under its name, with a `+` beside the label, and Artifacts carries a `+` of its own
     - name: Unfold a spec
       do: Unfold the row "Inbox and agents" and type a description.
       expect: the row shows the spec's Name and Description fields nested in the project's form, and the description
@@ -1422,7 +1489,7 @@ test QA-5: Switch between a project's specs
     - name: Open the Specs tab
       do: Click the Specs tab and scroll through the document.
       expect: the tab shows "Inbox and agents", its prose and goals with its features embedded under their headings,
-        and the toolbar holds the spec dropdown, the view toggle and Extensions instead of Create artifact
+        and the toolbar holds the spec dropdown, the view toggle and Extensions
     - name: Turn an idea into a feature
       do: At the end of the line "A morning digest of what agents did overnight", type `/feature`, press Enter and
         type a description.
@@ -1449,6 +1516,39 @@ test QA-5: Switch between a project's specs
     - name: Add a feature on the canvas
       do: Point at an empty cell, click the `+` that shows there, then New feature.
       expect: a tenth card, "New feature", appears in that cell
+```
+
+```mdl
+test QA-6: Arrow through a spec's features
+  desc: |
+    A spec read with the keyboard alone: the cursor arrows through the text and stops on each feature's section on the
+    way, rather than skipping it, so a section can be opened, edited and left without the mouse. Walked by the autocue
+    flow `embed-keyboard` against the feature-embeds story "Sample".
+  actors: human
+  covers: [F-20.7]
+  status: passing            # 2026-11-04, recorded by autocue/embed-keyboard.mjs
+  given:
+    - storybook serves plugin-code
+    - the spec "Inbox and agents" embeds its features under the heading "Features", Accounts first, with a blank line
+      between each
+  steps:
+    - name: Arrow onto a section
+      do: Put the cursor at the end of the heading "Features" and press Down twice.
+      expect: the first press moves to the blank line; the second selects the Accounts section, ringed in the focus
+        colour, and the cursor is gone from the text
+    - name: Edit it
+      do: Press Enter, then Right, type " (all providers)" and press Escape.
+      expect: Enter selects the section's name, the name takes the text, and Escape selects the section again
+    - name: Arrow on through the spec
+      do: Press Down until the "Provider sync" section is selected, then Up until Accounts is selected again.
+      expect: each press selects the next section or moves to the next line of text, in document order, and no
+        section is skipped
+    - name: Move a section
+      do: Press Alt+Down twice.
+      expect: the section moves down a line at a time, below the section after it, and stays selected
+    - name: Leave with Escape
+      do: Press Escape.
+      expect: the cursor is in the text on the line after the section
 ```
 
 ## Changelog
@@ -2016,6 +2116,162 @@ decision D-65: A section's fold toggle stays live while the rest of the section 
   by: user:wittjosiah
   affects: [F-20.7]
   why: Folding took two clicks, one to give the section attention and one on the toggle.
+```
+
+```mdl
+decision D-66: Arrowing through a spec stops on each section instead of skipping it. A section the arrows reach has focus itself, so it is selected: it has attention and a focus ring. Enter goes into it, Escape in a field comes back out to the selection, and the arrows go on to the text on either side. Alt with Up or Down and Backspace act on the selected section as they would on a line. The stop belongs to the editor's block widgets, so object embeds in a Markdown document stop the same way. Amends [F-20.7] and [D-65].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.7]
+  why: A section could be reached only with the mouse; the cursor skipped it.
+```
+
+```mdl
+decision D-67: Replaces the part of [D-66] where the arrows go only to the text. Undo and redo on a selected section act on the document, and the section stays selected while it is still there. From a selected section, an arrow selects the next section on its side or puts the cursor in the text there, and does nothing when there is neither; Escape puts the cursor in the text after it, or before it when none follows; Backspace or Delete removes it and puts the cursor in the text before it, or after it when none precedes. The arrows pass a block that cannot be selected, such as a missing feature's notice. In a read-only document a selected section neither moves nor deletes.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.7]
+  supersedes: D-66
+  why: D-66 left open what undo, Escape, a delete and a move do with the selection and the cursor, and an arrow beside another section stops on it as an arrow from the text does.
+```
+
+```mdl
+decision D-68: A feature embed in a spec is the editor's object embed, plugin-markdown's, the one a Markdown document draws; inside it is the feature's `section` surface. The section reads its attention from the embed. Like any embed it is inert until selected, its fold toggle too, so folding a section that is not selected takes a click to select it first; it shows its label and open button on hover and resizes from its bottom edge; a missing feature is its source text marked not found. plugin-markdown contributes the embed as `MarkdownCapabilities.ObjectEmbeds`, which plugin-projects' spec editor draws for every spec ([org.dxos.plugin.projects#D-198]), and the software package keeps only the sync, the pasted copy and `/feature`. CodePlugin depends on plugin-markdown, since without the embed a section is only its source text. Amends [F-20.7] and [D-65].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.7]
+  supersedes: D-65
+  why: The spec drew its sections in a frame of its own, a copy of the object embed; one embed keeps both documents the same.
+```
+
+```mdl
+decision D-69: A spec's reviews are structured data. A SpecReview type sits beside the Spec type, and each review holds its verdicts keyed by the spec items they judge. The feature component draws the verdicts on requirements and a CodeMirror extension draws them on other items. An operation creates a review, with no UI of its own, as a tool for agents over MCP and in the app. GitHub file sync imports reviews into structured data. Reviews have a fixed format and are not extensible. A view of a whole review sits beside the spec, in its companion. An item's current status is its newest verdict, and old verdicts are kept.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16, F-24]
+```
+
+```mdl
+decision D-70: Each review is a separate ECHO object. Reviews are only imported from git, never written back for now, and only the most recent review is imported, with no backfill.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16.1]
+```
+
+```mdl
+decision D-71: Feature cards stay small and show no requirement verdicts; a feature's requirements and their verdicts are seen by going to the feature.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-24]
+```
+
+```mdl
+decision D-72: A spec's reviews are ECHO objects beside the spec, one `SpecReview` per review, so a spec in a space keeps its review history. Each item's current status is its newest verdict in any review. Reviews come from git only: the `.review.mdl` file in the checkout or repository is imported and nothing writes one back, and only the current file is imported, with no backfill of earlier commits. The same front matter updates a review in place; new front matter makes a new review. The one way in for an agent is op:createSpecReview, which the Spec Review skill declares and the MCP server exposes. Requirement verdicts show where a feature's requirements are listed, its page and its section, and never on a feature card, which stays small. Fills in [D-69], [D-70] and [D-71], and amends [F-16.1] for a spec in a space, whose review is read from ECHO instead of the checkout.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1, F-24]
+  why: A review read from the checkout is lost to anyone without that checkout, and the file holds only the latest review.
+  rejected:
+    - Writing reviews back to git.
+    - A review per item rather than per review.
+    - Backfilling reviews from git history.
+```
+
+```mdl
+decision D-73: The Review view does not clip the summary, which made it cluttered. The summary leads the view, and the status counts become filters right above the cards they filter. The view is built from react-ui components only, and the proportion bar may be left out.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16.4, F-24.7]
+```
+
+```mdl
+decision D-74: The Review view leads with the review's summary, rendered as markdown and cut only at its first paragraph, with the rest behind a disclosure. The status counts become a filter pinned right above the cards they filter, each status an icon and count with its name in a tooltip, so the row fits a narrow panel. The summary scrolls with the cards rather than holding a fixed share of the panel. Fills in [D-73].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.4, F-24.7]
+  why: A six-line clip cut the summary mid-line, showed its source line breaks and backticks, and hid most of it; the counts looked like filters and did nothing, and as labelled tags they filled the panel's width.
+  rejected:
+    - Grouping the cards under collapsible status headers.
+    - A fixed-height summary with its own scroll.
+```
+
+```mdl
+decision D-75: The filter's statuses are delineated as a button group, so each count sits with its own icon rather than nearer the next one.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-24.7]
+```
+
+```mdl
+decision D-76: Each status in the filter is a filled toggle-group button with the button's standard padding, which matches the gap between its icon and count. Fills in [D-75].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-24.7]
+  why: react-ui has no joined button group; filled buttons with standard padding delineate each status from react-ui parts alone, as [D-73] asks.
+  rejected:
+    - A custom segmented control joining the buttons.
+```
+
+```mdl
+decision D-77: A spec lists its reviews in an annotation, `org.dxos.projects.reviews`, as it lists its features, so the spec holds a ref to each review it owns. Fills in [D-72].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: A parent edge needs a ref from the parent to the child; without one, every new review logged a warning and could be reached only by query.
+  rejected:
+    - Dropping the parent edge, which would leave a deleted spec's reviews behind.
+```
+
+```mdl
+decision D-78: A review's `date` may carry a UTC time, `YYYY-MM-DDTHH:MMZ`, and the Spec Review skill writes one, so two reviews of one day keep their order; a plain date orders before that day's timed ones. Fills in [D-72].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: Reviews are ordered by `date` as text, and two reviews of one day tied, so query order chose the current status.
+  rejected:
+    - Storing the time a review was imported, which orders imports rather than reviews.
+```
+
+```mdl
+decision D-79: A review file that a GitHub binding already holds as a spec, from before the review mapping, is released and imported as a review by file sync's re-claim (org.dxos.plugin.github.file-sync#F-3.5). Fills in [D-70].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.1]
+  why: The spec mapping claimed `**/*.review.mdl` before it excluded them, and file sync pulls only changed files, so an unchanged review would stay a spec.
+  rejected:
+    - A one-time migration deleting those specs.
+    - Leaving them.
+```
+
+```mdl
+decision D-80: Approve [D-77], [D-78] and [D-79].
+  date: 2026-11-05
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-81: A review whose front matter names another file than the one GitHub file sync binds the spec to is refused, and a review's front matter drops a trailing `# comment` as `deus review check` does. Fills in [D-69].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:createSpecReview, F-24.4]
+  why: op:createSpecReview takes the spec apart from the text, so a review of another spec could be recorded on this one; and a file the check accepted was refused on import.
+  rejected:
+    - Matching the review's repository as well, which needs a Repo lookup for a mistake the path already catches.
+```
+
+```mdl
+decision D-82: QA-5 finds Create artifact on the overview's Artifacts heading rather than the toolbar, following plugin-projects ([org.dxos.plugin.projects#D-199]).
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-5]
 ```
 
 ## Appendix: Extension Definitions

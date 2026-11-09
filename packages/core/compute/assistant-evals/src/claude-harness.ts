@@ -350,8 +350,11 @@ const bindTestAccount = async (edgeUrl: string, identity: Identity): Promise<voi
   }
 };
 
-/** Puts the harness's space on EDGE, where the deployed worker reads it. */
-const replicateToEdge = async (
+/**
+ * Puts the harness's space on EDGE, where the deployed worker reads it. Exported because every test that
+ * drives a deployed EDGE needs the same four steps, and EDGE refuses a space that skipped any of them.
+ */
+export const replicateToEdge = async (
   client: Client,
   edgeUrl: string,
   identity: Identity,

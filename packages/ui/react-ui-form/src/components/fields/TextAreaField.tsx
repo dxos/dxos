@@ -8,8 +8,13 @@ import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
+import { useFormExtensions } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
+import { InputEditor } from './InputEditor.tsx';
+
+/** A text area's minimum height in lines. */
+const TEXT_AREA_ROWS = 3;
 
 export const TextAreaField = ({
   type,
@@ -19,15 +24,32 @@ export const TextAreaField = ({
   placeholder,
   presentation,
   jsonPath,
+  path,
+  collaborative,
   getValue,
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<string>) => {
+  const extensions = useFormExtensions(
+    collaborative && path && jsonPath !== undefined ? { path, jsonPath } : undefined,
+  );
   const value = getValue() ?? '';
   const inPlace = presentation === 'title' || presentation === 'plain';
   const { isStatic, showLabel } = presentationFor(presentation);
   if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
+  }
+  if (collaborative) {
+    return (
+      <InputEditor
+        extensions={extensions}
+        rows={TEXT_AREA_ROWS}
+        placeholder={placeholder}
+        readonly={!!readonly}
+        {...(inPlace && { variant: 'plain' })}
+        testId={jsonPath}
+      />
+    );
   }
 
   return (

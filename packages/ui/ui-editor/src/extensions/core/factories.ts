@@ -16,7 +16,6 @@ import {
   highlightActiveLine,
   keymap,
   lineNumbers,
-  placeholder,
 } from '@codemirror/view';
 import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -31,6 +30,7 @@ import { hexToHue, isTruthy } from '@dxos/util';
 import { baseTheme, createFontTheme, editorGutter } from '../../styles/index.ts';
 import { automerge } from '../collab/automerge/index.ts';
 import { SpaceAwarenessProvider, awareness } from '../collab/awareness/index.ts';
+import { emptyPlaceholder } from '../completion/placeholder.ts';
 import { focus } from '../state/focus.ts';
 import { scrollPastEnd } from '../streaming/scrolling/index.ts';
 
@@ -147,7 +147,7 @@ export const createBasicExtensions = (propsProp?: BasicExtensionsOptions): Exten
     props.history && history(),
     props.lineNumbers && [lineNumbers(), editorGutter],
     props.lineWrapping && EditorView.lineWrapping,
-    props.placeholder && placeholder(props.placeholder),
+    props.placeholder && emptyPlaceholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     // `EditorState.readOnly` is advisory — CodeMirror doesn't auto-reject doc-changing
     // transactions. Some extensions (e.g. `@codemirror/lang-markdown`'s Enter handler that
@@ -319,6 +319,7 @@ export const createDataExtensions = <T>({ id, text, messenger, identity }: DataE
             darkColor: `var(--color-${hue}-border)`,
             lightColor: `var(--color-${hue}-border)`,
             displayName: identity.displayName ?? generateName(peerId),
+            hue,
           },
         }),
       ),

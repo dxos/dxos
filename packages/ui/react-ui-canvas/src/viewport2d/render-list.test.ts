@@ -127,7 +127,7 @@ describe('toRenderLists2D', () => {
     const {
       lists: [root],
     } = views(EXEMPLARS.links);
-    expect(root.nodes.b).toMatchObject({ type: 'rect', size: { width: 128, height: 128 }, style: { hue: 'green' } });
+    expect(root.nodes.b).toMatchObject({ type: 'rect', size: { width: 96, height: 96 }, style: { hue: 'green' } });
   });
 
   test('a .dx element keeps its layer and named style when its layout declares the layers', () => {

@@ -14,14 +14,14 @@
  *
  *   DX_STORIES=plugins/plugin-code VITE_DX_DISABLE_ANIMATIONS=true moon run storybook-react:serve-nodeps
  *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --out /tmp/demo \
- *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-code-containers-featureembeds--prose&viewMode=story'
+ *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-code-extensions-feature-embeds--prose&viewMode=story'
  *   node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/demo.webm --out /tmp/demo/demo-trimmed.webm \
  *     --duration off --max-static 3 --caption-hold 4
  */
 
 const STORYBOOK = 'http://localhost:9009';
 const SUBTITLE = 'from plugin-code/PLUGIN.mdl QA-4';
-const STORY = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-containers-featureembeds--prose&viewMode=story`;
+const STORY = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-extensions-feature-embeds--prose&viewMode=story`;
 
 /** Time to read a caption before the gesture it describes. */
 const READ = 3_000;
@@ -29,7 +29,7 @@ const READ = 3_000;
 /** Time to look at what a gesture changed. */
 const LOOK = 3_000;
 
-const SECTION = '[data-testid="feature-embed"]';
+const SECTION = '[data-testid="markdown.embed"]';
 
 const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, hold: READ });
 
@@ -37,7 +37,7 @@ const waitForNames = (page, expected) =>
   page.waitForFunction(
     ([selector, expected]) =>
       JSON.stringify(
-        [...document.querySelectorAll(`${selector} input[data-testid="name"]`)].map((input) => input.value),
+        [...document.querySelectorAll(`${selector} [data-testid="name"]`)].map((name) => name.textContent),
       ) === JSON.stringify(expected),
     [SECTION, expected],
     { timeout: 10_000 },
@@ -69,15 +69,13 @@ const makeFeature = async (demo, page, paragraph) => {
   });
 };
 
-/** Types the new feature's name into its focused name field, then returns to the text. */
+/** Types the new feature's name into its focused name field, then selects its section. */
 const nameFeature = async (demo, page, name) => {
   await demo.keys({ key: name });
   await page.keyboard.type(name, { delay: 140 });
   await demo.sleep({ ms: 1_500 });
   await demo.press({ key: 'Escape' });
-  await page.waitForFunction(() => document.activeElement?.classList.contains('cm-content'), undefined, {
-    timeout: 5_000,
-  });
+  await page.waitForFunction((selector) => document.activeElement?.matches(selector), SECTION, { timeout: 5_000 });
 };
 
 export const steps = [
@@ -115,7 +113,7 @@ export const steps = [
   {
     name: 'Name it',
     run: async ({ demo, page }) => {
-      await caption(demo, 3, 'Type its name, then press Escape to go back to the text');
+      await caption(demo, 3, 'Type its name, then press Escape to select the section');
       await nameFeature(demo, page, 'Search');
       await waitForNames(page, ['Search']);
       await waitForBlockIds(page, ['F-1']);
@@ -150,7 +148,7 @@ export const steps = [
   {
     name: 'Delete a feature by deleting its embed',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, 'With the cursor after "Instant inbox", press Backspace');
+      await caption(demo, 6, 'With the "Instant inbox" section still selected, press Backspace');
       await demo.press({ key: 'Backspace' });
       await waitForNames(page, ['Search']);
       await demo.sleep({ ms: LOOK });
@@ -242,6 +240,8 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 12, 'Each section folds to its header row');
       for (const [index, name] of ['Search', 'Instant inbox', 'Snooze'].entries()) {
+        // A section takes clicks only once selected.
+        await demo.click({ selector: `${SECTION} >> nth=${index}`, label: `Select ${name}` });
         await demo.click({
           selector: `${SECTION} >> nth=${index} >> [data-testid="feature-section.collapse"]`,
           label: `Fold ${name}`,

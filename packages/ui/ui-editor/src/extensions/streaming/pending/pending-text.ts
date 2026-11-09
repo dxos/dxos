@@ -303,10 +303,9 @@ const pendingDecorations = EditorView.decorations.compute(['doc', pendingTextSta
 /**
  * Marks the content element while the preview is on screen.
  *
- * `@codemirror/view`'s own placeholder keys off an empty document, and pending text is a decoration
+ * The empty-document placeholder keys off an empty document, and pending text is a decoration
  * rather than document content — so dictating into an empty editor draws the placeholder underneath
- * the words being spoken. That placeholder takes no condition, so it is suppressed from the DOM side
- * instead (see {@link styles}).
+ * the words being spoken. It is suppressed from the DOM side (see {@link styles}).
  *
  * Conditioned exactly as the decoration is: the placeholder goes when the preview arrives to cover
  * it, not when the mic is tapped — opening a session paints nothing, and blanking the hint before
@@ -383,7 +382,7 @@ export const pendingText = (): Extension => [
 ];
 
 const styles = EditorView.theme({
-  // See {@link pendingAttributes}: the built-in placeholder would otherwise sit behind the preview.
+  // See {@link pendingAttributes}: the placeholder would otherwise sit behind the preview.
   '.cm-content[data-pending-text] .cm-placeholder': {
     display: 'none',
   },

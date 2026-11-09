@@ -10,3 +10,8 @@ tags:
   - pack
   - storybook
   - model-fixture
+workspace:
+  inheritedTasks:
+    # Its bundle does not publish to EDGE yet; it is still built and checked by `check-edge-release`.
+    exclude:
+      - publish-edge-release

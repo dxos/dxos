@@ -12,7 +12,8 @@ import * as Project from '@dxos/compute/Project';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
+import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
+import { Form, type FormFieldMap, type FormFieldOverride, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -27,10 +28,11 @@ import {
   FeatureCard,
   type FeatureTarget,
   RequirementEditor,
+  type RequirementEditorExtensions,
   getDependents,
 } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget, useRequirementVerdicts } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
@@ -42,52 +44,48 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
   SchemaAST.pick(Type.getSchema(Feature.Feature).ast, ['name', 'description', 'status', 'requirements']),
 );
 
+const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
+  name: { collaborative: true },
+  description: { collaborative: true },
+};
+
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
-const RequirementsField: FormFieldRenderer = ({ type, label, getValue, onValueChange }) => (
-  <Form.Field label={label} standalone>
-    <Card.Root grid border={false}>
-      <RequirementEditor
-        requirements={getValue() ?? []}
-        onChange={(requirements) => onValueChange(type, requirements)}
-      />
-    </Card.Root>
-  </Form.Field>
-);
+const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExtensions): FormFieldMap => {
+  const RequirementsField: FormFieldRenderer = ({ label }) => {
+    const verdicts = useRequirementVerdicts(feature);
+    return (
+      <Form.Field label={label} standalone>
+        <Card.Root grid border={false}>
+          <RequirementEditor feature={feature} extensions={extensions} verdicts={verdicts} />
+        </Card.Root>
+      </Form.Field>
+    );
+  };
+  return { requirements: RequirementsField };
+};
 
-export const FEATURE_FIELD_MAP: FormFieldMap = { requirements: RequirementsField };
-
-/** The form values of a feature, bound to the live object so an edit elsewhere reaches an open form. */
+/**
+ * A feature's form: name, description and requirements edit the live feature in place, with the other peers' carets;
+ * only the status comes back.
+ */
 export const useFeatureValues = (subject: Feature.Feature) => {
-  const [snapshot, updateFeature] = useObject(subject);
-  const values = useMemo<Partial<FeatureValues>>(
-    () => ({
-      name: snapshot?.name,
-      description: snapshot?.description,
-      status: snapshot?.status,
-      requirements: snapshot?.requirements,
-    }),
-    [snapshot],
-  );
+  const [values, updateFeature] = useObject(subject);
+  const extensions = ProjectHooks.useFieldExtensions(subject);
+  const fieldMap = useMemo(() => makeFieldMap(subject, extensions), [subject, extensions]);
 
   const onValuesChanged = useCallback(
-    (values: Partial<FeatureValues>) =>
-      updateFeature((feature) => {
-        if (values.name !== undefined) {
-          feature.name = values.name;
-        }
-        feature.description = values.description;
-        if (values.status !== undefined) {
-          feature.status = values.status;
-        }
-        const requirements = values.requirements?.map((requirement) => ({ ...requirement }));
-        const blockId = Feature.getBlockId(subject);
-        feature.requirements =
-          requirements && blockId ? Feature.numberRequirements(blockId, requirements) : requirements;
-      }),
+    (values: Partial<FeatureValues>) => {
+      const { status } = values;
+      if (status !== undefined && status !== subject.status) {
+        updateFeature((feature) => {
+          feature.status = status;
+        });
+      }
+    },
     [subject, updateFeature],
   );
 
-  return { values, onValuesChanged, updateFeature };
+  return { extensions, fieldMap, onValuesChanged, updateFeature, values };
 };
 
 export type FeatureDetailProps = {
@@ -104,7 +102,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { values, onValuesChanged, updateFeature } = useFeatureValues(subject);
+  const { extensions, fieldMap, onValuesChanged, updateFeature, values } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -166,7 +164,9 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
       db={db}
       schema={FeatureValues}
       values={values}
-      fieldMap={FEATURE_FIELD_MAP}
+      extensions={extensions}
+      fieldMap={fieldMap}
+      fieldOverrides={FIELD_OVERRIDES}
       onValuesChanged={onValuesChanged}
     >
       <Form.Viewport scroll>

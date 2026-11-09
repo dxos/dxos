@@ -422,6 +422,25 @@ export type CommentConfig = Readonly<{
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
 
 /**
+ * The comments of graph nodes that cover more than one commentable object (a project and its specs, a level of a spec):
+ * the objects whose threads they list, grouped, and the object a comment on the whole node goes on. Every scope that
+ * covers a node adds its objects, so each plugin lists the objects it owns.
+ */
+export type CommentScope = Readonly<{
+  id: string;
+  /** Undefined for node data this scope does not cover; read through `get` so the targets follow edits. */
+  resolve: (
+    data: unknown,
+    get: Atom.AtomContext,
+  ) => { subject: Obj.Unknown; targets: readonly Obj.Unknown[] } | undefined;
+}>;
+
+/**
+ * @category Capability
+ */
+export const CommentScope = Capability$.make<CommentScope>()('org.dxos.app-framework.capability.commentScope');
+
+/**
  * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
  * Contributed by the assistant, so the review plugin owns threads without depending on any AI stack.
  */
@@ -439,6 +458,19 @@ export type CommentAgentRunner = Readonly<{
 export const CommentAgentRunner = Capability$.make<CommentAgentRunner>()(
   'org.dxos.app-framework.capability.commentAgentRunner',
 );
+
+/**
+ * Signs a message and relays it to another identity's inbox, addressed by their identity DID; resolves once
+ * the relay accepts it. Contributed by the messenger, so plugins can notify people without depending on it.
+ */
+export type InboxSender<E extends Error = Error> = Readonly<{
+  send: (recipientDid: string, message: Message.Message) => Effect$.Effect<void, E>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const InboxSender = Capability$.makeSingleton<InboxSender>()('org.dxos.app-framework.capability.inboxSender');
 
 /**
  * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the

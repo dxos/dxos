@@ -98,6 +98,7 @@ export const LoadPostContent = Operation.make({
     ),
   }),
   output: Schema.Void,
+  services: [Database.Service],
 });
 
 /**

@@ -10,6 +10,7 @@ import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { VoidInput } from '@dxos/conductor';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, defineComputeNode, getHeight } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
@@ -48,7 +49,7 @@ export const createTrigger = (props: CreateTriggerProps): TriggerShape => {
   return createShape<TriggerShape>({
     type: 'trigger',
     functionTrigger: Ref.make(functionTrigger),
-    size: { width: 192, height: getHeight(TriggerEvent.EmailEvent) },
+    size: { width: 3 * MAJOR_GRID, height: getHeight(TriggerEvent.EmailEvent) },
     ...props,
   });
 };
@@ -62,7 +63,7 @@ export const triggerNodeDef = defineComputeNode<TriggerShape>({
   component: TriggerComponent,
   create: createTrigger,
   // The factory makes an ECHO object, so the default size is stated rather than sampled.
-  defaultSize: { width: 192, height: getHeight(TriggerEvent.EmailEvent) },
+  defaultSize: { width: 3 * MAJOR_GRID, height: getHeight(TriggerEvent.EmailEvent) },
   ports: (shape) =>
     createFunctionPorts(shape.size, VoidInput, getOutputSchema(shape.functionTrigger?.target?.spec?.kind ?? 'email')),
 });

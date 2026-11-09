@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
@@ -16,6 +17,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -313,6 +315,72 @@ export const EmbedFocus: Story = {
     } finally {
       document.removeEventListener('keydown', onKeyDown);
     }
+  },
+};
+
+/** The arrows move focus from the text into an embed and back out to the line on the other side. */
+export const EmbedKeyboard: Story = {
+  args: WithObjects.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(async () => expect(canvas.getAllByTestId('markdown.embed').length).toBeGreaterThanOrEqual(2), {
+      timeout: 15_000,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    const [embed] = canvas.getAllByTestId('markdown.embed');
+    const editor = canvasElement.querySelector<HTMLElement>('.cm-editor');
+    const view = editor && EditorView.findFromDOM(editor);
+    invariant(view, 'Missing editor.');
+    view.dispatch({ selection: { anchor: view.state.doc.toString().indexOf('This is object #1') } });
+    view.focus();
+    // Down to the blank line between the paragraph and the embed, then into the embed.
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement?.classList.contains('cm-content')).toBe(true));
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement?.classList.contains('cm-content')).toBe(true));
+  },
+};
+
+export const EmbedKeyboardSketch: Story = {
+  args: WithObjects.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const embed = await waitFor(
+      () => {
+        const sketch = canvas.getAllByTestId('markdown.embed').find((embed) => embed.querySelector('.tl-container'));
+        invariant(sketch, 'Missing sketch embed.');
+        return sketch;
+      },
+      { timeout: 15_000 },
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    const editor = canvasElement.querySelector<HTMLElement>('.cm-editor');
+    const view = editor && EditorView.findFromDOM(editor);
+    invariant(view, 'Missing editor.');
+    view.dispatch({ selection: { anchor: view.state.doc.toString().indexOf('This is object #3') } });
+    view.focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    const sketch = embed.querySelector<HTMLElement>('.tl-container');
+    invariant(sketch, 'Missing sketch.');
+    // tldraw marks itself focused (so the wheel pans the sketch) only after it would have moved DOM focus.
+    await waitFor(() => expect(sketch).toHaveClass('tl-container__focused'));
+    await expect(document.activeElement).toBe(embed);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(sketch.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    const tlCanvas = sketch.querySelector<HTMLElement>('.tl-canvas');
+    invariant(tlCanvas, 'Missing sketch canvas.');
+    await userEvent.click(tlCanvas);
+    await waitFor(() => expect(sketch.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).not.toBe(embed));
   },
 };
 

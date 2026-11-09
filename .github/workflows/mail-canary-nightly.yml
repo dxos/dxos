@@ -1,0 +1,104 @@
+name: Mail canary nightly
+
+# End-to-end canary for Gmail sync on preview EDGE (packages/plugins/plugin-google/canary/README.md).
+# It opens the canary identity's profile, an encrypted agents fixture, and recovers the identity with its phrase
+# only when the profile is missing; no device key ever sits in an Actions cache a fork could read.
+
+on:
+  schedule:
+    # 03:17 UTC: after `EDGE nightly` (02:00), off the hour so it is not queued behind other crons.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+  # Adding the `mail-canary` label to a PR runs the canary from that PR's code: `workflow_dispatch` reaches a
+  # workflow only once it is on the default branch.
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+jobs:
+  canary:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'mail-canary'
+    runs-on: ubuntu-24.04
+    # A backstop: setup plus the `mail-canary` moon task's timeout, which sits above `runTimeoutMinutes` in canary.yml.
+    timeout-minutes: 80
+    # Two runs at once would read the same cursor and judge each other's copies. Set on the job, so a PR labelled
+    # with anything else never queues behind a run.
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: ./.github/actions/setup
+
+      # The pool lives in the encrypted `enron-pool` agents fixture, not in Gmail: the sync takes every message
+      # added to the account, so mail parked there would sync before the night it is seeded. The profile is the
+      # canary identity's one device, exported once (canary/README.md, Setup step 4).
+      # A failed pull still runs: the canary reports a missing pool as an S1 failure, and without the profile it
+      # recovers the identity as a new device.
+      - name: Pull the Enron pool and the canary profile
+        continue-on-error: true
+        env:
+          AGE_KEY: ${{ secrets.MAIL_CANARY_FIXTURES_AGE_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The shared deploy token, which the app deploys and introspect cache upload use too; only this step sees it.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends age
+          KEY_FILE="$RUNNER_TEMP/fixtures.key"
+          trap 'rm -f "$KEY_FILE"' EXIT
+          (umask 077 && printf '%s\n' "$AGE_KEY" > "$KEY_FILE")
+          # Each pull is tried even when the other fails; the step still reports the failure.
+          status=0
+          for name in enron-pool mail-canary-profile; do
+            DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs pull "$name" --scope agents || status=1
+          done
+          exit "$status"
+
+      # Settings live in packages/plugins/plugin-google/canary/canary.yml; only credentials come from here.
+      - name: Run canary
+        env:
+          DX_CANARY_RECOVERY_PHRASE: ${{ secrets.MAIL_CANARY_RECOVERY_PHRASE }}
+          GMAIL_CLIENT_ID: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.MAIL_CANARY_GMAIL_REFRESH_TOKEN }}
+        run: moon run plugin-google:mail-canary
+
+      - name: Report
+        if: always()
+        run: cat packages/plugins/plugin-google/canary/out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mail-canary-report
+          path: packages/plugins/plugin-google/canary/out
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # One run event and one event per failure (`renderEvents`), for the Mail canary dashboard in PostHog.
+      # A cancelled run is not a canary failure, so it records nothing.
+      - name: Record the run
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          EVENTS=packages/plugins/plugin-google/canary/out/events.ndjson
+          if [ ! -f "$EVENTS" ]; then
+            mkdir -p "$(dirname "$EVENTS")"
+            echo '{"event":"ci.mail-canary","properties":{"ok":false,"failures":1}}' > "$EVENTS"
+            echo '{"event":"ci.mail-canary.failure","properties":{"check":"RUN","class":"SETUP","message":"the canary did not run; see the job log"}}' >> "$EVENTS"
+          fi
+          node scripts/ci-event.mjs --batch "$EVENTS"

@@ -28,6 +28,7 @@ import {
   type ChatView,
   type ForkMarker,
   ChatThread as NaturalChatThread,
+  assistantRegistry,
 } from '@dxos/react-ui-assistant';
 import {
   type FeedModel,
@@ -73,6 +74,7 @@ import {
   useChatThreadContext,
 } from './context.ts';
 import { type ChatDrawer, type ChatEvent } from './events.ts';
+import { LaneSurfaceWidget } from './LaneSurfaceWidget.tsx';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 
@@ -569,11 +571,15 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+/** The plugin's `surface` and `lane` widgets layered over the package registry: they can dispatch a Surface. */
 const chatRegistry = {
   surface: {
     block: true,
     Component: SurfaceWidget,
+  },
+  lane: {
+    ...assistantRegistry.lane,
+    Component: LaneSurfaceWidget,
   },
 } as const;
 
@@ -583,6 +589,8 @@ type ChatThreadProps = Util.ThemedClassName<{
   tailLines?: number;
   /** Hue of the user's messages; defaults to the identity's hue. */
   userHue?: string;
+  /** Shows each block's estimated token count beside it. */
+  showTokens?: boolean;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
 }>;
@@ -600,7 +608,14 @@ const useInPlaceUpdates = (model: FeedModel, messages: readonly Message.Message[
   }, [model, messages]);
 };
 
-const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({
+  classNames,
+  viewType,
+  tailLines,
+  userHue: userHueProp,
+  showTokens,
+  onViewUsage,
+}: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages, tail, lanes, forks } = useChatThreadContext(CHAT_THREAD_NAME);
@@ -738,6 +753,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         // Forking needs the trajectory the Composer harness writes; an external agent keeps its own.
         fork={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         getForks={getForks}
+        showTokens={showTokens}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
@@ -1020,8 +1036,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     <TaskList.Root
       tasks={tasks}
       showGroupLabels={false}
-      showOrdinals
-      // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
+      // The prompt frames the list, and its rows are too narrow for who holds a task or its reference.
       flush
       columns={CHAT_TASK_COLUMNS}
       showMnemonics={false}
@@ -1029,7 +1044,8 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
       onTaskUpdate={handleUpdate}
       getTaskActions={getTaskActions}
     >
-      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+      {/* The inset puts the list's outer columns on the same lines as the context drawer's icons and carets. */}
+      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow px-1' })} ref={forwardedRef}>
         {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
         <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />

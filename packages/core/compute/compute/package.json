@@ -104,6 +104,11 @@
       "types": "./dist/types/src/types/Spec.d.ts",
       "import": "./dist/lib/types/Spec.mjs"
     },
+    "./SpecReview": {
+      "source": "./src/types/SpecReview.ts",
+      "types": "./dist/types/src/types/SpecReview.d.ts",
+      "import": "./dist/lib/types/SpecReview.mjs"
+    },
     "./Runnable": {
       "source": "./src/Runnable.ts",
       "types": "./dist/types/src/Runnable.d.ts",

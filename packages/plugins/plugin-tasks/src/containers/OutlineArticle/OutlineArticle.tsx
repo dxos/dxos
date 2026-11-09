@@ -10,14 +10,16 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { useIdentity } from '@dxos/halo-react';
 import { URI } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Show from '@dxos/react-ui/Show';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
+import { createDataExtensions } from '@dxos/ui-editor';
 
 import { Outline, type OutlineController } from '#components';
 
@@ -75,11 +77,19 @@ export const OutlineArticle = ({
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
-  const extensions = useMarkdownExtensions(outline);
-
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
   const text = useResolveRef(outline.content);
+  // Comments on the outline anchor into its text.
+  const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
+  const markdownExtensions = useMarkdownExtensions(outline, binding);
+  // Carets only: the outline's editor binds its text itself, under the same id.
+  const identity = useIdentity();
+  const space = getSpace(outline);
+  const extensions = useMemo(
+    () => [...markdownExtensions, createDataExtensions({ id: Obj.getURI(outline), messenger: space, identity })],
+    [markdownExtensions, outline, space, identity],
+  );
 
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
@@ -160,7 +170,8 @@ export const OutlineArticle = ({
       {(text) => (
         <Outline.Root
           ref={outlineRef}
-          id={text.id}
+          // The outline's URI, which keys the editor's comments as it does a Markdown document's.
+          id={Obj.getURI(outline)}
           text={text}
           onConvertToTask={taskSet ? handleConvertToTask : undefined}
           onConvertibleChange={setConvertible}

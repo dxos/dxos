@@ -210,6 +210,40 @@
       }
     }
 
+    /* Another user's selection: an outline in their color with their name on a tab at its top-start corner. */
+    .dx-grid__remote-selection {
+      position: relative;
+      z-index: 1;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 var(--dx-grid-focus-indicator-width) var(--dx-grid-remote-selection-color);
+      background: color-mix(in srgb, var(--dx-grid-remote-selection-color) 12%, transparent);
+    }
+
+    .dx-grid__remote-selection__label {
+      position: absolute;
+      inset-inline-start: 0;
+      inset-block-end: 100%;
+      max-inline-size: 12rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-inline: 0.25rem;
+      font-size: 0.625rem;
+      line-height: 1rem;
+      border-start-start-radius: 2px;
+      border-start-end-radius: 2px;
+      /* A collaborator sends this color; `background-color` takes no image, so it cannot make this client fetch one. */
+      background-color: var(--dx-grid-remote-selection-color);
+      color: var(--dx-grid-remote-selection-text, var(--color-grid-fg));
+    }
+
+    /* The plane clips above its first rendered row, so a selection there wears its tab underneath. */
+    .dx-grid__remote-selection[data-label-position='below'] > .dx-grid__remote-selection__label {
+      inset-block-end: auto;
+      inset-block-start: 100%;
+      border-radius: 0 0 2px 2px;
+    }
+
     .dx-grid__row--cta__cell {
       transition: background-color 100ms linear;
       & > .dx-grid__cell__content {
@@ -287,6 +321,46 @@
         }
       }
 
+      /*
+       * `block` unfurl: the focused cell keeps the column's width and wraps downward over the rows
+       * beneath, for a value of several lines (a list, an address). The inline unfurl above grows a
+       * single line sideways instead, which truncates nothing but reads as one long line.
+       *
+       * Nested inside the same focus block, so it carries that block's specificity plus this
+       * attribute and wins. Written beside it instead, it loses: the inline rule has one selector
+       * more, and the first-row rule two, so a block cell would stay one line tall and scroll.
+       */
+      &:not([data-focus-unfurl='false']):not(.dx-grid__cell--no-focus-unfurl) {
+        &:focus,
+        &:focus-within {
+          &[data-focus-unfurl='block'] > .dx-grid__cell__content {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            text-overflow: clip;
+            inline-size: auto;
+            min-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            max-inline-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            block-size: auto;
+            min-block-size: calc(100% + var(--dx-grid-focus-indicator-width));
+            /* Capped, so a long value scrolls rather than covering the grid. */
+            max-block-size: min(16rem, 60vh);
+          }
+
+          /* The first row has no neighbour line to reach over, and its rule is more specific still. */
+          &[data-focus-unfurl='block'][aria-rowindex='0'] > .dx-grid__cell__content {
+            block-size: auto;
+            min-block-size: 100%;
+          }
+        }
+      }
+
+      /*
+       * The cursor is navigation, not editing: a cell marks it whether or not it unfurls, and
+       * whether or not it is read-only. Without this a grid with `data-focus-unfurl='false'` (a
+       * read-only table) shows nothing at all for the cell the keyboard is on.
+       */
+      &:focus > .dx-grid__cell__content,
+      &:focus-within > .dx-grid__cell__content,
       &:focus-visible > .dx-grid__cell__content {
         border-color: var(--color-grid-focus-ring);
       }

@@ -656,6 +656,18 @@ export const StatusUpdate = EventType('status.update', {
   isEphemeral: true,
 });
 
+/** {@link StatusUpdate} message that ends a run's progress: the meter completes and is removed. */
+export const StatusComplete = 'progress.complete';
+
+/** {@link StatusUpdate} message that ends a sync's progress as failed; the meter stays visible. */
+export const StatusFailed = 'Sync failed';
+
+/** {@link StatusUpdate} message that ends any other run's progress as failed; the meter stays visible. */
+export const StatusError = 'Failed';
+
+/** {@link StatusUpdate} message that ends a run's progress as cancelled: the meter is removed. */
+export const StatusCancelled = 'Cancelled';
+
 /**
  * Emit the current human-readable execution status to the trace.
  */

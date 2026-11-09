@@ -61,14 +61,23 @@ const compareVersions = (a: string, b: string): number => {
 const MAX_DEPTH = 3;
 
 /**
+ * Past this many tagged variants a union is named by its tags alone: a content-block union spelled out in full is
+ * most of a prompt (14k characters for one type) and says nothing a model needs to choose a call.
+ */
+const MAX_TAGGED_VARIANTS = 4;
+
+/** How a union named by its tags ends, so a reader of the label can tell its variants' fields were left out. */
+export const ABRIDGED_UNION = ', … }';
+
+/**
  * The fields of a type's schema as the model is told about them: name, a TypeScript-like type
  * label, and whether the field may be omitted.
  */
 export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
   Object.entries(fields).map(([name, field]) => ({
     name,
-    type: labelOf(field.ast, 0),
-    summary: labelOf(field.ast, 0, true),
+    type: labelOf(field.ast, 0, { abridge: true }),
+    summary: labelOf(field.ast, 0, { collapse: true }),
     optional: SchemaAST.isOptional(field.ast),
   }));
 
@@ -91,6 +100,29 @@ export const describeInput = (schema: Schema.Top): string => {
   return labelOf(ast, 0);
 };
 
+/** How {@link labelOf} shortens a label. */
+type LabelOptions = {
+  /**
+   * Names a union of more than {@link MAX_TAGGED_VARIANTS} tagged variants by its tags. Only a registered type's fields
+   * are abridged: an operation's input is what the model must write, so it keeps every field.
+   */
+  readonly abridge?: boolean;
+  /** Labels every struct without an `identifier` `object`. */
+  readonly collapse?: boolean;
+};
+
+/** The `_tag` literal of a tagged struct, if it is one. */
+const tagOf = (ast: SchemaAST.AST): string | undefined => {
+  if (SchemaAST.isSuspend(ast)) {
+    return tagOf(ast.thunk());
+  }
+  if (!SchemaAST.isObjects(ast)) {
+    return undefined;
+  }
+  const tag = ast.propertySignatures.find((property) => property.name === '_tag')?.type;
+  return tag !== undefined && SchemaAST.isLiteral(tag) && typeof tag.literal === 'string' ? tag.literal : undefined;
+};
+
 /**
  * A short, TypeScript-like label for a schema node.
  *
@@ -99,9 +131,10 @@ export const describeInput = (schema: Schema.Top): string => {
  * model looking for the reference format by trial and error.
  *
  * A struct, or a union of them, carrying an `identifier` annotation (a JSON Schema, a query AST) is
- * labelled by that name rather than expanded. `collapse` labels every other struct `object`.
+ * labelled by that name rather than expanded.
  */
-export const labelOf = (ast: SchemaAST.AST, depth: number, collapse = false): string => {
+export const labelOf = (ast: SchemaAST.AST, depth: number, options: LabelOptions = {}): string => {
+  const { abridge = false, collapse = false } = options;
   const target = Ref.getReferenceTarget(ast);
   if (target !== undefined) {
     return `Ref<${DXN.isDXN(target) ? DXN.getName(target) : String(target)}>`;
@@ -133,10 +166,14 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, collapse = false): st
     return JSON.stringify(ast.literal);
   }
   if (SchemaAST.isUnion(ast)) {
+    const tags = ast.types.map(tagOf);
+    if (abridge && tags.length > MAX_TAGGED_VARIANTS && tags.every((tag) => tag !== undefined)) {
+      return `{ _tag: ${tags.map((tag) => JSON.stringify(tag)).join(' | ')}${ABRIDGED_UNION}`;
+    }
     // The `undefined` member is how an optional field is spelled; optionality is reported separately.
     const members = ast.types
       .filter((type) => !SchemaAST.isUndefined(type))
-      .map((type) => labelOf(type, depth, collapse));
+      .map((type) => labelOf(type, depth, options));
     return [...new Set(members)].join(' | ') || 'undefined';
   }
   if (SchemaAST.isArrays(ast)) {
@@ -144,7 +181,7 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, collapse = false): st
     if (item === undefined) {
       return 'unknown[]';
     }
-    const label = labelOf(item, depth + 1, collapse);
+    const label = labelOf(item, depth + 1, options);
     return label.includes(' | ') ? `(${label})[]` : `${label}[]`;
   }
   if (SchemaAST.isObjects(ast)) {
@@ -154,12 +191,12 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, collapse = false): st
     }
     const fields = ast.propertySignatures.map(
       (property) =>
-        `${String(property.name)}${SchemaAST.isOptional(property.type) ? '?' : ''}: ${labelOf(property.type, depth + 1)}`,
+        `${String(property.name)}${SchemaAST.isOptional(property.type) ? '?' : ''}: ${labelOf(property.type, depth + 1, options)}`,
     );
     return `{ ${fields.join(', ')} }`;
   }
   if (SchemaAST.isSuspend(ast)) {
-    return labelOf(ast.thunk(), depth + 1, collapse);
+    return labelOf(ast.thunk(), depth + 1, options);
   }
   return 'unknown';
 };

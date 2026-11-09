@@ -19,6 +19,25 @@ describe('mdl lint', () => {
     ]);
   });
 
+  test('the worker dialect blocks are known', ({ expect }) => {
+    expect(
+      messages(
+        [
+          block('binding DATA_SERVICE: Reads and writes space data.\n  type: Service<DataService.Service>'),
+          block(
+            "actor Scheduler: One space's trigger dispatcher.\n  binding: TRIGGERS_DISPATCHER\n  key: the space id",
+          ),
+          block(
+            "route listProcesses: Lists a space's processes.\n  method: GET\n  path: /processes/:spaceId\n  auth: none",
+          ),
+          block(
+            "keyspace schedulerState: A space's trigger state.\n  store: Scheduler storage\n  keys:\n    spaceId: string",
+          ),
+        ].join('\n'),
+      ),
+    ).toEqual([]);
+  });
+
   describe('one block per fence', () => {
     const lint = (text: string) =>
       lintMdl(text)

@@ -10,7 +10,9 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { getTextInRange, toCursor } from '@dxos/echo-client';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
@@ -103,12 +105,8 @@ describe('CodeOperation.UpdateFeature', () => {
         specs: ['a.mdl#F-1'],
         requirements: [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }],
       });
-      expect(sync).toMatchObject({
-        name: 'Sync',
-        description: 'Kept.',
-        status: 'operational',
-        requirements: [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }],
-      });
+      expect(sync).toMatchObject({ name: 'Sync', description: 'Kept.', status: 'operational' });
+      expect(Feature.getRequirements(sync)).toMatchObject([{ id: 'F-1.1', text: 'Mail arrives within a minute.' }]);
       expect(Feature.getSources(sync)).toEqual(['a.mdl#F-1']);
     }).pipe(Effect.provide(testLayer())),
   );
@@ -133,6 +131,37 @@ describe('CodeOperation.UpdateFeature', () => {
       const exit = yield* Effect.exit(update.handler({ feature: ref(sync), spec: ref(breakdown) }));
       expect(Exit.isFailure(exit)).toBe(true);
       expect(FeatureMap.getContainer(sync)?.id).toBe(inbox.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('rewords the name and description in place, so cursors into them survive', () =>
+    Effect.gen(function* () {
+      const sync = yield* Database.add(
+        Feature.make({ name: 'Mail sync', status: 'planned', description: 'New mail shows within a minute.' }),
+      );
+      const accessor = (field: 'name' | 'description') => Doc.createAccessor(sync, [field]);
+      const name = [toCursor(accessor('name'), 0), toCursor(accessor('name'), 4)] as const;
+      const description = [toCursor(accessor('description'), 4), toCursor(accessor('description'), 8)] as const;
+      yield* update.handler({
+        feature: ref(sync),
+        name: 'Mail sync engine',
+        description: 'All new mail shows within a minute.',
+      });
+      expect(getTextInRange(accessor('name'), ...name)).toBe('Mail');
+      expect(getTextInRange(accessor('description'), ...description)).toBe('mail');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('matches unkeyed requirements by text before numbering them, so keys stay with their text', () =>
+    Effect.gen(function* () {
+      const spec = yield* addSpec();
+      const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(spec) });
+      yield* update.handler({ feature: ref(sync), requirements: [{ text: 'A' }] });
+      const [{ key, id }] = Feature.getRequirements(sync);
+      expect(id).toBeDefined();
+
+      yield* update.handler({ feature: ref(sync), requirements: [{ text: 'X' }, { text: 'A' }] });
+      expect(Feature.getRequirements(sync).find(({ text }) => text === 'A')?.key).toBe(key);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -219,13 +248,16 @@ feat F-1: Sync
         name: 'Sync',
         description: 'Mail arrives without a refresh.',
         status: 'planned',
-        requirements: [{ id: 'F-1.1', text: 'New mail shows within a minute.' }],
       });
+      expect(Feature.getRequirements(feature)).toMatchObject([
+        { id: 'F-1.1', text: 'New mail shows within a minute.' },
+      ]);
       expect(Feature.getSources(feature)).toEqual(['packages/a/PLUGIN.mdl#F-1']);
       expect(featureIds(target)).toEqual([feature.id]);
       // The text holds an embed of the feature in place of its block.
       const content = yield* Database.load(target.content);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
+      const [{ key }] = Feature.getRequirements(feature);
 
       // Without a target, the second import finds the spec by its key and rewrites the text in place.
       const second = yield* importSpec.handler({
@@ -233,7 +265,10 @@ feat F-1: Sync
         text: spec('New mail shows within ten seconds.'),
       });
       expect(second).toEqual({ spec: target.id, created: [], updated: [feature.id] });
-      expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'New mail shows within ten seconds.' }]);
+      // The requirement is reworded in place, so it keeps the key comments anchor to.
+      expect(Feature.getRequirements(feature)).toEqual([
+        { key, id: 'F-1.1', text: 'New mail shows within ten seconds.' },
+      ]);
       expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(1);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
     }).pipe(Effect.provide(testLayer())),
@@ -296,7 +331,9 @@ feat F-1: Sync
       expect(Obj.getMeta(source).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);
       const content = yield* Database.load(source.content);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
-      expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'Mail arrives within ten seconds.' }]);
+      expect(Feature.getRequirements(feature)).toEqual([
+        { key: expect.any(String), id: 'F-1.1', text: 'Mail arrives within ten seconds.' },
+      ]);
     }).pipe(Effect.provide(testLayer())),
   );
 });
