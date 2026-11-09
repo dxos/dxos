@@ -5,11 +5,10 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
 import type * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
-
-import { ABRIDGED_UNION } from './fields.ts';
 
 /**
  * An operation the sandbox exposes, projected from a skill-bound tool.
@@ -31,30 +30,10 @@ export type SandboxOperation = {
 };
 
 /** One field of a registered type, as the model is told about it. */
-export type SandboxField = {
-  readonly name: string;
-  /** TypeScript-like label, e.g. `string`, `"open" | "done"`, `Ref<org.dxos.type.text>`. */
-  readonly type: string;
-  /** `type` with every nested struct labelled `object`, for a listing of one line per type. */
-  readonly summary: string;
-  readonly optional: boolean;
-};
+export type SandboxField = FieldDescription;
 
 /** A type the workspace has registered, as the model is told about it. */
-export type SandboxType = {
-  readonly typename: string;
-  /** The versioned DXN `Database.resolve` resolves the type by. */
-  readonly dxn: string;
-  /** A relation is an edge between two objects, made with `Relation.make` rather than `Obj.make`. */
-  readonly kind: 'object' | 'relation';
-  /** Whether this is the newest registered version of its typename (and the first registered at that version). */
-  readonly latest: boolean;
-  /**
-   * Fields with their types, so the model never has to introspect a schema to find out what it may
-   * write — least of all that a field holds a reference, which a name alone does not say.
-   */
-  readonly fields: readonly SandboxField[];
-};
+export type SandboxType = TypeDescription;
 
 /** What a dialect is handed to build its bindings: the ECHO runtime, the skills' operations, and the turn's printer. */
 export type BindingsContext = {
@@ -97,7 +76,11 @@ export interface Dialect {
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
 export type InstructionsContext = {
   readonly operations: readonly SandboxOperation[];
-  readonly types: readonly SandboxType[];
+  /**
+   * The registered types, listed in the types section. Absent in code mode's turns, where the model looks them up with
+   * the Skill Manager's `queryTypes`.
+   */
+  readonly types?: readonly SandboxType[];
 };
 
 /**
@@ -105,65 +88,22 @@ export type InstructionsContext = {
  * dialect's code names a type by — its typename, or the DXN it resolves.
  */
 export const renderTypes = (
-  types: readonly SandboxType[],
+  types: readonly SandboxType[] | undefined,
   name: (type: SandboxType) => string = ({ typename }) => typename,
 ): string =>
-  types.length === 0
-    ? '### Types\n\nNo types are registered.'
-    : trim`
+  types === undefined
+    ? "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`."
+    : types.length === 0
+      ? '### Types\n\nNo types are registered.'
+      : trim`
       ### Types
 
       Every registered type and its fields (\`?\` marks an optional field). This is the whole schema —
       do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
       the object or its id.${types.some(hasAbridgedUnion) ? ` ${ABRIDGED_UNION_NOTE}` : ''}
 
-      ${types
-        .map((type) =>
-          renderType(
-            type,
-            name(type),
-            type.fields.map((field) => renderField(field)),
-          ),
-        )
-        .join('\n')}
+      ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${renderFields(type.fields)}`).join('\n')}
     `;
-
-/**
- * The types section for a prompt that also carries the full list as a doc: the newest version of each
- * type, one line each, nested values collapsed. `catalog` names where the full list is.
- */
-export const renderTypeSummary = (
-  types: readonly SandboxType[],
-  name: (type: SandboxType) => string,
-  catalog: string,
-): string =>
-  types.length === 0
-    ? '### Types\n\nNo types are registered.'
-    : trim`
-      ### Types
-
-      The newest version of each registered type and its top-level fields (\`?\` marks an optional
-      field). A \`Ref<typename>\` field holds a reference to another object, not the object or its id.
-      \`object\` is a nested value and a bare name such as \`jsonSchema\` is a named schema: read
-      ${catalog} for their shape, and for older versions, before writing one.
-
-      ${types
-        .filter(({ latest }) => latest)
-        .map((type) =>
-          renderType(
-            type,
-            name(type),
-            type.fields.map((field) => renderField(field, field.summary)),
-          ),
-        )
-        .join('\n')}
-    `;
-
-const renderType = (type: SandboxType, name: string, fields: readonly string[]): string =>
-  `- \`${name}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${fields.join(', ')}`;
-
-const renderField = (field: SandboxField, label = field.type): string =>
-  `${field.name}${field.optional ? '?' : ''}: ${label}`;
 
 /**
  * Said only when a type has one: the exception to "the whole schema", so the model looks up a variant's fields rather

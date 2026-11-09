@@ -13,6 +13,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { callTool } from '@dxos/ai';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import { TrajectoryStore } from '@dxos/assistant';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -82,7 +83,8 @@ const ScoreSkill = Skill.make({
 
 const testLayerOptions = {
   types: [Task, Feed.Feed, Skill.Skill],
-  operationHandlers: [handlers],
+  // Code mode states the Skill Manager, so its operations need their handlers.
+  operationHandlers: [handlers, SkillManagerSkill.Handlers],
   skills: [ScoreSkill],
 };
 

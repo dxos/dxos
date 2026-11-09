@@ -5,56 +5,68 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Ref, type Registry, Type } from '@dxos/echo';
+import { type Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import type { SandboxField, SandboxType } from './Dialect.ts';
+/**
+ * How a model is told about types and operation inputs: TypeScript-like labels read from the schemas themselves, shared
+ * by code mode's prompt and by the Skill Manager's lookups.
+ */
+
+/** One field of a registered type, as the model is told about it. */
+export type FieldDescription = {
+  readonly name: string;
+  /** TypeScript-like label, e.g. `string`, `"open" | "done"`, `Ref<org.dxos.type.text>`. */
+  readonly type: string;
+  readonly optional: boolean;
+};
+
+/** A type the workspace has registered, as the model is told about it. */
+export type TypeDescription = {
+  readonly typename: string;
+  /** The versioned DXN `Database.resolve` resolves the type by. */
+  readonly dxn: string;
+  /** A relation is an edge between two objects, made with `Relation.make` rather than `Obj.make`. */
+  readonly kind: 'object' | 'relation';
+  /**
+   * Fields with their types, so the model never has to introspect a schema to find out what it may
+   * write — least of all that a field holds a reference, which a name alone does not say.
+   */
+  readonly fields: readonly FieldDescription[];
+};
 
 /**
  * Every object and relation type the database's registry holds, with its fields: what the model is
  * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
  * rebuild a type does not list it.
  */
-export const describeTypes = (registry: Registry.Registry): SandboxType[] => {
-  const types = registry
+export const describeTypes = (db: Database.Database, options: DescribeOptions = {}): TypeDescription[] =>
+  db.registry
     .list()
     .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
     .flatMap((type) => {
       const typename = Type.getTypename(type) ?? '';
-      return typename.length > 0 ? [{ type, typename, version: Type.getVersion(type) }] : [];
+      return typename.length > 0
+        ? [
+            {
+              typename,
+              dxn: String(DXN.make(typename, Type.getVersion(type))),
+              kind: Type.isRelation(type) ? ('relation' as const) : ('object' as const),
+              // The same `fields` record the bound type carries, which is what the model would
+              // otherwise go looking for.
+              fields: describeFields(('fields' in type && type.fields) || {}, options),
+            },
+          ]
+        : [];
     });
 
-  // The first entry at the highest version of each typename; a registry can hold one DXN twice.
-  const newest = new Map<string, (typeof types)[number]>();
-  for (const entry of types) {
-    const current = newest.get(entry.typename);
-    if (current === undefined || compareVersions(entry.version, current.version) > 0) {
-      newest.set(entry.typename, entry);
-    }
-  }
-
-  return types.map((entry) => ({
-    typename: entry.typename,
-    dxn: String(DXN.make(entry.typename, entry.version)),
-    kind: Type.isRelation(entry.type) ? ('relation' as const) : ('object' as const),
-    latest: newest.get(entry.typename) === entry,
-    // The same `fields` record the bound type carries, which is what the model would otherwise go
-    // looking for.
-    fields: describeFields(('fields' in entry.type && entry.type.fields) || {}),
-  }));
-};
-
-/** Orders two `major.minor.patch` versions, ignoring any pre-release suffix. */
-const compareVersions = (a: string, b: string): number => {
-  const parse = (version: string) => version.split('-')[0].split('.').map(Number);
-  const [left, right] = [parse(a), parse(b)];
-  for (let index = 0; index < Math.max(left.length, right.length); index++) {
-    const delta = (left[index] ?? 0) - (right[index] ?? 0);
-    if (delta !== 0) {
-      return delta;
-    }
-  }
-  return 0;
+export type DescribeOptions = {
+  /**
+   * Name a union of many tagged variants by its tags alone (see {@link ABRIDGED_UNION}): right for a list of every
+   * type, wrong for a lookup of one, which is how a model finds a variant's fields.
+   * @default true
+   */
+  readonly abridge?: boolean;
 };
 
 /** How deep a label follows arrays and recursive schemas before settling for `object`. */
@@ -73,11 +85,13 @@ export const ABRIDGED_UNION = ', … }';
  * The fields of a type's schema as the model is told about them: name, a TypeScript-like type
  * label, and whether the field may be omitted.
  */
-export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
+export const describeFields = (
+  fields: Schema.Struct.Fields,
+  { abridge = true }: DescribeOptions = {},
+): FieldDescription[] =>
   Object.entries(fields).map(([name, field]) => ({
     name,
-    type: labelOf(field.ast, 0, { abridge: true }),
-    summary: labelOf(field.ast, 0, { collapse: true }),
+    type: labelOf(field.ast, 0, abridge),
     optional: SchemaAST.isOptional(field.ast),
   }));
 
@@ -100,17 +114,6 @@ export const describeInput = (schema: Schema.Top): string => {
   return labelOf(ast, 0);
 };
 
-/** How {@link labelOf} shortens a label. */
-type LabelOptions = {
-  /**
-   * Names a union of more than {@link MAX_TAGGED_VARIANTS} tagged variants by its tags. Only a registered type's fields
-   * are abridged: an operation's input is what the model must write, so it keeps every field.
-   */
-  readonly abridge?: boolean;
-  /** Labels every struct without an `identifier` `object`. */
-  readonly collapse?: boolean;
-};
-
 /** The `_tag` literal of a tagged struct, if it is one. */
 const tagOf = (ast: SchemaAST.AST): string | undefined => {
   if (SchemaAST.isSuspend(ast)) {
@@ -130,22 +133,13 @@ const tagOf = (ast: SchemaAST.AST): string | undefined => {
  * structurally it would claim to be a plain object — which is exactly the mistake that sends a
  * model looking for the reference format by trial and error.
  *
- * A struct, or a union of them, carrying an `identifier` annotation (a JSON Schema, a query AST) is
- * labelled by that name rather than expanded.
+ * With `abridge`, a union of more than {@link MAX_TAGGED_VARIANTS} tagged variants is named by its tags. Only a
+ * registered type's fields are abridged: an operation's input is what the model must write, so it keeps every field.
  */
-export const labelOf = (ast: SchemaAST.AST, depth: number, options: LabelOptions = {}): string => {
-  const { abridge = false, collapse = false } = options;
+export const labelOf = (ast: SchemaAST.AST, depth: number, abridge = false): string => {
   const target = Ref.getReferenceTarget(ast);
   if (target !== undefined) {
     return `Ref<${DXN.isDXN(target) ? DXN.getName(target) : String(target)}>`;
-  }
-  // Only where a struct would be expanded: a named enum still lists its literals.
-  const identifier =
-    SchemaAST.isObjects(ast) || (SchemaAST.isUnion(ast) && ast.types.some(SchemaAST.isObjects))
-      ? SchemaAST.resolveIdentifier(ast)
-      : undefined;
-  if (identifier !== undefined) {
-    return identifier;
   }
   if (depth > MAX_DEPTH) {
     return 'object';
@@ -173,7 +167,7 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, options: LabelOptions
     // The `undefined` member is how an optional field is spelled; optionality is reported separately.
     const members = ast.types
       .filter((type) => !SchemaAST.isUndefined(type))
-      .map((type) => labelOf(type, depth, options));
+      .map((type) => labelOf(type, depth, abridge));
     return [...new Set(members)].join(' | ') || 'undefined';
   }
   if (SchemaAST.isArrays(ast)) {
@@ -181,22 +175,26 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, options: LabelOptions
     if (item === undefined) {
       return 'unknown[]';
     }
-    const label = labelOf(item, depth + 1, options);
+    const label = labelOf(item, depth + 1, abridge);
     return label.includes(' | ') ? `(${label})[]` : `${label}[]`;
   }
   if (SchemaAST.isObjects(ast)) {
-    // A record or open struct (`Obj.Unknown`) has no closed field list to state; a collapsed one states none.
-    if (collapse || ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
+    // A record or open struct (`Obj.Unknown`) has no closed field list to state.
+    if (ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
       return 'object';
     }
     const fields = ast.propertySignatures.map(
       (property) =>
-        `${String(property.name)}${SchemaAST.isOptional(property.type) ? '?' : ''}: ${labelOf(property.type, depth + 1, options)}`,
+        `${String(property.name)}${SchemaAST.isOptional(property.type) ? '?' : ''}: ${labelOf(property.type, depth + 1, abridge)}`,
     );
     return `{ ${fields.join(', ')} }`;
   }
   if (SchemaAST.isSuspend(ast)) {
-    return labelOf(ast.thunk(), depth + 1, options);
+    return labelOf(ast.thunk(), depth + 1, abridge);
   }
   return 'unknown';
 };
+
+/** Fields as one line, e.g. `title: string, priority?: number`. */
+export const renderFields = (fields: readonly FieldDescription[]): string =>
+  fields.map(({ name, type, optional }) => `${name}${optional ? '?' : ''}: ${type}`).join(', ');

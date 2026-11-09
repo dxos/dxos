@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { describeFields, describeInput } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref, Type } from '@dxos/echo';
-import { makeRegistry } from '@dxos/echo-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
@@ -16,7 +16,6 @@ import { EffectDialect } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
 import { STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
-import { describeFields, describeInput, describeTypes } from './fields.ts';
 
 class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
   Schema.Struct({ name: Schema.String }),
@@ -35,41 +34,12 @@ class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.
 describe('prompt', () => {
   test('fields are described with their types, references included', ({ expect }) => {
     expect(describeFields(Task.fields)).toEqual([
-      { name: 'title', type: 'string', summary: 'string', optional: false },
-      { name: 'status', type: '"open" | "done"', summary: '"open" | "done"', optional: false },
-      { name: 'priority', type: 'number', summary: 'number', optional: true },
-      {
-        name: 'owner',
-        type: 'Ref<com.example.type.person>',
-        summary: 'Ref<com.example.type.person>',
-        optional: true,
-      },
-      { name: 'tags', type: 'string[]', summary: 'string[]', optional: false },
+      { name: 'title', type: 'string', optional: false },
+      { name: 'status', type: '"open" | "done"', optional: false },
+      { name: 'priority', type: 'number', optional: true },
+      { name: 'owner', type: 'Ref<com.example.type.person>', optional: true },
+      { name: 'tags', type: 'string[]', optional: false },
     ]);
-  });
-
-  test('a summary collapses nested structs; a named schema is labelled by its name', ({ expect }) => {
-    const Named = Schema.Struct({ type: Schema.String }).annotate({ identifier: 'jsonSchema' });
-    const [steps, schema] = describeFields({
-      steps: Schema.Array(Schema.Struct({ text: Schema.String, done: Schema.Boolean })),
-      schema: Schema.optional(Named),
-    });
-    expect(steps).toMatchObject({ type: '{ text: string, done: boolean }[]', summary: 'object[]' });
-    expect(schema).toMatchObject({ type: 'jsonSchema', summary: 'jsonSchema', optional: true });
-  });
-
-  test('only the first type at the newest version of a typename is latest', ({ expect }) => {
-    const TaskNext = Type.makeObject(DXN.make('com.example.type.task', '0.10.0'))(
-      Schema.Struct({ title: Schema.String }),
-    );
-    const registry = makeRegistry({ initial: [TaskNext, Task, Person] });
-    expect(describeTypes(registry).map(({ dxn, latest }) => ({ dxn, latest }))).toEqual(
-      expect.arrayContaining([
-        { dxn: 'dxn:com.example.type.task:0.10.0', latest: true },
-        { dxn: 'dxn:com.example.type.task:0.1.0', latest: false },
-        { dxn: 'dxn:com.example.type.person:0.1.0', latest: true },
-      ]),
-    );
   });
 
   test('the types section renders each field with its type', ({ expect }) => {
@@ -78,7 +48,6 @@ describe('prompt', () => {
         typename: 'com.example.type.task',
         dxn: 'dxn:com.example.type.task:0.1.0',
         kind: 'object',
-        latest: true,
         fields: describeFields(Task.fields),
       },
     ]);
@@ -86,24 +55,6 @@ describe('prompt', () => {
       '- `com.example.type.task` — title: string, status: "open" | "done", priority?: number, ' +
         'owner?: Ref<com.example.type.person>, tags: string[]',
     );
-  });
-
-  test('the effect prompt lists the newest version of each type and points at the catalog', ({ expect }) => {
-    const fields = describeFields({ title: Schema.String, meta: Schema.Struct({ note: Schema.String }) });
-    const type = (version: string, latest: boolean) => ({
-      typename: 'com.example.type.note',
-      dxn: `dxn:com.example.type.note:${version}`,
-      kind: 'object' as const,
-      latest,
-      fields,
-    });
-    const instructions = EffectDialect.instructions({
-      types: [type('0.1.0', false), type('0.2.0', true)],
-      operations: [],
-    });
-    expect(instructions).toContain('- `dxn:com.example.type.note:0.2.0` — title: string, meta: object');
-    expect(instructions).not.toContain('com.example.type.note:0.1.0');
-    expect(instructions).toContain("`DOCS['catalog/types.md']`");
   });
 
   test('an operation input states refs as refs, not as the URI strings of the tool projection', ({ expect }) => {
@@ -125,17 +76,12 @@ describe('prompt', () => {
     const variant = (tag: string) => Schema.TaggedStruct(tag, { text: Schema.String });
     const many = Schema.Union(['a', 'b', 'c', 'd', 'e'].map(variant));
     expect(describeFields({ block: many })).toEqual([
-      { name: 'block', type: '{ _tag: "a" | "b" | "c" | "d" | "e", … }', summary: 'object', optional: false },
+      { name: 'block', type: '{ _tag: "a" | "b" | "c" | "d" | "e", … }', optional: false },
     ]);
     // Four or fewer are still spelled out, since their fields are short enough to be worth stating.
     const few = Schema.Union(['a', 'b'].map(variant));
     expect(describeFields({ block: few })).toEqual([
-      {
-        name: 'block',
-        type: '{ _tag: "a", text: string } | { _tag: "b", text: string }',
-        summary: 'object',
-        optional: false,
-      },
+      { name: 'block', type: '{ _tag: "a", text: string } | { _tag: "b", text: string }', optional: false },
     ]);
     // An operation's input is what the model writes, so it keeps every variant's fields.
     expect(describeInput(Schema.Struct({ block: many }))).toContain('{ _tag: "e", text: string }');
@@ -146,8 +92,7 @@ describe('prompt', () => {
       typename: 'com.example.type.note',
       dxn: 'dxn:com.example.type.note:0.1.0',
       kind: 'object' as const,
-      latest: true,
-      fields: [{ name: 'block', type: field, summary: field, optional: false }],
+      fields: [{ name: 'block', type: field, optional: false }],
     });
     const [{ type: shortened }] = describeFields({
       block: Schema.Union(['a', 'b', 'c', 'd', 'e'].map((tag) => Schema.TaggedStruct(tag, {}))),
@@ -179,21 +124,6 @@ describe('prompt', () => {
     expect(instructions).not.toContain('"type":"string"');
     expect(instructions).toContain("yield* Database.resolve('dxn:com.example.operation.close')");
     expect(instructions).toContain('`catalog/operations.md`');
-  });
-
-  test('the effect prompt cuts a long operation description at a sentence end', ({ expect }) => {
-    const description = 'Closes a task. '.repeat(100).trim();
-    const Close = Operation.make({
-      meta: { key: DXN.make('com.example.operation.close'), name: 'Close', description },
-      input: Schema.Struct({ task: Ref.Ref(Task) }),
-      output: Schema.Void,
-    });
-    const instructions = EffectDialect.instructions({
-      types: [],
-      operations: [{ name: 'close', description, parameters: {}, definition: Close, invoke: () => Effect.void }],
-    });
-    expect(instructions).toContain("Closes a task. … [cut; `DOCS['catalog/operations.md']` has the full text]");
-    expect(instructions).not.toContain(description);
   });
 
   test('the prompt and the README list every doc', async ({ expect }) => {
