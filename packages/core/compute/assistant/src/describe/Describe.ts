@@ -40,7 +40,7 @@ export type TypeDescription = {
  * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
  * rebuild a type does not list it.
  */
-export const describeTypes = (db: Database.Database): TypeDescription[] =>
+export const describeTypes = (db: Database.Database, options: DescribeOptions = {}): TypeDescription[] =>
   db.registry
     .list()
     .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
@@ -54,11 +54,20 @@ export const describeTypes = (db: Database.Database): TypeDescription[] =>
               kind: Type.isRelation(type) ? ('relation' as const) : ('object' as const),
               // The same `fields` record the bound type carries, which is what the model would
               // otherwise go looking for.
-              fields: describeFields(('fields' in type && type.fields) || {}),
+              fields: describeFields(('fields' in type && type.fields) || {}, options),
             },
           ]
         : [];
     });
+
+export type DescribeOptions = {
+  /**
+   * Name a union of many tagged variants by its tags alone (see {@link ABRIDGED_UNION}): right for a list of every
+   * type, wrong for a lookup of one, which is how a model finds a variant's fields.
+   * @default true
+   */
+  readonly abridge?: boolean;
+};
 
 /** How deep a label follows arrays and recursive schemas before settling for `object`. */
 const MAX_DEPTH = 3;
@@ -76,10 +85,13 @@ export const ABRIDGED_UNION = ', … }';
  * The fields of a type's schema as the model is told about them: name, a TypeScript-like type
  * label, and whether the field may be omitted.
  */
-export const describeFields = (fields: Schema.Struct.Fields): FieldDescription[] =>
+export const describeFields = (
+  fields: Schema.Struct.Fields,
+  { abridge = true }: DescribeOptions = {},
+): FieldDescription[] =>
   Object.entries(fields).map(([name, field]) => ({
     name,
-    type: labelOf(field.ast, 0, true),
+    type: labelOf(field.ast, 0, abridge),
     optional: SchemaAST.isOptional(field.ast),
   }));
 

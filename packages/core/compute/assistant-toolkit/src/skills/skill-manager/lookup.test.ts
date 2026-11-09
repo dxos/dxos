@@ -29,6 +29,13 @@ class Ticket extends Type.makeObject<Ticket>(DXN.make('com.example.type.ticket',
   Schema.Struct({ title: Schema.String, priority: Schema.optional(Schema.Number) }),
 ) {}
 
+/** A field with five tagged variants, which a list of every type names by its tags alone. */
+class Note extends Type.makeObject<Note>(DXN.make('com.example.type.note', '0.1.0'))(
+  Schema.Struct({
+    block: Schema.Union(['a', 'b', 'c', 'd', 'e'].map((tag) => Schema.TaggedStruct(tag, { text: Schema.String }))),
+  }),
+) {}
+
 const Score = Operation.make({
   meta: {
     key: DXN.make('com.example.operation.score'),
@@ -88,10 +95,18 @@ const HiddenSkill = Skill.make({
   tools: Skill.toolDefinitions({ operations: [Archive] }),
 });
 
+/** A skill whose template cannot render: an operation input that names no operation is a defect. */
+const BrokenSkill = Skill.make({
+  key: 'com.example.skill.broken',
+  name: 'Broken',
+  instructions: Template.make({ source: '{{value}}', inputs: [{ name: 'value', kind: 'operation' }] }),
+  agentCanEnable: true,
+});
+
 const TestLayer = AssistantTestLayer({
   operationHandlers: [SkillManagerHandlers, handlers],
-  types: [Ticket, Feed.Feed, Skill.Skill],
-  skills: [ScoreSkill, NotesSkill, HiddenSkill],
+  types: [Ticket, Note, Feed.Feed, Skill.Skill],
+  skills: [ScoreSkill, NotesSkill, HiddenSkill, BrokenSkill],
 });
 
 class TestConversation extends Context.Service<TestConversation, { conversation: URI.URI }>()(
@@ -126,6 +141,7 @@ describe('Skill Manager lookups', () => {
         const { conversation } = yield* TestConversation;
         const rows = yield* Operation.invoke(QuerySkills, {}, { conversation });
         expect(rows.map(({ key, enabled, agentCanEnable }) => ({ key, enabled, agentCanEnable }))).toEqual([
+          { key: 'com.example.skill.broken', enabled: false, agentCanEnable: true },
           { key: 'com.example.skill.hidden', enabled: false, agentCanEnable: false },
           { key: 'com.example.skill.notes', enabled: false, agentCanEnable: true },
           { key: 'com.example.skill.score', enabled: true, agentCanEnable: false },
@@ -247,6 +263,40 @@ describe('Skill Manager lookups', () => {
         expect(codeMode).toContain('Nothing about this workspace is listed in this prompt');
         expect(codeMode).not.toContain('com.example.skill');
         expect(SkillManagerSkill.makeForCodeMode().tools).toEqual(SkillManagerSkill.make().tools);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'query-skills by key still returns the other skills when one template cannot render',
+    Effect.fnUntraced(
+      function* (_) {
+        const { conversation } = yield* TestConversation;
+        const rows = yield* Operation.invoke(
+          QuerySkills,
+          { keys: ['com.example.skill.broken', 'com.example.skill.notes'] },
+          { conversation },
+        );
+        expect(rows.map(({ key, instructions }) => ({ key, instructions }))).toEqual([
+          { key: 'com.example.skill.broken', instructions: undefined },
+          { key: 'com.example.skill.notes', instructions: 'Write notes in lower case.' },
+        ]);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'query-types by typename spells out every variant of a union, which a list names by its tags',
+    Effect.fnUntraced(
+      function* (_) {
+        const { conversation } = yield* TestConversation;
+        const [note] = yield* Operation.invoke(QueryTypes, { typenames: ['com.example.type.note'] }, { conversation });
+        expect(note.fields).toContain('{ _tag: "e", text: string }');
+        expect(note.fields).not.toContain('…');
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

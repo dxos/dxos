@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -39,8 +40,14 @@ export default QuerySkills.pipe(
       return yield* Effect.forEach(
         skills.filter((skill) => keys.some((key) => sameKey(key, skillKey(skill)))),
         Effect.fnUntraced(function* (skill) {
-          // A template that fails to render costs the skill its instructions, not the whole lookup.
-          const instructions = yield* Template.processTemplate(skill.instructions).pipe(Effect.option);
+          // A template that fails to render, by an error or a defect, costs the skill its instructions rather than the
+          // whole lookup; an interruption still interrupts.
+          const instructions = yield* Template.processTemplate(skill.instructions).pipe(
+            Effect.map(Option.some),
+            Effect.catchCause((cause) =>
+              Cause.hasInterrupts(cause) ? Effect.interrupt : Effect.succeed(Option.none<string>()),
+            ),
+          );
           return {
             ...listedSkill(skill, isEnabled(enabled, skill)),
             ...(Option.isSome(instructions) ? { instructions: instructions.value } : {}),

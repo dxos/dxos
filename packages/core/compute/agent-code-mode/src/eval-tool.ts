@@ -206,7 +206,8 @@ const recordInvocations = (operations: readonly SandboxOperation[], recorder: Re
  * recorded once: the original `invokePromise` runs through the original service, not through the `invoke` here.
  */
 const recordingService = (service: Operation.OperationService, recorder: Recorder): Operation.OperationService => ({
-  ...service,
+  // Delegated by name rather than spread, which would miss a method a class-based service holds on its prototype.
+  schedule: (op, ...args) => service.schedule(op, ...args),
   invoke: (op, ...args) => service.invoke(op, ...args).pipe(recorder.effect(String(op.meta.key))),
   invokePromise: (op, ...args) =>
     service.invokePromise(op, ...args).then((outcome) => {

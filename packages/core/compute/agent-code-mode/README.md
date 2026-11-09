@@ -2,7 +2,7 @@
 
 Code mode for agent turns. The model carries one tool, `eval`, and does its work by writing a
 program against the workspace instead of calling one tool per action. Only what the program prints
-comes back to it.
+comes back to it, or the value it returns when it prints nothing.
 
 ## Where it runs
 
@@ -34,8 +34,8 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 
 ## The `eval` tool
 
-- **Input** is `code`; the **result** is what the code printed, cut at 8,000 characters
-  (`maxOutput`).
+- **Input** is `code`; the **result** is what the code printed, or the value it returned when it
+  printed nothing, cut at 8,000 characters (`maxOutput`).
 - **A throw** fails the call with what was printed before it and a short error (long serialized
   values cut, a hint for common mistakes), so the model reads it and writes different code.
 - **`print(obj)`** shows an object as a card: type, id, label and fields, references as
@@ -73,11 +73,11 @@ demand ([`src/docs`](./src/docs)), including the generated `catalog/types.md` an
 
 ## Sandboxes
 
-| Sandbox                                 | Where the code runs                                                                                     | Contained?                                                                       |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `Sandbox.inProcess` (the default)       | The host's own thread.                                                                                  | No. A timeout abandons the code, which keeps running.                            |
-| `WorkerSandbox`, `WorkerSandboxBrowser` | A Node worker thread or a Web Worker, on its own ECHO client; operations run back on the host.          | Bounded, not contained: a timeout kills the worker, which has the host's rights. |
-| `WorkerdSandbox`                        | A Cloudflare Worker Loader isolate, reaching only the host; plain dialect, every call made on the host. | Yes: the only security boundary here.                                            |
+| Sandbox                                 | Where the code runs                                                                                                                                                                                                                                                        | Contained?                                                                                                              |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `Sandbox.inProcess` (the default)       | The host's own thread.                                                                                                                                                                                                                                                     | No. A timeout abandons the code, which keeps running; a synchronous loop blocks the thread, so the timeout never fires. |
+| `WorkerSandbox`, `WorkerSandboxBrowser` | A Node worker thread or a Web Worker, on its own ECHO client; operations run back on the host.                                                                                                                                                                             | Bounded, not contained: a timeout kills the worker, which has the host's rights.                                        |
+| `WorkerdSandbox`                        | A Cloudflare Worker Loader isolate, reaching only the host. It runs the plain dialect's data calls (`print`, `query`, `make`, `add`, `remove`, `update`, `flush`, `ops`), each made on the host; `ref`, `relations`, `children`, `referrers` and `describe` are not there. | Yes: the only security boundary here.                                                                                   |
 
 ## What the model is told: the Skill Manager
 
@@ -89,15 +89,17 @@ each operation as a tool, is what tool calling does, which runs when code mode i
 
 The model looks the rest up from code:
 
-| Operation         | Listing                                                                                   | Lookup                                                                     |
-| ----------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `querySkills`     | Every skill, saying whether it is enabled here and whether an agent may enable it.        | `keys`: the skill's instructions and its operations.                       |
-| `queryOperations` | `query` searches the operations of the skills it can use by what they do; `skill` narrows. | `keys`: each operation's input, refs as `Ref<typename>`.                   |
-| `queryTypes`      | `query` searches the registered types.                                                    | `typenames`: their fields.                                                 |
-| `enableSkills`    |                                                                                           | Enables skills an agent may enable; their operations from the next call.  |
+| Operation         | Listing                                                                                    | Lookup                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `querySkills`     | Every skill, saying whether it is enabled here and whether an agent may enable it.         | `keys`: the skill's instructions and its operations.                     |
+| `queryOperations` | `query` searches the operations of the skills it can use by what they do; `skill` narrows. | `keys`: each operation's input, refs as `Ref<typename>`.                 |
+| `queryTypes`      | `query` searches the registered types.                                                     | `typenames`: their fields.                                               |
+| `enableSkills`    |                                                                                            | Enables skills an agent may enable; their operations from the next call. |
 
 - The model can call the Skill Manager's operations, the enabled skills' operations and the
-  conversation's MCP tools, and nothing else: `ops` and `Database.resolve` know only those.
+  conversation's MCP tools, and no other operation: `ops` and `Database.resolve` resolve no other.
+  That limits which operations code can run, not what it can reach: it reads and writes the
+  workspace's database directly.
 - The conversation's MCP tools are stated in the prompt, since no skill names them.
 - These are ordinary operations answered by the host's handlers, the same ones tool calling uses,
   so every host that runs code mode must register the Skill Manager's handlers.

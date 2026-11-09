@@ -94,23 +94,22 @@ export const makeForCodeMode = () =>
     instructions: Template.make({
       source: trim`
         Nothing about this workspace is listed in this prompt. Its skills, their operations and its types
-        are found with the operations below, which code calls like any other.
+        are found with the Skill Manager's operations, which the Operations section lists with the code
+        that calls each.
 
-        - \`querySkills()\` lists the skills, each saying whether it is enabled here and whether you may
+        - Query skills lists the skills, each saying whether it is enabled here and whether you may
           enable it. An enabled skill carries the rules for its part of the work, so at the start of a
-          request get each one the request touches in full with \`querySkills({ keys: [key] })\`, and
-          follow its instructions.
-        - \`queryOperations({ query })\` searches the operations of the skills you can use by what they
-          do; \`queryOperations({ skill })\` lists one skill's. Look an operation up with
-          \`queryOperations({ keys: [key] })\` before calling it: that gives its input.
-        - An operation whose skill is not enabled cannot be called yet. Enable the skill with
-          \`enableSkills({ keys: [key] })\` (only one you may enable); its operations can be called from
-          your next eval call.
-        - \`queryTypes({ query })\` searches the registered types; \`queryTypes({ typenames: [typename] })\`
-          gives their fields.
-        - A connection's MCP tools are on unless this conversation turned them off:
-          \`queryMcpConnections()\` lists them, and \`setMcpConnection\` turns one on from your next eval
-          call.
+          request get each one the request touches in full by passing its key in \`keys\`, and follow its
+          instructions.
+        - Query operations searches the operations of the skills you can use by what they do
+          (\`query\`), or lists one skill's (\`skill\`). Look an operation up by passing its key in
+          \`keys\` before calling it: that gives its input. Call it the way the Operations section calls
+          the Skill Manager's own, by its \`key\` or its \`tool\` name.
+        - An operation whose skill is not enabled cannot be called yet. Enable the skill with Enable
+          skills (only one you may enable); its operations can be called from your next eval call.
+        - Query types searches the registered types (\`query\`); pass \`typenames\` to get their fields.
+        - A connection's MCP tools are on unless this conversation turned them off: Query MCP
+          connections lists them, and Set MCP connection turns one on from your next eval call.
 
         Find what a request needs in one eval call that prints it, then do the work in the next.
       `,

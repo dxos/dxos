@@ -232,7 +232,7 @@ const bareKey = (key: string): string => key.replace(/^dxn:/, '');
 const renderEffectOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
 
-  The skills above describe their capabilities as tools; in code mode they are NOT tools. Resolve an
+  The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. Resolve an
   operation by its DXN and invoke it the way any other DXOS code does (\`DOCS['operations.md']\` has
   the details):
 

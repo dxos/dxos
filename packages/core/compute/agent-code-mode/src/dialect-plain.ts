@@ -190,7 +190,7 @@ const typeURI = (type: string) => (DXN.isDXN(type) ? type : DXN.make(type));
 const renderPlainOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
 
-  The skills above describe their capabilities as tools; in code mode they are NOT tools. Each one
+  The skills' instructions describe their capabilities as tools; in code mode they are NOT tools. Each one
   is an async function on \`ops\`, taking one argument matching its parameter schema. A failed
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.
