@@ -87,7 +87,6 @@ template tutorial: A learning path step
     - Steps: numbered, each one action, one snippet and one observable result
     - Try it: the tutorial app as it stands after this page, live [F-15.1]
     - Recap: what the reader can now do
-    - Next: the following step, from the sidebar order
 ```
 
 ```mdl
@@ -172,18 +171,18 @@ page defining-types: Defining types
 ```
 
 ```mdl
-page mutating-objects: Mutating objects
-  Create, change and remove the tutorial app's records, and observe each change.
-  route: /learn/mutating-objects/
+page querying: Querying
+  Select the tutorial app's records with Filter and Query, by type, sorted, searched, and live.
+  route: /learn/querying/
   group: Learning path
   template: tutorial
   status: spike
 ```
 
 ```mdl
-page querying: Querying
-  Select the tutorial app's records with Filter and Query, by type, sorted, searched, and live.
-  route: /learn/querying/
+page mutating-objects: Mutating objects
+  Create, change and remove the tutorial app's records, and observe each change.
+  route: /learn/mutating-objects/
   group: Learning path
   template: tutorial
   status: spike
@@ -1438,6 +1437,61 @@ decision D-70: Sharing's peers sit side by side at the Mutating objects stage: a
   affects: [F-15.3]
   why: That stage already leaves out search and the view toggles, so the embed needs no mode of its own, and side by side shows an edit on one peer arriving at the other.
   rejected: Stacking the peers one above the other, which keeps the full controls but pushes the second peer below the fold.
+```
+
+```mdl
+decision D-71: Querying comes before Mutating objects in the learning path.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-72: The tutorial's sample code follows the codebase's best practices and stays clean and readable, without exhaustive inline types.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15.2]
+```
+
+```mdl
+decision D-73: A learning-path page has no Next section; Starlight's previous and next links lead to the following page.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-74: The docs include generated API reference for `@dxos/echo`, `@dxos/halo`, `@dxos/echo-react` and `@dxos/echo-solid`.
+  date: 2026-11-09
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-75: The steps call ECHO directly (`db.add(Obj.make(...))`, `Obj.update`, `db.remove`) rather than app helpers, the app edits a record with `ObjectForm` and creates one with `Form.Root`, and every component's props are a named type. Fills in [D-72].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.2]
+  why: Helpers such as `addPerson` needed their own inline prop types and hid the calls the pages teach; `ObjectForm` is how the codebase edits an object and writes each change as the reader types.
+  rejected: Deriving the helpers' props from the schema with `Obj.MakeProps`, which keeps a layer the reader has to learn on top of ECHO's.
+```
+
+```mdl
+decision D-76: The embed stages run types, queries, records, complete, and Sharing's peers drop search and the view switch with a compact option. Fills in [D-71].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-70
+  affects: [F-15.3]
+  why: With Querying first, the Mutating objects stage includes search and the table, so it no longer gives Sharing its reduced controls by itself.
+```
+
+```mdl
+decision D-77: Each of the four packages gets the `typedoc` task with `src/index.ts` as its entry point, and the docs copy the output beside the existing client references. Fills in [D-74].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The docs already publish typedoc for client, react-client and app-framework this way, and `@dxos/echo`'s index re-exports each module as a namespace, so one entry point covers them.
 ```
 
 ## Appendix: Extension Definitions

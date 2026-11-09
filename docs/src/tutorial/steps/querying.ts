@@ -5,11 +5,10 @@
 import { type Database } from '@dxos/echo';
 
 import { employeesOf, people, search } from '../queries.ts';
-import { addOrganization, addPerson } from '../records.ts';
+import { type Organization } from '../schema.ts';
 
 declare const db: Database.Database;
-const northwind = addOrganization(db, { name: 'Northwind Labs' });
-addPerson(db, { name: 'Ada Lovelace', employer: northwind });
+declare const northwind: Organization;
 
 // #region run
 const everyone = await db.query(people).run();
@@ -28,9 +27,8 @@ const staff = await db.query(employeesOf(northwind)).run();
 const unsubscribe = db.query(people).subscribe(({ results }) => {
   console.log(`${results.length} people`);
 });
-
-addPerson(db, { name: 'Grace Hopper' });
-unsubscribe();
 // #endregion
+
+unsubscribe();
 
 export { matches, staff };

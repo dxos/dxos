@@ -16,16 +16,14 @@ const HUES: Record<string, string | undefined> = Object.fromEntries(
   types.map((type) => [Type.getTypename(type), getTypeIcon(type)?.hue]),
 );
 
-/** Every record as a node and every reference as an edge, laid out by force. */
-export const RecordGraph = ({
-  records,
-  selected,
-  onSelect,
-}: {
+export type RecordGraphProps = {
   records: readonly Obj.Unknown[];
   selected?: string;
   onSelect: (id: string) => void;
-}) => {
+};
+
+/** Every record as a node and every reference as an edge, laid out by force. */
+export const RecordGraph = ({ records, selected, onSelect }: RecordGraphProps) => {
   const svgRef = useRef<SVGContext>(null);
   const graphRef = useRef<GraphController>(null);
   const [projector, setProjector] = useState<GraphForceProjector>();

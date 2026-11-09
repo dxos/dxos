@@ -19,31 +19,21 @@ Writes are local. `db.add` and `Obj.update` return once the change is in the loc
 
 <Steps>
 
-1. **Write the app's add functions.** Each takes the database and the props of one type, and returns the tracked object.
-
-   <Snippet file="tutorial/records" region="add" />
-
-   A person's `employer` is passed as an object and stored as a reference to it.
-
-2. **Add records.**
+1. **Add records.** `db.add` takes an object made with `Obj.make` and returns it, now tracked. `Ref.make` stores the employer as a reference.
 
    <Snippet file="tutorial/steps/mutating" region="add" />
 
-3. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the subscription.
+2. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the subscription.
 
    <Snippet file="tutorial/steps/mutating" region="subscribe" />
 
-4. **Change a record.** The app moves a person to another organization in one update, and its form writes whatever fields the reader changed.
-
-   <Snippet file="tutorial/records" region="update" />
+3. **Change a record.** Every change goes inside `Obj.update`, which hands the callback a mutable view.
 
    <Snippet file="tutorial/steps/mutating" region="update" />
 
-   The subscriber from step 3 has run, so `employers` holds `'Halcyon Robotics'`.
+   The subscriber from step 2 has run and logged `Halcyon Robotics`.
 
-5. **Remove a record.**
-
-   <Snippet file="tutorial/records" region="remove" />
+4. **Remove a record.**
 
    <Snippet file="tutorial/steps/mutating" region="remove" />
 
@@ -57,14 +47,10 @@ Writes are local. `db.add` and `Obj.update` return once the change is in the loc
 
 ## Try it
 
-Select a record and change it in the form, or press **New** to add one of the chosen type. The **×** on a row removes it. A person's employer is a picker of the organizations in the space.
+Select a record and change a field: the form writes each change inside `Obj.update` as you type, and the list follows. Press **New** to add a record of the chosen type, and the **×** on a row removes it. The [React guide](/docs/echo/guides/react/) shows the form.
 
 <TutorialEmbed stage="records" />
 
 ## What you can do now
 
 You can add records to a database, change them inside `Obj.update`, watch them change, and remove them.
-
-## Next
-
-[Querying](/docs/echo/learn/querying/): list the records, sorted and searched.

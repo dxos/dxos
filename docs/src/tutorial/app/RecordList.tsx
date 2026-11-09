@@ -15,19 +15,16 @@ export type Entry = {
   icon?: string;
 };
 
-/** One row per record; selecting a row opens it in the form. */
-export const RecordList = ({
-  entries,
-  selected,
-  onSelect,
-  onRemove,
-}: {
+export type RecordListProps = {
   entries: readonly Entry[];
   selected?: string;
   onSelect: (id?: string) => void;
   /** Shows a remove button on each row when given. */
   onRemove?: (id: string) => void;
-}) => (
+};
+
+/** One row per record; selecting a row opens it in the form. */
+export const RecordList = ({ entries, selected, onSelect, onRemove }: RecordListProps) => (
   <Listbox.Root
     items={[...entries]}
     value={selected ?? ''}

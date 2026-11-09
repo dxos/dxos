@@ -20,16 +20,14 @@ const text = (value: unknown): unknown => {
   return value;
 };
 
-/** The records of one type, one column per field. */
-export const RecordTable = ({
-  type,
-  records,
-  onSelect,
-}: {
+export type RecordTableProps = {
   type: Type.AnyObj;
   records: readonly Obj.Unknown[];
   onSelect: (id: string) => void;
-}) => {
+};
+
+/** The records of one type, one column per field. */
+export const RecordTable = ({ type, records, onSelect }: RecordTableProps) => {
   const properties = useMemo(
     () =>
       [...new Set(records.flatMap((record) => Object.keys(record)))]

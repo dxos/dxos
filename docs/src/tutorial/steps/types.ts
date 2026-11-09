@@ -16,7 +16,6 @@ const review = Obj.make(Event, { title: 'Quarterly review', attendees: [Ref.make
 Obj.make(Person, {});
 
 // #region follow
-// The reference holds the organization's identity, not a copy of it.
 const employer = ada.employer?.peek();
 console.log(employer?.name);
 // #endregion

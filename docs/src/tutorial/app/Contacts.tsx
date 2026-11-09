@@ -14,7 +14,6 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { events, organizations, people, search } from '../queries.ts';
-import { removeRecord } from '../records.ts';
 import { Event, Organization, Person, getTypeIcon } from '../schema.ts';
 import { RecordForm } from './RecordForm.tsx';
 import { RecordGraph } from './RecordGraph.tsx';
@@ -22,12 +21,12 @@ import { type Entry, RecordList } from './RecordList.tsx';
 import { RecordTable } from './RecordTable.tsx';
 
 /**
- * How far the learning path has built the app: `types` shows each type's records and its form, `records` adds
- * creating, editing and removing, `queries` adds search and a table, and `complete` adds the graph.
+ * How far the learning path has built the app: `types` shows each type's records, `queries` adds search and a
+ * table, `records` adds creating, editing and removing, and `complete` adds the graph.
  */
-export type Stage = 'types' | 'records' | 'queries' | 'complete';
+export type Stage = 'types' | 'queries' | 'records' | 'complete';
 
-const STAGES: readonly Stage[] = ['types', 'records', 'queries', 'complete'];
+const STAGES: readonly Stage[] = ['types', 'queries', 'records', 'complete'];
 const reached = (stage: Stage, at: Stage) => STAGES.indexOf(stage) >= STAGES.indexOf(at);
 
 const TYPES = [
@@ -38,15 +37,30 @@ const TYPES = [
 
 type View = 'list' | 'table' | 'graph';
 
+const VIEWS: readonly { value: View; label: string; icon: string }[] = [
+  { value: 'list', label: 'List', icon: 'ph--list-bullets--regular' },
+  { value: 'table', label: 'Table', icon: 'ph--table--regular' },
+  { value: 'graph', label: 'Graph', icon: 'ph--graph--regular' },
+];
+
+/** The stage at which each view appears. */
+const VIEW_STAGES: Record<View, Stage> = { list: 'types', table: 'queries', graph: 'complete' };
+
+export type ContactsProps = {
+  space: Space;
+  stage: Stage;
+  /** Leaves out search and the view switch, for a peer that shares the embed with another. */
+  compact?: boolean;
+};
+
 /** The tutorial app: one space's organizations, people and events. */
-export const Contacts = ({ space, stage }: { space: Space; stage: Stage }) => {
+export const Contacts = ({ space, stage, compact }: ContactsProps) => {
   const [typename, setTypename] = useState(Type.getTypename(Person));
   const [view, setView] = useState<View>('list');
   const [selected, setSelected] = useState<string>();
   const [text, setText] = useState('');
 
   // #region query
-  // Each list is a live query: it re-renders when a record is added, changed by any peer, or removed.
   const allOrganizations = useQuery(space.db, organizations);
   const allPeople = useQuery(space.db, people);
   const allEvents = useQuery(space.db, events);
@@ -57,7 +71,8 @@ export const Contacts = ({ space, stage }: { space: Space; stage: Stage }) => {
     [allOrganizations, allPeople, allEvents],
   );
   const type = TYPES.find((entry) => Type.getTypename(entry.type) === typename)?.type ?? Person;
-  const searching = reached(stage, 'queries') && text.trim().length > 0;
+  const searchable = reached(stage, 'queries') && !compact;
+  const searching = searchable && text.trim().length > 0;
   // Searches only while there is text to search for: an empty search has nothing to match.
   const found = useQuery(searching ? space.db : undefined, search(text.trim()));
   const shown = useMemo(
@@ -88,23 +103,20 @@ export const Contacts = ({ space, stage }: { space: Space; stage: Stage }) => {
     (id: string) => {
       const record = records.find((record) => record.id === id);
       if (record) {
-        removeRecord(space.db, record);
+        space.db.remove(record);
         setSelected((current) => (current === id ? undefined : current));
       }
     },
     [space, records],
   );
+  const handleCreate = useCallback((record: Obj.Unknown) => setSelected(record.id), []);
 
   const typeItems = TYPES.map(({ type, label }) => ({
     value: Type.getTypename(type),
     label,
     icon: getTypeIcon(type)?.icon,
   }));
-  const views: { value: View; label: string; icon: string }[] = [
-    { value: 'list', label: 'List', icon: 'ph--list-bullets--regular' },
-    ...(reached(stage, 'queries') ? [{ value: 'table' as const, label: 'Table', icon: 'ph--table--regular' }] : []),
-    ...(reached(stage, 'complete') ? [{ value: 'graph' as const, label: 'Graph', icon: 'ph--graph--regular' }] : []),
-  ];
+  const views = compact ? [] : VIEWS.filter(({ value }) => reached(stage, VIEW_STAGES[value]));
 
   return (
     // A narrow peer, as on Sharing or a phone, puts the form under the list.
@@ -130,7 +142,7 @@ export const Contacts = ({ space, stage }: { space: Space; stage: Stage }) => {
             {reached(stage, 'records') && (
               <Button.Root icon='ph--plus--regular' label='New' iconOnly onClick={() => setSelected(undefined)} />
             )}
-            {reached(stage, 'queries') && (
+            {searchable && (
               <Input.Root
                 classNames='min-w-24'
                 noAutoFill
@@ -144,7 +156,9 @@ export const Contacts = ({ space, stage }: { space: Space; stage: Stage }) => {
               <ToggleGroup.Root
                 type='single'
                 value={view}
-                onValueChange={(value) => value && setView(value as View)}
+                onValueChange={(value) =>
+                  setView((current) => views.find((view) => view.value === value)?.value ?? current)
+                }
                 rovingFocus={false}
               >
                 {views.map(({ value, label, icon }) => (
@@ -173,9 +187,8 @@ export const Contacts = ({ space, stage }: { space: Space; stage: Stage }) => {
             db={space.db}
             type={type}
             record={subject}
-            records={records}
-            readonly={!reached(stage, 'records')}
-            onDone={() => setSelected(undefined)}
+            editable={reached(stage, 'records')}
+            onCreate={handleCreate}
           />
         </div>
       </div>

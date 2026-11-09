@@ -59,19 +59,21 @@ Two rules decide when a component re-renders:
      render time, and the component does not re-render when the field changes.
    </Aside>
 
-5. **Edit with a form built from the schema.** `Form.Root` from `@dxos/react-ui-form` takes the type's schema, so a new field in the schema is a new field in the form. A reference field lists the records of the type it points at.
+5. **Edit a record.** `ObjectForm` from `@dxos/react-ui-form` builds its fields from the record's type and writes each change back inside `Obj.update`. A reference field lists the records of the type it points at.
 
-   <Snippet file="tutorial/app/RecordForm" region="refs" lang="tsx" />
+   ```tsx
+   <ObjectForm type={Person} object={person} showTags={false} />
+   ```
 
-   On save, the form hands back its values, and the app writes them with the functions from [Mutating objects](/docs/echo/learn/mutating-objects/).
+6. **Create a record.** For a new record, `Form.Root` takes the type's schema and hands its values to `onSave`, which adds the record as in [Mutating objects](/docs/echo/learn/mutating-objects/).
 
-   <Snippet file="tutorial/app/RecordForm" region="save" lang="tsx" />
+   <Snippet file="tutorial/app/RecordForm" region="create" lang="tsx" />
 
 </Steps>
 
 ## Try it
 
-The app with every piece in place: lists, the table and the graph are all `useQuery`, and the form is `useObject` and `Form.Root`.
+The app with every piece in place: the lists, the table and the graph are all `useQuery`, and the form is `ObjectForm`.
 
 <TutorialEmbed stage="complete" />
 
@@ -98,7 +100,3 @@ Create the client yourself to use it outside React too.
 ## What you can do now
 
 You can provide a client to a React app, query a space from a component, show a record that re-renders on every change, and edit records with a form built from their schema. The [Tasks sample](/docs/additional-resources/samples#tasks) is another complete app built this way.
-
-## Next
-
-[Spaces and databases](/docs/echo/concepts/spaces/): what a space is, and how peers join one.

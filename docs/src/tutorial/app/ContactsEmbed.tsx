@@ -24,8 +24,13 @@ import { PeerApp } from './PeerApp.tsx';
 
 const translations = [...uiTranslations, ...formTranslations, ...tableTranslations];
 
+export type ContactsEmbedProps = {
+  stage: Stage;
+  peers?: 1 | 2;
+};
+
 /** A live embed of the tutorial app as it stands at `stage`: `<ContactsEmbed stage='records' client:only='react' />`. */
-export const ContactsEmbed = ({ stage, peers = 1 }: { stage: Stage; peers?: 1 | 2 }) => {
+export const ContactsEmbed = ({ stage, peers = 1 }: ContactsEmbedProps) => {
   const [started, setStarted] = useState<Peer[]>();
   const [error, setError] = useState<string>();
   useEffect(() => {
@@ -44,7 +49,7 @@ export const ContactsEmbed = ({ stage, peers = 1 }: { stage: Stage; peers?: 1 | 
             <div key={peer.name} className='flex flex-col dx-grow border-e border-separator last:border-e-0'>
               {started.length > 1 && <PeerBar peer={peer} />}
               <div className='dx-grow'>
-                <PeerApp client={peer.client} space={peer.space} stage={stage} />
+                <PeerApp client={peer.client} space={peer.space} stage={stage} compact={started.length > 1} />
               </div>
             </div>
           ))

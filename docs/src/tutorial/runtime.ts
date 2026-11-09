@@ -11,8 +11,8 @@ import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials
 
 import { listed } from '../demos/runtime.ts';
 import { openContacts } from './client.ts';
-import { seed } from './records.ts';
 import { types } from './schema.ts';
+import { seed } from './seed.ts';
 
 export type Peer = {
   readonly name: string;

@@ -5,16 +5,17 @@
 import React from 'react';
 
 import { type Client } from '@dxos/client';
-import { type Space } from '@dxos/client/echo';
 import { ClientProvider } from '@dxos/react-client';
 
-import { Contacts, type Stage } from './Contacts.tsx';
+import { Contacts, type ContactsProps } from './Contacts.tsx';
+
+export type PeerAppProps = ContactsProps & { client: Client };
 
 // #region provider
-/** One peer's copy of the app: the provider gives the hooks below it the peer's client. */
-export const PeerApp = ({ client, space, stage }: { client: Client; space: Space; stage: Stage }) => (
+/** One peer's copy of the app; the hooks below the provider read this peer's client. */
+export const PeerApp = ({ client, ...props }: PeerAppProps) => (
   <ClientProvider client={client}>
-    <Contacts space={space} stage={stage} />
+    <Contacts {...props} />
   </ClientProvider>
 );
 // #endregion

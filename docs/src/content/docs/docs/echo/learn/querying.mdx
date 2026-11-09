@@ -45,20 +45,16 @@ The client returns typed objects only for the types it knows. The app passes its
 
    <Snippet file="tutorial/steps/querying" region="live" />
 
-   The callback runs again for the person added after the subscription, before `addPerson` returns.
+   The callback runs again whenever a person is added, changed or removed, on this peer or another. [Mutating objects](/docs/echo/learn/mutating-objects/) makes those changes.
 
 </Steps>
 
 ## Try it
 
-Type in the search box to search every record. The table button shows the records of the chosen type with one column per field. Each list is a live query, so an edit in the form shows up in the list as you save it.
+Type in the search box to search every record. The table button shows the records of the chosen type with one column per field. Each list is a live query, which the next page puts to work.
 
 <TutorialEmbed stage="queries" />
 
 ## What you can do now
 
 You can select records by type, sort them, search their text, follow references backwards, and keep a query running as the results change.
-
-## Next
-
-[Sharing a space](/docs/echo/learn/sharing/): replicate the app's space to a second peer.

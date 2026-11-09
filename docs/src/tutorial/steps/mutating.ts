@@ -2,33 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Obj } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 
-import { addOrganization, addPerson, changeEmployer, removeRecord } from '../records.ts';
+import { Organization, Person } from '../schema.ts';
 
 declare const db: Database.Database;
 
 // #region add
-const northwind = addOrganization(db, { name: 'Northwind Labs' });
-const ada = addPerson(db, { name: 'Ada Lovelace', employer: northwind });
+const northwind = db.add(Obj.make(Organization, { name: 'Northwind Labs' }));
+const ada = db.add(Obj.make(Person, { name: 'Ada Lovelace', employer: Ref.make(northwind) }));
 // #endregion
 
 // #region subscribe
-const employers: (string | undefined)[] = [];
 const unsubscribe = Obj.subscribe(ada, () => {
-  employers.push(ada.employer?.peek()?.name);
+  console.log(ada.employer?.peek()?.name);
 });
 // #endregion
 
 // #region update
-const halcyon = addOrganization(db, { name: 'Halcyon Robotics' });
-changeEmployer(ada, halcyon);
+const halcyon = db.add(Obj.make(Organization, { name: 'Halcyon Robotics' }));
+Obj.update(ada, (ada) => {
+  ada.employer = Ref.make(halcyon);
+});
 // #endregion
 
 unsubscribe();
 
 // #region remove
-removeRecord(db, ada);
+db.remove(ada);
 // #endregion
-
-export { employers };
