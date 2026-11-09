@@ -61,12 +61,6 @@ export type CodeModeOptions = {
    * entirely by what its own code printed, so a host that cannot watch the turn can bound it here.
    */
   maxTurns?: number;
-
-  /**
-   * The prompt states one skill, Discovery, and the model looks up every other skill, operation and type through its
-   * operations instead of reading them in the prompt. The enabled skills' operations stay callable.
-   */
-  discovery?: boolean;
 };
 
 /**
@@ -169,40 +163,35 @@ const runCodeModeTurn = ({
                 params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
               );
               const bound = yield* projectOperations(skills, mcps);
-              const types = yield* registeredTypes;
-              const discovery = options.discovery
-                ? makeDiscovery({
-                    dialect,
-                    enabled: skills,
-                    operations: bound,
-                    types,
-                    catalog: readCatalog.pipe(Effect.provide(services)),
-                    instructionsOf: (skill) =>
-                      Template.processTemplate(skill.instructions).pipe(Effect.provide(services), Effect.orDie),
-                    enable: (skill) =>
-                      Skill.upsert(Skill.getKey(skill)).pipe(
-                        Effect.flatMap((stored) =>
-                          Effect.promise(() => session.context.bind({ skills: [Ref.make(stored)] })),
-                        ),
-                        Effect.provide(services),
-                        Effect.orDie,
-                      ),
-                  })
-                : undefined;
-              // Callable either way; only what the prompt states differs.
-              const operations = discovery === undefined ? bound : [...discovery.operations, ...bound];
+              // The prompt states only the Discovery skill; the model looks up every other skill, operation and type
+              // through it. The enabled skills' operations stay callable without a lookup.
+              const discovery = makeDiscovery({
+                dialect,
+                enabled: skills,
+                operations: bound,
+                types: yield* registeredTypes,
+                catalog: readCatalog.pipe(Effect.provide(services)),
+                instructionsOf: (skill) =>
+                  Template.processTemplate(skill.instructions).pipe(Effect.provide(services), Effect.orDie),
+                enable: (skill) =>
+                  Skill.upsert(Skill.getKey(skill)).pipe(
+                    Effect.flatMap((stored) =>
+                      Effect.promise(() => session.context.bind({ skills: [Ref.make(stored)] })),
+                    ),
+                    Effect.provide(services),
+                    Effect.orDie,
+                  ),
+              });
+              const operations = [...discovery.operations, ...bound];
               labelCall = labelEvalCall(operations);
               const toolkit = makeEvalToolkit({
                 dialect,
                 sandbox,
-                runtime:
-                  discovery === undefined
-                    ? runtime
-                    : Context.add(
-                        runtime,
-                        Operation.Service,
-                        serveLocally(Context.get(runtime, Operation.Service), discovery.operations),
-                      ),
+                runtime: Context.add(
+                  runtime,
+                  Operation.Service,
+                  serveLocally(Context.get(runtime, Operation.Service), discovery.operations),
+                ),
                 operations,
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 maxOutput: options.maxOutput,
@@ -211,15 +200,13 @@ const runCodeModeTurn = ({
               });
               const system = yield* formatSystemPrompt({
                 system: [
-                  discovery === undefined
-                    ? dialect.instructions({ operations, types })
-                    : dialect.instructions({ operations: discovery.operations, types: [], discovery: true }),
+                  dialect.instructions({ operations: discovery.operations, types: [], discovery: true }),
                   options.system,
                   params.system,
                 ]
                   .filter(isPresent)
                   .join('\n\n'),
-                skills: discovery === undefined ? skills : [discovery.skill],
+                skills: [discovery.skill],
                 objects: session.context.getObjects(),
                 instructions,
               }).pipe(Effect.orDie);
@@ -331,13 +318,7 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
   }
 };
 
-/**
- * Every object and relation type the workspace has registered, with its fields.
- *
- * Stated in the prompt rather than left to be discovered: a dialect that binds the real modules
- * invites the model to introspect a schema for the shape it needs, and that costs turns it should
- * be spending on the task.
- */
+/** Every object and relation type the workspace has registered, with its fields: what `queryTypes` answers from. */
 const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
   describeTypes(db),
 );

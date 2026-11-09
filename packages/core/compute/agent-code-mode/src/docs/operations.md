@@ -1,7 +1,8 @@
 # Operations
 
 The skills describe their capabilities as tools; in code mode they are NOT tools. Resolve the
-operation by the DXN the system prompt lists for it, then invoke it the way any DXOS code does:
+operation by its DXN, which `queryOperations` gives along with its input, then invoke it the way any
+DXOS code does:
 
 ```js
 const Score = yield* Database.resolve('dxn:com.example.operation.score');

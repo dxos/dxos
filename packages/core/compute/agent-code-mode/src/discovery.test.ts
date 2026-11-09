@@ -416,7 +416,7 @@ describe('discovery mode', () => {
         Effect.provide(
           AssistantTestLayer({
             ...testLayerOptions,
-            agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect, discovery: true }) },
+            agent: { makeTurnProducer: makeCodeModeTurnProducer({ dialect }) },
             aiService: scriptedAiService((request, index) => {
               systems.push(request.system);
               const code = steps[index];

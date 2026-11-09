@@ -10,8 +10,9 @@ comes back to it.
   off (plugin-assistant `F-5.4`, `F-5.5`, decision `D-18`). The app supplies the engine: the Effect
   dialect, with the code in a Web Worker on its own ECHO client (`composer-app/src/plugin-defs.tsx`).
   Without the chunk or a client it falls back to tool calling, never to running code in the page.
-- **`dx eval`**: runs one program in either dialect. `dx eval --instructions` prints what an agent
-  is told, with the profile's types and operations.
+- **`dx eval`**: runs one program in either dialect. `dx eval --instructions` prints the API
+  reference with the profile's types and operations listed, which an agent finds through discovery
+  instead.
 - **`assistant-evals`**: `code-mode.eval.ts` runs the same tasks with tool calling and both dialects.
 
 ## One turn
@@ -23,10 +24,10 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
    servers.
 2. Turns their tools into the operation list (`projectOperations`): each operation's name,
    description and input schema, the `Operation` definition behind it (none for an MCP tool), and a
-   function that runs it through the same handlers as a tool call.
-3. Builds the system prompt: the dialect's instructions (its API, the registered types, the
-   operations), then the skills' own instructions and the conversation's objects, as tool calling
-   does. In discovery mode it states the API and one skill, Discovery, instead (see below).
+   function that runs it through the same handlers as a tool call. The Discovery skill's three
+   operations join them.
+3. Builds the system prompt: the dialect's API, the Discovery skill with its three operations, and
+   the conversation's objects and instructions. No other skill, operation or type is listed.
 4. Calls the model. A text answer ends the request; an `eval` call runs in the sandbox and the loop
    repeats, up to `maxTurns`.
 
@@ -49,8 +50,8 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
 
 The body of an async function, over a small facade: `query`, `make`, `add`, `update`, `remove`,
 `ref`, `flush`, `relations`, `children`, `referrers`, `describe`, `print`. Every operation and MCP
-tool is a function on `ops`: `await ops['name'](input)`. The prompt gives each input as the JSON
-schema tool calling validates. Every binding takes and returns plain data, which is what lets a
+tool is a function on `ops`: `await ops['name'](input)`. `queryOperations` gives each input as the
+JSON schema tool calling validates. Every binding takes and returns plain data, which is what lets a
 sandbox with no database run it.
 
 ### Effect ([`dialect-effect.ts`](./src/dialect-effect.ts))
@@ -77,40 +78,32 @@ demand ([`src/docs`](./src/docs)), including the generated `catalog/types.md` an
 | `WorkerSandbox`, `WorkerSandboxBrowser` | A Node worker thread or a Web Worker, on its own ECHO client; operations run back on the host.          | Bounded, not contained: a timeout kills the worker, which has the host's rights. |
 | `WorkerdSandbox`                        | A Cloudflare Worker Loader isolate, reaching only the host; plain dialect, every call made on the host. | Yes: the only security boundary here.                                            |
 
-## What the model is told
+## What the model is told: discovery
 
-Two modes, chosen by `discovery` on `makeCodeModeTurnProducer`. In both, the model can call the
-operations of the conversation's enabled skills and nothing else: `ops` and `Database.resolve` know
-only those, and a skill enabled mid-request adds its operations on the next model call.
+Code mode always states one skill, Discovery ([`discovery.ts`](./src/discovery.ts)), and its three
+operations, and nothing else that is available: no other skill's instructions, no other operation,
+no types. Listing every skill, operation and type, each operation as a tool, is what tool calling
+does, which runs when code mode is off (`Settings.disableCodeMode`).
 
-### Listed (the default)
+The model looks the rest up from code:
 
-- **Types**: every registered type and its fields. A union of more than four tagged variants is
-  shortened to its tags, with a note to print an existing value to see a variant's fields.
-- **Operations**: every operation of the enabled skills, in full, before every model call.
-- **Skills**: each enabled skill's instructions; with the skill manager bound, a list of every skill
-  in the registry.
+| Operation         | Listing                                                                                   | Lookup                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `loadSkill`       | No key: the skills it can use, enabled here or enableable by an agent (`agentCanEnable`). | `key`: the skill's instructions and operations. A skill not yet enabled is enabled by loading it. |
+| `queryOperations` | `query` searches those skills' operations by what they do; `skill` narrows to one.        | `keys`: each operation's input and the code that calls it, in the dialect's form.                 |
+| `queryTypes`      | `query` searches the registered types.                                                    | `typenames`: their fields.                                                                        |
 
-So the prompt grows with every enabled skill and every registered type.
-
-### Discovery (`discovery: true`)
-
-The prompt states one skill, Discovery ([`discovery.ts`](./src/discovery.ts)), with its three
-operations: no other skill's instructions, no other operation, no types. The model looks the rest up
-from code:
-
-| Operation         | Listing                                                                                   | Lookup                                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `loadSkill`       | No key: the skills it can use, enabled here or enableable by an agent (`agentCanEnable`). | `key`: the skill's instructions and operations. A skill not yet enabled is enabled by loading it.   |
-| `queryOperations` | `query` searches those skills' operations by what they do; `skill` narrows to one.        | `keys`: each operation's input and the code that calls it, in the dialect's form.                   |
-| `queryTypes`      | `query` searches the registered types.                                                    | `typenames`: their fields.                                                                          |
-
+- The model can call the enabled skills' operations, the conversation's MCP tools and these three,
+  and nothing else: `ops` and `Database.resolve` know only those. A skill enabled mid-request adds
+  its operations from the next model call.
 - A skill that is neither enabled nor enableable never shows up, and nor do its operations.
-- The prompt no longer grows with skills or types. The cost is a lookup call at the start of a
+- The prompt does not grow with skills or types. The cost is a lookup call at the start of a
   request.
 - The turn answers these operations itself, from what it already holds, so no host registers a
   handler for them; `serveLocally` routes the Effect dialect's `Operation.invoke` to them.
 - It is the shape `@dxos/mcp-server` already gives MCP clients (`queryOperations`, `loadSkill`).
+- A type's union of more than four tagged variants is shortened to its tags, with a note to print
+  an existing value to see a variant's fields.
 
 ## Code map
 
