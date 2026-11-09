@@ -35,11 +35,18 @@ describe('buildContactFromActor', () => {
   });
 
   test('returns undefined for a sender address outside the Person email format', async ({ expect }) => {
-    // Real mail carries addresses such as `o'brien@corp.com`; `Obj.make` throws on them and failed the sync run.
-    for (const email of ["nicholas.o'day@enron.com", "o'brien@corp.com", 'no-domain@localhost', 'a@b']) {
+    // `Obj.make` throws on these, which used to fail the sync run.
+    for (const email of ['no-domain@localhost', 'a@b', 'two words@corp.com']) {
       const contact = await EffectEx.runPromise(buildContactFromActor({ email }, db));
       expect(contact).toBeUndefined();
     }
+  });
+
+  test("builds a Person for an address with an apostrophe (the canary mailbox's nicholas.o'day@enron.com)", async ({
+    expect,
+  }) => {
+    const contact = await EffectEx.runPromise(buildContactFromActor({ email: "nicholas.o'day@enron.com" }, db));
+    expect(contact?.emails?.[0]?.value).toBe("nicholas.o'day@enron.com");
   });
 
   test('builds a Person and links a matching Organization by domain', async ({ expect }) => {

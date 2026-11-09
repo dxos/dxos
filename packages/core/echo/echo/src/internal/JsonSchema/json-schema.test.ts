@@ -478,7 +478,7 @@ describe('effect-to-json', () => {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "description": "Email address",
         "format": "email",
-        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        "pattern": "^[a-zA-Z0-9._%+'-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
         "title": "Email",
         "type": "string",
       }
@@ -508,7 +508,7 @@ describe('json-to-effect', () => {
         title: 'Email',
         description: 'Email address',
         // TODO(dmaretskyi): omit pattern.
-        pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+        pattern: '^[a-zA-Z0-9._%+\'-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
       });
     });
   });

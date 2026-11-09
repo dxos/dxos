@@ -1056,7 +1056,7 @@ describe('ProjectionModel', () => {
     expect(emailJsonSchema).toMatchObject({
       type: 'string',
       format: 'email',
-      pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+      pattern: '^[a-zA-Z0-9._%+\'-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
     });
 
     // Verify reconstructed Effect schema maintains validation
