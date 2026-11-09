@@ -76,7 +76,10 @@ const session = <A>(spaceId: SpaceId, body: (db: Db, rows: Probe) => Promise<A>)
           `.pipe(Effect.orDie),
           );
         return yield* Effect.promise(() => body(db, rows));
-      }).pipe(Effect.provide(layer));
+        // `Effect.scoped` ahead of `Effect.provide`: the latter builds the layer in a scope of its own
+        // (`provideLayer` is `scopedWith`) that closes as soon as this effect returns, so a database
+        // left in the OUTER scope would close — retrying a failed write — after its client was gone.
+      }).pipe(Effect.scoped, Effect.provide(layer));
     }),
   ).pipe(EffectEx.runPromise);
 
