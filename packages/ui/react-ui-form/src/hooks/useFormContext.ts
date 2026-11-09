@@ -5,7 +5,6 @@
 import { type Extension } from '@codemirror/state';
 import { useEffect, useMemo, useRef } from 'react';
 
-import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -38,9 +37,6 @@ export type FormContextValue<T extends AnyProperties = any> = {
 
   /** Editor extensions for the form's editors, beyond their own (what a host's plugins contribute), by field. */
   extensions?: FormExtensions;
-
-  /** The live object whose strings collaborative fields (see `CollaborativeAnnotation`) edit in place. */
-  object?: Obj.Unknown;
 } & FieldContext;
 
 /** The field an editor edits, for extensions that depend on it (comments anchored to its text). */

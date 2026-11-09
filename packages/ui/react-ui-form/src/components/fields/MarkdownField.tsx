@@ -2,45 +2,37 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Editor, type TextEditorProps, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Input from '@dxos/react-ui/Input';
 import * as Typography from '@dxos/react-ui/Typography';
 import { Text } from '@dxos/schema';
-import { createDataExtensions } from '@dxos/ui-editor';
+import { createDataExtensions, createMarkdownExtensions, decorateMarkdown } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { useCollaborativeText, useFormContext, useFormExtensions } from '../../hooks/index.ts';
+import { useFormExtensions } from '../../hooks/index.ts';
 import { presentationFor } from '../presentation.tsx';
+import { InputEditor, type InputEditorProps } from './InputEditor.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
 const ROWS = 6;
 
-/**
- * Fits the editor to the field: a long unbroken token (an inline-code URL) breaks anywhere rather than widening the
- * content, and the editor fills the frame's height, so its scroller ends at the frame's foot instead of mid-field.
- */
+/** Elsewhere inline code is one clipped line (fixed height, no wrapping), which in a field widens the content instead. */
 const fieldTheme = EditorView.theme({
-  '&': { minHeight: '100%' },
-  '.cm-content': { overflowWrap: 'anywhere' },
-  // Elsewhere inline code is one clipped line (fixed height, no wrapping), which in a field widens the content instead.
   '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
 });
 
 /**
- * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
- * (`Format.TypeFormat.Markdown`), edited through the form's values or, when collaborative, in place in the form's
- * object, or a `Ref<Text>`, edited in place through its document; an empty ref offers a button that creates the Text.
+ * A markdown value in a multi-line `InputEditor`. The value is either a string (`Format.TypeFormat.Markdown`), edited
+ * through the form's values or, when collaborative, through the binding the form's extensions give it, or a
+ * `Ref<Text>`, edited in place through its document; an empty ref offers a button that creates the Text.
  */
 export const MarkdownField = ({
   type,
@@ -54,7 +46,6 @@ export const MarkdownField = ({
   getValue,
   onValueChange,
 }: FormFieldRendererProps) => {
-  const { object } = useFormContext('MarkdownField');
   const extensions = useFormExtensions(path && jsonPath !== undefined ? { path, jsonPath } : undefined);
   const value: unknown = getValue();
   const isStatic = presentationFor(presentation).isStatic;
@@ -86,85 +77,30 @@ export const MarkdownField = ({
     return <Typography.Text>{typeof value === 'string' ? value : ''}</Typography.Text>;
   }
 
-  return collaborative && object && path ? (
-    <CollaborativeMarkdownEditor
-      object={object}
-      path={path}
-      placeholder={placeholder}
-      readonly={!!readonly}
-      variant={variant}
-      extensions={extensions}
-      testId={jsonPath}
-    />
-  ) : (
+  // A collaborative string is edited through the binding in the form's extensions, never through the form's value.
+  return (
     <MarkdownEditor
-      value={typeof value === 'string' ? value : ''}
       placeholder={placeholder}
       readonly={!!readonly}
       variant={variant}
       extensions={extensions}
       testId={jsonPath}
-      onChange={(next) => onValueChange(type, next)}
+      {...(!collaborative && {
+        value: typeof value === 'string' ? value : '',
+        onChange: (next: string) => onValueChange(type, next),
+      })}
     />
   );
 };
-
-type InPlaceVariant = 'title' | 'plain';
-
-type MarkdownEditorProps = {
-  placeholder?: string;
-  readonly?: boolean;
-  variant?: InPlaceVariant;
-  /** The field's extensions: the form's, and the binding of an editor edited in place. */
-  extensions: Extension[];
-  testId?: string;
-} & Pick<TextEditorProps, 'value' | 'initialValue' | 'autoFocus' | 'onChange'>;
 
 /** The markdown editor every markdown field draws, given its value through the form or bound through `extensions`. */
-const MarkdownEditor = ({
-  placeholder,
-  readonly,
-  variant,
-  extensions: formExtensions,
-  testId,
-  onChange,
-  ...props
-}: MarkdownEditorProps) => {
-  // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
-  const fieldExtensions = useMemo(() => [fieldTheme, ...formExtensions], [formExtensions]);
-  const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
-  return (
-    <Input.Frame rows={variant ? 1 : ROWS} variant={variant} disabled={readonly} data-testid={testId}>
-      <Editor.Root>
-        <Editor.View {...props} extensions={extensions} onChange={readonly ? undefined : onChange} />
-      </Editor.Root>
-    </Input.Frame>
+const MarkdownEditor = ({ extensions: formExtensions, ...props }: Omit<InputEditorProps, 'rows'>) => {
+  const extensions = useMemo(
+    // `fixedHeight`: a field is a row of a form, so a heading keeps the body size and every line the same height.
+    () => [createMarkdownExtensions({ fixedHeight: true }), decorateMarkdown(), fieldTheme, ...(formExtensions ?? [])],
+    [formExtensions],
   );
-};
-
-type CollaborativeMarkdownEditorProps = Omit<MarkdownEditorProps, 'value' | 'initialValue' | 'onChange'> & {
-  object: Obj.Unknown;
-  path: Doc.KeyPath;
-};
-
-/** A markdown string of the form's object, edited in place (see `useCollaborativeText`). */
-const CollaborativeMarkdownEditor = ({
-  object,
-  path,
-  extensions,
-  readonly,
-  ...props
-}: CollaborativeMarkdownEditorProps) => {
-  const binding = useCollaborativeText({ object, path, extensions, readonly });
-  return (
-    <MarkdownEditor
-      {...props}
-      readonly={readonly}
-      extensions={binding.extensions}
-      initialValue={binding.initialValue}
-      autoFocus={binding.autoFocus}
-    />
-  );
+  return <InputEditor {...props} rows={ROWS} extensions={extensions} />;
 };
 
 /** A `Ref<Text>`'s content, resolved, as read-only text. */
@@ -174,7 +110,7 @@ const RefStaticText = ({ reference }: { reference: Ref.Unknown }) => {
   return content ? <Typography.Text>{content}</Typography.Text> : null;
 };
 
-type RefMarkdownEditorProps = Omit<MarkdownEditorProps, 'value' | 'initialValue' | 'onChange'> & {
+type RefMarkdownEditorProps = Omit<InputEditorProps, 'rows' | 'value' | 'initialValue' | 'onChange'> & {
   reference: Ref.Unknown;
 };
 
@@ -184,7 +120,10 @@ const RefMarkdownEditor = ({ reference, extensions: formExtensions, ...props }: 
   const extensions = useMemo(
     () =>
       text
-        ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) }), ...formExtensions]
+        ? [
+            createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) }),
+            ...(formExtensions ?? []),
+          ]
         : formExtensions,
     [text, reference, formExtensions],
   );

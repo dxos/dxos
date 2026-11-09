@@ -15,7 +15,14 @@ export const VENDOR_MANIFEST = 'manifest.json';
 /** What the Workers runtime provides; anything else a vendored package imports is bundled. */
 const RUNTIME_MODULES = ['cloudflare:*', 'node:*'];
 
-const NODE_BUILTIN = new RegExp(`^(${builtinModules.filter((name) => !name.startsWith('_')).join('|')})(/.*)?$`);
+/** Packages bun lists in `builtinModules` beside Node's own, which workerd does not provide as `node:` modules. */
+const BUN_BUILTINS = new Set(['bun', 'undici', 'ws']);
+
+const NODE_BUILTIN = new RegExp(
+  `^(${builtinModules
+    .filter((name) => !name.startsWith('_') && !name.startsWith('bun:') && !BUN_BUILTINS.has(name))
+    .join('|')})(/.*)?$`,
+);
 
 /** Imports Node built-ins as `node:<name>`, the form workerd's `nodejs_compat` provides them under. */
 const nodeBuiltins = (): EsbuildPlugin => ({

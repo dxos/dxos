@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { createPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { SurfaceComponent } from './Surface.tsx';
@@ -25,7 +27,7 @@ export type CreateSurfaceProps = CreateShapeProps<SurfaceShape>;
 export const createSurface = (props: CreateSurfaceProps) =>
   createShape<SurfaceShape>({
     type: 'surface',
-    size: { width: 384, height: 384 },
+    size: { width: 6 * MAJOR_GRID, height: 6 * MAJOR_GRID },
     ...props,
   });
 

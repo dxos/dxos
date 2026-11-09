@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '#types';
@@ -20,9 +20,10 @@ export default FeedOperation.LoadPostContent.pipe(
       // Resolve the source Subscription first: it carries the database binding. The Post is a queue
       // item, and its own `Obj.getDatabase` link is not reliably set on every code path that produces
       // a queue-decoded proxy, whereas the Subscription is always in the space database.
-      const post = postRef.target;
-      invariant(post, 'Post ref target not loaded.');
-      const subscription = post.source?.target;
+      // Loaded rather than read off `target`: only an in-process caller has resolved the ref, and a Post that lives
+      // only in its subscription's feed (synced, never curated) is not in the space database at all.
+      const post = yield* Database.load(postRef);
+      const subscription = post.source ? yield* Database.load(post.source) : undefined;
       if (!subscription || !post.link) {
         return;
       }

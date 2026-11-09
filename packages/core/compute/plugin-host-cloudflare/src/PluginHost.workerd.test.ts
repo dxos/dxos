@@ -19,6 +19,7 @@ import {
   Followup,
   Greet,
   Greeter,
+  GREETER_WIRE_KEY,
   Inspect,
   InspectEvent,
   Nest,
@@ -40,6 +41,9 @@ describe('PluginHost', () => {
     expect(catalog.types[0].jsonSchema).toMatchObject({ type: 'object' });
     expect(catalog.skills).toMatchObject([{ key: TestSkill.key, name: 'Host test', mcpPrompt: true }]);
     expect(catalog.skills[0].tools.length).toBe(1);
+    // The skill manager lets an agent enable only a skill that says it may; without the flag a bundled skill is unusable
+    // by an agent that starts with the skill manager alone.
+    expect(catalog.skills[0].agentCanEnable).toBe(true);
     const operations = JSON.stringify(catalog.operations);
     expect(operations).toContain(String(Reply.meta.key));
   });
@@ -211,6 +215,25 @@ describe('PluginHost', () => {
         [Greeter.key, 'names'],
         [Greeter.key, 'greet', 'Ada'],
         [Greeter.key, 'greet', 'Grace'],
+      ]);
+    });
+
+    test("a plugin's adapter builds the service from its wire service, over the generic proxy", async ({ expect }) => {
+      const calls: unknown[] = [];
+      const services: PluginProtocol.HostServices = {
+        descriptors: [{ key: Greeter.key, streams: ['names'] }, { key: GREETER_WIRE_KEY }],
+        host: {
+          call: async (service, method, args) => {
+            calls.push([service, method, ...args]);
+            return method === 'names' ? { ok: true, value: ['Ada'] } : { ok: true, value: `Hi, ${String(args[0])}` };
+          },
+        },
+      };
+      const result = await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {}, { services });
+      expect(result).toEqual({ ok: true, output: ['Hi, Ada (adapted)'] });
+      expect(calls).toEqual([
+        [GREETER_WIRE_KEY, 'names'],
+        [GREETER_WIRE_KEY, 'greet', 'Ada'],
       ]);
     });
 

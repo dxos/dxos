@@ -21,7 +21,7 @@ import {
 } from '@dxos/scene';
 
 import { type NodeRegistry } from '../model/index.ts';
-import { type Arrangement, type ForceOptions, type LatticeSpec, initialKeys } from '../utils/index.ts';
+import { type Arrangement, type ForceOptions, type LatticeSpec, initialKeys, nominalSize } from '../utils/index.ts';
 import { DYNAMIC_ARRANGE } from './dynamic.ts';
 import { type GraphModel, type GraphNode, type SlotsCache, graphCenters } from './graph.ts';
 
@@ -58,8 +58,8 @@ export type GraphLayoutOptions = {
   nodes?: NodeRegistry;
 };
 
-/** The dynamic projection's slot without a lattice, so a graph with no size draws as it did there. */
-const DEFAULT_SIZE: Size = { width: 192, height: 128 };
+/** The dynamic projection's slot without a lattice, so a graph with no size draws as it did there: in major cells. */
+const DEFAULT_SIZE: Size = nominalSize({ width: 3, height: 2 });
 
 export const GRAPH_LAYOUT_ID = 'graph';
 

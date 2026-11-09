@@ -23,6 +23,7 @@ import { EdgeHttpClient } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
 import * as BundleDescriber from '../../BundleDescriber.ts';
+import { buildInProcess, isViteBuild } from './build.ts';
 import { RegistryCommandError } from './errors.ts';
 import { PublishError } from './errors.ts';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
@@ -55,7 +56,8 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
 /**
  * `dx registry publish` — config-driven build + publish.
  *
- * Reads the build/publish orchestration from `dx.config.ts`, runs the declared build command,
+ * Reads the build/publish orchestration from `dx.config.ts`, builds the bundle (Vite in process unless
+ * `publish.buildCommand` names another command),
  * reads the emitted `manifest.json`, runs the bundle's `describe()` on a local workerd as EDGE would (failing the
  * publish when a module does not activate there), hosts the bundle (default: upload the build
  * output to the DXOS edge registry; override with `publish.assetBaseUrl` to point
@@ -78,7 +80,11 @@ export const publish = Command.make(
     ),
     noBuild: Options.Boolean('no-build').pipe(
       Options.withDefault(false),
-      Options.withDescription('Skip running the build command (publish a pre-built dist).'),
+      Options.withDescription('Skip the build (publish a pre-built dist).'),
+    ),
+    dryRun: Options.Boolean('dry-run').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Build and describe the bundle, then stop: nothing is uploaded or recorded.'),
     ),
     assetBaseUrl: Options.String('asset-base-url').pipe(
       Options.withDescription('Skip upload and point the release at an already-hosted bundle directory.'),
@@ -139,33 +145,39 @@ export const publish = Command.make(
           );
         }
 
-        // Build (unless skipped). Prepend the project's `node_modules/.bin` to PATH so
-        // locally-installed tools (e.g. `vite`) resolve like they do in an npm script.
+        // Build (unless skipped): the default Vite build in this process, any other command in a shell with the
+        // project's `node_modules/.bin` on PATH so locally-installed tools resolve like they do in an npm script.
         const buildCommand = config.publish?.buildCommand;
-        if (!options.noBuild && buildCommand) {
-          yield* Console.log(`Building: ${buildCommand}`);
-          const binDir = path.join(dir, 'node_modules', '.bin');
-          // v4 folds the process options into `make` and runs a command through the spawner
-          // service rather than through combinators on the command itself.
-          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-          const exitCode = yield* spawner.exitCode(
-            PlatformCommand.make('sh', ['-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`], {
-              cwd: dir,
-              env: { ...(yield* describer.value.buildEnv) },
-              extendEnv: true,
-              stdout: 'inherit',
-              stderr: 'inherit',
-            }),
-          );
-          if (exitCode !== 0) {
-            return yield* Effect.fail(
-              new RegistryCommandError({ message: `Build failed (exit ${exitCode}): ${buildCommand}` }),
+        const outdir = path.join(dir, config.publish?.outputDirectory ?? 'dist');
+        if (!options.noBuild) {
+          const env = yield* describer.value.buildEnv;
+          if (isViteBuild(buildCommand)) {
+            yield* Console.log(`Building:  ${dir} (Vite, in process)`);
+            yield* buildInProcess({ dir, outDir: outdir, env });
+          } else {
+            yield* Console.log(`Building:  ${buildCommand}`);
+            const binDir = path.join(dir, 'node_modules', '.bin');
+            // v4 folds the process options into `make` and runs a command through the spawner
+            // service rather than through combinators on the command itself.
+            const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+            const exitCode = yield* spawner.exitCode(
+              PlatformCommand.make('sh', ['-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`], {
+                cwd: dir,
+                env: { ...env },
+                extendEnv: true,
+                stdout: 'inherit',
+                stderr: 'inherit',
+              }),
             );
+            if (exitCode !== 0) {
+              return yield* Effect.fail(
+                new RegistryCommandError({ message: `Build failed (exit ${exitCode}): ${buildCommand}` }),
+              );
+            }
           }
         }
 
         // Read the emitted manifest.
-        const outdir = path.join(dir, config.publish?.outputDirectory ?? 'dist');
         const manifestPath = path.join(outdir, 'manifest.json');
         if (!(yield* fs.exists(manifestPath))) {
           return yield* Effect.fail(
@@ -181,6 +193,11 @@ export const publish = Command.make(
         // Before anything is uploaded: a hosted version is immutable, so a bundle EDGE cannot run must not burn it.
         yield* Console.log(`Describing ${outdir}`);
         yield* Console.log(`Described: ${yield* describer.value.describe(outdir)}`);
+
+        if (options.dryRun) {
+          yield* Console.log(`Dry run:   built ${key}@${version} in ${outdir}; nothing uploaded or recorded.`);
+          return;
+        }
 
         if (options.private) {
           const client = yield* ClientService.client;

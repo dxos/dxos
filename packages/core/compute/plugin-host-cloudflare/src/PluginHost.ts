@@ -9,6 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -128,8 +129,11 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     });
     const cancellation = RequestContext.listenForCancel(scope.cancellation);
 
+    // Set once the invocation's context exists; a nested call can only return after that.
+    let serviceContainer: ServiceContainer | undefined;
     // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
     const withOperations = HostServices.withOperations(handler, {
+      refreshWorkingSet: async () => serviceContainer?.refreshWorkingSet(),
       handlers: activation.operationHandlers,
       host: scope.operations,
       spaceId,
@@ -139,7 +143,14 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     });
     const contextual = RequestContext.withConversation(
       RequestContext.withCancellation(
-        withCapabilities(HostServices.withHostServices(withOperations, scope.services), activation.capabilities),
+        withCapabilities(
+          HostServices.withHostServices(
+            withOperations,
+            scope.services,
+            activation.capabilities.getAll(Capabilities.HostServiceAdapter),
+          ),
+          activation.capabilities,
+        ),
         cancellation.signal,
       ),
       scope.conversation,
@@ -159,7 +170,9 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     // The in-process rpc clients bridged onto the bindings live for one invocation.
     const serviceScope = Effect.runSync(Scope.make());
     try {
-      const context = await makeContext(env, scope, spaceId, serviceScope);
+      const made = await makeContext(env, scope, spaceId, serviceScope);
+      serviceContainer = made.serviceContainer;
+      const context = made.context;
       const output = await func.handler({
         context: { ...context, services: { ...context.services, traceService: trace.service } },
         data: request.input,
@@ -247,7 +260,7 @@ const makeContext = async (
   scope: PluginProtocol.InvocationScope,
   spaceId: SpaceId | undefined,
   serviceScope: Scope.Scope,
-): Promise<FunctionProtocol.Context> => {
+): Promise<{ context: FunctionProtocol.Context; serviceContainer?: ServiceContainer }> => {
   const { DATA_SERVICE, QUEUE_SERVICE, FUNCTIONS_AI_SERVICE } = env;
   if (DATA_SERVICE === undefined || QUEUE_SERVICE === undefined || FUNCTIONS_AI_SERVICE === undefined) {
     if (spaceId !== undefined) {
@@ -255,14 +268,16 @@ const makeContext = async (
         message: 'A space-scoped invocation needs DATA_SERVICE, QUEUE_SERVICE and FUNCTIONS_AI_SERVICE',
       });
     }
-    return { services: { accessTokenService: scope.accessTokenService } };
+    return { context: { services: { accessTokenService: scope.accessTokenService } } };
   }
-  return createFunctionContext({
-    serviceContainer: new ServiceContainer({}, DATA_SERVICE, QUEUE_SERVICE, FUNCTIONS_AI_SERVICE),
+  const serviceContainer = new ServiceContainer({}, DATA_SERVICE, QUEUE_SERVICE, FUNCTIONS_AI_SERVICE);
+  const context = await createFunctionContext({
+    serviceContainer,
     contextSpaceId: spaceId,
     serviceScope,
     accessTokenService: scope.accessTokenService,
   });
+  return { context, serviceContainer };
 };
 
 /** Gives the handler the plugins' capability manager, which operations that read contributed capabilities require. */

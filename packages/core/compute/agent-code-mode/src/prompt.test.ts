@@ -121,6 +121,41 @@ describe('prompt', () => {
     expect(describeInput(Schema.suspend(() => Schema.Struct({ id: Schema.String })))).toEqual('{ id: string }');
   });
 
+  test("a type's union of more than four tagged variants is named by its tags", ({ expect }) => {
+    const variant = (tag: string) => Schema.TaggedStruct(tag, { text: Schema.String });
+    const many = Schema.Union(['a', 'b', 'c', 'd', 'e'].map(variant));
+    expect(describeFields({ block: many })).toEqual([
+      { name: 'block', type: '{ _tag: "a" | "b" | "c" | "d" | "e", … }', summary: 'object', optional: false },
+    ]);
+    // Four or fewer are still spelled out, since their fields are short enough to be worth stating.
+    const few = Schema.Union(['a', 'b'].map(variant));
+    expect(describeFields({ block: few })).toEqual([
+      {
+        name: 'block',
+        type: '{ _tag: "a", text: string } | { _tag: "b", text: string }',
+        summary: 'object',
+        optional: false,
+      },
+    ]);
+    // An operation's input is what the model writes, so it keeps every variant's fields.
+    expect(describeInput(Schema.Struct({ block: many }))).toContain('{ _tag: "e", text: string }');
+  });
+
+  test('the types section says how to see a shortened union, and only when a type has one', ({ expect }) => {
+    const type = (field: string) => ({
+      typename: 'com.example.type.note',
+      dxn: 'dxn:com.example.type.note:0.1.0',
+      kind: 'object' as const,
+      latest: true,
+      fields: [{ name: 'block', type: field, summary: field, optional: false }],
+    });
+    const [{ type: shortened }] = describeFields({
+      block: Schema.Union(['a', 'b', 'c', 'd', 'e'].map((tag) => Schema.TaggedStruct(tag, {}))),
+    });
+    expect(renderTypes([type(shortened)])).toContain("print an existing value of that type to see a variant's fields");
+    expect(renderTypes([type('string')])).not.toContain('shortened to its tags');
+  });
+
   test('the effect dialect documents an operation by the schema Operation.invoke decodes against', ({ expect }) => {
     const Close = Operation.make({
       meta: { key: DXN.make('com.example.operation.close'), name: 'Close', description: 'Closes a task.' },
