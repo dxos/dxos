@@ -92,8 +92,52 @@ const styleOf = (element: { color?: Shape.Color; fill?: Shape.Fill; stroke?: Sha
   return Object.keys(style).length > 0 ? style : undefined;
 };
 
+/** The DSL color for a hue; a hue two colors share reads as the stronger. */
+const COLORS: Partial<Record<string, Shape.Color>> = {
+  neutral: 'grey',
+  violet: 'violet',
+  blue: 'blue',
+  sky: 'light-blue',
+  yellow: 'yellow',
+  orange: 'orange',
+  green: 'green',
+  lime: 'light-green',
+  rose: 'light-red',
+  red: 'red',
+};
+
+/** The DSL fields {@link styleOf} read, for a style a shape already has on the canvas. */
+const fieldsOf = (style: NodeStyle | undefined): { color?: Shape.Color; fill?: Shape.Fill; stroke?: Shape.Stroke } => {
+  const color = style?.hue ? COLORS[style.hue] : undefined;
+  const fill = style?.guide ? 'tint' : style?.fill === false ? 'none' : undefined;
+  return {
+    ...(color ? { color } : {}),
+    ...(fill ? { fill } : {}),
+    ...(style?.lineStyle === 'dashed' || style?.lineStyle === 'dotted' ? { stroke: style.lineStyle } : {}),
+  };
+};
+
 /** The size of a box's title (a group's name), the layout's small text. */
 const TITLE_FONT_SIZE = 14;
+
+/** A title's inset from its box's corner, the on-screen label's padding. */
+const TITLE_INSET = 8;
+
+/** The box a title was read from, by the id `read` gives a title. */
+const titleOwner = (id: string): string | undefined => id.match(/^(.+)-title(?:-\d+)?$/)?.[1];
+
+const contains = (box: Shape.Box, { x, y }: Shape.Point): boolean =>
+  x >= box.x && x <= box.x + box.w && y >= box.y && y <= box.y + box.h;
+
+/** The small text `read` split out of `box`, if any. */
+const titleOf = (elements: readonly Shape.Element[], box: Shape.Box): Shape.Text | undefined =>
+  elements.find(
+    (element): element is Shape.Text =>
+      element.kind === 'text' && element.weight === 's' && titleOwner(element.id) === box.id && contains(box, element),
+  );
+
+/** Whether a node's label reads as a title, from the top-left corner of its box. */
+const isTitled = ({ style }: Node): boolean => style?.alignHorizontal === 'left' && style.alignVertical === 'top';
 
 /** Px per character and line height of a small label, for sizing its box to its text (a note's default is a page). */
 const LABEL_CHAR = 7;
@@ -199,6 +243,14 @@ const placeOnLayers = (content: ContentMap, scene: string, records: ContentMap) 
   }
 };
 
+/** A shape as updated, with the style it has on the canvas where the update does not restate one. */
+const withStoredStyle = (content: ContentMap, object: string, element: Shape.Element): Shape.Element => {
+  const record = managed(content).find(({ dsl }) => dsl?.object === object && dsl.element === element.id);
+  return (element.kind === 'rect' || element.kind === 'ellipse') && record && isNodeRecord(record)
+    ? { ...fieldsOf(record.node.style), ...element }
+    : element;
+};
+
 export const SceneHandler: ContentHandler = {
   identify: (record) =>
     isElementRecord(record) && record.dsl ? { object: record.dsl.object, element: record.dsl.element } : undefined,
@@ -251,16 +303,15 @@ export const SceneHandler: ContentHandler = {
         absorbed.add(element.id);
         continue;
       }
-      const box = object.elements.find(
-        (other) =>
-          other.kind === 'rect' &&
-          !other.text &&
-          !titles.has(other.id) &&
-          element.x >= other.x &&
-          element.x <= other.x + other.w &&
-          element.y >= other.y &&
-          element.y <= other.y + other.h,
+      const around = object.elements.filter(
+        (other): other is Shape.Box =>
+          other.kind === 'rect' && !other.text && !titles.has(other.id) && contains(other, element),
       );
+      // A title names its box when `read` wrote it; otherwise it belongs to the innermost box around it, since an
+      // untitled outer box also contains the title of a box inside it.
+      const box =
+        around.find((other) => other.id === titleOwner(element.id)) ??
+        around.sort((left, right) => left.w * left.h - right.w * right.h)[0];
       if (box) {
         titles.set(box.id, element);
         absorbed.add(element.id);
@@ -466,6 +517,38 @@ export const SceneHandler: ContentHandler = {
     return records;
   },
 
+  // `read` shows a title as its own element but it lives on the box's record, so the two are replaced together; `read`
+  // omits a shape's style, so a partial update keeps whatever it does not restate.
+  completeElements: (previous, elements, content) => {
+    const ids = new Set(elements.map((element) => element.id));
+    const added: Shape.Element[] = [];
+    for (const box of previous.elements) {
+      if (box.kind !== 'rect') {
+        continue;
+      }
+      const title = titleOf(previous.elements, box);
+      if (!title) {
+        continue;
+      }
+      const updated = elements.find((element) => element.id === box.id);
+      if (updated?.kind === 'rect' && !updated.text && !ids.has(title.id)) {
+        added.push({ ...title, x: title.x + updated.x - box.x, y: title.y + updated.y - box.y });
+      } else if (!updated && ids.has(title.id)) {
+        added.push(box);
+      }
+    }
+    return [...added, ...elements].map((element) => withStoredStyle(content, previous.id, element));
+  },
+
+  // Removing a title is an update of the box it lives on, so the box goes back without it.
+  rewriteOnRemove: (previous, elementIds, content) =>
+    previous.elements.flatMap((box) => {
+      const title = box.kind === 'rect' ? titleOf(previous.elements, box) : undefined;
+      return title && elementIds.has(title.id) && !elementIds.has(box.id)
+        ? [withStoredStyle(content, previous.id, box)]
+        : [];
+    }),
+
   read: (content) => {
     const records = managed(content);
     const unmanaged = records.filter((record) => !record.dsl).length;
@@ -484,6 +567,15 @@ export const SceneHandler: ContentHandler = {
       };
       const first = members[0].dsl;
       const elements: Shape.Element[] = [];
+      const taken = new Set(members.map((record) => record.dsl?.element ?? ''));
+      const titleId = (box: string) => {
+        let candidate = `${box}-title`;
+        for (let suffix = 2; taken.has(candidate); suffix++) {
+          candidate = `${box}-title-${suffix}`;
+        }
+        taken.add(candidate);
+        return candidate;
+      };
       for (const record of members.sort((left, right) => (zOf(left) < zOf(right) ? -1 : 1))) {
         const element = record.dsl?.element ?? '';
         if (isNodeRecord(record)) {
@@ -502,6 +594,20 @@ export const SceneHandler: ContentHandler = {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
+          } else if (text && !isEllipseNode(node) && isTitled(node)) {
+            // A box's text is always centred, so a title is its own small text, which `upsert` folds back into the box.
+            elements.push(
+              { kind: 'rect', id: element, ...local },
+              {
+                kind: 'text',
+                id: titleId(element),
+                x: local.x + TITLE_INSET,
+                y: local.y + TITLE_INSET,
+                w: Math.max(local.w - 2 * TITLE_INSET, 0),
+                text,
+                weight: 's',
+              },
+            );
           } else {
             elements.push({
               kind: isEllipseNode(node) ? 'ellipse' : 'rect',

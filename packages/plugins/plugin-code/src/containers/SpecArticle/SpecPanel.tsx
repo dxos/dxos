@@ -3,7 +3,7 @@
 //
 
 import { useAtomSet } from '@effect/atom-react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -36,6 +36,7 @@ import {
   pendingReveal,
   toUserHandle,
 } from '#components';
+import { SpecReviews } from '#sync';
 import { CodeOperation } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
@@ -127,9 +128,20 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
   const identity = useIdentity();
   const sync = useSpecSyncState();
   const model = useSpecModel(source);
-  const { id, session, setSession, target, key, reviewKey, text, texts, review, read, specs, changelog } = model;
+  const { id, session, setSession, target, key, reviewKey, text, texts, reviews, review, read, specs, changelog } =
+    model;
   const { codePath, git, baseText, diffAvailable } = model;
-  const { view, codeTarget, selectedVerdict, selectedDecision, diff, fold } = session;
+  const { view, codeTarget, selectedVerdict, selectedReview, selectedDecision, diff, fold } = session;
+
+  // The review view shows the current status or one review; the editor's chips always show the current status.
+  const history = useMemo(
+    () => reviews.map(({ id, date, by, commit }) => ({ id, label: `${date} · ${by} · ${commit.slice(0, 7)}` })),
+    [reviews],
+  );
+  const shownReview = useMemo(() => {
+    const picked = selectedReview && reviews.find(({ id }) => id === selectedReview);
+    return picked ? SpecReviews.toModel(picked) : review;
+  }, [reviews, review, selectedReview]);
 
   const update = useCallback(
     (patch: Partial<typeof session>) => setSession((current) => ({ ...current, ...patch })),
@@ -184,9 +196,15 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
 
   const syncEntry = spec ? sync.specs[spec.id] : undefined;
   const pullRequest = git?.pullRequest;
-  // Without a local checkout the code is read from GitHub at the reviewed commit, so evidence shows what was reviewed.
-  const codeIsLocal = sync.available && codePath !== undefined;
-  const codeRef = review?.commit ?? 'main';
+  // A local checkout holds today's code, so an earlier review's evidence, like any without a checkout, is read from
+  // GitHub at the commit that was reviewed: the selected verdict's own, since the current status merges several.
+  const verdictCommit = shownReview?.verdicts.find(({ id }) => id === selectedVerdict)?.review?.commit;
+  const codeIsLocal =
+    sync.available &&
+    codePath !== undefined &&
+    shownReview === review &&
+    (verdictCommit === undefined || verdictCommit === review?.commit);
+  const codeRef = verdictCommit ?? shownReview?.commit ?? 'main';
   const remoteCode = useGitHubText(codeIsLocal ? undefined : codeTarget, codeRef);
   const codeText = codeIsLocal
     ? codeTarget && texts.get(fileKey(codeTarget))
@@ -325,7 +343,10 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
         )}
         {view === 'review' && (
           <ReviewPanel
-            review={review}
+            review={shownReview}
+            history={history}
+            selectedReview={shownReview === review ? undefined : selectedReview}
+            onSelectReview={(next) => update({ selectedReview: next })}
             reviewKey={reviewKey}
             selected={selectedVerdict}
             onSelect={selectVerdict}
@@ -342,7 +363,7 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
               symbol={codeTarget.fragment}
               source={codeIsLocal ? undefined : t('code-view.github-source.label', { ref: shortSha(codeRef) })}
               error={codeError}
-              onOpenExternal={codePath ? openExternal : undefined}
+              onOpenExternal={codeIsLocal ? openExternal : undefined}
             />
           ) : (
             <Status.Empty classNames='dx-fill' data-testid='code-view.empty'>

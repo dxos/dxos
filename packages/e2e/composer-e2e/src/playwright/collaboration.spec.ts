@@ -5,7 +5,9 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager.ts';
-import { Markdown } from './plugins/index.ts';
+import { Markdown, Projects } from './plugins/index.ts';
+
+const PROJECT_NAME = 'Launch plan';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
   const sharedWorkspace = host.workspaceId;
@@ -85,42 +87,67 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  test("host and guest can see each others' cursors when same document is in focus", { tag: ['@QA-8'] }, async () => {
-    // A query sent before the peers' connection forms is lost, so the host's state may only arrive
-    // with a 15 s re-announce; the wait covers two, in case the first also goes out before then.
-    const reAnnounceWait = 35_000;
-    test.setTimeout(90_000 + reAnnounceWait);
+  test(
+    "host and guest can see each others' cursors when same document is in focus",
+    { tag: ['@QA-8', '@projects:QA-9'] },
+    async () => {
+      // A query sent before the peers' connection forms is lost, so the host's state may only arrive
+      // with a 15 s re-announce; the wait covers two, in case the first also goes out before then.
+      const reAnnounceWait = 35_000;
+      test.setTimeout(90_000 + reAnnounceWait);
 
-    await host.createSpace();
-    await host.createObject({ type: 'Document' });
+      await host.createSpace();
+      // Shared by the same invitation; its section stays collapsed, so the guest still lists one object link.
+      await host.createObject({ type: 'Project', name: PROJECT_NAME });
+      await host.createObject({ type: 'Document' });
 
-    const hostPlank = host.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
-    await perfomInvitation(host, guest);
+      const hostPlank = host.deck.plank();
+      await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
+      await perfomInvitation(host, guest);
 
-    // The host's cursor is set before the guest opens the document, so the guest must receive it late.
-    // TODO(thure): Autofocus not working for solo mode when creating a new document.
-    await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus();
+      // The host's cursor is set before the guest opens the document, so the guest must receive it late.
+      // TODO(thure): Autofocus not working for solo mode when creating a new document.
+      await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus();
 
-    await guest.waitForSpaceReady();
-    await guest.expandSection('spacePlugin.collectionsSection');
-    await expect(guest.getObjectLinks()).toHaveCount(1);
-    await navigateToNewDocument(guest);
+      await guest.waitForSpaceReady();
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await expect(guest.getObjectLinks()).toHaveCount(1);
+      await navigateToNewDocument(guest);
 
-    const guestPlank = guest.deck.plank();
-    await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
-    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
+      const guestPlank = guest.deck.plank();
+      await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
+      await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-    await expect(Markdown.getCollaboratorNamesWithLocator(guestPlank.locator).first()).toHaveText(/.+/, {
-      timeout: reAnnounceWait,
-    });
-    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toBeVisible();
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
+      await expect(Markdown.getCollaboratorNamesWithLocator(guestPlank.locator).first()).toHaveText(/.+/, {
+        timeout: reAnnounceWait,
+      });
+      await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toBeVisible();
+      await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
 
-    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
-    await expect(Markdown.getCollaboratorNamesWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
-    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toBeVisible();
-  });
+      await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
+      await expect(Markdown.getCollaboratorNamesWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
+      await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toBeVisible();
+
+      // The peers are connected by now, so the project's Notes need no re-announce wait.
+      const openProject = async (app: AppManager) => {
+        await app.expandSection('org.dxos.type.project.section');
+        await app.getObjectByName(PROJECT_NAME).click({ timeout: 30_000 });
+        await Projects.getOutlineTextboxWithLocator(app.deck.plank().locator).waitFor({ timeout: 30_000 });
+      };
+      await openProject(host);
+      await openProject(guest);
+      const hostOutline = host.deck.plank().locator.getByTestId('projectsPlugin.outline');
+      const guestOutline = guest.deck.plank().locator.getByTestId('projectsPlugin.outline');
+
+      await Projects.getOutlineTextboxWithLocator(host.deck.plank().locator).focus();
+      await expect(Markdown.getCollaboratorNamesWithLocator(guestOutline).first()).toHaveText(/.+/);
+      await expect(Markdown.getCollaboratorCursorsWithLocator(guestOutline).first()).toBeVisible();
+
+      await Projects.getOutlineTextboxWithLocator(guest.deck.plank().locator).focus();
+      await expect(Markdown.getCollaboratorNamesWithLocator(hostOutline).first()).toHaveText(/.+/);
+      await expect(Markdown.getCollaboratorCursorsWithLocator(hostOutline).first()).toBeVisible();
+    },
+  );
 
   test("host and guest can see each others' changes in same document", { tag: ['@QA-8'] }, async () => {
     await host.createSpace();

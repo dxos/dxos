@@ -9,8 +9,9 @@ import { type ThemeExtensionsOptions } from './extensions/index.ts';
 export const editorClassNames = (role?: string) =>
   mx(
     'dx-attention-surface data-[toolbar=disabled]:pt-2 dx-focus-ring-inset',
+    // Only this editor's scroller: an editor a widget renders inside it (a field of an embedded object) sizes itself.
     role === 'org.dxos.role.section'
-      ? '[&_.cm-scroller]:overflow-hidden [&_.cm-scroller]:min-h-24'
+      ? '[&>.cm-editor>.cm-scroller]:overflow-hidden [&>.cm-editor>.cm-scroller]:min-h-24'
       : 'dx-expand overflow-hidden',
   );
 

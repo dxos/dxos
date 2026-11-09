@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { QueueInput, QueueOutput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, defineComputeNode } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createShape, withZ } from './defs.ts';
@@ -27,7 +28,7 @@ export type CreateFeedProps = CreateShapeProps<FeedShape>;
 export const createFeed = (props: CreateFeedProps) =>
   createShape<FeedShape>({
     type: 'queue',
-    size: { width: 256, height: 512 },
+    size: { width: 4 * MAJOR_GRID, height: 8 * MAJOR_GRID },
     ...props,
   });
 

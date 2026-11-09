@@ -65,6 +65,7 @@ export const translations = [
         'untitled-spec.label': 'Untitled spec',
         'spec.empty.message': 'No spec yet. A spec describes what this work delivers.',
         'level-spec.empty.message': 'This level has no spec of its own. Add one to break it down.',
+        'specs-empty.message': 'This project has no specs yet.',
         'spec-view.label': 'View',
         'spec-view.document.label': 'Spec text',
         'tasks.label': 'Tasks',

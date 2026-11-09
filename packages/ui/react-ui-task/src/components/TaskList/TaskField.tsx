@@ -15,8 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import {
-  ESTIMATE_ICON,
-  UNSET_ICON,
+  ESTIMATE_UNSET_ICON,
   estimateTextStyle,
   priorityIcon,
   priorityTextStyle,
@@ -106,7 +105,7 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
           [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
             createMenuAction(`priority-${id}`, () => onChange?.(id === 'none' ? undefined : id), {
               label: t(`priority-${id}.label`),
-              icon: icon ?? UNSET_ICON,
+              icon: icon ?? priorityIcon(undefined),
               iconClassNames: priorityTextStyle(id),
               checked: (value ?? 'none') === id,
             }),
@@ -118,9 +117,9 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
       const { value, onChange } = props;
       return {
         glyph: value ? (
-          <span className={mx(estimateTextStyle(value))}>{value.toUpperCase()}</span>
+          <span className={mx('text-sm', estimateTextStyle(value))}>{value.toUpperCase()}</span>
         ) : (
-          <Icon.Icon icon={ESTIMATE_ICON} classNames='text-neutral-500' />
+          <Icon.Icon icon={ESTIMATE_UNSET_ICON} classNames='text-neutral-500' />
         ),
         label: value ? value.toUpperCase() : t('task-estimate.label'),
         glyphIsLabel: !!value,

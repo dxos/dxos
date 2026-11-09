@@ -90,6 +90,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',
   Project: 'org.dxos.type.project',
+  Sheet: 'org.dxos.type.sheet',
   Table: 'org.dxos.type.table',
 };
 
@@ -672,13 +673,24 @@ export class AppManager {
     await this.#expandRow(this.getObjectLinks().nth(nth), timeout);
   }
 
-  async expandSection(testId: string, timeout = 15_000): Promise<void> {
+  async expandSection(testId: string | RegExp, timeout = 15_000): Promise<void> {
     const section = this.currentWorkspace.getByTestId(testId).first();
     await section.waitFor({ state: 'attached', timeout });
     await this.#expandRow(section, timeout);
   }
 
-  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+  /** `typename` picks the type a type-backed object (a Table) views, from the form's type select, at any version. */
+  async createObject({
+    type,
+    name,
+    nth,
+    typename,
+  }: {
+    type: string;
+    name?: string;
+    nth?: number;
+    typename?: string;
+  }): Promise<void> {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
@@ -696,18 +708,37 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // A type either shows its form or creates at once and closes the dialog; wait for whichever happens.
+    // A type shows its form, shows a panel of its own (a project's template picker), or creates at once and closes
+    // the dialog; wait for whichever happens.
     const objectForm = this.page.getByTestId('create-object-form');
+    const projectName = this.page.getByTestId('create-project-panel.name-input');
     const openDialog = this.page.locator('[data-scope="dialog"][data-part="content"][data-state="open"]');
     await expect
-      .poll(async () => (await objectForm.isVisible()) || !(await openDialog.isVisible()), { timeout: 30_000 })
+      .poll(
+        async () =>
+          (await objectForm.isVisible()) || (await projectName.isVisible()) || !(await openDialog.isVisible()),
+        { timeout: 30_000 },
+      )
       .toBe(true);
+    if (await projectName.isVisible()) {
+      // The Default template is preselected.
+      if (name) {
+        await projectName.fill(name);
+      }
+      await openDialog.getByTestId('save-button').click();
+      await projectName.waitFor({ state: 'detached', timeout: 30_000 });
+      return;
+    }
     if (!(await objectForm.isVisible())) {
       return;
     }
 
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
+    }
+    if (typename) {
+      await objectForm.getByTestId('typename').click();
+      await this.page.locator(`[role="option"][data-value^="dxn:${typename}:"]`).click();
     }
     // The form's Create sits in the dialog's footer, outside the form element.
     await openDialog.getByTestId('save-button').click();

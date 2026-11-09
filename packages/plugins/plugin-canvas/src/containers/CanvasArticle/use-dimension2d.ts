@@ -30,6 +30,9 @@ const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
 /** The theme a canvas draws when neither it nor the app names one. */
 const FALLBACK_THEME = 'flat';
 
+/** The grid a drawing shows when the panel turns one on without naming a kind. */
+const DEFAULT_GRID_KIND = 'lines';
+
 /**
  * A 2D canvas's dimension: react-ui-canvas's engine as the viewport, each layout in the mode its own fields name
  * (`constrain2D`), with the canvas's node types and generators; the look and grid are the drawing's, snapping, guides, axes and the camera this
@@ -100,21 +103,28 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   );
   // A drawing may name a theme by an id since renamed; the picker marks it by its current one.
   const theme = currentLookId('themes', settings?.theme);
+  const backgroundGrid = settings?.backgroundGrid ?? 'none';
   const display = useMemo<EditorDisplay>(
     () => ({
       theme: theme ?? appSettings.theme ?? FALLBACK_THEME,
       themeOverride: theme,
-      grid: (settings?.backgroundGrid ?? 'none') !== 'none',
+      grid: backgroundGrid !== 'none',
+      // The kind the drawing stores, so the display panel marks the one it draws rather than always the lines.
+      ...(backgroundGrid === 'none' ? {} : { gridKind: backgroundGrid }),
       snap: snap ?? true,
       guides: guides ?? true,
       axes: axes ?? false,
     }),
-    [theme, settings?.backgroundGrid, appSettings.theme, snap, guides, axes],
+    [theme, backgroundGrid, appSettings.theme, snap, guides, axes],
   );
   const onDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => {
       'themeOverride' in next && handleSettingsChange({ theme: next.themeOverride });
-      next.grid !== undefined && handleSettingsChange({ backgroundGrid: next.grid ? 'lines' : 'none' });
+      // The panel switches between the kinds and off, so the kind it picked is stored, not the grid's being on.
+      (next.grid !== undefined || next.gridKind !== undefined) &&
+        handleSettingsChange({
+          backgroundGrid: next.grid === false ? 'none' : (next.gridKind ?? DEFAULT_GRID_KIND),
+        });
       (next.snap !== undefined || next.guides !== undefined || next.axes !== undefined) &&
         updateViewState((state) => ({
           ...state,

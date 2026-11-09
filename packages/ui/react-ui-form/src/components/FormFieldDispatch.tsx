@@ -145,6 +145,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     label,
     description,
     jsonPath,
+    path,
+    collaborative: override?.collaborative ?? false,
     // An indeterminate value reads as none, so its placeholder says why rather than naming the field.
     placeholder: indeterminate
       ? (override?.placeholder ?? t('indeterminate.placeholder'))
@@ -202,6 +204,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         label={accessibleLabel}
         hideLabel={override?.hideLabel}
         section={presentation === 'section'}
+        placeholder={override?.placeholder}
         {...props}
         readonly={readonly || presentation === 'static'}
       />

@@ -3,6 +3,7 @@
 //
 
 import { parseMdlBlocks } from '../extension/blocks.ts';
+import { frontmatter } from '../spec-index/parse.ts';
 import { parseFields } from './fields.ts';
 import { type SourceKey, formatSourceKey, parseSourceKey } from './source-key.ts';
 
@@ -26,6 +27,8 @@ export type Verdict = {
   /** Where each part of the item is implemented, in reading order; empty when the review gives none. */
   walkthrough: WalkthroughStep[];
   note?: string;
+  /** The review the verdict came from, where verdicts of several reviews are shown together. */
+  review?: { commit?: string; date?: string };
 };
 
 /** One segment of a walkthrough: a sentence and the `github:` key of the code it describes. */
@@ -71,6 +74,8 @@ export type ReviewModel = {
   commit?: string;
   date?: string;
   by?: string;
+  /** The prose between the title and the first section. */
+  summary?: string;
   verdicts: Verdict[];
 };
 
@@ -79,19 +84,14 @@ const severity = (status: VerdictStatus): number => VERDICT_STATUSES.indexOf(sta
 const isStatus = (value?: string): value is VerdictStatus =>
   value !== undefined && (VERDICT_STATUSES as readonly string[]).includes(value);
 
-const parseFrontmatter = (text: string): Record<string, string> => {
-  const body = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
-  return Object.fromEntries(
-    body.split('\n').flatMap((line) => {
-      const match = line.match(/^([\w-]+):\s*(.*?)\s*$/);
-      return match ? [[match[1], match[2]]] : [];
-    }),
-  );
-};
+/** The prose under the `# ` title, up to the first `## ` section or block. */
+const parseSummary = (text: string): string | undefined =>
+  text.match(/^# .*\n([\s\S]*?)(?=^## |^```|(?![\s\S]))/m)?.[1].trim() || undefined;
 
 /** The `verdict` blocks of a review document; a verdict with no known status is dropped. */
 export const parseReview = (text: string): ReviewModel => {
-  const { spec, commit, date, by } = parseFrontmatter(text);
+  const { spec, commit, date, by } = frontmatter(text);
+  const summary = parseSummary(text);
   const verdicts = parseMdlBlocks(text)
     .filter(({ type, id }) => type === 'verdict' && id)
     .flatMap(({ id, title, body }): Verdict[] => {
@@ -120,7 +120,31 @@ export const parseReview = (text: string): ReviewModel => {
         },
       ];
     });
-  return { spec, commit, date, by, verdicts };
+  return { spec, commit, date, by, ...(summary && { summary }), verdicts };
+};
+
+/**
+ * The current status of a spec's items across several reviews: each item's verdict from the newest review that judges
+ * it, marked with that review. Reviews are ordered by date; a later one in the list wins a tie.
+ */
+export const mergeReviews = (reviews: readonly ReviewModel[]): ReviewModel | undefined => {
+  if (reviews.length === 0) {
+    return undefined;
+  }
+  const newest = reviews
+    .map((review, index) => ({ review, index }))
+    .sort((a, b) => (b.review.date ?? '').localeCompare(a.review.date ?? '') || b.index - a.index)
+    .map(({ review }) => review);
+  const verdicts = new Map<string, Verdict>();
+  for (const { commit, date, verdicts: own } of newest) {
+    for (const verdict of own) {
+      if (!verdicts.has(verdict.id)) {
+        verdicts.set(verdict.id, { ...verdict, review: { commit, date } });
+      }
+    }
+  }
+  const [{ spec, commit, date, by, summary }] = newest;
+  return { spec, commit, date, by, ...(summary && { summary }), verdicts: [...verdicts.values()] };
 };
 
 /**

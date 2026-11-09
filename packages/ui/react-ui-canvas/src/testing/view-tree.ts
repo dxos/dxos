@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { type Box, type BuilderElement, ViewBuilder, type ViewElement, type ViewTree } from '../builder/index.ts';
 import { DEFAULT_SIZES, portId } from '../utils/index.ts';
 
@@ -13,7 +15,7 @@ import { DEFAULT_SIZES, portId } from '../utils/index.ts';
 //
 
 /** The class fixture's unit: a major cell, so every box lands on the grid move and resize snap to. */
-const cell = (units: number) => units * 64;
+const cell = (units: number) => units * MAJOR_GRID;
 
 const CLASS_SIZE = { width: cell(4), height: cell(3) };
 const PORTAL_SIZE = DEFAULT_SIZES.view;
@@ -109,8 +111,8 @@ const classLevel = (level: LevelDef, path: string): ViewElement => {
  */
 export const createViewTree = (depth: number, prefix = 'root'): ViewTree => treeScene(depth, prefix, 0).build();
 
-/** The fixture's unit: every point and size is written as a count of these, never as raw pixels. */
-const scale = (units: number) => units * 32;
+/** The fixture's unit: half a major cell, every point and size a count of these rather than raw pixels. */
+const scale = (units: number) => (units * MAJOR_GRID) / 2;
 
 const PORTAL = DEFAULT_SIZES.view;
 

@@ -89,8 +89,12 @@ export const snippetCard = (key: SourceKey, options: SnippetCardOptions = {}): S
   return done();
 };
 
-/** The hover card of a status chip: each walkthrough step's sentence above its code. */
-export const walkthroughCard = (steps: readonly WalkthroughStep[], options: SnippetCardOptions = {}): SnippetCard => {
+/** The hover card of a status chip: each walkthrough step's sentence above its code, then the review it came from. */
+export const walkthroughCard = (
+  steps: readonly WalkthroughStep[],
+  options: SnippetCardOptions = {},
+  reviewed?: string,
+): SnippetCard => {
   const { root, views, done } = card('spec-review.walkthrough-card');
   steps.forEach(({ text, key }, index) => {
     const parsed = parseSourceKey(key);
@@ -103,5 +107,10 @@ export const walkthroughCard = (steps: readonly WalkthroughStep[], options: Snip
     }
     root.appendChild(step);
   });
+  if (reviewed) {
+    const line = element('span', 'text-xs text-description', reviewed);
+    line.dataset.testid = 'spec-review.walkthrough-reviewed';
+    root.appendChild(line);
+  }
   return done();
 };

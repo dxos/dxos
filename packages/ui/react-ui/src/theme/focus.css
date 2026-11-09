@@ -37,6 +37,27 @@
   .dx-focus-item[data-focus-click]:focus::after {
     box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
   }
+  /*
+   * A tile in a collection (`data-focus-click`) reads as a list's rows do: the selection is the focus
+   * colour and the cursor is neutral — the inverse of a lone focus item, where the ring marks focus
+   * and the subtle edge marks selection.
+   */
+  .dx-focus-item[data-focus-click] {
+    --dx-selected-color: var(--color-focus);
+    --dx-focus-ring-color: var(--color-neutral-border);
+  }
+  /*
+   * An item that is both the cursor and the selection shows both, as a list's rows do: the selected
+   * edge stays inside the box and the cursor moves to an outline outside it. Without this the focus
+   * ring above replaces the selected edge, so clicking a tile in a collection hides what it selected.
+   */
+  .dx-focus-item[aria-selected='true']:is(:focus-visible, [data-focus-click]:focus) {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: 1px;
+  }
+  .dx-focus-item[aria-selected='true']:is(:focus-visible, [data-focus-click]:focus)::after {
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-selected-color);
+  }
   /* A group a drag is over takes the focus ring's colour, so the drop target reads as the focus does. */
   .dx-focus-group[data-focus-state='active']::after {
     box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
