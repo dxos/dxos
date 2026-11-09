@@ -21,11 +21,16 @@ const gcd = (left: number, right: number): number => (right === 0 ? left : gcd(r
 
 /**
  * The minor grid pitch whose major lines (`ratio` minor cells) run along every cell edge of the lattice: the largest
- * major cell that divides the cells and gutters, since cell edges sit at `k x pitch +/- size / 2`.
+ * major cell that divides the cells and gutters, since cell edges sit at `k x pitch +/- size / 2`; 0 when no whole
+ * major cell does, or the minor pitch it gives is under one unit, so the caller falls back to its own grid.
  */
 export const latticeGrid = ({ width, height, gutterX, gutterY }: LatticeSpec, ratio: number): number => {
-  const major = [width / 2, height / 2, gutterX, gutterY].map(Math.round).reduce(gcd);
-  return major > 0 ? major / ratio : 0;
+  const lengths = [width / 2, height / 2, gutterX, gutterY];
+  if (!lengths.every((length) => Number.isInteger(length) && length > 0)) {
+    return 0;
+  }
+  const minor = lengths.reduce(gcd) / ratio;
+  return minor >= 1 ? minor : 0;
 };
 
 /** A shape on the lattice: its first (top-left) cell and how many cells it spans on each axis. */

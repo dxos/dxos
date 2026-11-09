@@ -8,11 +8,18 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjectValue } from '@dxos/echo-react';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { DEFAULT_LATTICE, latticeGrid, namedStyles, styleClasses } from '@dxos/react-ui-canvas/headless';
+import { latticeGrid, namedStyles, styleClasses } from '@dxos/react-ui-canvas/headless';
 import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
-import { DEFAULT_GRID, MAJOR_GRID_RATIO, type StyleClass } from '@dxos/scene';
+import { DEFAULT_GRID, MAJOR_GRID_RATIO, type Scene, type StyleClass } from '@dxos/scene';
 
-import { canvasModel2D, deleteNamedStyle, layoutLattice, namedStyleUses, setLayoutLattice, withoutMode } from '#model';
+import {
+  canvasModel2D,
+  deleteNamedStyle,
+  layoutLatticeSpec,
+  namedStyleUses,
+  setLayoutLattice,
+  withoutMode,
+} from '#model';
 import { Canvas, Settings } from '#types';
 
 import { StyleClassList } from './StyleClassList.tsx';
@@ -74,21 +81,28 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
 };
 
 /** The grid an unset pitch draws: a lattice's runs along its cell edges. */
-const defaultGrid = (lattice: boolean): number =>
-  (lattice && latticeGrid(DEFAULT_LATTICE, MAJOR_GRID_RATIO)) || DEFAULT_GRID;
+const defaultGrid = (lattice: Scene.Layout2D['lattice']): number =>
+  (lattice && latticeGrid(lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID;
 
-const valuesOf = (record: Partial<Canvas.CanvasSettings> | undefined, lattice: boolean): CanvasPropertiesValues => ({
-  lattice: lattice || undefined,
+const valuesOf = (
+  record: Partial<Canvas.CanvasSettings> | undefined,
+  lattice: Scene.Layout2D['lattice'],
+): CanvasPropertiesValues => ({
+  lattice: lattice !== undefined || undefined,
   grid: record?.grid ?? defaultGrid(lattice),
   theme: isThemeChoice(record?.theme) ? record.theme : undefined,
   styleSet: isStyleSetChoice(record?.styleSet) ? record.styleSet : undefined,
   background: isBackgroundChoice(record?.background) ? record.background : undefined,
 });
 
-/** `shown` is the default the form showed, so a pitch left at it stays unset as the lattice toggles. */
-const settingsOf = (next: CanvasPropertiesValues, shown: number): Partial<Canvas.CanvasSettings> => ({
+/** A pitch left at what the form showed keeps its stored value, so an unset one follows the lattice as it toggles. */
+const settingsOf = (
+  next: CanvasPropertiesValues,
+  stored: number | undefined,
+  shown: number,
+): Partial<Canvas.CanvasSettings> => ({
   lattice: next.lattice || undefined,
-  grid: next.grid === shown ? undefined : next.grid,
+  grid: next.grid === shown ? stored : next.grid,
   theme: next.theme,
   styleSet: next.styleSet,
   background: next.background,
@@ -100,13 +114,14 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
   const handleSave = useCallback(
     (next: CanvasPropertiesValues) => {
       // The lattice is each layout's own mode, so the toggle writes the layouts rather than the settings.
-      const lattice = layoutLattice(subject);
-      const shown = defaultGrid(lattice);
-      next.lattice !== lattice && setLayoutLattice(subject, next.lattice === true);
+      const lattice = layoutLatticeSpec(subject);
+      const stored = subject.settings?.grid;
+      const shown = stored ?? defaultGrid(lattice);
+      next.lattice !== (lattice !== undefined) && setLayoutLattice(subject, next.lattice === true);
       Obj.update(subject, (subject) => {
         // ECHO stores no `undefined`, so an unset value removes its key.
         subject.settings = Object.fromEntries(
-          Object.entries({ ...subject.settings, ...withoutMode(settingsOf(next, shown)) }).filter(
+          Object.entries({ ...subject.settings, ...withoutMode(settingsOf(next, stored, shown)) }).filter(
             ([, value]) => value !== undefined,
           ),
         );
@@ -134,7 +149,7 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
   const handleDelete = useCallback((id: string) => deleteNamedStyle(subject, id), [subject]);
   return (
     <PropertiesView
-      values={valuesOf(canvas.settings, layoutLattice(subject))}
+      values={valuesOf(canvas.settings, layoutLatticeSpec(subject))}
       onSave={handleSave}
       classes={classes}
       uses={uses}

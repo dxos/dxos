@@ -99,11 +99,14 @@ export const adoptLayoutMode = (canvas: Canvas.Canvas): boolean => {
   return true;
 };
 
-/** Whether the canvas's open 2D scene lays its shapes on a lattice. */
-export const layoutLattice = (canvas: Canvas.Canvas): boolean => {
+/** The lattice the canvas's open 2D scene lays its shapes on, if any. */
+export const layoutLatticeSpec = (canvas: Canvas.Canvas): Scene.Layout2D['lattice'] => {
   const layout = openScene(canvas)?.layout.target;
-  return Obj.instanceOf(Scene.Layout2D, layout) && layout.lattice !== undefined;
+  return Obj.instanceOf(Scene.Layout2D, layout) ? layout.lattice : undefined;
 };
+
+/** Whether the canvas's open 2D scene lays its shapes on a lattice. */
+export const layoutLattice = (canvas: Canvas.Canvas): boolean => layoutLatticeSpec(canvas) !== undefined;
 
 /** Puts every 2D layout of the canvas on the default lattice, or takes them off it. */
 export const setLayoutLattice = (canvas: Canvas.Canvas, lattice: boolean): void => {

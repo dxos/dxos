@@ -11,8 +11,8 @@ import { type ThemeMode, between, latticeGrid } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import {
   DEFAULT_GRID,
-  MAJOR_GRID_RATIO,
   type Layer,
+  MAJOR_GRID_RATIO,
   type NamedStyle,
   type NamedStyle2D,
   type NamedStyle3D,
