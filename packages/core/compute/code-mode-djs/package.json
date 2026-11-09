@@ -49,6 +49,7 @@
     "@dxos/assistant": "workspace:*",
     "@effect/vitest": "catalog:",
     "esbuild": "catalog:",
+    "miniflare": "catalog:",
     "vitest": "catalog:"
   }
 }
