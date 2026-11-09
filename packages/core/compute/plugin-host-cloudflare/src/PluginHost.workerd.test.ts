@@ -41,6 +41,9 @@ describe('PluginHost', () => {
     expect(catalog.types[0].jsonSchema).toMatchObject({ type: 'object' });
     expect(catalog.skills).toMatchObject([{ key: TestSkill.key, name: 'Host test', mcpPrompt: true }]);
     expect(catalog.skills[0].tools.length).toBe(1);
+    // The skill manager lets an agent enable only a skill that says it may; without the flag a bundled skill is unusable
+    // by an agent that starts with the skill manager alone.
+    expect(catalog.skills[0].agentCanEnable).toBe(true);
     const operations = JSON.stringify(catalog.operations);
     expect(operations).toContain(String(Reply.meta.key));
   });

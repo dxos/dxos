@@ -1,0 +1,196 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/**
+ * Plain-CSS graph styles, for a consumer with no Tailwind pipeline.
+ *
+ * `graph.css` is a Tailwind source — `@reference` plus `@apply` throughout — so a consumer that
+ * does not run the theme plugin gets none of its declarations: `g.dx-graph-label { @apply hidden }`
+ * is dropped, so every node paints its label box, and the box's `fill-inverse-surface` is dropped
+ * too, so it paints solid black. The graph is unreadable rather than merely unthemed.
+ *
+ * This sheet covers the same structural rules in plain CSS, driven by custom properties so a
+ * consumer can restyle without forking it. Import ONE of the two, not both: `graph.css` when the
+ * theme is present, this when it is not.
+ *
+ * `data-color` paints a node in one of the annotation hues, as the themed sheet does, but from
+ * plain colour values. Not covered: the radial cluster labels, which only apply when a consumer
+ * opts into them.
+ */
+
+:root {
+  --dx-graph-node-fill: #d4d4d4;
+  --dx-graph-node-stroke: #262626;
+  --dx-graph-node-stroke-active: #171717;
+  --dx-graph-edge-stroke: #a3a3a3;
+  --dx-graph-grid-axis: #d4d4d4;
+  --dx-graph-grid-line: #e5e5e5;
+  --dx-graph-label-fill: #fafafa;
+  --dx-graph-label-text: #171717;
+  --dx-graph-label-stroke: #737373;
+  --dx-graph-selected-fill: #ef4444;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --dx-graph-node-fill: #525252;
+    --dx-graph-node-stroke: transparent;
+    --dx-graph-node-stroke-active: #e5e5e5;
+    --dx-graph-edge-stroke: #404040;
+    --dx-graph-grid-axis: #262626;
+    --dx-graph-grid-line: #171717;
+    --dx-graph-label-fill: #171717;
+    --dx-graph-label-text: #fafafa;
+    --dx-graph-label-stroke: #737373;
+  }
+}
+
+/* The theme toggles this class, so a themed host that still loads this sheet stays consistent. */
+.dark {
+  --dx-graph-node-fill: #525252;
+  --dx-graph-node-stroke: transparent;
+  --dx-graph-node-stroke-active: #e5e5e5;
+  --dx-graph-edge-stroke: #404040;
+  --dx-graph-grid-axis: #262626;
+  --dx-graph-grid-line: #171717;
+  --dx-graph-label-fill: #171717;
+  --dx-graph-label-text: #fafafa;
+}
+
+svg marker.dx-graph-arrow path,
+svg marker.dx-dot circle {
+  fill: none;
+}
+
+svg g.dx-grid path.dx-axis {
+  stroke: var(--dx-graph-grid-axis);
+}
+
+svg g.dx-grid path.dx-major,
+svg g.dx-grid path.dx-minor {
+  stroke: var(--dx-graph-grid-line);
+}
+
+svg g.dx-graph g.dx-nodes g.dx-node {
+  cursor: pointer;
+  transition: opacity 150ms ease-out;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-node:hover {
+  opacity: 0.65;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-node.dx-hidden {
+  pointer-events: none;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-node circle {
+  fill: var(--dx-graph-node-fill);
+  stroke: var(--dx-graph-node-stroke);
+}
+
+svg g.dx-graph g.dx-nodes g.dx-node.dx-selected circle {
+  fill: var(--dx-graph-selected-fill);
+  stroke: var(--dx-graph-node-stroke-active);
+  stroke-width: 2px;
+}
+
+/*
+ * The label is drawn for every node and revealed on hover or drag. Without this it is always
+ * visible, which is what makes an unthemed graph look like a wall of black boxes.
+ */
+svg g.dx-graph g.dx-nodes g.dx-node g.dx-graph-label {
+  display: none;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-dragging circle,
+svg g.dx-graph g.dx-nodes g.dx-highlight circle {
+  stroke: var(--dx-graph-node-stroke-active);
+  stroke-width: 2px;
+  cursor: pointer;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-dragging g.dx-graph-label,
+svg g.dx-graph g.dx-nodes g.dx-highlight g.dx-graph-label {
+  display: block;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-graph-label line {
+  stroke: var(--dx-graph-label-stroke);
+  stroke-width: 2px;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-graph-label rect {
+  fill: var(--dx-graph-label-fill);
+  stroke: var(--dx-graph-label-stroke);
+  stroke-width: 1px;
+}
+
+svg g.dx-graph g.dx-nodes g.dx-graph-label text {
+  fill: var(--dx-graph-label-text);
+  font-size: 12px;
+}
+
+svg g.dx-graph g.dx-edges g.dx-edge :is(path, line, polyline) {
+  stroke: var(--dx-graph-edge-stroke);
+  stroke-width: 0.5px;
+  fill: none;
+  /* Some browsers' default `auto` shape-rendering leaves gaps in stroked beziers. */
+  shape-rendering: geometricPrecision;
+}
+
+svg g.dx-graph g.dx-edges g.dx-edge.dx-dashed :is(path, line, polyline) {
+  stroke-dasharray: 4 4;
+}
+
+/*
+ * Node hues, keyed by `data-color` — the same names an `IconAnnotation` carries, so a type's glyph
+ * and its node agree. Light values first, with the dark scheme a step deeper.
+ */
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='amber'] circle {
+  fill: #fcd34d;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='cyan'] circle {
+  fill: #67e8f9;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='green'] circle {
+  fill: #86efac;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='violet'] circle {
+  fill: #c4b5fd;
+}
+svg g.dx-graph g.dx-nodes g.dx-node[data-color='rose'] circle {
+  fill: #fda4af;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='amber'] circle {
+      fill: #f59e0b;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='cyan'] circle {
+      fill: #06b6d4;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='green'] circle {
+      fill: #22c55e;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='violet'] circle {
+      fill: #8b5cf6;
+    }
+    svg g.dx-graph g.dx-nodes g.dx-node[data-color='rose'] circle {
+      fill: #f43f5e;
+    }
+  }
+}
+
+/*
+ * `SVG.Root` wraps the canvas in a `dx-expand` div and measures it with a ResizeObserver to set the
+ * SVG's width, height and viewBox. `dx-expand` is a theme utility, so without it the container has
+ * no size, the observer measures nothing, and the graph never lays out. Give the consumer's own
+ * wrapper a height and this makes Root fill it.
+ */
+.dx-expand {
+  inline-size: 100%;
+  block-size: 100%;
+}

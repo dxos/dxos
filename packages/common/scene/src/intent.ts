@@ -10,6 +10,7 @@ import {
   type Dimension,
   Element2D,
   Element3D,
+  GridPitch,
   Lattice,
   LayoutKind,
   type LayoutRecord,
@@ -28,6 +29,7 @@ type Element = Element2D | Element3D;
  * leaves it.
  */
 export type LayoutPatch = {
+  readonly grid?: number;
   readonly lattice?: Lattice;
   readonly constraints?: readonly Constraint[];
   readonly kind?: LayoutKind;
@@ -36,6 +38,7 @@ export type LayoutPatch = {
 };
 
 export const LayoutPatch: Schema.Codec<LayoutPatch> = Schema.Struct({
+  grid: Schema.optional(GridPitch),
   lattice: Schema.optional(Lattice),
   constraints: Schema.optional(Schema.Array(Constraint)),
   kind: Schema.optional(LayoutKind),
@@ -45,6 +48,7 @@ export const LayoutPatch: Schema.Codec<LayoutPatch> = Schema.Struct({
 
 /** The layout fields a `layout` intent writes, so a store writes every one of them. */
 export const LAYOUT_PATCH_FIELDS = [
+  'grid',
   'lattice',
   'constraints',
   'kind',

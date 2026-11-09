@@ -10,10 +10,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, DXN, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Ref, Tag, Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MailSend from '@dxos/plugin-inbox/MailSend';
+import { TagIndex } from '@dxos/schema';
 // Referenced in the emitted .d.ts of the operations below; importing it lets TypeScript name it.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Event, type Message } from '@dxos/types';
@@ -75,6 +78,8 @@ export const GoogleMailSync = Operation.make({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
+  // Sync creates tags; on EDGE this plugin's bundle runs without plugin-inbox, which declares `Tag`.
+  types: [Tag.Tag],
 }).pipe(Operation.visible, Operation.idempotent);
 
 export const MaterializeGmailTarget = Operation.make({
@@ -86,6 +91,8 @@ export const MaterializeGmailTarget = Operation.make({
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
+  // Registered with the invocation on EDGE, where this plugin's bundle runs without plugin-inbox, which declares them.
+  types: [Mailbox.Mailbox, TagIndex.TagIndex],
 });
 
 export const GoogleCalendarSync = Operation.make({
@@ -118,6 +125,8 @@ export const MaterializeGoogleCalendarTarget = Operation.make({
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
+  // Registered with the invocation on EDGE, where this plugin's bundle runs without plugin-inbox, which declares them.
+  types: [Calendar.Calendar, TagIndex.TagIndex],
 });
 
 export const CreateGoogleCalendarEvent = Operation.make({

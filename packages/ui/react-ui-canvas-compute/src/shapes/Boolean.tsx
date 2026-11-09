@@ -7,7 +7,7 @@ import * as Struct from 'effect/Struct';
 import React, { type CSSProperties, type FC } from 'react';
 
 import { type NodeDef } from '@dxos/react-ui-canvas';
-import { DEFAULT_GRID } from '@dxos/scene';
+import { DEFAULT_GRID, MAJOR_GRID } from '@dxos/scene';
 
 import { createRowPorts, defineComputeNode, getRowPoints } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
@@ -31,7 +31,7 @@ type CreateGateProps = CreateShapeProps<GateShape> & { type: GateType };
 
 const createGate = (props: CreateGateProps): GateShape =>
   createShape<GateShape>({
-    size: { width: 64, height: 64 },
+    size: { width: MAJOR_GRID, height: MAJOR_GRID },
     ...props,
   });
 
