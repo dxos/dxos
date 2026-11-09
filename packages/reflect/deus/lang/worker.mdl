@@ -43,8 +43,10 @@ redefine it. Defining them once lets every EDGE worker's spec use the same four.
   for — the reason it exists, not a restatement of its name.
   - `type:` is the type the worker's code sees when it reads the binding, as a `TypeExpr`, so a reader
     knows exactly what a value may be rather than only what sort of thing it is:
-    - **a resource binding** is the runtime's own type for it: `Service<Interface>` for a service binding,
-      naming the RPC interface its entrypoint implements; `DurableObjectNamespace<Class>` for an actor
+    - **a resource binding** is the runtime's own type for it: `Service<Entrypoint>` for a service binding,
+      naming the entrypoint type the binding is declared with — a `WorkerEntrypoint` class, or an interface
+      branded as one (`Rpc.WorkerEntrypointBranded`), as EDGE's protocol services are
+      (`Service<DataService.Service>`); `DurableObjectNamespace<Class>` for an actor
       namespace; and `KVNamespace`, `R2Bucket`, `D1Database`, `WorkerLoader`, `DispatchNamespace`,
       `SendEmail`, `AnalyticsEngineDataset`, `RateLimit` or `WorkerVersionMetadata` for the rest;
     - **a variable** is its value type, as narrow as the code reads it: a union of literals when it takes
@@ -101,7 +103,7 @@ ext binding
     One name in a worker's environment: a service, an actor namespace, a store, a variable or a
     secret. The identifier is the name as the worker reads it; the inline prose is what it is for.
   fields:
-    type: TypeExpr              # what the code sees: `Service<I>`, `DurableObjectNamespace<C>`, a store type, a value type, `Secret<T>`
+    type: TypeExpr              # what the code sees: `Service<E>`, `DurableObjectNamespace<C>`, a store type, a value type, `Secret<T>`
     target?: Prose              # what it points at: service + entrypoint, bucket, namespace, actor class + worker
     envs?: FieldMap             # `env: value` for each environment where it differs
     reads?: Prose               # the code symbol that declares and reads it
