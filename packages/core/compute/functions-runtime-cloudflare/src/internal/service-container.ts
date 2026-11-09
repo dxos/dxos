@@ -17,6 +17,9 @@ import { QueryServiceImpl } from './query-service-impl.ts';
  * same service surface regardless of runtime.
  */
 export class ServiceContainer {
+  /** Every data service this container has handed out, for {@link ServiceContainer.refreshWorkingSet}. */
+  private readonly _dataServices: DataServiceImpl[] = [];
+
   constructor(
     private readonly _executionContext: EdgeFunctionEnv.TraceContext,
     private readonly _dataService: EdgeFunctionEnv.DataService,
@@ -43,6 +46,7 @@ export class ServiceContainer {
     functionsAiService: EdgeFunctionEnv.FunctionsAiService;
   }> {
     const dataService = new DataServiceImpl(this._executionContext, this._dataService);
+    this._dataServices.push(dataService);
     const queryService = new QueryServiceImpl(this._executionContext, this._dataService);
     const queueService = new FeedServiceImpl(this._executionContext, this._queueService);
 
@@ -52,6 +56,14 @@ export class ServiceContainer {
       queueService,
       functionsAiService: this._functionsService,
     };
+  }
+
+  /**
+   * Brings every document the invocation holds up to date with EDGE, for a caller that resumes after another
+   * invocation wrote to the space (see {@link DataServiceImpl.refreshWorkingSet}).
+   */
+  async refreshWorkingSet(): Promise<void> {
+    await Promise.all(this._dataServices.map((dataService) => dataService.refreshWorkingSet()));
   }
 
   async queryQueue(queue: EID.EID): Promise<FeedProtocol.QueryResult> {
