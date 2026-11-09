@@ -51,8 +51,7 @@ export const buildContactFromActor = (
       log.warn('email is required for contact extraction');
       return undefined;
     }
-    // `Obj.make` throws on an address outside the Person email format (e.g. `o'brien@corp.com`, which real
-    // mail carries), and a throw here fails the whole sync run, so such a sender yields no contact instead.
+    // `Obj.make` throws on an address outside the Person email format, which real mail headers can carry.
     if (!isValidEmail(email)) {
       log.warn('sender email is not a valid address; skipping contact extraction');
       return undefined;
