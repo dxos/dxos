@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, DXN, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Ref, Tag, Type } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
@@ -78,6 +78,8 @@ export const GoogleMailSync = Operation.make({
     newMessages: Schema.Number,
   }),
   services: [Capability.Service, Database.Service, Credential.CredentialsService, Trace.TraceService],
+  // Sync creates tags; on EDGE this plugin's bundle runs without plugin-inbox, which declares `Tag`.
+  types: [Tag.Tag],
 }).pipe(Operation.visible, Operation.idempotent);
 
 export const MaterializeGmailTarget = Operation.make({

@@ -85,6 +85,15 @@ describe('Mailbox sender filters', () => {
     Mailbox.ignoreSender(mailbox, 'digest@b.io');
     expect(mailbox.messageFilters).toEqual([{ from: 'news@a.io' }, { from: 'digest@b.io' }]);
   });
+
+  test('ignoreSender appends to a mailbox that already has filters', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Feed.Feed, Mailbox.Mailbox, TagIndex.TagIndex] });
+    const mailbox = db.add(Mailbox.make({ messageFilters: [{ from: 'npmjs' }] }));
+    await db.flush();
+
+    Mailbox.ignoreSender(mailbox, 'news@a.io');
+    expect(mailbox.messageFilters).toEqual([{ from: 'npmjs' }, { from: 'news@a.io' }]);
+  });
 });
 
 describe('identity addresses', () => {

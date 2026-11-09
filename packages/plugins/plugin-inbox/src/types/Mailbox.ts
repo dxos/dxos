@@ -316,10 +316,13 @@ export const ignoreSender = (mailbox: Mailbox, email: string): void => {
     return;
   }
 
-  // Assigned whole rather than `(mailbox.messageFilters ??= []).push(...)`: a `??=` expression evaluates to the
-  // array it assigned, not the one the object stores, so on a mailbox with no filters the push was lost.
+  // Pushed onto the stored list rather than reassigned, so a sender another peer ignores concurrently is kept; the
+  // list is re-read after initializing because `??=` evaluates to the assigned array, not the stored one.
   Obj.update(mailbox, (mailbox) => {
-    mailbox.messageFilters = [...(mailbox.messageFilters ?? []), { from: email }];
+    if (!mailbox.messageFilters) {
+      mailbox.messageFilters = [];
+    }
+    mailbox.messageFilters.push({ from: email });
   });
 };
 

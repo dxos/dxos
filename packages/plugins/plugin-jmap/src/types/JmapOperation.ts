@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, DXN } from '@dxos/echo';
+import { Database, DXN, Tag } from '@dxos/echo';
 // Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
 // lets TypeScript name it (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -41,6 +41,8 @@ export const JmapSync = Operation.make({
   // Capability (on-arrival extractors), Database (feed I/O), Trace (status) — provided by the invoker;
   // HTTP client and JMAP credentials are provided by the handler from the connection.
   services: [Capability.Service, Database.Service, Trace.TraceService],
+  // Sync creates tags; on EDGE this plugin's bundle runs without plugin-inbox, which declares `Tag`.
+  types: [Tag.Tag],
 }).pipe(Operation.visible, Operation.idempotent);
 
 export const MaterializeJmapTarget = Operation.make({
