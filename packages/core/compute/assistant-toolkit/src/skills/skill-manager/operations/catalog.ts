@@ -92,13 +92,11 @@ export const operationCandidates = (
  * The listed operation with its input, labelled as code passes it (refs as `Ref<typename>`). Left out where the record's
  * schema cannot be rebuilt, which costs only that operation's input.
  */
-export const withInput = ({ listed, record }: OperationCandidate): ListedOperation => {
-  try {
-    return { ...listed, input: describeInput(Operation.deserialize(record).input) };
-  } catch {
-    return listed;
-  }
-};
+export const withInput = ({ listed, record }: OperationCandidate): Effect.Effect<ListedOperation> =>
+  Effect.try(() => describeInput(Operation.deserialize(record).input)).pipe(
+    Effect.map((input) => ({ ...listed, input })),
+    Effect.orElseSucceed(() => listed),
+  );
 
 /** Lower-case words, splitting dotted keys, kebab-case and camelCase; words under three letters say nothing. */
 const words = (text: string): string[] =>

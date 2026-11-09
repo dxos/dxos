@@ -37,9 +37,10 @@ export default QueryOperations.pipe(
         yield* Registry.runQuery(Filter.type(Operation.PersistentOperation)),
       );
       if (keys !== undefined) {
-        return candidates
-          .filter(({ listed }) => keys.some((key) => sameKey(key, listed.key) || key === listed.tool))
-          .map(withInput);
+        return yield* Effect.forEach(
+          candidates.filter(({ listed }) => keys.some((key) => sameKey(key, listed.key) || key === listed.tool)),
+          withInput,
+        );
       }
       return ranked(candidates, query, ({ listed }) => [listed.key, listed.name, listed.description, listed.skill]).map(
         ({ listed }) => brief(listed),

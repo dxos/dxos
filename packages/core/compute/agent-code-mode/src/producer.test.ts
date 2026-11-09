@@ -91,10 +91,6 @@ class Ticket extends Type.makeObject<Ticket>(DXN.make('com.example.type.ticket',
   Schema.Struct({ title: Schema.String, priority: Schema.optional(Schema.Number) }),
 ) {}
 
-/** What the operations below were asked to do, so a test can tell they ran. */
-const scored: string[] = [];
-const noted: string[] = [];
-
 const Score = Operation.make({
   meta: {
     key: DXN.make('com.example.operation.score'),
@@ -115,24 +111,30 @@ const AddNote = Operation.make({
   output: Schema.String,
 });
 
-const handlers = OperationHandlerSet.make(
-  Score.pipe(
-    Operation.withHandler(({ title }) =>
-      Effect.sync(() => {
-        scored.push(title);
-        return title.length;
-      }),
+/** The scenario's operations, made per test with the record of what each was asked to do. */
+const makeHandlers = () => {
+  const scored: string[] = [];
+  const noted: string[] = [];
+  const handlers = OperationHandlerSet.make(
+    Score.pipe(
+      Operation.withHandler(({ title }) =>
+        Effect.sync(() => {
+          scored.push(title);
+          return title.length;
+        }),
+      ),
     ),
-  ),
-  AddNote.pipe(
-    Operation.withHandler(({ text }) =>
-      Effect.sync(() => {
-        noted.push(text);
-        return 'noted';
-      }),
+    AddNote.pipe(
+      Operation.withHandler(({ text }) =>
+        Effect.sync(() => {
+          noted.push(text);
+          return 'noted';
+        }),
+      ),
     ),
-  ),
-);
+  );
+  return { scored, noted, handlers };
+};
 
 /** Enabled in the conversation. */
 const ScoreSkill = Skill.make({
@@ -190,13 +192,12 @@ describe('code mode states only the Skill Manager', () => {
   describe.each(SCENARIOS)('$name dialect', ({ dialect, steps, querySkillsCall }) => {
     /** The system prompt of every model call. */
     const systems: string[] = [];
+    const { scored, noted, handlers } = makeHandlers();
 
     it.effect(
       'states only the Skill Manager, and the model finds, enables and calls the rest from code',
       Effect.fnUntraced(
         function* (_) {
-          scored.length = 0;
-          noted.length = 0;
           const session = yield* AgentService.createSession({ skills: [ScoreSkill] });
           yield* session.submitPrompt('Score "Write the docs", then note it.');
           yield* session.waitForCompletion();
