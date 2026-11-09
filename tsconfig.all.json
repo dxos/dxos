@@ -208,6 +208,12 @@
       "path": "packages/core/echo/echo-sqlite/tsconfig.json"
     },
     {
+      "path": "packages/apps/echo-sqlite-demo/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-worker/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {
