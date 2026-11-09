@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjectValue } from '@dxos/echo-react';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { latticeGrid, namedStyles, styleClasses } from '@dxos/react-ui-canvas/headless';
+import { GRID_PITCH_RANGE, latticeGrid, namedStyles, styleClasses } from '@dxos/react-ui-canvas/headless';
 import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO, type Scene, type StyleClass } from '@dxos/scene';
 
@@ -24,9 +24,6 @@ import { Canvas, Settings } from '#types';
 
 import { StyleClassList } from './StyleClassList.tsx';
 
-/** The minor pitches the form accepts. */
-const GRID_RANGE = { minimum: 4, maximum: 128 };
-
 const CanvasPropertiesSchema = Schema.Struct({
   lattice: Schema.optional(
     Schema.Boolean.annotate({
@@ -35,7 +32,7 @@ const CanvasPropertiesSchema = Schema.Struct({
     }),
   ),
   grid: Schema.optional(
-    Schema.Number.check(Schema.isInt(), Schema.isBetween(GRID_RANGE)).annotate({
+    Schema.Number.check(Schema.isInt(), Schema.isBetween(GRID_PITCH_RANGE)).annotate({
       title: 'Grid size',
       description: 'Spacing of the minor grid, in px.',
     }),
@@ -83,11 +80,9 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
   return Canvas.isCanvas(canvas) ? <SceneCanvasProperties canvas={canvas} /> : null;
 };
 
-/** The grid an unset pitch draws: a lattice's runs along its cell edges, when the form can show that pitch. */
-const defaultGrid = (lattice: Scene.Layout2D['lattice']): number => {
-  const grid = lattice ? latticeGrid(lattice, MAJOR_GRID_RATIO) : 0;
-  return Number.isInteger(grid) && grid >= GRID_RANGE.minimum && grid <= GRID_RANGE.maximum ? grid : DEFAULT_GRID;
-};
+/** The grid an unset pitch draws: a lattice's runs along its cell edges. */
+const defaultGrid = (lattice: Scene.Layout2D['lattice']): number =>
+  (lattice && latticeGrid(lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID;
 
 const valuesOf = (
   record: Partial<Canvas.CanvasSettings> | undefined,

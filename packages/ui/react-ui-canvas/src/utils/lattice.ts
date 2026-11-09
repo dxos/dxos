@@ -19,10 +19,13 @@ export const DEFAULT_LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 
 
 const gcd = (left: number, right: number): number => (right === 0 ? left : gcd(right, left % right));
 
+/** The minor grid pitches a canvas draws and its settings accept, in px. */
+export const GRID_PITCH_RANGE = { minimum: 4, maximum: 128 } as const;
+
 /**
  * The minor grid pitch whose major lines (`ratio` minor cells) run along every cell edge of the lattice: the largest
  * major cell that divides the cells and gutters, since cell edges sit at `k x pitch +/- size / 2`; 0 when no whole
- * major cell does, or the minor pitch it gives is under one unit, so the caller falls back to its own grid.
+ * major cell does, or its minor pitch is not a whole `GRID_PITCH_RANGE` pitch, so every caller falls back to the same grid.
  */
 export const latticeGrid = ({ width, height, gutterX, gutterY }: LatticeSpec, ratio: number): number => {
   const lengths = [width / 2, height / 2, gutterX, gutterY];
@@ -30,7 +33,7 @@ export const latticeGrid = ({ width, height, gutterX, gutterY }: LatticeSpec, ra
     return 0;
   }
   const minor = lengths.reduce(gcd) / ratio;
-  return minor >= 1 ? minor : 0;
+  return Number.isInteger(minor) && minor >= GRID_PITCH_RANGE.minimum && minor <= GRID_PITCH_RANGE.maximum ? minor : 0;
 };
 
 /** A shape on the lattice: its first (top-left) cell and how many cells it spans on each axis. */
