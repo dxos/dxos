@@ -20,12 +20,18 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "typedoc": "catalog:"
   },
   "publishConfig": {
     "access": "public"

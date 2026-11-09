@@ -46,8 +46,11 @@ tasks:
     preset: server
   typedoc:
     command: pnpm run --silent typedoc
+    # collect-typedoc.sh also copies packages docs does not depend on.
     deps:
       - ^:typedoc
+      - echo-solid:typedoc
+      - halo:typedoc
     inputs:
       - scripts/collect-typedoc.sh
     outputs:

@@ -1,6 +1,10 @@
 #!/bin/bash
 
 packages=(
+    "core/echo/echo"
+    "core/echo/echo-react"
+    "core/echo/echo-solid"
+    "core/halo/halo"
     "sdk/app-framework"
     "sdk/client"
     "sdk/react-client"

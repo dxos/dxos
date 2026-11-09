@@ -2282,6 +2282,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../packages/common/graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../packages/common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../packages/common/keys
@@ -6436,6 +6439,9 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.7.1
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/core/echo/echo-client:
     dependencies:
@@ -6856,6 +6862,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/core/echo/echo-solid:
     dependencies:
@@ -6878,6 +6887,9 @@ importers:
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.14(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -7092,6 +7104,10 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+    devDependencies:
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/core/halo/halo-adapter-client:
     dependencies:
