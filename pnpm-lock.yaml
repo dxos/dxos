@@ -4574,6 +4574,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../assistant-toolkit
       '@dxos/link':
         specifier: workspace:*
         version: link:../link
@@ -5610,6 +5613,12 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 5.20260719.1

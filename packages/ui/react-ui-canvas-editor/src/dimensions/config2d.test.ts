@@ -40,6 +40,8 @@ describe('config2d', () => {
     const snapped = constrain?.(lattice, move, { snap: true });
     expect(snapped && applyIntent(lattice, snapped).elements.a.center).toEqual({ x: 384, y: 0 });
     expect(constrain?.(lattice, move, { snap: false })).toBe(move);
+    // Snapping to the grid rather than the lattice leaves the move off the cells.
+    expect(constrain?.(lattice, move, { snap: true, lattice: false })).toBe(move);
     // A layout with no lattice is free.
     const { lattice: _lattice, ...free } = lattice;
     expect(constrain?.(free, move, { snap: true })).toBe(move);

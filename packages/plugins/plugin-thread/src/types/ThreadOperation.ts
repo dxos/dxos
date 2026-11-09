@@ -17,7 +17,7 @@ export const CreateChannel = Operation.make({
     name: 'Create Channel',
     icon: 'ph--hash--regular',
   },
-  services: [Capability.Service],
+  services: [Database.Service, Capability.Service],
   input: Schema.Struct({
     spaceId: Key.SpaceId,
     name: Schema.optional(Schema.String),

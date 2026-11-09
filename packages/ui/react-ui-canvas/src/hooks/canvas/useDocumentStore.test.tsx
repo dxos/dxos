@@ -43,7 +43,7 @@ const setup = (document: Scene.SceneDocument, options: { constrain?: ConstrainIn
     () =>
       useDocumentStore(registry, {
         document,
-        snap: () => false,
+        context: () => ({ snap: false }),
         constrain: options.constrain,
         onIntent: options.host === false ? undefined : onIntent,
       }),

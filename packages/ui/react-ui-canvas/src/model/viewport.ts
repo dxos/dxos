@@ -71,7 +71,11 @@ export type ViewportProps<C = unknown> = {
 };
 
 /** What a mode sees of the editor when it constrains an edit. */
-export type ConstrainContext = { snap: boolean };
+export type ConstrainContext = {
+  snap: boolean;
+  /** Whether a lattice layout snaps to its cells rather than the grid; the cells unless set. */
+  lattice?: boolean;
+};
 
 /**
  * A layout mode's rule: `intent` rewritten so `layout` keeps the mode (snapped onto a lattice, re-placed by a solver),
