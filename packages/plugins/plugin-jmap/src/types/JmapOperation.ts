@@ -15,6 +15,7 @@ import { Database, DXN } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MailSend from '@dxos/plugin-inbox/MailSend';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Message } from '@dxos/types';
@@ -51,6 +52,9 @@ export const MaterializeJmapTarget = Operation.make({
   },
   input: ConnectorSpec.MaterializeTargetInput,
   output: ConnectorSpec.MaterializeTargetOutput,
+  // The Mailbox it creates is plugin-inbox's type; declared so a host that loads this plugin alone (an EDGE bundle)
+  // registers it before the handler writes one.
+  types: [Mailbox.Mailbox],
 });
 
 export const JmapSend = Operation.make({
