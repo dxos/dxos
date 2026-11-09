@@ -15,7 +15,7 @@ export type SpaceEnv = {
 const TTL_MS = 24 * 60 * 60 * 1000;
 
 /** A demo bound; a graph this size is past what the demo is showing. */
-const MAX_RECORDS = 1_000;
+export const MAX_RECORDS = 1_000;
 
 /** A record's `props` and `refs` are objects; a client that sends anything else gets an empty one. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
@@ -177,21 +177,27 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
    *
    * The cap is on the graph, which is the LIVE objects: a tombstone is how an object leaves it, and
    * an edit upserts, so neither may be refused — refusing them would strand a full graph with no way
-   * back under the cap. A key the store holds only as a tombstone counts when it comes back.
+   * back under the cap. What matters is therefore the size the graph reaches, not how many keys the
+   * batch mentions: a batch that deletes one object and creates another leaves it the same size, and
+   * one that deletes a key and writes it again leaves that key live. Replaying the batch over the
+   * live key set is what counts both correctly, and it is replayed in order for the same reason
+   * `#apply` writes in order. A malformed entry is skipped here exactly as `#apply` skips it, rather
+   * than throwing and answering 500.
    */
   #refuse(incoming: readonly SyncRecord[]): Response | undefined {
-    const live = this.#count();
-    const alive = this.#liveKeys();
-    // One pass, and a key repeated in the batch counts once. A malformed entry is skipped here as
-    // `#apply` skips it, rather than throwing and answering 500.
-    const added = new Set<string>();
+    const live = this.#liveKeys();
     for (const record of incoming) {
-      if (typeof record?.key === 'string' && !record.deleted && !alive.has(record.key)) {
-        added.add(record.key);
+      if (typeof record?.key !== 'string' || typeof record?.typename !== 'string') {
+        continue;
+      }
+      if (record.deleted) {
+        live.delete(record.key);
+      } else {
+        live.add(record.key);
       }
     }
-    if (live + added.size > MAX_RECORDS) {
-      return new Response(`Too many records: ${live} + ${added.size} > ${MAX_RECORDS}`, { status: 413 });
+    if (live.size > MAX_RECORDS) {
+      return new Response(`Too many records: ${live.size} > ${MAX_RECORDS}`, { status: 413 });
     }
   }
 
@@ -296,13 +302,5 @@ export class SpaceObject extends DurableObject<SpaceEnv> {
         // A socket closing mid-broadcast is ordinary; the client re-reads from its version on reconnect.
       }
     }
-  }
-
-  /** The graph's size: live objects only, since a tombstone is an object that left it. */
-  #count(): number {
-    const [row] = this.ctx.storage.sql
-      .exec<{ n: number }>('SELECT COUNT(*) AS n FROM records WHERE deleted = 0')
-      .toArray();
-    return Number(row?.n ?? 0);
   }
 }

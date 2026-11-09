@@ -43,10 +43,15 @@ const keyOf = (obj: Obj.Unknown): string | undefined => Obj.getKeys(obj, SOURCE)
  *
  * Absence alone cannot: an object whose ref target is not resident omits the property too, and
  * treating that as a clear would delete edges on every peer that happens to have the target loaded.
+ *
+ * A multi-valued edge is an array OF refs rather than a ref, so the element type is what carries the
+ * reference annotation — `Event.attendees` is invisible to a check on the property type itself.
  */
 const refProperties = (type: Type.AnyObj): string[] =>
   SchemaEx.getProperties(Type.getSchema(type).ast)
-    .filter((property: SchemaEx.SchemaProperty) => Ref.isRefType(property.type))
+    .filter((property: SchemaEx.SchemaProperty) =>
+      Ref.isRefType(SchemaEx.getArrayElementType(property.type) ?? property.type),
+    )
     .map((property: SchemaEx.SchemaProperty) => String(property.name));
 
 export type SyncState = {
@@ -110,20 +115,23 @@ const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<stri
       }
       const props: Record<string, unknown> = {};
       const refs: Record<string, string | string[] | null> = {};
-      /** The properties the object actually holds; the rest of its schema's edges were cleared. */
+      /** The schema's edges, so an edge never travels as a value — an emptied list is not one. */
+      const edges = new Set(refProperties(type));
+      /** The edges the object actually holds; the rest of them were cleared by whoever wrote it. */
       const held = new Set<string>();
       for (const [prop, value] of Object.entries(obj)) {
         if (prop === 'id' || value === undefined) {
           continue;
         }
-        held.add(prop);
         if (Ref.isRef(value)) {
+          held.add(prop);
           const targetKey = value.target ? keyOf(value.target) : undefined;
           if (targetKey) {
             refs[prop] = targetKey;
           }
         } else if (Array.isArray(value) && value.some(Ref.isRef)) {
           // A multi-valued edge; a target that is not resident contributes nothing rather than a hole.
+          held.add(prop);
           const targetKeys = value.filter(Ref.isRef).flatMap((ref) => {
             const targetKey = ref.target ? keyOf(ref.target) : undefined;
             return targetKey ? [targetKey] : [];
@@ -131,14 +139,15 @@ const readLocal = async (db: SqliteDatabase, types: SyncTypes): Promise<Map<stri
           if (targetKeys.length > 0) {
             refs[prop] = targetKeys;
           }
-        } else {
+        } else if (!edges.has(prop)) {
           // Through JSON, so a live array or nested object leaves its proxy behind.
           props[prop] = JSON.parse(JSON.stringify(value));
         }
       }
-      // An edge the schema declares and the object does not hold at all was cleared by its writer;
-      // one whose target is merely unloaded is still a `Ref` on the object, so it is omitted instead.
-      for (const property of refProperties(type)) {
+      // An edge the schema declares and the object holds no reference in was cleared by its writer —
+      // an emptied list included; one whose target is merely unloaded is still a `Ref` on the object,
+      // so it is omitted instead.
+      for (const property of edges) {
         if (!held.has(property)) {
           refs[property] = null;
         }
