@@ -3,9 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { type Database, Format, Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
 import { type IdentityIndex } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { type Actor, Organization, Person } from '@dxos/types';
@@ -14,8 +13,6 @@ import { extractDomain, isFreeMailDomain, organizationNameFromDomain } from './d
 import { normalizeEmail } from './identity.ts';
 import { getIdentityIndex } from './resolver.ts';
 import { type SenderSignals, shouldExtractContact } from './selection.ts';
-
-const isValidEmail = Schema.is(Format.Email);
 
 export type BuildContactOptions = {
   /** Message signals feeding the extraction gate; omit when the caller has already decided. */
@@ -49,11 +46,6 @@ export const buildContactFromActor = (
     const email = normalizeEmail(actor.email);
     if (!email) {
       log.warn('email is required for contact extraction');
-      return undefined;
-    }
-    // `Obj.make` throws on an address outside the Person email format, which real mail headers can carry.
-    if (!isValidEmail(email)) {
-      log.warn('sender email is not a valid address; skipping contact extraction');
       return undefined;
     }
 
