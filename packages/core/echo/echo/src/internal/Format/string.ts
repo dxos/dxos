@@ -46,6 +46,11 @@ export const Regex = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Regex));
  */
 export const Text = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Text));
 
+/**
+ * Multi-line text written as Markdown; a form renders it in an editor with Markdown decorations.
+ */
+export const Markdown = Schema.String.pipe(FormatAnnotation.set(TypeFormat.Markdown));
+
 const URL_PATTERN = /^(\w+?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/i;
 
 /**

@@ -4,6 +4,7 @@
 
 import { type Page, expect, test } from '@playwright/test';
 
+import { DEFAULT_GRID, MAJOR_GRID } from '@dxos/scene';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { SceneManager } from './SceneManager.ts';
@@ -74,7 +75,7 @@ test.describe('Canvas', () => {
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
     // The pointer was the shape's centre; snapping its top-left to the grid moves it by under a cell.
     const created = await scene.box(page.locator('[data-node-id^="ellipse-"]'));
-    const cell = (64 * (await scene.zoom())) / 100;
+    const cell = (MAJOR_GRID * (await scene.zoom())) / 100;
     expect(Math.abs(created.x + created.width / 2 - drop.x)).toBeLessThanOrEqual(cell);
     expect(Math.abs(created.y + created.height / 2 - drop.y)).toBeLessThanOrEqual(cell);
   });
@@ -133,11 +134,11 @@ test.describe('Canvas', () => {
       );
       return [x - width / 2, y - height / 2, x + width / 2, y + height / 2];
     };
-    const onMajor = (values: number[]) => values.every((value) => Math.abs(value % 64) === 0);
+    const onMajor = (values: number[]) => values.every((value) => Math.abs(value % MAJOR_GRID) === 0);
     const before = await edges();
 
     // A move is held on a major line within the detent (8px on screen): a cell and a few px over lands on the line.
-    const major = (64 * (await scene.zoom())) / 100;
+    const major = (MAJOR_GRID * (await scene.zoom())) / 100;
     const box = await scene.box(scene.node(id));
     const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     await scene.drag(center, { x: center.x + major + 4, y: center.y + major + 3 });
@@ -357,9 +358,9 @@ test.describe('Canvas', () => {
     await x.focus();
     // One arrow press is a minor grid cell (the field's step annotation); Shift is the number field's ten steps.
     await x.press('ArrowUp');
-    await expect.poll(read).toBe(start + 16);
+    await expect.poll(read).toBe(start + DEFAULT_GRID);
     await x.press('Shift+ArrowUp');
-    await expect.poll(read).toBe(start + 16 + 160);
+    await expect.poll(read).toBe(start + DEFAULT_GRID + DEFAULT_GRID * 10);
     // The node followed, so the edit reached the model as an intent rather than staying in the input.
     await expect.poll(async () => (await scene.box(scene.node('scene:root/c'))).x).toBeGreaterThan(node.x);
   });

@@ -217,6 +217,15 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
     });
   }
 
+  ['IdentityService.migrateHaloRoot'](): Effect.Effect<IdentityService.MigrateHaloRootResponse, BaseError> {
+    return Effect.tryPromise({
+      try: async () => ({
+        haloSpaceRootUrl: await this._identityManager.migrateHaloRootOnEdge(Context.default()),
+      }),
+      catch: toServiceError,
+    });
+  }
+
   private '_getIdentity'(): IdentityProto | undefined {
     if (!this._identityManager.identity) {
       return undefined;
@@ -227,6 +236,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
       identityKey: fromPublicKey(this._identityManager.identity.identityKey),
       spaceKey: fromPublicKey(this._identityManager.identity.space.key),
       profile: this._identityManager.identity.profileDocument,
+      haloSpaceRootUrl: this._identityManager.identity.haloSpaceRootUrl,
     });
   }
 }
