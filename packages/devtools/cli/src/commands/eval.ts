@@ -90,7 +90,7 @@ export const evaluateCommand = Command.make(
 
     if (instructions) {
       const { db } = yield* Database.Service;
-      return yield* Console.log(dialect.instructions({ operations, types: describeTypes(db.registry) }));
+      return yield* Console.log(dialect.instructions({ operations, types: describeTypes(db) }));
     }
 
     const program = yield* readProgram(code, file);
