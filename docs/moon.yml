@@ -23,6 +23,14 @@ tasks:
       - dist
   prebuild:
     command: pnpm exec astro sync
+    # `astro sync` loads astro.config.ts, whose Vite plugins resolve to these packages' dist.
+    deps:
+      - app-framework:build
+      - ui-theme:build
+      - vite-plugin-icons:build
+      - vite-plugin-import-source:build
+      - vite-plugin-log:build
+      - vite-plugin-module-url:build
     inputs:
       - astro.config.ts
       - '@group(sources)'
