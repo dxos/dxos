@@ -624,7 +624,8 @@ const CanvasEngine = ({
                     tabIndex={0}
                     className={mx(
                       '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
-                      !transparent && 'bg-base-surface',
+                      // A dark theme's `dark` class paints its own surface, which a transparent canvas must not show.
+                      transparent ? 'bg-transparent' : 'bg-base-surface',
                       // A theme with a mode takes it over the app's, for everything over the canvas.
                       look.tone === 'dark' && 'dark',
                       (tool.kind === 'hand' || commandHeld) && 'cursor-grab',
