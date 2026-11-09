@@ -16,7 +16,6 @@ const factExplorerStyles = tv({
     root: 'dx-expand grid grid-rows-[auto_minmax(0,1fr)_minmax(0,1fr)] gap-2',
     overview: 'grid min-h-0 gap-2 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-2',
     panel: 'min-h-0',
-    toolbarSpacer: 'grow',
     total: 'text-xs text-fg-subtle tabular-nums',
 
     // Ranked bar rows.
@@ -28,8 +27,7 @@ const factExplorerStyles = tv({
     rankLabel: 'relative truncate',
     rankCount: 'relative text-end text-xs text-fg-subtle tabular-nums',
 
-    // Cross-tab.
-    matrix: 'overflow-auto',
+    // Cross-tab. The viewport scrolls both ways: the row headers are names, and the columns are every predicate.
     matrixGrid: 'grid text-xs',
     matrixCorner: 'sticky top-0 start-0 z-10 bg-base-surface',
     matrixColumnHeader: 'sticky top-0 z-[5] bg-base-surface px-1 py-1 text-fg-subtle truncate',

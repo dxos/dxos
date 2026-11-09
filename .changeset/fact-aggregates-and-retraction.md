@@ -2,6 +2,7 @@
 '@dxos/pipeline-rdf': minor
 '@dxos/react-ui-rdf': minor
 '@dxos/plugin-discord': patch
+'@dxos/react-ui': patch
 ---
 
 Fact reads no longer have to load the whole store to say anything about it, and a fact can now be corrected without being lost.
@@ -13,3 +14,5 @@ Fact reads no longer have to load the whole store to say anything about it, and 
 `@dxos/react-ui-rdf` adds three composites over that surface. `FactExplorer` is an aggregate-first overview — predicates and entities ranked, an entity × predicate cross-tab, and a capped fact list that states the true total — where clicking anything narrows the scope. `FactMemory` is the held-out-message view: an incoming message beside what the store already knew about the entities it mentions. `FactBelief` is one question, the answer that stands, and every claim behind it, a withdrawn one struck through with its original author and date. `@dxos/pipeline-rdf/testing` gains `generateCorpus`, `splitCorpus` and `beliefDemo` — a deterministic inbox-shaped corpus and the scripted correction the stories run on.
 
 `@dxos/plugin-discord`'s write-only fact-feed store declines the four new reads, as it already declines `query` and `select`.
+
+Two `@dxos/react-ui` fixes the explorer surfaced, both of which affect every consumer. A nested ScrollArea viewport whose content fits no longer contains the wheel: an `overflow: auto` box is a scroll container even with nothing to scroll, so a short list inside a long panel used to stop that panel dead. And a toolbar now gives its free space to an explicit `Toolbar.Separator variant='gap'` rather than splitting it with the label, which stranded whatever sat between them in the middle of the row; tags in a toolbar take the row's inset, so two adjacent ones no longer touch.

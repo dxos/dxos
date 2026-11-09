@@ -1023,8 +1023,18 @@
   }
   .dx-toolbar > .dx-control:not([data-square]),
   .dx-toolbar > .dx-select > .dx-control,
-  .dx-toolbar > .dx-tabs-list {
+  .dx-toolbar > .dx-tabs-list,
+  /* A tag is an item of the row too; without this two adjacent tags touch, having only their own half-gap padding. */
+  .dx-toolbar > .dx-tag {
     margin-inline: var(--dx-control-inset);
+  }
+  /*
+   * Text takes the free space (below) so a lone label truncates rather than letting the row collapse onto it. Where
+   * the toolbar states where its free space goes, that wins: two growing cells would split it and strand whatever
+   * sits between them in the middle of the row.
+   */
+  .dx-toolbar:has(> .dx-toolbar-gap) > .dx-toolbar-text {
+    flex: 0 1 auto;
   }
   /*
    * A visible edge at either end of the toolbar starts one gap in, whether it is a labelled control or a square icon

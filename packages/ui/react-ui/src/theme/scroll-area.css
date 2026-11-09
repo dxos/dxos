@@ -39,6 +39,18 @@
     overscroll-behavior-y: contain;
   }
   /*
+   * Except for a nested viewport with nothing to scroll: an `overflow: auto` box is a scroll container even when its
+   * content fits, so `contain` on an inner list swallows the wheel meant for the scroller around it — a few rows
+   * inside a long panel stop the panel dead. Only viewports INSIDE another are relaxed; an overlay's own viewport
+   * is not nested, so it still stops the chain reaching the page behind it. The thumbs publish `data-overflow-y`
+   * while a viewport really scrolls, and a native or bar-less one publishes nothing, so both keep the default.
+   */
+  .dx-scroll-viewport
+    .dx-scroll-root:not([data-mode='reserve'], [data-scrollbars='false'], [data-overflow-y])
+    > .dx-scroll-viewport {
+    overscroll-behavior-y: auto;
+  }
+  /*
    * A row track with a fixed minimum (`minmax(block, auto)`) grows only into the viewport's free space, so content
    * taller than the viewport overflowed it centred, half above the top; content-sized rows let the viewport scroll.
    */

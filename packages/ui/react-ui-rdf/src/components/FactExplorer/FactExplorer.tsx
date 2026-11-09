@@ -144,7 +144,7 @@ const FactExplorerToolbar = ({ classNames }: FactExplorerToolbarProps) => {
             </Tag.Tag>
           ),
         )}
-        <div className={styles.toolbarSpacer()} />
+        <Toolbar.Separator variant='gap' />
         {overview.factuality.map((row) => (
           <Tag.Tag key={row.key} hue={factualityColor(row.key)}>
             {`${row.key} ${row.count}`}
@@ -183,7 +183,7 @@ const FactExplorerDimension = ({ classNames, axis, label }: FactExplorerDimensio
     <Panel.Root classNames={mx(styles.panel(), classNames)}>
       <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.Text classNames='grow'>{`${label}${rows.length > 0 ? ` (${rows.length})` : ''}`}</Toolbar.Text>
+          <Toolbar.Text>{`${label}${rows.length > 0 ? ` (${rows.length})` : ''}`}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
@@ -247,49 +247,56 @@ const FactExplorerMatrix = ({ classNames }: FactExplorerMatrixProps) => {
     <Panel.Root classNames={mx('md:col-span-2', styles.panel(), classNames)}>
       <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.Text classNames='grow'>Entities × predicates</Toolbar.Text>
+          <Toolbar.Text>Entities × predicates</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Header>
-      <Panel.Body classNames={styles.matrix()}>
-        {matrix.rows.length === 0 || matrix.columns.length === 0 ? (
-          <Status.Empty icon='ph--grid-four--regular'>
-            {overview.pending ? 'Loading…' : 'No facts to cross-tabulate.'}
-          </Status.Empty>
-        ) : (
-          <div className={styles.matrixGrid()} style={{ gridTemplateColumns: template }} role='table'>
-            <div className={styles.matrixCorner()} />
-            {matrix.columns.map((column) => (
-              <div key={column.key} className={styles.matrixColumnHeader()} title={column.key}>
-                {column.label}
+      <Panel.Body asChild>
+        <ScrollArea.Root orientation='all'>
+          <ScrollArea.Viewport>
+            {matrix.rows.length === 0 || matrix.columns.length === 0 ? (
+              <Status.Empty icon='ph--grid-four--regular'>
+                {overview.pending ? 'Loading…' : 'No facts to cross-tabulate.'}
+              </Status.Empty>
+            ) : (
+              <div className={styles.matrixGrid()} style={{ gridTemplateColumns: template }} role='table'>
+                <div className={styles.matrixCorner()} />
+                {matrix.columns.map((column) => (
+                  <div key={column.key} className={styles.matrixColumnHeader()} title={column.key}>
+                    {column.label}
+                  </div>
+                ))}
+                {matrix.rows.map((row) => (
+                  <React.Fragment key={row.key}>
+                    <div className={styles.matrixRowHeader()} title={row.key}>
+                      {row.label}
+                    </div>
+                    {matrix.columns.map((column) => {
+                      const count = matrix.cell(row.key, column.key);
+                      const selected = scope.entity === row.key && scope.predicate === column.key;
+                      return (
+                        <button
+                          key={column.key}
+                          type='button'
+                          aria-label={`${row.label} ${column.label}: ${count}`}
+                          className={styles.matrixCell({ selected })}
+                          // An empty cell has nothing to narrow to; selecting it would scope the view to zero facts.
+                          disabled={count === 0}
+                          onClick={() => select(row.key, column.key)}
+                        >
+                          <span
+                            className={styles.matrixCellFill()}
+                            style={{ opacity: cellOpacity(count, matrix.max) }}
+                          />
+                          <span className={styles.matrixCellValue()}>{count === 0 ? '' : count}</span>
+                        </button>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
               </div>
-            ))}
-            {matrix.rows.map((row) => (
-              <React.Fragment key={row.key}>
-                <div className={styles.matrixRowHeader()} title={row.key}>
-                  {row.label}
-                </div>
-                {matrix.columns.map((column) => {
-                  const count = matrix.cell(row.key, column.key);
-                  const selected = scope.entity === row.key && scope.predicate === column.key;
-                  return (
-                    <button
-                      key={column.key}
-                      type='button'
-                      aria-label={`${row.label} ${column.label}: ${count}`}
-                      className={styles.matrixCell({ selected })}
-                      // An empty cell has nothing to narrow to; selecting it would scope the view to zero facts.
-                      disabled={count === 0}
-                      onClick={() => select(row.key, column.key)}
-                    >
-                      <span className={styles.matrixCellFill()} style={{ opacity: cellOpacity(count, matrix.max) }} />
-                      <span className={styles.matrixCellValue()}>{count === 0 ? '' : count}</span>
-                    </button>
-                  );
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-        )}
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </Panel.Body>
     </Panel.Root>
   );
@@ -311,7 +318,7 @@ const FactExplorerFacts = ({ classNames }: FactExplorerFactsProps) => {
     <FactViewer.Root classNames={classNames} facts={overview.facts} context={scope.entity}>
       <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.Text classNames='grow'>
+          <Toolbar.Text>
             {capped
               ? `Facts (showing ${overview.facts.length.toLocaleString()} of ${overview.total.toLocaleString()}; narrow the scope to see the rest)`
               : `Facts (${overview.facts.length.toLocaleString()})`}
