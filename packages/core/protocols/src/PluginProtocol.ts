@@ -192,6 +192,11 @@ export type SkillRecord = {
   readonly instructions?: string;
   readonly mcpPrompt: boolean;
   readonly tools: readonly string[];
+  /**
+   * Whether an agent may enable the skill itself (`Skill.agentCanEnable`);
+   * the skill manager refuses one without it.
+   */
+  readonly agentCanEnable?: boolean;
 };
 
 /** An ECHO type the bundle contributes. */
