@@ -12,14 +12,7 @@ import { GRID_PITCH_RANGE, latticeGrid, namedStyles, styleClasses } from '@dxos/
 import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO, type Scene, type StyleClass } from '@dxos/scene';
 
-import {
-  canvasModel2D,
-  deleteNamedStyle,
-  layoutLatticeSpec,
-  namedStyleUses,
-  setLayoutLattice,
-  withoutMode,
-} from '#model';
+import { canvasModel2D, deleteNamedStyle, namedStyleUses, openLayout2D, setLayoutLattice, withoutMode } from '#model';
 import { Canvas, Settings } from '#types';
 
 import { StyleClassList } from './StyleClassList.tsx';
@@ -80,16 +73,16 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
   return Canvas.isCanvas(canvas) ? <SceneCanvasProperties canvas={canvas} /> : null;
 };
 
-/** The grid an unset pitch draws: a lattice's runs along its cell edges. */
-const defaultGrid = (lattice: Scene.Layout2D['lattice']): number =>
-  (lattice && latticeGrid(lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID;
+/** The grid an unset pitch shows: the one the canvas draws, the layout's own or else its lattice's. */
+const defaultGrid = (layout: Scene.Layout2D | undefined): number =>
+  layout?.grid ?? ((layout?.lattice && latticeGrid(layout.lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID);
 
 const valuesOf = (
   record: Partial<Canvas.CanvasSettings> | undefined,
-  lattice: Scene.Layout2D['lattice'],
+  layout: Scene.Layout2D | undefined,
 ): CanvasPropertiesValues => ({
-  lattice: lattice !== undefined || undefined,
-  grid: record?.grid ?? defaultGrid(lattice),
+  lattice: layout?.lattice !== undefined || undefined,
+  grid: record?.grid ?? defaultGrid(layout),
   theme: isThemeChoice(record?.theme) ? record.theme : undefined,
   styleSet: isStyleSetChoice(record?.styleSet) ? record.styleSet : undefined,
   background: isBackgroundChoice(record?.background) ? record.background : undefined,
@@ -114,10 +107,11 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
   const handleSave = useCallback(
     (next: CanvasPropertiesValues) => {
       // The lattice is each layout's own mode, so the toggle writes the layouts rather than the settings.
-      const lattice = layoutLatticeSpec(subject);
+      const layout = openLayout2D(subject);
+      const lattice = layout?.lattice !== undefined;
       const stored = subject.settings?.grid;
-      const shown = stored ?? defaultGrid(lattice);
-      next.lattice !== (lattice !== undefined) && setLayoutLattice(subject, next.lattice === true);
+      const shown = stored ?? defaultGrid(layout);
+      next.lattice !== lattice && setLayoutLattice(subject, next.lattice === true);
       Obj.update(subject, (subject) => {
         // ECHO stores no `undefined`, so an unset value removes its key.
         subject.settings = Object.fromEntries(
@@ -149,7 +143,7 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
   const handleDelete = useCallback((id: string) => deleteNamedStyle(subject, id), [subject]);
   return (
     <PropertiesView
-      values={valuesOf(canvas.settings, layoutLatticeSpec(subject))}
+      values={valuesOf(canvas.settings, openLayout2D(subject))}
       onSave={handleSave}
       classes={classes}
       uses={uses}
