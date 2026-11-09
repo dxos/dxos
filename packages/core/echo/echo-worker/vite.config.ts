@@ -11,6 +11,7 @@ export default defineConfig({
     worker: 'src/worker/index.ts',
   },
   test: {
+    node: true,
     workerd: {
       // The object is the version authority for a graph, and its cap is read off its own SQLite, so
       // the tests run against a real Durable Object rather than a stand-in.

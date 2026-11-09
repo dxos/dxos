@@ -309,6 +309,23 @@ const applyRecords = async (
   await db.flush();
 };
 
+/**
+ * Whether a response comes from a store that is not the one the saved version belongs to — the graph
+ * expired and its alarm dropped everything, so nothing it once agreed to survives.
+ *
+ * The incarnation is what shows this. A lower version does too, but only while no other peer has
+ * written: one that pushed the new store past the saved version hides the expiry behind a version
+ * that looks like progress. It stays the fallback for a store, or a saved state, that names no
+ * incarnation.
+ */
+export const isReset = (
+  state: Pick<SyncState, 'version' | 'incarnation'>,
+  response: Pick<SyncResponse, 'version' | 'incarnation'>,
+): boolean =>
+  response.incarnation !== undefined && state.incarnation !== undefined
+    ? response.incarnation !== state.incarnation
+    : response.version < state.version;
+
 /** Applies a response and records the agreement it leaves behind. */
 const receive = async (
   db: SqliteDatabase,
@@ -325,18 +342,10 @@ const receive = async (
   );
   await applyRecords(db, types, response.records, incoming);
 
-  // A store that is not the one our version came from — the graph expired and its alarm dropped
-  // everything — has nothing it once agreed to, so forget the agreement and let the next push send
+  // Forget the agreement when the store is not the one it was made with, and let the next push send
   // the whole local graph again rather than trusting hashes for rows that no longer exist.
-  //
-  // The incarnation is what shows this. A lower version does too, but only while no other peer has
-  // written: one that pushed the new store past our saved version hides the expiry behind a version
-  // that looks like progress. It remains the fallback for a store that does not name an incarnation.
   const incarnation = response.incarnation;
-  const reset =
-    incarnation !== undefined && state.incarnation !== undefined
-      ? incarnation !== state.incarnation
-      : response.version < state.version;
+  const reset = isReset(state, response);
   const hashes: Record<string, string> = reset ? {} : { ...state.hashes };
   for (const record of [...response.records, ...sent]) {
     hashes[record.key] = fingerprint(record);

@@ -7,7 +7,7 @@
 // test is the record cap, and the cap is read off the object's own SQLite and enforced per
 // transport. A fake would be asserting against a reimplementation of the thing that was wrong.
 
-import { env } from 'cloudflare:test';
+import { env, runDurableObjectAlarm } from 'cloudflare:test';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import type { SyncRecord, SyncRequest, SyncResponse } from '../protocol.ts';
@@ -168,5 +168,26 @@ describe('SpaceObject record cap', () => {
     const response = await post({ since: 0, records: [{ key: 'fresh' } as unknown as SyncRecord] });
     expect(response.status).toBe(200);
     expect(await live()).not.toContain('fresh');
+  });
+});
+
+describe('SpaceObject expiry', () => {
+  test('the store that replaces an expired one is a different incarnation', async () => {
+    expect((await post({ since: 0, records: [record('key-0'), record('key-1')] })).status).toBe(200);
+    const before = await read();
+    expect(before.version).toBe(2);
+    expect(before.incarnation).toBeTypeOf('string');
+
+    // The 24h alarm: everything the object holds is the graph, so dropping its storage is the deletion.
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
+
+    // A peer that knows nothing of the expiry writes, which is what hides the expiry from a version
+    // comparison: the new store climbs back to the version a returning client saved. Only the
+    // incarnation distinguishes it, which is what `isReset` reads.
+    expect((await post({ since: 0, records: [record('key-2'), record('key-3')] })).status).toBe(200);
+    const after = await read();
+    expect(after.version).toBe(before.version);
+    expect(after.incarnation).not.toBe(before.incarnation);
+    expect(after.records.map((record) => record.key)).toEqual(['key-2', 'key-3']);
   });
 });
