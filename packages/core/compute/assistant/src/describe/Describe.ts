@@ -8,14 +8,39 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { type Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import type { SandboxField, SandboxType } from './Dialect.ts';
+/**
+ * How a model is told about types and operation inputs: TypeScript-like labels read from the schemas themselves, shared
+ * by code mode's prompt and by the Skill Manager's lookups.
+ */
+
+/** One field of a registered type, as the model is told about it. */
+export type FieldDescription = {
+  readonly name: string;
+  /** TypeScript-like label, e.g. `string`, `"open" | "done"`, `Ref<org.dxos.type.text>`. */
+  readonly type: string;
+  readonly optional: boolean;
+};
+
+/** A type the workspace has registered, as the model is told about it. */
+export type TypeDescription = {
+  readonly typename: string;
+  /** The versioned DXN `Database.resolve` resolves the type by. */
+  readonly dxn: string;
+  /** A relation is an edge between two objects, made with `Relation.make` rather than `Obj.make`. */
+  readonly kind: 'object' | 'relation';
+  /**
+   * Fields with their types, so the model never has to introspect a schema to find out what it may
+   * write — least of all that a field holds a reference, which a name alone does not say.
+   */
+  readonly fields: readonly FieldDescription[];
+};
 
 /**
  * Every object and relation type the database's registry holds, with its fields: what the model is
  * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
  * rebuild a type does not list it.
  */
-export const describeTypes = (db: Database.Database): SandboxType[] =>
+export const describeTypes = (db: Database.Database): TypeDescription[] =>
   db.registry
     .list()
     .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
@@ -51,7 +76,7 @@ export const ABRIDGED_UNION = ', … }';
  * The fields of a type's schema as the model is told about them: name, a TypeScript-like type
  * label, and whether the field may be omitted.
  */
-export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
+export const describeFields = (fields: Schema.Struct.Fields): FieldDescription[] =>
   Object.entries(fields).map(([name, field]) => ({
     name,
     type: labelOf(field.ast, 0, true),
@@ -157,3 +182,7 @@ export const labelOf = (ast: SchemaAST.AST, depth: number, abridge = false): str
   }
   return 'unknown';
 };
+
+/** Fields as one line, e.g. `title: string, priority?: number`. */
+export const renderFields = (fields: readonly FieldDescription[]): string =>
+  fields.map(({ name, type, optional }) => `${name}${optional ? '?' : ''}: ${type}`).join(', ');

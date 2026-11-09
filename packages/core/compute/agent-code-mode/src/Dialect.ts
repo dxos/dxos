@@ -5,11 +5,10 @@
 import type * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 
+import { ABRIDGED_UNION, type FieldDescription, type TypeDescription, renderFields } from '@dxos/assistant/Describe';
 import type * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
-
-import { ABRIDGED_UNION } from './fields.ts';
 
 /**
  * An operation the sandbox exposes, projected from a skill-bound tool.
@@ -31,26 +30,10 @@ export type SandboxOperation = {
 };
 
 /** One field of a registered type, as the model is told about it. */
-export type SandboxField = {
-  readonly name: string;
-  /** TypeScript-like label, e.g. `string`, `"open" | "done"`, `Ref<org.dxos.type.text>`. */
-  readonly type: string;
-  readonly optional: boolean;
-};
+export type SandboxField = FieldDescription;
 
 /** A type the workspace has registered, as the model is told about it. */
-export type SandboxType = {
-  readonly typename: string;
-  /** The versioned DXN `Database.resolve` resolves the type by. */
-  readonly dxn: string;
-  /** A relation is an edge between two objects, made with `Relation.make` rather than `Obj.make`. */
-  readonly kind: 'object' | 'relation';
-  /**
-   * Fields with their types, so the model never has to introspect a schema to find out what it may
-   * write — least of all that a field holds a reference, which a name alone does not say.
-   */
-  readonly fields: readonly SandboxField[];
-};
+export type SandboxType = TypeDescription;
 
 /** What a dialect is handed to build its bindings: the ECHO runtime, the skills' operations, and the turn's printer. */
 export type BindingsContext = {
@@ -88,28 +71,22 @@ export interface Dialect {
 
   /** Names bound in the code's scope, built per evaluation. */
   readonly bindings: (context: BindingsContext) => Record<string, unknown>;
-  /** How code in this dialect calls an operation, and the input it writes; the prompt and discovery both state it. */
-  readonly signature: (operation: SandboxOperation) => OperationSignature;
 }
-
-/** One operation as a dialect states it to the model. */
-export type OperationSignature = {
-  /** The code that calls the operation, or resolves it where calling takes a second step. */
-  readonly call: string;
-  /** Its input, in the form the call takes. */
-  readonly input: string;
-};
 
 /** What a dialect is handed to write its instructions: the operations and the types the model may name. */
 export type InstructionsContext = {
   readonly operations: readonly SandboxOperation[];
   readonly types: readonly SandboxType[];
   /**
-   * The model finds types and operations through the Discovery skill rather than in the prompt: `types` is then
-   * empty, and `operations` holds only the skill's own.
+   * The model looks types and operations up through the Skill Manager rather than reading them here, as code mode's
+   * turns do: `types` is then empty, and `operations` holds only those the prompt states.
    */
   readonly discovery?: boolean;
 };
+
+/** The types section when the model looks types up instead (see {@link InstructionsContext.discovery}). */
+export const DISCOVERED_TYPES =
+  "### Types\n\nTypes are not listed here: find them, and their fields, with the Skill Manager's `queryTypes`.";
 
 /**
  * The types section of the API reference, shared by the dialects. `name` renders the identifier a
@@ -128,10 +105,8 @@ export const renderTypes = (
       do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
       the object or its id.${types.some(hasAbridgedUnion) ? ` ${ABRIDGED_UNION_NOTE}` : ''}
 
-      ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${type.fields.map(renderField).join(', ')}`).join('\n')}
+      ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${renderFields(type.fields)}`).join('\n')}
     `;
-
-const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;
 
 /**
  * Said only when a type has one: the exception to "the whole schema", so the model looks up a variant's fields rather
@@ -143,15 +118,18 @@ const ABRIDGED_UNION_NOTE =
 
 const hasAbridgedUnion = ({ fields }: SandboxType): boolean => fields.some(({ type }) => type.includes(ABRIDGED_UNION));
 
-/** One operation's line in the API reference, as the dialect's {@link Dialect.signature} states it. */
-export const renderOperation = (operation: SandboxOperation, { call, input }: OperationSignature): string => trim`
-  - \`${call}\` — ${operation.description ?? 'No description.'}
+/**
+ * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
+ * `input` overrides the tool's JSON schema for a dialect whose call does not go through the tool path.
+ */
+export const renderOperation = (
+  operation: SandboxOperation,
+  call: (name: string) => string,
+  input: string = JSON.stringify(operation.parameters),
+): string => trim`
+  - \`${call(operation.name)}\` — ${operation.description ?? 'No description.'}
     input: ${input}
 `;
-
-/** The types section when the model looks types up instead (see {@link InstructionsContext.discovery}). */
-export const DISCOVERED_TYPES =
-  "### Types\n\nTypes are not listed here: find them, and their fields, with the Discovery skill's `queryTypes`.";
 
 /** Shown in place of the operations section when the conversation binds no skills. */
 export const NO_OPERATIONS = '### Operations\n\nNo operations are bound to this conversation.';

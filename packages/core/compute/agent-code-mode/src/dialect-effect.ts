@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
+import { describeInput, describeTypes } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, URI } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -18,13 +19,11 @@ import {
   DISCOVERED_TYPES,
   type InstructionsContext,
   NO_OPERATIONS,
-  type OperationSignature,
   type SandboxOperation,
   renderOperation,
   renderTypes,
 } from './Dialect.ts';
 import { type DocEntry, STATIC_DOCS, loadDocs } from './docs/index.ts';
-import { describeInput, describeTypes } from './fields.ts';
 
 /**
  * The repo's own ECHO API, written as an Effect program: `yield* Database.query(Filter.type(...)).run`.
@@ -90,8 +89,6 @@ export const EffectDialect: Dialect = {
       runEffect: RuntimeProvider.runPromise(Effect.succeed(runtime)),
     };
   },
-
-  signature: (operation) => effectSignature(operation),
 
   instructions: ({ operations, types, discovery }: InstructionsContext) => trim`
     ## Code mode
@@ -215,11 +212,14 @@ export const fromLegacyEchoDXN = (ref: string): URI.URI => {
 };
 
 const resolveWith = (operations: readonly SandboxOperation[]) => {
+  // Keyed without the `dxn:` prefix: the Skill Manager reports an operation by its registry key, which may omit it.
   const definitions = new Map(
-    operations.flatMap(({ definition }) => (definition ? [[operationKey(definition), definition] as const] : [])),
+    operations.flatMap(({ definition }) =>
+      definition ? [[bareKey(operationKey(definition)), definition] as const] : [],
+    ),
   );
   return (ref: URI.URI | Ref.Ref<Obj.Unknown>, schema?: Type.AnyEntity) => {
-    const definition = typeof ref === 'string' ? definitions.get(ref) : undefined;
+    const definition = typeof ref === 'string' ? definitions.get(bareKey(ref)) : undefined;
     if (definition !== undefined) {
       return Effect.succeed(definition);
     }
@@ -227,6 +227,8 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
     return schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
   };
 };
+
+const bareKey = (key: string): string => key.replace(/^dxn:/, '');
 
 const renderEffectOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations
@@ -260,21 +262,23 @@ const renderEffectTools = (operations: readonly SandboxOperation[]): string => {
       The conversation's MCP servers add these. They are NOT tools here either: each is an effect on
       \`Tools\`, taking one argument matching its input schema, and a failed call fails the program.
 
-      ${tools.map((tool) => renderOperation(tool, effectSignature(tool))).join('\n')}
+      ${tools.map((tool) => renderOperation(tool, (name) => `yield* Tools[${JSON.stringify(name)}](input)`)).join('\n')}
     `;
 };
 
 /** One line per operation backed by a definition, naming the DXN it resolves by. */
 const renderOperationList = (operations: readonly SandboxOperation[]): string =>
   operations
-    .flatMap((operation) => (operation.definition ? [renderOperation(operation, effectSignature(operation))] : []))
+    .flatMap((operation) => {
+      const { definition } = operation;
+      return definition
+        ? [
+            renderOperation(
+              operation,
+              () => `yield* Database.resolve('${operationKey(definition)}')`,
+              describeInput(definition.input),
+            ),
+          ]
+        : [];
+    })
     .join('\n');
-
-/**
- * An operation is resolved by its DXN and takes the input its own schema decodes, refs as `Ref<typename>`; a tool no
- * operation backs is called on `Tools` with the input its JSON schema states.
- */
-const effectSignature = ({ name, parameters, definition }: SandboxOperation): OperationSignature =>
-  definition
-    ? { call: `yield* Database.resolve('${operationKey(definition)}')`, input: describeInput(definition.input) }
-    : { call: `yield* Tools[${JSON.stringify(name)}](input)`, input: JSON.stringify(parameters) };

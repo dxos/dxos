@@ -17,7 +17,6 @@ import {
   DISCOVERED_TYPES,
   type InstructionsContext,
   NO_OPERATIONS,
-  type OperationSignature,
   type SandboxOperation,
   renderOperation,
   renderTypes,
@@ -132,8 +131,6 @@ export const PlainDialect: Dialect = {
     };
   },
 
-  signature: (operation) => plainSignature(operation),
-
   instructions: ({ operations, types, discovery }: InstructionsContext) => trim`
     ## Code mode
 
@@ -199,14 +196,10 @@ const renderPlainOperations = (operations: readonly SandboxOperation[]): string 
   operation throws, so wrap a call you expect to fail in \`try\`/\`catch\`. The names are kebab-case,
   so they are indexed rather than dotted.
 
-  ${operations.map((operation) => renderOperation(operation, plainSignature(operation))).join('\n')}
+  ${operations
+    .map((operation) => renderOperation(operation, (name) => `await ops[${JSON.stringify(name)}](input)`))
+    .join('\n')}
 `;
-
-/** An operation is a function on `ops`, indexed by its tool name, taking the input its JSON schema states. */
-const plainSignature = (operation: SandboxOperation): OperationSignature => ({
-  call: `await ops[${JSON.stringify(operation.name)}](input)`,
-  input: JSON.stringify(operation.parameters),
-});
 
 /** The identifier form of a kebab-case tool name, which the plain dialect binds alongside it. */
 export const camelCase = (name: string): string =>

@@ -8,18 +8,9 @@ export * as WorkerSandboxBrowser from './WorkerSandboxBrowser.ts';
 export * as WorkerdSandbox from './WorkerdSandbox.ts';
 export * as Wire from './Wire.ts';
 export { type HostHandler, registerHost } from './WorkerdHostWorker.ts';
-export { type BindingsContext, type Dialect, type OperationSignature, type SandboxOperation } from './Dialect.ts';
-export {
-  DISCOVERY_SKILL_KEY,
-  LoadSkill,
-  QueryOperations,
-  QueryTypes,
-  makeDiscovery,
-  makeDiscoverySkill,
-  serveLocally,
-} from './discovery.ts';
+export { type BindingsContext, type Dialect, type SandboxOperation } from './Dialect.ts';
 export { EffectDialect } from './dialect-effect.ts';
 export { PlainDialect } from './dialect-plain.ts';
 export { EVAL_TOOL_NAME, EvalTool, type EvaluateOptions, evaluate, makeEvalToolkit } from './eval-tool.ts';
-export { describeTypes } from './fields.ts';
+export { describeTypes } from '@dxos/assistant/Describe';
 export { type CodeModeOptions, makeCodeModeTurnProducer, projectOperations } from './producer.ts';

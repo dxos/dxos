@@ -13,17 +13,35 @@ import {
   AddMcpConnection,
   EnableSkills,
   QueryMcpConnections,
+  QueryOperations,
   QuerySkills,
+  QueryTypes,
   SetMcpConnection,
 } from './operations/definitions.ts';
 
 export const key = 'org.dxos.skill.skillManager';
 
+const name = 'Skill Manager';
+
+const description = 'Query and enable skills, their operations, types and MCP servers in the current conversation.';
+
+const tools = Skill.toolDefinitions({
+  operations: [
+    QuerySkills,
+    EnableSkills,
+    QueryOperations,
+    QueryTypes,
+    AddMcpConnection,
+    QueryMcpConnections,
+    SetMcpConnection,
+  ],
+});
+
 export const make = () =>
   Skill.make({
     key,
-    name: 'Skill Manager',
-    description: 'Query and enable skills and MCP servers in the current conversation.',
+    name,
+    description,
     instructions: Template.make({
       source: trim`
         The list below is the current set of available skills — it is rendered fresh into this prompt,
@@ -33,7 +51,7 @@ export const make = () =>
 
         <available_skills>
         {{#each skills}}
-        - {{key}} "{{name}}"{{#if description}} -- {{description}}{{/if}}{{#if agentCanEnable}} [agent-can-enable]{{/if}}
+        - {{key}} "{{name}}"{{#if description}} -- {{description}}{{/if}}{{#if enabled}} [enabled]{{/if}}{{#if agentCanEnable}} [agent-can-enable]{{/if}}
         {{/each}}
         </available_skills>
 
@@ -42,8 +60,9 @@ export const make = () =>
         can already see.
 
         When the task needs a tool you do not have, do not work around it with other tools: call
-        [query-skills] with a \`query\` describing the tool (e.g. "link task to feature"). Each skill it
-        returns lists the tools it provides; enable the one that has the tool you need.
+        [query-operations] with a \`query\` describing what it does (e.g. "link task to feature"). Each
+        operation it returns names the skill that provides it; enable that skill. [query-types] lists
+        the registered types, and with \`typenames\` their fields.
 
         Connections to services can also give you their MCP servers' tools. A space's connections are
         on unless this conversation turned them off; the built-in servers Composer ships are off until
@@ -60,9 +79,43 @@ export const make = () =>
         },
       ],
     }),
-    tools: Skill.toolDefinitions({
-      operations: [QuerySkills, EnableSkills, AddMcpConnection, QueryMcpConnections, SetMcpConnection],
+    tools,
+  });
+
+/**
+ * The skill as code mode states it: the same operations, called from code, and instructions that list nothing. Code
+ * mode's prompt states no other skill, operation or type, so these are how the model finds them.
+ */
+export const makeForCodeMode = () =>
+  Skill.make({
+    key,
+    name,
+    description,
+    instructions: Template.make({
+      source: trim`
+        Nothing about this workspace is listed in this prompt. Its skills, their operations and its types
+        are found with the operations below, which code calls like any other.
+
+        - \`querySkills()\` lists the skills, each saying whether it is enabled here and whether you may
+          enable it. An enabled skill carries the rules for its part of the work, so at the start of a
+          request get each one the request touches in full with \`querySkills({ keys: [key] })\`, and
+          follow its instructions.
+        - \`queryOperations({ query })\` searches the operations of the skills you can use by what they
+          do; \`queryOperations({ skill })\` lists one skill's. Look an operation up with
+          \`queryOperations({ keys: [key] })\` before calling it: that gives its input.
+        - An operation whose skill is not enabled cannot be called yet. Enable the skill with
+          \`enableSkills({ keys: [key] })\` (only one you may enable); its operations can be called from
+          your next eval call.
+        - \`queryTypes({ query })\` searches the registered types; \`queryTypes({ typenames: [typename] })\`
+          gives their fields.
+        - A connection's MCP tools are on unless this conversation turned them off:
+          \`queryMcpConnections()\` lists them, and \`setMcpConnection\` turns one on from your next eval
+          call.
+
+        Find what a request needs in one eval call that prints it, then do the work in the next.
+      `,
     }),
+    tools,
   });
 
 export { SkillManagerHandlers as Handlers } from './operations/index.ts';

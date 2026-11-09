@@ -3,7 +3,6 @@
 //
 
 import * as Tool from 'effect/ai/Tool';
-import * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -19,18 +18,16 @@ import {
   formatSystemPrompt,
   getOperationFromTool,
 } from '@dxos/assistant';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
-import * as Skill from '@dxos/compute/Skill';
-import * as Template from '@dxos/compute/Template';
-import { Database, Filter, Obj, Ref, Registry } from '@dxos/echo';
+import type * as Skill from '@dxos/compute/Skill';
+import { type Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import { type Catalog, makeDiscovery, serveLocally } from './discovery.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
-import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -111,8 +108,6 @@ const runCodeModeTurn = ({
     // The turn's own services, not the producer's database-only runtime: the sandbox runs the
     // model's effects, and `Operation.invoke` resolves its handler through `Operation.Service`.
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
-    // What discovery reads skills, operation records and skill instructions through.
-    const services = yield* Effect.context<Database.Service | Operation.Service | Registry.Service>();
 
     // A turn in a thread (a light thread or a fork) sees that thread's prompt, not main's.
     const history =
@@ -162,36 +157,20 @@ const runCodeModeTurn = ({
               const mcps = yield* AiSession.connectMcpServers(
                 params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
               );
-              const bound = yield* projectOperations(skills, mcps);
-              // The prompt states only the Discovery skill; the model looks up every other skill, operation and type
-              // through it. The enabled skills' operations stay callable without a lookup.
-              const discovery = makeDiscovery({
-                dialect,
-                enabled: skills,
-                operations: bound,
-                types: yield* registeredTypes,
-                catalog: readCatalog.pipe(Effect.provide(services)),
-                instructionsOf: (skill) =>
-                  Template.processTemplate(skill.instructions).pipe(Effect.provide(services), Effect.orDie),
-                enable: (skill) =>
-                  Skill.upsert(Skill.getKey(skill)).pipe(
-                    Effect.flatMap((stored) =>
-                      Effect.promise(() => session.context.bind({ skills: [Ref.make(stored)] })),
-                    ),
-                    Effect.provide(services),
-                    Effect.orDie,
-                  ),
-              });
-              const operations = [...discovery.operations, ...bound];
+              // The prompt states one skill, the Skill Manager, and the model looks up every other skill, operation and
+              // type through its operations. Those, the enabled skills' and the MCP tools are what code can call.
+              const stated = SkillManagerSkill.makeForCodeMode();
+              const operations = yield* projectOperations([stated, ...skills], mcps);
+              const statedTools = new Set(stated.tools.map(String));
+              // An MCP tool has no skill to look it up through, so the conversation's are stated too.
+              const listed = operations.filter(
+                (operation) => statedTools.has(operation.name) || operation.definition === undefined,
+              );
               labelCall = labelEvalCall(operations);
               const toolkit = makeEvalToolkit({
                 dialect,
                 sandbox,
-                runtime: Context.add(
-                  runtime,
-                  Operation.Service,
-                  serveLocally(Context.get(runtime, Operation.Service), discovery.operations),
-                ),
+                runtime,
                 operations,
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 maxOutput: options.maxOutput,
@@ -200,13 +179,13 @@ const runCodeModeTurn = ({
               });
               const system = yield* formatSystemPrompt({
                 system: [
-                  dialect.instructions({ operations: discovery.operations, types: [], discovery: true }),
+                  dialect.instructions({ operations: listed, types: [], discovery: true }),
                   options.system,
                   params.system,
                 ]
                   .filter(isPresent)
                   .join('\n\n'),
-                skills: [discovery.skill],
+                skills: [stated],
                 objects: session.context.getObjects(),
                 instructions,
               }).pipe(Effect.orDie);
@@ -317,17 +296,6 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
     return undefined;
   }
 };
-
-/** Every object and relation type the workspace has registered, with its fields: what `queryTypes` answers from. */
-const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
-  describeTypes(db),
-);
-
-/** The registry's skills and operation records, which discovery searches beyond the enabled skills. */
-const readCatalog: Effect.Effect<Catalog, never, Registry.Service> = Effect.all({
-  skills: Registry.runQuery(Filter.type(Skill.Skill)),
-  records: Registry.runQuery(Filter.type(Operation.PersistentOperation)),
-});
 
 /**
  * Projects the skills' tools, and those of the turn's MCP servers, into callable operations. Resolution goes through the ordinary toolkit
