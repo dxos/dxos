@@ -36,7 +36,7 @@ describe('buildContactFromActor', () => {
 
   test('returns undefined for a sender address outside the Person email format', async ({ expect }) => {
     // Real mail carries addresses such as `o'brien@corp.com`; `Obj.make` throws on them and failed the sync run.
-    for (const email of ["o'brien@corp.com", 'no-domain@localhost', 'a@b']) {
+    for (const email of ["nicholas.o'day@enron.com", "o'brien@corp.com", 'no-domain@localhost', 'a@b']) {
       const contact = await EffectEx.runPromise(buildContactFromActor({ email }, db));
       expect(contact).toBeUndefined();
     }
