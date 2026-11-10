@@ -166,7 +166,8 @@ const SCENARIOS = [
     querySkillsCall: `await ops[${toolOf(QuerySkills)}](input)`,
     steps: [
       `print(await ops[${toolOf(QueryOperations)}]({ query: 'urgency' }));`,
-      `print(await ops[${toolOf(Score)}]({ title: 'Write the docs' }));\n` +
+      // By the operation's key, which the Skill Manager says works as well as its tool name.
+      `print(await ops[${JSON.stringify(keyOf(Score))}]({ title: 'Write the docs' }));\n` +
         `print(await ops[${toolOf(EnableSkills)}]({ keys: ['com.example.skill.notes'] }));`,
       `print(await ops[${toolOf(AddNote)}]({ text: 'remember the docs' }));`,
     ],
