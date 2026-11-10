@@ -187,15 +187,11 @@ export class SchemaValidator {
     return property != null && SchemaAST.isOptional(property.type);
   }
 
-  /**
-   * Whether the property at `propertyPath` may be cleared: its key is optional in the enclosing struct (or
-   * discriminated union member), so writing `undefined` — which deletes the key — leaves a valid object.
-   * The path form of {@link isOptionalProperty}, for a database object's nested writes.
-   */
+  /** Whether writing `undefined` at `propertyPath`, which deletes the key, leaves a valid object. */
   public static isOptionalPropertyAt(
     rootObjectSchema: Schema.Top,
     propertyPath: KeyPath,
-    getProperty: (path: KeyPath) => any = () => null,
+    getProperty: (path: KeyPath) => any,
   ): boolean {
     const propertyName = propertyPath.at(-1);
     if (propertyName === undefined) {
@@ -203,16 +199,11 @@ export class SchemaValidator {
     }
     const parentPath = propertyPath.slice(0, -1);
     const parentAst =
-      parentPath.length === 0
-        ? rootObjectSchema.ast
-        : this.getPropertyAstChain(rootObjectSchema, parentPath, getProperty).at(-1);
-    if (parentAst == null) {
-      return false;
-    }
+      this.getPropertyAstChain(rootObjectSchema, parentPath, getProperty).at(-1) ?? rootObjectSchema.ast;
     const property = getPropertySignature(parentAst, propertyName.toString(), (name) =>
       getProperty([...parentPath, name]),
     );
-    return property != null && SchemaAST.isOptional(property.type);
+    return property != null && SchemaAST.isOptional(property.type) && !isUnionTag(parentAst, property.name);
   }
 
   /** The AST that property `prop` of a typed target follows. */
@@ -371,6 +362,13 @@ const getPropertySignature = (
   }
 
   return getProperties(typeOrDiscriminatedUnion, getTargetPropertyFn).find((p) => p.name === propertyName) ?? null;
+};
+
+/** Whether `propertyName` is the tag selecting a member of the discriminated union at `ast`; clearing it is never valid. */
+const isUnionTag = (ast: SchemaAST.AST, propertyName: PropertyKey): boolean => {
+  const union = unwrapAst(ast, (t) => SchemaAST.isUnion(t) && t.types.some((member) => SchemaAST.isObjects(member)));
+  const members = union == null ? [] : flattenUnion(union).filter((member) => SchemaAST.isObjects(member));
+  return members.length > 1 && getTypeDiscriminators(members)[0].name === propertyName;
 };
 
 /**

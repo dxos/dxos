@@ -188,6 +188,18 @@ describe('without database', () => {
   });
 });
 
+const Progress = Type.makeObject(DXN.make('com.example.type.progress', '0.1.0'))(
+  Schema.Struct({
+    lastError: Schema.String.pipe(Schema.optional),
+    spec: Schema.Union([
+      Schema.Struct({ kind: Schema.tagDefaultOmit('external'), token: Schema.String.pipe(Schema.optional) }),
+      Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.String }),
+    ]),
+    items: Schema.Array(Schema.Struct({ note: Schema.String.pipe(Schema.optional) })),
+    nested: Schema.Struct({ note: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+  }),
+);
+
 describe('Reactive Object with ECHO database', () => {
   let builder: EchoTestBuilder;
 
@@ -230,15 +242,63 @@ describe('Reactive Object with ECHO database', () => {
     expect(() => db.add(Obj.make(TestSchema.Example, { string: 'foo' }))).to.throw();
   });
 
-  test('a write the schema rejects names the field', async () => {
-    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
-    const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
-    expect(() =>
-      Obj.update(obj, (obj) => {
-        Reflect.set(obj, 'string', 42);
-      }),
-    ).to.throw('Schema validation failed — string: Expected string');
-    expect(obj.string).to.eq('foo');
+  describe('writes to an object of a type rebuilt from JSON Schema', () => {
+    // A stored type is rebuilt from JSON Schema, as a type published to EDGE's type registry is: its optional keys come
+    // back `optionalKey` and its union tags as one-member unions.
+    const setup = async () => {
+      const { db } = await builder.createDatabase();
+      const Stored = await db.addType(Progress);
+      return db.add(
+        Obj.make(Stored, {
+          lastError: 'boom',
+          spec: { kind: 'external', token: 'a' },
+          items: [{ note: 'a' }],
+          nested: { note: 'a' },
+        }),
+      );
+    };
+
+    test('clears an optional key at any depth', async () => {
+      const object = await setup();
+      Obj.update(object, (object) => {
+        object.lastError = undefined;
+        if (object.spec.kind === 'external') {
+          object.spec.token = undefined;
+        }
+        object.items[0].note = undefined;
+        if (object.nested) {
+          object.nested.note = undefined;
+        }
+      });
+
+      const snapshot = Obj.getSnapshot(object);
+      expect(snapshot).not.to.have.property('lastError');
+      expect(snapshot.spec).to.deep.eq({ kind: 'external' });
+      expect(snapshot.items).to.deep.eq([{}]);
+      expect(snapshot.nested).to.deep.eq({});
+    });
+
+    test('rejects a wrong value, naming the field', async () => {
+      const object = await setup();
+      expect(() => Obj.update(object, (object) => Reflect.set(object, 'lastError', 42))).to.throw(
+        'Schema validation failed — lastError: Expected string',
+      );
+      expect(() => Obj.update(object, (object) => Reflect.set(object.spec, 'token', 42))).to.throw(
+        'Schema validation failed — spec.token: Expected string',
+      );
+    });
+
+    test('rejects clearing a required key or a union tag', async () => {
+      const object = await setup();
+      expect(() => Obj.update(object, (object) => Reflect.set(object, 'spec', undefined))).to.throw(
+        /^Schema validation failed — spec: /,
+      );
+      // `tagDefaultOmit` leaves the tag optional after the round trip, yet it selects the member every other key needs.
+      expect(() => Obj.update(object, (object) => Reflect.set(object.spec, 'kind', undefined))).to.throw(
+        /^Schema validation failed — spec\.kind: /,
+      );
+      expect(object.spec).to.deep.eq({ kind: 'external', token: 'a' });
+    });
   });
 
   test('existing proxy objects can be added to the database', async () => {
