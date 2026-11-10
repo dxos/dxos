@@ -11,7 +11,7 @@ import {
   transcriptStarted,
 } from '@dxos/av';
 import { Context, Resource } from '@dxos/context';
-import { type EdgeHttpClient, type JoinCallResponse, type JoinCallRoomRequest } from '@dxos/edge-client';
+import { type EdgeHttpClient, type JoinCallResponse, type JoinCallRoomRequest, joinCallRoom } from '@dxos/edge-client';
 import { log } from '@dxos/log';
 
 import {
@@ -25,7 +25,7 @@ import {
   type TranscriptEvent,
 } from './media-transport.ts';
 
-/** Resolves a room's meeting and mints this device's participant token (`EdgeHttpClient.joinCallRoom`). */
+/** Resolves a room's meeting and mints this device's participant token (`joinCallRoom` from `@dxos/edge-client`). */
 export type JoinCallRoom = (request: JoinCallRoomRequest) => Promise<JoinCallResponse>;
 
 export type RealtimeKitTransportOptions = CreateTransportOptions & {
@@ -151,6 +151,6 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
 
 /** The app's {@link CreateTransport}: RealtimeKit, joined through calls-service on EDGE as the signed-in identity. */
 export const createRealtimeKitTransport =
-  (getEdge: () => Pick<EdgeHttpClient, 'joinCallRoom'>): CreateTransport =>
+  (getEdge: () => Pick<EdgeHttpClient, 'request'>): CreateTransport =>
   (options) =>
-    new RealtimeKitTransport({ ...options, join: (request) => getEdge().joinCallRoom(Context.default(), request) });
+    new RealtimeKitTransport({ ...options, join: (request) => joinCallRoom(getEdge(), Context.default(), request) });

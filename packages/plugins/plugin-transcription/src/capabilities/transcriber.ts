@@ -9,6 +9,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { joinTranscription } from '@dxos/edge-client';
+import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionCapabilities } from '#types';
@@ -35,7 +37,13 @@ export default Capability.makeModule(
       // would preempt the manager's own (actionable) error.
       const configured = getEdgeServiceEndpoint(client.config, EdgeServiceName.Calls) !== undefined;
       const transcriptionManager = new TranscriptionManagerImpl({
-        join: configured ? () => client.edge.http.joinTranscription(Context.default()) : undefined,
+        join: configured
+          ? () => {
+              const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
+              invariant(identity, 'Transcription needs an identity.');
+              return joinTranscription(client.edge.http, Context.default(), identity.did);
+            }
+          : undefined,
         messageEnricher,
         registry,
       });

@@ -63,6 +63,8 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
@@ -70,7 +72,6 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@dxos/invariant": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

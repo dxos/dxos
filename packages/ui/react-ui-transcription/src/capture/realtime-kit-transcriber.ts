@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type CreateTranscriber, type Transcriber, type TranscriberCallbacks } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
-/** Mints a participant token for this identity's one-person transcription meeting (`EdgeHttpClient.joinTranscription`). */
+/** Mints a participant token for this identity's one-person transcription meeting (`joinTranscription` from `@dxos/edge-client`). */
 export type JoinTranscription = () => Promise<{ authToken: string }>;
 
 export type RealtimeKitTranscriberOptions = {

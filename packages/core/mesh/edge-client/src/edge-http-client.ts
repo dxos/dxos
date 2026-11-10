@@ -57,7 +57,6 @@ import { createUrl } from '@dxos/util';
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client.ts';
 import { proxyFetchLegacy } from './cors-proxy.ts';
 import { HttpConfig, withLogging, withRetryConfig } from './http-client.ts';
-import { type JoinCallResponse, type JoinCallRoomRequest, type RealtimeKitCall } from './realtime-kit.ts';
 
 export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client.ts';
 
@@ -1066,41 +1065,6 @@ export class EdgeHttpClient extends BaseHttpClient {
       auth: true,
       ...args,
     });
-  }
-
-  //
-  // Calls
-  //
-
-  /**
-   * Joins a call room's Cloudflare RealtimeKit meeting as this device, through calls-service's RealtimeKit proxy.
-   */
-  public async joinCallRoom(
-    ctx: Context,
-    { roomId, meetingId, deviceKey }: JoinCallRoomRequest,
-    args?: EdgeHttpCallArgs,
-  ): Promise<JoinCallResponse> {
-    // Loaded on first join, so the app's boot graph does not carry it.
-    const { joinRealtimeKitMeeting } = await import('./realtime-kit.ts');
-    return joinRealtimeKitMeeting(this.#realtimeKit(ctx, args), { meetingId, title: roomId, participantId: deviceKey });
-  }
-
-  /**
-   * Joins this identity's one-person RealtimeKit meeting, where live transcription runs with nobody else in the room.
-   */
-  public async joinTranscription(ctx: Context, args?: EdgeHttpCallArgs): Promise<JoinCallResponse> {
-    const identityDid = this._edgeIdentity?.identityDid;
-    invariant(identityDid, 'Transcription needs an identity: call setIdentity first.');
-    const { joinRealtimeKitMeeting, transcriptionMeetingTitle } = await import('./realtime-kit.ts');
-    return joinRealtimeKitMeeting(this.#realtimeKit(ctx, args), {
-      title: transcriptionMeetingTitle(identityDid),
-      participantId: identityDid,
-    });
-  }
-
-  #realtimeKit(ctx: Context, args?: EdgeHttpCallArgs): RealtimeKitCall {
-    return (method, path, body) =>
-      this._call(ctx, new URL(`/calls/realtimekit${path}`, this.baseUrl), { ...args, method, body, auth: true });
   }
 
   //

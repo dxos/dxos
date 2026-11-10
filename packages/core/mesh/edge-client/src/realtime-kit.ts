@@ -4,6 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { type Context } from '@dxos/context';
+
+import { type EdgeHttpClient } from './edge-http-client.ts';
+
 /**
  * One call to calls-service's RealtimeKit proxy (`<edge>/calls/realtimekit/*`), which adds the API token; resolves to
  * the answer's `data`.
@@ -43,6 +47,29 @@ const MAX_PARTICIPANT_PAGES = 10;
 
 /** Title of an identity's transcription meeting: one per identity, reused by every session its devices start. */
 export const transcriptionMeetingTitle = (identityDid: string): string => `transcription:${identityDid}`;
+
+/** The authenticated EDGE call a join goes through; functions rather than client methods keep it out of app boot. */
+type EdgeRequest = Pick<EdgeHttpClient, 'request'>;
+
+/** Joins a call room's RealtimeKit meeting as this device, through calls-service's RealtimeKit proxy. */
+export const joinCallRoom = (
+  edge: EdgeRequest,
+  ctx: Context,
+  { roomId, meetingId, deviceKey }: JoinCallRoomRequest,
+): Promise<JoinCallResponse> =>
+  joinRealtimeKitMeeting(proxy(edge, ctx), { meetingId, title: roomId, participantId: deviceKey });
+
+/** Joins the identity's one-person RealtimeKit meeting, where live transcription runs with nobody else in the room. */
+export const joinTranscription = (edge: EdgeRequest, ctx: Context, identityDid: string): Promise<JoinCallResponse> =>
+  joinRealtimeKitMeeting(proxy(edge, ctx), {
+    title: transcriptionMeetingTitle(identityDid),
+    participantId: identityDid,
+  });
+
+const proxy =
+  (edge: EdgeRequest, ctx: Context): RealtimeKitCall =>
+  (method, path, body) =>
+    edge.request(ctx, `/calls/realtimekit${path}`, { method, body });
 
 /**
  * Joins a RealtimeKit meeting as `participantId`: the meeting the swarm agreed on when given, else the oldest active

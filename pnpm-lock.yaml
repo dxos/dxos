@@ -19923,6 +19923,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -19932,6 +19935,9 @@ importers:
       '@dxos/halo-react':
         specifier: workspace:*
         version: link:../../core/halo/halo-react
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -22054,6 +22060,12 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -22070,9 +22082,6 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
     devDependencies:
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

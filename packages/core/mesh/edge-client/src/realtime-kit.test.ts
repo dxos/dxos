@@ -4,7 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { type RealtimeKitCall, joinRealtimeKitMeeting, transcriptionMeetingTitle } from './realtime-kit.ts';
+import { Context } from '@dxos/context';
+
+import {
+  type RealtimeKitCall,
+  joinCallRoom,
+  joinRealtimeKitMeeting,
+  transcriptionMeetingTitle,
+} from './realtime-kit.ts';
 
 type Request = { route: string; body?: unknown };
 
@@ -90,5 +97,28 @@ describe('joinRealtimeKitMeeting', () => {
   test('an answer of the wrong shape fails the join', async ({ expect }) => {
     const { call } = fakeProxy({ 'GET /meetings?search=room&status=ACTIVE&per_page=50': { not: 'a list' } });
     await expect(joinRealtimeKitMeeting(call, { title: 'room', participantId: 'device' })).rejects.toThrow();
+  });
+
+  test("joinCallRoom goes through calls-service's RealtimeKit proxy", async ({ expect }) => {
+    const paths: string[] = [];
+    const answers: Record<string, unknown> = {
+      '/calls/realtimekit/meetings/meeting-1/participants?page_no=1&per_page=100': [],
+      '/calls/realtimekit/meetings/meeting-1/participants': { id: 'participant-1', token: 'auth-token' },
+    };
+    const edge = {
+      request: async (_ctx: Context, path: string) => {
+        paths.push(path);
+        return answers[path];
+      },
+    };
+
+    expect(
+      await joinCallRoom(edge, Context.default(), {
+        roomId: 'echo:/room',
+        meetingId: 'meeting-1',
+        deviceKey: 'device',
+      }),
+    ).toEqual({ meetingId: 'meeting-1', authToken: 'auth-token' });
+    expect(paths).toEqual(Object.keys(answers));
   });
 });
