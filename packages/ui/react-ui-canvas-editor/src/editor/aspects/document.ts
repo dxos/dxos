@@ -83,7 +83,11 @@ export const createDocumentAspect = <C>(
   const intent = (target: string, edit: LayoutIntent) => {
     const { props, display } = latest.current;
     const record = config.constrain && findLayout(props.document, target);
-    const next = record && config.constrain ? config.constrain(record, edit, { snap: display.snap }) : edit;
+    // Grid mode (guides off) snaps a lattice scene to the grid, as the canvas does; the engine's guides default on.
+    const next =
+      record && config.constrain
+        ? config.constrain(record, edit, { snap: display.snap, lattice: display.guides !== false })
+        : edit;
     if (!next) {
       return;
     }

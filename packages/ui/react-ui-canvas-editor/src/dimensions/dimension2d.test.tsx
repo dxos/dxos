@@ -97,7 +97,7 @@ describe('the 2D dimension under SceneEditor', () => {
     expect(screen.getByText('125%')).toBeDefined();
   });
 
-  test('the display panel offers dots and lines, and the guides for a lattice alone, as the engine draws them', async () => {
+  test('the display panel offers dots and lines, or on a lattice its cells and the grid, as the engine draws them', async () => {
     const config = createConfig2D();
     const display = { current: DISPLAY };
     const Host = ({ document }: { document: Scene.SceneDocument }) => {
@@ -128,14 +128,22 @@ describe('the 2D dimension under SceneEditor', () => {
     await waitFor(() => expect(display.current).toMatchObject({ grid: true, gridKind: 'dots' }));
     unmount();
 
-    // A lattice's cells are its grid and its guides.
+    // A lattice switches between its cells (its guides) and the grid, which is what a shape snaps to.
     const lattice: Scene.SceneDocument = {
       ...DOCUMENT,
       layouts: DOCUMENT.layouts.map((layout) => ({ ...layout, lattice: DEFAULT_LATTICE })),
     };
     render(<Host document={lattice} />);
-    await waitFor(() => expect(screen.getByTestId('toolbar-guides')).toBeDefined());
+    await waitFor(() => expect(screen.getByTestId('toolbar-lattice')).toBeDefined());
     expect(screen.queryByTestId('theme-grid-dots')).toBeNull();
+    expect(screen.queryByTestId('toolbar-guides')).toBeNull();
+    // The display sets no guides, so the grid is drawn and snapped to.
+    expect(screen.getByTestId('toolbar-lattice-grid').getAttribute('aria-pressed')).toBe('true');
+    await act(async () => screen.getByTestId('toolbar-lattice').click());
+    await waitFor(() => expect(display.current).toMatchObject({ guides: true }));
+    expect(screen.getByTestId('toolbar-lattice').getAttribute('aria-pressed')).toBe('true');
+    await act(async () => screen.getByTestId('toolbar-lattice-grid').click());
+    await waitFor(() => expect(display.current).toMatchObject({ guides: false }));
   });
 
   test('an aid the engine’s own key toggles reaches the host’s display, so the editor’s constrain reads it too', async () => {

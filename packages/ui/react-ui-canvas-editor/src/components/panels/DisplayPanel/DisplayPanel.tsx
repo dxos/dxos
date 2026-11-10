@@ -128,7 +128,7 @@ export type DisplayPanelProps = PanelProps & {
   onGridChange?: (grid: BackgroundGrid | undefined) => void;
   /** The grid the theme's background draws, so picking it again clears the override; none by default. */
   themeGrid?: BackgroundGrid;
-  /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle follows the grid options. */
+  /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle, which on a lattice scene picks the lattice over the grid. */
   guides?: boolean;
   onGuidesToggle?: () => void;
   /** Whether the axes are drawn (3D's in red, green and blue, 2D's in a stronger grid colour); with `onAxesToggle`, a toggle. */
@@ -139,7 +139,7 @@ export type DisplayPanelProps = PanelProps & {
   /** Whether moves, resizes and new nodes snap to the grid; with `onSnapToggle`, a toggle leads the grid controls. */
   snap?: boolean;
   onSnapToggle?: () => void;
-  /** A lattice scene: snap lands on the lattice's cells, and the lattice is the grid, so no grid choice is offered. */
+  /** A lattice scene: the grid switch picks between the lattice's cells (the guides) and the grid, drawn and snapped to. */
   lattice?: boolean;
   /** Whether the Timeline panel shows; with `onTimelineToggle`, a toggle before the theme selector. */
   timeline?: boolean;
@@ -148,7 +148,7 @@ export type DisplayPanelProps = PanelProps & {
 
 /**
  * The canvas's look: the snap, guides and axes toggles, a switch between dots and lines over the background (pressing the one
- * drawn turns the grid off), and the theme selector last.
+ * drawn turns the grid off), or on a lattice scene between its cells and the grid, and the theme selector last.
  */
 export const DisplayPanel = ({
   classNames,
@@ -181,7 +181,7 @@ export const DisplayPanel = ({
         variant='ghost'
         iconOnly
         icon='ph--magnet--regular'
-        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the ${lattice ? "lattice's cells" : 'major grid'}`}
+        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the ${lattice && guides ? "lattice's cells" : 'major grid'}`}
         disabled={readonly}
         pressed={snap === true}
         data-testid='toolbar-snap'
@@ -190,8 +190,8 @@ export const DisplayPanel = ({
     )}
     {/* Snapping is behaviour, the rest is what the canvas draws. */}
     {onSnapToggle && <Toolbar.Separator variant='line' />}
-    {/* A guide is drawn on the grid, so the toggle leads the grid options. */}
-    {onGuidesToggle && (
+    {/* A guide is drawn on the grid, so the toggle leads the grid options; on a lattice scene it is one side of the switch. */}
+    {onGuidesToggle && lattice !== true && (
       <Button.Toggle
         variant='ghost'
         iconOnly
@@ -215,7 +215,32 @@ export const DisplayPanel = ({
         onPressedChange={onAxesToggle}
       />
     )}
-    {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off; hidden on a lattice scene. */}
+    {/* A lattice scene snaps to its cells or to the grid, so exactly one of the two is drawn. */}
+    {lattice === true && (
+      <Button.Group compact role='group' aria-label='Grid'>
+        <Button.Toggle
+          variant='ghost'
+          iconOnly
+          icon='ph--squares-four--regular'
+          label={`Lattice (${shortcutFor('guides')}): show the lattice cells and snap to them`}
+          disabled={readonly || !onGuidesToggle}
+          pressed={guides === true}
+          data-testid='toolbar-lattice'
+          onPressedChange={(pressed) => pressed && guides !== true && onGuidesToggle?.()}
+        />
+        <Button.Toggle
+          variant='ghost'
+          iconOnly
+          icon='ph--grid-four--regular'
+          label={`Grid (${shortcutFor('guides')}): show the grid and snap to it, off the lattice`}
+          disabled={readonly || !onGuidesToggle}
+          pressed={guides !== true}
+          data-testid='toolbar-lattice-grid'
+          onPressedChange={(pressed) => pressed && guides === true && onGuidesToggle?.()}
+        />
+      </Button.Group>
+    )}
+    {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off. */}
     {lattice !== true && (
       <Button.Group compact role='group' aria-label='Grid'>
         {GRID_OPTIONS.filter((option) => !gridOptions || gridOptions.includes(option.grid)).map((option) => (
