@@ -17,7 +17,7 @@ import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type CommitFn, makeCorrectionStage } from '@dxos/pipeline-transcription';
-import { SAMPLE_MEETING, createScriptedTranscriber } from '@dxos/pipeline-transcription/testing';
+import { createScriptedTranscriber } from '@dxos/pipeline-transcription/testing';
 import { useJoinTranscription } from '@dxos/react-client';
 import {
   type TrackTranscriber,
@@ -37,7 +37,17 @@ import { createStoryDecorators } from '#testing';
 
 import { renderByline } from '../util/index.ts';
 
-const SCRIPTED_TRANSCRIBER: TrackTranscriber = () => createScriptedTranscriber({ segments: SAMPLE_MEETING });
+/** Stands in for the file's words offline; punctuated, since the sentence buffer holds text until a sentence ends. */
+const SCRIPTED_TRANSCRIPT = [
+  'London is one of the busiest cities in Europe.',
+  'Millions of people travel into the centre every day,',
+  'most of them by underground train or by bus.',
+  'The city has hundreds of parks and green spaces.',
+  'You can hear more than three hundred languages on its streets.',
+  'Many people say that variety is the best thing about living here.',
+].map((text) => ({ text }));
+
+const SCRIPTED_TRANSCRIBER: TrackTranscriber = () => createScriptedTranscriber({ segments: SCRIPTED_TRANSCRIPT });
 
 // In-memory message buffer + model adapter (production wires up a real space-backed `Feed`).
 const useStoryMessageModel = () => {

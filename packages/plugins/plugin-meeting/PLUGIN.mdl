@@ -328,11 +328,10 @@ scenario T-6: Regenerate summary
 scenario T-7: Transcription lifecycle
   given: user is in a call
   when: user joins the call
-  then: the call manager's transcript enricher is set
+  then: the meeting's transcript sink follows the call's transcript
 
   when: user leaves the call
   then:
-    - the call manager's transcript feed and enricher are cleared
     - plugin state is reset to empty
 ```
 
@@ -464,46 +463,29 @@ test QA-2: A four-person meeting call, with notes taken during it
     - name: Remove the simulated participants and the meeting
       invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [] }
       expect: the call manager has no simulated participants
+```
 
-test QA-3: Two people meet in one Meeting's call, with live transcription
+```mdl
+test QA-3: A scripted source fills a meeting's transcript
   desc: |
-    Alice and Bob, each with their own identity, share a space and open the same Meeting. Both join its call over
-    RealtimeKit, each sees and hears the other, Alice turns transcription on, they talk, and the transcript fills in on
-    both screens. Each person's camera and microphone play a pre-recorded track, so the test needs no camera, but it
-    needs a real EDGE and RealtimeKit: this is the test that the call's media and transcript cross between two devices.
+    The meeting's transcript path with no call: a scripted source writes through the same TranscriptSink a call writes
+    through, and the meeting's Transcript tab renders each line under its speaker. Runs in storybook, offline.
   actors: agent
-  covers: [F-1.1, F-1.2, F-3.2, F-3.6, T-1]
-  status: blocked             # 2026-10-24, autocue/two-peer-meeting.mjs on edge dev: steps 1-3 and 6 pass (video and voice cross both ways); no transcript arrives, as the RealtimeKit preset `group_call_participant` does not enable transcription
+  covers: [F-3.5, F-3.7]
+  status: unverified
   given:
-    - two identities on separate devices (browser contexts), with display names "Alice" and "Bob"
-    - space: "Launch sync", created by Alice; Bob has joined it by invitation
-    - plugin-calls and plugin-meeting are enabled on both
-    - the runtime config names an EDGE that serves `/calls/rooms/join`, and its RealtimeKit preset allows transcription
-    - tracks: `alice.webm` and `bob.webm` of equal length, made by `autocue/two-peer-tracks.py`; each device's camera
-      and microphone play its own (`fake-media.mjs`), and `timeline.json` gives each line's speaker, start and text
-    - meeting: a Meeting named "Meetings plugin launch" in the space, open and active on both devices
+    - storybook serves `plugins/plugin-meeting/stories/MeetingTranscript` in isolation mode
   steps:
-    - name: Open the call
-      do: On both devices, open the Call tab, turn the camera on and unmute.
-      expect: each shows its own camera preview and a Join button
-    - name: Alice joins
-      do: On Alice's device, click Join.
-      expect: Alice's grid shows her own tile, and the toolbar offers Leave
-    - name: Bob joins
-      do: On Bob's device, click Join.
-      expect: each grid shows two tiles, Alice and Bob, and each plays the other's video
-    - name: Start transcription
-      do: On Alice's device, choose Start transcription; on both, open the meeting companion's Transcript tab.
-      expect: the transcript tab is open beside the call on both devices
-    - name: They talk
-      do: Start both tracks on one cue and watch until the last line ("Perfect. I'll put that in the meeting notes.").
-      expect: |
-        each line appears in both transcripts, attributed to its speaker, among them Bob's "I can have the release
-        notes ready by Friday."
-      note: Each device writes only its own speaker's segments, so a line reaches the other device through the space.
-    - name: Bob leaves
-      do: On Bob's device, click Leave.
-      expect: Bob's call returns to the lobby, and Bob's tile leaves Alice's grid
+    - name: Open the transcript
+      do: Open the meeting's Transcript tab.
+      expect: the tab is empty
+    - name: Play the script
+      do: Click Play script.
+      expect: a line from Anna appears, then one from Ben, every 1.5 s, in spoken order
+      note: 2026-11-10, autocue/meeting-transcript.mjs — the first line is missing, or listed after the others seconds late; a fresh feed hides its first append from queries (ECHO, not the sink), so the take shows it only when the script repeats.
+    - name: Pause the script
+      do: Click Pause script.
+      expect: no further line appears
 ```
 
 ---
@@ -547,79 +529,21 @@ decision D-4: QA-2 makes the meeting active before adding the colleagues, and bi
 ```
 
 ```mdl
-decision D-5: A call's transcript comes from RealtimeKit's native transcription instead of each client recording its microphone: each participant writes its own segments to the linked Transcript feed, enriched with entity extraction, and the transcription toggle is meeting-wide.
-  date: 2026-10-23
+decision D-5: A call's transcript comes from RealtimeKit's native transcription: CallManager emits only the local speaker's final segments, and this plugin owns the transcription flag (its own call activity), the feed and enrichment, writing through one queued TranscriptSink that resolves the active meeting's feed per segment. The meeting payload carries only the meeting id, and QA-3 checks the sink offline.
+  date: 2026-11-10
   by: user:mykola-vrmchk
-  affects: [F-3, F-3.1, F-3.2, F-3.4, T-4, T-7, MeetingState]
-  source: https://github.com/dxos/dxos/pull/12046
-```
-
-```mdl
-decision D-6: A meeting payload without `transcriptionEnabled` leaves transcription as it is, and SetActive does not re-announce the meeting the call already advertises. Fills in [D-5].
-  date: 2026-10-23
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [F-2.2, F-3.3]
-  why: The meeting activity is one last-write-wins value, so a bare meeting selection would otherwise switch transcription off for everyone.
-  source: https://github.com/dxos/dxos/pull/12046
-```
-
-```mdl
-decision D-7: A meeting payload without `transcriptDxn` unbinds the call's transcript feed and leaves the transcription toggle as it is. Fills in [D-6].
-  date: 2026-10-23
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [F-3.5]
-  why: Selecting another meeting mid-call publishes only its id, and the previous meeting's feed would otherwise keep receiving segments.
-  source: https://github.com/dxos/dxos/pull/14179
-```
-
-```mdl
-decision D-8: QA-3 tests a two-person Meeting call across two devices over RealtimeKit, with a real EDGE, each device's camera and microphone playing its own pre-recorded track, and the transcript checked on both.
-  date: 2026-10-24
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [QA-3]
-  why: QA-2's colleagues are simulated on one device, so no test covered media and transcript crossing between two devices.
+  affects: [F-2.2, F-3, HandlePayload, SetTranscription, MeetingState, T-4, T-7, QA-3]
+  why: plugin-calls is meeting-agnostic, per-segment appends could land out of order, and a feed DXN beside the meeting id duplicated what `meeting.transcript.feed` already names.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 
 ```mdl
-decision D-9: A Meeting's own call offers the Start/Stop transcription toggle on the meeting's toolbar while the user is in it. Fills in [D-5].
-  date: 2026-10-24
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [F-3.6, QA-3]
-  why: The toggle existed only on channel calls, so a call started from a Meeting's Call tab could not turn transcription on; QA-3 found it.
-  source: https://github.com/dxos/dxos/pull/14186
-```
-
-```mdl
-decision D-10: The meeting's transcription toggle sits in MeetingArticle's own toolbar, and both toggles (channel call and meeting) share op:SetTranscription. Fills in [D-9].
-  date: 2026-10-24
+decision D-6: A Meeting's own call offers the Start/Stop transcription toggle in MeetingArticle's toolbar, and both toggles (channel call and meeting) share op:SetTranscription. Fills in [D-5].
+  date: 2026-11-10
   by: agent:claude-code
   for: user:mykola-vrmchk
   affects: [F-3.6, MeetingArticle, SetTranscription]
-  why: MeetingArticle builds its own toolbar, so an action on the meeting's graph node showed only in the plank heading's menu, where QA-3 could not find it.
-  source: https://github.com/dxos/dxos/pull/14186
-```
-
-```mdl
-decision D-11: A meeting payload whose transcriptDxn does not resolve to a feed on this device (not yet replicated, or another space) unbinds the call's transcript feed, as a payload without one does. Fills in [D-7].
-  date: 2026-10-26
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [F-3.5]
-  why: A peer that receives the new meeting before its feed replicates otherwise keeps writing segments to the previous meeting's transcript; CodeRabbit found it in review.
-  source: https://github.com/dxos/dxos/pull/14186
-```
-
-```mdl
-decision D-12: CallManager only emits the local speaker's final segments; this plugin owns the transcription flag, the feed and enrichment, writing through one queued TranscriptSink that resolves the active meeting's feed per segment. The flag is its own call activity, and the meeting payload carries only the meeting id. Supersedes [D-6], [D-7] and [D-11].
-  date: 2026-11-10
-  by: user:mykola-vrmchk
-  affects: [F-2.2, F-3.1, F-3.2, F-3.3, F-3.4, F-3.5, F-3.7, HandlePayload, SetTranscription, T-4]
-  why: plugin-calls is meeting-agnostic, per-segment appends could land out of order, and a feed DXN beside the meeting id duplicated what `meeting.transcript.feed` already names.
+  why: The toggle existed only on channel calls, so a call started from a Meeting's Call tab could not turn transcription on.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

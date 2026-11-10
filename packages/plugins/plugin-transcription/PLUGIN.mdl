@@ -208,7 +208,7 @@ feat F-2: Live Transcription
   req F-2.2:
     when: recording starts
     then: the track is published to the meeting, and RealtimeKit streams its transcription back; recording stops by
-      unpublishing it
+      muting it
 
   req F-2.3:
     when: RealtimeKit delivers a transcript for this peer
@@ -493,6 +493,29 @@ test QA-2: Record, transcribe, and summarize a meeting
       expect: the row leaves the navtree and its plank closes if it was open
 ```
 
+```mdl
+test QA-3: Transcribe an audio file in the Transcription story
+  desc: |
+    The recording pipeline end to end in storybook, with no microphone: the story plays an audio file, its track feeds
+    the transcriber, and each committed block appears as a message. Without EDGE, as in storybook, the scripted
+    transcriber stands in for RealtimeKit, so this checks the pipeline and the message list, not the service.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-2.4]
+  status: unverified
+  given:
+    - storybook serves `plugins/plugin-transcription/stories/Transcription` in isolation mode
+  steps:
+    - name: Play the file
+      do: Click Play in the story's toolbar.
+      expect: the button turns to Pause, and the first message appears within a few seconds
+    - name: Read the transcript
+      do: Wait while the file plays.
+      expect: messages from "You" keep appending, one per committed block, in order
+    - name: Pause
+      do: Click Pause.
+      expect: no further message appears
+```
+
 ## Changelog
 
 ```mdl
@@ -629,10 +652,10 @@ decision D-15: The Whistle hook, capture, protocol and worker move from the stor
 ```
 
 ```mdl
-decision D-16: Live transcription streams through a one-person RealtimeKit meeting instead of POSTing WAV chunks to Whisper at `/transcribe`, which is removed; `Transcriber` becomes an interface (`start`, `stop`, `flush`, `abort`) built through one `CreateTranscriber` seam, with a scripted one for offline stories and tests.
+decision D-16: Live transcription streams through a one-person RealtimeKit meeting instead of POSTing WAV chunks to Whisper at `/transcribe`, which is removed; `Transcriber` becomes an interface (`start`, `stop`, `flush`, `abort`) built through one `CreateTranscriber` seam, with a scripted one for offline stories and tests, which QA-3 runs.
   date: 2026-11-10
   by: user:mykola-vrmchk
-  affects: [F-1.2, F-1.3, F-2, T-2, T-3, QA-1, QA-2]
+  affects: [F-1.2, F-1.3, F-2, T-2, T-3, QA-1, QA-2, QA-3]
   why: Cloudflare recommends WebRTC for client-to-server audio, and one transcription path serves calls and everything else; batching is not wanted.
   source: https://github.com/dxos/dxos/pull/14186
 ```
