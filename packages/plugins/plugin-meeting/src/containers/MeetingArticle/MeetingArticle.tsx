@@ -111,7 +111,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
                 {
                   label: [
                     transcriptionEnabled ? 'stop-transcription.label' : 'start-transcription.label',
-                    { ns: meta.profile.key },
+                    { ns: MeetingNamespace.key },
                   ],
                   icon: 'ph--subtitles--regular',
                   checked: transcriptionEnabled,
