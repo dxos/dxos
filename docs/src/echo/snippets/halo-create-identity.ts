@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { Client } from '@dxos/client';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Identity } from '@dxos/halo';
 import { layerClient } from '@dxos/halo-adapter-client';
 
@@ -26,7 +27,7 @@ const signIn = Effect.gen(function* () {
   return yield* Identity.create({ displayName: 'Ada' });
 });
 
-const me = await Effect.runPromise(signIn.pipe(Effect.provide(halo)));
+const me = await EffectEx.runPromise(signIn.pipe(Effect.provide(halo)));
 console.log(me.did, me.displayName);
 // #endregion create
 
@@ -42,7 +43,7 @@ const watch = Identity.identity.pipe(
 
 // #region rename
 const rename = Identity.updateProfile({ displayName: 'Ada Lovelace' });
-await Effect.runPromise(rename.pipe(Effect.provide(halo)));
+await EffectEx.runPromise(rename.pipe(Effect.provide(halo)));
 // #endregion rename
 
 export { watch };

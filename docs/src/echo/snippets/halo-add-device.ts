@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { type Client } from '@dxos/client';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Identity, Invitation } from '@dxos/halo';
 import { layerClient } from '@dxos/halo-adapter-client';
 
@@ -56,6 +57,6 @@ const listDevices = Effect.gen(function* () {
 });
 // #endregion devices
 
-await Effect.runPromise(host.pipe(Effect.provide(layerClient(laptop))));
-await Effect.runPromise(guest.pipe(Effect.provide(layerClient(phone))));
-await Effect.runPromise(listDevices.pipe(Effect.provide(layerClient(phone))));
+await EffectEx.runPromise(host.pipe(Effect.provide(layerClient(laptop))));
+await EffectEx.runPromise(guest.pipe(Effect.provide(layerClient(phone))));
+await EffectEx.runPromise(listDevices.pipe(Effect.provide(layerClient(phone))));

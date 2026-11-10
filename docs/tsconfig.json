@@ -13,6 +13,9 @@
       "path": "../packages/common/async"
     },
     {
+      "path": "../packages/common/effect"
+    },
+    {
       "path": "../packages/common/graph"
     },
     {

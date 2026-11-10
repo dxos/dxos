@@ -2285,6 +2285,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../packages/common/effect
       '@dxos/graph':
         specifier: workspace:*
         version: link:../packages/common/graph

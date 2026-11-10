@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { Database, DXN, Filter, Obj, Query, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))({
   title: Schema.String,
@@ -50,7 +51,7 @@ const countOpen = Effect.gen(function* () {
   return { open: tasks.length, unsynced: sync.unsyncedDocumentCount };
 });
 
-const result = await Effect.runPromise(countOpen.pipe(Effect.provide(Database.layer(db))));
+const result = await EffectEx.runPromise(countOpen.pipe(Effect.provide(Database.layer(db))));
 // #endregion service
 
 export { open, persisted, result };

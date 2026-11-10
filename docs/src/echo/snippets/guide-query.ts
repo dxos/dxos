@@ -52,4 +52,4 @@ const unsubscribe = result.subscribe((result) => console.log(result.results.leng
 unsubscribe();
 // #endregion run
 
-export { byTitle, first, openNotUrgent, openOrUrgent, people, assignees, tasks, tasksFor };
+export { assignees, byTitle, first, openNotUrgent, openOrUrgent, people, tasks, tasksFor };

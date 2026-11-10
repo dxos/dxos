@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { type Client } from '@dxos/client';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Invitation, Space } from '@dxos/halo';
 import { layerClient } from '@dxos/halo-adapter-client';
 import { type IdentityDid, type SpaceId } from '@dxos/keys';
@@ -66,7 +67,7 @@ const manage = Effect.gen(function* () {
 const remove = Space.removeMember(spaceId, graceDid);
 // #endregion remove
 
-await Effect.runPromise(invite.pipe(Effect.provide(layerClient(ada))));
-await Effect.runPromise(accept.pipe(Effect.provide(layerClient(grace))));
-await Effect.runPromise(manage.pipe(Effect.provide(layerClient(ada))));
-await Effect.runPromise(remove.pipe(Effect.provide(layerClient(ada))));
+await EffectEx.runPromise(invite.pipe(Effect.provide(layerClient(ada))));
+await EffectEx.runPromise(accept.pipe(Effect.provide(layerClient(grace))));
+await EffectEx.runPromise(manage.pipe(Effect.provide(layerClient(ada))));
+await EffectEx.runPromise(remove.pipe(Effect.provide(layerClient(ada))));

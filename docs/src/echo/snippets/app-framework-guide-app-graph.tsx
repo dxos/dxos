@@ -16,6 +16,7 @@ import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 class Note extends Type.makeObject<Note>(DXN.make('com.example.type.note', '0.1.0'))(
   Schema.Struct({ title: Schema.optional(Schema.String), pinned: Schema.optional(Schema.Boolean) }),
@@ -72,7 +73,7 @@ export const ChildCount = ({ id }: { id: string }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     // Children are built lazily: expand the node, then read its connections.
-    void Effect.runPromise(AppGraph.expand(graph, id, AppGraphNode.child)).then(() =>
+    void EffectEx.runPromise(AppGraph.expand(graph, id, AppGraphNode.child)).then(() =>
       setCount(AppGraph.getConnections(graph, id, AppGraphNode.child).length),
     );
   }, [graph, id]);

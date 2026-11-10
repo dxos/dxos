@@ -13,6 +13,7 @@ import { DXN } from '@dxos/echo';
 // #region define
 export const Slugify = Operation.make({
   meta: {
+    // eslint-disable-next-line @dxos/rules/operation-key-shape -- a reader's app owns no org.dxos domain.
     key: DXN.make('com.example.operation.text.slugify'),
     name: 'Slugify',
     description: 'Turn a title into a URL slug.',

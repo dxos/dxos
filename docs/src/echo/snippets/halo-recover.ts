@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import { type Client } from '@dxos/client';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Identity } from '@dxos/halo';
 import { layerClient } from '@dxos/halo-adapter-client';
 
@@ -40,6 +41,6 @@ const revokeAll = Effect.gen(function* () {
 });
 // #endregion revoke
 
-await Effect.runPromise(backup.pipe(Effect.provide(layerClient(laptop))));
-await Effect.runPromise(restore.pipe(Effect.provide(layerClient(newLaptop))));
-await Effect.runPromise(revokeAll.pipe(Effect.provide(layerClient(newLaptop))));
+await EffectEx.runPromise(backup.pipe(Effect.provide(layerClient(laptop))));
+await EffectEx.runPromise(restore.pipe(Effect.provide(layerClient(newLaptop))));
+await EffectEx.runPromise(revokeAll.pipe(Effect.provide(layerClient(newLaptop))));

@@ -61,6 +61,9 @@ const localImports = (root: string, path: string, seen = new Set<string>()): str
   return order;
 };
 
+/** Lint directives configure the repo's checks, not the reader's code. */
+const LINT_DIRECTIVE = /^[ \t]*\/\/ (eslint|oxlint)-disable.*\n/gm;
+
 /** Returns a snippet's visible code: one `// #region` if named, else every region, else the whole file past its imports. */
 export const snippetSource = (file: string, region?: string): string => {
   const [, source] = findSource(file);
@@ -71,7 +74,7 @@ export const snippetSource = (file: string, region?: string): string => {
   if (!match) {
     throw new Error(`Snippet ${file} has no region ${region ?? '(default)'}`);
   }
-  return match[1].trimEnd();
+  return match[1].replace(LINT_DIRECTIVE, '').trimEnd();
 };
 
 /**

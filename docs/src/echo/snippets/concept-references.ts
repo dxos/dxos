@@ -26,4 +26,4 @@ const toRemote = db.makeRef<Person>(EID.make({ spaceId: otherSpace.spaceId, enti
 const grace = await toRemote.tryLoad(); // undefined if this device cannot reach it
 // #endregion cross-space
 
-export { grace, local, qualified, Ref, typeName };
+export { Ref, grace, local, qualified, typeName };

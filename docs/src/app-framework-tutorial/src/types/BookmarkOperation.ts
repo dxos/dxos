@@ -10,6 +10,7 @@ import { DXN } from '@dxos/echo';
 // #region operation
 export const RecordVisit = Operation.make({
   meta: {
+    // eslint-disable-next-line @dxos/rules/operation-key-shape -- a reader's app owns no org.dxos domain.
     key: DXN.make('com.example.operation.bookmark.recordVisit'),
     name: 'Record visit',
     description: 'Count one visit to a bookmark.',

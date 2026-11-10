@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Database, DXN, Feed, Filter, Obj, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))({
   text: Schema.String,
@@ -52,6 +53,6 @@ const branch = Effect.gen(function* () {
 // #endregion fork
 
 const run = <A, E>(effect: Effect.Effect<A, E, Database.Service>) =>
-  Effect.runPromise(effect.pipe(Effect.provide(Database.layer(db))));
+  EffectEx.runPromise(effect.pipe(Effect.provide(Database.layer(db))));
 
 export { branch, configure, post, read, run };
