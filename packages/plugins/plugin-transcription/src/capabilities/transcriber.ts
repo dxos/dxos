@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { CallsServiceClient } from '@dxos/client/edge';
+import { CallsServiceClient } from '@dxos/client/calls';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';

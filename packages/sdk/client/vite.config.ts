@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'calls': 'src/calls/index.ts',
     'devtools': 'src/devtools/index.ts',
     'echo': 'src/echo/index.ts',
     'edge': 'src/edge/index.ts',

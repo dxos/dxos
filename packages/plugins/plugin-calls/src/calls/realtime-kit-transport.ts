@@ -10,7 +10,7 @@ import {
   connectRealtimeKit,
   transcriptStarted,
 } from '@dxos/av';
-import { type CallsServiceClient, type JoinCallResponse, type JoinCallRoomRequest } from '@dxos/client/edge';
+import { type CallsServiceClient, type JoinCallResponse, type JoinCallRoomRequest } from '@dxos/client/calls';
 import { Context, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 

@@ -4,7 +4,7 @@
 
 import { useContext, useMemo } from 'react';
 
-import { CallsServiceClient } from '@dxos/client/edge';
+import { CallsServiceClient } from '@dxos/client/calls';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
