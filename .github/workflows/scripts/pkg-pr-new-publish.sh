@@ -34,7 +34,7 @@ echo "Found ${#PKG_ARRAY[@]} public packages to publish"
 # Private packages dxos/edge installs from pkg.pr.new before they have an npm trusted publisher. pkg-pr-new skips a
 # package marked private, so the flag is dropped in this job's throwaway checkout only; `changeset publish` and the npm
 # preflight still read it from the committed package.json and skip them.
-PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare)
+PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare packages/core/compute/agent-code-mode)
 for directory in "${PKG_PR_NEW_ONLY[@]}"; do
   node -e "
     const fs = require('fs');
