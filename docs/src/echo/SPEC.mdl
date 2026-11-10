@@ -118,7 +118,7 @@ template stub: A planned page
 
 ## Site map
 
-The order of these blocks is the order of the ECHO topic's sidebar. Routes are relative to
+The order of these blocks is the order of the ECHO group in the docs sidebar. Routes are relative to
 `/docs/echo`.
 
 ### Start here
@@ -570,8 +570,8 @@ feat F-5: The spec drives the site map
 
   req F-5.1:
     when: the site is built
-    then: the order, groups and labels of the ECHO topic's sidebar come from the `page` blocks in this
-          document, and the topic's link is the first page
+    then: the order, groups and labels of the ECHO group in the docs sidebar come from the `page` blocks
+          in this document
 
   req F-5.2:
     when: a `page` block has status `planned`
@@ -1495,15 +1495,13 @@ decision D-77: Each of the four packages gets the `typedoc` task with `src/index
 ```
 
 ```mdl
-decision D-78: The docs sidebar is split into topics with `starlight-sidebar-topics`: Overview, ECHO, HALO and Composer each have their own sidebar, and a list of the topics sits above it. The ECHO topic's items come from the `page` blocks, and every page under `/docs/echo` belongs to it.
+decision D-78: The docs sidebar has two topics, made with `starlight-sidebar-topics`: one for the protocols (ECHO, HALO) and one for the application layer (Composer, plugins, the CLI and other tools), each with its own sidebar under a list of the topics. ECHO is a group in the protocols topic, its items come from the `page` blocks, and every page under `/docs/echo` belongs to that topic. EDGE services have no docs for now. The topic titles are working titles.
   date: 2026-11-10
-  by: agent:claude-code
-  for: user:wittjosiah
+  by: user:wittjosiah
   affects: [F-5.1]
-  why: The docs cover several related products, and one sidebar holding all of them gets long; a topic per product keeps each sidebar to one product.
+  why: A topic per product is too much for now; the topics can be split further later.
   rejected:
-    - Starlight's built-in collapsed groups, which keep every product in one tree.
-    - `starlight-sidebar-topics-dropdown`, a dropdown in place of the list, which hides the products until opened and earns its place only with more topics than the four here.
+    - A topic per product (Overview, ECHO, HALO, Sync and EDGE, Functions and agents, Plugins, Composer, Tools and reference).
 ```
 
 ## Appendix: Extension Definitions

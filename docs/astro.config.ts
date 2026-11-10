@@ -20,7 +20,7 @@ import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { generateIslandBase, generateTheme, generateWebflowScoped } from './scripts/gen-theme.mjs';
 import { ISLAND_ROOTS, PAGE_LAYERS } from './src/demos/layers.ts';
-import { assertContentExists, pageHref, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
+import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
 
 generateTheme();
 generateIslandBase(ISLAND_ROOTS);
@@ -121,16 +121,19 @@ export default defineConfig({
         { icon: 'x.com', label: 'X', href: 'https://x.com/dxos_org' },
       ],
       // TODO(wittjosiah): Nested docs subdir is needed because link validation doesn't work with generateId config.
-      // Each product is a topic with its own sidebar; Starlight's own `sidebar` option must stay unset.
+      // Each topic has its own sidebar; Starlight's own `sidebar` option must stay unset.
       plugins: [
         starlightSidebarTopics(
           [
             {
-              label: 'Overview',
+              id: 'protocols',
+              label: 'Protocols',
               link: '/docs/',
-              icon: 'open-book',
+              icon: 'seti:db',
               items: [
                 { label: 'Introduction', slug: 'docs' },
+                { label: 'ECHO', items: sidebarFromSpec(echoPages) },
+                { label: 'HALO', items: [{ autogenerate: { directory: 'docs/halo' } }] },
                 {
                   label: 'Additional Resources',
                   items: [{ autogenerate: { directory: 'docs/additional-resources' } }],
@@ -138,27 +141,14 @@ export default defineConfig({
               ],
             },
             {
-              id: 'echo',
-              label: 'ECHO',
-              link: pageHref(echoPages[0]),
-              icon: 'seti:db',
-              items: sidebarFromSpec(echoPages),
-            },
-            {
-              label: 'HALO',
-              link: '/docs/halo/introduction/',
-              icon: 'approve-check',
-              items: [{ autogenerate: { directory: 'docs/halo' } }],
-            },
-            {
-              label: 'Composer',
+              label: 'Applications',
               link: '/docs/composer/introduction/',
               icon: 'puzzle',
-              items: [{ autogenerate: { directory: 'docs/composer' } }],
+              items: [{ label: 'Composer', items: [{ autogenerate: { directory: 'docs/composer' } }] }],
             },
           ],
-          // ECHO pages absent from SPEC.mdl's site map still belong to the ECHO topic.
-          { topics: { echo: ['/docs/echo/**'] } },
+          // ECHO pages absent from SPEC.mdl's site map still belong to the protocols topic.
+          { topics: { protocols: ['/docs/echo/**'] } },
         ),
         // The validator cannot resolve custom pages under `src/pages` (`/blog`, `/privacy`, `/terms`),
         // so it sees neither links to them nor the headings that same-page links in blog posts target.
