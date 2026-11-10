@@ -4,6 +4,7 @@
 
 import react from '@astrojs/react';
 import starlight from '@astrojs/starlight';
+import { type AstroIntegration } from 'astro';
 import { defineConfig } from 'astro/config';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -65,14 +66,30 @@ const appFrameworkRedirects = Object.fromEntries(
     .map((slug) => [`/docs/composer/${slug}`, `/docs/app-framework/${slug}/`]),
 );
 
+const redirects: Record<string, string> = {
+  '/docs': '/docs/echo/welcome/',
+  '/docs/halo/introduction': '/docs/halo/welcome/',
+  '/docs/halo/typescript': '/docs/halo/guides/identity/',
+  ...appFrameworkRedirects,
+};
+
+/**
+ * Writes the redirects to `_redirects`, which Cloudflare serves as 301s before any asset, so a reader never sees
+ * the "Redirecting from" page Astro emits for a static build. Each source also gets its trailing-slash form.
+ */
+const cloudflareRedirects = (): AstroIntegration => ({
+  name: 'docs:cloudflare-redirects',
+  hooks: {
+    'astro:build:done': ({ dir }) => {
+      const lines = Object.entries(redirects).flatMap(([from, to]) => [`${from} ${to} 301`, `${from}/ ${to} 301`]);
+      fs.writeFileSync(new URL('_redirects', dir), `${lines.join('\n')}\n`);
+    },
+  },
+});
+
 export default defineConfig({
   site: 'https://dxos.org',
-  redirects: {
-    '/docs': '/docs/echo/welcome/',
-    '/docs/halo/introduction': '/docs/halo/welcome/',
-    '/docs/halo/typescript': '/docs/halo/guides/identity/',
-    ...appFrameworkRedirects,
-  },
+  redirects,
   // The `/echo` demos are React islands built from the workspace's `@dxos/*` sources and the react-ui theme.
   vite: {
     plugins: [
@@ -115,6 +132,7 @@ export default defineConfig({
     },
   },
   integrations: [
+    cloudflareRedirects(),
     react({ include: ['**/src/demos/**', '**/src/tutorial/**'] }),
     starlight({
       title: 'DXOS Documentation',

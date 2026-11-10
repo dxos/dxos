@@ -1624,6 +1624,11 @@ feat F-16: Docs sections
     when: a reader opens `/docs/`
     then: they land on ECHO's Welcome page; there is no separate docs home page
 
+  req F-16.7:
+    when: a reader follows a redirected docs URL, such as `/docs` or an old `/docs/composer/` page
+    then: the server answers with a 301 to the new page, so no "Redirecting from" page shows in between; links in the
+          site's own navigation point at the destination directly
+
   req F-16.6:
     when: a reader looks at the topic switcher
     then: each section shows a DXOS brand mark, the same ones the brand package and the studio site use: ECHO's for
@@ -2631,6 +2636,13 @@ decision D-106: App Framework uses the KUBE brand mark in the topic switcher. Fi
   date: 2026-11-10
   by: user:wittjosiah
   affects: [F-16.6]
+```
+
+```mdl
+decision D-107: The build writes Astro's redirects to a `_redirects` file that Cloudflare serves as 301s, and the nav, footer and home page link to `/docs/echo/welcome/` instead of `/docs`. Fills in [D-97].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.5, F-16.7]
 ```
 
 ## Appendix: Extension Definitions

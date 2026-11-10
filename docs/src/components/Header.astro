@@ -15,6 +15,7 @@ const shouldRenderSearch =
 
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isCurrent = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
+const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? link.section : link.href);
 ---
 
 <div class="header">
@@ -26,8 +27,8 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path === href
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
     <nav class="site-nav" aria-label="dxos.org">
-      {siteLinks.map(({ label, href }) => (
-        <a href={href} aria-current={isCurrent(href) ? 'page' : undefined}>{label}</a>
+      {siteLinks.map((link) => (
+        <a href={link.href} aria-current={isCurrent(sectionOf(link)) ? 'page' : undefined}>{link.label}</a>
       ))}
     </nav>
     <div class="sl-flex social-icons">
