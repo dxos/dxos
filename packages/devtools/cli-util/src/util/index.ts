@@ -10,6 +10,7 @@ export * as Doc from './Doc.ts';
 export * as FormBuilder from './form-builder.ts';
 export * from './format.ts';
 export * from './options.ts';
+export * from './present-url.ts';
 export * from './printer.ts';
 export * from './runtime.ts';
 export * from './space.ts';

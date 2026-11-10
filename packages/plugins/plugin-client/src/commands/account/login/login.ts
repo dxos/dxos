@@ -14,7 +14,7 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Account from '@dxos/app-toolkit/Account';
-import { CommandConfig, openBrowser, print } from '@dxos/cli-util';
+import { CommandConfig, presentUrl, print } from '@dxos/cli-util';
 import { type LocalCallbackServer, startLocalCallbackServer } from '@dxos/cli-util/callback';
 import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
@@ -84,8 +84,12 @@ export const login = Command.make(
       ),
       Args.optional,
     ),
+    noOpen: Options.Boolean('no-open').pipe(
+      Options.withDescription('Print the sign-in link without opening it in the default browser.'),
+      Options.withDefault(false),
+    ),
   },
-  Effect.fn(function* ({ method, input }) {
+  Effect.fn(function* ({ method, input, noOpen }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService.client;
     const manager = yield* Plugin.Service;
@@ -105,10 +109,10 @@ export const login = Command.make(
         : '';
 
     const identity = yield* Match.value(resolvedMethod).pipe(
-      Match.when(ATMOSPHERE_METHOD, () => loginWithAtmosphere(client, resolvedInput)),
+      Match.when(ATMOSPHERE_METHOD, () => loginWithAtmosphere(client, resolvedInput, !noOpen)),
       Match.when('email', () => loginWithEmail(client, resolvedInput, invoke)),
-      Match.when('passkey', () => loginWithPasskey(client)),
-      Match.when('composer', () => loginWithComposer(client, resolvedInput)),
+      Match.when('passkey', () => loginWithPasskey(client, !noOpen)),
+      Match.when('composer', () => loginWithComposer(client, resolvedInput, !noOpen)),
       Match.when('recovery-code', () => loginWithRecoveryCode(client, resolvedInput)),
       Match.when('device-invitation', () => loginWithDeviceInvitation(client, resolvedInput)),
       Match.exhaustive,
@@ -130,7 +134,7 @@ export const login = Command.make(
  * and redeems the resulting one-time `recoveryProof` to admit this device into the existing
  * identity's HALO.
  */
-const loginWithAtmosphere = (client: Client, handle: string) =>
+const loginWithAtmosphere = (client: Client, handle: string, open: boolean) =>
   Effect.gen(function* () {
     const edgeBaseUrl = client.config.values.runtime?.services?.edge?.url;
     invariant(edgeBaseUrl, 'Edge services not configured (runtime.services.edge.url).');
@@ -139,6 +143,7 @@ const loginWithAtmosphere = (client: Client, handle: string) =>
       provider: OAuthProvider.ATPROTO,
       scopes: ATPROTO_OAUTH_SCOPES,
       loginHint: handle,
+      open,
     });
     return yield* Effect.tryPromise(() => client.halo.recoverIdentity({ recoveryProof }));
   });
@@ -166,7 +171,7 @@ const PASSKEY_CALLBACK_PATH = '/';
  * hub only ever sends the token to a loopback origin, so a stranger who phishes an approval has it
  * delivered to the victim's own machine, where nothing of theirs is listening.
  */
-const loginWithPasskey = (client: Client) =>
+const loginWithPasskey = (client: Client, open: boolean) =>
   Effect.gen(function* () {
     const server = yield* startLocalCallbackServer(PASSKEY_CALLBACK_PATH, {
       successMessage: 'Signed in. You can close this window and return to your terminal.',
@@ -177,9 +182,7 @@ const loginWithPasskey = (client: Client) =>
       url.searchParams.set('purpose', 'device');
       url.searchParams.set('callback', server.origin);
 
-      yield* openBrowser(url.href).pipe(
-        Effect.catch(() => Console.log(`Could not open a browser. Open this on this machine:\n\n  ${url.href}\n`)),
-      );
+      yield* presentUrl(url.href, { message: 'Open this on this machine to sign in:', open });
       yield* Console.log('Waiting for you to approve the sign-in in your browser...');
 
       const { token } = yield* server.waitForResult();
@@ -318,7 +321,7 @@ const COMPOSER_APPROVAL_TIMEOUT_MS = 10 * 60 * 1000;
  *
  * The Composer tab hosts the invitation, so it has to stay open until this command finishes.
  */
-const loginWithComposer = (client: Client, composerUrl: string) =>
+const loginWithComposer = (client: Client, composerUrl: string, open: boolean) =>
   Effect.gen(function* () {
     const state = CliLogin.createState();
     const server = yield* startLocalCallbackServer(CliLogin.CALLBACK_PATH, {
@@ -338,11 +341,8 @@ const loginWithComposer = (client: Client, composerUrl: string) =>
         catch: (cause) => new CommandError({ message: `Not a valid Composer URL: ${composerUrl}`, cause }),
       });
 
-      // Printed whether or not a browser opens: the approving tab may belong to another browser
-      // profile than the system default, and it has to be the one holding the identity.
-      yield* Console.log(`Open this on this machine to approve the login:\n\n  ${url.href}\n`);
+      yield* presentUrl(url.href, { message: 'Open this on this machine to approve the login:', open });
       yield* Console.log(`Composer should show the code: ${state}`);
-      yield* openBrowser(url.href).pipe(Effect.catch(() => Effect.void));
 
       const params = yield* server.waitForResult(COMPOSER_APPROVAL_TIMEOUT_MS);
       const code = params[CliLogin.INVITATION_CODE_PARAM];
