@@ -230,6 +230,17 @@ describe('Reactive Object with ECHO database', () => {
     expect(() => db.add(Obj.make(TestSchema.Example, { string: 'foo' }))).to.throw();
   });
 
+  test('a write the schema rejects names the field', async () => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
+    const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
+    expect(() =>
+      Obj.update(obj, (obj) => {
+        Reflect.set(obj, 'string', 42);
+      }),
+    ).to.throw('Schema validation failed — string: Expected string');
+    expect(obj.string).to.eq('foo');
+  });
+
   test('existing proxy objects can be added to the database', async () => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
 

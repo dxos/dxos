@@ -5,9 +5,9 @@
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import { afterAll, beforeAll, describe, test } from 'vitest';
+import { afterAll, assert, beforeAll, describe, test } from 'vitest';
 
-import { Entity, JsonSchema, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Entity, Filter, JsonSchema, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -37,8 +37,8 @@ const publishedType = (type: Type.AnyEntity): Type.AnyEntity => {
 
 // plugin-google's bundle registers only the types its operations declare (`Tag`); every other type an object in the
 // space carries resolves from EDGE's registry of published types the first time an object of it loads through a ref.
-// `Binding.syncAll` loads the `priority` binding through a ref, so a sync fired from a target's sync button writes the
-// cursor through its published type, where a scheduled sync (no priority) writes it with no type at all.
+// A sync fired from a target's sync button carries that binding as `priority`; it must reach the binding the way a
+// scheduled sync does, by query, or the cursor's rebuilt published type rejects the sync's own cursor writes.
 describe('Gmail sync on a plugin bundle’s type registry', () => {
   let builder: EchoTestBuilder;
 
@@ -82,7 +82,7 @@ describe('Gmail sync on a plugin bundle’s type registry', () => {
     return { db, connection: db.makeRef<Connection.Connection>(Ref.make(connection).uri), binding, published };
   };
 
-  test('a sync fired for one binding writes its cursor through the published type', async ({ expect }) => {
+  test('a sync fired for one binding writes its cursor as a scheduled sync does', async ({ expect }) => {
     const { db, connection, binding, published } = await setup();
     const now = new Date();
     const base = generateGmailDataset({ count: 5, seed: 91, start: subDays(now, 6), end: subDays(now, 2) });
@@ -98,7 +98,6 @@ describe('Gmail sync on a plugin bundle’s type registry', () => {
     // First run: date-window backfill, capturing the mailbox's history id.
     const first = await sync({ ...base, historyId: '1000' });
     expect(first.outputs).toEqual([{ newMessages: base.messages.length }]);
-    expect(published).toContain(Type.getTypename(Cursor.Cursor));
 
     // Next run: the history delta past the stored token.
     const arrival = generateGmailDataset({ count: 1, seed: 92, start: subDays(now, 1), end: now, idPrefix: 'new' })
@@ -110,9 +109,12 @@ describe('Gmail sync on a plugin bundle’s type registry', () => {
       historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: [arrival.id] }],
     });
     expect(second.outputs).toEqual([{ newMessages: 1 }]);
+    expect(published).not.toContain(Type.getTypename(Cursor.Cursor));
 
-    const cursor = await db.makeRef<Cursor.Cursor>(Ref.make(binding).uri).load();
+    // Read by query too: a ref load would register the rebuilt type this test asserts the sync never took.
+    const [cursor] = await db.query(Filter.id(binding.id)).run();
+    assert(Cursor.instanceOf(cursor) && Cursor.isExternal(cursor));
     expect(cursor.lastError).toBeUndefined();
-    expect(cursor.spec.kind === 'external' && cursor.spec.token).toBe('1001');
+    expect(cursor.spec.token).toBe('1001');
   });
 });

@@ -19,7 +19,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, type Error as EchoError, EID, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, Error as EchoError, EID, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -507,12 +507,14 @@ const REPLICATION_RETRIES = Schedule.exponential(Duration.millis(500), 2).pipe(S
 /** How long after an object's creation a miss is still put down to replication lag. */
 const REPLICATION_MAX_AGE = Duration.minutes(5);
 
-export interface LoadReplicatedOptions extends Ref.LoadOptions {
+interface ReplicationOptions {
   /** Retries within this run before `Operation.runAgain()`. */
   readonly retries?: Schedule.Schedule<unknown, unknown>;
   /** Age (from the object's id) past which a miss is final. */
   readonly maxAge?: Duration.Input;
 }
+
+export interface LoadReplicatedOptions extends Ref.LoadOptions, ReplicationOptions {}
 
 /**
  * Loads an object a sync may start before it has replicated, such as a binding the client created just
@@ -521,20 +523,28 @@ export interface LoadReplicatedOptions extends Ref.LoadOptions {
  */
 export const loadReplicated = <T>(
   ref: Ref.Ref<T>,
-  { retries = REPLICATION_RETRIES, maxAge = REPLICATION_MAX_AGE, ...options }: LoadReplicatedOptions = {},
+  { retries, maxAge, ...options }: LoadReplicatedOptions = {},
+): Effect.Effect<T, EchoError.EntityNotFoundError> =>
+  awaitReplicated(ref.uri, Database.load(ref, options), { retries, maxAge });
+
+/** Runs `find` until the object at `uri` has replicated; see {@link loadReplicated}. */
+const awaitReplicated = <T>(
+  uri: string,
+  find: Effect.Effect<T, EchoError.EntityNotFoundError>,
+  { retries = REPLICATION_RETRIES, maxAge = REPLICATION_MAX_AGE }: ReplicationOptions,
 ): Effect.Effect<T, EchoError.EntityNotFoundError> =>
   Effect.suspend(() => {
-    const eid = EID.tryParse(ref.uri);
+    const eid = EID.tryParse(uri);
     const entityId = eid && EID.getEntityId(eid);
     const age = entityId ? Date.now() - Key.EntityId.getTimestamp(entityId) : Infinity;
     // An object already past `maxAge` is not coming, so its miss is final without waiting.
     if (age >= Duration.toMillis(maxAge)) {
-      return Database.load(ref, options);
+      return find;
     }
-    return Database.load(ref, options).pipe(
+    return find.pipe(
       Effect.retry({ schedule: retries }),
       Effect.catchTag('EntityNotFoundError', () => {
-        log.info('object not replicated yet; running again', { uri: ref.uri, age });
+        log.info('object not replicated yet; running again', { uri, age });
         // `runAgain` raises a defect; `orDie` collapses its phantom `void` error type.
         return Operation.runAgain().pipe(Effect.orDie);
       }),
@@ -545,6 +555,9 @@ export const loadReplicated = <T>(
  * The binding a sync was fired for (`priority`), once it and its target have replicated: a target
  * bound and synced straight away can reach the runtime after the run starts, and the cursor query
  * can miss a binding the index has not caught up with.
+ *
+ * Found by query, as a scheduled run finds every binding: a ref load on EDGE registers the cursor's type rebuilt from
+ * published JSON Schema, which rejects the sync's own cursor writes.
  */
 const loadExpectedBinding = (
   db: Database.Database,
@@ -555,7 +568,18 @@ const loadExpectedBinding = (
     if (!Key.EntityId.isValid(cursorId)) {
       return undefined;
     }
-    const cursor = yield* loadReplicated(db.makeRef(EID.make({ entityId: cursorId })));
+    const uri = EID.make({ entityId: cursorId });
+    const cursor = yield* awaitReplicated(
+      uri,
+      Database.query(Filter.id(cursorId)).run.pipe(
+        Effect.provide(Database.layer(db)),
+        Effect.orElseSucceed((): Obj.Unknown[] => []),
+        Effect.flatMap(([object]) =>
+          object === undefined ? Effect.fail(new EchoError.EntityNotFoundError(uri)) : Effect.succeed(object),
+        ),
+      ),
+      {},
+    );
     if (!Obj.instanceOf(Cursor.Cursor, cursor) || !isForConnection(cursor, connection)) {
       return undefined;
     }
