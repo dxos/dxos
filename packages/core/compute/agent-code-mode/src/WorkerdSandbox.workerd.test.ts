@@ -22,6 +22,13 @@ import { describe, expect, test } from 'vitest';
 import type { BindingsContext, Dialect } from './Dialect.ts';
 import * as WorkerdSandbox from './WorkerdSandbox.ts';
 
+declare module 'cloudflare:test' {
+  interface ProvidedEnv {
+    /** The `worker_loaders` binding this package's vite config declares. */
+    readonly LOADER: WorkerdSandbox.WorkerLoader;
+  }
+}
+
 const TASK = 'com.example.type.task';
 
 /** What the workspace's `ref` makes: a reference holding the row it names. */
@@ -106,7 +113,7 @@ const dialectOver = (bindings: Record<string, unknown>): Dialect => ({
 
 const setup = () => {
   const workspace = makeWorkspace();
-  const sandbox = WorkerdSandbox.make({ loader: (env as any).LOADER });
+  const sandbox = WorkerdSandbox.make({ loader: env.LOADER });
 
   const evaluate = (code: string, timeout?: Duration.Input) =>
     // `EffectEx.runPromise`, which the rule asks for, is unusable here: importing `@dxos/effect`
