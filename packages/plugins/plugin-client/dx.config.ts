@@ -62,6 +62,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           provides: [
             ClientCapabilities.Client,
             ClientCapabilities.InitializeTimeout,
+            ClientCapabilities.ClientHandle,
             Capabilities.Layer,
             ClientCapabilities.IdentityService,
             ClientCapabilities.SpaceService,

@@ -453,6 +453,56 @@ describe('object references in the input', () => {
     });
     expect(result).toEqual({ title: 'Referenced' });
   });
+
+  test('passes a reference envelope through as data where the schema takes Unknown', async ({ expect }) => {
+    const EchoesData = Operation.make({
+      meta: { key: DXN.make('com.example.operation.echoesData'), name: 'Echoes Data' },
+      services: [Database.Service],
+      input: Schema.Struct({ payload: Schema.Unknown }),
+      output: Schema.Struct({ payload: Schema.Unknown }),
+    }).pipe(
+      Operation.withHandler(
+        Effect.fnUntraced(function* ({ payload }) {
+          return { payload };
+        }),
+      ),
+    );
+
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    const envelope = { '/': `echo://${db.spaceId}/01J00000000000000000000000` };
+
+    const result = await wrapFunctionHandler(EchoesData, { resolveObjectReferences: true }).handler({
+      data: { payload: envelope },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+    expect(result).toEqual({ payload: envelope });
+  });
+
+  test('passes reference envelopes through as data in a record of Unknown values', async ({ expect }) => {
+    const EchoesRecord = Operation.make({
+      meta: { key: DXN.make('com.example.operation.echoesRecord'), name: 'Echoes Record' },
+      services: [Database.Service],
+      input: Schema.Record(Schema.String, Schema.Unknown),
+      output: Schema.Record(Schema.String, Schema.Unknown),
+    }).pipe(
+      Operation.withHandler(
+        Effect.fnUntraced(function* (input) {
+          return input;
+        }),
+      ),
+    );
+
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    const envelope = { '/': `echo://${db.spaceId}/01J00000000000000000000000` };
+
+    const result = await wrapFunctionHandler(EchoesRecord, { resolveObjectReferences: true }).handler({
+      data: { anything: envelope },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+    expect(result).toEqual({ anything: envelope });
+  });
 });
 
 const openPeer = async () => {
