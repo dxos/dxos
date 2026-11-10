@@ -10,8 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Result from 'effect/Result';
 
+import * as ScriptRunner from '@dxos/compute-runtime/script-runner';
 import * as Operation from '@dxos/compute/Operation';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import type { Database } from '@dxos/echo';
 
 import { EffectDialect } from './dialect-effect.ts';

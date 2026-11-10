@@ -16,8 +16,8 @@ import * as Schema from 'effect/Schema';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 
+import * as ScriptRunner from '@dxos/compute-runtime/script-runner';
 import * as Operation from '@dxos/compute/Operation';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Obj, Registry } from '@dxos/echo';

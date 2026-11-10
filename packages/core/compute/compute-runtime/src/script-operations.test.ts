@@ -13,7 +13,6 @@ import { expect } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { DXN } from '@dxos/echo';
@@ -23,6 +22,7 @@ import * as ProcessManager from './ProcessManager.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import * as RemoteProcessManager from './RemoteProcessManager.ts';
 import * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
+import * as ScriptRunner from './ScriptRunner.ts';
 import * as UnifiedProcessManager from './UnifiedProcessManager.ts';
 
 const KEY = DXN.make('com.example.operation.script');

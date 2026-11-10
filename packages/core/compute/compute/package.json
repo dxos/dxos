@@ -119,11 +119,6 @@
       "types": "./dist/types/src/types/Script.d.ts",
       "import": "./dist/lib/types/Script.mjs"
     },
-    "./ScriptRunner": {
-      "source": "./src/ScriptRunner.ts",
-      "types": "./dist/types/src/ScriptRunner.d.ts",
-      "import": "./dist/lib/ScriptRunner.mjs"
-    },
     "./ServiceResolver": {
       "source": "./src/ServiceResolver.ts",
       "types": "./dist/types/src/ServiceResolver.d.ts",

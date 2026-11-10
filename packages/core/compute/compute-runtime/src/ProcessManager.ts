@@ -29,7 +29,6 @@ import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
-import * as ScriptRunner from '@dxos/compute/ScriptRunner';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
@@ -46,6 +45,7 @@ import { type PersistedProcess, ProcessStore } from './process-store.ts';
 import { createProcessTraceService } from './process-trace.ts';
 import * as ProcessHandle from './ProcessHandle.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
+import * as ScriptRunner from './ScriptRunner.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
 
 /** The optional services that resolve; one the runtime cannot provide is left out rather than failing the process. */

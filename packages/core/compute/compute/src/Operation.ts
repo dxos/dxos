@@ -728,7 +728,7 @@ export const ScriptDialects = {
 /**
  * A snippet carried by the operation itself, in the dialect it is written in.
  *
- * Declared as a type here and as a schema in `ScriptRunner`, because the schema of a {@link ScriptRef}
+ * Declared as a type here and as a schema in `@dxos/compute-runtime/script-runner`, because the schema of a {@link ScriptRef}
  * needs the `Script` object type, whose module reaches the whole `@dxos/schema` barrel: the kind is on
  * every app's boot path through this module, and the schema is not.
  */
@@ -795,7 +795,7 @@ export type ScriptStats = Schema$.Schema.Type<typeof ScriptStats>;
  * One run, as a runtime's script backend receives it.
  *
  * Every field but the source is a scalar, so the same request runs in this process, on a worker, or
- * on EDGE without being rebuilt (`ScriptRunner.Request` is its schema). What a request cannot carry
+ * on EDGE without being rebuilt (its schema is `ScriptRunner.Request` in `@dxos/compute-runtime`). What a request cannot carry
  * is the workspace: the bindings the code runs against are the backend's, built wherever it lives.
  */
 export type ScriptRequest = {

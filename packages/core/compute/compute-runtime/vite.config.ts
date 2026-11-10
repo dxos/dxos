@@ -9,6 +9,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'node-shell': 'src/node-shell.ts',
     'remote-process': 'src/remote-process.ts',
+    'script-runner': 'src/ScriptRunner.ts',
     'testing': 'src/testing/index.ts',
   },
   test: { node: true },

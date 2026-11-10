@@ -10,15 +10,15 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Annotation, Database, Obj, Ref } from '@dxos/echo';
-
-import * as Operation from './Operation.ts';
-import * as Script from './types/Script.ts';
 
 /**
  * The script backend a runtime runs script operations with.
  *
- * A dependency of the runtime, not of a caller: a client invokes a script operation like any other
+ * Lives with the runtime because only a runtime uses it — a dependency of the process manager, not of a
+ * caller: a client invokes a script operation like any other
  * operation (`Operation.invoke(script, input, { on })`) and never names this. It is a service so a
  * deployment chooses where scripts execute — in process, on a worker thread, in a contained isolate —
  * by providing a different layer to the process manager.

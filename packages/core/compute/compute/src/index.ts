@@ -18,7 +18,6 @@ export * as OperationHandlerSet from './OperationHandlerSet.ts';
 export * as OperationRegistry from './OperationRegistry.ts';
 export * as Process from './Process.ts';
 export * as Runnable from './Runnable.ts';
-export * as ScriptRunner from './ScriptRunner.ts';
 export * as ServiceResolver from './ServiceResolver.ts';
 export * as ShellService from './ShellService.ts';
 export * as SqlService from './SqlService.ts';
