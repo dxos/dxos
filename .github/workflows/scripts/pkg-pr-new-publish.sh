@@ -34,7 +34,7 @@ echo "Found ${#PKG_ARRAY[@]} public packages to publish"
 # Private packages dxos/edge installs from pkg.pr.new before they have an npm trusted publisher. pkg-pr-new skips a
 # package marked private, so the flag is dropped in this job's throwaway checkout only; `changeset publish` and the npm
 # preflight still read it from the committed package.json and skip them.
-PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare)
+PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare tools/vite-plugin-icons)
 for directory in "${PKG_PR_NEW_ONLY[@]}"; do
   node -e "
     const fs = require('fs');
@@ -73,6 +73,13 @@ done < <(node -p "Object.keys(require('./$CLI_DIST/cli/package.json').optionalDe
 
 echo "Found ${#CLI_PACKAGES[@]} generated CLI packages to publish"
 
+# The @dxos packages need these patches at runtime, and pnpm applies patches only inside this workspace,
+# so the patched installs are published beside them and pkg-pr-new points the dependencies at them.
+PATCHED_DIR=$(mktemp -d)
+mapfile -t PATCHED_PACKAGES < <(node .github/workflows/scripts/stage-patched-packages.mjs "$PATCHED_DIR" \
+  @automerge/automerge-repo @automerge/automerge-subduction)
+echo "Staged ${#PATCHED_PACKAGES[@]} patched third-party packages"
+
 # Run pkg-pr-new publish with all public packages
-pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}"
+pnpm dlx pkg-pr-new publish --pnpm "${PKG_ARRAY[@]}" "${CLI_PACKAGES[@]}" "${PATCHED_PACKAGES[@]}"
 
