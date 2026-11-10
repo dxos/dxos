@@ -2,22 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
-import type * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Event, synchronized } from '@dxos/async';
-import { type Client } from '@dxos/client';
-import { Resource } from '@dxos/context';
-import { Database, Feed, Obj } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
+import { Context, Resource } from '@dxos/context';
 import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -26,16 +20,10 @@ import {
   type SimulatedParticipantProps,
   type SimulatedUtterance,
 } from './call-simulation.ts';
-import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer.ts';
-import { type RoomJoiner, createEdgeRoomJoiner } from './edge-room-joiner.ts';
+import { type CallNetworkService, type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer.ts';
 import { MediaManager, type MediaState } from './media-manager.ts';
-import { type TranscriptEvent } from './media-transport.ts';
-import {
-  type RealtimeKitMeetingFactory,
-  RealtimeKitTransport,
-  createRealtimeKitMeetingFactory,
-} from './realtime-kit-transport.ts';
-import { type ActivityState, type EncodedTrackName, TrackNameCodec, type UserState } from './types.ts';
+import { type CloseReason, type CreateTransport, type MediaTransport, type TrackKind } from './media-transport.ts';
+import { type ActivityState, type RemoteTrackKey, type UserState, remoteTrackKey } from './types.ts';
 
 export type GlobalState = {
   call: CallState;
@@ -43,46 +31,44 @@ export type GlobalState = {
 };
 
 export type CallManagerOptions = {
-  /** Overrides the RealtimeKit meeting factory (tests and stories); defaults to the real SDK binding. */
-  createMeeting?: RealtimeKitMeetingFactory;
-  /** Overrides how a room is joined on EDGE; defaults to the client's EDGE HTTP client. */
-  roomJoiner?: RoomJoiner;
+  registry: Registry.AtomRegistry;
+  /** The local HALO identity and its devices; the current device is this participant. */
+  identity: Pick<Identity.ServiceApi, 'subscribe' | 'getDevicesSnapshot'>;
+  /** Carries presence and the room's shared activities (the meeting id among them) over the swarm. */
+  networkService: CallNetworkService;
+  /** Builds the media transport for a room: `createRealtimeKitTransport` in the app, `FakeTransport` in tests. */
+  createTransport: CreateTransport;
 };
-
-/**
- * Enriches a transcript message before it is written to the feed (e.g. entity linking), injected by the meeting
- * wiring so the calls layer stays agnostic of how enrichment works.
- */
-export type TranscriptMessageEnricher = (message: Message.Message) => Promise<Message.Message>;
 
 /**
  * Top level manager for call state.
  */
 export class CallManager extends Resource {
   public readonly callStateUpdated = new Event<CallState>();
-  // TODO(wittjosiah): Consolidate isSpeaking into the MediaState type.
-  public readonly mediaStateUpdated = new Event<[MediaState, boolean]>();
   public readonly roomJoined = new Event<{ roomId?: string }>();
   public readonly left = new Event<string>();
   /** Each scripted line of a simulated call as it starts playing (see `simulate`). */
   public readonly simulatedUtterance = new Event<SimulatedUtterance>();
+  /** This device's own speech in the live call, transcribed by the transport: final segments only, in spoken order. */
+  public readonly transcript = new Event<ContentBlock.Transcript>();
 
   /**
    * Atom-based state. Updated via `_updateState()`.
    * CAUTION: Do not change directly.
+   *
+   * Kept alive because it is the manager's own state, read imperatively (`joined`) as well as by the UI: a writable
+   * atom nothing subscribes to is dropped by the registry and reads back as its initial value.
    */
   private readonly _stateAtom = Atom.make<GlobalState>({
     call: {},
     media: { pulledAudioTracks: {}, pulledVideoStreams: {} },
-  });
+  }).pipe(Atom.keepAlive);
 
   // Derived atoms for reactive subscriptions.
   private readonly _roomIdAtom = Atom.make((get) => get(this._stateAtom).call.roomId);
   private readonly _raisedHandAtom = Atom.make((get) => get(this._stateAtom).call.raisedHand ?? false);
   private readonly _speakingAtom = Atom.make((get) => get(this._stateAtom).call.speaking ?? false);
   private readonly _joinedAtom = Atom.make((get) => get(this._stateAtom).call.joined ?? false);
-  // Owned by the manager rather than derived from swarm or media state, since it gates the transcript sink.
-  private readonly _transcriptionEnabledAtom = Atom.make(false);
   private readonly _selfAtom = Atom.make((get) => get(this._stateAtom).call.self ?? {});
   private readonly _tracksAtom = Atom.make((get) => get(this._stateAtom).call.tracks ?? {});
   private readonly _usersAtom = Atom.make((get) => get(this._stateAtom).call.users ?? []);
@@ -95,30 +81,31 @@ export class CallManager extends Resource {
   private readonly _audioTracksToPlayAtom = Atom.make((get) => {
     const state = get(this._stateAtom);
     return (state.call.users ?? [])
-      .map((user: UserState) => (user.tracks?.audioEnabled ? user.tracks?.audio : undefined))
-      .filter(isNonNullable)
-      .map((track: string) => state.media.pulledAudioTracks[track as EncodedTrackName])
+      .map((user: UserState) =>
+        user.id && user.tracks?.audioEnabled
+          ? state.media.pulledAudioTracks[remoteTrackKey(user.id, 'audio')]
+          : undefined,
+      )
       .filter(isNonNullable);
   });
-  private readonly _videoStreamAtomFamily = Atom.family<EncodedTrackName, Atom.Atom<MediaStream | undefined>>((name) =>
-    Atom.make((get) => get(this._stateAtom).media.pulledVideoStreams[name]),
+  private readonly _videoStreamAtomFamily = Atom.family<RemoteTrackKey, Atom.Atom<MediaStream | undefined>>((key) =>
+    Atom.make((get) => get(this._stateAtom).media.pulledVideoStreams[key]),
   );
   private readonly _activityAtomFamily = Atom.family<string, Atom.Atom<ActivityState | undefined>>((key) =>
     Atom.make((get) => get(this._stateAtom).call.activities?.[key]),
   );
 
-  #transcriptUnsubscribe?: () => void;
   // Bumped by every `join()` and `leave()`; a join holding a stale generation was superseded and must not finalize.
   #joinGeneration = 0;
-  // The feed this client's own native transcript segments are appended to, bound by the meeting wiring.
-  #transcriptFeed?: Feed.Feed = undefined;
-  #transcriptFeedServiceLayer?: Layer.Layer<Database.Service> = undefined;
-  #transcriptEnricher?: TranscriptMessageEnricher = undefined;
+  /** The live call's transport and the context its listeners are bound to, replaced on a meeting switch or rejoin. */
+  #transport?: MediaTransport;
+  #transportCtx?: Context;
+  /** A meeting the swarm agreed on that could not be joined here; not retried on every later state update. */
+  #unreachableMeetingId?: string;
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
-  private readonly _roomJoiner: RoomJoiner;
-  private readonly _createMeeting: RealtimeKitMeetingFactory;
+  private readonly _createTransport: CreateTransport;
 
   //
   // Derived atoms for reactive UI subscriptions.
@@ -147,11 +134,6 @@ export class CallManager extends Resource {
   /** Current joined state (synchronous read for imperative callers, e.g. join-after-leave). */
   get joined(): boolean {
     return this._registry.get(this._joinedAtom);
-  }
-
-  /** Transcription on/off for the current call; drives the toolbar toggle and gates the transcript sink. */
-  get transcriptionEnabledAtom(): Atom.Atom<boolean> {
-    return this._transcriptionEnabledAtom;
   }
 
   /** Derived atom for self. */
@@ -204,9 +186,12 @@ export class CallManager extends Resource {
     return this._stateAtom;
   }
 
-  /** Returns a derived atom for a pulled video stream by name; returns a no-op atom when name is undefined. */
-  videoStreamAtom(name: EncodedTrackName | undefined): Atom.Atom<MediaStream | undefined> {
-    return name !== undefined ? this._videoStreamAtomFamily(name) : this._noStreamAtom;
+  /** Returns a derived atom for a participant's camera or screenshare; a no-op atom when there is no participant. */
+  videoStreamAtom(
+    deviceKey: string | undefined,
+    kind: Exclude<TrackKind, 'audio'>,
+  ): Atom.Atom<MediaStream | undefined> {
+    return deviceKey !== undefined ? this._videoStreamAtomFamily(remoteTrackKey(deviceKey, kind)) : this._noStreamAtom;
   }
 
   /** Returns a derived atom for an activity by key. */
@@ -254,20 +239,16 @@ export class CallManager extends Resource {
     return this._mediaManager.turnScreenshareOff();
   }
 
-  constructor(
-    private readonly _client: Client,
-    private readonly _registry: Registry.AtomRegistry,
-    private readonly _haloIdentity: Context.Service.Shape<typeof Identity.Service>,
-    options: CallManagerOptions = {},
-  ) {
+  private readonly _registry: Registry.AtomRegistry;
+  private readonly _haloIdentity: CallManagerOptions['identity'];
+
+  constructor({ registry, identity, networkService, createTransport }: CallManagerOptions) {
     super();
-    this._client.config.getOrThrow('runtime.services.edge.url');
-    const networkService = this._client.services.services.NetworkService;
-    invariant(networkService, 'network service not found');
+    this._registry = registry;
+    this._haloIdentity = identity;
     this._swarmSynchronizer = new CallSwarmSynchronizer({ networkService });
     this._mediaManager = new MediaManager();
-    this._roomJoiner = options.roomJoiner ?? createEdgeRoomJoiner(this._client.edge.http);
-    this._createMeeting = options.createMeeting ?? createRealtimeKitMeetingFactory();
+    this._createTransport = createTransport;
   }
 
   protected override async _open(): Promise<void> {
@@ -338,15 +319,14 @@ export class CallManager extends Resource {
       return;
     }
 
-    // Validated before the optimistic flip so a missing room or device cannot leave us marked joined.
+    // Validated before the optimistic flip so a missing room cannot leave us marked joined.
     const roomId = this._swarmSynchronizer._getState().roomId;
-    const deviceKey = this._haloIdentity.getDevicesSnapshot().find((device) => device.current)?.key;
-    invariant(roomId && deviceKey, 'room id and device key are required to join a call');
+    invariant(roomId, 'room id is required to join a call');
 
     const generation = ++this.#joinGeneration;
     this._swarmSynchronizer.setJoined(true);
     try {
-      await this._runJoin(generation, roomId, deviceKey);
+      await this._runJoin(generation, roomId);
     } catch (error) {
       // Roll back unless a newer join or leave already owns the state.
       if (generation === this.#joinGeneration) {
@@ -364,7 +344,7 @@ export class CallManager extends Resource {
 
   // TODO(mykola): Reconcile with _swarmSynchronizer.state.joined.
   @synchronized
-  private async _runJoin(generation: number, roomId: string, deviceKey: string): Promise<void> {
+  private async _runJoin(generation: number, roomId: string): Promise<void> {
     if (generation !== this.#joinGeneration) {
       return;
     }
@@ -378,40 +358,89 @@ export class CallManager extends Resource {
     }
 
     // Reuse the meeting a peer already advertised, so all participants share one session.
-    const meetingId = await this._swarmSynchronizer.resolveMeetingId(roomId);
+    const advertised = await this._swarmSynchronizer.queryMeetingId(roomId);
     if (generation !== this.#joinGeneration) {
       return;
     }
 
-    const transport = new RealtimeKitTransport({
-      roomId,
-      deviceKey,
-      meetingId,
-      joiner: this._roomJoiner,
-      createMeeting: this._createMeeting,
-      // Advertised before the slow SFU connect so a concurrent joiner converges on this meeting, and never for a
-      // superseded join, whose meeting nobody will attend.
-      onMeetingResolved: (id) => {
-        if (generation === this.#joinGeneration) {
-          this._swarmSynchronizer.advertiseMeetingId(id);
-        }
-      },
-    });
-    await this._mediaManager.join(transport);
-
-    // A leave during the SFU connect: the pending `_teardown` releases the transport; emitting would resurrect the call.
+    await this.#connect(generation, roomId, advertised);
     if (generation !== this.#joinGeneration) {
       return;
     }
-
-    // Native transcription reaches every participant, so each persists only its own segments.
-    this.#transcriptUnsubscribe = transport.subscribeTranscripts?.((event) => {
-      if (event.deviceKey === deviceKey) {
-        void this.#writeTranscript(event).catch((error) => log.catch(error));
-      }
-    });
 
     this.roomJoined.emit({ roomId });
+  }
+
+  /**
+   * Opens a transport for the room's meeting and binds its events; replaces the current one, if any.
+   * Runs inside the manager's lock (`_runJoin`, `_switchMeeting`).
+   */
+  async #connect(generation: number, roomId: string, meetingId: string | undefined): Promise<void> {
+    await this.#disconnect();
+    const transport = this._createTransport({ roomId, meetingId });
+    this.#transport = transport;
+    await this._mediaManager.join(transport);
+
+    // A leave during the connect: the pending `_teardown` releases the transport; binding would resurrect the call.
+    if (generation !== this.#joinGeneration) {
+      return;
+    }
+
+    const ctx = new Context();
+    this.#transportCtx = ctx;
+    transport.transcript.on(ctx, (event) => {
+      // Revisions of a segment precede its final text, and a transcript keeps only what was finally said.
+      if (!event.pending && event.text.trim().length > 0) {
+        this.transcript.emit({ _tag: 'transcript', started: event.started, text: event.text.trim() });
+      }
+    });
+    transport.closed.on(ctx, (reason) => this.#onTransportClosed(generation, roomId, reason));
+
+    // Advertised so a late joiner, or a peer that raced us to an empty room, converges on one meeting.
+    if (transport.meetingId && transport.meetingId !== this._swarmSynchronizer.advertisedMeetingId) {
+      this._swarmSynchronizer.advertiseMeetingId(transport.meetingId);
+    }
+  }
+
+  async #disconnect(): Promise<void> {
+    await this.#transportCtx?.dispose();
+    this.#transportCtx = undefined;
+    this.#transport = undefined;
+    await this._mediaManager.leave();
+  }
+
+  /** RealtimeKit ended the session: leave if the meeting is gone, otherwise reconnect to it. */
+  #onTransportClosed(generation: number, roomId: string, reason: CloseReason): void {
+    if (generation !== this.#joinGeneration) {
+      return;
+    }
+    log.info('call transport closed', { reason });
+    if (reason === 'ended') {
+      void this.leave().catch((error) => log.catch(error));
+    } else {
+      void this._switchMeeting(generation, roomId, this.#transport?.meetingId, { reconnect: true }).catch((error) => {
+        log.catch(error);
+        void this.leave().catch((leaveError) => log.catch(leaveError));
+      });
+    }
+  }
+
+  /**
+   * Moves the live call to `meetingId`: the one the swarm agreed on, or with `reconnect` the same one after a lost
+   * connection. Queued switches re-check on entry, so a burst of state updates moves the call once.
+   */
+  @synchronized
+  private async _switchMeeting(
+    generation: number,
+    roomId: string,
+    meetingId: string | undefined,
+    { reconnect = false }: { reconnect?: boolean } = {},
+  ): Promise<void> {
+    if (generation !== this.#joinGeneration || (!reconnect && this.#transport?.meetingId === meetingId)) {
+      return;
+    }
+    log.info('switching call meeting', { from: this.#transport?.meetingId, to: meetingId, reconnect });
+    await this.#connect(generation, roomId, meetingId);
   }
 
   // Not `@synchronized`: presence flips at once so the lobby shows without waiting for an in-flight SFU connect.
@@ -425,87 +454,60 @@ export class CallManager extends Resource {
 
   @synchronized
   private async _teardown(): Promise<void> {
-    this.#transcriptUnsubscribe?.();
-    this.#transcriptUnsubscribe = undefined;
-    this.#transcriptFeed = undefined;
-    this.#transcriptFeedServiceLayer = undefined;
-    this.#transcriptEnricher = undefined;
-    this._registry.set(this._transcriptionEnabledAtom, false);
+    this.#unreachableMeetingId = undefined;
     // The `joined` flag is left alone: it belongs to the optimistic `join()`/`leave()`, and a queued teardown must
     // not flip a superseding join back to the lobby.
     await this._swarmSynchronizer.leave();
-    await this._mediaManager.leave();
+    await this.#disconnect();
     const roomId = this._registry.get(this._roomIdAtom);
     roomId && this.left.emit(roomId);
-  }
-
-  /** Binds the feed this call's own native transcript segments are appended to. */
-  setTranscriptFeed(db: Database.Database, feed: Feed.Feed): void {
-    this.#transcriptFeed = feed;
-    this.#transcriptFeedServiceLayer = Database.layer(db);
-  }
-
-  /** Unbinds the transcript feed, so segments are dropped until another is bound. */
-  clearTranscriptFeed(): void {
-    this.#transcriptFeed = undefined;
-    this.#transcriptFeedServiceLayer = undefined;
-  }
-
-  /** Toggles whether native transcript segments are persisted to the bound feed. */
-  setTranscriptionEnabled(enabled: boolean): void {
-    this._registry.set(this._transcriptionEnabledAtom, enabled);
-  }
-
-  /** Sets the enricher (e.g. entity linking) applied to each segment before it is appended. */
-  setTranscriptEnricher(enricher?: TranscriptMessageEnricher): void {
-    this.#transcriptEnricher = enricher;
-  }
-
-  async #writeTranscript(event: TranscriptEvent): Promise<void> {
-    const feed = this.#transcriptFeed;
-    const layer = this.#transcriptFeedServiceLayer;
-    // Interim revisions of a segment precede its final text, and the append-only feed cannot replace them.
-    if (event.pending || !this._registry.get(this._transcriptionEnabledAtom) || !feed || !layer) {
-      return;
-    }
-
-    const block: ContentBlock.Transcript = {
-      _tag: 'transcript',
-      started: event.started ?? new Date().toISOString(),
-      text: event.text,
-    };
-    let message = Obj.make(Message.Message, {
-      created: new Date().toISOString(),
-      blocks: [block],
-      sender: { identityDid: Option.getOrUndefined(this._haloIdentity.getSnapshot())?.did },
-    });
-    if (this.#transcriptEnricher) {
-      message = await this.#transcriptEnricher(message);
-    }
-
-    await Feed.append(feed, [message]).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
   }
 
   private _onCallStateUpdated(state: CallState): void {
     // Remote tracks follow the transport's roster (see `MediaManager`); the swarm stays the source of presence.
     this.callStateUpdated.emit(state);
     this._updateState();
+    this.#followAgreedMeeting(state);
+  }
+
+  /**
+   * Two peers that join an empty room together each get a meeting before either sees the other's advertisement.
+   * Last write wins across the swarm, so every peer reads the same winner; whoever is elsewhere moves to it.
+   */
+  #followAgreedMeeting(state: CallState): void {
+    const agreed = this._swarmSynchronizer.advertisedMeetingId;
+    const current = this.#transport?.meetingId;
+    const roomId = state.roomId;
+    if (
+      !state.joined ||
+      !roomId ||
+      !agreed ||
+      !current ||
+      agreed === current ||
+      agreed === this.#unreachableMeetingId
+    ) {
+      return;
+    }
+    const generation = this.#joinGeneration;
+    void this._switchMeeting(generation, roomId, agreed).catch((error) => {
+      // Back to the meeting we left, so a meeting we cannot join (gone, or not the room's) does not end the call.
+      log.catch(error);
+      this.#unreachableMeetingId = agreed;
+      void this._switchMeeting(generation, roomId, current, { reconnect: true }).catch((fallbackError) => {
+        log.catch(fallbackError);
+        void this.leave().catch((leaveError) => log.catch(leaveError));
+      });
+    });
   }
 
   private _onMediaStateUpdated(state: MediaState): void {
     this._swarmSynchronizer.setTracks({
-      video: state.pushedVideoTrack ? TrackNameCodec.encode(state.pushedVideoTrack) : undefined,
-      audio: state.pushedAudioTrack ? TrackNameCodec.encode(state.pushedAudioTrack) : undefined,
-      screenshare: state.pushedScreenshareTrack ? TrackNameCodec.encode(state.pushedScreenshareTrack) : undefined,
       videoEnabled: state.videoEnabled,
       audioEnabled: state.audioEnabled,
       screenshareEnabled: state.screenshareEnabled,
     });
 
-    const isSpeaking = this._mediaManager.isSpeaking ?? false;
-    this._swarmSynchronizer.setSpeaking(isSpeaking);
-
-    this.mediaStateUpdated.emit([state, isSpeaking]);
+    this._swarmSynchronizer.setSpeaking(this._mediaManager.isSpeaking ?? false);
     this._updateState();
   }
 

@@ -80,6 +80,8 @@ const LobbyPreview = (_props: LobbyPreviewProps) => {
           />
         )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera-off.label')}</div>}
       </ResponsivePanel>
+      {/* RealtimeKit transcribes every participant for the whole call; the meeting's toggle only decides what is kept. */}
+      <p className='text-center text-description text-sm'>{t('transcribed-call.message')}</p>
     </Layout.Grid>
   );
 };

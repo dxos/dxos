@@ -8,11 +8,10 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { useEdgeServiceEndpoint } from '@dxos/react-client';
+import { useJoinTranscription } from '@dxos/react-client';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
@@ -20,9 +19,6 @@ import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingT
 import { TranscriptionCapabilities } from '#types';
 
 import { TranscriptionNamespace } from '../namespace.ts';
-
-// Recorder chunk interval; the transcriber's chunk threshold is derived from the buffering setting.
-const RECORDER_INTERVAL_MS = 200;
 
 /**
  * Headless controller driving live transcription into a Markdown editor. Reads the active recording
@@ -37,7 +33,7 @@ const TranscriptionDriver = () => {
   // Injected entity resolver (full-text/vector/…); the driver stays decoupled from the database.
   const [lookup] = Hooks.useCapabilities(TranscriptionCapabilities.EntityLookup);
   const settings = Hooks.useAtomCapability(TranscriptionCapabilities.Settings);
-  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
+  const join = useJoinTranscription();
 
   const [, setStatus] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.PipelineStatus);
 
@@ -91,10 +87,9 @@ const TranscriptionDriver = () => {
   // Keep the track (and thus the transcriber) alive across the whole active session — including the
   // drain — so the transcriber can flush its buffered audio before teardown. Released at idle. The
   // mic indicator therefore lingers for the brief drain after stop.
-  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
-  // true, so without this the permission prompt and recording indicator appear before `open()`
-  // rejects for a transcription service that was never configured.
-  const track = useAudioTrack(active && !!endpoint, audioConstraints);
+  // Gate the mic on EDGE: `useAudioTrack` calls `getUserMedia` as soon as its flag is true, so without this the
+  // permission prompt appears before `open()` fails for a service that was never configured.
+  const track = useAudioTrack(active && !!join, audioConstraints);
 
   // Refs so `handleSegments` stays stable (changing it would recreate the transcriber).
   const sessionIdRef = useRef(sessionId);
@@ -169,27 +164,7 @@ const TranscriptionDriver = () => {
     [isCancelled],
   );
 
-  // Derive the transcriber's chunk threshold from the configured initial buffering time.
-  const transcriberConfig = useMemo(
-    () => ({
-      transcribeAfterChunksAmount: Math.max(
-        1,
-        Math.round((settings?.transcribeAfterMs ?? 4000) / RECORDER_INTERVAL_MS),
-      ),
-      endpoint,
-    }),
-    [settings?.transcribeAfterMs, endpoint],
-  );
-
-  // Stable identity: a fresh object would change useTranscriber's memo deps every render, recreating
-  // (and reopening) the transcriber and discarding its buffered audio.
-  const recorderConfig = useMemo(() => ({ interval: RECORDER_INTERVAL_MS }), []);
-  const transcriber = useTranscriber({
-    audioStreamTrack: track,
-    onSegments: handleSegments,
-    transcriberConfig,
-    recorderConfig,
-  });
+  const transcriber = useTranscriber({ audioStreamTrack: track, join, onSegments: handleSegments });
   const transcriberRef = useRef(transcriber);
   transcriberRef.current = transcriber;
 
@@ -203,7 +178,7 @@ const TranscriptionDriver = () => {
     void transcriber.open().then(
       () => {
         if (!cancelled && phase === 'recording') {
-          transcriber.startChunksRecording();
+          transcriber.start();
         }
       },
       (err) => {
@@ -218,14 +193,14 @@ const TranscriptionDriver = () => {
     };
   }, [transcriber, phase, setSession]);
 
-  // Drain on stop: flush buffered audio (final transcription) and the streamer's post-process
+  // Drain on stop: deliver the final segment and the streamer's post-process
   // (entity linking) before tearing down — so the tail of speech and its enrichment are not lost.
   useEffect(() => {
     if (phase !== 'draining') {
       return;
     }
     let cancelled = false;
-    // Hard-abort the in-flight transcription request if the user cancels (✕) during the drain.
+    // Stop waiting for the final segment if the user cancels (✕) during the drain.
     const abortTimer = setInterval(() => {
       if (isCancelled()) {
         transcriberRef.current?.abort();
@@ -233,7 +208,7 @@ const TranscriptionDriver = () => {
     }, 150);
     void (async () => {
       try {
-        // Flush buffered audio (final transcription) then settle the streamer's post-process, unless
+        // Deliver the final segment then settle the streamer's post-process, unless
         // the user cancelled (✕) — in which case skip the writes so the decoration stays cleared.
         await transcriberRef.current?.flush();
         if (!isCancelled()) {

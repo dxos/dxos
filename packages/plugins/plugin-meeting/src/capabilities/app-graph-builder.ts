@@ -25,7 +25,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { Channel, Event } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import { Meeting, MeetingActivity, MeetingCapabilities, MeetingOperation } from '#types';
 
 import { MeetingNamespace } from '../namespace.ts';
 
@@ -129,14 +129,16 @@ export default Capability.makeModule(
               return [];
             }
             const [callManager] = get(callManagerAtom);
-            const enabled = callManager ? get(callManager.transcriptionEnabledAtom) : false;
+            const enabled = callManager
+              ? MeetingActivity.isTranscriptionEnabled(get(callManager.activityAtom(MeetingActivity.TRANSCRIPTION_KEY)))
+              : false;
             return [
               {
                 id: 'action.startStopTranscription',
                 data: Effect.fnUntraced(function* () {
                   const store = yield* Capability.get(MeetingCapabilities.State);
-                  let meeting = store.state.activeMeeting;
-                  if (!meeting) {
+                  // The transcript is written to the call's active meeting, so one has to exist before it is kept.
+                  if (!store.state.activeMeeting) {
                     const db = Obj.getDatabase(channel);
                     invariant(db);
                     const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
@@ -147,14 +149,10 @@ export default Capability.makeModule(
                     );
                     invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
                     yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
-                    meeting = addResult.object as Meeting.Meeting;
                   }
 
                   const transcriptionEnabled = !enabled;
-                  yield* Operation.invoke(MeetingOperation.SetTranscription, {
-                    meeting,
-                    enabled: transcriptionEnabled,
-                  });
+                  yield* Operation.invoke(MeetingOperation.SetTranscription, { enabled: transcriptionEnabled });
                   if (!transcriptionEnabled) {
                     log.warn('transcription disabled');
                   } else {

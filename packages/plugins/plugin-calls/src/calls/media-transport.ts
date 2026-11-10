@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
+import { type Event } from '@dxos/async';
 
-import { type TrackObject } from './types.ts';
+/** A kind of media a participant publishes; screenshare is its own kind, separate from the camera's video. */
+export type TrackKind = 'audio' | 'video' | 'screenshare';
 
-/** A remote track currently available in the transport's roster, with the descriptor the swarm advertises. */
+/** A remote participant's track, keyed by the device that publishes it (== swarm `UserState.id`). */
 export type RemoteTrack = {
-  /** `{ sessionId: deviceKey, trackName: kind, mid: kind }` — encodes to the same name the publisher advertises. */
-  trackData: TrackObject;
+  deviceKey: string;
+  kind: TrackKind;
   track: MediaStreamTrack;
 };
 
@@ -23,18 +24,20 @@ export type MediaStats = {
   outbound: Array<{ kind: string; stats: Record<string, unknown> }>;
 };
 
-/** A transcription segment produced natively by the transport (e.g. RealtimeKit's on-network ASR). */
+/** A segment of this peer's own speech, transcribed by the transport's on-network ASR. */
 export type TranscriptEvent = {
-  /** Speaker's participant id (== DXOS device key / swarm `UserState.id`). */
-  deviceKey?: string;
   text: string;
-  /** ISO timestamp of the segment. */
-  started?: string;
-  /** True while the segment is still being revised (interim result). */
-  pending?: boolean;
-  /** Stable id for deduplication across revisions. */
-  id?: string;
+  /** ISO time the segment was spoken. */
+  started: string;
+  /** True while the segment is still being revised; only the final text is kept. */
+  pending: boolean;
 };
+
+/**
+ * Why the provider ended a session it was asked to keep: `ended` when the meeting was closed or this participant
+ * removed, `lost` when the connection failed and a rejoin may succeed.
+ */
+export type CloseReason = 'ended' | 'lost';
 
 /**
  * Media transport backend for a call: publishes local tracks and resolves remote tracks.
@@ -43,7 +46,10 @@ export type TranscriptEvent = {
  */
 export interface MediaTransport {
   /** True once a live session is established. */
-  get isOpen(): boolean;
+  readonly isOpen: boolean;
+
+  /** The provider session this transport joined (a RealtimeKit meeting id): what peers agree on over the swarm. */
+  readonly meetingId: string | undefined;
 
   /** Establish the live session. Return value is ignored (widened so `Resource`'s `Promise<this>` satisfies it). */
   open(): Promise<unknown>;
@@ -51,46 +57,43 @@ export interface MediaTransport {
   /** Tear down the live session. Return value is ignored. */
   close(): Promise<unknown>;
 
-  /**
-   * Publish (or replace) a local track. A `null` track with a `previousTrack` removes it.
-   * Returns the transport-specific descriptor of the published track.
-   */
-  pushTrack(options: {
-    ctx: Context;
-    track: MediaStreamTrack | null;
-    previousTrack?: TrackObject;
-    encodings?: RTCRtpEncodingParameters[];
-  }): Promise<TrackObject | undefined>;
+  /** Publish the microphone, or unpublish it with `undefined`. */
+  setAudio(track: MediaStreamTrack | undefined): Promise<void>;
+
+  /** Publish the camera, or unpublish it with `undefined`. */
+  setVideo(track: MediaStreamTrack | undefined): Promise<void>;
 
   /**
-   * Toggle screenshare. Screenshare is a distinct producer from the camera, and RealtimeKit captures the
-   * display itself, so it does not go through {@link pushTrack}. On enable, returns the swarm descriptor to
-   * advertise (a `screenshare`-kinded {@link TrackObject}) and the locally-captured track for the sharer's own
-   * self-view; on disable, returns an empty result.
+   * Toggle screen share. The provider captures the display itself, so this takes no track; it returns the captured
+   * track for the sharer's own self-view when enabling.
    */
-  setScreenShareEnabled(enabled: boolean): Promise<{ descriptor?: TrackObject; localTrack?: MediaStreamTrack }>;
+  setScreenShare(enabled: boolean): Promise<MediaStreamTrack | undefined>;
 
-  /**
-   * Snapshot every remote track currently available in the transport's roster. Called only in response to a
-   * {@link subscribeMediaChanges} event (never speculatively), so a returned track is one the transport has
-   * actually delivered — `MediaManager` caches these and the UI resolves them by the swarm-advertised name.
-   */
+  /** Snapshot every remote track the transport has delivered; called after each {@link mediaChanged}. */
   getRemoteTracks(): RemoteTrack[];
 
-  /** Collect live WebRTC {@link MediaStats} for the debug panel, if the transport exposes them. */
-  getStats?(): Promise<MediaStats>;
+  /** Collect live WebRTC {@link MediaStats} for the debug panel. */
+  getStats(): Promise<MediaStats>;
 
   /**
-   * Subscribe to changes in remote media: a participant joining/leaving or enabling/disabling/replacing their
-   * audio, video, or screenshare track. The callback carries no payload — it means "the roster changed, call
-   * {@link getRemoteTracks} again" — because a transport (e.g. RealtimeKit) swaps the underlying
-   * `MediaStreamTrack` while its swarm-advertised descriptor stays fixed. Returns an unsubscribe.
+   * Fires when remote media changes: a participant joining or leaving or changing a track. It carries no payload
+   * because a provider swaps a `MediaStreamTrack` while the participant stays the same; call {@link getRemoteTracks}.
    */
-  subscribeMediaChanges(callback: () => void): () => void;
+  readonly mediaChanged: Event<void>;
 
-  /**
-   * Subscribe to native transcription events, if the transport provides them. Returns an unsubscribe.
-   * Transports without on-network transcription omit this.
-   */
-  subscribeTranscripts?(callback: (event: TranscriptEvent) => void): () => void;
+  /** This peer's own speech, transcribed: revisions while pending, then the final text. */
+  readonly transcript: Event<TranscriptEvent>;
+
+  /** Fires once when the provider ends the session; never for {@link close}. */
+  readonly closed: Event<CloseReason>;
 }
+
+export type CreateTransportOptions = {
+  /** DXN of the object anchoring the call; also the swarm room id. */
+  roomId: string;
+  /** Provider session the swarm already agreed on; the first joiner omits it. */
+  meetingId?: string;
+};
+
+/** Builds the transport for a room: the one seam `CallManager` is tested through (see `FakeTransport`). */
+export type CreateTransport = (options: CreateTransportOptions) => MediaTransport;

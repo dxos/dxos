@@ -57,10 +57,8 @@ export const HandlePayload = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
+    // The call activity's `MeetingPayload.meeting_id`: the meeting's URI.
     meetingId: Schema.optional(Schema.String),
-    // Matches the protobuf wire field `transcript_dxn` (MeetingPayload), carried verbatim from the call activity.
-    transcriptDxn: Schema.optional(Schema.String),
-    transcriptionEnabled: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
 });
@@ -73,7 +71,6 @@ export const SetTranscription = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    meeting: Type.getSchema(Meeting.Meeting),
     enabled: Schema.Boolean,
   }),
   output: Schema.Void,

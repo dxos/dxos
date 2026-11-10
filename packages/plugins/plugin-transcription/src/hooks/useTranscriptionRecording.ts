@@ -3,15 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { EdgeServiceName } from '@dxos/config';
 import { Database, Feed, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { useEdgeServiceEndpoint } from '@dxos/react-client';
+import { useJoinTranscription } from '@dxos/react-client';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
@@ -35,11 +34,10 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   const [recording, setRecording] = useState(false);
   const { invokePromise } = Hooks.useOperationInvoker();
   const settings = Hooks.useAtomCapability(TranscriptionCapabilities.Settings);
-  const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
-  // Gate the mic on the endpoint: `useAudioTrack` calls `getUserMedia` as soon as its flag is
-  // true, so without this the permission prompt and recording indicator appear before `open()`
-  // rejects for a transcription service that was never configured.
-  const track = useAudioTrack(recording && !!endpoint);
+  const join = useJoinTranscription();
+  // Gate the mic on EDGE: `useAudioTrack` calls `getUserMedia` as soon as its flag is true, so without this the
+  // permission prompt and recording indicator appear before `open()` fails for a service that was never configured.
+  const track = useAudioTrack(recording && !!join);
 
   // Append a transcribed message batch to the transcript's feed, enriching it first (when entity
   // extraction is enabled) with references to known entities mentioned in the transcript.
@@ -76,9 +74,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.
-  // Stable identity: a fresh object every render would recreate (and reopen) the transcriber.
-  const transcriberConfig = useMemo(() => ({ endpoint }), [endpoint]);
-  const transcriber = useTranscriber({ audioStreamTrack: track, onSegments: handleSegments, transcriberConfig });
+  const transcriber = useTranscriber({ audioStreamTrack: track, join, onSegments: handleSegments });
   useEffect(() => {
     if (!transcriber) {
       return;
@@ -90,7 +86,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
     void transcriber.open().then(
       () => {
         if (!cancelled && recording) {
-          transcriber.startChunksRecording();
+          transcriber.start();
         }
       },
       (err) => {
@@ -102,7 +98,7 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
     );
     return () => {
       cancelled = true;
-      transcriber.stopChunksRecording();
+      transcriber.stop();
     };
   }, [transcriber, recording]);
 

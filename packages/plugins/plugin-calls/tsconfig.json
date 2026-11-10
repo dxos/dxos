@@ -35,9 +35,6 @@
       "path": "../../common/display-name"
     },
     {
-      "path": "../../common/effect"
-    },
-    {
       "path": "../../common/graph"
     },
     {
@@ -81,9 +78,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-protocol"

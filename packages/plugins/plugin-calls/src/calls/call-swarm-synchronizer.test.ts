@@ -135,16 +135,16 @@ describe('CallSwarmSynchronizer', () => {
     await synchronizer.close();
   });
 
-  test('resolveMeetingId ignores our own stale advertisement', async ({ expect }) => {
+  test('queryMeetingId ignores our own stale advertisement', async ({ expect }) => {
     const { network, synchronizer } = await setup();
 
-    // Alone in the swarm with only our own stale echo: mint fresh (resolve to undefined).
+    // Alone in the swarm with only our own stale echo: EDGE picks the meeting (resolve to undefined).
     network.setQueryPeers([peer(SELF_DEVICE, 'M-stale', 5)]);
-    expect(await synchronizer.resolveMeetingId(ROOM_ID)).toBeUndefined();
+    expect(await synchronizer.queryMeetingId(ROOM_ID)).toBeUndefined();
 
     // A remote advertisement is still honored.
     network.setQueryPeers([peer(SELF_DEVICE, 'M-stale', 5), peer(REMOTE_DEVICE, 'M-remote')]);
-    expect(await synchronizer.resolveMeetingId(ROOM_ID)).toBe('M-remote');
+    expect(await synchronizer.queryMeetingId(ROOM_ID)).toBe('M-remote');
 
     await synchronizer.close();
   });

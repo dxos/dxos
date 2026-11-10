@@ -4,9 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Context } from '@dxos/context';
-
-import { type MediaStats, type TranscriptEvent } from './media-transport.ts';
+import { type CloseReason, type MediaStats, type TranscriptEvent } from './media-transport.ts';
 import {
   type RealtimeKitMeeting,
   type RealtimeKitRemoteParticipant,
@@ -33,8 +31,10 @@ class FakeMeeting implements RealtimeKitMeeting {
   public remote: RealtimeKitRemoteParticipant[] = [];
   /** Track surfaced on `self.screenShareTracks.video` once screenshare is enabled. */
   public screenShareVideoTrack?: MediaStreamTrack;
+  public stats: MediaStats = { outbound: [] };
 
   public readonly self = {
+    id: 'self-peer',
     enableAudio: async (track?: MediaStreamTrack) => {
       this.enabledAudio = track;
     },
@@ -56,28 +56,40 @@ class FakeMeeting implements RealtimeKitMeeting {
     screenShareTracks: undefined as { audio?: MediaStreamTrack; video?: MediaStreamTrack } | undefined,
   };
 
+  #mediaChanged?: () => void;
+  #transcript?: (transcript: RealtimeKitTranscript) => void;
+  #roomLeft?: (state: string) => void;
+
   getRemoteParticipants(): RealtimeKitRemoteParticipant[] {
     return this.remote;
   }
 
-  onMediaChanged(): () => void {
-    return () => {};
+  onMediaChanged(callback: () => void): () => void {
+    this.#mediaChanged = callback;
+    return () => (this.#mediaChanged = undefined);
   }
 
-  #transcriptCallback?: (transcript: RealtimeKitTranscript) => void;
-
   onTranscript(callback: (transcript: RealtimeKitTranscript) => void): () => void {
-    this.#transcriptCallback = callback;
-    return () => {
-      this.#transcriptCallback = undefined;
-    };
+    this.#transcript = callback;
+    return () => (this.#transcript = undefined);
+  }
+
+  onRoomLeft(callback: (state: string) => void): () => void {
+    this.#roomLeft = callback;
+    return () => (this.#roomLeft = undefined);
+  }
+
+  emitMediaChanged(): void {
+    this.#mediaChanged?.();
   }
 
   emitTranscript(transcript: RealtimeKitTranscript): void {
-    this.#transcriptCallback?.(transcript);
+    this.#transcript?.(transcript);
   }
 
-  public stats: MediaStats = { outbound: [] };
+  emitRoomLeft(state: string): void {
+    this.#roomLeft?.(state);
+  }
 
   async getStats(): Promise<MediaStats> {
     return this.stats;
@@ -88,96 +100,92 @@ class FakeMeeting implements RealtimeKitMeeting {
   }
 }
 
-const makeTransport = (meeting: FakeMeeting, deviceKey = 'my-device') =>
+const makeTransport = (meeting: FakeMeeting, requests: unknown[] = []) =>
   new RealtimeKitTransport({
     roomId: 'echo:/room',
-    deviceKey,
-    joiner: async () => ({ meetingId: 'meeting-1', authToken: 'auth-token' }),
-    createMeeting: async () => meeting,
+    meetingId: 'meeting-agreed',
+    join: async (request) => {
+      requests.push(request);
+      return { meetingId: 'meeting-1', authToken: 'auth-token' };
+    },
+    connect: async () => meeting,
   });
 
 describe('RealtimeKitTransport', () => {
-  test('open joins the room and initializes the meeting', async ({ expect }) => {
+  test('open joins the room as the signed-in device and connects to the meeting', async ({ expect }) => {
     const meeting = new FakeMeeting();
-    const transport = makeTransport(meeting);
+    const requests: unknown[] = [];
+    const transport = makeTransport(meeting, requests);
     await transport.open();
     expect(transport.isOpen).toBe(true);
     expect(transport.meetingId).toBe('meeting-1');
+    // The device comes from the signed request, so the body names only the room and the agreed meeting.
+    expect(requests).toEqual([{ roomId: 'echo:/room', meetingId: 'meeting-agreed' }]);
     await transport.close();
     expect(meeting.left).toBe(true);
   });
 
-  test('pushTrack enables the local track and returns a device-scoped descriptor', async ({ expect }) => {
+  test('setAudio and setVideo publish and unpublish the local tracks', async ({ expect }) => {
     const meeting = new FakeMeeting();
     const transport = makeTransport(meeting);
     await transport.open();
 
     const audioTrack = makeAudioTrack();
-    const descriptor = await transport.pushTrack({ ctx: Context.default(), track: audioTrack });
-
+    const videoTrack = makeVideoTrack();
+    await transport.setAudio(audioTrack);
+    await transport.setVideo(videoTrack);
     expect(meeting.enabledAudio).toBe(audioTrack);
-    // Descriptor carries (deviceKey, kind) so the swarm broadcasts an identity-resolvable name.
-    expect(descriptor).toMatchObject({ sessionId: 'my-device', trackName: 'audio', mid: 'audio', location: 'local' });
+    expect(meeting.enabledVideo).toBe(videoTrack);
+
+    await transport.setAudio(undefined);
+    await transport.setVideo(undefined);
+    expect(meeting.enabledAudio).toBeUndefined();
+    expect(meeting.enabledVideo).toBeUndefined();
 
     await transport.close();
   });
 
-  test('getRemoteTracks snapshots the roster with swarm-encodable descriptors', async ({ expect }) => {
+  test('getRemoteTracks keys each track by the publishing device', async ({ expect }) => {
     const audioTrack = makeAudioTrack();
     const videoTrack = makeVideoTrack();
     const meeting = new FakeMeeting();
-    meeting.remote = [{ customParticipantId: 'peer-device', audioTrack, videoTrack }];
+    meeting.remote = [{ customParticipantId: 'peer-device', audioTrack, videoTrack }, { audioTrack }];
 
     const transport = makeTransport(meeting);
     await transport.open();
 
-    // Descriptor mirrors `pushTrack`'s return (`mid == kind`) so it encodes to the same name the publisher
-    // advertised in the swarm — letting the UI resolve this track by that name.
+    // A participant without a device key is not a DXOS peer, so it has no tile to land on.
     expect(transport.getRemoteTracks()).toEqual(
       expect.arrayContaining([
-        {
-          trackData: { location: 'remote', sessionId: 'peer-device', trackName: 'video', mid: 'video' },
-          track: videoTrack,
-        },
-        {
-          trackData: { location: 'remote', sessionId: 'peer-device', trackName: 'audio', mid: 'audio' },
-          track: audioTrack,
-        },
+        { deviceKey: 'peer-device', kind: 'video', track: videoTrack },
+        { deviceKey: 'peer-device', kind: 'audio', track: audioTrack },
       ]),
     );
+    expect(transport.getRemoteTracks()).toHaveLength(2);
+
+    let changed = 0;
+    transport.mediaChanged.on(() => {
+      changed++;
+    });
+    meeting.emitMediaChanged();
+    expect(changed).toBe(1);
 
     await transport.close();
   });
 
-  test('getRemoteTracks is empty until participants join', async ({ expect }) => {
-    const meeting = new FakeMeeting();
-    const transport = makeTransport(meeting);
-    await transport.open();
-
-    expect(transport.getRemoteTracks()).toEqual([]);
-
-    await transport.close();
-  });
-
-  test('setScreenShareEnabled uses RealtimeKit screenshare and returns a screenshare descriptor', async ({
-    expect,
-  }) => {
+  test('setScreenShare uses RealtimeKit screenshare and returns the captured track', async ({ expect }) => {
     const screenTrack = makeVideoTrack();
     const meeting = new FakeMeeting();
     meeting.screenShareVideoTrack = screenTrack;
     const transport = makeTransport(meeting);
     await transport.open();
 
-    // Enable: distinct `screenshare` descriptor (not the camera `video`) + the locally-captured track.
-    const { descriptor, localTrack } = await transport.setScreenShareEnabled(true);
-    expect(descriptor).toMatchObject({ sessionId: 'my-device', trackName: 'screenshare', mid: 'screenshare' });
-    expect(localTrack).toBe(screenTrack);
+    expect(await transport.setScreenShare(true)).toBe(screenTrack);
     expect(meeting.self.screenShareTracks?.video).toBe(screenTrack);
     // Screenshare must not touch the camera slot.
     expect(meeting.enabledVideo).toBeUndefined();
 
-    const off = await transport.setScreenShareEnabled(false);
-    expect(off).toEqual({});
+    expect(await transport.setScreenShare(false)).toBeUndefined();
     expect(meeting.self.screenShareTracks).toBeUndefined();
 
     await transport.close();
@@ -194,23 +202,51 @@ describe('RealtimeKitTransport', () => {
     await transport.close();
   });
 
-  test('subscribeTranscripts maps native transcript events to the normalized shape', async ({ expect }) => {
+  test('transcript carries only this peer’s speech, timed by either field RealtimeKit sends', async ({ expect }) => {
     const meeting = new FakeMeeting();
     const transport = makeTransport(meeting);
     await transport.open();
 
     const received: TranscriptEvent[] = [];
-    transport.subscribeTranscripts((event) => received.push(event));
+    transport.transcript.on((event) => {
+      received.push(event);
+    });
+    meeting.emitTranscript({ peerId: 'other-peer', transcript: 'not mine', isPartialTranscript: false });
     meeting.emitTranscript({
-      customParticipantId: 'peer-device',
+      peerId: 'self-peer',
       transcript: 'hello',
       isPartialTranscript: true,
-      id: 'seg-1',
+      date: new Date('2026-11-10T12:00:00Z'),
+    });
+    meeting.emitTranscript({
+      peerId: 'self-peer',
+      transcript: 'hello there',
+      isPartialTranscript: false,
+      timestamp: Date.parse('2026-11-10T12:00:01Z'),
     });
 
     expect(received).toEqual([
-      { deviceKey: 'peer-device', text: 'hello', started: undefined, pending: true, id: 'seg-1' },
+      { text: 'hello', started: '2026-11-10T12:00:00.000Z', pending: true },
+      { text: 'hello there', started: '2026-11-10T12:00:01.000Z', pending: false },
     ]);
+
+    await transport.close();
+  });
+
+  test('closed reports a meeting that ended apart from a connection that was lost', async ({ expect }) => {
+    const meeting = new FakeMeeting();
+    const transport = makeTransport(meeting);
+    await transport.open();
+
+    const reasons: CloseReason[] = [];
+    transport.closed.on((reason) => {
+      reasons.push(reason);
+    });
+    meeting.emitRoomLeft('kicked');
+    meeting.emitRoomLeft('disconnected');
+    meeting.emitRoomLeft('left');
+
+    expect(reasons).toEqual(['ended', 'lost']);
 
     await transport.close();
   });

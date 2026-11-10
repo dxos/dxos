@@ -8,7 +8,7 @@ import { waitForCondition } from '@dxos/async';
 
 import { FakeTransport } from '../testing/fake-transport.ts';
 import { MediaManager } from './media-manager.ts';
-import { TrackNameCodec, type TrackObject } from './types.ts';
+import { remoteTrackKey } from './types.ts';
 
 const makeRemoteVideoTrack = (): MediaStreamTrack => {
   const canvas = document.createElement('canvas');
@@ -49,7 +49,7 @@ describe('MediaManager transport seam', () => {
     await waitForCondition({ condition: () => fake.events.length > 0, timeout: 3_000 });
     // The very first publish is the real camera enable — proving join published no placeholder before it.
     expect(fake.events[0]).toMatchObject({ op: 'enable', kind: 'video' });
-    expect(fake.published.some((published) => published.track?.kind === 'video')).toBe(true);
+    expect(fake.published.video?.kind).toBe('video');
 
     await mediaManager.close();
   });
@@ -86,21 +86,20 @@ describe('MediaManager transport seam', () => {
     await mediaManager.join(fake);
 
     const videoTrack = makeRemoteVideoTrack();
-    const trackData: TrackObject = { location: 'remote', sessionId: 'peer-1', trackName: 'video', mid: 'video' };
-    const name = TrackNameCodec.encode(trackData);
-    const pulledStream = () => mediaManager._getState().pulledVideoStreams[name];
+    const remoteTrack = { deviceKey: 'peer-1', kind: 'video' as const, track: videoTrack };
+    const pulledStream = () => mediaManager._getState().pulledVideoStreams[remoteTrackKey('peer-1', 'video')];
 
     // Nothing is pulled speculatively: the cache stays empty until the transport signals the track's arrival.
     expect(pulledStream()).toBeUndefined();
 
-    // A media-change event (peer published video) populates the cache synchronously, keyed by the swarm name.
-    fake.setRemoteTracks([{ trackData, track: videoTrack }]);
+    // A media-change event (peer published video) populates the cache synchronously, keyed by device and kind.
+    fake.setRemoteTracks([remoteTrack]);
     const stream = pulledStream();
     expect(stream?.getVideoTracks()[0]).toBe(videoTrack);
 
     // A later event with the same track reuses the same `MediaStream` — so the bound `<video>` never re-binds
     // (no flicker). Reactivity relies on this reference stability.
-    fake.setRemoteTracks([{ trackData, track: videoTrack }]);
+    fake.setRemoteTracks([remoteTrack]);
     expect(pulledStream()).toBe(stream);
 
     // The peer leaving (empty roster) clears the cached stream.
@@ -120,16 +119,15 @@ describe('MediaManager transport seam', () => {
     await mediaManager.turnScreenshareOn();
     const state = mediaManager._getState();
     expect(state.screenshareEnabled).toBe(true);
-    // Self-view mirrors the RealtimeKit-captured local track, advertised on the swarm as a `screenshare` track.
+    // Self-view mirrors the RealtimeKit-captured local track.
     expect(state.screenshareTrack).toBe(fake.screenShareLocalTrack);
-    expect(state.pushedScreenshareTrack).toMatchObject({ trackName: 'screenshare' });
     // It goes through the dedicated screenshare API — never the camera video slot.
     expect(fake.events.some((event) => event.op === 'enable' && event.kind === 'screenshare')).toBe(true);
     expect(fake.events.some((event) => event.kind === 'video')).toBe(false);
 
     await mediaManager.turnScreenshareOff();
     expect(mediaManager._getState().screenshareEnabled).toBe(false);
-    expect(mediaManager._getState().pushedScreenshareTrack).toBeUndefined();
+    expect(mediaManager._getState().screenshareTrack).toBeUndefined();
     expect(fake.events.some((event) => event.op === 'disable' && event.kind === 'screenshare')).toBe(true);
 
     await mediaManager.close();

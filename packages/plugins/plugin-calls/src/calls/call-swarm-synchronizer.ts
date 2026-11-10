@@ -4,7 +4,7 @@
 
 import md5Hex from 'md5-hex';
 
-import { DeferredTask, Event, scheduleTask, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { Context, Resource } from '@dxos/context';
 import { generateName } from '@dxos/display-name';
@@ -66,17 +66,10 @@ export type CallSwarmSynchronizerProps = { networkService: CallNetworkService };
 const DISCONNECTED_ABRUPT_TIMEOUT = 10_000; // [ms]
 
 /**
- * Swarm activity key under which the room's RealtimeKit meeting id is advertised. The first joiner mints
- * the meeting and advertises it here (last write wins); late joiners read it to share one session.
+ * Swarm activity key under which the room's RealtimeKit meeting id is advertised. A joiner advertises the meeting it
+ * got (last write wins); late joiners read it, and a peer in another meeting moves to it, so the room shares one.
  */
 export const MEETING_ACTIVITY_KEY = 'org.dxos.plugin.calls.realtimekit-meeting';
-
-/**
- * When another peer is present but has not advertised a meeting id yet (a concurrent first join), poll this
- * many times at this interval before minting our own, so the creator's early advertisement can arrive.
- */
-const MEETING_RESOLVE_ATTEMPTS = 6;
-const MEETING_RESOLVE_INTERVAL = 400; // [ms]
 
 /**
  * Sends and receives state to/from Swarm network.
@@ -239,7 +232,7 @@ export class CallSwarmSynchronizer extends Resource {
 
     this._state.users = undefined;
     this._state.self = undefined;
-    // Otherwise a rejoin's `resolveMeetingId` could read this device's stale advertisement and reuse a torn-down meeting.
+    // Otherwise a rejoin would advertise the meeting of the session it left, before learning the room's current one.
     delete this._state.activities?.[MEETING_ACTIVITY_KEY];
     // The snapshot belongs to the session being left; a straggling reconcile must not repopulate state from it.
     this._lastSwarmEvent = undefined;
@@ -254,24 +247,15 @@ export class CallSwarmSynchronizer extends Resource {
     return swarm.peers ?? [];
   }
 
-  /**
-   * Resolves the room's RealtimeKit meeting id so all participants share one session: an id a peer already
-   * advertised, or `undefined` when this peer should mint one. Polls briefly while other peers are present but
-   * none has advertised yet; a lone joiner returns at once.
-   */
-  async resolveMeetingId(roomId: string): Promise<string | undefined> {
-    for (let attempt = 0; attempt < MEETING_RESOLVE_ATTEMPTS; attempt++) {
-      const peers = await this.querySwarm(roomId);
-      const advertised = this.#readAdvertisedMeetingId(peers);
-      if (advertised) {
-        return advertised;
-      }
-      if (peers.every((peer) => peer.peerKey === this._deviceKey)) {
-        return undefined;
-      }
-      await sleep(MEETING_RESOLVE_INTERVAL);
-    }
-    return undefined;
+  /** The meeting id a peer advertised for this room, queried once at join, before swarm state has arrived. */
+  async queryMeetingId(roomId: string): Promise<string | undefined> {
+    return this.#readAdvertisedMeetingId(await this.querySwarm(roomId));
+  }
+
+  /** The room's meeting id as the swarm currently agrees on it (last write wins), ours included. */
+  get advertisedMeetingId(): string | undefined {
+    const meetingId = this._state.activities?.[MEETING_ACTIVITY_KEY]?.payload?.meetingId;
+    return typeof meetingId === 'string' && meetingId.length > 0 ? meetingId : undefined;
   }
 
   /** Advertises the room's RealtimeKit meeting id so late joiners converge on it. */

@@ -38,6 +38,9 @@ import {
   type IndexerHeadsResponse,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
+  type JoinCallResponse,
+  JoinCallResponseSchema,
+  type JoinCallRoomRequest,
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
   type ObjectId,
@@ -106,22 +109,6 @@ export type CreateApiTokenResponse = {
   prefix: string;
   label: string;
   expiresAt?: number | null;
-};
-
-export type JoinCallRoomRequest = {
-  /** DXN of the object anchoring the call (e.g. a Meeting); also the swarm room id. */
-  roomId: string;
-  /** HALO device key hex (== swarm `UserState.id`), bound to the RealtimeKit participant. */
-  deviceKey: string;
-  /** Meeting id the swarm already agreed on; the first joiner omits it. */
-  meetingId?: string;
-};
-
-export type JoinCallRoomResponse = {
-  /** RealtimeKit meeting id, to advertise to the swarm. */
-  meetingId: string;
-  /** Participant token for `RealtimeKitClient.init`. */
-  authToken: string;
 };
 
 export type TriggersDispatcherStatus = {
@@ -1088,20 +1075,34 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   /**
-   * Joins a call room on Cloudflare RealtimeKit through calls-service, which creates the meeting for the first
-   * joiner and mints a participant token named after this client's identity.
+   * Joins a call room on Cloudflare RealtimeKit through calls-service, which resolves the room's meeting and mints a
+   * participant token for this identity and device.
    */
   public async joinCallRoom(
     ctx: Context,
     request: JoinCallRoomRequest,
     args?: EdgeHttpCallArgs,
-  ): Promise<JoinCallRoomResponse> {
-    return this._call(ctx, new URL('/calls/rooms/join', this.baseUrl), {
+  ): Promise<JoinCallResponse> {
+    const response = await this._call(ctx, new URL('/calls/rooms/join', this.baseUrl), {
       ...args,
       body: request,
       method: 'POST',
       auth: true,
     });
+    return Schema.decodeUnknownSync(JoinCallResponseSchema)(response);
+  }
+
+  /**
+   * Joins this device's one-person RealtimeKit meeting, where live transcription runs with nobody else in the room.
+   */
+  public async joinTranscription(ctx: Context, args?: EdgeHttpCallArgs): Promise<JoinCallResponse> {
+    const response = await this._call(ctx, new URL('/calls/transcription/join', this.baseUrl), {
+      ...args,
+      body: {},
+      method: 'POST',
+      auth: true,
+    });
+    return Schema.decodeUnknownSync(JoinCallResponseSchema)(response);
   }
 
   //

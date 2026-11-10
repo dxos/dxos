@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
@@ -30,7 +30,7 @@ import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
 import * as MeetingPlugin from '#meta';
-import { Meeting } from '#types';
+import { Meeting, MeetingOperation } from '#types';
 
 type StoryArgs = {};
 
@@ -43,24 +43,25 @@ const DefaultStory = (_: StoryArgs) => {
     return <Loading data={{ db: !!space?.db, meeting: !!meeting, transcript: !!transcript }} />;
   }
 
-  return <CallTranscriptionView meeting={meeting} transcript={transcript} />;
+  return <CallTranscriptionView meeting={meeting} />;
 };
 
 type CallTranscriptionViewProps = {
   meeting: Meeting.Meeting;
-  transcript: Transcript.Transcript;
 };
 
 /**
  * Two-column live view: the call's video/participant grid beside the meeting hub whose Transcript tab reflects the
  * live feed. The toolbar drives the production path: `join()` opens a RealtimeKit meeting through EDGE, and toggling
- * transcription publishes the meeting activity that binds the feed, after which each participant's native segments
- * reach it through the call manager. Needs a network, a microphone and an EDGE serving `/calls/rooms/join`.
+ * transcription shares the flag over the call, after which each participant's own segments reach the meeting's feed.
+ * Needs a network, a microphone, an identity with an account and an EDGE serving `/calls/rooms/join`; the
+ * `MeetingTranscript` story runs the same transcript path offline.
  */
-const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
+const CallTranscriptionView = ({ meeting }: CallTranscriptionViewProps) => {
   const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
   const roomId = Obj.getURI(meeting);
 
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [joined, setJoined] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
 
@@ -76,28 +77,19 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       callManager.setRoomId(roomId);
       try {
         await callManager.join();
+        await invokePromise(MeetingOperation.SetActive, { object: meeting });
         setJoined(true);
       } catch (err) {
         log.catch(err);
       }
     }
-  }, [callManager, joined, roomId]);
+  }, [callManager, invokePromise, joined, meeting, roomId]);
 
-  const handleToggleTranscription = useCallback(() => {
-    const feed = transcript.feed.target;
-    const feedUri = feed && Feed.getFeedUri(feed);
-    const typename = Type.getTypename(Meeting.Meeting);
-    if (!callManager || !feedUri || !typename) {
-      return;
-    }
+  const handleToggleTranscription = useCallback(async () => {
     const next = !transcribing;
-    callManager.setActivity(typename, {
-      meetingId: roomId,
-      transcriptDxn: feedUri.toString(),
-      transcriptionEnabled: next,
-    });
+    await invokePromise(MeetingOperation.SetTranscription, { enabled: next });
     setTranscribing(next);
-  }, [callManager, transcribing, transcript, roomId]);
+  }, [invokePromise, transcribing]);
 
   return (
     <div className='dx-expand flex flex-col gap-2'>

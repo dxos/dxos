@@ -4,50 +4,28 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { EID, parseId } from '@dxos/keys';
-import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { parseId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
+    Effect.fnUntraced(function* ({ meetingId }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const store = yield* Capability.get(MeetingCapabilities.State);
-      const callManager = yield* Capability.get(CallsCapabilities.Manager);
       const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
       const space = spaceId && client.spaces.get(spaceId);
+      // A meeting that has not replicated here yet resolves to none, and its transcript is then not written.
       const meeting =
         objectId && space
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(objectId))).firstOrUndefined())
           : undefined;
       store.updateState((current) => ({
         ...current,
-        activeMeeting: meeting as Meeting.Meeting | undefined,
+        activeMeeting: meeting && Obj.instanceOf(Meeting.Meeting, meeting) ? meeting : undefined,
       }));
-
-      // Resolve the feed object from its queue/echo URI.
-      const echoUri = space && transcriptDxn ? EID.tryParse(transcriptDxn) : undefined;
-      const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
-      const feed =
-        space && feedObjectId
-          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).firstOrUndefined())
-          : undefined;
-      // A payload whose feed does not resolve here (a bare selection, or a feed not yet replicated) must not leave the
-      // previous meeting's feed receiving segments.
-      if (space && feed && Obj.instanceOf(Feed.Feed, feed)) {
-        callManager.setTranscriptFeed(space.db, feed);
-      } else {
-        callManager.clearTranscriptFeed();
-      }
-
-      // The activity is last-write-wins, so a payload without the flag (e.g. a bare meeting selection) must not turn
-      // transcription off for the whole meeting.
-      if (transcriptionEnabled !== undefined) {
-        callManager.setTranscriptionEnabled(!!transcriptionEnabled);
-      }
     }),
   ),
 );

@@ -16,7 +16,7 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { Meeting, MeetingOperation } from '#types';
+import { Meeting, MeetingActivity, MeetingOperation } from '#types';
 
 import { MeetingNamespace } from '../../namespace.ts';
 
@@ -36,6 +36,7 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
 /** Stand-ins for the call manager's atoms, read unconditionally while the calls plugin is off. */
 const NOT_JOINED = Atom.make(false);
 const NO_ROOM = Atom.make<string | undefined>(undefined);
+const NO_ACTIVITY = Atom.make<undefined>(undefined);
 
 /**
  * Hub view for a meeting: a toolbar of tabs (notes / transcript / summary) over a single content
@@ -66,12 +67,15 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
   const joined = useAtomValue(callManager?.joinedAtom ?? NOT_JOINED);
   const roomId = useAtomValue(callManager?.roomIdAtom ?? NO_ROOM);
-  const transcriptionEnabled = useAtomValue(callManager?.transcriptionEnabledAtom ?? NOT_JOINED);
+  const transcriptionActivity = useAtomValue(
+    callManager?.activityAtom(MeetingActivity.TRANSCRIPTION_KEY) ?? NO_ACTIVITY,
+  );
+  const transcriptionEnabled = MeetingActivity.isTranscriptionEnabled(transcriptionActivity);
   const inCall = joined && roomId === Obj.getURI(meeting);
 
   const handleToggleTranscription = useCallback(async () => {
-    await invokePromise(MeetingOperation.SetTranscription, { meeting, enabled: !transcriptionEnabled });
-  }, [invokePromise, meeting, transcriptionEnabled]);
+    await invokePromise(MeetingOperation.SetTranscription, { enabled: !transcriptionEnabled });
+  }, [invokePromise, transcriptionEnabled]);
 
   // Toolbar tabs (single-select toggle group) + a generate/regenerate-summary action.
   const menuActions = useMenuBuilder(

@@ -9,7 +9,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
 import { trim } from '@dxos/util';
 
@@ -52,8 +51,8 @@ const config: Plugin.PluginConfig = Plugin.config({
       'CallExtension',
       {
         requires: [MeetingCapabilities.State],
-        provides: [CallsCapabilities.EventHandler],
-        // Both features must be live: the handler extends calls but reads meeting state.
+        provides: [],
+        // Both features must be live: the module subscribes to the call manager and reads meeting state.
         activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
       },
       () => import('./src/capabilities/call-extension.ts', { with: { type: 'module-url' } }),

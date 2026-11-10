@@ -9,31 +9,22 @@ import { type Transcriber } from '@dxos/pipeline-transcription';
 import { type CreateTranscriberOptions, createTranscriber } from '../capture/index.ts';
 
 /**
- * Records audio while the user is speaking and transcribes it after they pause. Builds a
- * {@link Transcriber} directly from {@link createTranscriber} (no app-framework capability needed,
- * since the browser construction lives in this package); returns `undefined` until a track and
- * `onSegments` handler are supplied.
+ * Transcribes a track live while started. Builds a {@link Transcriber} directly from {@link createTranscriber} (no
+ * app-framework capability needed, since the browser construction lives in this package); returns `undefined` until a
+ * track, a join function and an `onSegments` handler are supplied.
  */
 export const useTranscriber = ({
   audioStreamTrack,
-  recorderConfig,
-  transcriberConfig,
-  transcribe,
+  join,
   onSegments,
 }: Partial<CreateTranscriberOptions>): Transcriber | undefined => {
   const transcriber = useMemo<Transcriber | undefined>(() => {
-    if (!audioStreamTrack || !onSegments) {
+    if (!audioStreamTrack || !join || !onSegments) {
       return undefined;
     }
 
-    return createTranscriber({
-      audioStreamTrack,
-      recorderConfig,
-      transcriberConfig,
-      transcribe,
-      onSegments,
-    });
-  }, [audioStreamTrack, recorderConfig, transcriberConfig, transcribe, onSegments]);
+    return createTranscriber({ audioStreamTrack, join, onSegments });
+  }, [audioStreamTrack, join, onSegments]);
 
   useEffect(() => {
     return () => {

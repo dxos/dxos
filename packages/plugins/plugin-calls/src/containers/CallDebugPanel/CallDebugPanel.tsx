@@ -16,7 +16,7 @@ import type * as Util from '@dxos/react-ui/Util';
 
 import { CallsCapabilities } from '#types';
 
-import { type EncodedTrackName, type GlobalState, type MediaStats } from '../../calls/index.ts';
+import { type GlobalState, type MediaStats, remoteTrackKey } from '../../calls/index.ts';
 import { CallsNamespace } from '../../namespace.ts';
 
 // Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
@@ -38,15 +38,15 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
   // Polls the transport's send-side stats only while the switch is on and a session is live.
   const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState<MediaStats>();
-  const peer = state?.media.peer;
+  const transport = state?.media.transport;
   useEffect(() => {
-    if (!showStats || !peer) {
+    if (!showStats || !transport) {
       setStats(undefined);
       return;
     }
     let active = true;
     const poll = () =>
-      void peer.getStats?.().then(
+      void transport.getStats().then(
         (next) => active && setStats(next),
         (error) => log.catch(error),
       );
@@ -56,7 +56,7 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       active = false;
       clearInterval(interval);
     };
-  }, [showStats, peer]);
+  }, [showStats, transport]);
 
   const rows = useMemo(() => getCallStatusRows(state), [state?.call.users, state?.media.pulledAudioTracks]);
 
@@ -106,10 +106,11 @@ const getCallStatusRows = (state?: GlobalState): StatusRow[] => {
     .filter((user) => user.id !== self?.id)
     .map((user) => {
       // The cache holds only live remote tracks (dropped when the peer leaves), so presence means playable.
-      const audio = user.tracks?.audio && !!state.media.pulledAudioTracks[user.tracks.audio as EncodedTrackName];
-      const video = user.tracks?.video && !!state.media.pulledVideoStreams[user.tracks.video as EncodedTrackName];
+      const id = user.id ?? '';
+      const audio = user.tracks?.audioEnabled && !!state.media.pulledAudioTracks[remoteTrackKey(id, 'audio')];
+      const video = user.tracks?.videoEnabled && !!state.media.pulledVideoStreams[remoteTrackKey(id, 'video')];
       const screenshare =
-        user.tracks?.screenshare && !!state.media.pulledVideoStreams[user.tracks.screenshare as EncodedTrackName];
+        user.tracks?.screenshareEnabled && !!state.media.pulledVideoStreams[remoteTrackKey(id, 'screenshare')];
       return {
         label: user.name ?? truncateKey(user.id, 8),
         value: [
@@ -129,11 +130,11 @@ const getCallStatusRows = (state?: GlobalState): StatusRow[] => {
           {
             label: `self: ${self.name ?? truncateKey(self.id, 8)}`,
             value: [
-              trackStatus('AUD', self.tracks?.audio && state.media.pushedAudioTrack),
-              trackStatus('VID', self.tracks?.video && state.media.pushedVideoTrack),
+              trackStatus('AUD', self.tracks?.audioEnabled && state.media.audioTrack),
+              trackStatus('VID', self.tracks?.videoEnabled && state.media.videoTrack),
               trackStatus(
                 'SCR',
-                self.tracks?.screenshareEnabled && state.media.pushedScreenshareTrack,
+                self.tracks?.screenshareEnabled && state.media.screenshareTrack,
                 !!self.tracks?.screenshareEnabled,
               ),
             ]
@@ -143,6 +144,6 @@ const getCallStatusRows = (state?: GlobalState): StatusRow[] => {
         ]
       : []),
     ...userRows,
-    { label: 'Media', value: state.media.peer?.isOpen ? 'connected' : 'no connection' },
+    { label: 'Media', value: state.media.transport?.isOpen ? 'connected' : 'no connection' },
   ];
 };

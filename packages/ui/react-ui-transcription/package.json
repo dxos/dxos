@@ -35,6 +35,7 @@
     "src"
   ],
   "dependencies": {
+    "@cloudflare/realtimekit": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/async": "workspace:*",

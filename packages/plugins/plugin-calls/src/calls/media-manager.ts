@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { SpeakingMonitor } from '@dxos/av';
-import { Resource, cancelWithContext } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
+import { type Context, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import { type MediaTransport } from './media-transport.ts';
-import { type EncodedTrackName, TrackNameCodec, type TrackObject } from './types.ts';
+import { type RemoteTrackKey, remoteTrackKey } from './types.ts';
 import { getUserMediaTrack } from './util/index.ts';
 
 export type MediaState = {
@@ -26,24 +25,18 @@ export type MediaState = {
   screenshareTrack?: MediaStreamTrack;
   screenshareVideoStream?: MediaStream;
 
-  pushedVideoTrack?: TrackObject;
-  pushedAudioTrack?: TrackObject;
-  pushedScreenshareTrack?: TrackObject;
-  peer?: MediaTransport;
+  /** The live call's transport, while joined. */
+  transport?: MediaTransport;
 
-  pulledAudioTracks: Record<EncodedTrackName, MediaStreamTrack>;
-  /**
-   * Includes video feeds and screenshare feeds of other participants.
-   */
-  pulledVideoStreams: Record<EncodedTrackName, MediaStream>;
+  /** Remote microphones, by {@link remoteTrackKey}. */
+  pulledAudioTracks: Record<RemoteTrackKey, MediaStreamTrack>;
+  /** Remote cameras and screenshares, by {@link remoteTrackKey}. */
+  pulledVideoStreams: Record<RemoteTrackKey, MediaStream>;
 };
 
 // TOOD(burdon): Hard coded.
 const VIDEO_WIDTH = 1280;
 const VIDEO_HEIGHT = 720;
-const MAX_WEB_CAM_FRAMERATE = 24;
-const MAX_WEB_CAM_BITRATE = 120_0000;
-const RETRY_INTERVAL = 100;
 
 export class MediaManager extends Resource {
   public readonly stateUpdated = new Event<MediaState>();
@@ -54,8 +47,12 @@ export class MediaManager extends Resource {
   };
 
   private _speakingMonitor?: SpeakingMonitor = undefined;
-  private _pushTracksTask?: DeferredTask = undefined;
-  private _mediaChangeUnsubscribe?: () => void = undefined;
+  private _publishTask?: DeferredTask = undefined;
+  /** Scoped to one transport, so its listeners go when it does. */
+  private _transportCtx?: Context = undefined;
+  /** What the transport currently publishes, so only changes reach it. */
+  #publishedAudio?: MediaStreamTrack;
+  #publishedVideo?: MediaStreamTrack;
 
   get isSpeaking() {
     return this._speakingMonitor?.isSpeaking;
@@ -70,8 +67,8 @@ export class MediaManager extends Resource {
 
   protected override async _open(): Promise<void> {
     // Camera and mic start unpublished; off maps to the transport's native disable, so no placeholder tracks exist.
-    this._pushTracksTask = new DeferredTask(this._ctx, async () => {
-      await this._pushTracks();
+    this._publishTask = new DeferredTask(this._ctx, async () => {
+      await this._publishTracks();
     });
   }
 
@@ -81,30 +78,30 @@ export class MediaManager extends Resource {
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
     this._state.screenshareTrack?.stop();
-    this._pushTracksTask = undefined;
+    this._publishTask = undefined;
   }
 
   @synchronized
   async join(transport: MediaTransport): Promise<void> {
-    this._state.peer = transport;
-    await this._state.peer.open();
-    // Remote tracks follow the transport's roster events, never the swarm; the UI picks streams by advertised name.
-    this._mediaChangeUnsubscribe = transport.subscribeMediaChanges(() => this._syncRemoteTracks());
+    this._state.transport = transport;
+    await transport.open();
+    // Remote tracks follow the transport's roster events, never the swarm; the UI finds them by device and kind.
+    this._transportCtx = this._ctx.derive();
+    transport.mediaChanged.on(this._transportCtx, () => this._syncRemoteTracks());
     // No event fires for participants already present when we joined.
     this._syncRemoteTracks();
-    this._pushTracksTask!.schedule();
+    this._publishTask!.schedule();
   }
 
   @synchronized
   async leave(): Promise<void> {
-    this._mediaChangeUnsubscribe?.();
-    this._mediaChangeUnsubscribe = undefined;
+    await this._transportCtx?.dispose();
+    this._transportCtx = undefined;
     // The transport owns the remote tracks and stops them on close.
-    await this._state.peer?.close();
-    this._state.peer = undefined;
-    this._state.pushedVideoTrack = undefined;
-    this._state.pushedAudioTrack = undefined;
-    this._state.pushedScreenshareTrack = undefined;
+    await this._state.transport?.close();
+    this._state.transport = undefined;
+    this.#publishedAudio = undefined;
+    this.#publishedVideo = undefined;
     this._state.pulledAudioTracks = {};
     this._state.pulledVideoStreams = {};
   }
@@ -119,7 +116,7 @@ export class MediaManager extends Resource {
 
     this._state.videoEnabled = true;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._publishTask!.schedule();
   }
 
   async turnVideoOff(): Promise<void> {
@@ -130,7 +127,7 @@ export class MediaManager extends Resource {
 
     this._state.videoEnabled = false;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._publishTask!.schedule();
   }
 
   // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
@@ -145,7 +142,7 @@ export class MediaManager extends Resource {
     });
     this._state.audioEnabled = true;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._publishTask!.schedule();
     this._speakingMonitor = new SpeakingMonitor(this._state.audioTrack!);
     this._speakingMonitor.speakingChanged.on(this._ctx, () => this.stateUpdated.emit(this._state));
     void this._speakingMonitor.open();
@@ -158,17 +155,16 @@ export class MediaManager extends Resource {
     this._state.audioTrack?.stop();
     this._state.audioTrack = undefined;
     this.stateUpdated.emit(this._state);
-    this._pushTracksTask!.schedule();
+    this._publishTask!.schedule();
   }
 
   async turnScreenshareOn(): Promise<void> {
-    const peer = this._state.peer;
-    if (!peer) {
+    const transport = this._state.transport;
+    if (!transport) {
       return;
     }
     // The transport captures the display itself; its local track is the sharer's own self-view.
-    const { descriptor, localTrack } = await peer.setScreenShareEnabled(true);
-    this._state.pushedScreenshareTrack = descriptor;
+    const localTrack = await transport.setScreenShare(true);
     this._state.screenshareTrack = localTrack;
     this._state.screenshareVideoStream = localTrack ? new MediaStream([localTrack]) : undefined;
     this._state.screenshareEnabled = true;
@@ -176,8 +172,7 @@ export class MediaManager extends Resource {
   }
 
   async turnScreenshareOff(): Promise<void> {
-    await this._state.peer?.setScreenShareEnabled(false);
-    this._state.pushedScreenshareTrack = undefined;
+    await this._state.transport?.setScreenShare(false);
     this._state.screenshareTrack = undefined;
     this._state.screenshareVideoStream = undefined;
     this._state.screenshareEnabled = false;
@@ -185,30 +180,30 @@ export class MediaManager extends Resource {
   }
 
   /**
-   * Rebuilds the pulled-track cache from the transport's roster, keyed by the name each publisher advertises on the
-   * swarm. Synchronous, so it runs atomically against `leave`.
+   * Rebuilds the remote-track cache from the transport's roster, keyed by publishing device and kind. Synchronous, so
+   * it runs atomically against `leave`.
    */
   private _syncRemoteTracks(): void {
-    const peer = this._state.peer;
-    if (!peer?.isOpen) {
+    const transport = this._state.transport;
+    if (!transport?.isOpen) {
       return;
     }
 
     // An unchanged video track keeps its `MediaStream` wrapper: the UI binds `srcObject` to it, and a new one flickers.
-    const pulledVideoStreams: Record<EncodedTrackName, MediaStream> = {};
-    const pulledAudioTracks: Record<EncodedTrackName, MediaStreamTrack> = {};
+    const pulledVideoStreams: Record<RemoteTrackKey, MediaStream> = {};
+    const pulledAudioTracks: Record<RemoteTrackKey, MediaStreamTrack> = {};
     let changed = false;
-    for (const { trackData, track } of peer.getRemoteTracks()) {
-      const name = TrackNameCodec.encode(trackData);
-      if (trackData.trackName === 'audio') {
-        pulledAudioTracks[name] = track;
-        changed ||= this._state.pulledAudioTracks[name] !== track;
+    for (const { deviceKey, kind, track } of transport.getRemoteTracks()) {
+      const key = remoteTrackKey(deviceKey, kind);
+      if (kind === 'audio') {
+        pulledAudioTracks[key] = track;
+        changed ||= this._state.pulledAudioTracks[key] !== track;
       } else {
-        const existing = this._state.pulledVideoStreams[name];
+        const existing = this._state.pulledVideoStreams[key];
         if (existing?.getVideoTracks()[0] === track) {
-          pulledVideoStreams[name] = existing;
+          pulledVideoStreams[key] = existing;
         } else {
-          pulledVideoStreams[name] = new MediaStream([track]);
+          pulledVideoStreams[key] = new MediaStream([track]);
           changed = true;
         }
       }
@@ -225,82 +220,42 @@ export class MediaManager extends Resource {
     }
   }
 
-  private async _pushTracks(): Promise<void> {
-    // Captured for the whole push: a leave or rejoin can swap `_state.peer` while it awaits.
-    const peer = this._state.peer;
-    if (!peer?.isOpen) {
+  /**
+   * Publishes what is enabled and unpublishes what is not, sending only changes. A replaced track is unpublished
+   * before the new one goes out: RealtimeKit handles a swap while enabled unreliably (remote peers freeze).
+   */
+  private async _publishTracks(): Promise<void> {
+    const transport = this._state.transport;
+    if (!transport?.isOpen) {
       return;
     }
 
-    // Gated on the enabled flag, not the track, so every enable starts from disabled: RealtimeKit handles a track
-    // swap while enabled unreliably (remote peers freeze). Screenshare goes through `setScreenShareEnabled`.
-    let updated = false;
-    const [pushVideoResult, pushAudioResult] = await Promise.all([
-      this._maybePushTrack(
-        peer,
-        this._state.videoEnabled ? this._state.videoTrack : undefined,
-        this._state.pushedVideoTrack,
-        [{ maxFramerate: MAX_WEB_CAM_FRAMERATE, maxBitrate: MAX_WEB_CAM_BITRATE }],
-      ),
-      this._maybePushTrack(
-        peer,
-        this._state.audioEnabled ? this._state.audioTrack : undefined,
-        this._state.pushedAudioTrack,
-        [{ networkPriority: 'high' }],
-      ),
-    ]);
-
-    // The call ended or switched peers meanwhile; the new peer schedules its own push on join.
-    if (this._state.peer !== peer) {
-      return;
-    }
-
-    if (pushVideoResult.track !== this._state.pushedVideoTrack) {
-      this._state.pushedVideoTrack = pushVideoResult.track;
-      updated = true;
-    }
-    if (pushAudioResult.track !== this._state.pushedAudioTrack) {
-      this._state.pushedAudioTrack = pushAudioResult.track;
-      updated = true;
-    }
-
-    const shouldRetry = pushVideoResult.shouldRetry || pushAudioResult.shouldRetry;
-    if (updated) {
-      this.stateUpdated.emit(this._state);
-    }
-
-    if (shouldRetry) {
-      await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.info('retrying push tracks', { pushVideoResult, pushAudioResult });
-      invariant(this._pushTracksTask);
-      this._pushTracksTask.schedule();
-    }
+    const audio = this._state.audioEnabled ? this._state.audioTrack : undefined;
+    const video = this._state.videoEnabled ? this._state.videoTrack : undefined;
+    await Promise.all([
+      audio !== this.#publishedAudio &&
+        this.#publish(transport, audio, this.#publishedAudio, (track) => transport.setAudio(track)).then(() => {
+          this.#publishedAudio = audio;
+        }),
+      video !== this.#publishedVideo &&
+        this.#publish(transport, video, this.#publishedVideo, (track) => transport.setVideo(track)).then(() => {
+          this.#publishedVideo = video;
+        }),
+    ]).catch((err) => log.warn('failed to publish tracks', { err }));
   }
 
-  private async _maybePushTrack(
-    peer: MediaTransport,
-    track?: MediaStreamTrack,
-    previousTrack?: TrackObject,
-    encodings?: RTCRtpEncodingParameters[],
-  ): Promise<{ track?: TrackObject; shouldRetry?: boolean }> {
-    if (!track && !previousTrack) {
-      return { track: undefined };
+  async #publish(
+    transport: MediaTransport,
+    track: MediaStreamTrack | undefined,
+    published: MediaStreamTrack | undefined,
+    set: (track: MediaStreamTrack | undefined) => Promise<void>,
+  ): Promise<void> {
+    if (track && published) {
+      await set(undefined);
     }
-
-    const ctx = this._ctx.derive();
-    try {
-      return {
-        track: await peer.pushTrack({
-          ctx,
-          track: track ?? null,
-          previousTrack,
-          encodings,
-        }),
-      };
-    } catch (err) {
-      log.info('failed to push track', { err, track, previousTrack, encodings });
-      void ctx.dispose();
-      return { shouldRetry: true };
+    // A leave or rejoin swapped the transport meanwhile; the new one publishes for itself on join.
+    if (this._state.transport === transport) {
+      await set(track);
     }
   }
 }

@@ -8,15 +8,25 @@
  * appending each corrected block as a message rather than waiting for playback to stop.
  *
  * - `Default` plays a hosted m4a; the play/pause + upload toolbar gates playback and capture.
- * - A small chunk threshold drives incremental transcription every few seconds (the streaming stack).
+ * - With EDGE configured the file is transcribed live by RealtimeKit; without it a scripted transcript stands in, so
+ *   the pipeline and the message list still run offline.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
-import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
+import { type CommitFn, makeCorrectionStage } from '@dxos/pipeline-transcription';
+import { SAMPLE_MEETING, createScriptedTranscriber } from '@dxos/pipeline-transcription/testing';
+import { useJoinTranscription } from '@dxos/react-client';
+import {
+  type TrackTranscriber,
+  Transcription,
+  createRealtimeKitTranscriber,
+  useAudioFile,
+  useFeedModelAdapter,
+  useRecordingPipeline,
+} from '@dxos/react-ui-transcription';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
@@ -27,17 +37,7 @@ import { createStoryDecorators } from '#testing';
 
 import { renderByline } from '../util/index.ts';
 
-// The story names its transcription endpoint explicitly; the app derives it from
-// `runtime.services.edge.url`, which a story has no client to read.
-const TRANSCRIPTION_ENDPOINT = 'https://dxos.network/calls';
-
-// Small chunk threshold so the transcriber emits every few seconds while the file plays (streaming),
-// instead of only flushing the whole buffer on stop.
-const STREAMING_TRANSCRIBE_CONFIG: Partial<TranscribeConfig> = {
-  transcribeAfterChunksAmount: 25,
-  prefixBufferChunksAmount: 10,
-  endpoint: TRANSCRIPTION_ENDPOINT,
-};
+const SCRIPTED_TRANSCRIBER: TrackTranscriber = () => createScriptedTranscriber({ segments: SAMPLE_MEETING });
 
 // In-memory message buffer + model adapter (production wires up a real space-backed `Feed`).
 const useStoryMessageModel = () => {
@@ -119,8 +119,13 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
   );
 
   const stages = useMemo(() => [makeCorrectionStage()], []);
+  const join = useJoinTranscription();
+  const transcriber = useMemo<TrackTranscriber>(
+    () => (join ? (track) => createRealtimeKitTranscriber({ audioStreamTrack: track, join }) : SCRIPTED_TRANSCRIBER),
+    [join],
+  );
   useRecordingPipeline({
-    config: STREAMING_TRANSCRIBE_CONFIG,
+    transcriber,
     segmentSentences: true,
     active: running,
     track,
