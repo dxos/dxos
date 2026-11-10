@@ -9,6 +9,7 @@
   --sl-text-h2: 1.625rem;
   --sl-text-h3: 1.25rem;
   --sl-content-width: 46rem;
+  --c-toc-width: 15rem;
   --sl-line-height: 1.65;
 }
 
@@ -141,7 +142,28 @@ site-search button[data-open-modal] {
   font-size: 0.625rem;
 }
 
-/* Table of contents. */
+/* Title panel: no rule between it and the body. */
+.main-pane .content-panel + .content-panel {
+  border-top: 0;
+}
+
+/* Table of contents: a fixed column; the content centers in the rest. */
+@media (min-width: 72rem) {
+  html[data-has-sidebar][data-has-toc] .main-pane {
+    --sl-content-margin-inline: auto;
+    width: calc(100% - var(--c-toc-width));
+  }
+
+  html .right-sidebar-container {
+    width: var(--c-toc-width);
+  }
+
+  html .right-sidebar-panel .sl-container {
+    width: calc(var(--c-toc-width) - 2 * var(--sl-sidebar-pad-x));
+    max-width: none;
+  }
+}
+
 starlight-toc a[aria-current='true'] {
   color: var(--c-accent);
 }
