@@ -191,7 +191,7 @@ export class SchemaValidator {
   public static isOptionalPropertyAt(
     rootObjectSchema: Schema.Top,
     propertyPath: KeyPath,
-    getProperty: (path: KeyPath) => any,
+    getProperty: (path: KeyPath) => unknown,
   ): boolean {
     const propertyName = propertyPath.at(-1);
     if (propertyName === undefined) {
