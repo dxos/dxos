@@ -7,6 +7,8 @@ import IconBluesky from './svg/IconBluesky.astro';
 import IconRss from './svg/IconRss.astro';
 import IconChevronRight from './svg/IconChevronRight.astro';
 
+import { showBlog } from './site-links.ts';
+
 interface Props {
   accent?: 'green' | 'blue';
 }
@@ -44,9 +46,11 @@ const accent = accentColor === 'blue' ? ' c' : '';
           <a href="/plugins" class={`nav-link${accent} w-inline-block`}>
             <div>Plugins</div>
           </a>
-          <a href="/blog" class={`nav-link${accent} w-inline-block`}>
-            <div>Blog</div>
-          </a>
+          {showBlog && (
+            <a href="/blog" class={`nav-link${accent} w-inline-block`}>
+              <div>Blog</div>
+            </a>
+          )}
           <a href="/docs" class={`nav-link${accent} w-inline-block`}>
             <div>Docs</div>
           </a>
@@ -65,9 +69,11 @@ const accent = accentColor === 'blue' ? ' c' : '';
             <a href="https://x.com/dxos_org" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
               <div class="icon-1x1-xsmall w-embed"><IconX /></div>
             </a>
-            <a href="/blog/rss.xml" class={`button is-link is-icon-only${accent} w-inline-block`}>
-              <div class="icon-1x1-xsmall w-embed"><IconRss /></div>
-            </a>
+            {showBlog && (
+              <a href="/blog/rss.xml" class={`button is-link is-icon-only${accent} w-inline-block`}>
+                <div class="icon-1x1-xsmall w-embed"><IconRss /></div>
+              </a>
+            )}
           </div>
         </div>
         <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8d6-2ccfe8b8" class="horizontal-line-wrap">

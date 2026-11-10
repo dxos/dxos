@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-/** The main site's pages, as the Webflow nav lists them; the Starlight header and footer link the same set. */
-export const siteLinks = [
+/** Blog links are hidden from every nav and footer until the blog is ready; its pages still build. */
+export const showBlog = false;
+
+const allSiteLinks = [
   { id: 'home', label: 'Home', href: '/' },
   { id: 'echo', label: 'ECHO', href: '/echo' },
   { id: 'composer', label: 'Composer', href: '/composer' },
@@ -11,3 +13,6 @@ export const siteLinks = [
   { id: 'blog', label: 'Blog', href: '/blog' },
   { id: 'docs', label: 'Docs', href: '/docs' },
 ] as const;
+
+/** The main site's pages, as the Webflow nav lists them; the Starlight header and footer link the same set. */
+export const siteLinks = allSiteLinks.filter(({ id }) => showBlog || id !== 'blog');
