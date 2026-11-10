@@ -12,5 +12,5 @@ export type CreateTranscriberOptions = RealtimeKitTranscriberOptions & Transcrib
  * Builds the live {@link Transcriber} for a track: RealtimeKit's streaming transcription in a one-person meeting.
  * Consumed directly via the {@link useTranscriber} hook.
  */
-export const createTranscriber = ({ onSegments, ...options }: CreateTranscriberOptions): Transcriber =>
-  createRealtimeKitTranscriber(options)({ onSegments });
+export const createTranscriber = ({ onSegments, onEnded, ...options }: CreateTranscriberOptions): Transcriber =>
+  createRealtimeKitTranscriber(options)({ onSegments, onEnded });

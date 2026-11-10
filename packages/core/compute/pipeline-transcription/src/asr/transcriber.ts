@@ -28,6 +28,11 @@ export interface Transcriber {
 export type TranscriberCallbacks = {
   /** Receives final segments in spoken order; the next batch waits for this one to settle. */
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
+  /**
+   * Called once when the service ends the session for good (the meeting ended, or this participant was removed or
+   * refused), after which the transcriber takes no more audio; a consumer stops its recording here.
+   */
+  onEnded?: (reason: string) => void;
 };
 
 /** Builds a {@link Transcriber} delivering to the given callbacks: the one seam a pipeline is wired through. */

@@ -164,7 +164,13 @@ const TranscriptionDriver = () => {
     [isCancelled],
   );
 
-  const transcriber = useTranscriber({ audioStreamTrack: track, join, onSegments: handleSegments });
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    join,
+    onSegments: handleSegments,
+    // The meeting ended for good, so end the session rather than keep showing a recording nothing hears.
+    onEnded: () => setSession(() => null),
+  });
   const transcriberRef = useRef(transcriber);
   transcriberRef.current = transcriber;
 

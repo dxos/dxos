@@ -169,8 +169,9 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
   readonly #onRoomLeft = (state: string): void => {
     this.#detach();
     if (!RECONNECT_STATES.has(state)) {
-      // Ended, kicked or rejected: a rejoin would be refused the same way, so the session stays closed to new audio.
+      // Ended, kicked or rejected: a rejoin would be refused the same way, so the session takes no more audio.
       log.warn('transcription meeting ended', { state });
+      this._callbacks.onEnded?.(state);
       return;
     }
     log.info('transcription meeting lost; rejoining', { state });

@@ -74,7 +74,13 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
   );
 
   // Drive the transcriber lifecycle off the recording flag + audio track.
-  const transcriber = useTranscriber({ audioStreamTrack: track, join, onSegments: handleSegments });
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    join,
+    onSegments: handleSegments,
+    // The meeting ended for good, so stop rather than keep showing a recording nothing hears.
+    onEnded: () => setRecording(false),
+  });
   useEffect(() => {
     if (!transcriber) {
       return;

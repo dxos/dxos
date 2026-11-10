@@ -153,6 +153,8 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     await this.#closeTranscriber();
     const transcriber = createRealtimeKitTranscriber({ audioStreamTrack: track, join: this._join })({
       onSegments: (segments) => this._onSegments(segments),
+      // The meeting ended for good: turning transcription off closes this session and shows it as stopped.
+      onEnded: () => void this.setEnabled(false).catch((err) => log.catch(err)),
     });
     try {
       await transcriber.open();

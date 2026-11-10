@@ -105,7 +105,13 @@ export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditor
   // permission prompt and recording indicator appear before `open()` fails for a service that was never configured.
   const track = useAudioTrack(active && !!join, audioConstraints);
 
-  const transcriber = useTranscriber({ audioStreamTrack: track, join, onSegments: handleSegments });
+  const transcriber = useTranscriber({
+    audioStreamTrack: track,
+    join,
+    onSegments: handleSegments,
+    // The meeting ended for good, so end the session rather than keep showing a recording nothing hears.
+    onEnded: () => setSession?.(() => null),
+  });
 
   // `useTranscriber` only constructs (and eventually closes) the transcriber; opening it is the consumer's job.
   useEffect(() => {

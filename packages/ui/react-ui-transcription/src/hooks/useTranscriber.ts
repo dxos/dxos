@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { type Transcriber } from '@dxos/pipeline-transcription';
 
@@ -17,13 +17,17 @@ export const useTranscriber = ({
   audioStreamTrack,
   join,
   onSegments,
+  onEnded,
 }: Partial<CreateTranscriberOptions>): Transcriber | undefined => {
+  // Read through a ref, so a new `onEnded` closure does not rebuild (and so restart) the transcriber.
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
   const transcriber = useMemo<Transcriber | undefined>(() => {
     if (!audioStreamTrack || !join || !onSegments) {
       return undefined;
     }
 
-    return createTranscriber({ audioStreamTrack, join, onSegments });
+    return createTranscriber({ audioStreamTrack, join, onSegments, onEnded: (reason) => onEndedRef.current?.(reason) });
   }, [audioStreamTrack, join, onSegments]);
 
   useEffect(() => {
