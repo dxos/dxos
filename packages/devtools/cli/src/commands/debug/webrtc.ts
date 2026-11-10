@@ -9,6 +9,8 @@ import * as Effect from 'effect/Effect';
 
 import { getRtcConnectionFactory } from '@dxos/network-manager';
 
+import { CliError } from '../../util/errors.ts';
+
 const MESSAGE = 'ping';
 
 /**
@@ -52,7 +54,9 @@ export const webrtc = Command.make(
   Effect.fnUntraced(function* () {
     const received = yield* Effect.tryPromise(openLoopbackChannel).pipe(Effect.timeout(Duration.seconds(10)));
     if (received !== MESSAGE) {
-      return yield* Effect.fail(new Error(`Data channel delivered "${received}" instead of "${MESSAGE}".`));
+      return yield* Effect.fail(
+        new CliError({ message: `Data channel delivered "${received}" instead of "${MESSAGE}".` }),
+      );
     }
     yield* Console.log('WebRTC data channel opened between two local peers.');
   }),
