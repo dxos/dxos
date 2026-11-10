@@ -11,6 +11,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
@@ -21,6 +24,9 @@
     },
     {
       "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../mesh/edge-client"
     },
     {
       "path": "../../protocols"

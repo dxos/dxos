@@ -268,6 +268,29 @@ export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHa
   'org.dxos.app-framework.capability.operationHandler',
 );
 
+/** A service a host serves to a plugin's operations: every method takes and returns plain data. */
+export type HostServiceProxy = Readonly<Record<string, (...args: readonly unknown[]) => Effect.Effect<unknown, Error>>>;
+
+/**
+ * Builds one of a plugin's services from a service its host serves, for a host (EDGE) that holds the service's state
+ * elsewhere: the host's side crosses a wire as plain data, so the plugin's own codecs turn it back into the values
+ * its operations use (refs, decoded schemas).
+ */
+export type HostServiceAdapter = {
+  /** The key the host serves the wire service under. */
+  readonly host: string;
+  /** The key of the service it builds, which the plugin's operations require. */
+  readonly service: string;
+  readonly make: (host: HostServiceProxy) => unknown;
+};
+
+/**
+ * @category Capability
+ */
+export const HostServiceAdapter = Capability$.make<HostServiceAdapter>()(
+  'org.dxos.app-framework.capability.hostServiceAdapter',
+);
+
 /**
  * Merged, contribution-ordered view over all {@link OperationHandler} contributions — the same
  * set the operation invoker resolves against. Provided by ProcessManagerPlugin.

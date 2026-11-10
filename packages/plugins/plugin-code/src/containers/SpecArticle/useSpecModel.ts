@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtom } from '@effect/atom-react';
+import { useAtom, useAtomValue } from '@effect/atom-react';
+import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type * as Spec from '@dxos/compute/Spec';
+import * as SpecReview from '@dxos/compute/SpecReview';
 import { findSpecRefs, specReferenceFilter } from '@dxos/deus/extension';
 import {
   type ReviewModel,
@@ -18,13 +20,14 @@ import {
   parseSourceKey,
   reviewKeyOf,
 } from '@dxos/deus/review';
-import { useObject } from '@dxos/echo-react';
+import { Obj } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import type * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import { type Text } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
 import { type GutterItem, SPEC_INDEX, buildChangelogGraph, resolveSpecRef } from '#components';
-import { getSpecKey } from '#sync';
+import { SpecReviews, getSpecKey } from '#sync';
 
 import { type SpecSessionState, specSession } from './spec-session.ts';
 import { fileKey, useLocalTexts, useResolvedPath, useSpecDiff } from './useSpecSources.ts';
@@ -41,7 +44,7 @@ export type SpecSource = {
   sourceKey?: string;
   /** Base text that diff mode compares with, for hosts that cannot run git; git's base wins when both exist. */
   base?: string;
-  /** Review text (`<SPEC>.review.mdl`), for hosts that cannot read the checkout; the checkout's review wins. */
+  /** Review text (`<SPEC>.review.mdl`) of static content; an ECHO spec's reviews are its SpecReviews. */
   review?: string;
 };
 
@@ -61,6 +64,9 @@ export type SpecModel = {
   text: string;
   /** Files read from the checkout, by file key. */
   texts: ReadonlyMap<string, string>;
+  /** The spec's reviews, newest first. */
+  reviews: readonly SpecReviews.ReviewData[];
+  /** Each item's newest verdict across the reviews, or the static content's review. */
   review?: ReviewModel;
   read: (target: SourceKey) => string | undefined;
   /** Reads the latest files without rebuilding what holds it. */
@@ -76,7 +82,7 @@ export type SpecModel = {
 };
 
 /**
- * Everything the spec's editor and its panel read: its text, the files it names from the checkout, its latest review,
+ * Everything the spec's editor and its panel read: its text, the files it names from the checkout, its reviews,
  * its decisions and what diff mode compares it with. Both call it, so either can be shown without the other.
  */
 export const useSpecModel = ({ spec, content, sourceKey, base, review: staticReview }: SpecSource): SpecModel => {
@@ -100,7 +106,7 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
   const related = useMemo(
     () =>
       [
-        reviewKey,
+        !spec && reviewKey,
         !spec && key && fileKey(key),
         codeTarget && fileKey(codeTarget),
         ...findSourceKeys(ownText)
@@ -118,8 +124,19 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
   const [codeKeys, setCodeKeys] = useState<readonly string[]>([]);
   const texts = useLocalTexts(useMemo(() => [...related, ...codeKeys], [related, codeKeys]));
   const text = (!spec && key && texts.get(fileKey(key))) || ownText;
-  const reviewText = (reviewKey ? texts.get(reviewKey) : undefined) ?? staticReview;
-  const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
+  const reviewText = (!spec && reviewKey ? texts.get(reviewKey) : undefined) ?? staticReview;
+  const queried = useQuery(spec && Obj.getDatabase(spec), SpecReview.query(spec));
+  // Through each review's atom, so a review recorded again with new verdicts reaches the editor and the panel.
+  const reviews = useAtomValue(
+    useMemo(
+      () => Atom.make((get) => queried.map((review) => get(Obj.atom(review))).sort(SpecReview.byNewest)),
+      [queried],
+    ),
+  );
+  const review = useMemo(
+    () => (spec ? SpecReviews.currentModel(reviews) : reviewText ? parseReview(reviewText) : undefined),
+    [spec, reviews, reviewText],
+  );
   const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
   useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
   const read = useCallback((target: SourceKey) => texts.get(fileKey(target)), [texts]);
@@ -164,6 +181,7 @@ export const useSpecModel = ({ spec, content, sourceKey, base, review: staticRev
     reviewKey,
     text,
     texts,
+    reviews,
     review,
     read,
     readLatest,

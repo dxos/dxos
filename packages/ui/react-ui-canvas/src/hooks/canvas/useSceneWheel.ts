@@ -14,6 +14,7 @@ export type UseSceneWheelOptions = {
   /** Set once the user takes the camera over, which stops the view re-fitting itself. */
   interactedRef: MutableRefObject<boolean>;
   exitFit: () => void;
+  focusRequired?: boolean;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'touchNavigation'>;
 
 /** The wheel and the trackpad move the camera: a pinch or a mouse wheel zooms about the pointer, a swipe pans. */
@@ -21,6 +22,7 @@ export const useSceneWheel = ({
   rootRef,
   interactedRef,
   exitFit,
+  focusRequired,
   setCamera,
   cancelAnimation,
   touchNavigation,
@@ -52,5 +54,6 @@ export const useSceneWheel = ({
       },
       [setCamera, cancelAnimation, touchNavigation, exitFit],
     ),
+    { focusRequired },
   );
 };

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Spec from '@dxos/compute/Spec';
 import { type Database, Obj, Ref } from '@dxos/echo';
+import { getTextInRange, toCursor } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
@@ -106,9 +107,7 @@ describe('SpecText', () => {
     expect,
   }) => {
     const sync = addFeature('Sync');
-    Obj.update(sync, (sync) => {
-      sync.requirements = [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }];
-    });
+    Feature.setRequirements(sync, [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }]);
     Obj.update(sync, (sync) => {
       Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-1']);
     });
@@ -146,17 +145,34 @@ describe('SpecText', () => {
       Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-4']);
     });
     const archive = addFeature('Archive');
-    Obj.update(archive, (archive) => {
-      archive.requirements = [{ text: 'Archived mail is searchable.' }, { id: 'F-5.3', text: 'Undo restores it.' }];
-    });
+    Feature.setRequirements(archive, [
+      { text: 'Archived mail is searchable.' },
+      { id: 'F-5.3', text: 'Undo restores it.' },
+    ]);
     const inbox = addSpec('Inbox', [sync, archive]);
     await SpecText.sync(inbox);
     expect(Feature.getBlockId(archive)).toBe('F-5');
-    expect(archive.requirements?.map(({ id }) => id)).toEqual(['F-5.4', 'F-5.3']);
+    expect(Feature.getRequirements(archive).map(({ id }) => id)).toEqual(['F-5.4', 'F-5.3']);
 
     await write(inbox, `${SpecText.makeEmbed(archive)}\n\n${SpecText.makeEmbed(sync)}\n`);
     await SpecText.sync(inbox);
     expect([Feature.getBlockId(archive), Feature.getBlockId(sync)]).toEqual(['F-5', 'F-4']);
+  });
+
+  test('numbering a new requirement keeps the cursors into the others', async ({ expect }) => {
+    const archive = addFeature('Archive');
+    const inbox = addSpec('Inbox', [archive]);
+    await SpecText.sync(inbox);
+    Feature.setRequirements(archive, [{ text: 'Archived mail is searchable.' }]);
+    await SpecText.sync(inbox);
+    const [{ key }] = Feature.getRequirements(archive);
+    const accessor = () => Doc.createAccessor(archive, ['requirements', key, 'text']);
+    const [from, to] = [toCursor(accessor(), 9), toCursor(accessor(), 13)];
+
+    Feature.setRequirements(archive, [...Feature.getRequirements(archive), { text: 'Undo restores it.' }]);
+    await SpecText.sync(inbox);
+    expect(Feature.getRequirements(archive).map(({ id }) => id)).toEqual(['F-1.1', 'F-1.2']);
+    expect(getTextInRange(accessor(), from, to)).toBe('mail');
   });
 
   test('a feature numbered before its spec had a file is the feature its block names once taken in', async ({
@@ -267,13 +283,23 @@ describe('SpecText', () => {
     const map = addSpec('Ride Check');
     await SpecText.take(map, { path: 'SPEC.mdl', text: file });
     const features = await Ref.loadAll(FeatureMap.getFeatures(map));
-    expect(features.map(({ name, description, requirements }) => ({ name, description, requirements }))).toEqual([
+    expect(
+      features.map((feature) => ({
+        name: feature.name,
+        description: feature.description,
+        requirements: Feature.getRequirements(feature),
+      })),
+    ).toEqual([
       {
         name: 'Verdict',
         description: 'The answer first.',
-        requirements: [{ id: 'F-1.1', text: 'Covers three hours.' }],
+        requirements: [{ key: expect.any(String), id: 'F-1.1', text: 'Covers three hours.' }],
       },
-      { name: 'Chart', description: undefined, requirements: [{ id: 'F-2.1', text: 'One column per hour.' }] },
+      {
+        name: 'Chart',
+        description: undefined,
+        requirements: [{ key: expect.any(String), id: 'F-2.1', text: 'One column per hour.' }],
+      },
     ]);
     expect(await embedded(map)).toEqual(features.map(({ id }) => id));
   });

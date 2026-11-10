@@ -52,6 +52,7 @@ import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 import { type ThreadingOptions, runLanes, tenantOf } from './thread-scheduler.ts';
 import { type MakeTurnProducer, type TurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
+import { withTurnStatus } from './turn-status.ts';
 
 export interface AgentProcessOptions {
   // TODO(burdon): Instructions?
@@ -604,6 +605,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               delegation,
             })
             .pipe(
+              withTurnStatus(chat),
               Effect.onExit((exit) =>
                 Effect.gen(function* () {
                   yield* Trace.write(Trace.AgentRequestEnd, {

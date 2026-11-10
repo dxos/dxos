@@ -22,7 +22,15 @@ import { useStoreAdapter } from '#hooks';
 import { Settings } from '#types';
 
 import { handleSnap } from '../actions.ts';
-import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom/index.ts';
+import {
+  CollaboratorCursor,
+  CustomMenu,
+  CustomStylePanel,
+  DefaultToolbarContent,
+  DottedGrid,
+  MeshGrid,
+} from '../custom/index.ts';
+import { CanvasCursors } from './CanvasCursors.tsx';
 
 const threadToolId = 'thread';
 
@@ -36,6 +44,9 @@ export type CanvasProps = {
   readonly?: boolean;
   autoCenter?: boolean;
   hideUi?: boolean;
+  focusContainer?: boolean;
+  /** Share pointers with collaborators; only the interactive surface sets it, so cards and previews stay off the channel. */
+  cursors?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
   onSettingsChange?: (fn: (current: Settings.Settings) => Settings.Settings) => void;
@@ -65,6 +76,8 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
       readonly = false,
       autoCenter = true,
       hideUi = false,
+      focusContainer = true,
+      cursors = false,
       assetsBaseUrl = '/assets/plugin-tldraw',
       settings,
       onSettingsChange,
@@ -86,8 +99,8 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
 
     // Focus.
     useEffect(() => {
-      hideUi ? editor?.blur() : editor?.focus();
-    }, [hideUi, editor]);
+      hideUi ? editor?.blur() : editor?.focus({ focusContainer });
+    }, [hideUi, focusContainer, editor]);
 
     // Editor State.
     useEffect(() => {
@@ -280,6 +293,9 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
 
     const components = useMemo(
       () => ({
+        CollaboratorCursor,
+        // tldraw's default hint paints the presence `color` as a CSS colour, but it carries a member hue name.
+        CollaboratorHint: null,
         DebugPanel: null,
         Grid: gridComponents[settings?.gridType ?? 'mesh'],
         HelpMenu: null,
@@ -320,6 +336,7 @@ export const CanvasComponent = Util.composable<HTMLDivElement, CanvasProps>(
           components={components}
           onMount={setEditor}
         />
+        {cursors && editor && <CanvasCursors canvas={canvas} editor={editor} />}
       </div>
     );
   },

@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 
 import { CallsCapabilities } from '#types';
 
-import { type EncodedTrackName, type UserState } from '../../calls/index.ts';
+import { type UserState } from '../../calls/index.ts';
 import { VideoObject } from '../Media/index.ts';
 import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveGrid/index.ts';
 
@@ -24,30 +24,15 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
   const isSelf: boolean = self.id !== undefined && user.id !== undefined && user.id.startsWith(self.id);
   const isScreenshare = user.id?.endsWith(SCREENSHARE_SUFFIX);
 
-  // Track name to display for non-self users; undefined when no video should show.
-  // Guard on both the enabled flag and track-ID presence — a track may be enabled in state
-  // before the ID has been published to the swarm.
-  const pulledTrackName = useMemo<EncodedTrackName | undefined>(() => {
-    if (isSelf) {
-      return undefined;
-    }
-    if (isScreenshare && user.tracks?.screenshareEnabled && user.tracks?.screenshare) {
-      return user.tracks.screenshare as EncodedTrackName;
-    }
-    if (!isScreenshare && user.tracks?.videoEnabled && user.tracks?.video) {
-      return user.tracks.video as EncodedTrackName;
-    }
-    return undefined;
-  }, [
-    isSelf,
-    isScreenshare,
-    user.tracks?.screenshare,
-    user.tracks?.video,
-    user.tracks?.screenshareEnabled,
-    user.tracks?.videoEnabled,
-  ]);
-
-  const pulledVideoStream = useAtomValue(call.videoStreamAtom(pulledTrackName));
+  // A remote tile shows its device's camera, or for the screenshare tile its screen, once the swarm says it is on.
+  const remoteVideoEnabled = Boolean(isScreenshare ? user.tracks?.screenshareEnabled : user.tracks?.videoEnabled);
+  const deviceKey = isScreenshare ? user.id?.slice(0, -SCREENSHARE_SUFFIX.length) : user.id;
+  const pulledVideoStream = useAtomValue(
+    call.videoStreamAtom(
+      !isSelf && remoteVideoEnabled ? deviceKey : undefined,
+      isScreenshare ? 'screenshare' : 'video',
+    ),
+  );
 
   const videoStream = useMemo<MediaStream | undefined>(() => {
     if (isSelf) {
@@ -58,14 +43,11 @@ export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGrid
 
   // For self tiles use local media state; for remote tiles use the participant's swarm-reported state.
   // Self screenshare tiles gate on screenshareVideoStream, not camera state.
-  // Remote tiles require both the enabled flag and track-ID presence to stay consistent with pulledTrackName.
   const participantVideo = isSelf
     ? isScreenshare
       ? Boolean(screenshareVideoStream)
       : videoEnabled
-    : isScreenshare
-      ? Boolean(user.tracks?.screenshareEnabled && user.tracks?.screenshare)
-      : Boolean(user.tracks?.videoEnabled && user.tracks?.video);
+    : remoteVideoEnabled;
 
   return (
     <ResponsiveGridItem

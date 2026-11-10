@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
-import { type ReviewModel, type VerdictStatus, reviewAnnotations, statusOf } from '@dxos/deus/review';
+import { type ReviewModel, type VerdictStatus, reviewAnnotations, reviewItemId, statusOf } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
 import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
@@ -97,7 +97,7 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
           </Card.Title>
           {status && (
             <Layout.Block rail='end'>
-              <Icon.Icon icon={STATUS_STYLE[status].icon} classNames={STATUS_TEXT[status]} />
+              <Icon.Icon icon={STATUS_STYLE[status].icon} classNames={STATUS_STYLE[status].text} />
             </Layout.Block>
           )}
         </Card.Header>
@@ -130,15 +130,6 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
       </Card.Root>
     </div>
   );
-};
-
-/** Status icon colours, matching the review gutter. */
-const STATUS_TEXT: Record<VerdictStatus, string> = {
-  done: 'text-success-text',
-  untested: 'text-info-text',
-  partial: 'text-warning-text',
-  diverged: 'text-orange-text',
-  missing: 'text-error-text',
 };
 
 type KindLegendProps = {
@@ -302,7 +293,7 @@ export const DefinitionGraph = ({
           <DefinitionCard
             definition={definition}
             dependents={model.dependents.get(id) ?? 0}
-            status={definition.external ? undefined : statusOf(review, id)}
+            status={definition.external ? undefined : statusOf(review, reviewItemId(definition.kind, id))}
             change={diff?.changes.get(id)}
           />
         )

@@ -12,6 +12,7 @@ import * as Path from 'effect/Path';
 
 import { parseMdlBlocks } from '../extension/blocks.ts';
 import { specDependencies } from '../extension/refs.ts';
+import { parseVerdictHeader, reviewItemId } from '../review/review.ts';
 import { frontmatter, reqs } from '../spec-index/parse.ts';
 import { ReviewCheckError } from './errors.ts';
 import { git } from './git.ts';
@@ -32,6 +33,11 @@ const REVIEWED_KINDS = new Set([
   'db',
   'scenario',
   'test',
+  'table',
+  'binding',
+  'actor',
+  'route',
+  'keyspace',
 ]);
 
 /** A walkthrough says where things are; more steps than this retells the code. */
@@ -64,7 +70,9 @@ export const reviewItems = (text: string): ReviewItem[] =>
       return [];
     }
     const nested = reqs(body).map(({ id, title, offset }) => ({ id, kind: 'req', line: line + offset, title }));
-    return nested.length > 0 ? nested : [{ id: header[2], kind: header[1], line, title: header[3] ?? '' }];
+    return nested.length > 0
+      ? nested
+      : [{ id: reviewItemId(header[1], header[2]), kind: header[1], line, title: header[3] ?? '' }];
   });
 
 /** A block field at two spaces of indent; a `|` value continues on lines indented four or more. */
@@ -75,9 +83,13 @@ export const blockField = (body: string, name: string): string | undefined => {
 
 /**
  * The items a reference to `id` covers: a block's reqs (or the block itself when it has none), or one nested req.
+ * A block is found by its id or its review id (`table:feeds`).
  */
 export const itemsUnder = (text: string, id: string): ReviewItem[] => {
-  const block = blocks(text).find(({ body }) => body.split('\n')[0].match(/^\w+\s+([A-Za-z][\w.-]*)/)?.[1] === id);
+  const block = blocks(text).find(({ body }) => {
+    const header = body.split('\n')[0].match(/^(\w+)\s+([A-Za-z][\w.-]*)/);
+    return header !== null && (header[2] === id || reviewItemId(header[1], header[2]) === id);
+  });
   if (block) {
     const end = block.line + block.body.split('\n').length;
     return reviewItems(text).filter(({ line }) => line >= block.line && line < end);
@@ -89,7 +101,7 @@ export const itemsUnder = (text: string, id: string): ReviewItem[] => {
 export const reviewVerdicts = (text: string): Map<string, { status?: string; note?: string }> =>
   new Map(
     blocks(text).flatMap(({ body }) => {
-      const id = body.split('\n')[0].match(/^verdict\s+([A-Za-z][\w.-]*)/)?.[1];
+      const id = parseVerdictHeader(body.split('\n')[0])?.id;
       return id ? [[id, { status: blockField(body, 'status'), note: blockField(body, 'note') }] as const] : [];
     }),
   );
@@ -147,6 +159,19 @@ const declares = (source: string, name: string): boolean => {
 type ResolvedKey = { file?: string; symbol?: string; error?: string };
 
 /**
+ * Whether `value` is a calendar date written `YYYY-MM-DD`, or one with a UTC time (`YYYY-MM-DDTHH:MMZ`, no
+ * seconds), as plugin-code's importer accepts it: the forms whose text order is their time order.
+ */
+const isReviewDate = (value: string) => {
+  const time = Date.parse(value.includes('T') ? value : `${value}T00:00:00Z`);
+  return (
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}Z)?$/.test(value) &&
+    !Number.isNaN(time) &&
+    new Date(time).toISOString().startsWith(value.replace(/Z$/, ''))
+  );
+};
+
+/**
  * Validates a `.review.mdl` against its spec and the checkout: frontmatter, statuses, notes, coverage of every item,
  * and that each evidence key names an existing file and symbol.
  */
@@ -162,8 +187,8 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
       errors.push(`frontmatter: missing \`${key}\``);
     }
   }
-  if (meta.date && !/^\d{4}-\d{2}-\d{2}$/.test(meta.date)) {
-    errors.push('frontmatter: `date` must be YYYY-MM-DD');
+  if (meta.date && !isReviewDate(meta.date)) {
+    errors.push('frontmatter: `date` must be YYYY-MM-DD, or YYYY-MM-DDTHH:MMZ with a UTC time');
   }
   if (meta.by && !/^(user|agent):\S+$/.test(meta.by)) {
     errors.push('frontmatter: `by` must be `user:<handle>` or `agent:<name>`');
@@ -209,8 +234,8 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
   const kindOf = new Map(items.map(({ id, kind }) => [id, kind]));
 
   const verdicts = blocks(text).flatMap(({ body, line }) => {
-    const header = body.split('\n')[0].match(/^verdict\s+([A-Za-z][\w.-]*)\s*(?::\s*(.*))?$/);
-    return header ? [{ id: header[1], line, body }] : [];
+    const header = parseVerdictHeader(body.split('\n')[0]);
+    return header ? [{ id: header.id, line, body }] : [];
   });
   const seen = new Set<string>();
   for (const { id, line, body } of verdicts) {
@@ -220,7 +245,12 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
     }
     seen.add(id);
     if (specText && !itemIds.has(id)) {
-      errors.push(`${at}: ${id} is not a reviewable item of the spec (run \`items\` for the list)`);
+      const qualified = items.filter((item) => item.id.endsWith(`:${id}`)).map((item) => item.id);
+      errors.push(
+        qualified.length > 0
+          ? `${at}: ${id} is not a reviewable item of the spec; did you mean ${qualified.join(' or ')}?`
+          : `${at}: ${id} is not a reviewable item of the spec (run \`items\` for the list)`,
+      );
     }
     const status = blockField(body, 'status');
     if (!status || !STATUSES.has(status)) {

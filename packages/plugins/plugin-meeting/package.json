@@ -65,6 +65,11 @@
       "types": "./dist/types/src/types/Meeting.d.ts",
       "import": "./dist/lib/Meeting.mjs"
     },
+    "./MeetingActivity": {
+      "source": "./src/types/MeetingActivity.ts",
+      "types": "./dist/types/src/types/MeetingActivity.d.ts",
+      "import": "./dist/lib/MeetingActivity.mjs"
+    },
     "./MeetingCapabilities": {
       "source": "./src/types/MeetingCapabilities.ts",
       "types": "./dist/types/src/types/MeetingCapabilities.d.ts",
@@ -98,6 +103,9 @@
     "*": {
       "Meeting": [
         "dist/types/src/types/Meeting.d.ts"
+      ],
+      "MeetingActivity": [
+        "dist/types/src/types/MeetingActivity.d.ts"
       ],
       "MeetingCapabilities": [
         "dist/types/src/types/MeetingCapabilities.d.ts"
@@ -148,12 +156,15 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect/atom-react": "catalog:",
+    "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

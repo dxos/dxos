@@ -68,6 +68,8 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
       input as Tool.Parameters<
         Toolkit.WithHandlerTools<typeof toolkit>[keyof Toolkit.WithHandlerTools<typeof toolkit>]
       >,
+      // Handed to the handler's context, so a handler can tell which call it is answering.
+      toolCall.toolCallId,
     )
     .pipe(
       // v4 streams preliminary results ahead of the final one; only the last is authoritative.

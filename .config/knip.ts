@@ -570,6 +570,10 @@ for (const manifest of globSync(
 
 const config: KnipConfig = {
   workspaces,
+  // A project's `parked/` holds spike files kept for reference outside any package — they import
+  // paths that exist only where they came from. Only those: `.agents/` also holds a real workspace
+  // (`skills/composer-forensics/scripts`), which stays covered.
+  ignore: ['.agents/projects/*/parked/**'],
   // The issue types this repo gates on. Unused exports and types are deliberately excluded: barrel
   // files re-export far more than any one consumer uses, so they are noise here.
   include: ['files', 'dependencies', 'devDependencies', 'unlisted', 'binaries', 'unresolved'],
@@ -639,6 +643,8 @@ const config: KnipConfig = {
     /^watch$/,
     // Bundler resource queries (`?raw`, `?url`, `?worker`) are not part of the module path.
     /\?[a-z]+$/,
+    // The model's program in a `WorkerdSandbox` isolate, which the sandbox writes beside `workerd/main.mjs` at runtime.
+    /^\.\/program\.mjs$/,
   ],
   // These plugins execute the config files they discover, and those import workspace packages
   // through `exports` conditions that only resolve after a build. The config files are covered

@@ -247,7 +247,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/plugin-tldraw > @tldraw/state',
   '@dxos/plugin-tldraw > @tldraw/tldraw',
   '@dxos/plugin-tldraw > @tldraw/utils',
-  '@dxos/plugin-transcription > @dxos/pipeline-transcription > wavefile',
   '@dxos/plugin-voxel > @react-three/drei',
   '@dxos/plugin-voxel > @react-three/fiber',
   '@dxos/plugin-voxel > three',

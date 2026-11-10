@@ -21,6 +21,7 @@ import {
   loadMcpServers,
   makeInputMessage,
   mcpServerTypes,
+  withTurnStatus,
 } from '@dxos/agent-runtime';
 import { Alarm, HarnessControl, type PendingState, SessionStore, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
@@ -168,6 +169,7 @@ export const make = (options: Options): AgentProcessDefinition =>
           yield* Trace.write(Trace.AgentRequestBegin, {});
           const mcpServers = loadMcpServers({ feed, endpointOf: options.mcpEndpoint }).pipe(Effect.provide(mcpContext));
           yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt], source, mcpServers }).pipe(
+            withTurnStatus(chat),
             Effect.onExit((exit) =>
               Trace.write(Trace.AgentRequestEnd, {
                 status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',

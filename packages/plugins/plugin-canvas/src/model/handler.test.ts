@@ -15,7 +15,7 @@ import {
   linkGeometry,
   sortByZ,
 } from '@dxos/react-ui-canvas';
-import { isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
+import { type Shape, isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
 import { ROOT_VIEW_ID, readViews, rootOf, seedContent, updateCanvasRecord, writeViews } from './content.ts';
 import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';
@@ -187,6 +187,173 @@ describe('SceneHandler', () => {
     ]);
     const layers = sortByZ(Object.values(root.layers ?? {})).map((layer) => layer.id);
     expect(layers).toEqual([BACKDROP_LAYER.id, DEFAULT_LAYER.id]);
+  });
+
+  test('a title reads back as small text in its box, and folds into the box again', ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    const group = {
+      id: 'group',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'rect' as const, id: 'frame', x: 0, y: 0, w: 800, h: 400 },
+        { kind: 'text' as const, id: 'label', x: 16, y: 8, text: 'Group', weight: 's' as const },
+      ],
+    };
+    applyCommands(content, [{ op: 'upsert-object', object: group }], SceneHandler);
+
+    const [object] = SceneHandler.read(content).scene.objects;
+    const [box, title] = object.elements;
+    expect(box.kind === 'rect' && box.text).toBeUndefined();
+    expect(title.kind === 'text' && [title.x, title.y, title.text, title.weight]).toEqual([8, 8, 'Group', 's']);
+
+    const again: ContentMap = {};
+    seedContent(again);
+    applyCommands(again, [{ op: 'upsert-object', object }], SceneHandler);
+    const node = readViews(again)[ROOT_VIEW_ID].nodes[elementId('group', 'frame')];
+    expect(isRectNode(node) && [node.label, node.style?.alignHorizontal, node.style?.alignVertical]).toEqual([
+      'Group',
+      'left',
+      'top',
+    ]);
+  });
+
+  describe('titled boxes', () => {
+    const titled = (elements: Shape.Element[]) => {
+      const content: ContentMap = {};
+      seedContent(content);
+      applyCommands(
+        content,
+        [{ op: 'upsert-object', object: { id: 'group', origin: { x: 0, y: 0 }, elements } }],
+        SceneHandler,
+      );
+      return content;
+    };
+    const frame = { kind: 'rect' as const, id: 'frame', x: 0, y: 0, w: 800, h: 400 };
+    const label = { kind: 'text' as const, id: 'label', x: 16, y: 8, text: 'Group', weight: 's' as const };
+    const nodeOf = (content: ContentMap, element: string) =>
+      readViews(content)[ROOT_VIEW_ID].nodes[elementId('group', element)];
+    const labelOf = (content: ContentMap, element: string) => {
+      const node = nodeOf(content, element);
+      return isRectNode(node) ? node.label : undefined;
+    };
+
+    test('updating only the box keeps its title', ({ expect }) => {
+      const content = titled([frame, label]);
+      applyCommands(
+        content,
+        [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...frame, x: 100, w: 500 }] }],
+        SceneHandler,
+      );
+      expect(labelOf(content, 'frame')).toBe('Group');
+      const [object] = SceneHandler.read(content).scene.objects;
+      expect(object.elements.map(({ id }) => id)).toEqual(['frame', 'frame-title']);
+    });
+
+    test('a partial update keeps the style it does not restate', ({ expect }) => {
+      const content = titled([{ ...frame, color: 'violet', fill: 'tint', stroke: 'dashed' }, label]);
+      const [{ elements }] = SceneHandler.read(content).scene.objects;
+      const title = elements.find(({ id }) => id === 'frame-title');
+      expect(title?.kind).toBe('text');
+      if (title?.kind === 'text') {
+        applyCommands(
+          content,
+          [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...title, text: 'Renamed' }] }],
+          SceneHandler,
+        );
+      }
+      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'violet', guide: true, lineStyle: 'dashed' });
+
+      applyCommands(
+        content,
+        [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...frame, x: 40, color: 'green' }] }],
+        SceneHandler,
+      );
+      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'green', guide: true, lineStyle: 'dashed' });
+      expect(labelOf(content, 'frame')).toBe('Renamed');
+    });
+
+    test('removing a title clears it from its box and keeps the box', ({ expect }) => {
+      const content = titled([{ ...frame, color: 'violet' }, label]);
+      applyCommands(content, [{ op: 'remove-elements', objectId: 'group', elementIds: ['frame-title'] }], SceneHandler);
+      expect(labelOf(content, 'frame')).toBeUndefined();
+      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'violet' });
+      const [object] = SceneHandler.read(content).scene.objects;
+      expect(object.elements.map(({ id }) => id)).toEqual(['frame']);
+    });
+
+    test('removing a box and its title removes both', ({ expect }) => {
+      const content = titled([frame, { ...frame, id: 'other', x: 900 }, label]);
+      applyCommands(
+        content,
+        [{ op: 'remove-elements', objectId: 'group', elementIds: ['frame', 'frame-title'] }],
+        SceneHandler,
+      );
+      const [object] = SceneHandler.read(content).scene.objects;
+      expect(object.elements.map(({ id }) => id)).toEqual(['other']);
+    });
+
+    test('a box given its own text replaces the title', ({ expect }) => {
+      const content = titled([frame, label]);
+      applyCommands(
+        content,
+        [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...frame, text: 'Centred' }] }],
+        SceneHandler,
+      );
+      expect(labelOf(content, 'frame')).toBe('Centred');
+    });
+
+    test('updating only the title changes the box rather than adding a text', ({ expect }) => {
+      const content = titled([frame, label]);
+      const [{ elements }] = SceneHandler.read(content).scene.objects;
+      const title = elements.find(({ id }) => id === 'frame-title');
+      expect(title?.kind).toBe('text');
+      if (title?.kind === 'text') {
+        applyCommands(
+          content,
+          [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...title, text: 'Renamed' }] }],
+          SceneHandler,
+        );
+      }
+      expect(labelOf(content, 'frame')).toBe('Renamed');
+      const [object] = SceneHandler.read(content).scene.objects;
+      expect(object.elements.map(({ id }) => id)).toEqual(['frame', 'frame-title']);
+    });
+
+    test('a title id never collides with an element, which survives the round trip', ({ expect }) => {
+      const content = titled([
+        frame,
+        label,
+        { kind: 'text', id: 'frame-title', x: 900, y: 900, text: 'Elsewhere', weight: 's' },
+      ]);
+      const [object] = SceneHandler.read(content).scene.objects;
+      const ids = object.elements.map(({ id }) => id);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(ids).toContain('frame-title');
+
+      const again: ContentMap = {};
+      seedContent(again);
+      applyCommands(again, [{ op: 'upsert-object', object }], SceneHandler);
+      expect(labelOf(again, 'frame')).toBe('Group');
+      expect(labelOf(again, 'frame-title')).toBe('Elsewhere');
+    });
+
+    test('a title stays with its inner box inside an untitled outer box', ({ expect }) => {
+      const content = titled([
+        { kind: 'rect', id: 'outer', x: 0, y: 0, w: 800, h: 400 },
+        { kind: 'rect', id: 'inner', x: 100, y: 100, w: 200, h: 100 },
+        { kind: 'text', id: 'label', x: 108, y: 108, text: 'Inner', weight: 's' },
+      ]);
+      expect(labelOf(content, 'outer')).toBeUndefined();
+      expect(labelOf(content, 'inner')).toBe('Inner');
+
+      const [object] = SceneHandler.read(content).scene.objects;
+      const again: ContentMap = {};
+      seedContent(again);
+      applyCommands(again, [{ op: 'upsert-object', object }], SceneHandler);
+      expect(labelOf(again, 'outer')).toBeUndefined();
+      expect(labelOf(again, 'inner')).toBe('Inner');
+    });
   });
 });
 

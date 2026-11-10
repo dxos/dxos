@@ -194,6 +194,51 @@ describe('deus review', () => {
     ]);
     expect(output.at(-1)).toBe('3 verdicts for 4 items; 5 errors, 1 warnings.');
   });
+
+  test('items lists worker and SQL blocks by their qualified ids', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'items', `${dir}/worker/SPEC.mdl`]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output.map((line) => line.split('\t').slice(0, 2).join(' '))).toEqual([
+      'Feed type',
+      'binding:SCHEDULER binding',
+      'actor:Scheduler actor',
+      'route:listFeeds route',
+      'keyspace:schedulerState keyspace',
+      'table:Feed table',
+    ]);
+  });
+
+  test('check accepts a verdict for each worker and SQL item', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/worker/SPEC.review.mdl`]);
+    expect(output.filter((line) => line.startsWith('error: '))).toEqual([]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output.filter((line) => line.startsWith('warning: '))).toEqual([
+      'warning: frontmatter: commit 0000000000000000000000000000000000000000 is not in this clone (shallow, or not fetched)',
+    ]);
+    expect(output.at(-1)).toBe('6 verdicts for 6 items; 0 errors, 1 warnings.');
+  });
+
+  test('check points a bare id at the qualified item it names', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/worker/bare-ids.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(
+      output.filter((line) => line.startsWith('error: ')).map((line) => line.replace(/^error: .*?:\d+: /, '')),
+    ).toEqual([
+      'Scheduler is not a reviewable item of the spec; did you mean actor:Scheduler?',
+      'listFeeds is not a reviewable item of the spec; did you mean route:listFeeds?',
+      'actor:Scheduler has no verdict',
+      'route:listFeeds has no verdict',
+      'table:Feed has no verdict',
+    ]);
+  });
+
+  test('check refuses a date that is not a real UTC time, as the importer does', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/bad-date/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(output.filter((line) => line.startsWith('error: '))).toEqual([
+      'error: frontmatter: `date` must be YYYY-MM-DD, or YYYY-MM-DDTHH:MMZ with a UTC time',
+    ]);
+  });
 });
 
 describe('review dependsOn', () => {
