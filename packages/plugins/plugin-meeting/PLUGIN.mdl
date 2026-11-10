@@ -116,7 +116,7 @@ op Create
 ```mdl
 op SetActive
   key: org.dxos.operation.meeting.setActive
-  desc: Sets the currently active meeting in plugin state and broadcasts the meeting DXN to the call layer as an activity payload.
+  desc: Sets the currently active meeting in plugin state and shares its DXN with the call as the meeting activity (`MeetingPayload`).
   input:
     object?: Meeting
   output:
@@ -128,23 +128,20 @@ op SetActive
 ```mdl
 op HandlePayload
   key: org.dxos.operation.meeting.handlePayload
-  desc: Processes an incoming call-layer meeting payload; resolves the Meeting and Transcript feed objects from ECHO and updates transcription state.
+  desc: Processes an incoming meeting activity from the call; resolves the Meeting from ECHO and makes it the active meeting.
   input:
     meetingId?: string
-    transcriptDxn?: string
-    transcriptionEnabled?: boolean
   output: void
   effects: [echo:read]
   requires: [ClientCapabilities.Client, MeetingCapabilities.State]
-  note: Called whenever the remote call state is updated with a new meeting activity.
+  note: Called whenever the call's state carries a meeting activity. A meeting not yet replicated here leaves none active.
 ```
 
 ```mdl
 op SetTranscription
   key: org.dxos.operation.meeting.setTranscription
-  desc: Turns transcription on or off for everyone in the meeting's call, announcing the meeting, its Transcript feed and the flag as one call activity.
+  desc: Turns transcription on or off for everyone in the call, as its own call activity (`TranscriptionPayload`), apart from the meeting activity.
   input:
-    meeting: Meeting
     enabled: boolean
   output: void
   effects: [calls:activity]
@@ -185,7 +182,7 @@ feat F-2: Active Meeting
     then: plugin state activeMeeting is updated
 
   req F-2.2:
-    when: op:SetActive is invoked with a meeting other than the one the call already advertises
+    when: op:SetActive is invoked with a meeting
     then: call layer is updated with meeting DXN as activity payload
 
   req F-2.3:
@@ -197,29 +194,35 @@ feat F-2: Active Meeting
 feat F-3: Real-Time Transcription
 
   req F-3.1:
-    when: user joins a call
-    then: the call's transcript sink enriches each segment with entity extraction before it is written
+    when: a transcript segment is written
+    then: the transcript sink enriches it with entity extraction before it is appended
 
   req F-3.2:
-    when: HandlePayload is received with transcriptionEnabled: true
-    then: each participant's own native transcript segments are written to the linked Transcript feed
+    when: the call's transcription activity is on
+    then: each participant writes its own final segments, from `CallManager.transcript`, to the active meeting's
+      Transcript feed
 
   req F-3.3:
-    when: HandlePayload is received without transcriptionEnabled
-    then: the transcription state is unchanged
+    when: the transcription activity is off or absent
+    then: no live segment is written
 
   req F-3.4:
     when: user leaves the call
-    then: the transcript sink is unbound and plugin state is reset
+    then: plugin state is reset
 
   req F-3.5:
-    when: HandlePayload is received without a transcriptDxn that resolves to a Transcript feed here
-    then: the call's transcript feed is unbound, so no segment reaches the previously active meeting
+    when: a segment is written
+    then: the sink resolves the active meeting's feed at that moment and appends in arrival order, so a slow enrichment
+      never reorders the feed and a meeting selected mid-call still receives the segments that follow
 
   req F-3.6:
     when: the user is in a Meeting's own call (started from its Call tab)
     then: MeetingArticle's toolbar offers Start transcription (Stop once on), which invokes op:SetTranscription, as the
       channel call's toggle does
+
+  req F-3.7:
+    when: a transcript source other than a call writes (a simulated call, a scripted story)
+    then: it goes through the same sink into the meeting's feed, so the Transcript tab renders it with no live call
 ```
 
 ```mdl
@@ -296,11 +299,9 @@ scenario T-3: Clear active meeting
 ```mdl
 scenario T-4: Handle incoming payload
   given: a Meeting and Transcript feed exist in the space
-  when: op:HandlePayload is invoked with meetingId, transcriptDxn, and transcriptionEnabled: true
+  when: op:HandlePayload is invoked with meetingId
   then:
     - state.activeMeeting resolves to the correct Meeting
-    - the call manager's transcript feed is the resolved Feed
-    - the call manager's transcription is enabled
 ```
 
 ```mdl
@@ -610,6 +611,15 @@ decision D-11: A meeting payload whose transcriptDxn does not resolve to a feed 
   for: user:mykola-vrmchk
   affects: [F-3.5]
   why: A peer that receives the new meeting before its feed replicates otherwise keeps writing segments to the previous meeting's transcript; CodeRabbit found it in review.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-12: CallManager only emits the local speaker's final segments; this plugin owns the transcription flag, the feed and enrichment, writing through one queued TranscriptSink that resolves the active meeting's feed per segment. The flag is its own call activity, and the meeting payload carries only the meeting id. Supersedes [D-6], [D-7] and [D-11].
+  date: 2026-11-10
+  by: user:mykola-vrmchk
+  affects: [F-2.2, F-3.1, F-3.2, F-3.3, F-3.4, F-3.5, F-3.7, HandlePayload, SetTranscription, T-4]
+  why: plugin-calls is meeting-agnostic, per-segment appends could land out of order, and a feed DXN beside the meeting id duplicated what `meeting.transcript.feed` already names.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

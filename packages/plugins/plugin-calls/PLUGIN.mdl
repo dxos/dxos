@@ -207,19 +207,11 @@ capability CallsCapabilities.Manager
   desc: |
     Singleton service that owns the WebRTC session: joining a room, exposing
     self/users/track state as atoms, and toggling local media. Survives for
-    the lifetime of the Client.
+    the lifetime of the Client. Plugins that react to a call subscribe to its
+    events: `roomJoined`, `left`, `callStateUpdated`, and `transcript` (this
+    device's own final transcript segments, in spoken order).
   type: CallManager
   events: [client-ready]
-```
-
-```mdl
-capability CallsCapabilities.EventHandler
-  desc: |
-    Pluggable per-call lifecycle callback. Contributors (e.g. the in-plugin
-    transcription orchestrator, plugin-transcription) react to join / leave /
-    state changes without being coupled to the host object.
-  type: CallProperties
-  multi: true
 ```
 
 ```mdl
@@ -330,47 +322,42 @@ component CallDebugPanel
 ## Services
 
 ```mdl
-service RoomJoiner
-  desc: |
-    Joins a room on EDGE (`POST /calls/rooms/join`, authenticated as the caller). EDGE
-    creates the RealtimeKit meeting for the first joiner and mints a participant token
-    named after the caller's identity, with the device key as its participant id.
-  ops:
-    join(roomId: RoomId, deviceKey: string, meetingId?: SessionId) → { meetingId: SessionId, authToken: string }
-  errors:
-    SessionUnavailable: EDGE or RealtimeKit refused the join
-  effects: [http]
-```
-
-```mdl
 service MediaTransport
   desc: |
-    The call's media backend (RealtimeKit; a fake in tests). Publishes local tracks,
-    exposes the remote tracks in its roster keyed by device key, signals roster
-    changes, and delivers native transcription segments.
+    The call's media backend (RealtimeKit; `FakeTransport` in tests), built per room by the
+    `CreateTransport` the CallManager is given. The RealtimeKit transport joins through EDGE
+    (`POST /calls/rooms/join { roomId, meetingId? }`, signed by the device): calls-service checks
+    the meeting is the room's, takes the device key from the presentation's chain, and mints a
+    short-lived participant token. Publishes local tracks, exposes the remote tracks in its
+    roster keyed by device key and kind, and delivers this peer's own transcription.
   ops:
     open()
     close()
-    pushTrack(track: MediaStreamTrack | null) → LocalTrack
-    setScreenShareEnabled(enabled: boolean) → LocalTrack?
-    getRemoteTracks() → RemoteTrack[]
-    subscribeMediaChanges(callback) → unsubscribe
-    subscribeTranscripts(callback) → unsubscribe
+    setAudio(track?: MediaStreamTrack)
+    setVideo(track?: MediaStreamTrack)
+    setScreenShare(enabled: boolean) → MediaStreamTrack?
+    getRemoteTracks() → { deviceKey, kind, track }[]
+    getStats() → MediaStats
+  events:
+    mediaChanged()
+    transcript(text, started, pending)
+    closed(reason: ended | lost)
   errors:
-    SessionUnavailable: the meeting could not be joined
+    SessionUnavailable: EDGE or RealtimeKit refused the join
   effects: [network, device]
 ```
 
 ```mdl
 service CallSwarmSynchronizer
   desc: |
-    Discovers peers in a room via DXOS swarm signalling and shares each
-    peer's TrackBundle and the room's meeting id, so every peer joins the same
-    RealtimeKit meeting and the UI resolves remote tracks by advertised name.
+    Discovers peers in a room via DXOS swarm signalling and shares each peer's
+    enabled media flags and the room's meeting id (last write wins). A peer in
+    another meeting than the agreed one moves to it, so peers that raced into an
+    empty room converge; the UI finds remote tracks by user id and kind.
   ops:
     join(roomId: RoomId) → Participant[]
     leave(roomId: RoomId)
-    publish(state: TrackBundle)
+    publish(state: MediaToggles)
   events:
     onPeerJoin(peer: Participant)
     onPeerLeave(peer: Participant)
@@ -408,8 +395,8 @@ service SpeakingMonitor
 ```mdl
 op startCall
   desc: |
-    Joins the call for `roomId`, invoking `EventHandler.onJoin` for every
-    registered EventHandler after the local session is established.
+    Joins the call for `roomId`; `CallManager.roomJoined` fires once the local
+    session is established.
   input:
     roomId: RoomId
     channel?: Channel             # passed through to extensions
@@ -425,7 +412,7 @@ op startCall
 op leaveCall
   desc: |
     Tears down the local session, turns off audio/video/screenshare,
-    and invokes `EventHandler.onLeave` for every registered EventHandler.
+    and fires `CallManager.left`.
   input:
     roomId?: RoomId
   effects: [device, network]
@@ -569,29 +556,31 @@ feat F-4: Media Controls
 ```
 
 ```mdl
-feat F-5: Extension Lifecycle
+feat F-5: Call Events
 
-  req F-5.1: Plugins may register CallsCapabilities.EventHandler with optional
-             onJoin / onLeave / onCallStateUpdated / onMediaStateUpdated
-             callbacks.
+  req F-5.1: Plugins react to a call by subscribing to CallManager's events;
+             there is no contributed callback capability.
   req F-5.2:
     when: op:startCall completes
-    then: every registered EventHandler.onJoin is invoked once with
-          { channel, roomId }
+    then: `roomJoined` fires once with { roomId }
 
   req F-5.3:
     when: CallState changes
-    then: every registered EventHandler.onCallStateUpdated is invoked with the
-          new state
+    then: `callStateUpdated` fires with the new state
 
   req F-5.4:
-    when: local MediaState changes (e.g. mic toggled, speech detected)
-    then: every registered EventHandler.onMediaStateUpdated is invoked with
-          [mediaState, isSpeaking]
+    when: the transport transcribes this device's speech
+    then: `transcript` fires with each final segment, in spoken order; revisions
+          and other participants' segments are not emitted
 
   req F-5.5:
     when: op:leaveCall runs
-    then: every registered EventHandler.onLeave is invoked with the prior roomId
+    then: `left` fires with the prior roomId
+
+  req F-5.6:
+    when: RealtimeKit ends the session (kicked, ended)
+    then: the call is left; when the connection is lost (disconnected, failed),
+          the call rejoins the same meeting
 ```
 
 ```mdl
@@ -634,9 +623,8 @@ feat F-8: Independence from plugin-thread
           error; no missing-capability warnings appear
 
   req F-8.4: Existing consumers of `ThreadCapabilities.CallManager` /
-             `CallExtension` migrate to `CallsCapabilities.Manager` /
-             `CallsCapabilities.EventHandler`. The thread capability names
-             are removed.
+             `CallExtension` migrate to `CallsCapabilities.Manager` and its
+             events. The thread capability names are removed.
 ```
 
 ```mdl
@@ -726,7 +714,7 @@ scenario T-3: Leave a call
     - MediaManager.stop is called for audio / video / screenshare
     - CallState.joined === false
     - "Active Call" companion disappears
-    - every registered EventHandler.onLeave(R) is invoked
+    - CallManager.left fires with R
 ```
 
 ```mdl
@@ -741,13 +729,12 @@ scenario T-4: Display-name gate
 ```
 
 ```mdl
-scenario T-5: Extension receives lifecycle callbacks
-  given: a contributor has registered CallsCapabilities.EventHandler with
-         onJoin / onLeave callbacks
+scenario T-5: A subscriber receives the call's events
+  given: a plugin subscribes to CallManager.roomJoined and CallManager.left
   when: a call is started then ended
   then:
-    - onJoin called exactly once with { channel, roomId }
-    - onLeave called exactly once with roomId
+    - roomJoined fires exactly once with { roomId }
+    - left fires exactly once with roomId
 ```
 
 ```mdl
@@ -776,7 +763,6 @@ scenario T-8: SpeakingMonitor signal
   when: the user speaks above the threshold for 300ms
   then:
     - CallState.self.isSpeaking === true
-    - EventHandler.onMediaStateUpdated is invoked with isSpeaking === true
 ```
 
 ```mdl
@@ -1031,6 +1017,24 @@ decision D-14: The devtools surface shows the media transport's own send-side We
   affects: [F-7.2, QA-1]
   why: RealtimeKit exposes no peer connection to attach an external stats collector to, only the stats of the tracks it publishes.
   source: https://github.com/dxos/dxos/pull/14179
+```
+
+```mdl
+decision D-15: `MediaTransport` takes RealtimeKit's shape (`setAudio`, `setVideo`, `setScreenShare`, remote tracks by device and kind, and `mediaChanged`, `transcript` and `closed` events); the swarm's `Tracks` carries only enabled flags. CallManager is built from one `CreateTransport`, emits only the local speaker's final segments, and keeps no transcript feed; the `EventHandler` capability is gone. Supersedes [D-13].
+  date: 2026-11-10
+  by: user:mykola-vrmchk
+  affects: [service:MediaTransport, service:CallSwarmSynchronizer, capability:CallsCapabilities.Manager, F-5, T-5]
+  why: The transport still had the Calls SFU's signature with made-up descriptors, two test seams duplicated one, and transcript persistence belongs to the meeting.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-16: The room's meeting id stays agreed over the swarm, not owned by a server object: a joiner reuses an advertised id, EDGE reuses the oldest meeting titled after the room when none is, and a peer in a different meeting than the one the swarm settles on moves to it. Fills in [D-12].
+  date: 2026-11-10
+  by: user:mykola-vrmchk
+  affects: [service:CallSwarmSynchronizer, F-5.6]
+  why: Everything about a room already happens through the router; the first-joiner poll did not converge when two peers joined an empty room together.
+  source: https://github.com/dxos/dxos/pull/14186
 ```
 
 ## Appendix: Extension Definitions
