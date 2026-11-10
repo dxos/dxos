@@ -138,6 +138,21 @@ describe('script operations', () => {
   );
 
   it.effect(
+    'the manager spawns a script operation as it is — no wrapper, the ordinary spawn',
+    Effect.fnUntraced(
+      function* () {
+        runs.length = 0;
+        const handle = yield* Process.spawn(Greet, { name: 'spawned' });
+        const result: Operation.ScriptResult = yield* Process.awaitOutput(handle);
+        expect(result.output).toBe("effect:print('hello')");
+        expect(handle.key).toBe(DXN.getName(KEY));
+        expect(runs[0]?.input).toEqual({ name: 'spawned' });
+      },
+      (effect) => Effect.provide(effect, testLayer(echoRunner)),
+    ),
+  );
+
+  it.effect(
     'a script can invoke operations from inside its process',
     Effect.fnUntraced(
       function* () {

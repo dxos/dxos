@@ -968,6 +968,7 @@ export const makeScript = <const P extends Types.NoExcessProperties<ScriptProps,
  */
 export const isScript: {
   <I, O>(op: Definition<I, O>): op is ScriptDefinition<I, O>;
+  <I, O, R, Rpcs extends Rpc.Any>(op: Durable<I, O, R, Rpcs> | ScriptDefinition<I, O>): op is ScriptDefinition<I, O>;
   (value: unknown): value is ScriptDefinition.Any;
 } = (value: unknown): value is ScriptDefinition.Any =>
   typeof value === 'object' && value !== null && ScriptDefinitionTypeId in value;

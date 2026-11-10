@@ -32,7 +32,6 @@ import { RemoteRuntimeUnreachableError } from './errors.ts';
 import * as OperationProcess from './OperationProcess.ts';
 import { promptScheduler } from './prompt-scheduler.ts';
 import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
-import * as ScriptProcess from './ScriptProcess.ts';
 
 export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
 
@@ -100,10 +99,10 @@ export const make = ({
         return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
       }
       const parentThread = yield* Trace.CurrentThread;
-      // A script operation has no handler to look up, so the runtime spawns the process that runs
-      // its code; every other operation spawns the process that runs its handler.
-      const durable = Operation.isScript(op) ? ScriptProcess.make(op) : OperationProcess.make(op);
-      const handle = yield* Process.spawn(durable, input, {
+      // A script operation is spawned as itself: the manager runs its code. Every other operation
+      // spawns the process that runs its handler.
+      const definition = Operation.isScript(op) ? op : OperationProcess.make(op);
+      const handle = yield* Process.spawn(definition, input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
         ...(origin !== undefined ? { origin } : {}),
@@ -222,8 +221,8 @@ export const make = ({
 
   /**
    * A script operation's run on EDGE: one request to the operation host, as any other remote
-   * operation. Locally it needs nothing of its own — `spawn` builds the process that runs the
-   * script's code and the result comes back through {@link Process.awaitOutput} like any output.
+   * operation. Locally it needs nothing of its own — the manager's `spawn` takes the script
+   * operation as it is, and the result comes back through {@link Process.awaitOutput} like any output.
    */
   const runScriptRemote = <I, O>(
     op: Operation.ScriptDefinition.Any,
