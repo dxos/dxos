@@ -62,6 +62,7 @@ describe('CallsServiceClient', () => {
 
   test('a returning participant refreshes its token rather than adding another', async ({ expect }) => {
     const { client, requests } = fakeEdge({
+      'GET /meetings?search=echo%3A%2Froom&status=ACTIVE&per_page=50': [{ id: 'meeting-1', title: 'echo:/room' }],
       'GET /meetings/meeting-1/participants?page_no=1&per_page=100': Array.from({ length: 100 }, (_, index) => ({
         id: `p-${index}`,
         custom_participant_id: `d-${index}`,
@@ -76,6 +77,20 @@ describe('CallsServiceClient', () => {
       await client.joinCallRoom(ctx, { roomId: 'echo:/room', meetingId: 'meeting-1', deviceKey: 'device' }),
     ).toEqual({ meetingId: 'meeting-1', authToken: 'refreshed-token' });
     expect(requests.some(({ route }) => route === 'POST /meetings/meeting-1/participants')).toBe(false);
+  });
+
+  test("an agreed meeting that is not the room's is refused", async ({ expect }) => {
+    const { client, requests } = fakeEdge({
+      'GET /meetings?search=echo%3A%2Froom&status=ACTIVE&per_page=50': [
+        { id: 'meeting-1', title: 'echo:/room' },
+        { id: 'elsewhere', title: 'echo:/room/child' },
+      ],
+    });
+
+    await expect(
+      client.joinCallRoom(ctx, { roomId: 'echo:/room', meetingId: 'elsewhere', deviceKey: 'device' }),
+    ).rejects.toThrow('not an active meeting of this room');
+    expect(requests.some(({ route }) => route.includes('/participants'))).toBe(false);
   });
 
   test('an identity transcribes in its own meeting', async ({ expect }) => {

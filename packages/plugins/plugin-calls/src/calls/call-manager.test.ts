@@ -100,21 +100,29 @@ describe('CallManager', () => {
   });
 
   test('returns to its meeting when the one the swarm agreed on cannot be joined', async ({ expect }) => {
-    const { manager, transports, network } = await setup({ unreachable: 'meeting-gone' });
+    const { manager, transports, network, advertised } = await setup({ unreachable: 'meeting-gone' });
     manager.setRoomId(ROOM_ID);
     await manager.join();
 
     network.emitSwarmEvent(swarmEvent([peer(SELF_DEVICE), peer(REMOTE_DEVICE, 'meeting-gone', 5)]));
-    await waitForCondition({ condition: () => transports.length === 3, timeout: 3_000 });
+    await waitForCondition({ condition: () => transports.length === 4, timeout: 5_000 });
 
-    expect(transports.map(({ options }) => options.meetingId)).toEqual([undefined, 'meeting-gone', 'meeting-1']);
-    expect(transports[2].transport.isOpen).toBe(true);
+    // One retry of the agreed meeting, then back to our own.
+    expect(transports.map(({ options }) => options.meetingId)).toEqual([
+      undefined,
+      'meeting-gone',
+      'meeting-gone',
+      'meeting-1',
+    ]);
+    expect(transports[3].transport.isOpen).toBe(true);
     expect(manager.joined).toBe(true);
+    // Returning does not re-advertise our meeting, which would pull every other peer out of the agreed one.
+    expect(advertised()).toBe('meeting-gone');
 
     // Further state updates do not retry the meeting that failed.
     network.emitSwarmEvent(swarmEvent([peer(SELF_DEVICE), peer(REMOTE_DEVICE, 'meeting-gone', 6)]));
     await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(transports).toHaveLength(3);
+    expect(transports).toHaveLength(4);
 
     await manager.close();
   });

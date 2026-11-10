@@ -90,7 +90,7 @@ export class MediaManager extends Resource {
     transport.mediaChanged.on(this._transportCtx, () => this._syncRemoteTracks());
     // No event fires for participants already present when we joined.
     this._syncRemoteTracks();
-    this._publishTask!.schedule();
+    this.#schedulePublish();
   }
 
   @synchronized
@@ -104,6 +104,11 @@ export class MediaManager extends Resource {
     this.#publishedVideo = undefined;
     this._state.pulledAudioTracks = {};
     this._state.pulledVideoStreams = {};
+    // The display capture belonged to the transport that closed, so the share ends with it rather than showing as on.
+    this._state.screenshareEnabled = false;
+    this._state.screenshareTrack = undefined;
+    this._state.screenshareVideoStream = undefined;
+    this.stateUpdated.emit(this._state);
   }
 
   async turnVideoOn(): Promise<void> {
@@ -116,7 +121,7 @@ export class MediaManager extends Resource {
 
     this._state.videoEnabled = true;
     this.stateUpdated.emit(this._state);
-    this._publishTask!.schedule();
+    this.#schedulePublish();
   }
 
   async turnVideoOff(): Promise<void> {
@@ -127,23 +132,24 @@ export class MediaManager extends Resource {
 
     this._state.videoEnabled = false;
     this.stateUpdated.emit(this._state);
-    this._publishTask!.schedule();
+    this.#schedulePublish();
   }
 
   // TODO(mykola): Change to `setAudioEnabled(enabled: boolean)`.
   async turnAudioOn(): Promise<void> {
     void this._speakingMonitor?.close();
     // Acquired before `audioEnabled` flips, so a denied capture never leaves the state enabled without a track.
-    this._state.audioTrack = await getUserMediaTrack('audioinput', {
+    const audioTrack = await getUserMediaTrack('audioinput', {
       echoCancellation: true,
       noiseSuppression: true,
       autoGainControl: true,
       sampleRate: 16_000,
     });
+    this._state.audioTrack = audioTrack;
     this._state.audioEnabled = true;
     this.stateUpdated.emit(this._state);
-    this._publishTask!.schedule();
-    this._speakingMonitor = new SpeakingMonitor(this._state.audioTrack!);
+    this.#schedulePublish();
+    this._speakingMonitor = new SpeakingMonitor(audioTrack);
     this._speakingMonitor.speakingChanged.on(this._ctx, () => this.stateUpdated.emit(this._state));
     void this._speakingMonitor.open();
   }
@@ -155,7 +161,7 @@ export class MediaManager extends Resource {
     this._state.audioTrack?.stop();
     this._state.audioTrack = undefined;
     this.stateUpdated.emit(this._state);
-    this._publishTask!.schedule();
+    this.#schedulePublish();
   }
 
   async turnScreenshareOn(): Promise<void> {
@@ -183,6 +189,11 @@ export class MediaManager extends Resource {
    * Rebuilds the remote-track cache from the transport's roster, keyed by publishing device and kind. Synchronous, so
    * it runs atomically against `leave`.
    */
+  /** Nothing publishes outside `open`/`close`; the next join publishes whatever the state holds then. */
+  #schedulePublish(): void {
+    this._publishTask?.schedule();
+  }
+
   private _syncRemoteTracks(): void {
     const transport = this._state.transport;
     if (!transport?.isOpen) {

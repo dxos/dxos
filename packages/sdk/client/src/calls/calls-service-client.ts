@@ -29,6 +29,7 @@ const Meeting = Schema.Struct({
   title: Schema.optional(Schema.String),
   created_at: Schema.optional(Schema.String),
 });
+type Meeting = typeof Meeting.Type;
 const Participant = Schema.Struct({ id: Schema.String, custom_participant_id: Schema.optional(Schema.String) });
 const Token = Schema.Struct({ token: Schema.String });
 
@@ -53,25 +54,35 @@ export class CallsServiceClient {
   /**
    * Joins a call room's meeting as this device: the meeting the swarm agreed on when given, else the oldest active
    * meeting titled after the room, created when there is none, so joiners that raced to an empty room converge.
+   * Refuses an agreed meeting that is not one of the room's, so a peer cannot move the room into another meeting.
    */
   async joinCallRoom(ctx: Context, { roomId, meetingId, deviceKey }: JoinCallRoomRequest): Promise<JoinCallResponse> {
-    const id = meetingId ?? (await this.#findOrCreateMeeting(ctx, roomId));
+    const meetings = await this.#listMeetings(ctx, roomId);
+    if (meetingId !== undefined && !meetings.some((meeting) => meeting.id === meetingId)) {
+      throw new Error(`Meeting ${meetingId} is not an active meeting of this room.`);
+    }
+    const id = meetingId ?? (await this.#oldestOrCreate(ctx, roomId, meetings));
     return { meetingId: id, authToken: await this.#mintParticipantToken(ctx, id, deviceKey) };
   }
 
   /** Joins the identity's one-person meeting, where live transcription runs with nobody else in the room. */
   async joinTranscription(ctx: Context, identityDid: string): Promise<JoinCallResponse> {
-    const meetingId = await this.#findOrCreateMeeting(ctx, `transcription:${identityDid}`);
+    const title = `transcription:${identityDid}`;
+    const meetingId = await this.#oldestOrCreate(ctx, title, await this.#listMeetings(ctx, title));
     return { meetingId, authToken: await this.#mintParticipantToken(ctx, meetingId, identityDid) };
   }
 
-  async #findOrCreateMeeting(ctx: Context, title: string): Promise<string> {
+  /** The active meetings titled exactly `title`, oldest first; RealtimeKit's search also matches longer titles. */
+  async #listMeetings(ctx: Context, title: string): Promise<readonly Meeting[]> {
     const query = new URLSearchParams({ search: title, status: 'ACTIVE', per_page: '50' });
     const meetings = await this.#call(ctx, Schema.Array(Meeting), 'GET', `/meetings?${query}`);
-    const [oldest] = meetings
+    return meetings
       .filter((meeting) => meeting.title === title)
       .toSorted((left, right) => (left.created_at ?? '').localeCompare(right.created_at ?? ''));
-    return oldest?.id ?? (await this.#call(ctx, Meeting, 'POST', '/meetings', { title })).id;
+  }
+
+  async #oldestOrCreate(ctx: Context, title: string, meetings: readonly Meeting[]): Promise<string> {
+    return meetings[0]?.id ?? (await this.#call(ctx, Meeting, 'POST', '/meetings', { title })).id;
   }
 
   /**

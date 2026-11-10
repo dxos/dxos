@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { Event, synchronized } from '@dxos/async';
+import { Event, sleep, synchronized } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { type Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
@@ -43,6 +43,10 @@ export type CallManagerOptions = {
 /**
  * Top level manager for call state.
  */
+/** Joins of the swarm's agreed meeting tried before it counts as unreachable, so one transient failure does not isolate a peer. */
+const AGREED_MEETING_ATTEMPTS = 2;
+const AGREED_MEETING_RETRY_MS = 1_000;
+
 export class CallManager extends Resource {
   public readonly callStateUpdated = new Event<CallState>();
   public readonly roomJoined = new Event<{ roomId?: string }>();
@@ -102,6 +106,8 @@ export class CallManager extends Resource {
   #transportCtx?: Context;
   /** A meeting the swarm agreed on that could not be joined here; not retried on every later state update. */
   #unreachableMeetingId?: string;
+  /** Set while moving to the agreed meeting, so the call-state updates a switch causes do not start another. */
+  #following = false;
 
   private readonly _swarmSynchronizer: CallSwarmSynchronizer;
   private readonly _mediaManager: MediaManager;
@@ -375,7 +381,12 @@ export class CallManager extends Resource {
    * Opens a transport for the room's meeting and binds its events; replaces the current one, if any.
    * Runs inside the manager's lock (`_runJoin`, `_switchMeeting`).
    */
-  async #connect(generation: number, roomId: string, meetingId: string | undefined): Promise<void> {
+  async #connect(
+    generation: number,
+    roomId: string,
+    meetingId: string | undefined,
+    { advertise = true }: { advertise?: boolean } = {},
+  ): Promise<void> {
     await this.#disconnect();
     const deviceKey = this._haloIdentity.getDevicesSnapshot().find((device) => device.current)?.key;
     invariant(deviceKey, 'a call needs the current device');
@@ -399,7 +410,7 @@ export class CallManager extends Resource {
     transport.closed.on(ctx, (reason) => this.#onTransportClosed(generation, roomId, reason));
 
     // Advertised so a late joiner, or a peer that raced us to an empty room, converges on one meeting.
-    if (transport.meetingId && transport.meetingId !== this._swarmSynchronizer.advertisedMeetingId) {
+    if (advertise && transport.meetingId && transport.meetingId !== this._swarmSynchronizer.advertisedMeetingId) {
       this._swarmSynchronizer.advertiseMeetingId(transport.meetingId);
     }
   }
@@ -436,13 +447,13 @@ export class CallManager extends Resource {
     generation: number,
     roomId: string,
     meetingId: string | undefined,
-    { reconnect = false }: { reconnect?: boolean } = {},
+    { reconnect = false, advertise = true }: { reconnect?: boolean; advertise?: boolean } = {},
   ): Promise<void> {
     if (generation !== this.#joinGeneration || (!reconnect && this.#transport?.meetingId === meetingId)) {
       return;
     }
     log.info('switching call meeting', { from: this.#transport?.meetingId, to: meetingId, reconnect });
-    await this.#connect(generation, roomId, meetingId);
+    await this.#connect(generation, roomId, meetingId, { advertise });
   }
 
   // Not `@synchronized`: presence flips at once so the lobby shows without waiting for an in-flight SFU connect.
@@ -486,20 +497,43 @@ export class CallManager extends Resource {
       !agreed ||
       !current ||
       agreed === current ||
-      agreed === this.#unreachableMeetingId
+      agreed === this.#unreachableMeetingId ||
+      this.#following
     ) {
       return;
     }
-    const generation = this.#joinGeneration;
-    void this._switchMeeting(generation, roomId, agreed).catch((error) => {
-      // Back to the meeting we left, so a meeting we cannot join (gone, or not the room's) does not end the call.
-      log.catch(error);
-      this.#unreachableMeetingId = agreed;
-      void this._switchMeeting(generation, roomId, current, { reconnect: true }).catch((fallbackError) => {
-        log.catch(fallbackError);
-        void this.leave().catch((leaveError) => log.catch(leaveError));
-      });
+    this.#following = true;
+    void this.#moveToAgreed(this.#joinGeneration, roomId, agreed, current).finally(() => {
+      this.#following = false;
     });
+  }
+
+  /**
+   * Moves to the agreed meeting, retrying a failed join once. A meeting we still cannot join (gone, or not the room's)
+   * sends us back to the one we left without advertising it, so one peer's failure never moves the rest of the room.
+   */
+  async #moveToAgreed(generation: number, roomId: string, agreed: string, current: string): Promise<void> {
+    for (let attempt = 1; attempt <= AGREED_MEETING_ATTEMPTS; attempt++) {
+      try {
+        await this._switchMeeting(generation, roomId, agreed);
+        return;
+      } catch (error) {
+        log.catch(error);
+      }
+      if (generation !== this.#joinGeneration) {
+        return;
+      }
+      if (attempt < AGREED_MEETING_ATTEMPTS) {
+        await sleep(AGREED_MEETING_RETRY_MS);
+      }
+    }
+    this.#unreachableMeetingId = agreed;
+    try {
+      await this._switchMeeting(generation, roomId, current, { reconnect: true, advertise: false });
+    } catch (error) {
+      log.catch(error);
+      await this.leave().catch((leaveError) => log.catch(leaveError));
+    }
   }
 
   private _onMediaStateUpdated(state: MediaState): void {

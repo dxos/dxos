@@ -132,4 +132,21 @@ describe('MediaManager transport seam', () => {
 
     await mediaManager.close();
   });
+
+  test('a share ends with the transport, so a reconnect does not show it as on', async ({ expect }) => {
+    const fake = new FakeTransport();
+    fake.screenShareLocalTrack = makeRemoteVideoTrack();
+    const mediaManager = new MediaManager();
+    await mediaManager.open();
+    await mediaManager.join(fake);
+    await mediaManager.turnScreenshareOn();
+    expect(mediaManager._getState().screenshareEnabled).toBe(true);
+
+    await mediaManager.leave();
+    await mediaManager.join(new FakeTransport());
+    expect(mediaManager._getState().screenshareEnabled).toBe(false);
+    expect(mediaManager._getState().screenshareVideoStream).toBeUndefined();
+
+    await mediaManager.close();
+  });
 });

@@ -24,6 +24,9 @@ export type RealtimeKitTranscriberOptions = {
  */
 const FLUSH_TIMEOUT_MS = 3_000;
 
+/** `roomLeft` states in which RealtimeKit lost the connection, so a fresh join resumes; the rest end the meeting. */
+const RECONNECT_STATES = new Set(['disconnected', 'failed']);
+
 /** Builds the RealtimeKit transcriber for a track; what consumers pass wherever a {@link CreateTranscriber} is taken. */
 export const createRealtimeKitTranscriber =
   (options: RealtimeKitTranscriberOptions): CreateTranscriber =>
@@ -61,18 +64,12 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
   }
 
   protected override async _open(): Promise<void> {
-    const { authToken } = await this._options.join();
-    const meeting = await connectRealtimeKit(authToken);
-    this.#meeting = meeting;
-    this.#unsubscribe = [meeting.onTranscript(this.#onTranscript), meeting.onRoomLeft(this.#onRoomLeft)];
+    await this.#connect();
   }
 
   protected override async _close(): Promise<void> {
     const meeting = this.#meeting;
-    this.#meeting = undefined;
-    this.#release();
-    this.#unsubscribe.forEach((unsubscribe) => unsubscribe());
-    this.#unsubscribe = [];
+    this.#detach();
     if (meeting) {
       await this.#media;
       await meeting.leave();
@@ -123,6 +120,25 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
     this.#settled.wake();
   }
 
+  /** Joins a meeting and, after a reconnect, republishes the track already being sent (muted or not). */
+  async #connect(): Promise<void> {
+    const { authToken } = await this._options.join();
+    const meeting = await connectRealtimeKit(authToken);
+    this.#meeting = meeting;
+    this.#unsubscribe = [meeting.onTranscript(this.#onTranscript), meeting.onRoomLeft(this.#onRoomLeft)];
+    const sending = this.#sending;
+    if (sending) {
+      this.#enqueueMedia(() => meeting.self.enableAudio(sending));
+    }
+  }
+
+  #detach(): void {
+    this.#meeting = undefined;
+    this.#release();
+    this.#unsubscribe.forEach((unsubscribe) => unsubscribe());
+    this.#unsubscribe = [];
+  }
+
   readonly #onTranscript = (data: RealtimeKitTranscript): void => {
     // An identity can run several transcriptions at once (microphone and system audio, or two devices), each a peer
     // of the same participant in its one meeting, so a peer keeps only its own words.
@@ -151,7 +167,22 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
   };
 
   readonly #onRoomLeft = (state: string): void => {
-    log.info('transcription meeting left', { state });
-    this.#release();
+    this.#detach();
+    if (!RECONNECT_STATES.has(state)) {
+      // Ended, kicked or rejected: a rejoin would be refused the same way, so the session stays closed to new audio.
+      log.warn('transcription meeting ended', { state });
+      return;
+    }
+    log.info('transcription meeting lost; rejoining', { state });
+    void this.#connect()
+      .then(async () => {
+        // A close that ran while the rejoin was in flight left this meeting to us.
+        if (!this.isOpen) {
+          const meeting = this.#meeting;
+          this.#detach();
+          await meeting?.leave();
+        }
+      })
+      .catch((err) => log.catch(err));
   };
 }

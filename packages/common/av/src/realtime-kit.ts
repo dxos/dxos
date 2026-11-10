@@ -19,7 +19,7 @@ export interface RealtimeKitSelf {
 }
 
 export interface RealtimeKitRemoteParticipant {
-  /** The participant's verified device key, set by calls-service. */
+  /** The label the participant chose when it joined (its device key in a call); not verified, so never trust it. */
   customParticipantId?: string;
   audioTrack?: MediaStreamTrack;
   videoTrack?: MediaStreamTrack;
