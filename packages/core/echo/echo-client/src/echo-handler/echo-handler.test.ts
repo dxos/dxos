@@ -200,6 +200,16 @@ const Progress = Type.makeObject(DXN.make('com.example.type.progress', '0.1.0'))
   }),
 );
 
+/** A union whose first member's tag may be omitted. */
+const Tagged = Type.makeObject(DXN.make('com.example.type.tagged', '0.1.0'))(
+  Schema.Struct({
+    spec: Schema.Union([
+      Schema.Struct({ kind: Schema.Literal('a').pipe(Schema.optional), token: Schema.String.pipe(Schema.optional) }),
+      Schema.Struct({ kind: Schema.Literal('b'), feed: Schema.String }),
+    ]),
+  }),
+);
+
 describe('Reactive Object with ECHO database', () => {
   let builder: EchoTestBuilder;
 
@@ -278,6 +288,16 @@ describe('Reactive Object with ECHO database', () => {
       expect(snapshot.nested).to.deep.eq({});
     });
 
+    test('selects the member whose tag may be omitted when the tag is absent', async () => {
+      const { db } = await builder.createDatabase();
+      const Stored = await db.addType(Tagged);
+      const object = db.add(Obj.make(Stored, { spec: { token: 'a' } }));
+      Obj.update(object, (object) => {
+        Reflect.set(object.spec, 'token', 'b');
+      });
+      expect(object.spec).to.deep.eq({ token: 'b' });
+    });
+
     test('rejects a wrong value, naming the field', async () => {
       const object = await setup();
       expect(() => Obj.update(object, (object) => Reflect.set(object, 'lastError', 42))).to.throw(
@@ -302,17 +322,6 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('rejects clearing a union tag declared optional', async () => {
-    const Tagged = Type.makeObject(DXN.make('com.example.type.tagged', '0.1.0'))(
-      Schema.Struct({
-        spec: Schema.Union([
-          Schema.Struct({
-            kind: Schema.Literal('a').pipe(Schema.optional),
-            token: Schema.String.pipe(Schema.optional),
-          }),
-          Schema.Struct({ kind: Schema.Literal('b'), feed: Schema.String }),
-        ]),
-      }),
-    );
     const { db } = await builder.createDatabase({ types: [Tagged] });
     const object = db.add(Obj.make(Tagged, { spec: { kind: 'a' } }));
     expect(() => Obj.update(object, (object) => Reflect.set(object.spec, 'kind', undefined))).to.throw(

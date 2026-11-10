@@ -317,7 +317,7 @@ const getProperties = (
 
   const typeDiscriminators = getTypeDiscriminators(typeAstList);
   const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
-  const typeIndex = typeDiscriminators.findIndex((p) => targetPropertyValue === discriminatorValue(p));
+  const typeIndex = selectMember(typeDiscriminators, targetPropertyValue);
   invariant(typeIndex !== -1, 'discriminator field not set on target');
   return SchemaAST.getPropertySignatures(typeAstList[typeIndex]);
 };
@@ -392,6 +392,20 @@ const unwrapDiscriminator = (ast: SchemaAST.AST): SchemaAST.AST => {
 const discriminatorValue = (property: SchemaAST.PropertySignature): unknown => {
   const tag = unwrapDiscriminator(property.type);
   return SchemaAST.isLiteral(tag) ? tag.literal : undefined;
+};
+
+/**
+ * The index of the union member a target's tag selects; with no tag, the one member whose tag may be omitted (-1 when
+ * none or several may be).
+ */
+const selectMember = (typeDiscriminators: SchemaAST.PropertySignature[], tag: unknown): number => {
+  if (tag === undefined) {
+    const omittable = typeDiscriminators.flatMap((property, index) =>
+      SchemaAST.isOptional(property.type) ? [index] : [],
+    );
+    return omittable.length === 1 ? omittable[0] : -1;
+  }
+  return typeDiscriminators.findIndex((property) => tag === discriminatorValue(property));
 };
 
 const getTypeDiscriminators = (typeAstList: SchemaAST.Objects[]): SchemaAST.PropertySignature[] => {
@@ -495,7 +509,7 @@ const resolveTypeLiteral = (
 
   const typeDiscriminators = getTypeDiscriminators(typeAstList);
   const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
-  const typeIndex = typeDiscriminators.findIndex((property) => targetPropertyValue === discriminatorValue(property));
+  const typeIndex = selectMember(typeDiscriminators, targetPropertyValue);
   invariant(typeIndex !== -1, 'discriminator field not set on target');
   return typeAstList[typeIndex];
 };
