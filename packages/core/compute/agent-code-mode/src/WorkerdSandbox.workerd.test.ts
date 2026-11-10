@@ -24,10 +24,19 @@ import * as WorkerdSandbox from './WorkerdSandbox.ts';
 
 const TASK = 'com.example.type.task';
 
-type Row = { id: string; typename: string; [field: string]: unknown };
-
 /** What the workspace's `ref` makes: a reference holding the row it names. */
 type RowRef = { ref: Row };
+
+type Row = {
+  id: string;
+  typename: string;
+  title?: string;
+  owner?: RowRef;
+  parent?: string;
+  source?: string;
+  target?: string;
+  [field: string]: unknown;
+};
 
 /** A workspace with the plain dialect's shape and none of its machinery. */
 const makeWorkspace = () => {
@@ -37,8 +46,8 @@ const makeWorkspace = () => {
   const printed: string[] = [];
   /** Every value printed, as the host's printer received it. */
   const printedValues: unknown[] = [];
-  /** The inputs operations were invoked with. */
-  const inputs: unknown[] = [];
+  /** The inputs `assign` was invoked with. */
+  const inputs: { task: Row; owner: RowRef }[] = [];
   const byId = (target: Row | string) => (typeof target === 'string' ? target : target.id);
 
   const bindings = {
@@ -50,8 +59,7 @@ const makeWorkspace = () => {
     children: async (target: Row | string) => [...rows.values()].filter((row) => row.parent === byId(target)),
     relations: async (target: Row | string, direction: 'out' | 'in' = 'out') =>
       [...rows.values()].filter((row) => row[direction === 'out' ? 'source' : 'target'] === byId(target)),
-    referrers: async (target: Row | string) =>
-      [...rows.values()].filter((row) => (row.owner as RowRef | undefined)?.ref.id === byId(target)),
+    referrers: async (target: Row | string) => [...rows.values()].filter((row) => row.owner?.ref.id === byId(target)),
     ref: (row: Row): RowRef => ({ ref: row }),
     query: async (typename: string, props?: Record<string, unknown>) =>
       [...rows.values()].filter(
@@ -217,13 +225,12 @@ describe('workerd sandbox', () => {
     expect(output).toEqual('a');
 
     // `make` and `update` were handed the workspace's own reference, holding the live row.
-    const review = [...rows.values()].find((row) => row.title === 'Review')!;
-    expect((review.owner as RowRef).ref).toBe(rows.get('p'));
-    expect((rows.get('a')!.owner as RowRef).ref).toBe(rows.get('p'));
+    const review = [...rows.values()].find((row) => row.title === 'Review');
+    expect(review?.owner?.ref).toBe(rows.get('p'));
+    expect(rows.get('a')?.owner?.ref).toBe(rows.get('p'));
     // The operation got the live task, not the snapshot the isolate held, and a reference for `owner`.
-    const [input] = inputs as { task: Row; owner: RowRef }[];
-    expect(input.task).toBe(rows.get('a'));
-    expect(input.owner.ref).toBe(rows.get('p'));
+    expect(inputs).toEqual([{ task: rows.get('a'), owner: { ref: rows.get('p') } }]);
+    expect(inputs[0].task).toBe(rows.get('a'));
   });
 
   test('prints a held object as the live object, and describes it', async () => {
@@ -240,10 +247,11 @@ describe('workerd sandbox', () => {
 
   test("reads an object's children, relations and referrers, by object or by id", async () => {
     const { rows, run } = setup();
-    rows.set('a', { id: 'a', typename: TASK, title: 'Parent' });
+    const parent: Row = { id: 'a', typename: TASK, title: 'Parent' };
+    rows.set('a', parent);
     rows.set('b', { id: 'b', typename: TASK, title: 'Child', parent: 'a' });
     rows.set('r', { id: 'r', typename: TASK, title: 'Link', source: 'a', target: 'b' });
-    rows.set('c', { id: 'c', typename: TASK, title: 'Owned', owner: { ref: rows.get('a') } });
+    rows.set('c', { id: 'c', typename: TASK, title: 'Owned', owner: { ref: parent } });
     const output = await run(`
       const [parent] = await query('${TASK}', { title: 'Parent' });
       const titles = (objects) => objects.map((obj) => obj.title).join(',');

@@ -11,7 +11,11 @@ import * as Schema from 'effect/Schema';
 
 import { type BindingsContext } from './Dialect.ts';
 import * as Sandbox from './Sandbox.ts';
-import { PRELUDE, REF_MARKER } from './WorkerdSandboxPrelude.ts';
+import MAIN from './workerd/main.mjs?raw';
+import PRELUDE from './workerd/prelude.mjs?raw';
+
+/** The key of the marker `ref(obj)` returns in the isolate, which the host turns into a reference to `obj`. */
+const REF_MARKER = '@dxos/agent-code-mode/ref';
 
 /**
  * Answers one call the sandboxed code makes: a binding's name and its arguments. A refusal is returned rather than
@@ -19,7 +23,7 @@ import { PRELUDE, REF_MARKER } from './WorkerdSandboxPrelude.ts';
  */
 export type HostCall = (binding: string, args: readonly unknown[]) => Promise<Outcome>;
 
-/** The isolate's entrypoint, as {@link module_} defines it: it runs the code, answering its calls through `host`. */
+/** The isolate's entrypoint (`workerd/main.mjs`): it runs the code, answering its calls through `host`. */
 export type SandboxEntrypoint = { readonly run: (host: HostCall) => Promise<unknown> };
 
 /**
@@ -33,7 +37,8 @@ export type WorkerLoader = {
       compatibilityDate: string;
       compatibilityFlags?: string[];
       mainModule: string;
-      modules: Record<string, string>;
+      modules: Record<string, { js: string }>;
+      env: Record<string, string>;
       globalOutbound: null;
     }>,
   ) => { readonly getEntrypoint: () => SandboxEntrypoint };
@@ -78,8 +83,9 @@ export const make = (options: WorkerdSandboxOptions): Sandbox.Sandbox => ({
       const isolate = options.loader.get(`sandbox-${crypto.randomUUID()}`, async () => ({
         compatibilityDate: COMPATIBILITY_DATE,
         compatibilityFlags: COMPATIBILITY_FLAGS,
-        mainModule: 'main.js',
-        modules: { 'main.js': module_(code) },
+        mainModule: 'main.mjs',
+        modules: modules(code),
+        env: { REF_MARKER },
         globalOutbound: null,
       }));
 
@@ -141,32 +147,31 @@ const Outcome = Schema.Union([
 const COMPATIBILITY_DATE = '2026-03-17';
 const COMPATIBILITY_FLAGS = ['no_handle_cross_request_promise_resolution'];
 
-/**
- * The module the isolate runs: the facade, then the model's code as the body of its entrypoint's `run`, which the host
- * calls with the function that answers the facade. The value crosses as JSON, as the model's output would.
- */
-const module_ = (code: string): string => `
-import { WorkerEntrypoint } from 'cloudflare:workers';
+/** The names `prelude.mjs` exports for the model's code. */
+const FACADE = [
+  'print',
+  'describe',
+  'relations',
+  'children',
+  'referrers',
+  'query',
+  'make',
+  'add',
+  'remove',
+  'flush',
+  'ref',
+  'update',
+  'ops',
+];
 
-${PRELUDE}
-
-export default class extends WorkerEntrypoint {
-  async run(host) {
-    __host = host;
-    try {
-      const value = await (async () => {
-${code}
-      })();
-      await __drain();
-      return { _tag: 'Ok', value: JSON.parse(JSON.stringify(value === undefined ? null : value) ?? 'null') };
-    } catch (error) {
-      // Drained here too, so output the program produced before it threw still reaches the model.
-      try { await __drain(); } catch {}
-      return { _tag: 'Error', message: error && error.message ? error.message : String(error) };
-    }
-  }
-}
-`;
+/** The isolate's modules: its entrypoint, the facade, and the model's code as the body of the program `main` runs. */
+const modules = (code: string): Record<string, { js: string }> => ({
+  'main.mjs': { js: MAIN },
+  'prelude.mjs': { js: PRELUDE },
+  'program.mjs': {
+    js: `import { ${FACADE.join(', ')} } from './prelude.mjs';\nexport default async () => {\n${code}\n};\n`,
+  },
+});
 
 type HostState = {
   readonly bindings: Record<string, unknown>;
