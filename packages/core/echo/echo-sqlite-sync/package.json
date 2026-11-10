@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/echo-worker",
+  "name": "@dxos/echo-sqlite-sync",
   "version": "0.16.0",
   "private": true,
-  "description": "An ECHO graph in the browser, synced through a Cloudflare Durable Object",
+  "description": "An ECHO graph in the browser, synced through @dxos/echo-sync-worker",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -18,11 +18,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    },
-    "./worker": {
-      "source": "./src/worker/index.ts",
-      "types": "./dist/types/src/worker/index.d.ts",
-      "import": "./dist/lib/worker.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -33,6 +28,7 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/echo-sqlite": "workspace:*",
+    "@dxos/echo-sync-worker": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",

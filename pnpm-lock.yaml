@@ -3210,9 +3210,12 @@ importers:
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../../core/echo/echo-sqlite
-      '@dxos/echo-worker':
+      '@dxos/echo-sqlite-sync':
         specifier: workspace:*
-        version: link:../../core/echo/echo-worker
+        version: link:../../core/echo/echo-sqlite-sync
+      '@dxos/echo-sync-worker':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-sync-worker
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -6774,7 +6777,7 @@ importers:
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
 
-  packages/core/echo/echo-worker:
+  packages/core/echo/echo-sqlite-sync:
     dependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -6782,6 +6785,9 @@ importers:
       '@dxos/echo-sqlite':
         specifier: workspace:*
         version: link:../echo-sqlite
+      '@dxos/echo-sync-worker':
+        specifier: workspace:*
+        version: link:../echo-sync-worker
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -6801,6 +6807,15 @@ importers:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
         version: 5.20260719.1
+
+  packages/core/echo/echo-sync-worker:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^5.20260717.1
+        version: 5.20260719.1
+      wrangler:
+        specifier: '>=4.112.0'
+        version: 4.112.0(@cloudflare/workers-types@5.20260719.1)
 
   packages/core/echo/feed:
     dependencies:

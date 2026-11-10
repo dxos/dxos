@@ -1,0 +1,14 @@
+// The echo sync server: one Durable Object per graph, assigning sequence numbers to writes.
+// Deploy: `npm install && npm run deploy` here, or the "Deploy to Cloudflare" button in README.md.
+{
+  "name": "echo-sync-worker",
+  "main": "./src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  // One object per slug: single-threaded, so it hands out seqs in a total order with no coordination.
+  // Created on demand by the first request that addresses it, and deleted by its own alarm 24h later.
+  "durable_objects": {
+    "bindings": [{ "name": "SPACE", "class_name": "SpaceObject" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SpaceObject"] }],
+  "observability": { "enabled": true },
+}
