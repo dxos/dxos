@@ -1598,6 +1598,11 @@ feat F-15: The tutorial app
   req F-15.4:
     when: an embed renders on a docs page
     then: it follows the page's light or dark theme, and the page outside the embed keeps its own styles
+
+  req F-15.5:
+    when: a reader moves between docs pages
+    then: a page without an embed loads none of the embed's styles, so the sidebar and page paint at once instead
+          of flashing blank while those styles load
 ```
 
 ```mdl
@@ -2643,6 +2648,14 @@ decision D-107: The build writes Astro's redirects to a `_redirects` file that C
   date: 2026-11-10
   by: user:wittjosiah
   affects: [F-16.5, F-16.7]
+```
+
+```mdl
+decision D-108: Pages without an embed load none of its styles. Astro walks up the build graph from an island's styles to the pages that use it, and two links made that walk reach every docs page: `starlight-sidebar-topics` imports `astro:i18n`, which imports the page manifest, so the build aliases `astro:i18n` to a stub (the site has no locales); and every MDX page renders through Starlight's one docs route, so the tutorial embed is its own page, `/embed/contacts/`, shown in an iframe. Before this, each docs page loaded about 535 KB of the embed's CSS, and each navigation showed a blank sidebar while it loaded.
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.5]
 ```
 
 ## Appendix: Extension Definitions

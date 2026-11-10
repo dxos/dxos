@@ -29,7 +29,7 @@ export type ContactsEmbedProps = {
   peers?: 1 | 2;
 };
 
-/** A live embed of the tutorial app as it stands at `stage`: `<ContactsEmbed stage='records' client:only='react' />`. */
+/** A live embed of the tutorial app as it stands at `stage`; `/embed/contacts/` renders it. */
 export const ContactsEmbed = ({ stage, peers = 1 }: ContactsEmbedProps) => {
   const [started, setStarted] = useState<Peer[]>();
   const [error, setError] = useState<string>();

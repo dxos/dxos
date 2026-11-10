@@ -29,6 +29,8 @@ export type Stage = 'types' | 'queries' | 'records' | 'complete';
 const STAGES: readonly Stage[] = ['types', 'queries', 'records', 'complete'];
 const reached = (stage: Stage, at: Stage) => STAGES.indexOf(stage) >= STAGES.indexOf(at);
 
+export const isStage = (value: unknown): value is Stage => STAGES.some((stage) => stage === value);
+
 const TYPES = [
   { type: Organization, label: 'Organizations' },
   { type: Person, label: 'People' },

@@ -122,6 +122,13 @@ export default defineConfig({
       ThemePlugin({ srcCssPath: path.join(import.meta.dirname, 'src/styles/demo-theme.css') }),
       wasm(),
     ],
+    resolve: {
+      // `starlight-sidebar-topics`, the only importer of `astro:i18n`, would otherwise pull in Astro's page manifest.
+      // That makes every page a dependency of the Starlight routes in Astro's build graph, and Astro then adds the
+      // styles of any page's island, such as the `/echo` demos', to every docs page. The plugin only calls
+      // `getRelativeLocaleUrl` for a site with locales, and this one has none.
+      alias: [{ find: /^astro:i18n$/, replacement: path.join(import.meta.dirname, 'src/sidebar-topics-i18n.ts') }],
+    },
     optimizeDeps: {
       exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
     },
