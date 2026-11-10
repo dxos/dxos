@@ -37,19 +37,23 @@ return {
 
 ### Opening a space
 
-A space's navtree is in the DOM while that space is the open workspace. Close any open dialog, then
-click the space's name in the rail:
+A space's navtree is in the DOM only while that space is the open workspace, at `/w/<space id>`.
+Open it by URL, with `SPACE_NAME` set to its name:
 
 ```js
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-const tab = [...document.querySelectorAll('[role=tab],button')].find(
-  (e) => (e.getAttribute('aria-label') || e.textContent.trim()) === 'SPACE_NAME',
-);
-tab?.click();
-await wait(2000);
-return { found: !!tab, url: location.href };
+const name = (s) => {
+  try {
+    return s.properties?.name;
+  } catch {
+    return undefined; // Not open yet.
+  }
+};
+const space = dxos.client.spaces.get().find((s) => name(s) === 'SPACE_NAME');
+if (space) setTimeout(() => location.assign(`/w/${space.id}`), 100);
+return { found: !!space, at: Date.now() };
 ```
+
+Then wait for the new page with SKILL.md's reload-wait snippet, `RELOAD_AT` set to `at`.
 
 A check that only navigates and reads may use the user's default space, "My Space".
 
@@ -64,7 +68,7 @@ A check that only navigates and reads may use the user's default space, "My Spac
 | `npm install` fails with `ETARGET` for `@types/react`                                                                  | That version does not exist yet; take the newest with `react`'s major and minor.                                                                           |
 | `vite build` fails with "Cannot find native binding"                                                                   | Node is older than `^20.19` or `>=22.12`. Switch Node, delete `node_modules` and `package-lock.json`, and install again.                                   |
 | The plugin is loaded but a module is missing from `moduleIds`, or a node or surface never shows                        | An id is not camelCase (key's last segment, module, extension, node or surface id). A hyphenated id is dropped without an error.                           |
-| `account login` rejects `--no-open`, or fails with "Composer returned no admission; it may predate this version of dx" | The target predates the loopback login, so `dx` cannot log in to it. Stop and tell the user.                                                               |
+| `account login` rejects `--no-open`, or fails with "Composer returned no admission; it may predate this version of dx" | The target predates the loopback login, so `dx` cannot log in to it. Tell the user publishing waits on a newer deploy, and end the turn there.             |
 | `account login` times out although the user clicked **Authorize**                                                      | The page could not reach `dx`'s callback on `127.0.0.1`. See the local-network row above.                                                                  |
 | `account login` refuses because the profile already has an identity                                                    | Run `.dxos/dx account logout` first, or change `<slug>` in `.dxos/dx`.                                                                                     |
 | The user offers `DX_API_TOKEN` instead of a login                                                                      | It works only for an identity with an account: EDGE refuses to mint one otherwise ("Identity is not associated with an account").                          |

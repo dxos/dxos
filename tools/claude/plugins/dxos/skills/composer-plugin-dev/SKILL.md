@@ -215,6 +215,9 @@ Then loop:
 
 **Done when** every check passes on one reload with no edits in between.
 
+Steps 6 to 8 publish the plugin. Take them only when the user asks to publish or install it from
+the registry; otherwise the work ends here, with the plugin running from the dev server.
+
 ## 6. Log in with dx
 
 Install the `dx` CLI built from the same commit:
