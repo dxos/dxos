@@ -9,12 +9,9 @@ description: Typedoc generated api reference for DXOS packages
 - <a href='/typedoc/echo-react/index.html' target='_blank'>`@dxos/echo-react`</a>
 - <a href='/typedoc/echo-solid/index.html' target='_blank'>`@dxos/echo-solid`</a>
 
-## HALO
+## Client
 
-- <a href='/typedoc/halo/index.html' target='_blank'>`@dxos/halo`</a>
-
-## Client and apps
-
-- <a href='/typedoc/app-framework/index.html' target='_blank'>`@dxos/app-framework`</a>
 - <a href='/typedoc/client/index.html' target='_blank'>`@dxos/client`</a>
 - <a href='/typedoc/react-client/index.html' target='_blank'>`@dxos/react-client`</a>
+
+For `@dxos/halo`, see HALO's [API reference](/docs/halo/resources/api-reference/).

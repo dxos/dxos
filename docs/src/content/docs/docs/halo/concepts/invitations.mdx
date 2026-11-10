@@ -1,0 +1,51 @@
+---
+title: Invitations
+description: How a device or a person is let into an identity or a space.
+---
+
+An invitation is a short-lived offer from a host to let one guest in: a new device into an identity, or a new member into
+a space.
+
+## Model
+
+**Kinds.** A `device` invitation admits a device to the host's identity. A `space` invitation admits another identity to a
+space. `Identity.share` makes the first and `Space.share` the second.
+
+**Types.**
+
+| Type          | Behavior                                                                      |
+| ------------- | ----------------------------------------------------------------------------- |
+| `interactive` | Host and guest are online at the same time and talk directly                  |
+| `delegated`   | The guest can redeem it while the host is offline                             |
+| `multiuse`    | More than one guest can redeem it                                             |
+
+**Auth methods.** How the guest proves it is the intended guest:
+
+| Auth method        | Proof                                                                  |
+| ------------------ | ---------------------------------------------------------------------- |
+| `none`             | None. Anyone with the invitation code is admitted                      |
+| `shared-secret`    | A short authorization code the host shows, typed in by the guest       |
+| `known-public-key` | A signature from a key the host named in advance                       |
+
+The invitation code and the authorization code travel by different routes, for example a link in a chat and a code read
+aloud. Someone who intercepts only the link cannot get in.
+
+## The flow
+
+1. The host calls `share`. The flow emits `connecting` and waits for a guest.
+2. The host sends the invitation code to the guest.
+3. The guest calls `join` with the code. The two find each other through the signaling service and open an encrypted
+   connection. Both flows emit `connected`.
+4. With `shared-secret`, both flows emit `readyForAuthentication`. The host's event carries the authorization code, which
+   the host passes to the guest by another route.
+5. The guest calls `Invitation.authenticate` with the code. Both flows emit `authenticating`.
+6. The host checks the code and writes the statement that admits the guest. Both flows emit `success`; the guest's result
+   names the space or identity it joined.
+
+Any step can end in `cancelled`, if either side calls `Invitation.cancel`, or `error`.
+
+## Limits
+
+- An invitation that is never redeemed expires. Start a new one.
+- A wrong authorization code fails the attempt with an `error` event, and the guest must join again.
+- `none` admits anyone who sees the code. Use it for demos and for codes you show only on a screen you control.

@@ -1,0 +1,65 @@
+---
+title: Surface
+description: Contribute surfaces and render other plugins' surfaces.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+```
+
+`Surface` creates surface contributions and renders surfaces. `AppSurface` holds the App Toolkit's roles and the filters that
+match them. [Surfaces](/docs/app-framework/concepts/surfaces/) explains how matching works.
+
+## Contribute a surface for an object type
+
+`Surface.create` takes an id, a filter, a component and a `props` mapper. `AppSurface.object(role, Type)` matches a role
+when the data's subject is an object of the type.
+
+<Snippet file="app-framework-guide-surface" region="contribute" lang="tsx" />
+
+Contribute surfaces from a module through `Capabilities.ReactSurface`. In a manifest, `AppCapability.surface` makes
+that module and loads it when one of its `roles` is first requested.
+
+<Snippet file="app-framework-guide-surface" region="module" lang="tsx" />
+
+## Match on data and set the order
+
+`AppSurface.oneOf` matches any of several filters, and `AppSurface.allOf` requires all of them. Other filters match a
+literal value (`AppSurface.literal`), the object a companion panel is attached to (`AppSurface.companion`), or any
+subject (`AppSurface.subject`).
+
+<Snippet file="app-framework-guide-surface" region="match" lang="tsx" />
+
+When several surfaces match, `position` on the contribution orders them. Pass `Position.first` or `Position.last` from
+`@dxos/util` to come before or after the rest.
+
+## Render a nested surface from a component
+
+`Surface.Surface` renders whatever surface matches a role and data. Pass `limit` to cap how many render.
+
+<Snippet file="app-framework-guide-surface" region="nested" lang="tsx" />
+
+## The standard roles
+
+| Role | Where it renders | Data |
+| --- | --- | --- |
+| `Article` | The main content area, one object per plank. | `{ subject, attendableId }` |
+| `Section` | An object inside a stack or another document. | `{ subject, attendableId }` |
+| `CardContent`, `CardIcon`, `CardMenu` | Parts of an object's card. | `{ subject }` |
+| `ObjectProperties` | The properties panel of an object. | `{ subject }` |
+| `Dialog`, `Popover` | A dialog or popover opened by an operation. | Set by the caller. |
+| `StatusIndicator` | The status bar. | None. |
+| `deckCompanion(variant)` | A workspace-wide panel beside the deck. | `{ id?, subject? }` |
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Add a surface](/docs/app-framework/learn/add-surface/) | A surface end to end. |
+| [React](/docs/app-framework/guides/react/) | Hooks a surface component uses. |

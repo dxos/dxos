@@ -1,0 +1,53 @@
+---
+title: Create an identity
+description: Give the tutorial app a user, with a display name, and read it back.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the tutorial app has a named user, and shows who is signed in.
+
+## Background
+
+[Installation](/docs/echo/learn/installation/) gave the app an identity in one line, with `client.halo.createIdentity()`,
+because ECHO needs one before it can create a space. This path does the same work through `@dxos/halo`, the Effect API
+for identity, devices and membership. Its functions are Effects that need `Identity.Service` or `Space.Service`.
+
+An identity is a key pair the client generates on this device. Nothing is sent to a server to create it.
+[Identities and devices](/docs/halo/concepts/identities-devices/) has the full model.
+
+## Steps
+
+1. **Provide the HALO services.** `layerClient` builds both services from the app's client.
+
+   <Snippet file="halo-create-identity" region="layer" />
+
+   Nothing is visible yet: the layer only wires the services to the client.
+
+2. **Create the identity, unless the device already has one.** `Identity.getSnapshot` reads the current identity once.
+   It is an `Option`, empty on a fresh device. `Identity.create` generates the key pair and stores it on the device.
+
+   <Snippet file="halo-create-identity" region="create" />
+
+   The console shows a DID such as `did:halo:...` and the display name. Run the app again and you get the same DID back,
+   because the identity is now stored on the device.
+
+3. **Follow the identity.** `Identity.identity` is a stream. It emits the current value straight away, then again on each
+   change, which is what a header that shows the user needs.
+
+   <Snippet file="halo-create-identity" region="follow" />
+
+4. **Change the display name.** `Identity.updateProfile` writes the profile, and the stream from step 3 emits the new
+   name.
+
+   <Snippet file="halo-create-identity" region="rename" />
+
+## Recap
+
+You can now:
+
+- Provide the HALO services from a client.
+- Create an identity with a display name, or reuse the one on the device.
+- Read the identity once, follow it as a stream, and update its profile.
+
+Next, [add a device](/docs/halo/learn/add-device/) so the same user can work from a second browser.

@@ -2,14 +2,14 @@
 title: Plugin Tutorial
 description: Walkthrough of how to build a Composer plugin
 sidebar:
-  order: 2
+  hidden: true
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
 This tutorial will walk through the creation of a plugin which introduces a new data type and integrates it with other core plugins.
 The plugin used as an example here is Composer's [map plugin](https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map).
-Each section below will explain a different [`PluginModule`](/docs/composer/introduction#pluginmodule), its [`ActivationEvent`](/docs/composer/introduction#activationevent), the [`Capability`](/docs/composer/introduction#capability) it contributes and how that fits within the greater context of the application.
+Each section below will explain a different [`PluginModule`](/docs/app-framework/introduction#pluginmodule), its [`ActivationEvent`](/docs/app-framework/introduction#activationevent), the [`Capability`](/docs/app-framework/introduction#capability) it contributes and how that fits within the greater context of the application.
 
 ## Translations
 

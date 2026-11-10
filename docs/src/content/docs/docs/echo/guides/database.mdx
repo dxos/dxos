@@ -1,0 +1,81 @@
+---
+title: Database
+description: The imperative interface and the Effect service.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+```ts
+import { Database } from '@dxos/echo';
+```
+
+Each space has one database. It holds the space's objects, runs queries over them and saves writes to disk. You can use it
+two ways: as a plain object with methods, or as the Effect service `Database.Service`, whose functions compose as Effects.
+
+## Get a database
+
+In plain code the database is a property of the space.
+
+<Snippet file="guide-database" region="get" />
+
+## Add and remove objects
+
+`add` is synchronous. It returns the object, now stored in the database, and saves it in the background. `remove` marks the
+object deleted; queries leave it out from then on.
+
+<Snippet file="guide-database" region="write" />
+
+## Run a query
+
+`db.query` takes a filter or a query and returns a `QueryResult`. Call `run()` for the results once, or `subscribe()` to
+follow them. <SpecCite item="org.dxos.echo#F-5.1" /> [Query](/docs/echo/guides/query/) covers building queries.
+
+<Snippet file="guide-database" region="query" />
+
+## Wait for writes
+
+`flush` resolves once pending writes are on disk. Options also wait for the indexes and for query updates, which is what a
+test needs before it reads back what it wrote.
+
+<Snippet file="guide-database" region="flush" />
+
+## Add types
+
+`db.add` rejects type entities. Persist a type with `addType`, which replicates it to the space's other members. If the
+space already holds a type with the same typename and version, `addType` returns that one and writes nothing.
+
+<Snippet file="guide-database" region="types" />
+
+## Use the Effect service
+
+Effect code asks for `Database.Service` and uses the functions of the `Database` module: `add`, `remove`, `query`, `flush`,
+`resolve` and `load`. `Database.layer(db)` provides the service from a plain database, and `Database.notAvailable` stands
+in where there is none, failing on use. <SpecCite item="org.dxos.echo#F-6.1" /> <SpecCite item="org.dxos.echo#F-6.2" />
+
+`Database.getSyncState` reports how many documents have not yet synced, and `subscribeToSyncState` streams it.
+
+<Snippet file="guide-database" region="service" />
+
+## Members at a glance
+
+| Member                                    | Summary                                                 |
+| ----------------------------------------- | ------------------------------------------------------- |
+| `db.add` `db.remove`                      | Store and delete objects and relations                  |
+| `db.query`                                | Query the space; returns a `QueryResult`                |
+| `db.addType`                              | Persist a type so it replicates                         |
+| `db.makeRef`                              | A reference bound to this database                      |
+| `db.flush`                                | Wait for writes, indexes and query updates              |
+| `Service` `layer` `notAvailable`          | The Effect service and its layers                       |
+| `add` `remove` `query` `flush` `load`     | The same operations as Effects                          |
+| `getSyncState` `subscribeToSyncState`     | Replication progress                                    |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [Spaces and databases](/docs/echo/concepts/spaces/)
+- [Installation](/docs/echo/learn/installation/) opens the tutorial app's space.

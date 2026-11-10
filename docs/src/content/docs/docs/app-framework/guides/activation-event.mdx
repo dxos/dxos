@@ -1,0 +1,63 @@
+---
+title: ActivationEvent
+description: Declare activation events and use the built-in ones.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+```
+
+An activation event tells the plugin manager when a module should load. Modules wait for their event, so a plugin's code loads
+when it is needed, not all at startup.
+
+## Declare an activation event
+
+`ActivationEvent.make` declares an event from an NSID. `ActivationEvent.pluginStart` returns a plugin's own start event,
+which the plugin manager fires on demand and while it is idle.
+
+<Snippet file="app-framework-guide-activation-event" region="declare" />
+
+## Order modules with events and requirements
+
+A module's `activatesOn` can name one event, or combine several with `ActivationEvent.oneOf` and
+`ActivationEvent.allOf`.
+
+<Snippet file="app-framework-guide-activation-event" region="activates-on" />
+
+Requirements order modules within an event. A module that requires a capability activates after the module that
+provides it, whichever event activated the provider. Registration order does not matter.
+
+<Snippet file="app-framework-guide-activation-event" region="requires" />
+
+A module fires an event with `Plugin.activate`. This is how a plugin loads another plugin's modules on demand, for
+example when a person opens the create dialog.
+
+<Snippet file="app-framework-guide-activation-event" region="fire" />
+
+## The built-in events
+
+| Event | When it fires |
+| --- | --- |
+| `ActivationEvents.Startup` | Once, while the app boots. Only modules needed for the first paint belong here. |
+| `ActivationEvents.Idle` | After the first paint, when the app is idle. The default for a module with no `activatesOn`. |
+| `ActivationEvents.SurfacesRequested(role)` | The first time a surface of that role is rendered. |
+| `ActivationEvents.CommandsRequested` | When the command palette or CLI asks for commands. |
+| `ActivationEvents.PluginAssetsRequested` | When a tool asks for plugin assets, such as a spec. |
+
+<Snippet file="app-framework-guide-activation-event" region="builtin" />
+
+Module makers such as `AppCapability.surface` set the right event for their capability, so most manifests never name
+one.
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Plugin](/docs/app-framework/guides/plugin/) | Defining modules. |
+| [Capability](/docs/app-framework/guides/capability/) | Requirements between modules. |

@@ -1,0 +1,48 @@
+---
+title: Add a surface
+description: Render the plugin's objects by contributing a surface.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page a bookmark opens in Composer's main area, where a person can rename it and follow its link.
+
+## Background
+
+A surface is a named place in an app's UI, such as the main article area, a card or the status bar. Plugins fill
+surfaces by contributing a component and a filter that says which data the component can render. When Composer opens
+a bookmark in the article area, it asks for every component that matches the article role and a bookmark, and renders
+the best one. [Surfaces](/docs/app-framework/concepts/surfaces/) explains the matching.
+
+## Steps
+
+1. **Write the component.** The article surface passes the object as `subject`. `useObject` returns a snapshot of it and
+   re-renders the component when it changes, whether the change came from this tab, another device or the assistant.
+   Writes go through `Obj.update`, like any ECHO write.
+
+   <Snippet file="app-framework-tutorial/src/containers/BookmarkArticle" region="article" lang="tsx" />
+
+   `Panel.Root` with the surface's `role` gives the view the standard article layout.
+
+2. **Contribute the surface.** `AppSurface.object(AppSurface.Article, Bookmark)` matches the article role when the
+   subject is a bookmark. `props` maps the surface's data onto the component's props, and is type-checked against the
+   filter.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/react-surface" region="surface" />
+
+3. **Add the module to the manifest.** The `roles` list lets the plugin manager load the module only when it first needs an
+   article surface.
+
+   <Snippet file="app-framework-tutorial/dx.config" region="surface" />
+
+4. **Open a bookmark.** Reload the dev plugin and select the bookmark you created.
+
+   The bookmark opens in the main area. Rename it in the input, and the navigation tree's label changes as you type.
+
+## Recap
+
+You can now:
+
+- Read an object reactively in a component and write it with `Obj.update`.
+- Contribute an article surface for a type.
+- Load a surface module only when its role is needed.

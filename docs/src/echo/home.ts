@@ -56,8 +56,8 @@ export const routes = [
     href: '/docs/echo/learn/defining-types/',
   },
   {
-    title: 'Reference',
-    body: 'Every module of @dxos/echo, one page each.',
-    href: '/docs/echo/reference/filter/',
+    title: 'Guides',
+    body: 'Each namespace of @dxos/echo, one page each, with examples.',
+    href: '/docs/echo/guides/filter/',
   },
 ];

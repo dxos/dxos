@@ -1,8 +1,18 @@
 ---
-id: org.dxos.echo-site
-name: ECHO developer site
+id: org.dxos.docs
+name: DXOS docs
 version: 0.1.0
 ---
+
+The DXOS docs teach a developer to build on ECHO, then to build apps from plugins with the App Framework, using
+Composer as the app those plugins run in. They have three sections: ECHO; HALO, which holds identity, devices and
+space membership; and App Framework, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Welcome page;
+there is no separate docs home [F-16]. Every section has the same shape: Start here, a learning path that builds one
+thing step by step, core concepts, one guide per API namespace, and resources [F-17], [F-18].
+
+This document is the source of truth for what the docs cover and how. Each `page` block gives the page's section,
+place in the sidebar, template and status, a one-line summary, and under `covers:` the points the page must cover.
+Pages are written, and rewritten when the APIs change, from these blocks [F-5].
 
 The ECHO developer site is the technical reference for building on ECHO, the typed, local-first
 object graph. It is for an engineer deciding whether to adopt ECHO, then learning it, then looking
@@ -25,8 +35,8 @@ Three properties outrank everything else:
   longer exist, so a sample that is not checked is assumed to be wrong [F-3].
 - **Every claim about behavior cites a spec item.** A page says what ECHO guarantees only when
   `org.dxos.echo` or `org.dxos.echo.query` states it [F-4].
-- **The spec owns the site map.** The sidebar and the planned pages are generated from the `page`
-  blocks in this document [F-5].
+- **The spec owns the site map.** The sidebar, the planned pages and what each page covers come from the
+  `page` blocks in this document [F-5].
 
 ## Dependencies
 
@@ -38,6 +48,10 @@ uses org.dxos.echo: The public API that the learning path and the reference docu
 uses org.dxos.echo.query: The query guarantees that the argument for ECHO rests on.
 ```
 
+```mdl
+uses org.dxos.app.composer: The app that the App Framework section uses as its host, and teaches the reader to extend.
+```
+
 ## Extensions
 
 | Term       | URI                                 |
@@ -47,8 +61,8 @@ uses org.dxos.echo.query: The query guarantees that the argument for ECHO rests 
 | `scenario` | `org.dxos.mdl.scenario@1.0`         |
 | `decision` | `org.dxos.mdl.decision@1.0`         |
 | `question` | `org.dxos.mdl.question@1.0`         |
-| `template` | `org.dxos.echo-site.template@1.0`   |
-| `page`     | `org.dxos.echo-site.page@1.0`       |
+| `template` | `org.dxos.docs.template@1.0`     |
+| `page`     | `org.dxos.docs.page@1.0`         |
 
 ## Templates
 
@@ -109,36 +123,64 @@ template reference: One module
 ```
 
 ```mdl
+template namespace: One API namespace
+  purpose: Teach one namespace in a page a reader can read top to bottom, between the learning path and the generated API reference.
+  parts:
+    - Title, import line and a one-paragraph summary of what the namespace is for
+    - Common tasks: one H3 per task, each with a compiled example
+    - Members at a glance: a short table of the members a reader uses most, each linking to the API reference
+    - Related: the concept pages and learning-path steps that use the namespace
+```
+
+```mdl
 template stub: A planned page
   purpose: Show the planned scope of a page that is not written yet.
   parts:
     - Title, a planned badge and the page's summary
-    - The planned sections or template parts
+    - The page's `covers:` list
 ```
 
 ## Site map
 
-The order of these blocks is the order of the ECHO section of the docs sidebar. Routes are relative to
-`/docs/echo`.
+The order of these blocks is the order of the sidebar: section, then group, by first appearance. Routes are
+absolute. A page with status `later` is in scope but not yet in the sidebar. There is no docs home page:
+`/docs/` redirects to ECHO's Welcome, the first page of the first section [F-16.5].
+
+## ECHO
 
 ### Start here
 
 ```mdl
 page welcome: Welcome
   What ECHO is and how these docs are organized.
-  route: /welcome/
+  section: ECHO
+  route: /docs/echo/welcome/
   group: Start here
   template: concept
   status: spike
+  covers:
+    - What ECHO is in one paragraph: a typed, local-first, peer-to-peer object graph for TypeScript
+    - The model in four points: CRDT replication, peers over WebRTC, concurrent writers, offline writes that merge
+    - What DXOS is, in two sentences, with ECHO as the lead
+    - Spaces hold data and objects are its unit, with links to both concept pages
+    - How these docs are organized: the ECHO, HALO and App Framework sections, and in each the learning path, core
+      concepts, guides and resources
+    - Where to go next: Why ECHO?, the learning path, and the App Framework for building apps on ECHO
 ```
-
 ```mdl
 page why-echo: Why ECHO?
   Why apps and agents share one data model: agent memory, introspection, external data, then the argument for a typed, local-first object graph.
-  route: /why-echo/
+  section: ECHO
+  route: /docs/echo/why-echo/
   group: Start here
   template: narrative
   status: spike
+  covers:
+    - Agents need memory they can query, and a schema they can inspect
+    - External data needs one graph to meet in, and plugins code against that graph
+    - The ECHO pattern: the smallest complete example, then the same task without and with ECHO
+    - The practical problems ECHO solves, each with its mechanism and a spec citation
+    - How DXOS apps differ from SaaS apps, in the comparison table moved from the old docs home
 ```
 
 ### Learning path
@@ -146,55 +188,78 @@ page why-echo: Why ECHO?
 ```mdl
 page the-echo-object: The ECHO object
   What a live object is, and the app the learning path builds, running.
-  route: /learn/the-echo-object/
+  section: ECHO
+  route: /docs/echo/learn/the-echo-object/
   group: Learning path
   template: tutorial
   status: spike
+  covers:
+    - What a live object is: typed, reactive, replicated
+    - The finished tutorial app, running, so the reader sees where the path ends
 ```
-
 ```mdl
 page installation: Installation
   Add the packages and open a database in Node or the browser.
-  route: /learn/installation/
+  section: ECHO
+  route: /docs/echo/learn/installation/
   group: Learning path
   template: tutorial
   status: spike
+  covers:
+    - Install `@dxos/client` and the bundler setup the browser needs
+    - Create a client and an identity, linking to HALO's Create an identity for the details
+    - Create or open a space and get its database, in Node and in the browser
 ```
-
 ```mdl
 page defining-types: Defining types
   Declare the tutorial app's types, with references between them, and see the form ECHO derives from each.
-  route: /learn/defining-types/
+  section: ECHO
+  route: /docs/echo/learn/defining-types/
   group: Learning path
   template: tutorial
   status: spike
+  covers:
+    - Declare the tutorial app's types with `Type`, including references between them
+    - Register the types with the client
+    - The form ECHO derives from each type
 ```
-
 ```mdl
 page querying: Querying
   Select the tutorial app's records with Filter and Query, by type, sorted, searched, and live.
-  route: /learn/querying/
+  section: ECHO
+  route: /docs/echo/learn/querying/
   group: Learning path
   template: tutorial
   status: spike
+  covers:
+    - Select records by type with `Query` and `Filter`
+    - Sort, search text and match fields
+    - Subscribe to a live query and see results update
 ```
-
 ```mdl
 page mutating-objects: Mutating objects
   Create, change and remove the tutorial app's records, and observe each change.
-  route: /learn/mutating-objects/
+  section: ECHO
+  route: /docs/echo/learn/mutating-objects/
   group: Learning path
   template: tutorial
   status: spike
+  covers:
+    - Create objects with `Obj.make` and add them to the database
+    - Change them with `Obj.update` and remove them
+    - Observe each change in the running app
 ```
-
 ```mdl
 page sharing: Sharing a space
   Invite a second peer to the tutorial app's space and watch both replicas follow each other's edits.
-  route: /learn/sharing/
+  section: ECHO
+  route: /docs/echo/learn/sharing/
   group: Learning path
   template: tutorial
   status: spike
+  covers:
+    - Invite a second peer into the tutorial app's space
+    - Watch both replicas follow each other's edits, including offline edits that merge on reconnect
 ```
 
 ### Core concepts
@@ -202,241 +267,1023 @@ page sharing: Sharing a space
 ```mdl
 page spaces: Spaces and databases
   The unit of sharing, access and replication.
-  route: /concepts/spaces/
+  section: ECHO
+  route: /docs/echo/concepts/spaces/
   group: Core concepts
   template: concept
   status: spike
+  covers:
+    - A space is the unit of sharing, access and replication, with one database
+    - Members, roles and invitations in one paragraph, linking to HALO's Spaces and membership for the rest
+    - What is guaranteed about replication between members, with spec citations
+    - Limits: size, number of spaces, and known divergences
 ```
-
 ```mdl
 page objects-relations: Objects and relations
   Entities, the reserved fields, and parent and child ownership.
-  route: /concepts/objects-relations/
+  section: ECHO
+  route: /docs/echo/concepts/objects-relations/
   group: Core concepts
   template: concept
   status: spike
+  covers:
+    - Objects and relations are the two kinds of entity
+    - The reserved fields every entity has (id, type, meta)
+    - Parent and child ownership, and what deleting a parent does
+    - Limits and known divergences
 ```
-
 ```mdl
 page references: References and DXNs
   How objects point at each other, and how a reference resolves.
-  route: /concepts/references/
+  section: ECHO
+  route: /docs/echo/concepts/references/
   group: Core concepts
   template: concept
-  status: planned
+  status: spike
+  covers:
+    - How one object points at another with a `Ref`
+    - What a DXN is, its forms, and when to use one
+    - How a reference resolves, loads lazily and behaves across spaces
+    - Limits: dangling references and references to deleted objects
 ```
-
-```mdl
-page query-model: The query model
-  Traversal, ordering, aggregates, completeness and revalidation.
-  route: /concepts/query-model/
-  group: Core concepts
-  template: concept
-  status: planned
-```
-
 ```mdl
 page conflicts: Concurrency and conflicts
   What merges automatically and what the application must decide.
-  route: /concepts/conflicts/
+  section: ECHO
+  route: /docs/echo/concepts/conflicts/
   group: Core concepts
   template: concept
-  status: planned
-```
-
-```mdl
-page text-blobs: Text and blobs
-  Collaborative text edits and binary attachments.
-  route: /concepts/text-blobs/
-  group: Core concepts
-  template: concept
-  status: planned
-```
-
-```mdl
-page feeds: Feeds
-  Append-only logs, cursors, indexing and retention.
-  route: /concepts/feeds/
-  group: Core concepts
-  template: concept
-  status: planned
-```
-
-```mdl
-page schema-evolution: Schema evolution
-  Versioned types and object migrations.
-  route: /concepts/schema-evolution/
-  group: Core concepts
-  template: concept
-  status: planned
+  status: spike
+  covers:
+    - What merges automatically: concurrent field writes, collaborative text, list edits
+    - What the application must decide, and how to detect it
+    - How offline writes merge on reconnect
+    - Limits: the cases ECHO does not resolve
 ```
 
 ### Guides
 
+One page per `@dxos/echo` namespace, then the framework guides.
+
+```mdl
+page guide-type: Type
+  Declare and inspect object and relation types.
+  section: ECHO
+  route: /docs/echo/guides/type/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Declare object and relation types, with annotations
+    - Add, update and remove fields of a type at runtime
+    - Inspect a type: its typename, version and schema
+    - Check what kind of entity a value is
+```
+```mdl
+page guide-obj: Obj
+  The runtime API for objects.
+  section: ECHO
+  route: /docs/echo/guides/obj/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Make objects, and the options `Obj.make` takes
+    - Read and update objects; snapshots versus live objects
+    - Subscribe to changes on one object
+    - Meta, keys, tags, labels and parent ownership
+    - Clone an object and convert it to JSON
+```
+```mdl
+page guide-relation: Relation
+  The runtime API for relations.
+  section: ECHO
+  route: /docs/echo/guides/relation/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Make a relation between a source and a target
+    - Read its endpoints and resolve them
+    - Update, subscribe to and sort relations
+```
+```mdl
+page guide-ref: Ref
+  Typed references between entities.
+  section: ECHO
+  route: /docs/echo/guides/ref/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Make a reference to an object, or from a DXN
+    - Resolve and load a reference, and load many at once
+    - Compare references and check what they point at
+```
+```mdl
+page guide-database: Database
+  The imperative interface and the Effect service.
+  section: ECHO
+  route: /docs/echo/guides/database/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Get a database, in plain code and as the Effect `Database.Service`
+    - Add, remove and load objects; run a query
+    - Flush writes and read the sync state
+    - Add types to a database
+```
+```mdl
+page guide-query: Query
+  Graph-shaped selections, traversal, ordering and results.
+  section: ECHO
+  route: /docs/echo/guides/query/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Build a query with `select` and `type`, and combine with `all` and `without`
+    - Traverse references and relations from a selection
+    - Order results with `Order`, and read them through `QueryResult`
+    - Run a query once or subscribe to it
+    - Opens with the two or three most common filters and links to Filter for the rest
+```
+```mdl
+page guide-filter: Filter
+  Predicate builders that compile to a query AST.
+  section: ECHO
+  route: /docs/echo/guides/filter/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Match by type, id, tag and key
+    - Compare a field: equals, ranges, contains
+    - Combine filters with `and`, `or` and `not`
+    - Search text, and filter by creation and update time
+    - Filter by parent and child
+```
+```mdl
+page guide-feed: Feed
+  The append-only feed object.
+  section: ECHO
+  route: /docs/echo/guides/feed/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Make a feed and append to it
+    - Read with cursors, walk and query a feed
+    - Indexing and retention options
+    - Fork a feed and read a branch
+```
 ```mdl
 page guide-react: React
   The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them.
-  route: /guides/react/
+  section: ECHO
+  route: /docs/echo/guides/react/
   group: Guides
   template: tutorial
   status: spike
+  covers:
+    - Set up `ClientProvider`
+    - Read data with `useQuery` and `useObject`
+    - Edit an object with a schema form
+    - The reactivity rules behind the hooks
 ```
 
-```mdl
-page guide-solid: Solid
-  The Solid.js bindings.
-  route: /guides/solid/
-  group: Guides
-  template: tutorial
-  status: planned
-```
+### Resources
 
 ```mdl
-page guide-effect: Effect
-  The Database service, layers and typed errors.
-  route: /guides/effect/
-  group: Guides
-  template: tutorial
-  status: planned
-```
-
-```mdl
-page guide-testing: Testing
-  Build isolated peers with EchoTestBuilder.
-  route: /guides/testing/
-  group: Guides
-  template: tutorial
-  status: planned
-```
-
-```mdl
-page guide-foreign-records: Foreign records
-  Map records from another system onto ECHO types with panproto lenses.
-  route: /guides/foreign-records/
-  group: Guides
-  template: tutorial
-  status: planned
-```
-
-### Internals
-
-```mdl
-page architecture: Architecture
-  The packages, the processes they run in and the path of a write.
-  route: /internals/architecture/
-  group: Internals
-  template: concept
-  status: planned
-```
-
-```mdl
-page query-engine: The query engine
-  LocalQueryEngine, working sets and remote sources.
-  route: /internals/query-engine/
-  group: Internals
-  template: concept
-  status: planned
-```
-
-```mdl
-page indexing: Indexing
-  The host index and the SQL query plan.
-  route: /internals/indexing/
-  group: Internals
-  template: concept
-  status: planned
-```
-
-```mdl
-page versioning: Versioning
-  Heads, object versions and what a remote entry carries.
-  route: /internals/versioning/
-  group: Internals
-  template: concept
-  status: planned
-```
-
-### Reference
-
-```mdl
-page ref-type: Type
-  Declare and inspect object and relation types.
-  route: /reference/type/
-  group: Reference
-  template: reference
-  status: planned
-```
-
-```mdl
-page ref-obj: Obj
-  The runtime API for objects.
-  route: /reference/obj/
-  group: Reference
-  template: reference
-  status: planned
-```
-
-```mdl
-page ref-relation: Relation
-  The runtime API for relations.
-  route: /reference/relation/
-  group: Reference
-  template: reference
-  status: planned
-```
-
-```mdl
-page ref-ref: Ref
-  Typed references between entities.
-  route: /reference/ref/
-  group: Reference
-  template: reference
-  status: planned
-```
-
-```mdl
-page ref-filter: Filter
-  Predicate builders that compile to a query AST.
-  route: /reference/filter/
-  group: Reference
+page api-reference: API reference
+  Generated API reference for the ECHO and client packages.
+  section: ECHO
+  route: /docs/additional-resources/api-reference/
+  group: Resources
   template: reference
   status: spike
+  covers:
+    - Links to the generated reference for `@dxos/echo`, `@dxos/echo-react`, `@dxos/echo-solid`, `@dxos/client` and `@dxos/react-client`
 ```
-
-```mdl
-page ref-query: Query
-  Graph-shaped selections and traversal.
-  route: /reference/query/
-  group: Reference
-  template: reference
-  status: planned
-```
-
-```mdl
-page ref-database: Database
-  The imperative interface and the Effect service.
-  route: /reference/database/
-  group: Reference
-  template: reference
-  status: planned
-```
-
-```mdl
-page ref-feed: Feed
-  The append-only feed object.
-  route: /reference/feed/
-  group: Reference
-  template: reference
-  status: planned
-```
-
 ```mdl
 page glossary: Glossary
   Every ECHO term, defined once.
-  route: /reference/glossary/
-  group: Reference
+  section: ECHO
+  route: /docs/additional-resources/glossary/
+  group: Resources
   template: reference
-  status: planned
+  status: spike
+  covers:
+    - Every ECHO term, defined once: space, object, relation, reference, DXN, epoch and the rest
+    - Links to HALO's glossary for identity, device and invitation terms
+```
+```mdl
+page examples: Example gallery
+  Apps built on ECHO, with code and live links.
+  section: ECHO
+  route: /docs/additional-resources/samples/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Composer first, as the flagship app built on ECHO
+    - Tasks and TodoMVC, each with its code and a live link
+```
+
+### Later
+
+These pages are in scope but not in the sidebar yet.
+
+```mdl
+page query-model: The query model
+  Traversal, ordering, aggregates, completeness and revalidation.
+  section: ECHO
+  route: /docs/echo/concepts/query-model/
+  group: Core concepts
+  template: concept
+  status: later
+  covers:
+    - Traversal, ordering and aggregates
+    - Completeness of results and when a query revalidates
+```
+```mdl
+page text-blobs: Text and blobs
+  Collaborative text edits and binary attachments.
+  section: ECHO
+  route: /docs/echo/concepts/text-blobs/
+  group: Core concepts
+  template: concept
+  status: later
+  covers:
+    - Collaborative text edits on a text field
+    - Binary attachments stored as blobs
+```
+```mdl
+page feeds: Feeds
+  Append-only logs, cursors, indexing and retention.
+  section: ECHO
+  route: /docs/echo/concepts/feeds/
+  group: Core concepts
+  template: concept
+  status: later
+  covers:
+    - Append-only logs, cursors, indexing and retention
+```
+```mdl
+page schema-evolution: Schema evolution
+  Versioned types and object migrations.
+  section: ECHO
+  route: /docs/echo/concepts/schema-evolution/
+  group: Core concepts
+  template: concept
+  status: later
+  covers:
+    - Versioned types, and how objects migrate between versions
+```
+```mdl
+page guide-solid: Solid
+  The Solid.js bindings.
+  section: ECHO
+  route: /docs/echo/guides/solid/
+  group: Guides
+  template: tutorial
+  status: later
+  covers:
+    - The Solid.js bindings
+```
+```mdl
+page guide-effect: Effect
+  The Database service, layers and typed errors.
+  section: ECHO
+  route: /docs/echo/guides/effect/
+  group: Guides
+  template: tutorial
+  status: later
+  covers:
+    - The Database service, layers and typed errors
+```
+```mdl
+page guide-testing: Testing
+  Build isolated peers with EchoTestBuilder.
+  section: ECHO
+  route: /docs/echo/guides/testing/
+  group: Guides
+  template: tutorial
+  status: later
+  covers:
+    - Build isolated peers with EchoTestBuilder
+```
+```mdl
+page guide-foreign-records: Foreign records
+  Map records from another system onto ECHO types with panproto lenses.
+  section: ECHO
+  route: /docs/echo/guides/foreign-records/
+  group: Guides
+  template: tutorial
+  status: later
+  covers:
+    - Map records from another system onto ECHO types with panproto lenses
+```
+```mdl
+page architecture: Architecture
+  The packages, the processes they run in and the path of a write.
+  section: ECHO
+  route: /docs/echo/internals/architecture/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - The packages, the processes they run in and the path of a write
+```
+```mdl
+page query-engine: The query engine
+  LocalQueryEngine, working sets and remote sources.
+  section: ECHO
+  route: /docs/echo/internals/query-engine/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - LocalQueryEngine, working sets and remote sources
+```
+```mdl
+page indexing: Indexing
+  The host index and the SQL query plan.
+  section: ECHO
+  route: /docs/echo/internals/indexing/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - The host index and the SQL query plan
+```
+```mdl
+page versioning: Versioning
+  Heads, object versions and what a remote entry carries.
+  section: ECHO
+  route: /docs/echo/internals/versioning/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - Heads, object versions and what a remote entry carries
+```
+
+## HALO
+
+HALO is DXOS's identity management: a user's identity, the devices and credentials that act for it, and who may
+enter a space. Its learning path adds people and devices to the ECHO tutorial app, so it starts where ECHO's ends.
+Data and replication stay in ECHO's Spaces and databases; members, roles and access are HALO's Spaces and
+membership, and each links to the other.
+
+### Start here
+
+```mdl
+page halo-welcome: Welcome
+  What HALO is and how its pages are organized.
+  section: HALO
+  route: /docs/halo/welcome/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - What HALO is: identity management for local-first apps, covering identities, devices, credentials and space membership
+    - An identity is a key pair a client generates; no server issues it
+    - The three `@dxos/halo` namespaces, Identity, Invitation and Space, in one line each
+    - HALO is built on Keyhive: signed delegations and group encryption keys
+    - Where HALO shows up in the ECHO learning path, and that this path continues it
+```
+```mdl
+page why-halo: Why HALO?
+  Why identity is a key pair your device makes, not an account a server issues.
+  section: HALO
+  route: /docs/halo/why-halo/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - The pattern: create an identity and share a space with no sign-up server
+    - Comparison: an account a server issues and revokes, against a key pair the device holds
+    - Practical problems: one identity across devices, access that peers check without a server, recovery without a password reset
+    - What HALO does not do: it is not a login for third-party sites
+```
+
+### Learning path
+
+```mdl
+page halo-create-identity: Create an identity
+  Give the tutorial app a user, with a display name, and read it back.
+  section: HALO
+  route: /docs/halo/learn/create-identity/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Create an identity with `Identity.create`, with a display name
+    - Read it once with `Identity.getSnapshot` and follow it with `Identity.identity`
+    - Update the display name with `Identity.updateProfile`
+    - The tutorial app shows who is signed in
+```
+```mdl
+page halo-add-device: Add a device
+  Join a second device to the same identity and list the devices.
+  section: HALO
+  route: /docs/halo/learn/add-device/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Share the identity with `Identity.share` and read the invitation code
+    - Join from the second device with `Identity.join` and authenticate with the code
+    - List the identity's devices with `Identity.devices`, with each device's kind and presence
+    - The tutorial app runs on two devices of one user
+```
+```mdl
+page halo-invite-member: Invite a member
+  Invite another person into the tutorial app's space and give them a role.
+  section: HALO
+  route: /docs/halo/learn/invite-member/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Share a space with `Space.share` and pick an auth method
+    - Join with `Space.join` and follow the flow with `Invitation.events`
+    - List members with `Space.members` and change a role with `Space.updateMemberRole`
+    - Remove a member with `Space.removeMember`
+    - The tutorial app shows two people editing one space
+```
+```mdl
+page halo-recover-identity: Recover an identity
+  Set up a recovery credential and get the identity back on a new device.
+  section: HALO
+  route: /docs/halo/learn/recover-identity/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Create a recovery credential with `Identity.createRecoveryCredential`, and the kinds there are
+    - Recover on a fresh device with `Identity.recover`
+    - Revoke a credential with `Identity.revokeRecoveryCredential`
+    - The tutorial app, back on a new device with its spaces
+```
+
+### Core concepts
+
+```mdl
+page halo-identities-devices: Identities and devices
+  An identity is a key pair; devices are the keys that act for it.
+  section: HALO
+  route: /docs/halo/concepts/identities-devices/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An identity is a key pair, named by a DID, with a profile
+    - Each device has its own key, authorized by the identity, with a kind and presence
+    - In Keyhive, an identity is a group whose members are its devices
+    - The personal space every identity has
+    - Limits: what happens when every device is lost and no recovery credential exists
+```
+```mdl
+page halo-spaces-membership: Spaces and membership
+  Who may enter a space, and what each member may do.
+  section: HALO
+  route: /docs/halo/concepts/spaces-membership/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Members and their access levels: pull, read, edit and admin
+    - The membership policy: invite or locked
+    - How peers check a member's access without a server: membership is a Keyhive group of signed delegations that converges
+    - Encryption: Keyhive's group key, which `pull` members relay without reading and which changes with membership
+    - Links to ECHO's Spaces and databases for data and replication
+```
+```mdl
+page halo-invitations: Invitations
+  How a device or a person is let into an identity or a space.
+  section: HALO
+  route: /docs/halo/concepts/invitations/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The two kinds, device and space, and the three types, interactive, delegated and multiuse
+    - The auth methods: none, shared secret and known public key
+    - The invitation flow, step by step, with its events
+    - Limits: expiry, cancellation and a code that fails to authenticate
+```
+```mdl
+page halo-recovery-credentials: Recovery and credentials
+  How an identity survives the loss of its devices, and what credentials it holds.
+  section: HALO
+  route: /docs/halo/concepts/recovery-credentials/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Recovery kinds: passkey, recovery code and OAuth
+    - The recovery challenge, and what a recovered identity gets back
+    - Credentials an identity holds, and service access and API tokens
+    - Limits: what a lost recovery credential means
+```
+
+### Guides
+
+One page per `@dxos/halo` namespace, then React.
+
+```mdl
+page halo-guide-identity: Identity
+  Create, follow, recover and share an identity.
+  section: HALO
+  route: /docs/halo/guides/identity/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Get the `Identity.Service` and read the identity once or as a stream
+    - Create an identity and update its profile
+    - List devices, share the identity and join from a device
+    - Create, revoke and use recovery credentials
+    - Grant service access and create API tokens
+```
+```mdl
+page halo-guide-invitation: Invitation
+  Drive an invitation flow from either side.
+  section: HALO
+  route: /docs/halo/guides/invitation/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - The `Invitation.Flow` that `Identity.share`, `Identity.join`, `Space.share` and `Space.join` return
+    - Read the code, authenticate with it and cancel a flow
+    - Follow a flow with `Invitation.events`
+    - Share options: kind, auth method and type
+```
+```mdl
+page halo-guide-space: Space
+  Create spaces and manage their members.
+  section: HALO
+  route: /docs/halo/guides/space/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Get the `Space.Service`, list spaces and get one by id
+    - Create a space and wait until it is ready
+    - List members, change a role and remove a member
+    - Share and join a space
+    - Export and import a space archive, and set EDGE replication
+```
+```mdl
+page halo-react: React
+  Read the identity, devices and members from React components.
+  section: HALO
+  route: /docs/halo/react/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Read the current identity with `useIdentity`
+    - List the identity's devices and a space's members
+    - Show an invitation code and accept one in a component
+```
+
+### Resources
+
+```mdl
+page halo-api-reference: API reference
+  Generated API reference for `@dxos/halo` and `@dxos/halo-react`.
+  section: HALO
+  route: /docs/halo/resources/api-reference/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to the generated reference for `@dxos/halo` and `@dxos/halo-react`; `@dxos/halo-adapter-client` gets none
+```
+```mdl
+page halo-glossary: Glossary
+  Every HALO term, defined once.
+  section: HALO
+  route: /docs/halo/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, role and space key
+```
+
+## App Framework
+
+The App Framework builds apps from plugins. Composer is built on it and is the app the section's examples run
+in, so each page teaches the framework first and shows the result in Composer. The routes are under
+`/docs/app-framework/`.
+
+### Start here
+
+```mdl
+page app-framework-welcome: Welcome
+  What the App Framework is, how an app is made of plugins, and Composer as the app built on it.
+  section: App Framework
+  route: /docs/app-framework/welcome/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - What the App Framework is, in one screen: plugins made of modules that contribute capabilities, and an app that is the plugins it loads
+    - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
+    - What ECHO does under it: spaces, typed objects, sync between devices and people, and agents that query the same graph
+    - What a reader can build: a new object type with its own view, an operation, a panel, an integration
+    - Where to go next: Try Composer, Build a plugin with the assistant, or the learning path
+```
+
+```mdl
+page app-framework-try-composer: Try Composer
+  Open Composer, make a space, and share it, in one short page.
+  section: App Framework
+  route: /docs/app-framework/try/
+  group: Start here
+  template: tutorial
+  status: spike
+  covers:
+    - Open Composer on the web, or install the desktop app
+    - Create a space and a first object
+    - Invite a second device or person, and watch an edit reach the other replica
+    - Turn on a plugin from the plugin registry
+    - Links to the ECHO concepts behind each step (spaces, objects, sharing)
+```
+
+```mdl
+page app-framework-build-with-assistant: Build a plugin with the assistant
+  Have Composer's assistant write, build and load a plugin for you, in the desktop app.
+  section: App Framework
+  route: /docs/app-framework/build-a-plugin-with-the-assistant/
+  group: Start here
+  template: tutorial
+  status: spike
+  covers:
+    - Turn on the sandbox in the desktop app
+    - Create the plugin project
+    - Describe the plugin to the assistant and let it write and build the code
+    - Load the plugin and use it
+    - What the assistant can and cannot touch on the reader's machine
+    - Clean up, and what to do when something goes wrong
+```
+
+### Learning path
+
+```mdl
+page app-framework-create-plugin: Create a plugin
+  Start the tutorial plugin: its metadata, its first module and its translations.
+  section: App Framework
+  route: /docs/app-framework/learn/create-plugin/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - The plugin the learning path builds, shown running
+    - Create the package and its `dx.config.ts` manifest
+    - Define the plugin and its metadata with `Plugin`
+    - Add a first module that contributes translations, and the activation event that loads it
+    - Load the plugin into a local Composer
+```
+
+```mdl
+page app-framework-define-type: Define a type
+  Give the plugin its own ECHO type and make it an object a person can create.
+  section: App Framework
+  route: /docs/app-framework/learn/define-type/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Declare the plugin's type with `Type`, linking to the ECHO Defining types page for the details
+    - Register the type with the app so it can create, list and name objects of it
+    - Create an object of the new type from Composer's UI
+```
+
+```mdl
+page app-framework-add-surface: Add a surface
+  Render the plugin's objects by contributing a surface.
+  section: App Framework
+  route: /docs/app-framework/learn/add-surface/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What a surface is, in one paragraph, linking to the Surfaces concept page
+    - Contribute an article surface that renders the new type
+    - Read and edit the object reactively in the component
+    - See the object open in Composer's main area
+```
+
+```mdl
+page app-framework-add-operation: Add an operation
+  Give the plugin an action that the UI, the command palette and agents can run.
+  section: App Framework
+  route: /docs/app-framework/learn/add-operation/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Define an operation with its input and output schema
+    - Implement its handler and contribute it
+    - Invoke it from the plugin's UI and from the command palette
+    - Show that an agent can call the same operation
+```
+
+```mdl
+page app-framework-extend-app-graph: Extend the app graph
+  Put the plugin's objects and actions into the app's navigation.
+  section: App Framework
+  route: /docs/app-framework/learn/extend-app-graph/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What the app graph is, in one paragraph, linking to the App graph concept page
+    - Contribute nodes for the plugin's objects
+    - Attach the operation from the previous page as an action on those nodes
+    - See the result in the navigation tree and the object's menu
+```
+
+```mdl
+page app-framework-publishing: Publishing a plugin
+  Publish the finished plugin to your private registry, where Composer lists it only to you.
+  section: App Framework
+  route: /docs/app-framework/publishing-plugins/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - How the private registry works, in a paragraph: hosted by DXOS, owned by your identity, no AT Protocol
+    - Install the `dx` CLI and log in to your DXOS identity, or use `DX_API_TOKEN`
+    - Describe the plugin in `dx.config.ts` and publish it with `dx registry publish --private`
+    - Confirm it in Composer's registry and publish an update
+    - A note that an experimental public registry exists, with a Discord link for anyone who wants to try it
+    - Develop against a local Composer before publishing
+```
+
+### Core concepts
+
+```mdl
+page app-framework-anatomy: Anatomy of a plugin
+  Plugins, modules, capabilities and activation events, and how they fit together.
+  section: App Framework
+  route: /docs/app-framework/introduction/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A plugin is a set of modules; a module activates on an event and contributes capabilities
+    - Capabilities are typed contributions that other modules request, which is how plugins extend each other
+    - Activation events order startup and let modules load lazily
+    - The plugin context, through which modules contribute and request capabilities
+    - A diagram of one plugin's modules, events and capabilities
+```
+
+```mdl
+page app-framework-surfaces: Surfaces
+  How the framework decides which component renders an object in a given place.
+  section: App Framework
+  route: /docs/app-framework/concepts/surfaces/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A surface is a named place in the UI (article, section, card, and so on) that plugins fill
+    - How a surface contribution matches the data it is given, and how competing contributions are ordered
+    - How one plugin renders inside another plugin's surface
+    - Limits: what a surface component may not assume about its container
+```
+
+```mdl
+page app-framework-app-graph: The app graph
+  The graph of nodes and actions that an app's navigation and menus are built from.
+  section: App Framework
+  route: /docs/app-framework/concepts/app-graph/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - What a node is, and how nodes connect to form the graph
+    - How plugins contribute nodes and actions through graph builder extensions
+    - How the graph expands lazily as the reader navigates
+    - How the navigation tree, menus and the command palette read from it
+```
+
+```mdl
+page app-framework-operations: Operations
+  Named, typed actions that the UI, the command palette and agents all run the same way.
+  section: App Framework
+  route: /docs/app-framework/concepts/operations/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An operation is a schema-typed action with a handler, defined once and invoked from anywhere
+    - Why the UI and agents share them: one definition gives a button, a command and an agent tool
+    - How handlers are contributed and resolved
+    - Built-in operations every plugin can call, such as layout and navigation
+```
+
+### Guides
+
+One page per namespace, each a readable tour with compiled examples that links into the API reference.
+React comes last.
+
+```mdl
+page app-framework-guide-plugin: Plugin
+  Define a plugin and its modules.
+  section: App Framework
+  route: /docs/app-framework/guides/plugin/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Define a plugin with its metadata
+    - Add modules and choose their activation events
+    - Contribute capabilities from a module
+    - Test a plugin in isolation
+```
+
+```mdl
+page app-framework-guide-capability: Capability
+  Declare, contribute and request capabilities, including the built-in ones.
+  section: App Framework
+  route: /docs/app-framework/guides/capability/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Declare a new capability type
+    - Contribute an implementation and request all implementations
+    - The built-in capabilities in `Capabilities` that most plugins use
+    - React to capabilities that arrive after startup
+```
+
+```mdl
+page app-framework-guide-activation-event: ActivationEvent
+  Declare activation events and use the built-in ones.
+  section: App Framework
+  route: /docs/app-framework/guides/activation-event/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Declare an activation event
+    - Fire events before and after a module activates to order dependencies
+    - The built-in events in `ActivationEvents` and when each fires
+```
+
+```mdl
+page app-framework-guide-operation: Operation
+  Define operations, implement their handlers and invoke them.
+  section: App Framework
+  route: /docs/app-framework/guides/operation/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Define an operation with input and output schema
+    - Implement handlers and group them with `OperationHandlerSet`
+    - Invoke an operation and handle its typed errors
+    - The built-in `LayoutOperation` operations for opening, closing and focusing items
+```
+
+```mdl
+page app-framework-guide-surface: Surface
+  Contribute surfaces and render other plugins' surfaces.
+  section: App Framework
+  route: /docs/app-framework/guides/surface/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Contribute a surface with `AppSurface` for an object type
+    - Match on data and set the order among competing surfaces
+    - Render a nested surface from a component
+    - The standard surface roles and what each one expects
+```
+
+```mdl
+page app-framework-guide-app-graph: AppGraph
+  Contribute nodes and actions to the app graph.
+  section: App Framework
+  route: /docs/app-framework/guides/app-graph/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Write a graph builder extension that contributes nodes for a type
+    - Attach actions to nodes
+    - Work with `AppNode` and `GraphPath`
+    - Expand and read the graph from a component
+```
+
+```mdl
+page app-framework-guide-app-capabilities: AppCapabilities
+  The app-level capabilities the App Toolkit defines for plugins to contribute.
+  section: App Framework
+  route: /docs/app-framework/guides/app-capabilities/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - The app-level capabilities in `AppCapabilities` and what each one adds to an app such as Composer
+    - Contribute settings, metadata and schema registrations
+    - When to use an app capability and when to declare a new capability
+```
+
+```mdl
+page app-framework-guide-react: React
+  The React hooks for plugins.
+  section: App Framework
+  route: /docs/app-framework/guides/react/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Read capabilities from a component
+    - Invoke operations from a component
+    - Read plugin settings and translations
+    - The reactivity rules a plugin component follows
+```
+
+### Resources
+
+```mdl
+page app-framework-api-reference: API reference
+  Generated API reference for the App Framework.
+  section: App Framework
+  route: /docs/app-framework/resources/api-reference/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to the generated reference for `@dxos/app-framework`, `@dxos/app-toolkit` and `@dxos/operation`
+```
+
+### Later
+
+These pages are in scope but not in the sidebar yet.
+
+```mdl
+page app-framework-user-guide: Using Composer
+  Spaces and sharing, the assistant, adding plugins, the quick palette, settings and editing.
+  section: App Framework
+  route: /docs/app-framework/user-guide/
+  group: Start here
+  template: concept
+  status: later
+  covers:
+    - Spaces and sharing
+    - Working with the assistant
+    - Adding and removing plugins
+    - The quick palette, settings and editing documents
+```
+
+```mdl
+page app-framework-cli: The dx CLI
+  The command-line tool for profiles, functions and publishing.
+  section: App Framework
+  route: /docs/app-framework/tools/cli/
+  group: Guides
+  template: namespace
+  status: later
+  covers:
+    - Install the CLI and set up a profile
+    - Link the CLI to a Composer identity
+    - The commands a plugin author uses
+```
+
+```mdl
+page app-framework-manifest: The plugin manifest
+  `dx.config.ts`, capabilities and activation events, as reference.
+  section: App Framework
+  route: /docs/app-framework/reference/manifest/
+  group: Resources
+  template: reference
+  status: later
+  covers:
+    - Every field of `dx.config.ts`
+    - Every built-in capability and activation event, in tables
+```
+
+```mdl
+page app-framework-glossary: Glossary
+  Every Composer and App Framework term, defined once.
+  section: App Framework
+  route: /docs/app-framework/resources/glossary/
+  group: Resources
+  template: reference
+  status: later
+  covers:
+    - Plugin, module, capability, activation event, surface, app graph, node, operation
 ```
 
 ## Features
@@ -543,8 +1390,13 @@ feat F-3: Checked code samples
     then: a test runs that snippet against an in-memory database and asserts the result
 
   req F-3.4:
-    when: a reader hovers an identifier in a sample on a docs page
+    when: a reader hovers an identifier in a sample on a docs page of a site build
     then: its compiler-inferred type appears
+
+  req F-3.5:
+    when: the dev server renders a page
+    then: samples show their region without compiling, unless `DOCS_TWOSLASH=1` turns compiling on; a build compiles
+          unless `DOCS_TWOSLASH=0` turns it off
 ```
 
 ```mdl
@@ -569,18 +1421,25 @@ feat F-4: Accuracy
 feat F-5: The spec drives the site map
 
   req F-5.1:
-    when: the site is built
-    then: the order, groups and labels of the ECHO section of the docs sidebar come from the `page` blocks
-          in this document
+    when: the docs are built
+    then: the sections, groups, order and labels of the sidebar come from the `page` blocks in this document
 
   req F-5.2:
     when: a `page` block has status `planned`
-    then: the page exists as a stub that shows its summary and its template's parts, with a
-          planned badge in the sidebar
+    then: the page exists as a stub that shows its summary and its `covers:` list, with a planned badge in the
+          sidebar
 
   req F-5.3:
     when: a `page` block has status `spike` or `done`
     then: a content file exists at its route, and the build fails if it does not
+
+  req F-5.4:
+    when: a `page` block has status `later`
+    then: the page is not in the sidebar and has no stub
+
+  req F-5.5:
+    when: a page is written or regenerated
+    then: it covers every item in its `covers:` list, within the scope of its summary
 ```
 
 ```mdl
@@ -601,7 +1460,7 @@ feat F-7: Relationship to dxos.org
   req F-7.1:
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
-          Plugins, Blog, Docs); the footer links the same pages, the ECHO, Composer and HALO docs,
+          Plugins, Blog, Docs); the footer links the same pages, the ECHO, HALO and App Framework docs,
           GitHub and Discord
 
   req F-7.2:
@@ -739,6 +1598,62 @@ feat F-15: The tutorial app
   req F-15.4:
     when: an embed renders on a docs page
     then: it follows the page's light or dark theme, and the page outside the embed keeps its own styles
+```
+
+```mdl
+feat F-16: Docs sections
+
+  req F-16.1:
+    when: a reader opens the docs
+    then: there are three sections, ECHO, HALO and App Framework, in that order in the topic switcher
+
+  req F-16.2:
+    when: a reader looks for HALO
+    then: HALO is its own section, and its pages are no longer a group of the ECHO section
+
+  req F-16.3:
+    when: a page in the App Framework section introduces an idea
+    then: it presents the App Framework idea first and shows it in Composer, the app built on the framework, and
+          links to the ECHO page for each ECHO idea it uses
+
+  req F-16.4:
+    when: the docs are built
+    then: they do not document EDGE or the sync services
+
+  req F-16.5:
+    when: a reader opens `/docs/`
+    then: they land on ECHO's Welcome page; there is no separate docs home page
+```
+
+```mdl
+feat F-17: Same shape in both sections
+
+  req F-17.1:
+    when: a section is built
+    then: its sidebar groups are Start here, Learning path, Core concepts, Guides and Resources, in that order
+
+  req F-17.2:
+    when: a page is written
+    then: it follows the template its `page` block names
+
+  req F-17.3:
+    when: a learning path is built
+    then: its pages build one thing, the ECHO tutorial app or the App Framework tutorial plugin, and each page ends with
+          it as it stands after that page; HALO's learning path continues the ECHO tutorial app, adding people and
+          devices to it
+```
+
+```mdl
+feat F-18: Guides by namespace
+
+  req F-18.1:
+    when: a section's Guides group is built
+    then: it has one page per core API namespace, written with the `namespace` template, and then the framework
+          guides, with React last
+
+  req F-18.2:
+    when: a reader wants every member of a namespace
+    then: the guide links to the generated API reference rather than repeating it
 ```
 
 ## Acceptance
@@ -1494,11 +2409,211 @@ decision D-77: Each of the four packages gets the `typedoc` task with `src/index
   why: The docs already publish typedoc for client, react-client and app-framework this way, and `@dxos/echo`'s index re-exports each module as a namespace, so one entry point covers them.
 ```
 
+```mdl
+decision D-78: The docs have two sections: ECHO, which also holds HALO for now, and Composer, which holds the plugin docs and the tool chain. EDGE and sync services are not documented yet.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1, F-16.2, F-16.4]
+```
+
+```mdl
+decision D-79: The docs lead with ECHO. Composer is presented as what was built with ECHO and as a system the reader can extend.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1, F-16.3]
+```
+
+```mdl
+decision D-80: The Composer section has the same groups as the ECHO section: Start here, Learning path, Core concepts, Guides and Resources.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-17.1]
+```
+
+```mdl
+decision D-81: The ECHO section has no Reference group. Its Guides group has one page per common `@dxos/echo` namespace, with React last, and the Composer Guides group has one page per core App Framework namespace, with React last.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-18.1]
+```
+
+```mdl
+decision D-82: The HALO pages stay as they are, in the ECHO section, until HALO gets its own section.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.2]
+```
+
+```mdl
+decision D-83: The spec is the source of truth for what the docs cover and how. Each page has a concise summary of what it must cover, and pages are regenerated from the spec as the APIs change.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-5]
+```
+
+```mdl
+decision D-84: One docs-wide spec holds the page templates and the page list of both sections, and the `page` block is the docs-wide extension `org.dxos.docs.page@1.0`.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-85: Each `page` block names its section, has an absolute route, and lists what the page must cover under `covers:`; a `later` status keeps an in-scope page out of the sidebar. Fills in [D-83] and [D-84].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.2, F-5.4, F-5.5]
+  why: A summary line alone is too thin to regenerate a page from; absolute routes let one list hold pages under `/docs/echo`, `/docs/halo` and `/docs/composer`; pages kept for later stay recorded without crowding the sidebar.
+```
+
+```mdl
+decision D-86: A `namespace` template sits between the learning path and the generated API reference: common tasks with compiled examples, then the most-used members linking to the API reference. Fills in [D-81].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1, F-18.2]
+  why: The `reference` template answers one lookup with no narrative, which is what the generated API reference already does.
+```
+
+```mdl
+decision D-87: The ECHO guides are Type, Obj, Relation, Ref, Database, Query, Filter and Feed. Query also covers `Order` and `QueryResult`, and opens with common filters that link to Filter. Fills in [D-81].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1]
+  why: These are the most-used `@dxos/echo` namespaces across the repository's packages (Obj about 11,700 member uses, Database 5,800, Ref 5,000, Filter 3,900, Type 3,000, Feed 2,100, Query 1,800); Relation is used less but is half of the object model; DXN is covered by the References and DXNs concept page.
+  rejected: Merging Query and Filter, which would put a how-to and a 43-member lookup list on one page.
+```
+
+```mdl
+decision D-88: The Composer guides are Plugin, Capability, ActivationEvent, Operation, Surface, AppGraph, AppCapabilities and React. Fills in [D-81].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1]
+  why: These are the namespaces plugins use most (Operation about 3,700 uses across the plugins, Capability 2,700, AppSurface 1,500, Plugin 770); ActivationEvent and AppGraph are used less but every plugin needs them.
+  rejected: Separate guides for Capabilities, AppSurface, AppCapability and LayoutOperation, which each fold into the guide of the namespace they extend.
+```
+
+```mdl
+decision D-89: Build a plugin with the assistant is in Composer's Start here, and Publishing a plugin is the last step of its learning path, which splits the old plugin tutorial into five steps that build one plugin. Fills in [D-80].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-17.3]
+  why: Both pages walk through a task end to end, so they are tutorials rather than guides, and the assistant page is the fastest route to a working plugin.
+```
+
+```mdl
+decision D-90: References and DXNs and Concurrency and conflicts are written now; the query model, text and blobs, feeds, schema evolution, the Solid, Effect, testing and foreign-records guides, the internals pages, and the Composer user guide, CLI, manifest and glossary pages are `later`. Fills in [D-79].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The first reading of the docs needs the two concepts that the learning path already relies on; the rest deepen a topic a reader has already met.
+```
+
+```mdl
+decision D-91: The ECHO site spec and the docs spec are one spec, `org.dxos.docs`, for the whole docs site.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-5, F-16]
+```
+
+```mdl
+decision D-92: Each section is a sidebar topic, made with `starlight-sidebar-topics`: a list of the sections, ECHO first, sits above a sidebar that shows only the current section's pages. The sections' sidebars are generated from the `page` blocks, and a planned page's stub lists what it covers. Fills in [D-78].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5]
+  why: Josiah asked how large Starlight sites organize several related products; a topic per section keeps each sidebar to one section.
+  rejected:
+    - Starlight's built-in collapsed groups, which keep every section in one tree.
+    - `starlight-sidebar-topics-dropdown`, which hides the sections until opened and pays off only with more sections than two.
+```
+
+
+```mdl
+decision D-93: The docs have no separate home page. `/docs/` goes to ECHO's Welcome, which takes over the home page's description of DXOS, and the SaaS comparison table moves into Why ECHO?.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1, F-16.5]
+  why: Start here is where a reader starts, so its first page is the first page of the docs.
+  rejected: A docs home page in front of the sections, which repeats Start here.
+```
+
+```mdl
+decision D-94: HALO is the third section of the docs, after ECHO and Composer, with the same groups: Start here, a learning path that adds people and devices to the ECHO tutorial app, core concepts, one guide per `@dxos/halo` namespace (Identity, Invitation, Space) with React last, and resources. Using HALO in TypeScript folds into the Identity guide and the learning path. ECHO's Spaces and databases keeps data and replication; HALO's Spaces and membership has members, roles and access.
+  date: 2026-11-10
+  by: user:wittjosiah
+  supersedes: D-82
+  affects: [F-16.2, F-17.1, F-17.3, F-18.1]
+  rejected: Keeping HALO as a group of the ECHO section until later.
+```
+
+```mdl
+decision D-95: The sections are ordered ECHO, HALO, Composer, in the topic switcher and in this spec's site map. This replaces the order in [D-94], which put HALO third.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1]
+  rejected: ECHO, Composer, HALO, the order in D-94.
+```
+
+```mdl
+decision D-96: The third section is called App Framework, not Composer. Its pages keep their `/docs/app-framework/` routes. In ECHO's Welcome, App Framework links to that section, and Composer links to the `/composer` product page.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1]
+```
+
+```mdl
+decision D-97: The App Framework section's routes and files move from `composer` to `app-framework`: pages under `/docs/app-framework/`, their sources in `src/content/docs/docs/app-framework/`, and the tutorial plugin in `src/app-framework-tutorial/`. Old `/docs/composer/` URLs redirect. The section's pages present the framework first and show it in Composer, the app built on it. This replaces the routes in [D-96].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.3, F-17.3]
+```
+```mdl
+decision D-98: HALO is introduced as identity management: identities, the devices and credentials that act for them, and space membership. It is not described as giving an app its users.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+```mdl
+decision D-99: The HALO pages describe HALO as built on Keyhive, even while the implementation has not moved to it yet, because Keyhive is the planned foundation. Spaces and membership presents membership as a Keyhive group of signed delegations with a shared group key; Identities and devices presents an identity as a Keyhive group of its devices; Welcome, Why HALO? and the glossary name it. ECHO's pages name Automerge as the document format the same way.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-100: Twoslash compiles samples in a site build and not on the dev server; `DOCS_TWOSLASH` turns it on or off in either. Without it a sample shows only its region, with no hover types.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-3.4, F-3.5]
+```
+```mdl
+decision D-101: The HALO API reference covers `@dxos/halo` and `@dxos/halo-react`, each with generated typedoc. `@dxos/halo-adapter-client` has no reference.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+```mdl
+decision D-102: The layer that reverts the react-ui preflight on a docs page keeps elements with the `hidden` attribute hidden. Fills in [D-68].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.4]
+  why: Browsers apply `hidden` as a presentational hint at author level, so `all: revert` dropped it and every Starlight tab panel showed at once.
+```
+
+```mdl
+decision D-103: The App Framework learning path publishes to the private registry with `dx registry publish --private`. The public AT Protocol registry is mentioned once as experimental, with a Discord link for anyone who wants to try it, and its steps (app passwords, verification, publisher profile, records) leave the page.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
 ext template
-  uri: org.dxos.echo-site.template@1.0
+  uri: org.dxos.docs.template@1.0
   desc: A page format, as the ordered parts every page of that template has.
   fields:
     purpose: Prose
@@ -1507,14 +2622,16 @@ ext template
 
 ```mdl
 ext page
-  uri: org.dxos.echo-site.page@1.0
-  desc: One page of the site. The inline prose is its summary; the block's position sets its sidebar order.
+  uri: org.dxos.docs.page@1.0
+  desc: One page of the docs. The inline prose is its summary; the block's position sets its sidebar order.
   inline-prose: true
   fields:
+    section: Prose
     route: URI
     group: Prose
     template: ExtRef
-    status: planned | spike | done
+    status: planned | spike | done | later
+    covers?: ProseList
 ```
 
 ```mdl

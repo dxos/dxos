@@ -5,6 +5,7 @@ packages=(
     "core/echo/echo-react"
     "core/echo/echo-solid"
     "core/halo/halo"
+    "core/halo/halo-react"
     "sdk/app-framework"
     "sdk/client"
     "sdk/react-client"

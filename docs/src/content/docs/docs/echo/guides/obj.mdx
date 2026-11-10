@@ -1,0 +1,83 @@
+---
+title: Obj
+description: The runtime API for objects.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+```ts
+import { Obj } from '@dxos/echo';
+```
+
+`Obj` makes objects and reads and writes them. Its functions take the object as the first argument and work whether or
+not the object is in a database yet, so a getter that needs the database returns `undefined` outside one instead of
+throwing. <SpecCite item="org.dxos.echo#F-3.3" />
+
+## Make an object
+
+`Obj.make` checks the props against the type and gives the object an id. Reserved fields such as `Obj.Meta` go in the
+same props. Here the meta records the object's key in an external system. <SpecCite item="org.dxos.echo#F-3.1" />
+
+<Snippet file="guide-obj" region="make" />
+
+## Read and update an object
+
+Read a field like any property. Writes go inside `Obj.update`; a write outside it throws. All the writes in one callback
+reach subscribers as one change.
+
+A live object always shows the latest state. `Obj.getSnapshot` returns a frozen copy that later updates do not touch, which
+is what you want to keep a before-and-after or hand data to code that must not write it.
+
+<Snippet file="guide-obj" region="update" />
+
+## Subscribe to one object
+
+The callback runs synchronously after each committed change. Query subscriptions over the object re-evaluate at the same
+time. <SpecCite item="org.dxos.echo#F-3.2" /> In React, use the hooks in the [React guide](/docs/echo/guides/react/)
+instead.
+
+<Snippet file="guide-obj" region="subscribe" />
+
+## Meta, tags, labels and parents
+
+Meta holds data about the object rather than in it, such as foreign keys and tags. Labels and descriptions are what lists
+and pickers show.
+
+A child object can name a parent. The parent must hold a reference to the child, and deleting the parent deletes the
+child.
+
+<Snippet file="guide-obj" region="meta" />
+
+## Clone and serialize
+
+`Obj.clone` makes a structural copy. `Obj.toJSON` and `Obj.fromJSON` round-trip an object's id, type, meta and references.
+<SpecCite item="org.dxos.echo#F-3.4" />
+
+<Snippet file="guide-obj" region="json" />
+
+## Members at a glance
+
+| Member                                      | Summary                                              |
+| ------------------------------------------- | ---------------------------------------------------- |
+| `make`                                      | Create an object of a type                           |
+| `update`                                    | Write to an object; one notification per call        |
+| `getSnapshot`                               | A frozen copy of the current state                   |
+| `subscribe`                                 | Run a callback after each change                     |
+| `getMeta` `getKeys` `deleteKeys`            | Read and change metadata and foreign keys            |
+| `addTag` `removeTag`                        | Tag an object                                        |
+| `getLabel` `setLabel`                       | The label lists and pickers show                     |
+| `getParent` `setParent`                     | Parent and child ownership                           |
+| `instanceOf` `isObject` `isDeleted`         | Predicates                                           |
+| `clone` `toJSON` `fromJSON`                 | Copy and serialize                                   |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [The ECHO object](/docs/echo/learn/the-echo-object/) and [Mutating objects](/docs/echo/learn/mutating-objects/) in the
+  learning path.
+- [Objects and relations](/docs/echo/concepts/objects-relations/) for the reserved fields and ownership.

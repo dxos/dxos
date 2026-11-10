@@ -1,0 +1,55 @@
+---
+title: Extend the app graph
+description: Put the plugin's objects and actions into the app's navigation.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page each space has a **Bookmarks** section in the navigation tree, and **Record visit** is on every
+bookmark's toolbar.
+
+## Background
+
+An App Framework app draws its navigation tree, toolbars and menus from one graph, the app graph. In Composer that
+is the tree on the left, the object toolbar and the context menus. Its nodes are the things a
+person can open, and its action nodes are what they can do to them. Plugins add to the graph with builder extensions:
+functions that match a node and return its children or its actions. The app runs them only for the nodes a person
+expands. [The app graph](/docs/app-framework/concepts/app-graph/) explains the model.
+
+## Steps
+
+1. **Add a section under each space.** This extension matches space nodes. It returns a section node when the space has
+   at least one bookmark, so empty spaces show no empty heading. `get` reads the query's atom and reruns the extension
+   when the result changes.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="section" />
+
+2. **List the bookmarks in the section.** This extension matches the section by its type and returns one node per
+   bookmark. `AppNode.makeObject` builds the node from the type's label and icon annotations.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="items" />
+
+3. **Attach the operation as an action.** `createTypeExtension` matches every node whose data is a bookmark.
+   `AppNode.makeToolbarAction` puts the action on the bookmark's toolbar. Its `data` invokes the operation from the
+   previous page.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="actions" />
+
+4. **Add the module to the manifest.** The app graph maker activates the module when the app is idle after startup.
+
+   <Snippet file="app-framework-tutorial/dx.config" region="app-graph" />
+
+5. **See the result.** Reload the dev plugin.
+
+   A **Bookmarks** section appears under each space that has a bookmark, with the bookmarks under it. Open one: the
+   toolbar has **Record visit**.
+
+## Recap
+
+You can now:
+
+- Add a section and child nodes to the navigation tree.
+- Attach an operation to a type's nodes as an action.
+
+The plugin is complete. [Publishing a plugin](/docs/app-framework/publishing-plugins/) puts it in your private registry, so
+Composer lists it for you on every device, and the [guides](/docs/app-framework/guides/plugin/) cover each namespace in more depth.

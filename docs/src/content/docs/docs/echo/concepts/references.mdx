@@ -1,0 +1,53 @@
+---
+title: References and DXNs
+description: How objects point at each other, and how a reference resolves.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+A reference is a field whose value names another entity, so that objects can form trees and graphs without copying each
+other.
+
+## Model
+
+A field declared with `Ref.Ref(Type)` holds a reference to an entity of that type. The stored value is the target's URI,
+not the target's data. Two objects that reference the same person both see the person's latest name, because neither
+holds a copy. [Ref](/docs/echo/guides/ref/) shows how to declare and make one.
+
+ECHO uses two kinds of name:
+
+- An **EID** addresses an object or a space, with the `echo:` scheme. The local form `echo:///<objectId>` means "in this
+  space". The qualified form `echo://<spaceId>/<objectId>` names the space too, and is what a reference into another
+  space stores.
+- A **DXN** names a resource that is not an object, most often a type: `dxn:com.example.type.person:0.1.0`. A DXN can
+  also carry an object mnemonic after `#` to tell apart objects that share a key.
+
+<Snippet file="concept-references" region="names" />
+
+## Behavior
+
+- A reference stores the target's URI and resolves to a target of the declared type only when read.
+  <SpecCite item="org.dxos.echo#F-4.1" />
+- `ref.peek()` returns the target if it is in memory and never starts a load. `ref.load()` reads it from disk or the
+  network.
+- In Effect code, `Database.load` fails with `EntityNotFoundError` when the target is missing, and you can catch it by that
+  tag. <SpecCite item="org.dxos.echo#F-4.2" />
+- Serializing an object keeps its references as URIs, and reading it back restores them.
+  <SpecCite item="org.dxos.echo#F-3.4" />
+- A query can follow references forwards with `reference` and backwards with `referencedBy`, so you do not need to load
+  each target yourself. [Query](/docs/echo/guides/query/) covers traversal.
+
+A reference can point into another space. It resolves if this device holds or can reach that space.
+
+<Snippet file="concept-references" region="cross-space" />
+
+## Limits
+
+- A reference can dangle. Nothing stops a target from being removed while references to it remain, and the field keeps
+  the URI. `load()` throws for a missing target; `tryLoad()` returns `undefined`.
+- By default a removed target counts as missing. `Ref.loadAll` leaves out missing and removed targets unless you pass
+  `{ deleted: 'include' }`.
+- An array of references keeps every entry, dangling ones included. To list only the targets that exist, query them with
+  `reference` instead of filtering the array.
+- Each read of a reference field returns a new wrapper, so compare references with `Ref.equals`, not `===`.

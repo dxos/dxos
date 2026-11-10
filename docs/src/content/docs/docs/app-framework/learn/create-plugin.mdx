@@ -1,0 +1,64 @@
+---
+title: Create a plugin
+description: Start the tutorial plugin with its metadata, its first module and its translations.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page Composer loads a plugin named Bookmarks from your machine. It does nothing visible yet; the
+next four pages give it a type, a view, an action and a place in the navigation tree.
+
+## Background
+
+The finished plugin lets a person save links in a space. Each bookmark opens in Composer's main area with its name, its
+URL and a visit count. A **Record visit** action on the bookmark's toolbar adds one to the count, and the assistant can
+run the same action when asked. A **Bookmarks** section in the navigation tree lists them under each space.
+
+A plugin is a set of modules. Each module activates on an event and contributes capabilities, which are typed values
+that other parts of the app look up. [Anatomy of a plugin](/docs/app-framework/introduction/) explains how they fit. In this
+tutorial the whole plugin is defined in one file, `dx.config.ts`, and each module's code lives in its own file that loads
+only when the module activates.
+
+## Steps
+
+1. **Create the package.** Make a directory for the plugin with a `package.json` and a `vite.config.ts`. The package
+   pins the `@dxos/*` packages to the version of Composer you load the plugin into.
+   [Publishing a plugin](/docs/app-framework/publishing-plugins/#local-development) lists the exact dependencies and the
+   `composerPlugin` Vite plugin that builds the manifest.
+
+2. **Name the plugin.** The plugin's key is a reverse-domain name that no other plugin uses. Its last segment must be
+   camelCase. Put it in a file of its own, so the manifest and any capability tags the plugin declares can both import
+   it.
+
+   <Snippet file="app-framework-tutorial/src/namespace" region="namespace" />
+
+3. **Write the manifest.** `Plugin.config` takes the plugin's registry metadata and its modules. It returns the plugin's
+   `meta` and a `make` function that the app's plugin manager calls to create it.
+
+   <Snippet file="app-framework-tutorial/dx.config" region="config" />
+
+   The `tags` field starts with a quality tier. A new plugin is `labs`.
+
+4. **Add the first module.** Translations give the plugin's strings their text. The module lists the translation
+   resource by namespace: one entry for the plugin's own strings, and one for the type the next page adds.
+
+   <Snippet file="app-framework-tutorial/src/translations" region="translations" />
+
+   Add it to the manifest's `modules`. `AppCapability.translations` is a module maker: it fixes the capability the
+   module contributes and the event it activates on, so the manifest only names the file to load.
+
+   <Snippet file="app-framework-tutorial/dx.config" region="translations" />
+
+5. **Load the plugin into a local Composer.** Run `vite` in the plugin's directory. It serves a manifest at
+   `http://localhost:3967/manifest.json`. In Composer, open **Plugin Settings** in the rail, choose **Plugins**, and
+   under **Dev Server** click **Enable**.
+
+   Bookmarks appears in the list of plugins, turned on.
+
+## Recap
+
+You can now:
+
+- Name a plugin with a namespace and describe it in `dx.config.ts`.
+- Add a module with a module maker.
+- Load a plugin from its dev server into Composer.

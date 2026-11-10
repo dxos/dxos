@@ -1,0 +1,48 @@
+---
+title: Spaces and membership
+description: Who may enter a space, and what each member may do.
+---
+
+A space's membership is the list of identities that may replicate it, each with an access level.
+[Spaces and databases](/docs/echo/concepts/spaces/) covers the data in a space and how it replicates; this page covers who
+gets it.
+
+## Model
+
+**Members.** Each member is an identity, named by its DID, with one access level. The levels are ordered, and each includes
+the one before:
+
+| Access  | The member can                                             |
+| ------- | ---------------------------------------------------------- |
+| `pull`  | Receive the space's data in encrypted form, for example a sync service |
+| `read`  | Read the space                                             |
+| `edit`  | Read and change the space                                  |
+| `admin` | Change membership: invite, change roles, remove members    |
+
+The identity that creates a space is its first admin.
+
+**Membership policy.** `invite` admits new members through [invitations](/docs/halo/concepts/invitations/). `locked` admits
+no one new, which suits a space that should stay private to one person or a fixed group.
+
+**How access is checked.** A space's membership is a [Keyhive](https://github.com/inkandswitch/keyhive) group, and the
+access levels above are Keyhive's. Membership is a graph of signed delegations. Each delegation, such as "admit this
+identity with `edit`", is signed by a member allowed to make it. Every peer keeps the graph and checks each delegation
+against the members it already trusts, so a peer can decide whether to accept another peer's changes without asking a
+server. Delegations and revocations converge: peers that have seen the same ones agree on the membership, whatever order
+they arrived in.
+
+**Encryption.** Keyhive also keeps a group key that the current members share. A space's changes are encrypted with it, so
+a member with `pull` can store and relay the data without reading it. When membership changes, the key changes too.
+
+## Behavior
+
+- An admin can invite members, change a member's access with `Space.updateMemberRole` and remove a member with
+  `Space.removeMember`.
+- Peers reject changes from an identity whose access does not allow them.
+- Removing a member rotates the space's key. They stop receiving new changes, and could not decrypt them if they did.
+
+## Limits
+
+- Removal does not reach data the member already has. A removed member keeps their copy of everything they could read
+  before.
+- Access applies to the whole space. To share part of the data with fewer people, put it in a separate space.

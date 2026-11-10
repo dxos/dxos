@@ -1,0 +1,52 @@
+---
+title: Identities and devices
+description: An identity is a key pair; devices are the keys that act for it.
+---
+
+An identity is a key pair that stands for one user, and a device is a key pair that the identity has authorized to act
+for it.
+
+## Model
+
+**Identity.** The client generates the identity's key pair when it calls `Identity.create`. The public key is named by a
+DID such as `did:halo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`, which is how other members and services refer to the user. The
+identity also has a profile: a display name and free-form data such as an avatar. No server issues the identity, and
+none holds its private key.
+
+**Device.** Each client storage, such as one browser profile on one site, has its own device key. The first device
+creates the identity; later devices join through a [device invitation](/docs/halo/concepts/invitations/), after which the
+identity has signed a statement that admits their keys. A device signs the changes it makes, and peers check the
+signature against the identity's list of devices.
+
+Each device reports:
+
+| Field      | Meaning                                                                 |
+| ---------- | ----------------------------------------------------------------------- |
+| `kind`     | `browser`, `native`, `mobile`, or `agent` and `agent-managed` for hosted agents |
+| `presence` | `online`, `offline`, or `removed` once the device has been evicted      |
+| `current`  | Whether this is the device the code runs on                             |
+
+In [Keyhive](https://github.com/inkandswitch/keyhive), which HALO is built on, an identity is a group whose members are
+its devices. Admitting a device is a delegation to it, and removing one is a revocation.
+
+**Personal space.** Every identity has a personal space that only its own devices join. It holds the user's settings and
+anything that follows them from device to device. `Identity.personalSpaceId` returns its id.
+
+```text
+identity (did:halo:…)
+├── device: laptop browser   ← created the identity
+├── device: phone            ← joined by invitation
+└── personal space           ← replicated to every device
+```
+
+## Behavior
+
+- Creating an identity needs no network.
+- A new device receives the identity's spaces by syncing with the devices it was admitted by, or through EDGE.
+- A device that is removed stops being trusted for new changes. Changes it signed before removal stay valid.
+
+## Limits
+
+- If every device is lost and the identity has no [recovery credential](/docs/halo/concepts/recovery-credentials/), the
+  identity is gone. No one, including DXOS, can restore it, and its spaces are reachable only through other members.
+- Clearing a browser's site data deletes that device's keys. The device must join again as a new device.

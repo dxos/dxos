@@ -1,0 +1,66 @@
+---
+title: Add an operation
+description: Give the plugin an action that the UI, the command palette and agents can run.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the bookmark view has a **Record visit** button, and the assistant can record a visit when asked.
+
+## Background
+
+An operation is a named action with a typed input and output. The plugin defines it once and contributes a handler.
+After that, a button, the command palette and the assistant all run it the same way, through the framework's
+operation invoker. [Operations](/docs/app-framework/concepts/operations/) explains why.
+
+## Steps
+
+1. **Define the operation.** The key is a DXN. The input and output are schemas; an agent reads their descriptions to
+   learn what to pass.
+
+   <Snippet file="app-framework-tutorial/src/types/BookmarkOperation" region="operation" />
+
+2. **Implement the handler.** `Operation.withHandler` attaches an Effect to the definition. This one adds one to the
+   bookmark's visit count.
+
+   <Snippet file="app-framework-tutorial/src/operations/record-visit" region="handler" />
+
+3. **Contribute the handler.** A handler set lists the plugin's handlers. `Operation.lazyHandler` loads the handler's
+   file the first time the operation runs, not when the plugin starts.
+
+   <Snippet file="app-framework-tutorial/src/operations/index" region="handler-set" />
+
+   <Snippet file="app-framework-tutorial/src/capabilities/operation-handler" region="operation-handler" />
+
+4. **Invoke it from the UI.** `useOperation` binds the operation to a callback. Call it from the button, and from the
+   link so that following the link counts too.
+
+   <Snippet file="app-framework-tutorial/src/containers/BookmarkArticle" region="invoke" lang="tsx" />
+
+   <Snippet file="app-framework-tutorial/src/containers/BookmarkArticle" region="render" lang="tsx" />
+
+5. **Offer it to the assistant.** A skill gives the assistant a set of operations as tools, with instructions on when to
+   use them.
+
+   <Snippet file="app-framework-tutorial/src/skills/BookmarksSkill" region="skill" />
+
+   <Snippet file="app-framework-tutorial/src/capabilities/skill-definition" region="skill-definition" />
+
+6. **Add the modules to the manifest.**
+
+   <Snippet file="app-framework-tutorial/dx.config" region="operation" />
+
+7. **Run it three ways.** Reload the dev plugin and open a bookmark. Click **Record visit**: the count goes up. Open the
+   command palette and run **Record visit**. Then add the Bookmarks skill to a chat and write "I just opened this
+   bookmark".
+
+   Each run adds one to the count, and the view updates without a reload.
+
+## Recap
+
+You can now:
+
+- Define an operation with schemas for its input and output.
+- Implement a handler and load it lazily.
+- Run the operation from a component.
+- Give the assistant the operation through a skill.

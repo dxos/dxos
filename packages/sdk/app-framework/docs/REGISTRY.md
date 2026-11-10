@@ -229,7 +229,7 @@ publisher-trusted at the record level (the hosted bundle itself is already immut
 
 The `dx` CLI writes records to the publisher's PDS over standard XRPC (`com.atproto.repo.putRecord`,
 `deleteRecord`, `listRecords`). It supports two auth modes (see
-[Publishing a Plugin](/docs/composer/publishing-plugins) for the user-facing flow):
+[Publishing a Plugin](/docs/app-framework/publishing-plugins) for the user-facing flow):
 
 - **Logged-in identity (default).** After `dx account login`, writes are DPoP-signed by DXOS edge
   using the AT Protocol account connected to the user's identity (the "Atmosphere" integration in

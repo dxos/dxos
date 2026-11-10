@@ -12,6 +12,8 @@ const PAGE_REVERT = `@layer page-revert {
   @scope (body > .page, body > .sl-skip-link) to (.dx-island) {
     :scope, :not(${attributed}), :not(${attributed})::before, :not(${attributed})::after { all: revert; }
     :is(svg, img, video, canvas, iframe) { display: revert; vertical-align: revert; }
+    /* Browsers apply \`hidden\` as an author-level hint, which \`all: revert\` drops. */
+    [hidden]:not([hidden='until-found']) { display: none; }
   }
 }`;
 ---

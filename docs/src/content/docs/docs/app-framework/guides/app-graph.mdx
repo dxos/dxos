@@ -1,0 +1,62 @@
+---
+title: AppGraph
+description: Contribute nodes and actions to the app graph.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+```
+
+The app graph is the graph of nodes and actions that an app's navigation and menus are drawn from.
+[The app graph](/docs/app-framework/concepts/app-graph/) explains the model.
+
+## Write a graph builder extension
+
+`AppGraphBuilder.createExtension` takes an id, a matcher and a connector. The matcher returns `Option.some(value)` for
+the nodes it applies to; `AppNodeMatcher` has ready-made ones such as `whenSpace`. The connector returns the nodes to
+connect. Read reactive state with `get` so the connector reruns when it changes.
+
+<Snippet file="app-framework-guide-app-graph" region="nodes" lang="tsx" />
+
+## Attach actions to nodes
+
+`AppGraphBuilder.createTypeExtension` matches nodes whose data is an object of one type. Its `actions` callback returns
+action nodes. `AppGraphNode.makeAction` makes one; `disposition` decides where it shows. `AppNode.makeToolbarAction`
+is a shortcut for the object toolbar.
+
+<Snippet file="app-framework-guide-app-graph" region="actions" lang="tsx" />
+
+Both builders return Effects. Run them in the module body and contribute the result through
+`AppCapabilities.AppGraphBuilder`.
+
+<Snippet file="app-framework-guide-app-graph" region="contribute" lang="tsx" />
+
+## Work with AppNode and GraphPath
+
+`AppNode` builds the common kinds of node: `makeObject` for an ECHO object, `makeSection` for a heading in the tree,
+`makeCompanion` and `makeDeckCompanion` for panels. `GraphPath` builds and parses node paths, which navigation
+operations take.
+
+<Snippet file="app-framework-guide-app-graph" region="path" lang="tsx" />
+
+## Expand and read the graph from a component
+
+`useAppGraph` returns the graph. Expand a node before reading its connections, because the graph builds them lazily.
+`graph.connections(id, relation)` is the same data as an atom, for a component that should update as the graph changes.
+
+<Snippet file="app-framework-guide-app-graph" region="read" lang="tsx" />
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Extend the app graph](/docs/app-framework/learn/extend-app-graph/) | Sections, items and actions end to end. |
+| [Operation](/docs/app-framework/guides/operation/) | The operations that actions invoke. |

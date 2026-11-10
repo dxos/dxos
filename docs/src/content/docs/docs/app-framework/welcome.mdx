@@ -1,0 +1,49 @@
+---
+title: Welcome
+description: What the App Framework is, how an app is made of plugins, and Composer as the app built on it.
+---
+
+The App Framework builds apps out of plugins. An app is little more than the plugins it loads: each plugin adds types,
+views, actions and settings, and plugins extend each other through typed contributions instead of imports.
+
+## How an app is put together
+
+A plugin is a set of modules. Each module activates on an event, such as startup or the first time a view is needed,
+and contributes capabilities: typed values such as a React component for a surface, a handler for an operation, or nodes
+for the navigation graph. Other modules look capabilities up, so one plugin can render inside another plugin's view or
+add an action to another plugin's objects without either knowing about the other.
+[Anatomy of a plugin](/docs/app-framework/introduction/) explains the pieces.
+
+The packages are `@dxos/app-framework`, which holds plugins, modules, capabilities and surfaces, and
+`@dxos/app-toolkit`, which adds what a workspace app needs: the app graph, layout, settings and the standard surface
+roles.
+
+## Composer, the app built on it
+
+[Composer](/composer) is a local-first workspace built entirely with the App Framework. Its navigation tree, the deck
+of open items, the settings page and the assistant are all plugins, written against the same API a third-party plugin
+uses. A plugin from outside DXOS has the same powers as a built-in one, which is why these pages use Composer as the
+place your plugin runs.
+
+## What ECHO does underneath
+
+ECHO is the database under every App Framework app. A plugin's data is ECHO objects in spaces, so it syncs between a
+user's devices and the people they share with, merges concurrent edits, and works offline, without the plugin doing
+anything for it. Agents read and write the same objects through the same queries.
+[Spaces](/docs/echo/concepts/spaces/) and [Objects and relations](/docs/echo/concepts/objects-relations/) explain the
+model.
+
+## What you can build
+
+- A new object type with its own view, such as a bookmark, a recipe or a chess game.
+- An operation: an action that a button, the command palette and the assistant all run the same way.
+- A panel beside an object, or a section in the navigation tree.
+- An integration that syncs objects with an outside service.
+
+## Where to go next
+
+- [Try Composer](/docs/app-framework/try/) to see an App Framework app before you extend one.
+- [Build a plugin with the assistant](/docs/app-framework/build-a-plugin-with-the-assistant/) to have Composer's
+  desktop app write one for you.
+- [Create a plugin](/docs/app-framework/learn/create-plugin/) to start the learning path, which builds a Bookmarks
+  plugin by hand over five pages.

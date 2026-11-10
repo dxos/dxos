@@ -101,6 +101,15 @@ its comments.
 The ECHO version has no error branches for these cases because the failures do not reach it. There is no request to fail,
 the local write cannot conflict with itself, and a concurrent edit from a peer merges as a CRDT change.
 
+## DXOS apps compared with SaaS apps
+
+| | SaaS web apps | DXOS apps |
+| :-- | :-- | :-- |
+| How code is served | Rendered on the client and the server | Served as static files and rendered on the client |
+| Where data is stored | On the **server** | On the **client**, optionally backed up to a server |
+| How data is exchanged | Client to server over HTTP or WebSockets | Peer to peer over WebRTC, optionally through a sync server |
+| How identity is established | The server issues a session token after checking credentials, for example with OAuth | Each client generates its own key pair and signs its changes with it |
+
 ## Solving practical problems
 
 ### Your UI never shows stale local state
@@ -127,4 +136,4 @@ source and target endpoints, so you can query from either end. <SpecCite item="o
 ## Enjoy building
 
 Once persistence and merging are the database's job, the code that remains is your application. Start with the
-[learning path](/docs/echo/learn/defining-types/), or look up a module in the [reference](/docs/echo/reference/filter/).
+[learning path](/docs/echo/learn/defining-types/), or look up a namespace in the [guides](/docs/echo/guides/filter/).

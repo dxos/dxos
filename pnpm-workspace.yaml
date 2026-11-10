@@ -637,6 +637,7 @@ catalog:
   sparqljs: ^3.7.4
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.27.0
+  starlight-sidebar-topics: ^0.9.0
   storybook: ^10.6.0
   storybook-solidjs-vite: ^10.7.1
   streamx: ^2.12.5

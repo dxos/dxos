@@ -1,0 +1,55 @@
+---
+title: Why HALO?
+description: Why identity is a key pair your device makes, not an account a server issues.
+---
+
+import Snippet from '../../../../components/Snippet.astro';
+
+In most apps a user exists because a server says so: it holds the account, checks the password and can take the account
+away. A local-first app cannot depend on that server, because its data has to work offline and between peers. HALO makes
+the user a key pair the device generates, and lets peers check each other's keys directly.
+
+## The pattern
+
+Create an identity, create a space, invite someone. No step talks to a sign-up server.
+
+<Snippet file="why-halo" region="pattern" />
+
+## An account against a key pair
+
+|                                 | Account on a server                                  | HALO identity                                          |
+| ------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| Who creates it                  | The server, after sign-up                            | The device, with `Identity.create`                     |
+| What proves who you are         | A password or an OAuth token, checked by the server  | A signature from your device key, checked by any peer  |
+| Who decides access to data      | The server, on every request                         | The space's members, through signed membership         |
+| Works offline                   | No                                                   | Yes                                                    |
+| Can be taken away by the provider | Yes                                                | No; only your own devices hold the keys                |
+| Lost password                   | Reset by email                                       | Recover with a recovery credential set up in advance   |
+
+## Practical problems
+
+### One identity across devices
+
+A user expects their laptop and phone to be the same person. HALO admits each new device with a device invitation from one
+that already has the identity, so every device has its own key and the identity vouches for all of them. A lost phone
+takes only its own key with it. [Add a device](/docs/halo/learn/add-device/) walks through it.
+
+### Access that peers check without a server
+
+When two peers sync a space, each one decides whether to accept the other's changes. Membership is a
+[Keyhive](https://github.com/inkandswitch/keyhive) graph of signed delegations that every peer holds, so the check needs
+no server and still works when the peers meet on a local network.
+[Spaces and membership](/docs/halo/concepts/spaces-membership/) explains the graph.
+
+### Recovery without a password reset
+
+There is no server that can reset a key pair. Instead the user sets up a recovery credential, such as a recovery code or a
+passkey, while they still have a device, and uses it to admit a new device later.
+[Recover an identity](/docs/halo/learn/recover-identity/) shows how.
+
+## What HALO does not do
+
+HALO is the identity of a user inside DXOS apps and spaces. It is not a login for third-party websites, and it does not
+replace OAuth for signing in to services outside DXOS.
+
+Start with [Create an identity](/docs/halo/learn/create-identity/).

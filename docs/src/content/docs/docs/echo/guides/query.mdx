@@ -1,0 +1,79 @@
+---
+title: Query
+description: Graph-shaped selections, traversal, ordering and results.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+```ts
+import { Order, Query } from '@dxos/echo';
+```
+
+A query selects a set of entities, then can step through the graph from that set: along reference fields, backwards to
+whatever references them, or across relations. Building a query does no work. It compiles to a query AST, and runs only
+when you pass it to `db.query` and read the result. <SpecCite item="org.dxos.echo#F-5.2" />
+
+## Select objects
+
+Most queries start from a type and a few field values. `Query.select` takes any filter; these three cover most uses, and
+[Filter](/docs/echo/guides/filter/) has the rest.
+
+<Snippet file="guide-query" region="common" />
+
+## Combine queries
+
+`Query.all` is the union of several queries. `Query.without` removes the results of one query from another.
+
+<Snippet file="guide-query" region="combine" />
+
+## Traverse references and relations
+
+Each step returns a new query, so steps chain.
+
+- `reference(field)` follows a `Ref` field to its targets.
+- `referencedBy(Type, field)` goes the other way, to the objects whose field points at the selection.
+- `sourceOf(Relation)` and `targetOf(Relation)` select the relations that start or end at the selection.
+- `source()` and `target()` step from relations to their endpoints.
+
+<Snippet file="guide-query" region="traverse" />
+
+## Order results
+
+`orderBy` takes one or more orders, applied in turn. <SpecCite item="org.dxos.echo#F-5.3" /> `Order.property` sorts by a
+field; `Order.created` and `Order.updated` sort by timestamp; `Order.natural` keeps insertion order.
+
+<Snippet file="guide-query" region="order" />
+
+## Run once or subscribe
+
+`db.query` returns a `QueryResult`. `run()` resolves with the results once. `subscribe` calls back each time the results
+change, and `{ fire: true }` also calls it straight away with the current results. <SpecCite item="org.dxos.echo#F-5.1" />
+
+A query reads the objects on this device first and adds what the indexes and EDGE return. A subscriber can see results
+arrive in more than one step. <SpecCite item="org.dxos.echo.query#F-5" />
+
+<Snippet file="guide-query" region="run" />
+
+## Members at a glance
+
+| Member                                  | Summary                                           |
+| --------------------------------------- | ------------------------------------------------- |
+| `select` `type`                         | Start a query from a filter or a type             |
+| `all` `without`                         | Union and difference of queries                   |
+| `.reference` `.referencedBy`            | Follow reference fields, forwards or backwards    |
+| `.sourceOf` `.targetOf`                 | Relations that start or end at the selection      |
+| `.source` `.target`                     | Endpoints of selected relations                   |
+| `.orderBy` `.limit`                     | Order and cap the results                         |
+| `Order.property` `created` `updated`    | Orders                                            |
+| `QueryResult.run` `first` `subscribe`   | Read the results                                  |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [Querying](/docs/echo/learn/querying/) in the learning path.
+- [Filter](/docs/echo/guides/filter/) for every predicate.

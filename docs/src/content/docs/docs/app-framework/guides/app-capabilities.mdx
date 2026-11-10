@@ -1,0 +1,64 @@
+---
+title: AppCapabilities
+description: The app-level capabilities the App Toolkit defines for plugins to contribute.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+```
+
+`AppCapabilities` holds the app-level capabilities that `@dxos/app-toolkit` defines on top of the framework's own.
+Composer and any other app built with the toolkit read them. `AppCapability` has a module
+maker for most of them, which sets the activation event and environments so a manifest only names the file.
+
+## The app-level capabilities
+
+| Capability | Maker | What it adds |
+| --- | --- | --- |
+| `Translations` | `translations` | Text for the plugin's strings and type labels. |
+| `Schema` | `schema` | ECHO types the app can store, query and name. |
+| `Settings` | `settings` | A settings section in the settings page. |
+| `AppGraphBuilder` | `appGraphBuilder` | Nodes and actions in the app graph. |
+| `SkillDefinition` | `skillDefinition` | A skill the assistant can use. |
+| `PluginAsset` | `pluginAsset` | A file other tools can read, such as the plugin's spec. |
+| `SpaceTemplate` | `spaceTemplates` | A template for new spaces. |
+| `AppGraph` | none | The graph itself, for reading. |
+| `Layout` | none | The current layout, as an atom. |
+
+`AppCapability.surface` and `AppCapability.operationHandler` make modules for the framework's `ReactSurface` and
+`OperationHandler` capabilities.
+
+## Contribute settings, metadata and schema registrations
+
+A settings contribution names a prefix, a schema and a writable atom. The app renders a form from the schema and writes
+the person's changes to the atom.
+
+<Snippet file="app-framework-guide-app-capabilities" region="settings" />
+
+In a manifest, each maker takes the loader of the module that contributes the value:
+
+<Snippet file="app-framework-guide-app-capabilities" region="makers" />
+
+The tutorial plugin registers its type with `AppCapability.schema`, whose module's default export is the list of types:
+
+<Snippet file="app-framework-tutorial/src/capabilities/schema" region="schema" />
+
+## App capability or a new one
+
+Use an app capability when you are adding to something the app already shows: a setting, a node, a skill. Declare a
+new capability when your plugin is the host and other plugins add to it, the way the Space plugin declares
+`SpaceCapabilities.CreateObjectEntry` for the types in its create menu. [Capability](/docs/app-framework/guides/capability/)
+shows how.
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Capability](/docs/app-framework/guides/capability/) | Declaring and reading capabilities. |
+| [Plugin](/docs/app-framework/guides/plugin/) | Modules and makers. |

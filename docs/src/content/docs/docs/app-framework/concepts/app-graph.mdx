@@ -1,0 +1,39 @@
+---
+title: The app graph
+description: The graph of nodes and actions that an app's navigation and menus are built from.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+The app graph is a graph of everything a person can open or do in an App Framework app. In Composer, the navigation
+tree, toolbars, context menus and the command palette all read it, so a plugin that adds to the graph shows up in all of them.
+
+## Model
+
+A **node** has an id, a type, data and properties. Its data is usually the thing it stands for, such as a space or an
+ECHO object; its properties carry the label, icon and display hints. The graph starts from a root node.
+
+Nodes connect by **relations**. `child` makes the navigation tree: a space's children are its sections and objects.
+`action` connects a node to the things a person can do to it; an action node's data is a function that returns an
+Effect. Other relations, such as `companion`, attach panels to a node.
+
+Plugins add nodes through **builder extensions**. An extension has a matcher and a connector: the matcher picks the nodes
+it applies to, and the connector returns the nodes to connect to them.
+
+<Snippet file="app-framework-guide-app-graph" region="nodes" lang="tsx" />
+
+## Behavior
+
+- The graph expands lazily. The framework runs a node's extensions only when something asks for that node's connections,
+  such as the person opening a branch in the tree. A space with ten thousand objects costs nothing until it is opened.
+- A connector reads reactive state through `get`. When that state changes, such as a query gaining a result, the
+  connector reruns and the node's connections update.
+- Action nodes carry a disposition that says where they appear: `toolbar` for an object's toolbar, `list-item` for its
+  context menu in the tree. The command palette lists every action.
+- Each node has a path made of the ids from the root to it. In Composer the URL is a node path, and navigation operations take
+  paths.
+
+## Limits
+
+- An extension's id and a node's id must be camelCase. A hyphenated id is dropped without an error.
+- A connector must be cheap and must not write. It runs again on every change to the state it reads.

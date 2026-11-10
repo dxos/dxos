@@ -7,10 +7,11 @@ import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import ecTwoSlash from 'expressive-code-twoslash';
 
 import { codeThemes } from './src/theme/code-themes.mjs';
+import { twoslash } from './twoslash.mjs';
 
 export default defineEcConfig({
   themes: codeThemes,
-  plugins: [pluginLineNumbers(), ecTwoSlash()],
+  plugins: [pluginLineNumbers(), ...(twoslash ? [ecTwoSlash()] : [])],
   minSyntaxHighlightingColorContrast: 5.5,
   defaultProps: { wrap: true, hangingIndent: 2, showLineNumbers: true },
   styleOverrides: {

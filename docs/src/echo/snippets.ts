@@ -6,7 +6,16 @@ const SOURCES = {
   ...import.meta.glob<string>('./snippets/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
   // The tutorial app's own modules, quoted where a page builds that piece of it.
   ...import.meta.glob<string>('../tutorial/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+  // The Composer learning path's plugin, quoted the same way.
+  ...import.meta.glob<string>('../app-framework-tutorial/**/*.{ts,tsx}', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
 };
+
+/** Directories whose modules compile with their local imports beside them. */
+const PROJECTS = ['../tutorial/', '../app-framework-tutorial/'];
 
 const findSource = (file: string): [path: string, source: string] => {
   const entry = Object.entries(SOURCES).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));
@@ -32,20 +41,21 @@ const resolve = (from: string, specifier: string): string => {
 };
 
 /**
- * The local modules `path` imports, dependencies first, as paths under the tutorial directory. A snippet from the
- * tutorial app is compiled with these beside it, so its imports resolve the way they do in the app.
+ * The local modules `path` imports, statically or through a dynamic `import()`, dependencies first, as paths under
+ * the project directory `root`. A snippet from a project is compiled with these beside it, so its imports resolve the
+ * way they do in the project.
  */
-const localImports = (path: string, seen = new Set<string>()): string[] => {
-  const source = SOURCES[`../tutorial/${path}`];
-  if (!source) {
-    throw new Error(`Unknown tutorial module: ${path}`);
+const localImports = (root: string, path: string, seen = new Set<string>()): string[] => {
+  const source = SOURCES[`${root}${path}`];
+  if (typeof source !== 'string') {
+    throw new Error(`Unknown project module: ${root}${path}`);
   }
   const order: string[] = [];
-  for (const [, specifier] of source.matchAll(/from '(\.{1,2}\/[^']+)'/g)) {
+  for (const [, specifier] of source.matchAll(/(?:from |import\()'(\.{1,2}\/[^']+)'/g)) {
     const target = resolve(path, specifier);
-    if (!target.startsWith('..') && !seen.has(target) && SOURCES[`../tutorial/${target}`] !== undefined) {
+    if (!target.startsWith('..') && !seen.has(target) && SOURCES[`${root}${target}`] !== undefined) {
       seen.add(target);
-      order.push(...localImports(target, seen), target);
+      order.push(...localImports(root, target, seen), target);
     }
   }
   return order;
@@ -79,14 +89,16 @@ export const snippetWithContext = (file: string, region?: string): string => {
   const before = stripRegions(source.slice(0, start));
   const after = stripRegions(source.slice(source.indexOf('\n', end) + 1));
   const cut = `${before}// ---cut---\n${snippetSource(file, region)}\n// ---cut-after---\n${after}`;
-  if (!path.startsWith('../tutorial/')) {
+  const root = PROJECTS.find((project) => path.startsWith(project));
+  if (!root) {
     return cut;
   }
 
   // Each module the snippet imports goes in as a file of its own, ahead of the snippet's.
-  const self = path.slice('../tutorial/'.length);
-  const files = localImports(self).map(
-    (module) => `// @filename: ${module}\n${stripRegions(SOURCES[`../tutorial/${module}`])}`,
+  const self = path.slice(root.length);
+  const seen = new Set([self]);
+  const files = localImports(root, self, seen).map(
+    (module) => `// @filename: ${module}\n${stripRegions(SOURCES[`${root}${module}`])}`,
   );
   return ['// @allowImportingTsExtensions', '// @noEmit', ...files, `// @filename: ${self}`, cut].join('\n');
 };

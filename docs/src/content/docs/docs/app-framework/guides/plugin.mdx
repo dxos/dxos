@@ -1,0 +1,68 @@
+---
+title: Plugin
+description: Define a plugin and its modules.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Plugin from '@dxos/app-framework/Plugin';
+```
+
+`Plugin` defines a plugin: its metadata and the modules it is made of. A plugin does nothing by itself; its modules
+contribute everything it adds to the app.
+
+## Define a plugin with its metadata
+
+A plugin's metadata names it. The key is a reverse-domain DXN whose last segment is camelCase.
+
+<Snippet file="app-framework-guide-plugin" region="meta" />
+
+Plugins in a package with a `dx.config.ts` describe the same metadata there, and `Plugin.config` derives the `meta`.
+[Create a plugin](/docs/app-framework/learn/create-plugin/) shows that form.
+
+## Add modules and choose their activation events
+
+A module declares the capabilities it `provides` and `requires`, and optionally the event it `activatesOn`. The plugin
+manager activates a module when its event fires and every capability it requires has been contributed. A module with no
+`activatesOn` activates when the app is idle after startup.
+
+<Snippet file="app-framework-guide-plugin" region="module" />
+
+`Capability.inlineModule` keeps the body in the same file. `Capability.lazyModule` loads it from another chunk when the
+module activates, so a plugin with many modules costs little at startup.
+
+<Snippet file="app-framework-guide-plugin" region="lazy" />
+
+`Plugin.define` starts a plugin from its metadata, `Plugin.addModule` adds each module, and `Plugin.make` returns the
+factory the plugin manager calls.
+
+<Snippet file="app-framework-guide-plugin" region="define" />
+
+## Contribute capabilities from a module
+
+A module body returns the contributions it declared in `provides`. The compiler checks the match: a missing or
+undeclared contribution is a type error at `Plugin.addModule`. [Capability](/docs/app-framework/guides/capability/) covers
+declaring and requesting capabilities.
+
+## Test a plugin in isolation
+
+`Harness.createComposerTestApp` from `@dxos/plugin-testing` boots a headless Composer with the plugins you pass and the
+core plugins they need. Fire events, read capabilities and invoke operations on it.
+
+<Snippet file="app-framework-guide-plugin" region="test" />
+
+The tutorial plugin is tested the same way:
+
+<Snippet file="app-framework-tutorial/src/plugin-check" region="harness" />
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Anatomy of a plugin](/docs/app-framework/introduction/) | How plugins, modules, events and capabilities fit together. |
+| [ActivationEvent](/docs/app-framework/guides/activation-event/) | Declaring events and the built-in ones. |
+| [API reference](/docs/app-framework/resources/api-reference/) | Every export of `@dxos/app-framework`. |

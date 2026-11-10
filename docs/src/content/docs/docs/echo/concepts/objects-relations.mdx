@@ -3,7 +3,6 @@ title: Objects and relations
 description: Entities, the reserved fields, and parent and child ownership.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
 import SpecCite from '../../../../../components/SpecCite.astro';
 
 An object is the unit of data in ECHO, like a document or a row in other databases, and it always belongs to one space.
@@ -32,10 +31,3 @@ An object either has a type, declared as in [Defining types](/docs/echo/learn/de
 - Serializing an object and reading it back keeps its id, type, metadata and references. <SpecCite item="org.dxos.echo#F-3.4" />
 - A reference stores the DXN of its target and loads the target only when read. <SpecCite item="org.dxos.echo#F-4.1" />
 - Removing an object marks it as removed. It stays in the change history until the next [epoch](/docs/additional-resources/glossary#epoch), so a peer that wrote while offline can still reconcile its changes.
-
-## Limits
-
-<Aside type="caution">
-  This page is a first pass ported from the earlier ECHO guides. It does not yet describe relations or parent and
-  child ownership, and the removal behavior does not cite a spec item.
-</Aside>

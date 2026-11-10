@@ -17,6 +17,7 @@ tasks:
       - typedoc
     inputs:
       - astro.config.ts
+      - SPEC.mdl
       - '@group(sources)'
     outputs:
       - .astro
@@ -33,6 +34,7 @@ tasks:
       - vite-plugin-module-url:build
     inputs:
       - astro.config.ts
+      - SPEC.mdl
       - '@group(sources)'
     outputs:
       - .astro
@@ -51,6 +53,7 @@ tasks:
       - ^:typedoc
       - echo-solid:typedoc
       - halo:typedoc
+      - halo-react:typedoc
     inputs:
       - scripts/collect-typedoc.sh
     outputs:

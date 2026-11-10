@@ -1,0 +1,75 @@
+---
+title: Space
+description: Create spaces and manage their members.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Space } from '@dxos/halo';
+```
+
+`Space` manages spaces as units of membership: which spaces exist, who belongs to each and what they may do. It does not
+read or write the data inside a space; that is ECHO's [Database](/docs/echo/guides/database/), reached by the same space
+id. Every function needs `Space.Service`, which `layerClient` provides along with `Identity.Service`.
+
+## List spaces
+
+`Space.spaces` is a stream of every space the identity belongs to. It emits the current list straight away, so take one
+value to read it once. `Space.get` looks one up by id.
+
+<Snippet file="halo-guide-space" region="list" />
+
+## Create a space
+
+`create` returns the new space's id, name and state. Wait for `waitReady` before you open its database.
+`membershipPolicy: 'locked'` creates a space no one else can join.
+
+<Snippet file="halo-guide-space" region="create" />
+
+## Members
+
+`members` is a stream of the member list. `updateMemberRole` and `removeMember` take the member's DID.
+
+<Snippet file="halo-invite-member" region="members" />
+
+<Snippet file="halo-invite-member" region="remove" />
+
+## Share and join
+
+`share` starts a space invitation and `join` accepts one. Both return an [`Invitation.Flow`](/docs/halo/guides/invitation/).
+
+<Snippet file="halo-invite-member" region="share" />
+
+<Snippet file="halo-invite-member" region="join" />
+
+## Archives and EDGE replication
+
+`exportSpace` writes the space to an archive, and `importSpace` creates a new space from one. `setEdgeReplication` turns
+replication through EDGE on or off; with it off, the space syncs only between peers that are online together.
+
+<Snippet file="halo-guide-space" region="archive" />
+
+## Members at a glance
+
+| Member                                  | Summary                                         |
+| --------------------------------------- | ----------------------------------------------- |
+| `Service`                               | The Effect service                              |
+| `spaces` `get`                          | The identity's spaces                           |
+| `create` `waitReady`                    | Make a space and wait until it opens            |
+| `members`                               | The member list as a stream                     |
+| `updateMemberRole` `removeMember`       | Change a member's access                        |
+| `share` `join` `invitations`            | Space invitations                               |
+| `exportSpace` `importSpace`             | Archives                                        |
+| `setEdgeReplication`                    | Sync through EDGE, or only peer to peer         |
+
+The full list is in the [API reference](/docs/halo/resources/api-reference/).
+
+## Related
+
+- [Spaces and membership](/docs/halo/concepts/spaces-membership/)
+- [Spaces and databases](/docs/echo/concepts/spaces/) for the data in a space.
+- [Invite a member](/docs/halo/learn/invite-member/)

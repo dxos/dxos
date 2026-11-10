@@ -1,0 +1,54 @@
+---
+title: Invite a member
+description: Invite another person into the tutorial app's space and give them a role.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page two people edit the tutorial app's space, and one of them can change what the other may do.
+
+## Background
+
+[Add a device](/docs/halo/learn/add-device/) admitted a device to an identity. A space invitation admits a different
+identity to a space. The flow is the same: the host shares, the guest joins with the invitation code, and the guest proves
+itself with an authorization code the host shows.
+
+Every member has an access level: `pull`, `read`, `edit` or `admin`, each including the one before.
+[Spaces and membership](/docs/halo/concepts/spaces-membership/) explains what each allows.
+
+## Steps
+
+1. **Share the space.** `Space.share` takes the space id and options. `authMethod: 'shared-secret'` asks the guest for the
+   authorization code; `'none'` skips it, which suits a demo but lets anyone with the invitation code join.
+
+   <Snippet file="halo-invite-member" region="share" />
+
+   The console shows the invitation code to send, and later the authorization code to tell the guest.
+
+2. **Join from the other person's app.** `Space.join` takes the code. `Invitation.events` reports each step of the flow, and
+   the guest answers `readyForAuthentication` with the authorization code.
+
+   <Snippet file="halo-invite-member" region="join" />
+
+   The console shows each event in turn and ends with `success`. The guest's app now opens the space, and objects either
+   person adds appear for both.
+
+3. **List members and change a role.** `Space.members` is a stream of the member list. Take one value to read it once.
+
+   <Snippet file="halo-invite-member" region="members" />
+
+   The list shows both people. After the update, Grace can read the space but not change it.
+
+4. **Remove a member.** Removing a member stops them from receiving new changes to the space.
+
+   <Snippet file="halo-invite-member" region="remove" />
+
+## Recap
+
+You can now:
+
+- Share a space and choose how a guest proves itself.
+- Join a space and follow the invitation flow.
+- List members, change a member's role and remove a member.
+
+Next, [recover an identity](/docs/halo/learn/recover-identity/), so losing every device does not lose the user.

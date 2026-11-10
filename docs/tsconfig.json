@@ -37,6 +37,15 @@
       "path": "../packages/core/echo/echo-react"
     },
     {
+      "path": "../packages/core/halo/halo"
+    },
+    {
+      "path": "../packages/core/halo/halo-adapter-client"
+    },
+    {
+      "path": "../packages/core/halo/halo-react"
+    },
+    {
       "path": "../packages/core/protocols"
     },
     {
@@ -74,6 +83,9 @@
     },
     {
       "path": "../packages/sdk/app-framework"
+    },
+    {
+      "path": "../packages/sdk/app-graph"
     },
     {
       "path": "../packages/sdk/app-toolkit"

@@ -5,8 +5,10 @@
 import react from '@astrojs/react';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
+import fs from 'node:fs';
 import path from 'node:path';
 import starlightLinksValidator from 'starlight-links-validator';
+import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { type Plugin } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
@@ -30,8 +32,11 @@ if (themeLayers.join() !== LAYER_ORDER.join()) {
   throw new Error(`PAGE_LAYERS no longer contains the theme's LAYER_ORDER: ${LAYER_ORDER.join(', ')}`);
 }
 
-const echoPages = parsePages(readSpec());
-assertContentExists(echoPages);
+const specPages = parsePages(readSpec());
+assertContentExists(specPages);
+
+/** Routes of the stub pages `src/pages/docs/[...slug].astro` renders for planned spec pages. */
+const plannedRoutes = new Set(specPages.filter((page) => page.status === 'planned').map((page) => page.route));
 
 /** Node builtins the `@dxos/*` sources import, shimmed for the browser only: the server build needs the real ones. */
 const browserNodeStd = (): Plugin => ({
@@ -50,8 +55,24 @@ const dxosIcons = path.join(rootDir, 'packages/ui/brand/assets/icons');
 const extendedIcons = path.join(rootDir, 'packages/ui/ui-icons/assets');
 
 // https://astro.build/config
+// The App Framework section moved from `/docs/composer/`; each of its pages keeps its old URL as a redirect.
+const APP_FRAMEWORK_CONTENT = path.join(import.meta.dirname, 'src/content/docs/docs/app-framework');
+const appFrameworkRedirects = Object.fromEntries(
+  fs
+    .readdirSync(APP_FRAMEWORK_CONTENT, { recursive: true, encoding: 'utf8' })
+    .filter((file) => /\.mdx?$/.test(file))
+    .map((file) => file.replace(/\.mdx?$/, ''))
+    .map((slug) => [`/docs/composer/${slug}`, `/docs/app-framework/${slug}/`]),
+);
+
 export default defineConfig({
   site: 'https://dxos.org',
+  redirects: {
+    '/docs': '/docs/echo/welcome/',
+    '/docs/halo/introduction': '/docs/halo/welcome/',
+    '/docs/halo/typescript': '/docs/halo/guides/identity/',
+    ...appFrameworkRedirects,
+  },
   // The `/echo` demos are React islands built from the workspace's `@dxos/*` sources and the react-ui theme.
   vite: {
     plugins: [
@@ -120,40 +141,49 @@ export default defineConfig({
         { icon: 'x.com', label: 'X', href: 'https://x.com/dxos_org' },
       ],
       // TODO(wittjosiah): Nested docs subdir is needed because link validation doesn't work with generateId config.
-      sidebar: [
-        {
-          label: 'Introduction',
-          slug: 'docs',
-        },
-        {
-          label: 'ECHO',
-          items: sidebarFromSpec(echoPages),
-          collapsed: false,
-        },
-        {
-          label: 'HALO Identity',
-          items: [{ autogenerate: { directory: 'docs/halo' } }],
-          collapsed: false,
-        },
-        {
-          label: 'Composer',
-          items: [{ autogenerate: { directory: 'docs/composer' } }],
-          collapsed: false,
-        },
-        {
-          label: 'Additional Resources',
-          items: [{ autogenerate: { directory: 'docs/additional-resources' } }],
-          collapsed: false,
-        },
-      ],
-      // The validator cannot resolve custom pages under `src/pages` (`/blog`, `/privacy`, `/terms`),
-      // so it sees neither links to them nor the headings that same-page links in blog posts target.
+      // Each topic has its own sidebar; Starlight's own `sidebar` option must stay unset.
       plugins: [
+        starlightSidebarTopics(
+          [
+            {
+              id: 'echo',
+              label: 'ECHO',
+              link: '/docs/echo/welcome/',
+              icon: 'seti:db',
+              items: sidebarFromSpec(specPages, 'ECHO'),
+            },
+            {
+              id: 'halo',
+              label: 'HALO',
+              link: '/docs/halo/welcome/',
+              icon: 'seti:lock',
+              items: sidebarFromSpec(specPages, 'HALO'),
+            },
+            {
+              id: 'app-framework',
+              label: 'App Framework',
+              link: '/docs/app-framework/welcome/',
+              icon: 'puzzle',
+              items: sidebarFromSpec(specPages, 'App Framework'),
+            },
+          ],
+          // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.
+          {
+            topics: {
+              'echo': ['/docs/echo/**'],
+              'app-framework': ['/docs/app-framework/**'],
+              'halo': ['/docs/halo/**'],
+            },
+          },
+        ),
+        // The validator cannot resolve custom pages under `src/pages` (`/blog`, the product pages, `/privacy`, `/terms`,
+        // planned stubs), so it sees neither links to them nor the headings that same-page links in blog posts target.
         starlightLinksValidator({
           exclude: ({ file, link }) =>
             file.includes('/src/content/blog/') ||
             ['/typedoc/', '/blog/'].some((prefix) => link.startsWith(prefix)) ||
-            ['/privacy', '/terms'].includes(link.split(/[?#]/)[0]),
+            ['/composer', '/echo', '/plugins', '/privacy', '/terms'].includes(link.split(/[?#]/)[0]) ||
+            plannedRoutes.has(link.split(/[?#]/)[0].replace(/\/?$/, '/')),
         }),
       ],
     }),

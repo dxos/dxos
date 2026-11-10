@@ -1,0 +1,68 @@
+---
+title: Invitation
+description: Drive an invitation flow from either side.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Invitation } from '@dxos/halo';
+```
+
+An invitation lets a device into an identity, or a person into a space. You never make one with this namespace directly:
+`Identity.share`, `Identity.join`, `Space.share` and `Space.join` each return an `Invitation.Flow`, and `Invitation` drives
+that flow from either side. Its functions need no service, because they act on the flow handle itself.
+
+## Choose how the invitation works
+
+`share` takes options that decide who can redeem the invitation and how:
+
+- `authMethod`: `'shared-secret'` makes the guest enter the authorization code the host shows; `'none'` admits anyone with
+  the invitation code; `'known-public-key'` admits only a guest whose key the host names.
+- `type`: `'interactive'` needs host and guest online together; `'delegated'` can be redeemed while the host is offline;
+  `'multiuse'` admits more than one guest.
+
+<Snippet file="halo-guide-invitation" region="options" />
+
+## Read the code
+
+`Invitation.code` is the string to send to the guest, usually inside a link or a QR code.
+
+<Snippet file="halo-guide-invitation" region="code" />
+
+## Follow a flow
+
+`Invitation.events` streams the flow's progress: `connecting`, `connected`, `readyForAuthentication`, `authenticating`,
+then one of `success`, `cancelled` or `error`. On the host, `readyForAuthentication` carries the authorization code to
+show. On the guest, it is the moment to call `Invitation.authenticate`.
+
+<Snippet file="halo-guide-invitation" region="events" />
+
+<Snippet file="halo-add-device" region="join" />
+
+## Cancel a flow
+
+Either side can cancel. The host can list its open flows with `Space.invitations` or `Identity.invitations`.
+
+<Snippet file="halo-guide-invitation" region="cancel" />
+
+## Members at a glance
+
+| Member            | Summary                                             |
+| ----------------- | --------------------------------------------------- |
+| `Flow`            | An invitation in progress, host or guest side       |
+| `code`            | The invitation code to send                         |
+| `events`          | The flow's progress as a stream                     |
+| `authenticate`    | Send the authorization code                         |
+| `cancel`          | End the flow                                        |
+| `ShareOptions`    | `authMethod`, `type`, `multiUse` and `target`       |
+
+The full list is in the [API reference](/docs/halo/resources/api-reference/).
+
+## Related
+
+- [Invitations](/docs/halo/concepts/invitations/)
+- [Add a device](/docs/halo/learn/add-device/) and [Invite a member](/docs/halo/learn/invite-member/)

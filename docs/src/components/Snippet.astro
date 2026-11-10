@@ -1,6 +1,7 @@
 ---
 import { Code } from '@astrojs/starlight/components';
 
+import { twoslash } from '../../twoslash.mjs';
 import { snippetSource, snippetWithContext } from '../echo/snippets.ts';
 
 interface Props {
@@ -14,4 +15,8 @@ interface Props {
 
 const { file, region, title, lang = 'ts', numbered = true } = Astro.props;
 ---
-<Code code={snippetWithContext(file, region)} lang={lang} title={title} meta={`twoslash showLineNumbers=${numbered}`} />
+{twoslash ? (
+  <Code code={snippetWithContext(file, region)} lang={lang} title={title} meta={`twoslash showLineNumbers=${numbered}`} />
+) : (
+  <Code code={snippetSource(file, region)} lang={lang} title={title} meta={`showLineNumbers=${numbered}`} />
+)}

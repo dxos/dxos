@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ECHO_DOCS, parsePages, readSpec } from '../../echo/spec.ts';
+import { isEchoPage, parsePages, readSpec } from '../../echo/spec.ts';
 
 export const GET = ({ site }: { site?: URL }) => {
-  const pages = parsePages(readSpec()).filter((page) => page.status !== 'planned');
+  const pages = parsePages(readSpec()).filter(isEchoPage);
   const groups = [...new Set(pages.map((page) => page.group))];
   const body = [
     '# ECHO',
@@ -17,10 +17,7 @@ export const GET = ({ site }: { site?: URL }) => {
       '',
       ...pages
         .filter((page) => page.group === group)
-        .map(
-          (page) =>
-            `- [${page.label}](${new URL(`${ECHO_DOCS}${page.route.replace(/\/$/, '')}.md`, site)}): ${page.summary}`,
-        ),
+        .map((page) => `- [${page.label}](${new URL(`${page.route.replace(/\/$/, '')}.md`, site)}): ${page.summary}`),
       '',
     ]),
   ].join('\n');

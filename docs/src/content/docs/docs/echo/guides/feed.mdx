@@ -1,0 +1,77 @@
+---
+title: Feed
+description: The append-only feed object.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import SpecCite from '../../../../../components/SpecCite.astro';
+
+```ts
+import { Feed } from '@dxos/echo';
+```
+
+A feed is an append-only log of objects, such as the messages of a chat or the events of a sync. The feed itself is an
+ECHO object of type `org.dxos.type.feed`, stored in the space like any other. Its items are stored in blocks, apart from the
+space's documents. The functions in this module are Effects that need
+`Database.Service`; [Database](/docs/echo/guides/database/) shows how to provide it.
+
+## Make a feed and append to it
+
+Add the feed object to the database first. `Feed.append` then writes items in one batch.
+
+<Snippet file="guide-feed" region="make" />
+
+## Read a feed
+
+`Feed.walk` reads items in the order they were appended. To read a page at a time, pass `limit`, then pass the cursor of the
+last item as `begin` to get the page after it. `Feed.query` runs any filter over the feed's items, as `db.query` does over a
+space.
+
+<Snippet file="guide-feed" region="read" />
+
+## Indexing and retention
+
+Both options are fields of the feed object, so they replicate and merge like any other field.
+<SpecCite item="org.dxos.echo#F-7.1" />
+
+- `indexing: { enabled: false }` turns indexing of the feed's items off completely. There is no partial mode.
+  <SpecCite item="org.dxos.echo#F-7.2" />
+- `retention` drops items past `maxLength` items or older than `maxAge`. With both set, an item goes when it breaks either
+  limit. <SpecCite item="org.dxos.echo#F-7.3" />
+
+`setIndexing` and `setRetention` return once the change is applied locally. They do not wait for the feed store to trim
+anything. An invalid value, such as a `maxLength` below 1, fails with a schema error and leaves the feed unchanged.
+<SpecCite item="org.dxos.echo#F-7.4" /> <SpecCite item="org.dxos.echo#F-7.5" />
+
+<Snippet file="guide-feed" region="options" />
+
+## Fork a feed
+
+A fork starts a branch at an existing item, for example an alternate reply in a conversation. `Feed.fork` returns the
+branch id. Pass it to `walk` to read the path from the start of the feed to the end of that branch.
+
+<Snippet file="guide-feed" region="fork" />
+
+## Members at a glance
+
+| Member                         | Summary                                              |
+| ------------------------------ | ---------------------------------------------------- |
+| `Feed`                         | The feed object type                                 |
+| `make`                         | Create a feed object                                 |
+| `append` `remove`              | Write and delete items                               |
+| `walk`                         | Read items in order, a page at a time                |
+| `getLocalCursor`               | The cursor to resume a walk after an item            |
+| `query`                        | Filter a feed's items                                |
+| `setIndexing` `setRetention`   | Change the feed's options                            |
+| `fork` `readBranch`            | Branch a feed and read a branch                      |
+| `sync` `getSyncState`          | Replicate a feed and read its progress               |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [Database](/docs/echo/guides/database/) for providing `Database.Service`.
+- [Filter](/docs/echo/guides/filter/) for the filters `walk` and `query` take.

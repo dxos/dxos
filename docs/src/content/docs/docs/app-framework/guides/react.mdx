@@ -1,0 +1,57 @@
+---
+title: React
+description: The React hooks for plugins.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Hooks from '@dxos/app-framework/Hooks';
+```
+
+A plugin's components read capabilities, invoke operations and read settings through hooks. They work in any component
+under the app's plugin manager, which every surface is.
+
+## Read capabilities from a component
+
+`useCapability` returns a singleton capability, and `useCapabilities` every contribution to a multi capability. Both
+re-render when contributions change. `useOptionalCapability` returns `undefined` when no plugin provides it.
+
+<Snippet file="app-framework-guide-react" region="capabilities" lang="tsx" />
+
+## Invoke operations from a component
+
+`useOperation` binds an operation to a callback; its argument maps the callback's arguments to the operation's input.
+`useOperationInvoker` returns the invoker, whose `invokePromise` returns the operation's output.
+
+<Snippet file="app-framework-guide-react" region="invoke" lang="tsx" />
+
+## Read plugin settings and translations
+
+`useAtomCapability` reads an atom capability, such as a plugin's settings, and re-renders when it changes.
+`useAtomCapabilityState` also returns a setter. `useTranslation` from `@dxos/react-ui/Hooks` takes the plugin's
+namespace.
+
+<Snippet file="app-framework-guide-react" region="settings" lang="tsx" />
+
+`@dxos/app-toolkit/Hooks` adds hooks for app state, such as `useActiveSpace`, `useAppGraph` and `useLayout`.
+
+## The reactivity rules
+
+- Reading an ECHO object's field in render does not subscribe the component. Use `useObject` for a snapshot that does,
+  and `useQuery` for a list. See the ECHO [React guide](/docs/echo/guides/react/).
+- Write objects inside `Obj.update`, from an event handler or an operation, never during render.
+- A component never assumes it is the only view of an object. The same object can be open in another plank, on another
+  device, or in the assistant's hands.
+
+<Snippet file="app-framework-guide-react" region="reactivity" lang="tsx" />
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Surface](/docs/app-framework/guides/surface/) | Where these components render. |
+| [Operation](/docs/app-framework/guides/operation/) | Defining the operations a component invokes. |

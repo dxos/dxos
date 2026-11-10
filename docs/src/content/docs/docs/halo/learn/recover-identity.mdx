@@ -1,0 +1,60 @@
+---
+title: Recover an identity
+description: Set up a recovery credential and get the identity back on a new device.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the tutorial app's user can lose every device and still get their identity, and their spaces,
+back on a new one.
+
+## Background
+
+The identity's keys live only on its devices. [Add a device](/docs/halo/learn/add-device/) protects against losing one of
+them, but not all. A recovery credential is a second key, kept outside any device, that the identity has authorized to
+admit a new device.
+
+There are three kinds:
+
+- **Recovery code**: a phrase of words HALO generates. Whoever holds the phrase can recover the identity.
+- **Passkey**: a key in the platform's passkey store. The browser runs the WebAuthn ceremony, and HALO stores the public
+  half.
+- **OAuth**: recovery through an account with an OAuth provider.
+
+Recovery goes through EDGE, which checks the credential and admits the new device, so the new device must be online.
+[Recovery and credentials](/docs/halo/concepts/recovery-credentials/) has the details. This page uses a recovery code.
+
+## Steps
+
+1. **Create a recovery credential.** With no options, `Identity.createRecoveryCredential` generates a key and returns its
+   recovery code.
+
+   <Snippet file="halo-recover" region="create" />
+
+   The console shows the phrase. HALO does not keep a copy you can read back, so this is the only time it appears.
+
+2. **Recover on a fresh device.** On a device with no identity, `Identity.recover` takes the phrase and returns the
+   identity.
+
+   <Snippet file="halo-recover" region="recover" />
+
+   The console greets the user by name. The device now has the same DID, and the spaces sync to it like they would to any
+   added device.
+
+3. **Revoke a credential.** Each recovery credential appears in `Identity.credentials` with a lookup key. Revoke one that
+   may have leaked, then create a new one.
+
+   <Snippet file="halo-recover" region="revoke" />
+
+   A revoked phrase no longer recovers the identity.
+
+## Recap
+
+You can now:
+
+- Create a recovery code for an identity.
+- Recover the identity on a new device with the code.
+- Find and revoke recovery credentials.
+
+This is the end of the HALO learning path. [Identity](/docs/halo/guides/identity/) lists everything else the namespace
+does.

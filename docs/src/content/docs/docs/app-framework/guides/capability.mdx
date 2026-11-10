@@ -1,0 +1,71 @@
+---
+title: Capability
+description: Declare, contribute and request capabilities, including the built-in ones.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+```
+
+A capability is a typed slot that modules contribute values to and other modules read. Capabilities are how plugins
+extend each other without importing each other.
+
+## Declare a new capability type
+
+`Capability.make` declares a multi capability, which any number of modules contribute to. `Capability.makeSingleton`
+declares one with exactly one provider. Both take the value's type and an NSID.
+
+<Snippet file="app-framework-guide-capability" region="declare" />
+
+`Plugin.namespace` derives the NSID from the plugin's key, so a plugin's capabilities share its prefix.
+
+<Snippet file="app-framework-guide-capability" region="namespace" />
+
+## Contribute an implementation and request all implementations
+
+A module lists the capability in `provides` and returns `Capability.contribute(tag, value)`.
+
+<Snippet file="app-framework-guide-capability" region="contribute" />
+
+A module that lists a capability in `requires` activates only after it is contributed, and reads it with `yield*`.
+`Capability.getAll` reads every contribution to a multi capability.
+
+<Snippet file="app-framework-guide-capability" region="request" />
+
+## The built-in capabilities
+
+`Capabilities` holds the capabilities the framework itself defines. The ones most plugins touch:
+
+| Capability | What a plugin does with it |
+| --- | --- |
+| `ReactSurface` | Contributes surface components. See [Surface](/docs/app-framework/guides/surface/). |
+| `OperationHandler` | Contributes operation handlers. See [Operation](/docs/app-framework/guides/operation/). |
+| `OperationInvoker` | Reads it to invoke operations outside a handler. |
+| `ReactContext`, `ReactRoot` | Wraps the app in a provider, or adds a root-level component. |
+| `AtomRegistry` | Reads and writes atoms outside React. |
+
+The App Toolkit's capabilities, such as settings and the app graph, are in [AppCapabilities](/docs/app-framework/guides/app-capabilities/).
+
+<Snippet file="app-framework-guide-capability" region="builtin" />
+
+## React to capabilities that arrive after startup
+
+Contributions change as people turn plugins on and off. `Capability.contributions` returns a live view with `get` and
+`subscribe`; `Capability.atom` returns the same as an atom for reactive code.
+
+<Snippet file="app-framework-guide-capability" region="later" />
+
+In React, `useCapabilities` re-renders on each change. See [React](/docs/app-framework/guides/react/).
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Plugin](/docs/app-framework/guides/plugin/) | Modules and how they declare `provides` and `requires`. |
+| [AppCapabilities](/docs/app-framework/guides/app-capabilities/) | The app-level capabilities the App Toolkit defines. |

@@ -1,0 +1,41 @@
+---
+title: Operations
+description: Named, typed actions that the UI, the command palette and agents all run the same way.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+An operation is an action with a name, a typed input and a typed output, defined once and run from anywhere in
+an app, by people and by agents.
+
+## Model
+
+An operation **definition** has a key (a DXN), metadata for people and agents, and schemas for its input and output. A
+**handler** is an Effect that takes the input and returns the output. Definitions and handlers are separate values, so a
+plugin can export a definition for other plugins to call without exposing how it runs.
+
+<Snippet file="app-framework-guide-operation" region="define" />
+
+Plugins contribute handlers in an **operation handler set** through the `OperationHandler` capability. The framework's
+**operation invoker** looks up the handler by the definition's key and runs it.
+
+## Behavior
+
+- One definition serves three callers. A button invokes it through a hook. The command palette lists it. A skill hands
+  it to the assistant as a tool, and the assistant reads the schema descriptions to fill in the input. None of the three
+  needs code of its own.
+- The invoker validates the input against the schema before the handler runs, and the output after.
+- Handlers load lazily. A lazy handler set names each handler's module, and the framework imports it the first time the
+  operation is invoked.
+- Invoking an operation that has no handler fails with `NoHandlerError`, which a caller can catch.
+- The App Toolkit defines operations every plugin can call. `LayoutOperation.Open` opens items by path, `LayoutOperation.Close`
+  closes them, and `SpaceOperation.AddObject` adds an object to a space.
+
+<Snippet file="app-framework-guide-operation" region="layout" />
+
+## Limits
+
+- A handler runs with the services its definition declares, plus the operation service for invoking other operations.
+  It does not get the React tree.
+- An operation's input must be serializable for the assistant to call it. Pass objects by reference where the caller is
+  an agent.
