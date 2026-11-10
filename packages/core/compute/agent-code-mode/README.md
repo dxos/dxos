@@ -24,11 +24,11 @@ process; the process's queue, alarms and hydration are unchanged. Before every m
    conversation's MCP servers.
 2. Turns their tools into the operation list (`projectOperations`): each operation's name,
    description and input schema, the `Operation` definition behind it (none for an MCP tool), and a
-   function that runs it through the same handlers as a tool call. The Skill Manager's operations
+   function that runs it through the same handlers as a tool call. The Skill Manager's lookups
    join them.
-3. Builds the system prompt: the dialect's API, the Skill Manager with its operations, the
-   conversation's MCP tools, and its objects and instructions. No other skill, operation or type is
-   listed.
+3. Builds the system prompt: the dialect's API, the Skill Manager's lookups and the enabled skills
+   with their operations, the conversation's MCP tools, and its objects and instructions. No other
+   skill, operation or type is listed.
 4. Calls the model. A text answer ends the request; an `eval` call runs in the sandbox and the loop
    repeats, up to `maxTurns`.
 
@@ -79,13 +79,22 @@ demand ([`src/docs`](./src/docs)), including the generated `catalog/types.md` an
 | `WorkerSandbox`, `WorkerSandboxBrowser` | A Node worker thread or a Web Worker, on its own ECHO client; operations run back on the host.                                                                                                                                                                             | Bounded, not contained: a timeout kills the worker, which has the host's rights.                                        |
 | `WorkerdSandbox` | A Cloudflare Worker Loader isolate with no network, calling back over Workers RPC into the invocation that started it, so it also runs inside a Durable Object. It runs the plain dialect: each call is made on the host, objects cross as snapshots, and `ref(obj)` crosses as a marker the host turns into a reference. | Yes: the only security boundary here. |
 
-## What the model is told: the Skill Manager
+## What the model is told: the enabled skills and the Skill Manager
 
-Code mode always states one skill, the Skill Manager (`@dxos/assistant-toolkit`'s
-`SkillManagerSkill.makeForCodeMode()`), and its operations, and nothing else that is available: no
-other skill's instructions, no other operation, no types. Listing every skill, operation and type,
-each operation as a tool, is what tool calling does, which runs when code mode is off
-(`Settings.disableCodeMode`); there the same skill lists every skill in its instructions.
+Code mode states the skills enabled in the conversation, each with its instructions and its
+operations' inputs, and the Skill Manager's lookups (`@dxos/assistant-toolkit`'s
+`SkillManagerSkill.makeForCodeMode()`). Nothing else that is available is stated: no other skill,
+no other operation, no types. An enabled skill's rules apply to every request it touches, so they
+are in the prompt rather than looked up; a channel agent that had to look up how to reply did not.
+Listing every skill, operation and type, each operation as a tool, is what tool calling does, which
+runs when code mode is off (`Settings.disableCodeMode`); there the Skill Manager lists every skill in
+its instructions.
+
+The lookups are `querySkills`, `queryOperations`, `queryTypes` and `enableSkills`. The Skill
+Manager's MCP connection operations are not among them: a conversation gets those only by binding
+the Skill Manager, as under tool calling, so an agent cannot add or turn on an MCP server it was not
+given. A bound Skill Manager is stated in its code-mode form, since its own instructions list every
+skill, and its operations stay callable.
 
 The model looks the rest up from code, a level of detail at a time:
 
@@ -96,18 +105,19 @@ The model looks the rest up from code, a level of detail at a time:
 | `queryTypes`      | Every type's typename, DXN and kind; `query` searches type and field names.                          | `typenames`: their fields, every variant of a union spelled out.               |
 | `enableSkills`    |                                                                                                      | Enables skills an agent may enable; their operations from the next model call. |
 
-A typical request: `querySkills()` to see what is enabled, `querySkills({ keys })` for the rules of
-the skills it touches, `queryOperations({ keys })` for an operation's input, then the call.
+A typical request uses the enabled skills directly. One that needs more: `queryOperations({ query })`
+to find an operation, `queryOperations({ keys })` for its input, `enableSkills` if its skill is not
+enabled, then the call.
 
-- The model can call the Skill Manager's operations, the enabled skills' operations and the
+- The model can call the Skill Manager's lookups, the enabled skills' operations and the
   conversation's MCP tools, and no other operation: `ops` and `Database.resolve` resolve no other.
   That limits which operations code can run, not what it can reach: it reads and writes the
   workspace's database directly.
 - The conversation's MCP tools are stated in the prompt, since no skill names them.
 - These are ordinary operations answered by the host's handlers, the same ones tool calling uses,
   so every host that runs code mode must register the Skill Manager's handlers.
-- The prompt does not grow with skills or types: in this package's recorded scenarios it is about
-  8k characters, against about 134k when everything was listed, at one or two more model calls.
+- The prompt grows with the enabled skills only, not with every skill or type: when everything was
+  listed it was about 134k characters in this package's recorded scenarios.
 - A result stays inside the program until the code prints it, so the code picks the part it needs.
   `print` shows at most 10 items of an array and 200 characters of a string inside an object, and
   the call's output stops at `maxOutput`.
