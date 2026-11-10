@@ -980,60 +980,20 @@ decision D-10: react-ui-experimental exports the agent visualizations as its `Av
 ```
 
 ```mdl
-decision D-11: Calls move to Cloudflare RealtimeKit for their media and for native meeting transcription.
-  date: 2026-10-23
-  by: user:mykola-vrmchk
-  affects: [service:MediaTransport]
-  source: https://github.com/dxos/dxos/pull/12046
-```
-
-```mdl
-decision D-12: RealtimeKit sits behind a `MediaTransport`, and a room maps to one RealtimeKit meeting, whose id the first joiner mints through EDGE and advertises on the swarm for the others; the swarm stays the source of presence. Fills in [D-11].
-  date: 2026-10-23
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [service:RoomJoiner, service:MediaTransport, service:CallSwarmSynchronizer, type:SessionId]
-  why: EDGE minting the participant token keeps the RealtimeKit API token off clients, and the swarm already carries per-room state.
-  rejected:
-    - Keeping the Cloudflare Calls SFU client as a second transport: RealtimeKit has no pull-by-track-name model, so `MediaManager` would need two reconciliation paths.
-  source: https://github.com/dxos/dxos/pull/12046
-```
-
-```mdl
-decision D-13: Native transcription reaches every participant, and each one appends only its own segments to the meeting's transcript feed. Fills in [D-11].
-  date: 2026-10-23
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [service:MediaTransport]
-  why: Writing by speaker stores each segment once with no writer to elect, so a participant leaving opens no gap.
-  source: https://github.com/dxos/dxos/pull/12046
-```
-
-```mdl
-decision D-14: The devtools surface shows the media transport's own send-side WebRTC stats, and a live call's QA needs EDGE's room-join route and RealtimeKit rather than the Calls SFU. Fills in [D-12].
-  date: 2026-10-23
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [F-7.2, QA-1]
-  why: RealtimeKit exposes no peer connection to attach an external stats collector to, only the stats of the tracks it publishes.
-  source: https://github.com/dxos/dxos/pull/14179
-```
-
-```mdl
-decision D-15: `MediaTransport` takes RealtimeKit's shape (`setAudio`, `setVideo`, `setScreenShare`, remote tracks by device and kind, and `mediaChanged`, `transcript` and `closed` events); the swarm's `Tracks` carries only enabled flags. CallManager is built from one `CreateTransport`, emits only the local speaker's final segments, and keeps no transcript feed; the `EventHandler` capability is gone. Supersedes [D-13].
+decision D-11: Calls move to Cloudflare RealtimeKit for their media and native transcription, behind a `MediaTransport` of RealtimeKit's shape (`setAudio`, `setVideo`, `setScreenShare`, remote tracks by device and kind, and `mediaChanged`, `transcript` and `closed` events). The swarm's `Tracks` carries only enabled flags; CallManager is built from one `CreateTransport`, emits only the local speaker's final segments and keeps no transcript feed; the `EventHandler` capability is gone. The SDK seam (`connectRealtimeKit`) lives in `@dxos/av`, shared with standalone transcription.
   date: 2026-11-10
   by: user:mykola-vrmchk
-  affects: [service:MediaTransport, service:CallSwarmSynchronizer, capability:CallsCapabilities.Manager, F-5, T-5]
-  why: The transport still had the Calls SFU's signature with made-up descriptors, two test seams duplicated one, and transcript persistence belongs to the meeting.
+  affects: [service:MediaTransport, service:CallSwarmSynchronizer, capability:CallsCapabilities.Manager, F-5, F-7.2, T-5, QA-1]
+  why: EDGE minting the participant token keeps the RealtimeKit API token off clients, RealtimeKit has no pull-by-track-name model for the SFU client's reconciliation, and transcript persistence belongs to the meeting.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 
 ```mdl
-decision D-16: The room's meeting id stays agreed over the swarm, not owned by a server object: a joiner reuses an advertised id, EDGE reuses the oldest meeting titled after the room when none is, and a peer in a different meeting than the one the swarm settles on moves to it. Fills in [D-12].
+decision D-12: The room's meeting id stays agreed over the swarm, not owned by a server object: a joiner reuses an advertised id, EDGE reuses the oldest meeting titled after the room when none is, and a peer in a different meeting than the one the swarm settles on moves to it. Fills in [D-11].
   date: 2026-11-10
   by: user:mykola-vrmchk
-  affects: [service:CallSwarmSynchronizer, F-5.6]
-  why: Everything about a room already happens through the router; the first-joiner poll did not converge when two peers joined an empty room together.
+  affects: [service:CallSwarmSynchronizer, type:SessionId, F-5.6]
+  why: Everything about a room already happens through the router; a first-joiner poll did not converge when two peers joined an empty room together.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

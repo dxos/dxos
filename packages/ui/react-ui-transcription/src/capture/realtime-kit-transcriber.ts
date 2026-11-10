@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type RealtimeKitClient from '@cloudflare/realtimekit';
-
 import { Trigger } from '@dxos/async';
+import { type RealtimeKitMeeting, type RealtimeKitTranscript, connectRealtimeKit, transcriptStarted } from '@dxos/av';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type CreateTranscriber, type Transcriber, type TranscriberCallbacks } from '@dxos/pipeline-transcription';
@@ -31,9 +30,6 @@ export const createRealtimeKitTranscriber =
   (callbacks) =>
     new RealtimeKitTranscriber(options, callbacks);
 
-/** The fields of the SDK's (unexported) `TranscriptionData` this transcriber reads. */
-type TranscriptionData = { peerId: string; transcript: string; isPartialTranscript: boolean; date: Date };
-
 /**
  * Live transcription through Cloudflare RealtimeKit: the track is published to a meeting where this device is the
  * only participant, and the meeting's own transcription (the same one calls use) streams back the device's words.
@@ -41,7 +37,8 @@ type TranscriptionData = { peerId: string; transcript: string; isPartialTranscri
  * Audio is heard only between {@link start} and {@link stop}, which is what a speaking gate or push-to-talk toggles.
  */
 export class RealtimeKitTranscriber extends Resource implements Transcriber {
-  #meeting?: RealtimeKitClient;
+  #meeting?: RealtimeKitMeeting;
+  #unsubscribe: (() => void)[] = [];
   /**
    * Our own clone of the caller's track, published once: `stop` mutes it rather than unpublishing, since a speaking
    * gate toggles at every pause and a republish each time would clip the start of the next utterance.
@@ -65,22 +62,18 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
 
   protected override async _open(): Promise<void> {
     const { authToken } = await this._options.join();
-    const { default: RealtimeKit } = await import('@cloudflare/realtimekit');
-    // No auto-capture: the caller owns the track.
-    const meeting = await RealtimeKit.init({ authToken, defaults: { audio: false, video: false } });
-    meeting.ai.on('transcript', this.#onTranscript);
-    meeting.self.on('roomLeft', this.#onRoomLeft);
-    await meeting.join();
+    const meeting = await connectRealtimeKit(authToken);
     this.#meeting = meeting;
+    this.#unsubscribe = [meeting.onTranscript(this.#onTranscript), meeting.onRoomLeft(this.#onRoomLeft)];
   }
 
   protected override async _close(): Promise<void> {
     const meeting = this.#meeting;
     this.#meeting = undefined;
     this.#release();
+    this.#unsubscribe.forEach((unsubscribe) => unsubscribe());
+    this.#unsubscribe = [];
     if (meeting) {
-      meeting.ai.off('transcript', this.#onTranscript);
-      meeting.self.off('roomLeft', this.#onRoomLeft);
       await this.#media;
       await meeting.leave();
     }
@@ -130,7 +123,7 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
     this.#settled.wake();
   }
 
-  readonly #onTranscript = (data: TranscriptionData): void => {
+  readonly #onTranscript = (data: RealtimeKitTranscript): void => {
     // A device can run two transcriptions at once (microphone and system audio), joined to its one meeting as two
     // peers of the same participant, so a peer keeps only its own words.
     if (!this.#meeting || data.peerId !== this.#meeting.self.id) {
@@ -151,20 +144,14 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
     }
     const segment: ContentBlock.Transcript = {
       _tag: 'transcript',
-      started: toIsoString(data.date),
+      started: transcriptStarted(data),
       text,
     };
     this.#delivery = this.#delivery.then(() => this._callbacks.onSegments([segment])).catch((err) => log.catch(err));
   };
 
-  readonly #onRoomLeft = ({ state }: { state: string }): void => {
+  readonly #onRoomLeft = (state: string): void => {
     log.info('transcription meeting left', { state });
     this.#release();
   };
 }
-
-/** RealtimeKit's SDK types the time as `date: Date`; its REST docs call it `timestamp` (epoch ms). Accept either. */
-const toIsoString = (date: unknown): string => {
-  const time = date instanceof Date ? date.getTime() : typeof date === 'number' ? date : Number.NaN;
-  return new Date(Number.isFinite(time) ? time : Date.now()).toISOString();
-};

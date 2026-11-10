@@ -3603,6 +3603,9 @@ importers:
 
   packages/common/av:
     dependencies:
+      '@cloudflare/realtimekit':
+        specifier: 'catalog:'
+        version: 2.0.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../async
@@ -9777,9 +9780,6 @@ importers:
 
   packages/plugins/plugin-calls:
     dependencies:
-      '@cloudflare/realtimekit':
-        specifier: 'catalog:'
-        version: 2.0.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -26723,9 +26723,6 @@ importers:
 
   packages/ui/react-ui-transcription:
     dependencies:
-      '@cloudflare/realtimekit':
-        specifier: 'catalog:'
-        version: 2.0.4
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6

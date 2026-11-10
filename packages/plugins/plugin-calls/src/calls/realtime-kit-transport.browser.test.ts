@@ -4,13 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { type RealtimeKitMeeting, type RealtimeKitRemoteParticipant, type RealtimeKitTranscript } from '@dxos/av';
+
 import { type CloseReason, type MediaStats, type TranscriptEvent } from './media-transport.ts';
-import {
-  type RealtimeKitMeeting,
-  type RealtimeKitRemoteParticipant,
-  type RealtimeKitTranscript,
-  RealtimeKitTransport,
-} from './realtime-kit-transport.ts';
+import { RealtimeKitTransport } from './realtime-kit-transport.ts';
 
 const makeAudioTrack = (): MediaStreamTrack => {
   const audioContext = new AudioContext();
