@@ -187,7 +187,7 @@ export class SchemaValidator {
     return property != null && SchemaAST.isOptional(property.type);
   }
 
-  /** What writing `undefined` at `propertyPath` deletes: an optional key, the tag selecting a union member, or other. */
+  /** What writing `undefined` at `propertyPath` deletes: an optional key, a union member's tag, or a key validated as a value. */
   public static getClearedKey(
     rootObjectSchema: Schema.Top,
     propertyPath: KeyPath,
