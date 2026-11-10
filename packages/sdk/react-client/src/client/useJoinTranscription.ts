@@ -13,7 +13,7 @@ import { ClientContext } from './context.ts';
 export type JoinTranscription = () => Promise<{ authToken: string }>;
 
 /**
- * Hook returning the authenticated join for live transcription (`<edge>/calls/transcription/join`), or `undefined` when
+ * Hook returning the authenticated join for live transcription (`EdgeHttpClient.joinTranscription`), or `undefined` when
  * EDGE is not configured — so a transcription control can stay disabled instead of failing once pressed.
  *
  * Returns `undefined` outside a `ClientProvider` rather than throwing, for the same reason as

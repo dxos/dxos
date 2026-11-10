@@ -38,9 +38,6 @@ import {
   type IndexerHeadsResponse,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
-  type JoinCallResponse,
-  JoinCallResponseSchema,
-  type JoinCallRoomRequest,
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
   type ObjectId,
@@ -60,6 +57,13 @@ import { createUrl } from '@dxos/util';
 import { BaseHttpClient, type BaseHttpClientOptions, type EdgeHttpCallArgs } from './base-http-client.ts';
 import { proxyFetchLegacy } from './cors-proxy.ts';
 import { HttpConfig, withLogging, withRetryConfig } from './http-client.ts';
+import {
+  type JoinCallResponse,
+  type JoinCallRoomRequest,
+  type RealtimeKitCall,
+  joinRealtimeKitMeeting,
+  transcriptionMeetingTitle,
+} from './realtime-kit.ts';
 
 export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client.ts';
 
@@ -1075,34 +1079,31 @@ export class EdgeHttpClient extends BaseHttpClient {
   //
 
   /**
-   * Joins a call room on Cloudflare RealtimeKit through calls-service, which resolves the room's meeting and mints a
-   * participant token for this identity and device.
+   * Joins a call room's Cloudflare RealtimeKit meeting as this device, through calls-service's RealtimeKit proxy.
    */
   public async joinCallRoom(
     ctx: Context,
-    request: JoinCallRoomRequest,
+    { roomId, meetingId, deviceKey }: JoinCallRoomRequest,
     args?: EdgeHttpCallArgs,
   ): Promise<JoinCallResponse> {
-    const response = await this._call(ctx, new URL('/calls/rooms/join', this.baseUrl), {
-      ...args,
-      body: request,
-      method: 'POST',
-      auth: true,
-    });
-    return Schema.decodeUnknownSync(JoinCallResponseSchema)(response);
+    return joinRealtimeKitMeeting(this.#realtimeKit(ctx, args), { meetingId, title: roomId, participantId: deviceKey });
   }
 
   /**
    * Joins this identity's one-person RealtimeKit meeting, where live transcription runs with nobody else in the room.
    */
   public async joinTranscription(ctx: Context, args?: EdgeHttpCallArgs): Promise<JoinCallResponse> {
-    const response = await this._call(ctx, new URL('/calls/transcription/join', this.baseUrl), {
-      ...args,
-      body: {},
-      method: 'POST',
-      auth: true,
+    const identityDid = this._edgeIdentity?.identityDid;
+    invariant(identityDid, 'Transcription needs an identity: call setIdentity first.');
+    return joinRealtimeKitMeeting(this.#realtimeKit(ctx, args), {
+      title: transcriptionMeetingTitle(identityDid),
+      participantId: identityDid,
     });
-    return Schema.decodeUnknownSync(JoinCallResponseSchema)(response);
+  }
+
+  #realtimeKit(ctx: Context, args?: EdgeHttpCallArgs): RealtimeKitCall {
+    return (method, path, body) =>
+      this._call(ctx, new URL(`/calls/realtimekit${path}`, this.baseUrl), { ...args, method, body, auth: true });
   }
 
   //

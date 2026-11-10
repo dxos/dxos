@@ -325,10 +325,10 @@ component CallDebugPanel
 service MediaTransport
   desc: |
     The call's media backend (RealtimeKit; `FakeTransport` in tests), built per room by the
-    `CreateTransport` the CallManager is given. The RealtimeKit transport joins through EDGE
-    (`POST /calls/rooms/join { roomId, meetingId?, deviceKey }`, signed by the identity): calls-service
-    checks the meeting is the room's and mints a short-lived participant token labelled with the
-    device key. Publishes local tracks, exposes the remote tracks in its
+    `CreateTransport` the CallManager is given. The RealtimeKit transport joins through EDGE's
+    RealtimeKit proxy (`<edge>/calls/realtimekit/*`, signed by the identity): the client finds or
+    creates the room's meeting and adds itself, labelled with its device key, and calls-service adds
+    the API token, our preset and a short token lifetime. Publishes local tracks, exposes the remote tracks in its
     roster keyed by device key and kind, and delivers this peer's own transcription.
   ops:
     open()
@@ -807,7 +807,7 @@ Apart from `SetSimulatedParticipants`, none of the `op` blocks above have a runt
 `provisionCall` are all plain async methods on `CallManager` (`packages/plugins/plugin-calls/src/calls/call-manager.ts`),
 called directly from UI handlers — there is no invoker key for any of them. Every test below is
 therefore `actors: human`. Joining a live call additionally needs a camera/microphone and a
-reachable EDGE that serves `/calls/rooms/join` and RealtimeKit, which the debug port cannot substitute for — this is a real device
+reachable EDGE that serves the RealtimeKit proxy `/calls/realtimekit/*`, which the debug port cannot substitute for — this is a real device
 and network dependency, not a design gap, so it is declared in `given` rather than `blocked`.
 
 ```mdl
@@ -823,7 +823,7 @@ test QA-1: Start a video call from a Channel, toggle media, leave
     - channel: a Channel (chat) exists in that space, with plugin-thread active
     - plugin-calls is enabled — it defaults ON only in dev environments (isDev); elsewhere it must
       be enabled via the plugin registry
-    - camera and microphone permissions are available to the browser, and EDGE (`/calls/rooms/join`)
+    - camera and microphone permissions are available to the browser, and EDGE's RealtimeKit proxy (`/calls/realtimekit/*`)
       and RealtimeKit are reachable — this test cannot run headless or in an environment without real media devices
   steps:
     - name: Start the call
@@ -998,11 +998,11 @@ decision D-12: The room's meeting id stays agreed over the swarm, not owned by a
 ```
 
 ```mdl
-decision D-13: calls-service authenticates the identity only, as every service entrypoint does; the client names its own device key in the room join, which labels its participant so peers key its tracks by it. Fills in [D-11].
+decision D-13: calls-service authenticates the identity only, as every service entrypoint does, and proxies the RealtimeKit REST calls a join needs, adding the API token, our preset and a short token lifetime. The client finds or creates the room's meeting and adds itself, labelled with its device key so peers key its tracks by it. Fills in [D-11] and [D-12].
   date: 2026-11-10
   by: user:mykola-vrmchk
-  affects: [service:MediaTransport]
-  why: Only identities may use the entrypoint; nothing checks which device an identity calls from.
+  affects: [service:MediaTransport, QA-1]
+  why: Only identities may use the entrypoint, and the client already owns the room's state through the swarm, so calls-service needs no meeting logic of its own.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

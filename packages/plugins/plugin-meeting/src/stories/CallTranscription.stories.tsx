@@ -54,7 +54,7 @@ type CallTranscriptionViewProps = {
  * Two-column live view: the call's video/participant grid beside the meeting hub whose Transcript tab reflects the
  * live feed. The toolbar drives the production path: `join()` opens a RealtimeKit meeting through EDGE, and toggling
  * transcription shares the flag over the call, after which each participant's own segments reach the meeting's feed.
- * Needs a network, a microphone, an identity with an account and an EDGE serving `/calls/rooms/join`; the
+ * Needs a network, a microphone, an identity with an account and an EDGE serving `/calls/realtimekit/*`; the
  * `MeetingTranscript` story runs the same transcript path offline.
  */
 const CallTranscriptionView = ({ meeting }: CallTranscriptionViewProps) => {

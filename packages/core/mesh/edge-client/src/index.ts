@@ -11,6 +11,7 @@ export * from './defs.ts';
 export * from './edge-client.ts';
 export * from './errors.ts';
 export * from './protocol.ts';
+export type { JoinCallResponse, JoinCallRoomRequest } from './realtime-kit.ts';
 export * from './base-http-client.ts';
 export * from './edge-ai-http-client.ts';
 export * from './edge-http-client.ts';

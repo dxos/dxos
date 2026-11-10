@@ -202,8 +202,8 @@ feat F-2: Live Transcription
 
   req F-2.1:
     when: a transcriber opens
-    then: it joins this identity's one-person RealtimeKit meeting through EDGE
-      (`POST /calls/transcription/join`, signed by the identity), which returns a short-lived participant token
+    then: it joins this identity's one-person RealtimeKit meeting through EDGE's RealtimeKit proxy
+      (`<edge>/calls/realtimekit/*`, signed by the identity), which returns a short-lived participant token
 
   req F-2.2:
     when: recording starts
@@ -455,7 +455,7 @@ test QA-2: Record, transcribe, and summarize a meeting
     - space: a space is open
     - transcript: a Transcript open in TranscriptionArticle within that space
     - microphone permission is granted in the browser
-    - EDGE is configured and the identity has an account, so `/calls/transcription/join` mints a token
+    - EDGE is configured and the identity has an account, so EDGE's RealtimeKit proxy admits it
     - recordedContent: a canned transcript string to summarize when the recording steps below are
       not run (they are `blocked` on hardware), so `summarizeTranscript` can still be exercised
       standalone

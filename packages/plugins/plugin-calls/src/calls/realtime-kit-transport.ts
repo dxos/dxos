@@ -11,9 +11,8 @@ import {
   transcriptStarted,
 } from '@dxos/av';
 import { Context, Resource } from '@dxos/context';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, type JoinCallResponse, type JoinCallRoomRequest } from '@dxos/edge-client';
 import { log } from '@dxos/log';
-import { type JoinCallResponse, type JoinCallRoomRequest } from '@dxos/protocols';
 
 import {
   type CloseReason,
