@@ -1623,6 +1623,11 @@ feat F-16: Docs sections
   req F-16.5:
     when: a reader opens `/docs/`
     then: they land on ECHO's Welcome page; there is no separate docs home page
+
+  req F-16.6:
+    when: a reader looks at the topic switcher
+    then: each section shows a DXOS brand mark, the same ones the brand package and the studio site use: ECHO's for
+          ECHO, HALO's for HALO, and KUBE's for App Framework
 ```
 
 ```mdl
@@ -2613,6 +2618,19 @@ decision D-103: The App Framework learning path publishes to the private registr
 decision D-104: No page carries a "these docs are being written" caution. ECHO's Welcome drops its Limits section, which held only that caution.
   date: 2026-11-10
   by: user:wittjosiah
+```
+
+```mdl
+decision D-105: The topic switcher renders its own list instead of the plugin's, so a topic can show an SVG from `packages/ui/brand/assets/icons` in place of a Starlight icon name. Fills in [D-92].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.6]
+```
+```mdl
+decision D-106: App Framework uses the KUBE brand mark in the topic switcher. Fills in [D-105].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.6]
 ```
 
 ## Appendix: Extension Definitions

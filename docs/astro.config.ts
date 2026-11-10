@@ -125,6 +125,8 @@ export default defineConfig({
         Footer: './src/components/Footer.astro',
         Head: './src/components/Head.astro',
         Header: './src/components/Header.astro',
+        // Lists the topics with the DXOS brand marks; see `SidebarTopics.astro`.
+        Sidebar: './src/components/Sidebar.astro',
         // TODO(wittjosiah): Uncomment to link logo to home page.
         // SiteTitle: './src/components/CustomSiteTitle.astro',
       },
@@ -163,7 +165,6 @@ export default defineConfig({
               id: 'app-framework',
               label: 'App Framework',
               link: '/docs/app-framework/welcome/',
-              icon: 'puzzle',
               items: sidebarFromSpec(specPages, 'App Framework'),
             },
           ],

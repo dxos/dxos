@@ -1,0 +1,110 @@
+---
+import { Badge, Icon } from '@astrojs/starlight/components';
+
+import echo from '../../../packages/ui/brand/assets/icons/echo.svg?raw';
+import halo from '../../../packages/ui/brand/assets/icons/halo.svg?raw';
+import kube from '../../../packages/ui/brand/assets/icons/kube.svg?raw';
+
+/** Brand marks by topic link; a topic without one falls back to its Starlight `icon`. */
+const MARKS: Record<string, string> = {
+  '/docs/echo/welcome/': echo,
+  '/docs/halo/welcome/': halo,
+  '/docs/app-framework/welcome/': kube,
+};
+
+const { topics } = Astro.locals.starlightSidebarTopics;
+---
+
+<ul class="sidebar-topics">
+  {
+    topics.map((topic) => {
+      const { class: className, ...attrs } = topic.attrs || {};
+      const mark = MARKS[topic.link];
+      return (
+        <li>
+          <a {...attrs} href={topic.link} class:list={[{ current: topic.isCurrent }, className]}>
+            {(mark || topic.icon) && (
+              <div class="icon">{mark ? <Fragment set:html={mark} /> : <Icon name={topic.icon!} />}</div>
+            )}
+            <div>
+              {topic.label}
+              {topic.badge && (
+                <>
+                  {' '}
+                  <Badge class="badge" text={topic.badge.text} variant={topic.badge.variant} />
+                </>
+              )}
+            </div>
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul::after {
+    content: '';
+    display: block;
+    margin-top: 1rem;
+    height: 1px;
+    border-top: 1px solid var(--sl-color-hairline-light);
+  }
+
+  li {
+    overflow-wrap: anywhere;
+  }
+
+  li + li {
+    margin-top: 0.25rem;
+  }
+
+  a {
+    align-items: center;
+    color: var(--sl-color-white);
+    display: flex;
+    font-size: var(--sl-text-base);
+    font-weight: 600;
+    gap: 0.5rem;
+    line-height: 1.5;
+    padding: 0.3em 0.5rem;
+    text-decoration: none;
+  }
+
+  a:is(.current, :hover, :focus-visible) {
+    color: var(--sl-color-accent-high);
+  }
+
+  :global([data-theme='light']) a.current {
+    color: var(--sl-color-accent);
+  }
+
+  .icon {
+    align-items: center;
+    border-radius: 0.25rem;
+    border: 1px solid var(--sl-color-gray-4);
+    display: flex;
+    justify-content: center;
+    padding: 0.25rem;
+  }
+
+  .icon :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  a:is(.current, :hover, :focus-visible) .icon {
+    background-color: var(--sl-color-text-accent);
+    border-color: var(--sl-color-text-accent);
+    color: var(--sl-color-text-invert);
+  }
+
+  .badge {
+    margin-inline-start: 0.25em;
+  }
+</style>
