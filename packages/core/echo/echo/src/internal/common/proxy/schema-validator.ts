@@ -187,15 +187,15 @@ export class SchemaValidator {
     return property != null && SchemaAST.isOptional(property.type);
   }
 
-  /** Whether writing `undefined` at `propertyPath`, which deletes the key, leaves a valid object. */
-  public static isOptionalPropertyAt(
+  /** What writing `undefined` at `propertyPath` deletes: an optional key, the tag selecting a union member, or other. */
+  public static getClearedKey(
     rootObjectSchema: Schema.Top,
     propertyPath: KeyPath,
     getProperty: (path: KeyPath) => unknown,
-  ): boolean {
+  ): 'optional' | 'union-tag' | 'other' {
     const propertyName = propertyPath.at(-1);
     if (propertyName === undefined) {
-      return false;
+      return 'other';
     }
     const parentPath = propertyPath.slice(0, -1);
     const parentAst =
@@ -203,7 +203,13 @@ export class SchemaValidator {
     const property = getPropertySignature(parentAst, propertyName.toString(), (name) =>
       getProperty([...parentPath, name]),
     );
-    return property != null && SchemaAST.isOptional(property.type) && !isUnionTag(parentAst, property.name);
+    if (property == null) {
+      return 'other';
+    }
+    if (isUnionTag(parentAst, property.name)) {
+      return 'union-tag';
+    }
+    return SchemaAST.isOptional(property.type) ? 'optional' : 'other';
   }
 
   /** The AST that property `prop` of a typed target follows. */
@@ -364,7 +370,7 @@ const getPropertySignature = (
   return getProperties(typeOrDiscriminatedUnion, getTargetPropertyFn).find((p) => p.name === propertyName) ?? null;
 };
 
-/** Whether `propertyName` is the tag selecting a member of the discriminated union at `ast`; clearing it is never valid. */
+/** Whether `propertyName` is the tag selecting a member of the discriminated union at `ast`. */
 const isUnionTag = (ast: SchemaAST.AST, propertyName: PropertyKey): boolean => {
   const union = unwrapAst(ast, (t) => SchemaAST.isUnion(t) && t.types.some((member) => SchemaAST.isObjects(member)));
   const members = union == null ? [] : flattenUnion(union).filter((member) => SchemaAST.isObjects(member));

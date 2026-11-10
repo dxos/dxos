@@ -301,6 +301,26 @@ describe('Reactive Object with ECHO database', () => {
     });
   });
 
+  test('rejects clearing a union tag declared optional', async () => {
+    const Tagged = Type.makeObject(DXN.make('com.example.type.tagged', '0.1.0'))(
+      Schema.Struct({
+        spec: Schema.Union([
+          Schema.Struct({
+            kind: Schema.Literal('a').pipe(Schema.optional),
+            token: Schema.String.pipe(Schema.optional),
+          }),
+          Schema.Struct({ kind: Schema.Literal('b'), feed: Schema.String }),
+        ]),
+      }),
+    );
+    const { db } = await builder.createDatabase({ types: [Tagged] });
+    const object = db.add(Obj.make(Tagged, { spec: { kind: 'a' } }));
+    expect(() => Obj.update(object, (object) => Reflect.set(object.spec, 'kind', undefined))).to.throw(
+      "Schema validation failed — spec.kind: a union member's tag cannot be cleared",
+    );
+    expect(object.spec.kind).to.eq('a');
+  });
+
   test('existing proxy objects can be added to the database', async () => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Example] });
 

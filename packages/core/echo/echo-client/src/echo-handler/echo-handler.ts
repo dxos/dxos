@@ -502,9 +502,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const getProperty = (propertyPath: Doc.KeyPath) =>
       target[symbolInternals].getDecoded([getNamespace(target), ...propertyPath]);
-    // Writing `undefined` deletes the key, which an optional key admits even where its type rejects `undefined` (`optionalKey`).
-    if (value === undefined && SchemaValidator.isOptionalPropertyAt(rootObjectSchema, path, getProperty)) {
-      return value;
+    // Writing `undefined` deletes the key: allowed for an optional key even where its type rejects `undefined`
+    // (`optionalKey`), never for the tag selecting a union member, whose schema every other key follows.
+    if (value === undefined) {
+      const cleared = SchemaValidator.getClearedKey(rootObjectSchema, path, getProperty);
+      if (cleared === 'union-tag') {
+        throw new Error(
+          `Schema validation failed — ${path.map(String).join('.')}: a union member's tag cannot be cleared`,
+        );
+      }
+      if (cleared === 'optional') {
+        return value;
+      }
     }
 
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, getProperty);
