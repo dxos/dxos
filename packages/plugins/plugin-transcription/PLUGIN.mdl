@@ -202,8 +202,8 @@ feat F-2: Live Transcription
 
   req F-2.1:
     when: a transcriber opens
-    then: it joins this device's one-person RealtimeKit meeting through EDGE
-      (`POST /calls/transcription/join`, signed by the device), which returns a short-lived participant token
+    then: it joins this identity's one-person RealtimeKit meeting through EDGE
+      (`POST /calls/transcription/join`, signed by the identity), which returns a short-lived participant token
 
   req F-2.2:
     when: recording starts
@@ -652,10 +652,10 @@ decision D-15: The Whistle hook, capture, protocol and worker move from the stor
 ```
 
 ```mdl
-decision D-16: Live transcription streams through a one-person RealtimeKit meeting instead of POSTing WAV chunks to Whisper at `/transcribe`, which is removed; `Transcriber` becomes an interface (`start`, `stop`, `flush`, `abort`) built through one `CreateTranscriber` seam, with a scripted one for offline stories and tests, which QA-3 runs.
+decision D-16: Live transcription streams through the identity's one-person RealtimeKit meeting instead of POSTing WAV chunks to Whisper at `/transcribe`, which is removed; `Transcriber` becomes an interface (`start`, `stop`, `flush`, `abort`) built through one `CreateTranscriber` seam, with a scripted one for offline stories and tests, which QA-3 runs.
   date: 2026-11-10
   by: user:mykola-vrmchk
-  affects: [F-1.2, F-1.3, F-2, T-2, T-3, QA-1, QA-2, QA-3]
+  affects: [F-1.2, F-1.3, F-2, F-2.1, T-2, T-3, QA-1, QA-2, QA-3]
   why: Cloudflare recommends WebRTC for client-to-server audio, and one transcription path serves calls and everything else; batching is not wanted.
   source: https://github.com/dxos/dxos/pull/14186
 ```

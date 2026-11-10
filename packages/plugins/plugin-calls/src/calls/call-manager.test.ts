@@ -37,7 +37,9 @@ describe('CallManager', () => {
     manager.setRoomId(ROOM_ID);
     await manager.join();
 
-    expect(transports.map(({ options }) => options)).toEqual([{ roomId: ROOM_ID, meetingId: undefined }]);
+    expect(transports.map(({ options }) => options)).toEqual([
+      { roomId: ROOM_ID, meetingId: undefined, deviceKey: SELF_DEVICE },
+    ]);
     expect(manager.joined).toBe(true);
     expect(advertised()).toBe('meeting-1');
 
@@ -45,7 +47,11 @@ describe('CallManager', () => {
     network.setQueryPeers([peer(REMOTE_DEVICE, 'meeting-remote')]);
     await manager.leave();
     await manager.join();
-    expect(transports.at(-1)?.options).toEqual({ roomId: ROOM_ID, meetingId: 'meeting-remote' });
+    expect(transports.at(-1)?.options).toEqual({
+      roomId: ROOM_ID,
+      meetingId: 'meeting-remote',
+      deviceKey: SELF_DEVICE,
+    });
 
     await manager.close();
   });
@@ -86,7 +92,7 @@ describe('CallManager', () => {
     network.emitSwarmEvent(swarmEvent([peer(SELF_DEVICE), peer(REMOTE_DEVICE, 'meeting-remote', 5)]));
     await waitForCondition({ condition: () => transports.length === 2, timeout: 3_000 });
 
-    expect(transports[1].options).toEqual({ roomId: ROOM_ID, meetingId: 'meeting-remote' });
+    expect(transports[1].options).toEqual({ roomId: ROOM_ID, meetingId: 'meeting-remote', deviceKey: SELF_DEVICE });
     expect(transports[0].transport.isOpen).toBe(false);
     expect(transports[1].transport.isOpen).toBe(true);
 

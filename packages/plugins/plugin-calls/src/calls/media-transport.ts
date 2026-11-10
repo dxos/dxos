@@ -93,6 +93,8 @@ export type CreateTransportOptions = {
   roomId: string;
   /** Provider session the swarm already agreed on; the first joiner omits it. */
   meetingId?: string;
+  /** This device's key (== swarm `UserState.id`), which peers key its tracks by. */
+  deviceKey: string;
 };
 
 /** Builds the transport for a room: the one seam `CallManager` is tested through (see `FakeTransport`). */

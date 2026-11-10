@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 
 import { ClientContext } from './context.ts';
 
-/** Mints a participant token for this device's one-person RealtimeKit transcription meeting. */
+/** Mints a participant token for this identity's one-person RealtimeKit transcription meeting. */
 export type JoinTranscription = () => Promise<{ authToken: string }>;
 
 /**

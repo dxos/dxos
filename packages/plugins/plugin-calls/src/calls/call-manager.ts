@@ -377,7 +377,9 @@ export class CallManager extends Resource {
    */
   async #connect(generation: number, roomId: string, meetingId: string | undefined): Promise<void> {
     await this.#disconnect();
-    const transport = this._createTransport({ roomId, meetingId });
+    const deviceKey = this._haloIdentity.getDevicesSnapshot().find((device) => device.current)?.key;
+    invariant(deviceKey, 'a call needs the current device');
+    const transport = this._createTransport({ roomId, meetingId, deviceKey });
     this.#transport = transport;
     await this._mediaManager.join(transport);
 

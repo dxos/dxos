@@ -1093,7 +1093,7 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Joins this device's one-person RealtimeKit meeting, where live transcription runs with nobody else in the room.
+   * Joins this identity's one-person RealtimeKit meeting, where live transcription runs with nobody else in the room.
    */
   public async joinTranscription(ctx: Context, args?: EdgeHttpCallArgs): Promise<JoinCallResponse> {
     const response = await this._call(ctx, new URL('/calls/transcription/join', this.baseUrl), {

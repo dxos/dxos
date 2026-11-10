@@ -63,6 +63,7 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
     const { meetingId, authToken } = await this._options.join({
       roomId: this._options.roomId,
       meetingId: this._options.meetingId,
+      deviceKey: this._options.deviceKey,
     });
     const meeting = await (this._options.connect ?? connectRealtimeKit)(authToken);
     this.#meetingId = meetingId;
@@ -149,7 +150,7 @@ export class RealtimeKitTransport extends Resource implements MediaTransport {
   }
 }
 
-/** The app's {@link CreateTransport}: RealtimeKit, joined through calls-service on EDGE as the signed-in device. */
+/** The app's {@link CreateTransport}: RealtimeKit, joined through calls-service on EDGE as the signed-in identity. */
 export const createRealtimeKitTransport =
   (getEdge: () => Pick<EdgeHttpClient, 'joinCallRoom'>): CreateTransport =>
   (options) =>

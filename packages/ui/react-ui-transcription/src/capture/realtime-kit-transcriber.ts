@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type CreateTranscriber, type Transcriber, type TranscriberCallbacks } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
-/** Mints a participant token for this device's one-person transcription meeting (`EdgeHttpClient.joinTranscription`). */
+/** Mints a participant token for this identity's one-person transcription meeting (`EdgeHttpClient.joinTranscription`). */
 export type JoinTranscription = () => Promise<{ authToken: string }>;
 
 export type RealtimeKitTranscriberOptions = {
@@ -124,8 +124,8 @@ export class RealtimeKitTranscriber extends Resource implements Transcriber {
   }
 
   readonly #onTranscript = (data: RealtimeKitTranscript): void => {
-    // A device can run two transcriptions at once (microphone and system audio), joined to its one meeting as two
-    // peers of the same participant, so a peer keeps only its own words.
+    // An identity can run several transcriptions at once (microphone and system audio, or two devices), each a peer
+    // of the same participant in its one meeting, so a peer keeps only its own words.
     if (!this.#meeting || data.peerId !== this.#meeting.self.id) {
       return;
     }

@@ -326,9 +326,9 @@ service MediaTransport
   desc: |
     The call's media backend (RealtimeKit; `FakeTransport` in tests), built per room by the
     `CreateTransport` the CallManager is given. The RealtimeKit transport joins through EDGE
-    (`POST /calls/rooms/join { roomId, meetingId? }`, signed by the device): calls-service checks
-    the meeting is the room's, takes the device key from the presentation's chain, and mints a
-    short-lived participant token. Publishes local tracks, exposes the remote tracks in its
+    (`POST /calls/rooms/join { roomId, meetingId?, deviceKey }`, signed by the identity): calls-service
+    checks the meeting is the room's and mints a short-lived participant token labelled with the
+    device key. Publishes local tracks, exposes the remote tracks in its
     roster keyed by device key and kind, and delivers this peer's own transcription.
   ops:
     open()
@@ -994,6 +994,15 @@ decision D-12: The room's meeting id stays agreed over the swarm, not owned by a
   by: user:mykola-vrmchk
   affects: [service:CallSwarmSynchronizer, type:SessionId, F-5.6]
   why: Everything about a room already happens through the router; a first-joiner poll did not converge when two peers joined an empty room together.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-13: calls-service authenticates the identity only, as every service entrypoint does; the client names its own device key in the room join, which labels its participant so peers key its tracks by it. Fills in [D-11].
+  date: 2026-11-10
+  by: user:mykola-vrmchk
+  affects: [service:MediaTransport]
+  why: Only identities may use the entrypoint; nothing checks which device an identity calls from.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

@@ -210,12 +210,14 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
-/** Body of calls-service's `POST /rooms/join`; the caller and its device come from the signed presentation. */
+/** Body of calls-service's `POST /rooms/join`; the caller's identity comes from the signed presentation. */
 export const JoinCallRoomRequestSchema = Schema.Struct({
   /** DXN of the object anchoring the call (e.g. a Meeting); also the swarm room id and the meeting title. */
   roomId: Schema.NonEmptyString,
   /** RealtimeKit meeting id the swarm already agreed on; the first joiner omits it. */
   meetingId: Schema.optional(Schema.NonEmptyString),
+  /** The joining device's key (== swarm `UserState.id`), which peers key its tracks by. */
+  deviceKey: Schema.NonEmptyString,
 });
 export type JoinCallRoomRequest = Schema.Schema.Type<typeof JoinCallRoomRequestSchema>;
 
@@ -223,7 +225,7 @@ export type JoinCallRoomRequest = Schema.Schema.Type<typeof JoinCallRoomRequestS
 export const JoinCallResponseSchema = Schema.Struct({
   /** RealtimeKit meeting id; for a room, what the joiner advertises to the swarm. */
   meetingId: Schema.String,
-  /** Participant token for `RealtimeKitClient.init`, short-lived and bound to the caller's device. */
+  /** Participant token for `RealtimeKitClient.init`, short-lived. */
   authToken: Schema.String,
 });
 export type JoinCallResponse = Schema.Schema.Type<typeof JoinCallResponseSchema>;

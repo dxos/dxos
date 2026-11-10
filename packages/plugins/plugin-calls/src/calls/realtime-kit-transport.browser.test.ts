@@ -101,6 +101,7 @@ const makeTransport = (meeting: FakeMeeting, requests: unknown[] = []) =>
   new RealtimeKitTransport({
     roomId: 'echo:/room',
     meetingId: 'meeting-agreed',
+    deviceKey: 'self-device',
     join: async (request) => {
       requests.push(request);
       return { meetingId: 'meeting-1', authToken: 'auth-token' };
@@ -109,15 +110,14 @@ const makeTransport = (meeting: FakeMeeting, requests: unknown[] = []) =>
   });
 
 describe('RealtimeKitTransport', () => {
-  test('open joins the room as the signed-in device and connects to the meeting', async ({ expect }) => {
+  test('open joins the room as this device and connects to the meeting', async ({ expect }) => {
     const meeting = new FakeMeeting();
     const requests: unknown[] = [];
     const transport = makeTransport(meeting, requests);
     await transport.open();
     expect(transport.isOpen).toBe(true);
     expect(transport.meetingId).toBe('meeting-1');
-    // The device comes from the signed request, so the body names only the room and the agreed meeting.
-    expect(requests).toEqual([{ roomId: 'echo:/room', meetingId: 'meeting-agreed' }]);
+    expect(requests).toEqual([{ roomId: 'echo:/room', meetingId: 'meeting-agreed', deviceKey: 'self-device' }]);
     await transport.close();
     expect(meeting.left).toBe(true);
   });
