@@ -1488,6 +1488,9 @@ catalogs:
     starlight-links-validator:
       specifier: ^0.27.0
       version: 0.27.0
+    starlight-sidebar-topics:
+      specifier: ^0.9.0
+      version: 0.9.0
     storybook:
       specifier: ^10.6.0
       version: 10.6.1
@@ -2381,6 +2384,9 @@ importers:
       starlight-links-validator:
         specifier: 'catalog:'
         version: 0.27.0(@astrojs/starlight@0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)))(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      starlight-sidebar-topics:
+        specifier: 'catalog:'
+        version: 0.9.0(@astrojs/starlight@0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)))(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
     devDependencies:
       '@atproto/api':
         specifier: 'catalog:'
@@ -45993,6 +45999,13 @@ packages:
       '@astrojs/starlight': '>=0.42.0'
       astro: '>=7.2.10'
 
+  starlight-sidebar-topics@0.9.0:
+    resolution: {integrity: sha512-xFwMAAtTVyqsO5DZ8Ldk0vN+2QoPdtjtDi8fbrzvQATIJvIvfaBLL9JzfXAjNHI9vMkj35VMWMd8tTICeO6RIA==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      '@astrojs/starlight': '>=0.42.0'
+      astro: ^7.2.10
+
   static-eval@2.1.1:
     resolution: {integrity: sha512-MgWpQ/ZjGieSVB3eOJVs4OA2LT/q1vx98KPCTTQPzq/aLr0YUXTsgryTXr4SLfR0ZfUUCiedM9n/ABeDIyy4mA==}
 
@@ -70862,6 +70875,12 @@ snapshots:
       yaml: 2.9.0
     transitivePeerDependencies:
       - supports-color
+
+  starlight-sidebar-topics@0.9.0(@astrojs/starlight@0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)))(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)):
+    dependencies:
+      '@astrojs/starlight': 0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      astro: 7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+      picomatch: 4.0.5
 
   static-eval@2.1.1:
     dependencies:

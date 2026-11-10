@@ -67,7 +67,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "sharp": "catalog:",
-    "starlight-links-validator": "catalog:"
+    "starlight-links-validator": "catalog:",
+    "starlight-sidebar-topics": "catalog:"
   },
   "devDependencies": {
     "@atproto/api": "catalog:",

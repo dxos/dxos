@@ -7,6 +7,7 @@ import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import path from 'node:path';
 import starlightLinksValidator from 'starlight-links-validator';
+import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { type Plugin } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
@@ -19,7 +20,7 @@ import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { generateIslandBase, generateTheme, generateWebflowScoped } from './scripts/gen-theme.mjs';
 import { ISLAND_ROOTS, PAGE_LAYERS } from './src/demos/layers.ts';
-import { assertContentExists, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
+import { assertContentExists, pageHref, parsePages, readSpec, sidebarFromSpec } from './src/echo/spec.ts';
 
 generateTheme();
 generateIslandBase(ISLAND_ROOTS);
@@ -120,35 +121,47 @@ export default defineConfig({
         { icon: 'x.com', label: 'X', href: 'https://x.com/dxos_org' },
       ],
       // TODO(wittjosiah): Nested docs subdir is needed because link validation doesn't work with generateId config.
-      sidebar: [
-        {
-          label: 'Introduction',
-          slug: 'docs',
-        },
-        {
-          label: 'ECHO',
-          items: sidebarFromSpec(echoPages),
-          collapsed: false,
-        },
-        {
-          label: 'HALO Identity',
-          items: [{ autogenerate: { directory: 'docs/halo' } }],
-          collapsed: false,
-        },
-        {
-          label: 'Composer',
-          items: [{ autogenerate: { directory: 'docs/composer' } }],
-          collapsed: false,
-        },
-        {
-          label: 'Additional Resources',
-          items: [{ autogenerate: { directory: 'docs/additional-resources' } }],
-          collapsed: false,
-        },
-      ],
-      // The validator cannot resolve custom pages under `src/pages` (`/blog`, `/privacy`, `/terms`),
-      // so it sees neither links to them nor the headings that same-page links in blog posts target.
+      // Each product is a topic with its own sidebar; Starlight's own `sidebar` option must stay unset.
       plugins: [
+        starlightSidebarTopics(
+          [
+            {
+              label: 'Overview',
+              link: '/docs/',
+              icon: 'open-book',
+              items: [
+                { label: 'Introduction', slug: 'docs' },
+                {
+                  label: 'Additional Resources',
+                  items: [{ autogenerate: { directory: 'docs/additional-resources' } }],
+                },
+              ],
+            },
+            {
+              id: 'echo',
+              label: 'ECHO',
+              link: pageHref(echoPages[0]),
+              icon: 'seti:db',
+              items: sidebarFromSpec(echoPages),
+            },
+            {
+              label: 'HALO',
+              link: '/docs/halo/introduction/',
+              icon: 'approve-check',
+              items: [{ autogenerate: { directory: 'docs/halo' } }],
+            },
+            {
+              label: 'Composer',
+              link: '/docs/composer/introduction/',
+              icon: 'puzzle',
+              items: [{ autogenerate: { directory: 'docs/composer' } }],
+            },
+          ],
+          // ECHO pages absent from SPEC.mdl's site map still belong to the ECHO topic.
+          { topics: { echo: ['/docs/echo/**'] } },
+        ),
+        // The validator cannot resolve custom pages under `src/pages` (`/blog`, `/privacy`, `/terms`),
+        // so it sees neither links to them nor the headings that same-page links in blog posts target.
         starlightLinksValidator({
           exclude: ({ file, link }) =>
             file.includes('/src/content/blog/') ||

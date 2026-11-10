@@ -118,7 +118,7 @@ template stub: A planned page
 
 ## Site map
 
-The order of these blocks is the order of the ECHO section of the docs sidebar. Routes are relative to
+The order of these blocks is the order of the ECHO topic's sidebar. Routes are relative to
 `/docs/echo`.
 
 ### Start here
@@ -570,8 +570,8 @@ feat F-5: The spec drives the site map
 
   req F-5.1:
     when: the site is built
-    then: the order, groups and labels of the ECHO section of the docs sidebar come from the `page` blocks
-          in this document
+    then: the order, groups and labels of the ECHO topic's sidebar come from the `page` blocks in this
+          document, and the topic's link is the first page
 
   req F-5.2:
     when: a `page` block has status `planned`
@@ -1492,6 +1492,18 @@ decision D-77: Each of the four packages gets the `typedoc` task with `src/index
   by: agent:claude-code
   for: user:wittjosiah
   why: The docs already publish typedoc for client, react-client and app-framework this way, and `@dxos/echo`'s index re-exports each module as a namespace, so one entry point covers them.
+```
+
+```mdl
+decision D-78: The docs sidebar is split into topics with `starlight-sidebar-topics`: Overview, ECHO, HALO and Composer each have their own sidebar, and a list of the topics sits above it. The ECHO topic's items come from the `page` blocks, and every page under `/docs/echo` belongs to it.
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The docs cover several related products, and one sidebar holding all of them gets long; a topic per product keeps each sidebar to one product.
+  rejected:
+    - Starlight's built-in collapsed groups, which keep every product in one tree.
+    - `starlight-sidebar-topics-dropdown`, a dropdown in place of the list, which hides the products until opened and earns its place only with more topics than the four here.
 ```
 
 ## Appendix: Extension Definitions
