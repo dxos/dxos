@@ -8,7 +8,7 @@ import { addEventListener, combine } from '@dxos/async';
 import { Filter, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
-import { type Connection, connect } from '@dxos/echo-worker';
+import { type Connection, connect } from '@dxos/echo-sqlite-sync';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';

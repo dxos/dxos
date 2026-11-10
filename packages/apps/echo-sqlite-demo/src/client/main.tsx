@@ -24,7 +24,7 @@ import {
   openDatabase,
   resolveSlug,
   waitForDatabase,
-} from '@dxos/echo-worker';
+} from '@dxos/echo-sqlite-sync';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';

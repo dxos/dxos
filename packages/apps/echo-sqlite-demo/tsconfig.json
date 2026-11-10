@@ -50,10 +50,10 @@
       "path": "../../core/echo/echo-sqlite"
     },
     {
-      "path": "../../core/echo/echo-sync-worker"
+      "path": "../../core/echo/echo-sqlite-sync"
     },
     {
-      "path": "../../core/echo/echo-worker"
+      "path": "../../core/echo/echo-sync-worker"
     },
     {
       "path": "../../ui/react-ui"
