@@ -62,6 +62,13 @@ const claim = (): Promise<boolean> =>
   });
 
 /**
+ * Resolves once no other tab holds the database, without taking it: the caller reloads, and the
+ * reloaded page claims it as usual.
+ */
+export const waitForDatabase = (): Promise<void> =>
+  navigator.locks.request(DATABASE_LOCK, () => undefined).then(() => undefined);
+
+/**
  * Opens the database on this device. SQLite lives in a worker (OPFS sync access handles exist only
  * there); everything above it — the query compiler, object hydration, reactivity — runs here on the
  * main thread, which is what lets `@dxos/echo-react` bind to it with no bridge.

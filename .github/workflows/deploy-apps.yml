@@ -469,8 +469,8 @@ jobs:
 
   # The first-party plugins EDGE runs (every package tagged `edge-release`), published to the preview EDGE after the
   # Composer deploy so preview's registry tracks the same `main` snapshot. The admin key makes them first-party
-  # (`realm:dxos`). A version EDGE already holds with other content is a warning, not a failure: versions are
-  # immutable there and only move on a release. See packages/core/compute/plugin-builder/README.md.
+  # (`realm:dxos`). Each run publishes under `<version>+main.<sha>`, so every snapshot gets a fresh, immutable version
+  # that becomes `latest`. See packages/core/compute/plugin-builder/README.md.
   publish-plugins:
     needs: [plan, deploy]
     if: ${{ !cancelled() && needs.plan.outputs.plugins == 'true' && needs.deploy.result == 'success' }}
@@ -502,11 +502,14 @@ jobs:
         env:
           DX_EDGE_BASE_URL: https://preview.dxos.network/
           DX_HUB_API_KEY: ${{ secrets.EDGE_PREVIEW_ADMIN_KEY }}
+          DX_PLUGIN_BUILD: main.${{ github.sha }}
         run: |
           if [ -z "$DX_HUB_API_KEY" ]; then
             echo "::error::EDGE_PREVIEW_ADMIN_KEY is unset - cannot publish first-party plugins to preview."
             exit 1
           fi
+          # `DX_PLUGIN_BUILD` publishes each snapshot of `main` as `<version>+main.<sha>`, which moves `latest`: the bare
+          # release version is immutable on EDGE once uploaded, so publishing it again would leave preview on the old bundle.
           # Every plugin is attempted; the step still fails when any one did.
           # `--upstream none`: the bundles were built in the step above, so no build task runs with the admin key.
           moon exec --upstream none --on-failure continue :publish-edge-release

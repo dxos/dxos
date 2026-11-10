@@ -4,24 +4,31 @@
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
-import * as SchemaEx from '@dxos/effect/SchemaEx';
-
 import {
   type ClientMessage,
+  type PushRecord,
+  type PushResult,
+  type RecordsMessage,
   type ServerMessage,
   SOCKET_PATH,
   SOURCE,
   type SyncRecord,
-  type SyncResponse,
-} from './protocol.ts';
+} from '@dxos/echo-sync-worker/protocol';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+
+import { merge3, onBase, same } from './merge.ts';
 
 /**
- * Two-way sync against the slug's Durable Object.
+ * Two-way sync against the slug's Durable Object: pull, merge, push.
  *
- * The DO assigns every record a version in a total order, so last-writer-wins is well defined
- * rather than a race. Remote records are applied through the ECHO API — `db.add` / `Obj.update` —
- * never by writing `echo_entities`, because echo-sqlite invalidates queries from its own commits
- * only; a raw-SQL import would never reach the UI.
+ * Ordering is two counters and no clocks. The server stamps every write it accepts with its next `seq`;
+ * this client numbers its own pushes with `clientSeq`. Every pushed record names the server `seq` it was
+ * edited on, and the server refuses the push if any of them has moved — so the client pulls what it
+ * missed, merges it into its edits field by field, and pushes again.
+ *
+ * Remote records are applied through the ECHO API — `db.add` / `Obj.update` — never by writing
+ * `echo_entities`, because echo-sqlite invalidates queries from its own commits only; a raw-SQL import
+ * would never reach the UI.
  *
  * Objects are matched on a foreign key in `Obj.Meta.keys`, not the ECHO id, which `Obj.make` mints
  * itself and cannot be given.
@@ -55,12 +62,16 @@ const refProperties = (type: Type.AnyObj): string[] =>
     .map((property: SchemaEx.SchemaProperty) => String(property.name));
 
 export type SyncState = {
-  /** The highest version applied from the store. */
-  version: number;
-  /** Which incarnation of the store that version belongs to; absent in state saved before the field. */
+  /** Names this client to the server, so a retried push is applied once. */
+  client: string;
+  /** This client's own counter: the number of its last push. */
+  clientSeq: number;
+  /** The highest server seq applied here. */
+  seq: number;
+  /** Which incarnation of the store `seq` belongs to. */
   incarnation?: string;
-  /** Per-key fingerprint of what was last in agreement with the store. */
-  hashes: Record<string, string>;
+  /** Per key, the last version the store and this client agreed on, with its seq: what a local edit is based on. */
+  base: Record<string, SyncRecord>;
 };
 
 const stateKey = (slug: string) => `echo-sqlite-demo:${slug}`;
@@ -69,32 +80,30 @@ export const loadState = (slug: string): SyncState => {
   try {
     const raw = localStorage.getItem(stateKey(slug));
     if (raw) {
-      const parsed = JSON.parse(raw) as SyncState;
-      if (Number.isSafeInteger(parsed?.version)) {
+      const parsed = JSON.parse(raw) as Partial<SyncState>;
+      if (typeof parsed.client === 'string' && Number.isSafeInteger(parsed.seq)) {
         return {
-          version: parsed.version,
+          client: parsed.client,
+          clientSeq: parsed.clientSeq ?? 0,
+          seq: parsed.seq ?? 0,
           ...(typeof parsed.incarnation === 'string' && { incarnation: parsed.incarnation }),
-          hashes: parsed.hashes ?? {},
+          base: parsed.base ?? {},
         };
       }
     }
   } catch {
     // A corrupt or blocked store just means a full re-sync.
   }
-  return { version: 0, hashes: {} };
+  return { client: crypto.randomUUID(), clientSeq: 0, seq: 0, base: {} };
 };
 
 const saveState = (slug: string, state: SyncState): void => {
   try {
     localStorage.setItem(stateKey(slug), JSON.stringify(state));
   } catch {
-    // Private windows block it; sync still works, it just resends everything.
+    // Private windows block it; sync still works, it just starts from 0 on the next load.
   }
 };
-
-/** Cheap and stable — only used to spot a local edit, never for security. */
-const fingerprint = (record: SyncRecord): string =>
-  JSON.stringify([record.typename, record.props, record.refs, record.deleted ?? false]);
 
 /**
  * Every local object of a known type, in wire form.
@@ -197,24 +206,8 @@ const findAnyByKey = async (db: SqliteDatabase, key: string, types: SyncTypes): 
   return undefined;
 };
 
-/** What a round trip, or a message, moved; the UI says this out loud. */
-export type SyncResult = { sent: number; received: number; expiresAt: number };
-
 /**
- * The records the store has not agreed to: a fingerprint that differs from the one it last confirmed.
- *
- * A tombstone is a record like any other, so a delete travels and settles the same way an edit does: once the store
- * has agreed to it the fingerprints match and it is not sent again.
- */
-const changesSince = async (db: SqliteDatabase, types: SyncTypes, state: SyncState) => {
-  const local = await readLocal(db, types);
-  const deleted = await readDeleted(db, types);
-  const changed = [...local.values(), ...deleted].filter((record) => fingerprint(record) !== state.hashes[record.key]);
-  return { local, changed };
-};
-
-/**
- * Applies what the store sent: scalars first, so every ref target exists before the edges are wired.
+ * Writes merged records into the local graph: scalars first, so every ref target exists before the edges are wired.
  *
  * Remote records go in through the ECHO API — `db.add` / `Obj.update` — never by writing `echo_entities`, because
  * echo-sqlite invalidates queries from its own commits only; a raw-SQL import would never reach the UI.
@@ -309,148 +302,93 @@ const applyRecords = async (
   await db.flush();
 };
 
-/**
- * Whether a response comes from a store that is not the one the saved version belongs to — the graph
- * expired and its alarm dropped everything, so nothing it once agreed to survives.
- *
- * The incarnation is what shows this. A lower version does too, but only while no other peer has
- * written: one that pushed the new store past the saved version hides the expiry behind a version
- * that looks like progress. It stays the fallback for a store, or a saved state, that names no
- * incarnation.
- */
-export const isReset = (
-  state: Pick<SyncState, 'version' | 'incarnation'>,
-  response: Pick<SyncResponse, 'version' | 'incarnation'>,
-): boolean =>
-  response.incarnation !== undefined && state.incarnation !== undefined
-    ? response.incarnation !== state.incarnation
-    : response.version < state.version;
-
-/** Applies a response and records the agreement it leaves behind. */
-const receive = async (
-  db: SqliteDatabase,
-  slug: string,
-  types: SyncTypes,
-  state: SyncState,
-  response: SyncResponse,
-  local: ReadonlyMap<string, SyncRecord>,
-  sent: readonly SyncRecord[],
-): Promise<{ received: number; reset: boolean }> => {
-  // Only records this client has not seen; the ones it just sent come back too, carrying their versions.
-  const incoming = response.records.filter(
-    (record) => local.get(record.key) === undefined || fingerprint(record) !== state.hashes[record.key],
-  );
-  await applyRecords(db, types, response.records, incoming);
-
-  // Forget the agreement when the store is not the one it was made with, and let the next push send
-  // the whole local graph again rather than trusting hashes for rows that no longer exist.
-  const incarnation = response.incarnation;
-  const reset = isReset(state, response);
-  const hashes: Record<string, string> = reset ? {} : { ...state.hashes };
-  for (const record of [...response.records, ...sent]) {
-    hashes[record.key] = fingerprint(record);
+/** Every local record, live and deleted, as an edit on top of what the store last agreed to. */
+const readAll = async (db: SqliteDatabase, types: SyncTypes, state: SyncState): Promise<Map<string, SyncRecord>> => {
+  const live = await readLocal(db, types);
+  const all = new Map<string, SyncRecord>();
+  for (const record of [...live.values(), ...(await readDeleted(db, types))]) {
+    all.set(record.key, onBase(record, state.base[record.key]));
   }
-  // This response was filtered against a version belonging to the old store, so whatever the new one
-  // holds at or below it was never sent: go back to 0 and the next exchange reads it whole.
-  saveState(slug, {
-    version: reset ? 0 : response.version,
-    ...(incarnation !== undefined && { incarnation }),
-    hashes,
-  });
-  return { received: incoming.length, reset };
+  return all;
 };
 
+/** The local records the store has not agreed to. */
+const changed = (local: ReadonlyMap<string, SyncRecord>, state: SyncState): SyncRecord[] =>
+  [...local.values()].filter((record) => !same(record, state.base[record.key]));
+
 /**
- * One round trip: send what changed locally, apply what came back.
- *
- * The socket below is the normal path; this remains for a peer that cannot hold one open, and for a script with
- * `curl`. Returns how many records moved in each direction, so the UI can say something true.
+ * Whether a message comes from a store that is not the one the saved seq belongs to — the graph
+ * expired and its alarm dropped everything, so nothing it once agreed to survives. The seq alone
+ * cannot show this: another peer may have pushed the new store past the saved seq already.
  */
-export const sync = async (db: SqliteDatabase, slug: string, types: SyncTypes): Promise<SyncResult> => {
-  const state = loadState(slug);
-  const { local, changed } = await changesSince(db, types, state);
+export const isReset = (state: Pick<SyncState, 'incarnation'>, message: { incarnation: string }): boolean =>
+  state.incarnation !== undefined && state.incarnation !== message.incarnation;
 
-  const response = await fetch(`/api/space/${slug}/sync`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ since: state.version, records: changed }),
-  });
-  if (!response.ok) {
-    const detail = (await response.text()).trim();
-    throw new Error(`Sync failed: ${response.status}${detail ? ` ${detail}` : ''}`);
-  }
-  const body = (await response.json()) as SyncResponse;
-  const { received, reset } = await receive(db, slug, types, state, body, local, changed);
-  if (!reset) {
-    return { sent: changed.length, received, expiresAt: body.expiresAt };
-  }
-
-  // The store was reset: this response told us the agreement is void, and it was filtered against a
-  // version belonging to the store that is gone, so it carried neither what the new one already
-  // holds nor any sign that the local graph is now only here. One more trip, from version 0, both
-  // reads the new store whole and sends the local graph — rather than leaving either for whenever
-  // something calls again.
-  const after = loadState(slug);
-  const { local: resent, changed: all } = await changesSince(db, types, after);
-  const retry = await fetch(`/api/space/${slug}/sync`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ since: after.version, records: all }),
-  });
-  if (!retry.ok) {
-    const detail = (await retry.text()).trim();
-    throw new Error(`Sync failed: ${retry.status}${detail ? ` ${detail}` : ''}`);
-  }
-  const second = (await retry.json()) as SyncResponse;
-  const { received: again } = await receive(db, slug, types, after, second, resent, all);
-
-  return { sent: changed.length + all.length, received: received + again, expiresAt: second.expiresAt };
-};
+/** What a message moved; the UI says this out loud. */
+export type SyncResult = { sent: number; received: number; expiresAt: number };
 
 /** How long to wait before a reconnect, growing to a ceiling so a worker that is down is not hammered. */
 const RECONNECT_MS = { initial: 500, max: 10_000 };
 
+/** Rejected pushes in a row before waiting for the next local change; each one means someone else wrote. */
+const MAX_RETRIES = 5;
+
 export type Connection = {
-  /** Sends whatever changed locally; the store answers with the records as it now holds them. */
+  /** Sends whatever changed locally, unless a push is already waiting for its answer. */
   push: () => Promise<void>;
   close: () => void;
 };
 
-export type ConnectionHandlers = {
-  /** A message was applied, or the connection opened with nothing to apply. */
+export type ConnectionOptions = {
+  /** The sync server's origin; defaults to the page's own. */
+  server?: string;
+  /** A message was applied. */
   onSync?: (result: SyncResult) => void;
   /** The socket closed, or a message could not be applied. */
   onError?: (error: Error) => void;
 };
 
 /**
- * Holds a socket to the graph's Durable Object: the store pushes a write as it happens, rather than the client
- * asking every couple of seconds whether anything has changed.
+ * Holds a socket to the graph's Durable Object and runs pull → merge → push over it.
  *
- * The protocol is two messages. `hello` carries the version this client has applied, so the store answers with
- * everything above it — a first sync and a catch-up after a reconnect are the same exchange. `push` carries local
- * changes, and the store broadcasts them back to every socket, the sender included, so a client learns the versions
- * it was assigned the same way it learns someone else's write.
+ * On open the client pulls everything above its seq, then pushes its edits. Other clients' writes
+ * arrive as they land and are merged the same way. One push is outstanding at a time; its answer
+ * either confirms it (with the seqs it was given) or carries what the client missed, which is merged
+ * before pushing again.
  */
 export const connect = (
   db: SqliteDatabase,
   slug: string,
   types: SyncTypes,
-  { onSync, onError }: ConnectionHandlers = {},
+  { server, onSync, onError }: ConnectionOptions = {},
 ): Connection => {
+  const state = loadState(slug);
   let socket: WebSocket | undefined;
   let closed = false;
   let backoff = RECONNECT_MS.initial;
+  let retries = 0;
   let applying: Promise<void> = Promise.resolve();
   let timer: ReturnType<typeof setTimeout> | undefined;
+  /** The push waiting for its answer, and how many records it carried. */
+  let pending: number | undefined;
+  let pendingCount = 0;
   /**
-   * What has been sent but not yet seen coming back, by key and fingerprint. The agreement in local storage is
-   * written only when the broadcast arrives, so without this a second push in the meantime — one write per query
-   * that re-executed — would send the same records again and the store would version them twice.
+   * What this client sent, by key, until the store sends it back: that record is this client's own
+   * write, not a remote one to merge. Kept across reconnects, since a push may land and its answer not.
    */
-  const inFlight = new Map<string, string>();
+  const sent = new Map<string, SyncRecord>();
 
-  /** Messages are applied one at a time: two overlapping applies would both read the same stale state. */
+  const save = () => saveState(slug, state);
+
+  const send = (message: ClientMessage) => {
+    if (socket?.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message));
+      return true;
+    }
+    return false;
+  };
+
+  /** Messages are handled one at a time: two overlapping merges would both read the same stale state. */
   const enqueue = (work: () => Promise<void>) => {
     applying = applying
       .then(work)
@@ -458,59 +396,141 @@ export const connect = (
     return applying;
   };
 
+  /** Merges records from the store into the local graph and moves `base` to them; returns how many changed it. */
+  const mergeIn = async (records: readonly SyncRecord[]): Promise<number> => {
+    const local = await readAll(db, types, state);
+    const writes: SyncRecord[] = [];
+    for (const remote of records) {
+      const base = state.base[remote.key];
+      if (base?.seq !== undefined && remote.seq !== undefined && remote.seq <= base.seq) {
+        continue;
+      }
+      state.base[remote.key] = remote;
+      const mine = local.get(remote.key);
+      if (sent.has(remote.key) && same(sent.get(remote.key), remote)) {
+        // This client's own write coming back with its seq; anything edited since stays local and is pushed next.
+        sent.delete(remote.key);
+        continue;
+      }
+      const dirty = mine !== undefined && !same(mine, base);
+      const target = dirty ? merge3(base, mine, remote) : remote;
+      if (!same(target, mine)) {
+        writes.push(target);
+      }
+    }
+    await applyRecords(db, types, records, writes);
+    return writes.length;
+  };
+
+  /** A message from another incarnation of the store: forget the agreement and start from 0. */
+  const reset = (incarnation: string) => {
+    Object.assign(state, { seq: 0, base: {}, incarnation });
+    pending = undefined;
+    sent.clear();
+    save();
+    send({ type: 'pull', since: 0 });
+  };
+
   const push = () =>
     enqueue(async () => {
-      const state = loadState(slug);
-      const { changed } = await changesSince(db, types, state);
-      const records = changed.filter((record) => inFlight.get(record.key) !== fingerprint(record));
-      if (records.length === 0 || socket?.readyState !== WebSocket.OPEN) {
+      if (pending !== undefined || socket?.readyState !== WebSocket.OPEN) {
         return;
       }
-      for (const record of records) {
-        inFlight.set(record.key, fingerprint(record));
+      const records = changed(await readAll(db, types, state), state);
+      if (records.length === 0) {
+        retries = 0;
+        return;
       }
-      socket.send(JSON.stringify({ type: 'push', records } satisfies ClientMessage));
+      state.clientSeq++;
+      pending = state.clientSeq;
+      pendingCount = records.length;
+      save();
+      for (const record of records) {
+        sent.set(record.key, record);
+      }
+      send({
+        type: 'push',
+        client: state.client,
+        clientSeq: state.clientSeq,
+        since: state.seq,
+        records: records.map((record): PushRecord => ({ ...record, base: state.base[record.key]?.seq ?? 0 })),
+      });
     });
+
+  const onRecords = async (message: RecordsMessage) => {
+    const received = await mergeIn(message.records);
+    if (message.from <= state.seq) {
+      state.seq = Math.max(state.seq, message.seq);
+    } else {
+      // A broadcast from past what this client has pulled: something in between is missing.
+      send({ type: 'pull', since: state.seq });
+    }
+    save();
+    onSync?.({ sent: 0, received, expiresAt: message.expiresAt });
+  };
+
+  const onAck = async (message: PushResult) => {
+    if (message.clientSeq !== pending) {
+      return;
+    }
+    pending = undefined;
+    const received = await mergeIn(message.records);
+    state.seq = Math.max(state.seq, message.seq);
+    save();
+    onSync?.({ sent: message.accepted ? pendingCount : 0, received, expiresAt: message.expiresAt });
+    if (!message.accepted) {
+      // What it missed is merged now, so the same edits go again on top of it.
+      for (const key of message.conflicts) {
+        sent.delete(key);
+      }
+      if (++retries > MAX_RETRIES) {
+        onError?.(new Error(`Push rejected ${MAX_RETRIES} times; waiting for the next change`));
+        retries = 0;
+        return;
+      }
+    } else {
+      retries = 0;
+    }
+    // Edits made while the push was out, or the retry.
+    void push();
+  };
 
   const open = () => {
     if (closed) {
       return;
     }
-    const url = new URL(`/api/space/${slug}/${SOCKET_PATH}`, window.location.href);
+    const url = new URL(`/api/space/${slug}/${SOCKET_PATH}`, server ?? window.location.href);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     socket = new WebSocket(url);
 
     socket.onopen = () => {
       backoff = RECONNECT_MS.initial;
-      // A socket that went away never acknowledged what it carried, so none of it is in flight any more.
-      inFlight.clear();
-      socket?.send(JSON.stringify({ type: 'hello', since: loadState(slug).version } satisfies ClientMessage));
+      // The answer to a push sent on the last socket is lost; the pull below brings back whatever landed.
+      pending = undefined;
+      send({ type: 'pull', since: state.seq });
       // Anything written while the socket was down.
       void push();
     };
 
     socket.onmessage = (event: MessageEvent) =>
       void enqueue(async () => {
-        const message = JSON.parse(String(event.data)) as ServerMessage | { type: 'error'; message: string };
-        if (message.type !== 'records') {
-          onError?.(new Error('message' in message ? message.message : 'Unknown message'));
+        const message = JSON.parse(String(event.data)) as ServerMessage;
+        if (message.type === 'error') {
+          pending = undefined;
+          onError?.(new Error(message.message));
           return;
         }
-        for (const record of message.records) {
-          // Back from the store with its version: this client's copy is no longer in flight.
-          if (inFlight.get(record.key) === fingerprint(record)) {
-            inFlight.delete(record.key);
-          }
-        }
-        const state = loadState(slug);
-        const local = await readLocal(db, types);
-        const { received, reset } = await receive(db, slug, types, state, message, local, []);
-        onSync?.({ sent: 0, received, expiresAt: message.expiresAt });
-        if (reset) {
-          // The agreement is void: read the new store from the start (`receive` put the version back
-          // to 0), then send the local graph, which it has never seen.
-          socket?.send(JSON.stringify({ type: 'hello', since: loadState(slug).version } satisfies ClientMessage));
+        if (state.incarnation === undefined) {
+          state.incarnation = message.incarnation;
+        } else if (isReset(state, message)) {
+          reset(message.incarnation);
           void push();
+          return;
+        }
+        if (message.type === 'records') {
+          await onRecords(message);
+        } else {
+          await onAck(message);
         }
       });
 
