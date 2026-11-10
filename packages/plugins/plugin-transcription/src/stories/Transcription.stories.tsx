@@ -8,8 +8,8 @@
  * appending each corrected block as a message rather than waiting for playback to stop.
  *
  * - `Default` plays a hosted m4a; the play/pause + upload toolbar gates playback and capture.
- * - With EDGE configured the file is transcribed live by RealtimeKit; without it a scripted transcript stands in, so
- *   the pipeline and the message list still run offline.
+ * - `Live` transcribes the file through RealtimeKit on the dev EDGE, which needs a network and an identity with an
+ *   account; elsewhere a scripted transcript stands in, so the pipeline and the message list still run offline.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -194,4 +194,11 @@ export const Default: Story = {
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://media.dxos.network/audio-london.m4a',
   },
+};
+
+export const Live: Story = {
+  args: {
+    audioUrl: 'https://media.dxos.network/audio-london.m4a',
+  },
+  parameters: { edgeUrl: 'https://dev.dxos.network/' },
 };

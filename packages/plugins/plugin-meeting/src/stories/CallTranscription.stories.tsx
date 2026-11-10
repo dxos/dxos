@@ -133,9 +133,11 @@ const meta = {
         ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Transcript.Transcript, Meeting.Meeting, Text.Text],
-          // CallManager requires the edge service config to construct (it throws otherwise).
+          // CallManager requires the edge service config to construct (it throws otherwise), and the call's swarm
+          // needs EDGE signaling, since the in-memory signal manager cannot query a swarm.
           config: new Config({
             runtime: {
+              client: { edgeFeatures: { signaling: true } },
               services: {
                 edge: { url: 'https://dev.dxos.network/' },
               },

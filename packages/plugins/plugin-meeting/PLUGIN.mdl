@@ -486,6 +486,31 @@ test QA-3: A scripted source fills a meeting's transcript
     - name: Pause the script
       do: Click Pause script.
       expect: no further line appears
+
+test QA-4: A live call's transcript fills the meeting
+  desc: |
+    The call path end to end against the dev EDGE: the CallTranscription story joins a RealtimeKit meeting, turns
+    transcription on, and RealtimeKit's transcript of the local speaker lands in the meeting's Transcript tab. Needs a
+    network, a microphone and an identity with an account; QA-3 runs the same sink offline.
+  actors: agent
+  covers: [F-3.5, F-3.6, F-3.7]
+  status: unverified
+  given:
+    - storybook serves `plugins/plugin-meeting/stories/CallTranscription` in isolation mode, against the dev EDGE
+    - the story's identity is bound to an account
+  steps:
+    - name: Start the call
+      do: Click Start call.
+      expect: the button turns to Leave call, and the local participant's tile appears
+    - name: Unmute
+      do: Click Unmute in the call's toolbar.
+      expect: the tile no longer shows the muted marker
+    - name: Start transcription
+      do: Click Start transcription in the story's toolbar.
+      expect: the button turns to Stop transcription
+    - name: Read the transcript
+      do: Speak, and watch the meeting's Transcript tab.
+      expect: the spoken words appear under the speaker's name, one RealtimeKit segment per row, in spoken order
 ```
 
 ---
@@ -544,6 +569,16 @@ decision D-6: A Meeting's own call offers the Start/Stop transcription toggle in
   for: user:mykola-vrmchk
   affects: [F-3.6, MeetingArticle, SetTranscription]
   why: The toggle existed only on channel calls, so a call started from a Meeting's Call tab could not turn transcription on.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-7: The meeting payload names the meeting by its absolute URI, which HandlePayload parses as an EID, and CallExtension activates only once the client is initialized, since it subscribes to the call manager. QA-4 checks the live path. Fills in [D-5].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [HandlePayload, SetActive, QA-4]
+  why: HandlePayload read the URI as a `space:object` id, so every call-state update cleared the active meeting and the sink dropped each segment; and CallExtension could start before the manager existed, which disabled the whole plugin.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

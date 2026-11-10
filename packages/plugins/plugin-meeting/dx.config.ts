@@ -9,7 +9,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { trim } from '@dxos/util';
 
 import { MeetingNamespace } from './src/namespace.ts';
@@ -50,10 +53,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'CallExtension',
       {
-        requires: [MeetingCapabilities.State],
+        requires: [MeetingCapabilities.State, CallsCapabilities.Manager, ClientCapabilities.IdentityService],
         provides: [],
-        // Both features must be live: the module subscribes to the call manager and reads meeting state.
-        activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
+        // The module subscribes to the call manager, which rides the client-initialized event, so the two
+        // features starting is not enough for the pull to find it.
+        activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start, ClientEvents.Initialized),
       },
       () => import('./src/capabilities/call-extension.ts', { with: { type: 'module-url' } }),
     ),
