@@ -295,9 +295,14 @@ dxos/
 ├── commands/project.md            thin — defers to the injected directive
 ├── hooks/track.sh                 verb dispatch + backend resolver
 ├── hooks/hooks.json               UserPromptSubmit registration
+├── skills/composer-plugin-dev/    build, test and publish a Composer plugin outside this repo
 └── skills/task-planning/SKILL.md  TASKS.md convention, registry schema, handoff
 ```
 
-The skill loads on its own when work spans several steps or a session resumes —
+The task-planning skill loads on its own when work spans several steps or a session resumes —
 i.e. when nobody has typed a command. That is why the conventions live there and
 the per-verb mechanics live in the hook.
+
+`composer-plugin-dev` loads when someone asks to build a Composer plugin in their own repository.
+It drives the user's live Composer through its agent debug port; the `composer-plugin-dev` eval in
+`packages/core/compute/assistant-evals` measures it from a one-line brief.
