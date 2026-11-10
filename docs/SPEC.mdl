@@ -2609,6 +2609,12 @@ decision D-103: The App Framework learning path publishes to the private registr
   by: user:wittjosiah
 ```
 
+```mdl
+decision D-104: No page carries a "these docs are being written" caution. ECHO's Welcome drops its Limits section, which held only that caution.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
