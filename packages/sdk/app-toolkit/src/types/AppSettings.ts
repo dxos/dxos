@@ -113,7 +113,13 @@ export const resolve = (settings: Snapshot, namespace: string, local: Values = {
   return resolved;
 };
 
-/** Mutable view of {@link Snapshot}. Call the mutators inside `Obj.update(settings, ...)`. */
+/**
+ * Mutable view of {@link Snapshot}. Call the mutators inside `Obj.update(settings, ...)`.
+ *
+ * A draft whose `local` is empty has no device layer, so every mutator writes straight to `shared`:
+ * that is how a settings object nobody pins keys on — a space's, shared by its members — is edited,
+ * with no second code path.
+ */
 export type Draft = {
   shared: Namespaces;
   local: DeviceSettings;
@@ -238,3 +244,12 @@ export const applyResolved = (draft: Draft, namespace: string, before: Values, a
 /** Ids whose decision under {@link PLUGINS_NAMESPACE} resolves to enabled. */
 export const getEnabledPlugins = (decisions: Values): string[] =>
   Object.keys(decisions).filter((id) => decisions[id] === true);
+
+/**
+ * The plugin decisions this settings object records, keyed by plugin id.
+ *
+ * Reads the shared layer alone, so it answers for a settings object with no device layer — a space's
+ * (see {@link Draft}), where every member sees one set and there is nothing to pin.
+ */
+export const getPluginDecisions = (settings: { readonly shared: Namespaces } | Snapshot): Record<string, boolean> =>
+  (settings.shared[PLUGINS_NAMESPACE] ?? {}) as Record<string, boolean>;

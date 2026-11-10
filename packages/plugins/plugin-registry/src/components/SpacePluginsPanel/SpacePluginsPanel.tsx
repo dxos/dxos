@@ -56,10 +56,13 @@ export const SpacePluginsPanel = ({ plugins, scoped, onChange, onReset }: SpaceP
                 />
               </Form.Field>
             ))}
-          </Form.FieldSet>
 
-          <Form.FieldSet label={t('reset-space-plugins.label')} description={t('reset-space-plugins.description')}>
-            <Form.Field standalone label={t('reset-space-plugins.label')}>
+            {/* In the group it acts on, as the space's other reset sits inside its own group. */}
+            <Form.Field
+              standalone
+              label={t('reset-space-plugins.label')}
+              description={t('reset-space-plugins.description')}
+            >
               <Button.Root disabled={!scoped} onClick={onReset} data-testid='spacePlugins.reset'>
                 {t('reset-space-plugins.button.label')}
               </Button.Root>

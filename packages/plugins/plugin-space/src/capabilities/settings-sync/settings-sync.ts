@@ -13,12 +13,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation, Obj } from '@dxos/echo';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { catchNonInterrupt, resolveAppSettings, resolveSettingsSpace } from '../../util/index.ts';
+import { catchNonInterrupt, resolveSettingsSpace } from '../../util/index.ts';
 import { installedPlugins, pluginSet, pluginSettings } from './binding.ts';
 import { type Store } from './reconciler.ts';
 import { Sync } from './sync.ts';
@@ -77,7 +78,7 @@ export default Capability.makeModule(
 
     const bind = Effect.gen(function* () {
       const space = yield* resolveSettingsSpace(client);
-      let settings = yield* resolveAppSettings(space);
+      let settings = yield* AppSpace.resolveAppSettings(space);
       const store = makeStore(() => settings, device, registry);
       const sync = new Sync(store);
 

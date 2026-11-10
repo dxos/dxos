@@ -7,10 +7,11 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -121,21 +122,48 @@ export default Capability.makeModule(
 
     // Each space's own set. Watched per space rather than published from the settings UX, so a decision
     // another member made reaches EDGE from whichever client sees it first.
-    const watched = new Map<SpaceId, () => void>();
+    //
+    // Two subscriptions per space, following the annotation the way settings sync does: the properties
+    // name the settings object, and a space that has never been configured has none until its first
+    // decision names one. Read-only — a space with no object has made no choice, which clears its scope
+    // rather than creating an object here.
+    type Watch = { properties: () => void; settings: () => void };
+    const watched = new Map<SpaceId, Watch>();
     const watch = (space: Space): void => {
       if (watched.has(space.id)) {
         return;
       }
-      watched.set(space.id, () => {});
+      const entry: Watch = { properties: () => {}, settings: () => {} };
+      watched.set(space.id, entry);
       void space
         .waitUntilReady()
         .then(() => {
-          if (!watched.has(space.id)) {
+          if (watched.get(space.id) !== entry) {
             return;
           }
           const publishSpace = () => publisher.publishSpace(space.id, AppSpace.getEnabledSpacePlugins(space) ?? []);
-          watched.set(space.id, Obj.subscribe(space.properties, publishSpace));
-          publishSpace();
+          const follow = () => {
+            const ref = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+              Option.getOrUndefined,
+            );
+            if (!ref) {
+              publishSpace();
+              return;
+            }
+            void ref
+              .load()
+              .then((settings) => {
+                if (watched.get(space.id) !== entry) {
+                  return;
+                }
+                entry.settings();
+                entry.settings = Obj.subscribe(settings, publishSpace);
+                publishSpace();
+              })
+              .catch((err) => log.catch(err));
+          };
+          entry.properties = Obj.subscribe(space.properties, follow);
+          follow();
         })
         .catch((err) => log.catch(err));
     };
@@ -147,7 +175,10 @@ export default Capability.makeModule(
       Effect.sync(() => {
         unsubscribeIdentity();
         spaces.unsubscribe();
-        watched.forEach((unsubscribe) => unsubscribe());
+        watched.forEach(({ properties, settings }) => {
+          properties();
+          settings();
+        });
         watched.clear();
         publisher.cancel();
       }),

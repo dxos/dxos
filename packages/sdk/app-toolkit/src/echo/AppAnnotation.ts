@@ -84,18 +84,3 @@ export const HomeVisibilityAnnotation = Annotation.make({
   id: 'org.dxos.space.homeVisibility',
   schema: Schema.Record(Schema.String, Schema.Boolean),
 });
-
-/**
- * Which plugins a space runs, keyed by plugin id: present means decided, `true` means enabled.
- *
- * The same shape as the identity's own decisions under `AppSettings.PLUGINS_NAMESPACE`, and stored on
- * `space.properties` for the same reason the Home visibility record is — it is the space's choice, so it
- * replicates to every member rather than following one user's devices.
- *
- * An absent annotation is not an empty one: it means the space has made no choice, and the member's own
- * enabled set applies. That distinction is what EDGE scopes a headless invocation by (spec D-78).
- */
-export const SpacePluginsAnnotation = Annotation.make({
-  id: 'org.dxos.space.plugins',
-  schema: Schema.Record(Schema.String, Schema.Boolean),
-});
