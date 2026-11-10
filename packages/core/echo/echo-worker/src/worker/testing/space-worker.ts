@@ -10,9 +10,9 @@
  * can absorb a refusal.
  */
 
-import type { SpaceEnv } from '../space-object.ts';
+import type { SpaceEnv } from '@dxos/echo-sync-worker';
 
-export { SpaceObject } from '../space-object.ts';
+export { SpaceObject } from '@dxos/echo-sync-worker';
 
 // The runtime requires a default export with a handler; the tests never reach it.
 export default {

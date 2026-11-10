@@ -76,6 +76,7 @@
       "@dxos/echo-solid",
       "@dxos/echo-sqlite",
       "@dxos/echo-sqlite-demo",
+      "@dxos/echo-sync-worker",
       "@dxos/echo-worker",
       "@dxos/edge-client",
       "@dxos/edge-compute",

@@ -50,6 +50,9 @@
       "path": "../../core/echo/echo-sqlite"
     },
     {
+      "path": "../../core/echo/echo-sync-worker"
+    },
+    {
       "path": "../../core/echo/echo-worker"
     },
     {

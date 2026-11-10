@@ -25,6 +25,9 @@
     },
     {
       "path": "../echo-sqlite"
+    },
+    {
+      "path": "../echo-sync-worker"
     }
   ]
 }

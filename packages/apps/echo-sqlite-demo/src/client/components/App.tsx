@@ -81,6 +81,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   const socket = useRef<Connection>(undefined);
   useEffect(() => {
     const active = connect(db, slug, types, {
+      server: import.meta.env.VITE_SYNC_URL,
       onSync: ({ received, expiresAt: expiry }) => {
         setExpiresAt(expiry);
         setConnection({ ok: true, message: received > 0 ? `Received ${received}` : 'Connected' });

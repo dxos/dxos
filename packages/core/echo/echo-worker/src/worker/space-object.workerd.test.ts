@@ -3,15 +3,22 @@
 //
 
 // Runs INSIDE the Cloudflare Workers runtime via `@cloudflare/vitest-pool-workers`, opted in with
-// `workerd` in this package's vite config. That is the point rather than a detail: what is under
-// test is the record cap, and the cap is read off the object's own SQLite and enforced per
-// transport. A fake would be asserting against a reimplementation of the thing that was wrong.
+// `workerd` in this package's vite config. What is under test — compare-and-set on seqs, the record
+// cap, expiry — is read off the object's own SQLite, so a fake would be asserting against a
+// reimplementation of the thing under test.
 
 import { env, runDurableObjectAlarm } from 'cloudflare:test';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { SyncRecord, SyncRequest, SyncResponse } from '../protocol.ts';
-import { MAX_RECORDS, type SpaceEnv, type SpaceObject } from './space-object.ts';
+import {
+  MAX_RECORDS,
+  type PushRecord,
+  type PushRequest,
+  type PushResult,
+  type ServerMessage,
+  type SpaceEnv,
+  type SpaceObject,
+} from '@dxos/echo-sync-worker';
 
 // `cloudflare:test` types `env` as `Cloudflare.Env`, which the runtime leaves empty for a project to
 // extend: this is how the pool's `env` learns about the binding this package's vite config declares.
@@ -23,12 +30,16 @@ declare global {
 
 const TYPENAME = 'com.example.type.thing';
 
-const record = (key: string, deleted = false): SyncRecord => ({
+const record = (
+  key: string,
+  { deleted = false, name = key, base }: { deleted?: boolean; name?: string; base?: number } = {},
+): PushRecord => ({
   key,
   typename: TYPENAME,
-  props: { name: key },
+  props: { name },
   refs: {},
   ...(deleted ? { deleted: true } : {}),
+  ...(base !== undefined ? { base } : {}),
 });
 
 /** A fresh object per test: `idFromName` is deterministic, so the name has to carry the test apart. */
@@ -39,36 +50,40 @@ beforeEach(() => {
   stub = env.SPACE.get(env.SPACE.idFromName(`space-${++next}`));
 });
 
-const post = (request: SyncRequest): Promise<Response> =>
+const post = (request: PushRequest): Promise<Response> =>
   stub.fetch('https://space/api/space/test/sync', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(request),
   });
 
-/** Everything the store holds, live and tombstoned. */
-const read = async (): Promise<SyncResponse> => {
-  const response = await post({ since: 0, records: [] });
+const push = async (request: PushRequest): Promise<PushResult> => {
+  const response = await post(request);
   expect(response.status).toBe(200);
-  return (await response.json()) as SyncResponse;
+  return (await response.json()) as PushResult;
 };
+
+/** Everything the store holds, live and tombstoned. */
+const read = (): Promise<PushResult> => push({ since: 0, records: [] });
 
 const live = async (): Promise<string[]> =>
   (await read()).records.filter((record) => !record.deleted).map((record) => record.key);
 
-/** Opens a socket to the object and resolves once it has answered `count` messages. */
-const socket = async (): Promise<{
-  send: (message: unknown) => void;
-  next: () => Promise<{ type: string } & Partial<SyncResponse>>;
-}> => {
+const seqOf = async (key: string): Promise<number | undefined> =>
+  (await read()).records.find((record) => record.key === key)?.seq;
+
+type Socket = { send: (message: unknown) => void; next: () => Promise<ServerMessage> };
+
+/** Opens a socket to the object; `next` resolves with each message in order. */
+const socket = async (): Promise<Socket> => {
   const response = await stub.fetch('https://space/api/space/test/socket', { headers: { upgrade: 'websocket' } });
   const ws = response.webSocket;
   expect(ws).toBeDefined();
   ws!.accept();
-  const queue: ({ type: string } & Partial<SyncResponse>)[] = [];
-  const waiting: ((message: { type: string } & Partial<SyncResponse>) => void)[] = [];
+  const queue: ServerMessage[] = [];
+  const waiting: ((message: ServerMessage) => void)[] = [];
   ws!.addEventListener('message', (event: MessageEvent) => {
-    const message = JSON.parse(String(event.data));
+    const message = JSON.parse(String(event.data)) as ServerMessage;
     const resolve = waiting.shift();
     resolve ? resolve(message) : queue.push(message);
   });
@@ -93,6 +108,87 @@ const fill = async (count: number): Promise<void> => {
   expect(await live()).toHaveLength(count);
 };
 
+describe('SpaceObject sequencing', () => {
+  test('every accepted write gets the next seq', async () => {
+    const result = await push({ since: 0, records: [record('a', { base: 0 }), record('b', { base: 0 })] });
+    expect(result.accepted).toBe(true);
+    expect(result.seq).toBe(2);
+    expect(result.records.map((entry) => [entry.key, entry.seq])).toEqual([
+      ['a', 1],
+      ['b', 2],
+    ]);
+  });
+
+  test('a push based on the current seq is applied', async () => {
+    await push({ since: 0, records: [record('a', { base: 0 })] });
+    const result = await push({ since: 1, records: [record('a', { name: 'edited', base: 1 })] });
+    expect(result.accepted).toBe(true);
+    expect(result.records).toEqual([expect.objectContaining({ key: 'a', seq: 2, props: { name: 'edited' } })]);
+  });
+
+  test('a push based on a stale seq is refused whole, and answered with what was missed', async () => {
+    await push({ since: 0, records: [record('a', { base: 0 }), record('b', { base: 0 })] });
+    // Another client moves `a` on.
+    await push({ since: 2, records: [record('a', { name: 'theirs', base: 1 })] });
+
+    const result = await push({
+      since: 2,
+      records: [record('a', { name: 'mine', base: 1 }), record('b', { name: 'mine', base: 2 })],
+    });
+    expect(result.accepted).toBe(false);
+    expect(result.conflicts).toEqual(['a']);
+    expect(result.records).toEqual([expect.objectContaining({ key: 'a', seq: 3, props: { name: 'theirs' } })]);
+    // All or nothing: `b` was current, but it is not applied either.
+    expect((await read()).records.find((entry) => entry.key === 'b')?.props).toEqual({ name: 'b' });
+
+    // Merged on top of what it missed, the same push goes through.
+    const retry = await push({
+      since: 3,
+      records: [record('a', { name: 'mine', base: 3 }), record('b', { name: 'mine', base: 2 })],
+    });
+    expect(retry.accepted).toBe(true);
+    expect(await seqOf('a')).toBe(4);
+  });
+
+  test('a new record whose key the store already holds is a conflict', async () => {
+    await push({ since: 0, records: [record('a', { base: 0 })] });
+    const result = await push({ since: 0, records: [record('a', { name: 'again', base: 0 })] });
+    expect(result.accepted).toBe(false);
+    expect(result.conflicts).toEqual(['a']);
+  });
+
+  test('a record without a base is written unconditionally', async () => {
+    await push({ since: 0, records: [record('a', { base: 0 })] });
+    const result = await push({ since: 1, records: [record('a', { name: 'forced' })] });
+    expect(result.accepted).toBe(true);
+  });
+
+  test('a retried push is applied once', async () => {
+    const request = { client: 'c1', clientSeq: 1, since: 0, records: [record('a', { base: 0 })] };
+    expect((await push(request)).accepted).toBe(true);
+    // Its answer was lost; the retry carries the same clientSeq and a base that is no longer current.
+    const retry = await push(request);
+    expect(retry.accepted).toBe(true);
+    expect(retry.seq).toBe(1);
+  });
+
+  test('the pusher gets an ack; every other socket gets the records', async () => {
+    const mine = await socket();
+    const theirs = await socket();
+
+    mine.send({ type: 'push', client: 'c1', clientSeq: 1, since: 0, records: [record('a', { base: 0 })] });
+    const ack = await mine.next();
+    expect(ack).toMatchObject({ type: 'ack', clientSeq: 1, accepted: true, seq: 1 });
+
+    const broadcast = await theirs.next();
+    expect(broadcast).toMatchObject({ type: 'records', from: 0, seq: 1 });
+    expect(broadcast.type === 'records' && broadcast.records.map((entry) => entry.key)).toEqual(['a']);
+
+    theirs.send({ type: 'pull', since: 0 });
+    expect(await theirs.next()).toMatchObject({ type: 'records', from: 0, seq: 1 });
+  });
+});
+
 describe('SpaceObject record cap', () => {
   test('a batch past the cap is refused', async () => {
     const records = Array.from({ length: MAX_RECORDS + 1 }, (_unused, index) => record(`key-${index}`));
@@ -103,9 +199,7 @@ describe('SpaceObject record cap', () => {
 
   test('at the cap, a batch that deletes one and creates another is accepted', async () => {
     await fill(MAX_RECORDS);
-
-    // The case the cap used to refuse: the graph does not grow, so there is nothing to refuse.
-    const response = await post({ since: 0, records: [record('key-0', true), record('fresh')] });
+    const response = await post({ since: 0, records: [record('key-0', { deleted: true }), record('fresh')] });
     expect(response.status).toBe(200);
 
     const keys = await live();
@@ -116,56 +210,33 @@ describe('SpaceObject record cap', () => {
 
   test('at the cap, one more object is still refused', async () => {
     await fill(MAX_RECORDS);
-
-    const response = await post({ since: 0, records: [record('fresh')] });
-    expect(response.status).toBe(413);
+    expect((await post({ since: 0, records: [record('fresh')] })).status).toBe(413);
     expect(await live()).not.toContain('fresh');
   });
 
   test('at the cap, editing an object that is already there is accepted', async () => {
     await fill(MAX_RECORDS);
-
-    const response = await post({ since: 0, records: [{ ...record('key-0'), props: { name: 'edited' } }] });
-    expect(response.status).toBe(200);
-    expect((await read()).records.find((record) => record.key === 'key-0')?.props).toEqual({ name: 'edited' });
+    expect((await post({ since: 0, records: [record('key-0', { name: 'edited' })] })).status).toBe(200);
+    expect((await read()).records.find((entry) => entry.key === 'key-0')?.props).toEqual({ name: 'edited' });
   });
 
   test('a key deleted and written again in one batch ends up live, and counts', async () => {
     await fill(MAX_RECORDS);
-
-    // Order decides the outcome, so the cap has to replay the batch rather than count its keys.
-    expect((await post({ since: 0, records: [record('key-0', true), record('key-0')] })).status).toBe(200);
+    expect((await post({ since: 0, records: [record('key-0', { deleted: true }), record('key-0')] })).status).toBe(200);
     expect(await live()).toContain('key-0');
-
-    // Which means the graph is still full: the delete did not make room.
     expect((await post({ since: 0, records: [record('fresh')] })).status).toBe(413);
   });
 
-  test('the socket enforces the same cap, and allows the same swap', async () => {
+  test('the socket enforces the same cap', async () => {
     await fill(MAX_RECORDS);
     const connection = await socket();
-
-    connection.send({ type: 'hello', since: MAX_RECORDS });
-    expect((await connection.next()).type).toBe('records');
-
-    connection.send({ type: 'push', records: [record('fresh')] });
+    connection.send({ type: 'push', since: MAX_RECORDS, records: [record('fresh')] });
     expect(await connection.next()).toMatchObject({ type: 'error' });
-
-    connection.send({ type: 'push', records: [record('key-0', true), record('fresh')] });
-    const broadcast = await connection.next();
-    expect(broadcast.type).toBe('records');
-    expect(broadcast.records?.map((record) => record.key)).toEqual(['key-0', 'fresh']);
-
-    const keys = await live();
-    expect(keys).toHaveLength(MAX_RECORDS);
-    expect(keys).toContain('fresh');
   });
 
-  test('a malformed entry is skipped by the cap exactly as it is by the write', async () => {
+  test('a malformed entry is skipped', async () => {
     await fill(MAX_RECORDS);
-
-    // No typename, so `#apply` writes nothing: counting it would refuse a batch that adds nothing.
-    const response = await post({ since: 0, records: [{ key: 'fresh' } as unknown as SyncRecord] });
+    const response = await post({ since: 0, records: [{ key: 'fresh' } as unknown as PushRecord] });
     expect(response.status).toBe(200);
     expect(await live()).not.toContain('fresh');
   });
@@ -173,21 +244,18 @@ describe('SpaceObject record cap', () => {
 
 describe('SpaceObject expiry', () => {
   test('the store that replaces an expired one is a different incarnation', async () => {
-    expect((await post({ since: 0, records: [record('key-0'), record('key-1')] })).status).toBe(200);
+    await push({ since: 0, records: [record('key-0'), record('key-1')] });
     const before = await read();
-    expect(before.version).toBe(2);
-    expect(before.incarnation).toBeTypeOf('string');
+    expect(before.seq).toBe(2);
 
-    // The 24h alarm: everything the object holds is the graph, so dropping its storage is the deletion.
     expect(await runDurableObjectAlarm(stub)).toBe(true);
 
-    // A peer that knows nothing of the expiry writes, which is what hides the expiry from a version
-    // comparison: the new store climbs back to the version a returning client saved. Only the
-    // incarnation distinguishes it, which is what `isReset` reads.
-    expect((await post({ since: 0, records: [record('key-2'), record('key-3')] })).status).toBe(200);
+    // A peer that knows nothing of the expiry writes, which climbs the new store back to the seq a
+    // returning client saved; only the incarnation tells the two apart.
+    await push({ since: 0, records: [record('key-2'), record('key-3')] });
     const after = await read();
-    expect(after.version).toBe(before.version);
+    expect(after.seq).toBe(before.seq);
     expect(after.incarnation).not.toBe(before.incarnation);
-    expect(after.records.map((record) => record.key)).toEqual(['key-2', 'key-3']);
+    expect(after.records.map((entry) => entry.key)).toEqual(['key-2', 'key-3']);
   });
 });

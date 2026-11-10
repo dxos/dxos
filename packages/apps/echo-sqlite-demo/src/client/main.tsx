@@ -18,7 +18,13 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import '@dxos/react-ui/theme.css';
-import { DatabaseBusyError, DatabaseUnavailableError, openDatabase, resolveSlug } from '@dxos/echo-worker';
+import {
+  DatabaseBusyError,
+  DatabaseUnavailableError,
+  openDatabase,
+  resolveSlug,
+  waitForDatabase,
+} from '@dxos/echo-worker';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
@@ -54,6 +60,10 @@ openDatabase(slug, types).then(
   ({ db }) => render(<App db={db} slug={slug} />),
   (error) => {
     console.error(error);
+    if (error instanceof DatabaseBusyError) {
+      // The other tab's lock is released when it closes; this tab then opens without a manual reload.
+      void waitForDatabase().then(() => window.location.reload());
+    }
     render(
       <div className='p-4 space-y-2'>
         <p className='text-fg'>
@@ -61,7 +71,7 @@ openDatabase(slug, types).then(
         </p>
         <p className='text-fg-muted text-sm'>
           {error instanceof DatabaseBusyError
-            ? 'One tab at a time holds this browser’s database, whichever graph it shows. Close the other tab and reload this one; to watch two peers sync, open the second in another browser or profile.'
+            ? 'One tab at a time holds this browser’s database, whichever graph it shows. Close the other tab and this one opens by itself; to watch two peers sync, open the second in another browser or profile.'
             : error instanceof DatabaseUnavailableError
               ? 'The worker never got the file. A private window may block origin storage, and some browsers keep the handle for a moment after a tab holding it closes — reloading often works.'
               : 'This demo needs OPFS in a dedicated worker. It works in Chrome, Edge and Safari 17+; a private window may block origin storage.'}

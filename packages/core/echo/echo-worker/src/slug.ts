@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { SLUG_PATTERN, SOURCE, randomSlug } from '@dxos/echo-sync-worker/protocol';
 import { SpaceId } from '@dxos/keys';
-
-import { SLUG_PATTERN, SOURCE, randomSlug } from './protocol.ts';
 
 /**
  * The slug in the URL names the graph, and a graph exists as soon as it is addressed — there is no
