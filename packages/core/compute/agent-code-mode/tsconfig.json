@@ -44,6 +44,9 @@
       "path": "../assistant"
     },
     {
+      "path": "../assistant-toolkit"
+    },
+    {
       "path": "../compute"
     },
     {

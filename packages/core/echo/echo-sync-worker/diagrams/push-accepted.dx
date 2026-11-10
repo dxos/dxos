@@ -1,0 +1,13 @@
+diagram kind=sequence
+node A "client A" ref="packages/core/echo/echo-sqlite-sync/src/sync.ts"
+node DO "SpaceObject" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+node Store "entries" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+node B "client B" ref="packages/core/echo/echo-sqlite-sync/src/sync.ts"
+edge A sends DO "push since=4"
+edge DO calls Store "seq of each key"
+edge Store returns DO "all equal base"
+edge DO calls Store "write seq 5, 6"
+edge Store returns DO "applied"
+note DO "client:A = 3"
+edge DO sends A "ack accepted"
+edge DO sends B "records 4..6"

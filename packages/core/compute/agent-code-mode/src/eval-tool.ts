@@ -4,14 +4,15 @@
 
 import * as Tool from 'effect/ai/Tool';
 import * as Toolkit from 'effect/ai/Toolkit';
-import type * as Context from 'effect/Context';
+import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';
@@ -65,12 +66,30 @@ export type EvalToolkitOptions = {
   readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
+  /**
+   * Told, when an evaluation ends (failed or not), which operations its code ran: an `eval` result says only what the
+   * code printed, so this is how the turn records what the call actually did.
+   */
+  readonly onEvaluated?: (evaluation: Evaluation) => void;
+};
+
+/**
+ * What one evaluation did: the operations its code ran, in order. A failed evaluation still lists the ones that ran
+ * before the failure, since what they did (a message sent, an object written) happened all the same.
+ */
+export type Evaluation = {
+  /** The `eval` call this evaluation answered, when it ran as one. */
+  readonly toolCallId?: string;
+  readonly code: string;
+  readonly invocations: readonly ContentBlock.Invocation[];
 };
 
 /** One evaluation, as {@link evaluate} runs it: the program, plus everything that binds it to a workspace. */
 export type EvaluateOptions = EvalToolkitOptions & {
   /** The program, in the dialect's own syntax, before the dialect wraps it. */
   readonly code: string;
+  /** The `eval` call being answered, reported back in {@link Evaluation}. */
+  readonly toolCallId?: string;
 };
 
 /**
@@ -87,16 +106,32 @@ export const evaluate = Effect.fnUntraced(function* ({
   skills,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
+  onEvaluated,
+  toolCallId,
 }: EvaluateOptions) {
   const printer = makePrinter(maxOutput);
+  const invocations: ContentBlock.Invocation[] = [];
+  // Recorded on both paths an operation is reached by: the plain dialect calls `SandboxOperation.invoke` (the tool
+  // path, whose handlers hold their own services), while the Effect dialect and the worker sandbox call
+  // `Operation.invoke`, which resolves `Operation.Service` from the runtime handed to the sandbox.
+  const recorder = makeRecorder(invocations);
   const result = yield* sandbox
     .evaluate({
       code: dialect.wrap(code),
       dialect,
-      context: { runtime, operations, skills, print: printer.print },
+      context: {
+        runtime: Context.add(
+          runtime,
+          Operation.Service,
+          recordingService(Context.get(runtime, Operation.Service), recorder),
+        ),
+        operations: recordInvocations(operations, recorder),
+        skills,
+        print: printer.print,
+      },
       timeout,
     })
-    .pipe(Effect.result);
+    .pipe(Effect.result, Effect.ensuring(Effect.sync(() => onEvaluated?.({ toolCallId, code, invocations }))));
 
   if (Result.isFailure(result)) {
     // A tool failure reaches the model as a failed result, not a failed turn, so it can still
@@ -127,9 +162,59 @@ export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.Opaq
   OpaqueToolkit.make(
     EvalToolkitDefinition,
     EvalToolkitDefinition.toLayer({
-      [EVAL_TOOL_NAME]: ({ code }: { code: string }) => evaluate({ ...options, code }),
+      [EVAL_TOOL_NAME]: ({ code }: { code: string }, { toolCallId }) => evaluate({ ...options, code, toolCallId }),
     }),
   );
+
+/** Records each operation call into one evaluation's list: its key, and the first line of its failure if it failed. */
+type Recorder = {
+  /** Records the call `effect` makes once it settles. */
+  readonly effect: (operationKey: string) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  /** Records a call that reported its outcome as `invokePromise` does. */
+  readonly outcome: (operationKey: string, outcome: { readonly error?: Error }) => void;
+};
+
+/** Which operations ran, not what they returned: serializing every output (a query's) would cost each call. */
+const makeRecorder = (invocations: ContentBlock.Invocation[]): Recorder => {
+  // The first line names the failure; the rest is a trace no reader of the history needs.
+  const record = (operationKey: string, error?: string) =>
+    invocations.push(error === undefined ? { operationKey } : { operationKey, error: error.split('\n')[0] });
+  return {
+    effect: (operationKey) => (effect) =>
+      effect.pipe(
+        Effect.tap(() => Effect.sync(() => record(operationKey))),
+        Effect.tapCause((cause) => Effect.sync(() => record(operationKey, Cause.pretty(cause)))),
+      ),
+    outcome: (operationKey, { error }) => record(operationKey, error?.message),
+  };
+};
+
+/**
+ * The operations, each recording its calls as it runs. Only an operation-backed call is recorded: an MCP tool has no
+ * key a reader of the history could match.
+ */
+const recordInvocations = (operations: readonly SandboxOperation[], recorder: Recorder): SandboxOperation[] =>
+  operations.map((operation) => {
+    const operationKey = operation.definition && String(operation.definition.meta.key);
+    return operationKey === undefined
+      ? operation
+      : { ...operation, invoke: (input: unknown) => operation.invoke(input).pipe(recorder.effect(operationKey)) };
+  });
+
+/**
+ * `service`, recording each operation invoked through it. Both of its invoking methods are wrapped, and each call is
+ * recorded once: the original `invokePromise` runs through the original service, not through the `invoke` here.
+ */
+const recordingService = (service: Operation.OperationService, recorder: Recorder): Operation.OperationService => ({
+  // Delegated by name rather than spread, which would miss a method a class-based service holds on its prototype.
+  schedule: (op, ...args) => service.schedule(op, ...args),
+  invoke: (op, ...args) => service.invoke(op, ...args).pipe(recorder.effect(String(op.meta.key))),
+  invokePromise: (op, ...args) =>
+    service.invokePromise(op, ...args).then((outcome) => {
+      recorder.outcome(String(op.meta.key), outcome);
+      return outcome;
+    }),
+});
 
 /** How a tool call is shown, where its tool name alone says nothing about what it does. */
 export type CallLabel = Pick<ContentBlock.ToolCall, 'displayName' | 'displayIcon'>;
