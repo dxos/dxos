@@ -187,6 +187,34 @@ export class SchemaValidator {
     return property != null && SchemaAST.isOptional(property.type);
   }
 
+  /**
+   * Whether the property at `propertyPath` may be cleared: its key is optional in the enclosing struct (or
+   * discriminated union member), so writing `undefined` — which deletes the key — leaves a valid object.
+   * The path form of {@link isOptionalProperty}, for a database object's nested writes.
+   */
+  public static isOptionalPropertyAt(
+    rootObjectSchema: Schema.Top,
+    propertyPath: KeyPath,
+    getProperty: (path: KeyPath) => any = () => null,
+  ): boolean {
+    const propertyName = propertyPath.at(-1);
+    if (propertyName === undefined) {
+      return false;
+    }
+    const parentPath = propertyPath.slice(0, -1);
+    const parentAst =
+      parentPath.length === 0
+        ? rootObjectSchema.ast
+        : this.getPropertyAstChain(rootObjectSchema, parentPath, getProperty).at(-1);
+    if (parentAst == null) {
+      return false;
+    }
+    const property = getPropertySignature(parentAst, propertyName.toString(), (name) =>
+      getProperty([...parentPath, name]),
+    );
+    return property != null && SchemaAST.isOptional(property.type);
+  }
+
   /** The AST that property `prop` of a typed target follows. */
   public static getTargetPropertyAst(target: any, prop: string | symbol): SchemaAST.AST {
     const ast = getTargetAst(target);
@@ -292,7 +320,7 @@ const getProperties = (
 
   const typeDiscriminators = getTypeDiscriminators(typeAstList);
   const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
-  const typeIndex = typeDiscriminators.findIndex((p) => targetPropertyValue === (p.type as SchemaAST.Literal).literal);
+  const typeIndex = typeDiscriminators.findIndex((p) => targetPropertyValue === discriminatorValue(p));
   invariant(typeIndex !== -1, 'discriminator field not set on target');
   return SchemaAST.getPropertySignatures(typeAstList[typeIndex]);
 };
@@ -313,16 +341,7 @@ const getPropertyType = (
     return ast;
   }
 
-  const typeOrDiscriminatedUnion = unwrapAst(ast, (t) => {
-    return SchemaAST.isObjects(t) || (SchemaAST.isUnion(t) && t.types.some((t) => SchemaAST.isObjects(t)));
-  });
-  if (typeOrDiscriminatedUnion == null) {
-    return null;
-  }
-
-  const targetProperty = getProperties(typeOrDiscriminatedUnion, getTargetPropertyFn).find(
-    (p) => p.name === propertyName,
-  );
+  const targetProperty = getPropertySignature(ast, propertyName, getTargetPropertyFn);
   if (targetProperty != null) {
     return unwrapAst(targetProperty.type);
   }
@@ -336,6 +355,25 @@ const getPropertyType = (
 };
 
 /**
+ * The signature of `propertyName` on a struct, or on the member of a discriminated union that the target's
+ * current discriminator selects.
+ */
+const getPropertySignature = (
+  ast: SchemaAST.AST,
+  propertyName: string,
+  getTargetPropertyFn: (propertyName: string) => any,
+): SchemaAST.PropertySignature | null => {
+  const typeOrDiscriminatedUnion = unwrapAst(ast, (t) => {
+    return SchemaAST.isObjects(t) || (SchemaAST.isUnion(t) && t.types.some((t) => SchemaAST.isObjects(t)));
+  });
+  if (typeOrDiscriminatedUnion == null) {
+    return null;
+  }
+
+  return getProperties(typeOrDiscriminatedUnion, getTargetPropertyFn).find((p) => p.name === propertyName) ?? null;
+};
+
+/**
  * Unwraps the shapes a tag takes on after a JSON schema round-trip: optional (its constructor
  * default leaves it out of `required`) and single-member union (a one-entry `anyOf`).
  */
@@ -344,6 +382,12 @@ const unwrapDiscriminator = (ast: SchemaAST.AST): SchemaAST.AST => {
   return SchemaAST.isUnion(unwrapped) && unwrapped.types.length === 1
     ? unwrapDiscriminator(unwrapped.types[0])
     : unwrapped;
+};
+
+/** The tag a union member's discriminator property declares, seen through {@link unwrapDiscriminator}. */
+const discriminatorValue = (property: SchemaAST.PropertySignature): unknown => {
+  const tag = unwrapDiscriminator(property.type);
+  return SchemaAST.isLiteral(tag) ? tag.literal : undefined;
 };
 
 const getTypeDiscriminators = (typeAstList: SchemaAST.Objects[]): SchemaAST.PropertySignature[] => {
@@ -447,9 +491,7 @@ const resolveTypeLiteral = (
 
   const typeDiscriminators = getTypeDiscriminators(typeAstList);
   const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
-  const typeIndex = typeDiscriminators.findIndex(
-    (property) => targetPropertyValue === (property.type as SchemaAST.Literal).literal,
-  );
+  const typeIndex = typeDiscriminators.findIndex((property) => targetPropertyValue === discriminatorValue(property));
   invariant(typeIndex !== -1, 'discriminator field not set on target');
   return typeAstList[typeIndex];
 };

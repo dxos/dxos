@@ -500,10 +500,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
 
-    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
-      return target[symbolInternals].getDecoded([getNamespace(target), ...path]);
-    });
+    const getProperty = (propertyPath: Doc.KeyPath) =>
+      target[symbolInternals].getDecoded([getNamespace(target), ...propertyPath]);
+    // Clearing an optional key deletes it, so the enclosing struct admits `undefined` where the property's own type
+    // does not (an `optionalKey` field, as every optional field of a type rebuilt from JSON Schema is).
+    if (value === undefined && SchemaValidator.isOptionalPropertyAt(rootObjectSchema, path, getProperty)) {
+      return value;
+    }
 
+    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, getProperty);
     assertsWithDetail(propertySchema, value, path);
     SchemaValidator.assertExactProperties(propertySchema.ast, value, (path) => getDeep(value, path));
     return value;
