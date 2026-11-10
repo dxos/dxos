@@ -7,9 +7,12 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useMemo, useState } from 'react';
 
-import { type ThemeMode, between } from '@dxos/react-ui-canvas';
+import { type ThemeMode, between, latticeGrid } from '@dxos/react-ui-canvas';
+import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import {
+  DEFAULT_GRID,
   type Layer,
+  MAJOR_GRID_RATIO,
   type NamedStyle,
   type NamedStyle2D,
   type NamedStyle3D,
@@ -33,6 +36,7 @@ import {
   StylesInspector,
   VIEWS_INSPECTOR,
   ViewsInspector,
+  makeGeometryField,
   propertiesShown,
 } from '../components/index.ts';
 import { type ObjectEntry } from '../components/index.ts';
@@ -44,6 +48,15 @@ import {
   useSceneServices,
   useSceneTools,
 } from './aspects/index.ts';
+import {
+  DEFAULT_LATTICE,
+  type DrawingValues,
+  drawingOverrides,
+  drawingSchema,
+  drawingWrites,
+  latticeGutterType,
+  latticeValues,
+} from './drawing-form.ts';
 import {
   duplicateObject,
   layersOf,
@@ -57,6 +70,18 @@ import {
 const NO_LAYERS = Atom.make<readonly Layer[]>([]);
 const NO_OBJECTS = Atom.make<readonly ObjectEntry[]>([]);
 const NO_PICK = Atom.make<string | undefined>(undefined);
+
+/** The lattice's cell, with its gutter drawn beside it, as the Properties form draws an element's centre and size. */
+const DRAWING_FIELDS: FormFieldMap = {
+  cell: makeGeometryField({ name: 'gutter', label: 'Gutter', type: latticeGutterType }),
+};
+
+export const DRAWING_INSPECTOR: InspectorSectionDef = {
+  id: 'drawing',
+  title: 'Drawing',
+  icon: 'ph--compass-tool--regular',
+  order: 5,
+};
 
 export const STYLES_INSPECTOR: InspectorSectionDef = {
   id: 'styles',
@@ -411,6 +436,62 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
   );
 };
 
+/**
+ * Drawing: the whole drawing's properties, as a form — the look, the grid and the aids this viewer sees, and (in 2D)
+ * the lattice the layout is laid out on, which is the document's own and so is written as an intent.
+ */
+/**
+ * Drawing: the open layout's own properties — its grid pitch and whether it is laid out on a lattice. What this
+ * viewer sees (the look, the grid drawn, snapping, guides and axes) is the display panel's, so it is not repeated here.
+ */
+export const DrawingSection = () => {
+  const { atoms, commands } = useSceneDocument('SceneEditor.Drawing');
+  const readonly = useAtomValue(atoms.readonly);
+  const layout = useAtomValue(atoms.layout);
+  const record = useOpenLayout('SceneEditor.Drawing');
+  const drawing = record?.dim === '2d' ? record : undefined;
+  const values = useMemo(
+    (): DrawingValues => ({
+      // The pitch in force, so the field is never blank: a layout without one draws on its lattice's grid or the default.
+      grid: drawing?.grid ?? ((drawing?.lattice && latticeGrid(drawing.lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID),
+      lattice: drawing?.lattice !== undefined,
+      ...latticeValues(drawing?.lattice ?? DEFAULT_LATTICE),
+    }),
+    [drawing],
+  );
+  const overrides = useMemo(() => drawingOverrides({ lattice: values.lattice === true }), [values.lattice]);
+  const onSave = (next: DrawingValues) => {
+    const intents = drawingWrites(values, next);
+    layout !== undefined &&
+      intents.length > 0 &&
+      commands.intent(layout, intents.length === 1 ? intents[0] : { kind: 'batch', intents });
+  };
+  // Only a 2D layout has a grid and a lattice; a 3D scene's drawing has nothing of its own to show.
+  if (!drawing) {
+    return null;
+  }
+  return (
+    <InspectorSection section={DRAWING_INSPECTOR}>
+      <Form.Root
+        schema={drawingSchema}
+        values={values}
+        fieldOverrides={overrides}
+        fieldMap={DRAWING_FIELDS}
+        readonly={readonly}
+        autoSave
+        commitOn='blur'
+        onSave={onSave}
+      >
+        <Form.Viewport scroll={false}>
+          <Form.Content>
+            <Form.Fields />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </InspectorSection>
+  );
+};
+
 /** The shared inspector sections, then the dimension's own. */
 export const SceneEditorInspector = ({ catalogs }: { catalogs?: readonly EditorCatalog[] }) => {
   const { config } = useSceneDocument('SceneEditor.Inspector');
@@ -421,6 +502,7 @@ export const SceneEditorInspector = ({ catalogs }: { catalogs?: readonly EditorC
       <ObjectsSection />
       <LayersSection />
       <StylesSection catalogs={catalogs} />
+      <DrawingSection />
       {config.sections?.map(({ section, render }) => (
         <InspectorSection key={section.id} section={section}>
           {render()}

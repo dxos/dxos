@@ -18,16 +18,16 @@ import {
   formatSystemPrompt,
   getOperationFromTool,
 } from '@dxos/assistant';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { Database, Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import { type CallLabel, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
-import { describeTypes } from './fields.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
+import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -128,11 +128,12 @@ const runCodeModeTurn = ({
         Effect.gen(function* () {
           // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
           let labelCall = labelEvalCall([]);
+          const evaluations = makeEvaluationLog();
           const request = new AiRequest.Request({
             onOutput: (message) =>
               message.id === promptId
                 ? Effect.void
-                : append([labelEvalCalls(message, labelCall)]).pipe(Effect.provide(runtime)),
+                : append([annotateEvalBlocks(message, labelCall, evaluations)]).pipe(Effect.provide(runtime)),
           });
 
           yield* request.begin({
@@ -151,12 +152,21 @@ const runCodeModeTurn = ({
           const runIteration = (turn: number) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => session.context.sync());
+              evaluations.clear();
               const skills = session.context.getSkills();
               // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
               const mcps = yield* AiSession.connectMcpServers(
                 params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
               );
-              const operations = yield* projectOperations(skills, mcps);
+              // The prompt states one skill, the Skill Manager, and the model looks up every other skill, operation and
+              // type through its operations. Those, the enabled skills' and the MCP tools are what code can call.
+              const stated = SkillManagerSkill.makeForCodeMode();
+              const operations = yield* projectOperations([stated, ...skills], mcps);
+              const statedTools = new Set(stated.tools.map(String));
+              // An MCP tool has no skill to look it up through, so the conversation's are stated too.
+              const listed = operations.filter(
+                (operation) => statedTools.has(operation.name) || operation.definition === undefined,
+              );
               labelCall = labelEvalCall(operations);
               const evalOptions = {
                 dialect,
@@ -166,6 +176,7 @@ const runCodeModeTurn = ({
                 skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
+                onEvaluated: evaluations.add,
               };
               // Through the script API rather than straight into the sandbox: the turn states what to
               // run and the runner says where, which is what lets a deployment move code mode off
@@ -175,18 +186,17 @@ const runCodeModeTurn = ({
               const toolkit = makeEvalToolkit({
                 ...evalOptions,
                 ...(Operation.isScriptDialect(dialect.name)
-                  ? { runner: Runner.make({ ...evalOptions, dialects: { [dialect.name]: dialect } }) }
+                  ? {
+                      runner: ({ toolCallId }: { readonly toolCallId?: string }) =>
+                        Runner.make({ ...evalOptions, dialects: { [dialect.name]: dialect }, toolCallId }),
+                    }
                   : {}),
               });
               const system = yield* formatSystemPrompt({
-                system: [
-                  dialect.instructions({ operations, types: yield* registeredTypes }),
-                  options.system,
-                  params.system,
-                ]
+                system: [dialect.instructions({ operations: listed }), options.system, params.system]
                   .filter(isPresent)
                   .join('\n\n'),
-                skills,
+                skills: [stated],
                 objects: session.context.getObjects(),
                 instructions,
               }).pipe(Effect.orDie);
@@ -227,20 +237,56 @@ const runCodeModeTurn = ({
   );
 
 /**
- * Labels the message's `eval` calls before it reaches the feed, which is what the thread renders: a
- * code-mode turn's every call is an eval, and the label is the only thing that tells them apart.
+ * The request's evaluations by the `eval` call each answered, so a result written to the feed takes the operations
+ * its own call ran. An evaluation whose result is never written (the call was interrupted) is dropped when the next
+ * iteration starts.
  */
-const labelEvalCalls = (
+const makeEvaluationLog = () => {
+  const byCall = new Map<string, Evaluation>();
+  return {
+    add: (evaluation: Evaluation): void => {
+      if (evaluation.toolCallId !== undefined) {
+        byCall.set(evaluation.toolCallId, evaluation);
+      }
+    },
+    take: (block: ContentBlock.ToolResult): Evaluation | undefined => {
+      const evaluation = byCall.get(block.toolCallId);
+      byCall.delete(block.toolCallId);
+      return evaluation;
+    },
+    clear: (): void => byCall.clear(),
+  };
+};
+
+/** What an `eval` block is annotated with: a call's label, or the operations a result's evaluation ran. */
+type EvalAnnotation = CallLabel | Pick<ContentBlock.ToolResult, 'invocations'>;
+
+/**
+ * Annotates the message's `eval` blocks before it reaches the feed, which is what the thread renders and what a
+ * hook reads: a call is labelled after the operations its code names, and a result records the operations its code
+ * actually ran — every code-mode call is an eval, and these are the only things that tell them apart.
+ */
+const annotateEvalBlocks = (
   message: Message.Message,
   labelCall: (block: ContentBlock.ToolCall) => CallLabel | undefined,
+  evaluations: ReturnType<typeof makeEvaluationLog>,
 ): Message.Message => {
-  const labels = message.blocks.map((block) => (block._tag === 'toolCall' ? labelCall(block) : undefined));
-  if (labels.some((label) => label !== undefined)) {
+  const annotations = message.blocks.map((block): EvalAnnotation | undefined => {
+    if (block._tag === 'toolCall' && block.name === EVAL_TOOL_NAME) {
+      return labelCall(block);
+    }
+    if (block._tag === 'toolResult' && block.name === EVAL_TOOL_NAME) {
+      const invocations = evaluations.take(block)?.invocations ?? [];
+      return invocations.length > 0 ? { invocations: [...invocations] } : undefined;
+    }
+    return undefined;
+  });
+  if (annotations.some((annotation) => annotation !== undefined)) {
     Obj.update(message, (message) => {
       message.blocks.forEach((block, index) => {
-        const label = labels[index];
-        if (block._tag === 'toolCall' && label !== undefined) {
-          Object.assign(block, label);
+        const annotation = annotations[index];
+        if (annotation !== undefined) {
+          Object.assign(block, annotation);
         }
       });
     });
@@ -261,17 +307,6 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
     return undefined;
   }
 };
-
-/**
- * Every object and relation type the workspace has registered, with its fields.
- *
- * Stated in the prompt rather than left to be discovered: a dialect that binds the real modules
- * invites the model to introspect a schema for the shape it needs, and that costs turns it should
- * be spending on the task.
- */
-const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
-  describeTypes(db),
-);
 
 /**
  * Projects the skills' tools, and those of the turn's MCP servers, into callable operations. Resolution goes through the ordinary toolkit

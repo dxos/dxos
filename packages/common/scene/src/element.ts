@@ -26,7 +26,7 @@ export const Size = Schema.Struct({ width: Schema.Number, height: Schema.Number 
 export type Size = Schema.Schema.Type<typeof Size>;
 
 /** Minor grid spacing in scene px (the finest line the grid draws at zoom 1). */
-export const DEFAULT_GRID = 16;
+export const DEFAULT_GRID = 12;
 
 /** Major lines every N minor lines; the grid draws both and snapping uses the major one. */
 export const MAJOR_GRID_RATIO = 4;

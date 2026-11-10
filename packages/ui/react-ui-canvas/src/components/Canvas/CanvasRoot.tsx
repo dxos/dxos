@@ -44,8 +44,15 @@ import {
   useSceneWheel,
   useViewport,
 } from '../../hooks/index.ts';
-import { type ThemeChoice, chooseTheme, defaultThemeRegistry, keyAction, neuVars } from '../../model/index.ts';
-import { fitFrame, visibleView } from '../../utils/index.ts';
+import {
+  type ConstrainContext,
+  type ThemeChoice,
+  chooseTheme,
+  defaultThemeRegistry,
+  keyAction,
+  neuVars,
+} from '../../model/index.ts';
+import { fitFrame, latticeGrid, visibleView } from '../../utils/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
@@ -86,8 +93,8 @@ export const CanvasRoot = ({
   ...props
 }: CanvasRootProps) => {
   const registry = useRegistry();
-  // Read when a write is checked, so the view's snap toggle reaches the mode without rebuilding the store.
-  const snapRef = useRef<() => boolean>(() => true);
+  // Read when a write is checked, so the view's snap and lattice toggles reach the mode without rebuilding the store.
+  const contextRef = useRef<() => ConstrainContext>(() => ({ snap: true }));
   const {
     store,
     root,
@@ -96,7 +103,7 @@ export const CanvasRoot = ({
     document,
     scene,
     constrain,
-    snap: () => snapRef.current(),
+    context: () => contextRef.current(),
     onIntent,
     onModelIntent,
     onTransaction,
@@ -111,7 +118,7 @@ export const CanvasRoot = ({
       {...props}
       store={store}
       root={root}
-      snapRef={snapRef}
+      contextRef={contextRef}
       preview={preview}
       lattice={lattice}
     />
@@ -126,14 +133,14 @@ type CanvasEngineProps = Omit<
 > & {
   store: DrawState;
   root: ViewId;
-  snapRef: { current: () => boolean };
+  contextRef: { current: () => ConstrainContext };
 } & Pick<UseDrawSceneOptions, 'lattice'> & { preview: UseDrawSceneOptions['constrain'] };
 
 const CanvasEngine = ({
   classNames,
   store,
   root,
-  snapRef,
+  contextRef,
   preview,
   lattice,
   capabilities: capabilitiesProp,
@@ -144,7 +151,7 @@ const CanvasEngine = ({
   onCameraChange,
   initialDisplay,
   onDisplayChange,
-  grid = DEFAULT_GRID,
+  grid: gridProp,
   margin = DEFAULT_MARGIN,
   fitZoom,
   readonly = false,
@@ -194,7 +201,8 @@ const CanvasEngine = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  snapRef.current = () => registry.get(atoms.snap);
+  // A lattice scene snaps to its cells while they are drawn (its guides), otherwise to the grid.
+  contextRef.current = () => ({ snap: registry.get(atoms.snap), lattice: registry.get(atoms.guides) });
   const history = useCanvasHistory({ registry, atoms, store });
   const draw = useDrawScene({
     store,
@@ -205,6 +213,8 @@ const CanvasEngine = ({
     history,
   });
   const scene = useAtomValue(draw.scene);
+  // A lattice scene's grid runs along its cell edges unless the layout sets its own pitch.
+  const grid = gridProp ?? ((draw.lattice && latticeGrid(draw.lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID);
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
     scene,
@@ -354,7 +364,7 @@ const CanvasEngine = ({
     viewport,
   });
 
-  const { setTool, toggleSnap, toggleGuides, toggleDebug } = controller.tools;
+  const { setTool, toggleGrid, toggleSnap, toggleGuides, toggleDebug } = controller.tools;
   const { editNode, exitEdit } = useEditMode({ registry, atoms, nodeRegistry, capabilities, select });
   const {
     onBackgroundPointerDown,
@@ -453,12 +463,14 @@ const CanvasEngine = ({
     navigation,
     grid,
     select,
+    toggleGrid,
     toggleSnap,
     toggleGuides,
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,
     duplicate: () => controller.document.duplicate(registry.get(atoms.selection), { x: major, y: major }),
+    order: controller.document.order,
     commit: history.commit,
     major,
     copy,
@@ -612,7 +624,8 @@ const CanvasEngine = ({
                     tabIndex={0}
                     className={mx(
                       '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
-                      !transparent && 'bg-base-surface',
+                      // A dark theme's `dark` class paints its own surface, which a transparent canvas must not show.
+                      transparent ? 'bg-transparent' : 'bg-base-surface',
                       // A theme with a mode takes it over the app's, for everything over the canvas.
                       look.tone === 'dark' && 'dark',
                       (tool.kind === 'hand' || commandHeld) && 'cursor-grab',

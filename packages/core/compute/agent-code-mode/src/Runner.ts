@@ -17,7 +17,7 @@ import type { Database } from '@dxos/echo';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { evaluate } from './eval-tool.ts';
+import { type EvalToolkitOptions, evaluate } from './eval-tool.ts';
 import type * as Sandbox from './Sandbox.ts';
 
 /** The dialects code mode serves, keyed by the name an `Operation.ScriptRequest` names them by. */
@@ -42,6 +42,10 @@ export type Options = {
   readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
+  /** Told which operations an evaluation ran; see `EvalToolkitOptions.onEvaluated`. */
+  readonly onEvaluated?: EvalToolkitOptions['onEvaluated'];
+  /** The `eval` call this runner answers, reported back through {@link onEvaluated}. */
+  readonly toolCallId?: string;
 };
 
 /**
@@ -84,6 +88,8 @@ export const make = (options: Options): Operation.ScriptRunner => {
           runtime: runtime === undefined ? options.runtime : Context.merge(options.runtime, runtime.context),
           operations: options.operations,
           ...(options.skills !== undefined ? { skills: options.skills } : {}),
+          ...(options.onEvaluated !== undefined ? { onEvaluated: options.onEvaluated } : {}),
+          ...(options.toolCallId !== undefined ? { toolCallId: options.toolCallId } : {}),
           ...(maxOutput !== undefined ? { maxOutput } : {}),
           ...(timeout !== undefined ? { timeout } : {}),
         }).pipe(Effect.result);

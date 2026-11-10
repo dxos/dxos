@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { callTool } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -19,6 +20,7 @@ import { DXN } from '@dxos/keys';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { SandboxOperation } from './Dialect.ts';
+import { EVAL_TOOL_NAME, type Evaluation, makeEvalToolkit } from './eval-tool.ts';
 import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -180,6 +182,41 @@ describe('code-mode script runner', () => {
         const run = Runner.make({ sandbox: recording, runtime, operations: [] });
         yield* run.run({ source: Operation.inlineScript("print('x')", { dialect: 'plain' }) });
         expect(seen).toEqual(['plain:true']);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'an eval call answered through a runner still reports which call it was and what it ran',
+    Effect.fnUntraced(
+      function* (_) {
+        const runtime = yield* Effect.context<Database.Service | Operation.Service>();
+        const evaluations: Evaluation[] = [];
+        const base = {
+          dialect: PlainDialect,
+          sandbox: Sandbox.inProcess,
+          runtime,
+          operations: [ScoreOperation],
+          onEvaluated: (evaluation: Evaluation) => evaluations.push(evaluation),
+        };
+        // As the producer builds it: one runner per call, so the evaluation carries the call's id.
+        const toolkit = makeEvalToolkit({
+          ...base,
+          runner: ({ toolCallId }) => Runner.make({ ...base, dialects: { plain: PlainDialect }, toolCallId }),
+        });
+        const result = yield* callTool(yield* toolkit.handlers, {
+          _tag: 'toolCall',
+          toolCallId: 'call-1',
+          name: EVAL_TOOL_NAME,
+          input: JSON.stringify({ code: "print(await ops.score({ title: 'abc' }));" }),
+          providerExecuted: false,
+        });
+        expect(result.error).toBeUndefined();
+        expect(evaluations.map(({ toolCallId, invocations }) => ({ toolCallId, invocations }))).toEqual([
+          { toolCallId: 'call-1', invocations: [{ operationKey: String(Score.meta.key) }] },
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

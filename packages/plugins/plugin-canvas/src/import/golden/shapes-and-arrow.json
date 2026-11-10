@@ -9,11 +9,11 @@
         "z": "V",
         "center": {
           "x": 96,
-          "y": 64
+          "y": 48
         },
         "size": {
           "width": 192,
-          "height": 128
+          "height": 96
         },
         "label": "Box",
         "overrides": {
@@ -30,12 +30,12 @@
         "type": "ellipse",
         "z": "l",
         "center": {
-          "x": 448,
-          "y": 32
+          "x": 456,
+          "y": 48
         },
         "size": {
-          "width": 128,
-          "height": 64
+          "width": 144,
+          "height": 96
         },
         "label": "Oval",
         "overrides": {
@@ -83,11 +83,11 @@
         "z": "V",
         "center": {
           "x": 96,
-          "y": 64
+          "y": 48
         },
         "size": {
           "width": 192,
-          "height": 128
+          "height": 96
         },
         "label": "Box",
         "overrides": {
@@ -107,12 +107,12 @@
         "type": "ellipse",
         "z": "l",
         "center": {
-          "x": 448,
-          "y": 32
+          "x": 456,
+          "y": 48
         },
         "size": {
-          "width": 128,
-          "height": 64
+          "width": 144,
+          "height": 96
         },
         "label": "Oval",
         "overrides": {

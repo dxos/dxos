@@ -7,7 +7,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { type Scene, type ViewId, applyIntent, findLayout, rootScene, sceneLayout } from '@dxos/scene';
 
 import { type DrawState, createDrawState } from '../../engine/index.ts';
-import { type ConstrainIntent, type RenderLists2D, type ViewportProps } from '../../model/index.ts';
+import {
+  type ConstrainContext,
+  type ConstrainIntent,
+  type RenderLists2D,
+  type ViewportProps,
+} from '../../model/index.ts';
 import { type SceneEdit } from '../../utils/index.ts';
 import {
   type LayoutWrite,
@@ -25,8 +30,8 @@ export type DocumentStoreOptions = Partial<Pick<ViewportProps, 'onIntent' | 'onM
   scene?: string;
   /** The layout's mode, applied to every write; a refused or rewritten drag is redrawn as stored. */
   constrain?: ConstrainIntent;
-  /** Whether the mode snaps the write, read when it is made. */
-  snap: () => boolean;
+  /** What the mode sees of the editor (snapping, to the lattice or the grid), read when a write is made. */
+  context: () => ConstrainContext;
 };
 
 /** The scene's root layout, as {@link toRenderLists2D} draws it: its own 2D layout, else the document's first. */
@@ -65,7 +70,7 @@ export type DocumentStore = {
 
 export const useDocumentStore = (
   registry: ReturnType<typeof useRegistry>,
-  { document, scene, constrain, snap, onIntent, onModelIntent, onTransaction }: DocumentStoreOptions,
+  { document, scene, constrain, context, onIntent, onModelIntent, onTransaction }: DocumentStoreOptions,
 ): DocumentStore => {
   const sceneRecord =
     (scene === undefined ? undefined : document.scenes.find(({ id }) => id === scene)) ?? rootScene(document);
@@ -83,8 +88,8 @@ export const useDocumentStore = (
   const store = useMemo(() => createDrawState(initial.lists, stylesOf(document), { root }), [initial]);
 
   // The latest props, read by the store's subscription, which outlives a render.
-  const latest = useRef({ document, constrain, snap, onIntent, onModelIntent, onTransaction });
-  latest.current = { document, constrain, snap, onIntent, onModelIntent, onTransaction };
+  const latest = useRef({ document, constrain, context, onIntent, onModelIntent, onTransaction });
+  latest.current = { document, constrain, context, onIntent, onModelIntent, onTransaction };
   const reading = useRef(false);
   const last = useRef<RenderLists2D>(registry.get(store.views));
 
@@ -108,7 +113,7 @@ export const useDocumentStore = (
         if (reading.current) {
           return;
         }
-        const { document: doc, constrain: mode, snap: snapping, onIntent: write, ...handlers } = latest.current;
+        const { document: doc, constrain: mode, context: editor, onIntent: write, ...handlers } = latest.current;
         const writes = layoutWrites(doc, last.current, lists);
         // Whether the layout's mode refuses or rewrites one of the writes to a stored layout.
         const changedByMode = (next: LayoutWrite): boolean => {
@@ -116,7 +121,7 @@ export const useDocumentStore = (
           if (!mode || !record || next.kind !== 'layout') {
             return false;
           }
-          const constrained = mode(record, next.intent, { snap: snapping() });
+          const constrained = mode(record, next.intent, editor());
           return (
             constrained === undefined ||
             drawnDifferently(applyIntent(record, constrained), applyIntent(record, next.intent))
@@ -141,8 +146,8 @@ export const useDocumentStore = (
   const preview = useMemo(
     () =>
       (sceneId: ViewId, edit: SceneEdit): SceneEdit | undefined => {
-        const { document: doc, constrain: mode, snap: snapping } = latest.current;
-        return mode ? constrainEdit(doc, registry.get(store.views), sceneId, edit, mode, { snap: snapping() }) : edit;
+        const { document: doc, constrain: mode, context: editor } = latest.current;
+        return mode ? constrainEdit(doc, registry.get(store.views), sceneId, edit, mode, editor()) : edit;
       },
     [registry, store],
   );

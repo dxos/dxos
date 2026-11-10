@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { DefaultOutput, JsonTransformInput } from '@dxos/conductor';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { createFunctionPorts, createPorts, defineComputeNode, getHeight } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
@@ -41,7 +42,7 @@ export type JsonTransformShape = Schema.Schema.Type<typeof JsonTransformShape>;
 export type CreateJsonProps = CreateShapeProps<JsonShape>;
 
 export const createJson = (props: CreateJsonProps) =>
-  createShape<JsonShape>({ type: 'json', size: { width: 256, height: 256 }, ...props });
+  createShape<JsonShape>({ type: 'json', size: { width: 4 * MAJOR_GRID, height: 4 * MAJOR_GRID }, ...props });
 
 export const jsonNodeDef = defineComputeNode<JsonShape>({
   type: 'json',
@@ -64,7 +65,7 @@ export type CreateJsonTransformProps = CreateShapeProps<JsonTransformShape> & { 
 export const createJsonTransform = (props: CreateJsonTransformProps) =>
   createShape<JsonTransformShape>({
     type: 'json-transform',
-    size: { width: 128, height: getHeight(JsonTransformInput) },
+    size: { width: 2 * MAJOR_GRID, height: getHeight(JsonTransformInput) },
     ...props,
   });
 

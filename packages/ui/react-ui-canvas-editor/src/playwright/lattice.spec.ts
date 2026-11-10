@@ -33,14 +33,15 @@ test.describe('Canvas lattice', () => {
     close = undefined;
   });
 
-  test('draws the lattice cells, and no grid or grid choice, since the cells are what a shape lands on', async () => {
+  test('draws the lattice cells, and no grid or dots choice, since the cells are what a shape lands on', async () => {
     await expect(page.getByTestId('theme-grid-lines')).toHaveCount(0);
+    await expect(page.getByTestId('toolbar-lattice')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByTestId('lattice-grid')).toHaveCount(1);
     await expect(page.getByTestId('dx-canvas-grid')).toHaveCount(0);
   });
 
-  test('the guides toggle hides and restores the lattice cells', async () => {
-    await page.getByTestId('toolbar-guides').click();
+  test('the grid switch hides the lattice cells for the grid, and the guides key restores them', async () => {
+    await page.getByTestId('toolbar-lattice-grid').click();
     await expect(page.getByTestId('lattice-grid')).toHaveCount(0);
     await scene.focus();
     await page.keyboard.press(';');
