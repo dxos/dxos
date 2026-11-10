@@ -232,8 +232,9 @@ export class CallSwarmSynchronizer extends Resource {
 
     this._state.users = undefined;
     this._state.self = undefined;
-    // Otherwise a rejoin would advertise the meeting of the session it left, before learning the room's current one.
-    delete this._state.activities?.[MEETING_ACTIVITY_KEY];
+    // Activities belong to the session being left: otherwise a rejoin would advertise its meeting and flags (the
+    // RealtimeKit meeting, an extension's transcription toggle) before learning the room's current ones.
+    this._state.activities = {};
     // The snapshot belongs to the session being left; a straggling reconcile must not repopulate state from it.
     this._lastSwarmEvent = undefined;
     this.#inactivePeerRecheckPending = false;

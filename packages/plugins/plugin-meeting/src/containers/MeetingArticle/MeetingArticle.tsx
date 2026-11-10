@@ -74,8 +74,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   const inCall = joined && roomId === Obj.getURI(meeting);
 
   const handleToggleTranscription = useCallback(async () => {
+    if (!transcriptionEnabled) {
+      // The sink writes to the active meeting, and nothing else makes a meeting active in its own call.
+      await invokePromise(MeetingOperation.SetActive, { object: meeting });
+    }
     await invokePromise(MeetingOperation.SetTranscription, { enabled: !transcriptionEnabled });
-  }, [invokePromise, transcriptionEnabled]);
+  }, [invokePromise, meeting, transcriptionEnabled]);
 
   // Toolbar tabs (single-select toggle group) + a generate/regenerate-summary action.
   const menuActions = useMenuBuilder(

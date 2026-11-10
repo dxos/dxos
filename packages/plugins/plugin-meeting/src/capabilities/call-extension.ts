@@ -64,6 +64,8 @@ export default Capability.makeModule(
     // A simulated call's scripted lines are written as spoken, as live transcription would, but are not enriched.
     const simulatedSink = new TranscriptSink({ resolveTarget });
 
+    /** The meeting id last resolved from the call, so repeated call-state updates do not resolve it again. */
+    let handledMeetingId: string | undefined;
     const unsubscribe = [
       callManager.transcript.on((segment) => {
         if (
@@ -81,16 +83,22 @@ export default Capability.makeModule(
           .write({ _tag: 'transcript', started, text }, { name: speaker })
           .catch((error) => log.catch(error));
       }),
-      callManager.left.on(() => store.updateState(() => ({}))),
+      callManager.left.on(() => {
+        handledMeetingId = undefined;
+        store.updateState(() => ({}));
+      }),
       callManager.callStateUpdated.on((state) => {
         const payload: MeetingActivity.MeetingPayload | undefined =
           state.activities?.[MeetingActivity.meetingKey()]?.payload;
-        if (payload) {
-          const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-          void invokePromise(MeetingOperation.HandlePayload, { meetingId: payload.meetingId }).catch((error) =>
-            log.catch(error),
-          );
+        // Every speaking flip updates call state; only a newly advertised meeting needs resolving.
+        if (!payload || payload.meetingId === handledMeetingId) {
+          return;
         }
+        handledMeetingId = payload.meetingId;
+        const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+        void invokePromise(MeetingOperation.HandlePayload, { meetingId: payload.meetingId }).catch((error) =>
+          log.catch(error),
+        );
       }),
     ];
     // The manager outlives this module, so a reactivation would otherwise write every segment twice.
