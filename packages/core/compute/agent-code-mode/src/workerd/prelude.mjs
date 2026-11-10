@@ -27,12 +27,24 @@ const call = async (binding, args) => {
   return outcome.value;
 };
 
-// Kept in flight explicitly: `print` is synchronous in every dialect, but workerd cancels a call's pending I/O the
-// moment it returns, so a fire-and-forget print is simply lost. The entrypoint drains these before it returns.
+// Kept in flight explicitly: `print` and `update` are synchronous in every other dialect, so code does not await them,
+// but workerd cancels a call's pending I/O the moment it returns, so a fire-and-forget call is simply lost. The
+// entrypoint drains these before it returns.
 const pending = [];
+const updates = [];
 
-/** Waits for every print still in flight. */
-export const drain = () => Promise.all(pending);
+/**
+ * Waits for every print and update still in flight. A failed print, or a failed update the code never awaited, is
+ * raised here; an update the code awaited reported its failure to the code already.
+ */
+export const drain = async () => {
+  await Promise.all(pending);
+  const settled = await Promise.allSettled(updates.map(({ promise }) => promise));
+  const failed = settled.find((result, index) => result.status === 'rejected' && !updates[index].observed);
+  if (failed !== undefined) {
+    throw failed.reason;
+  }
+};
 
 export const print = (...values) => {
   pending.push(call('print', values));
@@ -49,7 +61,13 @@ export const flush = () => call('flush', []);
 
 // A reference cannot cross either, so it is a marker naming the object, which the host turns into a reference
 // wherever it is passed: a field of `make` or `update`, or an operation's input.
-export const ref = (obj) => ({ [refMarker]: obj.id });
+export const ref = (obj) => {
+  const id = typeof obj === 'string' ? obj : obj?.id;
+  if (typeof id !== 'string') {
+    throw new Error('ref() takes an object from query or make, or its id.');
+  }
+  return { [refMarker]: id };
+};
 
 // The mutator cannot cross — a function is not structured-cloneable — so it is applied HERE to the snapshot and the
 // resulting field changes are what travel. The model still writes the ordinary `update(obj, (obj) => { obj.x = 1 })`,
@@ -63,7 +81,22 @@ export const update = (obj, mutator) => {
       patch[key] = obj[key];
     }
   }
-  return call('update', [obj, patch]);
+  const promise = call('update', [obj, patch]);
+  // Handled here so an unawaited failure is not reported as unhandled; `drain` reports it unless the code awaited it.
+  promise.catch(() => {});
+  const entry = { promise, observed: false };
+  updates.push(entry);
+  // A thenable rather than the promise itself: `await` reads `then` only on a value that is not a native promise, and
+  // reading it is how the code is seen to handle the update's outcome.
+  const observe = () => {
+    entry.observed = true;
+    return promise;
+  };
+  return {
+    then: (onFulfilled, onRejected) => observe().then(onFulfilled, onRejected),
+    catch: (onRejected) => observe().catch(onRejected),
+    finally: (onFinally) => observe().finally(onFinally),
+  };
 };
 
 export const ops = new Proxy(

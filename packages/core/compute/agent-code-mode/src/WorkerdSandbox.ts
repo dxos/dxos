@@ -71,12 +71,22 @@ export const make = (options: WorkerdSandboxOptions): Sandbox.Sandbox => ({
   evaluate: ({ code, dialect, context, timeout }) =>
     Effect.gen(function* () {
       const bindings = dialect.bindings(context);
-      const objects = new Map<string, HostObject>();
+      const objects = new Map<string, HeldObject>();
+      // Closed when the evaluation ends, however it ends: an abandoned isolate keeps running, and its later calls must
+      // not write to a workspace whose turn was already told the evaluation failed.
+      let closed = false;
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          closed = true;
+        }),
+      );
       const host: HostCall = (binding, args) =>
-        dispatch({ bindings, context, objects }, binding, args).then(
-          (value): Outcome => ({ _tag: 'Ok', value }),
-          (error: unknown): Outcome => ({ _tag: 'Error', message: describe(error) }),
-        );
+        closed
+          ? Promise.resolve({ _tag: 'Error', message: 'The evaluation is over.' })
+          : dispatch({ bindings, context, objects }, binding, args).then(
+              (value): Outcome => ({ _tag: 'Ok', value }),
+              (error: unknown): Outcome => ({ _tag: 'Error', message: describe(error) }),
+            );
 
       // A fresh id per evaluation: the loader caches isolates by id, and one program must never
       // observe another's module state.
@@ -90,14 +100,16 @@ export const make = (options: WorkerdSandboxOptions): Sandbox.Sandbox => ({
       }));
 
       // Abandoning the call is what "killing" means here: the isolate is loaded per evaluation and
-      // nothing else holds it, so it is left to be collected.
+      // nothing else holds it, so it is left to be collected. It may keep executing until then; the
+      // closed host is what stops it from reaching the workspace.
       //
       // It is the OUTER of two bounds, and usually not the one reached: the runtime cancels a call
       // it can prove will never complete within milliseconds, and in production also enforces a CPU
       // limit. This budget covers what those do not — code that is genuinely waiting on I/O this
       // host is slow to answer.
       const evaluation = Effect.tryPromise({
-        // Taking the signal is what lets the timeout interrupt the call; an RPC call cannot be aborted, so it abandons it.
+        // Taking the signal is what lets the timeout interrupt the call. An RPC call cannot be aborted, so this
+        // abandons the call rather than stopping the isolate, which keeps executing.
         try: (_signal) => isolate.getEntrypoint().run(host),
         catch: (error: unknown) => new Sandbox.EvaluationError({ message: describe(error) }),
       });
@@ -122,6 +134,7 @@ export const make = (options: WorkerdSandboxOptions): Sandbox.Sandbox => ({
       }
       return outcome.value;
     }).pipe(
+      Effect.scoped,
       Effect.catch((error) =>
         Effect.fail(
           error instanceof Sandbox.EvaluationError
@@ -176,8 +189,14 @@ const modules = (code: string): Record<string, { js: string }> => ({
 type HostState = {
   readonly bindings: Record<string, unknown>;
   readonly context: BindingsContext;
-  readonly objects: Map<string, HostObject>;
+  readonly objects: Map<string, HeldObject>;
 };
+
+/** Anything the host's bindings hand back that the isolate may later name again. */
+type HostObject = { readonly id: string };
+
+/** An object handed to the isolate: the live object, and the snapshot as the isolate holds it, in canonical JSON. */
+type HeldObject = { readonly live: HostObject; view: string };
 
 /**
  * Runs one call from the isolate against the real bindings.
@@ -190,16 +209,17 @@ const dispatch = async (state: HostState, binding: string, args: readonly unknow
   const call = <T>(name: string, ...rest: unknown[]) => (bindings[name] as (...a: unknown[]) => T)(...rest);
 
   const remember = (obj: HostObject) => {
-    objects.set(obj.id, obj);
-    return snapshot(obj);
+    const view = snapshot(obj);
+    objects.set(obj.id, { live: obj, view: canonical(view) });
+    return view;
   };
   const resolve = (value: unknown): HostObject => {
-    const id = (value as { id?: string })?.id;
-    const obj = id === undefined ? undefined : objects.get(id);
-    if (obj === undefined) {
+    const id = typeof value === 'string' ? value : (value as { id?: string })?.id;
+    const held = id === undefined ? undefined : objects.get(id);
+    if (held === undefined) {
       throw new Error(`Unknown object: ${id ?? JSON.stringify(value)}`);
     }
-    return obj;
+    return held.live;
   };
   /** An object the bindings take by id or as the object itself: an id passes through, a snapshot resolves. */
   const target = (value: unknown): unknown => (typeof value === 'string' ? value : resolve(value));
@@ -236,13 +256,19 @@ const dispatch = async (state: HostState, binding: string, args: readonly unknow
       await call<Promise<unknown>>('flush');
       return null;
     case 'update': {
-      const patch = revive(args[1]) as Record<string, unknown>;
+      const sent = args[1] as Record<string, unknown>;
+      const patch = revive(sent) as Record<string, unknown>;
       const obj = resolve(args[0]);
       // Applied through the dialect's own `update`, not by touching the object: the mutator form
       // is what the dialect guarantees, and going through it keeps this module free of any ECHO
       // import — which matters, since it may run in a worker where that graph cannot load.
       call<unknown>('update', obj, (target: Record<string, unknown>) => Object.assign(target, patch));
-      return snapshot(obj);
+      // The isolate applied the same change to its snapshot, so that is what it now holds.
+      const held = objects.get(obj.id);
+      if (held !== undefined) {
+        held.view = canonical({ ...(JSON.parse(held.view) as Record<string, unknown>), ...sent });
+      }
+      return null;
     }
     case 'invoke': {
       const name = String(args[0]);
@@ -250,29 +276,35 @@ const dispatch = async (state: HostState, binding: string, args: readonly unknow
       if (operation === undefined) {
         throw new Error(`Unknown operation: ${name}`);
       }
-      return toWire(await operation(revive(args[1])));
+      return rememberResult(await operation(revive(args[1])), objects, remember, 0);
     }
     default:
       throw new Error(`Unknown binding: ${binding}`);
   }
 };
 
-/** Anything the host's bindings hand back that the isolate may later name again. */
-type HostObject = { readonly id: string };
-
 const MAX_DEPTH = 8;
 
 /**
  * A value from the isolate with what it names put back: a `ref(obj)` marker becomes a reference to the object, and a
  * snapshot becomes the live object it was taken from, so the bindings see what the same code would hold in-process.
+ *
+ * Only a snapshot the code left as it was is replaced: one it changed, or a record that merely shares an id, stays
+ * data, so its changes are not dropped in favour of the live object.
  */
 const reviveValue = (
   value: unknown,
-  objects: ReadonlyMap<string, HostObject>,
+  objects: ReadonlyMap<string, HeldObject>,
   ref: (obj: HostObject) => unknown,
   depth: number,
 ): unknown => {
-  if (depth > MAX_DEPTH || value === null || typeof value !== 'object') {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (depth > MAX_DEPTH) {
+    if (JSON.stringify(value).includes(JSON.stringify(REF_MARKER))) {
+      throw new Error(`A ref() nested more than ${MAX_DEPTH} levels deep cannot be resolved; pass it nearer the top.`);
+    }
     return value;
   }
   if (Array.isArray(value)) {
@@ -281,20 +313,54 @@ const reviveValue = (
   const record = value as Record<string, unknown>;
   const marked = record[REF_MARKER];
   if (typeof marked === 'string') {
-    const obj = objects.get(marked);
-    if (obj === undefined) {
+    const held = objects.get(marked);
+    if (held === undefined) {
       throw new Error(`Unknown object: ${marked}`);
     }
-    return ref(obj);
+    return ref(held.live);
   }
-  const known = typeof record.id === 'string' ? objects.get(record.id) : undefined;
-  if (known !== undefined) {
-    return known;
+  const held = typeof record.id === 'string' ? objects.get(record.id) : undefined;
+  if (held !== undefined && canonical(record) === held.view) {
+    return held.live;
   }
   return Object.fromEntries(
     Object.entries(record).map(([key, entry]) => [key, reviveValue(entry, objects, ref, depth + 1)]),
   );
 };
+
+/**
+ * An operation's result as it can cross: JSON, as the isolate's own output is, with each object in it that has an id
+ * remembered, so the code can pass it back as it does a query's results. An id already held keeps its object.
+ */
+const rememberResult = (
+  value: unknown,
+  objects: ReadonlyMap<string, HeldObject>,
+  remember: (obj: HostObject) => Record<string, unknown>,
+  depth: number,
+): unknown => {
+  if (value === undefined) {
+    return null;
+  }
+  if (value === null || typeof value !== 'object' || depth > MAX_DEPTH) {
+    return JSON.parse(JSON.stringify(value) ?? 'null');
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => rememberResult(entry, objects, remember, depth + 1));
+  }
+  if (isHostObject(value) && !objects.has(value.id)) {
+    return remember(value);
+  }
+  const json: unknown = JSON.parse(JSON.stringify(value) ?? 'null');
+  if (json === null || typeof json !== 'object' || Array.isArray(json)) {
+    return json;
+  }
+  // Walked over the live value's own fields, so an object nested in a plain result is remembered too.
+  return Object.fromEntries(
+    Object.keys(json).map((key) => [key, rememberResult(Reflect.get(value, key), objects, remember, depth + 1)]),
+  );
+};
+
+const isHostObject = (value: object): value is HostObject => 'id' in value && typeof value.id === 'string';
 
 /**
  * What an object looks like inside the isolate: its data, plus the id that names it back here.
@@ -307,8 +373,13 @@ const snapshot = (obj: HostObject): Record<string, unknown> => ({
   id: obj.id,
 });
 
-/** An operation's result as it can cross: JSON, as the isolate's own output is. */
-const toWire = (value: unknown): unknown => (value === undefined ? null : JSON.parse(JSON.stringify(value) ?? 'null'));
+/** JSON with every object's keys sorted, so two values compare equal however their keys were ordered. */
+const canonical = (value: unknown): string =>
+  JSON.stringify(value, (_key, entry: unknown) =>
+    entry !== null && typeof entry === 'object' && !Array.isArray(entry)
+      ? Object.fromEntries(Object.entries(entry).sort(([left], [right]) => left.localeCompare(right)))
+      : entry,
+  );
 
 const describe = (error: unknown): string => {
   if (error instanceof Error) {

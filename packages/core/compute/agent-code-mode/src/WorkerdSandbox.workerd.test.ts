@@ -85,7 +85,12 @@ const makeWorkspace = () => {
     },
     remove: async (row: Row) => void rows.delete(row.id),
     flush: async () => {},
-    update: (row: Row, mutator: (row: Row) => void) => mutator(row),
+    update: (row: Row, mutator: (row: Row) => void) => {
+      if (row.locked === true) {
+        throw new Error(`Locked: ${row.id}`);
+      }
+      mutator(row);
+    },
     ops: {
       score: async ({ title }: { title: string }) => {
         scored.push(title);
@@ -95,6 +100,8 @@ const makeWorkspace = () => {
         inputs.push(input);
         return { assigned: input.task.id };
       },
+      /** Returns a live row inside a plain result, as an operation that looks an object up does. */
+      find: async ({ id }: { id: string }) => ({ found: rows.get(id) }),
       /** Never answers, so an evaluation awaiting it is bounded only by the sandbox's own budget. */
       stall: () => new Promise<never>(() => {}),
     },
@@ -267,6 +274,94 @@ describe('workerd sandbox', () => {
       print(titles(await referrers(parent)));
     `);
     expect(output).toEqual(['Child Child', 'Link Link', 'Owned'].join('\n'));
+  });
+
+  test('applies an update the code did not await before the evaluation ends', async () => {
+    const { rows, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs', status: 'open' });
+    await run(`
+      const [task] = await query('${TASK}');
+      update(task, (task) => { task.status = 'done'; });
+    `);
+    expect(rows.get('a')?.status).toEqual('done');
+  });
+
+  test('reports a refused update the code did not await, but not one it caught', async () => {
+    const { rows, evaluate, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs', locked: true });
+    expect(
+      await evaluate(`const [task] = await query('${TASK}'); update(task, (task) => { task.status = 'done'; });`),
+    ).toEqual({ failure: 'Locked: a' });
+    const output = await run(`
+      const [task] = await query('${TASK}');
+      try {
+        await update(task, (task) => { task.status = 'done'; });
+      } catch (error) {
+        print('caught ' + error.message);
+      }
+    `);
+    expect(output).toEqual('caught Locked: a');
+  });
+
+  test('passes a changed copy of an object as data, and the object itself once updated', async () => {
+    const { rows, inputs, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs' });
+    rows.set('p', { id: 'p', typename: TASK, title: 'Person' });
+    await run(`
+      const [task] = await query('${TASK}', { title: 'Write the docs' });
+      const [person] = await query('${TASK}', { title: 'Person' });
+      await ops.assign({ task: { ...task, title: 'Edited' }, owner: ref(person) });
+      update(task, (task) => { task.status = 'done'; });
+      await ops.assign({ task, owner: ref(person.id) });
+    `);
+    // The copy kept its edit rather than being swapped for the live row.
+    expect(inputs[0].task).not.toBe(rows.get('a'));
+    expect(inputs[0].task.title).toEqual('Edited');
+    // The object the code updated is still the object, and `ref` took its id.
+    expect(inputs[1].task).toBe(rows.get('a'));
+    expect(inputs[1].owner.ref).toBe(rows.get('p'));
+  });
+
+  test('remembers the objects an operation returns, so the code can pass them back', async () => {
+    const { rows, inputs, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs' });
+    rows.set('p', { id: 'p', typename: TASK, title: 'Person' });
+    await run(`
+      const { found } = await ops.find({ id: 'a' });
+      const { found: person } = await ops.find({ id: 'p' });
+      await ops.assign({ task: found, owner: ref(person) });
+    `);
+    expect(inputs[0].task).toBe(rows.get('a'));
+    expect(inputs[0].owner.ref).toBe(rows.get('p'));
+  });
+
+  test('refuses a ref nested deeper than it resolves, and a ref of nothing', async () => {
+    const { rows, evaluate } = setup();
+    rows.set('p', { id: 'p', typename: TASK, title: 'Person' });
+    const deep = await evaluate(`
+      const [person] = await query('${TASK}');
+      let value = ref(person);
+      for (let level = 0; level < 12; level++) {
+        value = { value };
+      }
+      await make('${TASK}', { title: 'Deep', value });
+    `);
+    expect(deep.failure).toMatch(/nested more than 8 levels deep/);
+    expect(await evaluate('ref(undefined);')).toEqual({
+      failure: 'ref() takes an object from query or make, or its id.',
+    });
+  });
+
+  test('an abandoned evaluation cannot write after its budget', async () => {
+    const { rows, evaluate } = setup();
+    const result = await evaluate(
+      `await new Promise((resolve) => setTimeout(resolve, 1_000)); await add(await make('${TASK}', { title: 'Late' }));`,
+      '200 millis',
+    );
+    expect(result.failure).toMatch(/the isolate was abandoned/);
+    // Past the point where the isolate, still running, tried to write.
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    expect([...rows.values()].map((row) => row.title)).not.toContain('Late');
   });
 
   test('an evaluation that never finishes is abandoned at its budget', async () => {
