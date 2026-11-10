@@ -4,9 +4,9 @@
 
 import { useContext, useMemo } from 'react';
 
+import { CallsServiceClient } from '@dxos/client/edge';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { joinTranscription } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 
 import { ClientContext } from './context.ts';
@@ -15,7 +15,7 @@ import { ClientContext } from './context.ts';
 export type JoinTranscription = () => Promise<{ authToken: string }>;
 
 /**
- * Hook returning the authenticated join for live transcription (`joinTranscription`), or `undefined` when
+ * Hook returning the authenticated join for live transcription (`CallsServiceClient.joinTranscription`), or `undefined` when
  * EDGE is not configured — so a transcription control can stay disabled instead of failing once pressed.
  *
  * Returns `undefined` outside a `ClientProvider` rather than throwing, for the same reason as
@@ -30,7 +30,7 @@ export const useJoinTranscription = (): JoinTranscription | undefined => {
         ? () => {
             const identityDid = client.halo.identity.get()?.did;
             invariant(identityDid, 'Transcription needs an identity.');
-            return joinTranscription(client.edge.http, Context.default(), identityDid);
+            return new CallsServiceClient(client.edge.http).joinTranscription(Context.default(), identityDid);
           }
         : undefined,
     [client, configured],

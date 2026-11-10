@@ -62,9 +62,6 @@
       "path": "../../core/halo/halo"
     },
     {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
       "path": "../../core/protocols"
     },
     {
@@ -78,6 +75,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-protocol"

@@ -9795,6 +9795,9 @@ importers:
       '@dxos/av':
         specifier: workspace:*
         version: link:../../common/av
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
@@ -9819,9 +9822,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../../core/mesh/edge-client
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -19905,6 +19905,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -19923,9 +19926,6 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -22060,9 +22060,6 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../../core/mesh/edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

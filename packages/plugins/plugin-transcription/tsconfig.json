@@ -76,9 +76,6 @@
       "path": "../../core/halo/halo-react"
     },
     {
-      "path": "../../core/mesh/edge-client"
-    },
-    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -86,6 +83,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/config"

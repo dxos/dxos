@@ -22,7 +22,7 @@ export type TranscriptionManagerOptions = {
   registry: Registry.AtomRegistry;
 
   /**
-   * Joins this identity's RealtimeKit transcription meeting (`joinTranscription` from `@dxos/edge-client`).
+   * Joins this identity's RealtimeKit transcription meeting (`CallsServiceClient.joinTranscription`).
    * Transcription fails with {@link TranscriptionNotConfiguredError} when absent, i.e. when EDGE is not configured.
    */
   join?: JoinTranscription;

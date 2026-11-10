@@ -7,9 +7,9 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { CallsServiceClient } from '@dxos/client/edge';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { joinTranscription } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
@@ -41,7 +41,7 @@ export default Capability.makeModule(
           ? () => {
               const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
               invariant(identity, 'Transcription needs an identity.');
-              return joinTranscription(client.edge.http, Context.default(), identity.did);
+              return new CallsServiceClient(client.edge.http).joinTranscription(Context.default(), identity.did);
             }
           : undefined,
         messageEnricher,
