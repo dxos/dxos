@@ -3,12 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { Blob, type Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
+import { Blob, Database, Feed, Ref } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin, initializeMailbox, seedSummaries } from '@dxos/plugin-inbox/testing';
@@ -48,25 +50,21 @@ const MINIMAL_PDF =
 /** The message `seedAttachment` attached the PDF to, so the play function opens that one. */
 let attachedMessageId: string | undefined;
 
-/** Attaches a PDF blob to the mailbox's first feed message. */
 const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) => {
   const feed = await mailbox.feed.tryLoad();
   if (!feed) {
-    return;
-  }
-  const [message] = await db
-    .query(Query.select(Filter.type(Message.Message)).from([Scope.feed(Obj.getURI(feed, { prefer: 'absolute' }))]))
-    .run();
-  if (!message) {
-    return;
+    throw new Error('Mailbox missing backing feed');
   }
   const bytes = new TextEncoder().encode(MINIMAL_PDF);
   const blob = db.add(Blob.make({ type: 'application/pdf', size: bytes.byteLength, data: Blob.inlineData(bytes) }));
-  // Feed messages are immutable, so the attachment is recorded on the space-side object the query
-  // returned; that is the same instance the article renders.
-  Obj.update(message, (message) => {
-    message.attachments = [{ name: 'invoice.pdf', ref: Ref.make(blob) }];
+  const message = Message.make({
+    created: new Date().toISOString(),
+    sender: { name: 'Accounts' },
+    blocks: [{ _tag: 'text', text: 'The invoice is attached.' }],
+    properties: { subject: 'Invoice' },
+    attachments: [{ name: 'invoice.pdf', ref: Ref.make(blob) }],
   });
+  await EffectEx.runAndForwardErrors(Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db))));
   attachedMessageId = message.id;
   await db.flush({ indexes: true });
 };
@@ -89,7 +87,7 @@ const meta = {
   render: DefaultStory,
   decorators: createStoryDecorators<StoryArgs>(({ args: { count = 0, threads = 10, attachments = false } }) => ({
     types: [Blob.Blob, Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
-    plugins: [InboxPlugin(), PreviewPlugin.make(), UpdateCompanionStubPlugin(), StoryModulesPlugin()],
+    plugins: [InboxPlugin.make(), PreviewPlugin.make(), UpdateCompanionStubPlugin(), StoryModulesPlugin()],
     onInit: async ({ space }) => {
       const mailbox = await initializeMailbox(space.db, count, threads);
       await seedSummaries(space.db, mailbox);

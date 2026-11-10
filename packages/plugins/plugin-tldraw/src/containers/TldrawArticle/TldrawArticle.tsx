@@ -37,11 +37,11 @@ export const TldrawArticle = ({
   const [settings, updateSettings] = Hooks.useAtomCapabilityState(TldrawCapabilities.Settings);
   const id = Obj.getURI(drawing as Obj.Any);
   const { hasAttention } = useAttention(attendableId);
-  const section = role === AppSurface.Section.role;
+  const embedded = role === AppSurface.Section.role;
 
   const props = {
     readonly: role === AppSurface.Slide.role,
-    autoCenter: section ? true : undefined,
+    autoCenter: embedded ? true : undefined,
   };
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
@@ -60,18 +60,20 @@ export const TldrawArticle = ({
       // Section embeds render read-only (no controls/grid) until focused, on every platform; the
       // isTauri allowance (always-on UI) applies only to the full article/slide roles.
       // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
-      hideUi={section ? !hasAttention : !hasAttention && !isTauri()}
+      hideUi={embedded ? !hasAttention : !hasAttention && !isTauri()}
+      focusContainer={!embedded}
       onThreadCreate={handleThreadCreate}
       selection={selection}
       onSelectionChange={onSelectionChange}
       onActivate={onActivate}
+      cursors
       {...props}
     />
   );
 
   // An extrinsically-sized embed fills its (possibly non-square) box; otherwise it falls back to a
   // square so the intrinsic embed has a sensible height.
-  return section ? <Container fill={extrinsic}>{content}</Container> : <Article>{content}</Article>;
+  return embedded ? <Container fill={extrinsic}>{content}</Container> : <Article>{content}</Article>;
 };
 
 const Article = Util.composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (

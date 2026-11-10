@@ -88,7 +88,7 @@ const AUXILIARY_ENTRY = [
   // Alias targets wired up in the storybook config, never imported by name.
   '.storybook/mocks/**',
   // Stand-in package trees the introspection tests read from disk.
-  'src/__fixtures__/**',
+  'src/**/__fixtures__/**',
   'scripts/**/*.{ts,mts,js,mjs}',
 ];
 
@@ -432,15 +432,21 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/apps/composer-app': [
     '@dxos/app-graph',
     '@dxos/echo',
+    '@dxos/echo-doc',
     '@dxos/echo-react',
     '@dxos/graph',
     '@dxos/react-ui-attention',
     '@dxos/react-ui-geo',
+    'decode-named-character-reference',
   ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // The builder vendors the host by its installed path (`node_modules/@dxos/plugin-host-cloudflare`), never importing it.
+  'packages/core/compute/plugin-builder': ['@dxos/plugin-host-cloudflare'],
+  // The fixture plugin `build-remote-plugin` builds lives under `__fixtures__`, which knip does not scan.
+  'packages/e2e/composer-e2e': ['@dxos/compute'],
   // `index.html` links these by path rather than importing them, so no module graph reaches them —
   // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
   'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
@@ -462,6 +468,10 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@opentui/core-linux-arm64',
     '@opentui/core-linux-x64',
     '@opentui/core-win32-x64',
+    // `dx registry publish` runs the builder's `check-bundle` in a subprocess and points a plugin's build at the host's
+    // entry, both by path.
+    '@dxos/plugin-builder',
+    '@dxos/plugin-host-cloudflare',
   ],
 };
 
@@ -537,6 +547,9 @@ for (const manifest of globSync(
       ),
       ...supplemental.map((p) => `${p}!`),
       ...AUXILIARY_ENTRY,
+      // Run by path with `vitest bench`, imported by nothing. Only where entries are declared: without
+      // them the whole-source glob above already reaches benches as production code.
+      ...(entry.length && !isApp ? ['src/**/*.bench.{ts,tsx}'] : []),
     ],
     project: PROJECT.map((path) => `${path}!`),
     paths: { ...WORKSPACE_PATHS, ...paths },
@@ -557,6 +570,10 @@ for (const manifest of globSync(
 
 const config: KnipConfig = {
   workspaces,
+  // A project's `parked/` holds spike files kept for reference outside any package — they import
+  // paths that exist only where they came from. Only those: `.agents/` also holds a real workspace
+  // (`skills/composer-forensics/scripts`), which stays covered.
+  ignore: ['.agents/projects/*/parked/**'],
   // The issue types this repo gates on. Unused exports and types are deliberately excluded: barrel
   // files re-export far more than any one consumer uses, so they are noise here.
   include: ['files', 'dependencies', 'devDependencies', 'unlisted', 'binaries', 'unresolved'],

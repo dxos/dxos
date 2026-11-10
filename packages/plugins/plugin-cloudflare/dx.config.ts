@@ -2,12 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { CloudflareNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.cloudflare',
+    key: CloudflareNamespace.key,
     name: 'Cloudflare',
     author: 'DXOS',
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-cloudflare',
@@ -35,4 +42,22 @@ export default Config2.make({
     icon: { key: 'ph--cloud--regular', hue: 'amber' },
     tags: ['labs', 'connector'],
   },
+  modules: [
+    Capability.lazyModule(
+      'CloudflareConnector',
+      { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.pluginAsset({
+      pluginId: CloudflareNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

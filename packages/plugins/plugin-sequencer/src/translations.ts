@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Instrument, Score } from '#types';
+
+import { SequencerNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -33,7 +34,7 @@ export const translations = [
         'delete-object.label': 'Delete instrument',
         'object-deleted.label': 'Instrument deleted',
       },
-      [meta.profile.key]: {
+      [SequencerNamespace.key]: {
         'plugin.name': 'Sequencer',
         'add-track.label': 'Add track',
         'remove-track.label': 'Remove track',

@@ -13,44 +13,51 @@ import {
 } from 'react';
 
 import {
+  type ElementId,
+  type Endpoint,
+  type Link,
+  type Node,
+  type NodeId,
+  type NodeType,
+  type Point,
+  type Port,
+  type SplineLink,
+  endpointNode,
+  isPointEndpoint,
+  isPolylineNode,
+  isViewNode,
+} from '@dxos/scene';
+
+import {
   type CanvasAtoms,
   type ControlPointRef,
-  type DocumentIntentCommands,
+  type DocumentEditCommands,
   type Drag,
+  type DrawScene,
+  type DrawState,
   type Handle,
   type LinkEnd,
-  type Projection,
   type ToolsCommands,
 } from '../../engine/index.ts';
 import {
   type Camera,
   type Capabilities,
   type CreateProps,
-  type ElementId,
-  type Endpoint,
-  type Link,
-  type Node,
-  type NodeId,
   type NodeRegistry,
-  type NodeType,
-  type Point,
-  type Port,
-  type SplineLink,
-  type View,
-  type ViewStore,
-  endpointNode,
-  isPointEndpoint,
-  isPolylineNode,
-  isViewNode,
+  type RenderList2D,
+  isHandDrag,
   nodeDef,
 } from '../../model/index.ts';
 import {
   DEFAULT_LAYER,
   NOMINAL_SIZES,
+  type SceneEdit,
   VERTEX_SNAP_PX,
   activeLayer,
+  between,
   boundsCenter,
   boundsFromPoints,
+  chainEdits,
   cloneShape,
   createId,
   createLink,
@@ -59,8 +66,11 @@ import {
   hasVertices,
   hitTest,
   insertIndex,
+  insertLink,
+  insertNode,
   linkGeometry,
   minPolylineVertices,
+  moveNodes,
   nodeBounds,
   nodePorts,
   nodesIntersecting,
@@ -70,11 +80,14 @@ import {
   polylineVertices,
   portAccepts,
   portPoint,
+  pressSelects,
   refitPolyline,
   resizeBounds,
+  resizeTo,
   screenToScene,
   sideToward,
-  topZ,
+  topOfView,
+  updateElement,
 } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
@@ -110,7 +123,7 @@ const overCanvas = (target: EventTarget | null, root: HTMLElement | null): boole
 };
 
 /** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
-const isDirected = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
+const isDirected = (scene: RenderList2D, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
   [source, target].some((end) => {
     if (isPointEndpoint(end)) {
       return false;
@@ -128,11 +141,11 @@ export type UsePointerMachineOptions = {
   /** Returns to Select once a creation gesture lands. */
   setTool: ToolsCommands['setTool'];
   /** Drops a copy of the dragged nodes where the drag ends (⌘-drag). */
-  duplicate: DocumentIntentCommands['duplicate'];
-  store: ViewStore;
-  scene: View;
+  duplicate: DocumentEditCommands['duplicate'];
+  store: DrawState;
+  scene: RenderList2D;
   nodeRegistry: NodeRegistry;
-  projection: Projection;
+  draw: DrawScene;
   capabilities: Capabilities;
   camera: Camera;
   rootRef: RefObject<HTMLDivElement | null>;
@@ -207,7 +220,7 @@ export const usePointerMachine = ({
   store,
   scene,
   nodeRegistry,
-  projection,
+  draw,
   capabilities,
   camera,
   rootRef,
@@ -265,18 +278,18 @@ export const usePointerMachine = ({
       const node = def.createFromPoints(
         {
           id: createId(drawing.type),
-          z: topZ(Object.values(scene.nodes)),
+          z: topOfView(scene),
           center: boundsCenter(bounds),
           size: { width: bounds.width, height: bounds.height },
         },
         frame.points,
         closed && drawing.points.length >= 3,
       );
-      projection.apply({ kind: 'create', node: { ...node, layer: activeLayer(scene, registry.get(atoms.layer)) } });
+      draw.apply(insertNode({ ...node, layer: activeLayer(scene, registry.get(atoms.layer)) }));
       select([node.id]);
       setTool({ kind: 'select' });
     },
-    [nodeRegistry, minor, scene, projection, registry, atoms.layer, select, setTool],
+    [nodeRegistry, minor, scene, draw, registry, atoms.layer, select, setTool],
   );
 
   const finishVertices = useCallback(
@@ -340,7 +353,7 @@ export const usePointerMachine = ({
       if (event.target !== event.currentTarget) {
         return;
       }
-      if (event.button === 1 || currentTool.kind === 'hand') {
+      if (event.button === 1 || currentTool.kind === 'hand' || isHandDrag(event)) {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
@@ -416,7 +429,12 @@ export const usePointerMachine = ({
   const onNodePointerDown = useCallback(
     (node: Node, event: PointerEvent) => {
       const currentTool = registry.get(atoms.tool);
-      if ((currentTool.kind !== 'select' && currentTool.kind !== 'link') || event.button !== 0) {
+      // A drawing in progress (a polyline's vertices) takes the press where the canvas does.
+      if (
+        (!pressSelects(currentTool) && currentTool.kind !== 'link') ||
+        event.button !== 0 ||
+        registry.get(atoms.drag)?.kind === 'vertices'
+      ) {
         return;
       }
       event.stopPropagation();
@@ -517,11 +535,11 @@ export const usePointerMachine = ({
     ({ link: id, index }: ControlPointRef) => {
       const link = scene.links[id];
       if (link?.type === 'spline' && capabilities.update) {
-        projection.apply({ kind: 'update', id, values: { points: link.points.filter((_, i) => i !== index) } });
+        draw.apply(updateElement(id, { points: link.points.filter((_, i) => i !== index) }));
       }
       registry.set(atoms.point, undefined);
     },
-    [scene.links, capabilities.update, projection, registry, atoms.point],
+    [scene.links, capabilities.update, draw, registry, atoms.point],
   );
 
   /** A spline's control point: press selects it, drag moves it, alt-click removes it. */
@@ -573,10 +591,10 @@ export const usePointerMachine = ({
         minor,
       );
       if (values) {
-        projection.apply({ kind: 'update', id, values });
+        draw.apply(updateElement(id, values));
       }
     },
-    [scene.nodes, capabilities.update, registry, atoms.editing, minor, projection],
+    [scene.nodes, capabilities.update, registry, atoms.editing, minor, draw],
   );
 
   const onVertexPointerDown = useCallback(
@@ -702,10 +720,10 @@ export const usePointerMachine = ({
         { x: snap(point.x), y: snap(point.y) },
         ...link.points.slice(index),
       ];
-      projection.apply({ kind: 'update', id: link.id, values: { points } });
+      draw.apply(updateElement(link.id, { points }));
       select([link.id]);
     },
-    [capabilities.update, scene, nodeRegistry, toScene, snap, projection, select],
+    [capabilities.update, scene, nodeRegistry, toScene, snap, draw, select],
   );
 
   /**
@@ -805,6 +823,7 @@ export const usePointerMachine = ({
           break;
         }
         case 'link': {
+          // Everything the drop makes is one undo step, so the node it creates and the link to it go together.
           // The band follows the pointer exactly; it snaps as it lands (`settle`). A free source keeps
           // facing the far end.
           const point = toScene(event);
@@ -918,11 +937,11 @@ export const usePointerMachine = ({
       if (!drag.dropped && (drawn.width === 0 || drawn.height === 0)) {
         return undefined;
       }
-      const size = drag.dropped ? nominalSize(def.defaultSize, cell) : { ...drawn };
+      const size = drag.dropped ? nominalSize(def.defaultSize, cell) : { width: drawn.width, height: drawn.height };
       const center = drag.dropped
         ? { x: drag.from.x + size.width / 2, y: drag.from.y + size.height / 2 }
         : { x: drawn.x + drawn.width / 2, y: drawn.y + drawn.height / 2 };
-      const props: CreateProps = { id, z: topZ(Object.values(scene.nodes)), center, size };
+      const props: CreateProps = { id, z: topOfView(scene), center, size };
       const pending = pendingRef.current;
       // No `fontSize`: a new node inherits the view's default, as one created by dropping a link does.
       const reused = pending?.type === drag.type ? { ...pending.node, ...props } : undefined;
@@ -936,12 +955,16 @@ export const usePointerMachine = ({
       pendingRef.current = { type: drag.type, node };
       return node;
     },
-    [nodeRegistry, scene.nodes, cell],
+    // `topOfView` reads the links too, so a link added since would otherwise leave a stale key behind.
+    [nodeRegistry, scene.nodes, scene.links, cell],
   );
 
-  /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
-  const addNode = useCallback(
-    (node: Node) => {
+  /**
+   * The edit that adds a new node, with the scene a new portal opens onto registered as a side effect; a gesture that
+   * makes more than one element chains the edits so they land, and undo, as one.
+   */
+  const nodeEdit = useCallback(
+    (node: Node): SceneEdit => {
       if (isViewNode(node)) {
         registry.set(store.views, {
           ...registry.get(store.views),
@@ -953,10 +976,13 @@ export const usePointerMachine = ({
           },
         });
       }
-      projection.apply({ kind: 'create', node: { ...node, layer: activeLayer(scene, registry.get(atoms.layer)) } });
+      return insertNode({ ...node, layer: activeLayer(scene, registry.get(atoms.layer)) });
     },
-    [projection, registry, store, scene, atoms.layer],
+    [registry, store, scene, atoms.layer],
   );
+
+  /** Adds a new node; a new portal opens onto a fresh scene of its own, whichever path created it. */
+  const addNode = useCallback((node: Node) => draw.apply(nodeEdit(node)), [draw, nodeEdit]);
 
   /** The node the gesture made, committed: the next gesture starts from a fresh `create`. */
   const commitCreated = useCallback(
@@ -1010,12 +1036,12 @@ export const usePointerMachine = ({
           }
           // ⌘-drag leaves the selection where it was and drops a copy, which becomes the selection.
           if (!current.copy || !duplicate(current.ids, current.delta)) {
-            projection.apply({ kind: 'move', ids: current.ids, delta: current.delta });
+            draw.apply(moveNodes(current.ids, current.delta));
           }
           break;
         }
         case 'resize': {
-          projection.apply({ kind: 'resize', id: current.id, bounds: current.bounds });
+          draw.apply(resizeTo(current.id, current.bounds));
           break;
         }
         case 'link': {
@@ -1031,53 +1057,58 @@ export const usePointerMachine = ({
           }
           let target = current.target;
           let created: Node | undefined;
-          if (!target && isPointEndpoint(current.source)) {
-            // A free-ended link that never reached a node ends free too.
-            target = { point: current.to };
-          } else if (!target && capabilities.create) {
-            // Dropping a link drag on empty canvas creates a node there and links to it (canvas-editor
-            // behaviour): a copy of the shape it left, without its text, else a rectangle. It is centred on
-            // the release point (not the settled end, already snapped to the coarse grid) with its top-left
-            // on the minor grid, as a palette drop lands.
-            const drop = raw.kind === 'link' ? raw.to : current.to;
-            const source = scene.nodes[endpointNode(current.source) ?? ''];
-            const def = source ? nodeRegistry[source.type] : undefined;
-            const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
-            const props = {
-              id: createId(source?.type ?? 'rect'),
-              z: topZ(Object.values(scene.nodes)),
-              center: {
-                x: snapMinor(drop.x - size.width / 2) + size.width / 2,
-                y: snapMinor(drop.y - size.height / 2) + size.height / 2,
-              },
-              size,
-            };
-            const node =
-              source && def
-                ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
-                : createNode({ type: 'rect', ...props });
-            addNode(node);
-            created = node;
-            target = { node: node.id };
-          }
-          if (target) {
-            const link = createLink({
-              type: current.type,
-              id: createId(current.type),
-              z: topZ(Object.values(scene.links)),
-              source: current.source,
-              target,
-              midpoint: { x: snap((current.from.x + current.to.x) / 2), y: snap((current.from.y + current.to.y) / 2) },
-              // A link between ports that declare a direction is drawn with one.
-              ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
-            });
-            projection.apply({
-              kind: 'link',
-              link: { ...link, layer: activeLayer(scene, registry.get(atoms.layer)) },
-            });
-            // What the user just made is what they act on next (style, delete): the link, and the node
-            // the drop created with it.
-            select(created ? [link.id, created.id] : [link.id]);
+          // Everything the drop makes lands as one edit, so the node and the link to it undo together.
+          const edits: SceneEdit[] = [];
+          {
+            // One cursor over the whole view, so the node a drop makes and the link to it land above it and
+            // above each other rather than sharing a key.
+            let z = topOfView(scene);
+            const nextZ = () => (z = between(z, undefined));
+            if (!target && isPointEndpoint(current.source)) {
+              // A free-ended link that never reached a node ends free too.
+              target = { point: current.to };
+            } else if (!target && capabilities.create) {
+              // Dropping a link drag on empty canvas creates a node there and links to it (canvas-editor
+              // behaviour): a copy of the shape it left, without its text, else a rectangle. It is centred on
+              // the release point (not the settled end, already snapped to the coarse grid) with its top-left
+              // on the minor grid, as a palette drop lands.
+              const drop = raw.kind === 'link' ? raw.to : current.to;
+              const source = scene.nodes[endpointNode(current.source) ?? ''];
+              const def = source ? nodeRegistry[source.type] : undefined;
+              const size = source?.size ?? nominalSize(NOMINAL_SIZES.rect, cell);
+              const props = {
+                id: createId(source?.type ?? 'rect'),
+                z,
+                center: {
+                  x: snapMinor(drop.x - size.width / 2) + size.width / 2,
+                  y: snapMinor(drop.y - size.height / 2) + size.height / 2,
+                },
+                size,
+              };
+              const node =
+                source && def
+                  ? cloneShape(source, def.create(props), nodeDef(nodeRegistry, source)?.parts)
+                  : createNode({ type: 'rect', ...props });
+              edits.push(nodeEdit(node));
+              created = node;
+              target = { node: node.id };
+            }
+            if (target) {
+              const link = createLink({
+                type: current.type,
+                id: createId(current.type),
+                z: created ? nextZ() : z,
+                source: current.source,
+                target,
+                // A link between ports that declare a direction is drawn with one.
+                ends: isDirected(scene, nodeRegistry, current.source, target) ? { end: 'arrow' } : undefined,
+              });
+              edits.push(insertLink({ ...link, layer: activeLayer(scene, registry.get(atoms.layer)) }));
+              draw.apply(edits.length === 1 ? edits[0] : chainEdits(edits));
+              // What the user just made is what they act on next (style, delete): the link, and the node
+              // the drop created with it.
+              select(created ? [link.id, created.id] : [link.id]);
+            }
           }
           break;
         }
@@ -1091,7 +1122,7 @@ export const usePointerMachine = ({
           break;
         }
         case 'point': {
-          projection.apply({ kind: 'update', id: current.id, values: { points: current.points } });
+          draw.apply(updateElement(current.id, { points: current.points }));
           break;
         }
         case 'vertex': {
@@ -1107,14 +1138,14 @@ export const usePointerMachine = ({
             current.points.some((point, index) => point.x !== before[index].x || point.y !== before[index].y);
           const values = moved ? refitPolyline(node, current.points, minor) : undefined;
           if (values) {
-            projection.apply({ kind: 'update', id: current.id, values });
+            draw.apply(updateElement(current.id, values));
           }
           break;
         }
         case 'end': {
           // Dropped on a node it attaches there; dropped on empty canvas it becomes a free end at that point.
           const end: Endpoint = current.target ?? { point: current.to };
-          projection.apply({ kind: 'update', id: current.id, values: { [current.end]: end } });
+          draw.apply(updateElement(current.id, { [current.end]: end }));
           break;
         }
         case 'pan':
@@ -1130,7 +1161,7 @@ export const usePointerMachine = ({
       setDrag,
       scene,
       select,
-      projection,
+      draw,
       capabilities.create,
       snap,
       settle,
@@ -1140,6 +1171,7 @@ export const usePointerMachine = ({
       createdNode,
       commitCreated,
       addNode,
+      nodeEdit,
       minor,
       cell,
       snapMinor,

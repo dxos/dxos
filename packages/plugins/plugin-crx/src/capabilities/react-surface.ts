@@ -10,14 +10,15 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { CrxSettings } from '#containers';
-import { meta } from '#meta';
+
+import { CrxNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, CrxNamespace.key),
         component: CrxSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

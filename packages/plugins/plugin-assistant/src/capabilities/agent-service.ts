@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
@@ -44,6 +45,22 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
             delegationStrategy: strategies[0],
             makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
             processes: () => manager.getAll(AssistantCapabilities.AgentProcess),
+            // Read when a process spawns, so the setting applies to agents started after it changes.
+            threading: () => {
+              const [settings] = manager.getAll(AssistantCapabilities.Settings);
+              const [registry] = manager.getAll(Capabilities.AtomRegistry);
+              const values = settings && registry?.get(settings);
+              if (!values?.parallelThreads) {
+                return undefined;
+              }
+              const shared = new Set(values.parallelThreadAgents ?? []);
+              const tenants = manager
+                .getAll(AssistantCapabilities.Agent)
+                .filter((agent) => shared.has(agent.id))
+                .map((agent) => ({ name: agent.id, makeTurnProducer: agent.makeTurnProducer }));
+              return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
+            },
+            hooks: () => manager.getAll(AppCapabilities.HookDefinition),
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });

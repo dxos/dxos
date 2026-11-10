@@ -24,7 +24,6 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { PullRequest } from '@dxos/types';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
 import {
@@ -38,6 +37,7 @@ import {
   WalkthroughView,
 } from '../../components/index.ts';
 import { usePullRequestDiff, usePullRequestFiles, useSyncPullRequest } from '../../hooks/index.ts';
+import { GitHubNamespace } from '../../namespace.ts';
 import { githubConnection } from '../../operations/pull-request.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 import { pullRequestFailureKey } from './failure.ts';
@@ -75,7 +75,7 @@ export type PullRequestArticleProps = AppSurface.ObjectArticleProps<PullRequest.
  * pull request, not a different object to open.
  */
 export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }: PullRequestArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [subject] = useObject(pullRequest);
   const db = Obj.getDatabase(pullRequest);
@@ -137,7 +137,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
 
   // The diff is only read once the files tab is first opened: most visits never look at it.
   const diff = usePullRequestDiff(pullRequestRef, spaceId, tab === 'files');
-  const files = usePullRequestFiles(diff.diff, `${meta.profile.key}.reviewed.${reference}`);
+  const files = usePullRequestFiles(diff.diff, `${GitHubNamespace.key}.reviewed.${reference}`);
   const { file, step, setReviewed } = files;
 
   const handleFilesLineComment = useCallback(
@@ -189,9 +189,9 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   const toast = useCallback(
     (id: string, title: string, success: boolean, description?: string) =>
       invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.${id}`,
+        id: `${GitHubNamespace.key}.${id}`,
         icon: success ? 'ph--check-circle--regular' : 'ph--warning--regular',
-        title: [title, { ns: meta.profile.key }],
+        title: [title, { ns: GitHubNamespace.key }],
         ...(description ? { description } : {}),
       }),
     [invokePromise],
@@ -217,13 +217,13 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         )
       )?.connection;
       return invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.${id}`,
+        id: `${GitHubNamespace.key}.${id}`,
         icon: 'ph--warning--regular',
-        title: [key, { ns: meta.profile.key }],
+        title: [key, { ns: GitHubNamespace.key }],
         ...(connection
           ? {
-              actionLabel: ['open-github-connection.label', { ns: meta.profile.key }],
-              actionAlt: ['open-github-connection.label', { ns: meta.profile.key }],
+              actionLabel: ['open-github-connection.label', { ns: GitHubNamespace.key }],
+              actionAlt: ['open-github-connection.label', { ns: GitHubNamespace.key }],
               onAction: () =>
                 void invokePromise(LayoutOperation.Open, {
                   subject: [Binding.connectionSubject(db.spaceId, connection.id)],
@@ -349,7 +349,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         'tabs',
         {
           variant: 'custom',
-          label: ['views.label', { ns: meta.profile.key }],
+          label: ['views.label', { ns: GitHubNamespace.key }],
           render: () => tabs,
         },
         () => {},
@@ -362,7 +362,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         .action(
           'previousFile',
           {
-            label: ['previous-file.label', { ns: meta.profile.key }],
+            label: ['previous-file.label', { ns: GitHubNamespace.key }],
             icon: 'ph--caret-up--regular',
             disabled: !file,
             disposition: 'toolbar',
@@ -373,7 +373,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         .action(
           'nextFile',
           {
-            label: ['next-file.label', { ns: meta.profile.key }],
+            label: ['next-file.label', { ns: GitHubNamespace.key }],
             icon: 'ph--caret-down--regular',
             disabled: !file,
             disposition: 'toolbar',
@@ -384,7 +384,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         .action(
           'reviewed',
           {
-            label: ['file-reviewed.label', { ns: meta.profile.key }],
+            label: ['file-reviewed.label', { ns: GitHubNamespace.key }],
             icon: fileReviewed ? 'ph--check-square--fill' : 'ph--square--regular',
             iconOnly: false,
             disabled: !file,
@@ -400,7 +400,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       .action(
         'approve',
         {
-          label: ['approve-pull-request.label', { ns: meta.profile.key }],
+          label: ['approve-pull-request.label', { ns: GitHubNamespace.key }],
           icon: 'ph--check-circle--regular',
           variant: 'primary',
           iconOnly: false,
@@ -413,7 +413,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       .action(
         'comment',
         {
-          label: ['comment-pull-request.label', { ns: meta.profile.key }],
+          label: ['comment-pull-request.label', { ns: GitHubNamespace.key }],
           icon: 'ph--chat-text--regular',
           disabled: busy,
           disposition: 'toolbar',
@@ -427,7 +427,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
         {
           label: [
             walkthrough ? 'regenerate-walkthrough.label' : 'generate-walkthrough.label',
-            { ns: meta.profile.key },
+            { ns: GitHubNamespace.key },
           ],
           icon: 'ph--path--regular',
           disabled: generating,
@@ -439,7 +439,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       .action(
         'openOnGitHub',
         {
-          label: ['open-on-github.label', { ns: meta.profile.key }],
+          label: ['open-on-github.label', { ns: GitHubNamespace.key }],
           icon: 'ph--arrow-square-out--regular',
           disabled: !subject.url,
           disposition: 'toolbar',
@@ -450,7 +450,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
       .action(
         'copyLink',
         {
-          label: ['copy-link.label', { ns: meta.profile.key }],
+          label: ['copy-link.label', { ns: GitHubNamespace.key }],
           icon: 'ph--link--regular',
           disabled: !subject.url,
           disposition: 'toolbar',

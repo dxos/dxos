@@ -9,10 +9,9 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 
+import { type Clock, createClock } from '@dxos/animation';
 import {
   type Bounds,
-  type Camera,
-  type Clock,
   type ElementId,
   type Endpoint,
   type LayerId,
@@ -22,10 +21,10 @@ import {
   type NodeType,
   type Point,
   type Side,
-  type Tool,
   type ViewId,
-  createClock,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
+import { type Camera, type Tool } from '../model/index.ts';
 import { type Clipboard, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
@@ -95,9 +94,6 @@ export type ControlPointRef = { link: LinkId; index: number };
  */
 export type Editing = { id: NodeId; kind: 'label'; part: PartKey } | { id: NodeId; kind: 'vertices'; vertex?: number };
 
-/** Where the inspectors (properties, layers, about) sit: floating over the canvas, or docked in a column beside it. */
-export type InspectorMode = 'floating' | 'docked';
-
 export type CanvasAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<ViewId[]>;
@@ -112,10 +108,14 @@ export type CanvasAtoms = {
   tool: Atom.Writable<Tool>;
   /** The link type a port drag creates under the select tool: smart until a link tool is picked, then the last one. */
   linkType: Atom.Writable<LinkType>;
+  /** The background grid drawn. */
+  grid: Atom.Writable<boolean>;
   /** Grid shown and moves/resizes snapped to it. */
   snap: Atom.Writable<boolean>;
   /** Guides shown: on a lattice, its cells. */
   guides: Atom.Writable<boolean>;
+  /** The axes through the origin drawn. */
+  axes: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
   /** The last cut or copied fragment (`clipboard.ts`). */
@@ -128,10 +128,8 @@ export type CanvasAtoms = {
   active: Atom.Writable<NodeId | undefined>;
   /** Frames show their id, type and geometry. */
   debug: Atom.Writable<boolean>;
-  /** The time the view shows and whether it plays (ANIMATION.md §5.1). */
+  /** The time the view shows and whether it plays (ANIMATION.md §5.1): the host samples the document at it. */
   clock: Clock;
-  /** Edits away from t = 0 key the properties they change (ANIMATION.md §5.4). */
-  autoKey: Atom.Writable<boolean>;
   /** The composite open in isolation, if any. */
   isolation: Atom.Writable<Isolation | undefined>;
 };
@@ -150,8 +148,10 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   point: Atom.keepAlive(Atom.make<ControlPointRef | undefined>(undefined)),
   tool: Atom.keepAlive(Atom.make<Tool>({ kind: 'select' })),
   linkType: Atom.keepAlive(Atom.make<LinkType>('smart')),
+  grid: Atom.keepAlive(Atom.make<boolean>(true)),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
   guides: Atom.keepAlive(Atom.make<boolean>(true)),
+  axes: Atom.keepAlive(Atom.make<boolean>(false)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
@@ -159,6 +159,5 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
   clock: createClock(),
-  autoKey: Atom.keepAlive(Atom.make<boolean>(true)),
   isolation: Atom.keepAlive(Atom.make<Isolation | undefined>(undefined)),
 });

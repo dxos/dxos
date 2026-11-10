@@ -6,7 +6,7 @@
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
-import { meta } from '#meta';
+import { DeepSeekNamespace } from './namespace.ts';
 
 /** The feature's start event, gating this plugin's start-activated modules. */
-export const Start = ActivationEvent.pluginStart(meta.profile.key);
+export const Start = ActivationEvent.pluginStart(DeepSeekNamespace.key);

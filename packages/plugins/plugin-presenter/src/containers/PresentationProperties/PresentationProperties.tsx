@@ -15,8 +15,9 @@ import {
 } from '@dxos/react-ui-form';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { Presentation, SlideTheme } from '#types';
+
+import { PresenterNamespace } from '../../namespace.ts';
 
 /** Related settings side by side: the theme and its accent, the two colors, the two fonts. */
 const TEMPLATE = `
@@ -51,7 +52,7 @@ export type PresentationPropertiesProps = { presentation: Presentation.Presentat
  * collapsed group in the generic object form.
  */
 export const PresentationProperties = ({ presentation }: PresentationPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const [theme] = useObject(presentation, 'theme');
   const base = SlideTheme.isName(theme?.base) ? theme.base : undefined;
 

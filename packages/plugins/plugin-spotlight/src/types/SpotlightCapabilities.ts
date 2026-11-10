@@ -8,7 +8,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { SpotlightNamespace } from '../namespace.ts';
 
 export type SpotlightState = {
   dialogContent?: { component: string; props?: Record<string, any> };
@@ -16,4 +16,4 @@ export type SpotlightState = {
   dismissTimeout?: ReturnType<typeof setTimeout>;
 };
 
-export const State = Capability.makeSingleton<Atom.Writable<SpotlightState>>()(`${meta.profile.key}.state`);
+export const State = Capability.makeSingleton<Atom.Writable<SpotlightState>>()(`${SpotlightNamespace.key}.state`);

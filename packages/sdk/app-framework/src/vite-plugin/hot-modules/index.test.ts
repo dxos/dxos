@@ -26,6 +26,18 @@ describe('findModuleLoaders', () => {
     expect(findModuleLoaders('/src/MarkdownPlugin.ts', code).map(({ specifier }) => specifier)).toEqual(['#plugin']);
   });
 
+  test('finds loaders in a loader map passed to Plugin.fromManifest', ({ expect }) => {
+    const code = `const plugin = Plugin.fromManifest(manifest, { "/@fs/a.ts": () => import('./a.ts'), "/@fs/b.ts": () => import('#b') });`;
+    expect(findModuleLoaders('/dx.config.ts', code).map(({ specifier }) => specifier)).toEqual(['./a.ts', '#b']);
+  });
+
+  test("finds a config's module list loaded by Plugin.lazy", ({ expect }) => {
+    const code = `export const make = Plugin.lazy(meta, () => import('./dx.config.ts?dx-modules'));`;
+    expect(findModuleLoaders('/dx.config.ts', code).map(({ specifier }) => specifier)).toEqual([
+      './dx.config.ts?dx-modules',
+    ]);
+  });
+
   test('skips lazy components, dependencies, assets and non-loader arrows', ({ expect }) => {
     const code = `
       const Panel = lazy(() => import('./Panel.tsx'));

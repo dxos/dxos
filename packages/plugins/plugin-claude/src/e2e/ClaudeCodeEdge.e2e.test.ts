@@ -169,7 +169,8 @@ describe.skipIf(!EDGE_URL || (!FAKE_AGENT && !OAUTH_TOKEN))(
       Effect.fnUntraced(
         function* (_) {
           const repo = yield* Database.add(Repo.make({ owner: 'octocat', name: 'Hello-World' }));
-          const project = yield* Database.add(Project.make({ repositories: [Ref.make(repo)] }));
+          const project = yield* Database.add(Project.make());
+          Repo.setRepositories(project, [Ref.make(repo)]);
           const { chat, session } = yield* setup();
           Obj.setParent(chat, project);
           const reply = yield* turn(
@@ -192,7 +193,11 @@ describe.skipIf(!EDGE_URL || (!FAKE_AGENT && !OAUTH_TOKEN))(
           // As a person connects GitHub and lists the repositories on the project.
           yield* Database.add(Obj.make(AccessToken.AccessToken, { source: 'github.com', token: GITHUB_TOKEN }));
           const repos = yield* Effect.forEach(PR_REPOS, (name) => Database.add(Repo.make({ owner: 'dxos', name })));
-          const project = yield* Database.add(Project.make({ repositories: repos.map((repo) => Ref.make(repo)) }));
+          const project = yield* Database.add(Project.make());
+          Repo.setRepositories(
+            project,
+            repos.map((repo) => Ref.make(repo)),
+          );
           const { chat, session } = yield* setup();
           Obj.setParent(chat, project);
 

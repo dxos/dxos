@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { ReviewNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [ReviewNamespace.key]: {
         'history-panel.title': 'History',
         'now.label': 'Now',
         'branch-tip.label': 'Tip',
@@ -57,7 +57,10 @@ export const translations = [
         'draft.button': 'DRAFT',
         'no-comments.message': 'Select text and click <commentIcon></commentIcon> in the toolbar to create a comment.',
         'no-comments-unanchored.message': 'Click <addIcon></addIcon> to add a comment.',
+        'no-comments-fields.message':
+          'Select text and click <addIcon></addIcon> to comment on it, or click it with nothing selected to comment on the whole object.',
         'add-object-comment.label': 'Add comment',
+        'subscribe-comments.label': 'Notify me of comments',
         'comments.label': 'Comments',
         'show-unresolved.label': 'Active comments',
         'show-all.label': 'All comments',

@@ -26,8 +26,9 @@ import {
   type DiagnosticSeverity,
   runDiagnostics,
 } from '#diagnostics';
-import { meta } from '#meta';
 import { DoctorCapabilities } from '#types';
+
+import { DoctorNamespace } from '../../namespace.ts';
 
 type RunState =
   | { readonly status: 'idle' }
@@ -47,7 +48,7 @@ const SEVERITY_PALETTE: Record<DiagnosticSeverity, 'neutral' | 'amber' | 'rose'>
 };
 
 export const DiagnosticsPanel = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DoctorNamespace.key);
   const spaces = Hooks.useCapability(ClientCapabilities.SpaceService);
   const graph = Hooks.useCapability(ClientCapabilities.Hypergraph);
   const manager = PluginManagerProvider.usePluginManager();

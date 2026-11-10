@@ -8,6 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -25,6 +26,7 @@ import {
   ActionToolbar,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
+  TOOLBAR_OVERFLOW_ID,
   graphActions,
   isToolbarAction,
   useMenuBuilder,
@@ -49,10 +51,11 @@ import {
   useQueryFilter,
   useTagMap,
 } from '#hooks';
-import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
+import { MAILBOX_MENU_DISPOSITION } from '../../constants.ts';
+import { InboxNamespace } from '../../namespace.ts';
 import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
 import { buildSearchSelection, getSearchText, messageMatchesQuery } from '../../util/index.ts';
 import { InitializeMailbox } from './InitializeMailbox.tsx';
@@ -92,13 +95,15 @@ export const MailboxArticle = ({
   const showItem = ToolkitHooks.useShowItem();
   const runAction = GraphHooks.useActionRunner();
 
-  // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
+  // Mail sync (`#sync`), the analyze cascade (`#analyze`), Triage inbox (`#triage`) and a message's extraction (`#extract`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = ToolkitHooks.useProgressMonitor(createSyncProgressKey(mailbox));
   const scanProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
+  const triageProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createTriageProgressKey(mailbox));
+  const extractProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createExtractProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
-  const progress = [syncProgress, scanProgress].find(isActive);
+  const progress = [syncProgress, scanProgress, triageProgress, extractProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -610,19 +615,18 @@ const useMailboxActions = (
   const injectedActions = Hooks.useCapabilities(InboxCapabilities.MailboxAction);
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
   const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
-  const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
     (get) => {
       // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.
       const builder = MenuBuilder.make()
-        .root({ label: ['mailbox-toolbar.title', { ns: meta.profile.key }] })
+        .root({ label: ['mailbox-toolbar.title', { ns: InboxNamespace.key }] })
         .action(
           'sortAscending',
           {
             type: 'sortDescending',
             icon: sortDescending.value ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-            label: ['mailbox-toolbar-sort.menu', { ns: meta.profile.key }],
+            label: ['mailbox-toolbar-sort.menu', { ns: InboxNamespace.key }],
           },
           () => sortDescending.set((value) => !value),
         )
@@ -631,37 +635,10 @@ const useMailboxActions = (
           {
             type: 'loadRemoteImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
-            label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
+            label: ['message-toolbar-load-images.menu', { ns: InboxNamespace.key }],
             checked: loadRemoteImages,
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
-        )
-        .subgraph((builder) => {
-          if (extractActions.length > 0) {
-            return builder.group(
-              'extract',
-              {
-                label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
-                icon: 'ph--magic-wand--regular',
-                iconOnly: true,
-                variant: 'dropdownMenu',
-              },
-              (group) => {
-                for (const item of extractActions) {
-                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
-                }
-              },
-            );
-          }
-        })
-        .action(
-          'composeEmail',
-          {
-            type: 'composeEmail',
-            icon: 'ph--pen--regular',
-            label: ['compose-email.label', { ns: meta.profile.key }],
-          },
-          handleCompose,
         );
 
       // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
@@ -672,16 +649,61 @@ const useMailboxActions = (
           'filter',
           {
             variant: 'custom',
-            label: ['mailbox-toolbar.title', { ns: meta.profile.key }],
+            label: ['mailbox-toolbar.title', { ns: InboxNamespace.key }],
             render: () => filterElement,
           },
           () => {},
         );
       }
 
+      // Mailbox-wide jobs (sync, analyze, extract) share the trailing ⋮ menu so the toolbar row stays
+      // with the per-view controls; other contributed toolbar actions (Connect) keep their place in the row.
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
+        .action(
+          'composeEmail',
+          {
+            type: 'composeEmail',
+            icon: 'ph--pen--regular',
+            label: ['compose-email.label', { ns: InboxNamespace.key }],
+          },
+          handleCompose,
+        )
+        .menu(
+          TOOLBAR_OVERFLOW_ID,
+          (menu) => {
+            const jobs = graphActions(graph, get, nodeId, {
+              filter: (action) => AppGraphNode.hasDisposition(action, MAILBOX_MENU_DISPOSITION),
+              rootId: TOOLBAR_OVERFLOW_ID,
+            });
+            menu.subgraph(jobs);
+            // Contributed actions (triage, plugin-crm's image search) are mailbox-wide
+            // jobs like sync and analyze, not extractors, so they sit beside them.
+            for (const item of mailboxActions) {
+              menu.action(`mailbox-${item.id}`, { label: item.label, icon: item.icon }, item.onSelect);
+            }
+            if (mailboxExtractorActions.length > 0) {
+              if (jobs.nodes.length > 0 || mailboxActions.length > 0) {
+                menu.separator('line');
+              }
+              menu.group(
+                'extract',
+                {
+                  label: ['mailbox-toolbar-extract.menu', { ns: InboxNamespace.key }],
+                  icon: 'ph--magic-wand--regular',
+                  testId: 'inbox.mailbox.extract',
+                },
+                (group) => {
+                  for (const item of mailboxExtractorActions) {
+                    group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+                  }
+                },
+              );
+            }
+          },
+          'inbox.mailbox.more',
+        )
         .build();
     },
     [

@@ -14,8 +14,8 @@ import { Organization, Person, Pipeline, Task } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
 import { ExpandoCard, FormCard, JsonCard, PersonCardIcon, ProjectCard, TaskCard } from '../cards/index.ts';
-import { UnsupportedType } from '../components/index.ts';
 import { OrganizationCardContent, PersonCardContent } from './RelatedCards.tsx';
+import { UnsupportedTypeArticle } from './UnsupportedTypeArticle.tsx';
 
 /**
  * Checked against the type registry rather than "no other candidate matched" — the latter is also
@@ -173,7 +173,7 @@ export default Capability.makeModule(() =>
         id: 'unsupportedTypeArticle',
         position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, isTypeUnavailable),
-        component: UnsupportedType,
+        component: UnsupportedTypeArticle,
         props: ({ role, data: { subject } }) => ({ role, typename: Obj.getTypename(subject) ?? '' }),
       }),
     ]),

@@ -13,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -37,25 +24,11 @@
       "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
-    },
-    "#operations": {
-      "source": {
-        "workerd": "./src/operations/node.ts",
-        "node": "./src/operations/node.ts",
-        "default": "./src/operations/index.ts"
-      },
-      "types": "./dist/types/src/operations/index.d.ts",
-      "workerd": "./dist/lib/operations/node.mjs",
-      "node": "./dist/lib/operations/node.mjs",
-      "default": "./dist/lib/operations.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SheetPlugin.workerd.mjs",
+      "node": "./dist/lib/SheetPlugin.node.mjs",
+      "default": "./dist/lib/SheetPlugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -117,8 +90,10 @@
       "import": "./dist/lib/SheetOperation.mjs"
     },
     "./SheetPlugin": {
-      "source": "./src/SheetPlugin.ts",
-      "types": "./dist/types/src/SheetPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SheetPlugin.workerd.mjs",
+      "node": "./dist/lib/SheetPlugin.node.mjs",
       "import": "./dist/lib/SheetPlugin.mjs"
     },
     "./SheetRange": {
@@ -182,6 +157,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
@@ -209,6 +185,8 @@
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/halo": "workspace:*",
+    "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",

@@ -42,10 +42,19 @@ export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.
 
 /**
  * Document factory.
+ *
+ * The history struct is created with the document, not on first use: `ensureHistory` would create it by assignment,
+ * and two writers that both see no history (two invocations, or two peers, adding the first checkpoint or branch)
+ * would each assign their own struct to the same key, so one entry is lost. Created here, every later entry is an
+ * insert into a list, which merges.
  */
 export const make = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) => {
-  return Obj.make(Document, { ...props, content: Ref.make(Text.make({ content })) });
+  return Obj.make(Document, {
+    ...props,
+    content: Ref.make(Text.make({ content })),
+    history: { branches: [], versions: [] },
+  });
 };

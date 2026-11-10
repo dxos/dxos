@@ -66,7 +66,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   // TODO(wittjosiah): Update this to get threads via relations.
   // model.sheet.threads
   //   ?.filter((thread) => {
-  //     const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
+  //     const range = thread.target?.anchor && SheetUtil.rangeFromAnchor(model.sheet, thread.target!.anchor);
   //     return thread && range ? inRange(range, address) : false;
   //   })
   //   .map((thread) => Obj.getURI(thread!))

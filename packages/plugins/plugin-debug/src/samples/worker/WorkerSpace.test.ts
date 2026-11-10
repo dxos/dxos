@@ -7,7 +7,8 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Feature from '@dxos/plugin-code/Feature';
+import * as FeatureEmbed from '@dxos/plugin-code/FeatureEmbed';
 
 import { SPEC_PATH } from './spec.ts';
 import * as WorkerSpace from './WorkerSpace.ts';
@@ -29,13 +30,24 @@ type Archived = {
   'name'?: string;
   'title'?: string;
   'status'?: string;
-  'specs'?: string[];
-  'project'?: { '/': string };
-  'parent'?: { '/': string };
+  'content'?: string | { '/': string };
+  'spec'?: { '/': string };
+  'specs'?: Array<{ '/': string }>;
   '@relationSource'?: string;
   '@relationTarget'?: string;
-  '@meta'?: { keys?: Array<{ source: string; id: string }> };
+  '@meta'?: {
+    keys?: Array<{ source: string; id: string }>;
+    annotations?: { 'org.dxos.projects.features'?: Array<{ '/': string }> };
+  };
 };
+
+/** The refs to the features an archived spec holds, from its features annotation. */
+const featuresOf = (entity: Archived | undefined) =>
+  entity?.['@meta']?.annotations?.['org.dxos.projects.features'] ?? [];
+
+/** The spec blocks an archived feature was read in from, as its foreign keys. */
+const sourcesOf = (entity: Archived): string[] =>
+  (entity['@meta']?.keys ?? []).filter(({ source }) => source === Feature.SPEC_KEY_SOURCE).map(({ id }) => id);
 
 /** The archive's tasks, in the order they were written. */
 const taskArchive = async (definition: ReturnType<typeof WorkerSpace.make>): Promise<ArchivedTask[]> => {
@@ -61,13 +73,15 @@ describe('Worker template', () => {
           .reduce((total, [, count]) => total + count, 0);
 
       expect(objectCount).toBeGreaterThan(0);
-      expect(countOf('type.project')).toBe(1);
+      // With the colon, so the specs' `type.projects.spec` is not counted as a project.
+      expect(countOf('type.project:')).toBe(1);
       expect(countOf('type.instructions')).toBe(1);
       expect(countOf('type.taskSet')).toBe(1);
       expect(countOf('type.task:')).toBe(3);
       // Four features, and the endpoint's two subfeatures.
       expect(countOf('type.feature:')).toBe(6);
-      expect(countOf('type.spec:')).toBe(1);
+      // The map, and the spec that breaks the endpoint down; each owns its text.
+      expect(countOf('type.projects.spec:')).toBe(2);
       // The URL and the response body are what the run produces, so the space ships no documents.
       expect(countOf('type.document')).toBe(0);
     },
@@ -82,9 +96,12 @@ describe('Worker template', () => {
       const { json } = await EffectEx.runPromise(buildArchive(WorkerSpace.make()));
       const objects: Archived[] = JSON.parse(json).objects;
       const ofType = (typename: string) => objects.filter((object) => object['@type']?.includes(typename));
-      const [project] = ofType('type.project');
+      const [project] = ofType('type.project:');
       const all = ofType('type.feature:');
-      const features = all.filter((feature) => !feature.parent);
+      const byRef = (ref: { '/': string } | undefined) =>
+        objects.find((object) => `echo:///${object.id}` === ref?.['/']);
+      const map = byRef(project.specs?.[0]);
+      const features = featuresOf(map).flatMap((ref) => byRef(ref) ?? []);
       const tasks = ofType('type.task:');
 
       expect(features.map((feature) => feature.name)).toEqual([
@@ -94,13 +111,12 @@ describe('Worker template', () => {
         'Claimed account',
       ]);
       expect(features.every((feature) => feature.status === 'planned')).toBe(true);
-      expect(features.every((feature) => feature.project?.['/'] === `echo:///${project.id}`)).toBe(true);
-      expect(features.map((feature) => feature.specs)).toEqual(
-        ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
-      );
-      // The endpoint's parts are features of their own beneath it.
-      const subfeatures = all.filter((feature) => feature.parent?.['/'] === `echo:///${features[0].id}`);
+      expect(map?.['@type']).toContain('type.projects.spec:');
+      expect(features.map(sourcesOf)).toEqual(['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]));
+      // The endpoint's parts are features of their own, on the spec that breaks it down.
+      const subfeatures = featuresOf(byRef(features[0].spec)).flatMap((ref) => byRef(ref) ?? []);
       expect(subfeatures.map((feature) => feature.name)).toEqual(['JSON greeting', 'UTC time']);
+      expect(all).toHaveLength(features.length + subfeatures.length);
 
       // Each feature needs the one before it.
       const dependsOn = ofType('relation.dependsOn');
@@ -116,11 +132,16 @@ describe('Worker template', () => {
       const diagram = tasks.find((task) => task.title === 'Draw the proposed architecture');
       expect(implementsLinks).toEqual([[`echo:///${diagram?.id}`, `echo:///${features[0].id}`]]);
 
-      // The spec is the space's copy of the path the features cite, so their cards open it instead of GitHub.
-      const [spec] = ofType('type.spec:');
-      expect(spec['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      // The map is the space's copy of the path the features cite, so their cards open it instead of GitHub.
+      expect(map?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      // F-1 is embedded where its block stood, and F-2 to F-4, which have no block yet, after it.
+      const content = map?.content;
+      const text = typeof content === 'object' ? byRef(content)?.content : undefined;
+      expect(typeof text).toBe('string');
+      expect(FeatureEmbed.parse(String(text)).map(({ id }) => id)).toEqual(features.map(({ id }) => id));
+      expect(text).not.toMatch(/^feat F-/m);
       for (const feature of features) {
-        expect(Feature.getSpecPath(feature.specs?.[0] ?? '')).toBe(SPEC_PATH);
+        expect(Feature.getSpecPath(sourcesOf(feature)[0] ?? '')).toBe(SPEC_PATH);
       }
     },
   );

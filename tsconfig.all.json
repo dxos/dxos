@@ -16,6 +16,9 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
+      "path": "packages/common/animation/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {
@@ -205,6 +208,12 @@
       "path": "packages/core/echo/echo-sqlite/tsconfig.json"
     },
     {
+      "path": "packages/apps/echo-sqlite-demo/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-worker/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {
@@ -331,6 +340,9 @@
       "path": "packages/core/compute/mcp-server/tsconfig.json"
     },
     {
+      "path": "tools/mdl-language-server/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {
@@ -385,6 +397,9 @@
       "path": "packages/plugins/plugin-agent/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-animator/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -409,6 +424,9 @@
       "path": "packages/plugins/plugin-brain/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/plugin-builder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
@@ -428,6 +446,9 @@
     },
     {
       "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare-os/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
@@ -511,6 +532,9 @@
       "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/plugin-host-cloudflare/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
     },
     {
@@ -532,13 +556,13 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-labeler/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-lametric/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-library/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-lighthouse/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
@@ -656,9 +680,6 @@
     },
     {
       "path": "packages/plugins/plugin-space/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-spacetime/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"
@@ -781,6 +802,9 @@
       "path": "packages/ui/react-ui/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-animation/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-assistant/tsconfig.json"
     },
     {
@@ -800,6 +824,9 @@
     },
     {
       "path": "packages/ui/react-ui-canvas-compute/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-card/tsconfig.json"
@@ -917,6 +944,9 @@
     },
     {
       "path": "packages/e2e/rpc-tunnel-e2e/tsconfig.json"
+    },
+    {
+      "path": "packages/common/scene/tsconfig.json"
     },
     {
       "path": "packages/sdk/schema/tsconfig.json"

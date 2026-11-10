@@ -4,64 +4,71 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_GRID } from '../../model/index.ts';
-import { resizeBounds } from '../../utils/index.ts';
+import { DEFAULT_GRID, MAJOR_GRID } from '@dxos/scene';
+
+import { DETENT_PX, resizeBounds } from '../../utils/index.ts';
 import { sceneSnap } from './useSceneSnap.ts';
 
-// At 79% the 4px level is under the legible spacing, so the drawn levels are 16 (minor) and 64 (major).
+// At 79% the quarter level is under the legible spacing, so the drawn levels are the grid and its major.
 const ZOOM = 0.79;
-const MAJOR = 64;
 
-const onMajor = (value: number) => Math.abs(value % MAJOR) === 0;
+const onMajor = (value: number) => Math.abs(value % MAJOR_GRID) === 0;
 
 describe('sceneSnap', () => {
   test('reads the drawn levels from the zoom', ({ expect }) => {
     const { minor, major } = sceneSnap(DEFAULT_GRID, ZOOM, true);
-    expect([minor, major]).toEqual([16, MAJOR]);
+    expect([minor, major]).toEqual([DEFAULT_GRID, MAJOR_GRID]);
   });
 
-  test('a move lands the pressed node on the major grid', ({ expect }) => {
-    const { moveDelta } = sceneSnap(DEFAULT_GRID, ZOOM, true);
-    const anchor = { x: 64, y: 64 };
-    // Screen drags that landed on 16px multiples before the fix.
-    for (const [x, y] of [
-      [37, 23],
-      [11, 7],
-      [60, 45],
-      [100, 70],
-    ]) {
-      const delta = moveDelta(anchor, { x: x / ZOOM, y: y / ZOOM });
-      expect([anchor.x + delta.x, anchor.y + delta.y].every(onMajor)).toBe(true);
-    }
-    expect(moveDelta(anchor, { x: 37 / ZOOM, y: 23 / ZOOM })).toEqual({ x: 64, y: 0 });
+  test('a move holds the pressed node on the major grid within the detent and follows the pointer outside it', ({
+    expect,
+  }) => {
+    const { moveDelta, detent } = sceneSnap(DEFAULT_GRID, ZOOM, true);
+    expect(detent).toBeCloseTo(DETENT_PX / ZOOM);
+    const anchor = { x: MAJOR_GRID, y: MAJOR_GRID };
+    // Each axis on its own: x is 2 short of the next cell and y 3 past this one, both inside the detent, so both hold.
+    expect(moveDelta(anchor, { x: MAJOR_GRID - 2, y: 3 })).toEqual({ x: MAJOR_GRID, y: 0 });
+    // x is past the detent of either line, so it follows the pointer while y still holds.
+    const loose = Math.round(MAJOR_GRID / 2) - 2;
+    expect(moveDelta(anchor, { x: loose, y: 3 })).toEqual({ x: loose, y: 0 });
+    // Entering and leaving the detent moves the node by the detent at most, never by half a cell.
+    const xs = Array.from({ length: 80 }, (_, step) => anchor.x + moveDelta(anchor, { x: step, y: 0 }).x);
+    const steps = xs.slice(1).map((x, index) => Math.abs(x - xs[index]));
+    expect(Math.max(...steps)).toBeLessThanOrEqual(detent + 1);
   });
 
   test('a resize lands the moving edge on the major grid and keeps the opposite edge', ({ expect }) => {
     const { snap, major } = sceneSnap(DEFAULT_GRID, ZOOM, true);
-    const start = { x: 64, y: 64, width: 128, height: 64 };
-    const bounds = resizeBounds(start, 'se', { x: 40, y: 20 }, { minSize: { width: major, height: major }, snap });
-    expect(bounds).toEqual({ x: 64, y: 64, width: 192, height: 64 });
+    const start = { x: MAJOR_GRID, y: MAJOR_GRID, width: MAJOR_GRID * 2, height: MAJOR_GRID };
+    const bounds = resizeBounds(
+      start,
+      'se',
+      { x: Math.round(MAJOR_GRID * 0.8), y: Math.round(MAJOR_GRID * 0.4) },
+      { minSize: { width: major, height: major }, snap },
+    );
+    expect(bounds).toEqual({ x: MAJOR_GRID, y: MAJOR_GRID, width: MAJOR_GRID * 3, height: MAJOR_GRID });
     expect([bounds.x + bounds.width, bounds.y + bounds.height].every(onMajor)).toBe(true);
   });
 
   test("a click's jitter does not snap a node that sits off the major grid", ({ expect }) => {
     const { moveDelta, isClick } = sceneSnap(DEFAULT_GRID, ZOOM, true);
     // A palette drop leaves the node on the minor grid.
-    const anchor = { x: 16, y: 16 };
+    const anchor = { x: DEFAULT_GRID, y: DEFAULT_GRID };
     expect(moveDelta(anchor, { x: 1, y: 1 })).toEqual({ x: 0, y: 0 });
     expect(isClick({ x: 1, y: 1 })).toBe(true);
-    // Past half a minor cell the press is a drag and the node lands on the major grid.
-    expect(isClick({ x: 8, y: 0 })).toBe(false);
-    expect(moveDelta(anchor, { x: 8, y: 0 })).toEqual({ x: -16, y: -16 });
+    // Past half a minor cell the press is a drag, and a node this far from a major line follows the pointer.
+    const drag = DEFAULT_GRID / 2 + 1;
+    expect(isClick({ x: drag, y: 0 })).toBe(false);
+    expect(moveDelta(anchor, { x: drag, y: 0 })).toEqual({ x: drag, y: 0 });
   });
 
   test('control points keep the minor grid', ({ expect }) => {
     const { snapMinor } = sceneSnap(DEFAULT_GRID, ZOOM, true);
-    expect(snapMinor(23)).toBe(16);
+    expect(snapMinor(DEFAULT_GRID * 2 - 1)).toBe(DEFAULT_GRID * 2);
   });
 
   test('with snap off a move follows the pointer', ({ expect }) => {
     const { moveDelta } = sceneSnap(DEFAULT_GRID, ZOOM, false);
-    expect(moveDelta({ x: 64, y: 64 }, { x: 37, y: 23 })).toEqual({ x: 37, y: 23 });
+    expect(moveDelta({ x: MAJOR_GRID, y: MAJOR_GRID }, { x: 37, y: 23 })).toEqual({ x: 37, y: 23 });
   });
 });

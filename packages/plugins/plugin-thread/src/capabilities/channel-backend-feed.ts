@@ -37,8 +37,11 @@ export const feedChannelBackend: ThreadCapabilities.ChannelBackendProvider = {
     Effect.gen(function* () {
       const db = Obj.getDatabase(channel);
       invariant(db, 'Database not found');
-      const feed = Channel.getFeed(channel);
-      invariant(feed, 'Channel is not feed-backed');
+      invariant(channel.backend.kind === Channel.FeedBackendKind, 'Channel is not feed-backed');
+      // Loaded rather than read off `getFeed`: a channel loaded in this invocation (a headless host, an operation
+      // given the channel by reference) has not resolved its config ref yet, so its target is still undefined.
+      const feed = yield* Database.load(channel.backend.config);
+      invariant(Obj.instanceOf(Feed.Feed, feed), 'Channel is not feed-backed');
       yield* Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db)));
     }),
   readOnly: (channel) => Obj.getMeta(channel).keys.length > 0,

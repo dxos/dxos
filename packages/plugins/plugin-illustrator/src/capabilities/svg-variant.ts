@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { SVG_SCHEMA } from '@dxos/diagram';
 
-import { SvgArticle } from '#containers';
+import { SvgArticle, SvgCard } from '#containers';
 import { SvgBuilder } from '#model';
 import { IllustratorCapabilities } from '#types';
 
@@ -18,7 +18,7 @@ const variant: IllustratorCapabilities.DrawingVariant = {
   label: 'svg',
   icon: 'ph--vector-two--regular',
   builder: SvgBuilder,
-  card: SvgArticle,
+  card: SvgCard,
   article: SvgArticle,
 };
 

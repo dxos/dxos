@@ -77,17 +77,22 @@ const indexAnswers = (result: QueryResult.QueryResult<Obj.Unknown>): number =>
   result.sources.find((state) => state.source === 'index')?.answers ?? 0;
 
 /** Resolves once each result's index source has answered more often than `before` recorded. */
-const waitForAnswers = (results: QueryResult.QueryResult<Obj.Unknown>[], before: number[]): Promise<void> =>
-  asyncTimeout(
+const waitForAnswers = (results: QueryResult.QueryResult<Obj.Unknown>[], before: number[]): Promise<void> => {
+  const deadline = performance.now() + ANSWER_TIMEOUT_MS;
+  return asyncTimeout(
     (async () => {
-      // Polled: a re-run that leaves the merged result unchanged emits no event.
-      while (results.some((result, index) => indexAnswers(result) <= before[index])) {
+      // Polled: a re-run that leaves the merged result unchanged emits no event. The deadline stops the loop once the
+      // timeout has rejected, so a stalled answer does not keep the process alive.
+      while (results.some((result, index) => indexAnswers(result) <= before[index]) && performance.now() < deadline) {
         await sleep(ANSWER_POLL_MS);
       }
     })(),
     ANSWER_TIMEOUT_MS,
   );
+};
 
+// `every answer` runs before `behind`, whose iterations wait only for the cheap query: run after it, heavy answers left
+// over from those writes would count toward the next row's baseline.
 // Every live query has its first index answer before the first row writes, so a row times re-runs.
 await waitForAnswers(
   [alone, ...all],
@@ -116,21 +121,21 @@ describe('query queue', { tags: ['manual'], timeout: 300_000 }, () => {
   );
 
   bench(
-    `write → cheap index answer (behind ${HEAVY_COUNT} heavy, ${TASK_COUNT} tasks)`,
-    async () => {
-      const before = [indexAnswers(cheap)];
-      write(db);
-      await waitForAnswers([cheap], before);
-    },
-    BENCH_OPTIONS,
-  );
-
-  bench(
     `write → every index answer (${HEAVY_COUNT} heavy + 1 cheap, ${TASK_COUNT} tasks)`,
     async () => {
       const before = all.map(indexAnswers);
       write(db);
       await waitForAnswers(all, before);
+    },
+    BENCH_OPTIONS,
+  );
+
+  bench(
+    `write → cheap index answer (behind ${HEAVY_COUNT} heavy, ${TASK_COUNT} tasks)`,
+    async () => {
+      const before = [indexAnswers(cheap)];
+      write(db);
+      await waitForAnswers([cheap], before);
     },
     BENCH_OPTIONS,
   );

@@ -8,13 +8,9 @@ export default defineConfig({
   entry: {
     'ns/CallManager': 'src/CallManager.ts',
     'index': 'src/index.ts',
-    'CallsPlugin': 'src/CallsPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'hooks': 'src/hooks/index.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'translations': 'src/translations.ts',
     'CallOperation': 'src/types/CallOperation.ts',

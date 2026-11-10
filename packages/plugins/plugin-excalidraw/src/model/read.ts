@@ -8,7 +8,8 @@
 // resize shapes in the UI. An object's `origin` is the top-left of its bounding box.
 //
 
-import { type ReadResult, type ReadWorldObject, type Scene } from '@dxos/diagram';
+import { type ReadResult, type ReadWorldObject } from '@dxos/diagram';
+import { Shape } from '@dxos/scene';
 
 import { type CanvasContent, type ExternalBox } from './render.ts';
 import { readStyle, readTextStyle } from './style.ts';
@@ -63,7 +64,7 @@ const readObject = (objectId: string, records: ElementRecord[]): ReadWorldObject
     x: Math.min(...shapes.map((record) => bounds(record).x)),
     y: Math.min(...shapes.map((record) => bounds(record).y)),
   };
-  const local = (abs: { x: number; y: number }): Scene.Point => ({
+  const local = (abs: { x: number; y: number }): Shape.Point => ({
     x: round((abs.x - origin.x) / scale),
     y: round((abs.y - origin.y) / scale),
   });
@@ -71,20 +72,20 @@ const readObject = (objectId: string, records: ElementRecord[]): ReadWorldObject
 
   const elements = shapes
     .map((record) => readElement(record, { local, length, scale, objectId, labels }))
-    .filter((element): element is Scene.Element => element !== undefined);
+    .filter((element): element is Shape.Element => element !== undefined);
 
   return { id: objectId, origin, scale, elements };
 };
 
 type ReadContext = {
-  local: (abs: { x: number; y: number }) => Scene.Point;
+  local: (abs: { x: number; y: number }) => Shape.Point;
   length: (px: number) => number;
   scale: number;
   objectId: string;
   labels: Map<string, string>;
 };
 
-const readElement = (record: ElementRecord, ctx: ReadContext): Scene.Element | undefined => {
+const readElement = (record: ElementRecord, ctx: ReadContext): Shape.Element | undefined => {
   const id = record.customData.element;
   const kind = record.customData.kind;
   const label = ctx.labels.get(id);

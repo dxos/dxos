@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"

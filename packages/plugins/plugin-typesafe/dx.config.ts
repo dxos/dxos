@@ -2,12 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { TypeSafeNamespace } from './src/namespace.ts';
+import * as TypeSafeCapabilities from './src/types/TypeSafeCapabilities.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.typesafe',
+    key: TypeSafeNamespace.key,
     name: 'TypeSafe',
     author: 'DXOS',
     description: trim`
@@ -21,4 +32,29 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-typesafe',
     tags: ['labs', 'connector'],
   },
+  modules: [
+    Capability.lazyModule(
+      'Connector',
+      { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
+    ),
+    // Startup, not later: `AiService` snapshots its `AiModelResolver` contributions once during startup,
+    // so a resolver contributed in a later round is invisible to it.
+    Capability.lazyModule(
+      'ModelResolver',
+      {
+        requires: [Capabilities.AtomRegistry],
+        provides: [AppCapabilities.AiModelResolver],
+        activatesOn: ActivationEvents.Startup,
+      },
+      () => import('./src/capabilities/model-resolver.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      provides: [TypeSafeCapabilities.Settings],
+    }),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

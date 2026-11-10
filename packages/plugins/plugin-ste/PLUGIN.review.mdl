@@ -45,7 +45,7 @@ verdict Verify: The operation checks text with mode and vocabulary options and r
 ```mdl
 verdict F-1.1: The skill definition activates with the plugin on AssistantStart.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/capabilities/skill-definition.ts, github:dxos/dxos/packages/plugins/plugin-ste/src/capabilities/index.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ste/src/capabilities/skill-definition.ts, github:dxos/dxos/packages/plugins/plugin-ste/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-ste/src/plugin.test.ts]
 ```
 

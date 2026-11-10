@@ -31,6 +31,8 @@ export const make = ({ sendOperations = [] }: InboxSendSkillOptions = {}): Skill
         To answer an email, use the send-reply tool with the mailbox and the message being answered:
         it threads the reply under that message and sends it from the mailbox.
         Sending asks the user for permission first; if they decline, say so and do not retry.
+        If the mailbox is not connected to an email account, the reply is still saved as a draft under the email:
+        tell the user it was saved but not sent, and do not retry.
 
         There are more inbox-related tools in the "Inbox" skill.
         This skill is meant to be used in conjunction with the "Inbox" skill.

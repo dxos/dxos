@@ -40,8 +40,9 @@ that embeds three ECHO diagrams and a benchmarks sheet.
   `composer-compute`, Edge → `edge`.
 - `edge` has three groups: Clients, Gateway, Services. Its drill-downs: Router → `edge-router`, Db →
   `edge-db`, Compute → `edge-compute`, Hub → `edge-hub`.
-- A drill-down box is a frame whose `link.object` is a Ref to the child drawing. The deepest path is
-  `composer` → `edge` → `edge-db` → `edge-subduction`.
+- A drill-down box is a frame onto a nested scene of its own canvas, named after the child diagram and holding a
+  copy of it (its nested ids prefixed with the scene's id), so zooming into the box drills in place and zooming out
+  comes back. The deepest path is `composer` → `edge` → `edge-db` → `edge-subduction`.
 - Boxes may carry a `ref` to a repository path, for example `packages/sdk/app-framework`.
 - 3 `Markdown.Document`:
   - **Composer**: embeds the `composer` drawing; links DXOS and EDGE; sections The app, The
@@ -75,7 +76,7 @@ that embeds three ECHO diagrams and a benchmarks sheet.
 - The Architecture collection's labels are `Composer, DXOS, EDGE, ECHO design, ECHO, Overview, CF Workers, Plugin metrics`.
 - ECHO design has eight `## N.` chapters and embeds ECHO data model, ECHO replication, ECHO queries and ECHO benchmarks, in that order.
 - The metrics sheet is 21 rows by 5 columns with a horizontal bar chart over `A1:E21` and a pie chart over `A1:B9`.
-- Every drill-down box in `composer` and `edge` is a frame linked to the right child drawing.
+- Every drill-down box in `composer` and `edge` is a frame onto a nested scene holding the right child diagram, at every level.
 - Boxes sit on the lattice.
 - `compiled.json` matches the `.dx` sources (`DX_UPDATE_DIAGRAMS=1` regenerates it).
 - Composer links DXOS and EDGE and embeds its drawing. DXOS and EDGE each contain

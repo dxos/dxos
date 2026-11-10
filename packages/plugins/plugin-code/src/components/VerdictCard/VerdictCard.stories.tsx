@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { VERDICT_STATUSES, parseReview } from '@dxos/deus/review';
 import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -12,7 +13,6 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { translations } from '#translations';
 
 import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl?raw';
-import { VERDICT_STATUSES, parseReview } from '../SpecModel/index.ts';
 import { VerdictCard } from './VerdictCard.tsx';
 
 /** A real review written by the spec-review skill, so the cards carry real ids, notes and evidence. */

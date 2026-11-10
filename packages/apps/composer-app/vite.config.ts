@@ -23,7 +23,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { bootLoaderPlugin, hotModulesPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import {
+  bootLoaderPlugin,
+  hotModulesPlugin,
+  importMapPlugin,
+  pluginConfigPlugin,
+} from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -83,6 +88,8 @@ const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core
  * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-…` file names, so a family
  * that only shares a prefix (`nunito-sans`) is not caught.
  */
+const GEO_TOPOLOGY_FILES = '**/countries-*.json';
+
 const ON_DEMAND_FONTS = [
   'inter',
   'nunito',
@@ -588,6 +595,8 @@ export default defineConfig((env) => ({
     rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
+    // Serves each `Plugin.config`-defined `dx.config.ts` as its build-time manifest.
+    pluginConfigPlugin(),
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
     rearmWatchPlugin(),
@@ -765,14 +774,13 @@ export default defineConfig((env) => ({
       filename: 'sw.ts',
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}', GEO_TOPOLOGY_FILES],
         // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
         // so any icon the app has rendered once stays available offline.
         globIgnores: ['**/phosphor/**', ...ON_DEMAND_FONTS.map((font) => `**/${font}-${FONT_SUBSETS}-*.woff2`)],
       },
-      includeAssets: ['favicon.ico'],
       manifest: {
         name: 'DXOS Composer',
         short_name: 'Composer',

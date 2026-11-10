@@ -43,11 +43,11 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
-import { meta } from '#meta';
 import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions/index.ts';
 import { useSelectThreadOnCellFocus } from '../../integrations/index.ts';
+import { SheetNamespace } from '../../namespace.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
 import { FitBox, naturalSize, useUsedExtent } from './fit.tsx';
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util.ts';
@@ -86,14 +86,13 @@ export type SheetContentProps = {
 };
 
 export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>(({ fit, ...props }, forwardedRef) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SheetNamespace.key);
   const {
     id,
     attendableId,
     model,
     editing,
-    setCursor,
-    setRange,
+    addressing,
     cursor,
     cursorFallbackRange,
     activeRefs,
@@ -116,16 +115,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     (event: FocusEvent) => {
       if (!editing) {
         const cell = closestCell(event.target);
-        if (cell) {
-          if (cell.plane === 'grid') {
-            setCursor({ col: cell.col, row: cell.row });
-            setExtraplanarFocus(null);
-          } else {
-            setExtraplanarFocus(cell);
-          }
-        } else {
-          setExtraplanarFocus(null);
-        }
+        setExtraplanarFocus(cell && cell.plane !== 'grid' ? cell : null);
       }
     },
     [editing],
@@ -202,8 +192,6 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
         // Update range selection in formula.
         rangeController.current?.setRange(rangeToA1Notation(range));
       } else {
-        // Setting range while editing causes focus to move to null, avoid doing so.
-        setRange(range.to ? range : undefined);
         const from = addressToA1Notation(range.from);
         const to = addressToA1Notation(range.to ?? range.from);
         publishedSelection.current = `${from}:${to}`;
@@ -371,10 +359,10 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   const [gridInstances] = Hooks.useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
     if (dxGrid && gridInstances) {
-      gridInstances.register(attendableId, dxGrid, setActiveRefs);
+      gridInstances.register(attendableId, { sheet: model.sheet, grid: dxGrid, setActiveRefs });
       return () => gridInstances.unregister(attendableId);
     }
-  }, [dxGrid, gridInstances, attendableId, setActiveRefs]);
+  }, [dxGrid, gridInstances, attendableId, model.sheet, setActiveRefs]);
 
   useSelectThreadOnCellFocus();
 
@@ -391,6 +379,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
       activeRefs={activeRefs}
       frozen={frozen}
       overscroll='trap'
+      addressing={addressing}
       onAxisResize={handleAxisResize}
       onSelect={handleSelect}
       onFocus={handleFocus}

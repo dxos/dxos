@@ -4,6 +4,7 @@
 
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as CodeOperation from '@dxos/plugin-code/CodeOperation';
 
 import { PresenterOperation } from '#types';
 
@@ -14,4 +15,6 @@ export const PresenterOperationHandlerSet = OperationHandlerSet.lazy([
   PresenterOperation.ListLayouts.pipe(Operation.lazyHandler(() => import('./list-layouts.ts'))),
   PresenterOperation.PresentObject.pipe(Operation.lazyHandler(() => import('./present-object.ts'))),
   PresenterOperation.GenerateSlideImage.pipe(Operation.lazyHandler(() => import('./generate-slide-image.ts'))),
+  // Declared by plugin-code, whose Feature Map skill offers it; the deck it makes is this plugin's type.
+  CodeOperation.CreateShowcase.pipe(Operation.lazyHandler(() => import('./create-showcase.ts'))),
 ]);

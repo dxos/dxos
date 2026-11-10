@@ -15,7 +15,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Transcript } from '@dxos/types';
 
-import { TranscriptionPlugin } from '#plugin';
+import * as TranscriptionPlugin from '#meta';
 import { TestItem } from '#testing';
 import { translations } from '#translations';
 
@@ -50,7 +50,7 @@ const meta = {
               defaultSpace.db.add(Transcript.make(Ref.make(feed)));
             }),
         }),
-        TranscriptionPlugin(),
+        TranscriptionPlugin.make(),
       ],
     }),
   ],

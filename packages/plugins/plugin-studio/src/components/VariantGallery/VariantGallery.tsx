@@ -11,9 +11,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
 import { useVariantSource } from '../../hooks/useVariantSource.ts';
+import { StudioNamespace } from '../../namespace.ts';
 import { GalleryImage } from '../GalleryImage/index.ts';
 
 /** The subset of a {@link Variant} a gallery tile needs (a live object or a snapshot). */
@@ -63,7 +62,7 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
  * container (see `useListSelection`).
  */
 export const VariantGallery = ({ variants, emptyMessage, itemProps }: VariantGalleryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StudioNamespace.key);
   const items = useMemo(() => variants.map((variant, index) => ({ variant, index })), [variants]);
 
   if (items.length === 0) {

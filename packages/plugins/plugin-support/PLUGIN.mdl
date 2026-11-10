@@ -188,7 +188,9 @@ op submitIssue
     team's path; the debug console's `report` command invokes it by key and
     tags the report with the `Composer Feedback Form` label — the same label
     the PostHog submissions sync under — unless `--label` overrides it.
+```
 
+```mdl
 op submitReport
   key: org.dxos.operation.support.submitReport
   desc: >

@@ -3,7 +3,7 @@
 //
 
 /**
- * 2D vector.
+ * 2D vector. Operations mutate it in place and return it, so they chain.
  */
 export class Vec2 {
   x: number;

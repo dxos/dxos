@@ -6,10 +6,10 @@ import * as Predicate from 'effect/Predicate';
 
 import { Database } from '@dxos/echo';
 
-import { meta } from '#meta';
+import { AtprotoNamespace } from './namespace.ts';
 
 /** Node/subject type for the virtual PDS browser node in the system section. */
-export const PDS_NODE_TYPE = `${meta.profile.key}.pds`;
+export const PDS_NODE_TYPE = `${AtprotoNamespace.key}.pds`;
 
 /**
  * Registered URL key for the PDS browser, and necessarily the node's own id: the node is a singleton

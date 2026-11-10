@@ -32,6 +32,8 @@ type Presentation
     navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
     linked object it shows is only unlinked. Deleting the Presentation deletes its slides; linked objects stay.
     Version 0.1.0 held `sections: Ref<Obj>[]` directly; its migration wraps each section in a `Slide`.
+    A plugin-projects showcase is a Presentation (see CreateShowcase); a `Showcase` 0.1.0 migrates into one in
+    place, its markdown the first slide and each artifact a linked slide, so its `Demonstrates` edges still hold.
   fields:
     name?: string
     description?: string
@@ -108,10 +110,12 @@ component Deck
     and prints; `Deck.Viewport`, the current slide; `Deck.Grid`, every slide as a thumbnail; `Deck.Pager`,
     `Deck.PageNumber` and `Deck.PlayButton`), composed by its containers into a Panel.
     Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
-    and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
-    step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
-    Escape exits fullscreen. Space and right advance a click step, else the slide; left retreats a click step,
-    else lands on the previous slide fully revealed. Click steps are ephemeral and reset on slide change; Space
+    and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: Cmd (or Ctrl) with
+    left or right, Shift with left or right, and Home and End jump to first and last, `f` toggles fullscreen,
+    Escape exits fullscreen. Space and Down advance a click step, else the slide; Up retreats a click step,
+    else lands on the previous slide fully revealed. Right moves to the next slide at its first step, `]` to the next slide fully revealed, and Left and `[` to the
+    previous slide fully revealed, past any remaining click steps; none of them acts at the deck's end.
+    Click steps are ephemeral and reset on slide change; Space
     does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
     slide into a print-only container, one 16:9 page each with every click step shown, and drops the rest of the
     app from the printout.
@@ -328,6 +332,26 @@ op TogglePresentation
 ```
 
 ```mdl
+op CreateShowcase
+  key: org.dxos.operation.projects.createShowcase
+  desc: |
+    Declared by plugin-projects, whose project skill offers it, and implemented here. Makes a Presentation whose
+    first slide is an owned markdown `Text` holding `content` (`# <name>` when it is blank) and whose further
+    slides each link one of `artifacts` in order, such as an image or video `File`, a diagram or a `PullRequest`;
+    each renders through the slide surface fallback. A `Demonstrates` relation goes from the deck to each target.
+    Every target and artifact is loaded before anything is written.
+  input:
+    name: string
+    content: string             # markdown for the first slide
+    targets: Ref<Obj>[]         # the features and tasks it demonstrates
+    artifacts?: Ref<Obj>[]      # one linked slide each
+  output:
+    showcase: Presentation
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+```mdl
 op GenerateSlideImage
   key: org.dxos.operation.presenter.generateSlideImage
   desc: |
@@ -415,7 +439,7 @@ feat F-4: Presentation Deck
   req F-4.8: Only an attended deck takes focus on mount.
   req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
   req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
-  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it.
+  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it. Up and Down move between rows wherever focus is in the grid, Space presents from the current slide, and the current slide is the one outlined tile.
   req F-4.12:
     when: user drags a thumbnail before or after another
     then: the section moves there, and the moved slide stays current
@@ -450,10 +474,10 @@ feat F-7: Click Steps
 
   req F-7.1: `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` reveal their content one click at a time; a hidden element keeps its layout.
   req F-7.2:
-    when: user presses Space or right with steps remaining
+    when: user presses Space or Down with steps remaining
     then: the next step reveals, and only after the last step does the deck advance
   req F-7.3:
-    when: user presses left with steps revealed
+    when: user presses Up with steps revealed
     then: the last step hides; at step 0 the previous slide shows fully revealed
   req F-7.4: Click steps reset on any slide change and are never persisted; only the slide index is view state.
   req F-7.5: Space on a focused button or link activates it and does not advance.
@@ -535,7 +559,7 @@ feat F-12: Speaker Notes
   req F-12.3:
     when: the `notes` setting is `window` and a Presentation is presented
     then: a second window shows the current slide's notes, the time on the slide against its desired length, and the next slide's notes; it closes when the presentation ends
-  req F-12.4: Arrow keys and Space pressed in the notes window move the deck as they do in the deck.
+  req F-12.4: Arrow keys, brackets, Home, End and Space pressed in the notes window move the deck as they do in the deck.
   req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
   req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
   req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
@@ -649,8 +673,8 @@ test QA-4: Slidev subset and click steps
       do: Create a document with a `two-cols` slide containing `::right::` and `<Surface ref="echo:///<id of another document>" />`, followed by a slide with `<v-clicks>` over a three-item list, and a slide with an unknown `layout`.
       expect: the Presenter companion shows the two-cols slide with the other document embedded on the right
     - name: Step clicks
-      do: Open the list slide and press right three times, then once more.
-      expect: each press reveals one item, the fourth moves to the next slide, and left from there lands on the list slide fully revealed
+      do: Open the list slide and press Down three times, then once more.
+      expect: each press reveals one item, the fourth moves to the next slide, and Up from there lands on the list slide fully revealed
     - name: Unknown layout
       do: Go to the slide with the unknown layout.
       expect: it renders as a default slide without an error
@@ -709,7 +733,9 @@ test QA-1: Preview a document in the companion, then present it
       do: Right-click "QA Slides" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Present a document as slides and page through them. Recorded light at 60 fps with no ident, captions or
@@ -727,7 +753,9 @@ test QA-2: Showcase clip
     - name: Page through
       do: Press the right arrow three times.
       expect: each slide shows in turn
+```
 
+```mdl
 test QA-3: Build and present a Presentation
   desc: Create a Presentation, add a slide, link a markdown document, reorder in the navtree, present it fullscreen, step, exit and reload.
   actors: human
@@ -1434,6 +1462,138 @@ decision D-75: A Slide has an array of takes (plugin-studio Variants, owned by t
   date: 2026-10-26
   by: user:richburdon
   affects: [Slide]
+```
+
+```mdl
+decision D-76: A plugin-projects showcase is a Presentation: its write-up is the first slide and each artifact (an image or video, a diagram, a pull request) a linked slide after it, linked to the features it shows by `Demonstrates`.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [Presentation, CreateShowcase]
+```
+
+```mdl
+decision D-77: Presenter implements plugin-projects' `CreateShowcase` operation and migrates `Showcase` 0.1.0 into a Presentation in place, so the deck keeps the showcase's id and its `Demonstrates` edges. Fills in [D-76].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Presentation, CreateShowcase]
+  why: Presenter already depends on plugin-projects through plugin-studio, so only this side can name both the deck and the relation.
+```
+
+```mdl
+decision D-78: Left, right and Space move through a slide's click steps, with Space moving forward only; Up, Down, `[` and `]` move between slides; Cmd with left or right moves to the deck's start and end.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-12.4]
+```
+
+```mdl
+decision D-79: Up and `[` land on the previous slide fully revealed, and Down and `]` on the next at its first step; at the deck's ends they do nothing and keep the revealed steps. Fills in [D-78].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.4]
+  why: Left already lands on the previous slide fully revealed, and resetting a slide when there is nowhere to go would hide what the speaker has built.
+```
+
+```mdl
+decision D-80: Ctrl acts as Cmd on the jump keys, and Shift with left or right, Home and End still jump to the deck's ends. Fills in [D-78].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.4]
+  why: Only Macs have Cmd, and the other jump keys do not conflict with the new bindings.
+```
+
+```mdl
+decision D-81: Approve [D-80].
+  date: 2026-11-04
+  by: user:richburdon
+```
+
+```mdl
+decision D-82: Left and right move between slides; Up and Down move through a slide's click steps.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-78
+  affects: [F-12.4]
+```
+
+```mdl
+decision D-83: Space, `[`, `]`, and Cmd with left or right keep their bindings from [D-78]. Down carries on to the next slide once its click steps run out, and Up to the previous slide fully revealed. Fills in [D-82].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.4]
+  why: The request named only the arrow keys, and stopping at a slide's last step would leave Down and Space disagreeing.
+```
+
+```mdl
+decision D-84: In the inline grid, Up and Down move between slides directly, and Space starts the presentation.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-85: Space presents from the current slide, including from a clicked thumbnail; the grid's buttons keep Space, and an inline document preview still steps with it. With focus on a thumbnail the listbox keeps moving Up and Down by a row of the grid. Fills in [D-84].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.11]
+  why: A row is what Up and Down mean in a wrapped grid once a tile has focus, and a preview has no grid to start from.
+```
+
+```mdl
+decision D-86: In the inline grid the current slide and the focused tile are the same tile, so only one border shows.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-87: Up and Down move one slide wherever focus is in the grid, including on a clicked thumbnail, and the pointer tints the tile under it without outlining it. Fills in [D-86].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-85
+  affects: [F-4.11]
+  why: With a thumbnail focused, the listbox moved Up and Down by a row, which does nothing in a one-row grid; Space, the buttons and the document preview stay as [D-85] has them.
+  rejected: Moving by a row, which needs the rendered column count and leaves the two focus paths behaving differently.
+```
+
+```mdl
+decision D-88: In the inline grid, Up and Down move between rows.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-87
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-89: Moving between slides with `[` and `]` lands on the end of each slide's click steps.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-79
+  affects: [F-12.4]
+```
+
+```mdl
+decision D-90: A row move from a column the last row does not reach lands on the last slide, and stays put at the first and last rows. Right still starts the next slide at its first step and Left lands fully revealed, and the pointer only tints a tile as [D-87] had it. `[` and `]` move one slide in the grid. Fills in [D-88] and [D-89].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.11, F-12.4]
+  why: Stopping short of a shorter last row would leave a tile unreachable by Down, and the request named only the brackets.
+```
+
+```mdl
+decision D-91: [F-7.2], [F-7.3] and QA-4 step click steps with Down and Up, as [D-82] set the keys. Fills in [D-82].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2, F-7.3, QA-4]
+  why: Right and Left now move between slides, so QA-4 could not pass as written.
 ```
 
 ---

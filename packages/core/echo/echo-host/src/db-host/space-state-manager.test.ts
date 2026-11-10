@@ -19,6 +19,7 @@ import {
   isSpaceRoot,
 } from '@dxos/echo-protocol';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -65,7 +66,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
         void manager.close();
       });
 
-      const root = await manager.assignRootToSpace(spaceId, query);
+      const root = await manager.assignRootToSpace(spaceId, { lease: query });
       expect(root.documentId).to.equal(docId);
       expect(manager.spaceIds).to.deep.equal([spaceId]);
       expect(manager.getSpaceRootDocumentId(spaceId)).to.equal(docId);
@@ -146,14 +147,14 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
       spaceRootDocUrl = (await automergeHost.createDoc({})).url;
       credentialsDocUrl = (await automergeHost.createDoc({})).url;
 
-      await manager.assignRootToSpace(spaceId, await directory());
+      await manager.assignRootToSpace(spaceId, { lease: await directory() });
       expect(manager.getSpaceRootRefs(spaceId)).to.be.undefined;
 
       await manager.setSpaceRootRefs(spaceId, { spaceRootDocUrl, credentialsDocUrl });
       expect(manager.getSpaceRootRefs(spaceId)?.spaceRootDocUrl).to.equal(spaceRootDocUrl);
 
       // Rotating the directory must not disturb the immutable root — the upsert writes only root_doc_url.
-      const rotated = await manager.assignRootToSpace(spaceId, await directory());
+      const rotated = await manager.assignRootToSpace(spaceId, { lease: await directory() });
       rotatedDirectoryId = rotated.documentId;
       expect(manager.getSpaceRootRefs(spaceId)?.spaceRootDocUrl).to.equal(spaceRootDocUrl);
 
@@ -394,11 +395,10 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     });
     const spaceA = SpaceId.random();
     const spaceB = SpaceId.random();
-    await manager.assignRootToSpace(spaceA, automergeHost.acquireDoc<DatabaseDirectory>(created.documentId));
-    const rootB = await manager.assignRootToSpace(
-      spaceB,
-      automergeHost.acquireDoc<DatabaseDirectory>(created.documentId),
-    );
+    await manager.assignRootToSpace(spaceA, { lease: automergeHost.acquireDoc<DatabaseDirectory>(created.documentId) });
+    const rootB = await manager.assignRootToSpace(spaceB, {
+      lease: automergeHost.acquireDoc<DatabaseDirectory>(created.documentId),
+    });
 
     const updates: SpaceId[] = [];
     manager.spaceDocumentListUpdated.on(({ spaceId }) => {
@@ -449,7 +449,9 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
 
     // Creating an object links a new document from the directory, which is what changes the list.
     using object = await host.createDoc({});
-    using directory = host.automergeHost.acquireDoc<DatabaseDirectory>(root.documentId);
+    // Awaited: the reopened space shows its root from the snapshot, so nothing holds the document resident yet.
+    using directory = await host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), root.documentId);
+    invariant(directory, 'space root not found');
     directory.change((doc) => {
       doc.links = { ...(doc.links ?? {}), someObject: object.url };
     });
@@ -479,13 +481,13 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     using first = await createDirectory();
     using second = await createDirectory();
     const spaceId = SpaceId.random();
-    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(first.documentId));
+    await manager.assignRootToSpace(spaceId, { lease: automergeHost.acquireDoc<DatabaseDirectory>(first.documentId) });
 
     const updates: SpaceDocumentListUpdatedEvent[] = [];
     manager.spaceDocumentListUpdated.on((event) => {
       updates.push(event);
     });
-    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(second.documentId));
+    await manager.assignRootToSpace(spaceId, { lease: automergeHost.acquireDoc<DatabaseDirectory>(second.documentId) });
     await expect.poll(() => updates.some((event) => event.spaceRootId === second.documentId)).toBe(true);
     const swap = updates.find((event) => event.spaceRootId === second.documentId);
     expect(swap?.previousRootId).toBe(first.documentId);
@@ -521,7 +523,9 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     {
       const manager = new SpaceStateManager({ runtime });
       await manager.open(Context.default());
-      await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId));
+      await manager.assignRootToSpace(spaceId, {
+        lease: automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId),
+      });
       await manager.close();
     }
 
@@ -530,10 +534,12 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     // Dropping the row behind the manager's back makes any later save visible as a reappearing row.
     await run(Effect.flatMap(SqlClient.SqlClient, (sql) => sql`DELETE FROM echo_spaces`));
 
-    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId));
+    await manager.assignRootToSpace(spaceId, { lease: automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId) });
     expect(await rows()).toHaveLength(0);
 
-    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(replacement.documentId));
+    await manager.assignRootToSpace(spaceId, {
+      lease: automergeHost.acquireDoc<DatabaseDirectory>(replacement.documentId),
+    });
     expect(await rows()).toHaveLength(1);
   });
 });

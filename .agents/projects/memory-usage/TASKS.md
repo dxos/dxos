@@ -335,7 +335,7 @@ same series — agree any change before a dashboard or alert is built on them.
 - RESEARCH.md — industry norms, postmortems, strategy playbook.
 - ATOMS-AUDIT.md — `Atom.keepAlive` retention mechanism and site catalog.
 - Linear DX-1148 — feed/query payload retention.
-- `.agents/projects/feed-live-objects/DESIGN.md` — push-over-poll roadmap.
+- `packages/core/echo/echo/docs/feeds/live-objects.md` — push-over-poll roadmap.
 - `.agents/projects/startup-latency/DESIGN.md` — demand-driven activation.
 - `.agents/projects/sdk-metrics/DESIGN.md` — the OTel metrics pipeline these series ship
   through, and the cardinality budget they count against.

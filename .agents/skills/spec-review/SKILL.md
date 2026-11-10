@@ -31,6 +31,9 @@ decides whether the code or the spec changes.
 2. **Map the package.** Read the package's `src/` layout, its `index.ts` exports, capabilities,
    operations and containers before judging anything. Most items map to one or two files.
 
+   For a `plugin` block, judge its `dependsOn` against `dx.config.ts`'s `plugin.dependsOn` beside the spec;
+   a mismatch is `diverged`, and `deus review check` errors if the verdict says otherwise.
+
 3. **Judge each item against the code, not against names.** Find where the behaviour lives and read
    it. A symbol with the right name that does something else is `diverged`, not `done`.
 
@@ -91,13 +94,13 @@ decides whether the code or the spec changes.
    ---
    spec: github:dxos/dxos/packages/plugins/plugin-x/PLUGIN.mdl
    commit: <git rev-parse HEAD>
-   date: <YYYY-MM-DD>
+   date: <YYYY-MM-DDTHH:MMZ, the UTC time now>
    by: agent:claude-code
    ---
    ```
 
    Then `# Review: <spec name>`, a summary paragraph (what is solid, what is missing, the biggest
-   divergence), the `## Extensions` table declaring `verdict` (`org.dxos.mdl.verdict@1.0`), and
+   divergence; the Review view counts the statuses, so leave the counts out), the `## Extensions` table declaring `verdict` (`org.dxos.mdl.verdict@1.0`), and
    `## Verdicts` with one fenced `mdl` block per item, in spec order:
 
    ````markdown

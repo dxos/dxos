@@ -14,9 +14,9 @@ import {
 } from '@dxos/react-client/devtools';
 import { withTheme } from '@dxos/react-ui/testing';
 
+import * as DebugPlugin from '#meta';
 import { translations } from '#translations';
 
-import * as DebugPlugin from '../../DebugPlugin.ts';
 import { StubDrawerPlugin, StubToolsPlugin, getDrawerState, setDrawerState } from '../../testing/index.ts';
 import { DEBUG_PANEL_CONTEXT, type DebugPanelViewState, debugPanelAspect } from '../DebugPanel/index.ts';
 import { DebugPanelStatus } from './DebugPanelStatus.tsx';

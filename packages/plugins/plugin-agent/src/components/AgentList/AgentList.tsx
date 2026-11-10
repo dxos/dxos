@@ -18,7 +18,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
 
-import { meta } from '#meta';
+import { AgentNamespace } from '../../namespace.ts';
 
 // TODO(mykola): Factor out with `ContactList` in @dxos/shell and reconcile the two; until then this copies its rows.
 
@@ -56,7 +56,7 @@ export type AgentListProps = Util.ThemedClassName<{
 
 /** The agents the viewer administers, in the contacts book's rows. */
 export const AgentList = ({ classNames, agents, spaces, filter = '', onSelectSpace }: AgentListProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const visible = useMemo(
     () =>
       filterAgents(agents, filter).toSorted((left, right) =>
@@ -93,7 +93,7 @@ type AgentListItemProps = Pick<AgentListProps, 'spaces' | 'onSelectSpace'> & { a
 
 /** The avatar in the icon rail, the name over its shared-space chips, and the DID with its copy button at the end. */
 const AgentListItem = ({ agent, spaces, onSelectSpace }: AgentListItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const identityKey = requirePublicKey(agent.identityKey);
   const fallback = keyToFallback(identityKey);
   const common = (agent.commonSpaces ?? [])

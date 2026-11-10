@@ -7,9 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 
-import { SheetCapabilities, SheetOperation } from '#types';
-
-import { parseThreadAnchorAsCellRange } from '../integrations/thread-ranges.ts';
+import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = SheetOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
@@ -21,7 +19,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = She
       }
 
       entry.setActiveRefs(id);
-      const range = parseThreadAnchorAsCellRange(cursor);
+      const range = SheetUtil.rangeFromAnchor(entry.sheet, cursor);
       if (range) {
         entry.grid.setFocus({ ...range.to, plane: 'grid' }, true);
       }

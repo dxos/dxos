@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
-import { SpaceId } from '@dxos/keys';
+import { DXN, EID, SpaceId } from '@dxos/keys';
 
 /**
  * Lists spaces this query will select from.
@@ -186,6 +187,105 @@ export const isSimpleSelectionQuery = (
 };
 
 /**
+ * Ids or typenames of which a simple selection's filter requires a match to have one; undefined when it requires
+ * neither, so any written object might match.
+ */
+export const getSelectionKeys = (filter: QueryAST.Filter): { ids: string[]; typenames: string[] } | undefined => {
+  switch (filter.type) {
+    case 'object':
+      if (filter.id && filter.id.length > 0) {
+        return { ids: [...filter.id], typenames: [] };
+      }
+      return filter.typename !== null ? { ids: [], typenames: [filter.typename] } : undefined;
+    case 'and':
+      // Any one conjunct's requirement holds for the whole conjunction.
+      for (const conjunct of filter.filters) {
+        const keys = getSelectionKeys(conjunct);
+        if (keys) {
+          return keys;
+        }
+      }
+      return undefined;
+    case 'or': {
+      const ids: string[] = [];
+      const typenames: string[] = [];
+      for (const branch of filter.filters) {
+        const keys = getSelectionKeys(branch);
+        if (!keys) {
+          return undefined;
+        }
+        ids.push(...keys.ids);
+        typenames.push(...keys.typenames);
+      }
+      return filter.filters.length > 0 ? { ids, typenames } : undefined;
+    }
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * The parents a query selects under, for a query whose membership is otherwise decided by each object's own
+ * document: a select with `child-of` conjuncts, or the children of a by-id selection. Undefined for any other shape.
+ */
+export type HierarchyScope = {
+  /** Ids of the parents members sit under. */
+  anchors: ReadonlySet<string>;
+  /** How many parent hops a member may sit below an anchor. */
+  depth: number;
+};
+
+/** Matches the executors' `child-of` walk. */
+const MAX_CHILD_OF_DEPTH = 10;
+
+export const getHierarchyScope = (query: QueryAST.Query): HierarchyScope | undefined => {
+  switch (query.type) {
+    case 'options':
+      return getHierarchyScope(query.query);
+    case 'from':
+      return query.from._tag === 'scope' ? getHierarchyScope(query.query) : undefined;
+    case 'filter':
+      return isOwnDocumentFilter(query.filter) ? getHierarchyScope(query.selection) : undefined;
+    case 'select':
+      return childOfScope(query.filter);
+    case 'hierarchy-traversal': {
+      const anchor = query.anchor;
+      if (query.direction !== 'to-children' || anchor.type !== 'select' || anchor.filter.type !== 'object') {
+        return undefined;
+      }
+      const ids = anchor.filter.id ?? [];
+      return ids.length > 0 ? { anchors: new Set(ids), depth: 1 } : undefined;
+    }
+    default:
+      return undefined;
+  }
+};
+
+const childOfScope = (filter: QueryAST.Filter): HierarchyScope | undefined => {
+  const conjuncts = filter.type === 'and' ? filter.filters : [filter];
+  const anchors = new Set<string>();
+  let depth = 0;
+  for (const conjunct of conjuncts) {
+    if (conjunct.type === 'child-of') {
+      for (const parent of conjunct.parents) {
+        const id = EID.getEntityId(parent);
+        if (id) {
+          anchors.add(id);
+        }
+      }
+      depth = Math.max(depth, conjunct.transitive ? MAX_CHILD_OF_DEPTH : 1);
+    } else if (!isOwnDocumentFilter(conjunct)) {
+      return undefined;
+    }
+  }
+  return depth > 0 ? { anchors, depth } : undefined;
+};
+
+/** Whether each object's own document decides the filter. */
+const isOwnDocumentFilter = (filter: QueryAST.Filter): boolean =>
+  !filterContainsTimestamp(filter) && !filterContainsChildOf(filter) && !filterContainsInQuery(filter);
+
+/**
  * Whether the query selects from spaces or feeds — the data that space-backed sources
  * (`SpaceQuerySource`, `IndexQuerySource`) can serve.
  *
@@ -244,6 +344,37 @@ export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQuerySc
 };
 
 /**
+ * The typenames a query over the registry looks up: the keys (`Filter.key`) of a query that selects type entities
+ * (`Filter.type(Type.Type)`). Empty for any other query, so no type source is asked for an operation's or skill's key.
+ */
+export const getRegistryTypeKeys = (query: QueryAST.Query): string[] => {
+  if (!getRegistryScopeForQuery(query).included) {
+    return [];
+  }
+  const typeTypename = Type.getTypename(Type.Type);
+  const keys = new Set<string>();
+  let selectsTypes = false;
+  const collect = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(collect);
+    } else if (node !== null && typeof node === 'object') {
+      for (const [field, value] of Object.entries(node)) {
+        if (field === 'metaKey' && typeof value === 'string') {
+          keys.add(value);
+        } else if (field === 'typename' && typeof value === 'string') {
+          const dxn = DXN.tryMake(value);
+          selectsTypes ||= dxn !== undefined && DXN.getName(dxn) === typeTypename;
+        } else {
+          collect(value);
+        }
+      }
+    }
+  };
+  collect(query);
+  return selectsTypes ? [...keys] : [];
+};
+
+/**
  * Finds the (last) `from` clause within a query AST.
  * Reading the closure-assigned result through a function return boundary preserves
  * the nullable type — a bare local would be narrowed to `null` by control-flow analysis,
@@ -274,17 +405,37 @@ export const queryIncludesAllFeeds = (query: QueryAST.Query): boolean => {
   return includes;
 };
 
-/** The feed URIs the query's scopes name explicitly. */
-export const getTargetFeedsForQuery = (query: QueryAST.Query): string[] => {
-  const feeds = new Set<string>();
+/** The branches two scopes of one feed read together; `undefined`, every branch, absorbs any list. */
+const unionBranches = (
+  left: ReadonlyArray<string | null> | undefined,
+  right: ReadonlyArray<string | null> | undefined,
+): ReadonlyArray<string | null> | undefined => {
+  if (left === undefined || right === undefined) {
+    return undefined;
+  }
+  return [...new Set([...left, ...right])];
+};
+
+/**
+ * The branches each feed the query's scopes name explicitly reads, `null` naming main; `undefined` reads
+ * every branch. An absent scope filter reads main only, and several scopes of one feed read their union.
+ */
+export const getTargetFeedBranchesForQuery = (
+  query: QueryAST.Query,
+): ReadonlyMap<string, ReadonlyArray<string | null> | undefined> => {
+  const feeds = new Map<string, ReadonlyArray<string | null> | undefined>();
   QueryAST.visit(query, (node) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
       for (const scope of node.from.scopes) {
         if (scope._tag === 'feed') {
-          feeds.add(scope.feedUri);
+          const branches = scope.branches === 'all' ? undefined : (scope.branches ?? [null]);
+          feeds.set(
+            scope.feedUri,
+            feeds.has(scope.feedUri) ? unionBranches(feeds.get(scope.feedUri), branches) : branches,
+          );
         }
       }
     }
   });
-  return [...feeds];
+  return feeds;
 };

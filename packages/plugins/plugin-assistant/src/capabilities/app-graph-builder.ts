@@ -36,9 +36,10 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 import * as Position from '@dxos/util/Position';
 
-import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
+import { ASSISTANT_COMPANION_VARIANT, SPACE_SETTINGS_ID, SPACE_SETTINGS_TYPE } from '../constants.ts';
+import { AssistantNamespace } from '../namespace.ts';
 import { currentChatRef } from '../util/current-chat.ts';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
@@ -78,6 +79,25 @@ export const createPromptExtension = () =>
     connector: () => Effect.succeed([AppNode.makePrompt()]),
   });
 
+/** The assistant panel in each space's settings section. */
+export const createSpaceSettingsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'spaceSettingsAssistant',
+    url: { key: SPACE_SETTINGS_ID, kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
+    match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
+    connector: () =>
+      Effect.succeed([
+        AppNode.makeSettingsPanel({
+          id: SPACE_SETTINGS_ID,
+          type: SPACE_SETTINGS_TYPE,
+          label: ['space-settings.label', { ns: AssistantNamespace.key }],
+          icon: 'ph--sparkle--regular',
+          iconHue: 'emerald',
+          position: Position.last,
+        }),
+      ]),
+  });
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Read through their atoms so the "companionChat" extension establishes a reactive dependency
@@ -96,7 +116,7 @@ export default Capability.makeModule(
             AppNode.makeGroup({
               id: GraphPath.GroupSegments.ai,
               type: GraphPath.GroupTypes.ai,
-              label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
+              label: ['nav-tree-group-ai.label', { ns: AssistantNamespace.key }],
               icon: AI_ACTION_ICON,
               space,
               position: 300,
@@ -119,7 +139,7 @@ export default Capability.makeModule(
                   yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db.spaceId });
                 }),
               properties: {
-                label: ['chat-update-name.label', { ns: meta.profile.key }],
+                label: ['chat-update-name.label', { ns: AssistantNamespace.key }],
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
@@ -157,7 +177,7 @@ export default Capability.makeModule(
                 yield* Database.flush();
               }),
               properties: {
-                label: ['import-compute-operations.label', { ns: meta.profile.key }],
+                label: ['import-compute-operations.label', { ns: AssistantNamespace.key }],
                 icon: 'ph--download-simple--regular',
               },
             }),
@@ -172,7 +192,7 @@ export default Capability.makeModule(
                   });
                 }),
               properties: {
-                label: ['set-trace-panel-debug.label', { ns: meta.profile.key }],
+                label: ['set-trace-panel-debug.label', { ns: AssistantNamespace.key }],
                 icon: 'ph--brackets-curly--regular',
               },
             }),
@@ -212,7 +232,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeCompanion({
                 variant: ASSISTANT_COMPANION_VARIANT,
-                label: ['assistant-chat.label', { ns: meta.profile.key }],
+                label: ['assistant-chat.label', { ns: AssistantNamespace.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
                 position: Position.first,
@@ -222,6 +242,7 @@ export default Capability.makeModule(
       }),
 
       createPromptExtension(),
+      createSpaceSettingsExtension(),
 
       AppGraphBuilder.createExtension({
         id: 'invocations',
@@ -234,7 +255,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'invocations',
-              label: ['invocations.label', { ns: meta.profile.key }],
+              label: ['invocations.label', { ns: AssistantNamespace.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
             }),
@@ -249,7 +270,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: Attention.linkedSegment('trace'),
-              label: ['trace.label', { ns: meta.profile.key }],
+              label: ['trace.label', { ns: AssistantNamespace.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',
               position: Position.last,
@@ -298,7 +319,7 @@ export default Capability.makeModule(
                   }
                 }),
               properties: {
-                label: ['create-chat.label', { ns: meta.profile.key }],
+                label: ['create-chat.label', { ns: AssistantNamespace.key }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },

@@ -229,6 +229,11 @@ jobs:
       - name: Check module structure
         run: moon run :check-module-structure
 
+      # Each plugin tagged `edge-release` is bundled as an EDGE release and loaded through Worker Loader;
+      # it fails when the release is not self-contained or a module fails to activate in workerd.
+      - name: Check EDGE plugin releases
+        run: moon run :check-edge-release
+
       # ─── Stage 3: the slow checks ───────────────────────────────────────────────────────────────
       # Each runs once the compile gate passed, whatever the other did, so one run reports both.
       #

@@ -103,6 +103,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -122,6 +125,9 @@
     },
     {
       "path": "../../plugins/plugin-agent"
+    },
+    {
+      "path": "../../plugins/plugin-animator"
     },
     {
       "path": "../../plugins/plugin-assistant"
@@ -167,6 +173,9 @@
     },
     {
       "path": "../../plugins/plugin-cloudflare"
+    },
+    {
+      "path": "../../plugins/plugin-cloudflare-os"
     },
     {
       "path": "../../plugins/plugin-code"
@@ -271,13 +280,13 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
-      "path": "../../plugins/plugin-labeler"
-    },
-    {
       "path": "../../plugins/plugin-lametric"
     },
     {
       "path": "../../plugins/plugin-library"
+    },
+    {
+      "path": "../../plugins/plugin-lighthouse"
     },
     {
       "path": "../../plugins/plugin-linear"
@@ -395,9 +404,6 @@
     },
     {
       "path": "../../plugins/plugin-space"
-    },
-    {
-      "path": "../../plugins/plugin-spacetime"
     },
     {
       "path": "../../plugins/plugin-spotlight"

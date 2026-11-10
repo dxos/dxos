@@ -17,7 +17,8 @@ import { Database, Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dx
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { EID, EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
+import { LogLevel, type LogProcessor, log } from '@dxos/log';
 import { RpcClosedError, makeInProcessClient } from '@dxos/protocols';
 import { DataService, QueryService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
@@ -809,6 +810,26 @@ describe('Database', () => {
       const [ref] = person.tasks ?? [];
       await expect(ref.tryLoad()).resolves.toBeUndefined();
       await expect(ref.load()).rejects.toThrow('Object not found');
+    });
+
+    test('resolveSync resolves a malformed echo URI to undefined and warns once', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+      await using db = await peer.createDatabase();
+      const task = db.add(Obj.make(TestSchema.Task, { title: 'wrapped twice' }));
+      const uri = `echo:///${Obj.getURI(task, { prefer: 'absolute' })}` as URI.URI;
+      const warnings: string[] = [];
+      const collect: LogProcessor = (_, entry) => {
+        if (entry.level === LogLevel.WARN && entry.message) {
+          warnings.push(entry.message);
+        }
+      };
+      const removeProcessor = log.addProcessor(collect);
+      onTestFinished(() => removeProcessor());
+
+      const resolver = peer.client.graph.createRefResolver({ context: { space: db.spaceId } });
+      expect(resolver.resolveSync(uri, false)).toBeUndefined();
+      expect(resolver.resolveSync(uri, false)).toBeUndefined();
+      expect(warnings.filter((message) => message === 'malformed echo reference')).toHaveLength(1);
     });
   });
 

@@ -23,9 +23,9 @@ import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { RoutinePlugin } from '#plugin';
+import * as RoutinePlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), RoutinePlugin()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), RoutinePlugin.make()] });
 
 const Double = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.double'), name: 'Double' },
@@ -130,7 +130,7 @@ const double = (input: unknown) => Schema.decodeUnknownSync(Double.input)(input)
 const createApp = async (edgeUrl?: string) => {
   const config = edgeUrl ? new Config({ runtime: { services: { edge: { url: edgeUrl } } } }) : undefined;
   const harness = await Harness.createComposerTestApp({
-    plugins: [ClientPlugin.make(config ? { config } : {}), RoutinePlugin()],
+    plugins: [ClientPlugin.make(config ? { config } : {}), RoutinePlugin.make()],
   });
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),

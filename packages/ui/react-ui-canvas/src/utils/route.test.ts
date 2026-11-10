@@ -4,15 +4,23 @@
 
 import { describe, test } from 'vitest';
 
+import { DEFAULT_GRID, type Endpoint, type Link, MAJOR_GRID } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type Endpoint, type Link, type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath, viewLinkGeometry } from './route.ts';
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
 const ends = { source: { node: 'a' }, target: { node: 'b' }, z: 'z' };
+
+/** A smart link's stub out of a port: half a major cell. */
+const STUB = MAJOR_GRID / 2;
+
+/** A right angle's radius: one minor cell. */
+const RADIUS = DEFAULT_GRID;
 
 describe('route', () => {
   test('each link type routes by its own rule', ({ expect }) => {
@@ -30,16 +38,16 @@ describe('route', () => {
     // Facing ports, so the stubs point at each other and the middle segment joins them.
     expect(smartPoints(from, to)).toEqual([
       { x: 0, y: 0 },
-      { x: 32, y: 0 },
-      { x: 268, y: 0 },
+      { x: STUB, y: 0 },
+      { x: 300 - STUB, y: 0 },
       { x: 300, y: 0 },
     ]);
     // Two ports on the same side leave the same way, so the route doubles back through the middle
     // segment rather than cutting across either node — the elbow the ports imply.
     expect(smartPoints({ point: { x: 0, y: 0 }, side: 'e' }, { point: { x: 0, y: 200 }, side: 'e' })).toEqual([
       { x: 0, y: 0 },
-      { x: 32, y: 0 },
-      { x: 32, y: 200 },
+      { x: STUB, y: 0 },
+      { x: STUB, y: 200 },
       { x: 0, y: 200 },
     ]);
   });
@@ -52,7 +60,7 @@ describe('route', () => {
         { x: 10, y: 10 },
       ]),
     ).toBe('M 0 0 L 10 10');
-    // A right angle is cut one minor cell (16) back along each segment; the corner is the quadratic's control, so the
+    // A right angle is cut one minor cell back along each segment; the corner is the quadratic's control, so the
     // route bends around it and never reaches it.
     expect(
       splinePath([
@@ -60,7 +68,7 @@ describe('route', () => {
         { x: 100, y: 0 },
         { x: 100, y: 100 },
       ]),
-    ).toBe('M 0 0 L 84 0 Q 100 0, 100 16 L 100 100');
+    ).toBe(`M 0 0 L ${100 - RADIUS} 0 Q 100 0, 100 ${RADIUS} L 100 100`);
     // Segments shorter than two radii share what they have, so neighbouring corners never overlap.
     expect(
       splinePath([
@@ -107,7 +115,7 @@ describe('route', () => {
     expect(
       linkPath({ type: 'curve', id: 'c', z: 'a', source: { node: 'n' }, target: { point: free.point } }, port, free),
     ).toMatch(/, 100 37, 100 37$/);
-    expect(smartPoints(port, free)).toEqual([port.point, { x: 32, y: 0 }, free.point]);
+    expect(smartPoints(port, free)).toEqual([port.point, { x: STUB, y: 0 }, free.point]);
   });
 
   test('on a lattice a smart link takes the ports whose gutter route bends least', ({ expect }) => {
@@ -121,7 +129,7 @@ describe('route', () => {
       size: { width: 256, height: 128 },
     });
     const link: Link = { type: 'smart', id: 'link', z: 'a1', source: { node: 'mesh' }, target: { node: 'edge' } };
-    const scene: View = {
+    const scene: RenderList2D = {
       id: 'root',
       nodes: { mesh: box('mesh', 4, 1), edge: box('edge', 3, 4) },
       links: { link },
@@ -138,6 +146,33 @@ describe('route', () => {
     // The same choice for the link on its own, so hit-testing and handles agree with what is drawn.
     const single = linkGeometry(scene, defaultNodeRegistry, link, DEFAULT_LATTICE);
     expect([single?.source.side, single?.target.side]).toEqual(['s', 'e']);
+  });
+
+  test('a smart link to a shape off the lattice cells, as one in flight is, takes no gutter, so it does not flicker', ({
+    expect,
+  }) => {
+    const box = (id: string, x: number, y: number) => ({
+      type: 'rect',
+      id,
+      z: 'a0',
+      center: { x, y },
+      size: { width: 256, height: 128 },
+    });
+    const link: Link = { type: 'smart', id: 'ac', z: 'a1', source: { node: 'a' }, target: { node: 'c' } };
+    // C dragged along a diagonal between cells: gutter routing flipped its ports between two tied pairs every few px.
+    const sides = Array.from({ length: 60 }, (_, step) => {
+      const scene: RenderList2D = {
+        id: 'root',
+        nodes: { a: box('a', 0, 0), c: box('c', 6 + step * 6.4, 195 + step * 3.2) },
+        links: { link },
+      };
+      const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+      expect(geometry.path).toBe(linkGeometry(scene, defaultNodeRegistry, link)?.path);
+      return `${geometry.source.side}${geometry.target.side}`;
+    });
+    // The ports change only where the geometry turns a corner, never back and forth: no pair returns once left.
+    const runs = sides.filter((side, index) => index === 0 || side !== sides[index - 1]);
+    expect(new Set(runs).size).toBe(runs.length);
   });
 
   test('a plain line to a node with no port points at its centre and stops at its outline; a smart one takes ports', ({

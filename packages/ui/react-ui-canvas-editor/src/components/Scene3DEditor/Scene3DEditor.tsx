@@ -1,0 +1,1086 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+
+import { DETENT_PX, isHandDrag, useCommandHeld } from '@dxos/react-ui-canvas';
+import {
+  type Box,
+  DEFAULT_CAMERA,
+  type GeometrySource,
+  type GizmoMode,
+  GROUND_PLANE,
+  type RenderItem,
+  SceneLabels,
+  SNAP,
+  type Theme3D,
+  type WorkPlane,
+  type WorldTransform,
+  axisPoint,
+  facePoints,
+  flushWith,
+  onScene,
+  planeAxes,
+  planePoint,
+  planeThrough,
+  project,
+  renderList,
+  toTheme3D,
+  useManifoldGeometry,
+  useOrbit,
+  useSceneRenderer,
+} from '@dxos/react-ui-canvas/3d';
+import type * as Util from '@dxos/react-ui/Util';
+import {
+  type LayoutIntent,
+  type Scene,
+  applyIntent,
+  findLayout,
+  findModel,
+  findScene,
+  placesCycle,
+  resolveLayout3D,
+} from '@dxos/scene';
+import { mx } from '@dxos/ui-theme';
+
+import {
+  type GroundBase,
+  createdElement,
+  dragBase,
+  dragHeight,
+  placedElement,
+  placedOnBase,
+  sizesInOneStep,
+} from './create.ts';
+import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
+import { axisOf, extrudeIntent, gizmoIntent, screenLength } from './gizmo.ts';
+import { nearestOnScreen, planeMove } from './move.ts';
+import { targetOf } from './target.ts';
+import {
+  type FaceSelection,
+  type Tool3D,
+  clickCreates,
+  clickSelects,
+  doubleClickTarget,
+  editableTool,
+  extrudesFace,
+  groundSnap,
+  menuSelection,
+  orbitButtons,
+  restingCenter,
+  sameFace,
+} from './tools.ts';
+
+/**
+ * What a left click does: select, transform the selection with a gizmo, link two elements, place one, or (extrude)
+ * drag a face along its normal.
+ */
+
+export type Scene3DEditorProps = Util.ThemedClassName<{
+  document: Scene.SceneDocument;
+  /** The scene the editor looks through. */
+  scene: string;
+  /** The layout being edited: the scene's own, or a composite's parts when drilled in. */
+  editing?: string;
+  /** Ids of elements in the edited layout. */
+  selection: readonly string[];
+  tool: Tool3D;
+  /** Locked: only select and orbit work, and nothing is changed by a click, drag or key. */
+  readonly?: boolean;
+  theme?: Theme3D;
+  /** Draws the ground grid. */
+  grid?: boolean;
+  /** Draws the x, y and z axes, in red, green and blue. */
+  axes?: boolean;
+  /** Gizmos and placing snap to the grid; holding Alt frees one gesture. */
+  snap?: boolean;
+  /**
+   * The work plane: the grid is drawn on it, a shape is made on it, and a body dragged with Move slides parallel to it.
+   * The ground (y = 0) when unset.
+   */
+  plane?: WorkPlane;
+  /** Overlays drawn over the scene (floating panels); their pointer events never reach the scene. */
+  children?: ReactNode;
+  /** Called with the view's size as it is laid out and resized, e.g. to fit the camera to it. */
+  onResize?: (size: { width: number; height: number }) => void;
+  /** Where to look; the scene's camera when unset. */
+  camera?: Scene.Camera3D;
+  geometry?: GeometrySource;
+  onSelect: (ids: string[]) => void;
+  onIntent: (layout: string, intent: LayoutIntent) => void;
+  /** Drills into a composite's parts layout, or back out to the scene's layout. */
+  onEdit: (layout: string) => void;
+  /** The orbit camera, each time it moves. */
+  onCameraChange?: (camera: Scene.Camera3D) => void;
+  /** The selected face, set by a double-click on a plain element; Extrude acts on it. */
+  face?: FaceSelection;
+  onFaceChange?: (face: FaceSelection | undefined) => void;
+  /** A right-click, where it was and on what; an unselected element is selected first. */
+  onContextMenu?: (at: { x: number; y: number }, kind: 'element' | 'canvas') => void;
+}>;
+
+/** A swept base's height before the pointer raises it, when snapping is off. */
+const FLAT = 0.1;
+
+/** What a drag sizes: a new shape of a kind, or a placement of a model object (by its definition's proportions). */
+type Shape =
+  | { kind: 'create'; type: string }
+  | { kind: 'place'; object: string; definition: Scene.Object3D | undefined };
+
+/** How far a press may travel and still be a click rather than a drag. */
+const CLICK_SLOP = 4;
+
+/** Everything outside the edited composite fades to this, so the parts read as the thing being edited. */
+const DIMMED = 0.2;
+
+/** The first id of the form `base-n` the layout does not use. */
+const freeId = (layout: Scene.LayoutRecord | undefined, base: string): string => {
+  let index = 1;
+  while (layout?.elements[`${base}-${index}`]) {
+    index++;
+  }
+  return `${base}-${index}`;
+};
+
+/** The object `id` of the layout's 3D model, which a placement is sized and rested by. */
+const modelObject = (
+  doc: Scene.SceneDocument,
+  layout: Scene.LayoutRecord | undefined,
+  id: string,
+): Scene.Object3D | undefined => {
+  const model = layout?.model === undefined ? undefined : findModel(doc, layout.model);
+  return model?.dim === '3d' ? model.objects[id] : undefined;
+};
+
+const isGizmoMode = (tool: Tool3D): tool is GizmoMode => tool === 'move' || tool === 'rotate' || tool === 'scale';
+
+/**
+ * Arranges a 3D layout: click selects (shift toggles, empty space clears), a gizmo moves, rotates or scales the one
+ * selected element, the link tool binds two clicked elements, and a create or place tool puts an element where the
+ * pointer meets the ground. A double-click on a composite edits its parts, with the rest of the scene faded. Escape
+ * backs out of the innermost of a drag, a selected face, the selection and the composite. The middle button orbits (Shift pans) while a tool owns the left; the right button opens the menu.
+ */
+export const Scene3DEditor = ({
+  classNames,
+  document: doc,
+  scene: sceneId,
+  editing: editingProp,
+  selection,
+  tool: toolProp,
+  readonly = false,
+  theme,
+  grid = false,
+  axes = false,
+  snap = false,
+  plane = GROUND_PLANE,
+  children,
+  onResize,
+  camera,
+  geometry: givenGeometry,
+  onSelect,
+  onIntent: onIntentProp,
+  onEdit,
+  onCameraChange,
+  onContextMenu,
+  face,
+  onFaceChange,
+}: Scene3DEditorProps) => {
+  const tool = editableTool(toolProp, readonly);
+  // Locked, every edit stops here, whichever gesture or key would have made it.
+  const onIntent = useCallback(
+    (layout: string, intent: LayoutIntent) => !readonly && onIntentProp(layout, intent),
+    [readonly, onIntentProp],
+  );
+  const scene = findScene(doc, sceneId);
+  const editing = editingProp ?? scene?.layout ?? '';
+  const layout = findLayout(doc, editing);
+  const look: Theme3D = theme ?? toTheme3D(scene?.theme) ?? 'cad';
+  const given = camera ?? (scene?.dim === '3d' ? scene.camera : DEFAULT_CAMERA);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { renderer, size, mode } = useSceneRenderer(containerRef, canvasRef, look);
+  useEffect(() => onResize?.(size), [size, onResize]);
+  const view = useOrbit(containerRef, given, size, {
+    enabled: true,
+    buttons: orbitButtons(tool),
+    onChange: onCameraChange,
+  });
+
+  // The edited layout's drawn items, by the frame that shows them (`''` at the top level) and then by element id. A
+  // composite placed several times is edited through the frame last clicked, or else the first.
+  // A shape being sized by a drag, drawn as it will land but not yet in the layout.
+  const [draft, setDraft] = useState<Scene.Element3D>();
+  // The extrusion a face drag would make, drawn as the pointer moves but not yet in the layout.
+  const [extrusion, setExtrusion] = useState<LayoutIntent>();
+  // A body being dragged on the work plane, drawn where it goes until the document it was committed to moves on.
+  const [moved, setMoved] = useState<{ intent: LayoutIntent; doc: Scene.SceneDocument }>();
+  // Dropped once the document moves on, or an undo back to the document it was drawn over would draw it again.
+  useEffect(() => setMoved(undefined), [doc]);
+  // Loaded once Extrude is picked, so the first drag draws its solid rather than a stand-in.
+  const geometry = useManifoldGeometry(doc, givenGeometry, { preload: tool === 'extrude' });
+  // A released preview is held until the document has what it committed, which a stored document takes a moment to.
+  const previewId = draft?.id ?? (extrusion?.kind === 'extrude' ? extrusion.id : undefined);
+  const landed = previewId !== undefined && layout?.elements[previewId] !== undefined;
+  useEffect(() => {
+    if (landed) {
+      setDraft(undefined);
+      setExtrusion(undefined);
+    }
+  }, [landed]);
+  const drawnDoc = useMemo(() => {
+    // Until the solid can be built, the face keeps its place rather than a stand-in's.
+    const preview: LayoutIntent | undefined =
+      moved?.doc === doc
+        ? moved.intent
+        : landed
+          ? undefined
+          : draft
+            ? { kind: 'create', element: draft }
+            : geometry && extrusion;
+    return preview === undefined
+      ? doc
+      : {
+          ...doc,
+          layouts: doc.layouts.map((record) =>
+            record.id === (editingProp ?? scene?.layout) && record.dim === '3d' ? applyIntent(record, preview) : record,
+          ),
+        };
+  }, [doc, draft, extrusion, moved, geometry, landed, editingProp, scene]);
+  const list = useMemo(() => renderList(drawnDoc, scene), [drawnDoc, scene]);
+  const frames = useMemo(() => {
+    const byFrame = new Map<string, Map<string, RenderItem>>();
+    // Resolved in the drawn document, so a shape being dragged out has an item to box.
+    for (const item of list.items) {
+      const target = targetOf(drawnDoc, sceneId, item.key);
+      if (target?.layout !== editing) {
+        continue;
+      }
+      const frame = item.key.split('/').slice(0, -1).join('/');
+      const items = byFrame.get(frame) ?? new Map<string, RenderItem>();
+      items.has(target.element) || items.set(target.element, item);
+      byFrame.set(frame, items);
+    }
+    return byFrame;
+  }, [drawnDoc, sceneId, list, editing]);
+  const [frameHint, setFrameHint] = useState<string>();
+  const commandHeld = useCommandHeld();
+  const drilled = editing !== scene?.layout;
+  const prefix = frameHint !== undefined && frames.has(frameHint) ? frameHint : (frames.keys().next().value ?? '');
+  const keys = useMemo(() => frames.get(prefix) ?? new Map<string, RenderItem>(), [frames, prefix]);
+  // Parts no element places are not drawn, so there is nothing to edit them through.
+  const unplaced = drilled && frames.size === 0;
+  const resolved = useMemo(() => (layout?.dim === '3d' ? resolveLayout3D(doc, layout) : {}), [doc, layout]);
+  const transform = useMemo(
+    () => frameTransform([...keys].flatMap(([id, item]) => (resolved[id] ? [[item, resolved[id]] as const] : []))),
+    [keys, resolved],
+  );
+
+  const shown = useMemo(() => {
+    if (!drilled || unplaced) {
+      return list;
+    }
+    const inside = (key: string) => key.startsWith(`${prefix}/`);
+    return {
+      ...list,
+      items: list.items.map((item) =>
+        inside(item.key) ? item : { ...item, style: { ...item.style, opacity: (item.style?.opacity ?? 1) * DIMMED } },
+      ),
+    };
+  }, [list, drilled, unplaced, prefix]);
+
+  useLayoutEffect(() => {
+    if (renderer && size.width > 0) {
+      renderer.render(shown, view, { geometry });
+    }
+  }, [renderer, shown, view, geometry, size]);
+  useLayoutEffect(() => renderer?.setGrid(grid), [renderer, grid]);
+  useLayoutEffect(() => renderer?.setAxes(axes), [renderer, axes]);
+  useLayoutEffect(() => renderer?.setPlane(plane), [renderer, plane]);
+  // Holding Alt frees the gesture under way from the grid.
+  const [alt, setAlt] = useState(false);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => setAlt(event.altKey);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
+    };
+  }, []);
+  useLayoutEffect(() => renderer?.setSnap(snap && !alt), [renderer, snap, alt]);
+  // Holding X, Y or Z holds a body drag to that world axis.
+  const heldAxis = useRef<'x' | 'y' | 'z'>(undefined);
+  const redrag = useRef<() => void>(undefined);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if (key !== 'x' && key !== 'y' && key !== 'z') {
+        return;
+      }
+      const next = event.type === 'keydown' ? key : heldAxis.current === key ? undefined : heldAxis.current;
+      if (next !== heldAxis.current) {
+        heldAxis.current = next;
+        redrag.current?.();
+      }
+    };
+    // A key let go while the window had lost focus never reports its release.
+    const onBlur = () => {
+      heldAxis.current = undefined;
+      redrag.current?.();
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
+
+  // A shape being dragged out is boxed as the selection is, so its extent reads while it is sized.
+  const drawnSelection = useMemo(
+    () => (draft && !selection.includes(draft.id) ? [...selection, draft.id] : selection),
+    [selection, draft],
+  );
+  useLayoutEffect(() => {
+    renderer?.select(drawnSelection.flatMap((id) => keys.get(id)?.key ?? []));
+  }, [renderer, drawnSelection, keys, shown]);
+
+  useLayoutEffect(() => {
+    const key = face === undefined ? undefined : keys.get(face.element)?.key;
+    renderer?.selectFace(key, face?.normal);
+  }, [renderer, face, keys, shown]);
+
+  // The gizmo sits on the first selected element and a drag carries the rest along; its end becomes one intent per
+  // element, in the edited layout's coordinates.
+  const lead = selection[0];
+  const leadKey = lead === undefined ? undefined : keys.get(lead)?.key;
+  useLayoutEffect(() => {
+    if (!renderer) {
+      return;
+    }
+    const members = selection.filter((id) => resolved[id] !== undefined && keys.get(id) !== undefined);
+    const before = lead === undefined ? undefined : resolved[lead];
+    const item = lead === undefined ? undefined : keys.get(lead);
+    // One element whose aspect is locked keeps the whole group to even scaling.
+    const uniform = members.some((id) => {
+      const placed = layout?.elements[id]?.object;
+      return placed !== undefined && modelObject(doc, layout, placed)?.lockAspect === true;
+    });
+    const intentOf = (id: string, after: WorldTransform) => {
+      const from = resolved[id];
+      return from && isGizmoMode(tool)
+        ? gizmoIntent(tool, id, from, {
+            center: toLocal(transform, after.center),
+            rotation: after.rotation,
+            scale: scaleToLocal(transform, after.scale),
+          })
+        : undefined;
+    };
+    renderer.attachGizmo(
+      before && item && isGizmoMode(tool) ? leadKey : undefined,
+      isGizmoMode(tool) ? tool : undefined,
+      (after: WorldTransform, group: Record<string, WorldTransform>) => {
+        if (lead === undefined) {
+          return;
+        }
+        const intents = [
+          intentOf(lead, after),
+          ...members.flatMap((id) => {
+            const key = keys.get(id)?.key;
+            const moved = id === lead || key === undefined ? undefined : group[key];
+            return moved ? [intentOf(id, moved)] : [];
+          }),
+        ].filter((intent) => intent !== undefined);
+        // One intent, so one undo puts every element back.
+        intents.length > 0 && onIntent(editing, intents.length === 1 ? intents[0] : { kind: 'batch', intents });
+      },
+      { uniform, group: members.flatMap((id) => (id === lead ? [] : (keys.get(id)?.key ?? []))) },
+    );
+  }, [renderer, tool, lead, leadKey, selection, resolved, keys, transform, editing, onIntent, shown, doc, layout]);
+
+  const [linkFrom, setLinkFrom] = useState<string>();
+  useEffect(() => setLinkFrom(undefined), [tool, editing]);
+  // The face a drag with the extrude tool would pull, outlined, with the cursor marking it; a drag keeps the one it
+  // started with.
+  const [hoveredFace, setHoveredFace] = useState<FaceSelection>();
+  useEffect(() => setHoveredFace(undefined), [tool, editing]);
+  const hoveredKey = hoveredFace === undefined ? undefined : keys.get(hoveredFace.element)?.key;
+  useEffect(() => {
+    // The face moves as the drag extrudes it, so its outline is not drawn meanwhile.
+    renderer?.hoverFace(extrusion === undefined ? hoveredKey : undefined, hoveredFace?.normal);
+  }, [renderer, hoveredKey, hoveredFace, extrusion, shown]);
+  // The face an extrusion is pulling, from the middle of where it began; its arrow goes out with it.
+  const [pulling, setPulling] = useState<{ center: Scene.Vec3; normal: Scene.Vec3 }>();
+  // Extrude shows a single-axis arrow on the face it would pull: the selected face, else the one under the pointer.
+  useLayoutEffect(() => {
+    if (!renderer) {
+      return;
+    }
+    if (tool !== 'extrude') {
+      renderer.showFaceArrow(undefined);
+      return;
+    }
+    if (pulling) {
+      // The distance is in the edited layout's units; the arrow stands in the world.
+      const out = extrusion?.kind === 'extrude' ? extrusion.distance * transform.scale : 0;
+      const { center, normal } = pulling;
+      renderer.showFaceArrow({
+        point: { x: center.x + normal.x * out, y: center.y + normal.y * out, z: center.z + normal.z * out },
+        normal,
+      });
+      return;
+    }
+    const target = face ?? hoveredFace;
+    const key = target === undefined ? undefined : keys.get(target.element)?.key;
+    const normal = target && axisOf(target.normal);
+    const center = key === undefined || !normal ? undefined : renderer.faceCenter(key, normal);
+    renderer.showFaceArrow(center && normal ? { point: center, normal } : undefined);
+  }, [renderer, tool, pulling, extrusion, transform, face, hoveredFace, keys, shown]);
+
+  const elementAt = useCallback(
+    (point: { x: number; y: number }) => {
+      const hit = renderer?.pick(point, { through: drilled });
+      const target = hit?.item === undefined ? undefined : targetOf(doc, sceneId, hit.item);
+      const element = target?.layout === editing ? target.element : undefined;
+      // The frame a clicked element is drawn in is the one its gizmo and dimming follow.
+      const frame = element === undefined || !hit?.item ? undefined : hit.item.split('/').slice(0, -1).join('/');
+      return { hit, element, frame };
+    },
+    [renderer, drilled, doc, sceneId, editing],
+  );
+
+  const onClick = useCallback(
+    (point: { x: number; y: number }, shift: boolean, free = false) => {
+      const { hit, element, frame } = elementAt(point);
+      frame !== undefined && setFrameHint(frame);
+      if (face && element !== face.element) {
+        onFaceChange?.(undefined);
+      }
+      if (clickCreates(tool, element) && typeof tool === 'object') {
+        // A layout that is not drawn has nowhere to put an element; an object may not be placed inside its own parts.
+        if (!hit?.point || unplaced || ('place' in tool && placesCycle(doc, editing, tool.place))) {
+          return;
+        }
+        const center = toLocal(transform, groundSnap(hit.point, snap && !free ? SNAP.move : 0));
+        const intent: LayoutIntent =
+          'create' in tool
+            ? {
+                kind: 'create',
+                element: { id: freeId(layout, tool.create), type: tool.create, center: restingCenter(center) },
+              }
+            : {
+                kind: 'create',
+                element: placedElement(
+                  freeId(layout, tool.place),
+                  tool.place,
+                  modelObject(doc, layout, tool.place),
+                  center,
+                ),
+              };
+        onIntent(editing, intent);
+        onSelect([intent.element.id]);
+        return;
+      }
+      if (tool === 'link') {
+        if (element === undefined) {
+          setLinkFrom(undefined);
+        } else if (linkFrom === undefined || linkFrom === element) {
+          setLinkFrom(element);
+          onSelect([element]);
+        } else {
+          const id = freeId(layout, 'link');
+          onIntent(editing, {
+            kind: 'bind',
+            link: { id, type: 'link', source: { node: linkFrom }, target: { node: element } },
+          });
+          setLinkFrom(undefined);
+          onSelect([id]);
+        }
+        return;
+      }
+      if (element === undefined) {
+        onSelect([]);
+      } else if (shift) {
+        onSelect(selection.includes(element) ? selection.filter((id) => id !== element) : [...selection, element]);
+      } else {
+        onSelect([element]);
+      }
+    },
+    [
+      elementAt,
+      tool,
+      unplaced,
+      doc,
+      transform,
+      layout,
+      editing,
+      linkFrom,
+      selection,
+      onIntent,
+      onSelect,
+      snap,
+      face,
+      onFaceChange,
+    ],
+  );
+
+  const onDoubleClick = useCallback(
+    (point: { x: number; y: number }) => {
+      const { hit, element } = elementAt(point);
+      const target = doubleClickTarget(
+        element,
+        element === undefined ? undefined : resolved[element]?.parts,
+        hit?.normal,
+      );
+      if (target && 'drill' in target) {
+        onSelect([]);
+        onFaceChange?.(undefined);
+        hit?.item && setFrameHint(hit.item);
+        onEdit(target.drill);
+      } else if (target) {
+        onSelect([target.face.element]);
+        onFaceChange?.(target.face);
+      }
+    },
+    [elementAt, resolved, onEdit, onSelect, onFaceChange],
+  );
+
+  // A face drag with the extrude tool: where it started, and the face it started on.
+  const extruding = useRef<{
+    screen: { x: number; y: number };
+    element: string;
+    normal: Scene.Vec3;
+    point: Scene.Vec3;
+    // Read on the press: the preview that follows replaces the solid's mesh.
+    thickness?: number;
+    // Where the face is along its axis, and the other bodies' bounds it is held flush against.
+    side?: number;
+    boxes: Record<string, Box>;
+  }>(undefined);
+  // What a swept base, its height and an extrusion snap to: the minor grid, unless snapping is off or Alt held.
+  const step = snap && !alt ? SNAP.move : 0;
+  /**
+   * The extrusion the face drag would make with the pointer at `end`, or on its release there when `landing`; undefined
+   * for one too short to extrude.
+   */
+  const extrusionAt = useCallback(
+    (end: { x: number; y: number }, landing = false): LayoutIntent | undefined => {
+      const start = extruding.current;
+      if (!start) {
+        return undefined;
+      }
+      const face = axisOf(start.normal);
+      const from = project(view, size, start.point);
+      const to = project(view, size, {
+        x: start.point.x + face.x,
+        y: start.point.y + face.y,
+        z: start.point.z + face.z,
+      });
+      const length = from && to ? Math.hypot(to.x - from.x, to.y - from.y) : 0;
+      if (!from || !to || length < 1e-3) {
+        return undefined;
+      }
+      // The drag's length along the face's normal as the screen shows it.
+      const dragPixels =
+        ((end.x - start.screen.x) * (to.x - from.x) + (end.y - start.screen.y) * (to.y - from.y)) / length;
+      const intent = extrudeIntent({
+        id: freeId(layout, 'extrude'),
+        target: start.element,
+        normal: face,
+        dragPixels,
+        camera: view,
+        viewport: size,
+        point: start.point,
+        step,
+        landing,
+        thickness: start.thickness,
+        boxes: start.boxes,
+        side: start.side,
+      });
+      // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
+      return intent?.kind === 'extrude'
+        ? { ...intent, distance: Math.round((intent.distance / transform.scale) * 1000) / 1000 }
+        : undefined;
+    },
+    [view, size, layout, transform, step],
+  );
+  /** Shows which other bodies' sides an extrusion's face has come to lie on. */
+  const showFlush = useCallback(
+    (intent: LayoutIntent | undefined) => {
+      const start = extruding.current;
+      if (!start || start.side === undefined || intent?.kind !== 'extrude') {
+        renderer?.snapFaces([]);
+        return;
+      }
+      const axis = intent.face.x !== 0 ? 'x' : intent.face.y !== 0 ? 'y' : 'z';
+      const at = start.side + intent.face[axis] * intent.distance * transform.scale;
+      renderer?.snapFaces(step > 0 ? flushWith([at], start.boxes, axis) : []);
+    },
+    [renderer, transform, step],
+  );
+  const onExtrudeEnd = useCallback(
+    (end: { x: number; y: number }) => {
+      const intent = extrusionAt(end, true);
+      extruding.current = undefined;
+      setPulling(undefined);
+      renderer?.snapFaces([]);
+      setExtrusion(intent);
+      if (intent?.kind !== 'extrude') {
+        return false;
+      }
+      onIntent(editing, intent);
+      onFaceChange?.(undefined);
+      onSelect([intent.id]);
+      return true;
+    },
+    [extrusionAt, renderer, editing, onIntent, onSelect, onFaceChange],
+  );
+
+  const press = useRef<{ x: number; y: number }>(undefined);
+  // Drag to create or place: the base is swept on the ground, then (but for a sphere or a locked aspect) the pointer
+  // sets the height until a click fixes it; a plain click places the default size instead.
+  const sizing = useRef<
+    | { phase: 'base'; shape: Shape; id: string; from: Scene.Vec3; base?: GroundBase }
+    | { phase: 'height'; shape: Shape; id: string; base: GroundBase; startY: number }
+  >(undefined);
+  /** The element a drag makes over `base`: a created shape, or a placed object at its own proportions if locked. */
+  const sized = (shape: Shape, id: string, base: GroundBase, height: number | undefined): Scene.Element3D =>
+    shape.kind === 'create'
+      ? createdElement(id, shape.type, base, height)
+      : placedOnBase(id, shape.object, shape.definition, base, height);
+  /** The layout units along x and z that `DETENT_PX` spans at `ground`, within which a swept corner holds on a line. */
+  const sweepHold = (ground: Scene.Vec3) => {
+    const along = (direction: Scene.Vec3) => {
+      const pixels = (screenLength(view, size, ground, direction) ?? 0) * transform.scale;
+      return pixels > 0 ? DETENT_PX / pixels : 0;
+    };
+    return { x: along({ x: 1, y: 0, z: 0 }), z: along({ x: 0, y: 0, z: 1 }) };
+  };
+  /** The element a height drag makes with the pointer at `clientY`: held near a step while moving, on one when `landing`. */
+  const sizedHeight = (
+    current: { shape: Shape; id: string; base: GroundBase; startY: number },
+    clientY: number,
+    landing = false,
+  ) =>
+    // The height is measured in the world, and the edited layout may be a composite's parts at another scale.
+    sized(
+      current.shape,
+      current.id,
+      current.base,
+      dragHeight(current.base, (current.startY - clientY) / transform.scale, view, size, step, landing),
+    );
+  const oneStep = (shape: Shape) =>
+    shape.kind === 'create'
+      ? sizesInOneStep(shape.type)
+      : sizesInOneStep(shape.definition?.type ?? '', shape.definition);
+  const committed = useRef(false);
+  const cancelSizing = () => {
+    sizing.current = undefined;
+    setDraft(undefined);
+  };
+  const commitDraft = (element: Scene.Element3D) => {
+    // The draft stays drawn until the layout has the element.
+    sizing.current = undefined;
+    setDraft(element);
+    onIntent(editing, { kind: 'create', element });
+    onSelect([element.id]);
+  };
+  /** Whether the pointer has left the press by more than a click's jitter. */
+  const pastSlop = (event: { clientX: number; clientY: number }) => {
+    const start = press.current;
+    return start !== undefined && Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP;
+  };
+  const local = (event: { clientX: number; clientY: number }) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    return { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) };
+  };
+
+  // A press on a body with Move: what slides, on the plane through where it was grabbed, parallel to the work plane.
+  const moving = useRef<{
+    ids: string[];
+    // Their drawn items, which a pick looks past to see what the pointer is over.
+    keys: string[];
+    grab: Scene.Vec3;
+    plane: WorkPlane;
+    // The moving bodies' world bounds together.
+    box: Box;
+    selected: boolean;
+    // Where the pointer last was, so holding an axis key takes effect without a move.
+    screen?: { x: number; y: number };
+  }>(undefined);
+  /**
+   * The move a body drag makes with the pointer at `screen`, held as it goes or landed: on the drag's plane, or along the
+   * one axis a held X, Y or Z key picks; magnetised to the face or point of another body the pointer is over.
+   */
+  const moveAt = (current: NonNullable<typeof moving.current>, screen: { x: number; y: number }, landing = false) => {
+    const axis = heldAxis.current;
+    const unit = axis && { x: axis === 'x' ? 1 : 0, y: axis === 'y' ? 1 : 0, z: axis === 'z' ? 1 : 0 };
+    const point = unit
+      ? axisPoint(view, size, screen, current.grab, unit)
+      : planePoint(view, size, screen, current.plane);
+    if (!point) {
+      return undefined;
+    }
+    const along = (direction: Scene.Vec3) => {
+      const pixels = screenLength(view, size, current.grab, direction) ?? 0;
+      return pixels > 0 ? DETENT_PX / pixels : 0;
+    };
+    // Snapping off (or Alt held) frees the body from what the pointer is over as well as the grid.
+    const hit = step > 0 ? renderer?.pick(screen, { through: drilled, skip: current.keys }) : undefined;
+    const over = hit?.item === undefined || !hit.normal ? undefined : { key: hit.item, normal: axisOf(hit.normal) };
+    const overBox = over && renderer?.bounds(over.key);
+    const overAxis = over && (over.normal.x !== 0 ? 'x' : over.normal.y !== 0 ? 'y' : 'z');
+    const near =
+      over && overBox
+        ? nearestOnScreen(facePoints(overBox, over.normal), screen, (at) => project(view, size, at), DETENT_PX)
+        : undefined;
+    const delta = planeMove({
+      delta: { x: point.x - current.grab.x, y: point.y - current.grab.y, z: point.z - current.grab.z },
+      box: current.box,
+      grab: current.grab,
+      axes: axis ? [axis] : planeAxes(current.plane),
+      step,
+      detent: { x: along({ x: 1, y: 0, z: 0 }), y: along({ x: 0, y: 1, z: 0 }), z: along({ x: 0, y: 0, z: 1 }) },
+      point: near,
+      face:
+        overBox && over && overAxis
+          ? { axis: overAxis, at: over.normal[overAxis] > 0 ? overBox.max[overAxis] : overBox.min[overAxis] }
+          : undefined,
+      landing,
+    });
+    // The move was measured in the world; the layout may be a composite's parts drawn at another scale.
+    const toLayout = (value: number) => Math.round((value / transform.scale) * 1000) / 1000 + 0;
+    const offset = { x: toLayout(delta.x), y: toLayout(delta.y), z: toLayout(delta.z) };
+    const intent: LayoutIntent = { kind: 'move', ids: current.ids, delta: offset };
+    return {
+      intent,
+      still: offset.x === 0 && offset.y === 0 && offset.z === 0,
+      // What the pointer is over is shown, so what the body is held to reads before the release.
+      show: () => {
+        renderer?.snapFaces(over ? [over] : []);
+        renderer?.snapPoint(near);
+        renderer?.showAxisGuide(axis ? { origin: current.grab, axis } : undefined);
+      },
+    };
+  };
+  const endMoveGuides = () => {
+    renderer?.snapFaces([]);
+    renderer?.snapPoint(undefined);
+    renderer?.showAxisGuide(undefined);
+  };
+  /** Draws a body drag with the pointer at `screen`. */
+  const dragBody = (body: NonNullable<typeof moving.current>, screen: { x: number; y: number }) => {
+    body.screen = screen;
+    const next = moveAt(body, screen);
+    if (next) {
+      setMoved({ intent: next.intent, doc });
+      next.show();
+    }
+  };
+  // A key held or let go part way through a drag takes effect at once.
+  redrag.current = () => {
+    const body = moving.current;
+    body?.selected && body.screen && dragBody(body, body.screen);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      className={mx(
+        'relative dx-fill overflow-hidden bg-(--surface-bg) touch-none outline-none',
+        (tool === 'orbit' || commandHeld) && 'cursor-grab',
+        !commandHeld && hoveredFace !== undefined && 'cursor-move',
+        classNames,
+      )}
+      data-testid='scene.3d.editor'
+      data-selection={selection.join(' ')}
+      data-editing={editing}
+      onPointerDown={(event) => {
+        if (!onScene(event.nativeEvent)) {
+          return;
+        }
+        // A press focuses the editor so Delete and the shortcuts reach it, as in 2D, unless Babylon has focused its canvas:
+        // taking focus from the canvas blurs it, which Babylon reads as the button's release and so ends a gizmo drag.
+        if (!event.currentTarget.contains(document.activeElement)) {
+          event.currentTarget.focus({ preventScroll: true });
+        }
+        renderer?.takeDrag();
+        press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
+        // The click that fixes a dragged shape's height commits it, and is no other click.
+        if (sizing.current?.phase === 'height' && event.button === 0) {
+          // The height lands on the grid, as a 2D resize does on release.
+          commitDraft(sizedHeight(sizing.current, event.clientY, true));
+          committed.current = true;
+          return;
+        }
+        const shape: Shape | undefined =
+          typeof tool !== 'object'
+            ? undefined
+            : 'create' in tool
+              ? { kind: 'create', type: tool.create }
+              : placesCycle(doc, editing, tool.place)
+                ? undefined
+                : { kind: 'place', object: tool.place, definition: modelObject(doc, layout, tool.place) };
+        if (shape && event.button === 0 && !isHandDrag(event) && !unplaced) {
+          const screen = local(event);
+          const ground = clickCreates(tool, elementAt(screen).element)
+            ? planePoint(view, size, screen, plane)
+            : undefined;
+          if (ground) {
+            sizing.current = {
+              phase: 'base',
+              shape,
+              id: freeId(layout, shape.kind === 'create' ? shape.type : shape.object),
+              from: toLocal(transform, ground),
+            };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
+        }
+        // With Move, a press on a body (not on the gizmo, which takes its own press) slides it on its plane; within a
+        // click's slop it is still a click, which selects.
+        if (tool === 'move' && event.button === 0 && !isHandDrag(event)) {
+          const screen = local(event);
+          const { hit, element } = renderer?.overGizmo(screen)
+            ? { hit: undefined, element: undefined }
+            : elementAt(screen);
+          const ids =
+            element === undefined
+              ? []
+              : selection.includes(element)
+                ? selection.filter((id) => keys.has(id))
+                : [element];
+          const moveKeys = ids.flatMap((id) => keys.get(id)?.key ?? []);
+          const bounds = moveKeys.flatMap((key) => renderer?.bounds(key) ?? []);
+          if (hit?.point && bounds.length > 0) {
+            const lowest = (axis: 'x' | 'y' | 'z') => Math.min(...bounds.map(({ min }) => min[axis]));
+            const highest = (axis: 'x' | 'y' | 'z') => Math.max(...bounds.map(({ max }) => max[axis]));
+            moving.current = {
+              ids,
+              grab: hit.point,
+              plane: planeThrough(plane, hit.point),
+              box: {
+                min: { x: lowest('x'), y: lowest('y'), z: lowest('z') },
+                max: { x: highest('x'), y: highest('y'), z: highest('z') },
+              },
+              keys: moveKeys,
+              selected: false,
+            };
+            setMoved(undefined);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
+        }
+        // With the command key held a left drag moves the camera, whatever the tool, so it starts no tool gesture.
+        if (tool === 'extrude' && event.button === 0 && !isHandDrag(event)) {
+          const screen = local(event);
+          const { hit, element } = elementAt(screen);
+          // A selected face is the one extruded, wherever the drag starts; then the face whose arrow is pressed; otherwise
+          // the face pressed on.
+          const onArrow = !face && hoveredFace !== undefined && renderer?.overGizmo(screen) === true;
+          const pressed =
+            element !== undefined && hit?.normal && hit.point ? { element, normal: hit.normal } : undefined;
+          const pulled = face ?? (onArrow ? hoveredFace : pressed);
+          const key = pulled === undefined ? undefined : keys.get(pulled.element)?.key;
+          const normal = pulled && axisOf(pulled.normal);
+          const center = key === undefined || !normal ? undefined : renderer?.faceCenter(key, normal);
+          if (pulled && key !== undefined && normal && center) {
+            const axis = normal.x !== 0 ? 'x' : normal.y !== 0 ? 'y' : 'z';
+            // A face pressed on is pulled from where it was pressed, so the drag reads at that depth; else from its middle.
+            const point = pulled === pressed && hit?.point ? hit.point : center;
+            extruding.current = {
+              screen,
+              element: pulled.element,
+              normal: pulled.normal,
+              point,
+              thickness: renderer?.extent(key, pulled.normal),
+              side: center[axis],
+              boxes: renderer?.itemBounds([key]) ?? {},
+            };
+            setPulling({ center, normal });
+          } else {
+            extruding.current = undefined;
+          }
+          extruding.current && event.currentTarget.setPointerCapture(event.pointerId);
+        }
+      }}
+      onPointerMove={(event) => {
+        // The arrow stands off its face, so the pointer on it keeps that face.
+        if (tool === 'extrude' && event.buttons === 0 && !renderer?.overGizmo(local(event))) {
+          const { hit, element } = elementAt(local(event));
+          const next =
+            element !== undefined && hit?.normal && extrudesFace(tool, element, hit.normal, face)
+              ? { element, normal: axisOf(hit.normal) }
+              : undefined;
+          setHoveredFace((current) => (sameFace(current, next) ? current : next));
+        }
+        if (extruding.current) {
+          const intent = extrusionAt(local(event));
+          setExtrusion(intent);
+          showFlush(intent);
+          return;
+        }
+        const body = moving.current;
+        if (body && event.buttons & 1) {
+          if (!pastSlop(event)) {
+            return;
+          }
+          // A body dragged unselected is selected as it goes, so its gizmo and bounds follow it.
+          if (!body.selected) {
+            body.selected = true;
+            const same = body.ids.length === selection.length && body.ids.every((id) => selection.includes(id));
+            same || onSelect(body.ids);
+          }
+          dragBody(body, local(event));
+          return;
+        }
+        const current = sizing.current;
+        if (!current) {
+          return;
+        }
+        if (current.phase === 'base' && event.buttons & 1) {
+          // Within the click slop the press is still a click, which makes the default size, not a base to sweep.
+          if (!pastSlop(event)) {
+            return;
+          }
+          const ground = planePoint(view, size, local(event), plane);
+          const base = ground && dragBase(current.from, toLocal(transform, ground), step, sweepHold(ground));
+          sizing.current = { ...current, base: base ?? undefined };
+          setDraft(
+            base
+              ? sized(current.shape, current.id, base, oneStep(current.shape) ? undefined : step || FLAT)
+              : undefined,
+          );
+        } else if (current.phase === 'height') {
+          // The height is measured in the world, and the edited layout may be a composite's parts at another scale.
+          setDraft(sizedHeight(current, event.clientY));
+        }
+      }}
+      onPointerUp={(event) => {
+        if (committed.current) {
+          committed.current = false;
+          press.current = undefined;
+          return;
+        }
+        const body = moving.current;
+        if (body) {
+          moving.current = undefined;
+          endMoveGuides();
+          if (pastSlop(event)) {
+            press.current = undefined;
+            // The body lands on the grid or flush, and stays drawn there until the document has the move: one undo.
+            const next = moveAt(body, local(event), true);
+            if (next && !next.still) {
+              setMoved({ intent: next.intent, doc });
+              onIntent(editing, next.intent);
+            } else {
+              setMoved(undefined);
+            }
+            return;
+          }
+          setMoved(undefined);
+        }
+        const current = sizing.current;
+        if (current?.phase === 'base') {
+          // The swept corner lands on the grid on release, as a 2D sweep does.
+          const ground = planePoint(view, size, local(event), plane);
+          const base = !pastSlop(event)
+            ? undefined
+            : ground
+              ? dragBase(current.from, toLocal(transform, ground), step)
+              : current.base;
+          if (base) {
+            press.current = undefined;
+            if (oneStep(current.shape)) {
+              commitDraft(sized(current.shape, current.id, base, undefined));
+            } else {
+              sizing.current = { phase: 'height', shape: current.shape, id: current.id, base, startY: event.clientY };
+              setDraft(sized(current.shape, current.id, base, step || FLAT));
+            }
+            return;
+          }
+          // Too short to sweep a base: a click, which places the default size.
+          cancelSizing();
+        }
+        // A face drag, a sweep or a press on a body captured the pointer, so its release targets the editor, not the
+        // canvas: it began on the scene.
+        const faceDrag = extruding.current !== undefined;
+        if (!faceDrag && !body && current?.phase !== 'base' && !onScene(event.nativeEvent)) {
+          return;
+        }
+        // A face drag that extruded is not a click; one too short to extrude selects, as a click does.
+        if (faceDrag && onExtrudeEnd(local(event))) {
+          press.current = undefined;
+          return;
+        }
+        const start = press.current;
+        const moved = pastSlop(event);
+        press.current = undefined;
+        // A gizmo drag, however short, is not a click.
+        const dragged = renderer?.takeDrag() || renderer?.dragging;
+        if (start && !moved && !dragged && clickSelects(tool)) {
+          onClick(local(event), event.shiftKey, event.altKey);
+        }
+      }}
+      // An Extrude press captures the pointer, so its double-click targets the editor itself rather than the canvas.
+      onDoubleClick={(event) =>
+        (onScene(event.nativeEvent) || event.target === event.currentTarget) && onDoubleClick(local(event))
+      }
+      onPointerLeave={() => setHoveredFace(undefined)}
+      onContextMenu={(event) => {
+        if (!onScene(event.nativeEvent) || !onContextMenu) {
+          return;
+        }
+        event.preventDefault();
+        const at = local(event);
+        const { element } = elementAt(at);
+        const next = menuSelection(selection, element);
+        if (next.length !== selection.length || next.some((id, index) => id !== selection[index])) {
+          onSelect(next);
+        }
+        onContextMenu(at, element === undefined ? 'canvas' : 'element');
+      }}
+      onKeyDown={(event) => {
+        // A key typed in a panel (a form field) is the panel's; one on the scene's own canvas (which Babylon focuses) is ours.
+        if (event.target !== event.currentTarget && event.target !== canvasRef.current) {
+          return;
+        }
+        // A gizmo drag has no way back short of its release, and the gizmo is on the selection.
+        if (event.key === 'Escape' && renderer?.dragging) {
+          return;
+        }
+        // Escape backs out of whatever is innermost, as in 2D: a gesture, then a selected face, the selection, the composite.
+        if (event.key === 'Escape' && sizing.current) {
+          cancelSizing();
+        } else if (event.key === 'Escape' && moving.current) {
+          moving.current = undefined;
+          press.current = undefined;
+          endMoveGuides();
+          setMoved(undefined);
+        } else if (event.key === 'Escape' && extruding.current) {
+          extruding.current = undefined;
+          press.current = undefined;
+          setPulling(undefined);
+          setExtrusion(undefined);
+          renderer?.snapFaces([]);
+        } else if (event.key === 'Escape' && face) {
+          onFaceChange?.(undefined);
+        } else if (event.key === 'Escape' && selection.length > 0) {
+          onSelect([]);
+        } else if (event.key === 'Escape' && drilled && scene) {
+          onSelect([]);
+          onEdit(scene.layout);
+        } else if ((event.key === 'Delete' || event.key === 'Backspace') && selection.length > 0) {
+          onIntent(editing, { kind: 'delete', ids: selection });
+          onSelect([]);
+        }
+      }}
+    >
+      <canvas ref={canvasRef} className='dx-cover dx-fill block outline-none' />
+      {size.width > 0 && <SceneLabels items={shown.items} camera={view} viewport={size} theme={look} mode={mode} />}
+      {children}
+    </div>
+  );
+};

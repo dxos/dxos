@@ -21,6 +21,7 @@ import {
   OptionsLookupAnnotation,
 } from '../annotations.ts';
 import { getRefProps } from '../util/index.ts';
+import { isVectorType } from './fields/vector-axes.ts';
 
 /** The built-in control a scalar property gets. */
 export type ScalarKind = 'text' | 'number' | 'boolean' | 'date' | 'geo-point' | 'markdown' | 'password' | 'text-area';
@@ -61,11 +62,13 @@ export type FormFieldDispatchProps = {
    * `FormInlineAnnotation` but driven by the parent array rather than the element's own AST.
    */
   refInline?: boolean;
+  /** Whether a collapsible group the field renders starts open; owned-ref rows start folded unless just created. */
+  defaultOpen?: boolean;
 } & FieldContext;
 
 /**
  * Decides which renderer a schema property gets, in priority order: a custom renderer from the form,
- * an annotation that names one (options lookup, autofill, hue), then the shape of the type (array,
+ * an annotation that names one (options lookup, autofill, hue, vector), then the shape of the type (array,
  * scalar by format or tag, literal options, reference, nested object). Pure, so the decision can be
  * tested without rendering; {@link FormFieldDispatch} turns the result into an element.
  */
@@ -103,6 +106,10 @@ export const resolveFieldRenderer = ({
 
   if (Option.getOrUndefined(HueAnnotation.getFromAst(type))) {
     return { kind: 'hue' };
+  }
+
+  if (isVectorType(type)) {
+    return { kind: 'vector' };
   }
 
   if (SchemaEx.isArrayType(type)) {
@@ -157,6 +164,7 @@ export type FieldRendererResolution =
   | { kind: 'lookup'; lookup: OptionsLookup; combobox: boolean }
   | { kind: 'autofill'; autofill: Autofill }
   | { kind: 'hue' }
+  | { kind: 'vector' }
   | { kind: 'array' }
   | { kind: 'scalar'; scalar: ScalarKind }
   | { kind: 'select'; options: Format.Options[] }

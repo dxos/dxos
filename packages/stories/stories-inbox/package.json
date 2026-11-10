@@ -55,6 +55,7 @@
     "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-jmap": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",

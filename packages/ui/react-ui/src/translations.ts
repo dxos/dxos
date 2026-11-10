@@ -73,6 +73,7 @@ export const translations = [
 
         'number-input.increment.label': 'Increment',
         'number-input.decrement.label': 'Decrement',
+        'number-input.slider.label': 'Adjust',
         'password-input.show.label': 'Show password',
         'password-input.hide.label': 'Hide password',
         'tag.delete.label': 'Remove {{label}}',

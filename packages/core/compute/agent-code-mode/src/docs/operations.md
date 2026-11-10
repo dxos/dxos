@@ -1,7 +1,9 @@
 # Operations
 
 The skills describe their capabilities as tools; in code mode they are NOT tools. Resolve the
-operation by the DXN the system prompt lists for it, then invoke it the way any DXOS code does:
+operation by its DXN, which `queryOperations` gives along with its input, then invoke it the way any
+DXOS code does. An operation whose skill is not enabled yet can be looked up but not called until
+`enableSkills` enables the skill:
 
 ```js
 const Score = yield* Database.resolve('dxn:com.example.operation.score');
@@ -17,7 +19,7 @@ The `input` listed for each operation is the operation's own schema. Where it ta
 the object first if all you hold is its id.
 
 A skill that spells a reference as a `{"/": "echo:..."}` envelope or a URI string is describing the
-tool form. In code, the system prompt's input wins.
+tool form. In code, the input `queryOperations` gives wins.
 
 ## Failures
 

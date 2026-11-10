@@ -20,6 +20,7 @@ in separate entries: every entry names exactly one decider, typed as `user:` or 
 | Term       | URI                          |
 | ---------- | ---------------------------- |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+| `question` | `org.dxos.mdl.question@1.0` |
 
 ## Actors
 
@@ -69,6 +70,12 @@ that served it: models change mid-session and the name must stay stable across t
    instruction is only about process, follow it and record nothing. A spec change with no decision
    behind it carries the `Spec-Changelog-Skip` trailer instead. `.agents/skills/mdl/scripts/check-decisions.ts` checks
    new entries with TypeSafe System One.
+10. **An open question is a `question`, and its answer is a decision.** A choice the spec needs but
+    nobody has made yet goes in `## Changelog` as `question Q-n`, attributed like a decision. It is
+    answered by appending a `decision` whose `answers:` names it; the decider is whoever answered.
+    The question itself is never edited, so "answered" is derived, not stored. Only the first
+    decision that answers a question counts; to change the answer, supersede that decision.
+    Question ids are `Q-1`, `Q-2`, … in the order asked, a sequence of their own.
 
 ## Definitions
 
@@ -88,6 +95,24 @@ ext decision
     why?: Prose                 # the reason; on a user entry, only a reason the person gave
     rejected?: ProseList        # alternatives considered and why they lost
     source?: URI                # PR, review comment, issue, or session where it was made
+    answers?: Identifier        # a question this decision answers, e.g. Q-1
+  inline-prose: true
+```
+
+```mdl
+ext question
+  uri: org.dxos.mdl.question@1.0
+  desc: |
+    A choice the spec needs that nobody has made yet, attributed to the actor that asked it. The
+    inline prose is the question. It is answered by a later `decision` whose `answers:` names it.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day it was asked
+    by: ActorRef                # user:<handle> | agent:<name> — who asked
+    for?: UserRef               # agent questions only: the person the agent acted for
+    affects?: RefList           # block ids the answer will constrain
+    context?: Prose             # why it is asked, and what depends on the answer
+    options?: ProseList         # suggested answers, each `<title>: <description>`
+    source?: URI                # PR, review comment, issue, or session where it was asked
   inline-prose: true
 ```
 
@@ -135,4 +160,25 @@ decision D-5: Bounds grow to the minor grid while dragging and snap to the major
   date: 2026-10-05
   by: user:alice
   supersedes: D-3
+```
+
+The agent meets a choice it should not make alone, and asks; the person's answer is a decision.
+
+```mdl
+question Q-1: Does the canvas shrink when nodes are removed?
+  date: 2026-10-06
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene]
+  context: [D-1] grows the bounds; nothing says whether they ever shrink.
+  options:
+    - Never: bounds only grow, so the view never jumps under the reader.
+    - On drop: bounds fit the content again after each edit.
+```
+
+```mdl
+decision D-6: Never.
+  date: 2026-10-07
+  by: user:alice
+  answers: Q-1
 ```

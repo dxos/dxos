@@ -1,0 +1,21 @@
+scene subscene dim=2d layout=main name="Sub-scene" theme=flat {
+  camera center=192,0 zoom=1
+}
+
+layout main dim=2d model=parts {
+  element a rect "A" @ 0,0 size=96x96 hue=blue surface=solid border=true rounded=true
+  element b detail "B" @ 192,0 size=192x192 hue=green surface=tint border=true rounded=true
+  element c rect "C" @ 384,0 size=96x96 hue=amber surface=solid border=true rounded=true
+  element ab link from=a to=b end=arrow
+  element bc link from=b to=c end=arrow
+}
+
+layout b-detail dim=2d name="B detail" {
+  element x rect "X" @ 0,0 size=96x96 hue=green surface=solid border=true rounded=true
+  element y ellipse "Y" @ 192,0 size=96x96 hue=green surface=solid border=true
+  element xy link from=x to=y end=arrow
+}
+
+model parts dim=2d {
+  object detail rect parts=b-detail
+}

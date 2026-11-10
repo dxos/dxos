@@ -69,6 +69,15 @@ describe('Progress', () => {
     expect(() => progress.cancel('missing')).not.toThrow();
   });
 
+  test('cancel dismisses a failed task that has no handler, and leaves a running one', () => {
+    const progress = Progress.make();
+    progress.task('running');
+    progress.task('failed').fail('Timed out');
+    progress.cancel('running');
+    progress.cancel('failed');
+    expect(progress.snapshot().tasks.map((task) => task.name)).toEqual(['running']);
+  });
+
   test('remove clears the cancel handler', () => {
     const progress = Progress.make();
     let cancelled = 0;

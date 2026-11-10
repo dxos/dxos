@@ -43,3 +43,23 @@ export class RepoClosedError extends BaseError.extend(
     super({ context, ...options });
   }
 }
+
+/**
+ * A write would move a feed object to a different branch, or fork from an object already written. A feed
+ * accepts an update of an object only on the branch of the object; a change on another branch is a fork (F-1.3).
+ */
+export class FeedBranchMismatchError extends BaseError.extend(
+  'FeedBranchMismatchError',
+  'A feed object can be updated only on its own branch.',
+) {
+  constructor(
+    context: {
+      objectId: string;
+      branch: string | undefined;
+      requestedBranch: string | undefined;
+    },
+    options?: BaseErrorOptions,
+  ) {
+    super({ context, ...options });
+  }
+}

@@ -16,11 +16,20 @@ import { type DataService } from '@dxos/protocols/rpc';
 
 import { copyUint8Array } from './utils.ts';
 
+/** One client subscription: where its batches go, and what it has been sent. */
+type Subscription = {
+  spaceId: SpaceId;
+  next: (msg: DataService.BatchedDocumentUpdates) => void;
+  /** The documents this subscription has been sent bytes for: the invocation's working set. */
+  workingSet: Set<string>;
+  /** Batches sent that the subscriber has not pulled off the stream yet. */
+  undelivered: number;
+  /** Resolved once {@link Subscription.undelivered} drops to zero. */
+  onDelivered: (() => void)[];
+};
+
 export class DataServiceImpl implements DataService.Handlers {
-  private 'dataSubscriptions' = new Map<
-    string,
-    { spaceId: SpaceId; next: (msg: DataService.BatchedDocumentUpdates) => void }
-  >();
+  private 'dataSubscriptions' = new Map<string, Subscription>();
 
   'constructor'(
     private _executionContext: EdgeFunctionEnv.TraceContext,
@@ -30,29 +39,85 @@ export class DataServiceImpl implements DataService.Handlers {
   ['DataService.subscribe'](
     request: DataService.SubscribeRequest,
   ): EffectStream.Stream<DataService.BatchedDocumentUpdates, Error> {
+    let subscription: Subscription | undefined;
     return EffectEx.streamFromEmitter<DataService.BatchedDocumentUpdates, Error>((emit) => {
       try {
         invariant(SpaceId.isValid(request.spaceId));
         const next = (msg: DataService.BatchedDocumentUpdates) => {
+          if (subscription) {
+            subscription.undelivered++;
+          }
           void emit.single(msg);
         };
-        this.dataSubscriptions.set(request.subscriptionId, { spaceId: request.spaceId, next });
+        subscription = { spaceId: request.spaceId, next, workingSet: new Set(), undelivered: 0, onDelivered: [] };
+        this.dataSubscriptions.set(request.subscriptionId, subscription);
         // Ready beacon: `RepoProxy` gates every `updateSubscription` on the subscription's first
         // batch, so without it document loads wait forever (mirrors the echo-host `DataService`).
         next({ updates: [] });
         return Effect.sync(() => {
           this.dataSubscriptions.delete(request.subscriptionId);
+          // Nothing more will be pulled, so a refresh waiting on this subscription stops waiting.
+          subscription?.onDelivered.splice(0).forEach((resolve) => resolve());
         });
       } catch (error) {
         void emit.fail(error as Error);
       }
-    });
+    }).pipe(
+      // Counts what the subscriber has taken, which is how {@link DataServiceImpl.refreshWorkingSet} knows its batch
+      // has reached the client.
+      EffectStream.tap(() =>
+        Effect.sync(() => {
+          if (subscription && subscription.undelivered > 0 && --subscription.undelivered === 0) {
+            subscription.onDelivered.splice(0).forEach((resolve) => resolve());
+          }
+        }),
+      ),
+    );
+  }
+
+  /**
+   * Re-sends the current bytes of every document each subscription has been sent, and resolves once the subscribers
+   * have taken them.
+   *
+   * This data plane is pull-only: EDGE pushes nothing, so a document the invocation already holds stays as it was
+   * when first sent. That is correct while the invocation is the only writer, but a nested call to another operation
+   * — another bundle, or operation-service — runs in its own invocation and writes through its own database. Once it
+   * returns, the caller's copy of the space root lacks every object the callee minted, and the caller reports them
+   * absent (`Entity not found`) when it loads the output's refs. The host calls this when a nested call returns, so
+   * the caller continues on the space as the callee left it.
+   */
+  async 'refreshWorkingSet'(): Promise<void> {
+    await Promise.all(
+      [...this.dataSubscriptions.values()].map(async (subscription) => {
+        const documentIds = [...subscription.workingSet];
+        if (documentIds.length === 0) {
+          return;
+        }
+        const loaded = await this._loadDocuments(subscription.spaceId, documentIds);
+        const updates = documentIds.flatMap((documentId) => {
+          const mutation = loaded.get(documentId);
+          return mutation ? [{ documentId, mutation }] : [];
+        });
+        if (updates.length === 0) {
+          return;
+        }
+        const delivered = new Promise<void>((resolve) => subscription.onDelivered.push(resolve));
+        subscription.next({ updates });
+        await delivered;
+      }),
+    );
+    // Taken off the stream is not yet integrated: the batch still crosses the in-process RPC bridge to the client's
+    // subscription callback, which integrates it synchronously. Those hops are fiber steps, which finish before a
+    // macrotask runs.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
   }
 
   ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, BaseError> {
-    // A passive add holds the bytes a query row brought; a function is one call, so nothing it reads
-    // changes under it and fetching the document would undo the point of the row.
-    const addIds = (request.add ?? []).filter(({ passive }) => !passive).map(({ id }) => id);
+    // A passive add with heads holds the bytes a query row brought; a function is one call, so nothing it
+    // reads changes under it and fetching the document would undo the point of the row. One with no heads
+    // holds nothing (a space root waiting on the first send) and is fetched like any other: the full
+    // document carries no `passive.json`, so the client loads it.
+    const addIds = (request.add ?? []).filter(({ passive, heads }) => !passive || !heads?.length).map(({ id }) => id);
     const self = this;
     return Effect.gen(function* () {
       const sub =
@@ -88,6 +153,7 @@ export class DataServiceImpl implements DataService.Handlers {
           missing.push(documentId);
           continue;
         }
+        sub.workingSet.add(documentId);
         sub.next({ updates: [{ documentId, mutation }] });
       }
       if (missing.length > 0) {

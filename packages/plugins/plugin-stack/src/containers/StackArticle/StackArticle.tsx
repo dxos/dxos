@@ -20,13 +20,16 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayMove, isNonNullable } from '@dxos/util';
 
 import { Stack, type StackSectionItem } from '#components';
-import { meta } from '#meta';
+import { StackCapabilities } from '#types';
+
+import { StackNamespace } from '../../namespace.ts';
 
 export type StackArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const StackArticle = ({ attendableId, subject: collection }: StackArticleProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const heights = Hooks.useCapability(StackCapabilities.SectionHeights);
+  const { t } = UiHooks.useTranslation(StackNamespace.key);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const collectionObjects = useAtomValue(createCollectionObjects(collection));
@@ -156,12 +159,12 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
   const optionsMenu = useMemo(
     () => [
       createMenuAction('collapse-all', handleCollapseAll, {
-        label: ['collapse-all.label', { ns: meta.profile.key }],
+        label: ['collapse-all.label', { ns: StackNamespace.key }],
         icon: 'ph--arrows-in-line-vertical--regular',
         testId: 'stack.collapse-all',
       }),
       createMenuAction('expand-all', handleExpandAll, {
-        label: ['expand-all.label', { ns: meta.profile.key }],
+        label: ['expand-all.label', { ns: StackNamespace.key }],
         icon: 'ph--arrows-out-line-vertical--regular',
         testId: 'stack.expand-all',
       }),
@@ -204,6 +207,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
         <Stack.Root
           id={Obj.getURI(collection)}
           attendableId={attendableId}
+          heights={heights}
           collapsed={collapsed}
           eventHandler={eventHandler}
           onCollapse={handleCollapse}

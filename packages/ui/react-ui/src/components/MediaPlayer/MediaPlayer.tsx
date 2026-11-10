@@ -8,7 +8,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
+import { type MediaKind, resolveMediaElement } from './media-kind.ts';
 
 export type MediaPlayerKind = MediaKind;
 
@@ -16,12 +16,21 @@ export type MediaPlayerFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down
 
 type MediaPlayerStatus = 'loading' | 'loaded' | 'error';
 
-/** iframe sandbox flags compatible with typical oEmbed-style players. */
-const IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
-
-/** Cloudflare Stream `/iframe` embeds: `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`. */
-const CLOUDFLARE_STREAM_IFRAME_PATTERN =
-  /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\/[a-f0-9]{32}\/iframe(?:[/?#]|$)/i;
+/**
+ * iframe sandbox flags compatible with typical oEmbed-style players. `allow-presentation` only where the
+ * engine knows it: WebKit rejects it with a console error for every embed. Without a DOM (a server render)
+ * the flag is left out.
+ */
+const IFRAME_SANDBOX = 'allow-scripts allow-same-origin';
+let iframeSandbox: string | undefined;
+const getIframeSandbox = (): string => {
+  if (typeof document === 'undefined') {
+    return IFRAME_SANDBOX;
+  }
+  return (iframeSandbox ??= document.createElement('iframe').sandbox.supports('allow-presentation')
+    ? `${IFRAME_SANDBOX} allow-presentation`
+    : IFRAME_SANDBOX);
+};
 
 export type MediaPlayerProps = ThemedClassName<{
   'src': string;
@@ -65,9 +74,7 @@ export const MediaPlayer = ({
   const [result, setResult] = useState<{ src: string; status: MediaPlayerStatus }>();
   const status: MediaPlayerStatus = result?.src === src ? result.status : 'loading';
 
-  // An explicit `kind` forces native playback even for extensionless URLs (e.g. `blob:`/`data:`).
-  const resolved = kind || isEmbedUrl(src) ? (kind ?? detectMediaKind(src) ?? 'video') : undefined;
-  const element = resolved ?? (CLOUDFLARE_STREAM_IFRAME_PATTERN.test(src) ? 'embed' : 'image');
+  const element = resolveMediaElement(src, kind);
   const partProps = {
     'data-scope': 'media-player',
     'data-part': 'root',
@@ -105,7 +112,7 @@ export const MediaPlayer = ({
           src={src}
           title={alt ?? 'Embedded media'}
           loading='lazy'
-          sandbox={IFRAME_SANDBOX}
+          sandbox={getIframeSandbox()}
           referrerPolicy='no-referrer'
           allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
           allowFullScreen

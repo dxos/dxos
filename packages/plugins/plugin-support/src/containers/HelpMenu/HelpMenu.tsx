@@ -17,10 +17,10 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import { isTauri } from '@dxos/util';
 
-import { meta } from '#meta';
-
 import { ABOUT_DIALOG, SHORTCUTS_DIALOG } from '../../constants.ts';
+import { SupportNamespace } from '../../namespace.ts';
 import { downloadUrl } from './download.ts';
+import { menuCaptionClasses } from './styles.ts';
 import { UpdateMenuItem } from './UpdateMenuItem.tsx';
 
 const DOCS_URL = 'https://dxos.org/docs/composer/introduction/';
@@ -28,7 +28,7 @@ const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 
 export const HelpMenu = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const config = useConfig();
   const updateManager = Hooks.useOptionalCapability(AppCapabilities.UpdateManager);
@@ -105,8 +105,15 @@ export const HelpMenu = () => {
           onClick={openDialog(ABOUT_DIALOG)}
         />
         {version && (
-          <Layout.Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
-            <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
+          <Layout.Flex column classNames={menuCaptionClasses}>
+            {/* Untabbable so opening the menu does not auto-focus it ahead of the items. */}
+            <a
+              href={releaseUrl}
+              target='_blank'
+              rel='noopener noreferrer'
+              tabIndex={-1}
+              className='dx-link-hover font-mono'
+            >
               {version}
             </a>
             {released && (

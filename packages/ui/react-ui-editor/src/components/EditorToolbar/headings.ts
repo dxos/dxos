@@ -36,7 +36,8 @@ export const addHeadings =
       'heading',
       {
         label: ['heading.label', { ns: translationKey }],
-        placement: { collapse: 1 },
+        // Folds after the other ranked groups but before the unranked search and view mode, which the document tour targets.
+        placement: { collapse: 0 },
         icon: 'ph--text-h--regular',
         iconOnly: true,
         variant: 'dropdownMenu',

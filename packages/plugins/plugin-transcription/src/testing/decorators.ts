@@ -15,7 +15,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { TranscriptionPlugin } from '#plugin';
+import * as TranscriptionPlugin from '#meta';
 
 import { TestItem } from './testing.ts';
 
@@ -69,7 +69,7 @@ export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecora
           }),
       }),
       PreviewPlugin.make(),
-      TranscriptionPlugin(),
+      TranscriptionPlugin.make(),
     ],
     // setupEvents (not fireEvents) so capabilities activate during app setup, before the always-mounted
     // driver renders: SetupSettings registers the session/settings/status capabilities it reads,

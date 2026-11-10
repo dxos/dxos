@@ -8,19 +8,20 @@ import * as Operation from '@dxos/compute/Operation';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
+import * as RegistryPlugin from '#meta';
 import { RegistryOperation } from '#operations';
-import { RegistryPlugin } from '#plugin';
 
-await Harness.preload({ plugins: [RegistryPlugin(), GraphPlugin.make()] });
+import { RegistryNamespace } from '../namespace.ts';
+
+await Harness.preload({ plugins: [RegistryPlugin.make(), GraphPlugin.make()] });
 
 const graphKey = GraphPlugin.make().meta.profile.key;
 
 describe('RegistryOperation.QueryDisabledPlugins', () => {
   test('lists installed minus enabled, and nothing else', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin(), GraphPlugin.make()],
-      enabled: [meta.profile.key],
+      plugins: [RegistryPlugin.make(), GraphPlugin.make()],
+      enabled: [RegistryNamespace.key],
     });
 
     const { plugins } = await harness.runPromise(Operation.invoke(RegistryOperation.QueryDisabledPlugins, {}));
@@ -33,12 +34,12 @@ describe('RegistryOperation.QueryDisabledPlugins', () => {
       .map(({ meta: pluginMeta }) => pluginMeta.profile.key)
       .filter((id) => !enabled.has(id));
     expect(plugins.map(({ id }) => id).sort()).toEqual([...expected].sort());
-    expect(plugins.map(({ id }) => id)).not.toContain(meta.profile.key);
+    expect(plugins.map(({ id }) => id)).not.toContain(RegistryNamespace.key);
   });
 
   // Void input: the skill template invokes it with no arguments to render the list into the prompt.
   test('accepts a void invocation', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin.make()] });
 
     const { plugins } = await harness.runPromise(
       Operation.invoke(RegistryOperation.QueryDisabledPlugins, undefined as any),
@@ -51,8 +52,8 @@ describe('RegistryOperation.QueryDisabledPlugins', () => {
 describe('RegistryOperation.EnablePlugins', () => {
   test('enables an installed but disabled plugin', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin(), GraphPlugin.make()],
-      enabled: [meta.profile.key],
+      plugins: [RegistryPlugin.make(), GraphPlugin.make()],
+      enabled: [RegistryNamespace.key],
     });
 
     const { enabled, rejected } = await harness.runPromise(
@@ -65,8 +66,8 @@ describe('RegistryOperation.EnablePlugins', () => {
 
   test('reports dependencies that came on with the requested plugin', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin(), GraphPlugin.make()],
-      enabled: [meta.profile.key],
+      plugins: [RegistryPlugin.make(), GraphPlugin.make()],
+      enabled: [RegistryNamespace.key],
     });
 
     const dependencies = harness.manager.getDependencies(graphKey, { transitive: true });
@@ -76,14 +77,14 @@ describe('RegistryOperation.EnablePlugins', () => {
 
     // Enabling one plugin enables its closure; the reply names everything that came on, not just
     // what was asked for.
-    for (const id of dependencies.filter((id) => id !== meta.profile.key)) {
+    for (const id of dependencies.filter((id) => id !== RegistryNamespace.key)) {
       expect(enabled).toContain(id);
     }
     expect(new Set(enabled).size).toBe(enabled.length);
   });
 
   test('rejects a plugin the host does not have installed', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin.make()] });
 
     const { enabled, rejected } = await harness.runPromise(
       Operation.invoke(RegistryOperation.EnablePlugins, { ids: ['org.dxos.plugin.nonexistent'] }),
@@ -94,13 +95,13 @@ describe('RegistryOperation.EnablePlugins', () => {
   });
 
   test('an already-enabled plugin is not a failure', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin.make()] });
 
     const { enabled, rejected } = await harness.runPromise(
-      Operation.invoke(RegistryOperation.EnablePlugins, { ids: [meta.profile.key] }),
+      Operation.invoke(RegistryOperation.EnablePlugins, { ids: [RegistryNamespace.key] }),
     );
 
-    expect(enabled).toEqual([meta.profile.key]);
+    expect(enabled).toEqual([RegistryNamespace.key]);
     expect(rejected).toEqual([]);
   });
 });

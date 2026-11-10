@@ -15,8 +15,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { AgentNamespace } from '../../namespace.ts';
 import { EntityCard, type EntityCardProps } from './EntityCard.tsx';
 import { KnowledgeCard } from './KnowledgeStack.tsx';
 import { type BrowseSelection, type EntityCardModel, related, statements } from './subgraph.ts';
@@ -56,7 +55,7 @@ const CARD_SELECTOR = '[data-testid="entity-card"]';
  */
 const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
   ({ column, selection, icons, hues, onChoose, onClose, onNavigate }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(AgentNamespace.key);
     const [filter, setFilter] = useState('');
     const [stackElement, setStackElement] = useState<HTMLDivElement | null>(null);
     const stackRef = useComposedRefs<HTMLDivElement>(forwardedRef, setStackElement);
@@ -77,8 +76,8 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
       return () => stackElement.removeEventListener('focusin', handleFocusIn);
     }, [stackElement, selection?.cardId, onChoose]);
     const menuActions = useMenuBuilder(() => {
-      const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: meta.profile.key }] });
-      builder.custom('filter', { label: ['entity-browser-filter.placeholder', { ns: meta.profile.key }] }, () => (
+      const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: AgentNamespace.key }] });
+      builder.custom('filter', { label: ['entity-browser-filter.placeholder', { ns: AgentNamespace.key }] }, () => (
         <Field.Root>
           <Input.Root
             placeholder={t('entity-browser-filter.placeholder')}
@@ -91,7 +90,7 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
         builder.action(
           'close',
           {
-            label: ['entity-browser-close.label', { ns: meta.profile.key }],
+            label: ['entity-browser-close.label', { ns: AgentNamespace.key }],
             icon: 'ph--x--regular',
             iconOnly: true,
             testId: 'entity-browser-close',

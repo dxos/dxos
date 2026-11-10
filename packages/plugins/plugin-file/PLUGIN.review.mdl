@@ -151,7 +151,7 @@ verdict F-2.1: Backend is a multi capability; inline and edge descriptors are bo
 ```mdl
 verdict F-2.2: FilePlugin contributes the inline descriptor in every environment.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/inline-backend.ts#inlineBackend, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/index.ts#InlineBackend]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/inline-backend.ts#inlineBackend, github:dxos/dxos/packages/plugins/plugin-file/dx.config.ts]
   note: The tests contribute their own inline descriptor; none asserts that the plugin registers `inlineBackend`.
 ```
 

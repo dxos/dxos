@@ -1,28 +1,26 @@
 ---
 spec: github:dxos/dxos/packages/ui/react-ui-canvas/SPEC.mdl
-commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+commit: 078b4cff088820d47b80939196a828c77d37bedf
 date: 2026-10-27
 by: agent:claude-code
 ---
 
 # Review: SceneEngine
 
-The engine is built and well tested at the model level: `reduceIntent` implements every op,
-`createCanvasController` covers navigation, selection, grouping, clipboard and undo, and layers,
-style classes, ports, routing and layout each have their own unit tests. `scene.spec.ts` and
-`create.spec.ts` cover the main gestures. The spec has drifted from the code in naming and in a few
-decisions.
+Re-reviewed after SPEC.mdl took on the View, Object and Tag model. The containers are built and well
+tested: Group and Ungroup, library promotion, orphan pruning, the Views tree and isolation each have
+controller or unit tests (F-9.9's guard included), and undo is the patch log the spec now describes, tested locally and through
+plugin-canvas's `Apply`/`Patch` operations. Tags and container order are specified as planned and
+are not built.
 
-Of 83 items: 46 done, 15 untested, 9 partial, 13 diverged, 0 missing. Findings:
+Of 103 items: 68 done, 14 untested, 10 partial, 8 diverged, 3 missing. Findings:
 
-- **F-3.7 is reversed.** A drop or toolbar create is sized in grid cells and scales with zoom on
-  screen; `create.spec.ts` asserts that. F-5.1 / T-4 are reversed too: read-only selects nothing.
-- **The surface was renamed and recomposed.** Scene is `View`, the portal is a `view` node, ClassNode
-  and TextNode are gone, `Canvas` is a composite namespace, and Palette, Properties, Toolbar,
-  GeometryField and PartEditor are now ToolsPanel, PropertiesInspector, three toolbars, a step
-  annotation and TextPart.
-- **Undo and portal framing changed design.** Undo patches a versioned store rather than calling
-  `snapshot`/`restore`, and `portalFrame` scales by a continuous factor, not a power of the grid ratio.
+- **Tags and order are missing (F-9.6, F-9.7, `Tag`).** Layers still hide and order elements, and
+  `layerOrder` sorts by layer before node `z`.
+- **The older divergences stand.** F-3.7 (create size scales with zoom), F-5.1 / T-4 (read-only selects
+  nothing), F-1.4 (`portalFrame` scales continuously) and the recomposed surface (Palette, Properties,
+  Toolbar, GeometryField, PartEditor) still differ from the spec; the code has not changed since the
+  previous review.
 
 ## Extensions
 
@@ -33,28 +31,40 @@ Of 83 items: 46 done, 15 untested, 9 partial, 13 diverged, 0 missing. Findings:
 ## Verdicts
 
 ```mdl
-verdict Scene: The type is View (createViewSchema, OpenView), with the spec fields plus layers, kind, anonymous and timeline.
-  status: diverged
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#createViewSchema, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#View, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#OpenView]
-  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/registry.test.ts]
-  note: |
-    Renamed Scene → View throughout (`ViewId`, `ViewStore`, `getElement(scene: View)`). It adds `layers`, `kind`, `anonymous` and `timeline`; bounds are still derived, not stored.
+verdict View: View holds nodes, links, kind, anonymous, layers and timeline; bounds are derived.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#createViewSchema, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#View, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#OpenView, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#ViewKind]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.test.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/model/content.test.ts]
 ```
 
 ```mdl
-verdict NodeBase: All spec fields exist, plus rotation, portsPerSide, layer, class and exposed.
+verdict Layer: Layer has id, name, z and hidden; a View with none has the default layer.
   status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#Layer, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.ts#layerOrder]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.test.ts]
+```
+
+```mdl
+verdict Tag: No Tag type exists.
+  status: missing
+  note: |
+    Planned. Searched `src/model` for `Tag`, `TagId` and `tags`: nothing. Elements still carry `layer`.
+```
+
+```mdl
+verdict NodeBase: All built fields exist, plus rotation, portsPerSide, layer, class and exposed; `tags` does not.
+  status: partial
   evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#NodeBase, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#nodeBase]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/registry.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.test.ts]
+  note: |
+    The planned `tags?: TagId[]` field is absent; every other field the spec names is present.
 ```
 
 ```mdl
-verdict BuiltinNode: The built-ins are a different set: no ClassNode, TextNode or PortalNode.
-  status: diverged
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#BuiltinNode, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#NODE_TYPES, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#ViewNode]
+verdict BuiltinNode: The eleven built-ins match, including ViewNode and InstanceNode.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#BuiltinNode, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#ViewNode, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#InstanceNode]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/registry.test.ts]
-  note: |
-    `BuiltinNode` unions Rect, Ellipse, Cloud, Polygon, Polyline, Note, View, Instance, Path, Generator and Diagram nodes. The portal is `ViewNode` (type `view`, with a `link`), there is no UML class node, and a note replaces the text node.
 ```
 
 ```mdl
@@ -106,21 +116,28 @@ verdict NodeDef: Every spec field exists, with many more (silhouette, editor, pa
 ```
 
 ```mdl
-verdict ViewStore: views and view(id) atoms, createMemoryStore here and createEchoStore in react-ui-canvas-compute.
+verdict ViewStore: views and view(id) atoms, with styles, isRoot and versions.
   status: done
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.ts#ViewStore, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.ts#createMemoryStore, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/scene/echo-store.ts#createEchoStore]
-  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas-compute/src/types/canvas-board.test.ts]
-  note: |
-    `createEchoStore` lives in `@dxos/react-ui-canvas-compute`, not this package. The store also carries `styles`, `isRoot` and `versions`.
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.ts#ViewStore, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.ts#createMemoryStore, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/versioned.ts#VersionedSource]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/versioned.test.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/model/store.test.ts]
 ```
 
 ```mdl
-verdict Projection: scene, apply and capabilities match; snapshot/restore are replaced by a versioned model.
-  status: diverged
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#Projection, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#createFreehandProjection]
+verdict Projection: scene, apply, capabilities, model, restored, constrain and lattice match.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#Projection, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.test.ts]
-  note: |
-    There is no `snapshot()` / `restore()`. A projection exposes an optional `model: VersionedSource` that undo patches, a `restored()` callback, `constrain` and `lattice`.
+```
+
+```mdl
+verdict CanvasHistory: commit, undo, redo, state and connect, with local and tracker implementations.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#CanvasHistory, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#createLocalHistory, github:dxos/dxos/packages/plugins/plugin-canvas/src/containers/CanvasArticle/tracker-history.ts#createTrackerHistory]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.test.ts]
+  walkthrough:
+    - The type declares the commit and the undo and redo it serves. github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#CanvasHistory
+    - The local history keeps two stacks of patches in memory. github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#createLocalHistory
+    - In Composer each commit is recorded on the HistoryTracker instead. github:dxos/dxos/packages/plugins/plugin-canvas/src/containers/CanvasArticle/tracker-history.ts#createTrackerHistory
 ```
 
 ```mdl
@@ -131,18 +148,18 @@ verdict Tool: select, hand, node and link literals.
 ```
 
 ```mdl
-verdict Canvas: Canvas is a composite namespace (Canvas.Root, Viewport, Tools, Properties…) whose root takes store, root, registries and projection.
-  status: diverged
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Canvas/Canvas.tsx#Canvas, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Canvas/CanvasRootProps.ts#CanvasRootProps]
-  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/scene.spec.ts]
+verdict Canvas: Canvas.Root takes the spec's props and the controller holds the commands.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Canvas/Canvas.tsx#Canvas, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Canvas/CanvasRootProps.ts#CanvasRootProps, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/scene.spec.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts]
   note: |
-    The single component became `Canvas.Root` plus parts. `liveDepth`, `showPalette`, `showToolbar` and `overlay` are not root props (`overlay` is on `Canvas.Viewport`); many props were added (history, themes, inspectors, generators).
+    `Canvas` is a namespace (`Canvas.Root`, `Canvas.Viewport`, the bars and inspectors), not one component; the props the spec lists are `Canvas.Root`'s, among others it adds (themes, display, generators).
 ```
 
 ```mdl
-verdict SceneLayer: Renders nodes and links, mounting a portal child live up to liveDepth and as a preview below it.
+verdict SceneLayer: Renders a View's nodes and links, Views live to liveDepth, and an Instance's Object contents.
   status: done
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx#SceneLayer, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx#tierFor]
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx#SceneLayer, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx#tierFor, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx#InstanceNodeView]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/playwright/scene.spec.ts]
 ```
 
@@ -190,11 +207,39 @@ verdict GeometryField: No GeometryField; center and size step through a grid ste
 ```
 
 ```mdl
-verdict Breadcrumbs: Breadcrumbs renders the path and drills out on select.
-  status: untested
+verdict Breadcrumbs: Breadcrumbs renders the path and reads `Objects › <name>` in isolation.
+  status: done
   evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Breadcrumbs/Breadcrumbs.tsx#Breadcrumbs]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Canvas/Animation.stories.tsx]
   note: |
-    Props are `{ path, nameOf, onSelect }` rather than `{ path, store }`. No test clicks a breadcrumb.
+    Props are `{ path, nameOf, onSelect }` rather than `{ path, store }`; the isolation label is built in `CanvasBars`. No test clicks a crumb to drill out.
+```
+
+```mdl
+verdict ViewsInspector: The Views tree over buildViewTree selects, opens, restacks and filters.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/inspectors/ViewsInspector/ViewsInspector.tsx#ViewsInspector, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/view-tree.ts#buildViewTree]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/view-tree.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/inspectors/ViewsInspector/ViewsInspector.stories.tsx, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts]
+  note: |
+    The tree is rebuilt from `store.views` per edit rather than derived per node; filtering by tag waits for tags.
+```
+
+```mdl
+verdict ObjectsInspector: The library panel opens, places, duplicates, renames and deletes Objects.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/inspectors/ObjectsInspector/ObjectsInspector.tsx#ObjectsInspector, github:dxos/dxos/packages/ui/react-ui-canvas/src/hooks/canvas/useObjectActions.ts#useObjectActions]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Canvas/Animation.stories.tsx]
+  note: |
+    Only opening in isolation is played (`Animation` › Test); place, duplicate, rename and delete have no test.
+```
+
+```mdl
+verdict LayersInspector: The layers panel adds, deletes, merges, hides, reorders and renames layers.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/inspectors/LayersInspector/LayersInspector.tsx#LayersInspector]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/inspectors/LayersInspector/LayersInspector.stories.tsx, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.test.ts]
+  note: |
+    The Tags panel it becomes is planned.
 ```
 
 ```mdl
@@ -249,9 +294,23 @@ verdict delete: Removes nodes and links, and links attached to deleted nodes.
 ```
 
 ```mdl
-verdict reorder: Sets a node or link z.
+verdict reorder: Sets a node or link z; the Views tree's restack emits it.
   status: done
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent]
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/view-tree.ts#restackZ]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts]
+```
+
+```mdl
+verdict layer: Adds or replaces a layer by id.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.ts#reduceLayerIntent]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.test.ts]
+```
+
+```mdl
+verdict removeLayer: Removes a layer and its elements; the last layer stays.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.ts#reduceLayerIntent]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.test.ts]
 ```
 
@@ -329,6 +388,15 @@ verdict F-1.7: Alt+Left / Alt+Right walk camera history.
   status: done
   evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/keys.ts#KEY_BINDINGS, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/keys.test.ts]
+```
+
+```mdl
+verdict F-1.8: Opening an Object, or drilling into an Instance, isolates it; back returns to where the view was.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/Canvas/Animation.stories.tsx]
+  note: |
+    `drillIn` on an Instance node isolates its Object too, which the requirement does not mention.
 ```
 
 ```mdl
@@ -484,19 +552,14 @@ verdict F-3.15: Ordered layers, paint and hit by layer, layer panel operations a
 ```
 
 ```mdl
-verdict F-3.13: Group into an anonymous Object with one Instance; ungroup; orphan pruning.
+verdict F-4.1: Each commit is one entry of path patches between heads; a patch skips fields changed since.
   status: done
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/orphans.ts]
-  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.test.ts]
-```
-
-```mdl
-verdict F-4.1: Undo patches a versioned store, not a snapshot log over the projection.
-  status: diverged
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#createLocalHistory, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#withHistory]
-  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.test.ts]
-  note: |
-    History records store versions (`VersionedSource`) and patches them back; there is no `projection.snapshot()`. It is still projection-agnostic.
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#createLocalHistory, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/versioned.ts#recordChanges, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/versioned.ts#patchSource]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/versioned.test.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/operations/operations.test.ts]
+  walkthrough:
+    - A commit records the store's heads before and after and the paths it wrote. github:dxos/dxos/packages/ui/react-ui-canvas/src/model/versioned.ts#recordChanges
+    - The local history stacks those changes as undo entries. github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#createLocalHistory
+    - Undo writes each path back only while it still holds the written value. github:dxos/dxos/packages/ui/react-ui-canvas/src/model/versioned.ts#patchSource
 ```
 
 ```mdl
@@ -507,10 +570,37 @@ verdict F-4.2: Undo patches the projection's own model and calls restored().
 ```
 
 ```mdl
-verdict F-4.3: Per-view clipboard: fresh ids, links between pasted nodes, one batch.
+verdict F-4.3: Per-canvas clipboard: fresh ids, links between pasted nodes, one batch; a cut keeps its records.
   status: done
   evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/clipboard.ts#copySelection, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/clipboard.ts#pasteFragment]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/clipboard.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts]
+```
+
+```mdl
+verdict F-4.4: Each entry carries the View path, isolated Object and selection, restored before the patch.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#HistoryContext, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#afterPatch]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.test.ts]
+```
+
+```mdl
+verdict F-4.5: Commits sharing a merge key inside the window fold into one entry.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.ts#createLocalHistory]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/history.test.ts]
+```
+
+```mdl
+verdict F-4.6: Commits are recorded as CanvasOperation.Patch; Apply serves agents; both undo through Patch.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-canvas/src/types/CanvasOperation.ts#Apply, github:dxos/dxos/packages/plugins/plugin-canvas/src/types/CanvasOperation.ts#Patch, github:dxos/dxos/packages/plugins/plugin-canvas/src/capabilities/undo-mappings.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/containers/CanvasArticle/tracker-history.ts#createTrackerHistory]
+  tests: [github:dxos/dxos/packages/plugins/plugin-canvas/src/operations/operations.test.ts]
+  walkthrough:
+    - Apply and Patch are declared as canvas operations. github:dxos/dxos/packages/plugins/plugin-canvas/src/types/CanvasOperation.ts#Apply
+    - The undo mappings pair each with a reversed Patch, scoped to the canvas object. github:dxos/dxos/packages/plugins/plugin-canvas/src/capabilities/undo-mappings.ts
+    - The article's history records every canvas commit on the tracker as a Patch. github:dxos/dxos/packages/plugins/plugin-canvas/src/containers/CanvasArticle/tracker-history.ts#createTrackerHistory
+  note: |
+    The operations are tested; the gesture-to-tracker path was checked only by hand in the `CanvasArticle` story.
 ```
 
 ```mdl
@@ -608,6 +698,79 @@ verdict F-8.4: smartPoints stubs half a major cell and doubles back on a shared 
   status: done
   evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/route.ts#smartPoints]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/route.test.ts]
+```
+
+```mdl
+verdict F-9.1: A stored `frame` reads as `view`, and the next write stores `view`.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#withLegacyNodeType, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#withLegacyView]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.test.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/model/content.test.ts]
+```
+
+```mdl
+verdict F-9.2: Group makes an anonymous Object and one Instance, crossing links on exposed ports.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.test.ts]
+```
+
+```mdl
+verdict F-9.3: Ungroup explodes an Instance under fresh ids with its tracks; an anonymous definition goes.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#ungroupInstance, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.ts#createCanvasController]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.test.ts]
+```
+
+```mdl
+verdict F-9.4: Naming, placing, pasting or duplicating an anonymous Object promotes it to the library.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#promoted, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#promotedBy, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#libraryViews]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts]
+  note: |
+    Paste and duplicate are tested; promotion by rename and by placing from the library is not.
+```
+
+```mdl
+verdict F-9.5: Edits prune only the records they orphan; loads drop what nothing reaches.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/orphans.ts#pruneOrphaned, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/orphans.ts#withoutOrphans, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/orphans.ts#isLibraryEntry]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/model/content.test.ts]
+  note: |
+    Deletes outside the controller (the Objects panel's delete with instances aside, host operations) are pruned only on the next load.
+```
+
+```mdl
+verdict F-9.6: Tags do not exist; layers still hide elements.
+  status: missing
+  note: |
+    Planned. No Tag type, `tags` field, migration or Tags panel in `src/model`, `src/utils` or `src/components/inspectors`.
+```
+
+```mdl
+verdict F-9.7: Layer z still orders drawing before node z.
+  status: missing
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/layers.ts#layerOrder]
+  note: |
+    Planned. `layerOrder` sorts by layer first; no migration sorts containers on (layer z, node z).
+```
+
+```mdl
+verdict F-9.8: The Views panel shows the hierarchy, selects, opens, restacks, filters and reveals.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/components/inspectors/ViewsInspector/ViewsInspector.tsx#ViewsInspector, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/view-tree.ts#buildViewTree, github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/view-tree.ts#selectRows]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/view-tree.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/inspectors/ViewsInspector/ViewsInspector.stories.tsx]
+```
+
+```mdl
+verdict F-9.9: Group refuses `view` nodes, and a create or paste of one into an Object's definition is refused.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.test.ts]
+  walkthrough:
+    - Group refuses a selection that holds a `view` node. github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection
+    - The freehand reducer drops a `view` create, alone or in a paste's batch, on an Object's definition. github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent
+  note: |
+    A projection that does not reduce through `reduceIntent` (constrained, dynamic, compute) is not guarded; none is used on an Object's definition.
 ```
 
 ```mdl

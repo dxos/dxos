@@ -17,7 +17,9 @@ import { createDraftMessage, markSent, resolveMailRoute } from '../util/index.ts
 
 /**
  * Writes the reply as a draft threaded under the message (so it shows in the conversation whatever
- * happens next), sends it through the mailbox's provider, and flags it sent.
+ * happens next), sends it through the mailbox's provider, and flags it sent. Without a connected
+ * account the draft stays in the conversation, unsent, and the operation fails with
+ * {@link MailNotSendableError}.
  */
 const handler: Operation.WithHandler<typeof InboxOperation.SendReply> = InboxOperation.SendReply.pipe(
   Operation.withHandler(
@@ -29,11 +31,19 @@ const handler: Operation.WithHandler<typeof InboxOperation.SendReply> = InboxOpe
         DraftMessage.make(createDraftMessage({ mode: 'reply', message, body, mailbox })),
       );
       yield* SystemTags.toggleTag(mailbox, draft, 'draft');
+      // Flushed before sending, so the reply stays in the conversation (as an unsent draft) when the send fails.
+      yield* Database.flush();
 
       const sendOperations = yield* Capability.getAll(InboxCapabilities.MailSendOperation);
       const route = yield* resolveMailRoute(mailbox, sendOperations);
       if (!route) {
-        return yield* Effect.fail(new MailNotSendableError({ context: { mailbox: Obj.getURI(mailbox).toString() } }));
+        return yield* Effect.fail(
+          new MailNotSendableError({
+            message:
+              'The reply was saved as a draft under the email but not sent: the mailbox is not connected to an email account.',
+            context: { mailbox: Obj.getURI(mailbox).toString(), replyDXN: Obj.getURI(draft).toString() },
+          }),
+        );
       }
 
       const sent = yield* Operation.invoke(route.sendOperation.getOperation(), {

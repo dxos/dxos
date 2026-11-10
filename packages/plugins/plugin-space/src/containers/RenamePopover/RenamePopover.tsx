@@ -14,7 +14,7 @@ import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
 export type RenameCallback = { initialValue: string; onRename: (name: string) => void };
 export type RenameSubject = Space | Entity.Unknown | RenameCallback;
@@ -63,7 +63,7 @@ RenamePopover.displayName = 'RenamePopover';
  * Inline name field. Commits on Enter or when dismissed; Escape cancels.
  */
 const RenameField = ({ subject }: RenamePopoverProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const space = !isRenameCallback(subject) && isSpace(subject);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [name, setNameState] = useState(() => getName(subject));

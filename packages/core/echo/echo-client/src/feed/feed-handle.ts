@@ -23,9 +23,10 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { FeedProtocol, RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
+import { FeedBranchMismatchError } from '../errors.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { FeedCoreRegistry } from './feed-core-registry.ts';
 import { FeedObjectCore } from './feed-object-core.ts';
@@ -210,11 +211,14 @@ export class FeedHandle {
    * Insert into feed with optimistic update, awaiting the append RPC. Re-appending an id that
    * already has a core is an update (see `EntityMetaIndex`'s upsert-by-id): the argument's state is
    * applied onto the existing working-set instance, which stays canonical, rather than registering a
-   * second core.
+   * second core. Throws `FeedBranchMismatchError` when that update states a different branch.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
-    const cores = this.#registerItemsForAppend(items);
+    await this.#appendCores(this.#registerItemsForAppend(items));
+  }
 
+  /** Sends the cores' captured state. */
+  async #appendCores(cores: FeedObjectCore[]): Promise<void> {
     const batch = cores.map((core) => {
       // Captured explicitly below — don't let the background scheduler also flush this core.
       this.#dirtyCores.delete(core);
@@ -250,6 +254,39 @@ export class FeedHandle {
   }
 
   /**
+   * Appends `base` as the base block of a new branch that forks at block `at`, and resolves to the id of
+   * the branch, the block id of the base, once the store has written it. Throws `FeedBranchMismatchError`
+   * when `base` was already written, since a fork cannot move an object off its branch.
+   */
+  async fork(base: Entity.Unknown, at: string): Promise<string> {
+    const existing = this.#cores.get(EntityId.make(base.id));
+    if (existing?.written) {
+      throw new FeedBranchMismatchError({
+        objectId: base.id,
+        branch: existing.branch,
+        requestedBranch: `fork at ${at}`,
+      });
+    }
+    const [core] = this.#registerItemsForAppend([base], { markWritten: false });
+    // Published by `#sendAppendBatches` once a send, this one or a retry, confirms the base block.
+    core.requestFork(at);
+    await this.#appendCores([core]);
+    const branch = core.branch;
+    invariant(branch !== undefined, 'fork: the base block was not written; it is retried in the background');
+    return branch;
+  }
+
+  /** The id of the block an item was read from, or that this handle wrote it to; `undefined` before either. */
+  blockIdOf(item: Entity.Unknown | Entity.Snapshot): string | undefined {
+    const core = this.#cores.get(EntityId.make(item.id));
+    // The live instance reflects the core's latest block; `@meta.keys` may still name the block it was first read from.
+    if (core !== undefined && core.entity === item && core.blockId !== undefined) {
+      return core.blockId;
+    }
+    return Entity.getKeys(item, FeedProtocol.KEY_FEED_BLOCK).at(0)?.id ?? core?.blockId;
+  }
+
+  /**
    * Synchronous alternative to {@link append}: registers each item as a live feed object and
    * schedules the append in the background (no RPC awaited). Persistence is confirmed by
    * {@link waitForPendingWrites} (which `db.flush()` awaits). Backs `db.add(obj, { to: feed })`.
@@ -266,7 +303,10 @@ export class FeedHandle {
    * Shared preamble for {@link append}/{@link appendSync}: validate inputs, stamp feed metadata, and
    * register (or update in place, for a re-append-by-id) the working-set core for each item.
    */
-  #registerItemsForAppend(items: Entity.Unknown[]): FeedObjectCore[] {
+  #registerItemsForAppend(
+    items: Entity.Unknown[],
+    { markWritten = true }: { markWritten?: boolean } = {},
+  ): FeedObjectCore[] {
     for (const item of items) {
       if (!isProxy(item) && !Entity.isEntity(item)) {
         throw new TypeError(
@@ -275,6 +315,18 @@ export class FeedHandle {
       }
     }
     items.forEach((item) => assertObjectModel(item));
+    // Checked for the whole batch before any item is applied, so a rejected batch writes nothing.
+    for (const item of items) {
+      const existingCore = this.#cores.get(EntityId.make(item.id));
+      const rejected = existingCore?.checkBranch(item);
+      if (existingCore && rejected) {
+        if (existingCore.entity === item) {
+          // The caller re-stamped the live instance itself; undo that so the background flush cannot send it.
+          existingCore.restoreBranch();
+        }
+        throw rejected;
+      }
+    }
 
     return items.map((item) => {
       setRefResolverOnData(item, this._refResolver);
@@ -287,7 +339,9 @@ export class FeedHandle {
       const id = EntityId.make(item.id);
       const existingCore = this.#cores.get(id);
       const core = existingCore ?? this.#registerCore(item);
-      this.#markWritten(core);
+      if (markWritten) {
+        this.#markWritten(core);
+      }
       if (existingCore && existingCore.entity !== item) {
         existingCore.applyLocalUpdate(item);
       }
@@ -296,7 +350,12 @@ export class FeedHandle {
   }
 
   /** Add newly-tracked core entities to the held objects and notify subscribers. */
-  #addOptimistic(cores: FeedObjectCore[]): void {
+  #addOptimistic(allCores: FeedObjectCore[]): void {
+    // Until the store names its branch a fork base would read as a root item, so no query may see it.
+    const cores = allCores.filter((core) => !core.forkPending);
+    if (cores.length === 0) {
+      return;
+    }
     let added = false;
     for (const core of cores) {
       if (!this.#objects.has(core.entity.id)) {
@@ -315,7 +374,9 @@ export class FeedHandle {
     this.#markWritten(core);
     this.#dirtyCores.add(core);
     this.#appendScheduler.trigger();
-    this.localWrite.emit([core.entity]);
+    if (!core.forkPending) {
+      this.localWrite.emit([core.entity]);
+    }
   }
 
   /**
@@ -336,6 +397,11 @@ export class FeedHandle {
   }
 
   #markWritten(core: FeedObjectCore): void {
+    if (core.forkPending) {
+      // Still held strongly, since only this handle carries the unsent write.
+      this.#unacknowledged.add(core);
+      return;
+    }
     const id = EntityId.make(core.entity.id);
     if (this.#writtenHere.get(id)?.deref() !== core) {
       this.#writtenHere.set(id, new WeakRef(core));
@@ -349,7 +415,17 @@ export class FeedHandle {
     return core && !core.deleted ? core.entity : undefined;
   }
 
-  async delete(ids: string[]): Promise<void> {
+  /**
+   * Removes the items with these ids. Each tombstone lands on its item's branch: the live copy's when
+   * this handle holds one, else `branches[index]` as read with the item, else the root.
+   */
+  async delete(ids: string[], branches?: ReadonlyArray<string | null>): Promise<void> {
+    // Read before the cores go.
+    const tombstoneBranches = ids.map((id, index) => {
+      const core = EntityId.isValid(id) ? this.#cores.get(id) : undefined;
+      return core !== undefined ? (core.branch ?? null) : (branches?.[index] ?? null);
+    });
+
     // Optimistic update.
     const deleted: Entity.Unknown[] = [];
     for (const id of ids) {
@@ -378,6 +454,7 @@ export class FeedHandle {
         spaceId: this._spaceId,
         feedId: this._feedId,
         objectIds: ids,
+        branches: tombstoneBranches,
       });
     } catch (err) {
       this._error = err as Error;
@@ -407,7 +484,7 @@ export class FeedHandle {
     for (let i = 0; i < batch.length; i += FEED_APPEND_BATCH_SIZE) {
       const chunk = batch.slice(i, i + FEED_APPEND_BATCH_SIZE);
       try {
-        const { blocks } = await runServiceCall(
+        const { blocks, predecessors } = await runServiceCall(
           this._runtime,
           this._service,
           'FeedService.insertIntoFeed',
@@ -420,7 +497,15 @@ export class FeedHandle {
           { timeout: RPC_TIMEOUT },
         );
         chunk.forEach(({ core, token }, index) => {
-          core.confirmAppend(token, blocks?.[index]);
+          const forkPending = core.forkPending;
+          core.confirmAppend(token, blocks?.[index], predecessors?.[index]);
+          if (forkPending && !core.forkPending && core.branch !== undefined) {
+            this.#markWritten(core);
+            this.#addOptimistic([core]);
+          }
+          if (forkPending && this.#dirtyCores.has(core)) {
+            this.#appendScheduler.trigger();
+          }
           if (core.acknowledged) {
             this.#unacknowledged.delete(core);
           }
@@ -508,11 +593,19 @@ export class FeedHandle {
       this.updated.emit();
       return;
     }
-    const batch = [...this.#dirtyCores].map((core) => {
-      const { json, token } = core.captureForAppend();
+    // An edit of a fork base waits for the fork's confirmation, which names the branch the edit continues.
+    const ready = [...this.#dirtyCores].filter((core) => !core.forkInFlight);
+    if (ready.length === 0) {
+      return;
+    }
+    const batch = ready.map((core) => {
+      const { json, token, rejected } = core.captureForAppend();
+      if (rejected) {
+        log.warn('local edit of a feed object branch reverted', { feedId: this._feedId, error: rejected });
+      }
       return { core, json, token };
     });
-    this.#dirtyCores.clear();
+    ready.forEach((core) => this.#dirtyCores.delete(core));
 
     const sendPromise = this.#sendInOrder(batch);
     this.#inFlight.add(sendPromise);

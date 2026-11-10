@@ -103,7 +103,7 @@ verdict FactsCompanion: The surface is a role-only facts panel for the active sp
 ```mdl
 verdict F-1.1: The FactStore module contributes the registry and a space-affinity LayerSpec providing FactStore.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts, github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/index.ts#FactStore]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-brain/src/capabilities/fact-store.ts, github:dxos/dxos/packages/plugins/plugin-brain/dx.config.ts]
   note: No test activates the module and checks both contributions.
 ```
 

@@ -46,6 +46,36 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
+    "./SchemaAdapter": {
+      "source": "./src/app-framework/SchemaAdapter.ts",
+      "types": "./dist/types/src/app-framework/SchemaAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SchemaAdapter.mjs"
+    },
+    "./CommandsAdapter": {
+      "source": "./src/app-framework/CommandsAdapter.ts",
+      "types": "./dist/types/src/app-framework/CommandsAdapter.d.ts",
+      "import": "./dist/lib/app-framework/CommandsAdapter.mjs"
+    },
+    "./PluginAssetAdapter": {
+      "source": "./src/app-framework/PluginAssetAdapter.ts",
+      "types": "./dist/types/src/app-framework/PluginAssetAdapter.d.ts",
+      "import": "./dist/lib/app-framework/PluginAssetAdapter.mjs"
+    },
+    "./SurfaceAdapter": {
+      "source": "./src/app-framework/SurfaceAdapter.ts",
+      "types": "./dist/types/src/app-framework/SurfaceAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SurfaceAdapter.mjs"
+    },
+    "./TranslationsAdapter": {
+      "source": "./src/app-framework/TranslationsAdapter.ts",
+      "types": "./dist/types/src/app-framework/TranslationsAdapter.d.ts",
+      "import": "./dist/lib/app-framework/TranslationsAdapter.mjs"
+    },
+    "./SpaceTemplatesAdapter": {
+      "source": "./src/app-framework/SpaceTemplatesAdapter.ts",
+      "types": "./dist/types/src/app-framework/SpaceTemplatesAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SpaceTemplatesAdapter.mjs"
+    },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
       "types": "./dist/types/src/echo/AppMigrations.d.ts",
@@ -100,6 +130,11 @@
       "source": "./src/operations/CollectionOperation.ts",
       "types": "./dist/types/src/operations/CollectionOperation.d.ts",
       "import": "./dist/lib/operations/CollectionOperation.mjs"
+    },
+    "./ExportOperation": {
+      "source": "./src/operations/ExportOperation.ts",
+      "types": "./dist/types/src/operations/ExportOperation.d.ts",
+      "import": "./dist/lib/operations/ExportOperation.mjs"
     },
     "./ConnectorSync": {
       "source": "./src/types/ConnectorSync.ts",
@@ -280,11 +315,13 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/i18n": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

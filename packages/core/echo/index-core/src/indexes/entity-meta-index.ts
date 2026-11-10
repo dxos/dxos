@@ -9,6 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 import type * as Statement from 'effect/sql/Statement';
 
+import { EchoFeedCodec } from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
   ATTR_META,
@@ -146,6 +147,11 @@ export const EntityMeta = Schema.Struct({
    * Null for automerge objects and for feed blocks not yet positioned.
    */
   queuePosition: Schema.NullOr(Schema.Number),
+  /**
+   * Feed branch the item belongs to: the id of the branch's first item. Null for the main branch and
+   * for automerge objects.
+   */
+  queueBranch: Schema.NullOr(Schema.String),
 });
 export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
 
@@ -163,7 +169,20 @@ export interface QueueRef {
    * excluded in the read so that a page limit counts only live rows.
    */
   readonly updatedSince?: number;
+  /**
+   * Restricts the queue to rows on these branches, `null` naming the main branch: filtered in the read
+   * so that a page limit counts only the branches asked for. Absent reads every branch.
+   */
+  readonly branches?: ReadonlyArray<string | null>;
 }
+
+/**
+ * The {@link QueueRef.branches} entry a query's feed scope reads, to spread into its ref: an absent
+ * scope filter is the main branch only, and `'all'` lifts the filter.
+ */
+export const queueBranchesOf = (
+  branches: ReadonlyArray<string | null> | 'all' | undefined,
+): Pick<QueueRef, 'branches'> => (branches === 'all' ? {} : { branches: branches ?? [null] });
 
 /** The {@link QueueRef.updatedSince} bound over the `updatedAt` column (optionally qualified). */
 export const buildQueueExpiryCondition = (
@@ -172,6 +191,29 @@ export const buildQueueExpiryCondition = (
   column: Statement.Fragment = sql`updatedAt`,
 ): Statement.Fragment =>
   queue.updatedSince !== undefined ? sql` AND (${column} IS NULL OR ${column} >= ${queue.updatedSince})` : sql``;
+
+/** The {@link QueueRef.branches} membership test over the `queueBranch` column (optionally qualified). */
+export const buildQueueBranchCondition = (
+  sql: SqlClient.SqlClient,
+  queue: QueueRef,
+  column: Statement.Fragment = sql`queueBranch`,
+): Statement.Fragment => {
+  if (queue.branches === undefined) {
+    return sql``;
+  }
+  const ids = [...new Set(queue.branches.flatMap((branch) => (branch === null ? [] : [branch])))];
+  const conditions: Statement.Fragment[] = [];
+  // A single id is an equality, not `IN (?)`, so the planner seeks the branch index on it.
+  if (ids.length === 1) {
+    conditions.push(sql`${column} = ${ids[0]}`);
+  } else if (ids.length > 1) {
+    conditions.push(sql`${column} IN ${sql.in(ids)}`);
+  }
+  if (queue.branches.includes(null)) {
+    conditions.push(sql`${column} IS NULL`);
+  }
+  return conditions.length === 0 ? sql` AND 0` : sql` AND (${sql.or(conditions)})`;
+};
 
 /** One source a read selects from: a whole space, or one queue. */
 export type SourceRef = { readonly spaceId: string } | { readonly queue: QueueRef };
@@ -210,7 +252,8 @@ const buildSourceRefsCondition = (
 
   if (spaceIds.length > 0) {
     if (includeAllQueues) {
-      conditions.push(sql`${sql.in('spaceId', spaceIds)}`);
+      // A read of every feed is a default read, so it covers only main-branch items (automerge rows have no branch).
+      conditions.push(sql`(${sql.in('spaceId', spaceIds)} AND queueBranch IS NULL)`);
     } else {
       conditions.push(sql`(${sql.in('spaceId', spaceIds)} AND queueId = '')`);
     }
@@ -223,8 +266,8 @@ const buildSourceRefsCondition = (
       sql.or(
         queues.map((queue) =>
           queue.spaceId !== undefined
-            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`
-            : sql`(queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`,
+            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId}${buildQueueBranchCondition(sql, queue)}${buildQueueExpiryCondition(sql, queue)})`
+            : sql`(queueId = ${queue.queueId}${buildQueueBranchCondition(sql, queue)}${buildQueueExpiryCondition(sql, queue)})`,
         ),
       ),
     );
@@ -623,14 +666,15 @@ export class EntityMetaIndex implements Index {
               targetId: string | null;
               convergenceKey: string | null;
               annotations: string | null;
+              queueBranch: string | null;
             };
             let existing: readonly ExistingRow[];
             if (documentId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations, queueBranch FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
             } else if (queueId) {
               existing =
-                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, parentId, sourceId, targetId, convergenceKey, annotations, queueBranch FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
             } else {
               // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
               existing = [];
@@ -699,6 +743,13 @@ export class EntityMetaIndex implements Index {
                 ? JSON.stringify(rawAnnotations)
                 : null;
 
+            // Branch membership lives in `@meta`, which a partial block does not carry; only feed rows have one.
+            const queueBranch = preserveBody
+              ? priorRow.queueBranch
+              : queueId
+                ? (EchoFeedCodec.branchOf(castData) ?? null)
+                : null;
+
             const updatedAtTimestamp = object.updatedAt;
             // Prefer the creation timestamp stored in the document (survives compaction/migrations).
             // Fall back to the automerge-derived updatedAt for legacy objects that predate this field.
@@ -726,7 +777,8 @@ export class EntityMetaIndex implements Index {
                     annotations = ${annotations},
                     updatedAt = ${updatedAtTimestamp},
                     queuePosition = ${queuePosition ?? null},
-                    queueInsertionId = ${queueInsertionId ?? null}
+                    queueInsertionId = ${queueInsertionId ?? null},
+                    queueBranch = ${queueBranch}
                   WHERE recordId = ${existing[0].recordId}
                 `;
             } else {
@@ -734,13 +786,13 @@ export class EntityMetaIndex implements Index {
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
-                    convergenceKey, annotations, version, createdAt, updatedAt, queuePosition, queueInsertionId
+                    convergenceKey, annotations, version, createdAt, updatedAt, queuePosition, queueInsertionId, queueBranch
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${parentId}, ${sourceId}, ${targetId},
                     ${convergenceKey}, ${annotations}, ${version},
-                    ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}, ${queueInsertionId ?? null}
+                    ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}, ${queueInsertionId ?? null}, ${queueBranch}
                   )
                 `;
             }
@@ -852,6 +904,18 @@ export class EntityMetaIndex implements Index {
         }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId}`;
         return rows.map((row) => row.recordId);
       }),
+  );
+
+  /** Record ids of one feed's rows on a branch other than main. */
+  selectFeedBranchRecordIds = Effect.fn('EntityMetaIndex.selectFeedBranchRecordIds')(
+    { self: this },
+    function* (this: EntityMetaIndex, query: { spaceId: SpaceId; queueId: string }) {
+      const sql = this.#sql;
+      const rows = yield* sql<{
+        recordId: number;
+      }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND queueBranch IS NOT NULL`;
+      return rows.map((row) => row.recordId);
+    },
   );
 
   /**
@@ -1025,7 +1089,7 @@ export class EntityMetaIndex implements Index {
   /**
    * Query children by parent object ids.
    * Matches both:
-   * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
+   * - Objects whose parent is one of the given parent ids within the same space (standard parent/child hierarchy).
    * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
    *   DXN uses the feed's object id as its queue id — see `Feed.getFeedUri`).
    */
@@ -1037,16 +1101,16 @@ export class EntityMetaIndex implements Index {
         }
 
         const sql = this.#sql;
-        // Each parent id binds twice (as a DXN and as a queue id) and each space id once, so a
+        // Each parent id binds twice (as a parent id and as a queue id) and each space id once, so a
         // third of the budget per list keeps the statement whole.
         const chunkSize = chunkSizeForBoundVariables(3);
-        // A row can match one chunk by `parent` and another by `queueId`, so it is deduplicated.
+        // A row can match one chunk by `parentId` and another by `queueId`, so it is deduplicated.
         const byRecordId = new Map<number, EntityMeta>();
         for (const spaceIds of chunkArray(query.spaceId, chunkSize)) {
           for (const parentIds of chunkArray(query.parentIds, chunkSize)) {
-            const parentDxns = parentIds.map((id) => EID.make({ entityId: id }));
+            // `parentId` is the parent's bare id whether the reference was stored with its space or without.
             const rows =
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', parentIds)})`;
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND (${sql.in('parentId', parentIds)} OR ${sql.in('queueId', parentIds)})`;
             for (const row of rows) {
               byRecordId.set(row.recordId, { ...row, deleted: !!row.deleted });
             }

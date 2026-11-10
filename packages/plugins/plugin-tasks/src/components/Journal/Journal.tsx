@@ -14,9 +14,9 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { TasksUtil } from '#types';
 
+import { TasksNamespace } from '../../namespace.ts';
 import {
   type JournalEntry as JournalEntryObject,
   type Journal as JournalObject,
@@ -33,7 +33,7 @@ export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
 // TODO(burdon): Virtualize.
 export const Journal = Util.composable<HTMLDivElement, JournalProps>(
   ({ journal, onSelect, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(TasksNamespace.key);
     const date = new Date();
 
     // Subscribe to the journal object reactively so we pick up new entries.
@@ -100,7 +100,7 @@ type JournalEntryProps = Util.ThemedClassName<
 >;
 
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const [entry] = useObject(entryRef);
   // Subscribe to the content ref to trigger a re-render when the Text object loads.
   useObject(entry?.content);

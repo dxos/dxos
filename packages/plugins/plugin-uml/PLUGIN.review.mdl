@@ -83,7 +83,7 @@ verdict F-2.1: Link markers include a hollow triangle, drawn filled with the can
 ```mdl
 verdict F-3.1: The skill is contributed as a SkillDefinition while the plugin is active.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/index.ts#SkillDefinition, github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/skill-definition.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/dx.config.ts, github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/skill-definition.ts]
   note: No test checks the skill's presence or absence.
 ```
 

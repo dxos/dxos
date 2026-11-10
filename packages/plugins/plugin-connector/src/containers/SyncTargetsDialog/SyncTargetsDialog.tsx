@@ -22,10 +22,10 @@ import * as Status from '@dxos/react-ui/Status';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from '../../Binding.ts';
+import { ConnectorNamespace } from '../../namespace.ts';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
@@ -40,7 +40,7 @@ export type SyncTargetsDialogProps = {
  * the {@link ConnectorCoordination.ConnectorCoordinator}.
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ConnectorNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const manager = PluginManagerProvider.usePluginManager();
 

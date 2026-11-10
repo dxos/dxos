@@ -35,9 +35,29 @@ export type FormContextValue<T extends AnyProperties = any> = {
   /** Visual variant applied across the form's parts (see Form.theme). */
   variant?: FormVariant;
 
-  /** Editor extensions for the form's markdown fields, beyond their own (what a host's plugins contribute). */
-  markdownExtensions?: Extension[];
+  /** Editor extensions for the form's editors, beyond their own (what a host's plugins contribute), by field. */
+  extensions?: FormExtensions;
 } & FieldContext;
+
+/** The field an editor edits, for extensions that depend on it (comments anchored to its text). */
+export type FormExtensionsField = {
+  path: readonly (string | number)[];
+  jsonPath: string;
+};
+
+/** Extensions for every editor in the form, or by the field each edits. */
+export type FormExtensions = Extension[] | ((field: FormExtensionsField) => Extension[]);
+
+/** The form's extensions for one field's editor; stable while the field and the form's extensions are. */
+export const useFormExtensions = (field: FormExtensionsField | undefined): Extension[] => {
+  const { extensions } = useFormContext('useFormExtensions');
+  const jsonPath = field?.jsonPath;
+  return useMemo(
+    () => (typeof extensions === 'function' ? (field ? extensions(field) : []) : (extensions ?? [])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [extensions, jsonPath],
+  );
+};
 
 export const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
@@ -80,7 +100,7 @@ export const useFormValues: {
 export const useFormFieldState = (componentName: string, path: (string | number)[] = []): FormFieldStateProps => {
   const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
   const {
-    form: { getStatus, getValue, onBlur, onValueChange },
+    form: { getStatus, getValue, onBlur, onValueChange, onRevert },
   } = useFormContext(componentName);
 
   return useMemo(
@@ -89,7 +109,8 @@ export const useFormFieldState = (componentName: string, path: (string | number)
       getValue: () => getValue(stablePath),
       onBlur: () => onBlur(stablePath),
       onValueChange: (ast: SchemaAST.AST, value: any) => onValueChange(stablePath, ast, value),
+      onRevert: () => onRevert(stablePath),
     }),
-    [getStatus, getValue, onBlur, onValueChange, stablePath],
+    [getStatus, getValue, onBlur, onValueChange, onRevert, stablePath],
   );
 };

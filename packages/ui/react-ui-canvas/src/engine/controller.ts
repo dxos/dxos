@@ -6,46 +6,39 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
-  type BackgroundGrid,
   type Bounds,
-  type Camera,
-  type Capabilities,
   type ElementId,
-  type Intent,
   type Node,
-  type NodeRegistry,
-  OPACITY_PATH,
+  type NodeId,
   type Point,
   type Size,
   type StyleClass,
-  type Tool,
-  type View,
   type ViewId,
-  type ViewMap,
-  type ViewStore,
-  clampTime,
-  createTimeline,
-  getElement,
-  getPath,
   isInstanceNode,
   isLink,
   isViewNode,
-  keyTimes,
-  moveKeys,
-  nodeAnimatable,
+} from '@dxos/scene';
+
+import {
+  type BackgroundGrid,
+  type Camera,
+  type Capabilities,
+  type NodeRegistry,
+  type RenderList2D,
+  type RenderLists2D,
+  type Tool,
+  getElement,
   nodeDef,
   pruneOrphaned,
-  removeKey as removeTimelineKey,
-  setKey,
-  storeVersions,
-  timelineFps,
 } from '../model/index.ts';
 import {
   DRILL_ANIMATION_MS,
   EMPTY_FRAME,
   NOMINAL_ZOOM,
+  type SceneEdit,
   activeLayer,
   between,
+  chainEdits,
   childFrame,
   classedLink,
   classedNode,
@@ -56,24 +49,29 @@ import {
   contentBounds,
   copySelection,
   createId,
+  deleteElements,
   duplicateSelection,
   enterPortal,
   exitPortal,
   fitBounds,
   fitFrame,
   nodeBounds,
+  orderToEnd,
   pastedRecords,
   pasteFragment,
   promotedBy,
+  reorderElement,
   restackZ,
-  topZ,
+  topOfView,
   ungroupInstance,
   unionBounds,
+  updateElement,
   zoomAt,
 } from '../utils/index.ts';
 import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
+import { type DrawState, drawStateVersions } from './draw-state.ts';
+import { type DrawScene, readonlyCapabilities } from './draw.ts';
 import { type CanvasHistory, createCommitter } from './history.ts';
-import { type Projection, readonlyCapabilities, reduceIntent } from './projection.ts';
 
 /** The grid a paste steps along and snaps to, which depends on the zoom. */
 export type ControllerGrid = { major: number; snap: (value: number) => number };
@@ -105,12 +103,10 @@ export type LookHandlers = {
 export type CanvasControllerOptions = {
   registry: Registry.AtomRegistry;
   atoms: CanvasAtoms;
-  store: ViewStore;
-  /** The open View's projection, read when a command runs: it changes as the View changes. */
-  projection: () => Projection;
-  /** The projection under the animated one, which keys and timeline edits are written through. */
-  baseProjection: () => Projection;
-  /** What each node type animates, for keying the selection. */
+  store: DrawState;
+  /** The open View's draw scene, read when a command runs: it changes as the View changes. */
+  draw: () => DrawScene;
+  /** The node types, for how a portal opens. */
   nodeRegistry: () => NodeRegistry;
   /** Read when a command runs: the host may toggle it. */
   readonly: () => boolean;
@@ -167,9 +163,9 @@ export type NavigationCommands = {
   /** Back to true size about the view's centre, from where the camera is now. */
   resetZoom: () => void;
   /** A child scene's frame inside its portal, as drilling in maps it. */
-  childFrame: (portal: Node, child: View) => Bounds;
+  childFrame: (portal: Node, child: RenderList2D) => Bounds;
   /** The frame of the scene at the head of `path`: once entered through a portal, the one it arrived with. */
-  frame: (path: ViewId[], scene: View) => Bounds;
+  frame: (path: ViewId[], scene: RenderList2D) => Bounds;
 };
 
 /** Theme and background (DESIGN.md §13.1, the Look aspect). */
@@ -200,18 +196,24 @@ export type SelectionCommands = {
   classFrom: () => string | undefined;
 };
 
-/** The intent helpers on the open View's document (DESIGN.md §13.1, the Document aspect). */
-export type DocumentIntentCommands = {
+/** The edit helpers on the open View's document (DESIGN.md §13.1, the Document aspect). */
+export type DocumentEditCommands = {
   /**
    * Moves `element` just before or after its sibling `target` in the drawing order of `container`, which must be the
-   * open View, as one intent (one undo step); false when nothing moved.
+   * open View, as one edit (one undo step); false when nothing moved.
    */
   restack: (container: ViewId, element: ElementId, target: ElementId, position: 'before' | 'after') => boolean;
+  /**
+   * Lifts `ids` above every other element of the open View, or drops them below it, keeping their order among
+   * themselves (nodes among nodes, links among links), as one edit; false when nothing moved.
+   */
+  order: (ids: Iterable<ElementId>, place: 'front' | 'back') => boolean;
   /**
    * Drops a copy of the nodes `ids` and the links between them `delta` away, as one undo step, and selects it; an
    * anonymous Object placed again this way joins the library. False when nothing was copied.
    */
-  duplicate: (ids: Iterable<ElementId>, delta: Point) => boolean;
+  /** Copies `ids` one step aside; without a `delta`, by the drawn major cell, as the duplicate shortcut does. */
+  duplicate: (ids: Iterable<ElementId>, delta?: Point) => boolean;
 };
 
 /** Text editing and the clipboard (DESIGN.md §13.1, the Editing aspect). */
@@ -227,29 +229,12 @@ export type EditingCommands = {
 export type ToolsCommands = {
   /** A creation tool clears the selection, whose outline would only sit over the drawing; a link tool sets the type. */
   setTool: (tool: Tool) => void;
+  /** The background grid drawn; a host that owns the display takes the change from the atom. */
+  toggleGrid: () => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
+  toggleAxes: () => void;
   toggleDebug: () => void;
-};
-
-/** The clock and keyframing (DESIGN.md §13.1, the Time aspect). */
-export type TimeCommands = {
-  /** Pauses and moves the playhead, kept within the timeline. */
-  seek: (t: number) => void;
-  /** Plays from the start when stopped at the end. */
-  togglePlay: () => void;
-  setPlaying: (playing: boolean) => void;
-  setAutoKey: (autoKey: boolean) => void;
-  /** Moves the playhead by whole frames. */
-  step: (frames: number) => void;
-  /** Moves the playhead to the selection's next (1) or previous (-1) key, or to the end (or start) when there is none. */
-  jumpKey: (direction: 1 | -1) => void;
-  /** Keys the selected nodes' animatable properties at the playhead, as they are drawn there. */
-  addKey: () => void;
-  /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
-  removeKey: () => void;
-  /** Moves the selected nodes' keys at `from` to `to`, and the playhead with them. */
-  moveKey: (from: number, to: number) => void;
 };
 
 /**
@@ -257,21 +242,19 @@ export type TimeCommands = {
  * controller is created once per canvas and its identity never changes with the state (DESIGN.md §13).
  */
 export type CanvasController = {
-  document: DocumentIntentCommands;
+  document: DocumentEditCommands;
   navigation: NavigationCommands;
   look: LookCommands;
   selection: SelectionCommands;
   editing: EditingCommands;
   tools: ToolsCommands;
-  time: TimeCommands;
 };
 
 export const createCanvasController = ({
   registry,
   atoms,
   store,
-  projection,
-  baseProjection,
+  draw,
   nodeRegistry,
   readonly,
   grid,
@@ -286,17 +269,16 @@ export const createCanvasController = ({
 }: CanvasControllerOptions): CanvasController => {
   const unrecorded = createCommitter(
     {
-      store: storeVersions(registry, store),
-      model: () => baseProjection().model,
+      store: drawStateVersions(registry, store),
       context: () => ({ path: [], selection: [] }),
     },
     () => {},
   );
   const commit: CanvasHistory['commit'] = (change, options) =>
     (historyOption?.().commit ?? unrecorded)(change, options);
-  // A read-only canvas edits nothing whatever its projection allows, as `CanvasRoot` gates its own controls.
-  const capabilities = (): Capabilities => (readonly() ? readonlyCapabilities : projection().capabilities);
-  const currentScene = () => registry.get(projection().scene);
+  // A read-only canvas edits nothing whatever its layout allows, as `CanvasRoot` gates its own controls.
+  const capabilities = (): Capabilities => (readonly() ? readonlyCapabilities : draw().capabilities);
+  const currentScene = () => registry.get(draw().scene);
   const currentView = (): ViewId | undefined => registry.get(atoms.path).at(-1);
 
   const select = (ids: Iterable<ElementId>) => {
@@ -304,30 +286,30 @@ export const createCanvasController = ({
     registry.set(atoms.point, undefined);
   };
 
-  /** The Views kept with no node opening them: the drawing's root, and any root of its own the store declares. */
-  const roots = (views: ViewMap): ViewId[] => {
+  /** The Views kept with no node opening them: the drawing's root. */
+  const roots = (): ViewId[] => {
     const path = registry.get(atoms.isolation)?.back.path ?? registry.get(atoms.path);
-    return [...path.slice(0, 1), ...Object.keys(views).filter((id) => store.isRoot?.(id))];
+    return path.slice(0, 1);
   };
 
   /**
-   * Applies `intent` through `target` with `edit`'s change to the store's records, then deletes the records it leaves
-   * nothing pointing at (VIEWS.md §7.4), all as one undo step; false when the projection refused the intent, which
-   * leaves the records as they were.
+   * Applies `edit` through `target` with `records`' change to the store's records, then deletes the records it leaves
+   * nothing pointing at (VIEWS.md §7.4), all as one undo step; false when the edit changed nothing, which leaves the
+   * records as they were.
    */
   const applyWithRecords = (
-    target: Projection,
-    intent: Intent,
-    edit: (views: ViewMap) => ViewMap = (views) => views,
+    target: DrawScene,
+    edit: SceneEdit,
+    records: (views: RenderLists2D) => RenderLists2D = (views) => views,
   ): boolean =>
     commit(() => {
       const before = registry.get(store.views);
-      if (!commit(() => target.apply(intent))) {
+      if (!commit(() => target.apply(edit))) {
         return;
       }
       const after = registry.get(store.views);
-      const edited = edit(after);
-      const next = pruneOrphaned(before, edited, roots(edited));
+      const edited = records(after);
+      const next = pruneOrphaned(before, edited, roots());
       if (next !== after) {
         registry.set(store.views, next);
       }
@@ -341,7 +323,7 @@ export const createCanvasController = ({
       if (ids.length === 0 || !capabilities().delete) {
         return false;
       }
-      applyWithRecords(projection(), { kind: 'delete', ids });
+      applyWithRecords(draw(), deleteElements(ids));
       select([]);
       return true;
     },
@@ -349,7 +331,7 @@ export const createCanvasController = ({
       if (!capabilities().create || !capabilities().delete) {
         return undefined;
       }
-      const base = baseProjection();
+      const base = draw();
       const current = registry.get(base.scene);
       const instanceId = newId('instance');
       const composition = composeSelection(current, registry.get(atoms.selection), {
@@ -362,9 +344,9 @@ export const createCanvasController = ({
       if (!composition) {
         return undefined;
       }
-      const { composite, intents } = composition;
-      applyWithRecords(base, { kind: 'batch', intents }, (views) => ({ ...views, [composite.id]: composite }));
-      // A projection may refuse the batch or drop the Instance, which leaves the definition an orphan, already gone.
+      const { composite, edit } = composition;
+      applyWithRecords(base, edit, (views) => ({ ...views, [composite.id]: composite }));
+      // The edit may drop the Instance, which leaves the definition an orphan, already gone.
       if (!registry.get(base.scene).nodes[instanceId]) {
         return undefined;
       }
@@ -375,24 +357,25 @@ export const createCanvasController = ({
       if (!capabilities().create || !capabilities().delete) {
         return [];
       }
-      const base = baseProjection();
+      const base = draw();
       const views = registry.get(store.views);
       // Each Instance is exploded into the scene the ones before it left, so their new nodes stack in order.
       let scene = registry.get(base.scene);
-      const intents: Intent[] = [];
+      const edits: SceneEdit[] = [];
+      const created: NodeId[] = [];
       for (const id of registry.get(atoms.selection)) {
         const instance = scene.nodes[id];
         const composite = instance && isInstanceNode(instance) ? views[instance.composite] : undefined;
         if (instance && isInstanceNode(instance) && composite) {
           const exploded = ungroupInstance(scene, instance, composite, newId);
-          intents.push(...exploded);
-          scene = reduceIntent(scene, { kind: 'batch', intents: exploded });
+          edits.push(exploded.edit);
+          created.push(...exploded.created);
+          scene = exploded.edit(scene);
         }
       }
-      if (intents.length === 0 || !applyWithRecords(base, { kind: 'batch', intents })) {
+      if (edits.length === 0 || !applyWithRecords(base, chainEdits(edits))) {
         return [];
       }
-      const created = intents.flatMap((intent) => (intent.kind === 'create' ? [intent.node.id] : []));
       select(created);
       return created;
     },
@@ -408,7 +391,7 @@ export const createCanvasController = ({
       const style = isLink(element) ? classedLink(element, styleMap).style : classedNode(element, styleMap).style;
       const styleClass: StyleClass = { id, name, ...(style ? { style } : {}) };
       registry.set(store.styles, { ...styleMap, [id]: styleClass });
-      projection().apply({ kind: 'update', id: element.id, values: { class: id, style: undefined } });
+      draw().apply(updateElement(element.id, { class: id, style: undefined }));
       return id;
     },
   };
@@ -427,7 +410,7 @@ export const createCanvasController = ({
       if (!capabilities().delete || !copy()) {
         return;
       }
-      applyWithRecords(projection(), { kind: 'delete', ids: [...registry.get(atoms.selection)] });
+      applyWithRecords(draw(), deleteElements([...registry.get(atoms.selection)]));
       select([]);
     },
     paste: (at) => {
@@ -440,20 +423,19 @@ export const createCanvasController = ({
       const bounds = clipboardBounds(fragment);
       const step = major * (fragment.pasted + 1);
       const offset = at && bounds ? { x: snap(at.x) - bounds.x, y: snap(at.y) - bounds.y } : { x: step, y: step };
-      let nodeZ = topZ(Object.values(scene.nodes));
-      let linkZ = topZ(Object.values(scene.links));
-      const { intent, ids } = pasteFragment({
+      // One cursor for both kinds, so every pasted element lands above the view and above the one pasted before it.
+      let z = topOfView(scene);
+      const next = () => (z = between(z, undefined));
+      const { edit, ids } = pasteFragment({
         clipboard: fragment,
         offset,
         createId: newId,
-        nodeZ: () => (nodeZ = between(nodeZ, undefined)),
-        linkZ: () => (linkZ = between(linkZ, undefined)),
+        nodeZ: next,
+        linkZ: next,
         layer: activeLayer(scene, registry.get(atoms.layer)),
       });
       const records = pastedRecords(registry.get(store.views), fragment);
-      applyWithRecords(projection(), intent, (views) =>
-        Object.keys(records).length > 0 ? { ...views, ...records } : views,
-      );
+      applyWithRecords(draw(), edit, (views) => (Object.keys(records).length > 0 ? { ...views, ...records } : views));
       registry.set(atoms.clipboard, { ...fragment, pasted: at ? fragment.pasted : fragment.pasted + 1 });
       select(ids);
     },
@@ -470,93 +452,11 @@ export const createCanvasController = ({
         select([]);
       }
     },
+    toggleGrid: toggle(atoms.grid),
     toggleSnap: toggle(atoms.snap),
     toggleGuides: toggle(atoms.guides),
+    toggleAxes: toggle(atoms.axes),
     toggleDebug: toggle(atoms.debug),
-  };
-
-  const timeline = () => registry.get(baseProjection().scene).timeline;
-  const seek = (t: number) => {
-    registry.set(atoms.clock.playing, false);
-    registry.set(atoms.clock.time, clampTime(timeline(), t));
-  };
-  const time: TimeCommands = {
-    seek,
-    togglePlay: () => {
-      const playing = registry.get(atoms.clock.playing);
-      if (!playing && registry.get(atoms.clock.time) >= (timeline()?.duration ?? 0)) {
-        registry.set(atoms.clock.time, 0);
-      }
-      registry.set(atoms.clock.playing, !playing);
-    },
-    setPlaying: (playing) => registry.set(atoms.clock.playing, playing),
-    setAutoKey: (autoKey) => registry.set(atoms.autoKey, autoKey),
-    step: (frames) => {
-      const fps = timelineFps(timeline());
-      seek(Math.round((registry.get(atoms.clock.time) + frames / fps) * fps) / fps);
-    },
-    jumpKey: (direction) => {
-      const now = registry.get(atoms.clock.time);
-      const times = keyTimes(timeline(), registry.get(atoms.selection));
-      // No key that way: the end (or the start), so the jump always goes somewhere.
-      const target =
-        (direction > 0 ? times.find((t) => t > now + 1e-6) : times.findLast((t) => t < now - 1e-6)) ??
-        (direction > 0 ? (timeline()?.duration ?? now) : 0);
-      seek(target);
-    },
-    addKey: () => {
-      const shown = currentScene();
-      const t = registry.get(atoms.clock.time);
-      const styles = store.styles ? registry.get(store.styles) : undefined;
-      let next = timeline() ?? createTimeline();
-      for (const id of registry.get(atoms.selection)) {
-        const node = shown.nodes[id];
-        if (!node) {
-          continue;
-        }
-        // As drawn: a class's opacity is the node's until it sets its own.
-        const drawn = classedNode(node, styles);
-        for (const property of Object.keys(nodeAnimatable(nodeRegistry(), node))) {
-          const value = getPath(drawn, property) ?? (property === OPACITY_PATH ? 1 : undefined);
-          if (value !== undefined) {
-            next = setKey(next, id, property, { t, value });
-          }
-        }
-      }
-      baseProjection().apply({ kind: 'timeline', timeline: next });
-    },
-    moveKey: (from, to) => {
-      const current = timeline();
-      const target = clampTime(current, to);
-      if (!current || Math.abs(target - from) < 1e-6) {
-        return;
-      }
-      const next = moveKeys(current, registry.get(atoms.selection), from, target, 0.5 / timelineFps(current));
-      if (next !== current) {
-        baseProjection().apply({ kind: 'timeline', timeline: next });
-      }
-      seek(target);
-    },
-    removeKey: () => {
-      const current = timeline();
-      if (!current) {
-        return;
-      }
-      const t = registry.get(atoms.clock.time);
-      const ids = registry.get(atoms.selection);
-      const tolerance = 0.5 / timelineFps(current);
-      let next = current;
-      for (const track of Object.values(current.tracks)) {
-        if (ids.has(track.target)) {
-          for (const key of track.keys.filter((key) => Math.abs(key.t - t) < tolerance)) {
-            next = removeTimelineKey(next, track.target, track.property, key.t);
-          }
-        }
-      }
-      if (next !== current) {
-        baseProjection().apply({ kind: 'timeline', timeline: next });
-      }
-    },
   };
 
   const setCamera = (next: Camera) => registry.set(atoms.camera, next);
@@ -572,13 +472,13 @@ export const createCanvasController = ({
   const noFit: ViewFit = { enterFit: () => {}, exitFit: () => {}, takeOver: () => {} };
   const fitMode = () => viewFit?.() ?? noFit;
   const centre = () => ({ x: viewport().width / 2, y: viewport().height / 2 });
-  const frameIn = (portal: Node, child: View) => childFrame(portal, child, viewport());
+  const frameIn = (portal: Node, child: RenderList2D) => childFrame(portal, child, viewport());
 
   const portalTo = (parentId: ViewId | undefined, childId: ViewId): Node | undefined => {
     const parent = parentId ? registry.get(store.views)[parentId] : undefined;
     return parent ? Object.values(parent.nodes).find((node) => isViewNode(node) && node.scene === childId) : undefined;
   };
-  const frameOf = (path: ViewId[], current: View): Bounds => {
+  const frameOf = (path: ViewId[], current: RenderList2D): Bounds => {
     const portal = portalTo(path[path.length - 2], current.id);
     return portal ? frameIn(portal, current) : (contentBounds(current) ?? EMPTY_FRAME);
   };
@@ -815,7 +715,7 @@ export const createCanvasController = ({
     setBackgroundGrid: (grid) => lookHandlers?.().onBackgroundGridChange?.(grid),
   };
 
-  const document: DocumentIntentCommands = {
+  const document: DocumentEditCommands = {
     restack: (container, element, target, position) => {
       if (!capabilities().update) {
         return false;
@@ -823,10 +723,10 @@ export const createCanvasController = ({
       const scene = currentScene();
       if (scene.id === container) {
         const z = restackZ(scene, element, target, position);
-        z !== undefined && projection().apply({ kind: 'reorder', id: element, z });
+        z !== undefined && draw().apply(reorderElement(element, z));
         return z !== undefined;
       }
-      // Another View, or an Object's definition: written to the store, as the open View's projection draws only its own.
+      // Another View, or an Object's definition: written to the store, as the open scene draws only its own.
       const views = registry.get(store.views);
       const host = views[container];
       const z = host && restackZ(host, element, target, position);
@@ -835,7 +735,7 @@ export const createCanvasController = ({
       }
       const node = host.nodes[element];
       const link = host.links[element];
-      const moved: View = node
+      const moved: RenderList2D = node
         ? { ...host, nodes: { ...host.nodes, [element]: { ...node, z } } }
         : link
           ? { ...host, links: { ...host.links, [element]: { ...link, z } } }
@@ -843,10 +743,26 @@ export const createCanvasController = ({
       commit(() => registry.set(store.views, { ...views, [container]: moved }));
       return true;
     },
+    order: (ids, place) => {
+      if (!capabilities().update) {
+        return false;
+      }
+      const scene = currentScene();
+      // Nodes and links share one paint order, so they restack against each other: a shape brought to the front
+      // goes over the links too, and a link sent to the back goes under the shapes.
+      const keys = orderToEnd([...Object.values(scene.nodes), ...Object.values(scene.links)], ids, place);
+      const moved = Object.entries(keys);
+      if (moved.length === 0) {
+        return false;
+      }
+      return commit(() => draw().apply(chainEdits(moved.map(([id, z]) => reorderElement(id, z)))));
+    },
     duplicate: (ids, delta) => {
       const scene = currentScene();
+      const { major } = grid();
+      const step = delta ?? { x: major, y: major };
       const selected = [...ids];
-      const copy = capabilities().create ? duplicateSelection(scene, selected, delta, newId) : undefined;
+      const copy = capabilities().create ? duplicateSelection(scene, selected, step, newId) : undefined;
       if (!copy) {
         return false;
       }
@@ -854,7 +770,7 @@ export const createCanvasController = ({
         registry.get(store.views),
         selected.flatMap((id) => scene.nodes[id] ?? []),
       );
-      applyWithRecords(projection(), copy.intent, (views) =>
+      applyWithRecords(draw(), copy.edit, (views) =>
         Object.keys(records).length > 0 ? { ...views, ...records } : views,
       );
       select(copy.ids);
@@ -862,5 +778,5 @@ export const createCanvasController = ({
     },
   };
 
-  return { document, navigation, look, selection, editing, tools, time };
+  return { document, navigation, look, selection, editing, tools };
 };

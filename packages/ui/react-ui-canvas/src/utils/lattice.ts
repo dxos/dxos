@@ -8,13 +8,42 @@
 // on each axis and covers the gutters between them, so every channel between shapes is one gutter wide.
 //
 
-import { type Bounds, type ElementId, type Node } from '../model/index.ts';
+import { type Bounds, type ElementId, type Node } from '@dxos/scene';
+
 import { nodeBounds } from './shapes.ts';
 
 /** The size of a one-cell shape and the gutter between shapes, in scene units. */
 export type LatticeSpec = { width: number; height: number; gutterX: number; gutterY: number };
 
 export const DEFAULT_LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+
+const gcd = (left: number, right: number): number => (right === 0 ? left : gcd(right, left % right));
+
+/** The minor grid pitches a canvas draws and its settings accept, in px. */
+export const GRID_PITCH_RANGE = { minimum: 4, maximum: 128 } as const;
+
+/**
+ * The minor grid pitch whose major lines (`ratio` minor cells) run along every cell edge of the lattice: the largest
+ * whole `GRID_PITCH_RANGE` pitch whose major cell divides the cells and gutters, since cell edges sit at
+ * `k x pitch +/- size / 2`; 0 when none does, so every caller falls back to the same grid.
+ */
+export const latticeGrid = ({ width, height, gutterX, gutterY }: LatticeSpec, ratio: number): number => {
+  const lengths = [width / 2, height / 2, gutterX, gutterY];
+  if (!lengths.every((length) => Number.isInteger(length) && length > 0)) {
+    return 0;
+  }
+  const major = lengths.reduce(gcd);
+  for (
+    let minor = Math.min(GRID_PITCH_RANGE.maximum, Math.floor(major / ratio));
+    minor >= GRID_PITCH_RANGE.minimum;
+    minor--
+  ) {
+    if (major % (minor * ratio) === 0) {
+      return minor;
+    }
+  }
+  return 0;
+};
 
 /** A shape on the lattice: its first (top-left) cell and how many cells it spans on each axis. */
 export type LatticeCell = { col: number; row: number; spanX: number; spanY: number };

@@ -77,6 +77,56 @@ export const outliner = ({ readonly, ghost: ghostOptions }: OutlinerProps = {}):
       ]),
 ];
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const outlinerTheme = EditorView.theme({
+  '.cm-list-item': {
+    // borderLeftWidth: '1px',
+    // borderRightWidth: '1px',
+    paddingLeft: '32px',
+    borderColor: 'transparent',
+  },
+  '.cm-list-item.cm-codeblock-start': {
+    borderRadius: '0',
+  },
+
+  // No vertical margins: CodeMirror's gutter/height-map measures each line's border-box but not its
+  // margins, so any inter-row margin makes the drag grips drift further from center down the list (and
+  // shows as gaps between selected rows). Keep row spacing in the padding, which CM does measure.
+  '.cm-list-item-start': {
+    // borderTopWidth: '1px',
+    // borderTopLeftRadius: '4px',
+    // borderTopRightRadius: '4px',
+    paddingTop: '4px',
+  },
+  '.cm-list-item-end': {
+    // borderBottomWidth: '1px',
+    // borderBottomLeftRadius: '4px',
+    // borderBottomRightRadius: '4px',
+    paddingBottom: '4px',
+  },
+
+  // Accent background behind the selected subtree; flat so adjacent selected rows read as one region.
+  '.cm-list-item-selected': {
+    boxSizing: 'border-box',
+    backgroundColor: 'var(--color-cm-highlight-surface)',
+    borderRadius: '0',
+  },
+  // Subtle border on the item under the caret; distinct from the accent selection highlight.
+  '.cm-list-item-current': {
+    borderColor: 'var(--color-focus-ring-subtle)',
+  },
+
+  // The drag preview clones the selected rows, whose content is shifted horizontally to preview the
+  // drop indent — so the highlight must come from the (full-width) container, not the cloned lines,
+  // to span the editor width regardless of the indent level.
+  '.cm-blockDragPreview': {
+    backgroundImage: 'linear-gradient(var(--color-cm-highlight-surface), var(--color-cm-highlight-surface))',
+  },
+  '.cm-blockDragPreview .cm-list-item-selected': {
+    backgroundColor: 'transparent',
+  },
+});
+
 /**
  * Structural row layout plus a subtle border on the current (caret) item. The selection highlight is
  * drawn by `outlinerDnd` (the shared `blocks` layer), so this no longer renders selection.
@@ -154,52 +204,5 @@ const decorations = () => [
   ),
 
   // Theme.
-  EditorView.theme({
-    '.cm-list-item': {
-      // borderLeftWidth: '1px',
-      // borderRightWidth: '1px',
-      paddingLeft: '32px',
-      borderColor: 'transparent',
-    },
-    '.cm-list-item.cm-codeblock-start': {
-      borderRadius: '0',
-    },
-
-    // No vertical margins: CodeMirror's gutter/height-map measures each line's border-box but not its
-    // margins, so any inter-row margin makes the drag grips drift further from center down the list (and
-    // shows as gaps between selected rows). Keep row spacing in the padding, which CM does measure.
-    '.cm-list-item-start': {
-      // borderTopWidth: '1px',
-      // borderTopLeftRadius: '4px',
-      // borderTopRightRadius: '4px',
-      paddingTop: '4px',
-    },
-    '.cm-list-item-end': {
-      // borderBottomWidth: '1px',
-      // borderBottomLeftRadius: '4px',
-      // borderBottomRightRadius: '4px',
-      paddingBottom: '4px',
-    },
-
-    // Accent background behind the selected subtree; flat so adjacent selected rows read as one region.
-    '.cm-list-item-selected': {
-      boxSizing: 'border-box',
-      backgroundColor: 'var(--color-cm-highlight-surface)',
-      borderRadius: '0',
-    },
-    // Subtle border on the item under the caret; distinct from the accent selection highlight.
-    '.cm-list-item-current': {
-      borderColor: 'var(--color-focus-ring-subtle)',
-    },
-
-    // The drag preview clones the selected rows, whose content is shifted horizontally to preview the
-    // drop indent — so the highlight must come from the (full-width) container, not the cloned lines,
-    // to span the editor width regardless of the indent level.
-    '.cm-blockDragPreview': {
-      backgroundImage: 'linear-gradient(var(--color-cm-highlight-surface), var(--color-cm-highlight-surface))',
-    },
-    '.cm-blockDragPreview .cm-list-item-selected': {
-      backgroundColor: 'transparent',
-    },
-  }),
+  outlinerTheme,
 ];

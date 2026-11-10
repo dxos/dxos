@@ -11,7 +11,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { RecorderNamespace } from '../../namespace.ts';
 
 /** `m:ss`. */
 export const formatSeconds = (seconds: number): string => {
@@ -85,7 +85,7 @@ export const RecordingList = <T extends RecordingItem>({
   onOpen,
   actions,
 }: RecordingListProps<T>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RecorderNamespace.key);
   const keyboard = useRef(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const options = useMemo(() => items.map((item) => ({ value: item.id, label: item.title })), [items]);

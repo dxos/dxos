@@ -8,8 +8,7 @@ import { List, ListItem } from '@dxos/react-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
-
+import { SidekickNamespace } from '../namespace.ts';
 import { Section } from './Section.tsx';
 
 export type ActionItem = {
@@ -24,7 +23,7 @@ export type ActionItemsProps = {
 };
 
 export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SidekickNamespace.key);
 
   return (
     <Section title={t('action-items.title')}>

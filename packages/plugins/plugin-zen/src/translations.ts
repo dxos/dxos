@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Dream } from '#types';
+
+import { ZenNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete dream',
         'object-deleted.label': 'Dream deleted',
       },
-      [meta.profile.key]: {
+      [ZenNamespace.key]: {
         'plugin.name': 'Zen',
         'unmute-button.label': 'Unmute',
         'mute-button.label': 'Mute',

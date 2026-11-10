@@ -90,19 +90,26 @@ export const fetchMessages = (
         })
       : Stream.empty;
 
-  const forward = config.forwardIds ? Stream.fromIterable(config.forwardIds) : idsFor(config.windows.forward);
+  // `after:` is day-granular, so the forward window re-lists `max`'s whole day; its messages older than the
+  // window are left to the backward walk, since committing them oldest-first under the cap would drop `min`
+  // past the rest of that day and strand it as already synced.
+  const listed = (ids: Stream.Stream<string, GoogleMailApiError, GoogleMailApi>, floor = 0) =>
+    ids.pipe(Stream.map((messageId) => ({ messageId, floor })));
+  const forward = config.forwardIds
+    ? listed(Stream.fromIterable(config.forwardIds))
+    : listed(idsFor(config.windows.forward), config.windows.forward?.start.getTime());
 
-  return Stream.concat(forward, idsFor(config.windows.backward)).pipe(
-    Cursor.skipCommitted('skip-committed', (messageId) => messageId),
+  return Stream.concat(forward, listed(idsFor(config.windows.backward))).pipe(
+    Cursor.skipCommitted('skip-committed', ({ messageId }) => messageId),
     Stream.mapEffect(
-      (messageId) =>
+      ({ messageId, floor }) =>
         Effect.gen(function* () {
           const api = yield* GoogleMailApi;
           const message = yield* api
             .getMessage(config.userId, messageId)
             .pipe(Effect.withSpan('google-sync.fetch.message'));
           config.onRetrieved?.();
-          return Option.some(message);
+          return Number.parseInt(message.internalDate) < floor ? Option.none() : Option.some(message);
         }).pipe(
           // A message deleted before this fetch 404s forever and the token only advances on a clean run,
           // so failing here wedges the mailbox on that one id. Any other error must still fail, so the
@@ -166,6 +173,9 @@ const fetchMessageIds = (config: FetchMessageIdsProps) =>
     }),
   );
 
+/** The Gmail search the sync's `'all'` label lists: every mailbox but Spam, Trash, Drafts and Chats. */
+export const ALL_MAIL_SCOPE = 'in:anywhere -in:spam -in:trash -in:drafts -in:chats';
+
 const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChunk, config: FetchMessageIdsProps) =>
   Stream.unwrap(
     Effect.gen(function* () {
@@ -173,8 +183,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
 
       // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
-      const folderScope =
-        label === 'all' ? 'in:anywhere -in:spam -in:trash -in:drafts -in:chats' : `in:anywhere label:${label}`;
+      const folderScope = label === 'all' ? ALL_MAIL_SCOPE : `in:anywhere label:${label}`;
       // `before:` is day-granular and excludes the day it names. Forward internal chunk boundaries are
       // safe (covered by the older chunk's inclusive `after:`). But the backward window's `end` is
       // `low`'s exact timestamp when resuming backfill, so a mid-day `before:` would drop same-day
