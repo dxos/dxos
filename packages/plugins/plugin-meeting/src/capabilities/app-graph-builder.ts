@@ -15,7 +15,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
-import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
@@ -25,7 +25,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { Channel, Event } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import { Meeting, MeetingActivity, MeetingCapabilities, MeetingOperation } from '#types';
 
 import { MeetingNamespace } from '../namespace.ts';
 
@@ -39,10 +39,6 @@ const activeMeetingFamily = Atom.family((store: MeetingCapabilities.MeetingState
 
 const activeMeetingOrPlaceholderFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
   Atom.make((get) => get(store.stateAtom).activeMeeting ?? ('meeting' as const)),
-);
-
-const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.MeetingStateStore) =>
-  Atom.make((get) => get(store.stateAtom).transcriptionManager),
 );
 
 export default Capability.makeModule(
@@ -132,15 +128,17 @@ export default Capability.makeModule(
             if (!store) {
               return [];
             }
-            const transcriptionManager = get(transcriptionManagerFamily(store));
-            const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
+            const [callManager] = get(callManagerAtom);
+            const enabled = callManager
+              ? MeetingActivity.isTranscriptionEnabled(get(callManager.activityAtom(MeetingActivity.TRANSCRIPTION_KEY)))
+              : false;
             return [
               {
                 id: 'action.startStopTranscription',
                 data: Effect.fnUntraced(function* () {
                   const store = yield* Capability.get(MeetingCapabilities.State);
-                  let meeting = store.state.activeMeeting;
-                  if (!meeting) {
+                  // The transcript is written to the call's active meeting, so one has to exist before it is kept.
+                  if (!store.state.activeMeeting) {
                     const db = Obj.getDatabase(channel);
                     invariant(db);
                     const createResult = yield* Operation.invoke(MeetingOperation.Create, { channel });
@@ -151,21 +149,10 @@ export default Capability.makeModule(
                     );
                     invariant(Obj.instanceOf(Meeting.Meeting, addResult.object));
                     yield* Operation.invoke(MeetingOperation.SetActive, { object: addResult.object });
-                    meeting = addResult.object as Meeting.Meeting;
                   }
 
-                  const callManager = yield* Capability.get(CallsCapabilities.Manager);
-                  const transcript = yield* Effect.promise(() => meeting.transcript.load());
-                  const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                  const transcriptFeedUri = Feed.getFeedUri(transcriptFeed);
-                  invariant(transcriptFeedUri, 'Transcript feed has no feed URI');
                   const transcriptionEnabled = !enabled;
-                  callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                    meetingId: Obj.getURI(meeting),
-                    transcriptDxn: transcriptFeedUri.toString(),
-                    transcriptionEnabled,
-                  });
-
+                  yield* Operation.invoke(MeetingOperation.SetTranscription, { enabled: transcriptionEnabled });
                   if (!transcriptionEnabled) {
                     log.warn('transcription disabled');
                   } else {

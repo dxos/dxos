@@ -33,15 +33,12 @@
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
-    "@dxos/tracing": "workspace:*",
-    "@dxos/types": "workspace:*",
-    "wavefile": "catalog:"
+    "@dxos/types": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
