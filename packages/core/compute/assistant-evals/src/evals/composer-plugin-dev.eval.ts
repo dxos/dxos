@@ -63,6 +63,13 @@ const BRIEF = trim`
   My Composer is open at ${TARGET}.
 `;
 
+/**
+ * Speed and cost score 1 at or under the target, falling linearly to 0 at the ceiling. Wall clock
+ * covers the agent's turns only; cost is Claude Code's own `total_cost_usd`, persona excluded.
+ */
+const SPEED = { target: 5 * 60_000, ceiling: 25 * 60_000 };
+const COST = { target: 0.25, ceiling: 2 };
+
 const ALLOWED_TOOLS = ['Bash', 'Edit', 'Glob', 'Grep', 'Read', 'Skill', 'TodoWrite', 'WebFetch', 'Write'];
 
 //
@@ -112,7 +119,7 @@ const openTab = async (): Promise<Tab> => {
     ],
   });
   const page = context.pages()[0] ?? (await context.newPage());
-  await page.goto(TARGET);
+  await page.goto(TARGET, { waitUntil: 'domcontentloaded', timeout: 120_000 });
   await page.waitForFunction(
     () => document.querySelector('[role=alertdialog]') || (globalThis as any).dxos?.client?.halo?.identity?.get?.(),
     null,
@@ -150,9 +157,23 @@ const enableDevServer = async (page: Page): Promise<boolean> => {
   return true;
 };
 
+/** Retries `fn` across the reloads a plugin served by Vite triggers when its server starts. */
+const acrossReloads = async <T>(page: Page, fn: () => Promise<T>): Promise<T> => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === 3 || !/Execution context was destroyed|navigat/i.test(String(error))) {
+        throw error;
+      }
+      await page.waitForLoadState('load');
+    }
+  }
+};
+
 /** A fresh load of the target, waited out until the app has booted. */
 const boot = async (page: Page): Promise<void> => {
-  await page.goto(TARGET);
+  await page.goto(TARGET, { waitUntil: 'domcontentloaded', timeout: 120_000 });
   await page.waitForFunction(() => (globalThis as any).composer?.plugins && document.querySelector('main'), null, {
     timeout: 120_000,
   });
@@ -212,11 +233,36 @@ const DIMENSIONS = {
   'pinned': "Every @dxos/* dependency is pinned to the target's commit.",
   'builds': 'The plugin builds and its manifest names its key.',
   'loads': 'Served from the dev server, the plugin is enabled and active in the target.',
-  'navtree-group': 'F-1.1: the space navtree holds a WORLD CLOCK group with a Clocks page.',
+  'navtree-group': 'F-1.1: the space navtree holds a clock-named group with a page under it.',
   'map': 'F-1.2: the Clocks page renders a map.',
   'clocks-tick': 'F-1.3: the page shows HH:MM:SS clocks that change from one second to the next.',
   'timezone-shown': 'F-1.3: each clock names its timezone.',
+  'speed': "Wall clock of the agent's turns, 1 at 5 minutes or less, 0 at 25.",
+  'cost': "Claude Code's reported spend, 1 at $0.25 or less, 0 at $2.",
 } as const;
+
+/** The pass/fail dimensions; speed and cost are graded on a curve and never crash. */
+const CORRECTNESS = Object.keys(DIMENSIONS).filter((name) => name !== 'speed' && name !== 'cost') as Dimension[];
+
+/** 1 at or under `target`, 0 at or over `ceiling`, linear between. */
+const curve = (value: number, { target, ceiling }: { target: number; ceiling: number }): number =>
+  Math.min(1, Math.max(0, (ceiling - value) / (ceiling - target)));
+
+/**
+ * Claude Code's spend for the session from each `result` event's `total_cost_usd`: the last value
+ * when they only grow (cumulative), their sum when they do not (per turn).
+ */
+const costUsd = (events: readonly StreamEvent[]): number => {
+  const costs = events
+    .filter((event) => event.type === 'result')
+    .map((event) => event.total_cost_usd)
+    .filter((cost): cost is number => typeof cost === 'number');
+  if (costs.length === 0) {
+    return Number.NaN;
+  }
+  const cumulative = costs.every((cost, i) => i === 0 || cost >= costs[i - 1]);
+  return cumulative ? costs[costs.length - 1] : costs.reduce((sum, cost) => sum + cost, 0);
+};
 
 type Dimension = keyof typeof DIMENSIONS;
 
@@ -284,14 +330,15 @@ const grade = async (workdir: string, tab: Tab, events: readonly StreamEvent[]):
   const mark = (name: Dimension, pass: boolean, error?: string) => {
     scores[name] = { score: pass ? 1 : 0, ...(error ? { error } : {}) };
   };
+  const progress = { stage: 'start' };
 
   mark('skill-fired', skillFired(events));
   try {
-    await gradeBuild(workdir, tab, mark);
+    await gradeBuild(workdir, tab, mark, progress);
   } catch (error) {
-    // A crash part way scores what it reached and reports why on the rest.
-    for (const name of Object.keys(DIMENSIONS) as Dimension[]) {
-      scores[name] ??= { score: 0, error: String(error).slice(0, 500) };
+    // A crash part way scores what it reached and reports where and why on the rest.
+    for (const name of CORRECTNESS) {
+      scores[name] ??= { score: 0, error: `${progress.stage}: ${String(error).slice(0, 500)}` };
     }
   }
   return scores;
@@ -301,12 +348,14 @@ const gradeBuild = async (
   workdir: string,
   tab: Tab,
   mark: (name: Dimension, pass: boolean, error?: string) => void,
+  progress: { stage: string },
 ): Promise<void> => {
   const packageFile = path.join(workdir, 'package.json');
   if (!fs.existsSync(packageFile)) {
     return;
   }
   const pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
+  progress.stage = 'boot';
   await boot(tab.page);
   const commit: string = await tab.page.evaluate(
     () => (globalThis as any).dxos.client.config.values.runtime?.app?.build?.commitHash ?? '',
@@ -316,6 +365,7 @@ const gradeBuild = async (
   );
   mark('pinned', dxos.length > 0 && dxos.every(([, spec]) => String(spec).endsWith(`@${commit.slice(0, 7)}`)));
 
+  progress.stage = 'build';
   const built = run('npx', ['vite', 'build'], workdir);
   const manifest = built ? findManifest(workdir) : undefined;
   mark('builds', manifest !== undefined);
@@ -333,35 +383,83 @@ const gradeBuild = async (
     }
     // A plugin the tab loaded from the agent's server reloads the page when that server goes, so
     // start from a fresh load once the grader's own server is up.
-    await boot(tab.page);
-    await enableDevServer(tab.page);
-    await boot(tab.page);
-    const state = await tab.page.evaluate(
-      (key) => (globalThis as any).composer.plugins().find((plugin: any) => plugin.id === key),
-      manifest.key,
-    );
-    mark('loads', !!state?.enabled && !!state?.active);
-
     const { page } = tab;
-    await page.keyboard.press('Escape');
-    const spaceTab = page.getByRole('tab', { name: 'My Space' }).or(page.getByRole('button', { name: 'My Space' }));
-    if (await spaceTab.first().isVisible()) {
-      await spaceTab.first().click();
+    progress.stage = 'boot before Enable';
+    await acrossReloads(page, () => boot(page));
+    progress.stage = 'Enable under Dev Server';
+    await acrossReloads(page, () => enableDevServer(page));
+    progress.stage = 'boot with the dev server';
+    await acrossReloads(page, () => boot(page));
+    progress.stage = 'plugin state';
+    const loaded = await acrossReloads(page, () =>
+      page
+        .waitForFunction(
+          (key) => {
+            const plugin = (globalThis as any).composer?.plugins?.().find((plugin: any) => plugin.id === key);
+            return plugin?.enabled && plugin?.active;
+          },
+          manifest.key,
+          { timeout: 60_000 },
+        )
+        .then(
+          () => true,
+          (error) => {
+            if (/Execution context was destroyed|navigat/i.test(String(error))) {
+              throw error;
+            }
+            return false;
+          },
+        ),
+    );
+    mark('loads', loaded);
+
+    progress.stage = 'navtree';
+    // A reload leaves a space's rail tab pending ("Loading space…") until the space opens; its
+    // navtree exists only once that tab is clicked. Prefer "My Space", the persona's test space.
+    const ready = '[data-testid^="spacePlugin.space"]:not([data-testid="spacePlugin.space.pending"])';
+    await page.waitForSelector(ready, { timeout: 180_000 }).catch(() => undefined);
+    const spaceTab = page.locator(ready, { hasText: 'My Space' }).or(page.locator(ready)).first();
+    if (await spaceTab.isVisible().catch(() => false)) {
+      await spaceTab.click();
     }
+    // The brief names neither the group nor its page, so any clock-named group heading (uppercase
+    // by CSS) with a clock-named item under it passes.
     const group = await page
-      .waitForFunction(() => document.body.innerText.includes('WORLD CLOCK'), null, { timeout: 20_000 })
+      .waitForFunction(() => /^[A-Z0-9 ]*CLOCK[A-Z0-9 ]*$/m.test(document.body.innerText), null, { timeout: 30_000 })
       .then(
         () => true,
         () => false,
       );
-    const clocksItem = page.getByText('Clocks', { exact: true }).first();
-    const hasPage = group && (await clocksItem.isVisible());
-    mark('navtree-group', hasPage);
-    if (!hasPage) {
+    // The last clock-named navtree entry outside `main` that is not the uppercase group heading.
+    const openedPage =
+      group &&
+      (await page.evaluate(() => {
+        const item = [...document.querySelectorAll('*')]
+          .filter(
+            (e) =>
+              e.childElementCount === 0 &&
+              /clock/i.test(e.textContent ?? '') &&
+              !e.closest('main') &&
+              getComputedStyle(e).textTransform !== 'uppercase',
+          )
+          .pop();
+        const target = item?.closest('a,button,[role=treeitem],li') ?? item;
+        (target as HTMLElement | undefined)?.click();
+        return !!target;
+      }));
+    mark('navtree-group', openedPage);
+    if (!openedPage) {
+      await page.screenshot({ path: path.join(workdir, '.eval-navtree.png') }).catch(() => undefined);
+      const tabs = await page
+        .evaluate(() =>
+          [...document.querySelectorAll('[role=tab]')].map((e) => `${e.getAttribute('data-testid')}:${e.textContent}`),
+        )
+        .catch(() => []);
+      fs.writeFileSync(path.join(workdir, '.eval-navtree.json'), JSON.stringify({ group, tabs }, null, 2));
       return;
     }
 
-    await clocksItem.click();
+    progress.stage = 'clock page';
     const timePattern = /\b([01]\d|2[0-3]):[0-5]\d:[0-5]\d\b/g;
     const times = () => page.evaluate(() => document.querySelector('main')?.innerText ?? '');
     await page
@@ -400,6 +498,7 @@ type Output = {
   scores: Scorer.Scores;
   turns: number;
   durationMillis: number;
+  costUsd: number;
   finished: boolean;
   /** The agent's last message, for reading a failed run without re-running it. */
   lastMessage: string;
@@ -431,6 +530,7 @@ const task = async (): Promise<Output> => {
   let durationMillis = 0;
   let finished = false;
   let lastMessage = '';
+  let keep = false;
   const deadline = Date.now() + RUN_TIMEOUT;
   try {
     let prompt = BRIEF;
@@ -456,14 +556,34 @@ const task = async (): Promise<Output> => {
     }
     await agent.close();
     const scores = await grade(workdir, tab, events);
-    return { scores, turns, durationMillis, finished, lastMessage: lastMessage.slice(0, 4_000) };
+    const cost = costUsd(events);
+    scores.speed = { score: curve(durationMillis, SPEED) };
+    scores.cost = Number.isNaN(cost)
+      ? { score: 0, error: 'no total_cost_usd on any result event' }
+      : { score: curve(cost, COST) };
+    const output = { scores, turns, durationMillis, costUsd: cost, finished, lastMessage: lastMessage.slice(0, 4_000) };
+    keep = CORRECTNESS.some((name) => (scores[name]?.score ?? 0) < 1);
+    // evalite's table truncates. A failed run keeps the agent's folder; every run keeps its scores
+    // and event stream, for reading where the time and money went.
+    const record = keep ? workdir : fs.mkdtempSync(path.join(os.tmpdir(), 'dx-plugin-eval-record-'));
+    fs.writeFileSync(path.join(record, '.eval-output.json'), JSON.stringify(output, null, 2));
+    fs.writeFileSync(path.join(record, '.eval-events.jsonl'), events.map((event) => JSON.stringify(event)).join('\n'));
+    const summary = Object.entries(scores)
+      .map(([name, { score }]) => `${name}=${Math.round(score * 100) / 100}`)
+      .join(' ');
+    console.log(
+      `composer-plugin-dev: ${summary} turns=${turns} minutes=${(durationMillis / 60_000).toFixed(1)} usd=${cost.toFixed(2)} record=${record}`,
+    );
+    return output;
   } finally {
     await agent.close();
     killDevServer();
     await tab.context.close();
     await observed.finish();
     fs.rmSync(tab.profile, { recursive: true, force: true });
-    fs.rmSync(workdir, { recursive: true, force: true });
+    if (!keep) {
+      fs.rmSync(workdir, { recursive: true, force: true });
+    }
   }
 };
 
