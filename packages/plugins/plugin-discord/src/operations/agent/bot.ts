@@ -50,8 +50,9 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
   }
 
   const wanted = asked.toLowerCase();
-  let storedHandle: string | undefined;
   const people = yield* Database.query(Query.select(Filter.type(Person.Person))).run.pipe(Effect.orDie);
+  // Every contact the name matches, not the first: a handle on one must not hide an id on another.
+  const identities = new Set<string>();
   for (const person of people) {
     const identity = person.identities?.find(({ label }) => label === 'discord')?.value.trim();
     if (!identity) {
@@ -60,23 +61,52 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     // Only the Discord identity stands for a Discord handle; another platform's handle names someone else there.
     const names = [person.fullName, person.preferredName, person.nickname, identity.replace(/^@/, '')];
     if (names.some((candidate) => candidate?.trim().toLowerCase() === wanted)) {
-      if (SNOWFLAKE.test(identity)) {
-        return identity;
-      }
-      storedHandle = identity.replace(/^@/, '').toLowerCase();
-      break;
+      identities.add(identity);
     }
   }
 
+  const ids = [...identities].filter((identity) => SNOWFLAKE.test(identity));
+  const handles = [
+    ...new Set(
+      [...identities]
+        .filter((identity) => !SNOWFLAKE.test(identity))
+        .map((identity) => identity.replace(/^@/, '').toLowerCase()),
+    ),
+  ];
+  if (ids.length > 1) {
+    return yield* Effect.fail(
+      new DiscordBot.DiscordBotError({ message: `${to} could be any of the contacts with ids ${ids.join(', ')}.` }),
+    );
+  }
+  if (ids.length === 1) {
+    return ids[0];
+  }
+
   const service = yield* DiscordBot.DiscordBotService;
-  if (storedHandle !== undefined) {
-    // A handle on record names one account: a member whose name only starts with it is someone else.
-    const members = yield* service.findMembers(bot, storedHandle);
-    const match = members.find(({ username }) => username.toLowerCase() === storedHandle);
-    if (!match) {
-      return yield* Effect.fail(new DiscordBot.DiscordBotError({ message: `No Discord member is called ${to}.` }));
+  if (handles.length > 1) {
+    const listed = handles.map((handle) => `@${handle}`).join(', ');
+    return yield* Effect.fail(new DiscordBot.DiscordBotError({ message: `${to} could be any of ${listed}.` }));
+  }
+  if (handles.length === 1) {
+    // A handle on record names one account: a member whose name only starts with it is someone else. It may be a
+    // display name (EDGE writes a mention as `@<global name>`), which counts only when one member has it.
+    const [handle] = handles;
+    const members = yield* service.findMembers(bot, handle);
+    const byUsername = members.filter(({ username }) => username.toLowerCase() === handle);
+    const candidates =
+      byUsername.length > 0 ? byUsername : members.filter(({ displayName }) => displayName?.toLowerCase() === handle);
+    if (candidates.length === 0) {
+      return yield* Effect.fail(
+        new DiscordBot.DiscordBotError({ message: `${to}'s Discord handle @${handle} names no member.` }),
+      );
     }
-    return match.userId;
+    if (candidates.length > 1) {
+      const listed = candidates.map(({ username }) => `@${username}`).join(', ');
+      return yield* Effect.fail(
+        new DiscordBot.DiscordBotError({ message: `${to}'s Discord handle @${handle} could be any of ${listed}.` }),
+      );
+    }
+    return candidates[0].userId;
   }
 
   const members = yield* service.findMembers(bot, asked);

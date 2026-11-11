@@ -161,11 +161,56 @@ describe('resolveUser', () => {
       const twitter = yield* resolveUser(BOT, '@bobby').pipe(Effect.flip);
       expect(twitter.message).toBe('No Discord member is called @bobby.');
       const digits = yield* resolveUser(BOT, 'Numbers').pipe(Effect.flip);
-      expect(digits.message).toBe('No Discord member is called Numbers.');
+      expect(digits.message).toBe("Numbers's Discord handle @444444444444444444 names no member.");
       // `ric` is the start of @richburdon and @richard, but neither is Rick.
       const prefix = yield* resolveUser(BOT, 'Rick').pipe(Effect.flip);
-      expect(prefix.message).toBe('No Discord member is called Rick.');
+      expect(prefix.message).toBe("Rick's Discord handle @ric names no member.");
     }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+  );
+
+  it.effect('prefers an id on record to a handle, and refuses contacts whose handles disagree', () =>
+    Effect.gen(function* () {
+      // The handle comes first, so a first-match lookup would never reach the id.
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Rich', identities: [{ label: 'discord', value: 'richburdon' }] }),
+      );
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Rich', identities: [{ label: 'discord', value: '555555555555555555' }] }),
+      );
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Alex', identities: [{ label: 'discord', value: 'alex1' }] }),
+      );
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Alex', identities: [{ label: 'discord', value: 'alex2' }] }),
+      );
+      yield* Database.flush();
+
+      expect(yield* resolveUser(BOT, 'Rich')).toBe('555555555555555555');
+      const alex = yield* resolveUser(BOT, 'Alex').pipe(Effect.flip);
+      expect(alex.message).toBe('Alex could be any of @alex1, @alex2.');
+    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+  );
+
+  it.effect('takes a stored handle that is a display name only when one member has it', () =>
+    Effect.gen(function* () {
+      // As EDGE writes a mention: `@<global name>`, which an agent may keep as the person's Discord identity.
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Rich Burdon', identities: [{ label: 'discord', value: '@Rich Burdon' }] }),
+      );
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Sam', identities: [{ label: 'discord', value: 'Sam' }] }),
+      );
+      yield* Database.flush();
+      const guild: DiscordBot.Member[] = [
+        { userId: '666666666666666666', username: 'rburdon', displayName: 'Rich Burdon' },
+        { userId: '777777777777777777', username: 'samuel', displayName: 'Sam' },
+        { userId: '888888888888888888', username: 'samantha', displayName: 'Sam' },
+      ];
+
+      expect(yield* resolveUser(BOT, 'Rich Burdon').pipe(Effect.provide(fakeBot(guild)))).toBe('666666666666666666');
+      const sam = yield* resolveUser(BOT, 'Sam').pipe(Effect.provide(fakeBot(guild)), Effect.flip);
+      expect(sam.message).toBe("Sam's Discord handle @sam could be any of @samuel, @samantha.");
+    }).pipe(Effect.provide(TestLayer)),
   );
 
   it.effect('refuses a name that matches nobody, or several members', () =>
