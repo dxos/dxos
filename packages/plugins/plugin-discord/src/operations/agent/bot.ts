@@ -42,7 +42,8 @@ type Lookup = { readonly userId: string } | { readonly reason: string };
  * - `@` before digits is an id unless a member's username is those digits;
  * - else the account the contacts of that name record (their `discord` identities: ids, or handles an agent kept,
  *   which must be a member's exact username), which must be one account;
- * - else the one member whose username or guild nickname is exactly that name.
+ * - else the one member whose username or display name (their guild nickname, else their global name) is exactly that
+ *   name; Discord's search finds a member by username or nickname only.
  * Anything else is refused with the candidates.
  */
 export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to: string) {
@@ -56,7 +57,7 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
 
   /**
    * The account `value` names. A handle a contact records must be a username (`usernameOnly`); a name the agent gives
-   * may also be a guild nickname, the two being what Discord's search matches. Two accounts that match are refused.
+   * may also be a display name, which Discord's search finds as a guild nickname. Two accounts that match are refused.
    */
   const account = Effect.fnUntraced(function* (value: string, usernameOnly: boolean) {
     const id = DiscordBot.explicitUserId(value);

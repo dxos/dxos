@@ -66,28 +66,27 @@ export const makeDiscordChannelBackend = ({
   readOnly: () => true,
   mirrored: true,
   // No Discord call: EDGE's bot opens the DM with the token it holds when it posts the agent's message.
-  openDirect: (_channel, person) =>
-    Effect.gen(function* () {
-      const discord = DiscordBot.discordIdentities(person);
-      if (discord.length === 0) {
-        return undefined;
-      }
-      // A handle beside an id on the same contact is not looked up here (no member search): their own id is trusted.
-      // Only an unambiguous id: `@` before digits may be a numeric username, which this cannot look up.
-      const ids = [...new Set(discord.flatMap((value) => DiscordBot.explicitUserId(value) ?? []))];
-      if (ids.length === 1) {
-        return DiscordChannel.pendingDmThread(ids[0]);
-      }
-      const name = person.fullName || person.nickname || 'This person';
-      return yield* Effect.fail(
-        new DiscordChannelError({
-          message:
-            ids.length > 1
-              ? `${name} has more than one Discord user id on record: ${ids.join(', ')}.`
-              : `${name}'s Discord identity (${discord.join(', ')}) is not a user id; record their Discord user id to message them directly.`,
-        }),
-      );
-    }),
+  openDirect: Effect.fnUntraced(function* (_channel, person) {
+    const discord = DiscordBot.discordIdentities(person);
+    if (discord.length === 0) {
+      return undefined;
+    }
+    // Only an unambiguous id, since nothing is looked up here: `@` before digits may be a numeric username, and a
+    // handle beside an id on the same contact is not checked against it (their own id is trusted).
+    const ids = [...new Set(discord.flatMap((value) => DiscordBot.explicitUserId(value) ?? []))];
+    if (ids.length === 1) {
+      return DiscordChannel.pendingDmThread(ids[0]);
+    }
+    const name = person.fullName || person.nickname || 'This person';
+    return yield* Effect.fail(
+      new DiscordChannelError({
+        message:
+          ids.length > 1
+            ? `${name} has more than one Discord user id on record: ${ids.join(', ')}.`
+            : `${name}'s Discord identity (${discord.join(', ')}) is not a user id; record their Discord user id to message them directly.`,
+      }),
+    );
+  }),
   threads: {
     send: (channel, thread, message) =>
       Effect.gen(function* () {
