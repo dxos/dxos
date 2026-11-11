@@ -2834,6 +2834,13 @@ decision D-119: The snippet sources are read from disk with `fs`, not imported t
   affects: [F-3.6]
 ```
 
+```mdl
+decision D-120: The docs footer's Docs column lists ECHO, HALO and PLEX, in the topic switcher's order, each linking its section's Overview; the Composer entry goes. Fills in [F-7].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-7]
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
