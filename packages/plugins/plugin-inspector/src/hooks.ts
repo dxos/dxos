@@ -3,32 +3,24 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { useMemo } from 'react';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 
 /** The inspected plugin, once the manager has it. */
-export const useInspectedPlugin = (pluginId: string): Plugin.Plugin | undefined => {
-  const manager = usePluginManager();
+export const useInspectedPlugin = (pluginId: string | undefined): Plugin.Plugin | undefined => {
+  const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   return plugins.find((plugin) => plugin.meta.profile.key === pluginId);
 };
 
-/** What the inspected plugin's modules contribute to `interfaceDef`, by module id. */
+/** What the given modules contribute to `interfaceDef`, in module order. */
 export const useContributions = <T>(
-  pluginId: string,
+  moduleIds: readonly string[],
   interfaceDef: Capability.InterfaceDef<T>,
-): readonly { moduleId: string; value: T }[] => {
-  const manager = usePluginManager();
-  const plugin = useInspectedPlugin(pluginId);
+): readonly T[] => {
+  const manager = PluginManagerProvider.usePluginManager();
   const byModule = useAtomValue(manager.capabilities.atomByModule(interfaceDef));
-  return useMemo(
-    () =>
-      (plugin?.modules ?? []).flatMap((module) =>
-        (byModule[module.id] ?? []).map((value) => ({ moduleId: module.id, value })),
-      ),
-    [plugin, byModule],
-  );
+  return moduleIds.flatMap((moduleId) => byModule[moduleId] ?? []);
 };

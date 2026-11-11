@@ -4,4 +4,5 @@
 
 export * from './Inspector.tsx';
 export * from './InspectorPlugin.tsx';
-export type { LayoutProps, PanelId } from './Layout.tsx';
+export type { KindId } from './kinds.ts';
+export type { LayoutProps } from './Layout.tsx';

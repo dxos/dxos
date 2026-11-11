@@ -5,45 +5,29 @@
 import React, { useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Operation from '@dxos/compute/Operation';
-import { type Obj } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { type Space } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 
 import { useContributions } from '../hooks.ts';
-import { Empty, type PanelProps, Section } from './common.tsx';
+import { Note, Section, type ViewProps } from './common.tsx';
 
-export type OperationsPanelProps = PanelProps & { space?: Space; subject?: Obj.Unknown };
-
-/** The plugin's operations, each run from a form built from its input schema, and the tools its skills give. */
-export const OperationsPanel = ({ pluginId, empty, space, subject }: OperationsPanelProps) => {
-  const definitions = useContributions(pluginId, Capabilities.OperationHandler).flatMap(({ value }) =>
+/** Each operation the module handles, run from a form built from its input schema. */
+export const OperationsView = ({ moduleId, space, sample }: ViewProps) => {
+  const definitions = useContributions([moduleId], Capabilities.OperationHandler).flatMap((value) =>
     value.definitions(),
   );
-  const skills = useContributions(pluginId, AppCapabilities.SkillDefinition).map(({ value }) => value.make());
 
-  if (definitions.length === 0 && skills.length === 0) {
-    return <Empty>{empty}</Empty>;
+  if (definitions.length === 0) {
+    return <Note>This module handles no operations.</Note>;
   }
 
   return (
     <>
       {definitions.map((definition) => (
-        <OperationForm key={definition.meta.key} definition={definition} space={space} subject={subject} />
-      ))}
-      {skills.map((skill) => (
-        <Section key={skill.name} title={`Skill: ${skill.name}`}>
-          <p className='text-sm text-description'>Tools it gives the assistant:</p>
-          <ul className='text-sm font-mono'>
-            {skill.tools.map((tool) => (
-              <li key={tool}>{tool}</li>
-            ))}
-          </ul>
-        </Section>
+        <OperationForm key={definition.meta.key} definition={definition} space={space} sample={sample} />
       ))}
     </>
   );
@@ -73,12 +57,12 @@ const fieldsOf = (definition: Operation.Definition.Any): Field[] => {
   }));
 };
 
-type OperationFormProps = Pick<OperationsPanelProps, 'space' | 'subject'> & {
+type OperationFormProps = Pick<ViewProps, 'space' | 'sample'> & {
   definition: Operation.Definition.Any;
 };
 
-const OperationForm = ({ definition, space, subject }: OperationFormProps) => {
-  const { invokePromise } = useOperationInvoker();
+const OperationForm = ({ definition, space, sample }: OperationFormProps) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
   const fields = fieldsOf(definition);
   const [values, setValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<string>();
@@ -88,7 +72,7 @@ const OperationForm = ({ definition, space, subject }: OperationFormProps) => {
       fields.map(({ name, kind }) => [
         name,
         kind === 'object'
-          ? subject
+          ? sample
           : kind === 'number'
             ? Number(values[name])
             : kind === 'boolean'
@@ -112,9 +96,7 @@ const OperationForm = ({ definition, space, subject }: OperationFormProps) => {
             {description && <span className='text-description'> {description}</span>}
           </span>
           {kind === 'object' ? (
-            <span className='text-description'>
-              {subject ? 'The object selected in Types.' : 'Select an object in Types.'}
-            </span>
+            <span className='text-description'>{sample ? 'The sample object.' : 'Create a sample object first.'}</span>
           ) : (
             <Input.Root
               value={values[name] ?? ''}
@@ -123,8 +105,10 @@ const OperationForm = ({ definition, space, subject }: OperationFormProps) => {
           )}
         </label>
       ))}
-      <Button.Root label='Run' icon='ph--play--regular' disabled={needsSubject && !subject} onClick={handleRun} />
-      {result && <pre className='text-sm whitespace-pre-wrap'>{result}</pre>}
+      <div>
+        <Button.Root label='Run' icon='ph--play--regular' disabled={needsSubject && !sample} onClick={handleRun} />
+      </div>
+      {result && <pre className='text-sm whitespace-pre-wrap rounded-md bg-input-surface p-2'>{result}</pre>}
     </Section>
   );
 };
