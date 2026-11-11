@@ -9,7 +9,9 @@ import { type Space } from '@dxos/client/echo';
 import { Database, DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))({
+class Task extends Type.makeObject<Task>(
+  DXN.make('com.example.type.task', '0.1.0'),
+)({
   title: Schema.String,
   done: Schema.Boolean,
 }) {}
@@ -26,7 +28,9 @@ db.remove(task);
 // #endregion write
 
 // #region query
-const open = await db.query(Query.select(Filter.type(Task, { done: false }))).run();
+const open = await db
+  .query(Query.select(Filter.type(Task, { done: false })))
+  .run();
 // #endregion query
 
 // #region flush
@@ -51,7 +55,9 @@ const countOpen = Effect.gen(function* () {
   return { open: tasks.length, unsynced: sync.unsyncedDocumentCount };
 });
 
-const result = await EffectEx.runPromise(countOpen.pipe(Effect.provide(Database.layer(db))));
+const result = await EffectEx.runPromise(
+  countOpen.pipe(Effect.provide(Database.layer(db))),
+);
 // #endregion service
 
 export { open, persisted, result };

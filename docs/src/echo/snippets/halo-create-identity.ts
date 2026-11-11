@@ -35,7 +35,12 @@ console.log(me.did, me.displayName);
 const watch = Identity.identity.pipe(
   Stream.runForEach((identity) =>
     Effect.sync(() =>
-      console.log(Option.match(identity, { onNone: () => 'signed out', onSome: (i) => i.displayName })),
+      console.log(
+        Option.match(identity, {
+          onNone: () => 'signed out',
+          onSome: (i) => i.displayName,
+        }),
+      ),
     ),
   ),
 );

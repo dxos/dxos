@@ -10,7 +10,9 @@ declare const db: Database.Database;
 
 // #region add
 const northwind = db.add(Obj.make(Organization, { name: 'Northwind Labs' }));
-const ada = db.add(Obj.make(Person, { name: 'Ada Lovelace', employer: Ref.make(northwind) }));
+const ada = db.add(
+  Obj.make(Person, { name: 'Ada Lovelace', employer: Ref.make(northwind) }),
+);
 // #endregion
 
 // #region subscribe

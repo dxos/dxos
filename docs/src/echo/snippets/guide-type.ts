@@ -7,18 +7,24 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 // #region object
-class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+class Person extends Type.makeObject<Person>(
+  DXN.make('com.example.type.person', '0.1.0'),
+)(
   { name: Schema.String, email: Schema.optional(Schema.String) },
   Annotation.LabelAnnotation.set(['name']),
 ) {}
 // #endregion object
 
-class Company extends Type.makeObject<Company>(DXN.make('com.example.type.company', '0.1.0'))({
+class Company extends Type.makeObject<Company>(
+  DXN.make('com.example.type.company', '0.1.0'),
+)({
   name: Schema.String,
 }) {}
 
 // #region relation
-class WorksFor extends Type.makeRelation<WorksFor>(DXN.make('com.example.type.worksFor', '0.1.0'))({
+class WorksFor extends Type.makeRelation<WorksFor>(
+  DXN.make('com.example.type.worksFor', '0.1.0'),
+)({
   source: Person,
   target: Company,
 })({ role: Schema.String }) {}

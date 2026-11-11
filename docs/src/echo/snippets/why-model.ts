@@ -4,16 +4,27 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Database, DXN, Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
+import {
+  type Database,
+  DXN,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  Type,
+} from '@dxos/echo';
 
 declare const db: Database.Database;
 
-class Issue extends Type.makeObject<Issue>(DXN.make('com.example.type.issue', '0.1.0'))(
-  Schema.Struct({ title: Schema.String }),
-) {}
+class Issue extends Type.makeObject<Issue>(
+  DXN.make('com.example.type.issue', '0.1.0'),
+)(Schema.Struct({ title: Schema.String })) {}
 
 // #region memory
-class Memory extends Type.makeObject<Memory>(DXN.make('com.example.type.memory', '0.1.0'))(
+class Memory extends Type.makeObject<Memory>(
+  DXN.make('com.example.type.memory', '0.1.0'),
+)(
   Schema.Struct({
     title: Schema.String,
     content: Schema.String,
@@ -22,7 +33,13 @@ class Memory extends Type.makeObject<Memory>(DXN.make('com.example.type.memory',
 ) {}
 
 const issue = db.add(Obj.make(Issue, { title: 'Sync drops the last page' }));
-db.add(Obj.make(Memory, { title: 'Root cause', content: 'The cursor skips short pages.', about: Ref.make(issue) }));
+db.add(
+  Obj.make(Memory, {
+    title: 'Root cause',
+    content: 'The cursor skips short pages.',
+    about: Ref.make(issue),
+  }),
+);
 
 const recalled = await db.query(Query.select(Filter.type(Memory))).run();
 // #endregion memory
@@ -43,13 +60,20 @@ await db.addType(Contact);
 // #region external
 const key = { source: 'github.com', id: '1234' };
 
-const [existing] = await db.query(Query.select(Filter.foreignKeys(Issue, [key]))).run();
+const [existing] = await db
+  .query(Query.select(Filter.foreignKeys(Issue, [key])))
+  .run();
 if (existing) {
   Obj.update(existing, (existing) => {
     existing.title = 'Sync drops the last page';
   });
 } else {
-  db.add(Obj.make(Issue, { [Obj.Meta]: { keys: [key] }, title: 'Sync drops the last page' }));
+  db.add(
+    Obj.make(Issue, {
+      [Obj.Meta]: { keys: [key] },
+      title: 'Sync drops the last page',
+    }),
+  );
 }
 // #endregion external
 

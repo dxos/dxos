@@ -13,8 +13,13 @@ import { ClientProvider, useClient } from '@dxos/react-client';
 import { useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
-class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
-  Schema.Struct({ title: Schema.String, completed: Schema.optional(Schema.Boolean) }),
+class Task extends Type.makeObject<Task>(
+  DXN.make('com.example.type.task', '0.1.0'),
+)(
+  Schema.Struct({
+    title: Schema.String,
+    completed: Schema.optional(Schema.Boolean),
+  }),
 ) {}
 
 // #region spaces
@@ -69,8 +74,14 @@ const Tasks = () => {
           <TaskRow key={task.id} task={task} />
         ))}
       </ul>
-      <button onClick={() => space.db.add(Obj.make(Task, { title: 'Buy milk' }))}>Add a task</button>
-      <button onClick={() => tasks[0] && space.db.remove(tasks[0])}>Remove the first task</button>
+      <button
+        onClick={() => space.db.add(Obj.make(Task, { title: 'Buy milk' }))}
+      >
+        Add a task
+      </button>
+      <button onClick={() => tasks[0] && space.db.remove(tasks[0])}>
+        Remove the first task
+      </button>
     </>
   );
 };
@@ -108,7 +119,10 @@ const WithClient = () => (
 
 // #region config
 const WithConfig = () => (
-  <ClientProvider types={[Task]} config={async () => new Config(Local(), Defaults())}>
+  <ClientProvider
+    types={[Task]}
+    config={async () => new Config(Local(), Defaults())}
+  >
     <Tasks />
   </ClientProvider>
 );

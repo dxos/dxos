@@ -22,7 +22,12 @@ const invite = Effect.gen(function* () {
   console.log('Send this to Grace:', code);
 
   yield* Invitation.events(flow).pipe(
-    Stream.takeUntil((event) => event._tag === 'success' || event._tag === 'error' || event._tag === 'cancelled'),
+    Stream.takeUntil(
+      (event) =>
+        event._tag === 'success' ||
+        event._tag === 'error' ||
+        event._tag === 'cancelled',
+    ),
     Stream.runForEach((event) =>
       Effect.sync(() => {
         if (event._tag === 'readyForAuthentication') {
@@ -41,10 +46,18 @@ declare const authCode: string;
 const accept = Effect.gen(function* () {
   const flow = yield* Space.join(code);
   yield* Invitation.events(flow).pipe(
-    Stream.takeUntil((event) => event._tag === 'success' || event._tag === 'error' || event._tag === 'cancelled'),
+    Stream.takeUntil(
+      (event) =>
+        event._tag === 'success' ||
+        event._tag === 'error' ||
+        event._tag === 'cancelled',
+    ),
     Stream.runForEach((event) => {
-      console.log(event._tag); // connecting, connected, readyForAuthentication, authenticating, success
-      return event._tag === 'readyForAuthentication' ? Invitation.authenticate(flow, authCode) : Effect.void;
+      // connecting, connected, readyForAuthentication, authenticating, success
+      console.log(event._tag);
+      return event._tag === 'readyForAuthentication'
+        ? Invitation.authenticate(flow, authCode)
+        : Effect.void;
     }),
   );
 });
@@ -54,9 +67,16 @@ declare const graceDid: IdentityDid;
 
 // #region members
 const manage = Effect.gen(function* () {
-  const [members] = yield* Space.members(spaceId).pipe(Stream.take(1), Stream.runCollect);
+  const [members] = yield* Space.members(spaceId).pipe(
+    Stream.take(1),
+    Stream.runCollect,
+  );
   for (const member of members) {
-    console.log(member.displayName, member.role, member.online ? 'online' : 'offline');
+    console.log(
+      member.displayName,
+      member.role,
+      member.online ? 'online' : 'offline',
+    );
   }
 
   yield* Space.updateMemberRole(spaceId, graceDid, 'read');

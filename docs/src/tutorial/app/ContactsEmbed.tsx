@@ -7,7 +7,8 @@ import '../../styles/island-base.generated.css';
 
 import React, { useEffect, useState } from 'react';
 
-// `@dxos/keys` reads `Buffer` as it loads, so the globals go in before anything else.
+// `@dxos/keys` reads `Buffer` as it loads, so the globals go in before anything
+// else.
 import '@dxos/node-std/globals';
 import '@dxos/react-ui/theme.css';
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -22,14 +23,21 @@ import { type Peer, startPeers } from '../runtime.ts';
 import { type Stage } from './Contacts.tsx';
 import { PeerApp } from './PeerApp.tsx';
 
-const translations = [...uiTranslations, ...formTranslations, ...tableTranslations];
+const translations = [
+  ...uiTranslations,
+  ...formTranslations,
+  ...tableTranslations,
+];
 
 export type ContactsEmbedProps = {
   stage: Stage;
   peers?: 1 | 2;
 };
 
-/** A live embed of the tutorial app as it stands at `stage`; `/embed/contacts/` renders it. */
+/**
+ * A live embed of the tutorial app as it stands at `stage`; `/embed/contacts/`
+ * renders it.
+ */
 export const ContactsEmbed = ({ stage, peers = 1 }: ContactsEmbedProps) => {
   const [started, setStarted] = useState<Peer[]>();
   const [error, setError] = useState<string>();
@@ -46,10 +54,18 @@ export const ContactsEmbed = ({ stage, peers = 1 }: ContactsEmbedProps) => {
           <p className='p-4 text-description'>Starting…</p>
         ) : (
           started.map((peer) => (
-            <div key={peer.name} className='flex flex-col dx-grow border-e border-separator last:border-e-0'>
+            <div
+              key={peer.name}
+              className='flex flex-col dx-grow border-e border-separator last:border-e-0'
+            >
               {started.length > 1 && <PeerBar peer={peer} />}
               <div className='dx-grow'>
-                <PeerApp client={peer.client} space={peer.space} stage={stage} compact={started.length > 1} />
+                <PeerApp
+                  client={peer.client}
+                  space={peer.space}
+                  stage={stage}
+                  compact={started.length > 1}
+                />
               </div>
             </div>
           ))
@@ -64,7 +80,9 @@ const PeerBar = ({ peer }: { peer: Peer }) => {
   const [online, setOnline] = useState(true);
   const handleChange = (online: boolean) => {
     setOnline(online);
-    void peer.client.mesh.updateConfig(online ? ConnectionState.ONLINE : ConnectionState.OFFLINE);
+    void peer.client.mesh.updateConfig(
+      online ? ConnectionState.ONLINE : ConnectionState.OFFLINE,
+    );
   };
 
   return (

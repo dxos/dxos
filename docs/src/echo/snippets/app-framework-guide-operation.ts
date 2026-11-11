@@ -13,7 +13,7 @@ import { DXN } from '@dxos/echo';
 // #region define
 export const Slugify = Operation.make({
   meta: {
-    // eslint-disable-next-line @dxos/rules/operation-key-shape -- a reader's app owns no org.dxos domain.
+    // eslint-disable-next-line @dxos/rules/operation-key-shape -- a sample key.
     key: DXN.make('com.example.operation.text.slugify'),
     name: 'Slugify',
     description: 'Turn a title into a URL slug.',
@@ -41,7 +41,9 @@ export const TextHandlers = OperationHandlerSet.make(SlugifyHandler);
 
 // Lazy: the handler's module loads the first time the operation runs.
 export const LazyTextHandlers = OperationHandlerSet.lazy([
-  Slugify.pipe(Operation.lazyHandler(async () => ({ default: SlugifyHandler }))),
+  Slugify.pipe(
+    Operation.lazyHandler(async () => ({ default: SlugifyHandler })),
+  ),
 ]);
 // #endregion
 
@@ -54,5 +56,6 @@ export const slugOf = (title: string) =>
 // #endregion
 
 // #region layout
-export const openObject = (path: string) => Operation.invoke(LayoutOperation.Open, { subject: [path] });
+export const openObject = (path: string) =>
+  Operation.invoke(LayoutOperation.Open, { subject: [path] });
 // #endregion

@@ -12,7 +12,10 @@ import { Contacts, type ContactsProps } from './Contacts.tsx';
 export type PeerAppProps = ContactsProps & { client: Client };
 
 // #region provider
-/** One peer's copy of the app; the hooks below the provider read this peer's client. */
+/**
+ * One peer's copy of the app; the hooks below the provider read this peer's
+ * client.
+ */
 export const PeerApp = ({ client, ...props }: PeerAppProps) => (
   <ClientProvider client={client}>
     <Contacts {...props} />

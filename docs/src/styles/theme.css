@@ -10,7 +10,8 @@
   --sl-text-h1: 2.5rem;
   --sl-text-h2: 1.625rem;
   --sl-text-h3: 1.25rem;
-  --sl-content-width: 46rem;
+  /* Fits 80 columns of code inside a numbered step, the width the snippets are formatted to (850px at 17px). */
+  --sl-content-width: 50rem;
   --sl-line-height: 1.65;
 }
 

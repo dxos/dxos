@@ -18,8 +18,13 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-class Note extends Type.makeObject<Note>(DXN.make('com.example.type.note', '0.1.0'))(
-  Schema.Struct({ title: Schema.optional(Schema.String), pinned: Schema.optional(Schema.Boolean) }),
+class Note extends Type.makeObject<Note>(
+  DXN.make('com.example.type.note', '0.1.0'),
+)(
+  Schema.Struct({
+    title: Schema.optional(Schema.String),
+    pinned: Schema.optional(Schema.Boolean),
+  }),
 ) {}
 
 // #region nodes
@@ -47,8 +52,15 @@ const pin = AppGraphBuilder.createTypeExtension({
     Effect.succeed([
       AppGraphNode.makeAction({
         id: 'pin',
-        data: () => Effect.sync(() => Obj.update(note, (note) => (note.pinned = !note.pinned))),
-        properties: { label: 'Pin', icon: 'ph--push-pin--regular', disposition: 'list-item' },
+        data: () =>
+          Effect.sync(() =>
+            Obj.update(note, (note) => (note.pinned = !note.pinned)),
+          ),
+        properties: {
+          label: 'Pin',
+          icon: 'ph--push-pin--regular',
+          disposition: 'list-item',
+        },
       }),
     ]),
 });
@@ -58,13 +70,17 @@ const pin = AppGraphBuilder.createTypeExtension({
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([notes, pin]);
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contribute(
+      AppCapabilities.AppGraphBuilder,
+      extensions.flat(),
+    );
   }),
 );
 // #endregion
 
 // #region path
-export const pathOfNote = (note: Note, spaceId: string) => GraphPath.getSpacePath(spaceId, note.id);
+export const pathOfNote = (note: Note, spaceId: string) =>
+  GraphPath.getSpacePath(spaceId, note.id);
 // #endregion
 
 // #region read
@@ -73,7 +89,9 @@ export const ChildCount = ({ id }: { id: string }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     // Children are built lazily: expand the node, then read its connections.
-    void EffectEx.runPromise(AppGraph.expand(graph, id, AppGraphNode.child)).then(() =>
+    void EffectEx.runPromise(
+      AppGraph.expand(graph, id, AppGraphNode.child),
+    ).then(() =>
       setCount(AppGraph.getConnections(graph, id, AppGraphNode.child).length),
     );
   }, [graph, id]);

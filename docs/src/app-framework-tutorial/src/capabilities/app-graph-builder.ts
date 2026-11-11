@@ -51,15 +51,23 @@ export default Capability.makeModule(
       AppGraphBuilder.createExtension({
         id: 'sectionItems',
         match: (node) => {
-          const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-          return node.type === SECTION_TYPE && space ? Option.some(space) : Option.none();
+          const space = isSpace(node.properties.space)
+            ? node.properties.space
+            : undefined;
+          return node.type === SECTION_TYPE && space
+            ? Option.some(space)
+            : Option.none();
         },
         connector: (space, get) => {
           const bookmarks = get(space.db.query(Filter.type(Bookmark)).atom);
           return Effect.succeed(
             bookmarks
-              .map((bookmark) => AppNode.makeObject({ get, db: space.db, object: bookmark }))
-              .filter((node): node is NonNullable<typeof node> => node !== null),
+              .map((bookmark) =>
+                AppNode.makeObject({ get, db: space.db, object: bookmark }),
+              )
+              .filter(
+                (node): node is NonNullable<typeof node> => node !== null,
+              ),
           );
         },
       }),
@@ -82,6 +90,9 @@ export default Capability.makeModule(
       // #endregion
     ]);
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contribute(
+      AppCapabilities.AppGraphBuilder,
+      extensions.flat(),
+    );
   }),
 );

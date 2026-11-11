@@ -16,7 +16,8 @@ export const make = (): Skill.Skill =>
     name: 'Bookmarks',
     tools: Skill.toolDefinitions({ operations: [RecordVisit] }),
     instructions: Template.make({
-      source: 'When the user says they opened a bookmark, record a visit to it.',
+      source:
+        'When the user says they opened a bookmark, record a visit to it.',
     }),
   });
 // #endregion

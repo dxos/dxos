@@ -7,7 +7,10 @@ import React from 'react';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 
-/** A record as a row: `Listbox` reads `value`, `label`, `description` and `icon`. */
+/**
+ * A record as a row: `Listbox` reads `value`, `label`, `description` and
+ * `icon`.
+ */
 export type Entry = {
   value: string;
   label: string;
@@ -24,7 +27,12 @@ export type RecordListProps = {
 };
 
 /** One row per record; selecting a row opens it in the form. */
-export const RecordList = ({ entries, selected, onSelect, onRemove }: RecordListProps) => (
+export const RecordList = ({
+  entries,
+  selected,
+  onSelect,
+  onRemove,
+}: RecordListProps) => (
   <Listbox.Root
     items={[...entries]}
     value={selected ?? ''}
@@ -46,7 +54,8 @@ export const RecordList = ({ entries, selected, onSelect, onRemove }: RecordList
                 variant='ghost'
                 label='Remove'
                 onClick={(event) => {
-                  // The row selects on click, so removing a record must not reach it.
+                  // The row selects on click, so removing a record must not
+                  // reach it.
                   event.stopPropagation();
                   onRemove(entry.value);
                 }}

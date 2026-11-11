@@ -19,7 +19,9 @@ const meta = Plugin.makeMeta({
 // #endregion
 
 // #region module
-const Greeting = Capability.make<string>()('com.example.plugin.hello.capability.greeting');
+const Greeting = Capability.make<string>()(
+  'com.example.plugin.hello.capability.greeting',
+);
 
 const GreetingModule = Capability.inlineModule(
   'Greeting',
@@ -29,16 +31,22 @@ const GreetingModule = Capability.inlineModule(
 // #endregion
 
 // #region define
-export const HelloPlugin = Plugin.define(meta).pipe(Plugin.addModule(GreetingModule), Plugin.make);
+export const HelloPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(GreetingModule),
+  Plugin.make,
+);
 // #endregion
 
 // #region lazy
-// The module body loads only when its event fires. The loader's default export is checked against `provides`.
+// The module body loads only when its event fires. The loader's default export
+// is checked against `provides`.
 const LazyGreetingModule = Capability.lazyModule(
   'LazyGreeting',
   { provides: [Greeting], activatesOn: ActivationEvents.Idle },
   async () => ({
-    default: Capability.makeModule(() => Effect.succeed(Capability.contribute(Greeting, 'Hello, later'))),
+    default: Capability.makeModule(() =>
+      Effect.succeed(Capability.contribute(Greeting, 'Hello, later')),
+    ),
   }),
 );
 // #endregion
@@ -46,6 +54,8 @@ const LazyGreetingModule = Capability.lazyModule(
 void LazyGreetingModule;
 
 // #region test
-await using harness = await Harness.createComposerTestApp({ plugins: [HelloPlugin()] });
+await using harness = await Harness.createComposerTestApp({
+  plugins: [HelloPlugin()],
+});
 console.log(harness.getAll(Greeting)); // ['Hello, world']
 // #endregion

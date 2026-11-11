@@ -17,12 +17,16 @@ const listSpaces = Effect.gen(function* () {
   }
 });
 
-const findSpace = (id: SpaceId) => Space.get(id).pipe(Effect.map(Option.getOrUndefined));
+const findSpace = (id: SpaceId) =>
+  Space.get(id).pipe(Effect.map(Option.getOrUndefined));
 // #endregion list
 
 // #region create
 const createSpace = Effect.gen(function* () {
-  const space = yield* Space.create({ name: 'Team', membershipPolicy: 'invite' });
+  const space = yield* Space.create({
+    name: 'Team',
+    membershipPolicy: 'invite',
+  });
   yield* Space.waitReady(space.id);
   return space;
 });

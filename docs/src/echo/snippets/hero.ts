@@ -9,9 +9,9 @@ import { type Database, DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 declare const db: Database.Database;
 
 // #region
-class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
-  Schema.Struct({ title: Schema.String, done: Schema.Boolean }),
-) {}
+class Task extends Type.makeObject<Task>(
+  DXN.make('com.example.type.task', '0.1.0'),
+)(Schema.Struct({ title: Schema.String, done: Schema.Boolean })) {}
 
 const open = db.query(Query.select(Filter.type(Task, { done: false })));
 open.subscribe(() => console.log(open.results.length));

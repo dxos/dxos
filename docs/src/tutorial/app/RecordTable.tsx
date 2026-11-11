@@ -13,7 +13,8 @@ const text = (value: unknown): unknown => {
     return value.map(text).join(', ');
   }
   if (Ref.isRef(value)) {
-    // Every type is queried, so a target is in the working set and a synchronous read finds it.
+    // Every type is queried, so a target is in the working set and a
+    // synchronous read finds it.
     const target = value.peek();
     return (target && Obj.getLabel(target)) ?? '';
   }
@@ -37,11 +38,26 @@ export const RecordTable = ({ type, records, onSelect }: RecordTableProps) => {
   );
 
   const rows = useMemo(
-    () => records.map((record) => Object.fromEntries(Object.entries(record).map(([key, value]) => [key, text(value)]))),
+    () =>
+      records.map((record) =>
+        Object.fromEntries(
+          Object.entries(record).map(([key, value]) => [key, text(value)]),
+        ),
+      ),
     [records],
   );
 
-  const handleRowClick = useCallback((row: { id: string }) => onSelect(row.id), [onSelect]);
+  const handleRowClick = useCallback(
+    (row: { id: string }) => onSelect(row.id),
+    [onSelect],
+  );
 
-  return <DynamicTable name={Type.getTypename(type)} properties={properties} rows={rows} onRowClick={handleRowClick} />;
+  return (
+    <DynamicTable
+      name={Type.getTypename(type)}
+      properties={properties}
+      rows={rows}
+      onRowClick={handleRowClick}
+    />
+  );
 };

@@ -31,7 +31,10 @@ const restore = Effect.gen(function* () {
 
 // #region revoke
 const revokeAll = Effect.gen(function* () {
-  const [credentials] = yield* Identity.credentials.pipe(Stream.take(1), Stream.runCollect);
+  const [credentials] = yield* Identity.credentials.pipe(
+    Stream.take(1),
+    Stream.runCollect,
+  );
   for (const credential of credentials) {
     const recovery = credential.recovery;
     if (recovery && !recovery.revoked && recovery.lookupKey) {
@@ -43,4 +46,6 @@ const revokeAll = Effect.gen(function* () {
 
 await EffectEx.runPromise(backup.pipe(Effect.provide(layerClient(laptop))));
 await EffectEx.runPromise(restore.pipe(Effect.provide(layerClient(newLaptop))));
-await EffectEx.runPromise(revokeAll.pipe(Effect.provide(layerClient(newLaptop))));
+await EffectEx.runPromise(
+  revokeAll.pipe(Effect.provide(layerClient(newLaptop))),
+);

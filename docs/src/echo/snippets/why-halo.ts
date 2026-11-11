@@ -8,11 +8,13 @@ import { Identity, Invitation, Space } from '@dxos/halo';
 
 // #region pattern
 const start = Effect.gen(function* () {
-  const me = yield* Identity.create({ displayName: 'Ada' }); // a key pair, made on this device
+  // a key pair, made on this device
+  const me = yield* Identity.create({ displayName: 'Ada' });
   const team = yield* Space.create({ name: 'Team' });
 
   const flow = yield* Space.share(team.id, { authMethod: 'shared-secret' });
-  return { me, invite: yield* Invitation.code(flow) }; // send the code; no sign-up server involved
+  // send the code; no sign-up server involved
+  return { me, invite: yield* Invitation.code(flow) };
 });
 // #endregion pattern
 

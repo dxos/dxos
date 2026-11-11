@@ -8,7 +8,9 @@ import * as Schema from 'effect/Schema';
 import { Database, DXN, Feed, Filter, Obj, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-class Message extends Type.makeObject<Message>(DXN.make('com.example.type.message', '0.1.0'))({
+class Message extends Type.makeObject<Message>(
+  DXN.make('com.example.type.message', '0.1.0'),
+)({
   text: Schema.String,
 }) {}
 
@@ -18,7 +20,10 @@ declare const db: Database.Database;
 const feed = db.add(Feed.make({ name: 'Chat' }));
 
 const post = Effect.gen(function* () {
-  yield* Feed.append(feed, [Obj.make(Message, { text: 'Hello' }), Obj.make(Message, { text: 'Hi back' })]);
+  yield* Feed.append(feed, [
+    Obj.make(Message, { text: 'Hello' }),
+    Obj.make(Message, { text: 'Hi back' }),
+  ]);
 });
 // #endregion make
 
@@ -29,10 +34,16 @@ const read = Effect.gen(function* () {
 
   // The next page: resume after the last item read.
   const cursor = Feed.getLocalCursor(messages[messages.length - 1]);
-  const next = yield* Feed.walk(feed, Filter.type(Message), { begin: cursor, limit: 50 }).run;
+  const next = yield* Feed.walk(feed, Filter.type(Message), {
+    begin: cursor,
+    limit: 50,
+  }).run;
 
   // Any filter works, as in a database query.
-  const greetings = yield* Feed.query(feed, Filter.type(Message, { text: 'Hello' })).run;
+  const greetings = yield* Feed.query(
+    feed,
+    Filter.type(Message, { text: 'Hello' }),
+  ).run;
   return { messages, next, greetings };
 });
 // #endregion read
@@ -47,7 +58,11 @@ const configure = Effect.gen(function* () {
 // #region fork
 const branch = Effect.gen(function* () {
   const [first] = yield* Feed.walk(feed, Filter.type(Message)).run;
-  const id = yield* Feed.fork(feed, [Obj.make(Message, { text: 'An alternate reply' })], { at: first });
+  const id = yield* Feed.fork(
+    feed,
+    [Obj.make(Message, { text: 'An alternate reply' })],
+    { at: first },
+  );
   return yield* Feed.walk(feed, Filter.type(Message), { branch: id }).run;
 });
 // #endregion fork

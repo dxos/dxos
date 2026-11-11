@@ -11,6 +11,8 @@ import * as BookmarksSkill from '../skills/BookmarksSkill.ts';
 
 // #region skill-definition
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(AppCapabilities.SkillDefinition, BookmarksSkill)),
+  Effect.succeed(
+    Capability.contribute(AppCapabilities.SkillDefinition, BookmarksSkill),
+  ),
 );
 // #endregion

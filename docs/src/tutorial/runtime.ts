@@ -27,7 +27,8 @@ const NAMES = [
 ] as const;
 
 /**
- * Starts the app's peers in the page, each an in-memory client: the first opens the space and seeds it, and the
+ * Starts the app's peers in the page, each an in-memory client: the first opens
+ * the space and seeds it, and the
  * second, when asked for, joins it by invitation.
  */
 export const startPeers = async (count: 1 | 2): Promise<Peer[]> => {
@@ -37,10 +38,17 @@ export const startPeers = async (count: 1 | 2): Promise<Peer[]> => {
   const peers: Peer[] = [{ ...NAMES[0], ...host }];
 
   if (count === 2) {
-    const client = new Client({ types, services: builder.createLocalClientServices() });
+    const client = new Client({
+      types,
+      services: builder.createLocalClientServices(),
+    });
     await client.initialize();
-    await client.halo.createIdentity(create(ProfileDocumentSchema, { displayName: NAMES[1].name }));
-    await Promise.all(performInvitation({ host: host.space, guest: client.spaces }));
+    await client.halo.createIdentity(
+      create(ProfileDocumentSchema, { displayName: NAMES[1].name }),
+    );
+    await Promise.all(
+      performInvitation({ host: host.space, guest: client.spaces }),
+    );
     const space = await listed(client, host.space.id);
     await space.waitUntilReady();
     peers.push({ ...NAMES[1], client, space });

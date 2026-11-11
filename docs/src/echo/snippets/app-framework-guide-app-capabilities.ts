@@ -16,24 +16,34 @@ const ClockNamespace = Plugin.namespace('com.example.plugin.clock');
 
 // #region settings
 export const Settings = Schema.Struct({
-  showSeconds: Schema.optional(Schema.Boolean.annotate({ title: 'Show seconds' })),
+  showSeconds: Schema.optional(
+    Schema.Boolean.annotate({ title: 'Show seconds' }),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
 
 export const SettingsModule = Capability.makeModule(() =>
   Effect.sync(() => {
-    // A writable atom. Real plugins persist it with `KvsStore.make` from `@dxos/effect`.
+    // A writable atom. Real plugins persist it with `KvsStore.make` from
+    // `@dxos/effect`.
     const atom = Atom.make<Settings>({ showSeconds: false });
-    return Capability.contribute(AppCapabilities.Settings, { prefix: ClockNamespace.key, schema: Settings, atom });
+    return Capability.contribute(AppCapabilities.Settings, {
+      prefix: ClockNamespace.key,
+      schema: Settings,
+      atom,
+    });
   }),
 );
 // #endregion
 
 // #region makers
-// Each maker declares the capability and its default activation event, so a manifest names only the loader.
+// Each maker declares the capability and its default activation event, so a
+// manifest names only the loader.
 export const modules = [
   AppCapability.settings(async () => ({ default: SettingsModule })),
-  AppCapability.translations([{ 'en-US': { [ClockNamespace.key]: { 'plugin.name': 'Clock' } } }]),
+  AppCapability.translations([
+    { 'en-US': { [ClockNamespace.key]: { 'plugin.name': 'Clock' } } },
+  ]),
 ];
 // #endregion

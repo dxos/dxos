@@ -6,8 +6,14 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 
-class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))(
-  Schema.Struct({ title: Schema.String, priority: Schema.Number, tags: Schema.Array(Schema.String) }),
+class Task extends Type.makeObject<Task>(
+  DXN.make('com.example.type.task', '0.1.0'),
+)(
+  Schema.Struct({
+    title: Schema.String,
+    priority: Schema.Number,
+    tags: Schema.Array(Schema.String),
+  }),
 ) {}
 
 declare const db: Database.Database;
@@ -23,7 +29,11 @@ const tagged = Filter.type(Task, { tags: Filter.contains('docs') });
 // #endregion
 
 // #region combine
-const triage = Filter.and(Filter.type(Task), Filter.or(urgent, tagged), Filter.not(midrange));
+const triage = Filter.and(
+  Filter.type(Task),
+  Filter.or(urgent, tagged),
+  Filter.not(midrange),
+);
 const results = await db.query(Query.select(triage)).run();
 // #endregion
 

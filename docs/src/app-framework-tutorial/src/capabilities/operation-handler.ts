@@ -11,6 +11,11 @@ import { BookmarkOperationHandlerSet } from '../operations/index.ts';
 
 // #region operation-handler
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(Capabilities.OperationHandler, BookmarkOperationHandlerSet)),
+  Effect.succeed(
+    Capability.contribute(
+      Capabilities.OperationHandler,
+      BookmarkOperationHandlerSet,
+    ),
+  ),
 );
 // #endregion

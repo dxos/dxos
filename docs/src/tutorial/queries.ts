@@ -10,13 +10,18 @@ import { Event, Organization, Person } from './schema.ts';
 export const organizations = Query.select(Filter.type(Organization)).orderBy(
   Order.property<Organization>('name', 'asc'),
 );
-export const people = Query.select(Filter.type(Person)).orderBy(Order.property<Person>('name', 'asc'));
-export const events = Query.select(Filter.type(Event)).orderBy(Order.property<Event>('title', 'asc'));
+export const people = Query.select(Filter.type(Person)).orderBy(
+  Order.property<Person>('name', 'asc'),
+);
+export const events = Query.select(Filter.type(Event)).orderBy(
+  Order.property<Event>('title', 'asc'),
+);
 // #endregion
 
 // #region search
 /** Every record whose text contains `text`, whatever its type. */
-export const search = (text: string) => Query.select(Filter.text(text, { type: 'full-text' }));
+export const search = (text: string) =>
+  Query.select(Filter.text(text, { type: 'full-text' }));
 // #endregion
 
 // #region employees

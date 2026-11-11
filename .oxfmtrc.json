@@ -51,7 +51,12 @@
   ],
   "overrides": [
     {
-      "files": ["docs/src/content/docs/**"],
+      "files": [
+        "docs/src/app-framework-tutorial/**",
+        "docs/src/content/docs/**",
+        "docs/src/echo/snippets/**",
+        "docs/src/tutorial/**"
+      ],
       "options": {
         "printWidth": 80
       }

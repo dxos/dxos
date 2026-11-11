@@ -9,7 +9,10 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // #region
 export default defineConfig({
-  plugins: [ConfigPlugin({ root: import.meta.dirname, env: ['MY_ENV_VAR'] }), wasm()],
+  plugins: [
+    ConfigPlugin({ root: import.meta.dirname, env: ['MY_ENV_VAR'] }),
+    wasm(),
+  ],
   worker: {
     format: 'es',
     plugins: () => [wasm()],

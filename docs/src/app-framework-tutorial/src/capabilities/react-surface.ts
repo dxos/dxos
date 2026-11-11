@@ -21,7 +21,11 @@ export default Capability.makeModule(() =>
         id: 'article',
         filter: AppSurface.object(AppSurface.Article, Bookmark),
         component: BookmarkArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId } }) => ({
+          role,
+          subject,
+          attendableId,
+        }),
       }),
     ),
   ),

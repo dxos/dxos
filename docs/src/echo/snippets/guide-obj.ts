@@ -6,12 +6,16 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 
-class Task extends Type.makeObject<Task>(DXN.make('com.example.type.task', '0.1.0'))({
+class Task extends Type.makeObject<Task>(
+  DXN.make('com.example.type.task', '0.1.0'),
+)({
   title: Schema.String,
   done: Schema.Boolean,
 }) {}
 
-class Project extends Type.makeObject<Project>(DXN.make('com.example.type.project', '0.1.0'))({
+class Project extends Type.makeObject<Project>(
+  DXN.make('com.example.type.project', '0.1.0'),
+)({
   name: Schema.String,
   tasks: Schema.Array(Ref.Ref(Task)),
 }) {}
@@ -58,7 +62,9 @@ Obj.update(task, (task) => {
 });
 
 // The parent holds a reference to the child.
-const project = db.add(Obj.make(Project, { name: 'Docs', tasks: [Ref.make(task)] }));
+const project = db.add(
+  Obj.make(Project, { name: 'Docs', tasks: [Ref.make(task)] }),
+);
 Obj.setParent(task, project);
 const parent = Obj.getParent(task); // project
 // #endregion meta

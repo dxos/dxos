@@ -29,7 +29,12 @@ const showCode = Effect.gen(function* () {
 
 // #region events
 const follow = Invitation.events(flow).pipe(
-  Stream.takeUntil((event) => event._tag === 'success' || event._tag === 'error' || event._tag === 'cancelled'),
+  Stream.takeUntil(
+    (event) =>
+      event._tag === 'success' ||
+      event._tag === 'error' ||
+      event._tag === 'cancelled',
+  ),
   Stream.runForEach((event) =>
     Effect.sync(() => {
       switch (event._tag) {
@@ -47,7 +52,8 @@ const follow = Invitation.events(flow).pipe(
 
 // #region cancel
 const stop = Invitation.cancel(flow);
-const pending = Space.invitations(spaceId); // the flows this host has open for the space
+// the flows this host has open for the space
+const pending = Space.invitations(spaceId);
 // #endregion cancel
 
 export { follow, open, pending, showCode, stop };

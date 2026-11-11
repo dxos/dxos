@@ -8,32 +8,48 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Ref, Type } from '@dxos/echo';
 
 // #region organization
-export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
+export class Organization extends Type.makeObject<Organization>(
+  DXN.make('com.example.type.organization', '0.1.0'),
+)(
   Schema.Struct({
     name: Schema.String,
     website: Schema.optional(Format.URL),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--buildings--regular', hue: 'amber' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({
+      icon: 'ph--buildings--regular',
+      hue: 'amber',
+    }),
+  ),
 ) {}
 // #endregion
 
 // #region person
-export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
+export class Person extends Type.makeObject<Person>(
+  DXN.make('com.example.type.person', '0.1.0'),
+)(
   Schema.Struct({
     name: Schema.String,
     email: Schema.optional(Format.Email),
     employer: Schema.optional(Ref.Ref(Organization)),
-  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'cyan' })),
+  }).pipe(
+    Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'cyan' }),
+  ),
 ) {}
 // #endregion
 
 // #region event
-export class Event extends Type.makeObject<Event>(DXN.make('com.example.type.event', '0.1.0'))(
+export class Event extends Type.makeObject<Event>(
+  DXN.make('com.example.type.event', '0.1.0'),
+)(
   Schema.Struct({
     title: Schema.String,
     description: Schema.optional(Schema.String),
     attendees: Schema.optional(Schema.Array(Ref.Ref(Person))),
   }).pipe(
-    Annotation.IconAnnotation.set({ icon: 'ph--calendar-dots--regular', hue: 'green' }),
+    Annotation.IconAnnotation.set({
+      icon: 'ph--calendar-dots--regular',
+      hue: 'green',
+    }),
     Annotation.LabelAnnotation.set(['title']),
   ),
 ) {}
@@ -46,5 +62,7 @@ export const types = [Organization, Person, Event];
 export type ContactRecord = Organization | Person | Event;
 
 /** The glyph and hue a type declares on its schema. */
-export const getTypeIcon = (type: Type.AnyObj): Annotation.IconAnnotation | undefined =>
+export const getTypeIcon = (
+  type: Type.AnyObj,
+): Annotation.IconAnnotation | undefined =>
   Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(type)));

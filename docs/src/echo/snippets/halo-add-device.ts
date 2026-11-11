@@ -21,7 +21,12 @@ const host = Effect.gen(function* () {
 
   // Show the authorization code when the guest connects.
   yield* Invitation.events(flow).pipe(
-    Stream.takeUntil((event) => event._tag === 'success' || event._tag === 'error' || event._tag === 'cancelled'),
+    Stream.takeUntil(
+      (event) =>
+        event._tag === 'success' ||
+        event._tag === 'error' ||
+        event._tag === 'cancelled',
+    ),
     Stream.runForEach((event) =>
       Effect.sync(() => {
         if (event._tag === 'readyForAuthentication' && event.authCode) {
@@ -52,7 +57,12 @@ const guest = Effect.gen(function* () {
 const listDevices = Effect.gen(function* () {
   const devices = yield* Identity.getDevicesSnapshot;
   for (const device of devices) {
-    console.log(device.label ?? device.key, device.kind, device.presence, device.current ? '(this device)' : '');
+    console.log(
+      device.label ?? device.key,
+      device.kind,
+      device.presence,
+      device.current ? '(this device)' : '',
+    );
   }
 });
 // #endregion devices

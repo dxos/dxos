@@ -15,8 +15,14 @@ const service = Effect.gen(function* () {
 
 // #region access
 const connect = Effect.gen(function* () {
-  yield* Identity.grantServiceAccess({ serverName: 'hub.example.com', capabilities: ['compute'] });
-  const token = yield* Identity.createApiToken({ label: 'CI', expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 });
+  yield* Identity.grantServiceAccess({
+    serverName: 'hub.example.com',
+    capabilities: ['compute'],
+  });
+  const token = yield* Identity.createApiToken({
+    label: 'CI',
+    expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+  });
   return token;
 });
 // #endregion access

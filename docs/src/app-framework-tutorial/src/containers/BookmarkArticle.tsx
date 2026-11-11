@@ -19,7 +19,8 @@ import { RecordVisit } from '../types/BookmarkOperation.ts';
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark>;
 
 export const BookmarkArticle = ({ role, subject }: BookmarkArticleProps) => {
-  // A snapshot that re-renders the component when the object changes, here or on another peer.
+  // A snapshot that re-renders the component when the object changes, here or
+  // on another peer.
   const [bookmark] = useObject(subject);
 
   const handleNameChange = useCallback(
@@ -29,15 +30,25 @@ export const BookmarkArticle = ({ role, subject }: BookmarkArticleProps) => {
   // #endregion
 
   // #region invoke
-  const recordVisit = Hooks.useOperation(RecordVisit, () => ({ bookmark: subject }));
+  const recordVisit = Hooks.useOperation(RecordVisit, () => ({
+    bookmark: subject,
+  }));
   // #endregion
 
   // #region render
   return (
     <Panel.Root role={role}>
       <Panel.Body>
-        <Input.Root value={bookmark.name ?? ''} onChange={(event) => handleNameChange(event.target.value)} />
-        <a href={bookmark.url} target='_blank' rel='noreferrer' onClick={() => recordVisit()}>
+        <Input.Root
+          value={bookmark.name ?? ''}
+          onChange={(event) => handleNameChange(event.target.value)}
+        />
+        <a
+          href={bookmark.url}
+          target='_blank'
+          rel='noreferrer'
+          onClick={() => recordVisit()}
+        >
           {bookmark.url}
         </a>
         <p>Visited {bookmark.visits ?? 0} times.</p>
