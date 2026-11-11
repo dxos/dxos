@@ -15138,6 +15138,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -19987,21 +19990,12 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.7.6
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/fixtures':
         specifier: workspace:*
         version: link:../../../tools/fixtures
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -20011,15 +20005,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-list':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-list
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
