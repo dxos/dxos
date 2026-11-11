@@ -58,6 +58,6 @@ export const routes = [
   {
     title: 'Guides',
     body: 'Each namespace of @dxos/echo, one page each, with examples.',
-    href: '/docs/echo/guides/filter/',
+    href: '/docs/echo/api/filter/',
   },
 ];

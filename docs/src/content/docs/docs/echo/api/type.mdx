@@ -1,6 +1,6 @@
 ---
 title: Type
-description: Declare and inspect object and relation types.
+description: Declare and inspect object and relation types, and convert them to and from JSON Schema.
 tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 3
@@ -23,19 +23,27 @@ the field that labels an object in lists.
 
 <Snippet file="guide-type" region="object" />
 
-The last segment of the typename must be camelCase. A typename such as `com.example.type.works-for` fails to compile.
+The last segment of the typename must be camelCase. A typename such as `com.example.type.works-at` fails to compile.
 
 ## Declare a relation type
 
-A relation type also names the types of its two endpoints. [Relation](/docs/echo/guides/relation/) covers making
+A relation type also names the types of its two endpoints. [Relation](/docs/echo/api/relation/) covers making
 instances.
 
-<Snippet file="guide-type" region="relation" />
+<Snippet file="works-at" region="relation" />
+
+## Convert to and from JSON Schema
+
+The `JsonSchema` module converts a type's schema to JSON Schema and back. `Type.makeObjectFromJsonSchema` builds a type
+from JSON Schema, for a type that comes from a form, an agent or another system.
+
+<Snippet file="guide-type" region="json-schema" />
 
 ## Change fields at runtime
 
-A type built at runtime, for example from JSON Schema, can gain and lose fields after it exists. Objects already made
-from the type keep their data. Use a new version instead when old objects need converting.
+A type stored in a space with `db.addType` can gain and lose fields after it exists; the change replicates like any
+write. The functions throw for a type that is not stored. Objects already made from the type keep their data. Use a new
+version and a [migration](/docs/echo/api/migration/) instead when old objects need converting.
 
 <Snippet file="guide-type" region="fields" />
 
@@ -47,8 +55,8 @@ These read the identity and schema of a type, which is what an agent or a generi
 
 ## Check the kind of a value
 
-`Type.isObject` and `Type.isRelation` test a type. To test an instance, use the predicates in [Obj](/docs/echo/guides/obj/)
-and [Relation](/docs/echo/guides/relation/).
+`Type.isObject` and `Type.isRelation` test a type. To test an instance, use the predicates in [Obj](/docs/echo/api/obj/)
+and [Relation](/docs/echo/api/relation/).
 
 <Snippet file="guide-type" region="kind" />
 
@@ -62,6 +70,7 @@ and [Relation](/docs/echo/guides/relation/).
 | `addFields` `updateFields` `removeFields`       | Change the fields of a type at runtime          |
 | `getTypename` `getVersion` `getURI` `getMeta`   | Read the identity and metadata of a type        |
 | `getSchema`                                     | The Effect Schema of a type                     |
+| `JsonSchema.toJsonSchema` `JsonSchema.toEffectSchema` | Convert to and from JSON Schema           |
 | `isObject` `isRelation` `isType`                | Test what kind of type a value is               |
 
 The full list is in the [API reference](/docs/additional-resources/api-reference/).
@@ -69,4 +78,5 @@ The full list is in the [API reference](/docs/additional-resources/api-reference
 ## Related
 
 - [Defining types](/docs/echo/learn/defining-types/) declares the tutorial app's types.
-- [Objects and relations](/docs/echo/concepts/objects-relations/) describes the entities a type describes.
+- [Types and schema](/docs/echo/concepts/types/) explains types, versions and migrations.
+- [Annotation](/docs/echo/api/annotation/) lists what a type can carry beyond its fields.

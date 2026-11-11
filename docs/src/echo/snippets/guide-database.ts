@@ -2,20 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-
+import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Database, DXN, Filter, Obj, Query, Type } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 
-class Task extends Type.makeObject<Task>(
-  DXN.make('com.example.type.task', '0.1.0'),
-)({
-  title: Schema.String,
-  done: Schema.Boolean,
-}) {}
+import { Event, Person } from '../../tutorial/schema.ts';
 
+declare const client: Client;
 declare const space: Space;
 
 // #region get
@@ -23,14 +16,12 @@ const db = space.db;
 // #endregion get
 
 // #region write
-const task = db.add(Obj.make(Task, { title: 'Ship the guide', done: false }));
-db.remove(task);
+const ada = db.add(Obj.make(Person, { name: 'Ada' }));
+db.remove(ada);
 // #endregion write
 
 // #region query
-const open = await db
-  .query(Query.select(Filter.type(Task, { done: false })))
-  .run();
+const people = await db.query(Query.select(Filter.type(Person))).run();
 // #endregion query
 
 // #region flush
@@ -47,17 +38,27 @@ const Note = Type.makeObjectFromJsonSchema({
 const persisted = await db.addType(Note); // replicates to the other members
 // #endregion types
 
-// #region service
-const countOpen = Effect.gen(function* () {
-  yield* Database.add(Obj.make(Task, { title: 'From Effect', done: false }));
-  const tasks = yield* Database.query(Filter.type(Task, { done: false })).run;
-  const sync = yield* Database.getSyncState();
-  return { open: tasks.length, unsynced: sync.unsyncedDocumentCount };
-});
+// #region branches
+const launch = db.add(Obj.make(Event, { title: 'Launch' }));
+await db.createBranch(launch.id, 'draft');
+db.listBranches(launch.id); // ['main', 'draft']
 
-const result = await EffectEx.runPromise(
-  countOpen.pipe(Effect.provide(Database.layer(db))),
-);
-// #endregion service
+await db.switchBranch(launch.id, 'draft'); // this device only
+await db.switchBranch(launch.id, 'main');
+await db.mergeBranch(launch.id, 'draft', { deleteAfter: true });
+// #endregion branches
 
-export { open, persisted, result };
+// #region hypergraph
+const everyone = await client.graph
+  .query(Query.select(Filter.type(Person)).from('all-accessible-spaces'))
+  .run();
+const sameDb = client.graph.getDatabase(space.id);
+// #endregion hypergraph
+
+// #region sync
+const state = await db.getSyncState();
+const unsubscribe = db.subscribeToSyncState((state) => console.log(state));
+unsubscribe();
+// #endregion sync
+
+export { everyone, people, persisted, sameDb, state };

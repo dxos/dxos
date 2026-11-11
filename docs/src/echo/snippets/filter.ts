@@ -2,47 +2,44 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import { type Database, Filter, Query } from '@dxos/echo';
 
-import { type Database, DXN, Filter, Obj, Query, Type } from '@dxos/echo';
-
-class Task extends Type.makeObject<Task>(
-  DXN.make('com.example.type.task', '0.1.0'),
-)(
-  Schema.Struct({
-    title: Schema.String,
-    priority: Schema.Number,
-    tags: Schema.Array(Schema.String),
-  }),
-) {}
+import { Event, Person } from '../../tutorial/schema.ts';
 
 declare const db: Database.Database;
+declare const launch: Event;
 
 // #region type
-const urgent = Filter.type(Task, { priority: Filter.gte(8) });
-const untyped = Filter.props<{ priority: number }>({ priority: 8 });
+const adas = Filter.type(Person, { name: 'Ada' });
+const untyped = Filter.props<{ name: string }>({ name: 'Ada' });
 // #endregion
 
 // #region compare
-const midrange = Filter.type(Task, { priority: Filter.between(3, 7) });
-const tagged = Filter.type(Task, { tags: Filter.contains('docs') });
+const atExample = Filter.type(Person, {
+  email: Filter.in('ada@example.com', 'grace@example.com'),
+});
 // #endregion
 
 // #region combine
-const triage = Filter.and(
-  Filter.type(Task),
-  Filter.or(urgent, tagged),
-  Filter.not(midrange),
-);
-const results = await db.query(Query.select(triage)).run();
+const peopleNotAda = Filter.and(Filter.type(Person), Filter.not(adas));
+const results = await db.query(Query.select(peopleNotAda)).run();
 // #endregion
 
 // #region text
-const matches = Filter.text('conflict resolution', { type: 'full-text' });
+const matches = Filter.text('product launch', { type: 'full-text' });
 // #endregion
 
 // #region time
 const recent = Filter.updated({ after: new Date('2026-11-01') });
 // #endregion
 
-export { Obj, matches, recent, results, untyped };
+// #region parent
+const owned = Filter.childOf(launch); // children, grandchildren and on
+const direct = Filter.childOf(launch, { transitive: false });
+// #endregion
+
+// #region changes
+const history = Query.select(Filter.changes([launch])).limit(50);
+// #endregion
+
+export { atExample, direct, history, matches, owned, recent, results, untyped };

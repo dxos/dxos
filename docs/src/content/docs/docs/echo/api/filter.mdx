@@ -23,9 +23,12 @@ node and matches nothing until the query runs.
 | [`gt` `gte` `lt` `lte`](#compare-a-field) | `(value) => Filter<T>`              | Ordered comparison                    |
 | [`between`](#compare-a-field)         | `(from, to) => Filter<T>`               | From inclusive, to exclusive          |
 | [`contains`](#compare-a-field)        | `(value) => Filter<readonly T[]>`       | Array field holds the value           |
+| [`in`](#compare-a-field)              | `(...values) => Filter<T>`              | Field equals one of the values        |
 | [`and` `or` `not`](#combine-filters)  | `(...filters) => Filter<T>`             | Boolean combinators                   |
 | [`text`](#search-text)                | `(text, options?) => Filter`            | Full-text or vector search            |
 | [`created` `updated`](#filter-by-time) | `({ after?, before? }) => Filter`      | Timestamp range                       |
+| [`childOf`](#filter-by-parent)        | `(parents, options?) => Filter`         | Children of an object                 |
+| [`changes`](#filter-changes)          | `(targets?) => Filter`                  | Changes instead of objects            |
 
 ## Match by type
 
@@ -54,3 +57,17 @@ Comparators go in the props shape, on the field they test.
 Both bounds accept a number of milliseconds or a `Date`. With both set, the filter is the AND of the two.
 
 <Snippet file="filter" region="time" />
+
+## Filter by parent
+
+`childOf` matches the children of one or more objects, and their children in turn unless `transitive` is false. It takes
+objects or references, and reads a reference's URI without loading the target.
+
+<Snippet file="filter" region="parent" />
+
+## Filter changes
+
+`changes` selects the changes to some objects, or to every object in the space, instead of the objects. Order them by
+`time`, or count them with an [aggregate](/docs/echo/api/query/#aggregate-results).
+
+<Snippet file="filter" region="changes" />

@@ -2,76 +2,66 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import { type Database, Obj, Ref, Tag } from '@dxos/echo';
 
-import { type Database, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
-
-class Task extends Type.makeObject<Task>(
-  DXN.make('com.example.type.task', '0.1.0'),
-)({
-  title: Schema.String,
-  done: Schema.Boolean,
-}) {}
-
-class Project extends Type.makeObject<Project>(
-  DXN.make('com.example.type.project', '0.1.0'),
-)({
-  name: Schema.String,
-  tasks: Schema.Array(Ref.Ref(Task)),
-}) {}
+import { Organization, Person } from '../../tutorial/schema.ts';
 
 declare const db: Database.Database;
+const acme = db.add(Obj.make(Organization, { name: 'Acme' }));
 
 // #region make
-const task = Obj.make(Task, {
-  [Obj.Meta]: { keys: [{ source: 'linear.app', id: 'DX-42' }] },
-  title: 'Write the Obj guide',
-  done: false,
+const ada = Obj.make(Person, {
+  [Obj.Meta]: { keys: [{ source: 'crm.example.com', id: 'contact-42' }] },
+  name: 'Ada',
+  employer: Ref.make(acme),
 });
-db.add(task);
+db.add(ada);
 // #endregion make
 
 // #region update
-const title = task.title; // read a field directly
+const name = ada.name; // read a field directly
 
-Obj.update(task, (task) => {
-  task.done = true;
+Obj.update(ada, (ada) => {
+  ada.email = 'ada@example.com';
 });
 
-const before = Obj.getSnapshot(task); // an immutable copy
-Obj.update(task, (task) => {
-  task.title = 'Write the Obj and Ref guides';
+const before = Obj.getSnapshot(ada); // an immutable copy
+Obj.update(ada, (ada) => {
+  ada.name = 'Ada Lovelace';
 });
-// before.title is still 'Write the Obj guide'
+// before.name is still 'Ada'
 // #endregion update
 
 // #region subscribe
-const unsubscribe = Obj.subscribe(task, () => {
-  console.log('changed', task.title);
+const unsubscribe = Obj.subscribe(ada, () => {
+  console.log('changed', ada.name);
 });
 unsubscribe();
 // #endregion subscribe
 
 // #region meta
-const [linear] = Obj.getKeys(task, 'linear.app');
+const [crm] = Obj.getKeys(ada, 'crm.example.com');
 
-const urgent = db.add(Tag.make({ label: 'urgent' }));
-Obj.update(task, (task) => {
-  Obj.addTag(task, urgent);
-  Obj.setLabel(task, 'Docs task');
+const speaker = db.add(Tag.make({ label: 'speaker' }));
+Obj.update(ada, (ada) => {
+  Obj.addTag(ada, speaker);
 });
-
-// The parent holds a reference to the child.
-const project = db.add(
-  Obj.make(Project, { name: 'Docs', tasks: [Ref.make(task)] }),
-);
-Obj.setParent(task, project);
-const parent = Obj.getParent(task); // project
 // #endregion meta
 
+// #region history
+const changes = Obj.getChanges(ada, { property: 'name' });
+const [last] = changes.slice(-1);
+last.actor; // the device that made the change
+last.before; // 'Ada'
+last.after; // 'Ada Lovelace'
+
+// The object as it was after a change, without touching the live object.
+const then = Obj.getVersion(ada, changes[0].heads);
+// #endregion history
+
 // #region json
-const copy = Obj.clone(task);
-const json = Obj.toJSON(task);
+const copy = Obj.clone(ada);
+const json = Obj.toJSON(ada);
 // #endregion json
 
-export { before, copy, json, linear, parent, title };
+export { before, copy, crm, json, name, then };

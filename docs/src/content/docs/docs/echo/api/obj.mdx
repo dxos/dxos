@@ -1,6 +1,6 @@
 ---
 title: Obj
-description: The runtime API for objects.
+description: Make, read and write objects, and read their history.
 tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 3
@@ -45,12 +45,21 @@ instead.
 ## Meta, tags, labels and parents
 
 Meta holds data about the object rather than in it, such as foreign keys and tags. Labels and descriptions are what lists
-and pickers show.
-
-A child object can name a parent. The parent must hold a reference to the child, and deleting the parent deletes the
-child.
+and pickers show. [Tag](/docs/echo/api/tag/) covers tags.
 
 <Snippet file="guide-obj" region="meta" />
+
+A child object can name a parent with `Obj.setParent`. The parent must hold a reference to the child, and deleting the
+parent deletes the child.
+
+## Read the history
+
+Each change to an object is a `Change` with the device that made it, the time, and the heads of the document after it.
+`Obj.getChanges` lists them, for the whole object or one field, where each carries the value before and after.
+`Obj.getVersion` reads the object at a change's heads. [Changes and branches](/docs/echo/concepts/changes/) explains the
+model.
+
+<Snippet file="guide-obj" region="history" />
 
 ## Clone and serialize
 
@@ -71,10 +80,12 @@ child.
 | `addTag` `removeTag`                        | Tag an object                                        |
 | `getLabel` `setLabel`                       | The label lists and pickers show                     |
 | `getParent` `setParent`                     | Parent and child ownership                           |
+| `getChanges` `getVersion` `getBranch`       | History, past versions and the current branch        |
 | `instanceOf` `isObject` `isDeleted`         | Predicates                                           |
 | `clone` `toJSON` `fromJSON`                 | Copy and serialize                                   |
 
-The full list is in the [API reference](/docs/additional-resources/api-reference/).
+Functions shared by objects and relations, such as `getURI` and `getTypename`, are also in the `Entity` module. The
+full list is in the [API reference](/docs/additional-resources/api-reference/).
 
 ## Related
 

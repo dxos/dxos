@@ -1,0 +1,57 @@
+---
+title: Annotation
+description: What a type carries beyond its fields, and the tools that read it.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Annotation } from '@dxos/echo';
+```
+
+An annotation is a typed value attached to a schema, a field, or an object. Annotations on a type are saved with the
+type's schema, so they replicate with it and a tool that has never seen the code can still read them.
+
+## Annotate a type
+
+Each annotation has a `set` that pipes onto a schema, and a `get` that reads it back as an `Option`.
+
+<Snippet file="guide-annotation" region="schema" />
+
+| Annotation | Value | What reads it |
+| --- | --- | --- |
+| `LabelAnnotation` | The fields that label an object, in order | `Obj.getLabel`, lists and pickers |
+| `DescriptionAnnotation` | The field that describes an object | `Obj.getDescription` |
+| `IconAnnotation` | An icon and a hue | Composer's navigation tree and cards |
+| `FormInputAnnotation` `FormLayoutAnnotation` | Whether a field shows in a form, and the form's layout | Forms built from the schema |
+| `ContentVersionAnnotation` | The fields a version field describes | [Content migrations](/docs/echo/api/migration/#upgrade-a-content-format) |
+| `UserType` | That the type is for people, not internal | Composer's pickers, navigation tree and collections |
+
+## Read annotations
+
+<Snippet file="guide-annotation" region="read" />
+
+## Define an annotation
+
+`Annotation.make` defines an annotation with an id and a schema for its value. Set it on a schema like the built-in ones,
+or on one object with `Annotation.set`, which stores the value in the object's metadata.
+
+<Snippet file="guide-annotation" region="custom" />
+
+## Members at a glance
+
+| Member | Summary |
+| --- | --- |
+| `make` | Define an annotation |
+| `get` `set` `update` | Read and write an annotation on an object |
+| `<annotation>.get` `<annotation>.set` | Read and write an annotation on a schema |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [Types and schema](/docs/echo/concepts/types/)
+- [Type](/docs/echo/api/type/)

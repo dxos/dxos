@@ -15,7 +15,7 @@ import { Relation } from '@dxos/echo';
 
 A relation is an object with two typed endpoints, a source and a target. Use one when the link has data of its own, such
 as a role or a date, or when you need to query it from either end. A plain `Ref` field is enough when one object just
-points at another. `Relation` mirrors [Obj](/docs/echo/guides/obj/) for everything that is not about endpoints.
+points at another. `Relation` mirrors [Obj](/docs/echo/api/obj/) for everything that is not about endpoints.
 
 ## Make a relation
 
@@ -35,7 +35,7 @@ URIs without resolving them.
 ## Query from either end
 
 `targetOf` selects the relations that point at the current selection, and `sourceOf` the ones that start from it. Then
-`source()` or `target()` steps to the objects at the other end. [Query](/docs/echo/guides/query/) covers traversal.
+`source()` or `target()` steps to the objects at the other end. [Query](/docs/echo/api/query/) covers traversal.
 
 <Snippet file="guide-relation" region="query" />
 
@@ -60,4 +60,4 @@ The full list is in the [API reference](/docs/additional-resources/api-reference
 ## Related
 
 - [Objects and relations](/docs/echo/concepts/objects-relations/)
-- [Type](/docs/echo/guides/type/) for declaring relation types.
+- [Type](/docs/echo/api/type/) for declaring relation types.

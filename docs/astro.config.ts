@@ -101,8 +101,18 @@ const redirects: Record<string, string> = {
   // App Graph and Translations are app-level, so they moved to Guides.
   '/docs/plex/concepts/app-graph': '/docs/plex/guides/app-graph/',
   '/docs/plex/guides/translations': '/docs/plex/guides/app-capabilities/',
-  // The manifest's fields are documented in the generated API reference.
+  // The plugin manifest page is omitted for now.
   '/docs/plex/resources/manifest': '/docs/plex/guides/plugin/',
+  // ECHO's namespace pages moved from Guides to API, and Concurrency and conflicts became Changes and branches.
+  '/docs/echo/guides/database': '/docs/echo/api/database/',
+  '/docs/echo/guides/feed': '/docs/echo/api/feed/',
+  '/docs/echo/guides/filter': '/docs/echo/api/filter/',
+  '/docs/echo/guides/obj': '/docs/echo/api/obj/',
+  '/docs/echo/guides/query': '/docs/echo/api/query/',
+  '/docs/echo/guides/ref': '/docs/echo/api/ref/',
+  '/docs/echo/guides/relation': '/docs/echo/api/relation/',
+  '/docs/echo/guides/type': '/docs/echo/api/type/',
+  '/docs/echo/concepts/conflicts': '/docs/echo/concepts/changes/',
   ...plexRedirects,
 };
 

@@ -20,7 +20,7 @@ when you pass it to `db.query` and read the result. <SpecCite item="org.dxos.ech
 ## Select objects
 
 Most queries start from a type and a few field values. `Query.select` takes any filter; these three cover most uses, and
-[Filter](/docs/echo/guides/filter/) has the rest.
+[Filter](/docs/echo/api/filter/) has the rest.
 
 <Snippet file="guide-query" region="common" />
 
@@ -48,13 +48,30 @@ field; `Order.created` and `Order.updated` sort by timestamp; `Order.natural` ke
 
 <Snippet file="guide-query" region="order" />
 
+## Aggregate results
+
+`aggregate` turns the results into records of named values: `Aggregate.count`, `sum`, `min`, `max`, `group` by a field,
+`items` for the members of each group, and `created`, `updated` or `time` bucketed by a unit. It must be the last step that
+selects data; only `orderBy`, `limit`, `skip` and `from` may follow it.
+
+<Snippet file="guide-query" region="aggregate" />
+
+## Choose sources
+
+Without `from`, a query reads the database it runs on. `from` names the sources instead, with `Scope`: `Scope.space()` for
+a space, `Scope.registry()` for the types and objects registered in code, and `Scope.feed()` for a
+[feed](/docs/echo/api/feed/). `from` also takes a database, a feed object, or `'all-accessible-spaces'`.
+
+<Snippet file="guide-query" region="scope" />
+
 ## Run once or subscribe
 
 `db.query` returns a `QueryResult`. `run()` resolves with the results once. `subscribe` calls back each time the results
 change, and `{ fire: true }` also calls it straight away with the current results. <SpecCite item="org.dxos.echo#F-5.1" />
 
 A query reads the objects on this device first and adds what the indexes and EDGE return. A subscriber can see results
-arrive in more than one step. <SpecCite item="org.dxos.echo.query#F-5" />
+arrive in more than one step. `QueryResult.sources` lists each source with its state: pending, answered or failed.
+<SpecCite item="org.dxos.echo.query#F-5" />
 
 <Snippet file="guide-query" region="run" />
 
@@ -67,13 +84,16 @@ arrive in more than one step. <SpecCite item="org.dxos.echo.query#F-5" />
 | `.reference` `.referencedBy`            | Follow reference fields, forwards or backwards    |
 | `.sourceOf` `.targetOf`                 | Relations that start or end at the selection      |
 | `.source` `.target`                     | Endpoints of selected relations                   |
-| `.orderBy` `.limit`                     | Order and cap the results                         |
+| `.orderBy` `.limit` `.skip`             | Order, cap and page the results                   |
+| `.aggregate` `Aggregate.*`              | Count, sum, group and bucket the results          |
+| `.from` `Scope.*`                       | Choose the sources                                |
 | `Order.property` `created` `updated`    | Orders                                            |
 | `QueryResult.run` `first` `subscribe`   | Read the results                                  |
+| `QueryResult.sources`                   | Each source and its state                         |
 
 The full list is in the [API reference](/docs/additional-resources/api-reference/).
 
 ## Related
 
 - [Querying](/docs/echo/learn/querying/) in the learning path.
-- [Filter](/docs/echo/guides/filter/) for every predicate.
+- [Filter](/docs/echo/api/filter/) for every predicate.

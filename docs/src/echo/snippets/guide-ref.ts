@@ -2,31 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
+import { type Database, Obj, Ref } from '@dxos/echo';
 
-import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-
-class Person extends Type.makeObject<Person>(
-  DXN.make('com.example.type.person', '0.1.0'),
-)({ name: Schema.String }) {}
-
-// #region declare
-class Task extends Type.makeObject<Task>(
-  DXN.make('com.example.type.task', '0.1.0'),
-)({
-  title: Schema.String,
-  assignee: Schema.optional(Ref.Ref(Person)),
-  watchers: Schema.Array(Ref.Ref(Person)),
-}) {}
-// #endregion declare
+import { Event, Organization, Person } from '../../tutorial/schema.ts';
 
 declare const db: Database.Database;
 
 // #region make
-const ada = db.add(Obj.make(Person, { name: 'Ada' }));
-const task = db.add(
-  Obj.make(Task, { title: 'Review', assignee: Ref.make(ada), watchers: [] }),
+const acme = db.add(Obj.make(Organization, { name: 'Acme' }));
+const ada = db.add(Obj.make(Person, { name: 'Ada', employer: Ref.make(acme) }));
+const launch = db.add(
+  Obj.make(Event, { title: 'Launch', attendees: [Ref.make(ada)] }),
 );
 
 // From a URI: bound to the database, so it can load.
@@ -34,27 +20,20 @@ const again = db.makeRef<Person>(Obj.getURI(ada));
 // #endregion make
 
 // #region resolve
-const loaded = task.assignee?.peek(); // Person | undefined, never loads
+const loaded = ada.employer?.peek(); // Organization | undefined, never loads
 // loads from disk or the network if needed
-const assignee = await task.assignee?.load();
+const employer = await ada.employer?.load();
+// undefined instead of throwing when the target is missing
+const maybe = await again.tryLoad();
 // missing and deleted targets are left out
-const watchers = await Ref.loadAll(task.watchers);
+const attendees = await Ref.loadAll(launch.attendees ?? []);
 // #endregion resolve
-
-// #region effect
-const program = Effect.gen(function* () {
-  const person = yield* Database.load(again);
-  return person.name;
-}).pipe(
-  Effect.catchTag('EntityNotFoundError', () => Effect.succeed('unknown')),
-);
-// #endregion effect
 
 // #region compare
 const same =
-  task.assignee !== undefined && Ref.equals(task.assignee, Ref.make(ada));
-const isAda = task.watchers.some(Ref.hasEntityId(ada.id));
-Ref.isRef(task.assignee); // true
+  ada.employer !== undefined && Ref.equals(ada.employer, Ref.make(acme));
+const attending = (launch.attendees ?? []).some(Ref.hasEntityId(ada.id));
+Ref.isRef(ada.employer); // true
 // #endregion compare
 
-export { assignee, isAda, loaded, program, same, watchers };
+export { attendees, attending, employer, loaded, maybe, same };

@@ -2,70 +2,64 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
 import {
+  Aggregate,
   type Database,
-  DXN,
   Filter,
   Order,
   Query,
-  Ref,
+  Scope,
   Type,
 } from '@dxos/echo';
 
-class Person extends Type.makeObject<Person>(
-  DXN.make('com.example.type.person', '0.1.0'),
-)({ name: Schema.String }) {}
-class Task extends Type.makeObject<Task>(
-  DXN.make('com.example.type.task', '0.1.0'),
-)({
-  title: Schema.String,
-  priority: Schema.Number,
-  done: Schema.Boolean,
-  assignee: Schema.optional(Ref.Ref(Person)),
-}) {}
-class Assigned extends Type.makeRelation<Assigned>(
-  DXN.make('com.example.type.assigned', '0.1.0'),
-)({
-  source: Task,
-  target: Person,
-})({}) {}
+import { Event, Organization, Person } from '../../tutorial/schema.ts';
+import { WorksAt } from './works-at.ts';
 
 declare const db: Database.Database;
 
 // #region common
-const open = Query.type(Task, { done: false });
-const urgent = Query.select(Filter.type(Task, { priority: Filter.gte(8) }));
-const byTitle = Query.select(Filter.text('release notes'));
+const people = Query.type(Person);
+const acme = Query.select(Filter.type(Organization, { name: 'Acme' }));
+const launches = Query.select(Filter.text('launch'));
 // #endregion common
 
 // #region combine
-const openOrUrgent = Query.all(open, urgent);
-const openNotUrgent = Query.without(open, urgent);
+const peopleOrOrgs = Query.all(people, Query.type(Organization));
+const withoutAda = Query.without(people, Query.type(Person, { name: 'Ada' }));
 // #endregion combine
 
 // #region traverse
-const assignees = open.reference('assignee'); // follow a Ref field
-const tasksFor = Query.type(Person, { name: 'Ada' }).referencedBy(
-  Task,
-  'assignee',
-); // follow it backwards
+const employers = people.reference('employer'); // follow a Ref field
+const staff = acme.referencedBy(Person, 'employer'); // follow it backwards
 
-// relations that start at the open tasks
-const assignments = open.sourceOf(Assigned);
-const people = assignments.target(); // the people at the other end
+// relations that end at Acme, and the people at their other end
+const jobs = acme.targetOf(WorksAt);
+const workers = jobs.source();
 // #endregion traverse
 
 // #region order
-const ordered = open.orderBy(
-  Order.property<Task>('priority', 'desc'),
-  Order.updated(),
-);
+const ordered = people
+  .orderBy(Order.property<Person>('name', 'asc'), Order.updated())
+  .limit(20);
 // #endregion order
 
+// #region aggregate
+const [{ count }] = await db
+  .query(Query.type(Event).aggregate({ count: Aggregate.count() }))
+  .run();
+// #endregion aggregate
+
+// #region scope
+// Types stored in the space, and types registered in code.
+const types = await db
+  .query(
+    Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()),
+  )
+  .run();
+// #endregion scope
+
 // #region run
-const tasks = await db.query(ordered).run();
+const all = await db.query(ordered).run();
 const first = await db.query(ordered).firstOrUndefined();
 
 const result = db.query(ordered);
@@ -73,16 +67,21 @@ const unsubscribe = result.subscribe(
   (result) => console.log(result.results.length),
   { fire: true },
 );
+// Each source of the answer, with its state: pending, answered or failed.
+const sources = result.sources;
 unsubscribe();
 // #endregion run
 
 export {
-  assignees,
-  byTitle,
+  all,
+  count,
+  employers,
   first,
-  openNotUrgent,
-  openOrUrgent,
-  people,
-  tasks,
-  tasksFor,
+  launches,
+  peopleOrOrgs,
+  sources,
+  staff,
+  types,
+  withoutAda,
+  workers,
 };

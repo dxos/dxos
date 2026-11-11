@@ -20,9 +20,9 @@ explains the model; this page is the API.
 ## Declare a reference field
 
 `Ref.Ref(Type)` is the schema of a field that points at that type. Use it inside `Schema.optional` or `Schema.Array` like
-any other field schema.
+any other field schema. The tutorial's Person and Event declare both:
 
-<Snippet file="guide-ref" region="declare" />
+<Snippet file="tutorial/schema" region="person" />
 
 ## Make a reference
 
@@ -35,16 +35,12 @@ it.
 ## Resolve a reference
 
 `peek` returns the target if it is already in memory and never starts a load. `load` waits for the target, reading it
-from disk or the network, and throws if it cannot be found. `Ref.loadAll` loads an array of references at once.
+from disk or the network, and throws if it cannot be found; `tryLoad` returns `undefined` instead. `Ref.loadAll` loads an
+array of references at once.
 
 Avoid `ref.target`. It is deprecated because reading it starts a load as a side effect and can throw.
 
 <Snippet file="guide-ref" region="resolve" />
-
-In Effect code, `Database.load` resolves a reference and fails with `EntityNotFoundError` when the target is missing, so
-you can catch that case by its tag. <SpecCite item="org.dxos.echo#F-4.2" />
-
-<Snippet file="guide-ref" region="effect" />
 
 ## Compare references
 
@@ -64,11 +60,11 @@ id with `Ref.hasEntityId`.
 | `loadAll`                 | Load many targets, skipping missing and deleted ones      |
 | `equals` `hasEntityId`    | Compare references                                        |
 | `isRef`                   | Predicate                                                 |
-| `ref.peek()` `ref.load()` | Read the target in memory, or load it                     |
+| `ref.peek()` `ref.load()` `ref.tryLoad()` | Read the target in memory, or load it     |
 
 The full list is in the [API reference](/docs/additional-resources/api-reference/).
 
 ## Related
 
 - [References and DXNs](/docs/echo/concepts/references/)
-- [Query](/docs/echo/guides/query/) traverses references inside a query.
+- [Query](/docs/echo/api/query/) traverses references inside a query.

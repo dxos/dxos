@@ -1,6 +1,6 @@
 ---
 title: Database
-description: The imperative interface and the Effect service.
+description: The database of one space, its branches, and the Hypergraph over every space.
 tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 3
@@ -13,8 +13,8 @@ import SpecCite from '../../../../../components/SpecCite.astro';
 import { Database } from '@dxos/echo';
 ```
 
-Each space has one database. It holds the space's objects, runs queries over them and saves writes to disk. You can use it
-two ways: as a plain object with methods, or as the Effect service `Database.Service`, whose functions compose as Effects.
+Each space has one database. It holds the space's objects, runs queries over them and saves writes to disk. Effect code
+reaches the same database as `Database.Service`, which the [Effect guide](/docs/echo/guides/effect/) covers.
 
 ## Get a database
 
@@ -32,7 +32,7 @@ object deleted; queries leave it out from then on.
 ## Run a query
 
 `db.query` takes a filter or a query and returns a `QueryResult`. Call `run()` for the results once, or `subscribe()` to
-follow them. <SpecCite item="org.dxos.echo#F-5.1" /> [Query](/docs/echo/guides/query/) covers building queries.
+follow them. <SpecCite item="org.dxos.echo#F-5.1" /> [Query](/docs/echo/api/query/) covers building queries.
 
 <Snippet file="guide-database" region="query" />
 
@@ -50,15 +50,28 @@ space already holds a type with the same typename and version, `addType` returns
 
 <Snippet file="guide-database" region="types" />
 
-## Use the Effect service
+## Branches
 
-Effect code asks for `Database.Service` and uses the functions of the `Database` module: `add`, `remove`, `query`, `flush`,
-`resolve` and `load`. `Database.layer(db)` provides the service from a plain database, and `Database.notAvailable` stands
-in where there is none, failing on use. <SpecCite item="org.dxos.echo#F-6.1" /> <SpecCite item="org.dxos.echo#F-6.2" />
+A branch is a separate line of changes to an object and the objects it references. `createBranch` starts one,
+`switchBranch` shows it on this device, and `mergeBranch` merges it into main. `db.branch` returns a second live copy
+bound to a branch, without switching; call `dispose` on it when done. [Changes and
+branches](/docs/echo/concepts/changes/#branches) explains the model.
 
-`Database.getSyncState` reports how many documents have not yet synced, and `subscribeToSyncState` streams it.
+<Snippet file="guide-database" region="branches" />
 
-<Snippet file="guide-database" region="service" />
+## The Hypergraph
+
+`client.graph` is the Hypergraph: every space this device holds. It queries across spaces, finds a space's database by
+id, and holds the registry of types and objects registered in code.
+
+<Snippet file="guide-database" region="hypergraph" />
+
+## Sync state
+
+`getSyncState` reports how many documents this device has not yet synced with the remote peer, and
+`subscribeToSyncState` calls back as that changes.
+
+<Snippet file="guide-database" region="sync" />
 
 ## Members at a glance
 
@@ -69,8 +82,11 @@ in where there is none, failing on use. <SpecCite item="org.dxos.echo#F-6.1" /> 
 | `db.addType`                              | Persist a type so it replicates                         |
 | `db.makeRef`                              | A reference bound to this database                      |
 | `db.flush`                                | Wait for writes, indexes and query updates              |
-| `Service` `layer` `notAvailable`          | The Effect service and its layers                       |
-| `add` `remove` `query` `flush` `load`     | The same operations as Effects                          |
+| `createBranch` `switchBranch` `mergeBranch` | Branches of objects                                |
+| `syncBranch` `deleteBranch` `branch`      | Update, drop or bind a branch                           |
+| `createBlob` `readBlob` `getBlobUrl`      | Store and read [blobs](/docs/echo/api/blob/)            |
+| `appendToFeed` `forkFeed`                 | Write to [feeds](/docs/echo/api/feed/)                  |
+| `client.graph.query` `getDatabase`        | Query every space; find a space's database              |
 | `getSyncState` `subscribeToSyncState`     | Replication progress                                    |
 
 The full list is in the [API reference](/docs/additional-resources/api-reference/).
