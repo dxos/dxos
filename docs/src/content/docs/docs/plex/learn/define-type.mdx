@@ -3,9 +3,10 @@ title: Define a type
 description: Give the plugin its own ECHO type and make it an object a person can create.
 ---
 
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page a person can create a bookmark from Composer's **+** menu, and it appears in the space.
+By the end of this page the plugin has a Bookmark type, and the inspector can create a bookmark in its space.
 
 ## Background
 
@@ -40,9 +41,11 @@ pick its icon, and decide whether a person can create one. [Defining types](/doc
 
    <Snippet file="app-framework-tutorial/dx.config" region="schema" />
 
-5. **Create a bookmark.** Reload the dev plugin, click **+** on a space and choose **Bookmark**.
+5. **Create a bookmark.** Open the **Types** tab and click **Create** under the Bookmark type. The inspector runs the create-object module, as Composer's **+** menu would.
 
-   A bookmark named "New bookmark" appears under the space. It has no view yet, so opening it shows a placeholder.
+   <InspectorEmbed stage="define-type" panel="types" />
+
+   A bookmark named "New bookmark" appears under the type. It has no view yet; the next page adds one.
 
 ## Recap
 
@@ -50,4 +53,4 @@ You can now:
 
 - Declare a type with the annotations the app reads.
 - Register the type so the app can store and name it.
-- Let a person create an object of the type from the **+** menu.
+- Let a person create an object of the type.

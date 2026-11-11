@@ -3,9 +3,10 @@ title: Add an operation
 description: Give the plugin an action that the UI, the command palette and agents can run.
 ---
 
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page the bookmark view has a **Record visit** button, and the assistant can record a visit when asked.
+By the end of this page the bookmark view has a **Record visit** button, and a skill offers the same operation to the assistant.
 
 ## Background
 
@@ -20,8 +21,7 @@ operation invoker. [Operations](/docs/plex/concepts/operations/) explains why.
 
    <Snippet file="app-framework-tutorial/src/types/BookmarkOperation" region="operation" />
 
-2. **Implement the handler.** `Operation.withHandler` attaches an Effect to the definition. This one adds one to the
-   bookmark's visit count.
+2. **Implement the handler.** `Operation.withHandler` attaches an Effect to the definition. Operations are built on [Effect](https://effect.website/), and `Effect.gen` reads like an async function, with `yield*` in place of `await`. This one adds one to the bookmark's visit count and returns the new count.
 
    <Snippet file="app-framework-tutorial/src/operations/record-visit" region="handler" />
 
@@ -50,11 +50,11 @@ operation invoker. [Operations](/docs/plex/concepts/operations/) explains why.
 
    <Snippet file="app-framework-tutorial/dx.config" region="operation" />
 
-7. **Run it three ways.** Reload the dev plugin and open a bookmark. Click **Record visit**: the count goes up. Open the
-   command palette and run **Record visit**. Then add the Bookmarks skill to a chat and write "I just opened this
-   bookmark".
+7. **Run it.** Create and select a bookmark in **Types**, open **Operations** and click **Run**. The form is built from the operation's input schema; the bookmark field takes the selected bookmark. The result is the output, `{ "visits": 1 }`. Click **Record visit** in the article under **Surfaces** and the count goes up the same way.
 
-   Each run adds one to the count, and the view updates without a reload.
+   <InspectorEmbed stage="add-operation" panel="operations" />
+
+   Under the operation, the Bookmarks skill lists the tool it gives the assistant. [Run it in Composer](/docs/plex/learn/run-in-composer/) runs the operation from the command palette and from a chat.
 
 ## Recap
 

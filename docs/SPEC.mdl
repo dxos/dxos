@@ -1000,7 +1000,6 @@ page app-framework-create-plugin: Create a plugin
   template: tutorial
   status: spike
   covers:
-    - The plugin the learning path builds, shown running
     - Create the package and its `dx.config.ts` manifest
     - Define the plugin and its metadata with `Plugin`
     - Add a first module that contributes translations, and the activation event that loads it
@@ -3139,7 +3138,7 @@ decision D-141: The PLEX learning path ends each page in a plugin inspector, not
 ```
 
 ```mdl
-decision D-142: The PLEX plugin is the path's first page: what a plugin is, the finished Bookmarks plugin in the inspector, and Fork on StackBlitz, as The ECHO object opens ECHO's path. Follow along in StackBlitz is on Create a plugin.
+decision D-142: The PLEX plugin is the path's first page: what a plugin is, the finished Bookmarks plugin in the inspector, and Fork on StackBlitz, as The ECHO object opens ECHO's path, so Create a plugin no longer shows it running. Follow along in StackBlitz is on Create a plugin.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-the-plex-plugin, app-framework-create-plugin, F-20.3]

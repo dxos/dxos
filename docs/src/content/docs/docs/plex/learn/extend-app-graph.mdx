@@ -3,6 +3,7 @@ title: Extend the app graph
 description: Put the plugin's objects and actions into the app's navigation.
 ---
 
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
 By the end of this page each space has a **Bookmarks** section in the navigation tree, and **Record visit** is on every
@@ -39,10 +40,11 @@ expands. [The app graph](/docs/plex/concepts/app-graph/) explains the model.
 
    <Snippet file="app-framework-tutorial/dx.config" region="app-graph" />
 
-5. **See the result.** Reload the dev plugin.
+5. **See the result.** Create a bookmark in **Types**, then open **App graph**. The inspector shows the graph from its root, as Composer builds it.
 
-   A **Bookmarks** section appears under each space that has a bookmark, with the bookmarks under it. Open one: the
-   toolbar has **Record visit**.
+   <InspectorEmbed stage="extend-app-graph" panel="types" />
+
+   A **Bookmarks** section appears under the space, with the bookmark under it. **Record visit** is among the bookmark's actions, beside the ones other plugins add.
 
 ## Recap
 
@@ -51,5 +53,4 @@ You can now:
 - Add a section and child nodes to the navigation tree.
 - Attach an operation to a type's nodes as an action.
 
-The plugin is complete. [Publishing a plugin](/docs/plex/publishing-plugins/) puts it in your private registry, so
-Composer lists it for you on every device, and the [guides](/docs/plex/guides/plugin/) cover each namespace in more depth.
+The plugin is complete. [Run it in Composer](/docs/plex/learn/run-in-composer/) loads it into Composer from your machine.

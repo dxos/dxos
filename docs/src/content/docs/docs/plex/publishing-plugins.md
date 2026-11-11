@@ -149,28 +149,16 @@ two ways to do it.
 
 ### From your plugin's dev server
 
-This is the loop to use while you work on a plugin. Run Vite's dev server in your plugin's directory:
+This is the loop to use while you work on a plugin. [Run it in Composer](/docs/plex/learn/run-in-composer/) walks
+through it: run `vite` in the plugin's directory, then enable it under **Dev Server** in Composer's Plugins settings.
 
-```bash
-vite
-```
-
-`composerPlugin` binds it to port **3967** and serves a dev manifest at `http://localhost:3967/manifest.json`,
-which points at your unbundled source. If the port is taken, Vite fails rather than moving to another one,
-since Composer loads from 3967.
-
-In Composer, click **Plugin Settings** in the rail and open **Plugins**. Under **Dev Server**, the **Manifest URL** defaults to
-`http://localhost:3967/manifest.json`; change it only if you passed another `port` to `composerPlugin`. Click
-**Enable**. Composer loads the plugin and enables it in one step.
-
-- **It reloads with the app.** Dev Server stays on until you click Disable, and every reload of Composer loads
-  your plugin again from the dev server, so an edit is one reload away. React fast refresh does not reach a
-  plugin served from another origin, so reload the app rather than waiting for a hot update.
 - **It is never installed.** A dev plugin is not saved in your profile or in the offline cache. If the dev
   server is down at boot, Composer logs a warning, shows it under Dev Server, and tries again on the next
   reload.
 - **It can stand in for an installed plugin.** When your `dx.config.ts` key matches a plugin you already have,
   from the registry or built in, the dev plugin takes its place for the session. Disable restores the original.
+- **React fast refresh does not reach it.** It is served from another origin, so reload the app rather than
+  waiting for a hot update.
 
 ### From a built bundle
 

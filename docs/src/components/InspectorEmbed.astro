@@ -1,0 +1,33 @@
+---
+import { type PanelId } from '@dxos/plugin-inspector';
+
+import { type Stage } from '../plex/stages.ts';
+
+interface Props {
+  /** The page whose plugin the embed shows; the finished plugin when absent. */
+  stage?: Stage;
+  /** The panel shown first. */
+  panel?: PanelId;
+}
+
+const { stage, panel } = Astro.props;
+const query = new URLSearchParams({ ...(stage && { stage }), ...(panel && { panel }) });
+---
+
+<!-- The inspector runs on its own page so that its theme CSS stays off the docs pages; see `pages/embed/inspector.astro`. -->
+<iframe
+  class="inspector-embed not-content"
+  src={`/embed/inspector/?${query}`}
+  title="The plugin inspector"
+  loading="lazy"></iframe>
+
+<style>
+  .inspector-embed {
+    display: block;
+    width: 100%;
+    height: 32rem;
+    margin-block: 1.5rem;
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+  }
+</style>

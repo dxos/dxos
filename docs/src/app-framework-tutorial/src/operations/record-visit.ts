@@ -12,7 +12,7 @@ import { RecordVisit } from '../types/BookmarkOperation.ts';
 // #region handler
 const handler: Operation.WithHandler<typeof RecordVisit> = RecordVisit.pipe(
   Operation.withHandler(({ bookmark }) =>
-    Effect.sync(() => {
+    Effect.gen(function* () {
       Obj.update(bookmark, (bookmark) => {
         bookmark.visits = (bookmark.visits ?? 0) + 1;
       });
