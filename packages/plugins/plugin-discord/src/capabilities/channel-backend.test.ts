@@ -123,15 +123,46 @@ describe('Discord channel backend', () => {
       const backend = makeDiscordChannelBackend();
       const { channel } = yield* makeChannel(MANAGED_ACCESS_TOKEN);
       expect(backend.mirrored).toBe(true);
-      const josiah = Person.make({ fullName: 'Josiah', identities: [{ label: 'discord', value: 'user-7' }] });
+      const josiah = Person.make({
+        fullName: 'Josiah',
+        identities: [{ label: 'discord', value: '700000000000000007' }],
+      });
       const thread = yield* (backend.openDirect?.(channel, josiah) ?? Effect.succeed(undefined)).pipe(withCapabilities);
-      expect(thread).toBe(DiscordChannel.pendingDmThread('user-7'));
-      expect(DiscordChannel.pendingDmUser(thread ?? '')).toBe('user-7');
+      expect(thread).toBe(DiscordChannel.pendingDmThread('700000000000000007'));
+      expect(DiscordChannel.pendingDmUser(thread ?? '')).toBe('700000000000000007');
       expect(DiscordChannel.pendingDmUser('1400000000000000001')).toBeUndefined();
       const nobody = Person.make({ fullName: 'Nobody' });
       expect(
         yield* (backend.openDirect?.(channel, nobody) ?? Effect.succeed(undefined)).pipe(withCapabilities),
       ).toBeUndefined();
+      // Only a handle an agent kept, which Discord opens no DM with, or two ids: refused, saying what to record.
+      const refused = (person: Person.Person) =>
+        (backend.openDirect?.(channel, person) ?? Effect.succeed(undefined)).pipe(withCapabilities, Effect.flip);
+      const handle = yield* refused(
+        Person.make({ fullName: 'Rich', identities: [{ label: 'discord', value: '@richburdon' }] }),
+      );
+      expect(handle.message).toBe(
+        "Rich's Discord identity (@richburdon) is not a user id; record their Discord user id to message them directly.",
+      );
+      // `@` before digits may be a numeric username, which cannot be looked up here.
+      const numeric = yield* refused(
+        Person.make({ fullName: 'Numbers', identities: [{ label: 'discord', value: '@700000000000000009' }] }),
+      );
+      expect(numeric.message).toBe(
+        "Numbers's Discord identity (@700000000000000009) is not a user id; record their Discord user id to message them directly.",
+      );
+      const twoIds = yield* refused(
+        Person.make({
+          fullName: 'Sam',
+          identities: [
+            { label: 'discord', value: '700000000000000007' },
+            { label: 'Discord', value: '700000000000000008' },
+          ],
+        }),
+      );
+      expect(twoIds.message).toBe(
+        'Sam has more than one Discord user id on record: 700000000000000007, 700000000000000008.',
+      );
       expect(discord.calls).toHaveLength(0);
     }).pipe(Effect.provide(testLayer())),
   );
