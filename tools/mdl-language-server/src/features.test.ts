@@ -16,6 +16,7 @@ import {
   toDocument,
   verdictLines,
 } from './features.ts';
+import { itemLine } from './resolve.ts';
 import { FILES, hintText, hoverText } from './testing/fixture.ts';
 import { MemoryWorkspace } from './workspace.ts';
 
@@ -73,6 +74,7 @@ describe('diagnostics', () => {
     expect(found).toEqual([
       ['mdl/verdict', 'Unknown status `sideways`; use one of done, untested, partial, diverged, missing.'],
       ['mdl/verdict', '`Bogus` is not an item of `packages/a/SPEC.mdl`.'],
+      ['mdl/verdict', '`route:feeds` is not an item of `packages/a/SPEC.mdl`.'],
     ]);
   });
 });
@@ -161,7 +163,11 @@ describe('review verdicts', () => {
     const { workspace, document } = setup();
     const hints = inlayHints(workspace, document);
     const labels = hints.map(({ label }) => hintText(label));
-    expect(labels).toEqual(['✓ Done · </> openThing · </> a.test.ts', '✗ Missing · no code']);
+    expect(labels).toEqual([
+      '✓ Done · </> openThing · </> a.test.ts',
+      '✗ Missing · no code',
+      '◐ Partial · no code · untested',
+    ]);
     const [, code] = typeof hints[0].label === 'string' ? [] : hints[0].label;
     expect(code?.location).toMatchObject({ uri: 'file:///repo/packages/a/src/a.ts', range: { start: { line: 4 } } });
   });
@@ -180,7 +186,29 @@ describe('review verdicts', () => {
       [16, '</> a.test.ts', ['file:///repo/packages/a/src/a.test.ts', 0]],
       [21, '✗ Missing', undefined],
       [21, 'no code', undefined],
+      [37, '◐ Partial', undefined],
+      [37, 'no code', undefined],
+      [37, 'untested', undefined],
     ]);
+  });
+
+  test('a worker or SQL item takes the verdict of its qualified id, not its namesake', ({ expect }) => {
+    const { workspace, document } = setup();
+    const lines = verdictLines(workspace, document);
+    const tableLine = itemLine(document.text, 'table:feeds');
+    const typeLine = itemLine(document.text, 'feeds');
+    expect(tableLine).not.toBe(typeLine);
+    expect(lines).toContainEqual({ line: tableLine, status: 'partial' });
+    expect(lines.map(({ line }) => line)).not.toContain(typeLine);
+  });
+
+  test('a qualified verdict id goes to its item in the spec', ({ expect }) => {
+    const { workspace, at } = setup();
+    const review = toDocument(REVIEW, FILES[REVIEW]);
+    expect(definition(workspace, review, at('verdict table:feeds', 9, review.text))).toMatchObject({
+      uri: 'file:///repo/packages/a/SPEC.mdl',
+      range: { start: { line: itemLine(FILES[SPEC], 'table:feeds') } },
+    });
   });
 
   test('verdict lines feed the margin colours', ({ expect }) => {
@@ -188,6 +216,7 @@ describe('review verdicts', () => {
     expect(verdictLines(workspace, document)).toEqual([
       { line: 16, status: 'done' },
       { line: 21, status: 'missing' },
+      { line: 37, status: 'partial' },
     ]);
   });
 });
@@ -225,6 +254,8 @@ describe('completion', () => {
       'F-1.2',
       'Thing',
       'W-1',
+      'feeds',
+      'table:feeds',
     ]);
     expect(labels(completions(workspace, document, { line: 2, character: 10 }))).toEqual([
       'done',
@@ -246,7 +277,7 @@ describe('outline', () => {
         'Spec A',
         [
           ['Dependencies', ['uses org.dxos.spec.b']],
-          ['Features', [['feat F-1', ['F-1.1', 'F-1.2']], 'type Thing', 'widget W-1']],
+          ['Features', [['feat F-1', ['F-1.1', 'F-1.2']], 'type Thing', 'widget W-1', 'type feeds', 'table feeds']],
         ],
       ],
     ]);

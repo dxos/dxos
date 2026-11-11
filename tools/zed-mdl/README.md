@@ -12,8 +12,8 @@ Zed installs extensions from its registry or, for a dev extension, from a folder
 1. Install Rust with `rustup` (Zed builds the extension's Wasm with it): <https://rustup.rs>.
 2. Get the extension folder: this directory in a dxos checkout, or unpack the release tarball:
    ```bash
-   curl -LO https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-10-29-mdl-editor-extensions/zed-mdl-0.1.0.tar.gz
-   tar xzf zed-mdl-0.1.0.tar.gz        # -> zed-mdl/
+   curl -LO https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-11-11-mdl-editor-extensions/zed-mdl-0.2.0.tar.gz
+   tar xzf zed-mdl-0.2.0.tar.gz        # -> zed-mdl/
    ```
 3. In Zed, run `zed: install dev extension` from the command palette and choose that folder.
 4. Open a `.mdl` file. The status bar shows the language as `DEUS MDL`.

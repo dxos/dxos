@@ -33,6 +33,10 @@ export const FILES: Record<string, string> = {
     '',
     'See [F-1.2] and github:dxos/dxos/packages/a/src/a.ts#openThing and github:dxos/dxos/packages/a/src/a.ts#gone.',
     '',
+    fence('type feeds: The feed object.'),
+    '',
+    fence('table feeds: One feed of a space.', '  store: SPACE_DB'),
+    '',
   ].join('\n'),
   'packages/a/SPEC.review.mdl': [
     '---',
@@ -50,6 +54,10 @@ export const FILES: Record<string, string> = {
     fence('verdict Thing: No storage yet.', '  status: missing', '  note: Nothing writes it.'),
     '',
     fence('verdict Bogus: Not in the spec.', '  status: sideways'),
+    '',
+    fence('verdict table:feeds: The table is created.', '  status: partial'),
+    '',
+    fence('verdict route:feeds: No such route.', '  status: done'),
     '',
   ].join('\n'),
   'packages/b/SPEC.mdl': [

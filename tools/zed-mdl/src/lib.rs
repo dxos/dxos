@@ -11,8 +11,8 @@ use zed_extension_api::{self as zed, settings::LspSettings, LanguageServerId, Re
 const SERVER_ID: &str = "mdl-language-server";
 
 /// The bundled server (one CommonJS file, no `node_modules`), versioned in its name so a new release downloads afresh.
-const SERVER_VERSION: &str = "0.1.0";
-const SERVER_URL: &str = "https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-10-29-mdl-editor-extensions/mdl-language-server-0.1.0.cjs";
+const SERVER_VERSION: &str = "0.2.0";
+const SERVER_URL: &str = "https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/demos/2026-11-11-mdl-editor-extensions/mdl-language-server-0.2.0.cjs";
 
 /// A dxos checkout's own build of the server, preferred over the download so a local change is picked up.
 const CHECKOUT_SERVER: &str = "tools/mdl-language-server/dist/server.cjs";

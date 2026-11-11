@@ -6,7 +6,7 @@
   "repository": {
     "block": {
       "comment": "The header is the begin of a rule that runs to the closing fence, so only the first line of the block is read as `<type> [<id>][: <title>]`.",
-      "begin": "^[ \\t]*(?:(ext|type|op|feat|scenario|test|component|service|db|module|suite|decision|question)|([A-Za-z_][\\w-]*))(?![\\w-])(?:[ \\t]+([\\w][\\w.-]*))?(?:[ \\t]*(:)[ \\t]*(.*?))?[ \\t]*$",
+      "begin": "^[ \\t]*(?:(ext|type|op|feat|feature|scenario|test|component|service|db|module|suite|decision|question|verdict|plugin|uses|table|binding|actor|route|keyspace)|([A-Za-z_][\\w-]*))(?![\\w-])(?:[ \\t]+([\\w][\\w.-]*))?(?:[ \\t]*(:)[ \\t]*(.*?))?[ \\t]*$",
       "beginCaptures": {
         "1": { "name": "keyword.control.block.$1.mdl" },
         "2": { "name": "entity.name.type.block.mdl" },
