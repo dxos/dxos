@@ -34,11 +34,27 @@ export type FileBackend = {
 
 export const FileBackend = Capability.make<FileBackend>()('org.dxos.plugin.file.capability.backend');
 
+/**
+ * EDGE's hosted blob store, as the binding EDGE gives a bundle: the `/file/:key` (`GET`, `HEAD`, `POST`) and
+ * `/upload/:uploadId/finalize` (`POST`) routes over a service binding.
+ */
+export interface BlobService {
+  fetch(input: string, init?: RequestInit): Promise<Response>;
+}
+
+/**
+ * The bindings EDGE gives a bundle, with the hosted blob store beside the protocol's: optional, so a bundle EDGE does
+ * not give it stores files inline.
+ */
+export type Env = PluginProtocol.Env & {
+  readonly BLOB_SERVICE?: BlobService;
+};
+
 /** Any origin works over a service binding, which routes by the binding; this one cannot pass for a public address. */
 const BINDING_ORIGIN = 'https://blob-service.internal';
 
 /** The hosted blob store as a blob backend, reached over `BLOB_SERVICE` rather than the public edge proxy. */
-export const makeBackend = (blobService: PluginProtocol.BlobService): BlobBackend => {
+export const makeBackend = (blobService: BlobService): BlobBackend => {
   const call = (method: string, path: string, init: RequestInit = {}): Promise<Response> =>
     blobService.fetch(new URL(path, BINDING_ORIGIN).toString(), { method, ...init });
 
@@ -80,7 +96,7 @@ export const makeBackend = (blobService: PluginProtocol.BlobService): BlobBacken
 };
 
 /** The blob backends to register for an invocation: the hosted store, as the default, when EDGE binds it. */
-export const blobBackends = (env: PluginProtocol.Env): BlobBackendRegistration[] =>
+export const blobBackends = (env: Env): BlobBackendRegistration[] =>
   env.BLOB_SERVICE === undefined
     ? []
     : [{ name: Blob.Storage.edge, backend: makeBackend(env.BLOB_SERVICE), default: true }];

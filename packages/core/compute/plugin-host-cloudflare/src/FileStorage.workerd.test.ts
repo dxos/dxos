@@ -6,7 +6,6 @@ import { describe, test } from 'vitest';
 
 import { Blob } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
-import { type PluginProtocol } from '@dxos/protocols';
 
 import * as FileStorage from './FileStorage.ts';
 import * as PluginActivation from './PluginActivation.ts';
@@ -15,7 +14,7 @@ import { TestPlugin } from './testing/index.ts';
 const SPACE_ID = SpaceId.make('B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM');
 
 /** An in-memory blob-service: the `/file/:key` routes the backend calls over `BLOB_SERVICE`. */
-const fakeBlobService = (): PluginProtocol.BlobService & { files: Map<string, Uint8Array> } => {
+const fakeBlobService = (): FileStorage.BlobService & { files: Map<string, Uint8Array> } => {
   const files = new Map<string, Uint8Array>();
   return {
     files,

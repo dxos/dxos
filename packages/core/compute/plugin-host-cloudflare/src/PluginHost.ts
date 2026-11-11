@@ -49,7 +49,7 @@ export interface Host {
   /** Runs an operation; a failure is returned as data, since Workers RPC drops an error's class and stack. */
   invoke(
     request: PluginProtocol.InvokeRequest,
-    env: PluginProtocol.Env,
+    env: FileStorage.Env,
     scope?: PluginProtocol.InvocationScope,
   ): Promise<PluginProtocol.InvokeResult>;
 }
@@ -91,7 +91,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
 
   const run = async (
     request: PluginProtocol.InvokeRequest,
-    env: PluginProtocol.Env,
+    env: FileStorage.Env,
     scope: PluginProtocol.InvocationScope,
   ): Promise<unknown> => {
     const activation = await getActivation();
