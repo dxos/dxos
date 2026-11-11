@@ -5,6 +5,7 @@
 import echo from '../../../../packages/ui/brand/assets/logotypes/echo-horizontal-black.svg?raw';
 import edge from '../../../../packages/ui/brand/assets/logotypes/edge-horizontal-black.svg?raw';
 import halo from '../../../../packages/ui/brand/assets/logotypes/halo-horizontal-black.svg?raw';
+import kube from '../../../../packages/ui/brand/assets/icons/kube.svg?raw';
 import mesh from '../../../../packages/ui/brand/assets/logotypes/mesh-horizontal-black.svg?raw';
 import plex from '../../../../packages/ui/brand/assets/logotypes/plex-horizontal-black.svg?raw';
 
@@ -18,6 +19,8 @@ export type Topic = {
   href?: string;
   description: string;
   logotype?: string;
+  /** A square mark drawn beside the label, for a topic with no logotype. */
+  icon?: string;
 };
 
 /** Every docs topic, built or planned, in nav order. */
@@ -37,6 +40,12 @@ export const TOPICS: Topic[] = [
     logotype: inherit(halo),
   },
   {
+    id: 'mesh',
+    label: 'MESH',
+    description: 'Peer-to-peer networking and replication.',
+    logotype: inherit(mesh),
+  },
+  {
     id: 'plex',
     label: 'PLEX',
     href: '/docs/plex/overview/',
@@ -50,15 +59,11 @@ export const TOPICS: Topic[] = [
     logotype: inherit(edge),
   },
   {
-    id: 'mesh',
-    label: 'MESH',
-    description: 'Peer-to-peer networking and replication.',
-    logotype: inherit(mesh),
-  },
-  {
-    id: 'ui',
-    label: 'UI',
+    id: 'tile',
+    label: 'TILE',
     description: 'React components and the design system.',
+    // Stand-in: the brand has no TILE mark yet, so this borrows the unused KUBE icon.
+    icon: kube,
   },
 ];
 
@@ -73,7 +78,7 @@ export const NAV_VARIANTS = [
   { id: 'tabs', label: 'Tabs' },
   { id: 'sidebar-select', label: 'Sidebar picker' },
   { id: 'docs-menu', label: 'Docs menu' },
-  { id: 'effect-tabs', label: 'Effect tabs' },
+  { id: 'effect-tabs', label: 'Effect, tabs to picker' },
   { id: 'effect-picker', label: 'Effect picker' },
 ] as const;
 

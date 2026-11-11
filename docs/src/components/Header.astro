@@ -131,7 +131,22 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
   }
 
   :global(html[data-topic-nav^='effect']) .search-wrap {
+    flex: none;
     margin-inline-start: auto;
+  }
+
+  :global(html[data-topic-nav^='effect']) .right-group {
+    flex: none;
+  }
+
+  /* Effect's docs show only the magnifier and the shortcut. */
+  :global(html[data-topic-nav^='effect']) .search-wrap :global(button[data-open-modal]) {
+    gap: 0.75rem;
+    width: auto;
+  }
+
+  :global(html[data-topic-nav^='effect']) .search-wrap :global(button[data-open-modal] > span) {
+    display: none;
   }
 
   .site-nav {

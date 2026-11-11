@@ -1,6 +1,7 @@
 ---
 // Variants "effect-tabs" and "effect-picker": Docs beside the logo where the marketing nav has it, a separator, then
-// the topics, either as logotype tabs or as a picker.
+// the topics. "effect-tabs" lays them out as logotype tabs while they fit and falls back to the picker when they don't;
+// "effect-picker" always uses the picker.
 import TopicList from './TopicList.astro';
 import TopicMark from './TopicMark.astro';
 import { TOPICS, currentTopic } from './topics.ts';
@@ -28,7 +29,7 @@ const topic = currentTopic(Astro.url.pathname);
       }
     </nav>
   </div>
-  <div data-nav-only="effect-picker">
+  <div data-nav-only="effect-tabs effect-picker">
     <details class="picker" data-topic-popover>
       <summary>
         {topic ? <TopicMark topic={topic} size={20} /> : <span>Topics</span>}
@@ -41,7 +42,34 @@ const topic = currentTopic(Astro.url.pathname);
   </div>
 </div>
 
+<script>
+  // Shows the tabs to measure them, and collapses to the picker if they would run into the search button.
+  const nav = document.querySelector<HTMLElement>('.effect-nav');
+  const search = document.querySelector<HTMLElement>('.search-wrap');
+  const fit = () => {
+    if (!nav || !search || document.documentElement.dataset.topicNav !== 'effect-tabs') {
+      return;
+    }
+    nav.dataset.collapsed = 'false';
+    // The search button's auto margin takes the free space; nothing in the row shrinks, so it is the slack left.
+    const header = nav.closest<HTMLElement>('.header');
+    const gap = header ? parseFloat(getComputedStyle(header).columnGap) || 0 : 0;
+    const slack = search.getBoundingClientRect().left - nav.getBoundingClientRect().right - gap;
+    nav.dataset.collapsed = String(slack < 24);
+  };
+  if (nav) {
+    new ResizeObserver(fit).observe(document.documentElement);
+    new MutationObserver(fit).observe(document.documentElement, { attributes: true, attributeFilter: ['data-topic-nav'] });
+    fit();
+  }
+</script>
+
 <style>
+  :global(html[data-topic-nav='effect-tabs']) .effect-nav:not([data-collapsed='true']) .picker,
+  .effect-nav[data-collapsed='true'] .tabs {
+    display: none;
+  }
+
   .effect-nav {
     align-items: center;
     display: flex;
