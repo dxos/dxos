@@ -1118,6 +1118,15 @@ TODO: an override per DXN.
   compute-service refuses a bundle the data plane cannot serve, or the data service protocol is
   versioned instead.
 
+- **Hooks on EDGE.** A bundle's catalog carries operations, skills and types but no hooks, and an
+  agent turn reads every plugin's hooks from the plugin manager it runs in. How a hook a plugin
+  contributes reaches an agent turn on EDGE once its plugin runs only in a bundle is open.
+- **Other plugins' contributions.** A bundle sees only what its own plugin contributes, so an
+  operation that reads every plugin's contributions — skills, schemas, subject-context providers,
+  identity specs, space templates, exporters, operation handlers — sees only its own in a bundle.
+  How those reach a bundle (published through the registry, or served by compute-service) is open.
+  Until then such an operation may not work on EDGE.
+
 ## Changelog
 
 ```mdl
@@ -1833,4 +1842,49 @@ decision D-79: `OPERATION_SERVICE_PLUGINS` decides both halves of a key: the plu
   for: user:dmaretskyi
   affects: [F-4.2, F-5.1, F-6.6]
   why: Reviewing [D-76] showed [F-6.6] still promised a published bundle always wins, which the holdback list contradicts, and that nothing said which channel enumeration reads. The space-scoped case needs a space id on the enumeration RPC and is not worth it while the held set is shrinking to nothing.
+```
+
+```mdl
+decision D-80: Durable operations (`Operation.Durable`, such as the agent process) are not contributed by plugins yet: compute-service registers them in its built-in process registry and hosts them in its `Process` Durable Object. Plugins may later contribute durable operations that run through the Worker Loader in a Durable Object facet. Fills in [D-8].
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-8]
+```
+
+```mdl
+decision D-81: The `agentSession.ensureChat` operation, which finds or creates an agent's chat for an MCP client's session, belongs in plugin-agent rather than in an EDGE-owned plugin, so it reaches EDGE through plugin-agent's bundle like the agent's other operations.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-82: The operation is renamed `org.dxos.operation.agent.ensureSessionChat`, plugin-agent exports the chat's foreign-key source, and compute-service's MCP sessions call the new key. Fills in [D-81].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.7]
+  why: Every other plugin-agent key is `org.dxos.operation.agent.*`, and a new key cannot collide with the EDGE-owned handler while both are deployed during the switch.
+  rejected: Keeping `org.dxos.operation.agentSession.ensureChat`, which two handlers would register at once until the EDGE-owned plugin is removed.
+```
+
+```mdl
+decision D-83: mcp-space-service lists operations, skills and types from compute-service's merged catalog rather than from operation-service's, so a plugin that runs in its bundle stays discoverable over MCP. Fills in [D-76].
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1]
+```
+
+```mdl
+decision D-84: compute-service provides a file storage backend by default, so no plugin has to contribute one on EDGE.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.4]
+```
+
+```mdl
+decision D-85: An operation that needs other plugins' contributions — plugin-space's templates, exporters and identity specs, plugin-assistant's home suggestions — may not work on EDGE until those contributions reach a bundle. How hooks reach an agent turn on EDGE, how other plugins' contributions reach a bundle, and how plugin-agent's `ensureReplySent` finds other plugins' operation handlers stay open questions.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.4, F-6.7]
 ```
