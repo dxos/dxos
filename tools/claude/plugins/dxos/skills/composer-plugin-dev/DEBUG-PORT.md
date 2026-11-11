@@ -19,7 +19,7 @@ expired:
 ```bash
 c=~/.dxos/debug-port/cert.pem; test -f ~/.dxos/debug-port/key.pem &&
   openssl verify -CAfile "$(mkcert -CAROOT)/rootCA.pem" "$c" &&
-  openssl x509 -in "$c" -noout -text | grep -q 'IP Address:127.0.0.1'
+  openssl x509 -in "$c" -noout -text | grep -qE 'IP Address:127\.0\.0\.1(,|$)'
 ```
 
 If that fails, the user runs these (`mkcert -install` adds a root certificate to their system
