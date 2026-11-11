@@ -12,10 +12,12 @@ export type UseAudioState = {
   audio?: HTMLAudioElement;
   stream?: MediaStream;
   track?: MediaStreamTrack;
+  /** Why the file could not be fetched or decoded; the other fields stay unset. */
+  error?: Error;
 };
 
 export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstraints): UseAudioState => {
-  const [{ audio, stream, track }, setStream] = useState<UseAudioState>({});
+  const [{ audio, stream, track, error }, setStream] = useState<UseAudioState>({});
   useEffect(() => {
     const ctx = new Context();
 
@@ -76,6 +78,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
         });
       } catch (err) {
         log.catch(err);
+        setStream({ error: err instanceof Error ? err : new Error(String(err)) });
       }
     });
 
@@ -84,5 +87,5 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
     };
   }, [audioUrl]);
 
-  return { audio, stream, track };
+  return { audio, stream, track, error };
 };

@@ -154,6 +154,14 @@ const LiveStory = () => {
   const [recording, setRecording] = useState(false);
   const [track, setTrack] = useState<MediaStreamTrack>();
   const [micError, setMicError] = useState<string>();
+  // A permission prompt can outlive the story; a track granted after unmount is stopped at once.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const { model, appendMessage } = useStoryMessages();
   const commit = useCommitMessages(appendMessage);
   const transcriber = useRealtimeKitTranscriber();
@@ -184,6 +192,10 @@ const LiveStory = () => {
     // Acquired here, not by the pipeline, so a refused microphone is reported instead of a Stop that records nothing.
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!mounted.current) {
+        stream.getTracks().forEach((granted) => granted.stop());
+        return;
+      }
       setMicError(undefined);
       setTrack(stream.getAudioTracks()[0]);
       setRecording(true);
@@ -229,7 +241,12 @@ const FileStory = () => {
     event.target.value = '';
   }, []);
 
-  const { audio, stream, track } = useAudioFile(uploadedUrl ?? AUDIO_URL);
+  const { audio, stream, track, error: loadError } = useAudioFile(uploadedUrl ?? AUDIO_URL);
+  useEffect(() => {
+    if (loadError) {
+      setPlaying(false);
+    }
+  }, [loadError]);
 
   // The decoded stream also feeds an <audio> element, so the file is heard while it is transcribed.
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -265,12 +282,15 @@ const FileStory = () => {
   return (
     <>
       <audio ref={audioRef} autoPlay />
-      <TranscriptPanel model={model} error={accountError(account)}>
+      <TranscriptPanel
+        model={model}
+        error={accountError(account) ?? (loadError && `Audio file failed to load (${loadError.message}).`)}
+      >
         <Button.Root
           iconOnly
           // Not gated on the stream: until a user gesture, the browser holds the file's audio context suspended, and
           // this click is that gesture; playback and transcription start once the stream arrives.
-          disabled={!transcriber || account !== 'bound' || phase === 'draining'}
+          disabled={!transcriber || account !== 'bound' || phase === 'draining' || !!loadError}
           icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
           label={playing ? 'Pause' : 'Play'}
           onClick={() => setPlaying((value) => !value)}
