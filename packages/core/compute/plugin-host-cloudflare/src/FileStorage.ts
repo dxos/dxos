@@ -68,7 +68,9 @@ export const makeBackend = (blobService: PluginProtocol.BlobService): BlobBacken
   const finalizeUpload: BlobTransport['finalizeUpload'] = async (uploadId) => {
     const response = await call('POST', `/upload/${uploadId}/finalize`);
     if (!response.ok) {
-      throw new Error(`blob-service could not finalize upload ${uploadId}: ${response.status} ${await response.text()}`);
+      throw new Error(
+        `blob-service could not finalize upload ${uploadId}: ${response.status} ${await response.text()}`,
+      );
     }
     const { key, size, contentType } = (await response.json()) as { key: string; size: number; contentType?: string };
     return { key, size, contentType };
