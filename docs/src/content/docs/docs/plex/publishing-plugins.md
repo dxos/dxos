@@ -430,23 +430,44 @@ export default Plugin.config({
   plugin: {
     key: 'com.example.plugin.bookmarks',
     name: 'Bookmarks',
-    description: 'Save links in a space and count how often each one is opened.',
+    description:
+      'Save links in a space and count how often each one is opened.',
     icon: { key: 'ph--bookmark-simple--regular', hue: 'amber' },
     tags: ['labs'],
   },
   modules: [
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
-    SpaceCapability.createObject(() =>
-      import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+    AppCapability.schema(
+      () =>
+        import('./src/capabilities/schema.ts', {
+          with: { type: 'module-url' },
+        }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article],
-    }),
-    AppCapability.operationHandler(() =>
-      import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+    SpaceCapability.createObject(
+      () =>
+        import('./src/capabilities/create-object.ts', {
+          with: { type: 'module-url' },
+        }),
     ),
-    AppCapability.skillDefinition(() =>
-      import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    AppCapability.surface(
+      () =>
+        import('./src/capabilities/react-surface.ts', {
+          with: { type: 'module-url' },
+        }),
+      {
+        roles: [AppSurface.Article],
+      },
+    ),
+    AppCapability.operationHandler(
+      () =>
+        import('./src/capabilities/operation-handler.ts', {
+          with: { type: 'module-url' },
+        }),
+    ),
+    AppCapability.skillDefinition(
+      () =>
+        import('./src/capabilities/skill-definition.ts', {
+          with: { type: 'module-url' },
+        }),
     ),
   ],
 });
@@ -461,20 +482,31 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-export class Bookmark extends Type.makeObject<Bookmark>(DXN.make('com.example.type.bookmark', '0.1.0'))(
+export class Bookmark extends Type.makeObject<Bookmark>(
+  DXN.make('com.example.type.bookmark', '0.1.0'),
+)(
   Schema.Struct({
     name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
     url: Schema.optional(Schema.String.annotate({ title: 'URL' })),
     visits: Schema.optional(Schema.Number.annotate({ title: 'Visits' })),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
+    Annotation.IconAnnotation.set({
+      icon: 'ph--bookmark-simple--regular',
+      hue: 'amber',
+    }),
     Annotation.UserType.set(),
   ),
 ) {}
 
-export const make = (props: Partial<Obj.MakeProps<typeof Bookmark>> = {}): Bookmark =>
-  Obj.make(Bookmark, { name: props.name, url: props.url, visits: props.visits ?? 0 });
+export const make = (
+  props: Partial<Obj.MakeProps<typeof Bookmark>> = {},
+): Bookmark =>
+  Obj.make(Bookmark, {
+    name: props.name,
+    url: props.url,
+    visits: props.visits ?? 0,
+  });
 
 // src/capabilities/schema.ts
 import { Bookmark } from '../types/Bookmark.ts';
@@ -528,8 +560,16 @@ export const RecordVisit = Operation.make({
     description: 'Count one visit to a bookmark.',
     icon: 'ph--cursor-click--regular',
   },
-  input: Schema.Struct({ bookmark: Schema.Any.annotate({ description: 'The bookmark that was visited.' }) }),
-  output: Schema.Struct({ visits: Schema.Number.annotate({ description: 'The visit count after this visit.' }) }),
+  input: Schema.Struct({
+    bookmark: Schema.Any.annotate({
+      description: 'The bookmark that was visited.',
+    }),
+  }),
+  output: Schema.Struct({
+    visits: Schema.Number.annotate({
+      description: 'The visit count after this visit.',
+    }),
+  }),
 });
 
 // src/operations/record-visit.ts
@@ -567,7 +607,11 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.OperationHandler,
-      OperationHandlerSet.lazy([RecordVisit.pipe(Operation.lazyHandler(() => import('../operations/record-visit.ts')))]),
+      OperationHandlerSet.lazy([
+        RecordVisit.pipe(
+          Operation.lazyHandler(() => import('../operations/record-visit.ts')),
+        ),
+      ]),
     ),
   ),
 );
@@ -595,7 +639,10 @@ export default Capability.makeModule(() =>
           key: 'com.example.skill.bookmarks',
           name: 'Bookmarks',
           tools: Skill.toolDefinitions({ operations: [RecordVisit] }),
-          instructions: Template.make({ source: 'When the user says they opened a bookmark, record a visit to it.' }),
+          instructions: Template.make({
+            source:
+              'When the user says they opened a bookmark, record a visit to it.',
+          }),
         }),
     }),
   ),
@@ -624,7 +671,11 @@ export default Capability.makeModule(() =>
         id: 'article',
         filter: AppSurface.object(AppSurface.Article, Bookmark),
         component: BookmarkArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId } }) => ({
+          role,
+          subject,
+          attendableId,
+        }),
       }),
     ),
   ),
@@ -644,19 +695,34 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { type Bookmark } from '../types/Bookmark.ts';
 import { RecordVisit } from '../types/BookmarkOperation.ts';
 
-export const BookmarkArticle = ({ role, subject }: AppSurface.ObjectArticleProps<Bookmark>) => {
+export const BookmarkArticle = ({
+  role,
+  subject,
+}: AppSurface.ObjectArticleProps<Bookmark>) => {
   // Re-renders when the object changes, here or on another peer.
   const [bookmark] = useObject(subject);
-  const recordVisit = Hooks.useOperation(RecordVisit, () => ({ bookmark: subject }));
+  const recordVisit = Hooks.useOperation(RecordVisit, () => ({
+    bookmark: subject,
+  }));
 
   return (
     <Panel.Root role={role}>
       <Panel.Body>
         <Input.Root
           value={bookmark.name ?? ''}
-          onChange={(event) => Obj.update(subject, (subject) => (subject.name = event.target.value))}
+          onChange={(event) =>
+            Obj.update(
+              subject,
+              (subject) => (subject.name = event.target.value),
+            )
+          }
         />
-        <a href={bookmark.url} target='_blank' rel='noreferrer' onClick={() => recordVisit()}>
+        <a
+          href={bookmark.url}
+          target='_blank'
+          rel='noreferrer'
+          onClick={() => recordVisit()}
+        >
           {bookmark.url}
         </a>
         <p>Visited {bookmark.visits ?? 0} times.</p>
