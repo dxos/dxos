@@ -24,6 +24,12 @@ describe('skill token', () => {
     }
   });
 
+  // Pinned, not computed from `derive`: the hash and the word list are a wire format between
+  // processes that upgrade separately, so a change to either has to be a deliberate edit here.
+  test('one key pins one word across builds', ({ expect }) => {
+    expect(SkillToken.derive('org.dxos.skill.project')).to.equal('key');
+  });
+
   test('a token names one skill, so another skill does not get the same word', ({ expect }) => {
     const words = KEYS.map(SkillToken.derive);
     expect(new Set(words).size).to.equal(KEYS.length);
