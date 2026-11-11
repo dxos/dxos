@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'vitest';
 
-import { getPackageEntrypoints } from './index.ts';
+import { getPackageEntrypoints, hasDefaultExport } from './index.ts';
 
 /** Materialises a package on disk so wildcard exports have a directory to walk. */
 const makePackage = (exports: Record<string, unknown>, files: string[]): string => {
@@ -56,5 +56,21 @@ describe('getPackageEntrypoints', () => {
       '@example/pkg',
       '@example/pkg/Atom',
     ]);
+  });
+});
+
+describe('hasDefaultExport', () => {
+  const check = (source: string): boolean => {
+    const file = path.join(mkdtempSync(path.join(tmpdir(), 'import-map-')), 'index.js');
+    writeFileSync(file, source);
+    return hasDefaultExport(file);
+  };
+
+  test('counts only a default the module itself exports', ({ expect }) => {
+    expect(check('export default 1;')).toBe(true);
+    expect(check("export { default } from './a.js';")).toBe(true);
+    expect(check('const a = 1;\nexport { a as default };')).toBe(true);
+    expect(check("export { default as hypercore } from './a.js';")).toBe(false);
+    expect(check('// export default 1;\nexport const a = 1;')).toBe(false);
   });
 });
