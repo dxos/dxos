@@ -21,7 +21,7 @@ import { useTranslation } from '@dxos/react-ui/Theme';
 
 import { useContributions, useInspectedPlugin } from './hooks.ts';
 import { ModuleErrors } from './InspectorPlugin.tsx';
-import { type KindId, KINDS, kindOf } from './kinds.ts';
+import { type Kind, type KindId, KINDS, kindOf } from './kinds.ts';
 import { useDevPlugin } from './load.ts';
 import { useCreateSample } from './sample.ts';
 import { AppGraphView } from './views/AppGraphView.tsx';
@@ -141,7 +141,7 @@ const Workbench = ({ plugin, space, adds, manifestUrl, actions }: WorkbenchProps
   const statusOf = useStatus();
   const sample = useSample(plugin, space);
   const modules = [...plugin.modules].sort((a, b) => order(a) - order(b));
-  const missing = KINDS.filter((kind) => !modules.some((module) => kindOf(module) === kind));
+  const rows = sidebarRows(modules);
   const [selected, setSelected] = useState<string>();
   const current = modules.find((module) => module.id === selected) ?? modules[0];
 
@@ -158,7 +158,21 @@ const Workbench = ({ plugin, space, adds, manifestUrl, actions }: WorkbenchProps
       <div className='grid grid-cols-[13rem_minmax(0,1fr)] min-h-0'>
         <nav className='flex flex-col gap-0.5 p-2 border-e border-separator overflow-auto'>
           <h2 className='px-2 pb-1 text-xs uppercase tracking-wide text-description'>Modules</h2>
-          {modules.map((module) => {
+          {rows.map((row) => {
+            if (row.type === 'missing') {
+              return (
+                <span
+                  key={row.kind.id}
+                  className='flex items-center justify-between gap-2 px-2 py-1 text-sm text-description'
+                  title='Not added yet'
+                >
+                  <span>{row.kind.label}</span>
+                  <span className='text-xs'>○</span>
+                </span>
+              );
+            }
+
+            const module = row.module;
             const status = statusOf(module);
             return (
               <button
@@ -167,17 +181,11 @@ const Workbench = ({ plugin, space, adds, manifestUrl, actions }: WorkbenchProps
                 className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md text-sm text-start ${module === current ? 'bg-active-surface' : 'hover:bg-hover-surface'}`}
                 onClick={() => setSelected(module.id)}
               >
-                <span className='truncate'>{kindOf(module)?.label ?? moduleName(module.id)}</span>
+                <span className='truncate'>{row.kind?.label ?? moduleName(module.id)}</span>
                 <span className={`text-xs ${TONES[status.tone]}`}>{status.tone === 'active' ? '●' : status.label}</span>
               </button>
             );
           })}
-          {missing.map((kind) => (
-            <span key={kind.id} className='flex justify-between gap-2 px-2 py-1 text-sm text-description'>
-              <span>{kind.label}</span>
-              <span className='text-xs'>not added</span>
-            </span>
-          ))}
         </nav>
         <main className='flex flex-col gap-4 p-4 overflow-auto'>
           {adds && adds.length > 0 && <Adds adds={adds} modules={modules} statusOf={statusOf} />}
@@ -201,6 +209,19 @@ const Workbench = ({ plugin, space, adds, manifestUrl, actions }: WorkbenchProps
     </Frame>
   );
 };
+
+type Row = { type: 'missing'; kind: Kind } | { type: 'module'; kind?: Kind; module: Plugin.PluginModule };
+
+/** One row per kind in tutorial order, so modules turn green top to bottom; other modules follow. */
+const sidebarRows = (modules: readonly Plugin.PluginModule[]): Row[] => [
+  ...KINDS.flatMap((kind): Row[] => {
+    const matches = modules.filter((module) => kindOf(module) === kind);
+    return matches.length > 0
+      ? matches.map((module) => ({ type: 'module', kind, module }))
+      : [{ type: 'missing', kind }];
+  }),
+  ...modules.filter((module) => !kindOf(module)).map((module): Row => ({ type: 'module', module })),
+];
 
 const order = (module: Plugin.PluginModule): number => {
   const kind = kindOf(module);
