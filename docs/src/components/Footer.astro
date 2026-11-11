@@ -1,5 +1,6 @@
 ---
 import Default from '@astrojs/starlight/components/Footer.astro';
+import config from 'virtual:starlight/user-config';
 
 import logoBlack from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-block.svg?url';
 import logoWhite from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-white.svg?url';
@@ -30,8 +31,8 @@ import { siteLinks } from './site-links.ts';
   <div>
     <h4 class="label-mono">Community</h4>
     <ul>
-      <li><a href="https://github.com/dxos/dxos">GitHub</a></li>
-      <li><a href="https://dxos.org/discord">Discord</a></li>
+      {/* The same links as the header's social icons. */}
+      {config.social?.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}
     </ul>
   </div>
   <div class="legal">
