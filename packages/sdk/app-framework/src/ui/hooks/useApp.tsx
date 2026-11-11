@@ -150,6 +150,25 @@ export type UseAppOptions = {
 };
 
 /**
+ * The non-core plugins an app starts with enabled, as {@link useApp} reads them: none in safe mode,
+ * else the user's cached set when `cacheEnabled` and present, else `defaults`. Synchronous, so a host
+ * can act on the set (e.g. start its plugin worker) before rendering.
+ */
+export const readEnabled = ({
+  defaults,
+  cacheEnabled = false,
+  safeMode = false,
+}: Pick<UseAppOptions, 'cacheEnabled' | 'safeMode'> & { defaults: readonly string[] }): string[] => {
+  if (safeMode) {
+    return [];
+  }
+  // TODO(wittjosiah): Migrate to Atom.kvs for isomorphic storage.
+  const cached: unknown = cacheEnabled ? JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]') : [];
+  const ids = Array.isArray(cached) ? cached.filter((id): id is string => typeof id === 'string') : [];
+  return ids.length > 0 ? ids : [...defaults];
+};
+
+/**
  * Expected usage is for this to be the entrypoint of the application.
  * Initializes plugins and renders the root components.
  *
@@ -210,12 +229,7 @@ export const useApp = ({
     total: 0,
     progress: 0,
   });
-  // TODO(wittjosiah): Migrate to Atom.kvs for isomorphic storage.
-  const cached: string[] = useMemo(() => JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]'), []);
-  const enabled = useMemo(
-    () => (safeMode ? [] : cacheEnabled && cached.length > 0 ? cached : defaults),
-    [safeMode, cacheEnabled, cached, defaults],
-  );
+  const enabled = useMemo(() => readEnabled({ defaults, cacheEnabled, safeMode }), [safeMode, cacheEnabled, defaults]);
   const isExternalManager = !!pluginManager;
   const manager = useMemo(() => {
     const mgr =

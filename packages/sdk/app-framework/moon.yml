@@ -6,6 +6,7 @@ tags:
   - pack
   - ts-vite-build
   - ts-test
+  - ts-test-browser
   - ts-test-storybook
   - typedoc
   - storybook

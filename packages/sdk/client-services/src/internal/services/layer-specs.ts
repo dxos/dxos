@@ -921,7 +921,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   ...(options.edgeAvailable ? [IdentityEdgeServicesSpec(options)] : []),
   FeedSyncerSpec,
 
-  RpcRouterSpec,
+  ...(options.externalRouter ? [] : [RpcRouterSpec]),
   SystemServiceSpec,
   SystemServiceRegistrationSpec,
   IdentityServiceSpec,
