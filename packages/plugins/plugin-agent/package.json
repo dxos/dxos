@@ -92,6 +92,11 @@
       "types": "./dist/types/src/types/AgentPresence.d.ts",
       "import": "./dist/lib/AgentPresence.mjs"
     },
+    "./AgentSession": {
+      "source": "./src/types/AgentSession.ts",
+      "types": "./dist/types/src/types/AgentSession.d.ts",
+      "import": "./dist/lib/AgentSession.mjs"
+    },
     "./AgentSettings": {
       "source": "./src/types/AgentSettings.ts",
       "types": "./dist/types/src/types/AgentSettings.d.ts",
