@@ -7,18 +7,19 @@ import { describe, test } from 'vitest';
 import { groupOf, hiddenKinds } from './kinds.ts';
 
 describe('kind groups', () => {
-  test('sorts kinds into concepts, requirements and QA', ({ expect }) => {
-    expect(['type', 'op', 'component', 'code', 'spec', 'something-new'].map(groupOf)).toEqual(
-      Array(6).fill('concepts'),
-    );
-    expect(['feat', 'req'].map(groupOf)).toEqual(['requirements', 'requirements']);
+  test('sorts kinds into concepts, requirements, QA and other', ({ expect }) => {
+    expect(['type', 'op', 'component', 'binding', 'code', 'spec'].map(groupOf)).toEqual(Array(6).fill('concepts'));
+    expect(['feat', 'req', 'question'].map(groupOf)).toEqual(Array(3).fill('requirements'));
     expect(['scenario', 'test', 'suite'].map(groupOf)).toEqual(['qa', 'qa', 'qa']);
+    expect(['something-new', 'note'].map(groupOf)).toEqual(['other', 'other']);
   });
 
   test('hides the kinds of each group that is off, independently', ({ expect }) => {
-    const kinds = ['type', 'feat', 'test', 'op', 'scenario'];
-    expect(hiddenKinds(kinds, { concepts: true, requirements: true, qa: false })).toEqual(['test', 'scenario']);
-    expect(hiddenKinds(kinds, { concepts: false, requirements: true, qa: true })).toEqual(['type', 'op']);
-    expect(hiddenKinds(kinds, { concepts: true, requirements: false, qa: true })).toEqual(['feat']);
+    const all = { concepts: true, requirements: true, qa: true, other: true };
+    const kinds = ['type', 'feat', 'test', 'op', 'scenario', 'question', 'something-new'];
+    expect(hiddenKinds(kinds, { ...all, qa: false })).toEqual(['test', 'scenario']);
+    expect(hiddenKinds(kinds, { ...all, concepts: false })).toEqual(['type', 'op']);
+    expect(hiddenKinds(kinds, { ...all, requirements: false })).toEqual(['feat', 'question']);
+    expect(hiddenKinds(kinds, { ...all, other: false })).toEqual(['something-new']);
   });
 });
