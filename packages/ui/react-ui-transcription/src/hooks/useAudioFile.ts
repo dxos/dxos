@@ -22,6 +22,8 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
     const ctx = new Context();
 
     scheduleTask(ctx, async () => {
+      // A new file replaces the previous one at once, so nothing can play the old element while the new one loads.
+      setStream({});
       // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
       try {
         const response = await fetch(audioUrl);
@@ -33,6 +35,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
 
         const audio = new Audio();
         audio.src = objectUrl;
+        ctx.onDispose(() => audio.pause());
 
         await new Promise<void>((resolve, reject) => {
           audio.addEventListener(
