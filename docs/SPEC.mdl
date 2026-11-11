@@ -1003,8 +1003,7 @@ page app-framework-create-plugin: Create a plugin
     - Create the package and its `dx.config.ts` manifest
     - Define the plugin and its metadata with `Plugin`
     - Add a first module that contributes translations, and the activation event that loads it
-    - Follow along in StackBlitz: the starter, with each page's code to write
-    - See the plugin, its module and its strings in the inspector's Plugin and Translations panels
+    - Start the plugin's dev server and click Load dev plugin, then see the Translations module and its strings in the inspector
 ```
 
 ```mdl
@@ -1018,7 +1017,7 @@ page app-framework-define-type: Define a type
   covers:
     - Declare the plugin's type with `Type`, linking to the ECHO Defining types page for the details
     - Register the type with the app so it can create, list and name objects of it
-    - Create an object of the new type in the inspector's Types panel
+    - See the Schema and Create object modules in the inspector, and create an object of the new type
 ```
 
 ```mdl
@@ -1033,7 +1032,7 @@ page app-framework-add-surface: Add a surface
     - What a surface is, in one paragraph, linking to the Surfaces concept page
     - Contribute an article surface that renders the new type
     - Read and edit the object reactively in the component
-    - See the surface render the object in the inspector's Surfaces panel
+    - See the Surface module render the sample object in the inspector
 ```
 
 ```mdl
@@ -1048,11 +1047,11 @@ page app-framework-add-operation: Add an operation
     - Define an operation with its input and output schema
     - Implement its handler and contribute it
     - Write the handler as a short `Effect.gen`, since the operation API is Effect's
-    - Run it from the inspector's Operations panel, and see the skill that hands it to the assistant
+    - Run it from the inspector's Operations module, and see the Skill module that hands it to the assistant
 ```
 
 ```mdl
-page app-framework-extend-app-graph: Extend the app graph
+page app-framework-extend-app-graph: Extend the App Graph
   Put the plugin's objects and actions into the app's navigation.
   section: PLEX
   route: /docs/plex/learn/extend-app-graph/
@@ -1060,10 +1059,10 @@ page app-framework-extend-app-graph: Extend the app graph
   template: tutorial
   status: spike
   covers:
-    - What the app graph is, in one paragraph, linking to the App graph concept page
+    - What App Graph is, in one paragraph, linking to the App Graph concept page
     - Contribute nodes for the plugin's objects
     - Attach the operation from the previous page as an action on those nodes
-    - See the nodes and the action in the inspector's App graph panel
+    - See the nodes and the action in the inspector's App Graph module
 ```
 
 ```mdl
@@ -1100,49 +1099,50 @@ page app-framework-publishing: Publishing a plugin
 ### Core concepts
 
 ```mdl
-page app-framework-anatomy: Anatomy of a plugin
-  Plugins, modules, capabilities and activation events, and how they fit together.
+page app-framework-anatomy: Plugins and modules
+  A plugin is metadata plus modules, and an app is the plugins it loads.
   section: PLEX
-  route: /docs/plex/introduction/
+  route: /docs/plex/concepts/plugins/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - A plugin is a set of modules; a module activates on an event and contributes capabilities
-    - Capabilities are typed contributions that other modules request, which is how plugins extend each other
-    - Activation events order startup and let modules load lazily
-    - The plugin context, through which modules contribute and request capabilities
-    - A diagram of one plugin's modules, events and capabilities
+    - A plugin is metadata plus modules; `Plugin.define`, `Plugin.addModule` and `Plugin.make` build one
+    - The `dx.config.ts` manifest, which describes the plugin for the registry and lists its modules
+    - Inline and lazy modules (`Capability.inlineModule`, `Capability.lazyModule`), and why a module's code loads only when it activates
+    - A diagram of the Bookmarks plugin's modules, their events and their capabilities
 ```
 
 ```mdl
-page app-framework-surfaces: Surfaces
-  How the framework decides which component renders an object in a given place.
+page plex-capabilities: Capabilities
+  Typed contributions that modules provide and request, which is how plugins extend each other.
   section: PLEX
-  route: /docs/plex/concepts/surfaces/
+  route: /docs/plex/concepts/capabilities/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - A surface is a named place in the UI (article, section, card, and so on) that plugins fill
-    - How a surface contribution matches the data it is given, and how competing contributions are ordered
-    - How one plugin renders inside another plugin's surface
-    - Limits: what a surface component may not assume about its container
+    - A capability is a typed tag made with `Capability.make` or `Capability.makeSingleton`, and the values modules contribute under it
+    - Contributing and requesting: `Capability.get`, `getAll`, `waitFor` and `atom`
+    - `provides` and `requires`, which the compiler checks against what a module contributes and reads
+    - How one plugin extends another by contributing to a capability the other requests
+    - Capabilities that arrive after startup, when a module activates later or a plugin is added
 ```
 
 ```mdl
-page app-framework-app-graph: The app graph
-  The graph of nodes and actions that an app's navigation and menus are built from.
+page plex-activation: Activation
+  When a module runs: the events that activate it and the order the plugin manager follows.
   section: PLEX
-  route: /docs/plex/concepts/app-graph/
+  route: /docs/plex/concepts/activation/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - What a node is, and how nodes connect to form the graph
-    - How plugins contribute nodes and actions through graph builder extensions
-    - How the graph expands lazily as the reader navigates
-    - How the navigation tree, menus and the command palette read from it
+    - Activation events, and combining them with `ActivationEvent.oneOf` and `allOf`
+    - The `Startup` and `Idle` events, and the events built-in capabilities fire, such as `SurfacesRequested`
+    - How the plugin manager orders activation, with events fired before and after a module activates
+    - Lazy loading: a module whose event never fires never loads
+    - Adding and removing plugins while the app runs
 ```
 
 ```mdl
@@ -1156,13 +1156,49 @@ page app-framework-operations: Operations
   covers:
     - An operation is a schema-typed action with a handler, defined once and invoked from anywhere
     - Why the UI and agents share them: one definition gives a button, a command and an agent tool
-    - How handlers are contributed and resolved
-    - Built-in operations every plugin can call, such as layout and navigation
+    - How handlers are contributed and resolved, and the operation invoker that runs them
+    - Typed errors, and undo through `UndoMapping`
+    - Skills (`AppCapabilities.SkillDefinition`), which give operations to the assistant as tools
+    - The finished Bookmarks plugin's Operations module in the inspector
+```
+
+```mdl
+page app-framework-surfaces: Surfaces
+  How the framework decides which component renders an object in a given place.
+  section: PLEX
+  route: /docs/plex/concepts/surfaces/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A surface is a named place in the UI (article, section, card, and so on) that plugins fill
+    - A table of the standard roles and what each one is given
+    - How a surface contribution matches the data it is given, and how competing contributions are ordered
+    - How one plugin renders inside another plugin's surface
+    - Limits: what a surface component may not assume about its container
+    - The finished Bookmarks plugin's Surface module in the inspector, and a link to the Surface API page
+```
+
+```mdl
+page app-framework-app-graph: App Graph
+  The graph of nodes and actions that an app's navigation and menus are built from.
+  section: PLEX
+  route: /docs/plex/concepts/app-graph/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - What a node is, how nodes connect, and a node's identity as a `GraphPath`
+    - How plugins contribute nodes and actions through builder extensions
+    - How App Graph expands lazily as the reader navigates, and what `AppGraphRetention` keeps
+    - How the navigation tree, menus and the command palette read actions from it
+    - The finished Bookmarks plugin's App Graph module in the inspector
 ```
 
 ### API
 
 One page per namespace, each a readable tour with compiled examples that links into the API reference.
+Snippets come from the Bookmarks tutorial modules, except Plugin's, which keep World Clock [D-129].
 
 ```mdl
 page app-framework-guide-plugin: Plugin
@@ -1176,7 +1212,7 @@ page app-framework-guide-plugin: Plugin
     - Define a plugin with its metadata
     - Add modules and choose their activation events
     - Contribute capabilities from a module
-    - Test a plugin in isolation
+    - Describe the plugin in `dx.config.ts`
 ```
 
 ```mdl
@@ -1209,6 +1245,21 @@ page app-framework-guide-activation-event: ActivationEvent
 ```
 
 ```mdl
+page plex-guide-plugin-manager: PluginManager
+  Create the plugin manager, and add, enable and remove plugins.
+  section: PLEX
+  route: /docs/plex/guides/plugin-manager/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Create a plugin manager with its plugins and the ones enabled at start
+    - Add, enable, disable and remove a plugin while the app runs
+    - Load a plugin from a URL with a plugin loader
+    - Read which plugins and modules are active
+```
+
+```mdl
 page app-framework-guide-operation: Operation
   Define operations, implement their handlers and invoke them.
   section: PLEX
@@ -1217,7 +1268,7 @@ page app-framework-guide-operation: Operation
   template: namespace
   status: spike
   covers:
-    - Define an operation with input and output schema
+    - Define an operation with input and output schema, imported from `@dxos/compute/Operation`
     - Implement handlers and group them with `OperationHandlerSet`
     - Invoke an operation and handle its typed errors
     - The built-in `LayoutOperation` operations for opening, closing and focusing items
@@ -1240,14 +1291,14 @@ page app-framework-guide-surface: Surface
 
 ```mdl
 page app-framework-guide-app-graph: AppGraph
-  Contribute nodes and actions to the app graph.
+  Contribute nodes and actions to App Graph.
   section: PLEX
   route: /docs/plex/guides/app-graph/
   group: API
   template: namespace
   status: spike
   covers:
-    - Write a graph builder extension that contributes nodes for a type
+    - Write a builder extension that contributes nodes for a type
     - Attach actions to nodes
     - Work with `AppNode` and `GraphPath`
     - Expand and read the graph from a component
@@ -1262,9 +1313,96 @@ page app-framework-guide-app-capabilities: AppCapabilities
   template: namespace
   status: spike
   covers:
-    - The app-level capabilities in `AppCapabilities` and what each one adds to an app such as Composer
+    - A tour of `AppCapabilities` in groups (layout, graph, settings, schema, agents and files), with one table of every capability
     - Contribute settings, metadata and schema registrations
     - When to use an app capability and when to declare a new capability
+```
+
+```mdl
+page plex-guide-translations: Translations
+  Give a plugin's strings their text, by namespace and language.
+  section: PLEX
+  route: /docs/plex/guides/translations/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Contribute translation resources by namespace and language
+    - The keys the app reads for a type: its label, plural forms and placeholder
+    - Read a translated string from a component
+```
+
+### Guides
+
+```mdl
+page plex-guide-using-echo: Using ECHO in a plugin
+  Register a plugin's ECHO types with the app, so it can create, name and list their objects.
+  section: PLEX
+  route: /docs/plex/guides/using-echo/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Register ECHO types with the `Schema` capability
+    - Annotate a type with `AppAnnotation` so the app can name and list its objects
+    - Create objects from a plugin, and the create-object entry that adds them to the app's menus
+    - Links to ECHO's Defining types for the types themselves
+```
+
+```mdl
+page plex-guide-testing: Testing a plugin
+  Test a plugin's modules without an app, with the App Framework test harness.
+  section: PLEX
+  route: /docs/plex/guides/testing/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Start a headless app with the plugin under test, with `Harness.createComposerTestApp` from `@dxos/plugin-testing`
+    - Fire activation events and read the capabilities that result
+    - Invoke an operation and check its result
+```
+
+```mdl
+page plex-guide-settings-and-state: Settings and state
+  Keep a plugin's settings, which sync, apart from its device state, which does not.
+  section: PLEX
+  route: /docs/plex/guides/settings-and-state/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Contribute synced settings with a schema, and the settings form the app renders from it
+    - Keep device-only values in a State capability keyed `${key}.state`
+    - Read and write both from a component
+```
+
+```mdl
+page plex-guide-effect: Effect in plugins
+  Use Effect services and layers from a plugin's modules.
+  section: PLEX
+  route: /docs/plex/guides/effect/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Read a capability as an Effect service with `Capability.Service`
+    - Contribute layers for operation services through `Capabilities.LayerSpec`
+    - Declare the services an operation needs in its `services`, and yield them in the handler
+```
+
+```mdl
+page plex-guide-debugging: Debugging a plugin
+  Find out why a module did not activate or a contribution did not show.
+  section: PLEX
+  route: /docs/plex/guides/debugging/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Load the plugin from its dev server into the docs inspector, and read each module's status and error [D-147]
+    - The load errors the inspector names, and what each one means
+    - Debug the plugin in Composer Preview with the browser's devtools
 ```
 
 ```mdl
@@ -1293,7 +1431,45 @@ page app-framework-api-reference: API reference
   template: reference
   status: spike
   covers:
-    - Links to the generated reference for `@dxos/app-framework`, `@dxos/app-toolkit` and `@dxos/operation`
+    - Links to the generated reference for `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/app-graph` and `@dxos/compute`
+```
+
+```mdl
+page app-framework-manifest: The plugin manifest
+  `dx.config.ts`, capabilities and activation events, as reference.
+  section: PLEX
+  route: /docs/plex/resources/manifest/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Every field of `dx.config.ts`
+    - Every built-in capability and activation event, in tables
+```
+
+```mdl
+page app-framework-glossary: Glossary
+  Every Composer and PLEX term, defined once.
+  section: PLEX
+  route: /docs/plex/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Action, activation event, annotation, App Graph, App Toolkit, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role, schema registration and surface
+```
+
+```mdl
+page plex-llms-txt: llms.txt
+  The PLEX site map and full text for agents, in the llms.txt format.
+  section: PLEX
+  route: /docs/plex/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/plex/llms.txt`, each PLEX page with its summary and a link to its Markdown
+    - Links to `/plex/llms-full.txt`, every PLEX page in one file
 ```
 
 ### Later
@@ -1327,43 +1503,6 @@ page app-framework-cli: The dx CLI
     - Install the CLI and set up a profile
     - Link the CLI to a Composer identity
     - The commands a plugin author uses
-```
-
-```mdl
-page app-framework-manifest: The plugin manifest
-  `dx.config.ts`, capabilities and activation events, as reference.
-  section: PLEX
-  route: /docs/plex/reference/manifest/
-  group: Resources
-  template: reference
-  status: later
-  covers:
-    - Every field of `dx.config.ts`
-    - Every built-in capability and activation event, in tables
-```
-
-```mdl
-page app-framework-glossary: Glossary
-  Every Composer and PLEX term, defined once.
-  section: PLEX
-  route: /docs/plex/resources/glossary/
-  group: Resources
-  template: reference
-  status: spike
-  covers:
-    - Action, activation event, App Toolkit, app graph, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role and surface
-```
-```mdl
-page plex-llms-txt: llms.txt
-  The PLEX site map and full text for agents, in the llms.txt format.
-  section: PLEX
-  route: /docs/plex/resources/llms-txt/
-  group: Resources
-  template: reference
-  status: spike
-  covers:
-    - Links to `/plex/llms.txt`, each PLEX page with its summary and a link to its Markdown
-    - Links to `/plex/llms-full.txt`, every PLEX page in one file
 ```
 
 ## Features
@@ -1835,7 +1974,7 @@ feat F-19: The plugin inspector
     then: the main area shows that module working: translations as a table, a type's fields, Create for each
           object the plugin can create, each surface rendered with the sample object, each operation run from a
           form built from its input schema with its result, a skill with the operations it gives the assistant
-          (no model called), and the branches of the app graph that lead to the plugin's nodes, with those nodes
+          (no model called), and the branches of App Graph that lead to the plugin's nodes, with those nodes
           marked
 
   req F-19.6:
@@ -3192,6 +3331,56 @@ decision D-147: The inspector is a module workbench: a header with the plugin, i
   rejected:
     - A mini Composer, with a nav tree, an article and a command palette: it hides translations, schema and skills, and shows nothing until the app graph page.
     - Serving the inspector from the plugin's dev server: the docs inspector reaches the dev server already.
+```
+
+```mdl
+decision D-148: PLEX's Core concepts are Plugins and modules, Capabilities, Activation, Operations, Surfaces and App Graph, in that order. Anatomy of a plugin becomes Plugins and modules at `/docs/plex/concepts/plugins/`, and `/docs/plex/introduction/` redirects to it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-anatomy, plex-capabilities, plex-activation, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
+  why: Anatomy of a plugin packed capabilities and activation into one page and still described the removed plugin context; a reader meets operations before surfaces on the learning path, so the concepts follow that order.
+```
+
+```mdl
+decision D-149: "App Graph" is a proper name in PLEX prose: two words, capitalized, without "the". The namespace stays `AppGraph`, and the learning-path page is Extend the App Graph at the same route.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-app-graph, app-framework-guide-app-graph, app-framework-extend-app-graph, app-framework-glossary]
+  why: It names one structure in the app, like ECHO or HALO, not a kind of graph.
+```
+
+```mdl
+decision D-150: PLEX's API group adds PluginManager and Translations. AppGraph covers `AppNode` and `GraphPath`, and AppCapabilities is a tour in groups with one table, not a section per capability.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-plugin-manager, plex-guide-translations, app-framework-guide-app-graph, app-framework-guide-app-capabilities]
+  why: A reader loading plugins at runtime or writing strings had no page; AppCapabilities has too many members for one heading each.
+```
+
+```mdl
+decision D-151: PLEX's Guides are Using ECHO in a plugin, Testing a plugin, Settings and state, Effect in plugins, Debugging a plugin and React. Using ECHO in a plugin is a guide, not a concept, because it joins ECHO and PLEX. The dx CLI stays later.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-using-echo, plex-guide-testing, plex-guide-settings-and-state, plex-guide-effect, plex-guide-debugging, app-framework-guide-react, app-framework-cli]
+  why: Each answers a task a plugin author hits after the learning path; registering ECHO types is integration work, not an idea of PLEX's own.
+  rejected:
+    - Objects in the app as a core concept: it is not a PLEX concept.
+```
+
+```mdl
+decision D-152: The PLEX API reference covers `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/app-graph` and `@dxos/compute`. Operation is documented from `@dxos/compute/Operation`, since `@dxos/operation` exports only the invoker.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-api-reference, app-framework-guide-operation]
+  why: Those are the packages a plugin imports from.
+```
+
+```mdl
+decision D-153: The plugin manifest is written, in Resources, at `/docs/plex/resources/manifest/`. Concept and API snippets come from the Bookmarks modules, except Plugin's, which keep World Clock [D-129], and concept pages may embed the inspector with the finished plugin.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-manifest, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
+  why: One plugin carried from the learning path into the reference lets a reader recognize each snippet.
 ```
 
 ## Appendix: Extension Definitions
