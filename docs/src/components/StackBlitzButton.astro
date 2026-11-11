@@ -1,0 +1,57 @@
+---
+// Opens the tutorial app as a new StackBlitz project in its own tab. A form post to stackblitz.com/run is what the
+// StackBlitz SDK's `openProject` sends; posting it directly keeps the files in the page, so the tab opens on the click.
+
+import { tutorialProject, type TutorialProjectKind } from '../echo/tutorial-project.ts';
+
+type Props = {
+  kind: TutorialProjectKind;
+  label: string;
+  /** The file the editor opens on. */
+  file: string;
+};
+
+const { kind, label, file } = Astro.props;
+
+const TITLES: Record<TutorialProjectKind, string> = {
+  complete: 'ECHO contacts',
+  starter: 'ECHO contacts: follow along',
+};
+
+const files = tutorialProject(kind);
+---
+
+<form
+  class="stackblitz not-content"
+  method="post"
+  target="_blank"
+  action={`https://stackblitz.com/run?${new URLSearchParams({ file })}`}
+>
+  <input type="hidden" name="project[title]" value={TITLES[kind]} />
+  <input type="hidden" name="project[description]" value="The app the ECHO learning path builds." />
+  <input type="hidden" name="project[template]" value="node" />
+  {Object.entries(files).map(([path, content]) => <input type="hidden" name={`project[files][${path}]`} value={content} />)}
+  <button type="submit">{label}</button>
+</form>
+
+<style>
+  .stackblitz {
+    margin-block: 1rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--sl-color-text-accent);
+    border-radius: 999rem;
+    background: var(--sl-color-text-accent);
+    color: var(--sl-color-black);
+    font: inherit;
+    font-size: var(--sl-text-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button:hover {
+    filter: brightness(1.1);
+  }
+</style>

@@ -24,10 +24,11 @@ import {
 import { watchRecord } from '../records.ts';
 import { getTypeIcon, types } from '../schema.ts';
 
-/** Each type's hue, declared once on its schema. */
-const HUES: Record<string, string | undefined> = Object.fromEntries(
-  types.map((type) => [Type.getTypename(type), getTypeIcon(type)?.hue]),
-);
+/** The hue the schema of `typename` declares. */
+const hueOf = (typename: string) => {
+  const type = types.find((type) => Type.getTypename(type) === typename);
+  return type && getTypeIcon(type)?.hue;
+};
 
 export type RecordGraphProps = {
   records: readonly Obj.Unknown[];
@@ -115,7 +116,7 @@ export const RecordGraph = ({
     () => ({
       node: (node) => ({
         data: {
-          color: HUES[node.data?.type ?? ''],
+          color: hueOf(node.data?.type ?? ''),
           selected: node.id === selectedRef.current ? 'true' : 'false',
         },
       }),

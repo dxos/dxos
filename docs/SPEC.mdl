@@ -3016,6 +3016,16 @@ decision D-137: The learning path does not embed StackBlitz in its pages. The EC
     - A StackBlitz project from a GitHub folder: the starter would be a second committed copy of the app.
 ```
 
+```mdl
+decision D-138: The StackBlitz buttons post a form to `stackblitz.com/run`, the request the SDK's `openProject` sends, with the project's files in the page. The starter replaces each export in a quoted region with `todo('<page>, step <n>: <step>')`, and the app shows the stage the written pieces reach under a line naming the next step. `@dxos/*` pins pkg.pr.new commit `6bad7b6` of dxos#14487, its only published build, until that PR lands. Fills in [D-137].
+  date: 2026-11-11
+  by: agent:claude-code
+  affects: [F-15.7, F-15.8, F-15.9]
+  why: A click that first fetched the files or loaded the SDK would open the tab after an await, which browsers block as a popup; the files are about 60 KB and only two pages carry them.
+  rejected:
+    - Adding `@stackblitz/sdk` for one form post.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

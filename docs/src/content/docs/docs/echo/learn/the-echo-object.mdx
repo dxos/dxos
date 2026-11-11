@@ -3,6 +3,7 @@ title: The ECHO object
 description: What a live object is, and the app the learning path builds, running.
 ---
 
+import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
 import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
 The learning path builds one app: a contact book of organizations, the people who work at them, and the events they attend. This page explains what the app is made of, and shows it finished.
@@ -26,6 +27,8 @@ An object is also live: code can subscribe to it, or to a query, and run wheneve
 Pick a type, open a record, and edit it in the form. The table shows the records of one type, and the graph draws every reference between them. To change the code and run it yourself, fork it on StackBlitz.
 
 <TutorialEmbed stage="complete" />
+
+<StackBlitzButton kind="complete" label="Fork on StackBlitz" file="src/schema.ts" />
 
 Each page of the learning path builds one piece of it:
 
