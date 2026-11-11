@@ -5,11 +5,12 @@ import dmMonoRegular from '../../node_modules/@dxos/brand/assets/fonts/dm-mono/D
 import dmSansBold from '../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Bold.ttf?url';
 import dmSansMedium from '../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Medium.ttf?url';
 import dmSansRegular from '../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Regular.ttf?url';
+import sharpSansMedium from '../../node_modules/@dxos/brand/assets/fonts/sharp-sans/SharpSansDispNo1-Medium.ttf?url';
 import { DOCS_LAYERS } from '../demos/layers.ts';
 import PostHog from './PostHog.astro';
 
 /** The faces every page paints with; the browser otherwise finds them only after parsing the stylesheet. */
-const PRELOAD_FONTS = [dmSansRegular, dmSansMedium, dmSansBold, dmMonoRegular];
+const PRELOAD_FONTS = [dmSansRegular, dmSansMedium, dmSansBold, dmMonoRegular, sharpSansMedium];
 
 /** SVG geometry, media sizes and table alignment come from attributes, which reverting every property would drop. */
 const attributed = 'svg, svg *, img, video, canvas, iframe, table, table *';

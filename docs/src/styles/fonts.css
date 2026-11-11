@@ -65,11 +65,11 @@
   font-display: swap;
   src: url('../../node_modules/@dxos/brand/assets/fonts/dm-mono/DMMono-Regular.ttf');
 }
-/* Only the topic switcher's labels use it; each letter sits in a fixed cell, so the swap moves nothing and it needs no preload. */
+/* Preloaded and blocking, since the hero's large product name would visibly change shape on a swap from the fallback. */
 @font-face {
   font-family: 'Sharp Sans';
   font-weight: 500;
-  font-display: swap;
+  font-display: block;
   src: url('../../node_modules/@dxos/brand/assets/fonts/sharp-sans/SharpSansDispNo1-Medium.ttf');
 }
 @font-face {

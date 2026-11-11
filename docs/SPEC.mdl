@@ -1217,6 +1217,36 @@ page app-framework-guide-react: React
     - The reactivity rules a plugin component follows
 ```
 
+### Agents
+
+Pages for working on PLEX with an AI agent.
+
+```mdl
+page plex-open-in-claude: Open in Claude
+  Start a Claude Code session on a PLEX task from a link.
+  section: PLEX
+  route: /docs/plex/agents/open-in-claude/
+  group: Agents
+  template: reference
+  status: spike
+  covers:
+    - The Claude desktop app's `claude://code/new` link, with a working example
+    - Its parameters, and that the prompt is prefilled, not sent
+    - The Claude Code on the web and CLI equivalents
+```
+```mdl
+page plex-llms-txt: llms.txt
+  The PLEX site map for agents, in the llms.txt format.
+  section: PLEX
+  route: /docs/plex/agents/llms-txt/
+  group: Agents
+  template: reference
+  status: spike
+  covers:
+    - What `/plex/llms.txt` serves, and that it is a placeholder for now
+    - Where agents read ECHO's site map today
+```
+
 ### Resources
 
 ```mdl
@@ -1655,7 +1685,8 @@ feat F-17: Same shape in both sections
 
   req F-17.1:
     when: a section is built
-    then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides and Resources, in that order
+    then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides, any groups of its own (such as
+          PLEX's Agents) and Resources, in that order
 
   req F-17.2:
     when: a page is written
@@ -2720,6 +2751,13 @@ decision D-115: Each section's root page lives at `…/overview/`, and PLEX's pa
   date: 2026-11-10
   by: user:richburdon
   affects: [welcome, halo-welcome, app-framework-welcome]
+```
+
+```mdl
+decision D-116: PLEX has an Agents group, after Guides, with an Open in Claude page that shows the desktop app's `claude://code/new` link, and an llms.txt page backed by a placeholder `/plex/llms.txt`.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-17.1, plex-open-in-claude, plex-llms-txt]
 ```
 
 ## Appendix: Extension Definitions

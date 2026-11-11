@@ -53,7 +53,7 @@ h1#_top {
   color: var(--c-fg);
 }
 
-.sl-markdown-content a:not(.card) {
+.sl-markdown-content a:not(.card, .sl-link-button) {
   color: var(--c-accent);
   text-underline-offset: 0.2em;
 }
@@ -452,4 +452,12 @@ a.card:hover {
 :is(ol, ul) > li::marker,
 .sl-steps > li::before {
   font-variant-numeric: tabular-nums;
+}
+
+/* Sized and placed so the logotype's artwork sits where dxos.org's nav puts it: 1% of the page plus 16px from the edge. */
+@media (min-width: 50rem) {
+  .site-title img {
+    height: 48.7px;
+    translate: calc(1vw - 14px) 2.6px;
+  }
 }
