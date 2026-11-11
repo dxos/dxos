@@ -5,24 +5,12 @@
 // @import-as-namespace
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Channel } from '@dxos/types';
 
-import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls/index.ts';
+import { type CallManager as CallManagerImpl } from '../calls/index.ts';
 import { CallsNamespace } from '../namespace.ts';
 
+/** The call manager; plugins that react to a call subscribe to its events (`roomJoined`, `left`, `transcript`, …). */
 export const Manager = Capability.makeSingleton<CallManagerImpl>()(`${CallsNamespace.key}.capability.callManager`);
-
-// TODO(wittjosiah): These callbacks could be intents once we support broadcast.
-export type CallProperties = {
-  onJoin: (state: { channel?: Channel.Channel; roomId?: string }) => Promise<void>;
-  onLeave: (roomId?: string) => Promise<void>;
-  onCallStateUpdated: (callState: CallState) => Promise<void>;
-  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
-};
-
-export const EventHandler = Capability.makeSingleton<CallProperties>()(
-  `${CallsNamespace.key}.capability.callExtension`,
-);
 
 /**
  * Pluggable live-transport for a call, keyed by `kind`. A call is identified by

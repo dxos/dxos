@@ -329,6 +329,13 @@ export class AutomergeHost extends Resource {
   private _nonConvergingSyncPasses = new Map<string, number>();
 
   /**
+   * The heads each classical sync peer last reported for a document, kept across evictions. Evicting a document drops
+   * the sync round that would deliver its latest change, so one stays resident until every connected peer that synced
+   * it holds its heads.
+   */
+  private readonly _peerHeads = new Map<DocumentId, Map<PeerId, Heads>>();
+
+  /**
    * Heads a diverged document was last re-synced at, keyed by `<collectionId>:<peerId>:<documentId>`.
    *
    * {@link resyncDocument} re-arms the Subduction heal loop, which then retries with its own
@@ -528,6 +535,12 @@ export class AutomergeHost extends Resource {
         isLoadBlocked,
         network: [this._echoNetworkAdapter],
       });
+      this._repo.synchronizer.on('sync-state', ({ documentId, peerId, syncState }) => {
+        // A reloaded document starts from a persisted sync state, which does not carry the peer's heads.
+        if (syncState.theirHeads) {
+          defaultMap(this._peerHeads, documentId, () => new Map<PeerId, Heads>()).set(peerId, syncState.theirHeads);
+        }
+      });
     }
 
     // A source that cannot apply a document only marks itself unavailable, so a load waiting on the document would
@@ -572,11 +585,9 @@ export class AutomergeHost extends Resource {
     // make lands before the engine's in-memory view of that tree exists.
     await this._runSubductionMigrations();
 
-    // An auth-scope change and a transport reset both re-announce a peer that never left, and
-    // dropping its collection state costs a diff over every document in the collection (DX-1275).
-    let updatingAuthScope = false;
-    const peerLifecycleSuppressed = (peerId: PeerId): boolean =>
-      updatingAuthScope || this._echoNetworkAdapter.isTransportResetting(peerId);
+    // A transport reset re-announces a peer that never left, and dropping its collection state costs
+    // a diff over every document in the collection (DX-1275).
+    const peerLifecycleSuppressed = (peerId: PeerId): boolean => this._echoNetworkAdapter.isTransportResetting(peerId);
     Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
       this._ctx,
       ((e: PeerCandidatePayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerConnected(e.peerId)) as any,
@@ -586,21 +597,12 @@ export class AutomergeHost extends Resource {
       ((e: PeerDisconnectedPayload) => !peerLifecycleSuppressed(e.peerId) && this._onPeerDisconnected(e.peerId)) as any,
     );
 
-    this._collectionSynchronizer.peerCollectionStateUpdated.on(
-      this._ctx,
-      ({ collectionId, peerId, newDocsAppeared }) => {
-        this._onRemoteCollectionStateUpdated(collectionId, peerId);
-        this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
-        if (!this._useSubduction && newDocsAppeared) {
-          updatingAuthScope = true;
-          try {
-            this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
-          } finally {
-            updatingAuthScope = false;
-          }
-        }
-      },
-    );
+    this._collectionSynchronizer.peerCollectionStateUpdated.on(this._ctx, ({ collectionId, peerId }) => {
+      // The sync pass this schedules re-runs the share policy for the documents that appeared; re-announcing the
+      // peer instead would restart every sync round in flight with it.
+      this._onRemoteCollectionStateUpdated(collectionId, peerId);
+      this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
+    });
 
     this._syncTask = new DeferredTask(this._ctx, async () => {
       const collectionToSync = Array.from(this._collectionsToSync.values());
@@ -982,12 +984,33 @@ export class AutomergeHost extends Resource {
       log('deferred eviction of a document with a sync round pending', { documentId });
       return false;
     }
+    if (!this._useSubduction && this._hasPeerBehind(documentId)) {
+      log('deferred eviction of a document a peer has not caught up on', { documentId });
+      return false;
+    }
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
       countWork('automerge.evictions');
     }
     log('evicted document', { documentId });
     return true;
+  }
+
+  /** Whether a connected peer that synced the document last reported heads other than ours. */
+  private _hasPeerBehind(documentId: DocumentId): boolean {
+    const peerHeads = this._peerHeads.get(documentId);
+    const handle = this._repo.getHandle(documentId);
+    if (!peerHeads || !handle) {
+      return false;
+    }
+    const heads = [...getHeads(handle.doc())].sort();
+    const connected = new Set(this._repo.peers);
+    for (const [peerId, theirHeads] of peerHeads) {
+      if (connected.has(peerId) && !headsEquals([...theirHeads].sort(), heads)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private async _loadLeasedDoc<T>(
@@ -1192,6 +1215,7 @@ export class AutomergeHost extends Resource {
     );
 
     // The classical share policy answers from these, so an id left behind keeps being announced.
+    this._peerHeads.delete(documentId);
     this._createdDocuments.delete(documentId);
     this._documentsToSync.delete(documentId);
     this._documentsToRequest.delete(documentId);
@@ -1913,6 +1937,9 @@ export class AutomergeHost extends Resource {
       if (entry.peerId === peerId) {
         this._divergedResyncHeads.delete(resyncKey);
       }
+    }
+    for (const peerHeads of this._peerHeads.values()) {
+      peerHeads.delete(peerId);
     }
     this._collectionSynchronizer.onConnectionClosed(peerId);
   }

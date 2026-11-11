@@ -127,7 +127,7 @@ export const LineStyle = Schema.Struct({ ...lineStyleFields, fontSize: fontSizeF
 export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
 
 /** A shape's text size in scene units when its style sets none. */
-export const DEFAULT_FONT_SIZE = 20;
+export const DEFAULT_FONT_SIZE = 24;
 
 /** A link caption's text size in scene units when its style sets none. */
 export const LINK_FONT_SIZE = 14;

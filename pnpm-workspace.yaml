@@ -59,6 +59,7 @@ catalog:
   '@changesets/cli': ^3.0.0
   '@changesets/parse': ^1.0.0
   '@cloudflare/ai-chat': ^0.0.6
+  '@cloudflare/realtimekit': ^2.0.4
   '@cloudflare/vitest-pool-workers': ^0.18.6
   '@cloudflare/workers-types': ^5.20260717.1
   '@codemirror/autocomplete': ^6.20.3
@@ -174,7 +175,6 @@ catalog:
   '@oxc-project/runtime': ^0.129.0
   '@oxc-project/types': 0.154.0
   '@panproto/core': 0.56.1
-  '@peermetrics/webrtc-stats': 5.7.1
   '@phosphor-icons/core': ^2.1.1
   '@phosphor-icons/react': 2.1.10
   '@playwright/test': 1.63.0
@@ -702,7 +702,6 @@ catalog:
   vscode-oniguruma: ^2.0.1
   vscode-textmate: ^9.3.2
   wait-on: ^8.0.3
-  wavefile: ^11.0.0
   web-ext: ^10.5.0
   web-tree-sitter: ^0.25.10
   webdriverio: ^8.32.4

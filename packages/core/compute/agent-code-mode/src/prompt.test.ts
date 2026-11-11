@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { describeFields, describeInput } from '@dxos/assistant/Describe';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -15,7 +16,6 @@ import { EffectDialect } from './dialect-effect.ts';
 import { renderTypes } from './Dialect.ts';
 import { STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { conciseError } from './eval-tool.ts';
-import { describeFields, describeInput } from './fields.ts';
 
 class Person extends Type.makeObject<Person>(DXN.make('com.example.type.person', '0.1.0'))(
   Schema.Struct({ name: Schema.String }),

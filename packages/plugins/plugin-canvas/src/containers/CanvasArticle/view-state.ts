@@ -25,7 +25,7 @@ const CanvasViewStateSchema = Schema.Struct({
   floating: Schema.optional(Schema.Boolean),
   /** Moves snap to the grid, which is drawn. */
   grid: Schema.optional(Schema.Boolean),
-  /** The lattice's cells are drawn. */
+  /** The lattice's cells are drawn and snapped to; off, a lattice canvas draws and snaps to the grid. */
   guides: Schema.optional(Schema.Boolean),
   /** The axes through the origin are drawn; hidden until turned on. */
   axes: Schema.optional(Schema.Boolean),

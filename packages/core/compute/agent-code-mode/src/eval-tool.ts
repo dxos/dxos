@@ -206,7 +206,8 @@ const recordInvocations = (operations: readonly SandboxOperation[], recorder: Re
  * recorded once: the original `invokePromise` runs through the original service, not through the `invoke` here.
  */
 const recordingService = (service: Operation.OperationService, recorder: Recorder): Operation.OperationService => ({
-  ...service,
+  // Delegated by name rather than spread, which would miss a method a class-based service holds on its prototype.
+  schedule: (op, ...args) => service.schedule(op, ...args),
   invoke: (op, ...args) => service.invoke(op, ...args).pipe(recorder.effect(String(op.meta.key))),
   invokePromise: (op, ...args) =>
     service.invokePromise(op, ...args).then((outcome) => {
@@ -251,11 +252,11 @@ export const labelEvalCall =
     };
   };
 
-const operationNames = ({ name, definition }: SandboxOperation): string[] => [
-  name,
-  camelCase(name),
-  ...(definition ? [String(definition.meta.key)] : []),
-];
+const operationNames = ({ name, definition }: SandboxOperation): string[] => {
+  const key = definition === undefined ? undefined : String(definition.meta.key);
+  // The key with and without `dxn:`, as the plain dialect binds `ops` under both.
+  return [name, camelCase(name), ...(key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])])];
+};
 
 /** The `code` argument of an eval call. */
 const evalCode = (input: string): string => {

@@ -18,16 +18,16 @@ import {
   formatSystemPrompt,
   getOperationFromTool,
 } from '@dxos/assistant';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
-import { Database, Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
-import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
+import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
-import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -157,7 +157,14 @@ const runCodeModeTurn = ({
               const mcps = yield* AiSession.connectMcpServers(
                 params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
               );
-              const operations = yield* projectOperations(skills, mcps);
+              // The prompt states the Skill Manager's lookups and the enabled skills, with their operations; the model
+              // looks up every other skill, operation and type through the lookups. A bound Skill Manager is stated as
+              // its code-mode form, since its own instructions list every skill, but its operations stay callable.
+              const lookups = SkillManagerSkill.makeForCodeMode();
+              const enabled = skills.filter(
+                (skill) => Obj.getMeta(skill).key?.replace(/^dxn:/, '') !== SkillManagerSkill.key,
+              );
+              const operations = yield* projectOperations([lookups, ...skills], mcps);
               labelCall = labelEvalCall(operations);
               const toolkit = makeEvalToolkit({
                 dialect,
@@ -170,14 +177,10 @@ const runCodeModeTurn = ({
                 onEvaluated: evaluations.add,
               });
               const system = yield* formatSystemPrompt({
-                system: [
-                  dialect.instructions({ operations, types: yield* registeredTypes }),
-                  options.system,
-                  params.system,
-                ]
+                system: [dialect.instructions({ operations }), options.system, params.system]
                   .filter(isPresent)
                   .join('\n\n'),
-                skills,
+                skills: [lookups, ...enabled],
                 objects: session.context.getObjects(),
                 instructions,
               }).pipe(Effect.orDie);
@@ -288,17 +291,6 @@ const operationBehind = (tool: Tool.Any): Operation.Definition.Any | undefined =
     return undefined;
   }
 };
-
-/**
- * Every object and relation type the workspace has registered, with its fields.
- *
- * Stated in the prompt rather than left to be discovered: a dialect that binds the real modules
- * invites the model to introspect a schema for the shape it needs, and that costs turns it should
- * be spending on the task.
- */
-const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = Effect.map(Database.Service, ({ db }) =>
-  describeTypes(db),
-);
 
 /**
  * Projects the skills' tools, and those of the turn's MCP servers, into callable operations. Resolution goes through the ordinary toolkit
