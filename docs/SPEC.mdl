@@ -1179,22 +1179,6 @@ page app-framework-surfaces: Surfaces
     - The finished Bookmarks plugin's Surface module in the inspector, and a link to the Surface API page
 ```
 
-```mdl
-page app-framework-app-graph: App Graph
-  The graph of nodes and actions that an app's navigation and menus are built from.
-  section: PLEX
-  route: /docs/plex/concepts/app-graph/
-  group: Core concepts
-  template: concept
-  status: spike
-  covers:
-    - What a node is, how nodes connect, and a node's identity as a `GraphPath`
-    - How plugins contribute nodes and actions through builder extensions
-    - How App Graph expands lazily as the reader navigates, and what `AppGraphRetention` keeps
-    - How the navigation tree, menus and the command palette read actions from it
-    - The finished Bookmarks plugin's App Graph module in the inspector
-```
-
 ### API
 
 One page per namespace, each a readable tour with compiled examples that links into the API reference.
@@ -1289,49 +1273,6 @@ page app-framework-guide-surface: Surface
     - The standard surface roles and what each one expects
 ```
 
-```mdl
-page app-framework-guide-app-graph: AppGraph
-  Contribute nodes and actions to App Graph.
-  section: PLEX
-  route: /docs/plex/guides/app-graph/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Write a builder extension that contributes nodes for a type
-    - Attach actions to nodes
-    - Work with `AppNode` and `GraphPath`
-    - Expand and read the graph from a component
-```
-
-```mdl
-page app-framework-guide-app-capabilities: AppCapabilities
-  The app-level capabilities the App Toolkit defines for plugins to contribute.
-  section: PLEX
-  route: /docs/plex/guides/app-capabilities/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - A tour of `AppCapabilities` in groups (layout, graph, settings, schema, agents and files), with one table of every capability
-    - Contribute settings, metadata and schema registrations
-    - When to use an app capability and when to declare a new capability
-```
-
-```mdl
-page plex-guide-translations: Translations
-  Give a plugin's strings their text, by namespace and language.
-  section: PLEX
-  route: /docs/plex/guides/translations/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Contribute translation resources by namespace and language
-    - The keys the app reads for a type: its label, plural forms and placeholder
-    - Read a translated string from a component
-```
-
 ### Guides
 
 ```mdl
@@ -1377,6 +1318,22 @@ page plex-guide-settings-and-state: Settings and state
 ```
 
 ```mdl
+page app-framework-guide-app-capabilities: App capabilities
+  The capabilities a workspace app such as Composer adds for plugins to contribute, from the App Toolkit.
+  section: PLEX
+  route: /docs/plex/guides/app-capabilities/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Why these are app capabilities, from `@dxos/app-toolkit`, and not part of the framework
+    - A tour of `AppCapabilities` in groups (layout, graph, settings, schema, agents and files), with one table of every capability
+    - Translations: contribute resources by namespace and language, the keys the app reads for a type, and read a string from a component
+    - The standard surface roles the app renders
+    - When to use an app capability and when to declare a new capability
+```
+
+```mdl
 page app-framework-guide-react: React
   The React hooks for plugins.
   section: PLEX
@@ -1389,6 +1346,23 @@ page app-framework-guide-react: React
     - Invoke operations from a component
     - Read plugin settings and translations
     - The reactivity rules a plugin component follows
+```
+
+```mdl
+page app-framework-guide-app-graph: App Graph
+  The graph of nodes and actions that an app's navigation and menus are built from, and how a plugin adds to it.
+  section: PLEX
+  route: /docs/plex/guides/app-graph/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - What a node is, how nodes connect, and a node's identity as a `GraphPath`
+    - How App Graph expands lazily as the reader navigates, and what `AppGraphRetention` keeps
+    - Write a builder extension that contributes nodes for a type, and attach actions to nodes
+    - How the navigation tree, menus and the command palette read actions from it
+    - Expand and read the graph from a component
+    - The finished Bookmarks plugin's App Graph module in the inspector
 ```
 
 ```mdl
@@ -3382,11 +3356,17 @@ decision D-153: The plugin manifest is written, in Resources, at `/docs/plex/res
   affects: [app-framework-manifest, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
   why: One plugin carried from the learning path into the reference lets a reader recognize each snippet.
 
-decision D-200: PLEX's guides run from least to most complex: Testing, Debugging, Settings and state, React, Effect in plugins, Using ECHO in a plugin.
+decision D-200: PLEX's guides run from least to most complex: Testing, Debugging, Settings and state, React, Effect in plugins, Using ECHO in a plugin. App capabilities goes before React and App Graph after it [D-201].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-guide-testing, plex-guide-debugging, plex-guide-settings-and-state, app-framework-guide-react, plex-guide-effect, plex-guide-using-echo]
   why: A reader works through the guides in order, so each should build on the last; ECHO is the most involved and goes last.
+
+decision D-201: App Graph, AppCapabilities and Translations are app-level, not core PLEX. App Graph becomes one guide that explains the idea and the API, Translations folds into an App capabilities guide, and both sit in Guides; Core concepts and API keep only what `@dxos/app-framework` defines.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-guide-app-graph, app-framework-guide-app-capabilities, app-framework-app-graph, plex-guide-translations]
+  why: A PLEX app without App Graph is still a PLEX app; App Graph matters most of the app-level pieces, so it gets its own guide.
 ```
 
 ## Appendix: Extension Definitions
