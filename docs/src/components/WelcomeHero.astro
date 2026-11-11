@@ -5,9 +5,12 @@ import echo from '../../../packages/ui/brand/assets/backgrounds/bg-echo-right.sv
 import halo from '../../../packages/ui/brand/assets/backgrounds/bg-halo-right.svg?raw';
 import kube from '../../../packages/ui/brand/assets/backgrounds/bg-kube-right.svg?raw';
 import mesh from '../../../packages/ui/brand/assets/backgrounds/bg-mesh-right.svg?raw';
+// The brand has no EDGE or TILE background yet; these are the exploration's, built the same way.
+import edge from '../assets/topic-nav/backgrounds/bg-edge-right.svg?raw';
+import tile from '../assets/topic-nav/backgrounds/bg-tile-right.svg?raw';
 
 /** Keyed by the `welcome.background` values that `content.config.ts` allows. */
-const BACKGROUNDS = { dxos, echo, halo, kube, mesh } as const;
+const BACKGROUNDS = { dxos, echo, edge, halo, kube, mesh, tile } as const;
 
 type Props = {
   /** Product name shown as the page's heading, e.g. `ECHO`; the frontmatter title only labels the sidebar and tab. */

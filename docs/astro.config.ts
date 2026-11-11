@@ -296,18 +296,42 @@ export default defineConfig({
               items: sidebarFromSpec(specPages, 'HALO'),
             },
             {
+              id: 'mesh',
+              label: 'MESH',
+              link: '/docs/mesh/overview/',
+              // Exploration: an overview only, so the topic switcher has every topic to land on.
+              items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/mesh/overview/' }] }],
+            },
+            {
               id: 'plex',
               label: 'PLEX',
               link: '/docs/plex/overview/',
               items: sidebarFromSpec(specPages, 'PLEX'),
+            },
+            {
+              id: 'edge',
+              label: 'EDGE',
+              link: '/docs/edge/overview/',
+              // Exploration: an overview only, so the topic switcher has every topic to land on.
+              items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/edge/overview/' }] }],
+            },
+            {
+              id: 'tile',
+              label: 'TILE',
+              link: '/docs/tile/overview/',
+              // Exploration: an overview only, so the topic switcher has every topic to land on.
+              items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/tile/overview/' }] }],
             },
           ],
           // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.
           {
             topics: {
               echo: ['/docs/echo/**'],
-              plex: ['/docs/plex/**'],
+              edge: ['/docs/edge/**'],
               halo: ['/docs/halo/**'],
+              mesh: ['/docs/mesh/**'],
+              plex: ['/docs/plex/**'],
+              tile: ['/docs/tile/**'],
             },
           },
         ),

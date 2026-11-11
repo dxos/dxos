@@ -5,9 +5,11 @@
 import echo from '../../../../packages/ui/brand/assets/logotypes/echo-horizontal-black.svg?raw';
 import edge from '../../../../packages/ui/brand/assets/logotypes/edge-horizontal-black.svg?raw';
 import halo from '../../../../packages/ui/brand/assets/logotypes/halo-horizontal-black.svg?raw';
-import kube from '../../../../packages/ui/brand/assets/icons/kube.svg?raw';
 import mesh from '../../../../packages/ui/brand/assets/logotypes/mesh-horizontal-black.svg?raw';
 import plex from '../../../../packages/ui/brand/assets/logotypes/plex-horizontal-black.svg?raw';
+
+// The brand has no TILE logotype yet; this is the exploration's proposal, drawn to the other logotypes' frame.
+import tile from '../../assets/topic-nav/logotypes/tile-horizontal-black.svg?raw';
 
 /** The logotype's mark is outlined in black; the label's color replaces it, as it does the unset fill. */
 const inherit = (svg: string) => svg.replace(/stroke:black/g, 'stroke:currentColor');
@@ -42,6 +44,7 @@ export const TOPICS: Topic[] = [
   {
     id: 'mesh',
     label: 'MESH',
+    href: '/docs/mesh/overview/',
     description: 'Peer-to-peer networking and replication.',
     logotype: inherit(mesh),
   },
@@ -55,15 +58,16 @@ export const TOPICS: Topic[] = [
   {
     id: 'edge',
     label: 'EDGE',
+    href: '/docs/edge/overview/',
     description: 'Hosted services: sync, functions, agents.',
     logotype: inherit(edge),
   },
   {
     id: 'tile',
     label: 'TILE',
+    href: '/docs/tile/overview/',
     description: 'React components and the design system.',
-    // Stand-in: the brand has no TILE mark yet, so this borrows the unused KUBE icon.
-    icon: kube,
+    logotype: inherit(tile),
   },
 ];
 
