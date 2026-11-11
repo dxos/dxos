@@ -9,30 +9,30 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import dxnsLeft from '../../../assets/backgrounds/bg-dxns-left.svg?raw';
-import dxns from '../../../assets/backgrounds/bg-dxns.svg?raw';
+import dxnsRight from '../../../assets/backgrounds/bg-dxns-right.svg?raw';
 import dxos from '../../../assets/backgrounds/bg-dxos.svg?raw';
+import echoLeft from '../../../assets/backgrounds/bg-echo-left.svg?raw';
 import echoRight from '../../../assets/backgrounds/bg-echo-right.svg?raw';
-import echo from '../../../assets/backgrounds/bg-echo.svg?raw';
 import haloLeft from '../../../assets/backgrounds/bg-halo-left.svg?raw';
-import halo from '../../../assets/backgrounds/bg-halo.svg?raw';
+import haloRight from '../../../assets/backgrounds/bg-halo-right.svg?raw';
+import kubeLeft from '../../../assets/backgrounds/bg-kube-left.svg?raw';
 import kubeRight from '../../../assets/backgrounds/bg-kube-right.svg?raw';
-import kube from '../../../assets/backgrounds/bg-kube.svg?raw';
 import meshLeft from '../../../assets/backgrounds/bg-mesh-left.svg?raw';
-import mesh from '../../../assets/backgrounds/bg-mesh.svg?raw';
+import meshRight from '../../../assets/backgrounds/bg-mesh-right.svg?raw';
 
-// Each side-placed icon also has a variant on the other side, written by `scripts/flip-backgrounds.mjs`.
+// Each side-placed icon comes as a pair, with the icon on the left and on the right.
 const backgrounds: Record<string, string> = {
   dxos,
-  dxns,
   'dxns-left': dxnsLeft,
-  echo,
+  'dxns-right': dxnsRight,
+  'echo-left': echoLeft,
   'echo-right': echoRight,
-  halo,
   'halo-left': haloLeft,
-  kube,
+  'halo-right': haloRight,
+  'kube-left': kubeLeft,
   'kube-right': kubeRight,
-  mesh,
   'mesh-left': meshLeft,
+  'mesh-right': meshRight,
 };
 
 type BackgroundsProps = {
