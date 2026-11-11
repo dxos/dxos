@@ -13,10 +13,13 @@ the user names for testing, after they agree.
 and pastes the session id. The target must be open in a desktop browser on this machine.
 
 On an HTTPS target the port speaks HTTPS with a certificate the browser trusts. Check once per
-machine that the certificate exists, is signed by mkcert's root and has not expired:
+machine that the certificate exists, is signed by mkcert's root, covers `127.0.0.1` and has not
+expired:
 
 ```bash
-test -f ~/.dxos/debug-port/key.pem && openssl verify -CAfile "$(mkcert -CAROOT)/rootCA.pem" ~/.dxos/debug-port/cert.pem
+c=~/.dxos/debug-port/cert.pem; test -f ~/.dxos/debug-port/key.pem &&
+  openssl verify -CAfile "$(mkcert -CAROOT)/rootCA.pem" "$c" &&
+  openssl x509 -in "$c" -noout -text | grep -q 'IP Address:127.0.0.1'
 ```
 
 If that fails, the user runs these (`mkcert -install` adds a root certificate to their system
@@ -90,14 +93,15 @@ const key = 'KEY';
 const remote = JSON.parse(localStorage.getItem('org.dxos.composer.remote-plugins') ?? '[]').find((r) => r.id === key);
 return {
   plugin: composer.plugins().find((p) => p.id === key),
+  devLoaded: composer.manager.getDevPluginIds().includes(key),
   installedFrom: remote?.url,
   operations: composer.operations(key).map((o) => String(o.key ?? o)),
 };
 ```
 
-**Done when** the plugin snippet shows the plugin `enabled` and `active`, with every module the
-plugin defines in `moduleIds`. An `installedFrom` there is an earlier registry install, which the
-dev plugin shadows while the dev server is enabled.
+**Done when** the plugin snippet shows `devLoaded: true`, the plugin `enabled` and `active`, and
+every module the plugin defines in `moduleIds`. An `installedFrom` there is an earlier registry
+install, which the dev plugin shadows once it loads.
 
 ## Test
 
