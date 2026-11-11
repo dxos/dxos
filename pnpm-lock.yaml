@@ -3762,6 +3762,12 @@ importers:
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.9.1
+      '@opentelemetry/resources':
+        specifier: 'catalog:'
+        version: 2.11.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions':
+        specifier: 'catalog:'
+        version: 1.43.0
       jsonpath-plus:
         specifier: 'catalog:'
         version: 10.4.0
@@ -3775,9 +3781,6 @@ importers:
       '@opentelemetry/api-logs':
         specifier: 'catalog:'
         version: 0.222.0
-      '@opentelemetry/resources':
-        specifier: 'catalog:'
-        version: 2.11.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs':
         specifier: 'catalog:'
         version: 0.222.0(@opentelemetry/api@1.9.1)
@@ -3790,9 +3793,6 @@ importers:
       '@opentelemetry/sdk-trace-node':
         specifier: 'catalog:'
         version: 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/semantic-conventions':
-        specifier: 'catalog:'
-        version: 1.43.0
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -25408,9 +25408,6 @@ importers:
       d3:
         specifier: 'catalog:'
         version: 7.9.0
-      js-clipper:
-        specifier: 'catalog:'
-        version: 1.0.1(patch_hash=6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f)
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -25451,6 +25448,9 @@ importers:
       immutability-helper:
         specifier: 'catalog:'
         version: 3.1.1
+      js-clipper:
+        specifier: 'catalog:'
+        version: 1.0.1(patch_hash=6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f)
       react:
         specifier: ~19.3.1
         version: 19.3.1
