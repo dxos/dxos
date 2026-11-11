@@ -1,12 +1,15 @@
 #!/bin/bash
 
 packages=(
+    "core/compute/compute"
     "core/echo/echo"
     "core/echo/echo-react"
     "core/echo/echo-solid"
     "core/halo/halo"
     "core/halo/halo-react"
     "sdk/app-framework"
+    "sdk/app-graph"
+    "sdk/app-toolkit"
     "sdk/client"
     "sdk/react-client"
 )

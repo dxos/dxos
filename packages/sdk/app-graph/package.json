@@ -65,6 +65,9 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -89,6 +92,7 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "typedoc": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
