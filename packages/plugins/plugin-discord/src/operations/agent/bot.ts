@@ -37,11 +37,11 @@ const SNOWFLAKE = /^\d{15,21}$/;
 
 /**
  * The Discord user a person names: a user id as is; else a contact's Discord identity, matched by name, nickname
- * or handle; else the one guild member whose username or nickname is the handle.
+ * or Discord handle; else the one guild member whose username or nickname is the handle.
  *
- * A contact's Discord identity is a user id only when it is a snowflake: an agent recording a person from a message
- * (`@richburdon`) may keep their handle there instead, and Discord refuses a direct message to anything but an id, so
- * such a handle is looked up among the members like any other.
+ * A contact's Discord identity is a user id only when it is a bare snowflake: an agent recording a person from a
+ * message (`@richburdon`) may keep their handle there instead, and Discord refuses a direct message to anything but an
+ * id, so such a handle is looked up among the members, and only a member of exactly that name will do.
  */
 export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to: string) {
   const asked = to.trim().replace(/^@/, '');
@@ -49,34 +49,37 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     return asked;
   }
 
-  let handle = asked;
+  const wanted = asked.toLowerCase();
+  let storedHandle: string | undefined;
   const people = yield* Database.query(Query.select(Filter.type(Person.Person))).run.pipe(Effect.orDie);
   for (const person of people) {
-    const identity = person.identities
-      ?.find(({ label }) => label === 'discord')
-      ?.value.trim()
-      .replace(/^@/, '');
+    const identity = person.identities?.find(({ label }) => label === 'discord')?.value.trim();
     if (!identity) {
       continue;
     }
-    const names = [
-      person.fullName,
-      person.preferredName,
-      person.nickname,
-      ...(person.identities ?? []).map(({ value }) => value.trim().replace(/^@/, '')),
-    ];
-    if (names.some((candidate) => candidate?.trim().toLowerCase() === asked.toLowerCase())) {
+    // Only the Discord identity stands for a Discord handle; another platform's handle names someone else there.
+    const names = [person.fullName, person.preferredName, person.nickname, identity.replace(/^@/, '')];
+    if (names.some((candidate) => candidate?.trim().toLowerCase() === wanted)) {
       if (SNOWFLAKE.test(identity)) {
         return identity;
       }
-      handle = identity;
+      storedHandle = identity.replace(/^@/, '').toLowerCase();
       break;
     }
   }
 
-  const wanted = handle.toLowerCase();
   const service = yield* DiscordBot.DiscordBotService;
-  const members = yield* service.findMembers(bot, handle);
+  if (storedHandle !== undefined) {
+    // A handle on record names one account: a member whose name only starts with it is someone else.
+    const members = yield* service.findMembers(bot, storedHandle);
+    const match = members.find(({ username }) => username.toLowerCase() === storedHandle);
+    if (!match) {
+      return yield* Effect.fail(new DiscordBot.DiscordBotError({ message: `No Discord member is called ${to}.` }));
+    }
+    return match.userId;
+  }
+
+  const members = yield* service.findMembers(bot, asked);
   const exact = members.filter(
     ({ username, displayName }) => username.toLowerCase() === wanted || displayName?.toLowerCase() === wanted,
   );

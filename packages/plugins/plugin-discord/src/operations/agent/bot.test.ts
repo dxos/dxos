@@ -134,6 +134,40 @@ describe('resolveUser', () => {
     }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
   );
 
+  it.effect('matches a contact by their Discord identity alone, and a stored handle only exactly', () =>
+    Effect.gen(function* () {
+      yield* Database.add(
+        Obj.make(Person.Person, {
+          fullName: 'Bob',
+          identities: [
+            { label: 'twitter', value: '@bobby' },
+            { label: 'discord', value: '222222222222222222' },
+          ],
+        }),
+      );
+      // An all-digit handle, marked as one, and a handle whose only member is someone with a longer name.
+      yield* Database.add(
+        Obj.make(Person.Person, {
+          fullName: 'Numbers',
+          identities: [{ label: 'discord', value: '@444444444444444444' }],
+        }),
+      );
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Rick', identities: [{ label: 'discord', value: 'ric' }] }),
+      );
+      yield* Database.flush();
+
+      // Not Bob's Discord account: a Twitter handle names nobody on Discord.
+      const twitter = yield* resolveUser(BOT, '@bobby').pipe(Effect.flip);
+      expect(twitter.message).toBe('No Discord member is called @bobby.');
+      const digits = yield* resolveUser(BOT, 'Numbers').pipe(Effect.flip);
+      expect(digits.message).toBe('No Discord member is called Numbers.');
+      // `ric` is the start of @richburdon and @richard, but neither is Rick.
+      const prefix = yield* resolveUser(BOT, 'Rick').pipe(Effect.flip);
+      expect(prefix.message).toBe('No Discord member is called Rick.');
+    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+  );
+
   it.effect('refuses a name that matches nobody, or several members', () =>
     Effect.gen(function* () {
       const nobody = yield* resolveUser(BOT, 'zed').pipe(Effect.flip);
