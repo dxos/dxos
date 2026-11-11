@@ -185,16 +185,16 @@ page why-echo: Why ECHO?
 
 ```mdl
 page echo-build-with-agent: Build with a coding agent
-  Hand the ECHO learning path to Claude Code, Codex or Cursor, with a prompt you can edit first.
+  Have Claude Code, Codex or Cursor build a small ECHO app, from a prompt the reader can edit first.
   section: ECHO
   route: /docs/echo/build-with-a-coding-agent/
   group: Start here
   template: tutorial
   status: spike
   covers:
-    - A prompt the reader can edit, prefilled to build the tutorial app by following the learning path
+    - A prompt the reader can edit, with a picker of three sample apps above it: TodoMVC (the default), a kanban board and collaborative notes [D-210]
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a line the reader does not see before their text, which has the agent read `/echo/llms-full.txt` first
-    - What the reader does while the agent works, and what they should see at the end
+    - What the reader does while the agent works, and how to try a shared app from a second browser
 ```
 
 ### Learning path
@@ -3523,6 +3523,12 @@ decision D-209: The StackBlitz projects pin `@dxos/*` to pkg.pr.new commit `20a1
   date: 2026-11-11
   by: agent:claude
   why: dxos#14487 merged with a corrected `hasDefaultExport`, so main's builds now run outside the monorepo and the pin no longer needs to follow an open PR.
+
+decision D-210: ECHO's Build with a coding agent prompt has the PLEX page's picker [D-207] with three sample apps: TodoMVC (the default), Kanban board and Collaborative notes. Each builds a Vite and React app in the reader's folder; the learning path is no longer the prompt, and the page links to it instead.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [echo-build-with-agent]
+  why: A small, familiar app tests the docs better than repeating the learning path. The three cover objects and queries, references and replication, and concurrent text.
 
 ## Appendix: Extension Definitions
 

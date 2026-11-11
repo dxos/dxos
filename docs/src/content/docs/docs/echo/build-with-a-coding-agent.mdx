@@ -1,14 +1,36 @@
 ---
 title: Build with a coding agent
-description: Hand the ECHO learning path to Claude Code, Codex or Cursor, with a prompt you can edit first.
+description: Have Claude Code, Codex or Cursor build a small ECHO app in a folder of yours, from a prompt you can edit first.
 ---
 
 import AgentPrompt from '../../../../components/AgentPrompt.astro';
 
-A coding agent can work through the learning path for you and build its tutorial app in a folder of yours. Edit the
-prompt below if you want something different, then open it in your agent.
+A coding agent can build a small app on ECHO in a folder of yours. Open an empty folder in your agent, then describe the
+app you want in the prompt below, or pick an example, and open it in your agent.
 
-<AgentPrompt context="Read https://dxos.org/echo/llms-full.txt first. It has every ECHO page in one file." prompt="Build the ECHO tutorial app in this folder by following the ECHO learning path, starting at https://dxos.org/docs/echo/learn/the-echo-object/. Work through its pages in order, and after each one, show me what changed and how to run it." />
+export const examples = [
+  {
+    label: 'TodoMVC',
+    prompt:
+      'Build TodoMVC on ECHO in this folder: a Vite and React app where each todo is an ECHO object in a space the browser keeps. I can add a todo, tick it done, edit its text with a double click, delete it, filter All, Active and Completed, and clear the completed ones. The todos are still there after a reload.',
+  },
+  {
+    label: 'Kanban board',
+    prompt:
+      'Build a kanban board on ECHO in this folder: a Vite and React app with the columns To do, Doing and Done. Each card is an ECHO object that references its column. I can add a card, edit its title, and drag it to another column or to a new place in its own. A Share button gives me an invite code, and someone who pastes it into the app in another browser sees the same board and each move as it happens.',
+  },
+  {
+    label: 'Collaborative notes',
+    prompt:
+      'Build a collaborative notes app on ECHO in this folder: a Vite and React app with a list of notes beside an editor for the selected one. Each note has a title and a body, and the body is ECHO text, so two people can type in the same note at once and keep both their edits. A Share button gives me an invite code that someone pastes into the app in another browser to join.',
+  },
+];
+
+<AgentPrompt
+  context="Read https://dxos.org/echo/llms-full.txt first. It has every ECHO page in one file."
+  examples={examples}
+  prompt={examples[0].prompt}
+/>
 
 ## What the agent reads
 
@@ -17,10 +39,8 @@ included, so the agent has the whole section in one fetch. [llms.txt](/docs/echo
 
 ## While it works
 
-The agent stops after each page of the learning path to show you what changed. Run the app when it says how, and check
-that it does what that page describes before you let it go on.
+The agent sets up the project, writes the app and tells you how to run it. Run it when it says so and try what you
+asked for. To try a shared app, open it in a second browser or a private window, so the second copy has an identity of
+its own, and join with the code the first one gives you.
 
-At the end you have the app the learning path builds: organizations, the people who work at them and the events they
-attend, which a second peer can join and edit.
-
-To build it yourself instead, start with [The ECHO object](/docs/echo/learn/the-echo-object/).
+To build the learning path's app yourself instead, start with [The ECHO object](/docs/echo/learn/the-echo-object/).
