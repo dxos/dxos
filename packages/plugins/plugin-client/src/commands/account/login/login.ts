@@ -341,8 +341,9 @@ const loginWithComposer = (client: Client, composerUrl: string, open: boolean) =
         catch: (cause) => new CommandError({ message: `Not a valid Composer URL: ${composerUrl}`, cause }),
       });
 
-      yield* presentUrl(url.href, { message: 'Open this on this machine to approve the login:', open });
+      // Before the link: opening the browser can block until it exits (e.g. `xdg-open`).
       yield* Console.log(`Composer should show the code: ${state}`);
+      yield* presentUrl(url.href, { message: 'Open this on this machine to approve the login:', open });
 
       const params = yield* server.waitForResult(COMPOSER_APPROVAL_TIMEOUT_MS);
       const code = params[CliLogin.INVITATION_CODE_PARAM];

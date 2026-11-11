@@ -7,7 +7,7 @@
 import solidPlugin from '@opentui/solid/bun-plugin';
 import type { BunPlugin } from 'bun';
 import { existsSync } from 'fs';
-import { chmod, copyFile, mkdir, rm, writeFile } from 'fs/promises';
+import { chmod, copyFile, mkdir, rename, rm, writeFile } from 'fs/promises';
 import { dirname, extname, join, resolve } from 'path';
 
 /**
@@ -158,13 +158,21 @@ const fetchDataChannelAddon = (version: string, platform: string, arch: string):
         throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
       }
 
-      await mkdir(dir, { recursive: true });
-      const tarball = join(dir, asset);
-      await Bun.write(tarball, response);
-      const tar = Bun.spawnSync(['tar', '-xzf', asset], { cwd: dir, stderr: 'pipe' });
-      await rm(tarball);
-      if (tar.exitCode !== 0 || !existsSync(path)) {
-        throw new Error(`Failed to extract ${asset}: ${tar.stderr.toString()}`);
+      // Extracted beside the cache entry and renamed into place, so a failed run never leaves a partial addon there.
+      const staging = `${dir}.${process.pid}.tmp`;
+      await rm(staging, { recursive: true, force: true });
+      await mkdir(staging, { recursive: true });
+      try {
+        await Bun.write(join(staging, asset), response);
+        const tar = Bun.spawnSync(['tar', '-xzf', asset], { cwd: staging, stderr: 'pipe' });
+        await rm(join(staging, asset));
+        if (tar.exitCode !== 0 || !existsSync(join(staging, 'build', 'Release', 'node_datachannel.node'))) {
+          throw new Error(`Failed to extract ${asset}: ${tar.stderr.toString()}`);
+        }
+        await rm(dir, { recursive: true, force: true });
+        await rename(staging, dir);
+      } finally {
+        await rm(staging, { recursive: true, force: true });
       }
       return path;
     })();
