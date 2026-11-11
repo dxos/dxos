@@ -24,6 +24,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, type FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
+import * as FileStorage from './FileStorage.ts';
 import * as HostServices from './HostServices.ts';
 import * as Output from './Output.ts';
 import * as PluginActivation from './PluginActivation.ts';
@@ -160,6 +161,8 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       types: spaceId === undefined ? undefined : [...activation.registeredTypes],
       toolkits: [...activation.toolkits],
       typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
+      // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
+      blobBackends: FileStorage.blobBackends(env),
       // Another bundle's nested call passes the objects it holds by reference.
       resolveObjectReferences: true,
     });

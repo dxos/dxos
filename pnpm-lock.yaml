@@ -6113,6 +6113,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../echo/blob
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
