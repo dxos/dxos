@@ -7,9 +7,9 @@ import { join } from 'node:path';
 
 /**
  * The pkg.pr.new build every `@dxos/*` dependency of the project pins. It must be a commit whose packages run outside
- * the monorepo: https://github.com/dxos/dxos/pull/14487.
+ * the monorepo, which main has had since #14487.
  */
-export const DXOS_COMMIT = '6bad7b6';
+export const DXOS_COMMIT = '20a14b9';
 
 const DXOS_PACKAGES = [
   'async',

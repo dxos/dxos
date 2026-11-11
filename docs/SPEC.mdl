@@ -3519,6 +3519,11 @@ decision D-208: World Clock leaves the docs. The plugin guide's second worked ex
   affects: [plex-build-with-agent, app-framework-publishing, app-framework-guide-plugin]
   why: The skill fetches the guide and follows it, so a World Clock example handed the default brief its answer. The `composer-plugin-dev` eval now measures building from the guide's patterns; its first score after this lands is the new baseline, and a drop is expected rather than a regression.
 
+decision D-209: The StackBlitz projects pin `@dxos/*` to pkg.pr.new commit `20a14b9`, main after dxos#14487 landed, in place of that PR's own build `6bad7b6`. Amends [D-138].
+  date: 2026-11-11
+  by: agent:claude
+  why: dxos#14487 merged with a corrected `hasDefaultExport`, so main's builds now run outside the monorepo and the pin no longer needs to follow an open PR.
+
 ## Appendix: Extension Definitions
 
 ```mdl
