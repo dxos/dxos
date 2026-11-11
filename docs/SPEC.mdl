@@ -3360,6 +3360,12 @@ decision D-202: The plugin manifest page is omitted for now; `dx.config.ts` gets
   by: user:wittjosiah
   affects: [app-framework-manifest, app-framework-guide-plugin, app-framework-api-reference]
   why: A hand-written table of the config's fields would drift from the type.
+
+decision D-203: The Build with a coding agent prompt no longer tells the agent where Composer is open. The composer-plugin-dev skill needs the target's URL only to publish, and reads it through the debug port then; the reader's steps still point at Composer Preview. The skill fetches its guide from `docs/plex/` and falls back to `docs/composer/` for commits before the move.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Building and loading a plugin never reaches Composer from the agent, so the URL was an unused instruction.
 ```
 
 ## Appendix: Extension Definitions
