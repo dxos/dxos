@@ -452,7 +452,7 @@ const TaskList = ({
           >
             <Icon.Icon
               icon={STATUS_ICON[status]}
-              size={5}
+              size='md'
               classNames={[status === 'running' && 'animate-spin', status === 'done' && 'text-success-text']}
             />
             <span className='flex flex-col min-w-0'>
