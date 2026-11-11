@@ -122,26 +122,33 @@ const openTab = async (): Promise<Tab> => {
       '--disable-features=LocalNetworkAccessChecks,PrivateNetworkAccessRespectPreflightResults',
     ],
   });
-  const page = context.pages()[0] ?? (await context.newPage());
-  await page.goto(TARGET, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-  await page.waitForFunction(
-    () => document.querySelector('[role=alertdialog]') || (globalThis as any).dxos?.client?.halo?.identity?.get?.(),
-    null,
-    { timeout: 120_000 },
-  );
-  const signedIn = await page.evaluate(() => !!(globalThis as any).dxos?.client?.halo?.identity?.get?.());
-  if (!signedIn) {
-    await page.getByText('More ways to log in').click();
-    await page.getByText("We'll send a login link.").click();
-    await page.getByPlaceholder('Your email').fill(TEST_EMAIL);
-    await page.getByPlaceholder('Your email').press('Enter');
-    await page.waitForFunction(() => (globalThis as any).dxos?.client?.halo?.identity?.get?.(), null, {
-      timeout: 120_000,
-    });
+  // Nothing else owns the browser until this returns, so a failed sign-in closes it here.
+  try {
+    const page = context.pages()[0] ?? (await context.newPage());
+    await page.goto(TARGET, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+    await page.waitForFunction(
+      () => document.querySelector('[role=alertdialog]') || (globalThis as any).dxos?.client?.halo?.identity?.get?.(),
+      null,
+      { timeout: 120_000 },
+    );
+    const signedIn = await page.evaluate(() => !!(globalThis as any).dxos?.client?.halo?.identity?.get?.());
+    if (!signedIn) {
+      await page.getByText('More ways to log in').click();
+      await page.getByText("We'll send a login link.").click();
+      await page.getByPlaceholder('Your email').fill(TEST_EMAIL);
+      await page.getByPlaceholder('Your email').press('Enter');
+      await page.waitForFunction(() => (globalThis as any).dxos?.client?.halo?.identity?.get?.(), null, {
+        timeout: 120_000,
+      });
+    }
+    // What Settings → Debug → Agent debug port calls.
+    const session: string = await page.evaluate(() => (globalThis as any).dxos.debugPort.start({ persist: true }));
+    return { context, page, session, profile };
+  } catch (error) {
+    await context.close().catch(() => undefined);
+    fs.rmSync(profile, { recursive: true, force: true });
+    throw error;
   }
-  // What Settings → Debug → Agent debug port calls.
-  const session: string = await page.evaluate(() => (globalThis as any).dxos.debugPort.start({ persist: true }));
-  return { context, page, session, profile };
 };
 
 /** The Dev Server's Enable, under Plugins settings. Returns whether the dev server is now enabled. */
@@ -357,7 +364,8 @@ const openClockPage = async (page: Page): Promise<{ group: boolean; opened: bool
   // navtree exists only once that tab is clicked. Prefer "My Space", the persona's test space.
   const ready = '[data-testid^="spacePlugin.space"]:not([data-testid="spacePlugin.space.pending"])';
   await page.waitForSelector(ready, { timeout: 180_000 }).catch(() => undefined);
-  const spaceTab = page.locator(ready, { hasText: 'My Space' }).or(page.locator(ready)).first();
+  const mySpace = page.locator(ready, { hasText: 'My Space' });
+  const spaceTab = (await mySpace.count()) > 0 ? mySpace.first() : page.locator(ready).first();
   if (await spaceTab.isVisible().catch(() => false)) {
     await spaceTab.click();
   }
@@ -502,10 +510,21 @@ const addClock = async (page: Page, zone: string): Promise<string | undefined> =
 
   const option = page.getByRole('option', { name: new RegExp(escapeRegExp(city), 'i') }).first();
   const form = page.locator('main, [role=dialog]');
-  const combobox = form.getByRole('combobox').filter({ visible: true }).last();
+  // A native <select> also has the combobox role, so it is taken first.
   const select = form.locator('select').filter({ visible: true }).last();
+  const combobox = form.getByRole('combobox').and(page.locator(':not(select)')).filter({ visible: true }).last();
   const field = page.locator('[role=dialog] input, form input, main input').filter({ visible: true }).last();
-  if (await visible(combobox)) {
+  if (await visible(select)) {
+    const value = await select.evaluate(
+      (e, { zone, city }) =>
+        [...(e as HTMLSelectElement).options].find((o) => o.value === zone || o.text.includes(city))?.value,
+      { zone, city },
+    );
+    if (value === undefined) {
+      return `no option for ${city} in the timezone select`;
+    }
+    await select.selectOption(value);
+  } else if (await visible(combobox)) {
     const typed = await combobox.evaluate((e) => e.tagName === 'INPUT');
     if (typed) {
       await combobox.fill(city);
@@ -524,16 +543,6 @@ const addClock = async (page: Page, zone: string): Promise<string | undefined> =
     } else {
       return `no option for ${city} in the timezone picker`;
     }
-  } else if (await visible(select)) {
-    const value = await select.evaluate(
-      (e, { zone, city }) =>
-        [...(e as HTMLSelectElement).options].find((o) => o.value === zone || o.text.includes(city))?.value,
-      { zone, city },
-    );
-    if (value === undefined) {
-      return `no option for ${city} in the timezone select`;
-    }
-    await select.selectOption(value);
   } else if (await visible(field)) {
     await field.fill(zone);
   } else {
@@ -714,7 +723,13 @@ const gradeBuild = async (
     progress.stage = 'add a clock';
     await page.waitForTimeout(1_200);
     const mapStill = await mapImage(page);
-    const zone = ADD_CANDIDATES.find((candidate) => !shown.some((clock) => clock.zone === candidate))!;
+    const zone = ADD_CANDIDATES.find((candidate) => !shown.some((clock) => clock.zone === candidate));
+    if (zone === undefined) {
+      for (const name of ['add-clock', 'pins-follow-clocks', 'persists', 'remove-clock'] as const) {
+        mark(name, false, `the page already shows every zone the grader adds (${ADD_CANDIDATES.join(', ')})`);
+      }
+      return;
+    }
     const addFailure = await addClock(page, zone);
     mark('add-clock', addFailure === undefined, addFailure);
     if (addFailure !== undefined) {
@@ -859,6 +874,16 @@ const task = async (): Promise<Output> => {
       `composer-plugin-dev: ${summary} turns=${turns} minutes=${(durationMillis / 60_000).toFixed(1)} usd=${cost.toFixed(2)} record=${record}`,
     );
     return output;
+  } catch (error) {
+    // A run that throws keeps the agent's folder, with what it reached, for reading why.
+    keep = true;
+    fs.writeFileSync(
+      path.join(workdir, '.eval-output.json'),
+      JSON.stringify({ error: String(error), turns, durationMillis, conversation }, null, 2),
+    );
+    fs.writeFileSync(path.join(workdir, '.eval-events.jsonl'), events.map((event) => JSON.stringify(event)).join('\n'));
+    console.log(`composer-plugin-dev: threw after ${turns} turns, record=${workdir}`);
+    throw error;
   } finally {
     await agent.close();
     killDevServer();
