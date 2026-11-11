@@ -132,6 +132,7 @@ const writeConsumerTheme = ({
 /**
  * Vite plugin to configure theme.
  * Returns the official Tailwind Vite plugin (persistent incremental scanner) alongside the theme plugin.
+ * Every option has a default, so a consumer of the published package can call `ThemePlugin()`.
  */
 export const ThemePlugin = (options: ThemePluginOptions = {}): Plugin[] => {
   // `src` is published too, so only the location tells a workspace checkout from an installed copy.
