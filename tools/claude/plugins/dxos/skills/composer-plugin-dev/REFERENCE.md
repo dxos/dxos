@@ -1,69 +1,13 @@
-# Composer plugin development: reference
+# Composer plugin development: failures
 
-On-demand material for [SKILL.md](SKILL.md): building blocks for checks, and failures by symptom.
-
-## Checks
-
-A check reads what the user sees. It navigates by clicking, as the user would, and waits for text.
-
-A behaviour check, with `Hello` the item to click and `EXPECTED` the text it should show:
-
-```js
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-const click = (text) => {
-  const leaf = [...document.querySelectorAll('*')]
-    .filter((e) => e.childElementCount === 0 && e.textContent.trim() === text)
-    .pop();
-  (leaf?.closest('a,button,[role=treeitem],li') ?? leaf)?.click();
-  return !!leaf;
-};
-click('Hello');
-for (let i = 0; i < 20 && !document.body.innerText.includes('EXPECTED'); i++) await wait(500);
-let s = await composer.snapshot();
-if (typeof s === 'string') s = JSON.parse(s);
-return {
-  pass: document.body.innerText.includes('EXPECTED') && !document.body.innerText.includes('Unable to open this object'),
-  active: s.layout.active,
-};
-```
-
-- Assert on rendered text. A surface that throws is caught by an error boundary: its plank shows
-  "Unable to open this object", the error goes to the browser console, and `snapshot().errors`
-  stays empty.
-- Match visible text with `innerText`. Group headings are uppercase by CSS only: `innerText` is
-  `HELLO` where `textContent` is `Hello`.
-- `composer.snapshot({ since })` also carries `toasts`, the app's own report of what an operation
-  did.
-
-### Opening a space
-
-A space's navtree is in the DOM only while that space is the open workspace, at `/w/<space id>`.
-Open it by URL, with `SPACE_NAME` set to its name:
-
-```js
-const name = (s) => {
-  try {
-    return s.properties?.name;
-  } catch {
-    return undefined; // Not open yet.
-  }
-};
-const space = dxos.client.spaces.get().find((s) => name(s) === 'SPACE_NAME');
-if (space) setTimeout(() => location.assign(`/w/${space.id}`), 100);
-return { found: !!space, at: Date.now() };
-```
-
-Then wait for the new page with SKILL.md's reload-wait snippet, `RELOAD_AT` set to `at`.
-
-A check that only navigates and reads may use the user's default space, "My Space".
-
-## Failures
+Failures by symptom, for [SKILL.md](SKILL.md), [DEBUG-PORT.md](DEBUG-PORT.md) and [PUBLISHING.md](PUBLISHING.md).
 
 | Symptom                                                                                                                | Cause and fix                                                                                                                                              |
 | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A snippet run ends "Browser did not connect … within 36000ms"                                                          | The session lapsed (30 minutes), the tab closed, or the browser cannot reach `127.0.0.1`. Ask the user to switch the port off and on and paste the new id. |
 | The page's requests to `127.0.0.1` fail with `net::ERR_BLOCKED_BY_CLIENT`                                              | The browser blocks loopback from pages, as embedded app browsers do. The target has to be in a desktop browser.                                            |
 | Chrome asks whether the page may reach devices on the local network                                                    | The user allows it: the port, the dev server and `dx`'s login callback are on loopback.                                                                    |
+| The plugin loads but fails in the target with a missing export or a changed API                                        | The target's deploy is older than `main`. Pin to its own commit instead: in the target, **About Composer**'s "Published …" link ends in it.                |
 | `npm install` fails with `ERESOLVE` on a `react` peer                                                                  | Install with `--legacy-peer-deps`.                                                                                                                         |
 | `npm install` fails with `ETARGET` for `@types/react`                                                                  | That version does not exist yet; take the newest with `react`'s major and minor.                                                                           |
 | `vite build` fails with "Cannot find native binding"                                                                   | Node is older than `^20.19` or `>=22.12`. Switch Node, delete `node_modules` and `package-lock.json`, and install again.                                   |
