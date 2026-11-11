@@ -502,6 +502,8 @@ type Output = {
   finished: boolean;
   /** The agent's last message, for reading a failed run without re-running it. */
   lastMessage: string;
+  /** Every message in order: the brief, the agent's replies, and the persona's, the last one unsent when it ends the run. */
+  conversation: { role: 'user' | 'agent'; text: string }[];
 };
 
 const task = async (): Promise<Output> => {
@@ -530,12 +532,14 @@ const task = async (): Promise<Output> => {
   let durationMillis = 0;
   let finished = false;
   let lastMessage = '';
+  const conversation: Output['conversation'] = [];
   let keep = false;
   const deadline = Date.now() + RUN_TIMEOUT;
   try {
     let prompt = BRIEF;
     while (turns < MAX_TURNS && Date.now() < deadline) {
       turns++;
+      conversation.push({ role: 'user', text: prompt });
       const turn = await agent.send(prompt);
       durationMillis += turn.end - turn.start;
       events.push(...turn.events);
@@ -544,8 +548,10 @@ const task = async (): Promise<Output> => {
       Usage.report(calls, link);
 
       lastMessage = turn.result ?? '';
+      conversation.push({ role: 'agent', text: lastMessage });
       const reply = await personaReply(tab.session, lastMessage);
       if (reply.done) {
+        conversation.push({ role: 'user', text: reply.message });
         finished = true;
         break;
       }
@@ -561,7 +567,15 @@ const task = async (): Promise<Output> => {
     scores.cost = Number.isNaN(cost)
       ? { score: 0, error: 'no total_cost_usd on any result event' }
       : { score: curve(cost, COST) };
-    const output = { scores, turns, durationMillis, costUsd: cost, finished, lastMessage: lastMessage.slice(0, 4_000) };
+    const output = {
+      scores,
+      turns,
+      durationMillis,
+      costUsd: cost,
+      finished,
+      lastMessage: lastMessage.slice(0, 4_000),
+      conversation,
+    };
     keep = CORRECTNESS.some((name) => (scores[name]?.score ?? 0) < 1);
     // evalite's table truncates. A failed run keeps the agent's folder; every run keeps its scores
     // and event stream, for reading where the time and money went.
