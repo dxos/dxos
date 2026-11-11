@@ -1335,21 +1335,6 @@ page plex-guide-translations: Translations
 ### Guides
 
 ```mdl
-page plex-guide-using-echo: Using ECHO in a plugin
-  Register a plugin's ECHO types with the app, so it can create, name and list their objects.
-  section: PLEX
-  route: /docs/plex/guides/using-echo/
-  group: Guides
-  template: namespace
-  status: spike
-  covers:
-    - Register ECHO types with the `Schema` capability
-    - Annotate a type with `AppAnnotation` so the app can name and list its objects
-    - Create objects from a plugin, and the create-object entry that adds them to the app's menus
-    - Links to ECHO's Defining types for the types themselves
-```
-
-```mdl
 page plex-guide-testing: Testing a plugin
   Test a plugin's modules without an app, with the App Framework test harness.
   section: PLEX
@@ -1361,34 +1346,6 @@ page plex-guide-testing: Testing a plugin
     - Start a headless app with the plugin under test, with `Harness.createComposerTestApp` from `@dxos/plugin-testing`
     - Fire activation events and read the capabilities that result
     - Invoke an operation and check its result
-```
-
-```mdl
-page plex-guide-settings-and-state: Settings and state
-  Keep a plugin's settings, which sync, apart from its device state, which does not.
-  section: PLEX
-  route: /docs/plex/guides/settings-and-state/
-  group: Guides
-  template: namespace
-  status: spike
-  covers:
-    - Contribute synced settings with a schema, and the settings form the app renders from it
-    - Keep device-only values in a State capability keyed `${key}.state`
-    - Read and write both from a component
-```
-
-```mdl
-page plex-guide-effect: Effect in plugins
-  Use Effect services and layers from a plugin's modules.
-  section: PLEX
-  route: /docs/plex/guides/effect/
-  group: Guides
-  template: namespace
-  status: spike
-  covers:
-    - Read a capability as an Effect service with `Capability.Service`
-    - Contribute layers for operation services through `Capabilities.LayerSpec`
-    - Declare the services an operation needs in its `services`, and yield them in the handler
 ```
 
 ```mdl
@@ -1406,6 +1363,20 @@ page plex-guide-debugging: Debugging a plugin
 ```
 
 ```mdl
+page plex-guide-settings-and-state: Settings and state
+  Keep a plugin's settings, which sync, apart from its device state, which does not.
+  section: PLEX
+  route: /docs/plex/guides/settings-and-state/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Contribute synced settings with a schema, and the settings form the app renders from it
+    - Keep device-only values in a State capability keyed `${key}.state`
+    - Read and write both from a component
+```
+
+```mdl
 page app-framework-guide-react: React
   The React hooks for plugins.
   section: PLEX
@@ -1418,6 +1389,35 @@ page app-framework-guide-react: React
     - Invoke operations from a component
     - Read plugin settings and translations
     - The reactivity rules a plugin component follows
+```
+
+```mdl
+page plex-guide-effect: Effect in plugins
+  Use Effect services and layers from a plugin's modules.
+  section: PLEX
+  route: /docs/plex/guides/effect/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Read a capability as an Effect service with `Capability.Service`
+    - Contribute layers for operation services through `Capabilities.LayerSpec`
+    - Declare the services an operation needs in its `services`, and yield them in the handler
+```
+
+```mdl
+page plex-guide-using-echo: Using ECHO in a plugin
+  Register a plugin's ECHO types with the app, so it can create, name and list their objects.
+  section: PLEX
+  route: /docs/plex/guides/using-echo/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Register ECHO types with the `Schema` capability
+    - Annotate a type with `AppAnnotation` so the app can name and list its objects
+    - Create objects from a plugin, and the create-object entry that adds them to the app's menus
+    - Links to ECHO's Defining types for the types themselves
 ```
 
 ### Resources
@@ -3381,6 +3381,12 @@ decision D-153: The plugin manifest is written, in Resources, at `/docs/plex/res
   by: user:wittjosiah
   affects: [app-framework-manifest, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
   why: One plugin carried from the learning path into the reference lets a reader recognize each snippet.
+
+decision D-154: PLEX's guides run from least to most complex: Testing, Debugging, Settings and state, React, Effect in plugins, Using ECHO in a plugin.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-testing, plex-guide-debugging, plex-guide-settings-and-state, app-framework-guide-react, plex-guide-effect, plex-guide-using-echo]
+  why: A reader works through the guides in order, so each should build on the last; ECHO is the most involved and goes last.
 ```
 
 ## Appendix: Extension Definitions
