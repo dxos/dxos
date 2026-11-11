@@ -2,6 +2,9 @@
 // An editable prompt with links that open it in a coding agent. Plain HTML and a small script, not a React
 // island, so a docs page that uses it loads no component styles.
 
+import claude from '../assets/agents/claude.svg?raw';
+import codex from '../assets/agents/codex.svg?raw';
+import cursor from '../assets/agents/cursor.svg?raw';
 import { SKILLS_URL } from '../utils/agent-skills.ts';
 
 type Props = {
@@ -17,11 +20,12 @@ const { prompt, context, skill } = Astro.props;
 
 /** Each link prefills its agent's prompt without sending it; `skills` is where that agent loads project skills from. */
 const AGENTS = [
-  { id: 'claude', label: 'Open in Claude Code', base: 'claude://code/new?q=', skills: '.claude/skills' },
-  { id: 'codex', label: 'Open in Codex', base: 'codex://new?prompt=', skills: '.agents/skills' },
+  { id: 'claude', label: 'Open in Claude Code', logo: claude, base: 'claude://code/new?q=', skills: '.claude/skills' },
+  { id: 'codex', label: 'Open in Codex', logo: codex, base: 'codex://new?prompt=', skills: '.agents/skills' },
   {
     id: 'cursor',
     label: 'Open in Cursor',
+    logo: cursor,
     base: 'cursor://anysphere.cursor-deeplink/prompt?text=',
     skills: '.cursor/skills',
   },
@@ -47,7 +51,7 @@ const copyPreamble = preamble("your agent's project skills folder (.claude/skill
   </label>
   <div class="actions">
     {
-      AGENTS.map(({ id, label, base, skills }) => (
+      AGENTS.map(({ id, label, logo, base, skills }) => (
         <a
           class="action"
           data-agent={id}
@@ -55,6 +59,7 @@ const copyPreamble = preamble("your agent's project skills folder (.claude/skill
           data-preamble={preamble(skills)}
           href={base + encodeURIComponent(full(preamble(skills), prompt))}
         >
+          <Fragment set:html={logo} />
           {label}
         </a>
       ))
@@ -123,6 +128,9 @@ const copyPreamble = preamble("your agent's project skills folder (.claude/skill
     --action-bg: var(--sl-color-white);
     --action-fg: var(--sl-color-black);
 
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.5rem 1rem;
     border: 1px solid var(--action-bg);
     border-radius: 999rem;
@@ -133,6 +141,12 @@ const copyPreamble = preamble("your agent's project skills folder (.claude/skill
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
+  }
+
+  .action :global(svg) {
+    flex: none;
+    width: 1.1em;
+    height: 1.1em;
   }
 
   .action[data-agent='claude'] {

@@ -2928,6 +2928,16 @@ decision D-130: Build with a coding agent replaces the Open in Claude pages, and
     - Telling the agent to use the skill if installed and read it otherwise: it depends on the Claude Code plugin, and the other two agents have no way to install it.
 ```
 
+```mdl
+decision D-131: Each open button shows its agent's logo before its label, in the button's text color. The logos are Lobe Icons' monochrome SVGs (MIT), kept in `src/assets/agents/`. Amends [D-130].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.4]
+  why: A reader finds their agent by its mark faster than by its name.
+  rejected:
+    - Simple Icons (CC0): it has the Claude and Cursor marks but dropped OpenAI's, and has no Codex mark.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
