@@ -106,15 +106,20 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     return 'userId' in found ? found.userId : yield* fail(found.reason);
   }
 
-  // The Discord identities of every contact the name matches, each with the contacts that record it.
+  // The Discord identities of every contact the name matches, each with the contacts that record it, and the matching
+  // contacts that record none.
   const wanted = asked.toLowerCase();
   const people = yield* Database.query(Query.select(Filter.type(Person.Person))).run.pipe(Effect.orDie);
   const identities = new Map<string, { value: string; contacts: Set<string> }>();
+  const unidentified: string[] = [];
   for (const person of people) {
     const discord = DiscordBot.discordIdentities(person);
     const names = [person.fullName, person.preferredName, person.nickname, ...discord.map(DiscordBot.bareName)];
     if (!names.some((name) => name?.trim().toLowerCase() === wanted)) {
       continue;
+    }
+    if (discord.length === 0) {
+      unidentified.push(person.fullName || person.preferredName || person.nickname || asked);
     }
     for (const value of discord) {
       const entry = identities.get(value.toLowerCase()) ?? { value, contacts: new Set<string>() };
@@ -144,6 +149,12 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
   }
   if (accounts.size > 1) {
     return yield* fail(`${to} names contacts with different Discord accounts: ${named}.`);
+  }
+  if (unidentified.length > 0) {
+    // The one account on record may not be the contact meant: another of that name has none.
+    return yield* fail(
+      `${to} also names ${unidentified.join(', ')}, with no Discord identity on record; the account on record is ${named}.`,
+    );
   }
   const [[userId]] = accounts;
   return userId;

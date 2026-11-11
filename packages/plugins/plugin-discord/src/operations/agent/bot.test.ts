@@ -233,6 +233,13 @@ describe('resolveUser', () => {
             ],
           }),
         );
+        // Two people called Kim, only one of them on Discord: the account on record may not be the one meant.
+        yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'Kim', identities: [{ label: 'discord', value: '123456789012345678' }] }),
+        );
+        yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'Kim', identities: [{ label: 'email', value: 'kim@x.y' }] }),
+        );
         // Two people called Sam on record.
         yield* Database.add(
           Obj.make(Person.Person, { fullName: 'Sam', identities: [{ label: 'discord', value: 'richard' }] }),
@@ -243,6 +250,10 @@ describe('resolveUser', () => {
         yield* Database.flush();
 
         expect(yield* resolveUser(BOT, 'Rich')).toBe('111111111111111111');
+        const kim = yield* resolveUser(BOT, 'Kim').pipe(Effect.flip);
+        expect(kim.message).toBe(
+          `Kim also names Kim, with no Discord identity on record; the account on record is Kim (123456789012345678).${HINT}`,
+        );
         const sam = yield* resolveUser(BOT, 'Sam').pipe(Effect.flip);
         expect(sam.message).toBe(
           `Sam names contacts with different Discord accounts: Sam (222222222222222222), Sam (333333333333333333).${HINT}`,
