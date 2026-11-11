@@ -440,7 +440,7 @@ page guide-react: React
 
 ### API
 
-One page per `@dxos/echo` namespace, at `/docs/echo/api/<namespace>/` [D-157]. Collection, View, Dataset, Registry, Json, Format, Key and Error appear only in the generated reference. Every page uses the promise APIs [D-158].
+One page per `@dxos/echo` namespace, at `/docs/echo/api/<namespace>/` [D-157]. Collection, View, Dataset, Registry, Json, Format, Key, Error, Migration and Tag appear only in the generated reference [D-205]. Every page uses the promise APIs [D-158].
 
 ```mdl
 page guide-type: Type
@@ -596,30 +596,6 @@ page guide-blob: Blob
   covers:
     - Store a blob and reference it from an object
     - Read a blob back
-```
-```mdl
-page guide-migration: Migration
-  Migrations between versions of a type.
-  section: ECHO
-  route: /docs/echo/api/migration/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - `Migration.define`, `defineRename` and `defineContent`
-    - Register migrations, and what runs them
-```
-```mdl
-page guide-tag: Tag
-  Tags on objects.
-  section: ECHO
-  route: /docs/echo/api/tag/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Make a tag, add it to an object and remove it
-    - Query by tag
 ```
 
 ### Resources
@@ -1278,7 +1254,7 @@ page app-framework-surfaces: Surfaces
 ### Guides
 
 ```mdl
-page plex-guide-effect: Effect in plugins
+page plex-guide-effect: Effect
   Use Effect services and layers from a plugin's modules.
   section: PLEX
   route: /docs/plex/guides/effect/
@@ -1292,7 +1268,7 @@ page plex-guide-effect: Effect in plugins
 ```
 
 ```mdl
-page plex-guide-testing: Testing a plugin
+page plex-guide-testing: Testing
   Test a plugin's modules without an app, with the App Framework test harness.
   section: PLEX
   route: /docs/plex/guides/testing/
@@ -1306,7 +1282,7 @@ page plex-guide-testing: Testing a plugin
 ```
 
 ```mdl
-page plex-guide-debugging: Debugging a plugin
+page plex-guide-debugging: Debugging
   Find out why a module did not activate or a contribution did not show.
   section: PLEX
   route: /docs/plex/guides/debugging/
@@ -1382,7 +1358,7 @@ page app-framework-guide-react: React
 ```
 
 ```mdl
-page plex-guide-using-echo: Using ECHO in a plugin
+page plex-guide-using-echo: ECHO
   Register a plugin's ECHO types with the app, so it can create, name and list their objects.
   section: PLEX
   route: /docs/plex/guides/using-echo/
@@ -3517,6 +3493,18 @@ decision D-204: Every section's navigation runs Start here, Learning path, Core 
   affects: [plex-guide-effect, halo-react, halo-guide-identity, app-framework-guide-plugin]
   why: A reader looks for a how-to before an API page, and an API page is reference like the rest of Resources.
 ```
+
+decision D-205: ECHO's API group drops Migration and Tag, leaving eleven namespace pages. Both appear only in the generated reference; Types and schema still explains versions and migrations.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-migration, guide-tag, types]
+  why: Neither is something most readers call; the concept page carries what a reader needs to know about migrations.
+
+decision D-206: Guide names are short nouns in every section, without the section's name: PLEX's become Effect, Testing, Debugging and ECHO, alongside App capabilities, Settings and state, App Graph and React.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-effect, plex-guide-testing, plex-guide-debugging, plex-guide-using-echo]
+  why: The section already says whose guide it is, so the names line up across the trees.
 
 ## Appendix: Extension Definitions
 

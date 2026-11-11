@@ -43,7 +43,7 @@ from JSON Schema, for a type that comes from a form, an agent or another system.
 
 A type stored in a space with `db.addType` can gain and lose fields after it exists; the change replicates like any
 write. The functions throw for a type that is not stored. Objects already made from the type keep their data. Use a new
-version and a [migration](/docs/echo/api/migration/) instead when old objects need converting.
+version and a [migration](/docs/echo/concepts/types/#versions-and-migrations) instead when old objects need converting.
 
 <Snippet file="guide-type" region="fields" />
 
