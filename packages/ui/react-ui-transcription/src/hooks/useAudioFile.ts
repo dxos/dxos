@@ -54,11 +54,9 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
         });
 
         const audioCtx = new AudioContext();
-
-        // Resume AudioContext if it's suspended.
-        if (audioCtx.state === 'suspended') {
-          await audioCtx.resume();
-        }
+        // Created before a user gesture, the context starts suspended and only a resume() made after the gesture takes;
+        // playback follows one, so the context resumes when the element plays instead of holding the stream back.
+        audio.addEventListener('play', () => void audioCtx.resume().catch((err) => log.catch(err)));
 
         const destination = audioCtx.createMediaStreamDestination();
         destination.channelCount = 1;
