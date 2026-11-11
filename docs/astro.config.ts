@@ -118,6 +118,7 @@ const redirects: Record<string, string> = {
   '/docs/halo/guides/invitation': '/docs/halo/api/invitation/',
   '/docs/halo/guides/space': '/docs/halo/api/space/',
   '/docs/halo/learn/create-identity': '/docs/halo/learn/your-name/',
+  '/docs/halo/learn/contact-book': '/docs/halo/learn/the-halo-identity/',
   '/docs/halo/learn/invite-member': '/docs/halo/learn/invite-people/',
   '/docs/halo/react': '/docs/halo/guides/react/',
   ...plexRedirects,

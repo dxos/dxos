@@ -1,27 +1,28 @@
 ---
-title: The contact book
-description: The app the learning path builds, running for three people.
+title: The HALO identity
+description: What an identity is, and the app the learning path builds, running for three people.
 ---
 
 import HaloEmbed from '../../../../../components/HaloEmbed.astro';
 import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
 
-The HALO learning path builds one app: a contact book. You give yourself a name, keep a few named spaces, and invite
-people into them. Your contacts are the people you share a space with, so the app never keeps a list of its own. It reads
-each space's members and merges them.
+The learning path builds one app: a contact book. You give yourself a name, keep a few named spaces, and invite people
+into them. Your contacts are the people you share a space with. This page explains what a HALO identity is, and shows the
+contact book finished.
 
-## What the app is made of
+## What an identity is
 
-Everything the contact book shows comes from HALO:
+Everything the contact book shows comes from one identity per person. An identity has four parts:
 
-- **Your identity.** A Keyhive group named by a DID, with your name on it. The device you start on is its first member.
-- **Your spaces.** Each space is a group too, with you as its first admin. ECHO keeps data in a space, but the contact book
-  uses spaces only for who is in them.
-- **Invitations.** Each person you invite joins through a short handshake that ends in a signed delegation.
-- **Your devices and a recovery code.** Every device you add is another member of your identity, and so is the key behind
-  a recovery code.
+- **A DID.** Peers know the identity by this one name, on every device and in every space.
+- **A profile.** Its display name, which every space the identity is in shows.
+- **Members.** An identity is a Keyhive group, and its members are the keys allowed to act for it. Each device holds its
+  own key, so adding a device adds a member and removing one revokes it. The key behind a recovery code is a member too.
+- **Spaces.** A space is a group as well, and the identity is one of its members, with an access level. The identity's
+  devices act for it in every space it belongs to.
 
-[Identities and devices](/docs/halo/concepts/identities-devices/) describes the model in full.
+No server issues or holds an identity. Each change to its members is a signed delegation or revocation, and every peer
+checks it. [Identities and devices](/docs/halo/concepts/identities-devices/) describes the model in full.
 
 ## The finished app
 

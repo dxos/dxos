@@ -777,14 +777,15 @@ Seven pages build one app, a contact book: a name, a few named spaces, the peopl
 recovery code [D-169]. The embeds and StackBlitz projects work as ECHO's do [D-171].
 
 ```mdl
-page halo-contact-book: The contact book
-  The app the learning path builds, running for three people.
+page halo-the-halo-identity: The HALO identity
+  What an identity is, and the app the learning path builds, running for three people.
   section: HALO
-  route: /docs/halo/learn/contact-book/
+  route: /docs/halo/learn/the-halo-identity/
   group: Learning path
   template: tutorial
   status: spike
   covers:
+    - What an identity is, in a paragraph: a Keyhive group named by a DID, with a profile, whose members are its devices and recovery keys, and which joins spaces as a member [D-175]
     - What the contact book does: a name, named spaces, and contacts, who are the people you share a space with [D-170]
     - The finished app for Alice, Bob and Carol in two spaces, each in a device frame, with Fork on StackBlitz
     - What each page adds
@@ -3577,25 +3578,25 @@ decision D-167: HALO's Guides are Passkey recovery and React, in that order. Rea
 decision D-168: HALO's learning path is planned on its own, apart from the concepts, API and guides.
   date: 2026-11-11
   by: agent:claude
-  affects: [halo-contact-book]
+  affects: [halo-the-halo-identity]
   why: The path is an app with its own design questions.
 
 decision D-169: HALO's learning path builds its own app, a contact book, over seven pages: The contact book, Your name, Your spaces, Invite people, Your contacts, Add a device and Recover an identity. It has no ECHO types and does not continue ECHO's tutorial app; ECHO's Sharing a space stays. The four earlier pages are replaced, and `/docs/halo/learn/create-identity/` and `/docs/halo/learn/invite-member/` redirect to Your name and Invite people.
   date: 2026-11-11
   by: user:wittjosiah
-  affects: [halo-contact-book, halo-your-name, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity, halo-welcome]
+  affects: [halo-the-halo-identity, halo-your-name, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity, halo-welcome]
   why: An app about identity teaches HALO without the reader carrying ECHO's app along.
 
 decision D-170: A contact is anyone the reader shares a space with: the members of every space, merged by DID, each with the spaces they share. There is no way to add a person outside a space.
   date: 2026-11-11
   by: user:wittjosiah
-  affects: [halo-contact-book, halo-your-contacts]
+  affects: [halo-the-halo-identity, halo-your-contacts]
   why: Contacts then come from HALO's own membership, with no list of their own to keep.
 
 decision D-171: HALO's path is built as ECHO's is [D-137] [D-138] [D-140]: the embeds run in-memory clients in device frames; the StackBlitz projects are real clients on EDGE with the browser's private file system; the starter replaces each quoted region with `todo()`. Each page's code is one module of the app, and pages quote only modules the app runs. The app provides `Identity.Service` and `Space.Service` with `layerClient(client)` from `@dxos/halo-adapter-client`.
   date: 2026-11-11
   by: agent:claude
-  affects: [halo-contact-book, halo-your-name, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity]
+  affects: [halo-the-halo-identity, halo-your-name, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity]
   why: The reader gets the same live, follow-along path in both sections.
 
 decision D-172: Recover an identity's embed creates and revokes recovery codes live, on in-memory clients. `Identity.recover` goes through EDGE, which the embeds have no route to, so the step that recovers on a new device runs only in the StackBlitz project. HALO refuses to revoke the last recovery credential, so the page makes a second code before it revokes the first.
@@ -3615,6 +3616,12 @@ decision D-174: Each code sample shows the imports its code uses, above it; the 
   by: agent:claude
   affects: [installation, sharing, guide-react, guide-text]
   why: Three coding agents built apps from the ECHO pages alone, and each hit these gaps.
+
+decision D-175: HALO's learning path opens with The HALO identity, as ECHO's opens with The ECHO object and PLEX's with The PLEX plugin: what an identity is first, then the contact book running. The page moves from /docs/halo/learn/contact-book/, which redirects to it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-the-halo-identity]
+  why: The three learning paths should start the same way, with the product's central idea.
 
 decision D-200: PLEX's guides run in this order: Effect in plugins, Testing, Debugging, App capabilities, Settings and state, App Graph, React, Using ECHO in a plugin. Effect comes first because every module body and handler is an Effect.
   date: 2026-11-11

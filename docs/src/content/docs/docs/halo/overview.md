@@ -34,5 +34,5 @@ ECHO stores and replicates the data in a space; HALO decides who may join it. Th
 creates an identity in one line so it can open a space, and its [Sharing a space](/docs/echo/learn/sharing/) page invites a
 second person.
 
-The HALO learning path builds an app of its own, a [contact book](/docs/halo/learn/contact-book/): a name, a few named
+The HALO learning path builds an app of its own, a [contact book](/docs/halo/learn/the-halo-identity/): a name, a few named
 spaces, the people in them, a second device and a recovery code.
