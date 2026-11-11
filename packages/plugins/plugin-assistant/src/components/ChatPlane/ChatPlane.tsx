@@ -524,13 +524,15 @@ ChatPlaneColumn.displayName = 'ChatPlane.Column';
 type ChatPlaneCellProps = PropsWithChildren<{
   /** The column's menu, on the right of its header; no menu without it. */
   menu?: MenuActions;
+  /** Names the thread in the header, between the drag handle and the menu. */
+  title?: ReactNode;
 }>;
 
 /**
  * The column's tile: a header with the drag handle, over the thread. Focusable as one unit. Escape from its thread or
  * prompt lands here, where the arrow keys move between columns and Enter goes back into the prompt.
  */
-const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
+const ChatPlaneCell = ({ menu, title, children }: ChatPlaneCellProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { event } = useChatContext('ChatPlane.Cell');
   const { navigation } = useChatPlaneContext('ChatPlane.Cell');
@@ -619,6 +621,7 @@ const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
               label={t('move-thread.button')}
               testId='chat-plane.drag-handle'
             />
+            {title && <div className='flex-1 min-w-0 truncate px-1 text-sm'>{title}</div>}
             {menu && (
               <ActionMenu {...menu}>
                 <Button.Root

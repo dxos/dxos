@@ -120,6 +120,11 @@
       "types": "./dist/types/src/Chat.d.ts",
       "import": "./dist/lib/ns/Chat.mjs"
     },
+    "./ChatPlane": {
+      "source": "./src/ChatPlane.ts",
+      "types": "./dist/types/src/ChatPlane.d.ts",
+      "import": "./dist/lib/ns/ChatPlane.mjs"
+    },
     "./AssistantSurface": {
       "source": "./src/types/AssistantSurface.ts",
       "types": "./dist/types/src/types/AssistantSurface.d.ts",
