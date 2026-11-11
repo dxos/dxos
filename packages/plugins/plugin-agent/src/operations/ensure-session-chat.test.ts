@@ -5,6 +5,7 @@
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { TrajectoryStore } from '@dxos/assistant';
@@ -15,7 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Channel } from '@dxos/types';
 
@@ -43,7 +44,7 @@ const TestLayer = AssistantTestLayer({
 const MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 describe('EnsureSessionChat', () => {
-  it('is invoked by the key AgentSession exports', ({ expect }) => {
+  test('is invoked by the key AgentSession exports', ({ expect }) => {
     expect(String(AgentOperation.EnsureSessionChat.meta.key)).toContain(AgentSession.ENSURE_CHAT_KEY);
   });
 
@@ -101,6 +102,48 @@ describe('EnsureSessionChat', () => {
 
         // A session chat never shadows the agent's primary chat.
         expect((yield* Agent.loadChat(agent))?.id).toBe(primary?.id);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'refuses a kind with a colon, which would collide with another session',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Concierge' });
+        // Would share the foreign key `mcp:tenant:session` with kind `mcp`, key `tenant:session`.
+        const exit = yield* Operation.invoke(AgentOperation.EnsureSessionChat, {
+          kind: 'mcp:tenant',
+          key: 'session',
+        }).pipe(Effect.exit);
+        expect(Exit.isFailure(exit)).toBe(true);
+        const allowed = yield* Operation.invoke(AgentOperation.EnsureSessionChat, {
+          kind: 'mcp',
+          key: 'tenant:session',
+        });
+        expect(allowed.created).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'refuses an agent in another space',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Concierge' });
+        const entityId = EID.getEntityId(EID.parse(agent.uri));
+        expect(entityId).toBeDefined();
+        const elsewhere = EID.make({ spaceId: SpaceId.random(), entityId });
+        const exit = yield* Operation.invoke(AgentOperation.EnsureSessionChat, {
+          agent: elsewhere,
+          kind: 'mcp',
+          key: 'session-1',
+        }).pipe(Effect.exit);
+        expect(String(exit)).toMatch(/is not in this space/);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

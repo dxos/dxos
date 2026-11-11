@@ -42,6 +42,12 @@ are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.
 | `step`      | `org.dxos.mdl.step@1.0`        |
 | `decision`  | `org.dxos.mdl.decision@1.0`    |
 
+## Dependencies
+
+```mdl
+uses org.dxos.app-framework.edge-plugins: How this plugin's operations reach EDGE through its bundle, including `ensureSessionChat`, which moved here from an EDGE-owned plugin (its D-81, D-82).
+```
+
 ## External types
 
 Used, not defined, here: `Agent` and `Chat` (`@dxos/assistant`), `Instructions` and `Skill`
@@ -215,7 +221,7 @@ op ensureSessionChat
   desc: Finds or creates an agent's chat for a session, a conversation with a caller that is not a channel (an MCP client).
   input:
     agent?: string                  # the agent's URI or name; optional when the space has one agent
-    kind: string                    # the kind of caller, e.g. mcp
+    kind: string                    # the kind of caller, e.g. mcp; no `:`
     key: string                     # the caller's session id
     title?: string                  # names a new chat
     model?: string                  # a model NSID, kept on the chat for later turns
@@ -1281,7 +1287,7 @@ decision D-11: `ensureSessionChat` moves into this plugin from EDGE's operation-
   date: 2026-11-11
   by: user:dmaretskyi
   affects: [ensureSessionChat]
-  why: It reaches EDGE through this plugin's bundle like the agent's other operations (EDGE-PLUGINS D-81, D-82). The source keeps its value `org.dxos.agent/session`, since existing session chats are keyed by it.
+  why: It reaches EDGE through this plugin's bundle like the agent's other operations (org.dxos.app-framework.edge-plugins D-81, D-82). The source keeps its value `org.dxos.agent/session`, since existing session chats are keyed by it.
 ```
 
 ---

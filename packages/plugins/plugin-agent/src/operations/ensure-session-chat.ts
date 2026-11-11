@@ -31,7 +31,13 @@ const parseModel = (model: string) =>
 /** The agent a caller names: by URI, by name, or the space's only agent. */
 const resolveAgent = Effect.fnUntraced(function* (name: string | undefined) {
   const wanted = name?.trim();
-  if (wanted && EID.tryParse(wanted)) {
+  const eid = wanted ? EID.tryParse(wanted) : undefined;
+  if (wanted && eid) {
+    // An agent in another space cannot parent a chat in this one, so its session chat would never be found again.
+    const spaceId = EID.getSpaceId(eid);
+    if (spaceId !== undefined && spaceId !== (yield* Database.spaceId)) {
+      return yield* Effect.fail(new AgentSessionError({ message: `Agent ${wanted} is not in this space.` }));
+    }
     return yield* Database.resolve(URI.make(wanted), Agent.Agent).pipe(
       Effect.mapError(() => new AgentSessionError({ message: `No agent ${wanted} in this space.` })),
     );
@@ -106,11 +112,16 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureSessionChat> = 
             ...(modelId !== undefined ? { session: { model: modelId } } : {}),
           }),
         );
-        const AiContext = yield* Effect.promise(aiContextRuntime);
-        const runtime = yield* Effect.context<Database.Service>();
-        const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-        yield* Effect.promise(() =>
-          binder.bind({ skills: bindings.skills, objects: [...bindings.objects, Ref.make(chat)] }),
+        yield* Effect.gen(function* () {
+          const AiContext = yield* Effect.promise(aiContextRuntime);
+          const runtime = yield* Effect.context<Database.Service>();
+          const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+          yield* Effect.promise(() =>
+            binder.bind({ skills: bindings.skills, objects: [...bindings.objects, Ref.make(chat)] }),
+          );
+        }).pipe(
+          // The next call would find a chat left without its bindings and never bind it, so it goes with the failure.
+          Effect.onError(() => Effect.all([Database.remove(chat), Database.remove(feed)], { discard: true })),
         );
         yield* Database.flush();
         return { agent: Ref.make(agent), agentName: agent.name, chat: Ref.make(chat), feed: chat.feed, created: true };

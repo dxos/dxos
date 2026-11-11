@@ -13,8 +13,11 @@
 /** `@meta.keys` source of a session's chat; the id is `<kind>:<key>`. */
 export const SOURCE = 'org.dxos.agent/session';
 
+/** What a session's kind may be: no `:`, which separates it from the key in the chat's foreign key. */
+export const KIND_PATTERN = /^[^:]+$/;
+
 /** Key of `AgentOperation.EnsureSessionChat`, for callers that invoke it by key without loading its schema. */
 export const ENSURE_CHAT_KEY = 'org.dxos.operation.agent.ensureSessionChat';
 
-/** The foreign key of a session's chat. */
+/** The foreign key of a session's chat; `kind` has no `:`, so the id splits back unambiguously. */
 export const chatKey = (kind: string, key: string) => ({ source: SOURCE, id: `${kind}:${key}` });

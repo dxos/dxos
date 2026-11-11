@@ -20,6 +20,7 @@ import { Text } from '@dxos/schema';
 import { Channel, Person } from '@dxos/types';
 
 import * as AgentEmail from './AgentEmail.ts';
+import * as AgentSession from './AgentSession.ts';
 import * as BrainService from './BrainService.ts';
 
 /**
@@ -124,7 +125,13 @@ export const EnsureSessionChat = Operation.make({
     agent: Schema.optional(
       Schema.String.annotate({ description: 'The agent: its URI or name; optional when the space has one agent.' }),
     ),
-    kind: Schema.String.annotate({ description: 'The kind of caller, e.g. `mcp`.' }),
+    kind: Schema.String.pipe(
+      Schema.check(
+        Schema.isPattern(AgentSession.KIND_PATTERN, {
+          toJsonSchema: () => ({ pattern: AgentSession.KIND_PATTERN.source }),
+        }),
+      ),
+    ).annotate({ description: 'The kind of caller, e.g. `mcp`; it contains no `:`.' }),
     key: Schema.String.annotate({ description: "The caller's session id, unique within its kind." }),
     title: Schema.optional(Schema.String.annotate({ description: 'Names a new chat.' })),
     model: Schema.optional(
