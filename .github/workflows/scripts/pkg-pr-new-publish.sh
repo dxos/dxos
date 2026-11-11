@@ -11,7 +11,7 @@ echo "Finding public packages..."
 # --filter-prod filters out packages with "private": true
 # --depth=-1 gets all nested packages
 # --json outputs JSON format
-PUBLIC_PACKAGES=$(pnpm list --filter-prod="./packages/**" --filter-prod="./vendor/**" --depth=-1 --json 2>/dev/null | \
+PUBLIC_PACKAGES=$(pnpm list --filter-prod="./packages/**" --filter-prod="./tools/**" --filter-prod="./vendor/**" --depth=-1 --json 2>/dev/null | \
   node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
     const packages = Array.isArray(data) ? data : [data];
@@ -34,7 +34,7 @@ echo "Found ${#PKG_ARRAY[@]} public packages to publish"
 # Private packages dxos/edge installs from pkg.pr.new before they have an npm trusted publisher. pkg-pr-new skips a
 # package marked private, so the flag is dropped in this job's throwaway checkout only; `changeset publish` and the npm
 # preflight still read it from the committed package.json and skip them.
-PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare tools/vite-plugin-icons)
+PKG_PR_NEW_ONLY=(packages/core/compute/plugin-host-cloudflare)
 for directory in "${PKG_PR_NEW_ONLY[@]}"; do
   node -e "
     const fs = require('fs');
