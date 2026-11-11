@@ -113,13 +113,17 @@ export const steps = [
       await demo.sleep({ ms: 2_000 });
       // The checklist drawer sits over the end of the thread; closing it shows the summary in full.
       await demo.click({ selector: '[data-testid="assistant.toggle-tasks"]', label: 'Tasks' });
-      // The agent's column does not follow a reply that lands while another column is selected, so scroll to it.
-      await demo.hover({ selector: AGENT, label: 'Agent' });
-      for (let tick = 0; tick < 6; tick++) {
-        await page.mouse.wheel(0, 600);
-        await demo.sleep({ ms: 150 });
-      }
-      await page.getByText('The launch kit is ready').first().scrollIntoViewIfNeeded();
+      // The agent's column does not follow a reply that lands while another column is selected, so scroll to its end.
+      await page.evaluate((selector) => {
+        const column = document.querySelector(selector);
+        const scroller = [...(column?.querySelectorAll('*') ?? [])].find(
+          (element) =>
+            element.scrollHeight > element.clientHeight + 40 && getComputedStyle(element).overflowY !== 'visible',
+        );
+        scroller?.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+      }, '[data-testid="chat-plane.column"]');
+      await demo.sleep({ ms: 1_000 });
+      await page.getByText('Ready for review').last().waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: 9_000 });
     },
   },
