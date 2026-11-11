@@ -674,12 +674,6 @@ export const fromModules = <T = void>(
       .reduce((builder, module) => addModule<T>(module)(builder), define<T>(meta)),
   );
 
-/** The `plugin` section of `dx.config.ts`: the plugin's metadata. */
-export interface ConfigPlugin extends Config2.Plugin {}
-
-/** The `publish` section of `dx.config.ts`: how `dx registry publish` builds and hosts the plugin. */
-export interface ConfigPublish extends Config2.Publish {}
-
 /** Authoring input for {@link config}: the `dx.config.ts` data plus the plugin's modules. */
 export type ConfigOptions = Config2.Config & {
   /** Module specs only; each body is a dynamic import, so reading the config loads no plugin code. */
