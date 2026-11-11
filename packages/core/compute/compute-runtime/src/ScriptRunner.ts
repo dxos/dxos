@@ -46,7 +46,7 @@ export const byDialect = (
         ? Effect.fail(
             new Operation.ScriptError({
               message: `No backend for dialect "${dialect}"; this runtime serves ${Object.keys(runners).join(', ') || 'none'}.`,
-              dialect,
+              context: { dialect },
             }),
           )
         : runner.run(request, runtime);
@@ -94,32 +94,27 @@ export const Request = Schema.Struct({
  * those refs were read from; a snippet needs nothing, which is why a backend in another runtime can
  * be handed one whole.
  */
-export const resolveSource = (
+export const resolveSource = Effect.fnUntraced(function* (
   source: Operation.ScriptSource,
-): Effect.Effect<{ readonly code: string; readonly dialect: Operation.ScriptDialect }, Operation.ScriptError> =>
-  Effect.gen(function* () {
-    if (Operation.isInlineScript(source)) {
-      return { code: source.code, dialect: source.dialect };
-    }
-    const target = yield* Database.load(source.script).pipe(
-      Effect.mapError(
-        (error) => new Operation.ScriptError({ message: `Script object did not load: ${String(error)}` }),
-      ),
+): Effect.fn.Return<{ readonly code: string; readonly dialect: Operation.ScriptDialect }, Operation.ScriptError> {
+  if (Operation.isInlineScript(source)) {
+    return { code: source.code, dialect: source.dialect };
+  }
+  const target = yield* Database.load(source.script).pipe(
+    Effect.mapError((error) => new Operation.ScriptError({ message: `Script object did not load: ${String(error)}` })),
+  );
+  if (!Obj.instanceOf(Script.Script, target)) {
+    return yield* Effect.fail(
+      new Operation.ScriptError({
+        message: `A script source must point at a Script object: ${Obj.getTypename(target)}`,
+      }),
     );
-    if (!Obj.instanceOf(Script.Script, target)) {
-      return yield* Effect.fail(
-        new Operation.ScriptError({
-          message: `A script source must point at a Script object: ${Obj.getTypename(target)}`,
-        }),
-      );
-    }
-    const text = yield* Database.load(target.source).pipe(
-      Effect.mapError(
-        (error) => new Operation.ScriptError({ message: `Script source did not load: ${String(error)}` }),
-      ),
-    );
-    return { code: text.content, dialect: Operation.ScriptDialects.TypeScript };
-  });
+  }
+  const text = yield* Database.load(target.source).pipe(
+    Effect.mapError((error) => new Operation.ScriptError({ message: `Script source did not load: ${String(error)}` })),
+  );
+  return { code: text.content, dialect: Operation.ScriptDialects.TypeScript };
+});
 
 /**
  * Annotation carrying a script operation's inline snippet on its persisted record.

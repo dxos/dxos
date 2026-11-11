@@ -225,13 +225,13 @@ export const make = ({
    * operation as it is, and the result comes back through {@link Process.awaitOutput} like any output.
    */
   const runScriptRemote = <I, O>(
-    op: Operation.ScriptDefinition.Any,
+    op: Operation.ScriptDefinition<I, O>,
     input: I,
     options: Operation.InvokeOptions & { spaceId: NonNullable<Operation.InvokeOptions['spaceId']> },
   ): Effect.Effect<O> =>
     remote === undefined
       ? Effect.die(new Error(`Script operation '${op.meta.key}' cannot run on EDGE: this stack has no operation host.`))
-      : (invokeRemote(op, input, options, remote) as Effect.Effect<O>);
+      : invokeRemote(op, input, options, remote);
 
   const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,

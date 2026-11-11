@@ -79,7 +79,7 @@ describe('ScriptRunner.byDialect', () => {
         .pipe(Effect.flip),
     );
     expect(error._tag).toBe('ScriptError');
-    expect(error.dialect).toBe('plain');
+    expect(error.context.dialect).toBe('plain');
     expect(error.message).toContain('effect');
   });
 });

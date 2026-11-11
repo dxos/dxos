@@ -34,10 +34,11 @@ const Greet = Operation.makeScript({
 
 const NESTED_KEY = DXN.make('com.example.operation.fromScript');
 
-/** The live process tree as the nested operation saw it, captured while both processes are running. */
-let treeFromInside: readonly Process.Process[] = [];
-
-/** Runs inside a script's process, so a test can see what a script may do from there. */
+/**
+ * Runs inside a script's process and answers with the keys of the live process tree as it sees them.
+ * Read from inside, because a finished process leaves the tree: whether the script's own process is
+ * there is only observable while the nested call is still running.
+ */
 const FromScript = Operation.make({
   meta: { key: NESTED_KEY, name: 'FromScript' },
   input: Schema.Void,
@@ -46,30 +47,30 @@ const FromScript = Operation.make({
 }).pipe(
   Operation.withHandler(() =>
     Effect.gen(function* () {
-      // Read from inside: a finished process leaves the tree, so the parenting is only observable
-      // while the nested call is still running.
       const manager = yield* Process.ManagerService;
-      treeFromInside = yield* manager.processTree;
-      return 'ran';
+      const tree = yield* manager.processTree;
+      return tree.map((process) => process.key).join(',');
     }),
   ),
 );
 
-/** Every request the backend was handed. */
-const runs: Operation.ScriptRequest[] = [];
-
 /**
- * Stands in for a real backend: it echoes the snippet rather than evaluating it, which keeps these
- * assertions about how a runtime runs a script operation rather than about any one sandbox.
+ * A backend that echoes the snippet rather than evaluating it, which keeps these assertions about how a
+ * runtime runs a script operation rather than about any one sandbox. Made per test, with the requests
+ * it was handed, so no test reads another's.
  */
-const echoRunner: Operation.ScriptRunner = {
-  run: (request) =>
-    Effect.sync(() => {
-      runs.push(request);
-      return Operation.isInlineScript(request.source)
-        ? { output: `${request.source.dialect}:${request.source.code}` }
-        : { output: 'object' };
-    }),
+const makeEchoRunner = () => {
+  const requests: Operation.ScriptRequest[] = [];
+  const runner: Operation.ScriptRunner = {
+    run: (request) =>
+      Effect.sync(() => {
+        requests.push(request);
+        return Operation.isInlineScript(request.source)
+          ? { output: `${request.source.dialect}:${request.source.code}` }
+          : { output: 'object' };
+      }),
+  };
+  return { runner, requests };
 };
 
 /**
@@ -82,7 +83,7 @@ const delegatingRunner: Operation.ScriptRunner = {
       ? Effect.die('a script runtime was not handed over')
       : Effect.gen(function* () {
           const output = yield* Operation.invoke(FromScript);
-          return { output: `delegated:${output}` };
+          return { output };
         }).pipe(Effect.provide(runtime.context), Effect.orDie),
 };
 
@@ -90,6 +91,7 @@ const failingRunner: Operation.ScriptRunner = {
   run: () => Effect.fail(new Operation.ScriptError({ message: 'no backend here' })),
 };
 
+/** The runtime under test, parameterized by the backend each test runs scripts with. */
 const testLayer = (runner: Operation.ScriptRunner) =>
   ProcessOperationInvoker.layer.pipe(
     Layer.provideMerge(UnifiedProcessManager.layer),
@@ -106,89 +108,65 @@ const testLayer = (runner: Operation.ScriptRunner) =>
   );
 
 describe('script operations', () => {
-  it.effect(
-    'a client invokes one like any other operation',
-    Effect.fnUntraced(
-      function* () {
-        runs.length = 0;
-        const result = yield* Operation.invoke(Greet, { name: 'world' }, { on: 'local' });
-        expect(result.output).toBe("effect:print('hello')");
-        // The operation's own source and input reach the backend, so the same request would run in
-        // another runtime unchanged.
-        expect(runs).toHaveLength(1);
-        expect(runs[0]?.source).toEqual(Greet.source);
-        expect(runs[0]?.input).toEqual({ name: 'world' });
-      },
-      (effect) => Effect.provide(effect, testLayer(echoRunner)),
-    ),
+  it.effect('a client invokes one like any other operation', () => {
+    const echo = makeEchoRunner();
+    return Effect.gen(function* () {
+      const result = yield* Operation.invoke(Greet, { name: 'world' }, { on: 'local' });
+      expect(result.output).toBe("effect:print('hello')");
+      // The operation's own source and input reach the backend, so the same request would run in
+      // another runtime unchanged.
+      expect(echo.requests).toHaveLength(1);
+      expect(echo.requests[0]?.source).toEqual(Greet.source);
+      expect(echo.requests[0]?.input).toEqual({ name: 'world' });
+    }).pipe(Effect.provide(testLayer(echo.runner)));
+  });
+
+  it.effect("the run is a process in the manager's own tree, under the operation's key", () => {
+    const echo = makeEchoRunner();
+    return Effect.gen(function* () {
+      yield* Operation.invoke(Greet, undefined, { on: 'local' });
+      const manager = yield* Process.ManagerService;
+      const tree = yield* manager.processTree;
+      expect(tree.some((process) => process.key === DXN.getName(KEY))).toBe(true);
+    }).pipe(Effect.provide(testLayer(echo.runner)));
+  });
+
+  it.effect('the manager spawns a script operation as it is — no wrapper, the ordinary spawn', () => {
+    const echo = makeEchoRunner();
+    return Effect.gen(function* () {
+      const handle = yield* Process.spawn(Greet, { name: 'spawned' });
+      const result: Operation.ScriptResult = yield* Process.awaitOutput(handle);
+      expect(result.output).toBe("effect:print('hello')");
+      expect(handle.key).toBe(DXN.getName(KEY));
+      expect(echo.requests[0]?.input).toEqual({ name: 'spawned' });
+    }).pipe(Effect.provide(testLayer(echo.runner)));
+  });
+
+  it.effect('a script can invoke operations from inside its process', () =>
+    Effect.gen(function* () {
+      const result = yield* Operation.invoke(Greet, undefined, { on: 'local' });
+      // Seen from inside the nested call: the script's own process is still live, so the work was
+      // delegated from within it — a script spawns work the way a handler does, with the script's
+      // process as the parent and its guard in scope.
+      expect(result.output.split(',')).toContain(DXN.getName(KEY));
+      expect(result.output.split(',')).toContain(DXN.getName(NESTED_KEY));
+    }).pipe(Effect.provide(testLayer(delegatingRunner))),
   );
 
-  it.effect(
-    "the run is a process in the manager's own tree, under the operation's key",
-    Effect.fnUntraced(
-      function* () {
-        runs.length = 0;
-        yield* Operation.invoke(Greet, undefined, { on: 'local' });
-        const manager = yield* Process.ManagerService;
-        const tree = yield* manager.processTree;
-        expect(tree.some((process) => process.key === DXN.getName(KEY))).toBe(true);
-      },
-      (effect) => Effect.provide(effect, testLayer(echoRunner)),
-    ),
+  it.effect('a runtime with no backend for the script fails the call rather than answering', () =>
+    Effect.gen(function* () {
+      const exit = yield* Operation.invoke(Greet, undefined, { on: 'local' }).pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+    }).pipe(Effect.provide(testLayer(failingRunner))),
   );
 
-  it.effect(
-    'the manager spawns a script operation as it is — no wrapper, the ordinary spawn',
-    Effect.fnUntraced(
-      function* () {
-        runs.length = 0;
-        const handle = yield* Process.spawn(Greet, { name: 'spawned' });
-        const result: Operation.ScriptResult = yield* Process.awaitOutput(handle);
-        expect(result.output).toBe("effect:print('hello')");
-        expect(handle.key).toBe(DXN.getName(KEY));
-        expect(runs[0]?.input).toEqual({ name: 'spawned' });
-      },
-      (effect) => Effect.provide(effect, testLayer(echoRunner)),
-    ),
-  );
-
-  it.effect(
-    'a script can invoke operations from inside its process',
-    Effect.fnUntraced(
-      function* () {
-        treeFromInside = [];
-        const result = yield* Operation.invoke(Greet, undefined, { on: 'local' });
-        expect(result.output).toBe('delegated:ran');
-        // Seen from inside the nested call: the script's own process is still live, so the work was
-        // delegated from within it — a script spawns work the way a handler does, with the script's
-        // process as the parent and its guard in scope.
-        expect(treeFromInside.some((process) => process.key === DXN.getName(KEY))).toBe(true);
-      },
-      (effect) => Effect.provide(effect, testLayer(delegatingRunner)),
-    ),
-  );
-
-  it.effect(
-    'a runtime with no backend for the script fails the call rather than answering',
-    Effect.fnUntraced(
-      function* () {
-        const exit = yield* Operation.invoke(Greet, undefined, { on: 'local' }).pipe(Effect.exit);
-        expect(exit._tag).toBe('Failure');
-      },
-      (effect) => Effect.provide(effect, testLayer(failingRunner)),
-    ),
-  );
-
-  it.effect(
-    'an edge invocation needs an operation host, and says so when there is none',
-    Effect.fnUntraced(
-      function* () {
-        const exit = yield* Operation.invoke(Greet, undefined, { on: 'edge', spaceId: SpaceId.random() }).pipe(
-          Effect.exit,
-        );
-        expect(exit._tag).toBe('Failure');
-      },
-      (effect) => Effect.provide(effect, testLayer(echoRunner)),
-    ),
-  );
+  it.effect('an edge invocation needs an operation host, and says so when there is none', () => {
+    const echo = makeEchoRunner();
+    return Effect.gen(function* () {
+      const exit = yield* Operation.invoke(Greet, undefined, { on: 'edge', spaceId: SpaceId.random() }).pipe(
+        Effect.exit,
+      );
+      expect(exit._tag).toBe('Failure');
+    }).pipe(Effect.provide(testLayer(echo.runner)));
+  });
 });

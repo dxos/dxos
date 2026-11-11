@@ -21,6 +21,7 @@ import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { assertArgument, invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -779,10 +780,7 @@ export const isScriptRef = (source: ScriptSource): source is ScriptRef => source
  * since the caller (a model writing code, a person at `dx eval`) is meant to read it and write
  * different code rather than see the call fail.
  */
-export class ScriptError extends Schema$.TaggedError<ScriptError>('ScriptError')('ScriptError', {
-  message: Schema$.String,
-  dialect: Schema$.optional(ScriptDialect),
-}) {}
+export class ScriptError extends BaseError.extend('ScriptError', 'Script could not be run') {}
 
 /** The host calls one run made: how many, and the wall time spent waiting on them. */
 export const ScriptStats = Schema$.Struct({

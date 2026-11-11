@@ -66,7 +66,7 @@ export const make = (options: Options): Operation.ScriptRunner => {
           return yield* Effect.fail(
             new Operation.ScriptError({
               message: `Code mode does not serve dialect "${dialect}"; it serves ${Object.keys(dialects).join(', ')}.`,
-              dialect,
+              context: { dialect },
             }),
           );
         }

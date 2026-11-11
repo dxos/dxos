@@ -799,7 +799,7 @@ export const scriptRunner = (
         return yield* Effect.fail(
           new Operation.ScriptError({
             message: `This server runs the "${Operation.ScriptDialects.Effect}" dialect only, not "${dialect}".`,
-            dialect,
+            context: { dialect },
           }),
         );
       }
