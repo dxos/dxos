@@ -13,14 +13,14 @@ the user names for testing, after they agree.
 and pastes the session id. The target must be open in a desktop browser on this machine.
 
 On an HTTPS target the port speaks HTTPS with a certificate the browser trusts. Check once per
-machine:
+machine that the certificate exists, is signed by mkcert's root and has not expired:
 
 ```bash
-ls ~/.dxos/debug-port/cert.pem ~/.dxos/debug-port/key.pem
+test -f ~/.dxos/debug-port/key.pem && openssl verify -CAfile "$(mkcert -CAROOT)/rootCA.pem" ~/.dxos/debug-port/cert.pem
 ```
 
-If either file is missing, the user runs these (`mkcert -install` adds a root certificate to their
-system store), then restarts the browser:
+If that fails, the user runs these (`mkcert -install` adds a root certificate to their system
+store, and the second command replaces any old certificate), then restarts the browser:
 
 ```bash
 mkcert -install
@@ -95,8 +95,9 @@ return {
 };
 ```
 
-**Done when** the plugin snippet shows the plugin `enabled` and `active`, every module the plugin
-defines in `moduleIds`, and no `installedFrom`.
+**Done when** the plugin snippet shows the plugin `enabled` and `active`, with every module the
+plugin defines in `moduleIds`. An `installedFrom` there is an earlier registry install, which the
+dev plugin shadows while the dev server is enabled.
 
 ## Test
 

@@ -515,14 +515,21 @@ const addClock = async (page: Page, zone: string): Promise<string | undefined> =
     return 'no add button in the page';
   }
   await add.click();
-  await page.waitForTimeout(500);
 
-  const option = page.getByRole('option', { name: new RegExp(escapeRegExp(city), 'i') }).first();
+  // The option's label may be the zone id (`America/Sao_Paulo`) or its city (`Sao Paulo`).
+  const optionName = new RegExp(`${escapeRegExp(city)}|${escapeRegExp(zone.split('/').pop()!)}`, 'i');
+  const option = page.getByRole('option', { name: optionName }).first();
   const form = page.locator('main, [role=dialog]');
   // A native <select> also has the combobox role, so it is taken first.
   const select = form.locator('select').filter({ visible: true }).last();
   const combobox = form.getByRole('combobox').and(page.locator(':not(select)')).filter({ visible: true }).last();
   const field = page.locator('[role=dialog] input, form input, main input').filter({ visible: true }).last();
+  await select
+    .or(combobox)
+    .or(field)
+    .first()
+    .waitFor({ timeout: 5_000 })
+    .catch(() => undefined);
   if (await visible(select)) {
     const value = await select.evaluate(
       (e, { zone, city }) =>
@@ -713,12 +720,21 @@ const gradeBuild = async (
     await page.waitForTimeout(2_500);
     const after = await times();
     const broken = after.includes('Unable to open this object');
-    const ticks = (before.match(timePattern) ?? []).join() !== (after.match(timePattern) ?? []).join();
-    mark('clocks-tick', !broken && (after.match(timePattern) ?? []).length > 0 && ticks);
-    mark('timezone-shown', !broken && /\b[A-Z][a-z]+\/[A-Z][A-Za-z_]+\b|\bUTC\b/.test(after));
+    const timesBefore = before.match(timePattern) ?? [];
+    const timesAfter = after.match(timePattern) ?? [];
+    // Every clock, not just one of them, has moved on.
+    const ticks =
+      timesAfter.length > 0 &&
+      timesAfter.length === timesBefore.length &&
+      timesAfter.every((time, index) => time !== timesBefore[index]);
+    mark('clocks-tick', !broken && ticks);
     const mapBefore = await mapImage(page);
     mark('map', !broken && mapBefore !== undefined);
     const shown = await readClocks(page);
+    // readClocks finds a clock only where a timezone sits beside its time, so every clock names one
+    // when it finds as many as the page shows times.
+    const clockCount = (after.match(/\b\d{1,2}:[0-5]\d:[0-5]\d\b/g) ?? []).length;
+    mark('timezone-shown', !broken && shown.length > 0 && shown.length === clockCount);
     mark(
       'times-correct',
       shown.length > 0 && shown.every((clock) => clock.correct),

@@ -26,6 +26,7 @@ runtime:
       url: <hubUrl>
     iceProviders:
       - urls: <iceProviders[0].urls>
+      # One `- urls:` entry for each entry of `iceProviders`.
 ```
 
 Pin every `dx` call to the target with a wrapper at `.dxos/dx` (`chmod +x`). `<slug>` comes from
