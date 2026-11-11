@@ -33,6 +33,10 @@ mkcert -install
 mkdir -p ~/.dxos/debug-port && mkcert -cert-file ~/.dxos/debug-port/cert.pem -key-file ~/.dxos/debug-port/key.pem localhost 127.0.0.1
 ```
 
+Only the browser can tell whether it trusts mkcert's root. If the first snippet on an HTTPS target
+times out with the port switched on, the browser does not trust it: the user runs `mkcert -install`
+(Firefox needs `nss` installed first for this), restarts the browser, and you run the snippet again.
+
 Set up the port client: fetch it, write the session id to `.dxos/session`, and write the wrapper
 below to `.dxos/port.sh` with `chmod +x`. The page calls the port over its own scheme, so for an HTTP
 target (a Composer served on `http://localhost`) leave out the three `COMPOSER_RECOVERY_*` lines.
