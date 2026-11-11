@@ -18,6 +18,18 @@ const require = nodeCreateRequire(import.meta.url);
 // detecting module formats (ESM vs CJS), and extracting named exports from CJS bundles.
 //
 
+/** Whether an ES module's source declares a default export, outside its comments. */
+const hasDefaultExport = (file: string): boolean => {
+  try {
+    const code = readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    return /^\s*export\s+default\b|^\s*export\s*\{[^}]*\bdefault\b[^}]*\}/m.test(code);
+  } catch {
+    return false;
+  }
+};
+
 /** Strips vite query strings (e.g. `?v=123`) from resolved module IDs. */
 const trimQueryString = (id: string) => id.replace(/\?.*$/, '');
 
@@ -385,7 +397,16 @@ const getCjsNamedExports = (filePath: string, seen = new Set<string>()): string[
  *     `this.resolve()` ourselves
  *   - resolve via `require.resolve` directly, bypassing the Vite plugin pipeline entirely
  */
-export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => {
+export type ImportMapPluginOptions = {
+  packages?: string[];
+  /**
+   * Receives the import map once the bundle is written, for a host whose pages Vite's HTML hooks never see (e.g. an
+   * Astro site), which then writes the map into its pages itself.
+   */
+  onImportMap?: (importMap: { imports: Record<string, string> }) => void;
+};
+
+export const importMapPlugin = (options?: ImportMapPluginOptions): Plugin[] => {
   const packages = options?.packages ?? DEFAULT_PACKAGES;
   const WRAPPER_PREFIX = '\0import-map:';
   const chunkRefIds: Record<string, string> = {};
@@ -529,7 +550,11 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
             return `export { default, ${named.join(', ')} } from ${JSON.stringify(filePath)};\n${keepalive}\n`;
           }
         }
-        return `export * from ${JSON.stringify(filePath)};\n${keepalive}\n`;
+        // `export *` leaves out `default`, which a module adapter is loaded by, so it is re-exported by name.
+        const reexportDefault = hasDefaultExport(filePath)
+          ? `export { default } from ${JSON.stringify(filePath)};\n`
+          : '';
+        return `export * from ${JSON.stringify(filePath)};\n${reexportDefault}${keepalive}\n`;
       },
 
       // After bundling, map each specifier to the URL of its emitted chunk. Preserves
@@ -548,6 +573,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
               .map((specifier) => [specifier, `${base}${this.getFileName(chunkRefIds[specifier])}`]),
           ),
         };
+        options?.onImportMap?.({ imports });
       },
     },
 
