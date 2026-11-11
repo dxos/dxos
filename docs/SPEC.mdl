@@ -1041,6 +1041,7 @@ page plex-build-with-agent: Build with a coding agent
   status: spike
   covers:
     - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
+    - A picker above the prompt that fills it with one of four examples: World Clock, Expense splitter, Family tree and Tournament bracket [D-207]
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
@@ -1375,7 +1376,7 @@ page plex-guide-using-echo: ECHO
 ### API
 
 One page per namespace, each a readable tour with compiled examples that links into the API reference.
-Snippets come from the Bookmarks tutorial modules, except Plugin's, which keep World Clock [D-129].
+Snippets come from the Bookmarks tutorial modules [D-208].
 
 ```mdl
 page app-framework-guide-plugin: Plugin
@@ -3505,6 +3506,18 @@ decision D-206: Guide names are short nouns in every section, without the sectio
   by: user:wittjosiah
   affects: [plex-guide-effect, plex-guide-testing, plex-guide-debugging, plex-guide-using-echo]
   why: The section already says whose guide it is, so the names line up across the trees.
+
+decision D-207: PLEX's Build with a coding agent prompt has a picker of four examples above the text box: World Clock (the default, the eval's brief), Expense splitter, Family tree and Tournament bracket. Picking one replaces the text. The tournament works with any game in Composer: each match is a game of any kind, and the match records its own winner.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: A reader can try the agent without first thinking of a plugin, and each example exercises different parts of PLEX: data and a navtree group, relations and a drawn view, and another plugin's objects.
+
+decision D-208: World Clock leaves the docs. The plugin guide's second worked example becomes Bookmarks, from the PLEX learning path, and the With an assistant section no longer names a World Clock folder. Replaces [D-129] and amends [D-153]: every PLEX concept and API snippet comes from the Bookmarks modules. The in-app plugin templates keep World Clock.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent, app-framework-publishing, app-framework-guide-plugin]
+  why: The skill fetches the guide and follows it, so a World Clock example handed the default brief its answer. The `composer-plugin-dev` eval now measures building from the guide's patterns; its first score after this lands is the new baseline, and a drop is expected rather than a regression.
 
 ## Appendix: Extension Definitions
 

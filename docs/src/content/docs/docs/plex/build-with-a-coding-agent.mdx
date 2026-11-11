@@ -11,9 +11,32 @@ A coding agent can build a plugin in a folder of yours and load it into Composer
    from a dev server; composer.space loads only the plugins it ships with.
 2. Open an empty folder in your agent. The plugin is its own project, and the agent sets it up there.
 
-Then describe the plugin you want in the prompt below, and open it in your agent.
+Then describe the plugin you want in the prompt below, or pick an example, and open it in your agent.
 
-<AgentPrompt skill="composer-plugin-dev" prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team." />
+export const examples = [
+  {
+    label: 'World clock',
+    prompt:
+      'I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team.',
+  },
+  {
+    label: 'Expense splitter',
+    prompt:
+      'I want to build a Composer plugin that splits shared expenses. Each group of people gets a page in the navtree with its expenses and a balance for each person. I add an expense with who paid and who shares it, and a Settle up button records who pays whom.',
+  },
+  {
+    label: 'Family tree',
+    prompt:
+      'I want to build a Composer plugin for a family tree. Each person has a page with their parents, partner and children, and a tree view draws the whole family. I can add a child to someone, and the tree updates.',
+  },
+  {
+    label: 'Tournament bracket',
+    prompt:
+      'I want to build a Composer plugin that runs a tournament for any game in Composer. I add players and pick a game, and it builds a bracket where each match is a game I can open and play. When a match ends, the winner moves to the next round.',
+  },
+];
+
+<AgentPrompt skill="composer-plugin-dev" examples={examples} prompt={examples[0].prompt} />
 
 The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to load
 the plugin into your Composer. The prompt installs it in the folder first, so you do not need to install anything.

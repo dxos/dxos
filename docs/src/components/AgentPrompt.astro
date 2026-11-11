@@ -7,16 +7,20 @@ import codex from '../assets/agents/codex.svg?raw';
 import cursor from '../assets/agents/cursor.svg?raw';
 import { SKILLS_URL } from '../utils/agent-skills.ts';
 
+type Example = { label: string; prompt: string };
+
 type Props = {
   /** The text box's starting text. */
   prompt: string;
+  /** Prompts the reader can pick to fill the text box; the one whose text is `prompt` starts selected. */
+  examples?: Example[];
   /** Lines each link puts before the reader's text, after any skill step, not shown, such as where the docs are. */
   context?: string;
   /** A DXOS skill the agent installs into the folder and follows before the reader's text, not shown. */
   skill?: string;
 };
 
-const { prompt, context, skill } = Astro.props;
+const { prompt, examples = [], context, skill } = Astro.props;
 
 /** Each link prefills its agent's prompt without sending it; `skills` is where that agent loads project skills from. */
 const AGENTS = [
@@ -45,6 +49,22 @@ const copyPreamble = preamble("your agent's project skills folder (.claude/skill
 ---
 
 <div class="agent-prompt not-content" data-preamble={copyPreamble}>
+  {
+    examples.length > 0 && (
+      <div class="examples" role="group" aria-label="Example prompts">
+        {examples.map((example) => (
+          <button
+            class="example"
+            type="button"
+            data-prompt={example.prompt}
+            aria-pressed={example.prompt === prompt ? 'true' : 'false'}
+          >
+            {example.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
   <label>
     <span class="sr-only">Prompt</span>
     <textarea rows="6" spellcheck="true">{prompt}</textarea>
@@ -83,6 +103,20 @@ const copyPreamble = preamble("your agent's project skills folder (.claude/skill
       }
     });
 
+    const examples = root.querySelectorAll<HTMLButtonElement>('[data-prompt]');
+    const markSelected = () => {
+      for (const example of examples) {
+        example.setAttribute('aria-pressed', String(example.dataset.prompt === textarea.value));
+      }
+    };
+    textarea.addEventListener('input', markSelected);
+    for (const example of examples) {
+      example.addEventListener('click', () => {
+        textarea.value = example.dataset.prompt ?? '';
+        textarea.dispatchEvent(new Event('input'));
+      });
+    }
+
     const copy = root.querySelector<HTMLButtonElement>('[data-copy]');
     copy?.addEventListener('click', async () => {
       await navigator.clipboard.writeText(full(root.dataset.preamble ?? '', textarea.value));
@@ -98,6 +132,32 @@ const copyPreamble = preamble("your agent's project skills folder (.claude/skill
     flex-direction: column;
     gap: 0.75rem;
     margin-block: 1.5rem;
+  }
+
+  .examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .example {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 999rem;
+    background: transparent;
+    color: var(--sl-color-gray-2);
+    font: inherit;
+    font-size: var(--sl-text-sm);
+    cursor: pointer;
+  }
+
+  .example:hover {
+    border-color: var(--sl-color-text-accent);
+  }
+
+  .example[aria-pressed='true'] {
+    border-color: var(--sl-color-text-accent);
+    color: var(--sl-color-white);
   }
 
   textarea {

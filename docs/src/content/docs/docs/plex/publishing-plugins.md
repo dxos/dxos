@@ -174,19 +174,15 @@ the entry it names.
 ### With an assistant
 
 To have the assistant build one for you, create a project from the **Composer Plugin** template in the Composer
-desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk a chat through the example below
+desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk a chat through building a plugin
 in a sandbox on your computer, from fetching this guide to the load prompt; assign them to the agent to start
 it.
 
 In a browser, the template comes from the Dev Shell plugin and needs a Composer served locally by
 `vite preview`. There the chat writes the files and checks them against the plugin's dev server. The assistant
-cannot keep a dev server running, so start it yourself once the chat asks, from the Composer app directory:
-
-```bash
-node_modules/.bin/vite temp/plugins/world-clock
-```
-
-When the chat says the plugin is ready, turn on **Dev Server** as above.
+cannot keep a dev server running, so start it yourself once the chat asks, from the Composer app directory, with
+`node_modules/.bin/vite` and the folder the chat names. When the chat says the plugin is ready, turn on **Dev
+Server** as above.
 
 The **Composer Plugin (Sandbox)** template, contributed by the Sandbox plugin, runs the same example against any
 bundled Composer, deployed ones included: the agent builds in an EDGE sandbox with `@dxos/*` installed from
@@ -417,340 +413,272 @@ Things to know:
 - The browser caches a module that failed to import, so reload Composer before loading a fixed copy from the
   same URL.
 
-### Example: data, a form and another plugin's surface
+### Example: data, an operation and another plugin's menu
 
-The same plugin grows an ECHO type stored in the space, a form that edits it, and a map drawn by another plugin
-that follows what the reader selects. The rest of the plugin (navtree group, page, surface) is as above.
-
-Depend on the plugin whose surface you render; enabling yours then enables it too:
+Bookmarks, the plugin the [learning path](/docs/plex/learn/the-plex-plugin/) builds, stores an ECHO type in the space, adds
+itself to the Space plugin's create menu, shows each bookmark in an article, and counts visits with an operation that
+people and the assistant both run. It is defined entirely in `dx.config.ts`, with one file per module body:
 
 ```ts
 // dx.config.ts
-export default Config2.make({
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+
+export default Plugin.config({
   plugin: {
-    key: 'org.example.plugin.worldClock',
-    name: 'World Clock',
-    icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'sky' },
+    key: 'com.example.plugin.bookmarks',
+    name: 'Bookmarks',
+    description: 'Save links in a space and count how often each one is opened.',
+    icon: { key: 'ph--bookmark-simple--regular', hue: 'amber' },
     tags: ['labs'],
-    dependsOn: ['org.dxos.plugin.map'],
   },
+  modules: [
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    SpaceCapability.createObject(() =>
+      import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [AppSurface.Article],
+    }),
+    AppCapability.operationHandler(() =>
+      import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.skillDefinition(() =>
+      import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
 });
 ```
 
-Register the type in the pipe, before the other modules, so the space can store it:
+The type, with the annotations Composer reads: the field that labels a bookmark, its icon, and `UserType`, which puts
+it in pickers and the navigation tree. The schema module registers it, so the space can store it:
 
-```tsx
-Plugin.addModule(AppCapability.schema([Clock])),
+```ts
+// src/types/Bookmark.ts
+import * as Schema from 'effect/Schema';
+
+import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+
+export class Bookmark extends Type.makeObject<Bookmark>(DXN.make('com.example.type.bookmark', '0.1.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+    url: Schema.optional(Schema.String.annotate({ title: 'URL' })),
+    visits: Schema.optional(Schema.Number.annotate({ title: 'Visits' })),
+  }).pipe(
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--bookmark-simple--regular', hue: 'amber' }),
+    Annotation.UserType.set(),
+  ),
+) {}
+
+export const make = (props: Partial<Obj.MakeProps<typeof Bookmark>> = {}): Bookmark =>
+  Obj.make(Bookmark, { name: props.name, url: props.url, visits: props.visits ?? 0 });
+
+// src/capabilities/schema.ts
+import { Bookmark } from '../types/Bookmark.ts';
+
+export default [Bookmark];
 ```
 
-A page that needs the space carries it in the node's `data`, and the surface narrows on it:
+The create menu belongs to the Space plugin. It lists every `CreateObjectEntry` contribution, so Bookmarks contributes
+one; the space shows its form, built from the type's fields, and calls `createObject` with what the person typed:
+
+```ts
+// src/capabilities/create-object.ts
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import { Type } from '@dxos/echo';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+
+import { Bookmark, make } from '../types/Bookmark.ts';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
+      id: Type.getTypename(Bookmark),
+      createObject: (props, options) =>
+        Operation.invoke(
+          SpaceOperation.AddObject,
+          { object: make(props), target: options.target },
+          { spaceId: options.db.spaceId },
+        ),
+    }),
+  ),
+);
+```
+
+The operation is defined once, with a schema for its input and output, and its handler loads only when it first runs:
+
+```ts
+// src/types/BookmarkOperation.ts
+import * as Schema from 'effect/Schema';
+
+import * as Operation from '@dxos/compute/Operation';
+import { DXN } from '@dxos/echo';
+
+export const RecordVisit = Operation.make({
+  meta: {
+    key: DXN.make('com.example.operation.bookmark.recordVisit'),
+    name: 'Record visit',
+    description: 'Count one visit to a bookmark.',
+    icon: 'ph--cursor-click--regular',
+  },
+  input: Schema.Struct({ bookmark: Schema.Any.annotate({ description: 'The bookmark that was visited.' }) }),
+  output: Schema.Struct({ visits: Schema.Number.annotate({ description: 'The visit count after this visit.' }) }),
+});
+
+// src/operations/record-visit.ts
+import * as Effect from 'effect/Effect';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Obj } from '@dxos/echo';
+
+import { RecordVisit } from '../types/BookmarkOperation.ts';
+
+const handler: Operation.WithHandler<typeof RecordVisit> = RecordVisit.pipe(
+  Operation.withHandler(({ bookmark }) =>
+    Effect.gen(function* () {
+      Obj.update(bookmark, (bookmark) => {
+        bookmark.visits = (bookmark.visits ?? 0) + 1;
+      });
+      return { visits: bookmark.visits };
+    }),
+  ),
+);
+
+export default handler;
+
+// src/capabilities/operation-handler.ts
+import * as Effect from 'effect/Effect';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+
+import { RecordVisit } from '../types/BookmarkOperation.ts';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(
+      Capabilities.OperationHandler,
+      OperationHandlerSet.lazy([RecordVisit.pipe(Operation.lazyHandler(() => import('../operations/record-visit.ts')))]),
+    ),
+  ),
+);
+```
+
+A skill gives the operation to the assistant as a tool:
+
+```ts
+// src/capabilities/skill-definition.ts
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
+
+import { RecordVisit } from '../types/BookmarkOperation.ts';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(AppCapabilities.SkillDefinition, {
+      key: 'com.example.skill.bookmarks',
+      make: () =>
+        Skill.make({
+          key: 'com.example.skill.bookmarks',
+          name: 'Bookmarks',
+          tools: Skill.toolDefinitions({ operations: [RecordVisit] }),
+          instructions: Template.make({ source: 'When the user says they opened a bookmark, record a visit to it.' }),
+        }),
+    }),
+  ),
+);
+```
+
+The article surface matches any bookmark the person opens, and runs the operation from a button:
 
 ```tsx
-AppGraphNode.make({ id: PAGE, type: `${meta.profile.key}.page`, data: { type: PAGE, space }, properties: { ... } });
+// src/capabilities/react-surface.ts
+import * as Effect from 'effect/Effect';
 
-Surface.create({
-  id: 'worldClockArticle',
-  filter: AppSurface.subject(AppSurface.Article, isPage),
-  component: WorldClockArticle,
-  props: ({ data: { subject } }) => ({ db: subject.space.db }),
-});
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+
+import { BookmarkArticle } from '../containers/BookmarkArticle.tsx';
+import { Bookmark } from '../types/Bookmark.ts';
+
+export default Capability.makeModule(() =>
+  Effect.succeed(
+    Capability.contribute(
+      Capabilities.ReactSurface,
+      Surface.create({
+        id: 'article',
+        filter: AppSurface.object(AppSurface.Article, Bookmark),
+        component: BookmarkArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+    ),
+  ),
+);
+
+// src/containers/BookmarkArticle.tsx
+import React from 'react';
+
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import * as Button from '@dxos/react-ui/Button';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+
+import { type Bookmark } from '../types/Bookmark.ts';
+import { RecordVisit } from '../types/BookmarkOperation.ts';
+
+export const BookmarkArticle = ({ role, subject }: AppSurface.ObjectArticleProps<Bookmark>) => {
+  // Re-renders when the object changes, here or on another peer.
+  const [bookmark] = useObject(subject);
+  const recordVisit = Hooks.useOperation(RecordVisit, () => ({ bookmark: subject }));
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Body>
+        <Input.Root
+          value={bookmark.name ?? ''}
+          onChange={(event) => Obj.update(subject, (subject) => (subject.name = event.target.value))}
+        />
+        <a href={bookmark.url} target='_blank' rel='noreferrer' onClick={() => recordVisit()}>
+          {bookmark.url}
+        </a>
+        <p>Visited {bookmark.visits ?? 0} times.</p>
+        <Button.Root onClick={() => recordVisit()}>Record visit</Button.Root>
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
 ```
 
 Things to know:
 
-- `useQuery` re-renders when the set of objects changes, not when a field of one changes; subscribe to the fields
-  you render with `useObject`, or an update is saved but never shown.
-- Create the object on the first change, not in an effect on first view: the query is empty until it has loaded,
-  so an effect that creates when it finds nothing creates a duplicate on every visit.
-- A form is a schema; a `Schema.Literals` field renders as a select.
-- Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws
-  the world with `markers` on it, flat (`view: 'map'`) or as a globe the reader can toggle to. Give it the object
-  as `subject`: the marker whose id is selected under that object's URI is highlighted, and the globe turns to it.
-- Select with `LayoutOperation.Select` (context id: the object's URI), and read the selection with
-  `useSelection`, so the map and your own view agree on what is selected.
-- `timezones` from `@dxos/react-ui-geo/data` gives each IANA zone its principal city's position.
-- Give the map a sized box: it fills its parent, so a parent with no height draws nothing.
+- Read an object you render with `useObject`: it re-renders on a field change. Reading `subject.visits` directly in
+  render does not subscribe, so an update is saved but never shown.
+- Write inside `Obj.update`; a write outside it throws.
+- An operation that people and the assistant both run is one definition: the button calls it through
+  `useOperation`, and the skill gives it to the assistant as a tool.
+- A type without `UserType` is internal: Composer does not offer it in the create menu or show it in the
+  navigation tree.
 
-The imports and the article, put together. Every card has one fixed size, so opening the form moves nothing; the
-map fills the page above the row of clocks, which scrolls sideways in a thin scroll area:
-
-```tsx
-import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
-import React, { useEffect, useState } from 'react';
-
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Surface from '@dxos/app-framework/Surface';
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
-import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppNode from '@dxos/app-toolkit/AppNode';
-import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { type Database, DXN, Filter, Obj, Type } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
-import * as Button from '@dxos/react-ui/Button';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import { useSelection } from '@dxos/react-ui-attention';
-import { Form } from '@dxos/react-ui-form';
-import { timezones } from '@dxos/react-ui-geo/data';
-import * as MapRole from '@dxos/plugin-map/MapRole';
-
-// The type: one Clock per space, holding its clocks, each a timezone and where it is on the map.
-const Location = Schema.Struct({ lat: Schema.Number, lng: Schema.Number });
-const ClockEntry = Schema.Struct({
-  timezone: Schema.String,
-  location: Schema.optional(Location),
-});
-type ClockEntry = Schema.Schema.Type<typeof ClockEntry>;
-
-export class Clock extends Type.makeObject<Clock>(
-  DXN.make('org.example.type.worldClock', '0.2.0'),
-)(Schema.Struct({ clocks: Schema.optional(Schema.Array(ClockEntry)) })) {}
-
-type Page = { type: typeof PAGE; space: { db: Database.Database } };
-const isPage = (data: unknown): data is Page =>
-  typeof data === 'object' &&
-  data !== null &&
-  'type' in data &&
-  data.type === PAGE;
-
-// A timezone's position is its principal city, from the tz database; a zone it does not list has no pin.
-const makeEntry = (timezone: string): ClockEntry => ({
-  timezone,
-  location: timezones[timezone],
-});
-
-const localZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-const useNow = () => {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1_000);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-};
-
-// Every card has one fixed size, so the empty card lines up with the clocks and opening its form moves nothing.
-const CARD: React.CSSProperties = {
-  boxSizing: 'border-box',
-  position: 'relative',
-  flex: 'none',
-  width: 240,
-  height: 176,
-  padding: 16,
-  borderRadius: 8,
-  border: '1px solid color-mix(in srgb, currentColor 25%, transparent)',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-};
-
-// 24-hour and zero-padded, so every clock is the same width.
-const TIME: Intl.DateTimeFormatOptions = {
-  hourCycle: 'h23',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-};
-
-type ClockCardProps = {
-  timeZone: string;
-  now: Date;
-  selected: boolean;
-  onSelect: () => void;
-  onDelete: () => void;
-};
-
-const ClockCard = ({
-  timeZone,
-  now,
-  selected,
-  onSelect,
-  onDelete,
-}: ClockCardProps) => (
-  <div
-    data-testid='worldClock.clock'
-    aria-selected={selected}
-    style={{
-      ...CARD,
-      cursor: 'pointer',
-      ...(selected && { borderColor: 'rgb(14, 165, 233)' }),
-    }}
-    // A focusable button so the keyboard can select a clock as the pointer does.
-    role='button'
-    tabIndex={0}
-    onClick={onSelect}
-    onKeyDown={(event) => {
-      if (
-        event.target === event.currentTarget &&
-        (event.key === 'Enter' || event.key === ' ')
-      ) {
-        event.preventDefault();
-        onSelect();
-      }
-    }}
-  >
-    <div style={{ opacity: 0.7 }}>
-      {now.toLocaleDateString(undefined, { timeZone, dateStyle: 'medium' })}
-    </div>
-    <div style={{ fontSize: '2rem', fontVariantNumeric: 'tabular-nums' }}>
-      {now.toLocaleTimeString(undefined, { timeZone, ...TIME })}
-    </div>
-    <div style={{ opacity: 0.7 }}>{timeZone}</div>
-    {/* Last, so it paints above the text it overlaps. */}
-    <div style={{ position: 'absolute', top: 4, right: 4 }}>
-      <Button.Root
-        data-testid='worldClock.delete'
-        variant='ghost'
-        icon='ph--x--regular'
-        iconOnly
-        label='Delete clock'
-        onClick={(event) => {
-          event.stopPropagation();
-          onDelete();
-        }}
-      />
-    </div>
-  </div>
-);
-
-// The choices are the zones with a known position, so every clock added gets a pin.
-const TimezoneForm = Schema.Struct({
-  timezone: Schema.Literals(Object.keys(timezones)).annotate({
-    title: 'Timezone',
-  }),
-});
-
-const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
-  const [adding, setAdding] = useState(false);
-  return (
-    <div
-      data-testid='worldClock.new'
-      style={{
-        ...CARD,
-        borderStyle: 'dashed',
-        alignItems: adding ? 'stretch' : 'center',
-      }}
-    >
-      {adding ? (
-        <Form.Root
-          schema={TimezoneForm}
-          onSave={({ timezone }) => {
-            onAdd(timezone);
-            setAdding(false);
-          }}
-          onCancel={() => setAdding(false)}
-        >
-          <Form.Content>
-            <Form.Fields />
-            <Form.Actions />
-          </Form.Content>
-        </Form.Root>
-      ) : (
-        <Button.Root
-          data-testid='worldClock.add'
-          variant='ghost'
-          icon='ph--plus--regular'
-          iconOnly
-          size='lg'
-          label='Add clock'
-          onClick={() => setAdding(true)}
-        />
-      )}
-    </div>
-  );
-};
-
-const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
-  const now = useNow();
-  const { invokePromise } = useOperationInvoker();
-  const [clock] = useQuery(db, Filter.type(Clock));
-  // `useQuery` re-renders when the set of objects changes; `useObject` is what re-renders on a field change.
-  const [stored] = useObject(clock, 'clocks');
-  const clocks = stored ?? [makeEntry(localZone())];
-  // The selection lives in the view state under the clock's URI, where the map surface reads it.
-  const contextId = clock ? Obj.getURI(clock) : undefined;
-  const selected = useSelection(contextId, 'single');
-  const select = (timezone: string) =>
-    contextId &&
-    void invokePromise(LayoutOperation.Select, {
-      contextId,
-      subject: { mode: 'single', id: timezone },
-    });
-
-  // Created on the first change rather than on first view: the query is empty until it has loaded.
-  const save = (next: ClockEntry[]) => {
-    if (clock) {
-      Obj.update(clock, (clock) => {
-        clock.clocks = next;
-      });
-    } else {
-      db?.add(Obj.make(Clock, { clocks: next }));
-    }
-  };
-  const add = (timezone: string) =>
-    !clocks.some((entry) => entry.timezone === timezone) &&
-    save([...clocks, makeEntry(timezone)]);
-  const remove = (timezone: string) =>
-    save(clocks.filter((entry) => entry.timezone !== timezone));
-
-  // West to east, so the row reads left to right like the map; a clock with no position goes last.
-  const sorted = [...clocks].sort(
-    (left, right) =>
-      (left.location?.lng ?? Number.POSITIVE_INFINITY) -
-      (right.location?.lng ?? Number.POSITIVE_INFINITY),
-  );
-
-  const markers = clocks.flatMap(({ timezone, location }) =>
-    location ? [{ id: timezone, title: timezone, location }] : [],
-  );
-
-  return (
-    // The map fills the page above the row of clocks, which scrolls sideways when it outgrows the width.
-    // A grid rather than a flex column: the scroll area expands to fill whatever cell it is in.
-    <div
-      style={{
-        height: '100%',
-        display: 'grid',
-        gridTemplateRows: 'minmax(0, 1fr) min-content',
-      }}
-    >
-      <div style={{ minHeight: 0 }}>
-        <Surface.Surface
-          type={MapRole.World}
-          data={{ markers, subject: clock, view: 'map' }}
-          limit={1}
-        />
-      </div>
-      <ScrollArea.Root orientation='horizontal' width='thin'>
-        <ScrollArea.Viewport>
-          <div style={{ display: 'flex', gap: 16, padding: 16 }}>
-            {sorted.map(({ timezone }) => (
-              <ClockCard
-                key={timezone}
-                timeZone={timezone}
-                now={now}
-                selected={timezone === selected}
-                onSelect={() => select(timezone)}
-                onDelete={() => remove(timezone)}
-              />
-            ))}
-            <AddClock onAdd={add} />
-          </div>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </div>
-  );
-};
-```
+The [learning path](/docs/plex/learn/the-plex-plugin/) builds this plugin one module at a time, with each step running in
+the inspector.
 
 ### Ship a spec
 
