@@ -113,6 +113,13 @@ export const steps = [
       await demo.sleep({ ms: 2_000 });
       // The checklist drawer sits over the end of the thread; closing it shows the summary in full.
       await demo.click({ selector: '[data-testid="assistant.toggle-tasks"]', label: 'Tasks' });
+      // The agent's column does not follow a reply that lands while another column is selected, so scroll to it.
+      await demo.hover({ selector: AGENT, label: 'Agent' });
+      for (let tick = 0; tick < 6; tick++) {
+        await page.mouse.wheel(0, 600);
+        await demo.sleep({ ms: 150 });
+      }
+      await page.getByText('The launch kit is ready').first().scrollIntoViewIfNeeded();
       await demo.sleep({ ms: 9_000 });
     },
   },
