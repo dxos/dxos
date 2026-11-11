@@ -978,6 +978,20 @@ page plex-build-with-agent: Build with a coding agent
 ### Learning path
 
 ```mdl
+page plex-the-plex-plugin: The PLEX plugin
+  What a plugin is, and the plugin the learning path builds, running in the plugin inspector.
+  section: PLEX
+  route: /docs/plex/learn/the-plex-plugin/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What a plugin is, in a paragraph: metadata and modules that contribute capabilities
+    - The finished Bookmarks plugin, running in the plugin inspector, with Fork on StackBlitz
+    - What each page of the path adds, and the file it goes in
+```
+
+```mdl
 page app-framework-create-plugin: Create a plugin
   Start the tutorial plugin: its metadata, its first module and its translations.
   section: PLEX
@@ -990,7 +1004,8 @@ page app-framework-create-plugin: Create a plugin
     - Create the package and its `dx.config.ts` manifest
     - Define the plugin and its metadata with `Plugin`
     - Add a first module that contributes translations, and the activation event that loads it
-    - Load the plugin into a local Composer
+    - Follow along in StackBlitz: the starter, with each page's code to write
+    - See the plugin, its module and its strings in the inspector's Plugin and Translations panels
 ```
 
 ```mdl
@@ -1004,7 +1019,7 @@ page app-framework-define-type: Define a type
   covers:
     - Declare the plugin's type with `Type`, linking to the ECHO Defining types page for the details
     - Register the type with the app so it can create, list and name objects of it
-    - Create an object of the new type from Composer's UI
+    - Create an object of the new type in the inspector's Types panel
 ```
 
 ```mdl
@@ -1019,7 +1034,7 @@ page app-framework-add-surface: Add a surface
     - What a surface is, in one paragraph, linking to the Surfaces concept page
     - Contribute an article surface that renders the new type
     - Read and edit the object reactively in the component
-    - See the object open in Composer's main area
+    - See the surface render the object in the inspector's Surfaces panel
 ```
 
 ```mdl
@@ -1033,8 +1048,8 @@ page app-framework-add-operation: Add an operation
   covers:
     - Define an operation with its input and output schema
     - Implement its handler and contribute it
-    - Invoke it from the plugin's UI and from the command palette
-    - Show that an agent can call the same operation
+    - Write the handler as a short `Effect.gen`, since the operation API is Effect's
+    - Run it from the inspector's Operations panel, and see the skill that hands it to the assistant
 ```
 
 ```mdl
@@ -1049,7 +1064,22 @@ page app-framework-extend-app-graph: Extend the app graph
     - What the app graph is, in one paragraph, linking to the App graph concept page
     - Contribute nodes for the plugin's objects
     - Attach the operation from the previous page as an action on those nodes
-    - See the result in the navigation tree and the object's menu
+    - See the nodes and the action in the inspector's App graph panel
+```
+
+```mdl
+page plex-run-in-composer: Run it in Composer
+  Load the plugin from its dev server into Composer Preview, and use it there.
+  section: PLEX
+  route: /docs/plex/learn/run-in-composer/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Sign in to Composer Preview, which loads plugins from a dev server; composer.space loads only its own
+    - Run the plugin's `vite` dev server, then open Settings, Plugins, and Enable under Dev Server, allowing the browser's local-network prompt
+    - Open a bookmark in the main area, and run Record visit from the command palette
+    - Have the assistant run the same operation from a chat with the Bookmarks skill
 ```
 
 ```mdl
@@ -1066,7 +1096,6 @@ page app-framework-publishing: Publishing a plugin
     - Describe the plugin in `dx.config.ts` and publish it with `dx registry publish --private`
     - Confirm it in Composer's registry and publish an update
     - A note that an experimental public registry exists, with a Discord link for anyone who wants to try it
-    - Develop against a local Composer before publishing
 ```
 
 ### Core concepts
@@ -1787,6 +1816,61 @@ feat F-18: API by namespace
   req F-18.2:
     when: a reader wants every member of a namespace
     then: the guide links to the generated API reference rather than repeating it
+```
+
+```mdl
+feat F-19: The plugin inspector
+
+  desc: |
+    A PLEX app that loads one plugin and shows what the framework could load and create from it. It is built
+    from plugins, its layout included, and runs on an in-memory client, so it needs no account or server.
+
+  req F-19.1:
+    when: the inspector loads a plugin
+    then: it shows one panel per kind of contribution: Plugin (metadata, and each module with its activation
+          event and whether it is waiting, active or failed), Translations, Types, Surfaces, Operations and
+          App graph; a panel with nothing to show says which page fills it
+
+  req F-19.2:
+    when: a module fails to activate because a contribution is still a starter placeholder
+    then: the Plugin panel names the learning-path page and step that writes it, not the stack trace
+
+  req F-19.3:
+    when: a reader uses the Types, Surfaces and Operations panels
+    then: Types creates an object through the plugin's create-object contribution, Surfaces renders each surface
+          whose filter accepts that object, and Operations runs an operation from a form built from its input
+          schema and shows the result; a skill lists the operations it gives the assistant, with no model called
+
+  req F-19.4:
+    when: a reader runs the plugin's `vite` dev server
+    then: the dev server also serves the inspector for that plugin, so it outlives the docs
+
+  req F-19.5:
+    when: the inspector is published
+    then: it is the package `@dxos/plugin-inspector`
+```
+
+```mdl
+feat F-20: The tutorial plugin
+
+  desc: |
+    The PLEX learning path builds one plugin, Bookmarks, as ECHO's builds one app ([F-15]). Each page writes one
+    capability file and one region of `dx.config.ts`, and ends with the plugin as it stands, live in the inspector.
+
+  req F-20.1:
+    when: a PLEX learning-path page shows code
+    then: the code is a region of the module the inspector embed loads, one capability module per page
+
+  req F-20.2:
+    when: a reader finishes a learning-path page that builds part of the plugin
+    then: the page embeds the inspector with the plugin as it stands after that page, and no earlier page needs
+          Composer
+
+  req F-20.3:
+    when: the docs build
+    then: the finished plugin and the starter, with each quoted region replaced by a TODO naming its page, are
+          generated from the same modules, with `@dxos/*` pinned to the pkg.pr.new commit the ECHO projects use;
+          The PLEX plugin has Fork on StackBlitz, and Create a plugin has Follow along in StackBlitz
 ```
 
 ## Acceptance
@@ -3042,6 +3126,37 @@ decision D-140: The tutorial app is one device: it opens its own space, and from
   why: The embeds mixed the demo's controls into the app, so the finished app lacked sharing and the second peer opened on a join screen no real app has; the StackBlitz project is where a reader builds a real app, which an in-memory network is not.
   rejected:
     - In-memory devices in StackBlitz too, which cannot share with anything outside the page.
+```
+
+```mdl
+decision D-141: The PLEX learning path ends each page in a plugin inspector, not in Composer. The inspector is a PLEX app on an in-memory client that loads the reader's plugin at its stage, with one panel per kind of contribution; the docs embed it, StackBlitz runs it, and the plugin's dev server serves it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-19, F-20, app-framework-create-plugin, app-framework-define-type, app-framework-add-surface, app-framework-add-operation, app-framework-extend-app-graph]
+  why: Seeing a step land in Composer needs an account, Composer Preview and a dev server from the first page; the inspector shows each contribution on its own, in the page, and the reader keeps it after the docs.
+  rejected:
+    - A cut-down Composer in the embed, which hides most contributions behind navigation and needs the whole app to boot.
+```
+
+```mdl
+decision D-142: The PLEX plugin is the path's first page: what a plugin is, the finished Bookmarks plugin in the inspector, and Fork on StackBlitz, as The ECHO object opens ECHO's path. Follow along in StackBlitz is on Create a plugin.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-the-plex-plugin, app-framework-create-plugin, F-20.3]
+```
+
+```mdl
+decision D-143: Composer comes in on Run it in Composer, the page before Publishing: Composer Preview, the dev server, the command palette and the assistant. Create a plugin no longer loads the plugin into a local Composer, and Publishing no longer covers developing against one.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-run-in-composer, app-framework-create-plugin, app-framework-add-operation, app-framework-publishing]
+```
+
+```mdl
+decision D-144: PLEX learning-path pages may use Effect where the PLEX API is Effect's, such as an operation handler written as `Effect.gen`. ECHO's pages stay with the promise APIs.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-add-operation, F-20]
 ```
 
 ## Appendix: Extension Definitions
