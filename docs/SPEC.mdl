@@ -969,7 +969,7 @@ page plex-build-with-agent: Build with a coding agent
   covers:
     - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
-    - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
+    - That the reader opens a folder in their agent first, empty or a project to add the plugin to, since the links cannot choose one; the fixed lines have the agent make a new folder for the plugin when that one is not empty
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
     - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
@@ -2964,6 +2964,14 @@ decision D-134: The PLEX page asks the reader to open an empty folder in their a
     - A prompt step that stops when the folder is not empty: the reader is told what to do, and the step adds a line they did not ask for.
     - A folder field that fills `folder` and `path`: the folder must already exist, Cursor ignores it, and typing an absolute path is more work than opening the folder.
     - Having the agent make the folder: Codex's sandbox and Claude Code's permissions block or prompt on writes outside the open folder.
+```
+
+```mdl
+decision D-135: The reader may open any folder, not only an empty one. When it is not empty, PLEX's fixed lines have the agent make a new folder for the plugin inside it: where the project keeps its packages, such as `packages/` in a monorepo, set up with the project's package manager, or else a folder named after the plugin. Amends [D-134].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: A reader should be able to start from wherever their agent already is, and a new folder inside the open one stays within the agent's sandbox.
 ```
 
 ## Appendix: Extension Definitions
