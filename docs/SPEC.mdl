@@ -474,17 +474,6 @@ page echo-open-in-claude: Open in Claude
     - Its parameters, and that the prompt is prefilled, not sent
     - The Claude Code on the web and CLI equivalents
 ```
-```mdl
-page echo-llms-txt: llms.txt
-  The ECHO site map for agents, in the llms.txt format.
-  section: ECHO
-  route: /docs/echo/agents/llms-txt/
-  group: Agents
-  template: reference
-  status: spike
-  covers:
-    - What `/echo/llms.txt` and `/echo/llms-full.txt` serve
-```
 
 ### Resources
 
@@ -522,6 +511,18 @@ page examples: Examples
   covers:
     - Composer first, as the flagship app built on ECHO
     - Tasks and TodoMVC, each with its code and a live link
+```
+```mdl
+page echo-llms-txt: llms.txt
+  The ECHO site map and full text for agents, in the llms.txt format.
+  section: ECHO
+  route: /docs/echo/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/echo/llms.txt`, each ECHO page with its summary and a link to its Markdown
+    - Links to `/echo/llms-full.txt`, every ECHO page in one file
 ```
 
 ### Later
@@ -909,6 +910,18 @@ page halo-glossary: Glossary
   covers:
     - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, role and space key
 ```
+```mdl
+page halo-llms-txt: llms.txt
+  The HALO site map and full text for agents, in the llms.txt format.
+  section: HALO
+  route: /docs/halo/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/halo/llms.txt`, each HALO page with its summary and a link to its Markdown
+    - Links to `/halo/llms-full.txt`, every HALO page in one file
+```
 
 ## PLEX
 
@@ -1263,18 +1276,6 @@ page plex-open-in-claude: Open in Claude
     - Its parameters, and that the prompt is prefilled, not sent
     - The Claude Code on the web and CLI equivalents
 ```
-```mdl
-page plex-llms-txt: llms.txt
-  The PLEX site map for agents, in the llms.txt format.
-  section: PLEX
-  route: /docs/plex/agents/llms-txt/
-  group: Agents
-  template: reference
-  status: spike
-  covers:
-    - What `/plex/llms.txt` serves, and that it is a placeholder for now
-    - Where agents read ECHO's site map today
-```
 
 ### Resources
 
@@ -1346,6 +1347,18 @@ page app-framework-glossary: Glossary
   status: later
   covers:
     - Plugin, module, capability, activation event, surface, app graph, node, operation
+```
+```mdl
+page plex-llms-txt: llms.txt
+  The PLEX site map and full text for agents, in the llms.txt format.
+  section: PLEX
+  route: /docs/plex/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/plex/llms.txt`, each PLEX page with its summary and a link to its Markdown
+    - Links to `/plex/llms-full.txt`, every PLEX page in one file
 ```
 
 ## Features
@@ -1508,8 +1521,14 @@ feat F-5: The spec drives the site map
 feat F-6: Reading by agents
 
   req F-6.1:
-    when: an agent fetches `/echo/llms.txt`
-    then: it receives the site map, each page with its summary and link, in the llms.txt format
+    when: an agent fetches `/echo/llms.txt`, `/halo/llms.txt` or `/plex/llms.txt`
+    then: it receives that section's site map, each page with its summary and link, in the llms.txt format; the
+          matching `llms-full.txt` has every page of the section in one file
+
+  req F-6.3:
+    when: a reader looks for the llms.txt files
+    then: each section's Resources group has an llms.txt page that links its two files; the site footer does not
+          list them
 
   req F-6.2:
     when: an agent fetches a written page's route with `.md` appended
@@ -2794,6 +2813,13 @@ decision D-117: ECHO has an Agents group too, after Guides, with an Open in Clau
   date: 2026-11-10
   by: user:richburdon
   affects: [F-17.1, echo-open-in-claude, echo-llms-txt]
+```
+
+```mdl
+decision D-118: The llms.txt pages move from the Agents groups to each section's Resources group, HALO gets one, and the footer drops its "For agents" column. `/halo/llms.txt`, `/plex/llms.txt` and their `llms-full.txt` are generated from the spec like ECHO's, so PLEX's file is no longer a placeholder. The old `/docs/echo/agents/llms-txt/` and `/docs/plex/agents/llms-txt/` redirect. Amends [D-116] and [D-117].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.1, F-6.3, echo-llms-txt, halo-llms-txt, plex-llms-txt]
 ```
 
 ## Appendix: Extension Definitions

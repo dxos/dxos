@@ -2,15 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { isEchoPage, parsePages, readSpec } from '../../echo/spec.ts';
+import {
+  AGENT_SECTION_IDS,
+  AGENT_SECTIONS,
+  type AgentSection,
+  isAgentPage,
+  parsePages,
+  readSpec,
+} from '../../echo/spec.ts';
 
-export const GET = ({ site }: { site?: URL }) => {
-  const pages = parsePages(readSpec()).filter(isEchoPage);
+export const getStaticPaths = () => AGENT_SECTION_IDS.map((section) => ({ params: { section } }));
+
+export const GET = ({ params, site }: { params: { section: AgentSection }; site?: URL }) => {
+  const { label, summary } = AGENT_SECTIONS[params.section];
+  const pages = parsePages(readSpec()).filter(isAgentPage(params.section));
   const groups = [...new Set(pages.map((page) => page.group))];
   const body = [
-    '# ECHO',
+    `# ${label}`,
     '',
-    '> The typed, local-first object graph. Objects are stored on the device as CRDT documents and merged between peers.',
+    `> ${summary}`,
     '',
     ...groups.flatMap((group) => [
       `## ${group}`,

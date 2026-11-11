@@ -4,13 +4,13 @@
 
 import { type CollectionEntry, getCollection } from 'astro:content';
 
-import { isEchoPage, parsePages, readSpec } from './spec.ts';
+import { type AgentSection, isAgentPage, parsePages, readSpec } from './spec.ts';
 
-/** The written pages of the ECHO spec's site map, in spec order; the other ECHO docs are not exported to agents. */
-export const echoEntries = async (): Promise<CollectionEntry<'docs'>[]> => {
+/** The written pages of a section's site map, in spec order; the section's other docs are not exported to agents. */
+export const sectionEntries = async (section: AgentSection): Promise<CollectionEntry<'docs'>[]> => {
   const entries = await getCollection('docs');
   return parsePages(readSpec())
-    .filter(isEchoPage)
+    .filter(isAgentPage(section))
     .map((page) => {
       const id = page.route.replace(/^\/|\/$/g, '');
       const entry = entries.find((entry) => entry.id === id);

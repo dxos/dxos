@@ -78,6 +78,9 @@ const redirects: Record<string, string> = {
   '/docs/halo/welcome': '/docs/halo/overview/',
   '/docs/app-framework/welcome': '/docs/plex/overview/',
   '/docs/composer/welcome': '/docs/plex/overview/',
+  // The llms.txt pages moved from each section's Agents group to its Resources group.
+  '/docs/echo/agents/llms-txt': '/docs/echo/resources/llms-txt/',
+  '/docs/plex/agents/llms-txt': '/docs/plex/resources/llms-txt/',
   ...plexRedirects,
 };
 

@@ -24,7 +24,7 @@ export const toMarkdown = (title: string, description: string | undefined, body:
         .map(([, code, label]) => `- \`${code}\`: ${label}`)
         .join('\n'),
     )
-    .replace(/<\/?(Steps|Aside|div)\b[^>]*>/g, '')
+    .replace(/<\/?(Steps|Aside|Tabs|TabItem|div)\b[^>]*>/g, '')
     .replace(/\n{3,}/g, '\n\n');
   return `# ${title}\n\n${description ? `${description}\n\n` : ''}${content.trim()}\n`;
 };

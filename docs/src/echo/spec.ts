@@ -5,8 +5,27 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Where the ECHO section's own pages are served; its HALO and resource pages live elsewhere. */
-export const ECHO_DOCS = '/docs/echo';
+/** The sections whose pages are exported to agents, by the path segment their routes and llms.txt files use. */
+export const AGENT_SECTION_IDS = ['echo', 'halo', 'plex'] as const;
+
+export type AgentSection = (typeof AGENT_SECTION_IDS)[number];
+
+export const AGENT_SECTIONS: Record<AgentSection, { label: string; summary: string }> = {
+  echo: {
+    label: 'ECHO',
+    summary:
+      'The typed, local-first object graph. Objects are stored on the device as CRDT documents and merged between peers.',
+  },
+  halo: {
+    label: 'HALO',
+    summary:
+      "Identity management for local-first apps: a user's identity, the devices and credentials that act for it, and who can join a space.",
+  },
+  plex: {
+    label: 'PLEX',
+    summary: 'An agentic framework for building apps out of plugins.',
+  },
+};
 
 const STATUSES = ['later', 'planned', 'spike', 'done'] as const;
 
@@ -90,9 +109,11 @@ export const readSpec = (): string => readFileSync(join(process.cwd(), 'SPEC.mdl
 /** A page with content written for it, as opposed to a planned stub or a page left for later. */
 export const isWritten = (page: SpecPage): boolean => page.status === 'spike' || page.status === 'done';
 
-/** The written pages of the ECHO section that live under `/docs/echo`, the ones exported to agents. */
-export const isEchoPage = (page: SpecPage): boolean =>
-  page.section === 'ECHO' && page.route.startsWith(`${ECHO_DOCS}/`) && isWritten(page);
+/** The written pages of a section that live under `/docs/<section>/`, the ones exported to agents. */
+export const isAgentPage =
+  (section: AgentSection) =>
+  (page: SpecPage): boolean =>
+    page.section === AGENT_SECTIONS[section].label && page.route.startsWith(`/docs/${section}/`) && isWritten(page);
 
 /** Throws unless every written page in the spec has a content file at its route. */
 export const assertContentExists = (pages: SpecPage[]): void => {
