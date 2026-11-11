@@ -23,6 +23,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -35,9 +36,10 @@ import { type Space } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
-import { ClientPlugin, initializeIdentity, useTestAccount } from '@dxos/plugin-client/testing';
+import { ClientPlugin, type TestAccountState, initializeIdentity, useTestAccount } from '@dxos/plugin-client/testing';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -47,7 +49,12 @@ import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPl
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
+import {
+  type Invitation,
+  Invitation_AuthMethod,
+  Invitation_State,
+  InvitationEncoder,
+} from '@dxos/react-client/invitations';
 import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -73,9 +80,9 @@ type StoryArgs = {
 };
 
 const CallView = () => {
-  const bound = useTestAccount(HUB_URL);
-  if (!bound) {
-    return <Loading data={{ account: bound }} />;
+  const account = useTestAccount(HUB_URL);
+  if (account !== 'bound') {
+    return <Loading data={{ account: describeAccount(account) }} />;
   }
 
   return (
@@ -148,7 +155,7 @@ const TranscriptionToggle = ({ meeting }: { meeting: Meeting.Meeting }) => {
 const useMeetingSpace = (invitation?: string): Space | undefined => {
   const spaces = useSpaces();
   const invitedSpaceId = useMemo(() => {
-    const id = invitation && InvitationEncoder.decode(invitation).spaceId;
+    const id = invitation && decodeInvitation(invitation)?.spaceId;
     return SpaceId.isValid(id) ? id : undefined;
   }, [invitation]);
   return invitation
@@ -157,11 +164,11 @@ const useMeetingSpace = (invitation?: string): Space | undefined => {
 };
 
 const MeetingView = ({ invitation }: StoryArgs) => {
-  const bound = useTestAccount(HUB_URL);
+  const account = useTestAccount(HUB_URL);
   const space = useMeetingSpace(invitation);
   const [meeting] = useQuery(space?.db, Filter.type(Meeting.Meeting));
-  if (!bound || !space || !meeting) {
-    return <Loading data={{ account: bound, space: !!space, meeting: !!meeting }} />;
+  if (account !== 'bound' || !space || !meeting) {
+    return <Loading data={{ account: describeAccount(account), space: !!space, meeting: !!meeting }} />;
   }
 
   return (
@@ -178,9 +185,18 @@ const MeetingView = ({ invitation }: StoryArgs) => {
   );
 };
 
-/** This story's URL with `invitation` set, in the Storybook manager when the story runs inside it. */
+/** The Storybook manager's URL when the story runs inside it; a cross-origin host throws on reading it. */
+const storyUrl = (): string => {
+  try {
+    return (window.top ?? window).location.href;
+  } catch {
+    return window.location.href;
+  }
+};
+
+/** This story's URL with `invitation` set. */
 const inviteUrl = (code: string): string => {
-  const url = new URL((window.top ?? window).location.href);
+  const url = new URL(storyUrl());
   url.searchParams.set('args', `invitation:${code}`);
   return url.href;
 };
@@ -215,17 +231,32 @@ const InviteActions = ({ space }: { space: Space }) => {
   );
 };
 
-/** Joins the space an invite code names, resolving once the guest is admitted; a refused join is a defect. */
-const joinSpace = (client: Client, code: string) =>
-  Effect.callback<void>((resume) => {
-    const invitation = client.spaces.join(InvitationEncoder.decode(code));
-    const subscription = invitation.subscribe(
+class JoinSpaceError extends Data.TaggedError('JoinSpaceError')<{ readonly cause: unknown }> {}
+
+/** The invitation a code encodes, or nothing for a malformed code, so a typo in the arg leaves the story loading. */
+const decodeInvitation = (code: string): Invitation | undefined => {
+  try {
+    return InvitationEncoder.decode(code);
+  } catch (error) {
+    log.catch(error);
+    return undefined;
+  }
+};
+
+/** What the Loading state shows for the account: pending, bound, or why binding failed. */
+const describeAccount = (account: TestAccountState): string => (account instanceof Error ? account.message : account);
+
+/** Joins the invitation's space, resolving once the guest is admitted. */
+const joinSpace = (client: Client, invitation: Invitation) =>
+  Effect.callback<void, JoinSpaceError>((resume) => {
+    const observable = client.spaces.join(invitation);
+    const subscription = observable.subscribe(
       (state) => {
         if (state.state === Invitation_State.SUCCESS) {
           resume(Effect.void);
         }
       },
-      (error) => resume(Effect.die(error)),
+      (error) => resume(Effect.fail(new JoinSpaceError({ cause: error }))),
     );
     return Effect.sync(() => subscription.unsubscribe());
   });
@@ -251,8 +282,13 @@ const meta = {
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               if (args.invitation) {
-                // The inviter's space already holds the meeting.
-                yield* joinSpace(client, args.invitation);
+                // The inviter's space already holds the meeting; a failed join leaves the story loading, with the cause logged.
+                const invitation = decodeInvitation(args.invitation);
+                if (invitation) {
+                  yield* joinSpace(client, invitation).pipe(
+                    Effect.catch((error) => Effect.sync(() => log.catch(error))),
+                  );
+                }
                 return;
               }
 
@@ -286,6 +322,8 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
+  // Live: each render binds a preview Hub account and makes a replicated space, which CI's smoke run must not do.
+  tags: ['!test'],
 } satisfies Meta<StoryArgs>;
 
 export default meta;

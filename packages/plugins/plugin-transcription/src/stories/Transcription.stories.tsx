@@ -139,7 +139,7 @@ const TranscriptPanel = ({ model, children }: PropsWithChildren<{ model: Transcr
 );
 
 const LiveStory = () => {
-  const bound = useTestAccount(HUB_URL);
+  const bound = useTestAccount(HUB_URL) === 'bound';
   const [recording, setRecording] = useState(false);
   const { model, appendMessage } = useStoryMessages();
   const commit = useCommitMessages(appendMessage);
@@ -169,7 +169,7 @@ const LiveStory = () => {
 };
 
 const FileStory = () => {
-  const bound = useTestAccount(HUB_URL);
+  const bound = useTestAccount(HUB_URL) === 'bound';
   const [playing, setPlaying] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string>();
   useEffect(() => {
@@ -295,14 +295,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Live and File bind a preview Hub account on every render, which CI's smoke run must not do.
 export const Live: Story = {
   render: () => <LiveStory />,
   parameters: { edgeUrl: EDGE_URL },
+  tags: ['!test'],
 };
 
 export const File: Story = {
   render: () => <FileStory />,
   parameters: { edgeUrl: EDGE_URL },
+  tags: ['!test'],
 };
 
 export const TextMock: Story = {

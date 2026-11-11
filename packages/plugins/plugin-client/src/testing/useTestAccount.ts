@@ -12,16 +12,20 @@ import { useIdentity } from '@dxos/react-client/halo';
 
 import { bindTestAccount } from './bindTestAccount.ts';
 
+/** `'pending'` until the binding lands, then `'bound'`, or the error that stopped it. */
+export type TestAccountState = 'pending' | 'bound' | Error;
+
 /**
  * Binds the story's identity to a test account on `hubUrl` once the identity exists (see {@link bindTestAccount}), and
- * reports when it is bound, so a story can hold back controls that reach account-only EDGE services until then.
+ * reports the binding's state, so a story can hold back controls that reach account-only EDGE services until it is
+ * bound, and say why when it never will be.
  */
-export const useTestAccount = (hubUrl: string): boolean => {
+export const useTestAccount = (hubUrl: string): TestAccountState => {
   const client = useClient();
   const identityDid = useIdentity()?.did;
   const key = identityDid && `${hubUrl} ${identityDid}`;
-  // Keyed, so a new identity or hub reads as unbound until its own binding lands.
-  const [boundKey, setBoundKey] = useState<string>();
+  // Keyed, so a new identity or hub reads as pending until its own binding settles.
+  const [result, setResult] = useState<{ key: string; state: 'bound' | Error }>();
   useEffect(() => {
     if (!key) {
       return;
@@ -29,8 +33,13 @@ export const useTestAccount = (hubUrl: string): boolean => {
 
     const fiber = Effect.runFork(
       bindTestAccount(client, { hubUrl }).pipe(
-        Effect.flatMap(() => Effect.sync(() => setBoundKey(key))),
-        Effect.catch((error) => Effect.sync(() => log.catch(error))),
+        Effect.flatMap(() => Effect.sync(() => setResult({ key, state: 'bound' }))),
+        Effect.catch((error) =>
+          Effect.sync(() => {
+            log.catch(error);
+            setResult({ key, state: error });
+          }),
+        ),
       ),
     );
     return () => {
@@ -38,5 +47,5 @@ export const useTestAccount = (hubUrl: string): boolean => {
     };
   }, [client, key, hubUrl]);
 
-  return key !== undefined && boundKey === key;
+  return key !== undefined && result?.key === key ? result.state : 'pending';
 };
