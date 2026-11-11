@@ -9,7 +9,7 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { openContacts } from './client.ts';
+import { openSpace } from './client.ts';
 import { types } from './schema.ts';
 import { seed } from './seed.ts';
 
@@ -33,7 +33,7 @@ const NAMES = [
  */
 export const startPeers = async (count: 1 | 2): Promise<Peer[]> => {
   const builder = new TestBuilder();
-  const host = await openContacts(builder.createLocalClientServices());
+  const host = await openSpace(builder.createLocalClientServices());
   seed(host.space.db);
   const peers: Peer[] = [{ ...NAMES[0], ...host }];
 

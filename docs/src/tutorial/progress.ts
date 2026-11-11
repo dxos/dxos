@@ -18,7 +18,7 @@ const PIECES: readonly { stage: Stage; values: readonly unknown[] }[] = [
   {
     stage: 'types',
     values: [
-      client.openContacts,
+      client.openSpace,
       schema.Organization,
       schema.Person,
       schema.Event,

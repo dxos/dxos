@@ -11,7 +11,7 @@ import { types } from './schema.ts';
  * Starts a client that knows the app's types, gives it an identity, and creates
  * the space the app keeps its records in.
  */
-export const openContacts = async (services?: ClientServicesProvider) => {
+export const openSpace = async (services?: ClientServicesProvider) => {
   const client = new Client({ types, services });
   await client.initialize();
   if (!client.halo.identity.get()) {
