@@ -457,6 +457,35 @@ page guide-react: React
     - The reactivity rules behind the hooks
 ```
 
+### Agents
+
+Pages for working on ECHO with an AI agent.
+
+```mdl
+page echo-open-in-claude: Open in Claude
+  Start a Claude Code session on an ECHO task from a link.
+  section: ECHO
+  route: /docs/echo/agents/open-in-claude/
+  group: Agents
+  template: reference
+  status: spike
+  covers:
+    - The Claude desktop app's `claude://code/new` link, with a working example
+    - Its parameters, and that the prompt is prefilled, not sent
+    - The Claude Code on the web and CLI equivalents
+```
+```mdl
+page echo-llms-txt: llms.txt
+  The ECHO site map for agents, in the llms.txt format.
+  section: ECHO
+  route: /docs/echo/agents/llms-txt/
+  group: Agents
+  template: reference
+  status: spike
+  covers:
+    - What `/echo/llms.txt` and `/echo/llms-full.txt` serve
+```
+
 ### Resources
 
 ```mdl
@@ -2758,6 +2787,13 @@ decision D-116: PLEX has an Agents group, after Guides, with an Open in Claude p
   date: 2026-11-10
   by: user:richburdon
   affects: [F-17.1, plex-open-in-claude, plex-llms-txt]
+```
+
+```mdl
+decision D-117: ECHO has an Agents group too, after Guides, with an Open in Claude page and an llms.txt page that describes the existing `/echo/llms.txt` and `/echo/llms-full.txt`.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-17.1, echo-open-in-claude, echo-llms-txt]
 ```
 
 ## Appendix: Extension Definitions

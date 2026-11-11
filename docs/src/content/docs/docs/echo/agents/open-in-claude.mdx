@@ -1,0 +1,42 @@
+---
+title: Open in Claude
+description: Start a Claude Code session on an ECHO task from a link.
+---
+
+import { LinkButton } from '@astrojs/starlight/components';
+
+export const prompt = 'Build a local-first task list with ECHO: define a Task type, create and query tasks, and share the space. Follow https://dxos.org/docs/echo/learn/installation/.';
+
+A link can open the Claude desktop app on a new Claude Code session with a prompt already written. The reader checks the prompt, picks a folder and sends it.
+
+<LinkButton href={`claude://code/new?q=${encodeURIComponent(prompt)}`} icon="rocket" iconPlacement="start">Open in Claude</LinkButton>
+
+```text
+claude://code/new?q=Build%20a%20local-first%20task%20list%20with%20ECHO%3A%20define%20a%20Task%20type...
+```
+
+## Parameters
+
+| Parameter | Value                                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------- |
+| `q`       | The prompt, URL-encoded. It is prefilled, not sent.                                             |
+| `folder`  | An absolute path to open the session in. Claude treats a folder from a link as untrusted.       |
+| `file`    | A file to attach to the prompt.                                                                 |
+
+Build the link with `encodeURIComponent`, so that spaces, `&` and `#` in the prompt survive:
+
+```ts
+const href = `claude://code/new?q=${encodeURIComponent(prompt)}`;
+```
+
+The link works only where the desktop app is installed. See [Open Claude Desktop with a link](https://support.claude.com/en/articles/14729294-open-claude-desktop-with-a-link).
+
+## Other entry points
+
+| Where                  | Link                                                               | Reference                                                                                          |
+| ---------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Claude Code on the web | `https://claude.ai/code/new?q=<prompt>&repo=<owner/name>`          | [Support article](https://support.claude.com/en/articles/14898120-open-the-claude-mobile-app-with-a-link) |
+| Claude Code CLI        | `claude-cli://open?q=<prompt>&cwd=<absolute path>`                 | [Deep links](https://code.claude.com/docs/en/deep-links)                                           |
+| A terminal             | `claude "<prompt>"`                                                | [Claude Code](https://code.claude.com/docs)                                                        |
+
+Each one prefills the prompt; none sends it.
