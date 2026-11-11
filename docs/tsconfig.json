@@ -76,6 +76,9 @@
       "path": "../packages/core/echo/echo-client"
     },
     {
+      "path": "../packages/core/echo/echo-host"
+    },
+    {
       "path": "../packages/core/echo/echo-protocol"
     },
     {
