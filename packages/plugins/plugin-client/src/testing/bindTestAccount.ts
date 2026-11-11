@@ -37,19 +37,18 @@ const isTransient = (error: BindTestAccountError): boolean =>
  * That is deliberate: redeeming a shared email rebinds its account to the newest identity, which would revoke every
  * other tab's access.
  */
-export const bindTestAccount = (client: Client, { hubUrl, email }: BindTestAccountOptions) =>
-  Effect.gen(function* () {
-    const identity = client.halo.identity.get();
-    invariant(identity, 'bindTestAccount needs an identity');
-    const hub = new HubHttpClient(hubUrl);
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        hub.redeemInvitationCode(new Context(), {
-          email: email ?? `test+story-${identity.did.slice(-12).toLowerCase()}@dxos.org`,
-          identityDid: identity.did,
-        }),
-      catch: (cause) => new BindTestAccountError({ cause }),
-    }).pipe(Effect.retry({ times: 4, schedule: Schedule.exponential('250 millis'), while: isTransient }));
-    invariant('accountId' in response, 'hub-service did not bind an account');
-    return response.accountId;
-  });
+export const bindTestAccount = Effect.fnUntraced(function* (client: Client, { hubUrl, email }: BindTestAccountOptions) {
+  const identity = client.halo.identity.get();
+  invariant(identity, 'bindTestAccount needs an identity');
+  const hub = new HubHttpClient(hubUrl);
+  const response = yield* Effect.tryPromise({
+    try: () =>
+      hub.redeemInvitationCode(new Context(), {
+        email: email ?? `test+story-${identity.did.slice(-12).toLowerCase()}@dxos.org`,
+        identityDid: identity.did,
+      }),
+    catch: (cause) => new BindTestAccountError({ cause }),
+  }).pipe(Effect.retry({ times: 4, schedule: Schedule.exponential('250 millis'), while: isTransient }));
+  invariant('accountId' in response, 'hub-service did not bind an account');
+  return response.accountId;
+});

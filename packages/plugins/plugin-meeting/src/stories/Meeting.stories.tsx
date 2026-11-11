@@ -23,7 +23,6 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -35,6 +34,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { BaseError } from '@dxos/errors';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
@@ -231,7 +231,7 @@ const InviteActions = ({ space }: { space: Space }) => {
   );
 };
 
-class JoinSpaceError extends Data.TaggedError('JoinSpaceError')<{ readonly cause: unknown }> {}
+class JoinSpaceError extends BaseError.extend('JoinSpaceError', 'Could not join the invited space.') {}
 
 /** The invitation a code encodes, or nothing for a malformed code, so a typo in the arg leaves the story loading. */
 const decodeInvitation = (code: string): Invitation | undefined => {

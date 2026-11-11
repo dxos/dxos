@@ -15129,6 +15129,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox

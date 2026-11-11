@@ -7,6 +7,8 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { log } from '@dxos/log';
+
 import { useAudioFile } from './useAudioFile.ts';
 
 /** A fetch whose response the test settles, keyed by URL, so loads can complete in any order. */
@@ -72,8 +74,12 @@ describe('useAudioFile', () => {
     await waitFor(() => expect(result.current.audio).toBeDefined());
     const current = result.current.audio;
 
-    network.settle('a').reject(new Error('a failed'));
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // The hook logs a failed load before deciding whether to report it, so the log marks that A has settled.
+    const logged = vi.spyOn(log, 'catch');
+    const failure = new Error('a failed');
+    network.settle('a').reject(failure);
+    // The log transform appends call-site metadata, so only the first argument is matched.
+    await waitFor(() => expect(logged.mock.calls.some((call: unknown[]) => call[0] === failure)).toBe(true));
     expect(result.current.error).toBeUndefined();
     expect(result.current.audio).toBe(current);
   });
