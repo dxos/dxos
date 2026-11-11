@@ -42,32 +42,19 @@ const topic = currentTopic(Astro.url.pathname);
   </div>
 </div>
 
-<script>
-  // Shows the tabs to measure them, and collapses to the picker if they would run into the search button.
-  const nav = document.querySelector<HTMLElement>('.effect-nav');
-  const search = document.querySelector<HTMLElement>('.search-wrap');
-  const fit = () => {
-    if (!nav || !search || document.documentElement.dataset.topicNav !== 'effect-tabs') {
-      return;
-    }
-    nav.dataset.collapsed = 'false';
-    // The search button's auto margin takes the free space; nothing in the row shrinks, so it is the slack left.
-    const header = nav.closest<HTMLElement>('.header');
-    const gap = header ? parseFloat(getComputedStyle(header).columnGap) || 0 : 0;
-    const slack = search.getBoundingClientRect().left - nav.getBoundingClientRect().right - gap;
-    nav.dataset.collapsed = String(slack < 24);
-  };
-  if (nav) {
-    new ResizeObserver(fit).observe(document.documentElement);
-    new MutationObserver(fit).observe(document.documentElement, { attributes: true, attributeFilter: ['data-topic-nav'] });
-    fit();
-  }
-</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400&display=swap" />
 
 <style>
-  :global(html[data-topic-nav='effect-tabs']) .effect-nav:not([data-collapsed='true']) .picker,
-  .effect-nav[data-collapsed='true'] .tabs {
-    display: none;
+  /* The tabs give way to the picker where the sidebar folds into a menu (PageFrame's 72rem). */
+  @media (min-width: 72rem) {
+    :global(html[data-topic-nav='effect-tabs']) .picker {
+      display: none;
+    }
+  }
+  @media (max-width: 71.99rem) {
+    .effect-nav .tabs {
+      display: none;
+    }
   }
 
   .effect-nav {
@@ -75,13 +62,17 @@ const topic = currentTopic(Astro.url.pathname);
     display: flex;
     flex: none;
     gap: 1rem;
-    /* Puts Docs at the x the marketing nav's Docs link has, so it stays put when crossing into the docs. */
-    margin-inline-start: 27px;
+    /*
+     * Puts Docs where the marketing nav has it, so it stays put when crossing into the docs. There the text sits at
+     * 1% padding + 16px container padding + 89px logo + 16px gap + 16px link padding; this row starts 122.875px in.
+     */
+    margin-inline-start: calc(1vw + 14.125px);
   }
   .docs {
     color: var(--sl-color-white);
-    font-size: 1rem;
-    padding: 0.5rem 0;
+    /* The marketing nav's type, in px since the docs' root font size differs. */
+    font: 400 16px / 24px 'Kumbh Sans', sans-serif;
+    padding: 8px 0;
     text-decoration: none;
   }
   .sep {

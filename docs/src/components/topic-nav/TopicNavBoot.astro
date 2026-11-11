@@ -12,6 +12,8 @@ const TOPIC_NAV_CSS = [
   ),
   `html[data-topic-nav='tabs'] { --topic-tabs-height: 2.75rem; --sl-nav-height: calc(3.5rem + var(--topic-tabs-height)); }`,
   `@media (min-width: 50rem) { html[data-topic-nav='tabs'] { --sl-nav-height: calc(4rem + var(--topic-tabs-height)); } }`,
+  // The Effect designs match the marketing nav's 72px bar (plus Starlight's 1px border), so Docs sits at the same height on both sides.
+  `@media (min-width: 50rem) { html[data-topic-nav^='effect'] { --sl-nav-height: 73px; } }`,
   `html[data-topic-nav='tabs'] body > .page > header { padding-bottom: calc(var(--sl-nav-pad-y) + var(--topic-tabs-height)); }`,
 ].join('\n');
 ---
