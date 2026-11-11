@@ -40,8 +40,8 @@ type Lookup = { readonly userId: string } | { readonly reason: string };
  * match messages someone else:
  * - an id, as the message header gives it (bare or as a mention), as is;
  * - `@` before digits is an id unless a member's username is those digits;
- * - else the account the contacts of that name record (their `discord` identities: ids, or handles an agent kept,
- *   which must be a member's exact username), which must be one account;
+ * - else the account the contacts of that name record (their `discord` identities: ids, unless a member's username is
+ *   those digits, or handles an agent kept, which must be a member's exact username), which must be one account;
  * - else the one member whose username or display name (their guild nickname, else their global name) is exactly that
  *   name; Discord's search finds a member by username or nickname only.
  * Anything else is refused with the candidates.
@@ -56,12 +56,16 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     members.map(({ username, userId }) => `@${username} (${userId})`).join(', ');
 
   /**
-   * The account `value` names. A handle a contact records must be a username (`usernameOnly`); a name the agent gives
-   * may also be a display name, which Discord's search finds as a guild nickname. Two accounts that match are refused.
+   * The account `value` names: given by the agent (`stored` false) or recorded on a contact (`stored` true).
+   * - An id as the header writes it (bare, or as a mention), given by the agent, as is. On record, the contact schema
+   *   cannot tell it from a numeric username, so it is refused when a member has those digits as their username.
+   * - `@` before digits, given by the agent, likewise. On record it is a handle, never an id.
+   * - A name: on record, a handle, which must be a member's exact username; given by the agent, a username or display
+   *   name (Discord's search finds a guild nickname). Two accounts that match are refused.
    */
-  const account = Effect.fnUntraced(function* (value: string, usernameOnly: boolean) {
+  const account = Effect.fnUntraced(function* (value: string, stored: boolean) {
     const id = DiscordBot.explicitUserId(value);
-    if (id) {
+    if (id && !stored) {
       const lookup: Lookup = { userId: id };
       return lookup;
     }
@@ -69,15 +73,15 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     const found = yield* service.findMembers(bot, name);
     const wanted = name.toLowerCase();
     const byUsername = found.filter(({ username }) => username.toLowerCase() === wanted);
-    if (DiscordBot.isUserId(name)) {
-      // `@` before digits: their id, unless the digits are also someone's username.
+    if (DiscordBot.isUserId(name) && (id !== undefined || !stored)) {
+      // Digits that may be an id: their id, unless the digits are also someone's username.
       const lookup: Lookup =
         byUsername.length === 0
           ? { userId: name }
           : { reason: `${value} could be the user id ${name} or ${listed(byUsername)}.` };
       return lookup;
     }
-    const exact = usernameOnly
+    const exact = stored
       ? byUsername
       : found.filter(
           ({ username, displayName }) => username.toLowerCase() === wanted || displayName?.toLowerCase() === wanted,
@@ -92,7 +96,7 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
       reason:
         accounts.length > 1
           ? `${name} could be any of ${listed(accounts)}.`
-          : `No Discord member ${usernameOnly ? 'has the username' : 'is called'} ${name}${similar}.`,
+          : `No Discord member ${stored ? 'has the username' : 'is called'} ${name}${similar}.`,
     };
     return lookup;
   });
@@ -102,7 +106,7 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     return yield* fail('Name the person to message, or pass their user id from the message header.', '');
   }
   if (DiscordBot.explicitUserId(to) || DiscordBot.isUserId(asked)) {
-    const found = yield* account(to, true);
+    const found = yield* account(to, false);
     return 'userId' in found ? found.userId : yield* fail(found.reason);
   }
 

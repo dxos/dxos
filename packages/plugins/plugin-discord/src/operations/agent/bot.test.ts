@@ -201,6 +201,19 @@ describe('resolveUser', () => {
         yield* Database.add(
           Obj.make(Person.Person, { fullName: 'Rick', identities: [{ label: 'discord', value: 'Rich' }] }),
         );
+        // Digits on record: an id, unless a member has them as their username; `@` before them, a handle only.
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Numeral',
+            identities: [{ label: 'discord', value: '555555555555555555' }],
+          }),
+        );
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Handle',
+            identities: [{ label: 'discord', value: '@123456789012345678' }],
+          }),
+        );
         yield* Database.flush();
 
         expect(yield* resolveUser(BOT, 'richburdon')).toBe('111111111111111111');
@@ -209,6 +222,15 @@ describe('resolveUser', () => {
         // Not Bob's Discord account: a Twitter handle names nobody on Discord.
         const twitter = yield* resolveUser(BOT, '@bobby').pipe(Effect.flip);
         expect(twitter.message).toBe(`No Discord member is called bobby.${HINT}`);
+        const numeral = yield* resolveUser(BOT, 'Numeral').pipe(Effect.flip);
+        expect(numeral.message).toBe(
+          `Numeral records the Discord identity "555555555555555555": 555555555555555555 could be the user id 555555555555555555 or @555555555555555555 (999999999999999999).${HINT}`,
+        );
+        // Nobody in the bot's guilds has that username, and it is not taken for an id either.
+        const handle = yield* resolveUser(BOT, 'Handle').pipe(Effect.flip);
+        expect(handle.message).toBe(
+          `Handle records the Discord identity "@123456789012345678": No Discord member has the username 123456789012345678.${HINT}`,
+        );
         const nick = yield* resolveUser(BOT, 'Rick').pipe(Effect.flip);
         expect(nick.message).toBe(
           `Rick records the Discord identity "Rich": No Discord member has the username Rich; similar: @richburdon (111111111111111111), @richard (222222222222222222).${HINT}`,
