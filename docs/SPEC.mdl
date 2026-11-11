@@ -3382,7 +3382,7 @@ decision D-153: The plugin manifest is written, in Resources, at `/docs/plex/res
   affects: [app-framework-manifest, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
   why: One plugin carried from the learning path into the reference lets a reader recognize each snippet.
 
-decision D-154: PLEX's guides run from least to most complex: Testing, Debugging, Settings and state, React, Effect in plugins, Using ECHO in a plugin.
+decision D-200: PLEX's guides run from least to most complex: Testing, Debugging, Settings and state, React, Effect in plugins, Using ECHO in a plugin.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-guide-testing, plex-guide-debugging, plex-guide-settings-and-state, app-framework-guide-react, plex-guide-effect, plex-guide-using-echo]
