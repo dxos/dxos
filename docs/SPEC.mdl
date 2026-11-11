@@ -8,7 +8,7 @@ The DXOS docs teach a developer to build on ECHO, then to build apps from plugin
 Composer as the app those plugins run in. They have three sections: ECHO; HALO, which holds identity, devices and
 space membership; and PLEX, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Overview page;
 there is no separate docs home [F-16]. Every section has the same shape: Start here, a learning path that builds one
-thing step by step, core concepts, one guide per API namespace, and resources [F-17], [F-18].
+thing step by step, core concepts, an API group with one page per core namespace, guides, and resources [F-17], [F-18].
 
 This document is the source of truth for what the docs cover and how. Each `page` block gives the page's section,
 place in the sidebar, template and status, a one-line summary, and under `covers:` the points the page must cover.
@@ -321,16 +321,16 @@ page conflicts: Concurrency and conflicts
     - Limits: the cases ECHO does not resolve
 ```
 
-### Guides
+### API
 
-One page per `@dxos/echo` namespace, then the framework guides.
+One page per `@dxos/echo` namespace.
 
 ```mdl
 page guide-type: Type
   Declare and inspect object and relation types.
   section: ECHO
   route: /docs/echo/guides/type/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -344,7 +344,7 @@ page guide-obj: Obj
   The runtime API for objects.
   section: ECHO
   route: /docs/echo/guides/obj/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -359,7 +359,7 @@ page guide-relation: Relation
   The runtime API for relations.
   section: ECHO
   route: /docs/echo/guides/relation/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -372,7 +372,7 @@ page guide-ref: Ref
   Typed references between entities.
   section: ECHO
   route: /docs/echo/guides/ref/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -385,7 +385,7 @@ page guide-database: Database
   The imperative interface and the Effect service.
   section: ECHO
   route: /docs/echo/guides/database/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -399,7 +399,7 @@ page guide-query: Query
   Graph-shaped selections, traversal, ordering and results.
   section: ECHO
   route: /docs/echo/guides/query/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -414,7 +414,7 @@ page guide-filter: Filter
   Predicate builders that compile to a query AST.
   section: ECHO
   route: /docs/echo/guides/filter/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -429,7 +429,7 @@ page guide-feed: Feed
   The append-only feed object.
   section: ECHO
   route: /docs/echo/guides/feed/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -438,6 +438,10 @@ page guide-feed: Feed
     - Indexing and retention options
     - Fork a feed and read a branch
 ```
+### Guides
+
+The framework guides.
+
 ```mdl
 page guide-react: React
   The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them.
@@ -479,7 +483,7 @@ page glossary: Glossary
     - Links to HALO's glossary for identity, device and invitation terms
 ```
 ```mdl
-page examples: Example gallery
+page examples: Examples
   Apps built on ECHO, with code and live links.
   section: ECHO
   route: /docs/additional-resources/samples/
@@ -790,16 +794,16 @@ page halo-recovery-credentials: Recovery and credentials
     - Limits: what a lost recovery credential means
 ```
 
-### Guides
+### API
 
-One page per `@dxos/halo` namespace, then React.
+One page per `@dxos/halo` namespace.
 
 ```mdl
 page halo-guide-identity: Identity
   Create, follow, recover and share an identity.
   section: HALO
   route: /docs/halo/guides/identity/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -814,7 +818,7 @@ page halo-guide-invitation: Invitation
   Drive an invitation flow from either side.
   section: HALO
   route: /docs/halo/guides/invitation/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -828,7 +832,7 @@ page halo-guide-space: Space
   Create spaces and manage their members.
   section: HALO
   route: /docs/halo/guides/space/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1091,17 +1095,16 @@ page app-framework-operations: Operations
     - Built-in operations every plugin can call, such as layout and navigation
 ```
 
-### Guides
+### API
 
 One page per namespace, each a readable tour with compiled examples that links into the API reference.
-React comes last.
 
 ```mdl
 page app-framework-guide-plugin: Plugin
   Define a plugin and its modules.
   section: PLEX
   route: /docs/app-framework/guides/plugin/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1116,7 +1119,7 @@ page app-framework-guide-capability: Capability
   Declare, contribute and request capabilities, including the built-in ones.
   section: PLEX
   route: /docs/app-framework/guides/capability/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1131,7 +1134,7 @@ page app-framework-guide-activation-event: ActivationEvent
   Declare activation events and use the built-in ones.
   section: PLEX
   route: /docs/app-framework/guides/activation-event/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1145,7 +1148,7 @@ page app-framework-guide-operation: Operation
   Define operations, implement their handlers and invoke them.
   section: PLEX
   route: /docs/app-framework/guides/operation/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1160,7 +1163,7 @@ page app-framework-guide-surface: Surface
   Contribute surfaces and render other plugins' surfaces.
   section: PLEX
   route: /docs/app-framework/guides/surface/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1175,7 +1178,7 @@ page app-framework-guide-app-graph: AppGraph
   Contribute nodes and actions to the app graph.
   section: PLEX
   route: /docs/app-framework/guides/app-graph/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1190,7 +1193,7 @@ page app-framework-guide-app-capabilities: AppCapabilities
   The app-level capabilities the App Toolkit defines for plugins to contribute.
   section: PLEX
   route: /docs/app-framework/guides/app-capabilities/
-  group: Guides
+  group: API
   template: namespace
   status: spike
   covers:
@@ -1652,7 +1655,7 @@ feat F-17: Same shape in both sections
 
   req F-17.1:
     when: a section is built
-    then: its sidebar groups are Start here, Learning path, Core concepts, Guides and Resources, in that order
+    then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides and Resources, in that order
 
   req F-17.2:
     when: a page is written
@@ -1666,12 +1669,12 @@ feat F-17: Same shape in both sections
 ```
 
 ```mdl
-feat F-18: Guides by namespace
+feat F-18: API by namespace
 
   req F-18.1:
-    when: a section's Guides group is built
-    then: it has one page per core API namespace, written with the `namespace` template, and then the framework
-          guides, with React last
+    when: a section's API group is built
+    then: it has one page per core API namespace, written with the `namespace` template; the framework guides,
+          React among them, go in the Guides group
 
   req F-18.2:
     when: a reader wants every member of a namespace
@@ -2684,6 +2687,32 @@ decision D-111: Each section's root page is titled Overview, keeps its `/welcome
   date: 2026-11-10
   by: user:richburdon
   affects: [F-16.8]
+```
+
+```mdl
+decision D-112: ECHO's sidebar has an API group holding one page per `@dxos/echo` namespace, Type to Feed; React stays in Guides.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-18.1]
+```
+
+```mdl
+decision D-114: HALO and PLEX follow D-112: their namespace pages (Identity, Invitation, Space; Plugin to AppCapabilities) form an API group, and React and the dx CLI stay in Guides. Every moved page keeps its `…/guides/…` route.
+  date: 2026-11-10
+  by: agent:claude
+  for: user:richburdon
+  affects: [F-17.1, F-18.1]
+  why: F-17 gives every section the same shape.
+  rejected:
+    - Moving only ECHO, which would leave HALO and PLEX with a different shape
+    - New `/api/` routes, which would need a redirect for every moved page
+```
+
+```mdl
+decision D-113: The examples page is titled Examples.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [examples]
 ```
 
 ## Appendix: Extension Definitions
