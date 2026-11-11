@@ -29,7 +29,7 @@ import {
   parseMdlBlocks,
   scanFenceLines,
 } from '@dxos/deus/parse';
-import { VERDICT_STATUSES, findSourceKeys, findSymbolLine, parseReview } from '@dxos/deus/review';
+import { VERDICT_STATUSES, findSourceKeys, findSymbolLine, parseReview, parseVerdictHeader } from '@dxos/deus/review';
 import { frontmatter, reqs } from '@dxos/deus/spec-index';
 
 import { keyCard, specCard, verdictCard } from './hover.ts';
@@ -111,13 +111,15 @@ export const diagnostics = (workspace: Workspace, { path, text, lines }: Documen
   if (review) {
     const specPath = reviewedSpecPath(workspace, path, text);
     const spec = workspace.read(specPath);
-    const items = spec === undefined ? undefined : new Set(declarations(spec).map(({ id }) => id));
-    for (const { type, id, to, body } of parseBlockHeaders(text)) {
+    const items = spec === undefined ? undefined : new Set(declarations(spec).map(({ reviewId }) => reviewId));
+    for (const { type, to, body } of parseBlockHeaders(text)) {
       if (type !== 'verdict') {
         continue;
       }
       const header = to + 1;
-      const headerEnd = header + body.split('\n', 1)[0].length;
+      const headerLine = body.split('\n', 1)[0];
+      const headerEnd = header + headerLine.length;
+      const id = parseVerdictHeader(headerLine)?.id;
       const status = body.match(/^\s+status:[ \t]*([\w-]*)/m)?.[1];
       if (!status) {
         found.push({
@@ -218,6 +220,14 @@ export const definition = (workspace: Workspace, document: Document, position: P
   const reference = referenceAt(workspace, document, offset);
   if (reference) {
     return 'error' in reference.target ? undefined : location(reference.target);
+  }
+  if (isReview(document.path)) {
+    const verdict = parseVerdictHeader(document.lines.line(position.line));
+    const specPath = reviewedSpecPath(workspace, document.path, document.text);
+    const line = verdict && itemLine(workspace.read(specPath) ?? '', verdict.id);
+    if (line !== undefined) {
+      return { uri: uriOfPath(workspace, specPath), range: lineRange(line) };
+    }
   }
   const word = wordAt(document.text, offset);
   if (!word) {
@@ -391,11 +401,11 @@ export const completions = (workspace: Workspace, document: Document, position: 
         detail: path,
       }));
     }
-    const verdictId = before.match(/^\s*verdict\s+[\w.-]*$/);
+    const verdictId = before.match(/^\s*verdict\s+[\w.:-]*$/);
     if (verdictId && isReview(document.path)) {
       const spec = workspace.read(reviewedSpecPath(workspace, document.path, text)) ?? '';
-      return declarations(spec).map(({ kind, id }) => ({
-        label: id,
+      return declarations(spec).map(({ kind, reviewId }) => ({
+        label: reviewId,
         kind: CompletionItemKind.Reference,
         detail: kind,
       }));

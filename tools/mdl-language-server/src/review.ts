@@ -75,10 +75,10 @@ export const reviewedItems = (workspace: Workspace, specPath: string, text: stri
   }
   const verdicts = new Map(review.verdicts.map((verdict) => [verdict.id, verdict]));
   const annotations = new Map(reviewAnnotations(review).map((annotation) => [annotation.id, annotation]));
-  return declarations(text).flatMap(({ kind, id, line }) => {
-    const verdict = verdicts.get(id);
+  return declarations(text).flatMap(({ kind, reviewId, line }) => {
+    const verdict = verdicts.get(reviewId);
     return verdict
-      ? [{ line, kind, verdict, annotation: annotations.get(id), exercise: EXERCISE_KINDS.has(kind) }]
+      ? [{ line, kind, verdict, annotation: annotations.get(reviewId), exercise: EXERCISE_KINDS.has(kind) }]
       : [];
   });
 };

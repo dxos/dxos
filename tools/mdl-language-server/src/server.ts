@@ -121,7 +121,7 @@ export const startServer = (connection: Connection): void => {
         inlayHintProvider: true,
         codeLensProvider: { resolveProvider: false },
       },
-      serverInfo: { name: 'mdl-language-server', version: '0.1.0' },
+      serverInfo: { name: 'mdl-language-server', version: '0.2.0' },
     };
   });
 
