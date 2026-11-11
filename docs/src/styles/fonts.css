@@ -1,3 +1,39 @@
+/* Local faces scaled to DM's metrics (from @capsizecss/unpack), so text set before the web font arrives wraps the same and the swap does not move it. */
+@font-face {
+  font-family: 'DM Sans Fallback';
+  font-weight: 400;
+  src: local('Arial'), local('ArialMT'), local('Helvetica');
+  size-adjust: 104.08%;
+  ascent-override: 95.31%;
+  descent-override: 29.78%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'DM Sans Fallback';
+  font-weight: 500;
+  src: local('Arial'), local('ArialMT'), local('Helvetica');
+  size-adjust: 106.55%;
+  ascent-override: 93.1%;
+  descent-override: 29.09%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'DM Sans Fallback';
+  font-weight: 700;
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Helvetica Bold');
+  size-adjust: 101.25%;
+  ascent-override: 97.97%;
+  descent-override: 30.62%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'DM Mono Fallback';
+  src: local('Courier New'), local('CourierNewPSMT');
+  size-adjust: 99.98%;
+  ascent-override: 99.22%;
+  descent-override: 31.01%;
+  line-gap-override: 0%;
+}
 @font-face {
   font-family: 'DM Sans';
   font-weight: 400;
@@ -28,6 +64,13 @@
   font-weight: 400;
   font-display: swap;
   src: url('../../node_modules/@dxos/brand/assets/fonts/dm-mono/DMMono-Regular.ttf');
+}
+/* Only the topic switcher's labels use it; each letter sits in a fixed cell, so the swap moves nothing and it needs no preload. */
+@font-face {
+  font-family: 'Sharp Sans';
+  font-weight: 500;
+  font-display: swap;
+  src: url('../../node_modules/@dxos/brand/assets/fonts/sharp-sans/SharpSansDispNo1-Medium.ttf');
 }
 @font-face {
   font-family: 'DM Mono';

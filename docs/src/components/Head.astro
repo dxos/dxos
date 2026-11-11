@@ -1,8 +1,15 @@
 ---
 import Default from '@astrojs/starlight/components/Head.astro';
 
+import dmMonoRegular from '../../node_modules/@dxos/brand/assets/fonts/dm-mono/DMMono-Regular.ttf?url';
+import dmSansBold from '../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Bold.ttf?url';
+import dmSansMedium from '../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Medium.ttf?url';
+import dmSansRegular from '../../node_modules/@dxos/brand/assets/fonts/dm-sans/DMSans-Regular.ttf?url';
 import { DOCS_LAYERS } from '../demos/layers.ts';
 import PostHog from './PostHog.astro';
+
+/** The faces every page paints with; the browser otherwise finds them only after parsing the stylesheet. */
+const PRELOAD_FONTS = [dmSansRegular, dmSansMedium, dmSansBold, dmMonoRegular];
 
 /** SVG geometry, media sizes and table alignment come from attributes, which reverting every property would drop. */
 const attributed = 'svg, svg *, img, video, canvas, iframe, table, table *';
@@ -20,6 +27,7 @@ const PAGE_REVERT = `@layer page-revert {
 
 <!-- First in the head, so this order holds over the layers that Starlight and the react-ui theme declare. -->
 <style is:inline set:html={`@layer ${DOCS_LAYERS.join(', ')};\n${PAGE_REVERT}`} />
+{PRELOAD_FONTS.map((href) => <link rel="preload" href={href} as="font" type="font/ttf" crossorigin />)}
 <Default />
 <!-- react-ui's dark variant keys on a `dark` class; Starlight's theme picker sets `data-theme`. -->
 <script is:inline>

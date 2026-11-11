@@ -5,6 +5,8 @@
 }
 
 :root {
+  /* One step above the browser default (17px at 16px); a percentage keeps the reader's own font-size setting, and every rem size scales with it. */
+  font-size: 106.25%;
   --sl-text-h1: 2.5rem;
   --sl-text-h2: 1.625rem;
   --sl-text-h3: 1.25rem;
@@ -146,9 +148,17 @@ site-search button[data-open-modal] {
   border-top: 0;
 }
 
-/* Table of contents: headings wrap at a narrow measure. */
-.right-sidebar-panel .sl-container {
-  max-width: 12rem;
+/* Table of contents: as wide as the sidebar, instead of Starlight's column that grows with the viewport. */
+@media (min-width: 72rem) {
+  :root .right-sidebar-container {
+    width: var(--sl-sidebar-width);
+    /* The container precedes `.main-pane` in the DOM, so while the page streams in it would paint at the left and jump. */
+    margin-inline-start: auto;
+  }
+  :root .main-pane {
+    flex-grow: 1;
+    --sl-content-margin-inline: auto;
+  }
 }
 
 starlight-toc a[aria-current='true'] {

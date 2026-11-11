@@ -100,8 +100,9 @@ export const generateTheme = () => {
       block(':root', {
         '--c-radius': '8px',
         '--c-dur': '120ms',
-        '--sl-font': "'DM Sans', system-ui, sans-serif",
-        '--sl-font-mono': "'DM Mono', ui-monospace, monospace",
+        // The metric-matched fallbacks are declared in `fonts.css`.
+        '--sl-font': "'DM Sans', 'DM Sans Fallback', system-ui, sans-serif",
+        '--sl-font-mono': "'DM Mono', 'DM Mono Fallback', ui-monospace, monospace",
       }),
       block(':root, :root[data-theme="dark"]', vars(THEMES.dark)),
       block(':root[data-theme="light"]', vars(THEMES.light)),
