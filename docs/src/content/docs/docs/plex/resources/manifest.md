@@ -41,7 +41,7 @@ reading the config loads none of the plugin's code. See [Plugins and modules](/d
 ## Framework capabilities
 
 From `@dxos/app-framework/Capabilities`. The capabilities a workspace app adds are in
-[AppCapabilities](/docs/plex/guides/app-capabilities/).
+[App capabilities](/docs/plex/guides/app-capabilities/).
 
 | Capability | What it holds |
 | --- | --- |

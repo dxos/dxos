@@ -98,6 +98,9 @@ const redirects: Record<string, string> = {
   '/docs/app-framework/introduction': '/docs/plex/concepts/plugins/',
   '/docs/composer/introduction': '/docs/plex/concepts/plugins/',
   '/docs/plex/introduction': '/docs/plex/concepts/plugins/',
+  // App Graph and Translations are app-level, so they moved to Guides.
+  '/docs/plex/concepts/app-graph': '/docs/plex/guides/app-graph/',
+  '/docs/plex/guides/translations': '/docs/plex/guides/app-capabilities/',
   ...plexRedirects,
 };
 

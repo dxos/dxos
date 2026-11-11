@@ -10,7 +10,7 @@ invitation terms are in HALO's [glossary](/docs/halo/resources/glossary/).
 
 A [node](#node) in [App Graph](#app-graph) that stands for something a person can do to another node. Its data is a
 function that returns an Effect. The action's disposition says where it appears, such as an object's toolbar or its
-context menu. See [App Graph](/docs/plex/concepts/app-graph/).
+context menu. See [App Graph](/docs/plex/guides/app-graph/).
 
 ### Activation event
 
@@ -26,18 +26,18 @@ type's icon, or whether people create it themselves. See [Using ECHO in a plugin
 
 The graph of everything a person can open or do in an app, made of [nodes](#node) and [actions](#action). In Composer
 the navigation tree, toolbars, context menus and command palette all read it. See
-[App Graph](/docs/plex/concepts/app-graph/).
+[App Graph](/docs/plex/guides/app-graph/).
 
 ### App Toolkit
 
 `@dxos/app-toolkit`, the package that adds what a workspace app needs on top of the framework: the
 [App Graph](#app-graph), layout, settings and the standard [roles](#role). See
-[AppCapabilities](/docs/plex/guides/app-capabilities/).
+[App capabilities](/docs/plex/guides/app-capabilities/).
 
 ### Builder extension
 
 A matcher and a connector that add [nodes](#node) to [App Graph](#app-graph). The matcher picks the nodes it
-applies to, and the connector returns the nodes to connect to them. See [AppGraph](/docs/plex/guides/app-graph/).
+applies to, and the connector returns the nodes to connect to them. See [App Graph](/docs/plex/guides/app-graph/).
 
 ### Capability
 
