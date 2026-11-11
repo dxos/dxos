@@ -27,7 +27,7 @@ export type ClaudeAgentOptions = {
   model: string;
   /** Tools the agent may use without a prompt. Anything else is denied outright. */
   allowedTools: string[];
-  /** Plugin directories loaded for this session; `--bare` loads no installed plugin. */
+  /** Plugin directories to load; with `--bare` no installed plugin loads, so these are the only ones. */
   pluginDirs?: string[];
   /**
    * `--bare` (the default) also cuts the toolset to Bash, Edit and Read, so a plugin's skills cannot
