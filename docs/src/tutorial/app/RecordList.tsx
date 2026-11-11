@@ -47,6 +47,7 @@ export const RecordList = ({
           <Listbox.Item key={entry.value} id={entry.value} highlightOnHover>
             {entry.icon && <Listbox.ItemIcon />}
             <Listbox.ItemText />
+            {entry.description && <Listbox.ItemDescription />}
             {onRemove && (
               <Button.Root
                 iconOnly

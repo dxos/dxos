@@ -59,7 +59,11 @@ Two rules decide when a component re-renders:
      render time, and the component does not re-render when the field changes.
    </Aside>
 
-5. **Edit a record.** `ObjectForm` from `@dxos/react-ui-form` builds its fields from the record's type and writes each change back inside `Obj.update`. A reference field lists the records of the type it points at.
+5. **Edit a record.** The app's form is `Form.Root` from `@dxos/react-ui-form`, given the record's type and the values from `useObject`. `onValuesChanged` writes each change back with `updateRecord` from [Mutating objects](/docs/echo/learn/mutating-objects/). A reference field lists the records of the type it points at.
+
+   <Snippet file="tutorial/app/RecordForm" region="edit" lang="tsx" />
+
+   `ObjectForm` from the same package does all of this in one component:
 
    ```tsx
    <ObjectForm type={Person} object={person} showTags={false} />
@@ -73,7 +77,7 @@ Two rules decide when a component re-renders:
 
 ## Try it
 
-The app with every piece in place: the lists, the table and the graph are all `useQuery`, and the form is `ObjectForm`.
+The app with every piece in place: the lists, the table and the graph are all `useQuery`, and the form writes through `updateRecord`.
 
 <TutorialEmbed stage="complete" />
 

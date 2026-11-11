@@ -17,25 +17,28 @@ A tracked object is read like any other, but it is changed only inside `Obj.upda
 
 Writes are local. `db.add` and `Obj.update` return once the change is in the local database, and replication runs after. Two peers that change the same object concurrently both keep their edits: ECHO merges them field by field.
 
+Every function on this page goes in a new file, `records.ts`.
+
 <Steps>
 
-1. **Add records.** `db.add` takes an object made with `Obj.make` and returns it, now tracked. `Ref.make` stores the employer as a reference.
+1. **Add records.** `db.add` takes an object made with `Obj.make` and returns it, now tracked. The **New** form saves
+   with this.
 
-   <Snippet file="tutorial/steps/mutating" region="add" />
+   <Snippet file="tutorial/records" region="add" />
 
-2. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the subscription.
+2. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the
+   subscription. The graph redraws an edge with this when a reference moves.
 
-   <Snippet file="tutorial/steps/mutating" region="subscribe" />
+   <Snippet file="tutorial/records" region="subscribe" />
 
-3. **Change a record.** Every change goes inside `Obj.update`, which hands the callback a mutable view.
+3. **Change a record.** Every change goes inside `Obj.update`, which hands the callback a mutable view. The form calls
+   this as you type.
 
-   <Snippet file="tutorial/steps/mutating" region="update" />
+   <Snippet file="tutorial/records" region="update" />
 
-   The subscriber from step 2 has run and logged `Halcyon Robotics`.
+4. **Remove a record.** The **×** on a row calls this.
 
-4. **Remove a record.**
-
-   <Snippet file="tutorial/steps/mutating" region="remove" />
+   <Snippet file="tutorial/records" region="remove" />
 
    <Aside type="note">
      ECHO does not delete a removed object at once. It marks the object as removed and keeps it in the change history

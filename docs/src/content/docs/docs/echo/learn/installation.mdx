@@ -8,6 +8,8 @@ import Snippet from '../../../../../components/Snippet.astro';
 
 By the end of this page the tutorial app will have a running client, an identity, and the space it keeps its records in.
 
+To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages taken out. It runs from the start, and tells you which step to fill in next. Each page says which file its code goes in.
+
 ## Before you start
 
 The `Client` is the app's way into ECHO. It holds the databases of the spaces you belong to, on the device, and connects them to the network so peers can replicate them.
@@ -44,7 +46,7 @@ A client acts for an identity. The identity owns the spaces it creates, and othe
 
    `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin` for Rollup and esbuild. Node needs no bundler setup.
 
-3. **Open the app's space.** The app does this in one function. `new Client` takes the app's types, which the next page declares. `initialize` opens local storage and connects to the network. The client then needs an identity before it can create a space; [HALO](/docs/halo/overview/) covers identities and devices. Last, it creates the space and waits until its database is ready.
+3. **Open the app's space.** The app does this in one function, in `client.ts`. `new Client` takes the app's types, which the next page declares. `initialize` opens local storage and connects to the network. The client then needs an identity before it can create a space; [HALO](/docs/halo/overview/) covers identities and devices. Last, it creates the space and waits until its database is ready.
 
    <Snippet file="tutorial/client" region="client" />
 

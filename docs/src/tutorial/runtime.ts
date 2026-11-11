@@ -6,10 +6,9 @@ import { create } from '@bufbuild/protobuf';
 
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { TestBuilder, performInvitation } from '@dxos/client/testing';
+import { TestBuilder } from '@dxos/client/testing';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
-import { listed } from '../demos/runtime.ts';
 import { openContacts } from './client.ts';
 import { types } from './schema.ts';
 import { seed } from './seed.ts';
@@ -18,7 +17,8 @@ export type Peer = {
   readonly name: string;
   readonly hue: string;
   readonly client: Client;
-  readonly space: Space;
+  /** The app's space; a second peer has none until it accepts an invitation. */
+  readonly space?: Space;
 };
 
 const NAMES = [
@@ -27,9 +27,9 @@ const NAMES = [
 ] as const;
 
 /**
- * Starts the app's peers in the page, each an in-memory client: the first opens
- * the space and seeds it, and the
- * second, when asked for, joins it by invitation.
+ * Starts the app's peers in the page, each an in-memory client on one
+ * in-memory network: the first opens the space and seeds it, and the second,
+ * when asked for, starts with an identity and no space.
  */
 export const startPeers = async (count: 1 | 2): Promise<Peer[]> => {
   const builder = new TestBuilder();
@@ -46,12 +46,7 @@ export const startPeers = async (count: 1 | 2): Promise<Peer[]> => {
     await client.halo.createIdentity(
       create(ProfileDocumentSchema, { displayName: NAMES[1].name }),
     );
-    await Promise.all(
-      performInvitation({ host: host.space, guest: client.spaces }),
-    );
-    const space = await listed(client, host.space.id);
-    await space.waitUntilReady();
-    peers.push({ ...NAMES[1], client, space });
+    peers.push({ ...NAMES[1], client });
   }
 
   return peers;

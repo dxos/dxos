@@ -6,14 +6,32 @@ import { type Database, Obj, Ref } from '@dxos/echo';
 
 import { Event, Organization, Person } from './schema.ts';
 
-/** Adds the records every embed starts with. */
+// #region instance
+/** An organization, a person who works there, and an event she attends. */
+export const makeTeam = () => {
+  const northwind = Obj.make(Organization, {
+    name: 'Northwind Labs',
+    website: 'https://northwind.example',
+  });
+  const ada = Obj.make(Person, {
+    name: 'Ada Lovelace',
+    employer: Ref.make(northwind),
+  });
+  const review = Obj.make(Event, {
+    title: 'Quarterly review',
+    attendees: [Ref.make(ada)],
+  });
+  return { northwind, ada, review };
+};
+// #endregion
+
+/** Adds the records the app starts with: {@link makeTeam}'s, and more like them. */
 export const seed = (db: Database.Database) => {
-  const northwind = db.add(
-    Obj.make(Organization, {
-      name: 'Northwind Labs',
-      website: 'https://northwind.example',
-    }),
-  );
+  const { northwind, ada, review } = makeTeam();
+  db.add(northwind);
+  db.add(ada);
+  db.add(review);
+
   const halcyon = db.add(
     Obj.make(Organization, {
       name: 'Halcyon Robotics',
@@ -21,20 +39,8 @@ export const seed = (db: Database.Database) => {
     }),
   );
   const riverbend = db.add(Obj.make(Organization, { name: 'Riverbend Foods' }));
-
-  const ada = db.add(
-    Obj.make(Person, {
-      name: 'Ada Lovelace',
-      email: 'ada@northwind.example',
-      employer: Ref.make(northwind),
-    }),
-  );
   const grace = db.add(
-    Obj.make(Person, {
-      name: 'Grace Hopper',
-      email: 'grace@halcyon.example',
-      employer: Ref.make(halcyon),
-    }),
+    Obj.make(Person, { name: 'Grace Hopper', employer: Ref.make(halcyon) }),
   );
   const alan = db.add(
     Obj.make(Person, { name: 'Alan Turing', employer: Ref.make(northwind) }),
@@ -47,13 +53,13 @@ export const seed = (db: Database.Database) => {
   );
   const edsger = db.add(Obj.make(Person, { name: 'Edsger Dijkstra' }));
 
-  db.add(
-    Obj.make(Event, {
-      title: 'Quarterly review',
-      description: 'Numbers, then lunch.',
-      attendees: [Ref.make(ada), Ref.make(alan), Ref.make(grace)],
-    }),
-  );
+  Obj.update(review, (review) => {
+    review.attendees = [
+      ...(review.attendees ?? []),
+      Ref.make(alan),
+      Ref.make(grace),
+    ];
+  });
   db.add(
     Obj.make(Event, {
       title: 'Robotics demo day',

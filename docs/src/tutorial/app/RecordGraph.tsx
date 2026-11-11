@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 
 import { combine } from '@dxos/async';
-import { Entity, Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import {
   type GraphController,
@@ -21,6 +21,7 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 
+import { watchRecord } from '../records.ts';
 import { getTypeIcon, types } from '../schema.ts';
 
 /** Each type's hue, declared once on its schema. */
@@ -61,9 +62,7 @@ export const RecordGraph = ({
     () =>
       combine(
         ...records.map((record) =>
-          Entity.subscribe(record, () =>
-            setRevision((revision) => revision + 1),
-          ),
+          watchRecord(record, () => setRevision((revision) => revision + 1)),
         ),
       ),
     [records],

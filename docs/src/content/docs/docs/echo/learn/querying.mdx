@@ -19,31 +19,34 @@ The client returns typed objects only for the types it knows. The app passes its
 
 [The Filter guide](/docs/echo/guides/filter/) lists every comparison and combinator.
 
+Every query on this page goes in `queries.ts`.
+
 <Steps>
 
-1. **List each type, sorted.** `Filter.type` selects the objects of a type, and `orderBy` sorts them by a field.
+1. **List each type, sorted.** `Filter.type` selects the objects of a type, and `orderBy` sorts them by a field. The
+   app's lists use these.
 
    <Snippet file="tutorial/queries" region="by-type" />
 
-2. **Run a query.** The results are typed, so `person.name` is a `string`.
-
-   <Snippet file="tutorial/steps/querying" region="run" />
-
-3. **Search text.** `Filter.text` matches objects whose text contains the words, whatever their type. The space indexes text as objects are written.
+2. **Search text.** `Filter.text` matches objects whose text contains the words, whatever their type. The space indexes
+   text as objects are written. The search box uses this.
 
    <Snippet file="tutorial/queries" region="search" />
 
-   <Snippet file="tutorial/steps/querying" region="search" />
-
-4. **Follow references backwards.** `referencedBy` steps from the selected organization to the people whose `employer` points at it.
+3. **Follow references backwards.** `referencedBy` steps from an organization to the people whose `employer` points at
+   it.
 
    <Snippet file="tutorial/queries" region="employees" />
 
-   <Snippet file="tutorial/steps/querying" region="employees" />
+4. **Run a query.** `db.query(query).run()` returns the matches once, typed, so each result is a `Person`. An
+   organization's form lists its people with this.
 
-5. **Keep a query live.** `subscribe` calls back with the current results each time they change, and returns a function that stops it.
+   <Snippet file="tutorial/queries" region="run" />
 
-   <Snippet file="tutorial/steps/querying" region="live" />
+5. **Keep a query live.** `subscribe` calls back with the current results each time they change, and returns a function
+   that stops it. `fire: true` calls back once at the start too. The toolbar's count of people uses this.
+
+   <Snippet file="tutorial/queries" region="live" />
 
    The callback runs again whenever a person is added, changed or removed, on this peer or another. [Mutating objects](/docs/echo/learn/mutating-objects/) makes those changes.
 
@@ -51,7 +54,7 @@ The client returns typed objects only for the types it knows. The app passes its
 
 ## Try it
 
-Type in the search box to search every record. The table button shows the records of the chosen type with one column per field. Each list is a live query, which the next page puts to work.
+Type in the search box to search every record. Choose Organizations and open one to see its people. The table button shows the records of the chosen type with one column per field. Each list is a live query, which the next page puts to work.
 
 <TutorialEmbed stage="queries" />
 

@@ -38,18 +38,21 @@ A field can hold a reference to another object, with `Ref.Ref(Type)`. A referenc
    <Snippet file="tutorial/schema" region="event" />
 
 4. **List the types.** The client is given this list when the app starts, in [Installation](/docs/echo/learn/installation/).
+   Steps 1 to 4 all go in `schema.ts`.
 
    <Snippet file="tutorial/schema" region="types" />
 
 5. **Create instances.** `Obj.make` takes the props the schema allows, and `Ref.make` makes a reference to an object.
+   The app starts with these records, in `seed.ts`:
 
-   <Snippet file="tutorial/steps/types" region="instance" />
+   <Snippet file="tutorial/seed" region="instance" />
 
    Leave out a person's `name` and the compiler rejects the call.
 
-6. **Follow a reference.** `peek` reads the target, if it is loaded, without waiting.
+6. **Follow a reference.** `peek` reads the target, if it is loaded, without waiting. The list shows each person's
+   employer beside their name with this, in `schema.ts`:
 
-   <Snippet file="tutorial/steps/types" region="follow" />
+   <Snippet file="tutorial/schema" region="follow" />
 
 </Steps>
 

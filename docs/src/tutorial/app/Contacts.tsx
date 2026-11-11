@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useLabels } from '@dxos/echo-react';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
@@ -13,23 +13,36 @@ import * as Select from '@dxos/react-ui/Select';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { events, organizations, people, search } from '../queries.ts';
-import { Event, Organization, Person, getTypeIcon } from '../schema.ts';
+import { type Stage } from '../progress.ts';
+import {
+  events,
+  organizations,
+  people,
+  search,
+  watchCount,
+} from '../queries.ts';
+import { removeRecord } from '../records.ts';
+import {
+  Event,
+  Organization,
+  Person,
+  employerName,
+  getTypeIcon,
+} from '../schema.ts';
 import { RecordForm } from './RecordForm.tsx';
 import { RecordGraph } from './RecordGraph.tsx';
 import { type Entry, RecordList } from './RecordList.tsx';
 import { RecordTable } from './RecordTable.tsx';
 
+export { type Stage };
+
 /**
  * How far the learning path has built the app: `types` shows each type's
- * records, `queries` adds search and a
- * table, `records` adds creating, editing and removing, and `complete` adds the
- * graph.
+ * records, `queries` adds search and a table, `records` adds creating, editing
+ * and removing, and `complete` adds the graph.
  */
-export type Stage = 'types' | 'queries' | 'records' | 'complete';
-
 const STAGES: readonly Stage[] = ['types', 'queries', 'records', 'complete'];
-const reached = (stage: Stage, at: Stage) =>
+export const reached = (stage: Stage, at: Stage) =>
   STAGES.indexOf(stage) >= STAGES.indexOf(at);
 
 export const isStage = (value: unknown): value is Stage =>
@@ -56,6 +69,13 @@ const VIEW_STAGES: Record<View, Stage> = {
   graph: 'complete',
 };
 
+/** Every record of each type, before Querying sorts them. */
+const unsorted = () => ({
+  organizations: Query.select(Filter.type(Organization)),
+  people: Query.select(Filter.type(Person)),
+  events: Query.select(Filter.type(Event)),
+});
+
 export type ContactsProps = {
   space: Space;
   stage: Stage;
@@ -73,11 +93,21 @@ export const Contacts = ({ space, stage, compact }: ContactsProps) => {
   const [selected, setSelected] = useState<string>();
   const [text, setText] = useState('');
 
+  // Before Querying, each list is every record of its type, unsorted.
+  const sorted = reached(stage, 'queries');
+  const lists = sorted ? { organizations, people, events } : unsorted();
+
   // #region query
-  const allOrganizations = useQuery(space.db, organizations);
-  const allPeople = useQuery(space.db, people);
-  const allEvents = useQuery(space.db, events);
+  const allOrganizations = useQuery(space.db, lists.organizations);
+  const allPeople = useQuery(space.db, lists.people);
+  const allEvents = useQuery(space.db, lists.events);
   // #endregion
+
+  const [count, setCount] = useState<number>();
+  useEffect(
+    () => (sorted ? watchCount(space.db, setCount) : undefined),
+    [space, sorted],
+  );
 
   const records: Obj.Unknown[] = useMemo(
     () => [...allOrganizations, ...allPeople, ...allEvents],
@@ -90,7 +120,10 @@ export const Contacts = ({ space, stage, compact }: ContactsProps) => {
   const searching = searchable && text.trim().length > 0;
   // Searches only while there is text to search for: an empty search has
   // nothing to match.
-  const found = useQuery(searching ? space.db : undefined, search(text.trim()));
+  const found = useQuery(
+    searching ? space.db : undefined,
+    searching ? search(text.trim()) : Query.select(Filter.nothing()),
+  );
   const shown = useMemo(
     () =>
       searching
@@ -111,6 +144,9 @@ export const Contacts = ({ space, stage, compact }: ContactsProps) => {
         return {
           value: record.id,
           label: labels.get(record) ?? '',
+          description: Obj.instanceOf(Person, record)
+            ? employerName(record)
+            : undefined,
           icon: recordType && getTypeIcon(recordType)?.icon,
         };
       }),
@@ -125,7 +161,7 @@ export const Contacts = ({ space, stage, compact }: ContactsProps) => {
     (id: string) => {
       const record = records.find((record) => record.id === id);
       if (record) {
-        space.db.remove(record);
+        removeRecord(space.db, record);
         setSelected((current) => (current === id ? undefined : current));
       }
     },
@@ -184,6 +220,11 @@ export const Contacts = ({ space, stage, compact }: ContactsProps) => {
               />
             )}
             <Toolbar.Separator variant='gap' />
+            {count !== undefined && !compact && (
+              <span className='text-sm text-description'>
+                {count} {count === 1 ? 'person' : 'people'}
+              </span>
+            )}
             {views.length > 1 && (
               <ToggleGroup.Root
                 type='single'
@@ -239,6 +280,7 @@ export const Contacts = ({ space, stage, compact }: ContactsProps) => {
             type={type}
             record={subject}
             editable={reached(stage, 'records')}
+            showStaff={reached(stage, 'queries')}
             onCreate={handleCreate}
           />
         </div>

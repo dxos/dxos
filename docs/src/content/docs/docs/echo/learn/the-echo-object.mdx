@@ -23,18 +23,18 @@ An object is also live: code can subscribe to it, or to a query, and run wheneve
 
 ## The finished app
 
-Pick a type, open a record, and edit it in the form. The table shows the records of one type, and the graph draws every reference between them.
+Pick a type, open a record, and edit it in the form. The table shows the records of one type, and the graph draws every reference between them. To change the code and run it yourself, fork it on StackBlitz.
 
 <TutorialEmbed stage="complete" />
 
 Each page of the learning path builds one piece of it:
 
-| Page | What it adds |
-| --- | --- |
-| [Installation](/docs/echo/learn/installation/) | A client, an identity and the app's space |
-| [Defining types](/docs/echo/learn/defining-types/) | Organization, Person and Event, and a form for each |
-| [Querying](/docs/echo/learn/querying/) | Sorted lists, search, and the people at an organization |
-| [Mutating objects](/docs/echo/learn/mutating-objects/) | Adding, editing and removing records |
-| [Sharing a space](/docs/echo/learn/sharing/) | A second peer that follows every edit |
+| Page | File | What it adds |
+| --- | --- | --- |
+| [Installation](/docs/echo/learn/installation/) | `client.ts` | A client, an identity and the app's space |
+| [Defining types](/docs/echo/learn/defining-types/) | `schema.ts`, `seed.ts` | Organization, Person and Event, and the first records |
+| [Querying](/docs/echo/learn/querying/) | `queries.ts` | Sorted lists, search, a live count and the people at an organization |
+| [Mutating objects](/docs/echo/learn/mutating-objects/) | `records.ts` | Adding, editing and removing records |
+| [Sharing a space](/docs/echo/learn/sharing/) | `sharing.ts` | An invitation code, and a second peer that joins with it |
 
 The pages show the app's ECHO code in plain TypeScript. The [React guide](/docs/echo/guides/react/) walks through the components that draw it.

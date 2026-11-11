@@ -11,33 +11,36 @@ By the end of this page a second peer will have joined the app's space, and each
 
 ## Before you start
 
-A space is shared by invitation. The host creates an invitation, and the guest uses it to find the host and open a secure connection. The host then gives the guest an authentication code, which the guest sends back over that connection to prove it received the invitation from the host.
+A space is shared by invitation. The host creates an invitation, and the guest uses its code to find the host and open a secure connection. An invitation can also ask the guest for an authentication code, which the host passes on by another channel, to prove the guest received the invitation from the host. The app leaves that out, so pasting the code is enough.
 
 Once the guest is in, both peers hold a full replica of the space's database. Each peer reads and writes its own replica, and the replicas exchange changes whenever the peers can reach each other. A peer that goes offline keeps working, and catches up when it reconnects.
 
 [Spaces and databases](/docs/echo/concepts/spaces/#joining-a-space) explains the handshake in detail.
 
+Both functions go in a new file, `sharing.ts`.
+
 <Steps>
 
-1. **Invite a peer.** `space.share` starts an invitation. Its code locates you on the network, and its authentication code proves the guest received the invitation from you.
+1. **Invite a peer.** `space.share` starts an invitation and reports each change to its state. Once it is connecting
+   to the network, its encoded form is the code to send. The **Create invitation** button calls this and copies the
+   code.
 
-   <Snippet file="tutorial/steps/sharing" region="invite" />
+   <Snippet file="tutorial/sharing" region="invite" />
 
-   Send the two codes over different channels. Someone who intercepts one of them cannot join.
+   Anyone with the code can join while the invitation is open. For a code that is not enough on its own, leave out
+   `authMethod` and send the authentication code the invitation then asks for over a different channel.
 
-2. **Join from the other peer.** The guest needs a client that knows the app's types and an identity of its own. It decodes the invitation, connects, and sends the authentication code back.
+2. **Join from the other peer.** The guest needs a client that knows the app's types and an identity of its own. It
+   decodes the code and joins; once the invitation succeeds, the space is among the guest's spaces, and both peers
+   replicate it. The **Join** button calls this.
 
-   <Snippet file="tutorial/steps/sharing" region="join" />
-
-3. **Find the space.** Once authentication completes, the space is among the guest's spaces, and both peers replicate it.
-
-   <Snippet file="tutorial/steps/sharing" region="list" />
+   <Snippet file="tutorial/sharing" region="join" />
 
 </Steps>
 
 ## Try it
 
-Alice created the space and Bob joined it by invitation. Edit a record on one side and watch the other follow. Switch a peer offline, edit on both sides, then switch it back on: the replicas exchange what they missed.
+Alice has the space and Bob has none yet. Press **Create invitation** on Alice's side, paste the code into Bob's, and press **Join**. Then edit a record on one side and watch the other follow. Switch a peer offline, edit on both sides, then switch it back on: the replicas exchange what they missed.
 
 <TutorialEmbed stage="records" peers={2} />
 

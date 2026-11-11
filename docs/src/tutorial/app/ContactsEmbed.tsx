@@ -12,15 +12,19 @@ import React, { useEffect, useState } from 'react';
 import '@dxos/node-std/globals';
 import '@dxos/react-ui/theme.css';
 import '@dxos/react-ui-graph/styles/graph.css';
+import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
+import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { type Stage } from '../progress.ts';
 import { type Peer, startPeers } from '../runtime.ts';
-import { type Stage } from './Contacts.tsx';
+import { acceptInvite, createInvite } from '../sharing.ts';
 import { PeerApp } from './PeerApp.tsx';
 
 const translations = [
@@ -36,7 +40,7 @@ export type ContactsEmbedProps = {
 
 /**
  * A live embed of the tutorial app as it stands at `stage`; `/embed/contacts/`
- * renders it.
+ * renders it. With two peers, the first invites the second.
  */
 export const ContactsEmbed = ({ stage, peers = 1 }: ContactsEmbedProps) => {
   const [started, setStarted] = useState<Peer[]>();
@@ -54,20 +58,12 @@ export const ContactsEmbed = ({ stage, peers = 1 }: ContactsEmbedProps) => {
           <p className='p-4 text-description'>Starting…</p>
         ) : (
           started.map((peer) => (
-            <div
+            <PeerPanel
               key={peer.name}
-              className='flex flex-col dx-grow border-e border-separator last:border-e-0'
-            >
-              {started.length > 1 && <PeerBar peer={peer} />}
-              <div className='dx-grow'>
-                <PeerApp
-                  client={peer.client}
-                  space={peer.space}
-                  stage={stage}
-                  compact={started.length > 1}
-                />
-              </div>
-            </div>
+              peer={peer}
+              stage={stage}
+              shared={started.length > 1}
+            />
           ))
         )}
       </div>
@@ -75,29 +71,129 @@ export const ContactsEmbed = ({ stage, peers = 1 }: ContactsEmbedProps) => {
   );
 };
 
-/** The peer's name, and a switch that takes it off the network. */
-const PeerBar = ({ peer }: { peer: Peer }) => {
+/** One peer: its bar when the app is shared, then its app or, before it has joined, a field for the invitation. */
+const PeerPanel = ({
+  peer,
+  stage,
+  shared,
+}: {
+  peer: Peer;
+  stage: Stage;
+  shared: boolean;
+}) => {
+  const [space, setSpace] = useState(peer.space);
+  return (
+    <div className='flex flex-col dx-grow border-e border-separator last:border-e-0'>
+      {shared && <PeerBar peer={peer} space={space} />}
+      <div className='dx-grow'>
+        {space ? (
+          <PeerApp
+            client={peer.client}
+            space={space}
+            stage={stage}
+            compact={shared}
+          />
+        ) : (
+          <AcceptInvite client={peer.client} onJoin={setSpace} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The peer's name, a button that invites another peer to its space, and a
+ * switch that takes it off the network.
+ */
+const PeerBar = ({ peer, space }: { peer: Peer; space?: Space }) => {
   const [online, setOnline] = useState(true);
+  const [code, setCode] = useState<string>();
   const handleChange = (online: boolean) => {
     setOnline(online);
     void peer.client.mesh.updateConfig(
       online ? ConnectionState.ONLINE : ConnectionState.OFFLINE,
     );
   };
+  const handleInvite = async () => {
+    if (space) {
+      const code = await createInvite(space);
+      setCode(code);
+      await navigator.clipboard?.writeText(code).catch(() => {});
+    }
+  };
 
   return (
     <div
-      className='flex items-center gap-2 px-3 py-1 text-sm border-b border-separator'
+      className='flex flex-col gap-2 px-3 py-1 text-sm border-b border-separator'
       style={{ borderTop: `3px solid var(--color-${peer.hue}-border)` }}
     >
-      <span className='font-medium'>{peer.name}</span>
-      <span className='ms-auto' />
-      <Input.Switch
-        classNames='text-sm'
-        label={online ? 'Online' : 'Offline'}
-        checked={online}
-        onCheckedChange={({ checked }) => handleChange(checked)}
+      <div className='flex items-center gap-2'>
+        <span className='font-medium'>{peer.name}</span>
+        {space && (
+          <Button.Root
+            icon='ph--user-plus--regular'
+            label={code ? 'Copied invitation' : 'Create invitation'}
+            onClick={() => void handleInvite()}
+          />
+        )}
+        <span className='ms-auto' />
+        <Input.Switch
+          classNames='text-sm'
+          label={online ? 'Online' : 'Offline'}
+          checked={online}
+          onCheckedChange={({ checked }) => handleChange(checked)}
+        />
+      </div>
+      {code && (
+        <Input.Root
+          aria-label='Invitation code'
+          readOnly
+          value={code}
+          onFocus={(event) => event.target.select()}
+        />
+      )}
+    </div>
+  );
+};
+
+/** A field for an invitation code; joining hands the peer the space. */
+const AcceptInvite = ({
+  client,
+  onJoin,
+}: {
+  client: Client;
+  onJoin: (space: Space) => void;
+}) => {
+  const [code, setCode] = useState('');
+  const [joining, setJoining] = useState(false);
+  const [error, setError] = useState<string>();
+  const handleJoin = () => {
+    setJoining(true);
+    setError(undefined);
+    acceptInvite(client, code.trim()).then(onJoin, (error) => {
+      setJoining(false);
+      setError(String(error));
+    });
+  };
+
+  return (
+    <div className='flex flex-col gap-2 p-3'>
+      <p className='text-sm text-description'>
+        Paste an invitation from another peer to join its space.
+      </p>
+      <Input.Root
+        aria-label='Invitation code'
+        placeholder='Invitation code'
+        value={code}
+        onChange={(event) => setCode(event.target.value)}
       />
+      <Button.Root
+        icon='ph--sign-in--regular'
+        label={joining ? 'Joining…' : 'Join'}
+        disabled={joining || code.trim().length === 0}
+        onClick={handleJoin}
+      />
+      {error && <p className='text-sm text-error-text'>{error}</p>}
     </div>
   );
 };

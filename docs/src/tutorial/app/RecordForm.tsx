@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Form, ObjectForm, omitId } from '@dxos/react-ui-form';
+import { Form, omitId } from '@dxos/react-ui-form';
+
+import { staffOf } from '../queries.ts';
+import { addRecord, updateRecord } from '../records.ts';
+import { Organization, type Person } from '../schema.ts';
 
 // #region title
 /** Re-renders whenever any peer renames the record. */
@@ -50,8 +54,7 @@ type NewRecordProps = {
 const NewRecord = ({ db, type, onCreate }: NewRecordProps) => {
   const schema = useMemo(() => omitId(type), [type]);
   const handleSave = useCallback(
-    (values: Record<string, unknown>) =>
-      onCreate(db.add(Obj.make(type, values))),
+    (values: Record<string, unknown>) => onCreate(addRecord(db, type, values)),
     [db, type, onCreate],
   );
 
@@ -66,11 +69,94 @@ const NewRecord = ({ db, type, onCreate }: NewRecordProps) => {
 };
 // #endregion
 
+type EditRecordProps = {
+  db: Database.Database;
+  type: Type.AnyObj;
+  record: Obj.Unknown;
+};
+
+// #region edit
+/** The record's fields; each change is written back as it is made. */
+const EditRecord = ({ db, type, record }: EditRecordProps) => {
+  const [snapshot] = useObject(record);
+  const schema = useMemo(() => omitId(type), [type]);
+  const values = useMemo(
+    () => Object.fromEntries(Object.entries(snapshot ?? {})),
+    [snapshot],
+  );
+  const handleChange = useCallback(
+    (
+      values: Record<string, unknown>,
+      {
+        isValid,
+        changed,
+      }: { isValid: boolean; changed: Record<string, boolean> },
+    ) => {
+      // A changed path such as `attendees[0]` rewrites the whole field.
+      const fields = new Set(
+        Object.keys(changed)
+          .filter((path) => changed[path])
+          .map((path) => path.split(/[.[]/)[0]),
+      );
+      if (isValid && fields.size > 0) {
+        updateRecord(
+          record,
+          Object.fromEntries(
+            [...fields].map((field) => [field, values[field]]),
+          ),
+        );
+      }
+    },
+    [record],
+  );
+
+  return (
+    <Form.Root
+      schema={schema}
+      db={db}
+      values={values}
+      onValuesChanged={handleChange}
+    >
+      <Form.Content>
+        <Form.Fields />
+      </Form.Content>
+    </Form.Root>
+  );
+};
+// #endregion
+
+/** The people who work at `organization`. */
+const Staff = ({
+  db,
+  organization,
+}: {
+  db: Database.Database;
+  organization: Organization;
+}) => {
+  const [staff, setStaff] = useState<Person[]>();
+  useEffect(() => {
+    void staffOf(db, organization).then(setStaff);
+  }, [db, organization]);
+
+  return staff && staff.length > 0 ? (
+    <div className='flex flex-col gap-1'>
+      <h4 className='text-sm text-description'>People</h4>
+      <ul className='text-sm'>
+        {staff.map((person) => (
+          <li key={person.id}>{person.name}</li>
+        ))}
+      </ul>
+    </div>
+  ) : null;
+};
+
 export type RecordFormProps = {
   db: Database.Database;
   type: Type.AnyObj;
   record?: Obj.Unknown;
   editable?: boolean;
+  /** Lists an organization's people under its fields. */
+  showStaff?: boolean;
   onCreate: (record: Obj.Unknown) => void;
 };
 
@@ -83,6 +169,7 @@ export const RecordForm = ({
   type,
   record,
   editable,
+  showStaff,
   onCreate,
 }: RecordFormProps) => {
   const recordType = (record && Obj.getType(record)) ?? type;
@@ -105,12 +192,7 @@ export const RecordForm = ({
           record={record}
         />
       ) : record ? (
-        <ObjectForm
-          key={record.id}
-          type={recordType}
-          object={record}
-          showTags={false}
-        />
+        <EditRecord key={record.id} db={db} type={recordType} record={record} />
       ) : (
         <NewRecord
           key={Type.getTypename(recordType)}
@@ -118,6 +200,9 @@ export const RecordForm = ({
           type={recordType}
           onCreate={onCreate}
         />
+      )}
+      {showStaff && record && Obj.instanceOf(Organization, record) && (
+        <Staff key={record.id} db={db} organization={record} />
       )}
     </div>
   );
