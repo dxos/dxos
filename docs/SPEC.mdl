@@ -1472,6 +1472,10 @@ feat F-3: Checked code samples
     when: the dev server renders a page
     then: samples show their region without compiling, unless `DOCS_TWOSLASH=1` turns compiling on; a build compiles
           unless `DOCS_TWOSLASH=0` turns it off
+
+  req F-3.6:
+    when: the dev server first renders a page that quotes code, such as `/echo`
+    then: it answers without compiling the tutorial app or the demos; those compile when the browser loads them
 ```
 
 ```mdl
@@ -2820,6 +2824,14 @@ decision D-118: The llms.txt pages move from the Agents groups to each section's
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-6.1, F-6.3, echo-llms-txt, halo-llms-txt, plex-llms-txt]
+```
+
+```mdl
+decision D-119: The snippet sources are read from disk with `fs`, not imported through `import.meta.glob` with `?raw`. In dev, Astro collects a page's CSS by walking its imports, and it follows each `?raw` import into the real module's graph, so the first render of `/echo` compiled the tutorial app, the demos and their theme before it answered (about 11 s).
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.6]
 ```
 
 ## Appendix: Extension Definitions

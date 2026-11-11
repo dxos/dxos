@@ -2,23 +2,51 @@
 // Copyright 2026 DXOS.org
 //
 
-const SOURCES = {
-  ...import.meta.glob<string>('./snippets/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+
+/**
+ * Directories whose `.ts` and `.tsx` files are quoted, relative to this module. They are read from disk, not imported:
+ * in dev, Astro walks a page's imports for its CSS and follows a `?raw` import into the module's own graph, so a page
+ * quoting the tutorial app would compile the whole app before it renders.
+ */
+const SOURCE_DIRS = [
+  './snippets/',
   // The tutorial app's own modules, quoted where a page builds that piece of it.
-  ...import.meta.glob<string>('../tutorial/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+  '../tutorial/',
   // The Composer learning path's plugin, quoted the same way.
-  ...import.meta.glob<string>('../app-framework-tutorial/**/*.{ts,tsx}', {
-    query: '?raw',
-    import: 'default',
-    eager: true,
-  }),
-};
+  '../app-framework-tutorial/',
+];
+
+const ECHO_DIR = join(process.cwd(), 'src/echo');
+
+const cache = new Map<string, { mtime: number; source: string }>();
+
+/** The quoted sources by their path relative to this module; a file is read again when it changes. */
+const readSources = (): Record<string, string> =>
+  Object.fromEntries(
+    SOURCE_DIRS.flatMap((dir) =>
+      readdirSync(join(ECHO_DIR, dir), { recursive: true, encoding: 'utf8' })
+        .filter((file) => /\.tsx?$/.test(file))
+        .map((file) => {
+          const key = `${dir}${file}`;
+          const path = join(ECHO_DIR, key);
+          const mtime = statSync(path).mtimeMs;
+          let entry = cache.get(path);
+          if (entry?.mtime !== mtime) {
+            entry = { mtime, source: readFileSync(path, 'utf8') };
+            cache.set(path, entry);
+          }
+          return [key, entry.source];
+        }),
+    ),
+  );
 
 /** Directories whose modules compile with their local imports beside them. */
 const PROJECTS = ['../tutorial/', '../app-framework-tutorial/'];
 
 const findSource = (file: string): [path: string, source: string] => {
-  const entry = Object.entries(SOURCES).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));
+  const entry = Object.entries(readSources()).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));
   if (!entry) {
     throw new Error(`Unknown snippet: ${file}`);
   }
@@ -46,14 +74,15 @@ const resolve = (from: string, specifier: string): string => {
  * way they do in the project.
  */
 const localImports = (root: string, path: string, seen = new Set<string>()): string[] => {
-  const source = SOURCES[`${root}${path}`];
+  const sources = readSources();
+  const source = sources[`${root}${path}`];
   if (typeof source !== 'string') {
     throw new Error(`Unknown project module: ${root}${path}`);
   }
   const order: string[] = [];
   for (const [, specifier] of source.matchAll(/(?:from |import\()'(\.{1,2}\/[^']+)'/g)) {
     const target = resolve(path, specifier);
-    if (!target.startsWith('..') && !seen.has(target) && SOURCES[`${root}${target}`] !== undefined) {
+    if (!target.startsWith('..') && !seen.has(target) && sources[`${root}${target}`] !== undefined) {
       seen.add(target);
       order.push(...localImports(root, target, seen), target);
     }
@@ -101,7 +130,7 @@ export const snippetWithContext = (file: string, region?: string): string => {
   const self = path.slice(root.length);
   const seen = new Set([self]);
   const files = localImports(root, self, seen).map(
-    (module) => `// @filename: ${module}\n${stripRegions(SOURCES[`${root}${module}`])}`,
+    (module) => `// @filename: ${module}\n${stripRegions(readSources()[`${root}${module}`])}`,
   );
   return ['// @allowImportingTsExtensions', '// @noEmit', ...files, `// @filename: ${self}`, cut].join('\n');
 };
