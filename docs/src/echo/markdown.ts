@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { SKILLS_URL } from '../utils/agent-skills.ts';
 import { snippetSource } from './snippets.ts';
 
 const attribute = (tag: string, name: string): string | undefined => tag.match(new RegExp(`${name}="([^"]*)"`))?.[1];
@@ -20,7 +21,14 @@ export const toMarkdown = (title: string, description: string | undefined, body:
     })
     .replace(/<SpecCite item="([^"]*)" \/>/g, '[$1]')
     .replace(/<AgentPrompt\b[^>]*\/>/g, (tag) => {
-      const text = [attribute(tag, 'prefix'), attribute(tag, 'prompt')].filter(Boolean).join('\n\n');
+      const skill = attribute(tag, 'skill');
+      const text = [
+        attribute(tag, 'context'),
+        skill && `Use the ${skill} skill: ${SKILLS_URL}/${skill}/SKILL.md`,
+        attribute(tag, 'prompt'),
+      ]
+        .filter(Boolean)
+        .join('\n\n');
       return `\`\`\`text\n${text}\n\`\`\``;
     })
     .replace(/<Anatomy[\s\S]*?\/>/g, (tag) =>

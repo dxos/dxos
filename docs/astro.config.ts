@@ -89,6 +89,11 @@ const redirects: Record<string, string> = {
   '/docs/app-framework/build-a-plugin-with-the-assistant': '/docs/plex/build-with-a-coding-agent/',
   '/docs/composer/build-a-plugin-with-the-assistant': '/docs/plex/build-with-a-coding-agent/',
   '/docs/plex/build-a-plugin-with-the-assistant': '/docs/plex/build-with-a-coding-agent/',
+  // Build with a coding agent replaced the Open in Claude pages.
+  '/docs/app-framework/agents/open-in-claude': '/docs/plex/build-with-a-coding-agent/',
+  '/docs/composer/agents/open-in-claude': '/docs/plex/build-with-a-coding-agent/',
+  '/docs/echo/agents/open-in-claude': '/docs/echo/build-with-a-coding-agent/',
+  '/docs/plex/agents/open-in-claude': '/docs/plex/build-with-a-coding-agent/',
   ...plexRedirects,
 };
 

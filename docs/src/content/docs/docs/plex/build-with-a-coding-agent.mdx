@@ -7,24 +7,29 @@ import AgentPrompt from '../../../../components/AgentPrompt.astro';
 
 A coding agent can build a plugin in a folder of yours and load it into the Composer you have open, in a few minutes.
 Describe the plugin you want in the prompt below, and change the Composer address if yours is different. Then open it
-in your agent. The prompt is filled in, not sent: you pick the folder and send it.
+in your agent.
 
-<AgentPrompt prefix="Use the composer-plugin-dev skill. If it is not installed, read https://raw.githubusercontent.com/dxos/dxos/main/tools/claude/plugins/dxos/skills/composer-plugin-dev/SKILL.md and the files it links, from the same folder, and follow it." prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team. My Composer is open at https://composer.space." />
+<AgentPrompt skill="composer-plugin-dev" prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team. My Composer is open at https://composer.space." />
 
 The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to load
-the plugin into your Composer. The first line of the prompt makes the agent use it, or read it from the repository if
-it is not installed.
+the plugin into your Composer. Each button adds a step before your text that installs the skill into the folder and has
+the agent follow it, so you do not need to install anything first.
 
-## Install the skill in Claude Code
+## How the buttons work
 
-If you build plugins more than once, install the `dxos` Claude Code plugin, which carries the skill:
+Each button opens its agent's desktop app with the prompt filled in. It does not send it: you pick the folder, read the
+prompt and send it. A button does nothing if that app is not installed; copy the prompt instead.
 
-```bash
-claude plugin marketplace add dxos/dxos
-claude plugin install dxos@dxos
-```
+The added step downloads the skill from the [dxos repository](https://github.com/dxos/dxos/tree/main/tools/claude/plugins/dxos/skills/composer-plugin-dev)
+into the folder each agent loads project skills from:
 
-Start a new Claude Code session after installing.
+| Agent       | Skill folder                         |
+| ----------- | ------------------------------------ |
+| Claude Code | `.claude/skills/composer-plugin-dev` |
+| Codex       | `.agents/skills/composer-plugin-dev` |
+| Cursor      | `.cursor/skills/composer-plugin-dev` |
+
+The next prompt you send in that folder can use the skill again.
 
 ## When the agent hands off
 

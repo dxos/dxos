@@ -193,8 +193,8 @@ page echo-build-with-agent: Build with a coding agent
   status: spike
   covers:
     - A prompt the reader can edit, prefilled to build the tutorial app by following the learning path
-    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it
-    - What the agent reads first: `/echo/llms-full.txt`, every ECHO page in one file
+    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a line the reader does not see before their text, which has the agent read `/echo/llms-full.txt` first
+    - How the buttons work: the prompt is prefilled, not sent, and each needs its agent's desktop app
     - What the reader does while the agent works, and what they should see at the end
 ```
 
@@ -470,24 +470,6 @@ page guide-react: React
     - Read data with `useQuery` and `useObject`
     - Edit an object with a schema form
     - The reactivity rules behind the hooks
-```
-
-### Agents
-
-Pages for working on ECHO with an AI agent.
-
-```mdl
-page echo-open-in-claude: Open in Claude
-  Start a Claude Code session on an ECHO task from a link.
-  section: ECHO
-  route: /docs/echo/agents/open-in-claude/
-  group: Agents
-  template: reference
-  status: spike
-  covers:
-    - The Claude desktop app's `claude://code/new` link, with a working example
-    - Its parameters, and that the prompt is prefilled, not sent
-    - The Claude Code on the web and CLI equivalents
 ```
 
 ### Resources
@@ -987,8 +969,8 @@ page plex-build-with-agent: Build with a coding agent
   status: spike
   covers:
     - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser
-    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts the skill instruction before the reader's text
-    - Installing the `dxos` Claude Code plugin, which carries the `composer-plugin-dev` skill, for readers who build more than once
+    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
+    - How the buttons work: the prompt is prefilled, not sent, each needs its agent's desktop app, and where each agent's copy of the skill goes
     - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
 
@@ -1271,24 +1253,6 @@ page app-framework-guide-react: React
     - The reactivity rules a plugin component follows
 ```
 
-### Agents
-
-Pages for working on PLEX with an AI agent.
-
-```mdl
-page plex-open-in-claude: Open in Claude
-  Start a Claude Code session on a PLEX task from a link.
-  section: PLEX
-  route: /docs/plex/agents/open-in-claude/
-  group: Agents
-  template: reference
-  status: spike
-  covers:
-    - The Claude desktop app's `claude://code/new` link, with a working example
-    - Its parameters, and that the prompt is prefilled, not sent
-    - The Claude Code on the web and CLI equivalents
-```
-
 ### Resources
 
 ```mdl
@@ -1566,7 +1530,9 @@ feat F-6: Reading by agents
   req F-6.4:
     when: a reader opens a Build with a coding agent page
     then: it shows a prompt they can edit, prefilled for that section, and buttons that open it in Claude Code,
-          Codex or Cursor, or copy it; the prompt is prefilled in the agent, not sent
+          Codex or Cursor, or copy it; each puts the section's fixed lines, which the page does not show, before the
+          reader's text; the three open buttons look alike, each in the palette color nearest its agent's brand; the
+          prompt is prefilled in the agent, not sent
 ```
 
 ```mdl
@@ -1773,8 +1739,8 @@ feat F-17: Same shape in both sections
 
   req F-17.1:
     when: a section is built
-    then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides, any groups of its own (such as
-          PLEX's Agents) and Resources, in that order
+    then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides, any groups of its own and
+          Resources, in that order
 
   req F-17.2:
     when: a page is written
@@ -2950,6 +2916,16 @@ decision D-129: The plugin guide keeps World Clock as its worked example, as the
   by: user:wittjosiah
   affects: [plex-build-with-agent]
   why: An example that matches a held-out brief lets the agent copy the answer, and the eval stops measuring what it is meant to.
+```
+
+```mdl
+decision D-130: Build with a coding agent replaces the Open in Claude pages, and the Agents groups go with them; their routes redirect to the section's Build with a coding agent page. The fixed lines move out of view: the page shows only the text the reader edits. PLEX's fixed lines install the `composer-plugin-dev` skill into the folder, downloading `SKILL.md` and the files it links from the repository into the agent's own skills folder (`.claude/skills`, `.agents/skills` or `.cursor/skills`), then have the agent follow it; the copied prompt names all three folders. ECHO's fixed line has the agent read `/echo/llms-full.txt` first. The three open buttons are all primary, each in the palette color nearest its agent's brand: Claude Code in the property orange, Codex in the string blue, Cursor in the foreground neutral. The Notes example goes with the Open in Claude pages. Amends [D-116], [D-117] and [D-127].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.4, F-17.1, echo-build-with-agent, plex-build-with-agent]
+  why: A reader should not need the `dxos` Claude Code plugin installed, or have to read a line they cannot change, and no one agent should look like the default.
+  rejected:
+    - Telling the agent to use the skill if installed and read it otherwise: it depends on the Claude Code plugin, and the other two agents have no way to install it.
 ```
 
 ## Appendix: Extension Definitions
