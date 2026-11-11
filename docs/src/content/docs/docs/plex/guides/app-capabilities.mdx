@@ -17,19 +17,44 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 Composer and any other app built with the toolkit read them. `AppCapability` has a module
 maker for most of them, which sets the activation event and environments so a manifest only names the file.
 
-## The app-level capabilities
+## A tour, by group
+
+Most plugins touch a handful of these. The rest exist for the plugins that build the app's own features, and a
+plugin that is not one of those can ignore them.
+
+- **Layout.** `Layout` is the current layout as an atom: what is open, the sidebar, the mode. Plugins read it; the
+  layout plugin provides it. Changing it goes through `LayoutOperation`.
+- **App Graph.** `AppGraphBuilder` adds nodes and actions, `AppGraph` is the graph itself for reading, and
+  `AppGraphRetention` keeps nodes loaded while they are off screen. [AppGraph](/docs/plex/guides/app-graph/) covers
+  them.
+- **Settings and text.** `Settings` adds a section to the settings page, and `Translations` gives the plugin's
+  strings their text. [Settings and state](/docs/plex/guides/settings-and-state/) and
+  [Translations](/docs/plex/guides/translations/) cover them.
+- **Schema.** `Schema` registers the ECHO types the app can store, query and name.
+  [Using ECHO in a plugin](/docs/plex/guides/using-echo/) covers it.
+- **Agents.** `SkillDefinition` gives the assistant a skill, `Toolkit` adds tools outside a skill, and `McpServer`
+  exposes a built-in MCP server.
+- **Files and content.** `FileUploader` stores an uploaded file, `Exporter` adds an export format, `TextContent`
+  extracts an object's text for search and agents, and `PluginAsset` publishes a file other tools can read, such as
+  the plugin's spec.
 
 | Capability | Maker | What it adds |
 | --- | --- | --- |
-| `Translations` | `translations` | Text for the plugin's strings and type labels. |
-| `Schema` | `schema` | ECHO types the app can store, query and name. |
-| `Settings` | `settings` | A settings section in the settings page. |
-| `AppGraphBuilder` | `appGraphBuilder` | Nodes and actions in the app graph. |
-| `SkillDefinition` | `skillDefinition` | A skill the assistant can use. |
-| `PluginAsset` | `pluginAsset` | A file other tools can read, such as the plugin's spec. |
-| `SpaceTemplate` | `spaceTemplates` | A template for new spaces. |
 | `AppGraph` | none | The graph itself, for reading. |
+| `AppGraphBuilder` | `appGraphBuilder` | Nodes and actions in App Graph. |
+| `AppGraphRetention` | none | Nodes App Graph keeps loaded. |
+| `Exporter` | `exporter` | An export format for objects. |
+| `FileUploader` | none | Storage for files people add. |
 | `Layout` | none | The current layout, as an atom. |
+| `McpServer` | `mcpServer` | A built-in MCP server. |
+| `PluginAsset` | `pluginAsset` | A file other tools can read, such as the plugin's spec. |
+| `Schema` | `schema` | ECHO types the app can store, query and name. |
+| `Settings` | `settings` | A section in the settings page. |
+| `SkillDefinition` | `skillDefinition` | A skill the assistant can use. |
+| `SpaceTemplate` | `spaceTemplates` | A template for new spaces. |
+| `TextContent` | `textContent` | The text of an object, for search and agents. |
+| `Toolkit` | none | Tools for the assistant outside a skill. |
+| `Translations` | `translations` | Text for the plugin's strings and type labels. |
 
 `AppCapability.surface` and `AppCapability.operationHandler` make modules for the framework's `ReactSurface` and
 `OperationHandler` capabilities.

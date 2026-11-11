@@ -1,0 +1,46 @@
+---
+title: Testing a plugin
+description: Test a plugin's modules without an app, with the test harness.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Harness from '@dxos/plugin-testing/Harness';
+```
+
+A plugin's modules run in a plugin manager, so a test starts one. `Harness.createComposerTestApp` starts a headless
+app with the core plugins Composer gives every plugin, plus the plugins under test. It runs on an in-memory client,
+so it needs no browser, account or server.
+
+## Start the app
+
+<Snippet file="plex-guide-testing" region="boot" />
+
+`await using` closes the app when the test ends, which deactivates every module and runs its finalizers.
+
+## Fire activation events
+
+The harness fires the startup events. A module gated on a later event stays inactive until the test fires that event,
+so a test can check what a module does before and after it activates.
+
+<Snippet file="plex-guide-testing" region="events" />
+
+## Read capabilities
+
+`getAll` returns every contribution to a capability, as `Capability.getAll` does inside a module. `waitForCapability`
+waits for a capability whose module has not activated yet.
+
+<Snippet file="plex-guide-testing" region="capabilities" />
+
+## Invoke an operation
+
+`invoke` runs an operation through the app's invoker, with the handlers the plugins contributed, and returns its
+output. A typed error fails the promise.
+
+<Snippet file="plex-guide-testing" region="invoke" />
+
+## Limits
+
+- The harness renders no UI. Test a surface's component on its own, with a story or a component test.
+- Plugins that need a real network or device, such as a connector, need their own test layers.

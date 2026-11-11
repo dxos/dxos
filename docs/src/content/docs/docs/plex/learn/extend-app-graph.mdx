@@ -1,5 +1,5 @@
 ---
-title: Extend the app graph
+title: Extend the App Graph
 description: Put the plugin's objects and actions into the app's navigation.
 ---
 
@@ -11,11 +11,11 @@ bookmark's toolbar.
 
 ## Background
 
-An PLEX app draws its navigation tree, toolbars and menus from one graph, the app graph. In Composer that
+A PLEX app draws its navigation tree, toolbars and menus from one graph, App Graph. In Composer that
 is the tree on the left, the object toolbar and the context menus. Its nodes are the things a
 person can open, and its action nodes are what they can do to them. Plugins add to the graph with builder extensions:
 functions that match a node and return its children or its actions. The app runs them only for the nodes a person
-expands. [The app graph](/docs/plex/concepts/app-graph/) explains the model.
+expands. [App Graph](/docs/plex/concepts/app-graph/) explains the model.
 
 ## Steps
 
@@ -36,11 +36,11 @@ expands. [The app graph](/docs/plex/concepts/app-graph/) explains the model.
 
    <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="actions" />
 
-4. **Add the module to the manifest.** The app graph maker activates the module when the app is idle after startup.
+4. **Add the module to the manifest.** The App Graph maker activates the module when the app is idle after startup.
 
    <Snippet file="app-framework-tutorial/dx.config" region="app-graph" />
 
-5. **See the result.** Load or reload your plugin below, create a sample bookmark with **New**, and select **App graph**. The inspector shows the branches of the graph, as Composer builds it, that lead to what your plugin added, and marks those nodes.
+5. **See the result.** Load or reload your plugin below, create a sample bookmark with **New**, and select **App Graph**. The inspector shows the branches of the graph, as Composer builds it, that lead to what your plugin added, and marks those nodes.
 
    <InspectorEmbed adds={['app-graph']} />
 

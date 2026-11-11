@@ -48,21 +48,21 @@ A module body returns the contributions it declared in `provides`. The compiler 
 undeclared contribution is a type error at `Plugin.addModule`. [Capability](/docs/plex/guides/capability/) covers
 declaring and requesting capabilities.
 
-## Test a plugin in isolation
+## Describe the plugin in `dx.config.ts`
 
-`Harness.createComposerTestApp` from `@dxos/plugin-testing` boots a headless Composer with the plugins you pass and the
-core plugins they need. Fire events, read capabilities and invoke operations on it.
+A plugin that is published describes itself in a `dx.config.ts` manifest. `Plugin.config` takes the metadata, the
+registry's fields such as tags, and the modules, each made with a maker from `AppCapability` that names the file to
+load. It returns `meta` and `make`, so the registry reads the plugin without importing its modules.
 
-<Snippet file="app-framework-guide-plugin" region="test" />
+<Snippet file="app-framework-tutorial/dx.config" region="config" />
 
-The tutorial plugin is tested the same way:
-
-<Snippet file="app-framework-tutorial/src/plugin-check" region="harness" />
+[The plugin manifest](/docs/plex/resources/manifest/) lists every field. [Testing a plugin](/docs/plex/guides/testing/)
+boots a plugin in a headless app.
 
 ## Related
 
 | Page | What it covers |
 | --- | --- |
-| [Anatomy of a plugin](/docs/plex/introduction/) | How plugins, modules, events and capabilities fit together. |
+| [Plugins and modules](/docs/plex/concepts/plugins/) | How plugins, modules, events and capabilities fit together. |
 | [ActivationEvent](/docs/plex/guides/activation-event/) | Declaring events and the built-in ones. |
 | [API reference](/docs/plex/resources/api-reference/) | Every export of `@dxos/app-framework`. |

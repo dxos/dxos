@@ -3,6 +3,7 @@ title: Surfaces
 description: How the framework decides which component renders an object in a given place.
 ---
 
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
 A surface is a named place in an app's UI that plugins fill with components. The host asks for "the article for this
@@ -14,11 +15,29 @@ A **role** names a place: `Article` is the main content area, `Section` is an ob
 the body of a card, and `StatusIndicator` is the status bar. Each role declares the shape of the data it passes, such as
 `{ subject, attendableId }` for an article.
 
+The roles a plugin fills most often are in `AppSurface` from `@dxos/app-toolkit`:
+
+| Role | Where it renders | What it is given |
+| --- | --- | --- |
+| `Article` | The main content area, one object at a time | `subject`, `attendableId` |
+| `Section` | An object inside a stack of objects | `subject`, `attendableId` |
+| `CardContent` | The body of a card, in search results and boards | `subject` |
+| `ObjectProperties` | The object's properties panel | `subject` |
+| `Dialog`, `Popover` | A dialog or popover a plugin opens by name | `component`, `props` |
+| `Navigation` | The navigation sidebar | `current`, the open item's id |
+| `StatusIndicator` | The status bar | no data |
+
+[Surface](/docs/plex/guides/surface/) lists the rest and shows how to narrow a role's `subject` to one type.
+
 A **surface contribution** is a component plus a **filter**. The filter names one or more roles and a guard on the data,
 for example "the article role, when the subject is a Note". Plugins contribute surfaces through the `ReactSurface`
 capability.
 
 <Snippet file="app-framework-guide-surface" region="contribute" lang="tsx" />
+
+Bookmarks' Surface module in the inspector renders its article with the sample bookmark:
+
+<InspectorEmbed module="surface" />
 
 ## Behavior
 

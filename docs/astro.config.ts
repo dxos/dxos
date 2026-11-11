@@ -94,6 +94,10 @@ const redirects: Record<string, string> = {
   '/docs/composer/agents/open-in-claude': '/docs/plex/build-with-a-coding-agent/',
   '/docs/echo/agents/open-in-claude': '/docs/echo/build-with-a-coding-agent/',
   '/docs/plex/agents/open-in-claude': '/docs/plex/build-with-a-coding-agent/',
+  // Anatomy of a plugin became the Plugins and modules concept page.
+  '/docs/app-framework/introduction': '/docs/plex/concepts/plugins/',
+  '/docs/composer/introduction': '/docs/plex/concepts/plugins/',
+  '/docs/plex/introduction': '/docs/plex/concepts/plugins/',
   ...plexRedirects,
 };
 

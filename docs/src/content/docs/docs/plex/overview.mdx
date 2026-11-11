@@ -16,10 +16,10 @@ A plugin is a set of modules. Each module activates on an event, such as startup
 and contributes capabilities: typed values such as a React component for a surface, a handler for an operation, or nodes
 for the navigation graph. Other modules look capabilities up, so one plugin can render inside another plugin's view or
 add an action to another plugin's objects without either knowing about the other.
-[Anatomy of a plugin](/docs/plex/introduction/) explains the pieces.
+[Plugins and modules](/docs/plex/concepts/plugins/) explains the pieces.
 
 The packages are `@dxos/app-framework`, which holds plugins, modules, capabilities and surfaces, and
-`@dxos/app-toolkit`, which adds what a workspace app needs: the app graph, layout, settings and the standard surface
+`@dxos/app-toolkit`, which adds what a workspace app needs: App Graph, layout, settings and the standard surface
 roles.
 
 ## Composer: a super-app built on PLEX

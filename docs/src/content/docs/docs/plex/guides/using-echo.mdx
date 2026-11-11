@@ -1,0 +1,53 @@
+---
+title: Using ECHO in a plugin
+description: Register a plugin's ECHO types with the app, so it can create, name and list their objects.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+A plugin stores its data as ECHO objects in the person's spaces. The types themselves are ordinary ECHO types,
+which [Defining types](/docs/echo/learn/defining-types/) covers. This page covers what a plugin adds so the app knows
+about them.
+
+## Register the types
+
+The app can store, query and show an object only if its type is registered. A plugin registers its types with the
+`Schema` capability: a module returns the list, and `AppCapability.schema` contributes it.
+
+<Snippet file="app-framework-tutorial/src/capabilities/schema" region="schema" />
+
+<Snippet file="app-framework-tutorial/dx.config" region="schema" />
+
+A type registered by no plugin still syncs, since ECHO stores any object, but the app cannot name, list or create it.
+
+## Annotate the type for the app
+
+Annotations on the schema tell the app how to present an object:
+
+- `LabelAnnotation` names the property that holds the object's label, shown in the navigation tree and in search.
+- `IconAnnotation` gives the type an icon and a hue.
+- `UserType` marks a type people create themselves, so it appears in the app's create menus. Leave it off types
+  that only a plugin creates, such as a sync cursor.
+
+<Snippet file="app-framework-tutorial/src/types/Bookmark" region="type" />
+
+The type's name in the menus comes from the plugin's translations, keyed by its typename. See
+[Translations](/docs/plex/guides/translations/).
+
+## Create objects
+
+Give each type a `make` function that fills in defaults, so every plugin that creates one gets a valid object.
+
+<Snippet file="app-framework-tutorial/src/types/Bookmark" region="make" />
+
+To add the type to the app's create menu, contribute a `SpaceCapabilities.CreateObjectEntry`. The Space plugin lists
+every entry, and calls `createObject` with the properties the person entered and the place they chose.
+`SpaceOperation.AddObject` adds the object to the space, so the change can be undone and other plugins see it.
+
+<Snippet file="app-framework-tutorial/src/capabilities/create-object" region="create-object" />
+
+## Limits
+
+- A plugin can register only types it defines or depends on. It cannot change another plugin's type.
+- Turning a plugin off does not delete its objects. They stay in the space, and the app shows them again once the
+  plugin is back on.

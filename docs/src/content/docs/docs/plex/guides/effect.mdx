@@ -1,0 +1,40 @@
+---
+title: Effect in plugins
+description: Use Effect services and layers from a plugin's modules and operations.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+A module's body and an operation's handler are Effects. A plugin can read the capability manager as an Effect
+service, contribute layers of its own, and name the services an operation needs.
+
+## Read capabilities as a service
+
+Inside a module, the capability manager is `Capability.Service`. `Capability.get`, `getAll` and `waitFor` read it
+for you; yield the service itself when you need the manager.
+
+<Snippet file="plex-guide-effect" region="service" />
+
+## Contribute a layer
+
+A service an operation uses comes from a layer. Contribute a `LayerSpec` to `Capabilities.LayerSpec`: it says what
+the layer provides, what it requires and how widely one instance is shared. With `affinity: 'application'` the app
+builds the layer once and every operation shares it.
+
+<Snippet file="plex-guide-effect" region="layer" />
+
+## Declare an operation's services
+
+An operation lists the services it needs in `services`. When it is invoked, the runtime builds them from the layer
+specs plugins contributed, and the handler yields them like any Effect service.
+
+<Snippet file="plex-guide-effect" region="operation" />
+
+An operation whose services have no layer fails when invoked, not when the plugin loads. [Testing a
+plugin](/docs/plex/guides/testing/) catches it.
+
+## Limits
+
+- Never run an Effect with `Effect.runPromise` inside a module. Return it, so the plugin manager can interrupt it
+  when the module deactivates.
+- A layer spec's service is in-process. A service that must run on EDGE needs a layer there too.
