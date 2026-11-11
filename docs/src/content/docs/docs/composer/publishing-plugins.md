@@ -747,7 +747,7 @@ const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
           variant='ghost'
           icon='ph--plus--regular'
           iconOnly
-          size={8}
+          size='lg'
           label='Add clock'
           onClick={() => setAdding(true)}
         />
@@ -817,7 +817,7 @@ const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
           limit={1}
         />
       </div>
-      <ScrollArea.Root orientation='horizontal' thin>
+      <ScrollArea.Root orientation='horizontal' width='thin'>
         <ScrollArea.Viewport>
           <div style={{ display: 'flex', gap: 16, padding: 16 }}>
             {sorted.map(({ timezone }) => (

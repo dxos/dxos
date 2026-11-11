@@ -385,7 +385,8 @@ export const MoveTask = Operation.make({
   },
   input: Schema.Struct({
     task: Ref.Ref(Task.Task),
-    taskSet: Ref.Ref(TaskSet.TaskSet),
+    /** The set the task belongs to; omit to use the set holding the task's root. */
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
     /** Insert immediately before this sibling; omit to move to the end of the siblings. */
     before: Schema.optional(Ref.Ref(Task.Task)),
     /** Re-parent as a sub-task; `null` promotes the task to a root of its set (as `UpdateTask`). */

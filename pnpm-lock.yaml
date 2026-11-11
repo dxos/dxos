@@ -5044,6 +5044,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
         version: 1.27.1(@cfworker/json-schema@4.1.1)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       autoevals:
         specifier: ^0.0.132
         version: 0.0.132(ws@8.18.3)
@@ -6116,6 +6119,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../echo/blob
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute
@@ -7629,6 +7635,9 @@ importers:
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../../core/compute/mcp-server
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
