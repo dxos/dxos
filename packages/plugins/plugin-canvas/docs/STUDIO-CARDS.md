@@ -161,3 +161,69 @@ In order of value for the cost:
    than a `rect` with a sidecar. Until then, a slide needs both files and a loader.
 
 Items 2 and 3 are what the sidecar exists to work around. With them, `*.json` disappears and a slide is one file.
+
+## 7. Todo: a presentation template for a drawing
+
+A drawing has no notion of the box it will be shown in. It has a scene and a camera, and the viewport fits the
+content to whatever space it is given, so a diagram authored to fill a screen and one authored for the right-hand
+column of a two-column slide are the same drawing with a different zoom. That is wrong for a deck: the slide
+decides the shape, and the diagram should be composed for it.
+
+What already exists, in both plugins:
+
+| Where                                                                    | What it fixes                                                                                                               |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `plugin-presenter/src/components/Slide/canvas.tsx` → `createLayoutProps` | The full-screen stage: 16:9, nominal 2560 × 1440, scaled to fit and centred.                                                |
+| `plugin-presenter/src/markdown/frontmatter.ts` → `LAYOUTS`               | 18 layouts (a Slidev subset): `full`, `default`, `two-cols`, `two-cols-header`, `three-cols`, `two-by-two`, `image-left`, … |
+| `plugin-presenter/src/markdown/slots.ts` → `LAYOUT_SLOTS`                | The named regions of the multi-slot layouts.                                                                                |
+| `plugin-presenter/src/components/MarkdownSlide/layouts.tsx`              | Those layouts as CSS grid inside the stage, with `theme.padding` (`px-40 py-16`) around the content.                        |
+| `plugin-canvas/src/containers/CanvasArticle/CanvasArticle.tsx`           | Already special-cases `AppSurface.Slide.role`, and falls back to `aspect-video` for a section its host does not size.       |
+
+So the stage is 16:9 at 2560 × 1440, and the default content box inside it is 2240 × 1312 (≈ 1.71:1) once the
+padding is taken off — but both of those are implicit, one in a component's local constant and the other in a
+Tailwind class. Nothing a drawing can read, and nothing the two plugins agree on by construction. The deck we are
+copying has the same idea written down a third time: 1600 × 900, in `studio/assets/deck/lib/deck.css`.
+
+**What to build.** A declared _stage_: a nominal size, its aspect, and the content box each layout slot offers,
+all in nominal units. A drawing carries the stage and slot it was composed for; the canvas uses it as the
+authoring frame (a visible boundary, and the extent an export crops to) rather than fitting to content; the
+presenter uses it to place the drawing without re-measuring. Three cases to cover, which is the set to design
+against: a full-bleed diagram, a diagram under a title in the content area, and a diagram in one column of a
+two-column slide.
+
+**Where it lives.** `plugin-canvas` already depends on `plugin-presenter`, not the reverse, so the shared
+definition has to sit below both. Two candidates:
+
+1. **`@dxos/scene`** — already the renderer-neutral schema layer under `react-ui-canvas` and `plugin-canvas`, and
+   a stage is a schema. Costs `plugin-presenter` a new dependency on it.
+2. **A new small common package** (`@dxos/stage`) holding nothing but the stage and layout geometry, which both
+   plugins and the deck's own exporter can read.
+
+(1) is cheaper and keeps the count down; (2) is cleaner if the geometry grows to cover print and image export as
+well. Either way the presenter's `createLayoutProps` and the markdown layouts' padding should be derived from it
+rather than restated.
+
+## 8. Todo: spike the richer deck slides
+
+The three slides done here are the deck's _simplest_: a graph of uniform cards, straight or orthogonal links, and
+a few frames. The six numbered slides are a step up, and each stresses something the card kind does not reach:
+
+| Slide             | What is new                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `02-echo-layers`  | Cards with a body and a footer, and a grid of chips _inside_ the card — a kind with nested content, not one label. |
+| `03-plugins`      | One card fanning out to five, `wire`/`path` connectors with their own labels, and consumer chips sharing a width.  |
+| `05-architecture` | Two mirrored stacks, one shared service grid in a fixed order, groups with labels, wires with labels.              |
+| `06-agents`       | Feed strips, and a _generated_ hex-lattice space graph drawn inside the slide (`substrate-view.mjs`).              |
+| `01-hyperspace`   | Wireframe Composer planks and the substrate view — an embedded UI, which on the canvas is a portal.                |
+| `04-composer`     | The Composer app frame with region ids — the same, with a layout of its own.                                       |
+
+**The studio half is the bigger half.** Only `erd`, `chat` and `agent` export a `model()`; the six numbered slides
+render straight to HTML with no data model, and `export.mjs` only walks those three. There are no reference PNGs
+for them either. So the next spike starts in `dxos/studio`: give the chosen slides a `model()`, teach `dsl.mjs`
+the elements they use, and capture a PNG of each — and only then build the kinds on this side.
+
+**Suggested order:** `03-plugins` and `05-architecture` first. They need no generated graph and no embedded UI, so
+they exercise exactly the two things the card kind is missing — a card with body/footer/chips, and a labelled
+connector that is not a plain arrow — and they would tell us whether the sidecar can be retired or has to grow.
+`06-agents` next, since a generated sub-graph is what canvas Generators are for. `01-hyperspace` and `04-composer`
+last: a portal onto another drawing is a different question from a diagram.
