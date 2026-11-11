@@ -280,32 +280,39 @@ page sharing: Sharing a space
 ### Core concepts
 
 ```mdl
-page spaces: Spaces and databases
-  The unit of sharing, access and replication.
+page types: Types and schema
+  What a type is, how ECHO identifies it, and how it changes over time.
   section: ECHO
-  route: /docs/echo/concepts/spaces/
+  route: /docs/echo/concepts/types/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - A space is the unit of sharing, access and replication, with one database
-    - Members, roles and invitations in one paragraph, linking to HALO's Spaces and membership for the rest
-    - What is guaranteed about replication between members, with spec citations
-    - Limits: size, number of spaces, and known divergences
+    - A type is an Effect Schema with a typename and a version; its DXN `dxn:<typename>:<version>` is what each object stores
+    - Object types and relation types: `Type.makeObject` and `Type.makeRelation`
+    - Annotations such as label and icon, and what tools derive from them
+    - Registering types with a database, and what fails without it
+    - JSON Schema in and out
+    - Types edited at runtime: `addFields` and `updateFields`
+    - Versions and migrations: `Migration.define`, `defineRename` and `defineContent` [D-155]
+    - Limits: peers on different versions of a type do not merge, and when migrations run outside a plugin is not documented yet
 ```
 ```mdl
 page objects-relations: Objects and relations
-  Entities, the reserved fields, and parent and child ownership.
+  Typed records in one space, and the entities that join them.
   section: ECHO
   route: /docs/echo/concepts/objects-relations/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - Objects and relations are the two kinds of entity
-    - The reserved fields every entity has (id, type, meta)
-    - Parent and child ownership, and what deleting a parent does
-    - Limits and known divergences
+    - Objects are typed records in one space; relations are entities that join a source and a target
+    - The managed fields: id, type, meta keys and tags, label, deleted
+    - A relation next to a reference field, shown with a WorksAt relation beside `Person.employer` [D-160]
+    - Parents and children, and what removing a parent does
+    - Removal marks an object deleted, and it stays in history until the next epoch
+    - Snapshots versus live objects
+    - Limits: the top level of an object is a record, and a relation needs both ends
 ```
 ```mdl
 page references: References and DXNs
@@ -316,30 +323,106 @@ page references: References and DXNs
   template: concept
   status: spike
   covers:
-    - How one object points at another with a `Ref`
-    - What a DXN is, its forms, and when to use one
-    - How a reference resolves, loads lazily and behaves across spaces
-    - Limits: dangling references and references to deleted objects
+    - `Ref.Ref` stores the URI of its target
+    - EIDs (`echo:///id`, `echo://space/id`) versus DXNs
+    - `peek` versus `load` versus `Ref.loadAll`, and traversal in a query instead of loading
+    - Limits: dangling references, removed targets, arrays that keep dangling entries, and `Ref.equals`
 ```
 ```mdl
-page conflicts: Concurrency and conflicts
-  What merges automatically and what the application must decide.
+page feeds: Feeds
+  An append log of ECHO objects, as a tree of branches.
   section: ECHO
-  route: /docs/echo/concepts/conflicts/
+  route: /docs/echo/concepts/feeds/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - What merges automatically: concurrent field writes, collaborative text, list edits
-    - What the application must decide, and how to detect it
-    - How offline writes merge on reconnect
-    - Limits: the cases ECHO does not resolve
+    - A feed is an append log of ECHO objects, a tree of branches [FEEDS.mdl F-1.1, F-1.2]
+    - Uses as examples, not kinds: AI chat, comments, messaging, event logs [F-3.1]
+    - Rewrite by id, logical removal, and rewind as a branch [F-1.3, F-1.4, F-1.5]
+    - Cursors, forward and backward walks, and fork points [F-5]
+    - Indexing on or off, partial sync, and retention per branch [F-2, F-4.4]
+    - When a feed fits better than objects
+    - Links to Changes and branches for branches of objects
+```
+```mdl
+page queries: Queries
+  Filters, query shapes, traversal and live results.
+  section: ECHO
+  route: /docs/echo/concepts/queries/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - `Filter` is the predicate and `Query` the shape around it
+    - Traversal in both directions [echo-client QUERY.mdl F-7]
+    - Order, windows and aggregates [F-8, F-9]
+    - Sources through `Scope`: this space, the registry, a feed
+    - Live results never finish; each source has only a pending state [F-3]. Never describe a query as complete
+    - Local writes show in results before the write returns [F-2]
+    - Limits: remote results are revalidated [F-5]
+```
+```mdl
+page spaces: Spaces and databases
+  The unit of sharing and replication, how it is stored, and the Hypergraph over all of them.
+  section: ECHO
+  route: /docs/echo/concepts/spaces/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A space is the unit of sharing and replication, with one database
+    - Storage: SQLite in a worker, browser file storage or disk; a space is never loaded into memory whole [echo-sqlite F-3]; indexing, and queries compiled to SQL [F-4]; writes and flush [F-6]
+    - Replication: each member holds a full copy, syncing over WebRTC or through EDGE
+    - The Hypergraph: every reachable space as one graph, qualified EIDs, references across spaces and unreachable spaces, the in-process registry a query searches without `from()`, and `db` versus Hypergraph
+    - Access in one paragraph: HALO controls members and roles, built on Keyhive, with a link [D-156]
+```
+```mdl
+page changes: Changes and branches
+  Every write as a change, how changes merge, history, and branches of objects.
+  section: ECHO
+  route: /docs/echo/concepts/changes/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Every write is a change on a CRDT document
+    - Merge rules: the merge table, assignment versus Text edits, offline writes, and a subscriber that writes during a notification makes its own commit
+    - History: `Obj.getChanges` with the device for each, `Obj.getVersion` at past heads, `Filter.changes`
+    - Branches: `createBranch` from the tip or past heads, covering the object and what it references; `switchBranch` per device, cascading to children; `mergeBranch`, `syncBranch`, `deleteBranch`; `db.branch` for a separate live copy shown side by side
+    - Feed branches stay on Feeds, linked
+    - Limits: ECHO does not know what a field means, rules across objects are not enforced, schema versions do not merge, and a switch does not follow you to other devices
 ```
 
 ### Guides
 
 The framework guides.
 
+```mdl
+page guide-effect: Effect
+  Use ECHO from Effect code: `Database.Service`, layers and typed errors.
+  section: ECHO
+  route: /docs/echo/guides/effect/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Get the database as `Database.Service`, and provide it with a layer
+    - Typed errors, and handling them
+    - The only page that teaches ECHO through Effect [D-158]
+```
+```mdl
+page guide-testing: Testing
+  Test code that uses ECHO, with isolated peers.
+  section: ECHO
+  route: /docs/echo/guides/testing/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Build a database with `EchoTestBuilder` from `@dxos/echo-client` testing
+    - Isolated peers, and replicating between them
+```
 ```mdl
 page guide-react: React
   The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them.
@@ -357,13 +440,13 @@ page guide-react: React
 
 ### API
 
-One page per `@dxos/echo` namespace.
+One page per `@dxos/echo` namespace, at `/docs/echo/api/<namespace>/` [D-157]. Collection, View, Dataset, Registry, Json, Format, Key and Error appear only in the generated reference. Every page uses the promise APIs [D-158].
 
 ```mdl
 page guide-type: Type
-  Declare and inspect object and relation types.
+  Declare and inspect object and relation types, and convert them to and from JSON Schema.
   section: ECHO
-  route: /docs/echo/guides/type/
+  route: /docs/echo/api/type/
   group: API
   template: namespace
   status: spike
@@ -372,12 +455,26 @@ page guide-type: Type
     - Add, update and remove fields of a type at runtime
     - Inspect a type: its typename, version and schema
     - Check what kind of entity a value is
+    - Convert a type to and from JSON Schema, with `JsonSchema`
+```
+```mdl
+page guide-annotation: Annotation
+  The annotations tools read from a type.
+  section: ECHO
+  route: /docs/echo/api/annotation/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Label, icon, description and the other annotations
+    - Set and read an annotation
+    - What reads each one
 ```
 ```mdl
 page guide-obj: Obj
-  The runtime API for objects.
+  The runtime API for objects, their changes and the Entity helpers they share with relations.
   section: ECHO
-  route: /docs/echo/guides/obj/
+  route: /docs/echo/api/obj/
   group: API
   template: namespace
   status: spike
@@ -387,12 +484,13 @@ page guide-obj: Obj
     - Subscribe to changes on one object
     - Meta, keys, tags, labels and parent ownership
     - Clone an object and convert it to JSON
+    - History and versions, with `Change`; the `Entity` helpers shared with relations
 ```
 ```mdl
 page guide-relation: Relation
   The runtime API for relations.
   section: ECHO
-  route: /docs/echo/guides/relation/
+  route: /docs/echo/api/relation/
   group: API
   template: namespace
   status: spike
@@ -405,49 +503,52 @@ page guide-relation: Relation
 page guide-ref: Ref
   Typed references between entities.
   section: ECHO
-  route: /docs/echo/guides/ref/
+  route: /docs/echo/api/ref/
   group: API
   template: namespace
   status: spike
   covers:
     - Make a reference to an object, or from a DXN
-    - Resolve and load a reference, and load many at once
+    - Peek at, load, and load many references at once
     - Compare references and check what they point at
 ```
 ```mdl
 page guide-database: Database
-  The imperative interface and the Effect service.
+  The database of one space, and the Hypergraph over every space.
   section: ECHO
-  route: /docs/echo/guides/database/
+  route: /docs/echo/api/database/
   group: API
   template: namespace
   status: spike
   covers:
-    - Get a database, in plain code and as the Effect `Database.Service`
+    - Get a database
     - Add, remove and load objects; run a query
     - Flush writes and read the sync state
     - Add types to a database
+    - Branches of objects
+    - The `Hypergraph`: query and resolve across spaces
 ```
 ```mdl
 page guide-query: Query
-  Graph-shaped selections, traversal, ordering and results.
+  Graph-shaped selections, traversal, ordering, aggregates, sources and results.
   section: ECHO
-  route: /docs/echo/guides/query/
+  route: /docs/echo/api/query/
   group: API
   template: namespace
   status: spike
   covers:
     - Build a query with `select` and `type`, and combine with `all` and `without`
     - Traverse references and relations from a selection
-    - Order results with `Order`, and read them through `QueryResult`
-    - Run a query once or subscribe to it
+    - Order results with `Order`, and aggregate them with `Aggregate`
+    - Choose the sources with `Scope`
+    - Run a query once or subscribe to it, and read it through `QueryResult`
     - Opens with the two or three most common filters and links to Filter for the rest
 ```
 ```mdl
 page guide-filter: Filter
   Predicate builders that compile to a query AST.
   section: ECHO
-  route: /docs/echo/guides/filter/
+  route: /docs/echo/api/filter/
   group: API
   template: namespace
   status: spike
@@ -456,13 +557,13 @@ page guide-filter: Filter
     - Compare a field: equals, ranges, contains
     - Combine filters with `and`, `or` and `not`
     - Search text, and filter by creation and update time
-    - Filter by parent and child
+    - Filter by parent and child, and by change
 ```
 ```mdl
 page guide-feed: Feed
   The append-only feed object.
   section: ECHO
-  route: /docs/echo/guides/feed/
+  route: /docs/echo/api/feed/
   group: API
   template: namespace
   status: spike
@@ -472,6 +573,55 @@ page guide-feed: Feed
     - Indexing and retention options
     - Fork a feed and read a branch
 ```
+```mdl
+page guide-text: Text
+  Collaborative text fields.
+  section: ECHO
+  route: /docs/echo/api/text/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Declare a text field and make text
+    - Read and edit text, and what merges character by character
+```
+```mdl
+page guide-blob: Blob
+  Binary data stored beside objects.
+  section: ECHO
+  route: /docs/echo/api/blob/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Store a blob and reference it from an object
+    - Read a blob back
+```
+```mdl
+page guide-migration: Migration
+  Migrations between versions of a type.
+  section: ECHO
+  route: /docs/echo/api/migration/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - `Migration.define`, `defineRename` and `defineContent`
+    - Register migrations, and what runs them
+```
+```mdl
+page guide-tag: Tag
+  Tags on objects.
+  section: ECHO
+  route: /docs/echo/api/tag/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Make a tag, add it to an object and remove it
+    - Query by tag
+```
+
 ### Resources
 
 ```mdl
@@ -494,7 +644,7 @@ page glossary: Glossary
   template: reference
   status: spike
   covers:
-    - Every ECHO term, defined once: space, object, relation, reference, DXN, epoch and the rest
+    - Every ECHO term, defined once: space, object, relation, reference, DXN, epoch, Hypergraph, registry, scope, branch, migration, content version and the rest
     - Links to HALO's glossary for identity, device and invitation terms
 ```
 ```mdl
@@ -527,41 +677,6 @@ page echo-llms-txt: llms.txt
 These pages are in scope but not in the sidebar yet.
 
 ```mdl
-page query-model: The query model
-  Traversal, ordering, aggregates, completeness and revalidation.
-  section: ECHO
-  route: /docs/echo/concepts/query-model/
-  group: Core concepts
-  template: concept
-  status: later
-  covers:
-    - Traversal, ordering and aggregates
-    - Completeness of results and when a query revalidates
-```
-```mdl
-page text-blobs: Text and blobs
-  Collaborative text edits and binary attachments.
-  section: ECHO
-  route: /docs/echo/concepts/text-blobs/
-  group: Core concepts
-  template: concept
-  status: later
-  covers:
-    - Collaborative text edits on a text field
-    - Binary attachments stored as blobs
-```
-```mdl
-page feeds: Feeds
-  Append-only logs, cursors, indexing and retention.
-  section: ECHO
-  route: /docs/echo/concepts/feeds/
-  group: Core concepts
-  template: concept
-  status: later
-  covers:
-    - Append-only logs, cursors, indexing and retention
-```
-```mdl
 page schema-evolution: Schema evolution
   Versioned types and object migrations.
   section: ECHO
@@ -582,28 +697,6 @@ page guide-solid: Solid
   status: later
   covers:
     - The Solid.js bindings
-```
-```mdl
-page guide-effect: Effect
-  The Database service, layers and typed errors.
-  section: ECHO
-  route: /docs/echo/guides/effect/
-  group: Guides
-  template: tutorial
-  status: later
-  covers:
-    - The Database service, layers and typed errors
-```
-```mdl
-page guide-testing: Testing
-  Build isolated peers with EchoTestBuilder.
-  section: ECHO
-  route: /docs/echo/guides/testing/
-  group: Guides
-  template: tutorial
-  status: later
-  covers:
-    - Build isolated peers with EchoTestBuilder
 ```
 ```mdl
 page guide-foreign-records: Foreign records
@@ -3345,6 +3438,54 @@ decision D-153: The plugin manifest is written, in Resources, at `/docs/plex/res
   by: user:wittjosiah
   affects: [app-framework-manifest, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
   why: One plugin carried from the learning path into the reference lets a reader recognize each snippet.
+
+decision D-154: ECHO's Core concepts are Types and schema, Objects and relations, References and DXNs, Feeds, Queries, Spaces and databases, and Changes and branches, in that order. Text and blobs leaves the site map.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [types, objects-relations, references, feeds, queries, spaces, changes, text-blobs]
+  why: A reader needs types before objects, and objects before how they are queried, stored and changed.
+
+decision D-155: Versions and migrations are a section of Types and schema. Schema evolution stays later until the docs can say when migrations run outside a plugin.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [types, schema-evolution]
+  why: A version belongs to the type; a page of its own would promise more than the docs can say yet.
+
+decision D-156: Spaces and databases covers storage, replication and the Hypergraph, not joining. Access is HALO's, built on Keyhive.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [spaces]
+  why: HALO's Invitations page owns the handshake; ECHO links to it.
+
+decision D-157: ECHO's API group has thirteen namespace pages at `/docs/echo/api/<namespace>/`: Type, Annotation, Obj, Relation, Ref, Database, Query, Filter, Feed, Text, Blob, Migration and Tag. The old `/docs/echo/guides/<namespace>/` routes redirect. The other namespaces appear only in the generated reference.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-type, guide-annotation, guide-obj, guide-relation, guide-ref, guide-database, guide-query, guide-filter, guide-feed, guide-text, guide-blob, guide-migration, guide-tag]
+  why: API pages are reference, so they get their own route, apart from the guides.
+
+decision D-158: ECHO's concept and API pages use the promise APIs. Effect is taught only in the Effect guide.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-effect]
+  why: Most readers start without Effect; one page teaches it for those who want it.
+
+decision D-159: ECHO's Guides are Effect, Testing and React, with React last. Solid and Foreign records stay later, and Using ECHO in a plugin belongs to PLEX.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-effect, guide-testing, guide-react, guide-solid, guide-foreign-records]
+  why: These are the guides the docs can back with tested code today.
+
+decision D-160: Concept and API snippets use the tutorial's Person, Organization and Event types. Relation snippets add a WorksAt relation without changing the tutorial app. Queries and Changes and branches may embed the contacts app.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [objects-relations, queries, changes]
+  why: One set of types from the learning path lets a reader recognize each snippet.
+
+decision D-161: Concurrency and conflicts becomes Changes and branches at `/docs/echo/concepts/changes/`, taking in history and branches. `/docs/echo/concepts/conflicts/` redirects.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [changes, conflicts]
+  why: Merging, history and branches are one model: changes on a CRDT document.
 
 decision D-200: PLEX's guides run in this order: Effect in plugins, Testing, Debugging, App capabilities, Settings and state, App Graph, React, Using ECHO in a plugin. Effect comes first because every module body and handler is an Effect.
   date: 2026-11-11
