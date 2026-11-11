@@ -142,7 +142,14 @@ describe('Discord channel backend', () => {
         Person.make({ fullName: 'Rich', identities: [{ label: 'discord', value: '@richburdon' }] }),
       );
       expect(handle.message).toBe(
-        "Rich's Discord identity (richburdon) is a handle, not a user id; record their Discord user id to message them directly.",
+        "Rich's Discord identity (@richburdon) is not a user id; record their Discord user id to message them directly.",
+      );
+      // `@` before digits may be a numeric username, which cannot be looked up here.
+      const numeric = yield* refused(
+        Person.make({ fullName: 'Numbers', identities: [{ label: 'discord', value: '@700000000000000009' }] }),
+      );
+      expect(numeric.message).toBe(
+        "Numbers's Discord identity (@700000000000000009) is not a user id; record their Discord user id to message them directly.",
       );
       const twoIds = yield* refused(
         Person.make({

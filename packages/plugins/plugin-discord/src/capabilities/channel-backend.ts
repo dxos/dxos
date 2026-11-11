@@ -73,7 +73,8 @@ export const makeDiscordChannelBackend = ({
         return undefined;
       }
       // A handle beside an id on the same contact is not looked up here (no member search): their own id is trusted.
-      const ids = [...new Set(discord.filter(DiscordBot.isUserId))];
+      // Only an unambiguous id: `@` before digits may be a numeric username, which this cannot look up.
+      const ids = [...new Set(discord.flatMap((value) => DiscordBot.explicitUserId(value) ?? []))];
       if (ids.length === 1) {
         return DiscordChannel.pendingDmThread(ids[0]);
       }
@@ -83,7 +84,7 @@ export const makeDiscordChannelBackend = ({
           message:
             ids.length > 1
               ? `${name} has more than one Discord user id on record: ${ids.join(', ')}.`
-              : `${name}'s Discord identity (${discord.join(', ')}) is a handle, not a user id; record their Discord user id to message them directly.`,
+              : `${name}'s Discord identity (${discord.join(', ')}) is not a user id; record their Discord user id to message them directly.`,
         }),
       );
     }),

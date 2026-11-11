@@ -32,15 +32,18 @@ export const agentBot = Effect.fnUntraced(function* (agentRef: Ref.Ref<Agent>) {
   return yield* Effect.fail(new DiscordBot.DiscordBotError({ message: 'The agent is not in any Discord channel.' }));
 });
 
-/** A member found, or why there is none. */
-type MemberLookup = { readonly userId: string } | { readonly reason: string };
+/** An account found, or why there is none. */
+type Lookup = { readonly userId: string } | { readonly reason: string };
 
 /**
- * The Discord user id `to` names, for a direct message, which Discord accepts only by id: an id (or a mention of one)
- * as is; else the account the contacts of that name record (`discord` identities, an id or a handle an agent kept from
- * a message), which must be one account; else the one guild member of exactly that username or nickname. Never a guess:
- * a partial match, or contacts that name different accounts, are refused with the candidates, since a wrong match
- * messages someone else.
+ * The Discord user id `to` names, for a direct message, which Discord accepts only by id. Never a guess, since a wrong
+ * match messages someone else:
+ * - an id, as the message header gives it (bare or as a mention), as is;
+ * - `@` before digits is an id unless a member's username is those digits;
+ * - else the account the contacts of that name record (their `discord` identities: ids, or handles an agent kept,
+ *   which must be a member's exact username), which must be one account;
+ * - else the one member whose username or guild nickname is exactly that name.
+ * Anything else is refused with the candidates.
  */
 export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to: string) {
   const service = yield* DiscordBot.DiscordBotService;
@@ -51,36 +54,56 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
   const listed = (members: readonly DiscordBot.Member[]) =>
     members.map(({ username, userId }) => `@${username} (${userId})`).join(', ');
 
+  /**
+   * The account `value` names. A handle a contact records must be a username (`usernameOnly`); a name the agent gives
+   * may also be a guild nickname, the two being what Discord's search matches. Two accounts that match are refused.
+   */
+  const account = Effect.fnUntraced(function* (value: string, usernameOnly: boolean) {
+    const id = DiscordBot.explicitUserId(value);
+    if (id) {
+      const lookup: Lookup = { userId: id };
+      return lookup;
+    }
+    const name = DiscordBot.bareName(value);
+    const found = yield* service.findMembers(bot, name);
+    const wanted = name.toLowerCase();
+    const byUsername = found.filter(({ username }) => username.toLowerCase() === wanted);
+    if (DiscordBot.isUserId(name)) {
+      // `@` before digits: their id, unless the digits are also someone's username.
+      const lookup: Lookup =
+        byUsername.length === 0
+          ? { userId: name }
+          : { reason: `${value} could be the user id ${name} or ${listed(byUsername)}.` };
+      return lookup;
+    }
+    const exact = usernameOnly
+      ? byUsername
+      : found.filter(
+          ({ username, displayName }) => username.toLowerCase() === wanted || displayName?.toLowerCase() === wanted,
+        );
+    const accounts = [...new Map(exact.map((member) => [member.userId, member])).values()];
+    if (accounts.length === 1) {
+      const lookup: Lookup = { userId: accounts[0].userId };
+      return lookup;
+    }
+    const similar = found.length > 0 ? `; similar: ${listed(found)}` : '';
+    const lookup: Lookup = {
+      reason:
+        accounts.length > 1
+          ? `${name} could be any of ${listed(accounts)}.`
+          : `No Discord member ${usernameOnly ? 'has the username' : 'is called'} ${name}${similar}.`,
+    };
+    return lookup;
+  });
+
   const asked = DiscordBot.bareName(to);
   if (asked === '') {
     return yield* fail('Name the person to message, or pass their user id from the message header.', '');
   }
-  if (DiscordBot.isUserId(asked)) {
-    return asked;
+  if (DiscordBot.explicitUserId(to) || DiscordBot.isUserId(asked)) {
+    const found = yield* account(to, true);
+    return 'userId' in found ? found.userId : yield* fail(found.reason);
   }
-
-  /**
-   * The one member whose username, else display name, is exactly `name` (Discord's search matches a username or a guild
-   * nickname), or why there is none.
-   */
-  const member = Effect.fnUntraced(function* (name: string) {
-    const found = yield* service.findMembers(bot, name);
-    const wanted = name.toLowerCase();
-    const byUsername = found.filter(({ username }) => username.toLowerCase() === wanted);
-    const matches =
-      byUsername.length > 0 ? byUsername : found.filter(({ displayName }) => displayName?.toLowerCase() === wanted);
-    if (matches.length === 1) {
-      const lookup: MemberLookup = { userId: matches[0].userId };
-      return lookup;
-    }
-    const lookup: MemberLookup = {
-      reason:
-        matches.length > 1
-          ? `${name} could be any of ${listed(matches)}.`
-          : `No Discord member is called ${name}${found.length > 0 ? `; similar: ${listed(found)}` : ''}.`,
-    };
-    return lookup;
-  });
 
   // The Discord identities of every contact the name matches, each with the contacts that record it.
   const wanted = asked.toLowerCase();
@@ -88,7 +111,7 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
   const identities = new Map<string, { value: string; contacts: Set<string> }>();
   for (const person of people) {
     const discord = DiscordBot.discordIdentities(person);
-    const names = [person.fullName, person.preferredName, person.nickname, ...discord];
+    const names = [person.fullName, person.preferredName, person.nickname, ...discord.map(DiscordBot.bareName)];
     if (!names.some((name) => name?.trim().toLowerCase() === wanted)) {
       continue;
     }
@@ -99,7 +122,7 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     }
   }
   if (identities.size === 0) {
-    const found = yield* member(asked);
+    const found = yield* account(asked, false);
     return 'userId' in found ? found.userId : yield* fail(found.reason);
   }
 
@@ -107,7 +130,7 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
   const accounts = new Map<string, Set<string>>();
   const unresolved: string[] = [];
   for (const { value, contacts } of identities.values()) {
-    const found: MemberLookup = DiscordBot.isUserId(value) ? { userId: value } : yield* member(value);
+    const found = yield* account(value, true);
     if ('userId' in found) {
       accounts.set(found.userId, new Set([...(accounts.get(found.userId) ?? []), ...contacts]));
     } else {

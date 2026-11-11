@@ -105,11 +105,16 @@ describe('resolveUser', () => {
     { userId: '333333333333333333', username: 'dima' },
     // A global display name only: Discord's search does not find it.
     { userId: '666666666666666666', username: 'rburdon', displayName: 'Rich Burdon' },
+    // One member's username is another member's nickname.
+    { userId: '777777777777777777', username: 'alex' },
+    { userId: '888888888888888888', username: 'alexandra', displayName: 'alex', nick: 'alex' },
+    // A numeric username, which `@` before digits could mean.
+    { userId: '999999999999999999', username: '555555555555555555' },
   ];
   const withGuild = <A, E>(effect: Effect.Effect<A, E, Database.Service | DiscordBot.DiscordBotService>) =>
     effect.pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members))));
 
-  it.effect('takes a user id or a mention of one as is, else a contact’s Discord id, else a member', () =>
+  it.effect('takes an id as the header gives it, else the one member of that username or nickname', () =>
     withGuild(
       Effect.gen(function* () {
         yield* Database.add(
@@ -121,9 +126,9 @@ describe('resolveUser', () => {
         );
         yield* Database.flush();
 
-        expect(yield* resolveUser(BOT, '555555555555555555')).toBe('555555555555555555');
-        expect(yield* resolveUser(BOT, '<@555555555555555555>')).toBe('555555555555555555');
-        expect(yield* resolveUser(BOT, '<@!555555555555555555>')).toBe('555555555555555555');
+        expect(yield* resolveUser(BOT, '123456789012345678')).toBe('123456789012345678');
+        expect(yield* resolveUser(BOT, '<@123456789012345678>')).toBe('123456789012345678');
+        expect(yield* resolveUser(BOT, '<@!123456789012345678>')).toBe('123456789012345678');
         expect(yield* resolveUser(BOT, 'Josiah Witt')).toBe('444444444444444444');
         expect(yield* resolveUser(BOT, '@josiah')).toBe('444444444444444444');
         expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
@@ -134,7 +139,19 @@ describe('resolveUser', () => {
     ),
   );
 
-  it.effect('never guesses: a partial match and a name nobody has are refused with the candidates', () =>
+  it.effect('reads @ before digits as an id unless a member has those digits as their username', () =>
+    withGuild(
+      Effect.gen(function* () {
+        expect(yield* resolveUser(BOT, '@123456789012345678')).toBe('123456789012345678');
+        const numeric = yield* resolveUser(BOT, '@555555555555555555').pipe(Effect.flip);
+        expect(numeric.message).toBe(
+          `@555555555555555555 could be the user id 555555555555555555 or @555555555555555555 (999999999999999999).${HINT}`,
+        );
+      }),
+    ),
+  );
+
+  it.effect('never guesses: partial matches, a name nobody has and two accounts of one name are refused', () =>
     withGuild(
       Effect.gen(function* () {
         const partial = yield* resolveUser(BOT, 'ric').pipe(Effect.flip);
@@ -146,6 +163,11 @@ describe('resolveUser', () => {
         expect(lone.message).toBe(`No Discord member is called dim; similar: @dima (333333333333333333).${HINT}`);
         const nobody = yield* resolveUser(BOT, 'zed').pipe(Effect.flip);
         expect(nobody.message).toBe(`No Discord member is called zed.${HINT}`);
+        // One member's username and another's nickname.
+        const alex = yield* resolveUser(BOT, 'alex').pipe(Effect.flip);
+        expect(alex.message).toBe(
+          `alex could be any of @alex (777777777777777777), @alexandra (888888888888888888).${HINT}`,
+        );
         // An empty name would match a contact with no name at all.
         for (const empty of ['', ' @ ']) {
           expect((yield* resolveUser(BOT, empty).pipe(Effect.flip)).message).toBe(
@@ -156,7 +178,7 @@ describe('resolveUser', () => {
     ),
   );
 
-  it.effect('looks up a contact whose Discord identity is a handle among the members', () =>
+  it.effect('takes a contact’s Discord identities only, and a handle on record only as a username', () =>
     withGuild(
       Effect.gen(function* () {
         // As an agent records someone it was asked to message: their handle where the user id belongs.
@@ -166,18 +188,6 @@ describe('resolveUser', () => {
         yield* Database.add(
           Obj.make(Person.Person, { fullName: 'Dmytro', identities: [{ label: 'Discord', value: '@dima' }] }),
         );
-        yield* Database.flush();
-
-        expect(yield* resolveUser(BOT, 'richburdon')).toBe('111111111111111111');
-        expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
-        expect(yield* resolveUser(BOT, 'Dmytro')).toBe('333333333333333333');
-      }),
-    ),
-  );
-
-  it.effect('matches a contact by their Discord identities alone, and reads an @ before digits as an id', () =>
-    withGuild(
-      Effect.gen(function* () {
         yield* Database.add(
           Obj.make(Person.Person, {
             fullName: 'Bob',
@@ -187,18 +197,22 @@ describe('resolveUser', () => {
             ],
           }),
         );
+        // Recorded with a nickname: nobody's username, so no account.
         yield* Database.add(
-          Obj.make(Person.Person, {
-            fullName: 'Numbers',
-            identities: [{ label: 'discord', value: '@444444444444444444' }],
-          }),
+          Obj.make(Person.Person, { fullName: 'Rick', identities: [{ label: 'discord', value: 'Rich' }] }),
         );
         yield* Database.flush();
 
+        expect(yield* resolveUser(BOT, 'richburdon')).toBe('111111111111111111');
+        expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
+        expect(yield* resolveUser(BOT, 'Dmytro')).toBe('333333333333333333');
         // Not Bob's Discord account: a Twitter handle names nobody on Discord.
         const twitter = yield* resolveUser(BOT, '@bobby').pipe(Effect.flip);
         expect(twitter.message).toBe(`No Discord member is called bobby.${HINT}`);
-        expect(yield* resolveUser(BOT, 'Numbers')).toBe('444444444444444444');
+        const nick = yield* resolveUser(BOT, 'Rick').pipe(Effect.flip);
+        expect(nick.message).toBe(
+          `Rick records the Discord identity "Rich": No Discord member has the username Rich; similar: @richburdon (111111111111111111), @richard (222222222222222222).${HINT}`,
+        );
       }),
     ),
   );
@@ -252,7 +266,7 @@ describe('resolveUser', () => {
 
         const display = yield* resolveUser(BOT, 'Rich Burdon').pipe(Effect.flip);
         expect(display.message).toBe(
-          `Rich Burdon records the Discord identity "Rich Burdon": No Discord member is called Rich Burdon.${HINT}`,
+          `Rich Burdon records the Discord identity "@Rich Burdon": No Discord member has the username Rich Burdon.${HINT}`,
         );
 
         // Another contact of that name has an id; the unresolved one is still refused, naming the id it found.
@@ -265,7 +279,7 @@ describe('resolveUser', () => {
         yield* Database.flush();
         const mixed = yield* resolveUser(BOT, 'Rich Burdon').pipe(Effect.flip);
         expect(mixed.message).toBe(
-          `Rich Burdon records the Discord identity "Rich Burdon": No Discord member is called Rich Burdon. Ids on record: Rich Burdon (666666666666666666).${HINT}`,
+          `Rich Burdon records the Discord identity "@Rich Burdon": No Discord member has the username Rich Burdon. Ids on record: Rich Burdon (666666666666666666).${HINT}`,
         );
       }),
     ),
