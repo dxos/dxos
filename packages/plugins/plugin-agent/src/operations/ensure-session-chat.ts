@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureSessionChat> = 
       function* ({ agent: agentName, kind, key, title, model }) {
         const agent = yield* resolveAgent(agentName);
         const modelId = model === undefined ? undefined : yield* parseModel(model);
-        const foreignKey = AgentSession.sessionKey(kind, key);
+        const foreignKey = AgentSession.chatKey(kind, key);
         // The same session may have been opened with more than one agent.
         const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [foreignKey]))).run;
         const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);

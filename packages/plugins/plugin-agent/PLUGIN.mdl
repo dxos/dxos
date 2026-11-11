@@ -224,11 +224,11 @@ op ensureSessionChat
   requires: [Database.Service]
   note: |
     Idempotent on (agent, kind, key): the chat carries the `Obj.Meta` key
-    `{ source: 'org.dxos.agent/session', id: '<kind>:<key>' }` (`AgentSession.sessionKey`); a chat with the key
+    `{ source: 'org.dxos.agent/session', id: '<kind>:<key>' }` (`AgentSession.chatKey`); a chat with the key
     parented to another agent is not a match. A new chat is parented to the agent, shares its Instructions, and is
     bound to the agent's session skills, the objects of its current chat, and every channel's skills, so the agent
     can act in its channels from the session. A model given on a later call replaces the chat's model. Called by
-    EDGE compute-service's `askAgent`, by key (`AgentSession.ENSURE_SESSION_CHAT_KEY`), which also finds an
+    EDGE compute-service's `askAgent`, by key (`AgentSession.ENSURE_CHAT_KEY`), which also finds an
     existing session chat in the index by the same foreign key.
 ```
 
@@ -1277,7 +1277,7 @@ decision D-10: `AgentList` takes the agents as the contacts they are and copies 
 ```
 
 ```mdl
-decision D-11: `ensureSessionChat` moves into this plugin from EDGE's operation-service, renamed from `org.dxos.operation.agentSession.ensureChat`, and the plugin exports the session chat's foreign-key source (`AgentSession.SESSION_SOURCE`) for compute-service's MCP sessions.
+decision D-11: `ensureSessionChat` moves into this plugin from EDGE's operation-service, renamed from `org.dxos.operation.agentSession.ensureChat`, and the plugin exports the session chat's foreign-key source (`AgentSession.SOURCE`) for compute-service's MCP sessions.
   date: 2026-11-11
   by: user:dmaretskyi
   affects: [ensureSessionChat]

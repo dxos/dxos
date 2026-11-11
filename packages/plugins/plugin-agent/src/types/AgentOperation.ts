@@ -109,7 +109,7 @@ export const EnsureChannelChat = Operation.make({
 /**
  * Finds or creates an agent's chat for a session: a conversation with a caller that is not a channel, such as an MCP
  * client (EDGE compute-service's `askAgent`). Idempotent on `(agent, kind, key)`: the chat carries
- * `AgentSession.sessionKey` as an `Obj.Meta` foreign key. A new chat binds the agent's context, its session skills and
+ * `AgentSession.chatKey` as an `Obj.Meta` foreign key. A new chat binds the agent's context, its session skills and
  * every channel's skills, so the agent can act in its channels from the session.
  */
 export const EnsureSessionChat = Operation.make({

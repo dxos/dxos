@@ -44,7 +44,7 @@ const MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
 describe('EnsureSessionChat', () => {
   it('is invoked by the key AgentSession exports', ({ expect }) => {
-    expect(String(AgentOperation.EnsureSessionChat.meta.key)).toContain(AgentSession.ENSURE_SESSION_CHAT_KEY);
+    expect(String(AgentOperation.EnsureSessionChat.meta.key)).toContain(AgentSession.ENSURE_CHAT_KEY);
   });
 
   it.effect(
@@ -88,7 +88,7 @@ describe('EnsureSessionChat', () => {
         expect(chat.id).not.toBe(primary?.id);
         expect(chat.name).toBe('MCP: hello');
         expect(Obj.getParent(chat)?.id).toBe(agent.id);
-        expect(Obj.getMeta(chat).keys).toEqual([AgentSession.sessionKey('mcp', 'session-1')]);
+        expect(Obj.getMeta(chat).keys).toEqual([AgentSession.chatKey('mcp', 'session-1')]);
         expect(Obj.getMeta(chat).keys[0].source).toBe('org.dxos.agent/session');
         // A later turn's model is kept on the chat.
         expect(String(chat.session?.model)).toContain(MODEL);
