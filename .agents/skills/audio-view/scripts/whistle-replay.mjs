@@ -9,7 +9,7 @@
 //
 // Usage: node whistle-replay.mjs <file> [--pass-ms 1000] [--keywords "ECHO, DXOS"] [--language en]
 //                                       [--reference "expected text"] [-o timeline.jsonl] [--json] [--no-gate]
-// --no-gate decodes from the first sample instead of waiting, as the Whistle worker does, for sound.
+// --no-gate decodes from the first sample instead of waiting for sound, as a Whistle worker started with `endpoint` on does.
 
 import { writeFileSync } from 'node:fs';
 

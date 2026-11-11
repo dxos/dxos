@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
-import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { CallsNamespace } from '../../namespace.ts';
 
@@ -80,7 +80,8 @@ export const ResponsiveGridItem = <T extends object = any>({
   return (
     <div
       className={mx(
-        'dx-expand relative group',
+        // Named: the call viewport is a `group` too, and hovering it must not reveal every tile's pin.
+        'dx-expand relative group/tile',
         'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
         speakingIndicator ? 'outline-green-border' : !video && 'outline-separator',
         classNames,
@@ -93,7 +94,7 @@ export const ResponsiveGridItem = <T extends object = any>({
       {onClick && (
         <Layout.Flex classNames='z-10 absolute top-1 right-1'>
           <Button.Root
-            classNames={mx('p-1 min-h-1 rounded-sm', groupHoverControlItemWithTransition)}
+            classNames='p-1 min-h-1 rounded-sm transition-opacity duration-200 opacity-0 group-hover/tile:opacity-100'
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             iconSize={pinned ? 'lg' : 'md'}

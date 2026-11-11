@@ -99,7 +99,7 @@ export const loadWhistle = async ({ language = 'en', keywords = [] } = {}) => {
 
   /**
    * Replays `samples` as a live stream: a pass every `passMs` of audio, then the stop that commits the tail.
-   * With `gate` (the worker's default), the stream opens only once the worker's endpointer hears sound, keeping
+   * With `gate` (as a worker started with `endpoint` on), the stream opens only once the worker's endpointer hears sound, keeping
    * the same pre-roll, so silence before speech is never decoded. Returns one event per pass, timed in audio
    * seconds from the start of `samples` (`at`: how much audio had arrived when the pass ran).
    */

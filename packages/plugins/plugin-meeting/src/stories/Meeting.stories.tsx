@@ -215,9 +215,9 @@ const InviteActions = ({ space }: { space: Space }) => {
   );
 };
 
-/** Joins the space an invite code names, resolving once the guest is admitted. */
+/** Joins the space an invite code names, resolving once the guest is admitted; a refused join is a defect. */
 const joinSpace = (client: Client, code: string) =>
-  Effect.callback<void, Error>((resume) => {
+  Effect.callback<void>((resume) => {
     const invitation = client.spaces.join(InvitationEncoder.decode(code));
     const subscription = invitation.subscribe(
       (state) => {
@@ -225,7 +225,7 @@ const joinSpace = (client: Client, code: string) =>
           resume(Effect.void);
         }
       },
-      (error) => resume(Effect.fail(error)),
+      (error) => resume(Effect.die(error)),
     );
     return Effect.sync(() => subscription.unsubscribe());
   });
@@ -252,7 +252,7 @@ const meta = {
               yield* initializeIdentity(client);
               if (args.invitation) {
                 // The inviter's space already holds the meeting.
-                yield* joinSpace(client, args.invitation).pipe(Effect.orDie);
+                yield* joinSpace(client, args.invitation);
                 return;
               }
 

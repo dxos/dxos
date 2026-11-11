@@ -19,22 +19,24 @@ import { bindTestAccount } from './bindTestAccount.ts';
 export const useTestAccount = (hubUrl: string): boolean => {
   const client = useClient();
   const identityDid = useIdentity()?.did;
-  const [bound, setBound] = useState(false);
+  const key = identityDid && `${hubUrl} ${identityDid}`;
+  // Keyed, so a new identity or hub reads as unbound until its own binding lands.
+  const [boundKey, setBoundKey] = useState<string>();
   useEffect(() => {
-    if (!identityDid) {
+    if (!key) {
       return;
     }
 
     const fiber = Effect.runFork(
       bindTestAccount(client, { hubUrl }).pipe(
-        Effect.flatMap(() => Effect.sync(() => setBound(true))),
+        Effect.flatMap(() => Effect.sync(() => setBoundKey(key))),
         Effect.catch((error) => Effect.sync(() => log.catch(error))),
       ),
     );
     return () => {
       Effect.runFork(Fiber.interrupt(fiber));
     };
-  }, [client, identityDid, hubUrl]);
+  }, [client, key, hubUrl]);
 
-  return bound;
+  return key !== undefined && boundKey === key;
 };

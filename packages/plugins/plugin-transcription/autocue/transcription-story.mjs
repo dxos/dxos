@@ -46,7 +46,8 @@ export const steps = [
       await caption(demo, 1, 'Click Play');
       await demo.click({ selector: PLAY, label: 'Play' });
       await page.locator(PAUSE).waitFor({ timeout: 5_000 });
-      await page.locator(MESSAGE).first().waitFor({ timeout: 2_000 });
+      // The first sentence lands after one 1.5 s tick; the rest is headroom for a slow runner.
+      await page.locator(MESSAGE).first().waitFor({ timeout: 5_000 });
     },
   },
   {
@@ -68,6 +69,8 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 3, 'Click Pause: nothing more is appended');
       await demo.click({ selector: PAUSE, label: 'Pause' });
+      // A sentence appended just before Pause may still render; count once it has.
+      await page.waitForTimeout(1_000);
       const paused = await count(page);
       await page.waitForTimeout(3_000);
       if ((await count(page)) !== paused) {

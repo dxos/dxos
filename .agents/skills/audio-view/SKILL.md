@@ -50,7 +50,7 @@ typically about 2 s, round trip through the sandbox's proxy.
 ## Silence
 
 `whistle-replay.mjs` opens the stream only once the worker's endpointer hears sound (louder than the noise-floor
-threshold and -35 dBFS for 0.15 s, with 0.5 s of pre-roll), as the Whistle worker does; without that Whistle
+threshold and -35 dBFS for 0.15 s, with 0.5 s of pre-roll), as a Whistle worker started with `endpoint` on does; without that Whistle
 transcribes room tone as "Thank you.". `--no-gate` decodes from the first sample, to see what the model alone hears.
 
 ## Evals over the fixtures

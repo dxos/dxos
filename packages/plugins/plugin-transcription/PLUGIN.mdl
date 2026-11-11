@@ -468,7 +468,7 @@ test QA-3: Append mock text in the Transcription story
   desc: |
     The message list with no audio and no network: the story's `TextMock` variant appends one scripted sentence at a
     time, as committed transcript blocks would arrive, so this checks the list, not the pipeline or the service.
-  actors: agent
+  actors: human
   covers: [F-4.2]
   status: unverified
   given:
@@ -483,13 +483,15 @@ test QA-3: Append mock text in the Transcription story
     - name: Pause
       do: Click Pause.
       expect: no further message appears
+```
 
+```mdl
 test QA-4: Transcribe an audio file live through RealtimeKit
   desc: |
     The recording pipeline end to end against the preview EDGE: the story's `File` variant gives its client an EDGE and
     binds its identity to a test account, so the file's track streams to the identity's one-person RealtimeKit meeting
     and RealtimeKit's transcript fills the list. Needs a network.
-  actors: agent
+  actors: human
   covers: [F-1.1, F-1.2, F-2.4]
   status: unverified
   given:
@@ -697,6 +699,16 @@ decision D-21: QA-3 runs the `TextMock` story offline and covers the message lis
   for: user:mykola-vrmchk
   affects: [QA-3, QA-4]
   why: No story transcribes a file offline any more, so the offline flow can check only the list.
+```
+
+```mdl
+decision D-22: QA-3 and QA-4 are `actors: human`, since none of their steps names an operation. Fills in [D-21].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-3, QA-4]
+  why: The QA dialect allows `actors: agent` only when every step names an operation.
+  source: https://github.com/dxos/dxos/pull/14495
 ```
 
 ## Appendix: Extension Definitions

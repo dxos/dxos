@@ -31,6 +31,7 @@ import { type CommitFn, makeCorrectionStage } from '@dxos/pipeline-transcription
 import { useTestAccount } from '@dxos/plugin-client/testing';
 import { useJoinTranscription } from '@dxos/react-client';
 import {
+  type PipelinePhase,
   type TrackTranscriber,
   Transcription,
   type TranscriptModel,
@@ -106,6 +107,20 @@ const useRealtimeKitTranscriber = (): TrackTranscriber | undefined => {
 
 const useStages = () => useMemo(() => [makeCorrectionStage()], []);
 
+/**
+ * Turns the control off when the pipeline falls from recording straight back to idle, which it does only when its
+ * session fails to open (a stop drains first), so the control offers a retry rather than a dead Stop.
+ */
+const useResetOnFailure = (phase: PipelinePhase, setActive: (active: boolean) => void) => {
+  const previous = useRef(phase);
+  useEffect(() => {
+    if (previous.current === 'recording' && phase === 'idle') {
+      setActive(false);
+    }
+    previous.current = phase;
+  }, [phase, setActive]);
+};
+
 const TranscriptPanel = ({ model, children }: PropsWithChildren<{ model: TranscriptModel<Message.Message> }>) => (
   <Panel.Root>
     <Panel.Header>
@@ -129,7 +144,7 @@ const LiveStory = () => {
   const { model, appendMessage } = useStoryMessages();
   const commit = useCommitMessages(appendMessage);
   const transcriber = useRealtimeKitTranscriber();
-  useRecordingPipeline({
+  const { phase } = useRecordingPipeline({
     transcriber,
     segmentSentences: true,
     active: recording,
@@ -137,12 +152,14 @@ const LiveStory = () => {
     stages: useStages(),
     commit,
   });
+  useResetOnFailure(phase, setRecording);
 
   return (
     <TranscriptPanel model={model}>
       <Button.Root
         iconOnly
-        disabled={!transcriber || !bound}
+        // A new session waits for the previous one to drain, which would otherwise end the new one's pipeline.
+        disabled={!transcriber || !bound || phase === 'draining'}
         icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
         label={recording ? 'Stop' : 'Record'}
         onClick={() => setRecording((value) => !value)}
@@ -197,7 +214,7 @@ const FileStory = () => {
   const { model, appendMessage } = useStoryMessages();
   const commit = useCommitMessages(appendMessage);
   const transcriber = useRealtimeKitTranscriber();
-  useRecordingPipeline({
+  const { phase } = useRecordingPipeline({
     transcriber,
     segmentSentences: true,
     active: playing,
@@ -205,6 +222,7 @@ const FileStory = () => {
     stages: useStages(),
     commit,
   });
+  useResetOnFailure(phase, setPlaying);
 
   return (
     <>
@@ -212,7 +230,7 @@ const FileStory = () => {
       <TranscriptPanel model={model}>
         <Button.Root
           iconOnly
-          disabled={!stream || !transcriber || !bound}
+          disabled={!stream || !transcriber || !bound || phase === 'draining'}
           icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
           label={playing ? 'Pause' : 'Play'}
           onClick={() => setPlaying((value) => !value)}

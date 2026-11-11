@@ -471,8 +471,8 @@ test QA-4: A live call's transcript fills the meeting
     The call path end to end against the preview EDGE: the Meeting story's `CallTranscription` variant joins the stories'
     shared call room, turns transcription on, and RealtimeKit's transcript of the local speaker lands in the meeting's
     Transcript tab. The story binds its identity to a test account itself. Needs a network and a microphone.
-  actors: agent
-  covers: [F-3.5, F-3.6, F-3.7]
+  actors: human
+  covers: [F-3.5]
   status: unverified
   given:
     - storybook serves `plugins/plugin-meeting/stories/Meeting` `CallTranscription` in isolation mode
@@ -489,13 +489,15 @@ test QA-4: A live call's transcript fills the meeting
     - name: Read the transcript
       do: Speak, and watch the meeting's Transcript tab.
       expect: the spoken words appear under the speaker's name, one RealtimeKit segment per row, in spoken order
+```
 
+```mdl
 test QA-5: Two tabs share one meeting through an invitation
   desc: |
     The Meeting story as Composer shows a meeting, against the preview EDGE: a fresh load makes a new space and
     meeting, and its invite link opens the story as a guest that joins that space, so both tabs render the same meeting
     and its Call tab puts them in one call. Needs a network; each tab binds its identity to a test account itself.
-  actors: agent
+  actors: human
   covers: [F-5.2, F-3.6]
   status: unverified
   given:
@@ -634,6 +636,16 @@ decision D-13: QA-3 is removed with the story it ran, and F-3.7 names only the s
   for: user:mykola-vrmchk
   affects: [QA-3, F-3.7]
   why: No other story writes a scripted transcript into a meeting, so QA-3 had nothing left to run.
+```
+
+```mdl
+decision D-14: QA-4 covers only F-3.5: it starts transcription from the CallTranscription story's own toggle in the stories' shared room, so it exercises neither MeetingArticle's own-call toggle (F-3.6) nor a source other than a call (F-3.7). QA-4 and QA-5 are `actors: human`, since none of their steps names an operation. Fills in [D-9] and [D-11].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-4, QA-5]
+  why: A flow's coverage claim must match what its steps exercise, and the QA dialect allows `actors: agent` only when every step names an operation.
+  source: https://github.com/dxos/dxos/pull/14495
 ```
 
 ## Appendix: Extension Definitions
