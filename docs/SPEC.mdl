@@ -192,8 +192,8 @@ page echo-build-with-agent: Build with a coding agent
   template: tutorial
   status: spike
   covers:
-    - A prompt the reader can edit, with a picker of three sample apps above it: TodoMVC (the default), a kanban board and collaborative notes [D-210]
-    - The hidden part of the prompt points the agent at the learning path's project setup, pinned to a build of main, until the next npm release [D-211]
+    - A prompt the reader can edit, with a picker of three sample apps above it: TodoMVC (the default), a kanban board and collaborative notes [D-187]
+    - The hidden part of the prompt points the agent at the learning path's project setup, pinned to a build of main, until the next npm release [D-188]
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a line the reader does not see before their text, which has the agent read `/echo/llms-full.txt` first
     - What the reader does while the agent works, and how to try a shared app from a second browser
 ```
@@ -441,7 +441,7 @@ page guide-react: React
 
 ### API
 
-One page per `@dxos/echo` namespace, at `/docs/echo/api/<namespace>/` [D-157]. Collection, View, Dataset, Registry, Json, Format, Key, Error, Migration and Tag appear only in the generated reference [D-205]. Every page uses the promise APIs [D-158].
+One page per `@dxos/echo` namespace, at `/docs/echo/api/<namespace>/` [D-157]. Collection, View, Dataset, Registry, Json, Format, Key, Error, Migration and Tag appear only in the generated reference [D-182]. Every page uses the promise APIs [D-158].
 
 ```mdl
 page guide-type: Type
@@ -1116,7 +1116,7 @@ page plex-build-with-agent: Build with a coding agent
   status: spike
   covers:
     - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
-    - A picker above the prompt that fills it with one of four examples: World Clock, Expense splitter, Family tree and Tournament bracket [D-207]
+    - A picker above the prompt that fills it with one of four examples: World Clock, Expense splitter, Family tree and Tournament bracket [D-184]
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
@@ -1451,7 +1451,7 @@ page plex-guide-using-echo: ECHO
 ### API
 
 One page per namespace, each a readable tour with compiled examples that links into the API reference.
-Snippets come from the Bookmarks tutorial modules [D-208].
+Snippets come from the Bookmarks tutorial modules [D-185].
 
 ```mdl
 page app-framework-guide-plugin: Plugin
@@ -3629,79 +3629,79 @@ decision D-176: The learning path's second page is Your profile, at /docs/halo/l
   affects: [halo-your-profile]
   why: The page sets and changes the identity's profile, not only a name.
 
-decision D-200: PLEX's guides run in this order: Effect in plugins, Testing, Debugging, App capabilities, Settings and state, App Graph, React, Using ECHO in a plugin. Effect comes first because every module body and handler is an Effect.
+decision D-177: PLEX's guides run in this order: Effect in plugins, Testing, Debugging, App capabilities, Settings and state, App Graph, React, Using ECHO in a plugin. Effect comes first because every module body and handler is an Effect.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-guide-testing, plex-guide-debugging, plex-guide-settings-and-state, app-framework-guide-react, plex-guide-effect, plex-guide-using-echo]
   why: A reader works through the guides in order, so each should build on the last; ECHO is the most involved and goes last.
 
-decision D-201: App Graph, AppCapabilities and Translations are app-level, not core PLEX. App Graph becomes one guide that explains the idea and the API, Translations folds into an App capabilities guide, and both sit in Guides; Core concepts and API keep only what `@dxos/app-framework` defines.
+decision D-178: App Graph, AppCapabilities and Translations are app-level, not core PLEX. App Graph becomes one guide that explains the idea and the API, Translations folds into an App capabilities guide, and both sit in Guides; Core concepts and API keep only what `@dxos/app-framework` defines.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [app-framework-guide-app-graph, app-framework-guide-app-capabilities, app-framework-app-graph, plex-guide-translations]
   why: A PLEX app without App Graph is still a PLEX app; App Graph matters most of the app-level pieces, so it gets its own guide.
 
-decision D-202: The plugin manifest page is omitted for now; `dx.config.ts` gets no reference of its own until there is a place for it.
+decision D-179: The plugin manifest page is omitted for now; `dx.config.ts` gets no reference of its own until there is a place for it.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [app-framework-manifest, app-framework-guide-plugin, app-framework-api-reference]
   why: A hand-written table of the config's fields would drift from the type.
 
-decision D-203: The Build with a coding agent prompt no longer tells the agent where Composer is open. The composer-plugin-dev skill needs the target's URL only to publish, and reads it through the debug port then; the reader's steps still point at Composer Preview. The skill fetches its guide from `docs/plex/` and falls back to `docs/composer/` for commits before the move.
+decision D-180: The Build with a coding agent prompt no longer tells the agent where Composer is open. The composer-plugin-dev skill needs the target's URL only to publish, and reads it through the debug port then; the reader's steps still point at Composer Preview. The skill fetches its guide from `docs/plex/` and falls back to `docs/composer/` for commits before the move.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-build-with-agent]
   why: Building and loading a plugin never reaches Composer from the agent, so the URL was an unused instruction.
 
-decision D-204: Every section's navigation runs Start here, Learning path, Core concepts, Guides, API, Resources: from most guided to most lookup-like, with API beside Resources as reference.
+decision D-181: Every section's navigation runs Start here, Learning path, Core concepts, Guides, API, Resources: from most guided to most lookup-like, with API beside Resources as reference.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-guide-effect, halo-react, halo-guide-identity, app-framework-guide-plugin]
   why: A reader looks for a how-to before an API page, and an API page is reference like the rest of Resources.
 ```
 
-decision D-205: ECHO's API group drops Migration and Tag, leaving eleven namespace pages. Both appear only in the generated reference; Types and schema still explains versions and migrations.
+decision D-182: ECHO's API group drops Migration and Tag, leaving eleven namespace pages. Both appear only in the generated reference; Types and schema still explains versions and migrations.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [guide-migration, guide-tag, types]
   why: Neither is something most readers call; the concept page carries what a reader needs to know about migrations.
 
-decision D-206: Guide names are short nouns in every section, without the section's name: PLEX's become Effect, Testing, Debugging and ECHO, alongside App capabilities, Settings and state, App Graph and React.
+decision D-183: Guide names are short nouns in every section, without the section's name: PLEX's become Effect, Testing, Debugging and ECHO, alongside App capabilities, Settings and state, App Graph and React.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-guide-effect, plex-guide-testing, plex-guide-debugging, plex-guide-using-echo]
   why: The section already says whose guide it is, so the names line up across the trees.
 
-decision D-207: PLEX's Build with a coding agent prompt has a picker of four examples above the text box: World Clock (the default, the eval's brief), Expense splitter, Family tree and Tournament bracket. Picking one replaces the text. The tournament works with any game in Composer: each match is a game of any kind, and the match records its own winner.
+decision D-184: PLEX's Build with a coding agent prompt has a picker of four examples above the text box: World Clock (the default, the eval's brief), Expense splitter, Family tree and Tournament bracket. Picking one replaces the text. The tournament works with any game in Composer: each match is a game of any kind, and the match records its own winner.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-build-with-agent]
   why: A reader can try the agent without first thinking of a plugin, and each example exercises different parts of PLEX: data and a navtree group, relations and a drawn view, and another plugin's objects.
 
-decision D-208: World Clock leaves the docs. The plugin guide's second worked example becomes Bookmarks, from the PLEX learning path, and the With an assistant section no longer names a World Clock folder. Replaces [D-129] and amends [D-153]: every PLEX concept and API snippet comes from the Bookmarks modules. The in-app plugin templates keep World Clock.
+decision D-185: World Clock leaves the docs. The plugin guide's second worked example becomes Bookmarks, from the PLEX learning path, and the With an assistant section no longer names a World Clock folder. Replaces [D-129] and amends [D-153]: every PLEX concept and API snippet comes from the Bookmarks modules. The in-app plugin templates keep World Clock.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [plex-build-with-agent, app-framework-publishing, app-framework-guide-plugin]
   why: The skill fetches the guide and follows it, so a World Clock example handed the default brief its answer. The `composer-plugin-dev` eval now measures building from the guide's patterns; its first score after this lands is the new baseline, and a drop is expected rather than a regression.
 
-decision D-209: The StackBlitz projects pin `@dxos/*` to pkg.pr.new commit `20a14b9`, main after dxos#14487 landed, in place of that PR's own build `6bad7b6`. Amends [D-138].
+decision D-186: The StackBlitz projects pin `@dxos/*` to pkg.pr.new commit `20a14b9`, main after dxos#14487 landed, in place of that PR's own build `6bad7b6`. Amends [D-138].
   date: 2026-11-11
   by: agent:claude
   why: dxos#14487 merged with a corrected `hasDefaultExport`, so main's builds now run outside the monorepo and the pin no longer needs to follow an open PR.
 
-decision D-210: ECHO's Build with a coding agent prompt has the PLEX page's picker [D-207] with three sample apps: TodoMVC (the default), Kanban board and Collaborative notes. Each builds a Vite and React app in the reader's folder; the learning path is no longer the prompt, and the page links to it instead.
+decision D-187: ECHO's Build with a coding agent prompt has the PLEX page's picker [D-184] with three sample apps: TodoMVC (the default), Kanban board and Collaborative notes. Each builds a Vite and React app in the reader's folder; the learning path is no longer the prompt, and the page links to it instead.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [echo-build-with-agent]
   why: A small, familiar app tests the docs better than repeating the learning path. The three cover objects and queries, references and replication, and concurrent text.
 
-decision D-211: Until the next npm release, ECHO's coding-agent prompt has the agent set up its project from the learning path's package.json, Vite config, tsconfig and index.html, served at `/echo/project/`, which pin every `@dxos` package to pkg.pr.new at `DXOS_COMMIT`. The prompt says not to install `@dxos` packages from npm. Remove the step once a release from main is on npm.
+decision D-188: Until the next npm release, ECHO's coding-agent prompt has the agent set up its project from the learning path's package.json, Vite config, tsconfig and index.html, served at `/echo/project/`, which pin every `@dxos` package to pkg.pr.new at `DXOS_COMMIT`. The prompt says not to install `@dxos` packages from npm. Remove the step once a release from main is on npm.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [echo-build-with-agent]
   why: Test runs of all three prompts installed `@dxos/client` 0.16.0, npm's latest, which predates the APIs these docs describe; the Kanban app crashed on its first write until the agent patched node_modules.
 
-decision D-212: Until the next npm release, Installation and the React guide install `@dxos/client` and `@dxos/react-client` from pkg.pr.new at `DXOS_COMMIT`, with `effect` (and React 19.3 for the React client), and link the tutorial project's package.json for the rest. Revert to plain npm installs with the release that removes [D-211].
+decision D-189: Until the next npm release, Installation and the React guide install `@dxos/client` and `@dxos/react-client` from pkg.pr.new at `DXOS_COMMIT`, with `effect` (and React 19.3 for the React client), and link the tutorial project's package.json for the rest. Revert to plain npm installs with the release that removes [D-188].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [installation, guide-react]
