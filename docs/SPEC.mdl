@@ -1196,7 +1196,7 @@ page app-framework-guide-plugin: Plugin
     - Define a plugin with its metadata
     - Add modules and choose their activation events
     - Contribute capabilities from a module
-    - Describe the plugin in `dx.config.ts`
+    - Describe the plugin in `dx.config.ts`, linking each field's documentation in the generated reference
 ```
 
 ```mdl
@@ -1406,19 +1406,6 @@ page app-framework-api-reference: API reference
   status: spike
   covers:
     - Links to the generated reference for `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/app-graph` and `@dxos/compute`
-```
-
-```mdl
-page app-framework-manifest: The plugin manifest
-  `dx.config.ts`, capabilities and activation events, as reference.
-  section: PLEX
-  route: /docs/plex/resources/manifest/
-  group: Resources
-  template: reference
-  status: spike
-  covers:
-    - Every field of `dx.config.ts`
-    - Every built-in capability and activation event, in tables
 ```
 
 ```mdl
@@ -3367,6 +3354,12 @@ decision D-201: App Graph, AppCapabilities and Translations are app-level, not c
   by: user:wittjosiah
   affects: [app-framework-guide-app-graph, app-framework-guide-app-capabilities, app-framework-app-graph, plex-guide-translations]
   why: A PLEX app without App Graph is still a PLEX app; App Graph matters most of the app-level pieces, so it gets its own guide.
+
+decision D-202: The plugin manifest page is removed. `@dxos/app-framework` exports the `dx.config.ts` sections as `Plugin.ConfigPlugin` and `Plugin.ConfigPublish`, each field carries a doc comment, and the generated API reference documents them; Plugin links there.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-manifest, app-framework-guide-plugin, app-framework-api-reference]
+  why: A hand-written table of the config's fields duplicated the type; the generated reference stays in step with it.
 ```
 
 ## Appendix: Extension Definitions
