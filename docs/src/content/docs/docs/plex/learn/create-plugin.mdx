@@ -14,7 +14,7 @@ A plugin is a set of modules. Each module activates on an event and contributes 
 
 ## Steps
 
-1. **Create the package.** Make a directory for the plugin with a `package.json` and a `vite.config.ts`. The package pins the `@dxos/*` packages to the version of Composer you load the plugin into, and its Vite config adds the `composerPlugin` plugin, which builds the manifest. [Publishing a plugin](/docs/plex/publishing-plugins/) lists both. The starter has them already.
+1. **Create the package.** Make a directory for the plugin with a `package.json` and a `vite.config.ts`. The package pins the `@dxos/*` packages to the version of Composer you load the plugin into, and its Vite config adds the `composerPlugin` plugin, which builds the manifest. [Publishing a plugin](/docs/plex/publishing-plugins/) lists both.
 
 2. **Name the plugin.** The plugin's key is a reverse-domain name that no other plugin uses. Its last segment must be camelCase. Put it in a file of its own, so the manifest and any capability tags the plugin declares can both import it.
 

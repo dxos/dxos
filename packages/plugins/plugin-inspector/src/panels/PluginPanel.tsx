@@ -12,7 +12,6 @@ import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 
 import { useInspectedPlugin } from '../hooks.ts';
 import { ModuleErrors } from '../InspectorPlugin.tsx';
-import { todoStep } from '../todo.ts';
 import { Empty, type PanelProps, Section, moduleName, shortName } from './common.tsx';
 
 type Status = { label: string; detail?: string; tone: 'active' | 'failed' | 'waiting' };
@@ -43,20 +42,13 @@ export const PluginPanel = ({ pluginId, empty }: PanelProps) => {
   const statusOf = (module: Plugin.PluginModule): Status => {
     const error = errors[module.id];
     if (error) {
-      const step = todoStep(error);
-      return step
-        ? { label: 'Not written yet', detail: step, tone: 'failed' }
-        : { label: 'Failed', detail: error.message, tone: 'failed' };
+      return { label: 'Failed', detail: error.message, tone: 'failed' };
     }
     return active.includes(module.id)
       ? { label: 'Active', tone: 'active' }
       : { label: 'Waiting', detail: `Activates on ${events(module)}`, tone: 'waiting' };
   };
 
-  // A placeholder can fail a module of another plugin, e.g. a type the client registers.
-  const elsewhere = Object.entries(errors).filter(
-    ([moduleId, error]) => todoStep(error) && !plugin.modules.some((module) => module.id === moduleId),
-  );
   const pluginFailure = failed.find((failure) => failure.id === pluginId && failure.phase === 'load');
   const { name, key, description } = plugin.meta.profile;
 
@@ -85,18 +77,6 @@ export const PluginPanel = ({ pluginId, empty }: PanelProps) => {
           </ul>
         )}
       </Section>
-      {elsewhere.length > 0 && (
-        <Section title='Waiting on this plugin'>
-          <ul className='flex flex-col gap-1'>
-            {elsewhere.map(([moduleId, error]) => (
-              <li key={moduleId} className='text-sm'>
-                <span className='font-mono'>{moduleId}</span>
-                <span className='block text-description'>{todoStep(error)}</span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
     </>
   );
 };

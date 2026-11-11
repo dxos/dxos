@@ -21,7 +21,4 @@ It has one panel per kind of contribution:
 - **Operations:** each operation, run from a form built from its input schema; each skill with the tools it gives.
 - **App graph:** the app graph from its root.
 
-`todo(step)` (also at `@dxos/plugin-inspector/todo`) is a placeholder for code a tutorial step writes. Using it throws a
-`TodoError` naming the step, and the Plugin panel shows the step in place of the error.
-
 The DXOS docs embed it on each page of the PLEX learning path.

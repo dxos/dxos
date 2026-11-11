@@ -18,21 +18,9 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./package.json": "./package.json",
-    "./todo": {
-      "source": "./src/todo.ts",
-      "types": "./dist/types/src/todo.d.ts",
-      "import": "./dist/lib/todo.mjs"
-    }
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "todo": [
-        "dist/types/src/todo.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

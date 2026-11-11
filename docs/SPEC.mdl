@@ -987,7 +987,7 @@ page plex-the-plex-plugin: The PLEX plugin
   status: spike
   covers:
     - What a plugin is, in a paragraph: metadata and modules that contribute capabilities
-    - The finished Bookmarks plugin, running in the plugin inspector, with Fork on StackBlitz
+    - The finished Bookmarks plugin, running in the plugin inspector
     - What each page of the path adds, and the file it goes in
 ```
 
@@ -1830,10 +1830,6 @@ feat F-19: The plugin inspector
           event and whether it is waiting, active or failed), Translations, Types, Surfaces, Operations and
           App graph; a panel with nothing to show says which page fills it
 
-  req F-19.2:
-    when: a module fails to activate because a contribution is still a starter placeholder
-    then: the Plugin panel names the learning-path page and step that writes it, not the stack trace
-
   req F-19.3:
     when: a reader uses the Types, Surfaces and Operations panels
     then: Types creates an object through the plugin's create-object contribution, Surfaces renders each surface
@@ -1864,12 +1860,6 @@ feat F-20: The tutorial plugin
     when: a reader finishes a learning-path page that builds part of the plugin
     then: the page embeds the inspector with the plugin as it stands after that page, and no earlier page needs
           Composer
-
-  req F-20.3:
-    when: the docs build
-    then: the finished plugin and the starter, with each quoted region replaced by a TODO naming its page, are
-          generated from the same modules, with `@dxos/*` pinned to the pkg.pr.new commit the ECHO projects use;
-          The PLEX plugin has Fork on StackBlitz, and Create a plugin has Follow along in StackBlitz
 ```
 
 ## Acceptance
@@ -3163,6 +3153,14 @@ decision D-145: Installation documents every piece of `vite.config.ts` that ECHO
   date: 2026-11-11
   by: user:wittjosiah
   affects: [installation]
+```
+
+```mdl
+decision D-146: The PLEX learning path has no StackBlitz projects: The PLEX plugin has no Fork on StackBlitz and Create a plugin has no Follow along in StackBlitz. The reader builds the plugin in a local package, and the inspector drops the starter placeholder. Amends [D-141] and [D-142].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-19, F-20, plex-the-plex-plugin, app-framework-create-plugin]
+  why: A plugin running in StackBlitz is served from StackBlitz's machine, where neither the docs inspector nor Composer can load it, so the reader would end up with a plugin they cannot carry into Run it in Composer.
 ```
 
 ## Appendix: Extension Definitions
