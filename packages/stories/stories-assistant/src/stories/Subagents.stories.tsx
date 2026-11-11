@@ -513,7 +513,6 @@ const ThreadColumn = ({ db, chat, lane }: ThreadColumnProps) => {
   if (!chatModel) {
     return null;
   }
-
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel}>
       <ChatPlane.Column value={lane.id}>
@@ -585,7 +584,7 @@ const ThreadPlane = ({ db, chat, chatModel }: AgentColumnProps) => {
   const items = useMemo(() => [{ id: chat.id }, ...lanes.map(({ id }) => ({ id }))], [chat, lanes]);
 
   return (
-    <div className='flex h-full'>
+    <div className='flex grow h-full min-w-0'>
       <TaskList lanes={lanes} started={started} onStart={handleStart} onSelect={setCurrent} />
       <div className='flex-1 min-w-0'>
         <Dnd.Root>

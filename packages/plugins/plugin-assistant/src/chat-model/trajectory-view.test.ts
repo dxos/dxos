@@ -184,4 +184,38 @@ describe('selectThread', () => {
     ]);
     expect(texts(selectThread(raw.read()).messages)).toEqual(['Name a colour.', 'Blue.', 'Square.']);
   });
+
+  test("a subagent's thread shows only its own messages, and none of main or of another subagent", ({ expect }) => {
+    const { read, set } = setup();
+    const open = (purpose: string) => {
+      const id = Obj.ID.random();
+      const thread = Trajectory.ThreadId.make(id);
+      const event = Trajectory.make({
+        id,
+        payload: { _tag: 'threadOpen', mode: 'fresh', purpose },
+        sender: { role: 'assistant' },
+        thread,
+      });
+      return { thread, event };
+    };
+    const blog = open('Blog post');
+    const notes = open('Release notes');
+    set([
+      say('Write the launch posts.', 'user'),
+      blog.event,
+      say('Draft the blog post.', 'user', blog.thread),
+      notes.event,
+      say('Write the release notes.', 'user', notes.thread),
+      say('Wrote the blog post.', 'assistant', blog.thread),
+      say('Wrote the release notes.', 'assistant', notes.thread),
+    ]);
+
+    const view = read();
+    expect(texts(selectThread(view, blog.thread).messages)).toEqual(['Draft the blog post.', 'Wrote the blog post.']);
+    expect(texts(selectThread(view, notes.thread).messages)).toEqual([
+      'Write the release notes.',
+      'Wrote the release notes.',
+    ]);
+    expect(selectThread(view, blog.thread).lanes.map((lane) => lane.id)).toEqual([blog.thread]);
+  });
 });
