@@ -5,12 +5,13 @@ description: Have Claude Code, Codex or Cursor build a plugin and load it into y
 
 import AgentPrompt from '../../../../components/AgentPrompt.astro';
 
-A coding agent can build a plugin in a folder of yours and load it into Composer, in a few minutes. Describe the
-plugin you want in the prompt below, then open it in your agent.
+A coding agent can build a plugin in a folder of yours and load it into Composer, in a few minutes. Before you start:
 
-Only [Composer Preview](https://preview.composer.space) loads plugins from a dev server; composer.space loads only the
-plugins it ships with. Sign in to Composer Preview and keep it open before you start. The prompt tells the agent to use
-it.
+1. Sign in to [Composer Preview](https://preview.composer.space) and keep it open. Only Composer Preview loads plugins
+   from a dev server; composer.space loads only the plugins it ships with.
+2. Open an empty folder in your agent. The plugin is its own project, and the agent sets it up there.
+
+Then describe the plugin you want in the prompt below, and open it in your agent.
 
 <AgentPrompt skill="composer-plugin-dev" prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team." context="My Composer is open at https://preview.composer.space. Load the plugin there: composer.space does not load plugins from a dev server." />
 

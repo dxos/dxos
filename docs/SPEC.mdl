@@ -969,6 +969,7 @@ page plex-build-with-agent: Build with a coding agent
   covers:
     - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
+    - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
     - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
@@ -2951,6 +2952,18 @@ decision D-133: Build with a coding agent targets Composer Preview (`https://pre
   by: user:wittjosiah
   affects: [plex-build-with-agent]
   why: composer.space cannot load a plugin from a dev server, and a reader should not have to know which Composer to name.
+```
+
+```mdl
+decision D-134: The PLEX page asks the reader to open an empty folder in their agent before pressing a button, and the prompt does not check the folder. Claude Code's link takes only an absolute `folder` path and Codex's an existing `path`; Cursor's takes none, and a web page cannot see the reader's files to fill one in. The skill sets the plugin up as its own repository with npm, so a folder inside a monorepo is not offered. Amends [D-130].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: One sentence of setup works the same in all three agents.
+  rejected:
+    - A prompt step that stops when the folder is not empty: the reader is told what to do, and the step adds a line they did not ask for.
+    - A folder field that fills `folder` and `path`: the folder must already exist, Cursor ignores it, and typing an absolute path is more work than opening the folder.
+    - Having the agent make the folder: Codex's sandbox and Claude Code's permissions block or prompt on writes outside the open folder.
 ```
 
 ## Appendix: Extension Definitions
