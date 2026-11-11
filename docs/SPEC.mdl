@@ -1451,6 +1451,12 @@ feat F-2: Brand and visual style
           full-width text column and the table of contents side by side
     then: the table of contents folds into the bar above the page, and the text column keeps its full width
 
+  req F-2.15:
+    when: a docs page renders in a window too narrow to hold the sidebar and a full-width text column side by
+          side
+    then: the sidebar folds behind the menu button in the header, as on a phone, and the text column keeps its
+          full width
+
 ```
 
 ```mdl
@@ -2873,6 +2879,14 @@ decision D-123: Docs pages favor room for code. The table of contents folds into
   supersedes: D-17
   affects: [F-2.5, F-2.14, T-4]
   why: Wrapped code is hard to read, since a wrapped line looks like two statements. A text column squeezed by the table of contents wraps or cuts off code that would otherwise fit.
+```
+
+```mdl
+decision D-124: The docs sidebar folds behind the menu button below 72rem, the width that fits the sidebar and a full text column, instead of Starlight's 50rem, as the Effect docs do. Fills in [D-123].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-2.15]
+  why: Between 50rem and 72rem the sidebar took a third of the window and left the code samples too narrow.
 ```
 
 ## Appendix: Extension Definitions

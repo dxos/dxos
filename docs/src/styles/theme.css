@@ -149,6 +149,27 @@ site-search button[data-open-modal] {
 }
 
 /*
+ * Starlight shows the sidebar as a column from 50rem, which leaves the text column too narrow for
+ * code. Until the viewport fits the sidebar and a full text column (72rem), the sidebar stays behind
+ * the menu button; `PageFrame.astro` does the same for the sidebar pane itself.
+ */
+@media (min-width: 50rem) and (max-width: 71.99rem) {
+  :root[data-has-sidebar] {
+    --sl-content-inline-start: 0rem;
+  }
+  :root .sl-menu-button {
+    display: flex;
+  }
+  :root body:has(#starlight__sidebar:popover-open) {
+    overflow: hidden;
+  }
+  /* With the sidebar gone, the text column centers in the window, as it does beside the sidebar. */
+  :root .content-panel .sl-container {
+    margin-inline: auto;
+  }
+}
+
+/*
  * Starlight shows the table of contents as a column from 72rem, which squeezes the text column below
  * its full width. Until the viewport fits the sidebar, a full text column and the table of contents
  * (88rem), the table of contents folds into the bar above the page instead.

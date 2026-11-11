@@ -162,6 +162,8 @@ export default defineConfig({
         Head: './src/components/Head.astro',
         Header: './src/components/Header.astro',
         // Welcome pages put the title in a hero; see `WelcomeHero.astro`.
+        // The sidebar folds into a menu below 72rem; see `PageFrame.astro`.
+        PageFrame: './src/components/PageFrame.astro',
         PageTitle: './src/components/PageTitle.astro',
         // Lists the topics with the DXOS brand marks; see `SidebarTopics.astro`.
         Sidebar: './src/components/Sidebar.astro',

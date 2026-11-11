@@ -1,5 +1,6 @@
 ---
 import { PAGE_LAYERS } from '../../demos/layers.ts';
+import { ContactsEmbedPage } from '../../tutorial/app/ContactsEmbedPage.tsx';
 ---
 
 <!--
@@ -32,17 +33,14 @@ import { PAGE_LAYERS } from '../../demos/layers.ts';
     </script>
   </head>
   <body>
-    <div id="root" class="dx-island"></div>
-    <script>
-      import { mount } from '../../tutorial/app/mount.tsx';
-
-      const root = document.getElementById('root');
-      root && mount(root, new URLSearchParams(window.location.search));
-    </script>
+    <!-- `client:only`, since the query is known only in the browser; an island also gets React's dev preamble. -->
+    <div id="root" class="dx-island"><ContactsEmbedPage client:only="react" /></div>
     <style is:global>
       html,
       body,
-      #root {
+      #root,
+      #root > astro-island {
+        display: block;
         height: 100%;
         margin: 0;
       }
