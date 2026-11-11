@@ -71,6 +71,11 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
           await track.applyConstraints(constraints).catch((err) => log.catch(err));
         }
 
+        // A superseded load (the URL changed or the caller unmounted) must not overwrite the current one.
+        if (ctx.disposed) {
+          return;
+        }
+
         // Also connect to speakers so audio is audible.
         setStream({
           audio,
@@ -79,7 +84,9 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
         });
       } catch (err) {
         log.catch(err);
-        setStream({ error: err instanceof Error ? err : new Error(String(err)) });
+        if (!ctx.disposed) {
+          setStream({ error: err instanceof Error ? err : new Error(String(err)) });
+        }
       }
     });
 
