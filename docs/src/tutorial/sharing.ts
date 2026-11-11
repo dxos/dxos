@@ -5,9 +5,9 @@
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import {
-  InvitationEncoder,
   Invitation_AuthMethod,
   Invitation_State,
+  InvitationEncoder,
 } from '@dxos/client/invitations';
 import { SpaceId } from '@dxos/keys';
 
