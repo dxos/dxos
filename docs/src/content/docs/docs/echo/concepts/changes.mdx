@@ -1,13 +1,14 @@
 ---
-title: Concurrency and conflicts
-description: What merges automatically and what the application must decide.
+title: Changes and branches
+description: Every write as a change, how changes merge, the history they leave, and branches of objects.
 ---
 
 import Snippet from '../../../../../components/Snippet.astro';
 import SpecCite from '../../../../../components/SpecCite.astro';
 
-Two peers can change the same object at the same time, online or offline, and ECHO merges both changes without asking
-either of them.
+Every write to an object is a change. Changes from different peers merge without asking either of them, each object
+keeps the history of its changes, and a branch lets a set of changes wait apart from the main line until they are
+merged.
 
 ## Model
 
@@ -29,7 +30,7 @@ What "merged" means depends on the kind of value:
 The table explains the choice between assigning a string and editing it with `Text`. Assignment replaces the value;
 `Text.splice` and `Text.update` change characters, so two people typing in the same field both keep their work.
 
-<Snippet file="concept-conflicts" region="text" />
+<Snippet file="concept-changes" region="text" />
 
 ## Behavior
 
@@ -39,16 +40,46 @@ The table explains the choice between assigning a string and editing it with `Te
   first. <SpecCite item="org.dxos.echo.query#F-2.2" />
 - A peer that was offline keeps writing to its copy. When it reconnects, peers exchange the changes each is missing and
   merge them by the rules above. Nothing is rejected for being late.
-- Each change records the device that made it. `Obj.getChanges` lists an object's history, so an app can see that two
-  devices wrote the same field and ask a person to confirm the result.
+- Each change records the device that made it, so an app can see that two devices wrote the same field and ask a
+  person to confirm the result.
 
-<Snippet file="concept-conflicts" region="detect" />
+<Snippet file="concept-changes" region="detect" />
+
+### History
+
+`Obj.getChanges` lists an object's changes, each with the device that made it, the time, and the value before and
+after. `Obj.getVersion` reads the object as it was after any change, without changing the live object. `Filter.changes`
+queries changes across a space, to count or list them.
+
+<Snippet file="concept-changes" region="history" />
+
+### Branches
+
+A **branch** is a separate line of changes to an object and the objects it references, such as a draft of a document.
+`createBranch` starts one from the latest state or from a past version. Changes on a branch do not show on main until
+`mergeBranch` merges them, as one CRDT merge, so main's own changes since the branch started are kept.
+
+- `switchBranch` shows a branch on this device, for the object and its children. Other devices keep the branch they
+  are on.
+- `syncBranch` brings main's newer changes into a branch, and `deleteBranch` drops a branch.
+- `db.branch` gives a second live copy of an object, bound to a branch, without switching. Use it to show a branch next
+  to main; call `dispose` when the view closes.
+
+<Snippet file="concept-changes" region="branch" />
+
+<Snippet file="concept-changes" region="side-by-side" />
+
+A [feed](/docs/echo/concepts/feeds/) has branches of its own, for items appended to a log. Branches of objects are for
+objects that people edit in place.
 
 ## Limits
 
 - ECHO does not know what your fields mean. When one peer sets `status: 'done'` and another sets `status: 'doing'`, one
   value wins and the other is not flagged. If the loser matters, model the intent instead: record each person's choice in a
-  field of its own, or append events to a [feed](/docs/echo/guides/feed/) and derive the state from them.
+  field of its own, or append events to a [feed](/docs/echo/api/feed/) and derive the state from them.
 - Invariants across fields or objects are not kept. Two peers can each make a valid change whose merge breaks a rule such as
   "at most one task is in progress". Check such rules when you read, not only when you write.
-- A schema change is not merged with data written under the old version. Use a new version and a migration.
+- A schema change is not merged with data written under the old version. Use a new version and a
+  [migration](/docs/echo/concepts/types/#versions-and-migrations).
+- A switch to a branch is local to the device. Another device of the same person still shows main until it switches
+  too.

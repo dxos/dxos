@@ -1,38 +1,66 @@
 ---
 title: Spaces and databases
-description: The unit of sharing, access and replication.
+description: The unit of sharing and replication, how a space is stored, and the Hypergraph over every space.
 ---
 
-import { Badge } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
 
-A space is an ECHO database that a set of peers replicates, and it is the unit of sharing and access control.
+A space is a database that a set of peers share and replicate, and it is the unit of sharing: a person shares a whole
+space, not single objects.
 
 ## Model
 
-A space works like a collection in a document store. Every object belongs to exactly one space, and `space.db` is the database that holds them. A peer usually belongs to many spaces at once, and each space has its own members.
+Every object belongs to exactly one space, and `space.db` is the database that holds them. A device usually holds many
+spaces at once, and each space has its own members.
 
-There is no server that owns a space. Each member keeps a full copy of the space's database in local storage, and members exchange changes directly over [WebRTC](https://en.wikipedia.org/wiki/WebRTC) or through EDGE.
+<Snippet file="concept-spaces" region="database" />
 
-### Joining a space
+### Storage
 
-A peer joins a space through an invitation from a member. The handshake has five steps:
+A device keeps each space in local storage: the browser's storage in a web app, files on disk in Node. In a browser the
+client runs the database in a worker, apart from the page. It keeps an index of every space, and queries read from the
+index as well as from the objects the page holds.
 
-1. <Badge text="Peer A" variant="tip" /> generates an [invitation code](/docs/halo/concepts/invitations/) and listens on the network for peers that present it.
-2. <Badge text="Peer B" variant="note" /> obtains the invitation code and finds <Badge text="Peer A" variant="tip" /> through the [signaling service](/docs/additional-resources/glossary#signaling-service).
-3. The two peers open a secure connection with a [Diffie-Hellman](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) key exchange.
-4. <Badge text="Peer A" variant="tip" /> generates an [authorization code](/docs/halo/concepts/invitations/) and gives it to <Badge text="Peer B" variant="note" /> over a second channel, such as a QR code.
-5. <Badge text="Peer B" variant="note" /> sends the authorization code back to <Badge text="Peer A" variant="tip" /> over the new connection.
+A write is finished, and visible to queries in the same tab, when the call returns. `db.flush` waits until pending
+writes are on disk, and optionally until the index has them too.
 
-The last step proves that the connection is secure and that each peer is who the other expects. [Sharing a space](/docs/echo/learn/sharing/) drives these steps from code.
+### Replication
 
-### Spaces and HALO
+There is no server that owns a space. Each member holds a full copy of the space's data and exchanges changes with the
+other members directly, over [WebRTC](https://en.wikipedia.org/wiki/WebRTC), or through EDGE, the DXOS sync service.
+Reads and writes work offline, and the changes merge when the device reconnects, by the rules in
+[Changes and branches](/docs/echo/concepts/changes/).
 
-ECHO keeps both the user's data and the user's identity in persistent storage on the device: browser storage in a web app, files on disk in Node, where the database runs in the same process. [HALO](/docs/halo/overview/) holds the identity, its keys and its credentials.
+### The Hypergraph
 
-An identity can span several devices. To give a second app or device read and write access to all of a user's spaces, the user starts a device invitation from one that already has access. The user can revoke a device at any time.
+The **Hypergraph** is every space this device holds, as one graph. `client.graph` queries across spaces and finds a
+space's database by id. It also holds the **registry**: the types and objects registered in code, which a query without
+`from` searches along with the database.
+
+<Snippet file="concept-spaces" region="hypergraph" />
+
+A reference can point into another space. It stores the qualified EID, `echo://<spaceId>/<objectId>`, and resolves if
+this device holds or can reach that space.
+
+<Snippet file="concept-spaces" region="cross-space" />
+
+Use `space.db` for work inside one space, which is most work. Use the Hypergraph when the code cannot know the space
+in advance, such as a search across everything a person has.
+
+### Access
+
+HALO decides who is a member of a space and what each member can do, with access control built on
+[Keyhive](https://www.inkandswitch.com/keyhive/notebook/). [Spaces and membership](/docs/halo/concepts/spaces-membership/)
+covers members and roles, and [Invitations](/docs/halo/concepts/invitations/) covers how a peer joins.
 
 ## Behavior
 
 - Each member holds a full replica, so reads and writes work offline and merge when the peer reconnects.
 - Several members can write to the same space at the same time. Their changes merge without a central authority.
-- A peer joins only after it completes the handshake above. Holding the invitation code alone is not enough.
+- A reference into a space this device does not hold resolves to nothing: `tryLoad` returns `undefined`.
+
+## Limits
+
+- An object cannot move to another space. Copy it into the other space and remove the original.
+- Sharing is per space. To share some objects and not others, put them in different spaces and link them with
+  references.

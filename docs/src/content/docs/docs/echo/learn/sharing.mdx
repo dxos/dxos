@@ -15,7 +15,7 @@ A space is shared by invitation. The host creates an invitation, and the guest u
 
 Once the guest is in, both peers hold a full replica of the space's database. Each peer reads and writes its own replica, and the replicas exchange changes whenever the peers can reach each other. A peer that goes offline keeps working, and catches up when it reconnects.
 
-[Spaces and databases](/docs/echo/concepts/spaces/#joining-a-space) explains the handshake in detail.
+[Invitations](/docs/halo/concepts/invitations/) explains the handshake in detail.
 
 Both functions go in a new file, `sharing.ts`.
 

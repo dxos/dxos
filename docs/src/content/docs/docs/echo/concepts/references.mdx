@@ -13,7 +13,7 @@ other.
 
 A field declared with `Ref.Ref(Type)` holds a reference to an entity of that type. The stored value is the target's URI,
 not the target's data. Two objects that reference the same person both see the person's latest name, because neither
-holds a copy. [Ref](/docs/echo/guides/ref/) shows how to declare and make one.
+holds a copy. [Ref](/docs/echo/api/ref/) shows how to declare and make one.
 
 ECHO uses two kinds of name:
 
@@ -31,16 +31,13 @@ ECHO uses two kinds of name:
   <SpecCite item="org.dxos.echo#F-4.1" />
 - `ref.peek()` returns the target if it is in memory and never starts a load. `ref.load()` reads it from disk or the
   network.
-- In Effect code, `Database.load` fails with `EntityNotFoundError` when the target is missing, and you can catch it by that
-  tag. <SpecCite item="org.dxos.echo#F-4.2" />
 - Serializing an object keeps its references as URIs, and reading it back restores them.
   <SpecCite item="org.dxos.echo#F-3.4" />
 - A query can follow references forwards with `reference` and backwards with `referencedBy`, so you do not need to load
-  each target yourself. [Query](/docs/echo/guides/query/) covers traversal.
+  each target yourself. [Query](/docs/echo/api/query/) covers traversal.
 
-A reference can point into another space. It resolves if this device holds or can reach that space.
-
-<Snippet file="concept-references" region="cross-space" />
+A reference can point into another space, which [Spaces and databases](/docs/echo/concepts/spaces/#the-hypergraph)
+covers.
 
 ## Limits
 
