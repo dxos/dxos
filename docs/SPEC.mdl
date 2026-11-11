@@ -957,7 +957,7 @@ page why-plex: Why PLEX?
   status: spike
   covers:
     - The pattern: a plugin fills a role in a view it did not write, and the app renders whatever answers
-    - Comparison: an app with an extension API, against an app that is the plugins it loads
+    - Comparison: an app with a fixed core that outside code hooks into, against an app that is the plugins it loads
     - Practical problems: extending a plugin you did not write, loading only what is used, one action for people and agents, data that syncs without plugin code
     - What PLEX does not do: it does not store or sync data, and it is not a component library
 ```
