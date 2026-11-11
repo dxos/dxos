@@ -1,5 +1,7 @@
 /* The react-ui theme for the demos and the tutorial app: the workspace entry, plus the sources it does not scan. */
 @import '../../../packages/ui/ui-theme/src/workspace.css';
 
+@source '../app-framework-tutorial/**/*.{ts,tsx}';
 @source '../demos/**/*.{ts,tsx}';
+@source '../plex/**/*.{ts,tsx}';
 @source '../tutorial/**/*.{ts,tsx}';

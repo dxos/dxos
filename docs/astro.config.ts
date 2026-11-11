@@ -164,7 +164,7 @@ export default defineConfig({
   },
   integrations: [
     cloudflareRedirects(),
-    react({ include: ['**/src/demos/**', '**/src/tutorial/**'] }),
+    react({ include: ['**/src/app-framework-tutorial/**', '**/src/demos/**', '**/src/plex/**', '**/src/tutorial/**'] }),
     starlight({
       title: 'DXOS Documentation',
       lastUpdated: true,

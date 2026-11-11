@@ -1,0 +1,49 @@
+---
+import { PAGE_LAYERS } from '../../demos/layers.ts';
+import { InspectorEmbedPage } from '../../plex/InspectorEmbedPage.tsx';
+---
+
+<!--
+  The plugin inspector on a page of its own, which `InspectorEmbed.astro` shows in an iframe. Astro scopes a stylesheet
+  only to a page of its own, so the app's theme CSS stays off the docs pages. Query: `?stage=<Stage>&panel=<PanelId>`.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Plugin inspector</title>
+    <style is:inline set:html={`@layer ${PAGE_LAYERS.join(', ')};`} />
+    <!-- Follows the theme of the docs page around the iframe; react-ui's dark variant keys on a `dark` class. -->
+    <script is:inline>
+      {
+        const root = document.documentElement;
+        const host = window.parent === window ? undefined : window.parent.document.documentElement;
+        const sync = () => {
+          const dark = host
+            ? host.dataset.theme === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          root.classList.toggle('dark', dark);
+          root.style.colorScheme = dark ? 'dark' : 'light';
+        };
+        sync();
+        host && new MutationObserver(sync).observe(host, { attributes: true, attributeFilter: ['data-theme'] });
+      }
+    </script>
+  </head>
+  <body>
+    <!-- `client:only`, since the query is known only in the browser; an island also gets React's dev preamble. -->
+    <div id="root" class="dx-island"><InspectorEmbedPage client:only="react" /></div>
+    <style is:global>
+      html,
+      body,
+      #root,
+      #root > astro-island {
+        display: block;
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+  </body>
+</html>
