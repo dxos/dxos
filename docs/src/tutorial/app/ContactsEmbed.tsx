@@ -97,7 +97,7 @@ const Device = ({
   };
 
   return (
-    <div className='flex flex-col dx-grow min-w-0 border-e border-separator last:border-e-0'>
+    <div className='flex flex-col dx-grow border-e border-separator last:border-e-0'>
       {compact && (
         <div
           className='flex items-center gap-2 px-3 py-1 text-sm border-b border-separator bg-group-surface'
@@ -113,7 +113,7 @@ const Device = ({
           />
         </div>
       )}
-      <div className='dx-grow min-h-0'>
+      <div className='dx-grow'>
         <PeerApp
           client={peer.client}
           space={peer.space}

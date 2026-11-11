@@ -66,7 +66,7 @@ export const App = () => {
         {error && <p style={{ padding: '1rem' }}>{error}</p>}
         {stage && opened && (
           <Themed>
-            <div className='dx-grow min-w-0'>
+            <div className='dx-grow'>
               <PeerApp
                 client={opened.client}
                 space={opened.space}
