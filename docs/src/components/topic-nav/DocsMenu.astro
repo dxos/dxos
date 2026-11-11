@@ -1,0 +1,57 @@
+---
+// Variant "docs-menu": the site nav's Docs link opens a menu of every topic, which the marketing nav could share.
+import TopicList from './TopicList.astro';
+import { currentTopic } from './topics.ts';
+
+const topic = currentTopic(Astro.url.pathname);
+---
+
+<details class="docs-menu" data-topic-popover>
+  <summary aria-current={Astro.url.pathname.startsWith('/docs') ? 'page' : undefined}>
+    Docs
+    <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+  </summary>
+  <div class="panel">
+    <TopicList current={topic?.id} layout="grid" />
+  </div>
+</details>
+
+<style>
+  .docs-menu {
+    position: relative;
+  }
+  summary {
+    align-items: center;
+    color: var(--sl-color-gray-2);
+    cursor: pointer;
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary[aria-current='page'],
+  summary:hover {
+    color: var(--sl-color-white);
+  }
+  .chevron {
+    fill: none;
+    height: 0.875rem;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    width: 0.875rem;
+  }
+  .panel {
+    background: var(--sl-color-bg-nav);
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    box-shadow: var(--sl-shadow-lg);
+    inset-inline-end: -1rem;
+    padding: 0.5rem;
+    position: absolute;
+    top: calc(100% + 1rem);
+    width: 32rem;
+    z-index: 100;
+  }
+</style>

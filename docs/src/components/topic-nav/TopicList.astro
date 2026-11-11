@@ -1,0 +1,95 @@
+---
+// Every topic as a link with its mark and description; planned topics show but do not link.
+import TopicMark from './TopicMark.astro';
+import { TOPICS } from './topics.ts';
+
+interface Props {
+  current?: string;
+  layout?: 'rows' | 'grid';
+}
+
+const { current, layout = 'rows' } = Astro.props;
+---
+
+<ul class:list={['topic-list', layout]}>
+  {
+    TOPICS.map((topic) => {
+      const Tag = topic.href ? 'a' : 'span';
+      return (
+        <li>
+          <Tag
+            href={topic.href}
+            class:list={['item', { current: topic.id === current, soon: !topic.href }]}
+            aria-current={topic.id === current ? 'page' : undefined}
+            aria-disabled={topic.href ? undefined : 'true'}
+          >
+            <span class="head">
+              <TopicMark topic={topic} size={20} />
+              {!topic.href && <span class="badge">Soon</span>}
+            </span>
+            <span class="desc">{topic.description}</span>
+          </Tag>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<style>
+  .topic-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.125rem;
+  }
+  .topic-list.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem 0.5rem;
+  }
+  .item {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.5rem;
+    color: var(--sl-color-white);
+    text-decoration: none;
+  }
+  a.item:hover,
+  a.item:focus-visible {
+    background: var(--sl-color-gray-6);
+  }
+  .item.current {
+    background: var(--sl-color-gray-6);
+    color: var(--sl-color-accent-high);
+  }
+  :global([data-theme='light']) .item.current {
+    color: var(--sl-color-accent);
+  }
+  .item.soon {
+    color: var(--sl-color-gray-3);
+    cursor: default;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .desc {
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-xs);
+    line-height: 1.35;
+    white-space: normal;
+  }
+  .badge {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0 0.4rem;
+    text-transform: uppercase;
+  }
+</style>

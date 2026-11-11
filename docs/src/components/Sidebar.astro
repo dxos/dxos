@@ -2,10 +2,41 @@
 import Default from '@astrojs/starlight/components/Sidebar.astro';
 
 import SidebarTopics from './SidebarTopics.astro';
+import TopicMark from './topic-nav/TopicMark.astro';
+import TopicSelect from './topic-nav/TopicSelect.astro';
+import { currentTopic } from './topic-nav/topics.ts';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
 const { isPageWithTopic } = Astro.locals.starlightSidebarTopics;
+const topic = currentTopic(Astro.url.pathname);
 ---
 
-{hasSidebar && isPageWithTopic && <SidebarTopics />}
+{
+  hasSidebar && isPageWithTopic && (
+    <>
+      <div data-nav-only="sidebar">
+        <SidebarTopics />
+      </div>
+      <div data-nav-only="sidebar-select">
+        <TopicSelect />
+      </div>
+      {topic && (
+        <div data-nav-only="docs-menu">
+          <div class="topic-heading">
+            <TopicMark topic={topic} size={26} />
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 <Default><slot /></Default>
+
+<style>
+  .topic-heading {
+    border-bottom: 1px solid var(--sl-color-hairline-light);
+    color: var(--sl-color-white);
+    margin-bottom: 1rem;
+    padding: 0.25rem 0.5rem 1rem;
+  }
+</style>

@@ -1,0 +1,93 @@
+---
+// Exploration only: a floating switch between the topic-nav designs, so they can be compared on any page.
+import { NAV_VARIANTS } from './topics.ts';
+---
+
+<div class="nav-variant-picker" role="group" aria-label="Topic nav design">
+  <span class="label">Topic nav</span>
+  {NAV_VARIANTS.map((variant, index) => (
+    <button type="button" data-variant={variant.id} title={variant.label}>
+      {String.fromCharCode(65 + index)}. {variant.label}
+    </button>
+  ))}
+</div>
+
+<script>
+  const picker = document.querySelector<HTMLElement>('.nav-variant-picker');
+  const sync = () =>
+    picker?.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.variant === document.documentElement.dataset.topicNav));
+    });
+  picker?.addEventListener('click', (event) => {
+    const variant = (event.target as HTMLElement).closest<HTMLButtonElement>('button')?.dataset.variant;
+    if (!variant) {
+      return;
+    }
+    document.documentElement.dataset.topicNav = variant;
+    try {
+      localStorage.setItem('dx-topic-nav', variant);
+    } catch {}
+    const url = new URL(location.href);
+    url.searchParams.set('nav', variant);
+    history.replaceState(null, '', url);
+    sync();
+  });
+  sync();
+
+  // Closes an open topic menu on a click outside it or on Escape.
+  document.addEventListener('click', (event) => {
+    document.querySelectorAll<HTMLDetailsElement>('details[data-topic-popover][open]').forEach((details) => {
+      if (!details.contains(event.target as Node)) {
+        details.open = false;
+      }
+    });
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      document.querySelectorAll<HTMLDetailsElement>('details[data-topic-popover][open]').forEach((details) => {
+        details.open = false;
+      });
+    }
+  });
+</script>
+
+<style>
+  .nav-variant-picker {
+    align-items: center;
+    background: var(--sl-color-bg-nav);
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 999px;
+    bottom: 1rem;
+    box-shadow: var(--sl-shadow-md);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: var(--sl-text-xs);
+    gap: 0.25rem;
+    inset-inline-start: 1rem;
+    max-width: calc(100vw - 2rem);
+    padding: 0.25rem 0.375rem 0.25rem 0.875rem;
+    position: fixed;
+    z-index: 1000;
+  }
+  .label {
+    color: var(--sl-color-gray-3);
+    font-weight: 600;
+    margin-inline-end: 0.25rem;
+  }
+  button {
+    background: none;
+    border: 0;
+    border-radius: 999px;
+    color: var(--sl-color-gray-2);
+    cursor: pointer;
+    font: inherit;
+    padding: 0.25rem 0.625rem;
+  }
+  button:hover {
+    color: var(--sl-color-white);
+  }
+  button[aria-pressed='true'] {
+    background: var(--sl-color-accent);
+    color: var(--sl-color-black);
+  }
+</style>

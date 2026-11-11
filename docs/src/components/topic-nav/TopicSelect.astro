@@ -1,0 +1,76 @@
+---
+// Variant "sidebar-select": a card at the top of the sidebar names the current topic and opens the others.
+import TopicList from './TopicList.astro';
+import TopicMark from './TopicMark.astro';
+import { currentTopic } from './topics.ts';
+
+const topic = currentTopic(Astro.url.pathname);
+---
+
+<details class="topic-select" data-topic-popover>
+  <summary>
+    <span class="current">
+      {topic && <TopicMark topic={topic} size={26} />}
+      <span class="desc">{topic?.description}</span>
+    </span>
+    <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.5l3-3 3 3M5 9.5l3 3 3-3" /></svg>
+  </summary>
+  <div class="panel">
+    <TopicList current={topic?.id} />
+  </div>
+</details>
+
+<style>
+  .topic-select {
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  summary {
+    align-items: center;
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    color: var(--sl-color-white);
+    cursor: pointer;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    list-style: none;
+    padding: 0.625rem 0.75rem;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary:hover,
+  .topic-select[open] summary {
+    background: var(--sl-color-gray-6);
+  }
+  .current {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+  .desc {
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-xs);
+  }
+  .chevron {
+    fill: none;
+    flex: none;
+    height: 1rem;
+    stroke: var(--sl-color-gray-3);
+    stroke-width: 1.5;
+    width: 1rem;
+  }
+  .panel {
+    background: var(--sl-color-bg-nav);
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    box-shadow: var(--sl-shadow-lg);
+    inset-inline: 0;
+    padding: 0.375rem;
+    position: absolute;
+    top: calc(100% + 0.375rem);
+    z-index: 100;
+  }
+</style>

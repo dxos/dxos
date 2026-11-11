@@ -9,6 +9,10 @@ import SocialIcons from 'virtual:starlight/components/SocialIcons';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
 
 import { siteLinks } from './site-links.ts';
+import DocsMenu from './topic-nav/DocsMenu.astro';
+import NavVariantPicker from './topic-nav/NavVariantPicker.astro';
+import TopicMenu from './topic-nav/TopicMenu.astro';
+import TopicTabs from './topic-nav/TopicTabs.astro';
 
 const shouldRenderSearch =
   config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
@@ -20,17 +24,26 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
 
 <div class="header">
   <div class="title-wrapper sl-flex">
-    <SiteTitle />
+    <div data-nav-hide="logo-menu"><SiteTitle /></div>
+    <div data-nav-only="logo-menu"><TopicMenu /></div>
   </div>
   <div class="sl-flex print:hidden">
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
-    <nav class="site-nav" aria-label="dxos.org">
-      {siteLinks.map((link) => (
-        <a href={link.href} aria-current={isCurrent(sectionOf(link)) ? 'page' : undefined}>{link.label}</a>
-      ))}
+    <nav class="site-nav" aria-label="dxos.org" data-nav-hide="tabs">
+      {siteLinks.map((link) =>
+        link.id === 'docs' ? (
+          <>
+            <a href={link.href} data-nav-hide="docs-menu" aria-current={isCurrent(sectionOf(link)) ? 'page' : undefined}>{link.label}</a>
+            <div data-nav-only="docs-menu"><DocsMenu /></div>
+          </>
+        ) : (
+          <a href={link.href} aria-current={isCurrent(sectionOf(link)) ? 'page' : undefined}>{link.label}</a>
+        ),
+      )}
     </nav>
+    <div data-nav-only="tabs"><a class="back-home" href="/">dxos.org<span aria-hidden="true"> ↗</span></a></div>
     <div class="sl-flex social-icons">
       <SocialIcons />
     </div>
@@ -38,6 +51,8 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
     <LanguageSelect />
   </div>
 </div>
+<div data-nav-only="tabs"><TopicTabs /></div>
+<NavVariantPicker />
 
 <style>
   @layer starlight.core {
@@ -54,6 +69,11 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
       padding: 0.25rem;
       margin: -0.25rem;
       min-width: 0;
+    }
+
+    /* The topic menu's panel hangs below the header. */
+    :global(html[data-topic-nav='logo-menu']) .title-wrapper {
+      overflow: visible;
     }
 
     .right-group,
@@ -93,5 +113,29 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
         align-content: center;
       }
     }
+  }
+</style>
+
+<!-- Exploration styles sit outside Starlight's layer so the page revert does not undo them. -->
+<style>
+  .site-nav {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .back-home {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+    padding: 0.25rem 0.75rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .back-home:hover {
+    border-color: var(--sl-color-gray-3);
+    color: var(--sl-color-white);
   }
 </style>
