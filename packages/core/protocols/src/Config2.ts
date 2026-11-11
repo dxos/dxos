@@ -23,18 +23,26 @@ export type Icon = Schema.Schema.Type<typeof Icon>;
 export const Plugin = Schema.Struct({
   /** Reverse-domain NSID — the plugin's globally-unique key (e.g. `org.dxos.plugin.excalidraw`). */
   key: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  /** The name people see. */
   name: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  /** One or two sentences, shown in the plugin list. */
   description: Schema.optional(Schema.String),
   /**
    * Author or organization name. Only used for bundled plugins. For plugins published to the
    * registry this field is ignored — the verified publisher (handle ?? did) is used instead.
    */
   author: Schema.optional(Schema.String),
+  /** A link to the plugin's site. */
   homePage: Schema.optional(Schema.String),
+  /** A link to the plugin's source code. */
   source: Schema.optional(Schema.String),
+  /** Light and dark screenshot URLs, for the registry. */
   screenshots: Schema.optional(Schema.Array(Screenshot)),
+  /** Labels for the plugin list. Composer's own plugins start with a quality tier: `system`, `beta`, `alpha` or `labs`. */
   tags: Schema.optional(Schema.Array(Schema.String)),
+  /** A Phosphor icon key and a hue. */
   icon: Schema.optional(Icon),
+  /** The plugin's spec, such as its `PLUGIN.mdl`. */
   spec: Schema.optional(Schema.String),
   /** Composer plugin ids this plugin depends on at runtime (NSIDs). */
   dependsOn: Schema.optional(Schema.Array(Schema.String)),
@@ -46,8 +54,11 @@ export type Plugin = Schema.Schema.Type<typeof Plugin>;
  * hosting override. All three are consumed together — they are a single workflow, not separate concerns.
  */
 export const Publish = Schema.Struct({
+  /** The command that builds the plugin. */
   buildCommand: Schema.optional(Schema.String),
+  /** The folder the build writes to. */
   outputDirectory: Schema.optional(Schema.String),
+  /** Where the built files are hosted, when not on the registry. */
   assetBaseUrl: Schema.optional(Schema.String),
 });
 export type Publish = Schema.Schema.Type<typeof Publish>;
