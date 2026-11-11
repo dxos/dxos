@@ -2757,6 +2757,13 @@ decision D-112: ECHO's sidebar has an API group holding one page per `@dxos/echo
 ```
 
 ```mdl
+decision D-113: The examples page is titled Examples.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [examples]
+```
+
+```mdl
 decision D-114: HALO and PLEX follow D-112: their namespace pages (Identity, Invitation, Space; Plugin to AppCapabilities) form an API group, and React and the dx CLI stay in Guides. Every moved page keeps its `…/guides/…` route.
   date: 2026-11-10
   by: agent:claude
@@ -2766,13 +2773,6 @@ decision D-114: HALO and PLEX follow D-112: their namespace pages (Identity, Inv
   rejected:
     - Moving only ECHO, which would leave HALO and PLEX with a different shape
     - New `/api/` routes, which would need a redirect for every moved page
-```
-
-```mdl
-decision D-113: The examples page is titled Examples.
-  date: 2026-11-10
-  by: user:richburdon
-  affects: [examples]
 ```
 
 ```mdl
