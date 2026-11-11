@@ -4,7 +4,7 @@
 
 // Writes a horizontal logotype per product, black and white, in the geometry of `dxos-horizontal-white.svg`.
 // The letters are Sharp Sans Display No1 Medium at the DXOS size and baseline; the mark fills the DXOS mark's box.
-// Every product shares one mark box, one line weight, one letter pitch and one width, so stacked logotypes line up.
+// Every product shares one mark box, one line weight and one justified text width, so stacked logotypes line up.
 // Usage: node scripts/build-logotypes.mjs [name...]
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -20,6 +20,7 @@ const PRODUCTS = {
   halo: { word: 'HALO', icon: 'halo' },
   mesh: { word: 'MESH', icon: 'mesh' },
   plex: { word: 'PLEX', icon: 'kube' },
+  edge: { word: 'EDGE', icon: 'dxns' },
 };
 
 /** The group transform of `dxos-horizontal-white.svg`; every length below is in its local units. */
@@ -37,7 +38,7 @@ const MARK_CENTER = { x: 523.3, y: 533.2 };
 const MARK_SIZE = 962;
 const MARK_WEIGHT = 42.6;
 
-/** Space between the mark's box and the first letter's cell. */
+/** Space between the mark's box and the first letter's ink. */
 const GAP = 200;
 
 const VIEW_HEIGHT = 1024;
@@ -164,21 +165,27 @@ const mark = (name, fill) => {
   ];
 };
 
-/** One pitch for every letter of every product, so the n-th letters of the wordmarks share a column. */
-const LETTERS = [...new Set(Object.values(PRODUCTS).flatMap(({ word }) => [...word]))];
-const PITCH =
-  LETTERS.reduce((sum, letter) => sum + font.charToGlyph(letter).advanceWidth * em, 0) / LETTERS.length +
-  TRACKING * FONT_SIZE;
+/** Every wordmark spans the DXOS wordmark's ink, kerned and tracked as in the original. */
+const TEXT_WIDTH = (() => {
+  const box = font.getPath('DXOS', 0, BASELINE, FONT_SIZE, { kerning: true, letterSpacing: TRACKING }).getBoundingBox();
+  return box.x2 - box.x1;
+})();
 const TEXT_LEFT = MARK_CENTER.x + MARK_SIZE / 2 + GAP;
 
-/** Each glyph centered on its advance within its cell. */
+/** Justified: the first letter's ink starts at the left edge, the last ends at the right, and the gaps between are equal. */
 const wordPath = (word) => {
-  const path = new opentype.Path();
-  [...word].forEach((letter, i) => {
+  const glyphs = [...word].map((letter) => {
     const glyph = font.charToGlyph(letter);
-    const x = TEXT_LEFT + i * PITCH + (PITCH - glyph.advanceWidth * em) / 2;
-    path.extend(glyph.getPath(x, BASELINE, FONT_SIZE));
+    const box = glyph.getPath(0, BASELINE, FONT_SIZE).getBoundingBox();
+    return { glyph, left: box.x1, width: box.x2 - box.x1 };
   });
+  const gap = (TEXT_WIDTH - glyphs.reduce((sum, { width }) => sum + width, 0)) / (glyphs.length - 1);
+  const path = new opentype.Path();
+  let x = TEXT_LEFT;
+  for (const { glyph, left, width } of glyphs) {
+    path.extend(glyph.getPath(x - left, BASELINE, FONT_SIZE));
+    x += width + gap;
+  }
   return path;
 };
 

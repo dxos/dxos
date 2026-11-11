@@ -12,6 +12,8 @@ import dxosBlack from '../../../assets/logotypes/dxos-horizontal-block.svg?raw';
 import dxosWhite from '../../../assets/logotypes/dxos-horizontal-white.svg?raw';
 import echoBlack from '../../../assets/logotypes/echo-horizontal-black.svg?raw';
 import echoWhite from '../../../assets/logotypes/echo-horizontal-white.svg?raw';
+import edgeBlack from '../../../assets/logotypes/edge-horizontal-black.svg?raw';
+import edgeWhite from '../../../assets/logotypes/edge-horizontal-white.svg?raw';
 import haloBlack from '../../../assets/logotypes/halo-horizontal-black.svg?raw';
 import haloWhite from '../../../assets/logotypes/halo-horizontal-white.svg?raw';
 import meshBlack from '../../../assets/logotypes/mesh-horizontal-black.svg?raw';
@@ -77,6 +79,7 @@ const horizontal: Record<string, { black: string; white: string }> = {
   halo: { black: haloBlack, white: haloWhite },
   mesh: { black: meshBlack, white: meshWhite },
   plex: { black: plexBlack, white: plexWhite },
+  edge: { black: edgeBlack, white: edgeWhite },
 };
 
 const Svg = ({ svg }: { svg: string }) => (
