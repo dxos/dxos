@@ -1826,19 +1826,38 @@ feat F-19: The plugin inspector
 
   req F-19.1:
     when: the inspector loads a plugin
-    then: it shows one panel per kind of contribution: Plugin (metadata, and each module with its activation
-          event and whether it is waiting, active or failed), Translations, Types, Surfaces, Operations and
-          App graph; a panel with nothing to show says which page fills it
+    then: a header names the plugin and where it came from, and a sidebar lists its modules in the order the
+          learning path adds them, each with its status: active, waiting on its activation event, or failed with
+          the reason; a kind the plugin does not have yet is listed as not added
 
   req F-19.3:
-    when: a reader uses the Types, Surfaces and Operations panels
-    then: Types creates an object through the plugin's create-object contribution, Surfaces renders each surface
-          whose filter accepts that object, and Operations runs an operation from a form built from its input
-          schema and shows the result; a skill lists the operations it gives the assistant, with no model called
+    when: a reader selects a module
+    then: the main area shows that module working: translations as a table, a type's fields, Create for each
+          object the plugin can create, each surface rendered with the sample object, each operation run from a
+          form built from its input schema with its result, a skill with the operations it gives the assistant
+          (no model called), and the branches of the app graph that lead to the plugin's nodes, with those nodes
+          marked
 
-  req F-19.4:
-    when: a reader runs the plugin's `vite` dev server
-    then: the dev server also serves the inspector for that plugin, so it outlives the docs
+  req F-19.6:
+    when: the reader creates or picks an object
+    then: it is the sample object every module shows, chosen in the header
+
+  req F-19.7:
+    when: a learning-path page embeds the inspector
+    then: the embed loads nothing until the reader clicks Load dev plugin, which fetches
+          `http://localhost:3967/manifest.json` with the loader Composer uses; Reload loads it again after an
+          edit, and a failed load says whether the server was unreachable, the manifest was invalid, or a module
+          failed
+
+  req F-19.8:
+    when: a page embeds the inspector with the modules that page adds
+    then: a "This page adds" box checks each against the loaded plugin, so the reader sees what is still missing
+
+  req F-19.9:
+    when: the docs site is built
+    then: the inspector page carries an import map of the shared `@dxos/*` packages, as Composer does, so the
+          reader's plugin uses the page's copies; the reader's package pins `@dxos/*` to the version the docs
+          were built from
 
   req F-19.5:
     when: the inspector is published
@@ -1858,8 +1877,9 @@ feat F-20: The tutorial plugin
 
   req F-20.2:
     when: a reader finishes a learning-path page that builds part of the plugin
-    then: the page embeds the inspector with the plugin as it stands after that page, and no earlier page needs
-          Composer
+    then: the page embeds the inspector, the reader loads their own plugin into it from its dev server, and no
+          page before Run it in Composer needs Composer; The PLEX plugin alone loads the finished Bookmarks
+          plugin by itself
 ```
 
 ## Acceptance
@@ -3161,6 +3181,17 @@ decision D-146: The PLEX learning path has no StackBlitz projects: The PLEX plug
   by: user:wittjosiah
   affects: [F-19, F-20, plex-the-plex-plugin, app-framework-create-plugin]
   why: A plugin running in StackBlitz is served from StackBlitz's machine, where neither the docs inspector nor Composer can load it, so the reader would end up with a plugin they cannot carry into Run it in Composer.
+```
+
+```mdl
+decision D-147: The inspector is a module workbench: a header with the plugin, its source and the sample object; a sidebar of modules with their status; and a main area showing the selected module working. Learning-path pages load the reader's own plugin from its dev server with Load dev plugin, and check it against what the page adds; only The PLEX plugin loads the finished plugin by itself. The dev server no longer serves the inspector. Amends [D-141].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-19, F-20, plex-the-plex-plugin, app-framework-create-plugin, app-framework-define-type, app-framework-add-surface, app-framework-add-operation, app-framework-extend-app-graph, plex-run-in-composer]
+  why: Tabs per kind of contribution, filled from the docs' own copy of the plugin, did not show the reader what their own code did; the path adds one module per page, so the modules are the natural index.
+  rejected:
+    - A mini Composer, with a nav tree, an article and a command palette: it hides translations, schema and skills, and shows nothing until the app graph page.
+    - Serving the inspector from the plugin's dev server: the docs inspector reaches the dev server already.
 ```
 
 ## Appendix: Extension Definitions
