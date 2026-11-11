@@ -19,9 +19,6 @@
       "path": "../packages/common/graph"
     },
     {
-      "path": "../packages/common/invariant"
-    },
-    {
       "path": "../packages/common/keys"
     },
     {

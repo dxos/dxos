@@ -40,7 +40,6 @@
     "@dxos/halo": "workspace:*",
     "@dxos/halo-adapter-client": "workspace:*",
     "@dxos/halo-react": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",

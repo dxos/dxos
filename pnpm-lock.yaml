@@ -2303,9 +2303,6 @@ importers:
       '@dxos/halo-react':
         specifier: workspace:*
         version: link:../packages/core/halo/halo-react
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../packages/common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../packages/common/keys
