@@ -157,6 +157,7 @@
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
