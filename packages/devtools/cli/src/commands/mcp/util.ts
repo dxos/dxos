@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
 
-import { type McpSession, McpSession as McpSessionSchema, loadSession, sessionDir } from './client.ts';
+import { type McpSession, McpSession as McpSessionSchema, loadSession, serverBase, sessionDir } from './client.ts';
 
 export class McpSessionError extends BaseError.extend('McpSessionError', 'MCP session error') {}
 
@@ -22,13 +22,44 @@ export const serverUrlOption = Options.String('url').pipe(
   Options.optional,
 );
 
-/** Resolves the stored session for a server, failing with actionable guidance when absent. */
+/** Personal API token (`dx-api01-…`); when set it replaces the stored OAuth session. */
+export const API_TOKEN_ENV = 'DX_API_TOKEN';
+
+/** Server used with {@link API_TOKEN_ENV} when `--url` is omitted. */
+export const MCP_URL_ENV = 'DX_MCP_URL';
+
+export const DEFAULT_MCP_URL = 'https://composer.dxos.network';
+
+/**
+ * Builds a session from an API token, so a headless caller (an agent, CI) needs only the token.
+ * The MCP server accepts `Bearer dx-api01-…` in place of an OAuth access token; there is no refresh
+ * token, so expiry surfaces as a 401 and the caller requests a new token.
+ */
+export const apiTokenSession = (token: string, serverUrl: string): McpSession => ({
+  serverUrl: serverBase(serverUrl),
+  clientId: 'api-token',
+  accessToken: token,
+  identityKey: '',
+  spaceIds: [],
+});
+
+/**
+ * Resolves the session for a server: an API token from the environment wins, otherwise the stored
+ * session, failing with actionable guidance when neither exists.
+ */
 export const requireSession = (
   profile: string,
   url: Option.Option<string>,
 ): Effect.Effect<McpSession, McpSessionError, never> =>
   Effect.gen(function* () {
     const serverUrl = Option.getOrUndefined(url);
+    const apiToken = process.env[API_TOKEN_ENV];
+    if (apiToken) {
+      if (!apiToken.startsWith('dx-api01-')) {
+        return yield* Effect.fail(new McpSessionError({ message: `${API_TOKEN_ENV} is not a dx-api01 token.` }));
+      }
+      return apiTokenSession(apiToken, serverUrl ?? process.env[MCP_URL_ENV] ?? DEFAULT_MCP_URL);
+    }
     if (!serverUrl) {
       const stored = yield* lastSession(profile);
       if (!stored) {

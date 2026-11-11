@@ -76,6 +76,14 @@ describe('Wire', () => {
       expect(new TextEncoder().encode(message.result.instructions).byteLength).to.be.below(2048);
     });
 
+    // Without it a model reads bulk results through its own context, the cost the CLI exists to avoid.
+    test('the instructions point bulk work at the dx CLI', ({ expect }) => {
+      const message = discoverMessage();
+      Wire.normalize(message);
+      expect(message.result.instructions).to.include('cli/install.sh');
+      expect(message.result.instructions).to.include('delegateToCli');
+    });
+
     test('a host field wins over the shared identity', ({ expect }) => {
       const message = discoverMessage();
       Wire.normalize(message, { serverInfo: { title: 'Something else' } });

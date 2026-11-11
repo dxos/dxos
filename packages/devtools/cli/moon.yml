@@ -90,3 +90,17 @@ tasks:
     inputs:
       - scripts/publish.ts
       - dist/**/*
+  # Uploads the bundled binaries and install.sh to the agent-artifacts R2 bucket (`publish-all.yml`).
+  publish-r2:
+    command: bun
+    args:
+      - ./scripts/publish-r2.ts
+    deps:
+      - bundle
+      - smoke
+    inputs:
+      - scripts/publish-r2.ts
+      - scripts/install.sh
+      - dist/**/*
+    options:
+      cache: false
