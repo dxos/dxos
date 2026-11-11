@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 /**
  * Common English words a model's tokenizer encodes as one token each, so a skill token costs the
  * caller one token to carry. Any edit, even an appended word, changes the modulus and so retires
@@ -261,31 +259,23 @@ export const WORDS: readonly string[] = [
 ];
 
 /**
- * Domain-separation label: the host's secret may be a credential with another job (EDGE passes its
- * service keypair), so the HMAC key is derived from it rather than used directly.
- */
-const KEY_DERIVATION_LABEL = 'dxos-mcp-skill-token-v1';
-
-const encoder = new TextEncoder();
-
-/**
- * The word for one skill: `WORDS[HMAC(secret, skillKey) mod WORDS.length]`. Proof that the caller
- * read the skill, not a credential: one word in a few hundred is guessable, and that is acceptable.
+ * The word for one skill: `WORDS[hash(skillKey) mod WORDS.length]`, hashed with FNV-1a.
  *
- * Computed per call rather than memoized, since a cached promise outlives the request that made it
- * on Workers.
+ * A token is a crutch that makes a model show it read the skill, not a credential: the word is one
+ * of a few hundred, printed in every `loadSkill` result, and guessable by construction. So it is
+ * derived from the skill's key alone — no secret to agree on, no HMAC, and synchronous. Keying it
+ * off the host's own credential instead made two processes serving one session derive different
+ * words: in EDGE, compute-service holds its service keypair and the public MCP gateway deliberately
+ * does not, so every token the gateway issued was refused inside `runScript`.
  */
-export const derive = (secret: string, skillKey: string): Effect.Effect<string> =>
-  Effect.promise(async () => {
-    const digest = await crypto.subtle.digest('SHA-256', encoder.encode(`${KEY_DERIVATION_LABEL}:${secret}`));
-    const key = await crypto.subtle.importKey('raw', digest, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-    const signature = new DataView(await crypto.subtle.sign('HMAC', key, encoder.encode(skillKey)));
-    return WORDS[signature.getUint32(0) % WORDS.length];
-  });
+export const derive = (skillKey: string): string => {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < skillKey.length; index++) {
+    hash ^= skillKey.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return WORDS[hash % WORDS.length];
+};
 
 /** Read leniently: a model may echo the word capitalized or padded. */
 export const normalize = (token: string): string => token.trim().toLowerCase();
-
-/** A secret for a host that keeps none, valid for as long as this process runs. */
-export const randomSecret = (): string =>
-  Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join('');

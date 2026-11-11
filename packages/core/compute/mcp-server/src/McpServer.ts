@@ -78,30 +78,20 @@ export type SkillGate = {
 };
 
 /**
- * A {@link SkillGate} whose token is one common word derived from `secret` and the skill key, so
- * every process holding the same secret issues and accepts the same word.
+ * A {@link SkillGate} whose token is one common word derived from the skill's key alone, so every
+ * process issues and accepts the same word with nothing to configure or share.
  */
-export const skillGate = (secret: string): SkillGate => {
-  const issue = (skillKey: string) => skillTokenInternal.derive(secret, skillKey);
-  return {
-    issue,
-    verify: (ownerSkillKeys, token) =>
-      token === undefined
-        ? Effect.succeed(false)
-        : Effect.forEach(ownerSkillKeys, issue).pipe(
-            Effect.map((issued) => issued.includes(skillTokenInternal.normalize(token))),
-          ),
-  };
-};
+export const skillGate = (): SkillGate => ({
+  issue: (skillKey) => Effect.succeed(skillTokenInternal.derive(skillKey)),
+  verify: (ownerSkillKeys, token) =>
+    Effect.succeed(
+      token !== undefined &&
+        ownerSkillKeys.map(skillTokenInternal.derive).includes(skillTokenInternal.normalize(token)),
+    ),
+});
 
 export type HostShape = {
   readonly invoke: (request: InvokeRequest) => Effect.Effect<unknown, HostError>;
-  /**
-   * Secret the skill tokens are derived from. A host serving one session per process (stdio) may
-   * omit it and get a random one per build; a host whose requests land on different processes must
-   * supply one they all share, or a token issued by one is refused by the next.
-   */
-  readonly skillSecret?: string;
   /**
    * Spaces this session may address. No member is a default: a call that names none is refused.
    * Omitted is unrestricted; empty is a host that enumerated and found none, refusing every call.
@@ -678,7 +668,7 @@ export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation
  *
  * An `invoke` carries the skill tokens the script holds (`skillTokens`, attached by the sandbox) as
  * well as any `skillToken` it named, and passes if one of them belongs to a skill governing the
- * operation. Forwarding them is safe: a token is checked against the gate's secret, so script code
+ * operation. Forwarding them is safe: a token is checked against the gate's derivation, so script code
  * can present only tokens it was issued.
  */
 export const scriptDispatch = (
@@ -967,7 +957,7 @@ export const toolsLayer = ({
       const source = yield* RegistrySource;
       const host = yield* Host;
       // One gate for every tool, so a token `loadSkill` issued is accepted inside a script as well.
-      const gate = skillGate(host.skillSecret ?? skillTokenInternal.randomSecret());
+      const gate = skillGate();
       return {
         source,
         host,
