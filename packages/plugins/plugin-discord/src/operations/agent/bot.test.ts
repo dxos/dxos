@@ -30,15 +30,23 @@ const addAgent = () =>
 
 const BOT: DiscordBot.Bot = { applicationId: 'app-1', spaceId: 'space-1', channel: 'echo://space-1/channel-1' };
 
-/** A bot host whose guild has the given members; a search returns those whose username or nickname starts with it. */
-const fakeBot = (members: DiscordBot.Member[]) =>
+/** A guild member, with the nickname Discord's search matches; their display name is that, else their global name. */
+type GuildMember = DiscordBot.Member & { nick?: string };
+
+/**
+ * A bot host whose guild has the given members. As Discord's member search does, a search returns those whose
+ * username or guild nickname starts with it, never a global display name.
+ */
+const fakeBot = (members: GuildMember[]) =>
   Layer.succeed(DiscordBot.DiscordBotService, {
     act: () => Effect.die('Not acted in this test.'),
     findMembers: (_bot, query) =>
       Effect.succeed(
-        members.filter(({ username, displayName }) =>
-          [username, displayName].some((name) => name?.toLowerCase().startsWith(query.toLowerCase())),
-        ),
+        members
+          .filter(({ username, nick }) =>
+            [username, nick].some((name) => name?.toLowerCase().startsWith(query.toLowerCase())),
+          )
+          .map(({ nick: _nick, ...member }) => member),
       ),
   });
 
@@ -90,136 +98,156 @@ describe('agentBot', () => {
 });
 
 describe('resolveUser', () => {
-  const members: DiscordBot.Member[] = [
-    { userId: '111111111111111111', username: 'richburdon', displayName: 'Rich' },
-    { userId: '222222222222222222', username: 'richard', displayName: 'Richard' },
+  const HINT = ' Pass their user id instead, as the message header gives it (from, mentions).';
+  const members: GuildMember[] = [
+    { userId: '111111111111111111', username: 'richburdon', displayName: 'Rich', nick: 'Rich' },
+    { userId: '222222222222222222', username: 'richard', displayName: 'Richard', nick: 'Richard' },
     { userId: '333333333333333333', username: 'dima' },
+    // A global display name only: Discord's search does not find it.
+    { userId: '666666666666666666', username: 'rburdon', displayName: 'Rich Burdon' },
   ];
+  const withGuild = <A, E>(effect: Effect.Effect<A, E, Database.Service | DiscordBot.DiscordBotService>) =>
+    effect.pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members))));
 
-  it.effect('takes a user id as is, else a contact’s Discord identity, else a member', () =>
-    Effect.gen(function* () {
-      yield* Database.add(
-        Obj.make(Person.Person, {
-          fullName: 'Josiah Witt',
-          nickname: 'josiah',
-          identities: [{ label: 'discord', value: '444444444444444444' }],
-        }),
-      );
-      yield* Database.flush();
+  it.effect('takes a user id or a mention of one as is, else a contact’s Discord id, else a member', () =>
+    withGuild(
+      Effect.gen(function* () {
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Josiah Witt',
+            nickname: 'josiah',
+            identities: [{ label: 'discord', value: '444444444444444444' }],
+          }),
+        );
+        yield* Database.flush();
 
-      expect(yield* resolveUser(BOT, '555555555555555555')).toBe('555555555555555555');
-      expect(yield* resolveUser(BOT, 'Josiah Witt')).toBe('444444444444444444');
-      expect(yield* resolveUser(BOT, '@josiah')).toBe('444444444444444444');
-      expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
-      // An exact name wins over the other members it is a prefix of.
-      expect(yield* resolveUser(BOT, 'rich')).toBe('111111111111111111');
-      expect(yield* resolveUser(BOT, 'dima')).toBe('333333333333333333');
-    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+        expect(yield* resolveUser(BOT, '555555555555555555')).toBe('555555555555555555');
+        expect(yield* resolveUser(BOT, '<@555555555555555555>')).toBe('555555555555555555');
+        expect(yield* resolveUser(BOT, '<@!555555555555555555>')).toBe('555555555555555555');
+        expect(yield* resolveUser(BOT, 'Josiah Witt')).toBe('444444444444444444');
+        expect(yield* resolveUser(BOT, '@josiah')).toBe('444444444444444444');
+        expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
+        // A nickname is what the search matches besides the username.
+        expect(yield* resolveUser(BOT, 'rich')).toBe('111111111111111111');
+        expect(yield* resolveUser(BOT, 'dima')).toBe('333333333333333333');
+      }),
+    ),
+  );
+
+  it.effect('never guesses: a partial match and a name nobody has are refused with the candidates', () =>
+    withGuild(
+      Effect.gen(function* () {
+        const partial = yield* resolveUser(BOT, 'ric').pipe(Effect.flip);
+        expect(partial.message).toBe(
+          `No Discord member is called ric; similar: @richburdon (111111111111111111), @richard (222222222222222222).${HINT}`,
+        );
+        // The only member whose name starts with it is still someone else.
+        const lone = yield* resolveUser(BOT, 'dim').pipe(Effect.flip);
+        expect(lone.message).toBe(`No Discord member is called dim; similar: @dima (333333333333333333).${HINT}`);
+        const nobody = yield* resolveUser(BOT, 'zed').pipe(Effect.flip);
+        expect(nobody.message).toBe(`No Discord member is called zed.${HINT}`);
+      }),
+    ),
   );
 
   it.effect('looks up a contact whose Discord identity is a handle among the members', () =>
-    Effect.gen(function* () {
-      // As an agent records someone it was asked to message: their handle where the user id belongs.
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'richburdon', identities: [{ label: 'discord', value: 'richburdon' }] }),
-      );
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Dmytro', identities: [{ label: 'discord', value: '@dima' }] }),
-      );
-      yield* Database.flush();
+    withGuild(
+      Effect.gen(function* () {
+        // As an agent records someone it was asked to message: their handle where the user id belongs.
+        yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'richburdon', identities: [{ label: 'discord', value: 'richburdon' }] }),
+        );
+        yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'Dmytro', identities: [{ label: 'Discord', value: '@dima' }] }),
+        );
+        yield* Database.flush();
 
-      expect(yield* resolveUser(BOT, 'richburdon')).toBe('111111111111111111');
-      expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
-      expect(yield* resolveUser(BOT, 'Dmytro')).toBe('333333333333333333');
-    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+        expect(yield* resolveUser(BOT, 'richburdon')).toBe('111111111111111111');
+        expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
+        expect(yield* resolveUser(BOT, 'Dmytro')).toBe('333333333333333333');
+      }),
+    ),
   );
 
-  it.effect('matches a contact by their Discord identity alone, and a stored handle only exactly', () =>
-    Effect.gen(function* () {
-      yield* Database.add(
-        Obj.make(Person.Person, {
-          fullName: 'Bob',
-          identities: [
-            { label: 'twitter', value: '@bobby' },
-            { label: 'discord', value: '222222222222222222' },
-          ],
-        }),
-      );
-      // An all-digit handle, marked as one, and a handle whose only member is someone with a longer name.
-      yield* Database.add(
-        Obj.make(Person.Person, {
-          fullName: 'Numbers',
-          identities: [{ label: 'discord', value: '@444444444444444444' }],
-        }),
-      );
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Rick', identities: [{ label: 'discord', value: 'ric' }] }),
-      );
-      yield* Database.flush();
+  it.effect('matches a contact by their Discord identities alone, and reads an @ before digits as an id', () =>
+    withGuild(
+      Effect.gen(function* () {
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Bob',
+            identities: [
+              { label: 'twitter', value: '@bobby' },
+              { label: 'discord', value: '222222222222222222' },
+            ],
+          }),
+        );
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Numbers',
+            identities: [{ label: 'discord', value: '@444444444444444444' }],
+          }),
+        );
+        yield* Database.flush();
 
-      // Not Bob's Discord account: a Twitter handle names nobody on Discord.
-      const twitter = yield* resolveUser(BOT, '@bobby').pipe(Effect.flip);
-      expect(twitter.message).toBe('No Discord member is called @bobby.');
-      const digits = yield* resolveUser(BOT, 'Numbers').pipe(Effect.flip);
-      expect(digits.message).toBe("Numbers's Discord handle @444444444444444444 names no member.");
-      // `ric` is the start of @richburdon and @richard, but neither is Rick.
-      const prefix = yield* resolveUser(BOT, 'Rick').pipe(Effect.flip);
-      expect(prefix.message).toBe("Rick's Discord handle @ric names no member.");
-    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+        // Not Bob's Discord account: a Twitter handle names nobody on Discord.
+        const twitter = yield* resolveUser(BOT, '@bobby').pipe(Effect.flip);
+        expect(twitter.message).toBe(`No Discord member is called bobby.${HINT}`);
+        expect(yield* resolveUser(BOT, 'Numbers')).toBe('444444444444444444');
+      }),
+    ),
   );
 
-  it.effect('prefers an id on record to a handle, and refuses contacts whose handles disagree', () =>
-    Effect.gen(function* () {
-      // The handle comes first, so a first-match lookup would never reach the id.
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Rich', identities: [{ label: 'discord', value: 'richburdon' }] }),
-      );
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Rich', identities: [{ label: 'discord', value: '555555555555555555' }] }),
-      );
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Alex', identities: [{ label: 'discord', value: 'alex1' }] }),
-      );
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Alex', identities: [{ label: 'discord', value: 'alex2' }] }),
-      );
-      yield* Database.flush();
+  it.effect('takes one account however many contacts record it, and refuses contacts that name different ones', () =>
+    withGuild(
+      Effect.gen(function* () {
+        // The same person recorded twice, and with a handle then an id on one contact: one account.
+        yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'Rich', identities: [{ label: 'discord', value: 'richburdon' }] }),
+        );
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Rich',
+            identities: [
+              { label: 'discord', value: 'richburdon' },
+              { label: 'discord', value: '111111111111111111' },
+            ],
+          }),
+        );
+        // Two people called Sam on record.
+        yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'Sam', identities: [{ label: 'discord', value: 'richard' }] }),
+        );
+        yield* Database.add(
+          Obj.make(Person.Person, { fullName: 'Sam', identities: [{ label: 'discord', value: '333333333333333333' }] }),
+        );
+        yield* Database.flush();
 
-      expect(yield* resolveUser(BOT, 'Rich')).toBe('555555555555555555');
-      const alex = yield* resolveUser(BOT, 'Alex').pipe(Effect.flip);
-      expect(alex.message).toBe('Alex could be any of @alex1, @alex2.');
-    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+        expect(yield* resolveUser(BOT, 'Rich')).toBe('111111111111111111');
+        const sam = yield* resolveUser(BOT, 'Sam').pipe(Effect.flip);
+        expect(sam.message).toBe(
+          `Sam names contacts with different Discord accounts: 222222222222222222, 333333333333333333.${HINT}`,
+        );
+      }),
+    ),
   );
 
-  it.effect('takes a stored handle that is a display name only when one member has it', () =>
-    Effect.gen(function* () {
-      // As EDGE writes a mention: `@<global name>`, which an agent may keep as the person's Discord identity.
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Rich Burdon', identities: [{ label: 'discord', value: '@Rich Burdon' }] }),
-      );
-      yield* Database.add(
-        Obj.make(Person.Person, { fullName: 'Sam', identities: [{ label: 'discord', value: 'Sam' }] }),
-      );
-      yield* Database.flush();
-      const guild: DiscordBot.Member[] = [
-        { userId: '666666666666666666', username: 'rburdon', displayName: 'Rich Burdon' },
-        { userId: '777777777777777777', username: 'samuel', displayName: 'Sam' },
-        { userId: '888888888888888888', username: 'samantha', displayName: 'Sam' },
-      ];
+  it.effect('cannot find a global display name, which Discord’s search does not match', () =>
+    withGuild(
+      Effect.gen(function* () {
+        // As EDGE writes a mention in the text, `@<global name>`, kept as the person's Discord identity; the header's
+        // id is what reaches them.
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Rich Burdon',
+            identities: [{ label: 'discord', value: '@Rich Burdon' }],
+          }),
+        );
+        yield* Database.flush();
 
-      expect(yield* resolveUser(BOT, 'Rich Burdon').pipe(Effect.provide(fakeBot(guild)))).toBe('666666666666666666');
-      const sam = yield* resolveUser(BOT, 'Sam').pipe(Effect.provide(fakeBot(guild)), Effect.flip);
-      expect(sam.message).toBe("Sam's Discord handle @sam could be any of @samuel, @samantha.");
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('refuses a name that matches nobody, or several members', () =>
-    Effect.gen(function* () {
-      const nobody = yield* resolveUser(BOT, 'zed').pipe(Effect.flip);
-      const several = yield* resolveUser(BOT, 'ric').pipe(Effect.flip);
-      expect(nobody.message).toBe('No Discord member is called zed.');
-      expect(several.message).toBe('ric could be any of @richburdon, @richard.');
-    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+        const display = yield* resolveUser(BOT, 'Rich Burdon').pipe(Effect.flip);
+        expect(display.message).toBe(`No Discord member is called rich burdon.${HINT}`);
+      }),
+    ),
   );
 });
 

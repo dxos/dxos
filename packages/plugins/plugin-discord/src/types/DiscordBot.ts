@@ -18,6 +18,19 @@ import { BaseError } from '@dxos/errors';
 
 export class DiscordBotError extends BaseError.extend('DiscordBotError', 'Discord bot request failed.') {}
 
+/** A Discord user id (a snowflake), which a direct message needs: the message header names people by one. */
+export const isUserId = (value: string): boolean => /^\d{15,21}$/.test(value);
+
+/**
+ * A user id, handle or name as written, without a mention's markup (`<@id>`, `<@!id>`), a handle's `@` or
+ * surrounding space: the form a user id is tested in and a name compared in.
+ */
+export const bareName = (value: string): string =>
+  value
+    .trim()
+    .replace(/^<@!?(\d{15,21})>$/, '$1')
+    .replace(/^@/, '');
+
 /** Which bot acts, for which agent; the bot host refuses a space that does not own the bot. */
 export type Bot = {
   readonly applicationId: string;

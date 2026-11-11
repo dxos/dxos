@@ -123,15 +123,23 @@ describe('Discord channel backend', () => {
       const backend = makeDiscordChannelBackend();
       const { channel } = yield* makeChannel(MANAGED_ACCESS_TOKEN);
       expect(backend.mirrored).toBe(true);
-      const josiah = Person.make({ fullName: 'Josiah', identities: [{ label: 'discord', value: 'user-7' }] });
+      const josiah = Person.make({
+        fullName: 'Josiah',
+        identities: [{ label: 'discord', value: '700000000000000007' }],
+      });
       const thread = yield* (backend.openDirect?.(channel, josiah) ?? Effect.succeed(undefined)).pipe(withCapabilities);
-      expect(thread).toBe(DiscordChannel.pendingDmThread('user-7'));
-      expect(DiscordChannel.pendingDmUser(thread ?? '')).toBe('user-7');
+      expect(thread).toBe(DiscordChannel.pendingDmThread('700000000000000007'));
+      expect(DiscordChannel.pendingDmUser(thread ?? '')).toBe('700000000000000007');
       expect(DiscordChannel.pendingDmUser('1400000000000000001')).toBeUndefined();
-      const nobody = Person.make({ fullName: 'Nobody' });
-      expect(
-        yield* (backend.openDirect?.(channel, nobody) ?? Effect.succeed(undefined)).pipe(withCapabilities),
-      ).toBeUndefined();
+      // No id on record, or only a handle an agent kept, which Discord does not open a DM with.
+      for (const person of [
+        Person.make({ fullName: 'Nobody' }),
+        Person.make({ fullName: 'Handle', identities: [{ label: 'discord', value: '@richburdon' }] }),
+      ]) {
+        expect(
+          yield* (backend.openDirect?.(channel, person) ?? Effect.succeed(undefined)).pipe(withCapabilities),
+        ).toBeUndefined();
+      }
       expect(discord.calls).toHaveLength(0);
     }).pipe(Effect.provide(testLayer())),
   );

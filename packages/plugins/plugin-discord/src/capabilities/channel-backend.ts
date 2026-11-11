@@ -14,7 +14,7 @@ import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { isManagedAccessToken } from '@dxos/protocols';
 import { type Channel, Message } from '@dxos/types';
 
-import { DiscordChannel } from '#types';
+import { DiscordBot, DiscordChannel } from '#types';
 
 import { DiscordChannelError } from '../errors.ts';
 import {
@@ -68,7 +68,11 @@ export const makeDiscordChannelBackend = ({
   // No Discord call: EDGE's bot opens the DM with the token it holds when it posts the agent's message.
   openDirect: (_channel, person) =>
     Effect.sync(() => {
-      const userId = person.identities?.find((identity) => identity.label === 'discord')?.value;
+      // Only an id opens a DM; a handle an agent recorded instead names an account this cannot look up here.
+      const userId = (person.identities ?? [])
+        .filter(({ label }) => label?.toLowerCase() === 'discord')
+        .map(({ value }) => DiscordBot.bareName(value))
+        .find(DiscordBot.isUserId);
       return userId === undefined ? undefined : DiscordChannel.pendingDmThread(userId);
     }),
   threads: {
