@@ -336,6 +336,25 @@ page conflicts: Concurrency and conflicts
     - Limits: the cases ECHO does not resolve
 ```
 
+### Guides
+
+The framework guides.
+
+```mdl
+page guide-react: React
+  The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them.
+  section: ECHO
+  route: /docs/echo/guides/react/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Set up `ClientProvider`
+    - Read data with `useQuery` and `useObject`
+    - Edit an object with a schema form
+    - The reactivity rules behind the hooks
+```
+
 ### API
 
 One page per `@dxos/echo` namespace.
@@ -453,25 +472,6 @@ page guide-feed: Feed
     - Indexing and retention options
     - Fork a feed and read a branch
 ```
-### Guides
-
-The framework guides.
-
-```mdl
-page guide-react: React
-  The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them.
-  section: ECHO
-  route: /docs/echo/guides/react/
-  group: Guides
-  template: tutorial
-  status: spike
-  covers:
-    - Set up `ClientProvider`
-    - Read data with `useQuery` and `useObject`
-    - Edit an object with a schema form
-    - The reactivity rules behind the hooks
-```
-
 ### Resources
 
 ```mdl
@@ -821,6 +821,22 @@ page halo-recovery-credentials: Recovery and credentials
     - Limits: what a lost recovery credential means
 ```
 
+### Guides
+
+```mdl
+page halo-react: React
+  Read the identity, devices and members from React components.
+  section: HALO
+  route: /docs/halo/react/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Read the current identity with `useIdentity`
+    - List the identity's devices and a space's members
+    - Show an invitation code and accept one in a component
+```
+
 ### API
 
 One page per `@dxos/halo` namespace.
@@ -868,19 +884,6 @@ page halo-guide-space: Space
     - List members, change a role and remove a member
     - Share and join a space
     - Export and import a space archive, and set EDGE replication
-```
-```mdl
-page halo-react: React
-  Read the identity, devices and members from React components.
-  section: HALO
-  route: /docs/halo/react/
-  group: Guides
-  template: tutorial
-  status: spike
-  covers:
-    - Read the current identity with `useIdentity`
-    - List the identity's devices and a space's members
-    - Show an invitation code and accept one in a component
 ```
 
 ### Resources
@@ -1179,100 +1182,6 @@ page app-framework-surfaces: Surfaces
     - The finished Bookmarks plugin's Surface module in the inspector, and a link to the Surface API page
 ```
 
-### API
-
-One page per namespace, each a readable tour with compiled examples that links into the API reference.
-Snippets come from the Bookmarks tutorial modules, except Plugin's, which keep World Clock [D-129].
-
-```mdl
-page app-framework-guide-plugin: Plugin
-  Define a plugin and its modules.
-  section: PLEX
-  route: /docs/plex/guides/plugin/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Define a plugin with its metadata
-    - Add modules and choose their activation events
-    - Contribute capabilities from a module
-    - Describe the plugin in `dx.config.ts`
-```
-
-```mdl
-page app-framework-guide-capability: Capability
-  Declare, contribute and request capabilities, including the built-in ones.
-  section: PLEX
-  route: /docs/plex/guides/capability/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Declare a new capability type
-    - Contribute an implementation and request all implementations
-    - The built-in capabilities in `Capabilities` that most plugins use
-    - React to capabilities that arrive after startup
-```
-
-```mdl
-page app-framework-guide-activation-event: ActivationEvent
-  Declare activation events and use the built-in ones.
-  section: PLEX
-  route: /docs/plex/guides/activation-event/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Declare an activation event
-    - Fire events before and after a module activates to order dependencies
-    - The built-in events in `ActivationEvents` and when each fires
-```
-
-```mdl
-page plex-guide-plugin-manager: PluginManager
-  Create the plugin manager, and add, enable and remove plugins.
-  section: PLEX
-  route: /docs/plex/guides/plugin-manager/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Create a plugin manager with its plugins and the ones enabled at start
-    - Add, enable, disable and remove a plugin while the app runs
-    - Load a plugin from a URL with a plugin loader
-    - Read which plugins and modules are active
-```
-
-```mdl
-page app-framework-guide-operation: Operation
-  Define operations, implement their handlers and invoke them.
-  section: PLEX
-  route: /docs/plex/guides/operation/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Define an operation with input and output schema, imported from `@dxos/compute/Operation`
-    - Implement handlers and group them with `OperationHandlerSet`
-    - Invoke an operation and handle its typed errors
-    - The built-in `LayoutOperation` operations for opening, closing and focusing items
-```
-
-```mdl
-page app-framework-guide-surface: Surface
-  Contribute surfaces and render other plugins' surfaces.
-  section: PLEX
-  route: /docs/plex/guides/surface/
-  group: API
-  template: namespace
-  status: spike
-  covers:
-    - Contribute a surface with `AppSurface` for an object type
-    - Match on data and set the order among competing surfaces
-    - Render a nested surface from a component
-    - The standard surface roles and what each one expects
-```
-
 ### Guides
 
 ```mdl
@@ -1392,6 +1301,100 @@ page plex-guide-using-echo: Using ECHO in a plugin
     - Annotate a type with `AppAnnotation` so the app can name and list its objects
     - Create objects from a plugin, and the create-object entry that adds them to the app's menus
     - Links to ECHO's Defining types for the types themselves
+```
+
+### API
+
+One page per namespace, each a readable tour with compiled examples that links into the API reference.
+Snippets come from the Bookmarks tutorial modules, except Plugin's, which keep World Clock [D-129].
+
+```mdl
+page app-framework-guide-plugin: Plugin
+  Define a plugin and its modules.
+  section: PLEX
+  route: /docs/plex/guides/plugin/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Define a plugin with its metadata
+    - Add modules and choose their activation events
+    - Contribute capabilities from a module
+    - Describe the plugin in `dx.config.ts`
+```
+
+```mdl
+page app-framework-guide-capability: Capability
+  Declare, contribute and request capabilities, including the built-in ones.
+  section: PLEX
+  route: /docs/plex/guides/capability/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Declare a new capability type
+    - Contribute an implementation and request all implementations
+    - The built-in capabilities in `Capabilities` that most plugins use
+    - React to capabilities that arrive after startup
+```
+
+```mdl
+page app-framework-guide-activation-event: ActivationEvent
+  Declare activation events and use the built-in ones.
+  section: PLEX
+  route: /docs/plex/guides/activation-event/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Declare an activation event
+    - Fire events before and after a module activates to order dependencies
+    - The built-in events in `ActivationEvents` and when each fires
+```
+
+```mdl
+page plex-guide-plugin-manager: PluginManager
+  Create the plugin manager, and add, enable and remove plugins.
+  section: PLEX
+  route: /docs/plex/guides/plugin-manager/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Create a plugin manager with its plugins and the ones enabled at start
+    - Add, enable, disable and remove a plugin while the app runs
+    - Load a plugin from a URL with a plugin loader
+    - Read which plugins and modules are active
+```
+
+```mdl
+page app-framework-guide-operation: Operation
+  Define operations, implement their handlers and invoke them.
+  section: PLEX
+  route: /docs/plex/guides/operation/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Define an operation with input and output schema, imported from `@dxos/compute/Operation`
+    - Implement handlers and group them with `OperationHandlerSet`
+    - Invoke an operation and handle its typed errors
+    - The built-in `LayoutOperation` operations for opening, closing and focusing items
+```
+
+```mdl
+page app-framework-guide-surface: Surface
+  Contribute surfaces and render other plugins' surfaces.
+  section: PLEX
+  route: /docs/plex/guides/surface/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Contribute a surface with `AppSurface` for an object type
+    - Match on data and set the order among competing surfaces
+    - Render a nested surface from a component
+    - The standard surface roles and what each one expects
 ```
 
 ### Resources
@@ -3366,6 +3369,12 @@ decision D-203: The Build with a coding agent prompt no longer tells the agent w
   by: user:wittjosiah
   affects: [plex-build-with-agent]
   why: Building and loading a plugin never reaches Composer from the agent, so the URL was an unused instruction.
+
+decision D-204: Every section's navigation runs Start here, Learning path, Core concepts, Guides, API, Resources: from most guided to most lookup-like, with API beside Resources as reference.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-effect, halo-react, halo-guide-identity, app-framework-guide-plugin]
+  why: A reader looks for a how-to before an API page, and an API page is reference like the rest of Resources.
 ```
 
 ## Appendix: Extension Definitions
