@@ -10,7 +10,6 @@ import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Result from 'effect/Result';
 import * as Stdio from 'effect/Stdio';
 import * as Stream from 'effect/Stream';
 
@@ -18,15 +17,15 @@ import {
   type Dialect,
   EffectDialect,
   PlainDialect,
+  Runner,
   Sandbox,
   describeTypes,
-  evaluate,
   projectOperations,
 } from '@dxos/agent-code-mode';
 import { OpaqueToolkit } from '@dxos/ai';
 import { ToolExecutionServices } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Entity, Obj } from '@dxos/echo';
@@ -94,31 +93,32 @@ export const evaluateCommand = Command.make(
     }
 
     const program = yield* readProgram(code, file);
-    const result = yield* evaluate({
-      code: program,
-      dialect,
+    // Through the script API: the program is a script in a dialect, and where it runs is the runner's
+    // to decide — here, in this process, against the space this command opened.
+    const runner = Runner.make({
       sandbox: Sandbox.inProcess,
       runtime: yield* Effect.context<Database.Service | Operation.Service>(),
       operations,
-      maxOutput: Option.getOrUndefined(maxOutput),
-    }).pipe(Effect.result);
+      dialects: { [dialectName]: dialect },
+    });
+    const result = yield* runner
+      .run({
+        source: Operation.inlineScript(program, { dialect: dialectName }),
+        ...(Option.isSome(maxOutput) ? { maxOutput: maxOutput.value } : {}),
+      })
+      .pipe(Effect.mapError((error) => new CliError({ message: error.message })));
+    const ok = result.error === undefined;
 
     if (json) {
-      yield* Console.log(
-        JSON.stringify(
-          Result.isSuccess(result) ? { ok: true, output: result.success } : { ok: false, output: result.failure },
-          null,
-          2,
-        ),
-      );
+      yield* Console.log(JSON.stringify({ ok, output: result.output }, null, 2));
     } else {
-      yield* Console.log(Result.isSuccess(result) ? result.success : result.failure);
+      yield* Console.log(result.output);
     }
 
     // After printing, so a failed flush cannot swallow output the program already produced.
     yield* Database.flush();
 
-    if (Result.isFailure(result)) {
+    if (!ok) {
       // The output above already carries the error; failing only sets the exit code.
       return yield* Effect.fail(new CliError({ message: 'Evaluation failed.' }));
     }

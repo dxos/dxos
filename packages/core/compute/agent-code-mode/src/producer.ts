@@ -28,6 +28,7 @@ import { type ContentBlock, Message } from '@dxos/types';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
 import { type CallLabel, EVAL_TOOL_NAME, type Evaluation, labelEvalCall, makeEvalToolkit } from './eval-tool.ts';
+import * as Runner from './Runner.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** How a code-mode producer is configured; every field has a default, so `{}` is a working producer. */
@@ -166,7 +167,7 @@ const runCodeModeTurn = ({
               );
               const operations = yield* projectOperations([lookups, ...skills], mcps);
               labelCall = labelEvalCall(operations);
-              const toolkit = makeEvalToolkit({
+              const evalOptions = {
                 dialect,
                 sandbox,
                 runtime,
@@ -175,6 +176,20 @@ const runCodeModeTurn = ({
                 maxOutput: options.maxOutput,
                 timeout: options.timeout,
                 onEvaluated: evaluations.add,
+              };
+              // Through the script API rather than straight into the sandbox: the turn states what to
+              // run and the runner says where, which is what lets a deployment move code mode off
+              // this thread without touching the turn loop. The turn's own dialect is registered under
+              // its name, since a producer may hand the model a variant of it (extra bindings) and the
+              // runner must evaluate THAT one, not the canonical entry.
+              const toolkit = makeEvalToolkit({
+                ...evalOptions,
+                ...(Operation.isScriptDialect(dialect.name)
+                  ? {
+                      runner: ({ toolCallId }: { readonly toolCallId?: string }) =>
+                        Runner.make({ ...evalOptions, dialects: { [dialect.name]: dialect }, toolCallId }),
+                    }
+                  : {}),
               });
               const system = yield* formatSystemPrompt({
                 system: [dialect.instructions({ operations }), options.system, params.system]
