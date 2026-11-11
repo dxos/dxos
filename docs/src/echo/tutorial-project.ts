@@ -7,7 +7,7 @@ import { join } from 'node:path';
 
 /**
  * The pkg.pr.new build every `@dxos/*` dependency of the project pins. It must be a commit whose packages run outside
- * the monorepo, which main has had since #14487.
+ * the monorepo, which main has had since #14487. The install commands in Installation and the React guide name it too.
  */
 export const DXOS_COMMIT = '20a14b9';
 

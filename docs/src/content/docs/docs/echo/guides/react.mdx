@@ -20,22 +20,22 @@ Two rules decide when a component re-renders:
 
 <Steps>
 
-1. **Install the React client.** `@dxos/react-client` wraps `@dxos/client` in a provider and hooks. Configure the bundler as in [Installation](/docs/echo/learn/installation/).
+1. **Install the React client.** `@dxos/react-client` wraps `@dxos/client` in a provider and hooks. Install it from the same build as `@dxos/client`, and configure the bundler, as in [Installation](/docs/echo/learn/installation/). It needs React 19.3.
 
    <Tabs>
      <TabItem label="pnpm">
        ```bash
-       pnpm add @dxos/react-client
+       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/react-client@20a14b9 effect@4.0.4 react@~19.3.1 react-dom@~19.3.1
        ```
      </TabItem>
      <TabItem label="npm">
        ```bash
-       npm install --save @dxos/react-client
+       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/react-client@20a14b9 effect@4.0.4 react@~19.3.1 react-dom@~19.3.1
        ```
      </TabItem>
      <TabItem label="yarn">
        ```bash
-       yarn add @dxos/react-client
+       yarn add https://pkg.pr.new/dxos/dxos/@dxos/react-client@20a14b9 effect@4.0.4 react@~19.3.1 react-dom@~19.3.1
        ```
      </TabItem>
    </Tabs>

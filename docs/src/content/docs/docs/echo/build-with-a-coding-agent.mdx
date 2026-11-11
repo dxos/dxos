@@ -26,8 +26,13 @@ export const examples = [
   },
 ];
 
+export const context = [
+  'Read https://dxos.org/echo/llms-full.txt first. It has every ECHO page in one file.',
+  'Set the project up from these files: https://dxos.org/echo/project/package.json, https://dxos.org/echo/project/vite.config.ts, https://dxos.org/echo/project/tsconfig.json and https://dxos.org/echo/project/index.html. Until the next npm release, every @dxos package comes from a pkg.pr.new build of main that package.json pins. The npm releases are older than these docs, so do not install @dxos packages from npm or change those versions.',
+].join(' ');
+
 <AgentPrompt
-  context="Read https://dxos.org/echo/llms-full.txt first. It has every ECHO page in one file."
+  context={context}
   examples={examples}
   prompt={examples[0].prompt}
 />
@@ -35,7 +40,8 @@ export const examples = [
 ## What the agent reads
 
 The prompt has the agent read `/echo/llms-full.txt` first. It holds every ECHO page as Markdown, code samples
-included, so the agent has the whole section in one fetch. [llms.txt](/docs/echo/resources/llms-txt/) lists the other files for agents.
+included, so the agent has the whole section in one fetch. The agent then sets the project up from the learning path's
+package.json and Vite config, which pin each `@dxos` package to a build of main until the next npm release. [llms.txt](/docs/echo/resources/llms-txt/) lists the other files for agents.
 
 ## While it works
 

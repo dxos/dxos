@@ -21,25 +21,29 @@ A client acts for an identity. The identity owns the spaces it creates, and othe
 
 <Steps>
 
-1. **Install the client.** `@dxos/client` holds the `Client`, and it brings `@dxos/echo` with it.
+1. **Install the client.** `@dxos/client` holds the `Client`, and it brings `@dxos/echo` with it. The schemas these pages write also import `effect`.
+
+   Until the next npm release, install the build of main these pages describe, from pkg.pr.new. The releases on npm are older and lack some of the APIs below.
 
    <Tabs>
      <TabItem label="pnpm">
        ```bash
-       pnpm add @dxos/client
+       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 effect@4.0.4
        ```
      </TabItem>
      <TabItem label="npm">
        ```bash
-       npm install --save @dxos/client
+       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 effect@4.0.4
        ```
      </TabItem>
      <TabItem label="yarn">
        ```bash
-       yarn add @dxos/client
+       yarn add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 effect@4.0.4
        ```
      </TabItem>
    </Tabs>
+
+   Install any other `@dxos` package from the same build, with its name in place of `client`. The tutorial app's [package.json](/echo/project/package.json) lists every package it uses at that build.
 
    In a React app, install `@dxos/react-client` instead and follow the [React guide](/docs/echo/guides/react/).
 

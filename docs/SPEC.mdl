@@ -193,6 +193,7 @@ page echo-build-with-agent: Build with a coding agent
   status: spike
   covers:
     - A prompt the reader can edit, with a picker of three sample apps above it: TodoMVC (the default), a kanban board and collaborative notes [D-210]
+    - The hidden part of the prompt points the agent at the learning path's project setup, pinned to a build of main, until the next npm release [D-211]
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a line the reader does not see before their text, which has the agent read `/echo/llms-full.txt` first
     - What the reader does while the agent works, and how to try a shared app from a second browser
 ```
@@ -3529,6 +3530,18 @@ decision D-210: ECHO's Build with a coding agent prompt has the PLEX page's pick
   by: user:wittjosiah
   affects: [echo-build-with-agent]
   why: A small, familiar app tests the docs better than repeating the learning path. The three cover objects and queries, references and replication, and concurrent text.
+
+decision D-211: Until the next npm release, ECHO's coding-agent prompt has the agent set up its project from the learning path's package.json, Vite config, tsconfig and index.html, served at `/echo/project/`, which pin every `@dxos` package to pkg.pr.new at `DXOS_COMMIT`. The prompt says not to install `@dxos` packages from npm. Remove the step once a release from main is on npm.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [echo-build-with-agent]
+  why: Test runs of all three prompts installed `@dxos/client` 0.16.0, npm's latest, which predates the APIs these docs describe; the Kanban app crashed on its first write until the agent patched node_modules.
+
+decision D-212: Until the next npm release, Installation and the React guide install `@dxos/client` and `@dxos/react-client` from pkg.pr.new at `DXOS_COMMIT`, with `effect` (and React 19.3 for the React client), and link the tutorial project's package.json for the rest. Revert to plain npm installs with the release that removes [D-211].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [installation, guide-react]
+  why: npm's `latest` (0.16.0) is older than the APIs the docs teach.
 
 ## Appendix: Extension Definitions
 
