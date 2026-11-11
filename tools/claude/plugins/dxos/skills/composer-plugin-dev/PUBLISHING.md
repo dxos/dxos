@@ -65,7 +65,8 @@ joins.
 
 ## 2. Publish
 
-Skip this step when the user asks only to install a version already in the registry.
+Skip this step when the user asks only to install. If the version they want is not in the registry,
+tell them and ask before publishing it.
 
 Each version publishes once, and the first private release of a key claims it. Bump `version` in
 `package.json` (a prerelease such as `0.1.0-dev.3` is fine), then:

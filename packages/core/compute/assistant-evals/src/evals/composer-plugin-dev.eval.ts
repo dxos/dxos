@@ -345,7 +345,16 @@ const FINAL_SCREENSHOT = '.eval-final.png';
 const ADDED_SCREENSHOT = '.eval-added.png';
 
 /** Zones the grader adds, the first one the page does not already show. */
-const ADD_CANDIDATES = ['Asia/Tokyo', 'Australia/Sydney', 'America/Sao_Paulo', 'Africa/Nairobi'];
+const ADD_CANDIDATES = [
+  'Asia/Tokyo',
+  'Australia/Sydney',
+  'America/Sao_Paulo',
+  'Africa/Nairobi',
+  'Asia/Kolkata',
+  'Europe/Berlin',
+  'America/Chicago',
+  'Pacific/Auckland',
+];
 
 const cityOf = (zone: string): string => zone.split('/').pop()!.replace(/_/g, ' ');
 
