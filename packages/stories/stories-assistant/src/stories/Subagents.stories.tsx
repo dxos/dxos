@@ -4,30 +4,32 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Reducer from '@dxos/compute/Reducer';
-import type * as Trajectory from '@dxos/compute/Trajectory';
-import { type Database, Filter } from '@dxos/echo';
+import * as Trajectory from '@dxos/compute/Trajectory';
+import { type Database, Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as ChatPlane from '@dxos/plugin-assistant/ChatPlane';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
-import { useQuery, useRegistry, useSpaces } from '@dxos/react-client/echo';
+import { useObject, useQuery, useRegistry, useResolveRef, useSpaces } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
-import * as Button from '@dxos/react-ui/Button';
-import * as Icon from '@dxos/react-ui/Icon';
+import { Timeline } from '@dxos/react-ui-trace';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { StoryRole } from '../modules/index.ts';
+import { toCommits } from '../modules/trajectory-commits.ts';
 import {
   Calculate,
   CalculatorSkill,
@@ -239,243 +241,241 @@ export const Demo: Story = {
 };
 
 //
-// Columns: the same delegation, with each subagent thread in a column of its own.
+// Columns: a complex request split into subagent threads, each in a column of its own.
 //
 
-/** A task the reader hands the agent; each becomes a subagent thread that writes one document. */
+/** One part of the launch; the agent puts it on its checklist and hands it to a subagent that writes one document. */
 type LaunchTask = {
-  readonly purpose: string;
+  readonly title: string;
   readonly task: string;
   readonly document: string;
+  readonly brief: string;
   readonly outline: string;
-  readonly content: string;
+  readonly body: string;
+  readonly review: string;
   /** Seconds each of the subagent's turns takes, so the threads finish at different times. */
   readonly pace: number;
 };
 
 const LAUNCH_TASKS: readonly LaunchTask[] = [
   {
-    purpose: 'Blog post',
+    title: 'Blog post',
     task: 'Draft the launch blog post for Composer 1.0: what it is, who it is for, and the three features to try first.',
     document: 'Launch blog post',
-    outline: 'I will lead with the problem, then walk through the three features with one example each.',
-    content: [
-      '# Composer 1.0',
-      '',
+    brief: 'Readers are new to Composer. Lead with the problem it solves before naming any feature.',
+    outline: ['# Composer 1.0', '', '## Why', '', '## Three things to try first', ''].join('\n'),
+    body: [
       'Your documents, tables and agents in one local-first workspace.',
-      '',
-      '## Three things to try first',
       '',
       '1. **Spaces** that sync between your devices and your team.',
       '2. **Agents** that work on the same objects you do.',
       '3. **Plugins** that turn a space into a tool for your job.',
     ].join('\n'),
-    pace: 3,
+    review: 'Three features, one example each, under 300 words. Good to hand back.',
+    pace: 5,
   },
   {
-    purpose: 'Release notes',
+    title: 'Release notes',
     task: 'Write the release notes for Composer 1.0, grouped into new features, improvements and fixes.',
     document: 'Release notes 1.0',
-    outline: 'I will group the changes into three sections and keep each line to one change.',
-    content: [
-      '# Release notes · 1.0',
-      '',
-      '## New',
-      '- Parallel agent threads, each in a column of its own.',
-      '',
-      '## Improved',
-      '- Spaces open twice as fast.',
-      '',
-      '## Fixed',
-      '- Comments keep their position after an edit.',
+    brief: 'Release notes are scanned, not read: one change per line, grouped so each reader finds their part.',
+    outline: ['# Release notes · 1.0', '', '## New', '## Improved', '## Fixed', ''].join('\n'),
+    body: [
+      '- New: parallel agent threads, each in a column of its own.',
+      '- Improved: spaces open twice as fast.',
+      '- Fixed: comments keep their position after an edit.',
     ].join('\n'),
-    pace: 4,
+    review: 'Every line is one change and starts with its group. Done.',
+    pace: 6,
   },
   {
-    purpose: 'FAQ',
-    task: 'Draft an FAQ for the launch page that answers the five questions new users ask most.',
+    title: 'FAQ',
+    task: 'Draft an FAQ for the launch page that answers the questions new users ask most.',
     document: 'Launch FAQ',
-    outline: 'I will answer each question in two sentences at most, starting with where data lives.',
-    content: [
-      '# FAQ',
-      '',
+    brief: 'The first question is always where the data lives, so that one goes first.',
+    outline: ['# FAQ', ''].join('\n'),
+    body: [
       '**Where is my data?** On your devices first; it syncs through EDGE when you share.',
       '',
       '**Does it work offline?** Yes. Changes merge when you reconnect.',
       '',
       '**Can agents see everything?** Only the spaces you give them.',
     ].join('\n'),
-    pace: 5,
+    review: 'Each answer is two sentences at most. The privacy answer is first, as planned.',
+    pace: 7,
   },
   {
-    purpose: 'Announcement email',
+    title: 'Announcement email',
     task: 'Write the announcement email to existing users, under 150 words, with one call to action.',
     document: 'Announcement email',
-    outline: 'I will keep it short: one paragraph on what is new and one link to try it.',
-    content: [
-      '# Composer 1.0 is here',
-      '',
-      'Hi there,',
-      '',
+    brief: 'Existing users already know Composer; tell them what changed and give them one link.',
+    outline: ['# Composer 1.0 is here', '', 'Hi there,', ''].join('\n'),
+    body: [
       'Composer 1.0 lets agents work beside you, each on its own task, in the same space.',
       '',
       '**[Open Composer](https://composer.space)** and try it on your next project.',
     ].join('\n'),
-    pace: 3.5,
+    review: 'Under 150 words with a single link. Ready.',
+    pace: 5.5,
   },
 ];
 
-const LAUNCH_PROMPT = [
-  'Here are the launch tasks. Delegate each one to a subagent, then tell me when they are all done.',
-  '',
-  ...LAUNCH_TASKS.map(({ purpose, task }) => `- **${purpose}:** ${task}`),
-].join('\n');
+/** What the reader types: one request too large for a single thread. */
+const LAUNCH_REQUEST =
+  'Plan the Composer 1.0 launch: we need a blog post, release notes, an FAQ and an announcement email.';
+
+/** Sent while the subagents work, to show the agent keeps talking. */
+const SIDE_QUESTION = 'While they work: which day should we launch?';
 
 const CREATE_DOCUMENT = Operation.toolName(MarkdownOperation.Create);
+const UPDATE_DOCUMENT = Operation.toolName(MarkdownOperation.Update);
+const CHECKPOINT_DOCUMENT = Operation.toolName(MarkdownOperation.CreateCheckpoint);
+const UPDATE_TASKS = Operation.toolName(PlanningSkill.Operations.UpdateTasks);
+
+/** The agent's chat, read at turn time: the checklist names tasks by URI, which exists only once a task is created. */
+let launchChat: AssistantChat.Chat | undefined;
+
+/** The URI of the checklist task titled `title`, as the update-tasks tool takes it. */
+const taskUri = (title: string): string | undefined => {
+  const task = launchChat && AssistantChat.resolveTasks(launchChat).find((candidate) => candidate.title === title);
+  return task && Obj.getURI(task).toString();
+};
 
 /** The thread a launch task's subagent was started in, from the delegating call's result. */
 const startedLaunchThread = (prompt: string, task: LaunchTask) =>
-  new RegExp(`Started subagent thread ([\\w@-]+) \\(\\\\*"${task.purpose}`).exec(prompt)?.[1];
+  new RegExp(`Started subagent thread ([\\w@-]+) \\(\\\\*"${task.title}`).exec(prompt)?.[1];
 
 /** The URI of the document the subagent created, from the create tool's result. */
 const createdDocument = (prompt: string) => /(echo:\/\/[^"\\\s]+|dxn:echo:[^"\\\s]+)/.exec(prompt)?.[1];
 
-/** A subagent plans, writes its document, then reports with the document embedded as a card. */
+/** A subagent thinks aloud at every step: it outlines, fills in, checks its work, then reports with the document. */
 const launchSubagent = (
   request: ScriptedLanguageModel.ScriptedRequest,
   task: LaunchTask,
   step: number,
 ): ScriptedLanguageModel.ScriptedTurn => {
+  const uri = createdDocument(JSON.stringify(request.prompt.content.slice(currentRequest(request).index + 1)));
   switch (step) {
     case 0:
       return {
         delay: `${task.pace} seconds`,
         parts: [
-          reasoning(`The task: ${task.task}`),
-          text(task.outline),
-          toolCall(CREATE_DOCUMENT, { name: task.document, content: task.content }),
+          reasoning(task.brief),
+          text('Outline first, so the structure is settled before any wording.'),
+          toolCall(CREATE_DOCUMENT, { name: task.document, content: task.outline }),
         ],
       };
-    default: {
-      const uri = createdDocument(JSON.stringify(request.prompt.content.slice(currentRequest(request).index + 1)));
+    case 1:
+      return {
+        delay: `${task.pace} seconds`,
+        parts: [
+          reasoning('The outline holds. Each section needs one concrete line, nothing more.'),
+          text('Filling in the sections.'),
+          toolCall(UPDATE_DOCUMENT, { doc: uri, edits: [{ newString: `\n${task.body}\n` }] }),
+        ],
+      };
+    case 2:
       return {
         delay: `${task.pace / 2} seconds`,
+        parts: [
+          reasoning(task.review),
+          text('Saving a checkpoint for review.'),
+          toolCall(CHECKPOINT_DOCUMENT, { doc: uri, name: 'Ready for review' }),
+        ],
+      };
+    default:
+      return {
+        delay: '600 millis',
         parts: [text([`Wrote **${task.document}**.`, '', ...(uri ? [`![${task.document}](${uri})`] : [])].join('\n'))],
       };
-    }
   }
 };
 
-/** The agent delegates one task per turn, so the columns open one by one, then waits for every subagent. */
+/**
+ * The agent puts the work on its checklist, delegates one task per turn so the columns open one by one, then waits for
+ * each subagent, checking its task off as it reports.
+ */
 const launchScript: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
+  if (request.text.includes('Reply with exactly one word')) {
+    return { parts: [text('stop')] };
+  }
   if (!request.tools.includes(CREATE_DOCUMENT)) {
-    return { parts: [text('Launch plan')] };
+    return { parts: [text('Composer 1.0 launch')] };
   }
   const { text: current, index } = currentRequest(request);
   const task = LAUNCH_TASKS.find((candidate) => current === candidate.task);
   if (task !== undefined) {
     return launchSubagent(request, task, toolResultsSince(request, index));
   }
-  if (!current.includes('launch tasks')) {
+  if (current.includes('which day')) {
+    return {
+      delay: '1200 millis',
+      parts: [
+        text(
+          'Tuesday the 18th: midweek launches get the most attention, and it leaves Monday for a last check of the documents.',
+        ),
+      ],
+    };
+  }
+  if (!current.includes('Composer 1.0 launch')) {
     return { parts: [text('Done.')] };
   }
+
   const prompt = JSON.stringify(request.prompt.content);
+  if (LAUNCH_TASKS.some(({ title }) => taskUri(title) === undefined)) {
+    return {
+      delay: '1500 millis',
+      parts: [
+        reasoning('Four documents with no dependencies between them: each can go to a subagent of its own.'),
+        text('I will split this into four tasks and hand each one to a subagent.'),
+        toolCall(UPDATE_TASKS, { changes: LAUNCH_TASKS.map(({ title }) => ({ create: true, title })) }),
+      ],
+    };
+  }
   const threads = LAUNCH_TASKS.map((candidate) => startedLaunchThread(prompt, candidate));
   const next = threads.findIndex((thread) => thread === undefined);
   if (next !== -1) {
     const nextTask = LAUNCH_TASKS[next];
     return {
-      delay: '1500 millis',
+      delay: '1200 millis',
       parts: [
-        ...(next === 0 ? [reasoning('The tasks are independent, so each can run in a subagent of its own.')] : []),
-        text(`Delegating the ${nextTask.purpose.toLowerCase()}.`),
-        toolCall('thread_delegate', { task: nextTask.task, purpose: nextTask.purpose }),
+        text(`Delegating the ${nextTask.title.toLowerCase()}.`),
+        toolCall(UPDATE_TASKS, { changes: [{ task: taskUri(nextTask.title), status: 'started' }] }),
+        toolCall('thread_delegate', { task: nextTask.task, purpose: nextTask.title }),
       ],
     };
   }
-  const pending = LAUNCH_TASKS.findIndex((candidate) => !prompt.includes(`Wrote **${candidate.document}**`));
+  // Check off every task whose subagent has reported, then wait for the next one still working.
+  const reported = LAUNCH_TASKS.filter(({ document }) => prompt.includes(`Wrote **${document}**`));
+  const unchecked = reported.filter(({ title }) => {
+    const task = launchChat && AssistantChat.resolveTasks(launchChat).find((candidate) => candidate.title === title);
+    return task?.status !== 'done';
+  });
+  const checkOff = unchecked.length
+    ? [toolCall(UPDATE_TASKS, { changes: unchecked.map(({ title }) => ({ task: taskUri(title), status: 'done' })) })]
+    : [];
+  const pending = LAUNCH_TASKS.findIndex((candidate) => !reported.includes(candidate));
   if (pending !== -1) {
-    return {
-      delay: '500 millis',
-      parts: [toolCall('thread_wait', { thread: threads[pending] })],
-    };
+    return { delay: '500 millis', parts: [...checkOff, toolCall('thread_wait', { thread: threads[pending] })] };
+  }
+  if (checkOff.length > 0) {
+    return { delay: '500 millis', parts: [text('Every subagent has reported.'), ...checkOff] };
   }
   return {
     delay: '1200 millis',
     parts: [
       text(
         [
-          'All four launch tasks are done:',
+          'The launch kit is ready:',
           '',
-          ...LAUNCH_TASKS.map(({ purpose, document }) => `- **${purpose}:** ${document}`),
+          ...LAUNCH_TASKS.map(({ title, document }) => `- **${title}:** ${document}`),
+          '',
+          'Each document has a checkpoint named "Ready for review", so you can compare any later edit against it.',
         ].join('\n'),
       ),
     ],
   };
 };
-
-const STATUS_ICON: Record<Reducer.LaneStatus | 'todo', string> = {
-  todo: 'ph--circle--regular',
-  running: 'ph--circle-notch--regular',
-  waiting: 'ph--hourglass--regular',
-  done: 'ph--check-circle--regular',
-  failed: 'ph--x-circle--regular',
-};
-
-/** The reader's task list: what the agent was given, and where each task's thread stands. */
-const TaskList = ({
-  lanes,
-  started,
-  onStart,
-  onSelect,
-}: {
-  lanes: readonly Reducer.Lane[];
-  started: boolean;
-  onStart: () => void;
-  onSelect: (id: string) => void;
-}) => (
-  <Panel.Root classNames='w-72 shrink-0 border-e border-separator' data-testid='launch.tasks'>
-    <Panel.Header classNames='px-3 font-medium'>Launch tasks</Panel.Header>
-    <Panel.Body classNames='flex flex-col gap-1 p-2 overflow-y-auto'>
-      {LAUNCH_TASKS.map((task) => {
-        const lane = lanes.find((candidate) => candidate.purpose === task.purpose);
-        const status = lane?.status ?? 'todo';
-        return (
-          <button
-            key={task.purpose}
-            type='button'
-            disabled={!lane}
-            className='flex gap-2 p-2 rounded-sm text-start hover:bg-hover-surface disabled:hover:bg-transparent'
-            data-testid='launch.task'
-            data-status={status}
-            onClick={() => lane && onSelect(lane.id)}
-          >
-            <Icon.Icon
-              icon={STATUS_ICON[status]}
-              size='md'
-              classNames={[status === 'running' && 'animate-spin', status === 'done' && 'text-success-text']}
-            />
-            <span className='flex flex-col min-w-0'>
-              <span className='text-sm font-medium'>{task.purpose}</span>
-              <span className='text-xs text-description line-clamp-2'>{task.task}</span>
-            </span>
-          </button>
-        );
-      })}
-    </Panel.Body>
-    <Panel.Footer classNames='p-2'>
-      <Button.Root
-        classNames='w-full'
-        variant='primary'
-        icon='ph--play--regular'
-        label='Delegate'
-        disabled={started}
-        data-testid='launch.start'
-        onClick={onStart}
-      />
-    </Panel.Footer>
-  </Panel.Root>
-);
 
 type ChatModel = NonNullable<ReturnType<typeof AssistantHooks.useChatModel>>;
 
@@ -488,8 +488,8 @@ const useThreadModel = (
   const registry = useRegistry();
   const runtime = Hooks.useProcessManagerRuntime();
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
-  const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
-  const chatModel = AssistantHooks.useChatModel({
+  const { preset } = AssistantHooks.usePresets(settings, chat);
+  return AssistantHooks.useChatModel({
     db,
     chat,
     preset,
@@ -498,30 +498,67 @@ const useThreadModel = (
     settings,
     ...(lane ? { thread: lane } : {}),
   });
-  return { chatModel, preset, chatProps };
+};
+
+/** The events written in `lane` and in every turn or thread nested in it, in feed order. */
+const laneEvents = (events: readonly Trajectory.Event[], lane: Trajectory.ThreadId): Trajectory.Event[] => {
+  const threads = new Set<string>([lane]);
+  return events.filter((event) => {
+    const thread = Trajectory.threadOf(event);
+    const payload = event.payload;
+    if (
+      thread !== undefined &&
+      (payload._tag === 'turnBegin' || payload._tag === 'threadOpen') &&
+      payload.from?.thread !== undefined &&
+      threads.has(payload.from.thread)
+    ) {
+      threads.add(thread);
+    }
+    return thread !== undefined && threads.has(thread);
+  });
+};
+
+/** The slice of the trajectory a subagent wrote, as a git graph: what it holds in memory, step by step. */
+const LaneMemory = ({ events }: { events: readonly Trajectory.Event[] }) => {
+  const commits = useMemo(() => toCommits(events), [events]);
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+  return (
+    <div className='flex flex-col h-56 shrink-0 border-t border-separator' data-testid='launch.memory'>
+      <div className='px-3 py-1 text-xs text-description'>Memory · {events.length} events</div>
+      <ScrollArea.Root classNames='dx-grow'>
+        <ScrollArea.Viewport ref={setViewport}>
+          <Timeline commits={commits} scroller={viewport} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </div>
+  );
 };
 
 type ThreadColumnProps = {
   db: Database.Database;
   chat: AssistantChat.Chat;
   lane: Reducer.Lane;
+  events: readonly Trajectory.Event[];
 };
 
-/** One subagent thread: its conversation, with the documents it wrote as cards. */
-const ThreadColumn = ({ db, chat, lane }: ThreadColumnProps) => {
-  const { chatModel } = useThreadModel(db, chat, lane.id);
+/** One subagent thread: its reasoning and turns, the document it wrote as a card, and its slice of memory. */
+const ThreadColumn = ({ db, chat, lane, events }: ThreadColumnProps) => {
+  const chatModel = useThreadModel(db, chat, lane.id);
+  const memory = useMemo(() => laneEvents(events, lane.id), [events, lane.id]);
   if (!chatModel) {
     return null;
   }
+
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel}>
       <ChatPlane.Column value={lane.id}>
         <ChatPlane.Cell title={`${lane.purpose ?? 'Subagent'} · ${lane.status}`}>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread />
+              <Chat.Thread viewType='thinking' />
             </Chat.Content>
           </Panel.Body>
+          <LaneMemory events={memory} />
         </ChatPlane.Cell>
       </ChatPlane.Column>
     </Chat.Root>
@@ -534,7 +571,7 @@ type AgentColumnProps = {
   chatModel: ChatModel;
 };
 
-/** The agent's own conversation, with the prompt. */
+/** The agent's own conversation, with the prompt and its checklist. */
 const AgentColumn = ({ db, chat, chatModel }: AgentColumnProps) => {
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
@@ -557,15 +594,33 @@ const AgentColumn = ({ db, chat, chatModel }: AgentColumnProps) => {
   );
 };
 
+/** How long a finished subagent's column stays open, so its result can be read before it closes. */
+const CLOSE_DELAY = 6_000;
+
 /**
- * The agent's conversation in the first column and each subagent thread in a column of its own, opened as the agent
- * delegates; the task list on the left starts the run and follows each task's thread.
+ * The agent's conversation in the first column and each subagent thread in a column of its own: a column opens as the
+ * agent delegates, and closes a few seconds after its subagent reports, leaving the result in the agent's column.
  */
 const ThreadPlane = ({ db, chat, chatModel }: AgentColumnProps) => {
   const view = useAtomValue(chatModel.trajectory);
   const lanes = useMemo(() => view.lanes.filter((lane) => lane.kind === 'fresh'), [view.lanes]);
-  const [started, setStarted] = useState(false);
+  const [closed, setClosed] = useState<ReadonlySet<string>>(new Set());
   const [current, setCurrent] = useState<string>();
+
+  // Every branch of the feed, so each column can show the events its subagent wrote.
+  const [feedRef] = useObject(chat, 'feed');
+  const feed = useResolveRef(feedRef);
+  const feedUri = feed && Feed.getFeedUri(feed);
+  const query = useMemo(
+    () =>
+      feedUri
+        ? Query.select(Filter.type(Trajectory.Event))
+            .from(Scope.feed(feedUri.toString(), { walk: { branch: 'all' } }))
+            .orderBy(Order.natural('asc'))
+        : Query.select(Filter.nothing()),
+    [feedUri?.toString()],
+  );
+  const events = useQuery(db, query);
 
   // Follows the newest thread as it opens, so the reader watches each column arrive.
   const countRef = useRef(0);
@@ -576,34 +631,44 @@ const ThreadPlane = ({ db, chat, chatModel }: AgentColumnProps) => {
     countRef.current = lanes.length;
   }, [lanes]);
 
-  const handleStart = useCallback(() => {
-    setStarted(true);
-    void chatModel.request({ message: LAUNCH_PROMPT });
-  }, [chatModel]);
+  // A finished thread's column closes once the reader has had a moment with its result.
+  const done = useMemo(
+    () =>
+      lanes
+        .filter((lane) => lane.status === 'done' || lane.status === 'failed')
+        .map(({ id }) => id)
+        .join(','),
+    [lanes],
+  );
+  useEffect(() => {
+    const ids = done.split(',').filter((id) => id.length > 0 && !closed.has(id));
+    if (ids.length === 0) {
+      return;
+    }
+    const timer = setTimeout(() => setClosed((previous) => new Set([...previous, ...ids])), CLOSE_DELAY);
+    return () => clearTimeout(timer);
+  }, [done, closed]);
 
-  const items = useMemo(() => [{ id: chat.id }, ...lanes.map(({ id }) => ({ id }))], [chat, lanes]);
+  const open = useMemo(() => lanes.filter(({ id }) => !closed.has(id)), [lanes, closed]);
+  const items = useMemo(() => [{ id: chat.id }, ...open.map(({ id }) => ({ id }))], [chat, open]);
+  const selected = current !== undefined && items.some(({ id }) => id === current) ? current : chat.id;
 
   return (
-    <div className='flex grow h-full min-w-0'>
-      <TaskList lanes={lanes} started={started} onStart={handleStart} onSelect={setCurrent} />
-      <div className='flex-1 min-w-0'>
-        <Dnd.Root>
-          <ChatPlane.Root value={current ?? chat.id} onValueChange={setCurrent}>
-            <ChatPlane.Viewport>
-              <ChatPlane.Columns items={items}>
-                {(id) => {
-                  if (id === chat.id) {
-                    return <AgentColumn db={db} chat={chat} chatModel={chatModel} />;
-                  }
-                  const lane = lanes.find((candidate) => candidate.id === id);
-                  return lane && <ThreadColumn db={db} chat={chat} lane={lane} />;
-                }}
-              </ChatPlane.Columns>
-            </ChatPlane.Viewport>
-          </ChatPlane.Root>
-        </Dnd.Root>
-      </div>
-    </div>
+    <Dnd.Root>
+      <ChatPlane.Root value={selected} onValueChange={setCurrent}>
+        <ChatPlane.Viewport>
+          <ChatPlane.Columns items={items}>
+            {(id) => {
+              if (id === chat.id) {
+                return <AgentColumn db={db} chat={chat} chatModel={chatModel} />;
+              }
+              const lane = open.find((candidate) => candidate.id === id);
+              return lane && <ThreadColumn db={db} chat={chat} lane={lane} events={events} />;
+            }}
+          </ChatPlane.Columns>
+        </ChatPlane.Viewport>
+      </ChatPlane.Root>
+    </Dnd.Root>
   );
 };
 
@@ -612,7 +677,8 @@ const ThreadColumns = () => {
   const db = space?.db;
   const chats = useQuery(db, Filter.type(AssistantChat.Chat));
   const chat = chats.at(-1);
-  const { chatModel } = useThreadModel(db, chat);
+  launchChat = chat;
+  const chatModel = useThreadModel(db, chat);
   if (!db || !chat || !chatModel) {
     return null;
   }
@@ -621,13 +687,15 @@ const ThreadColumns = () => {
 };
 
 /**
- * Scripted (offline): the reader hands the agent four launch tasks; it delegates them one by one, and each subagent
- * thread opens as a column of its own, holding its conversation and the document it wrote.
+ * Scripted (offline): the reader asks for a launch kit; the agent puts four tasks on its checklist and delegates each
+ * to a subagent, whose thread opens as a column showing its reasoning, the document it writes and its slice of memory.
+ * The reader keeps talking meanwhile; each column closes once its subagent reports, and the result lands in the agent's
+ * column.
  */
 export const Columns: StoryObj = {
   render: () => <ThreadColumns />,
   decorators: createDecorators({
-    skills: [MarkdownSkill.key],
+    skills: [MarkdownSkill.key, PlanningSkill.key],
     scripted: launchScript,
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),

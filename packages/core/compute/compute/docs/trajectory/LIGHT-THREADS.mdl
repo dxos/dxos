@@ -505,29 +505,35 @@ test QA-5: Fork a chat at an earlier answer
 ```mdl
 test QA-6: Subagent threads open as columns
   desc: The scripted story `stories-assistant/Subagents` (Columns) walked by a person. Each subagent thread renders as a
-    column of its own beside the agent's conversation, holding its turns and the document it wrote.
+    column of its own beside the agent's conversation, holding its reasoning, the document it wrote and its slice of
+    the trajectory, and closes once the subagent reports.
   actors: human
   covers: [F-8.1, F-8.2, F-8.3, F-8.4]
   status: draft
   given:
     - the story `stories/stories-assistant/Subagents` Columns, with Parallel threads on
-    - four launch tasks listed on the left, none started
   steps:
-    - name: Hand over the tasks
-      do: Click Delegate under the task list.
-      expect: the agent's column shows the four tasks as the prompt and starts delegating
+    - name: Describe a complex task
+      do: Send "Plan the Composer 1.0 launch: we need a blog post, release notes, an FAQ and an announcement email."
+      expect: the prompt shows in the agent's column
+    - name: See the task list
+      do: Open the tasks drawer above the prompt.
+      expect: the agent's checklist holds four tasks, one per document
     - name: Watch the columns open
       do: Wait while the agent delegates.
-      expect: a column opens for each task, one at a time, and its task in the list shows it is running
-    - name: Watch the subagents work
-      do: Wait a few seconds.
-      expect: each column streams its own conversation, and each ends with a card for the document its subagent wrote
-    - name: Step back through the threads
-      do: Click each task in the list.
-      expect: the strip scrolls to that task's column; finished tasks show a check
-    - name: Read the agent's summary
-      do: Click the agent's column.
-      expect: once every subagent has reported, the agent lists the four documents
+      expect: a column opens for each task, one at a time, showing its subagent's reasoning as it works
+    - name: Keep talking
+      do: Select the agent's column and send "While they work: which day should we launch?"
+      expect: the agent answers at once while the subagents keep working
+    - name: Look inside a subagent's column
+      do: Click the FAQ column.
+      expect: the column ends with a card for the document its subagent wrote, over a graph of the events in its memory
+    - name: Watch the columns close
+      do: Wait for the subagents to finish.
+      expect: each column closes a few seconds after its subagent reports, and its task is checked off
+    - name: Read the result
+      do: Close the tasks drawer.
+      expect: the agent's column lists the four documents
 ```
 
 ## Changelog
@@ -961,7 +967,7 @@ decision D-40: `test QA-5` walks forks in a live Composer chat: fork at the firs
 ```
 
 ```mdl
-decision D-41: `test QA-6` walks subagent threads as columns: the Subagents Columns story renders the agent's conversation and each `fresh` lane in its own `ChatPlane` column, each column a chat model scoped to that lane. Fills in [D-10].
+decision D-41: `test QA-6` walks subagent threads as columns: the Subagents Columns story renders the agent's conversation and each `fresh` lane in its own `ChatPlane` column, each column a chat model scoped to that lane with the lane's slice of the trajectory beneath it, closed once the lane is done. Fills in [D-10].
   date: 2026-11-11
   by: agent:claude-code
   for: user:dmaretskyi
