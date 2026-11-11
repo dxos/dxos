@@ -6,7 +6,7 @@ version: 0.1.0
 
 The DXOS docs teach a developer to build on ECHO, then to build apps from plugins with PLEX, using
 Composer as the app those plugins run in. They have three sections: ECHO; HALO, which holds identity, devices and
-space membership; and PLEX, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Welcome page;
+space membership; and PLEX, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Overview page;
 there is no separate docs home [F-16]. Every section has the same shape: Start here, a learning path that builds one
 thing step by step, core concepts, one guide per API namespace, and resources [F-17], [F-18].
 
@@ -144,14 +144,14 @@ template stub: A planned page
 
 The order of these blocks is the order of the sidebar: section, then group, by first appearance. Routes are
 absolute. A page with status `later` is in scope but not yet in the sidebar. There is no docs home page:
-`/docs/` redirects to ECHO's Welcome, the first page of the first section [F-16.5].
+`/docs/` redirects to ECHO's Overview, the first page of the first section [F-16.5].
 
 ## ECHO
 
 ### Start here
 
 ```mdl
-page welcome: Welcome
+page welcome: Overview
   What ECHO is and how these docs are organized.
   section: ECHO
   route: /docs/echo/welcome/
@@ -640,7 +640,7 @@ membership, and each links to the other.
 ### Start here
 
 ```mdl
-page halo-welcome: Welcome
+page halo-welcome: Overview
   What HALO is and how its pages are organized.
   section: HALO
   route: /docs/halo/welcome/
@@ -886,7 +886,7 @@ in, so each page teaches the framework first and shows the result in Composer. T
 ### Start here
 
 ```mdl
-page app-framework-welcome: Welcome
+page app-framework-welcome: Overview
   What PLEX is, how an app is made of plugins, and Composer as the app built on it.
   section: PLEX
   route: /docs/app-framework/welcome/
@@ -1627,7 +1627,7 @@ feat F-16: Docs sections
 
   req F-16.5:
     when: a reader opens `/docs/`
-    then: they land on ECHO's Welcome page; there is no separate docs home page
+    then: they land on ECHO's Overview page; there is no separate docs home page
 
   req F-16.7:
     when: a reader follows a redirected docs URL, such as `/docs` or an old `/docs/composer/` page
@@ -1639,6 +1639,12 @@ feat F-16: Docs sections
     then: each section shows a DXOS brand mark, the same ones the brand package and the studio site use: ECHO's for
           ECHO, HALO's for HALO, and KUBE's for PLEX; each mark has no box and takes its label's color, the accent
           color for the current section
+
+  req F-16.8:
+    when: a reader opens a section's root page
+    then: the page is titled Overview in the sidebar and the browser tab, and it opens with a hero that shows the
+          section's product name in large type as the page's only heading, over the section's brand background, with
+          a one-line tagline under it
 ```
 
 ```mdl
@@ -2671,6 +2677,13 @@ decision D-110: The topic switcher draws each brand mark without a box, in its l
   date: 2026-11-10
   by: user:richburdon
   affects: [F-16.6]
+```
+
+```mdl
+decision D-111: Each section's root page is titled Overview, keeps its `/welcome/` route, and opens with a hero whose heading is the product name (ECHO, HALO or PLEX) in large Sharp Sans, in place of the page title.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-16.8]
 ```
 
 ## Appendix: Extension Definitions

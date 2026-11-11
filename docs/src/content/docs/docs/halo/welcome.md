@@ -1,5 +1,5 @@
 ---
-title: Welcome
+title: Overview
 description: What HALO is and how its pages are organized.
 welcome:
   section: HALO

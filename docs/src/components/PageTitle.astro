@@ -3,7 +3,7 @@ import Default from '@astrojs/starlight/components/PageTitle.astro';
 
 import WelcomeHero from './WelcomeHero.astro';
 
-const { title, welcome } = Astro.locals.starlightRoute.entry.data;
+const { welcome } = Astro.locals.starlightRoute.entry.data;
 ---
 
-{welcome ? <WelcomeHero title={title} {...welcome} /> : <Default />}
+{welcome ? <WelcomeHero {...welcome} /> : <Default />}
