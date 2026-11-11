@@ -50,11 +50,11 @@ operation invoker. [Operations](/docs/plex/concepts/operations/) explains why.
 
    <Snippet file="app-framework-tutorial/dx.config" region="operation" />
 
-7. **Run it.** Create and select a bookmark in **Types**, open **Operations** and click **Run**. The form is built from the operation's input schema; the bookmark field takes the selected bookmark. The result is the output, `{ "visits": 1 }`. Click **Record visit** in the article under **Surfaces** and the count goes up the same way.
+7. **Run it.** Load or reload your plugin below, create a sample bookmark with **New**, select **Operations** and click **Run**. The form is built from the operation's input schema; the bookmark field takes the sample. The result is the output, `{ "visits": 1 }`. Click **Record visit** in the article under **Surface** and the count goes up the same way.
 
-   <InspectorEmbed stage="add-operation" panel="operations" />
+   <InspectorEmbed adds={['operations', 'skill']} />
 
-   Under the operation, the Bookmarks skill lists the tool it gives the assistant. [Run it in Composer](/docs/plex/learn/run-in-composer/) runs the operation from the command palette and from a chat.
+   **Skill** lists the tool the Bookmarks skill gives the assistant. [Run it in Composer](/docs/plex/learn/run-in-composer/) runs the operation from the command palette and from a chat.
 
 ## Recap
 

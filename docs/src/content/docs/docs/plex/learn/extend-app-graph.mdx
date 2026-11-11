@@ -40,11 +40,11 @@ expands. [The app graph](/docs/plex/concepts/app-graph/) explains the model.
 
    <Snippet file="app-framework-tutorial/dx.config" region="app-graph" />
 
-5. **See the result.** Create a bookmark in **Types**, then open **App graph**. The inspector shows the graph from its root, as Composer builds it.
+5. **See the result.** Load or reload your plugin below, create a sample bookmark with **New**, and select **App graph**. The inspector shows the branches of the graph, as Composer builds it, that lead to what your plugin added, and marks those nodes.
 
-   <InspectorEmbed stage="extend-app-graph" panel="types" />
+   <InspectorEmbed adds={['app-graph']} />
 
-   A **Bookmarks** section appears under the space, with the bookmark under it. **Record visit** is among the bookmark's actions, beside the ones other plugins add.
+   A **Bookmarks** section appears under the space, with the bookmark under it, and **Record visit** is the bookmark's action.
 
 ## Recap
 

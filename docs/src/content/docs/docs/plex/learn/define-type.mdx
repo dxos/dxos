@@ -41,11 +41,11 @@ pick its icon, and decide whether a person can create one. [Defining types](/doc
 
    <Snippet file="app-framework-tutorial/dx.config" region="schema" />
 
-5. **Create a bookmark.** Open the **Types** tab and click **Create** under the Bookmark type. The inspector runs the create-object module, as Composer's **+** menu would.
+5. **Create a bookmark.** Click **Load dev plugin** below, or **Reload** if your plugin is loaded already. **Schema** shows the Bookmark type's fields. Select **Create object** and click **Create**: the inspector runs the module, as Composer's **+** menu would.
 
-   <InspectorEmbed stage="define-type" panel="types" />
+   <InspectorEmbed adds={['schema', 'create-object']} />
 
-   A bookmark named "New bookmark" appears under the type. It has no view yet; the next page adds one.
+   A bookmark named "New bookmark" becomes the sample object in the inspector's header, which every module is shown with. It has no view yet; the next page adds one.
 
 ## Recap
 

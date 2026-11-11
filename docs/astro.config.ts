@@ -13,7 +13,7 @@ import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { type Plugin } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
-import { pluginConfigPlugin } from '@dxos/app-framework/vite-plugin';
+import { DEFAULT_PACKAGES, importMapPlugin, pluginConfigPlugin } from '@dxos/app-framework/vite-plugin';
 import { LAYER_ORDER, ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
@@ -111,6 +111,50 @@ const cloudflareRedirects = (): AstroIntegration => ({
   },
 });
 
+/** The page the inspector embed runs on, which loads the reader's plugin from its dev server. */
+const INSPECTOR_PAGE = 'embed/inspector/index.html';
+
+/**
+ * Gives the inspector page Composer's import map, so a plugin loaded from its dev server imports the page's own copies
+ * of the shared packages. The map is built with the client bundle and written into the page once the build is done,
+ * since Astro renders pages without Vite's HTML hooks. A dev server has no map, so loading a dev plugin needs a build.
+ */
+const inspectorImportMap = (): AstroIntegration => {
+  let importMap: { imports: Record<string, string> } | undefined;
+  // The shared packages the docs depend on; a plugin that imports another one fails to load here. Solid's need its JSX
+  // transform, which the docs do not run.
+  const packages = DEFAULT_PACKAGES.filter(
+    (name) => !name.includes('solid') && fs.existsSync(path.join(import.meta.dirname, 'node_modules', name)),
+  );
+  const plugins = importMapPlugin({ packages, onImportMap: (map) => (importMap = map) });
+  return {
+    name: 'docs:inspector-import-map',
+    hooks: {
+      'astro:config:setup': ({ command, updateConfig }) => {
+        if (command === 'build') {
+          updateConfig({
+            vite: {
+              plugins: plugins.map((plugin) => ({
+                ...plugin,
+                applyToEnvironment: (environment) => environment.name === 'client',
+              })),
+            },
+          });
+        }
+      },
+      'astro:build:done': ({ dir }) => {
+        if (!importMap) {
+          throw new Error('The inspector import map was not built.');
+        }
+        const file = new URL(INSPECTOR_PAGE, dir);
+        const page = fs.readFileSync(file, 'utf8');
+        const script = `<script type="importmap">${JSON.stringify(importMap)}</script>`;
+        fs.writeFileSync(file, page.replace('<head>', `<head>${script}`));
+      },
+    },
+  };
+};
+
 export default defineConfig({
   site: 'https://dxos.org',
   redirects,
@@ -164,6 +208,7 @@ export default defineConfig({
   },
   integrations: [
     cloudflareRedirects(),
+    inspectorImportMap(),
     react({ include: ['**/src/app-framework-tutorial/**', '**/src/demos/**', '**/src/plex/**', '**/src/tutorial/**'] }),
     starlight({
       title: 'DXOS Documentation',

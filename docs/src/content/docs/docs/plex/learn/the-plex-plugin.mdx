@@ -15,7 +15,7 @@ Composer is built this way: every feature in it is a plugin, and your plugin use
 
 ## The finished plugin
 
-Below, Bookmarks runs in the plugin inspector, a small PLEX app that loads one plugin and shows what the framework found in it. Each tab is one kind of contribution. Create a bookmark in **Types**, see its view in **Surfaces**, and run **Record visit** on it in **Operations**.
+Below, Bookmarks runs in the plugin inspector, a small PLEX app that loads one plugin and shows each of its modules working. The sidebar lists the modules. Click **New** in the header to create a sample bookmark, then select **Surface** to see its view, and **Operations** to run **Record visit** on it.
 
 <InspectorEmbed />
 
@@ -30,4 +30,4 @@ Each page of the learning path builds one piece of it, and ends with that piece 
 | [Extend the app graph](/docs/plex/learn/extend-app-graph/) | `capabilities/app-graph-builder.ts` | A Bookmarks section in the navigation tree, with Record visit on each bookmark |
 | [Run it in Composer](/docs/plex/learn/run-in-composer/) | | The plugin in Composer, from the command palette and the assistant |
 
-The inspector also runs on the plugin's own dev server, so you can keep using it after the learning path.
+From the next page on, the inspector on each page loads your own plugin from its dev server, and checks what that page adds.

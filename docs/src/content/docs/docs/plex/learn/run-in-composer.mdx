@@ -13,13 +13,13 @@ Until now the inspector has loaded the plugin. Composer loads it the same way, f
 
 1. **Sign in to Composer Preview.** Open [preview.composer.space](https://preview.composer.space) and sign in or create an identity. Keep the tab open.
 
-2. **Start the dev server.** Run Vite in the plugin's directory:
+2. **Keep the dev server running.** It is the one the inspector has loaded from since [Create a plugin](/docs/plex/learn/create-plugin/). If you stopped it, start it again in the plugin's directory:
 
    ```bash
-   vite
+   npx vite
    ```
 
-   `composerPlugin` binds it to port 3967 and serves a manifest at `http://localhost:3967/manifest.json`, which points at your unbundled source. If the port is taken, Vite fails rather than moving to another one, since Composer loads from 3967.
+   It serves the manifest at `http://localhost:3967/manifest.json`, which points at your unbundled source. If the port is taken, Vite fails rather than moving to another one, since Composer loads from 3967.
 
 3. **Enable the dev plugin.** In Composer, click **Plugin Settings** in the rail and open **Plugins**. Under **Dev Server**, leave the manifest URL as it is and click **Enable**. Allow the browser's prompt to reach devices on your local network: the plugin's source comes from your machine.
 

@@ -13,10 +13,28 @@
       "path": "../packages/common/async"
     },
     {
+      "path": "../packages/common/context"
+    },
+    {
+      "path": "../packages/common/crypto"
+    },
+    {
+      "path": "../packages/common/debug"
+    },
+    {
+      "path": "../packages/common/display-name"
+    },
+    {
       "path": "../packages/common/effect"
     },
     {
+      "path": "../packages/common/errors"
+    },
+    {
       "path": "../packages/common/graph"
+    },
+    {
+      "path": "../packages/common/invariant"
     },
     {
       "path": "../packages/common/keys"
@@ -28,10 +46,40 @@
       "path": "../packages/common/node-std"
     },
     {
+      "path": "../packages/common/random"
+    },
+    {
+      "path": "../packages/common/timeframe"
+    },
+    {
+      "path": "../packages/common/tracing"
+    },
+    {
+      "path": "../packages/common/util"
+    },
+    {
+      "path": "../packages/common/web-context"
+    },
+    {
+      "path": "../packages/common/web-context-react"
+    },
+    {
       "path": "../packages/core/compute/compute"
     },
     {
+      "path": "../packages/core/compute/operation"
+    },
+    {
       "path": "../packages/core/echo/echo"
+    },
+    {
+      "path": "../packages/core/echo/echo-client"
+    },
+    {
+      "path": "../packages/core/echo/echo-protocol"
+    },
+    {
+      "path": "../packages/core/echo/echo-query"
     },
     {
       "path": "../packages/core/echo/echo-react"
@@ -115,6 +163,9 @@
       "path": "../packages/ui/brand"
     },
     {
+      "path": "../packages/ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../packages/ui/react-ui"
     },
     {
@@ -130,10 +181,19 @@
       "path": "../packages/ui/react-ui-list"
     },
     {
+      "path": "../packages/ui/react-ui-menu"
+    },
+    {
       "path": "../packages/ui/react-ui-table"
     },
     {
+      "path": "../packages/ui/ui"
+    },
+    {
       "path": "../packages/ui/ui-theme"
+    },
+    {
+      "path": "../packages/ui/ui-types"
     },
     {
       "path": "../tools/vite-plugin-icons"

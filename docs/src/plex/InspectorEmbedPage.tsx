@@ -7,32 +7,39 @@ import '../styles/island-base.generated.css';
 
 import React from 'react';
 
+import { DEV_SERVER_PORT } from '@dxos/app-framework/PluginManifest';
 import '@dxos/node-std/globals';
+import { Inspector, type KindId } from '@dxos/plugin-inspector';
 import '@dxos/react-ui/theme.css';
-import { Inspector, type PanelId } from '@dxos/plugin-inspector';
 
 import { make } from '../app-framework-tutorial/dx.config.ts';
-import { EMPTY, isStage, modulesAt } from './stages.ts';
 
-const PANELS: readonly PanelId[] = ['graph', 'operations', 'plugin', 'surfaces', 'translations', 'types'];
+const KIND_IDS: readonly KindId[] = [
+  'app-graph',
+  'create-object',
+  'operations',
+  'schema',
+  'skill',
+  'surface',
+  'translations',
+];
 
-const isPanel = (value: unknown): value is PanelId => PANELS.some((panel) => panel === value);
+const isKindId = (value: string): value is KindId => KIND_IDS.some((kind) => kind === value);
 
 /**
- * The inspector with Bookmarks as it stands after the page in the query, as `/embed/inspector/` renders it. Query:
- * `?stage=<Stage>&panel=<PanelId>`; the whole plugin when the stage is absent.
+ * The inspector as `/embed/inspector/` renders it. With `?dev&adds=<kind>,…` it loads the reader's plugin from its dev
+ * server and checks the kinds of module the page adds; without, it shows the finished Bookmarks plugin.
  */
 export const InspectorEmbedPage = () => {
   const params = new URLSearchParams(window.location.search);
-  const stage = params.get('stage');
-  const panel = params.get('panel');
+  if (!params.has('dev')) {
+    return <Inspector plugin={make()} />;
+  }
 
   return (
     <Inspector
-      plugin={make()}
-      modules={isStage(stage) ? modulesAt(stage) : undefined}
-      panel={isPanel(panel) ? panel : undefined}
-      empty={EMPTY}
+      manifestUrl={`http://localhost:${DEV_SERVER_PORT}/manifest.json`}
+      adds={(params.get('adds') ?? '').split(',').filter(isKindId)}
     />
   );
 };
