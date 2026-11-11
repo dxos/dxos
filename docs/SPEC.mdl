@@ -967,7 +967,8 @@ page plex-build-with-agent: Build with a coding agent
   template: tutorial
   status: spike
   covers:
-    - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser
+    - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
+    - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
     - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
@@ -2942,6 +2943,14 @@ decision D-132: Build with a coding agent does not explain the buttons. Amends [
   by: user:wittjosiah
   affects: [echo-build-with-agent, plex-build-with-agent]
   why: Pressing a button shows the whole prompt, fixed lines included, before anything is sent.
+```
+
+```mdl
+decision D-133: Build with a coding agent targets Composer Preview (`https://preview.composer.space`), not composer.space, which loads only the plugins it ships with. The Composer address moves out of the editable prompt into PLEX's fixed lines, after the skill step, and the page says to sign in to Composer Preview first. Amends [D-127].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: composer.space cannot load a plugin from a dev server, and a reader should not have to know which Composer to name.
 ```
 
 ## Appendix: Extension Definitions

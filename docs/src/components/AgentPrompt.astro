@@ -10,7 +10,7 @@ import { SKILLS_URL } from '../utils/agent-skills.ts';
 type Props = {
   /** The text box's starting text. */
   prompt: string;
-  /** Lines each link puts before the reader's text, not shown, such as where the docs are. */
+  /** Lines each link puts before the reader's text, after any skill step, not shown, such as where the docs are. */
   context?: string;
   /** A DXOS skill the agent installs into the folder and follows before the reader's text, not shown. */
   skill?: string;
@@ -37,7 +37,7 @@ const install = (dir: string) =>
     `with each file it links, from the same folder, beside it. Then read ${dir}/${skill}/SKILL.md and follow it for ` +
     'the task below.';
 
-const preamble = (dir: string) => [context, install(dir)].filter(Boolean).join('\n\n');
+const preamble = (dir: string) => [install(dir), context].filter(Boolean).join('\n\n');
 const full = (lines: string, text: string) => (lines ? `${lines}\n\n${text}` : text);
 
 /** The copied prompt goes to an agent we cannot name, so it lists each one's skills folder. */

@@ -5,11 +5,14 @@ description: Have Claude Code, Codex or Cursor build a plugin and load it into y
 
 import AgentPrompt from '../../../../components/AgentPrompt.astro';
 
-A coding agent can build a plugin in a folder of yours and load it into the Composer you have open, in a few minutes.
-Describe the plugin you want in the prompt below, and change the Composer address if yours is different. Then open it
-in your agent.
+A coding agent can build a plugin in a folder of yours and load it into Composer, in a few minutes. Describe the
+plugin you want in the prompt below, then open it in your agent.
 
-<AgentPrompt skill="composer-plugin-dev" prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team. My Composer is open at https://composer.space." />
+Only [Composer Preview](https://preview.composer.space) loads plugins from a dev server; composer.space loads only the
+plugins it ships with. Sign in to Composer Preview and keep it open before you start. The prompt tells the agent to use
+it.
+
+<AgentPrompt skill="composer-plugin-dev" prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team." context="My Composer is open at https://preview.composer.space. Load the plugin there: composer.space does not load plugins from a dev server." />
 
 The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to load
 the plugin into your Composer. The prompt installs it in the folder first, so you do not need to install anything.
@@ -18,7 +21,7 @@ the plugin into your Composer. The prompt installs it in the folder first, so yo
 
 The agent builds the plugin and starts a dev server for it. Then it asks you to load it:
 
-1. In Composer, open **Settings**, then **Plugins**.
+1. In Composer Preview, open **Settings**, then **Plugins**.
 2. Click **Enable** under **Dev Server**.
 3. Allow the browser's prompt to reach devices on your local network.
 4. Work through the checklist the agent gives you, and tell it what you see.
