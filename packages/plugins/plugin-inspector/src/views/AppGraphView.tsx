@@ -69,7 +69,7 @@ const tree = (
     : undefined;
 };
 
-/** The app graph, showing where the plugin's nodes and actions land. */
+/** App Graph, showing where the plugin's nodes and actions land. */
 export const AppGraphView = ({ moduleId, pluginKey, pluginModuleIds }: ViewProps) => {
   const builders = useContributions([moduleId], AppCapabilities.AppGraphBuilder);
   const typenames = useContributions(pluginModuleIds, AppCapabilities.Schema)
@@ -87,11 +87,11 @@ export const AppGraphView = ({ moduleId, pluginKey, pluginModuleIds }: ViewProps
   const root = useAtomValue(atom);
 
   if (builders.length === 0) {
-    return <Note>This module contributes nothing to the app graph.</Note>;
+    return <Note>This module contributes nothing to App Graph.</Note>;
   }
 
   return (
-    <Section title='Where the plugin lands in the app graph'>
+    <Section title='Where the plugin lands in App Graph'>
       {root && root.children.length > 0 ? (
         <ul className='text-sm'>
           {root.children.map((child) => (

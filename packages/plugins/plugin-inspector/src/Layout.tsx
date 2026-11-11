@@ -40,6 +40,8 @@ export type LayoutProps = {
   manifestUrl?: string;
   /** The kinds of module a learning-path page adds, checked against the loaded plugin. */
   adds?: readonly KindId[];
+  /** The kind of module to show first, for a page about one idea. */
+  module?: KindId;
 };
 
 const VIEWS: Record<KindId, FC<ViewProps>> = {
@@ -61,7 +63,7 @@ const TONES: Record<Status['tone'], string> = {
 };
 
 /** The workbench: a header with the plugin and the sample object, its modules in a sidebar, and the selected one. */
-export const Layout = ({ pluginId: given, manifestUrl, adds }: LayoutProps) => {
+export const Layout = ({ pluginId: given, manifestUrl, adds, module }: LayoutProps) => {
   const dev = useDevPlugin(manifestUrl);
   const plugin = useInspectedPlugin(given ?? dev.pluginId);
   const [space] = useSpaces();
@@ -82,7 +84,7 @@ export const Layout = ({ pluginId: given, manifestUrl, adds }: LayoutProps) => {
   );
 
   return plugin ? (
-    <Workbench plugin={plugin} space={space} adds={adds} manifestUrl={manifestUrl} actions={source} />
+    <Workbench plugin={plugin} space={space} adds={adds} initial={module} manifestUrl={manifestUrl} actions={source} />
   ) : (
     <Frame header={<Title manifestUrl={manifestUrl} />} actions={source}>
       <LoadPrompt manifestUrl={manifestUrl} loading={dev.status === 'loading'} error={dev.error} />
@@ -133,17 +135,21 @@ type WorkbenchProps = {
   plugin: Plugin.Plugin;
   space?: Space;
   adds?: readonly KindId[];
+  initial?: KindId;
   manifestUrl?: string;
   actions: ReactNode;
 };
 
-const Workbench = ({ plugin, space, adds, manifestUrl, actions }: WorkbenchProps) => {
+const Workbench = ({ plugin, space, adds, initial, manifestUrl, actions }: WorkbenchProps) => {
   const statusOf = useStatus();
   const sample = useSample(plugin, space);
   const modules = [...plugin.modules].sort((a, b) => order(a) - order(b));
   const rows = sidebarRows(modules);
   const [selected, setSelected] = useState<string>();
-  const current = modules.find((module) => module.id === selected) ?? modules[0];
+  const current =
+    modules.find((module) => module.id === selected) ??
+    modules.find((module) => kindOf(module)?.id === initial) ??
+    modules[0];
 
   return (
     <Frame

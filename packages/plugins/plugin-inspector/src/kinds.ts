@@ -20,7 +20,7 @@ export const KINDS: readonly Kind[] = [
   { id: 'surface', label: 'Surface', capability: Capabilities.ReactSurface },
   { id: 'operations', label: 'Operations', capability: Capabilities.OperationHandler },
   { id: 'skill', label: 'Skill', capability: AppCapabilities.SkillDefinition },
-  { id: 'app-graph', label: 'App graph', capability: AppCapabilities.AppGraphBuilder },
+  { id: 'app-graph', label: 'App Graph', capability: AppCapabilities.AppGraphBuilder },
 ];
 
 /** The kind of a module, by the first capability it provides that the inspector knows. */

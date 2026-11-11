@@ -7,10 +7,16 @@ interface Props {
    * them; without, it shows the finished plugin.
    */
   adds?: KindId[];
+  /** The module the finished plugin opens at, for a page about one idea. */
+  module?: KindId;
 }
 
-const { adds } = Astro.props;
-const query = adds ? `?${new URLSearchParams({ dev: '', adds: adds.join(',') })}` : '';
+const { adds, module } = Astro.props;
+const query = adds
+  ? `?${new URLSearchParams({ dev: '', adds: adds.join(',') })}`
+  : module
+    ? `?${new URLSearchParams({ module })}`
+    : '';
 ---
 
 <!-- The inspector runs on its own page so that its theme CSS stays off the docs pages; see `pages/embed/inspector.astro`. -->

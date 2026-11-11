@@ -23,14 +23,16 @@ export type InspectorProps = {
   manifestUrl?: string;
   /** The kinds of module a learning-path page adds, checked against the plugin. */
   adds?: readonly KindId[];
+  /** The kind of module to show first. */
+  module?: KindId;
 };
 
 /**
  * A PLEX app that loads one plugin, beside the plugins Composer would give it, on an in-memory client with an identity
  * and a space, and shows each of its modules working.
  */
-export const Inspector = ({ plugin, manifestUrl, adds }: InspectorProps) => {
-  const id = `${plugin?.meta.profile.key ?? manifestUrl}:${adds?.join(',')}`;
+export const Inspector = ({ plugin, manifestUrl, adds, module }: InspectorProps) => {
+  const id = `${plugin?.meta.profile.key ?? manifestUrl}:${adds?.join(',')}:${module}`;
   const options = useMemo(
     () => ({
       plugins: [
@@ -40,7 +42,7 @@ export const Inspector = ({ plugin, manifestUrl, adds }: InspectorProps) => {
         }),
         SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        InspectorPlugin({ pluginId: plugin?.meta.profile.key, manifestUrl, adds }),
+        InspectorPlugin({ pluginId: plugin?.meta.profile.key, manifestUrl, adds, module }),
         ...(plugin ? [plugin] : []),
       ],
       pluginLoader: UrlLoader.make([]),

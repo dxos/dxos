@@ -29,7 +29,7 @@ one shows it working:
 - **Surface:** each surface whose filter accepts the sample, rendered with it.
 - **Operations:** each operation, run from a form built from its input schema.
 - **Skill:** each skill, with the operations it gives the assistant.
-- **App graph:** the branches of the app graph that lead to what the plugin added.
+- **App Graph:** the branches of App Graph that lead to what the plugin added.
 
 `adds` lists the kinds of module a page of a tutorial adds; the inspector checks each against the plugin.
 

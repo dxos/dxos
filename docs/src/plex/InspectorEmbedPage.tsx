@@ -28,12 +28,14 @@ const isKindId = (value: string): value is KindId => KIND_IDS.some((kind) => kin
 
 /**
  * The inspector as `/embed/inspector/` renders it. With `?dev&adds=<kind>,…` it loads the reader's plugin from its dev
- * server and checks the kinds of module the page adds; without, it shows the finished Bookmarks plugin.
+ * server and checks the kinds of module the page adds; without, it shows the finished Bookmarks plugin, opened at
+ * `?module=<kind>` when a page names one.
  */
 export const InspectorEmbedPage = () => {
   const params = new URLSearchParams(window.location.search);
   if (!params.has('dev')) {
-    return <Inspector plugin={make()} />;
+    const module = params.get('module') ?? '';
+    return <Inspector plugin={make()} module={isKindId(module) ? module : undefined} />;
   }
 
   return (
