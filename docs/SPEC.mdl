@@ -1409,7 +1409,7 @@ feat F-2: Brand and visual style
     when: a code sample renders
     then: it sits on the tinted surface inside a hairline frame, with numbered lines and a rule beside
           the numbers except in a side-by-side comparison, and a titled sample shows its title as a tab; a syntax theme colors it with a
-          contrast of at least 4.5:1 for every token, and long lines wrap
+          contrast of at least 4.5:1 for every token, and long lines do not wrap: the sample scrolls sideways
 
   req F-2.13:
     when: a reader is not pointing at a token in a code sample
@@ -1445,6 +1445,11 @@ feat F-2: Brand and visual style
     when: a list renders
     then: its text and markers set `tabular-nums` and stay in DM Sans; the brand's DM Sans has no
           tabular figures, so digits remain proportional until the font gains them
+
+  req F-2.14:
+    when: a docs page with a table of contents renders in a window too narrow to hold the sidebar, a
+          full-width text column and the table of contents side by side
+    then: the table of contents folds into the bar above the page, and the text column keeps its full width
 
 ```
 
@@ -2848,10 +2853,19 @@ decision D-120: The docs footer's Docs column lists ECHO, HALO and PLEX, in the 
 ```
 
 ```mdl
-decision D-121: The Overview hero crops its background from the left and keeps the right edge, where the mark sits, so a narrow content column never cuts the mark off; it switches to its stacked layout by its own width rather than the viewport's, since the sidebars narrow it too.
+decision D-121: The Overview hero crops its background from the left and keeps the right edge, where the mark sits, so a narrow content column never cuts the mark off, and its heading never breaks. It stacks the art behind the text only on a phone; on wider windows it gets room from [D-123], not from a stacked layout.
   date: 2026-11-11
-  by: agent:claude-code for user:wittjosiah
+  by: user:wittjosiah
   affects: [F-16.8]
+```
+
+```mdl
+decision D-123: Docs pages favor room for code. The table of contents folds into the bar above the page until the window fits the sidebar, a full text column and the table of contents (88rem), as the Effect docs do, and code samples no longer wrap: a long line scrolls sideways.
+  date: 2026-11-11
+  by: user:wittjosiah
+  supersedes: D-17
+  affects: [F-2.5, F-2.14, T-4]
+  why: Wrapped code is hard to read, since a wrapped line looks like two statements. A text column squeezed by the table of contents wraps or cuts off code that would otherwise fit.
 ```
 
 ```mdl

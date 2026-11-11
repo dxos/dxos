@@ -13,7 +13,7 @@ export default defineEcConfig({
   themes: codeThemes,
   plugins: [pluginLineNumbers(), ...(twoslash ? [ecTwoSlash()] : [])],
   minSyntaxHighlightingColorContrast: 5.5,
-  defaultProps: { wrap: true, hangingIndent: 2, showLineNumbers: true },
+  defaultProps: { wrap: false, showLineNumbers: true },
   styleOverrides: {
     borderRadius: 'var(--c-radius)',
     borderColor: 'var(--c-hairline)',

@@ -148,8 +148,42 @@ site-search button[data-open-modal] {
   border-top: 0;
 }
 
+/*
+ * Starlight shows the table of contents as a column from 72rem, which squeezes the text column below
+ * its full width. Until the viewport fits the sidebar, a full text column and the table of contents
+ * (88rem), the table of contents folds into the bar above the page instead.
+ */
+@media (min-width: 72rem) and (max-width: 87.99rem) {
+  :root {
+    --sl-mobile-toc-height: 3rem;
+  }
+  /* Undo Starlight's 72rem column layout. The folded table of contents lives inside the column, and is fixed in place. */
+  :root .lg\:sl-flex {
+    display: block;
+  }
+  :root .right-sidebar-container,
+  :root .right-sidebar {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    border: 0;
+  }
+  :root .right-sidebar-panel {
+    display: none;
+  }
+  /* PageSidebar wraps the folded table of contents in `lg:sl-hidden`. */
+  :root .lg\:sl-hidden {
+    display: block;
+  }
+  :root .main-pane {
+    width: 100%;
+    --sl-content-margin-inline: auto;
+  }
+}
+
 /* Table of contents: as wide as the sidebar, instead of Starlight's column that grows with the viewport. */
-@media (min-width: 72rem) {
+@media (min-width: 88rem) {
   :root .right-sidebar-container {
     width: var(--sl-sidebar-width);
     /* The container precedes `.main-pane` in the DOM, so while the page streams in it would paint at the left and jump. */
