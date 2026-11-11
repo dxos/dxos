@@ -2,7 +2,7 @@
 interface Props {
   name: string;
   alt: string;
-  /** Draws the diagram on a dark ground, for a page that is always dark. */
+  /** Draws the diagram on a dark ground in both themes, for a page that is always dark. */
   dark?: boolean;
 }
 
@@ -15,16 +15,24 @@ if (!urls[path]) {
 }
 
 // The renderer tags elements with Tailwind `dark:` variants but compiles only the light rules; these supply the dark
-// ones, on the demo frames' surface colour.
-const DARK_RULES = `
-  svg { color: #e5e5e5; background: oklch(0.205 0.001 190); --surface-bg: oklch(0.205 0.001 190); }
+// ones on the given ground. The SVG is an image, so the page's CSS variables cannot reach it.
+const darkRules = (ground: string) => `
+  svg { color: #e5e5e5; background: ${ground}; --surface-bg: ${ground}; }
   .dark\\:fill-neutral-200 { fill: #e5e5e5; }
   .dark\\:stroke-neutral-200 { stroke: #e5e5e5; }
   .dark\\:text-neutral-200 { color: #e5e5e5; }
   .dark\\:text-neutral-400 { color: #a3a3a3; }
 `;
-const src = dark
-  ? `data:image/svg+xml,${encodeURIComponent(sources[path].replace('</style>', `${DARK_RULES}</style>`))}`
-  : urls[path];
+const darkSrc = (ground: string) =>
+  `data:image/svg+xml,${encodeURIComponent(sources[path].replace('</style>', `${darkRules(ground)}</style>`))}`;
 ---
-<img class="diagram" src={src} alt={alt} />
+{
+  dark ? (
+    <img class="diagram diagram--always-dark" src={darkSrc('oklch(0.205 0.001 190)')} alt={alt} />
+  ) : (
+    <>
+      <img class="diagram diagram--light" src={urls[path]} alt={alt} />
+      <img class="diagram diagram--dark" src={darkSrc('#1d1f20')} alt={alt} />
+    </>
+  )
+}

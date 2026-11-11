@@ -467,7 +467,7 @@ a.card:hover {
   min-width: 0;
 }
 
-/* The renderer draws diagrams for a white ground, so they stay on one in both themes. */
+/* Each diagram ships a light and a dark drawing; the theme shows one. */
 .diagram {
   display: block;
   width: 100%;
@@ -475,7 +475,12 @@ a.card:hover {
   padding: 1rem;
   border: 1px solid var(--c-hairline);
   border-radius: var(--c-radius);
-  background: #ffffff;
+  background: var(--c-bg);
+}
+
+:root:not([data-theme='light']) .diagram--light,
+:root[data-theme='light'] .diagram--dark {
+  display: none;
 }
 
 /* Compiler hover cards. */
