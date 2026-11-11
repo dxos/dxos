@@ -30,6 +30,9 @@ The package has three namespaces:
 
 ## How these pages relate to ECHO
 
-The [ECHO learning path](/docs/echo/learn/installation/) creates an identity in one line so it can open a space. The HALO learning path starts from that app and adds a second device, then a second person, then recovery.
+ECHO stores and replicates the data in a space; HALO decides who may join it. The [ECHO learning path](/docs/echo/learn/the-echo-object/)
+creates an identity in one line so it can open a space, and its [Sharing a space](/docs/echo/learn/sharing/) page invites a
+second person.
 
-To read the identity in a React app today, see [React](/docs/halo/react/).
+The HALO learning path builds an app of its own, a [contact book](/docs/halo/learn/contact-book/): a name, a few named
+spaces, the people in them, a second device and a recovery code.

@@ -1,0 +1,90 @@
+---
+title: Your name
+description: Create an identity with a display name, show it and change it.
+---
+
+import { Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
+
+By the end of this page the contact book will ask for your name the first time it runs, show it in the corner, and let
+you change it.
+
+To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages taken
+out. It runs from the start, and tells you which step to fill in next. Each page says which file its code goes in.
+
+<StackBlitzButton project="halo" kind="starter" label="Follow along in StackBlitz" file="src/client.ts" />
+
+## Before you start
+
+An identity stands for you. In Keyhive, which HALO is built on, it is a group named by a DID, such as
+`did:halo:BA25QRC2…`. Its members are your devices, and the first member is the device that creates it. No server issues
+the identity; the client makes it on the device, with no network needed.
+
+The identity also has a profile: a display name, and any other data the app wants, such as an avatar. Everyone you share a
+space with sees it.
+
+The code is Effect. `@dxos/halo` describes each operation as an `Effect` or a `Stream` that needs `Identity.Service` or
+`Space.Service`, and `layerClient` from `@dxos/halo-adapter-client` provides both from a client.
+
+<Steps>
+
+1. **Install the packages.** `@dxos/client` holds the client, `@dxos/halo` the API these pages use, and
+   `@dxos/halo-adapter-client` the layer between them. Until the next npm release, install the build of main these pages
+   describe, from pkg.pr.new.
+
+   <Tabs>
+     <TabItem label="pnpm">
+       ```bash
+       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 effect@4.0.4
+       ```
+     </TabItem>
+     <TabItem label="npm">
+       ```bash
+       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 effect@4.0.4
+       ```
+     </TabItem>
+   </Tabs>
+
+   The browser setup is the same as ECHO's; see [Installation](/docs/echo/learn/installation/) for the Vite config. The
+   StackBlitz project has it already.
+
+2. **Configure the client.** The client keeps the device's keys and data on the device, and reaches other devices through
+   EDGE, DXOS's network, which relays invitations and replicates spaces. This goes in `client.ts`.
+
+   <Snippet file="halo-tutorial/client" region="config" />
+
+3. **Start the client.** `openHalo` starts a client and returns `run`, which runs a piece of HALO code against it with
+   `Effect.runPromise`. The app calls it once, at startup.
+
+   <Snippet file="halo-tutorial/client" region="client" />
+
+4. **Create your identity.** `Identity.create` makes the identity, with this device as its first member, and gives it your
+   name. The app calls this when you press **Start**. This and the next two steps go in `profile.ts`.
+
+   <Snippet file="halo-tutorial/profile" region="create" />
+
+5. **Follow your identity.** `Identity.identity` is a stream: it emits the identity straight away, as an `Option` that is
+   empty before there is one, and again on every change. `me` turns the empty case into `undefined`, and the app follows
+   it to show either the name prompt or your name.
+
+   <Snippet file="halo-tutorial/profile" region="follow" />
+
+6. **Change your name.** `Identity.updateProfile` writes a new profile. `me` emits it, and so does every space member list
+   that includes you. Clicking your name in the app calls this.
+
+   <Snippet file="halo-tutorial/profile" region="rename" />
+
+</Steps>
+
+## Try it
+
+This device has no identity yet. Type a name and press **Start**, then click your name to change it.
+
+<HaloEmbed stage="name" scene="new" />
+
+## What you can do now
+
+You can start a client, create an identity with a name, follow it as a stream, and change it. Next,
+[Your spaces](/docs/halo/learn/your-spaces/) gives it somewhere to invite people.

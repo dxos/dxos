@@ -16,6 +16,8 @@ const SOURCE_DIRS = [
   '../tutorial/',
   // The Composer learning path's plugin, quoted the same way.
   '../app-framework-tutorial/',
+  // HALO's contact book, quoted the same way.
+  '../halo-tutorial/',
 ];
 
 const ECHO_DIR = join(process.cwd(), 'src/echo');
@@ -43,7 +45,7 @@ const readSources = (): Record<string, string> =>
   );
 
 /** Directories whose modules compile with their local imports beside them. */
-const PROJECTS = ['../tutorial/', '../app-framework-tutorial/'];
+const PROJECTS = ['../tutorial/', '../app-framework-tutorial/', '../halo-tutorial/'];
 
 const findSource = (file: string): [path: string, source: string] => {
   const entry = Object.entries(readSources()).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));

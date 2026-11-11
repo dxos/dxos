@@ -32,19 +32,17 @@ value to read it once. `Space.get` looks one up by id.
 
 ## Members
 
-`members` is a stream of the member list. `updateMemberRole` and `removeMember` take the member's DID.
+`members` is a stream of the member list. Each member has a DID, a display name, an access level (`role`) and whether
+it is online. `updateMemberRole` changes a member's access and `removeMember` revokes it; both take the member's DID and
+need `admin`, or [causal seniority](/docs/halo/concepts/spaces-membership/) to revoke.
 
-<Snippet file="halo-invite-member" region="members" />
-
-<Snippet file="halo-invite-member" region="remove" />
+<Snippet file="halo-guide-space" region="members" />
 
 ## Share and join
 
-`share` starts a space invitation and `join` accepts one. Both return an [`Invitation.Flow`](/docs/halo/guides/invitation/).
+`share` starts a space invitation and `join` accepts one. Both return an [`Invitation.Flow`](/docs/halo/api/invitation/).
 
-<Snippet file="halo-invite-member" region="share" />
-
-<Snippet file="halo-invite-member" region="join" />
+<Snippet file="halo-guide-space" region="share" />
 
 ## Archives and EDGE replication
 
@@ -68,8 +66,24 @@ replication through EDGE on or off; with it off, the space syncs only between pe
 
 The full list is in the [API reference](/docs/halo/resources/api-reference/).
 
+## Errors
+
+Every function that can fail fails with `SpaceError`, whose message says what went wrong.
+
+<Snippet file="halo-guide-space" region="errors" />
+
+A membership change Keyhive refuses names the reason with one of the errors `@dxos/halo` exports:
+
+| Error                    | Raised when                                                              |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `NotAuthorizedError`     | The acting member lacks the access, such as revoking without seniority   |
+| `UnknownPrincipalError`  | The member named is not known to the space                               |
+| `InvalidSignatureError`  | A signed operation fails verification                                    |
+| `MissingDependencyError` | An operation refers to earlier operations that have not arrived          |
+
 ## Related
 
 - [Spaces and membership](/docs/halo/concepts/spaces-membership/)
 - [Spaces and databases](/docs/echo/concepts/spaces/) for the data in a space.
-- [Invite a member](/docs/halo/learn/invite-member/)
+- [Your spaces](/docs/halo/learn/your-spaces/), [Invite people](/docs/halo/learn/invite-people/) and
+  [Your contacts](/docs/halo/learn/your-contacts/) in the learning path.

@@ -6,8 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Space } from '@dxos/halo';
-import { type SpaceId } from '@dxos/keys';
+import { Invitation, Space } from '@dxos/halo';
+import { type IdentityDid, type SpaceId } from '@dxos/keys';
+
+declare const spaceId: SpaceId;
+declare const graceDid: IdentityDid;
 
 // #region list
 const listSpaces = Effect.gen(function* () {
@@ -32,6 +35,32 @@ const createSpace = Effect.gen(function* () {
 });
 // #endregion create
 
+// #region members
+const listMembers = Effect.gen(function* () {
+  const [members] = yield* Space.members(spaceId).pipe(
+    Stream.take(1),
+    Stream.runCollect,
+  );
+  for (const member of members) {
+    console.log(member.displayName, member.role, member.online);
+  }
+});
+
+const demote = Space.updateMemberRole(spaceId, graceDid, 'read');
+const remove = Space.removeMember(spaceId, graceDid);
+// #endregion members
+
+// #region share
+const invite = Effect.gen(function* () {
+  const flow = yield* Space.share(spaceId, { authMethod: 'shared-secret' });
+  console.log('Send this to Grace:', yield* Invitation.code(flow));
+  return flow;
+});
+
+declare const code: string;
+const accept = Space.join(code);
+// #endregion share
+
 // #region archive
 const backUp = Effect.gen(function* () {
   const space = yield* createSpace;
@@ -43,4 +72,21 @@ const backUp = Effect.gen(function* () {
 });
 // #endregion archive
 
-export { backUp, findSpace, listSpaces };
+// #region errors
+const safeRemove = remove.pipe(
+  Effect.catchTag('SpaceError', (error) =>
+    Effect.sync(() => console.error('Could not remove:', error.message)),
+  ),
+);
+// #endregion errors
+
+export {
+  accept,
+  backUp,
+  demote,
+  findSpace,
+  invite,
+  listMembers,
+  listSpaces,
+  safeRemove,
+};

@@ -24,6 +24,7 @@ that flow from either side. Its functions need no service, because they act on t
   the invitation code; `'known-public-key'` admits only a guest whose key the host names.
 - `type`: `'interactive'` needs host and guest online together; `'delegated'` can be redeemed while the host is offline;
   `'multiuse'` admits more than one guest.
+- `target`: with `'known-public-key'`, the key or DID of the one guest it admits.
 
 <Snippet file="halo-guide-invitation" region="options" />
 
@@ -41,7 +42,7 @@ show. On the guest, it is the moment to call `Invitation.authenticate`.
 
 <Snippet file="halo-guide-invitation" region="events" />
 
-<Snippet file="halo-add-device" region="join" />
+<Snippet file="halo-guide-invitation" region="authenticate" />
 
 ## Cancel a flow
 
@@ -62,7 +63,17 @@ Either side can cancel. The host can list its open flows with `Space.invitations
 
 The full list is in the [API reference](/docs/halo/resources/api-reference/).
 
+## Errors
+
+`code` and `authenticate` fail with `InvitationError`, for example when the guest sends a wrong authorization code. The
+flow also emits an `error` event, so a UI following `events` needs no separate handler.
+
+<Snippet file="halo-guide-invitation" region="errors" />
+
+`share` and `join` fail with the error of the namespace that started the flow: `IdentityError` for a device invitation and
+`SpaceError` for a space invitation.
+
 ## Related
 
 - [Invitations](/docs/halo/concepts/invitations/)
-- [Add a device](/docs/halo/learn/add-device/) and [Invite a member](/docs/halo/learn/invite-member/)
+- [Invite people](/docs/halo/learn/invite-people/) and [Add a device](/docs/halo/learn/add-device/) in the learning path.

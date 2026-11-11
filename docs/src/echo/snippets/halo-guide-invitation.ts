@@ -50,10 +50,33 @@ const follow = Invitation.events(flow).pipe(
 );
 // #endregion events
 
+// #region authenticate
+declare const code: string;
+declare const authCode: string;
+
+const join = Effect.gen(function* () {
+  const flow = yield* Space.join(code);
+  yield* Invitation.events(flow).pipe(
+    Stream.filter((event) => event._tag === 'readyForAuthentication'),
+    Stream.take(1),
+    Stream.runDrain,
+  );
+  yield* Invitation.authenticate(flow, authCode);
+});
+// #endregion authenticate
+
+// #region errors
+const retry = Invitation.authenticate(flow, authCode).pipe(
+  Effect.catchTag('InvitationError', (error) =>
+    Effect.sync(() => console.error('Wrong code?', error.message)),
+  ),
+);
+// #endregion errors
+
 // #region cancel
 const stop = Invitation.cancel(flow);
 // the flows this host has open for the space
 const pending = Space.invitations(spaceId);
 // #endregion cancel
 
-export { follow, open, pending, showCode, stop };
+export { follow, join, open, pending, retry, showCode, stop };

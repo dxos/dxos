@@ -1,52 +1,58 @@
 ---
 title: Add a device
-description: Join a second device to the same identity and list the devices.
+description: Join Alice's phone to her identity, so it shows the same contacts.
 ---
 
+import { Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page the tutorial app runs on two devices that belong to one user, and lists them both.
+By the end of this page Alice's phone joins her identity, and shows her name, her spaces and her contacts.
 
-## Background
+## Before you start
 
-A device here is one client's storage: a browser profile on one site, or one Node process. Each has its own key. Adding
-a device means the identity authorizes the new device's key, after which the device can act for the user and replicate
-their spaces. Nothing is copied by hand; the new device syncs once it is admitted.
+Each device has its own key. Adding a device is the same handshake as inviting a person, with a device invitation
+instead of a space invitation: the device already in the identity is the host, and the new device the guest. At the end,
+the host writes a delegation that makes the new device a member of the identity's group.
 
-The admission is a device invitation. The device that already has the identity shares it, and the new device joins with
-the invitation code. To prove the person at the new device is the same one, the first device shows a short authorization
-code, and the person types it on the new device. [Invitations](/docs/halo/concepts/invitations/) explains the flow.
+The new device then syncs the identity's personal space and every space the identity is in, from the other device or
+through EDGE. Nothing about the identity has to be typed in again.
 
-## Steps
+The functions go in a new file, `devices.ts`.
 
-1. **Share the identity from the first device.** `Identity.share` starts the invitation and returns its flow. Read the
-   invitation code from the flow, and watch its events for the authorization code.
+<Steps>
 
-   <Snippet file="halo-add-device" region="share" />
+1. **Share your identity.** `Identity.share` starts a device invitation on the device you have. **Add a device** on the
+   Devices tab calls this and shows the code.
 
-   The console shows the invitation code. When the second device connects, it also shows a short authorization code.
+   <Snippet file="halo-tutorial/devices" region="share" />
 
-2. **Join from the second device.** `Identity.join` takes the invitation code. When the flow is ready for authentication,
-   `Invitation.authenticate` sends the authorization code back.
+2. **Join from the new device.** On the new device, before it has an identity, `Identity.join` redeems the code. The
+   handshake and its authorization code are the same as for a space, so the app follows it with `progress` and
+   `authenticate` from `invitations.ts`. **Join your other device** calls this.
 
-   <Snippet file="halo-add-device" region="join" />
+   <Snippet file="halo-tutorial/devices" region="join" />
 
-   Both flows end with a `success` event. The second device now has the same DID as the first.
+3. **List your devices.** `Identity.devices` is a stream of the identity's devices. Each has a key, a kind, whether it is
+   online, and whether it is the device the code runs on. The Devices tab follows this.
 
-3. **List the devices.** Each entry has the device's kind, such as `browser` or `native`, and whether it is online.
-   `current` marks the device the code runs on.
+   <Snippet file="halo-tutorial/devices" region="list" />
 
-   <Snippet file="halo-add-device" region="devices" />
+</Steps>
 
-   The list shows both devices. `Identity.devices` is the same list as a stream, for a page that stays open.
+## Try it
 
-## Recap
+Alice's laptop has her identity, her spaces and her contacts; her phone has nothing.
 
-You can now:
+1. On the laptop, open **Devices**, press **Add a device** and copy the code.
+2. On the phone, press **Join your other device**, paste it and press **Join**.
+3. Type the authorization code the laptop shows into the phone and press **Send**.
 
-- Share an identity and read the invitation and authorization codes.
-- Join a new device with those codes.
-- List the identity's devices, with their kind and presence.
+The phone now shows Alice's name, both spaces and both contacts, and each device lists the other.
 
-Next, [invite a member](/docs/halo/learn/invite-member/): another person, with an identity of their own, into the app's
-space.
+<HaloEmbed stage="devices" scene="phone" />
+
+## What you can do now
+
+You can add a device to your identity and list your devices. Next,
+[Recover an identity](/docs/halo/learn/recover-identity/) covers losing all of them.

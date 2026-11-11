@@ -1,0 +1,46 @@
+---
+title: Your spaces
+description: Create named spaces and switch between them.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page you can make named spaces, such as Book club and Climbing, and switch between them.
+
+## Before you start
+
+A space is a group of identities that replicate the same data. ECHO keeps a database in each one; the contact book uses
+spaces only for who is in them. In Keyhive terms a space is a group, and the identity that creates it is its first admin.
+Admins invite people, change what members may do and remove them.
+
+`Space.create` makes a space, and `Space.spaces` lists every space your identity belongs to. Your identity also has a
+personal space, which only your own devices join; `Space.spaces` leaves it out.
+
+Both pieces go in a new file, `spaces.ts`.
+
+<Steps>
+
+1. **Create a space.** `Space.create` returns the new space's id, name and state at once. The space opens a moment later,
+   so wait for `Space.waitReady` before you use it. **New space** calls this.
+
+   <Snippet file="halo-tutorial/spaces" region="create" />
+
+2. **List your spaces.** `Space.spaces` is a stream of every space, now and after each change. A space you are removed
+   from stays in the list with no name, closed, so keep the ones that are ready and named. The dropdown follows this.
+
+   <Snippet file="halo-tutorial/spaces" region="list" />
+
+</Steps>
+
+## Try it
+
+Alice has a name and no spaces. Press **New space**, name it, and make another; the dropdown switches between them.
+
+<HaloEmbed stage="spaces" scene="named" />
+
+## What you can do now
+
+You can create spaces and list them as a stream. Next, [Invite people](/docs/halo/learn/invite-people/) lets someone
+else in.

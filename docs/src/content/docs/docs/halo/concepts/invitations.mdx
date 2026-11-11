@@ -4,7 +4,7 @@ description: How a device or a person is let into an identity or a space.
 ---
 
 An invitation is a short-lived offer from a host to let one guest in: a new device into an identity, or a new member into
-a space.
+a space. It ends in a delegation, the same signed statement that every other change to membership is.
 
 ## Model
 
@@ -13,36 +13,50 @@ space. `Identity.share` makes the first and `Space.share` the second.
 
 **Types.**
 
-| Type          | Behavior                                                                      |
-| ------------- | ----------------------------------------------------------------------------- |
-| `interactive` | Host and guest are online at the same time and talk directly                  |
-| `delegated`   | The guest can redeem it while the host is offline                             |
-| `multiuse`    | More than one guest can redeem it                                             |
+| Type          | Behavior                                                       |
+| ------------- | -------------------------------------------------------------- |
+| `interactive` | Host and guest are online at the same time and talk directly   |
+| `delegated`   | The guest can redeem it while the host is offline              |
+| `multiuse`    | More than one guest can redeem it                              |
 
 **Auth methods.** How the guest proves it is the intended guest:
 
-| Auth method        | Proof                                                                  |
-| ------------------ | ---------------------------------------------------------------------- |
-| `none`             | None. Anyone with the invitation code is admitted                      |
-| `shared-secret`    | A short authorization code the host shows, typed in by the guest       |
-| `known-public-key` | A signature from a key the host named in advance                       |
+| Auth method        | Proof                                                            |
+| ------------------ | ---------------------------------------------------------------- |
+| `none`             | None. Anyone with the invitation code is admitted                |
+| `shared-secret`    | A short authorization code the host shows, typed in by the guest |
+| `known-public-key` | A signature from a key the host named in advance                 |
 
 The invitation code and the authorization code travel by different routes, for example a link in a chat and a code read
 aloud. Someone who intercepts only the link cannot get in.
 
+**Admission.** Two things happen when a guest is let in. The two sides exchange contact cards: each card names an identity
+or device and carries the keys others need to encrypt to it and check its signatures. Then the host writes a
+[delegation](/docs/halo/concepts/spaces-membership/) that admits the guest, signed by a member allowed to make it. Peers
+check that delegation like any other, so nothing about the invitation itself has to be trusted after it ends.
+
 ## The flow
+
+`Invitation.events` follows a flow from either side. An interactive invitation with `shared-secret` runs like this:
 
 1. The host calls `share`. The flow emits `connecting` and waits for a guest.
 2. The host sends the invitation code to the guest.
 3. The guest calls `join` with the code. The two find each other through the signaling service and open an encrypted
    connection. Both flows emit `connected`.
-4. With `shared-secret`, both flows emit `readyForAuthentication`. The host's event carries the authorization code, which
-   the host passes to the guest by another route.
+4. Both flows emit `readyForAuthentication`. The host's event carries the authorization code, which the host passes to
+   the guest by another route.
 5. The guest calls `Invitation.authenticate` with the code. Both flows emit `authenticating`.
-6. The host checks the code and writes the statement that admits the guest. Both flows emit `success`; the guest's result
-   names the space or identity it joined.
+6. The host checks the code. The two sides exchange contact cards, and the host writes the delegation that admits the
+   guest. Both flows emit `success`; the guest's result names the space or identity it joined.
 
 Any step can end in `cancelled`, if either side calls `Invitation.cancel`, or `error`.
+
+## Delegated invitations
+
+A delegated invitation works while the host is offline. The host publishes prekeys in advance: one-time keys the guest can
+encrypt to without the host there. The host signs the operations that admit whoever redeems the invitation, and EDGE holds
+them until the guest connects. The guest then reads the operations, checks the signatures, and joins with the access the
+host chose.
 
 ## Limits
 

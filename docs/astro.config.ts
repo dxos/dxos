@@ -72,7 +72,7 @@ const plexRedirects = Object.fromEntries(
 const redirects: Record<string, string> = {
   '/docs': '/docs/echo/overview/',
   '/docs/halo/introduction': '/docs/halo/overview/',
-  '/docs/halo/typescript': '/docs/halo/guides/identity/',
+  '/docs/halo/typescript': '/docs/halo/api/identity/',
   // Section roots were `welcome` pages before they were titled Overview.
   '/docs/echo/welcome': '/docs/echo/overview/',
   '/docs/halo/welcome': '/docs/halo/overview/',
@@ -113,6 +113,13 @@ const redirects: Record<string, string> = {
   '/docs/echo/guides/relation': '/docs/echo/api/relation/',
   '/docs/echo/guides/type': '/docs/echo/api/type/',
   '/docs/echo/concepts/conflicts': '/docs/echo/concepts/changes/',
+  // HALO's namespace pages moved from Guides to API, React moved into Guides, and the learning path became the contact book.
+  '/docs/halo/guides/identity': '/docs/halo/api/identity/',
+  '/docs/halo/guides/invitation': '/docs/halo/api/invitation/',
+  '/docs/halo/guides/space': '/docs/halo/api/space/',
+  '/docs/halo/learn/create-identity': '/docs/halo/learn/your-name/',
+  '/docs/halo/learn/invite-member': '/docs/halo/learn/invite-people/',
+  '/docs/halo/react': '/docs/halo/guides/react/',
   ...plexRedirects,
 };
 
@@ -228,7 +235,15 @@ export default defineConfig({
   integrations: [
     cloudflareRedirects(),
     inspectorImportMap(),
-    react({ include: ['**/src/app-framework-tutorial/**', '**/src/demos/**', '**/src/plex/**', '**/src/tutorial/**'] }),
+    react({
+      include: [
+        '**/src/app-framework-tutorial/**',
+        '**/src/demos/**',
+        '**/src/halo-tutorial/**/*.{ts,tsx}',
+        '**/src/plex/**',
+        '**/src/tutorial/**',
+      ],
+    }),
     starlight({
       title: 'DXOS Documentation',
       lastUpdated: true,

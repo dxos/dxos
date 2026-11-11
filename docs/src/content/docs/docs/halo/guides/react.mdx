@@ -1,0 +1,59 @@
+---
+title: React
+description: Read the identity, devices, spaces and members from React components.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { HaloProvider, useIdentity } from '@dxos/halo-react';
+```
+
+`@dxos/halo-react` reads HALO from React components. Each hook follows one `@dxos/halo` stream and re-renders when it
+emits, so a component shows the current identity, devices or members without subscribing itself.
+
+## Set up the provider
+
+`HaloProvider` takes the HALO services as an Effect `Context`. Build it from a `Client` with the adapter's
+`makeIdentityService` and `makeSpaceService`, and wrap the part of the app that uses the hooks.
+
+<Snippet file="halo-guide-react" region="provider" />
+
+## The identity
+
+`useIdentity` returns the identity, or `undefined` before one exists. It has the current value on the first render.
+`useDevices` and `useCredentials` return the identity's devices and credentials.
+
+<Snippet file="halo-guide-react" region="identity" />
+
+## Spaces and members
+
+`useSpaces` returns the spaces that are ready; pass `{ all: true }` for every space. `useSpace` finds one by id, and
+`useMembers` returns a space's members.
+
+<Snippet file="halo-guide-react" region="spaces" />
+
+## Invitations
+
+Start a flow with `Space.share` or `Identity.share`, run as an Effect with the same services. `useInvitationFlow` follows
+the flow: its latest event and its code. It needs no provider, since a flow carries what it needs. `useSpaceInvitations`
+and `useHaloInvitations` list the flows this device has open.
+
+<Snippet file="halo-guide-react" region="invitations" />
+
+## Hooks at a glance
+
+| Hook                                       | Returns                                       |
+| ------------------------------------------ | --------------------------------------------- |
+| `useIdentity`                              | The identity, or `undefined`                  |
+| `useDevices` `useCredentials`              | The identity's devices and credentials        |
+| `useSpaces` `useSpace`                     | Spaces, and one space by id                   |
+| `useMembers`                               | A space's members                             |
+| `useSpaceInvitations` `useHaloInvitations` | Open space and device invitations             |
+| `useInvitationFlow`                        | One flow's latest event and code              |
+
+## Related
+
+- [Identity](/docs/halo/api/identity/), [Space](/docs/halo/api/space/) and [Invitation](/docs/halo/api/invitation/)
+- The [contact book](/docs/halo/learn/contact-book/) in the learning path uses the Effect API directly, with its own
+  `useStream` hook in place of these.

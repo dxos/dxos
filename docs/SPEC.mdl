@@ -734,9 +734,10 @@ page versioning: Versioning
 ## HALO
 
 HALO is DXOS's identity management: a user's identity, the devices and credentials that act for it, and who may
-enter a space. Its learning path adds people and devices to the ECHO tutorial app, so it starts where ECHO's ends.
-Data and replication stay in ECHO's Spaces and databases; members, roles and access are HALO's Spaces and
-membership, and each links to the other.
+enter a space. Its learning path builds a small app of its own, a contact book [D-169]. Data and replication stay in
+ECHO's Spaces and databases; members, access and invitations are HALO's, and each links to the other. Every page
+describes HALO in Keyhive's terms, in the present tense [D-163], and teaches `@dxos/halo` through Effect, run with
+`Effect.runPromise` [D-162].
 
 ### Start here
 
@@ -753,7 +754,7 @@ page halo-welcome: Overview
     - An identity is a key pair a client generates; no server issues it
     - The three `@dxos/halo` namespaces, Identity, Invitation and Space, in one line each
     - HALO is built on Keyhive: signed delegations and group encryption keys
-    - Where HALO shows up in the ECHO learning path, and that this path continues it
+    - The learning path builds a contact book of its own; ECHO's Sharing a space is where ECHO meets HALO [D-169]
 ```
 ```mdl
 page why-halo: Why HALO?
@@ -772,80 +773,123 @@ page why-halo: Why HALO?
 
 ### Learning path
 
+Seven pages build one app, a contact book: a name, a few named spaces, the people in them, a second device and a
+recovery code [D-169]. The embeds and StackBlitz projects work as ECHO's do [D-171].
+
 ```mdl
-page halo-create-identity: Create an identity
-  Give the tutorial app a user, with a display name, and read it back.
+page halo-contact-book: The contact book
+  The app the learning path builds, running for three people.
   section: HALO
-  route: /docs/halo/learn/create-identity/
+  route: /docs/halo/learn/contact-book/
   group: Learning path
   template: tutorial
   status: spike
   covers:
-    - Create an identity with `Identity.create`, with a display name
-    - Read it once with `Identity.getSnapshot` and follow it with `Identity.identity`
-    - Update the display name with `Identity.updateProfile`
-    - The tutorial app shows who is signed in
+    - What the contact book does: a name, named spaces, and contacts, who are the people you share a space with [D-170]
+    - The finished app for Alice, Bob and Carol in two spaces, each in a device frame, with Fork on StackBlitz
+    - What each page adds
+```
+```mdl
+page halo-your-name: Your name
+  Create an identity with a display name, show it and change it.
+  section: HALO
+  route: /docs/halo/learn/your-name/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Set up the project and provide the services with `layerClient(client)`, with Follow along in StackBlitz
+    - Create an identity with `Identity.create`, with the name the first run asks for
+    - Follow it with the `Identity.identity` stream and show it in the profile chip
+    - Rename with `Identity.updateProfile`
+    - In Keyhive terms: the identity is a group named by a DID, and this device its first member
+```
+```mdl
+page halo-your-spaces: Your spaces
+  Create named spaces and switch between them.
+  section: HALO
+  route: /docs/halo/learn/your-spaces/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Create a space with `Space.create({ name })`
+    - List spaces with the `Space.spaces` stream and switch between them in a dropdown
+    - In Keyhive terms: a space is a group, and its creator its first admin
+```
+```mdl
+page halo-invite-people: Invite people
+  Alice invites Bob into a space with an invitation code and an authorization code.
+  section: HALO
+  route: /docs/halo/learn/invite-people/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Start a space invitation with `Space.share` and read its code
+    - Join with `Space.join`, follow the flow with `Invitation.events`, and enter the authorization code with `Invitation.authenticate`
+    - In Keyhive terms: the two sides exchange contact cards and the host writes a delegation that admits the guest
+```
+```mdl
+page halo-your-contacts: Your contacts
+  List everyone you share a space with, and remove someone from a space.
+  section: HALO
+  route: /docs/halo/learn/your-contacts/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Read each space's members with `Space.members` and merge them by DID, with the spaces each person shares [D-170]
+    - Remove a member with `Space.removeMember`
+    - Changing a member's access is on the Space API page, not here
+    - In Keyhive terms: removal is a revocation, and the group key changes
 ```
 ```mdl
 page halo-add-device: Add a device
-  Join a second device to the same identity and list the devices.
+  Join Alice's phone to her identity, so it shows the same contacts.
   section: HALO
   route: /docs/halo/learn/add-device/
   group: Learning path
   template: tutorial
   status: spike
   covers:
-    - Share the identity with `Identity.share` and read the invitation code
-    - Join from the second device with `Identity.join` and authenticate with the code
-    - List the identity's devices with `Identity.devices`, with each device's kind and presence
-    - The tutorial app runs on two devices of one user
-```
-```mdl
-page halo-invite-member: Invite a member
-  Invite another person into the tutorial app's space and give them a role.
-  section: HALO
-  route: /docs/halo/learn/invite-member/
-  group: Learning path
-  template: tutorial
-  status: spike
-  covers:
-    - Share a space with `Space.share` and pick an auth method
-    - Join with `Space.join` and follow the flow with `Invitation.events`
-    - List members with `Space.members` and change a role with `Space.updateMemberRole`
-    - Remove a member with `Space.removeMember`
-    - The tutorial app shows two people editing one space
+    - Share the identity with `Identity.share` and join from the phone with `Identity.join`
+    - List the devices with the `Identity.devices` stream, with each device's kind and presence
+    - The phone shows Alice's name, spaces and contacts
+    - In Keyhive terms: the phone is a new member of the identity's group
 ```
 ```mdl
 page halo-recover-identity: Recover an identity
-  Set up a recovery credential and get the identity back on a new device.
+  Make a recovery code, and get Alice's identity back on a new laptop.
   section: HALO
   route: /docs/halo/learn/recover-identity/
   group: Learning path
   template: tutorial
   status: spike
   covers:
-    - Create a recovery credential with `Identity.createRecoveryCredential`, and the kinds there are
-    - Recover on a fresh device with `Identity.recover`
-    - Revoke a credential with `Identity.revokeRecoveryCredential`
-    - The tutorial app, back on a new device with its spaces
+    - Create a recovery code with `Identity.createRecoveryCredential`
+    - Recover on a new device with `Identity.recover`, which brings back the name, spaces and contacts [D-172]
+    - Revoke the code with `Identity.revokeRecoveryCredential`
+    - In Keyhive terms: the recovery key is a member of the identity's group
 ```
 
 ### Core concepts
 
+Four pages, in this order, with Keyhive inside each and no page of its own [D-163] [D-164].
+
 ```mdl
 page halo-identities-devices: Identities and devices
-  An identity is a key pair; devices are the keys that act for it.
+  An identity is a Keyhive group named by a DID; its devices are its members.
   section: HALO
   route: /docs/halo/concepts/identities-devices/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - An identity is a key pair, named by a DID, with a profile
-    - Each device has its own key, authorized by the identity, with a kind and presence
-    - In Keyhive, an identity is a group whose members are its devices
-    - The personal space every identity has
-    - Limits: what happens when every device is lost and no recovery credential exists
+    - An identity is a Keyhive group named by a DID, with a profile
+    - Each device is a member key, added by a delegation and removed by a revocation, with a kind and presence
+    - The personal space every identity has, and `Identity.personalSpaceId`
+    - Limits: when every device is lost and no recovery credential exists
 ```
 ```mdl
 page halo-spaces-membership: Spaces and membership
@@ -856,10 +900,11 @@ page halo-spaces-membership: Spaces and membership
   template: concept
   status: spike
   covers:
-    - Members and their access levels: pull, read, edit and admin
+    - Access levels pull, read, edit and admin, each including the ones before it
     - The membership policy: invite or locked
-    - How peers check a member's access without a server: membership is a Keyhive group of signed delegations that converges
-    - Encryption: Keyhive's group key, which `pull` members relay without reading and which changes with membership
+    - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
+    - The group key, which changes with membership and which pull members relay without reading
+    - EDGE as a pull member, and the explicit read a plaintext service such as AI or search needs
     - Links to ECHO's Spaces and databases for data and replication
 ```
 ```mdl
@@ -873,7 +918,9 @@ page halo-invitations: Invitations
   covers:
     - The two kinds, device and space, and the three types, interactive, delegated and multiuse
     - The auth methods: none, shared secret and known public key
-    - The invitation flow, step by step, with its events
+    - The invitation flow, step by step, with its events [D-165]
+    - Admission: a contact-card exchange and a delegation
+    - Delegated invitations with the host offline: prekeys, and EDGE holding the signed operations until the guest connects
     - Limits: expiry, cancellation and a code that fails to authenticate
 ```
 ```mdl
@@ -886,51 +933,70 @@ page halo-recovery-credentials: Recovery and credentials
   status: spike
   covers:
     - Recovery kinds: passkey, recovery code and OAuth
+    - The recovery key is a member of the identity's group
     - The recovery challenge, and what a recovered identity gets back
-    - Credentials an identity holds, and service access and API tokens
+    - The credentials stream, service access and API tokens
     - Limits: what a lost recovery credential means
 ```
 
 ### Guides
 
+Passkey recovery, then React [D-167].
+
 ```mdl
-page halo-react: React
-  Read the identity, devices and members from React components.
+page halo-guide-passkey-recovery: Passkey recovery
+  Register a passkey as a recovery credential and recover with it.
   section: HALO
-  route: /docs/halo/react/
+  route: /docs/halo/guides/passkey-recovery/
   group: Guides
   template: tutorial
   status: spike
   covers:
-    - Read the current identity with `useIdentity`
-    - List the identity's devices and a space's members
-    - Show an invitation code and accept one in a component
+    - Create the passkey with WebAuthn in the app, since `@dxos/halo` leaves the ceremony to the caller
+    - Register it with `Identity.createRecoveryCredential({ externalKey })`
+    - Recover: `Identity.requestRecoveryChallenge`, sign the challenge with the passkey, then `Identity.recover`
+    - Revoke it with `Identity.revokeRecoveryCredential`
+```
+```mdl
+page halo-react: React
+  Read the identity, devices, spaces and members from React components.
+  section: HALO
+  route: /docs/halo/guides/react/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Set up `HaloProvider` from `@dxos/halo-react`
+    - Read the identity, devices and credentials with `useIdentity`, `useDevices` and `useCredentials`
+    - Read spaces and members with `useSpaces`, `useSpace` and `useMembers`
+    - Drive invitations with `useSpaceInvitations`, `useHaloInvitations` and `useInvitationFlow`
 ```
 
 ### API
 
-One page per `@dxos/halo` namespace.
+One page per `@dxos/halo` namespace, at `/docs/halo/api/<namespace>/`, each ending with the errors it fails with [D-166].
 
 ```mdl
 page halo-guide-identity: Identity
   Create, follow, recover and share an identity.
   section: HALO
-  route: /docs/halo/guides/identity/
+  route: /docs/halo/api/identity/
   group: API
   template: namespace
   status: spike
   covers:
-    - Get the `Identity.Service` and read the identity once or as a stream
-    - Create an identity and update its profile
+    - Get the `Identity.Service` with `layerClient`, and read the identity once, as a stream or as an atom
+    - Create an identity, update its profile, and get its personal space id
     - List devices, share the identity and join from a device
-    - Create, revoke and use recovery credentials
-    - Grant service access and create API tokens
+    - Create, revoke and use recovery credentials, and request a recovery challenge
+    - Read credentials, grant service access, create API tokens and get the EDGE identity
+    - Errors: IdentityError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
 ```
 ```mdl
 page halo-guide-invitation: Invitation
   Drive an invitation flow from either side.
   section: HALO
-  route: /docs/halo/guides/invitation/
+  route: /docs/halo/api/invitation/
   group: API
   template: namespace
   status: spike
@@ -938,22 +1004,24 @@ page halo-guide-invitation: Invitation
     - The `Invitation.Flow` that `Identity.share`, `Identity.join`, `Space.share` and `Space.join` return
     - Read the code, authenticate with it and cancel a flow
     - Follow a flow with `Invitation.events`
-    - Share options: kind, auth method and type
+    - Share options: auth method, type and target
+    - Errors: InvitationError
 ```
 ```mdl
 page halo-guide-space: Space
   Create spaces and manage their members.
   section: HALO
-  route: /docs/halo/guides/space/
+  route: /docs/halo/api/space/
   group: API
   template: namespace
   status: spike
   covers:
     - Get the `Space.Service`, list spaces and get one by id
     - Create a space and wait until it is ready
-    - List members, change a role and remove a member
+    - List members, change a member's access and remove a member
     - Share and join a space
     - Export and import a space archive, and set EDGE replication
+    - Errors: SpaceError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
 ```
 
 ### Resources
@@ -978,7 +1046,8 @@ page halo-glossary: Glossary
   template: reference
   status: spike
   covers:
-    - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, role and space key
+    - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, access and space key
+    - Contact card, delegation, revocation, prekey, access level and group key
 ```
 ```mdl
 page halo-llms-txt: llms.txt
@@ -3464,6 +3533,72 @@ decision D-161: Concurrency and conflicts becomes Changes and branches at `/docs
   by: user:wittjosiah
   affects: [changes, conflicts]
   why: Merging, history and branches are one model: changes on a CRDT document.
+
+decision D-162: HALO's pages teach `@dxos/halo` in Effect, with no promise form, and run it with `Effect.runPromise`. ECHO's promise-only rule [D-158] does not apply to HALO.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-guide-identity, halo-guide-invitation, halo-guide-space, halo-guide-passkey-recovery]
+  why: `@dxos/halo` is Effect-only; a promise wrapper the package does not ship would teach an API that does not exist.
+
+decision D-163: HALO describes Keyhive in the present tense, inside each concept page, with no Keyhive page of its own. Code stays agnostic of what runs underneath.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-welcome, halo-identities-devices, halo-spaces-membership, halo-invitations, halo-recovery-credentials]
+  why: Keyhive is the model the API is shaped around; the docs describe the model, and the code does not change when the implementation does.
+
+decision D-164: HALO's core concepts are Identities and devices, Spaces and membership, Invitations, and Recovery and credentials, in that order.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-identities-devices, halo-spaces-membership, halo-invitations, halo-recovery-credentials]
+  why: Each page builds on the one before: a device belongs to an identity, a member to a space, an invitation adds either, and recovery restores the first.
+
+decision D-165: HALO's Invitations page owns the invitation handshake that ECHO's Spaces and databases leaves out [D-156]. Admission is a contact-card exchange and a delegation.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-invitations]
+  why: One page explains the handshake, and ECHO links to it.
+
+decision D-166: HALO's API pages move to `/docs/halo/api/<namespace>/`, and `/docs/halo/guides/<namespace>/` redirects, as ECHO's did [D-157]. Each page ends with an Errors section naming the classes from `@dxos/halo`'s `errors.ts`; there is no errors page.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-guide-identity, halo-guide-invitation, halo-guide-space]
+  why: API pages are reference and get their own route; a reader handling a failure looks on the page of the call that failed.
+
+decision D-167: HALO's Guides are Passkey recovery and React, in that order. React moves to `/docs/halo/guides/react/` and `/docs/halo/react/` redirects. Agents and API tokens stays later.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-guide-passkey-recovery, halo-react]
+  why: These are the guides the docs can back with tested code today, at the route ECHO and PLEX use for theirs.
+
+decision D-168: HALO's learning path is planned on its own, apart from the concepts, API and guides.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-contact-book]
+  why: The path is an app with its own design questions.
+
+decision D-169: HALO's learning path builds its own app, a contact book, over seven pages: The contact book, Your name, Your spaces, Invite people, Your contacts, Add a device and Recover an identity. It has no ECHO types and does not continue ECHO's tutorial app; ECHO's Sharing a space stays. The four earlier pages are replaced, and `/docs/halo/learn/create-identity/` and `/docs/halo/learn/invite-member/` redirect to Your name and Invite people.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-contact-book, halo-your-name, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity, halo-welcome]
+  why: An app about identity teaches HALO without the reader carrying ECHO's app along.
+
+decision D-170: A contact is anyone the reader shares a space with: the members of every space, merged by DID, each with the spaces they share. There is no way to add a person outside a space.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-contact-book, halo-your-contacts]
+  why: Contacts then come from HALO's own membership, with no list of their own to keep.
+
+decision D-171: HALO's path is built as ECHO's is [D-137] [D-138] [D-140]: the embeds run in-memory clients in device frames; the StackBlitz projects are real clients on EDGE with the browser's private file system; the starter replaces each quoted region with `todo()`. Each page's code is one module of the app, and pages quote only modules the app runs. The app provides `Identity.Service` and `Space.Service` with `layerClient(client)` from `@dxos/halo-adapter-client`.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-contact-book, halo-your-name, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity]
+  why: The reader gets the same live, follow-along path in both sections.
+
+decision D-172: Recover an identity's embed creates and revokes recovery codes live, on in-memory clients. `Identity.recover` goes through EDGE, which the embeds have no route to, so the step that recovers on a new device runs only in the StackBlitz project. HALO refuses to revoke the last recovery credential, so the page makes a second code before it revokes the first.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-recover-identity]
+  why: The embed shows what it can run; the reader runs the EDGE step against the real network.
 
 decision D-200: PLEX's guides run in this order: Effect in plugins, Testing, Debugging, App capabilities, Settings and state, App Graph, React, Using ECHO in a plugin. Effect comes first because every module body and handler is an Effect.
   date: 2026-11-11
