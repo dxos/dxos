@@ -2,6 +2,9 @@
 // Copyright 2021 DXOS.org
 //
 
+// The protocols clients and EDGE share: RPC bridges, storage and archives, and the function, plugin, process and
+// feed protocols.
+
 export * from './automerge.ts';
 export * from './edge/index.ts';
 export * from './effect-runtime.ts';
