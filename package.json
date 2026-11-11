@@ -1,0 +1,39 @@
+{
+  "name": "echo-tutorial-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "2.11.0",
+    "@dxos/async": "https://pkg.pr.new/dxos/dxos/@dxos/async@6bad7b6",
+    "@dxos/client": "https://pkg.pr.new/dxos/dxos/@dxos/client@6bad7b6",
+    "@dxos/echo": "https://pkg.pr.new/dxos/dxos/@dxos/echo@6bad7b6",
+    "@dxos/echo-react": "https://pkg.pr.new/dxos/dxos/@dxos/echo-react@6bad7b6",
+    "@dxos/graph": "https://pkg.pr.new/dxos/dxos/@dxos/graph@6bad7b6",
+    "@dxos/invariant": "https://pkg.pr.new/dxos/dxos/@dxos/invariant@6bad7b6",
+    "@dxos/keys": "https://pkg.pr.new/dxos/dxos/@dxos/keys@6bad7b6",
+    "@dxos/node-std": "https://pkg.pr.new/dxos/dxos/@dxos/node-std@6bad7b6",
+    "@dxos/protocols": "https://pkg.pr.new/dxos/dxos/@dxos/protocols@6bad7b6",
+    "@dxos/react-client": "https://pkg.pr.new/dxos/dxos/@dxos/react-client@6bad7b6",
+    "@dxos/react-ui": "https://pkg.pr.new/dxos/dxos/@dxos/react-ui@6bad7b6",
+    "@dxos/react-ui-form": "https://pkg.pr.new/dxos/dxos/@dxos/react-ui-form@6bad7b6",
+    "@dxos/react-ui-graph": "https://pkg.pr.new/dxos/dxos/@dxos/react-ui-graph@6bad7b6",
+    "@dxos/react-ui-list": "https://pkg.pr.new/dxos/dxos/@dxos/react-ui-list@6bad7b6",
+    "@dxos/react-ui-table": "https://pkg.pr.new/dxos/dxos/@dxos/react-ui-table@6bad7b6",
+    "@dxos/ui-theme": "https://pkg.pr.new/dxos/dxos/@dxos/ui-theme@6bad7b6",
+    "effect": "4.0.4",
+    "react": "~19.3.1",
+    "react-dom": "~19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^5.9.0",
+    "vite": "^8.3.7",
+    "vite-plugin-wasm": "^3.6.0",
+    "@dxos/vite-plugin-icons": "https://pkg.pr.new/dxos/dxos/@dxos/vite-plugin-icons@6bad7b6",
+    "@phosphor-icons/core": "^2.1.1"
+  }
+}
