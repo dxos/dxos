@@ -296,3 +296,54 @@ sub-agent to the two it reaches.
 
 Did not: the reader links draw solid rather than dashed (above); the accent on the delegation links reaches their
 arrowheads but not their strokes; and the deck's exact blue becomes the theme's.
+
+## 10. The deck's theme, in both modes
+
+A canvas already has a first-class theme: `Theme = { id, name, styleSet, background, mode? }`, resolved through a
+registry (`react-ui-canvas` `model/style-set.ts`). The deck's look is in there — `deck.css` calls it "the Studio
+soft theme (`neuTokens`)", and the canvas's `neu` style set on the `neu` background is the same thing: every shape
+is the ground, raised out of it by dual shadows, with the hue only an accent.
+
+So the studio canvases take it as settings rather than as CSS:
+
+```ts
+export const STUDIO_CANVAS = { styleSet: 'neu', background: 'neu' } as const;
+```
+
+**With no `theme` id, so the canvas follows the app's mode.** The two built-in Neu themes each pin one
+(`neu-light`, `neu-dark`), which is right for a drawing that must look the same in a light and a dark app, and
+wrong for one that should follow it. Overriding `styleSet` and `background` without naming a theme is how a drawing
+gets the Neu look _and_ the app's mode, and it needs no addition to the registry.
+
+### The card kinds
+
+A style set draws the canvas's own shapes; a contributed kind draws its own DOM, so the deck's card had to carry
+the same tokens. [`theme.css`](../src/testing/studio/theme.css) is `deck.css`'s token block, with every value a
+`light-dark()` pair:
+
+```css
+--sd-panel: light-dark(hsl(220 14% 93.5%), hsl(220 10% 17.5%));
+--sd-accent: light-dark(#2d6fff, #06c5fd);
+```
+
+`light-dark()` resolves against the `color-scheme` of the element that _draws_ it, not of the element that declares
+the variable. A canvas whose theme pins a mode sets `color-scheme` on its own container, so a card inside a
+`neu-dark` canvas draws dark while the app around it is light — which is what makes a side-by-side possible at all.
+Keying off `:root.dark` instead would have given two identical copies.
+
+Measured in the browser, one light and one dark canvas on the same page:
+
+|                                  | light                | dark              |
+| -------------------------------- | -------------------- | ----------------- |
+| `color-scheme` on the scene view | `light`              | `dark`            |
+| card background                  | `rgb(236, 238, 241)` | `rgb(40, 43, 49)` |
+| a marked feed block              | `#2d6fff`            | `#06c5fd`         |
+
+Those are `deck.css`'s own values in both columns.
+
+### Side by side
+
+[`StudioThemes.stories.tsx`](../src/containers/CanvasArticle/StudioThemes.stories.tsx) draws each slide twice, as
+two drawings in one space whose canvases pin `neu-light` and `neu-dark`. `ModuleLayout` is `ModuleSpec[][]` with the
+outer array as columns, so returning one column per drawing from `onInit` puts them beside each other. The play
+function asserts both views and their two colour schemes, so a regression that collapses them to one mode fails.

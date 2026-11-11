@@ -29,10 +29,10 @@ import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentsSource from '../../testing/studio/agents.diagram?raw';
 import agentsModel from '../../testing/studio/agents.json?raw';
-import { ACCENT, feedCardSpec } from '../../testing/studio/FeedCard.tsx';
+import { feedCardSpec } from '../../testing/studio/FeedCard.tsx';
 import generatorParams from '../../testing/studio/space-graph/params.schema.json?raw';
 import generatorSource from '../../testing/studio/space-graph/space-graph.generator.ts?raw';
-import { parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
+import { STUDIO_CANVAS, parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
 
 /** A plugin contributing the feed card, the way a real one contributes a kind. */
 const FeedCardPlugin = Plugin.define(
@@ -81,6 +81,7 @@ const decorators = ({ withGenerator = true, plugins = [FeedCardPlugin()] }: Opti
             ? { 'space-graph': { reference: Generator.referenceOf(generator), params: SPACE_PARAMS } }
             : {},
         }),
+        STUDIO_CANVAS,
       );
       const drawing = space.db.add(Drawing.make({ name: model.title, canvas }));
       await space.db.flush();
@@ -115,8 +116,8 @@ export const Default: Story = {
     await expect(marked.length).toBe(
       Object.values(model.nodes).reduce((total, card) => total + Object.keys(card.feed?.marks ?? {}).length, 0),
     );
+    // The deck's accent, from the theme tokens rather than a colour named in the view.
     await expect(getComputedStyle(marked[0]).backgroundColor).toBe('rgb(45, 111, 255)');
-    await expect(ACCENT).toBe('#2d6fff');
   },
 };
 

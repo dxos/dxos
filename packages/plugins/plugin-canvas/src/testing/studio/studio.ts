@@ -499,6 +499,13 @@ const placeGenerators = (content: ContentMap, model: StudioModel, generators: Ge
 /** A `Generator` object in the space, by the component kind it draws. */
 export type Generators = Record<string, { reference: string; params?: Record<string, unknown> }>;
 
+/**
+ * The canvas settings a deck slide wants: the Neu style set on the Neu ground, which is the look `deck.css` calls
+ * the "Studio soft theme". No `theme` id, so the canvas follows the app's mode; a story pins one with `theme`
+ * (`neu-light` / `neu-dark`) when it wants a drawing in a mode of its own.
+ */
+export const STUDIO_CANVAS = { styleSet: 'neu', background: 'neu' } as const;
+
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
 export type StudioReport = { problems: number; cards: number; routed: number; generators: number };
 

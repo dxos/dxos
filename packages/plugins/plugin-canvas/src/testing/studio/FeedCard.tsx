@@ -12,16 +12,24 @@
 // the page.
 //
 
+import './theme.css';
+
 import * as Schema from 'effect/Schema';
-import React from 'react';
+import React, { type CSSProperties } from 'react';
 
 import { type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
-/** The deck's accent, and the ink outline its agent cards take. */
-export const ACCENT = '#2d6fff';
-export const INK = '#1e2430';
+/**
+ * A tone as a CSS value. The deck's own names resolve to theme tokens (`theme.css`), so they follow the mode;
+ * anything else is taken as a colour of its own, which is how a `var(--t-trip)` from a sidecar still works.
+ */
+/** A style that also sets custom properties, which `CSSProperties` alone does not allow. */
+export type Styled = CSSProperties & Record<`--${string}`, string>;
+
+export const toneValue = (tone: string | undefined): string | undefined =>
+  tone === undefined ? undefined : tone === 'accent' ? 'var(--sd-accent)' : tone === 'ink' ? 'var(--sd-fg)' : tone;
 
 /** A feed block that is marked, by index, with the tone it takes; the deck keys these as strings, as JSON does. */
 const Marks = Schema.Record(Schema.String, Schema.String);
@@ -54,31 +62,22 @@ type FeedCardFields = Schema.Struct.Type<typeof feedCardFields>;
 const isFeedCard = (node: NodeViewProps['node']): node is NodeViewProps['node'] & FeedCardFields =>
   node.type === 'feed-card';
 
-/** The tone a mark or an outline names; anything else is taken as a colour of its own. */
-const toneColor = (tone: string | undefined): string | undefined =>
-  tone === undefined ? undefined : tone === 'accent' ? ACCENT : tone === 'ink' ? INK : tone;
-
 const FeedStrip = ({ n, label, marks }: { n: number; label?: string; marks?: Record<string, string> }) => (
   <div className='flex items-center shrink-0' style={{ gap: 5 }} data-testid='feed-strip'>
     {label && (
-      <span className='font-mono text-description shrink-0' style={{ fontSize: 12, marginInlineEnd: 2 }}>
+      <span className='studio-card-label font-mono shrink-0' style={{ fontSize: 12, marginInlineEnd: 2 }}>
         {label}
       </span>
     )}
     {Array.from({ length: n }, (_, index) => {
-      const mark = toneColor(marks?.[String(index)]);
+      const mark = toneValue(marks?.[String(index)]);
+      const style: Styled = { width: 17, height: 17, ...(mark ? { '--sd-mark': mark } : {}) };
       return (
         <i
           key={index}
           data-marked={mark ? true : undefined}
-          className='block shrink-0 rounded-[3px]'
-          // An unmarked block is the deck's inset well: a shade of the surface rather than a colour of its own.
-          style={{
-            width: 17,
-            height: 17,
-            background: mark ?? 'rgb(0 0 0 / 0.07)',
-            ...(mark ? {} : { boxShadow: 'inset 0 1px 2px rgb(0 0 0 / 0.1)' }),
-          }}
+          className='studio-feed-block block shrink-0 rounded-[3px]'
+          style={{ width: 17, height: 17, ...(mark ? { '--sd-mark': mark } : ({} as Styled)) } satisfies Styled}
         />
       );
     })}
@@ -89,35 +88,31 @@ export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
   if (!isFeedCard(node)) {
     return null;
   }
-  const outline = toneColor(node.tone);
+  const tone = toneValue(node.tone);
+  const style: Styled = { padding: '14px 18px', gap: 10, ...(tone ? { '--sd-tone': tone } : {}) };
   return (
     <div
-      className='dx-cover flex flex-col rounded-xl bg-baseSurface overflow-hidden'
+      className='studio-card dx-cover flex flex-col rounded-xl overflow-hidden'
       data-testid='feed-card-node'
-      style={{
-        padding: '14px 18px',
-        gap: 10,
-        boxShadow: outline
-          ? `0 1px 2px rgb(0 0 0 / 0.06), 0 6px 16px rgb(0 0 0 / 0.08), inset 0 0 0 2px ${outline}`
-          : '0 1px 2px rgb(0 0 0 / 0.06), 0 6px 16px rgb(0 0 0 / 0.08)',
-      }}
+      data-tone={tone ? true : undefined}
+      style={style}
     >
       <div className='flex items-center shrink-0' style={{ gap: 9 }}>
-        <Icon.Icon icon={`ph--${node.icon ?? 'square'}--regular`} size='lg' classNames='shrink-0' />
+        <Icon.Icon icon={`ph--${node.icon ?? 'square'}--regular`} size='lg' classNames='studio-card-icon shrink-0' />
         <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate text-[23px] leading-none'>
           {node.label}
         </TextPart>
       </div>
       {node.feed ? <FeedStrip n={node.feed} label={node.feedLabel} marks={node.marks} /> : null}
       {node.body ? (
-        <div className='text-baseText' style={{ fontSize: 15, lineHeight: 1.3 }}>
+        <div className='studio-card-body' style={{ fontSize: 15, lineHeight: 1.3 }}>
           {node.body}
         </div>
       ) : null}
       {node.footer ? (
         <div
-          className='mt-auto border-bs border-separator font-mono text-description'
-          style={{ paddingBlockStart: 10, fontSize: 14 }}
+          className='studio-card-footer mt-auto shrink-0 font-mono truncate'
+          style={{ paddingBlockStart: 8, fontSize: 13 }}
         >
           {node.footer}
         </div>
