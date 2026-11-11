@@ -40,6 +40,7 @@ export class EdgeCallFailedError extends BaseError.extend('EdgeCallFailedError',
     });
   }
 
+  /** A call that failed before a response could be read, such as a network error: retryable, with no `status`. */
   public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
     return new EdgeCallFailedError({
       message: 'Error processing request.',
