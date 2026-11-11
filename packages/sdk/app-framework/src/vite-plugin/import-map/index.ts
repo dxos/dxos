@@ -19,12 +19,24 @@ const require = nodeCreateRequire(import.meta.url);
 //
 
 /** Whether an ES module's source declares a default export, outside its comments. */
-const hasDefaultExport = (file: string): boolean => {
+export const hasDefaultExport = (file: string): boolean => {
   try {
     const code = readFileSync(file, 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/^\s*\/\/.*$/gm, '');
-    return /^\s*export\s+default\b|^\s*export\s*\{[^}]*\bdefault\b[^}]*\}/m.test(code);
+    if (/^\s*export\s+default\b/m.test(code)) {
+      return true;
+    }
+    // In `export { a, b as default }` the exported name is the one after `as`, so `default as x` does not count.
+    return [...code.matchAll(/^\s*export\s*\{([^}]*)\}/gm)].some(([, specifiers]) =>
+      specifiers.split(',').some(
+        (specifier) =>
+          specifier
+            .trim()
+            .split(/\s+as\s+/)
+            .at(-1) === 'default',
+      ),
+    );
   } catch {
     return false;
   }
