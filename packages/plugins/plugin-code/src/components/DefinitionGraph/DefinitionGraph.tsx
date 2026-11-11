@@ -33,7 +33,7 @@ import {
 } from '../SpecModel/index.ts';
 
 /** QA blocks name most of the design, so they start hidden to keep the design legible. */
-const DEFAULT_GROUPS: Record<KindGroup, boolean> = { concepts: true, requirements: true, qa: false };
+const DEFAULT_GROUPS: Record<KindGroup, boolean> = { concepts: true, requirements: true, qa: false, other: true };
 
 /** Short cards: a definition shows its kind, id and title, and its dependencies are the arrows. */
 const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 64, gutterY: 64 };
@@ -167,7 +167,13 @@ const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange, changes 
         </Layout.Flex>
       )}
       {KIND_GROUPS.map((group) => (
-        <Layout.Flex key={group} wrap gap='xs' classNames='items-center'>
+        <Layout.Flex
+          key={group}
+          wrap
+          gap='xs'
+          classNames='items-center'
+          data-testid={`definition-graph.group-${group}.kinds`}
+        >
           <Input.Switch
             checked={groups[group]}
             onCheckedChange={({ checked }) => onGroupChange(group, checked)}

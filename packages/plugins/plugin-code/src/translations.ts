@@ -135,6 +135,7 @@ export const translations = [
         'definition-graph.group-concepts.label': 'Concepts',
         'definition-graph.group-requirements.label': 'Features & requirements',
         'definition-graph.group-qa.label': 'Scenarios & tests',
+        'definition-graph.group-other.label': 'Other',
         'definition-graph.change.added.label': 'New',
         'definition-graph.change.changed.label': 'Changed',
         'definition-graph.change.removed.label': 'Removed',

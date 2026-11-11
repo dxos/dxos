@@ -76,3 +76,55 @@ export const Diff: Story = {
 export const DiffRemoved: Story = {
   args: { content: CODE_BASE_SPEC, base: CODE_SPEC },
 };
+
+/** One block of each group: a question sits with the features, and a kind the graph does not know goes under Other. */
+const GROUPS_SPEC = [
+  '---',
+  'id: org.dxos.example.groups',
+  'name: Groups',
+  '---',
+  '',
+  '## Types',
+  '',
+  'FENCEmdl',
+  'type Item',
+  '  desc: A thing the example tracks.',
+  'FENCE',
+  '',
+  '## Features',
+  '',
+  'FENCEmdl',
+  'feat F-1: Tracking',
+  '',
+  '  req F-1.1:',
+  '    when: an item is added',
+  '    then: it is listed',
+  'FENCE',
+  '',
+  '## Rules',
+  '',
+  'FENCEmdl',
+  'rule R-1: Items are never deleted, only archived.',
+  'FENCE',
+  '',
+  '## Changelog',
+  '',
+  'FENCEmdl',
+  'question Q-1: Should archived items be listed?',
+  '  date: 2026-11-11',
+  'FENCE',
+  '',
+]
+  .join('\n')
+  .replaceAll('FENCE', '```');
+
+export const Groups: Story = {
+  args: { content: GROUPS_SPEC, defaultGroups: { qa: true } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = (name: string) => within(canvas.getByTestId(`definition-graph.group-${name}.kinds`));
+    await waitFor(() => expect(group('requirements').getByText('question')).toBeInTheDocument(), TIMEOUT);
+    await expect(group('concepts').queryByText('question')).toBeNull();
+    await expect(group('other').getByText('rule')).toBeInTheDocument();
+  },
+};
