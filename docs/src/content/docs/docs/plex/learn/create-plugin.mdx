@@ -15,7 +15,7 @@ URL and a visit count. A **Record visit** action on the bookmark's toolbar adds 
 run the same action when asked. A **Bookmarks** section in the navigation tree lists them under each space.
 
 A plugin is a set of modules. Each module activates on an event and contributes capabilities, which are typed values
-that other parts of the app look up. [Anatomy of a plugin](/docs/app-framework/introduction/) explains how they fit. In this
+that other parts of the app look up. [Anatomy of a plugin](/docs/plex/introduction/) explains how they fit. In this
 tutorial the whole plugin is defined in one file, `dx.config.ts`, and each module's code lives in its own file that loads
 only when the module activates.
 
@@ -23,7 +23,7 @@ only when the module activates.
 
 1. **Create the package.** Make a directory for the plugin with a `package.json` and a `vite.config.ts`. The package
    pins the `@dxos/*` packages to the version of Composer you load the plugin into.
-   [Publishing a plugin](/docs/app-framework/publishing-plugins/#local-development) lists the exact dependencies and the
+   [Publishing a plugin](/docs/plex/publishing-plugins/#local-development) lists the exact dependencies and the
    `composerPlugin` Vite plugin that builds the manifest.
 
 2. **Name the plugin.** The plugin's key is a reverse-domain name that no other plugin uses. Its last segment must be

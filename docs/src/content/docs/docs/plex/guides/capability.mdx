@@ -44,13 +44,13 @@ A module that lists a capability in `requires` activates only after it is contri
 
 | Capability | What a plugin does with it |
 | --- | --- |
-| `ReactSurface` | Contributes surface components. See [Surface](/docs/app-framework/guides/surface/). |
-| `OperationHandler` | Contributes operation handlers. See [Operation](/docs/app-framework/guides/operation/). |
+| `ReactSurface` | Contributes surface components. See [Surface](/docs/plex/guides/surface/). |
+| `OperationHandler` | Contributes operation handlers. See [Operation](/docs/plex/guides/operation/). |
 | `OperationInvoker` | Reads it to invoke operations outside a handler. |
 | `ReactContext`, `ReactRoot` | Wraps the app in a provider, or adds a root-level component. |
 | `AtomRegistry` | Reads and writes atoms outside React. |
 
-The App Toolkit's capabilities, such as settings and the app graph, are in [AppCapabilities](/docs/app-framework/guides/app-capabilities/).
+The App Toolkit's capabilities, such as settings and the app graph, are in [AppCapabilities](/docs/plex/guides/app-capabilities/).
 
 <Snippet file="app-framework-guide-capability" region="builtin" />
 
@@ -61,11 +61,11 @@ Contributions change as people turn plugins on and off. `Capability.contribution
 
 <Snippet file="app-framework-guide-capability" region="later" />
 
-In React, `useCapabilities` re-renders on each change. See [React](/docs/app-framework/guides/react/).
+In React, `useCapabilities` re-renders on each change. See [React](/docs/plex/guides/react/).
 
 ## Related
 
 | Page | What it covers |
 | --- | --- |
-| [Plugin](/docs/app-framework/guides/plugin/) | Modules and how they declare `provides` and `requires`. |
-| [AppCapabilities](/docs/app-framework/guides/app-capabilities/) | The app-level capabilities the App Toolkit defines. |
+| [Plugin](/docs/plex/guides/plugin/) | Modules and how they declare `provides` and `requires`. |
+| [AppCapabilities](/docs/plex/guides/app-capabilities/) | The app-level capabilities the App Toolkit defines. |

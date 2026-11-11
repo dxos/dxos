@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-This guide publishes a plugin to your **private registry**, so it appears in Composer's plugin registry for you on every device. It assumes you already have a working plugin. If you don't, start with the [learning path](/docs/app-framework/learn/create-plugin/) and use [`plugin-excalidraw`](https://github.com/dxos/plugin-excalidraw) as a reference implementation.
+This guide publishes a plugin to your **private registry**, so it appears in Composer's plugin registry for you on every device. It assumes you already have a working plugin. If you don't, start with the [learning path](/docs/plex/learn/create-plugin/) and use [`plugin-excalidraw`](https://github.com/dxos/plugin-excalidraw) as a reference implementation.
 
 :::note[Public registry]
 There is also an experimental public registry, where plugins are published over AT Protocol and listed to everyone. If you'd like to try it, reach out on [Discord](https://dxos.org/discord).

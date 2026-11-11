@@ -56,21 +56,29 @@ const dxosIcons = path.join(rootDir, 'packages/ui/brand/assets/icons');
 const extendedIcons = path.join(rootDir, 'packages/ui/ui-icons/assets');
 
 // https://astro.build/config
-// The PLEX section moved from `/docs/composer/`; each of its pages keeps its old URL as a redirect.
-const APP_FRAMEWORK_CONTENT = path.join(import.meta.dirname, 'src/content/docs/docs/app-framework');
-const appFrameworkRedirects = Object.fromEntries(
+// The PLEX section moved from `/docs/composer/` and then `/docs/app-framework/`; each of its pages keeps both old URLs as redirects.
+const PLEX_CONTENT = path.join(import.meta.dirname, 'src/content/docs/docs/plex');
+const plexRedirects = Object.fromEntries(
   fs
-    .readdirSync(APP_FRAMEWORK_CONTENT, { recursive: true, encoding: 'utf8' })
+    .readdirSync(PLEX_CONTENT, { recursive: true, encoding: 'utf8' })
     .filter((file) => /\.mdx?$/.test(file))
     .map((file) => file.replace(/\.mdx?$/, ''))
-    .map((slug) => [`/docs/composer/${slug}`, `/docs/app-framework/${slug}/`]),
+    .flatMap((slug) => [
+      [`/docs/composer/${slug}`, `/docs/plex/${slug}/`],
+      [`/docs/app-framework/${slug}`, `/docs/plex/${slug}/`],
+    ]),
 );
 
 const redirects: Record<string, string> = {
-  '/docs': '/docs/echo/welcome/',
-  '/docs/halo/introduction': '/docs/halo/welcome/',
+  '/docs': '/docs/echo/overview/',
+  '/docs/halo/introduction': '/docs/halo/overview/',
   '/docs/halo/typescript': '/docs/halo/guides/identity/',
-  ...appFrameworkRedirects,
+  // Section roots were `welcome` pages before they were titled Overview.
+  '/docs/echo/welcome': '/docs/echo/overview/',
+  '/docs/halo/welcome': '/docs/halo/overview/',
+  '/docs/app-framework/welcome': '/docs/plex/overview/',
+  '/docs/composer/welcome': '/docs/plex/overview/',
+  ...plexRedirects,
 };
 
 /**
@@ -177,30 +185,30 @@ export default defineConfig({
             {
               id: 'echo',
               label: 'ECHO',
-              link: '/docs/echo/welcome/',
+              link: '/docs/echo/overview/',
               icon: 'seti:db',
               items: sidebarFromSpec(specPages, 'ECHO'),
             },
             {
               id: 'halo',
               label: 'HALO',
-              link: '/docs/halo/welcome/',
+              link: '/docs/halo/overview/',
               icon: 'seti:lock',
               items: sidebarFromSpec(specPages, 'HALO'),
             },
             {
-              id: 'app-framework',
+              id: 'plex',
               label: 'PLEX',
-              link: '/docs/app-framework/welcome/',
+              link: '/docs/plex/overview/',
               items: sidebarFromSpec(specPages, 'PLEX'),
             },
           ],
           // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.
           {
             topics: {
-              'echo': ['/docs/echo/**'],
-              'app-framework': ['/docs/app-framework/**'],
-              'halo': ['/docs/halo/**'],
+              echo: ['/docs/echo/**'],
+              plex: ['/docs/plex/**'],
+              halo: ['/docs/halo/**'],
             },
           },
         ),

@@ -13,7 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 ```
 
-An operation is a named action with a typed input and output. [Operations](/docs/app-framework/concepts/operations/)
+An operation is a named action with a typed input and output. [Operations](/docs/plex/concepts/operations/)
 explains why the UI and agents share them.
 
 ## Define an operation with input and output schema
@@ -41,7 +41,7 @@ graph actions. It fails with `NoHandlerError` when no plugin handles the operati
 
 <Snippet file="app-framework-guide-operation" region="invoke" />
 
-From React, use `useOperation` or `useOperationInvoker`. See [React](/docs/app-framework/guides/react/).
+From React, use `useOperation` or `useOperationInvoker`. See [React](/docs/plex/guides/react/).
 
 ## The built-in layout operations
 
@@ -54,5 +54,5 @@ replaces the open items; `ScrollIntoView`, `UpdateSidebar`, `UpdateDialog` and `
 
 | Page | What it covers |
 | --- | --- |
-| [Add an operation](/docs/app-framework/learn/add-operation/) | An operation end to end, including the assistant. |
-| [AppGraph](/docs/app-framework/guides/app-graph/) | Attaching an operation to nodes as an action. |
+| [Add an operation](/docs/plex/learn/add-operation/) | An operation end to end, including the assistant. |
+| [AppGraph](/docs/plex/guides/app-graph/) | Attaching an operation to nodes as an action. |

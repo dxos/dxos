@@ -154,7 +154,7 @@ absolute. A page with status `later` is in scope but not yet in the sidebar. The
 page welcome: Overview
   What ECHO is and how these docs are organized.
   section: ECHO
-  route: /docs/echo/welcome/
+  route: /docs/echo/overview/
   group: Start here
   template: concept
   status: spike
@@ -647,7 +647,7 @@ membership, and each links to the other.
 page halo-welcome: Overview
   What HALO is and how its pages are organized.
   section: HALO
-  route: /docs/halo/welcome/
+  route: /docs/halo/overview/
   group: Start here
   template: concept
   status: spike
@@ -885,7 +885,7 @@ page halo-glossary: Glossary
 
 PLEX builds apps from plugins. Composer is built on it and is the app the section's examples run
 in, so each page teaches the framework first and shows the result in Composer. The routes are under
-`/docs/app-framework/`.
+`/docs/plex/`.
 
 ### Start here
 
@@ -893,7 +893,7 @@ in, so each page teaches the framework first and shows the result in Composer. T
 page app-framework-welcome: Overview
   What PLEX is, how an app is made of plugins, and Composer as the app built on it.
   section: PLEX
-  route: /docs/app-framework/welcome/
+  route: /docs/plex/overview/
   group: Start here
   template: narrative
   status: spike
@@ -909,7 +909,7 @@ page app-framework-welcome: Overview
 page app-framework-try-composer: Try Composer
   Open Composer, make a space, and share it, in one short page.
   section: PLEX
-  route: /docs/app-framework/try/
+  route: /docs/plex/try/
   group: Start here
   template: tutorial
   status: spike
@@ -925,7 +925,7 @@ page app-framework-try-composer: Try Composer
 page app-framework-build-with-assistant: Build a plugin with the assistant
   Have Composer's assistant write, build and load a plugin for you, in the desktop app.
   section: PLEX
-  route: /docs/app-framework/build-a-plugin-with-the-assistant/
+  route: /docs/plex/build-a-plugin-with-the-assistant/
   group: Start here
   template: tutorial
   status: spike
@@ -944,7 +944,7 @@ page app-framework-build-with-assistant: Build a plugin with the assistant
 page app-framework-create-plugin: Create a plugin
   Start the tutorial plugin: its metadata, its first module and its translations.
   section: PLEX
-  route: /docs/app-framework/learn/create-plugin/
+  route: /docs/plex/learn/create-plugin/
   group: Learning path
   template: tutorial
   status: spike
@@ -960,7 +960,7 @@ page app-framework-create-plugin: Create a plugin
 page app-framework-define-type: Define a type
   Give the plugin its own ECHO type and make it an object a person can create.
   section: PLEX
-  route: /docs/app-framework/learn/define-type/
+  route: /docs/plex/learn/define-type/
   group: Learning path
   template: tutorial
   status: spike
@@ -974,7 +974,7 @@ page app-framework-define-type: Define a type
 page app-framework-add-surface: Add a surface
   Render the plugin's objects by contributing a surface.
   section: PLEX
-  route: /docs/app-framework/learn/add-surface/
+  route: /docs/plex/learn/add-surface/
   group: Learning path
   template: tutorial
   status: spike
@@ -989,7 +989,7 @@ page app-framework-add-surface: Add a surface
 page app-framework-add-operation: Add an operation
   Give the plugin an action that the UI, the command palette and agents can run.
   section: PLEX
-  route: /docs/app-framework/learn/add-operation/
+  route: /docs/plex/learn/add-operation/
   group: Learning path
   template: tutorial
   status: spike
@@ -1004,7 +1004,7 @@ page app-framework-add-operation: Add an operation
 page app-framework-extend-app-graph: Extend the app graph
   Put the plugin's objects and actions into the app's navigation.
   section: PLEX
-  route: /docs/app-framework/learn/extend-app-graph/
+  route: /docs/plex/learn/extend-app-graph/
   group: Learning path
   template: tutorial
   status: spike
@@ -1019,7 +1019,7 @@ page app-framework-extend-app-graph: Extend the app graph
 page app-framework-publishing: Publishing a plugin
   Publish the finished plugin to your private registry, where Composer lists it only to you.
   section: PLEX
-  route: /docs/app-framework/publishing-plugins/
+  route: /docs/plex/publishing-plugins/
   group: Learning path
   template: tutorial
   status: spike
@@ -1038,7 +1038,7 @@ page app-framework-publishing: Publishing a plugin
 page app-framework-anatomy: Anatomy of a plugin
   Plugins, modules, capabilities and activation events, and how they fit together.
   section: PLEX
-  route: /docs/app-framework/introduction/
+  route: /docs/plex/introduction/
   group: Core concepts
   template: concept
   status: spike
@@ -1054,7 +1054,7 @@ page app-framework-anatomy: Anatomy of a plugin
 page app-framework-surfaces: Surfaces
   How the framework decides which component renders an object in a given place.
   section: PLEX
-  route: /docs/app-framework/concepts/surfaces/
+  route: /docs/plex/concepts/surfaces/
   group: Core concepts
   template: concept
   status: spike
@@ -1069,7 +1069,7 @@ page app-framework-surfaces: Surfaces
 page app-framework-app-graph: The app graph
   The graph of nodes and actions that an app's navigation and menus are built from.
   section: PLEX
-  route: /docs/app-framework/concepts/app-graph/
+  route: /docs/plex/concepts/app-graph/
   group: Core concepts
   template: concept
   status: spike
@@ -1084,7 +1084,7 @@ page app-framework-app-graph: The app graph
 page app-framework-operations: Operations
   Named, typed actions that the UI, the command palette and agents all run the same way.
   section: PLEX
-  route: /docs/app-framework/concepts/operations/
+  route: /docs/plex/concepts/operations/
   group: Core concepts
   template: concept
   status: spike
@@ -1103,7 +1103,7 @@ One page per namespace, each a readable tour with compiled examples that links i
 page app-framework-guide-plugin: Plugin
   Define a plugin and its modules.
   section: PLEX
-  route: /docs/app-framework/guides/plugin/
+  route: /docs/plex/guides/plugin/
   group: API
   template: namespace
   status: spike
@@ -1118,7 +1118,7 @@ page app-framework-guide-plugin: Plugin
 page app-framework-guide-capability: Capability
   Declare, contribute and request capabilities, including the built-in ones.
   section: PLEX
-  route: /docs/app-framework/guides/capability/
+  route: /docs/plex/guides/capability/
   group: API
   template: namespace
   status: spike
@@ -1133,7 +1133,7 @@ page app-framework-guide-capability: Capability
 page app-framework-guide-activation-event: ActivationEvent
   Declare activation events and use the built-in ones.
   section: PLEX
-  route: /docs/app-framework/guides/activation-event/
+  route: /docs/plex/guides/activation-event/
   group: API
   template: namespace
   status: spike
@@ -1147,7 +1147,7 @@ page app-framework-guide-activation-event: ActivationEvent
 page app-framework-guide-operation: Operation
   Define operations, implement their handlers and invoke them.
   section: PLEX
-  route: /docs/app-framework/guides/operation/
+  route: /docs/plex/guides/operation/
   group: API
   template: namespace
   status: spike
@@ -1162,7 +1162,7 @@ page app-framework-guide-operation: Operation
 page app-framework-guide-surface: Surface
   Contribute surfaces and render other plugins' surfaces.
   section: PLEX
-  route: /docs/app-framework/guides/surface/
+  route: /docs/plex/guides/surface/
   group: API
   template: namespace
   status: spike
@@ -1177,7 +1177,7 @@ page app-framework-guide-surface: Surface
 page app-framework-guide-app-graph: AppGraph
   Contribute nodes and actions to the app graph.
   section: PLEX
-  route: /docs/app-framework/guides/app-graph/
+  route: /docs/plex/guides/app-graph/
   group: API
   template: namespace
   status: spike
@@ -1192,7 +1192,7 @@ page app-framework-guide-app-graph: AppGraph
 page app-framework-guide-app-capabilities: AppCapabilities
   The app-level capabilities the App Toolkit defines for plugins to contribute.
   section: PLEX
-  route: /docs/app-framework/guides/app-capabilities/
+  route: /docs/plex/guides/app-capabilities/
   group: API
   template: namespace
   status: spike
@@ -1206,7 +1206,7 @@ page app-framework-guide-app-capabilities: AppCapabilities
 page app-framework-guide-react: React
   The React hooks for plugins.
   section: PLEX
-  route: /docs/app-framework/guides/react/
+  route: /docs/plex/guides/react/
   group: Guides
   template: namespace
   status: spike
@@ -1223,7 +1223,7 @@ page app-framework-guide-react: React
 page app-framework-api-reference: API reference
   Generated API reference for PLEX.
   section: PLEX
-  route: /docs/app-framework/resources/api-reference/
+  route: /docs/plex/resources/api-reference/
   group: Resources
   template: reference
   status: spike
@@ -1239,7 +1239,7 @@ These pages are in scope but not in the sidebar yet.
 page app-framework-user-guide: Using Composer
   Spaces and sharing, the assistant, adding plugins, the quick palette, settings and editing.
   section: PLEX
-  route: /docs/app-framework/user-guide/
+  route: /docs/plex/user-guide/
   group: Start here
   template: concept
   status: later
@@ -1254,7 +1254,7 @@ page app-framework-user-guide: Using Composer
 page app-framework-cli: The dx CLI
   The command-line tool for profiles, functions and publishing.
   section: PLEX
-  route: /docs/app-framework/tools/cli/
+  route: /docs/plex/tools/cli/
   group: Guides
   template: namespace
   status: later
@@ -1268,7 +1268,7 @@ page app-framework-cli: The dx CLI
 page app-framework-manifest: The plugin manifest
   `dx.config.ts`, capabilities and activation events, as reference.
   section: PLEX
-  route: /docs/app-framework/reference/manifest/
+  route: /docs/plex/reference/manifest/
   group: Resources
   template: reference
   status: later
@@ -1281,7 +1281,7 @@ page app-framework-manifest: The plugin manifest
 page app-framework-glossary: Glossary
   Every Composer and PLEX term, defined once.
   section: PLEX
-  route: /docs/app-framework/resources/glossary/
+  route: /docs/plex/resources/glossary/
   group: Resources
   template: reference
   status: later
@@ -2713,6 +2713,13 @@ decision D-113: The examples page is titled Examples.
   date: 2026-11-10
   by: user:richburdon
   affects: [examples]
+```
+
+```mdl
+decision D-115: Each section's root page lives at `…/overview/`, and PLEX's pages live under `/docs/plex/` (`/docs/echo/overview/`, `/docs/halo/overview/`, `/docs/plex/overview/`). Each old `…/welcome/` URL redirects to its Overview, and every `/docs/app-framework/…` and `/docs/composer/…` page redirects to the same page under `/docs/plex/`. This replaces the `/welcome/` route in [D-111] and the `/docs/app-framework/` routes in [D-97]; the rest of both stands.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [welcome, halo-welcome, app-framework-welcome]
 ```
 
 ## Appendix: Extension Definitions

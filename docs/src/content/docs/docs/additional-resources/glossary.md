@@ -10,7 +10,7 @@ A running instance of DXOS such a command line program or a browser tab.
 
 There can be several clients per device. Browser tabs in the same profile and at the same domain are each a client, and they share a device.
 
-### [ECHO](/docs/echo/welcome/)
+### [ECHO](/docs/echo/overview/)
 
 Eventually Consistent Hierarchical Object Store supporting multiple concurrent writers and latent offline writers.
 
