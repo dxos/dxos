@@ -8,7 +8,7 @@
  * appending each corrected block as a message rather than waiting for playback to stop.
  *
  * - `Default` plays a hosted m4a; the play/pause + upload toolbar gates playback and capture.
- * - `Live` transcribes the file through RealtimeKit on the dev EDGE, which needs a network and an identity with an
+ * - `Live` transcribes the file through RealtimeKit on the preview EDGE, which needs a network and an identity with an
  *   account; elsewhere a scripted transcript stands in, so the pipeline and the message list still run offline.
  */
 
@@ -200,5 +200,5 @@ export const Live: Story = {
   args: {
     audioUrl: 'https://media.dxos.network/audio-london.m4a',
   },
-  parameters: { edgeUrl: 'https://dev.dxos.network/' },
+  parameters: { edgeUrl: 'https://preview.dxos.network/' },
 };

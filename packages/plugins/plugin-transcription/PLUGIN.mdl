@@ -515,9 +515,12 @@ test QA-3: Transcribe an audio file in the Transcription story
       do: Click Pause.
       expect: no further message appears
 
+```
+
+```mdl
 test QA-4: Transcribe an audio file live through RealtimeKit
   desc: |
-    QA-3 against the dev EDGE: the story's `Live` variant gives its client an EDGE, so the file's track streams to the
+    QA-3 against the preview EDGE: the story's `Live` variant gives its client an EDGE, so the file's track streams to the
     identity's one-person RealtimeKit meeting and RealtimeKit's transcript fills the list. Needs a network and an
     identity with an account.
   actors: agent
@@ -690,6 +693,14 @@ decision D-17: The Transcription story's `Live` variant sets `parameters.edgeUrl
   affects: [QA-4]
   why: No story gave its client an EDGE, so the live path the story describes could not run in storybook.
   source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-18: The Transcription story's `Live` variant and QA-4 point at the preview EDGE, which serves the released calls-service proxy, instead of dev, a shared sandbox that may run any branch. Supersedes the EDGE named in [D-17].
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-4]
+  why: The live demos are recorded against preview once dxos/edge#1387 is deployed there.
 ```
 
 ## Appendix: Extension Definitions

@@ -3,13 +3,13 @@
 //
 
 /**
- * A live call fills a meeting's transcript: the CallTranscription story joins a RealtimeKit meeting on the dev EDGE,
+ * A live call fills a meeting's transcript: the CallTranscription story joins a RealtimeKit meeting on the preview EDGE,
  * turns transcription on, and each segment RealtimeKit transcribes from the speaker's microphone lands in the
  * meeting's Transcript tab.
  *
  * @title Transcribe a live call into its meeting
  * @mdl packages/plugins/plugin-meeting/PLUGIN.mdl test QA-4
- * @app storybook-react, narrowed to plugin-meeting, on :9009, against the dev EDGE
+ * @app storybook-react, narrowed to plugin-meeting, on :9009, against the preview EDGE
  *
  *   DX_STORIES=plugins/plugin-meeting VITE_DX_DISABLE_ANIMATIONS=true moon run storybook-react:serve
  *   MEETING_TRACK=$PWD/temp/meeting-live/speaker.webm node .agents/skills/autocue/scripts/driver.mjs --port 7333 \
@@ -25,8 +25,8 @@
  *     -filter_complex "[2:a]aresample=48000,aformat=channel_layouts=mono[s];[1:a][s]concat=n=2:v=0:a=1[a]" \
  *     -map 0:v -map "[a]" -t 75 -c:v libvpx -b:v 150k -c:a libopus -b:a 64k speaker.webm
  *
- * Setup binds the story's new identity to a dev test account, because calls-service serves only identities with an
- * account; dev Hub accepts a `test+*@dxos.org` email in place of an invitation code. The WebRTC flag sends media over
+ * Setup binds the story's new identity to a test account, because calls-service serves only identities with an
+ * account; preview's Hub accepts a `test+*@dxos.org` email in place of an invitation code. The WebRTC flag sends media over
  * TCP through the proxy, for a sandbox with no UDP egress.
  */
 
@@ -36,7 +36,7 @@ const SUBTITLE = 'from plugin-meeting/PLUGIN.mdl QA-4';
 const TRACK = process.env.MEETING_TRACK ?? 'temp/meeting-live/speaker.webm';
 const LEAD_IN = 3;
 const SPEAKER = 'Alice';
-const HUB = 'https://dev.dxos.network/hub/';
+const HUB = 'https://preview.dxos.network/hub/';
 const START_CALL = 'button:has-text("Start call"):not([disabled])';
 const LEAVE_CALL = 'button:has-text("Leave call")';
 const UNMUTE = 'button[aria-label="Unmute"]';
@@ -54,7 +54,7 @@ const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${
 
 const rows = (page) => page.getByText(ROW_TIME).count();
 
-/** Binds the page's identity to a dev test account, so the calls-service proxy accepts it. */
+/** Binds the page's identity to a test account, so the calls-service proxy accepts it. */
 const bindAccount = async (page) => {
   const handle = await page.waitForFunction(() => globalThis.__DXOS__?.client?.halo.identity.get()?.did, null, {
     timeout: 60_000,

@@ -4,25 +4,25 @@
 
 /**
  * The Transcription story's `Live` variant plays an audio file and RealtimeKit transcribes it as it plays: the file's
- * track streams through the identity's one-person meeting on the dev EDGE, and each sentence RealtimeKit returns
+ * track streams through the identity's one-person meeting on the preview EDGE, and each sentence RealtimeKit returns
  * appends as a message.
  *
  * @title Transcribe an audio file live
  * @mdl packages/plugins/plugin-transcription/PLUGIN.mdl test QA-4
- * @app storybook-react, narrowed to plugin-transcription, on :9009, against the dev EDGE
+ * @app storybook-react, narrowed to plugin-transcription, on :9009, against the preview EDGE
  *
  *   DX_STORIES=plugins/plugin-transcription VITE_DX_DISABLE_ANIMATIONS=true moon run storybook-react:serve
  *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --out /tmp/demo \
  *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-transcription-stories-transcription--live&viewMode=story' \
  *     --chromium-args --autoplay-policy=no-user-gesture-required,--force-webrtc-ip-handling-policy=disable_non_proxied_udp
  *
- * Setup binds the story's new identity to a dev test account, because calls-service serves only identities with an
- * account; dev Hub accepts a `test+*@dxos.org` email in place of an invitation code. The WebRTC flag sends media over
+ * Setup binds the story's new identity to a test account, because calls-service serves only identities with an
+ * account; preview's Hub accepts a `test+*@dxos.org` email in place of an invitation code. The WebRTC flag sends media over
  * TCP through the proxy, for a sandbox with no UDP egress.
  */
 
 const SUBTITLE = 'from plugin-transcription/PLUGIN.mdl QA-4';
-const HUB = 'https://dev.dxos.network/hub/';
+const HUB = 'https://preview.dxos.network/hub/';
 const PLAY = 'button[aria-label="Play"]:not([disabled])';
 const PAUSE = 'button[aria-label="Pause"]';
 /** One rendered message per sentence; the byline names the sender. */
@@ -35,7 +35,7 @@ const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${
 
 const count = (page) => page.locator(MESSAGE).count();
 
-/** Binds the page's identity to a dev test account, so the calls-service proxy accepts it. */
+/** Binds the page's identity to a test account, so the calls-service proxy accepts it. */
 const bindAccount = async (page) => {
   const handle = await page.waitForFunction(() => globalThis.__DXOS__?.client?.halo.identity.get()?.did, null, {
     timeout: 60_000,

@@ -139,7 +139,7 @@ const meta = {
             runtime: {
               client: { edgeFeatures: { signaling: true } },
               services: {
-                edge: { url: 'https://dev.dxos.network/' },
+                edge: { url: 'https://preview.dxos.network/' },
               },
             },
           }),

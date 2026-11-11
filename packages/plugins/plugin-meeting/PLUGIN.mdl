@@ -487,16 +487,19 @@ test QA-3: A scripted source fills a meeting's transcript
       do: Click Pause script.
       expect: no further line appears
 
+```
+
+```mdl
 test QA-4: A live call's transcript fills the meeting
   desc: |
-    The call path end to end against the dev EDGE: the CallTranscription story joins a RealtimeKit meeting, turns
+    The call path end to end against the preview EDGE: the CallTranscription story joins a RealtimeKit meeting, turns
     transcription on, and RealtimeKit's transcript of the local speaker lands in the meeting's Transcript tab. Needs a
     network, a microphone and an identity with an account; QA-3 runs the same sink offline.
   actors: agent
   covers: [F-3.5, F-3.6, F-3.7]
   status: unverified
   given:
-    - storybook serves `plugins/plugin-meeting/stories/CallTranscription` in isolation mode, against the dev EDGE
+    - storybook serves `plugins/plugin-meeting/stories/CallTranscription` in isolation mode, against the preview EDGE
     - the story's identity is bound to an account
   steps:
     - name: Start the call
@@ -580,6 +583,14 @@ decision D-7: The meeting payload names the meeting by its absolute URI, which H
   affects: [HandlePayload, SetActive, QA-4]
   why: HandlePayload read the URI as a `space:object` id, so every call-state update cleared the active meeting and the sink dropped each segment; and CallExtension could start before the manager existed, which disabled the whole plugin.
   source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-8: The CallTranscription story and QA-4 run against the preview EDGE, which serves the released calls-service proxy, instead of dev, a shared sandbox that may run any branch.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-4]
+  why: The live demos are recorded against preview once dxos/edge#1387 is deployed there.
 ```
 
 ## Appendix: Extension Definitions
