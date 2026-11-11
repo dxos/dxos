@@ -77,6 +77,10 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureSessionChat> = 
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ agent: agentName, kind, key, title, model }) {
+        // In-process callers skip the schema's pattern, and a `:` in the kind would collide with another session's key.
+        if (!AgentSession.KIND_PATTERN.test(kind)) {
+          return yield* Effect.fail(new AgentSessionError({ message: `A session kind may not contain ':': ${kind}` }));
+        }
         const agent = yield* resolveAgent(agentName);
         const modelId = model === undefined ? undefined : yield* parseModel(model);
         const foreignKey = AgentSession.chatKey(kind, key);

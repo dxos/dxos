@@ -119,6 +119,10 @@ describe('EnsureSessionChat', () => {
           key: 'session',
         }).pipe(Effect.exit);
         expect(Exit.isFailure(exit)).toBe(true);
+        // The handler refuses it too, for an in-process caller whose input is not decoded against the schema.
+        const { default: ensureSessionChat } = yield* Effect.promise(() => import('./ensure-session-chat.ts'));
+        const direct = yield* ensureSessionChat.handler({ kind: 'mcp:tenant', key: 'session' }).pipe(Effect.exit);
+        expect(String(direct)).toMatch(/may not contain ':'/);
         const allowed = yield* Operation.invoke(AgentOperation.EnsureSessionChat, {
           kind: 'mcp',
           key: 'tenant:session',

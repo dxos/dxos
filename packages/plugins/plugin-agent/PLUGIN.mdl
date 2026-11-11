@@ -45,7 +45,7 @@ are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.
 ## Dependencies
 
 ```mdl
-uses org.dxos.app-framework.edge-plugins: How this plugin's operations reach EDGE through its bundle, including `ensureSessionChat`, which moved here from an EDGE-owned plugin (its D-81, D-82).
+uses org.dxos.app-framework.edge-plugins: How this plugin's operations reach EDGE through its bundle, including `ensureSessionChat`, which moved here from an EDGE-owned plugin (org.dxos.app-framework.edge-plugins#D-81, org.dxos.app-framework.edge-plugins#D-82).
 ```
 
 ## External types
@@ -1287,7 +1287,7 @@ decision D-11: `ensureSessionChat` moves into this plugin from EDGE's operation-
   date: 2026-11-11
   by: user:dmaretskyi
   affects: [ensureSessionChat]
-  why: It reaches EDGE through this plugin's bundle like the agent's other operations (org.dxos.app-framework.edge-plugins D-81, D-82). The source keeps its value `org.dxos.agent/session`, since existing session chats are keyed by it.
+  why: It reaches EDGE through this plugin's bundle like the agent's other operations (org.dxos.app-framework.edge-plugins#D-81, org.dxos.app-framework.edge-plugins#D-82). The source keeps its value `org.dxos.agent/session`, since existing session chats are keyed by it.
 ```
 
 ---
