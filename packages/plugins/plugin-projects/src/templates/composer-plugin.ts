@@ -49,7 +49,7 @@ const DXOS_PACKAGES = [
 ];
 
 /** The plugin guide, relative to the repository root. */
-export const GUIDE = 'docs/src/content/docs/docs/app-framework/publishing-plugins.md';
+export const GUIDE = 'docs/src/content/docs/docs/plex/publishing-plugins.md';
 
 /** pnpm checks `engines` against a node it cannot find under bun alone, and would skip rolldown's native binding. */
 const NPMRC = 'node-version=24.11.1\n';

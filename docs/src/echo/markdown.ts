@@ -19,6 +19,10 @@ export const toMarkdown = (title: string, description: string | undefined, body:
       return `\`\`\`ts\n${snippetSource(file, attribute(tag, 'region'))}\n\`\`\``;
     })
     .replace(/<SpecCite item="([^"]*)" \/>/g, '[$1]')
+    .replace(/<AgentPrompt\b[^>]*\/>/g, (tag) => {
+      const text = [attribute(tag, 'prefix'), attribute(tag, 'prompt')].filter(Boolean).join('\n\n');
+      return `\`\`\`text\n${text}\n\`\`\``;
+    })
     .replace(/<Anatomy[\s\S]*?\/>/g, (tag) =>
       [...tag.matchAll(/code: '([^']*)', label: '([^']*)'/g)]
         .map(([, code, label]) => `- \`${code}\`: ${label}`)

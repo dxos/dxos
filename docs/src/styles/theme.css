@@ -54,7 +54,7 @@ h1#_top {
   color: var(--c-fg);
 }
 
-.sl-markdown-content a:not(.card, .sl-link-button) {
+.sl-markdown-content a:not(.card, .sl-link-button, .not-content *) {
   color: var(--c-accent);
   text-underline-offset: 0.2em;
 }

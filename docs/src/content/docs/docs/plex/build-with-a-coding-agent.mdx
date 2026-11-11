@@ -1,0 +1,41 @@
+---
+title: Build with a coding agent
+description: Have Claude Code, Codex or Cursor build a plugin and load it into your Composer, from a prompt you can edit first.
+---
+
+import AgentPrompt from '../../../../components/AgentPrompt.astro';
+
+A coding agent can build a plugin in a folder of yours and load it into the Composer you have open, in a few minutes.
+Describe the plugin you want in the prompt below, and change the Composer address if yours is different. Then open it
+in your agent. The prompt is filled in, not sent: you pick the folder and send it.
+
+<AgentPrompt prefix="Use the composer-plugin-dev skill. If it is not installed, read https://raw.githubusercontent.com/dxos/dxos/main/tools/claude/plugins/dxos/skills/composer-plugin-dev/SKILL.md and the files it links, from the same folder, and follow it." prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team. My Composer is open at https://composer.space." />
+
+The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to load
+the plugin into your Composer. The first line of the prompt makes the agent use it, or read it from the repository if
+it is not installed.
+
+## Install the skill in Claude Code
+
+If you build plugins more than once, install the `dxos` Claude Code plugin, which carries the skill:
+
+```bash
+claude plugin marketplace add dxos/dxos
+claude plugin install dxos@dxos
+```
+
+Start a new Claude Code session after installing.
+
+## When the agent hands off
+
+The agent builds the plugin and starts a dev server for it. Then it asks you to load it:
+
+1. In Composer, open **Settings**, then **Plugins**.
+2. Click **Enable** under **Dev Server**.
+3. Allow the browser's prompt to reach devices on your local network.
+4. Work through the checklist the agent gives you, and tell it what you see.
+
+The plugin loads from the agent's dev server, so it is there only while the server runs. To keep it,
+[Publishing a plugin](/docs/plex/publishing-plugins/) puts it in your private registry.
+
+To build one yourself instead, start with [Create a plugin](/docs/plex/learn/create-plugin/).

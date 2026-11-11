@@ -299,7 +299,7 @@ Order matters: the dxos schema change must publish before edge can consume it.
    `registry-upload.workerd.test.ts` (claim, foreign-owner 403, re-publish 409, pending retry, concurrent
    upload 409, expired-lease publish rejected, yank, unscoped-token 403, API-token auth).
 5. **dxos — CLI**: `--target direct`, token auth, `yank` / `list --mine`; update
-   `docs/app-framework/publishing-plugins.md` (also fix its stale `package.*` NSIDs and `outdir` field).
+   `docs/plex/publishing-plugins.md` (also fix its stale `package.*` NSIDs and `outdir` field).
 6. **dxos — Composer**: `direct` / unverified badges and toggle in `plugin-registry`; client-side
    `manifestHash` verification in `UrlLoader.loadFromManifest`, which now has a server-computed hash to
    check against.

@@ -1,0 +1,27 @@
+---
+title: Build with a coding agent
+description: Hand the ECHO learning path to Claude Code, Codex or Cursor, with a prompt you can edit first.
+---
+
+import AgentPrompt from '../../../../components/AgentPrompt.astro';
+
+A coding agent can work through the learning path for you and build its tutorial app in a folder of yours. Edit the
+prompt below if you want something different, then open it in your agent. The prompt is filled in, not sent: you pick
+the folder and send it.
+
+<AgentPrompt prompt="Build the ECHO tutorial app in this folder by following the ECHO learning path, starting at https://dxos.org/docs/echo/learn/the-echo-object/. First read https://dxos.org/echo/llms-full.txt, which has every ECHO page in one file. Work through the learning path pages in order, and after each one, show me what changed and how to run it." />
+
+## What the agent reads
+
+`/echo/llms-full.txt` holds every ECHO page as Markdown, code samples included, so the agent has the whole section in
+one fetch. [llms.txt](/docs/echo/resources/llms-txt/) lists the other files for agents.
+
+## While it works
+
+The agent stops after each page of the learning path to show you what changed. Run the app when it says how, and check
+that it does what that page describes before you let it go on.
+
+At the end you have the app the learning path builds: organizations, the people who work at them and the events they
+attend, which a second peer can join and edit.
+
+To build it yourself instead, start with [The ECHO object](/docs/echo/learn/the-echo-object/).

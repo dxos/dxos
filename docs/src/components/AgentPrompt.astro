@@ -1,0 +1,135 @@
+---
+// An editable prompt with links that open it in a coding agent. Plain HTML and a small script, not a React
+// island, so a docs page that uses it loads no component styles.
+
+type Props = {
+  /** A fixed instruction each link puts before the reader's text, shown above the text box. */
+  prefix?: string;
+  /** The text box's starting text. */
+  prompt: string;
+};
+
+const { prefix = '', prompt } = Astro.props;
+
+/** Each agent's link prefills its prompt and does not send it. */
+const AGENTS = [
+  { id: 'claude', label: 'Open in Claude Code', base: 'claude://code/new?q=' },
+  { id: 'codex', label: 'Open in Codex', base: 'codex://new?prompt=' },
+  { id: 'cursor', label: 'Open in Cursor', base: 'cursor://anysphere.cursor-deeplink/prompt?text=' },
+] as const;
+
+const full = (text: string) => (prefix ? `${prefix}\n\n${text}` : text);
+---
+
+<div class="agent-prompt not-content" data-prefix={prefix}>
+  {
+    prefix && (
+      <p class="prefix">
+        Each button starts the prompt with: <code>{prefix}</code>
+      </p>
+    )
+  }
+  <label>
+    <span class="sr-only">Prompt</span>
+    <textarea rows="6" spellcheck="true">{prompt}</textarea>
+  </label>
+  <div class="actions">
+    {
+      AGENTS.map(({ id, label, base }) => (
+        <a class="action" data-base={base} data-agent={id} href={base + encodeURIComponent(full(prompt))}>
+          {label}
+        </a>
+      ))
+    }
+    <button class="action" type="button" data-copy>Copy prompt</button>
+  </div>
+</div>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('.agent-prompt')) {
+    const prefix = root.dataset.prefix ?? '';
+    const textarea = root.querySelector('textarea');
+    if (!textarea) {
+      continue;
+    }
+
+    const full = () => (prefix ? `${prefix}\n\n${textarea.value}` : textarea.value);
+    const update = () => {
+      for (const link of root.querySelectorAll<HTMLAnchorElement>('a[data-base]')) {
+        link.href = (link.dataset.base ?? '') + encodeURIComponent(full());
+      }
+    };
+    textarea.addEventListener('input', update);
+
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy]');
+    copy?.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(full());
+      copy.textContent = 'Copied';
+      setTimeout(() => (copy.textContent = 'Copy prompt'), 1500);
+    });
+  }
+</script>
+
+<style>
+  .agent-prompt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-block: 1.5rem;
+  }
+
+  .prefix {
+    margin: 0;
+    font-size: var(--sl-text-sm);
+    color: var(--sl-color-gray-3);
+  }
+
+  .prefix code {
+    overflow-wrap: anywhere;
+  }
+
+  textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.5rem;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-white);
+    font: inherit;
+    line-height: var(--sl-line-height);
+    resize: vertical;
+  }
+
+  textarea:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 1px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .action {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 999rem;
+    background: transparent;
+    color: var(--sl-color-white);
+    font: inherit;
+    font-size: var(--sl-text-sm);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .action:first-child {
+    border-color: var(--sl-color-text-accent);
+    background: var(--sl-color-text-accent);
+    color: var(--sl-color-black);
+  }
+
+  .action:hover {
+    border-color: var(--sl-color-text-accent);
+  }
+</style>

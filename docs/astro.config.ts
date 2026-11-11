@@ -85,6 +85,10 @@ const redirects: Record<string, string> = {
   '/docs/app-framework/try': '/docs/plex/why-plex/',
   '/docs/composer/try': '/docs/plex/why-plex/',
   '/docs/plex/try': '/docs/plex/why-plex/',
+  // Build with a coding agent took Build a plugin with the assistant's place in Start here.
+  '/docs/app-framework/build-a-plugin-with-the-assistant': '/docs/plex/build-with-a-coding-agent/',
+  '/docs/composer/build-a-plugin-with-the-assistant': '/docs/plex/build-with-a-coding-agent/',
+  '/docs/plex/build-a-plugin-with-the-assistant': '/docs/plex/build-with-a-coding-agent/',
   ...plexRedirects,
 };
 

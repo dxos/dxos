@@ -183,6 +183,21 @@ page why-echo: Why ECHO?
     - How DXOS apps differ from SaaS apps, in the comparison table moved from the old docs home
 ```
 
+```mdl
+page echo-build-with-agent: Build with a coding agent
+  Hand the ECHO learning path to Claude Code, Codex or Cursor, with a prompt you can edit first.
+  section: ECHO
+  route: /docs/echo/build-with-a-coding-agent/
+  group: Start here
+  template: tutorial
+  status: spike
+  covers:
+    - A prompt the reader can edit, prefilled to build the tutorial app by following the learning path
+    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it
+    - What the agent reads first: `/echo/llms-full.txt`, every ECHO page in one file
+    - What the reader does while the agent works, and what they should see at the end
+```
+
 ### Learning path
 
 ```mdl
@@ -944,7 +959,7 @@ page app-framework-welcome: Overview
     - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
     - What ECHO does under it: spaces, typed objects, sync between devices and people, and agents that query the same graph
     - What a reader can build: a new object type with its own view, an operation, a panel, an integration
-    - Where to go next: Why PLEX?, Build a plugin with the assistant, or the learning path
+    - Where to go next: Why PLEX?, Build with a coding agent, or the learning path
 ```
 
 ```mdl
@@ -963,20 +978,18 @@ page why-plex: Why PLEX?
 ```
 
 ```mdl
-page app-framework-build-with-assistant: Build a plugin with the assistant
-  Have Composer's assistant write, build and load a plugin for you, in the desktop app.
+page plex-build-with-agent: Build with a coding agent
+  Have Claude Code, Codex or Cursor build a plugin and load it into your Composer, from a prompt you can edit first.
   section: PLEX
-  route: /docs/plex/build-a-plugin-with-the-assistant/
+  route: /docs/plex/build-with-a-coding-agent/
   group: Start here
   template: tutorial
   status: spike
   covers:
-    - Turn on the sandbox in the desktop app
-    - Create the plugin project
-    - Describe the plugin to the assistant and let it write and build the code
-    - Load the plugin and use it
-    - What the assistant can and cannot touch on the reader's machine
-    - Clean up, and what to do when something goes wrong
+    - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser
+    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts the skill instruction before the reader's text
+    - Installing the `dxos` Claude Code plugin, which carries the `composer-plugin-dev` skill, for readers who build more than once
+    - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
 
 ### Learning path
@@ -1549,6 +1562,11 @@ feat F-6: Reading by agents
   req F-6.2:
     when: an agent fetches a written page's route with `.md` appended
     then: it receives the page as Markdown, with snippet includes replaced by their code
+
+  req F-6.4:
+    when: a reader opens a Build with a coding agent page
+    then: it shows a prompt they can edit, prefilled for that section, and buttons that open it in Claude Code,
+          Codex or Cursor, or copy it; the prompt is prefilled in the agent, not sent
 ```
 
 ```mdl
@@ -2906,6 +2924,32 @@ decision D-126: PLEX's Start here group has Why PLEX? in place of Try Composer, 
   by: user:wittjosiah
   affects: [why-plex, app-framework-glossary, app-framework-welcome]
   why: The three sections open the same way, so a reader moving between them finds the same pages in the same places.
+```
+
+```mdl
+decision D-127: ECHO and PLEX have Build with a coding agent as the third page in Start here; HALO has none yet. PLEX's replaces Build a plugin with the assistant, whose route redirects to it. The page's prompt is a text box the reader edits before opening it in Claude Code (`claude://code/new?q=`), Codex (`codex://new?prompt=`) or Cursor (`cursor://anysphere.cursor-deeplink/prompt?text=`). PLEX's prompt starts with a fixed line that tells the agent to use the `composer-plugin-dev` skill, or to read it from the repository when it is not installed, since none of the three links can install a plugin. Its default text is the eval's World Clock brief without "test it yourself": the skill's default flow ends with the reader enabling the dev server, which needs no debug port.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.4, echo-build-with-agent, plex-build-with-agent, app-framework-welcome]
+  why: The `composer-plugin-dev` eval shows the skill plus a one-line brief builds a working plugin in 5 to 7 minutes for about $0.50, and readers use more than one coding agent.
+  rejected:
+    - An install link per agent: Claude's links only prefill a prompt; Codex's plugin-install link takes a Codex marketplace, which the `dxos` plugin is not in.
+```
+
+```mdl
+decision D-128: Agents may read a whole section in one fetch: `llms-full.txt` holds every page of it, examples included. A page must not assume an agent reads one page at a time, or that an example on one page is unknown to an agent reading another.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.1]
+  why: The `composer-plugin-dev` eval's agent reads the plugin guide, whose World Clock example matches its brief, so the eval measures how well an agent follows the guide.
+```
+
+```mdl
+decision D-129: The plugin guide keeps World Clock as its worked example, as the eval's guide-following case. New worked examples stay off the subjects the eval holds out, such as a habit tracker or a standup board; Bookmarks (PLEX learning path), Contacts (ECHO tutorial) and Notes (the Open in Claude prompt) are already taken. Check with the eval's owner before adding a plugin example.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: An example that matches a held-out brief lets the agent copy the answer, and the eval stops measuring what it is meant to.
 ```
 
 ## Appendix: Extension Definitions
