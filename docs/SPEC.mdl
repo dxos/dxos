@@ -194,7 +194,6 @@ page echo-build-with-agent: Build with a coding agent
   covers:
     - A prompt the reader can edit, prefilled to build the tutorial app by following the learning path
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a line the reader does not see before their text, which has the agent read `/echo/llms-full.txt` first
-    - How the buttons work: the prompt is prefilled, not sent, and each needs its agent's desktop app
     - What the reader does while the agent works, and what they should see at the end
 ```
 
@@ -970,7 +969,6 @@ page plex-build-with-agent: Build with a coding agent
   covers:
     - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
-    - How the buttons work: the prompt is prefilled, not sent, each needs its agent's desktop app, and where each agent's copy of the skill goes
     - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
 ```
 
@@ -2936,6 +2934,14 @@ decision D-131: Each open button shows its agent's logo before its label, in the
   why: A reader finds their agent by its mark faster than by its name.
   rejected:
     - Simple Icons (CC0): it has the Claude and Cursor marks but dropped OpenAI's, and has no Codex mark.
+```
+
+```mdl
+decision D-132: Build with a coding agent does not explain the buttons. Amends [D-130].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [echo-build-with-agent, plex-build-with-agent]
+  why: Pressing a button shows the whole prompt, fixed lines included, before anything is sent.
 ```
 
 ## Appendix: Extension Definitions

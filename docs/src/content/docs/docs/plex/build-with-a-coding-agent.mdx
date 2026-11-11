@@ -12,24 +12,7 @@ in your agent.
 <AgentPrompt skill="composer-plugin-dev" prompt="I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team. My Composer is open at https://composer.space." />
 
 The `composer-plugin-dev` skill tells the agent how to set up the project, which DXOS packages to use, and how to load
-the plugin into your Composer. Each button adds a step before your text that installs the skill into the folder and has
-the agent follow it, so you do not need to install anything first.
-
-## How the buttons work
-
-Each button opens its agent's desktop app with the prompt filled in. It does not send it: you pick the folder, read the
-prompt and send it. A button does nothing if that app is not installed; copy the prompt instead.
-
-The added step downloads the skill from the [dxos repository](https://github.com/dxos/dxos/tree/main/tools/claude/plugins/dxos/skills/composer-plugin-dev)
-into the folder each agent loads project skills from:
-
-| Agent       | Skill folder                         |
-| ----------- | ------------------------------------ |
-| Claude Code | `.claude/skills/composer-plugin-dev` |
-| Codex       | `.agents/skills/composer-plugin-dev` |
-| Cursor      | `.cursor/skills/composer-plugin-dev` |
-
-The next prompt you send in that folder can use the skill again.
+the plugin into your Composer. The prompt installs it in the folder first, so you do not need to install anything.
 
 ## When the agent hands off
 
