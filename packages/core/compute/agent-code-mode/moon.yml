@@ -5,6 +5,7 @@ tags:
   - ts-test
   - ts-test-browser
   - ts-test-workerd
+  - pack
   - model-fixture
 tasks:
   test:

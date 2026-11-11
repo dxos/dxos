@@ -11,6 +11,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { trim } from '@dxos/util';
 
 import { MeetingNamespace } from './src/namespace.ts';
@@ -27,7 +29,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       Comprehensive meeting management that captures notes, generates real-time transcriptions, and produces AI-powered summaries of every session.
       Each meeting record stores an ISO-timestamped creation time, a list of participant identities, and three linked documents: a live transcript feed, a freeform markdown notes editor, and an AI-generated summary.
 
-      The plugin integrates with the Calls plugin so that joining a call automatically opens a TranscriptionManager, routes the audio feed to a transcript object in ECHO, and synchronises the active meeting identity across all peers in the session.
+      The plugin integrates with the Calls plugin so that enabling transcription during a call writes each participant's native RealtimeKit transcript segments to a transcript object in ECHO, and synchronises the active meeting identity across all peers in the session.
       Participants can switch which meeting is active at any time, and the call layer propagates the selection via a typed activity payload so every peer stays in sync.
 
       AI summarisation sends the combined transcript and notes content to a language model, which returns a structured markdown document containing key discussion points, verbatim quotes, and a checklist of clearly assigned action items.
@@ -51,10 +53,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'CallExtension',
       {
-        requires: [MeetingCapabilities.State],
-        provides: [CallsCapabilities.EventHandler],
-        // Both features must be live: the handler extends calls but reads meeting state.
-        activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
+        requires: [MeetingCapabilities.State, CallsCapabilities.Manager, ClientCapabilities.IdentityService],
+        provides: [],
+        // The module subscribes to the call manager, which rides the client-initialized event, so the two
+        // features starting is not enough for the pull to find it.
+        activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start, ClientEvents.Initialized),
       },
       () => import('./src/capabilities/call-extension.ts', { with: { type: 'module-url' } }),
     ),

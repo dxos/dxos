@@ -8,39 +8,30 @@ import { log } from '@dxos/log';
 import {
   type AsrPipeline,
   type CommitFn,
+  type CreateTranscriber,
   type EntityLookup,
   type Stage,
-  type TranscribeConfig,
   runAsrPipeline,
 } from '@dxos/pipeline-transcription';
 import { type ContentBlock } from '@dxos/types';
 
-import { MediaStreamRecorder } from '../capture/index.ts';
 import { type PipelinePhase } from '../types.ts';
 import { useAudioTrack } from './useAudioTrack.ts';
-
-// Recorder chunk interval; the transcriber's chunk threshold derives from this.
-const RECORDER_INTERVAL_MS = 200;
 
 // Silence reported on drain so on-silence stages (e.g. summarization) fire over the final window.
 const DRAIN_SILENCE_MS = 5_000;
 
-const DEFAULT_TRANSCRIBE_CONFIG: TranscribeConfig = {
-  transcribeAfterChunksAmount: 50,
-  prefixBufferChunksAmount: 10,
-};
+/** Builds the transcriber for the session's audio track, e.g. `createRealtimeKitTranscriber`. */
+export type TrackTranscriber = (track: MediaStreamTrack) => CreateTranscriber;
 
 export type RecordingPipelineOptions = {
-  /**
-   * Transcriber configuration. Must carry `endpoint` (there is no built-in one); a transcriber
-   * without it rejects on `open()` with `TranscriptionEndpointNotConfiguredError`.
-   */
-  config?: Partial<TranscribeConfig>;
+  /** The transcriber for the captured track; a session starts only once both are present. */
+  transcriber?: TrackTranscriber;
   /** Re-segment ASR output into complete sentences before the pipeline (merges mid-sentence cuts). */
   segmentSentences?: boolean;
   /**
    * Raw capture flag — recording (mic) or playing (file). When it flips false the hook drains
-   * (flushing the transcriber's buffered audio) before returning to idle.
+   * (delivering the transcriber's pending segments) before returning to idle.
    */
   active: boolean;
   /** Use the microphone as the ASR source; the hook owns the track and keeps it alive through drain. */
@@ -79,7 +70,7 @@ export const useRecordingPipeline = ({
   commit,
   lookup,
   onSegment,
-  config,
+  transcriber,
   segmentSentences,
 }: RecordingPipelineOptions): RecordingPipeline => {
   // Phase machine: hold 'recording' for the commit when `active` flips off, then 'draining' until the
@@ -94,13 +85,10 @@ export const useRecordingPipeline = ({
   const micTrack = useAudioTrack(!!microphone && inUse, audioConstraints);
   const track = microphone ? micTrack : externalTrack;
 
-  // A fresh recorder per track so a stopped (encoder-flushed) instance is never reused.
-  const recorder = useMemo(
-    () =>
-      track
-        ? new MediaStreamRecorder({ mediaStreamTrack: track, config: { interval: RECORDER_INTERVAL_MS } })
-        : undefined,
-    [track],
+  // A fresh transcriber per track, so a closed session is never reused.
+  const createTranscriber = useMemo(
+    () => (track && transcriber ? transcriber(track) : undefined),
+    [track, transcriber],
   );
 
   const pipelineRef = useRef<AsrPipeline | null>(null);
@@ -108,12 +96,11 @@ export const useRecordingPipeline = ({
   // Start a live ASR pipeline session when recording. Stages/commit/lookup are captured for the
   // lifetime of the session (a config change mid-recording would orphan the run).
   useEffect(() => {
-    if (phase !== 'recording' || !recorder) {
+    if (phase !== 'recording' || !createTranscriber) {
       return;
     }
     const asr = runAsrPipeline({
-      recorder,
-      config: { ...DEFAULT_TRANSCRIBE_CONFIG, ...config },
+      createTranscriber,
       segmentSentences,
       stages,
       commit,
@@ -140,9 +127,9 @@ export const useRecordingPipeline = ({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, recorder]);
+  }, [phase, createTranscriber]);
 
-  // Drain on stop: flush buffered audio, signal silence, end the session.
+  // Drain on stop: deliver pending segments, signal silence, end the session.
   useEffect(() => {
     if (phase !== 'draining') {
       return;

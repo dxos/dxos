@@ -12,6 +12,7 @@ import {
   type Verdict,
   formatSourceKey,
   reviewAnnotations,
+  reviewItemId,
   walkthroughOf,
 } from '@dxos/deus/review';
 
@@ -298,7 +299,8 @@ const buildDecorations = (
   for (let number = 1; number <= state.doc.lines; number++) {
     const line = state.doc.line(number);
     const [, kind, id] = DECLARATION.exec(line.text) ?? [];
-    const verdict = id && !seen.has(id) ? verdicts.get(id) : undefined;
+    const itemId = id && reviewItemId(kind, id);
+    const verdict = itemId && !seen.has(itemId) ? verdicts.get(itemId) : undefined;
     if (verdict) {
       // The first declaration wins; later mentions (a changelog's `affects:`) are not the item itself.
       seen.add(verdict.id);

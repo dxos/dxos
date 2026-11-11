@@ -5,9 +5,9 @@ version: 0.1.0
 ---
 
 A real-time voice-to-text transcription plugin for DXOS Composer.
-Captures spoken audio from a microphone, converts it to timestamped text segments via the
-Whisper speech-recognition service, and stores the results in an ECHO `Transcript` object
-backed by a `Feed`.
+Captures spoken audio from a microphone, streams it to Cloudflare RealtimeKit's live
+transcription in a one-person meeting (the same transcription calls use), and stores the
+final, timestamped segments in an ECHO `Transcript` object backed by a `Feed`.
 The plugin also exposes skill-compatible operations that let AI assistants open and
 summarize transcripts inside agent workflows.
 
@@ -51,24 +51,6 @@ type Transcript
     id: string
     feed: Ref<Feed>           # ECHO feed that stores Message objects
     started?: string          # ISO-8601 timestamp when recording started
-```
-
-```mdl
-type WhisperWord
-  fields:
-    word: string
-    start: number             # seconds from start of audio chunk
-    end: number
-```
-
-```mdl
-type WhisperSegment
-  fields:
-    text: string
-    start: number
-    end: number
-    no_speech_prob: number    # probability of silence; used to filter noise
-    words: WhisperWord[]
 ```
 
 ```mdl
@@ -211,28 +193,30 @@ op normalizeSentences
 feat F-1: Recording Lifecycle
 
   req F-1.1: User can start microphone capture from TranscriptionArticle toolbar.
-  req F-1.2: User can stop microphone capture; final buffered chunks are flushed and transcribed.
-  req F-1.3: TranscriptionManager restarts the Transcriber automatically when the audio track changes.
+  req F-1.2: User can stop microphone capture; the final segment of speech already sent is delivered before the session ends.
+  req F-1.3: TranscriptionManager opens a new transcription session when the audio track changes.
 ```
 
 ```mdl
-feat F-2: Audio Chunking and Transcription
+feat F-2: Live Transcription
 
   req F-2.1:
-    when: user is speaking and chunk count reaches transcribeAfterChunksAmount
-    then: Transcriber schedules a deferred transcription task
+    when: a transcriber opens
+    then: it joins this identity's one-person RealtimeKit meeting through EDGE's RealtimeKit proxy
+      (`<edge>/calls/realtimekit/*`, signed by the identity), which returns a short-lived participant token
 
   req F-2.2:
-    when: transcription task runs
-    then: buffered PCM chunks are merged into a WAV file and POSTed to the Whisper endpoint
+    when: recording starts
+    then: the track is published to the meeting, and RealtimeKit streams its transcription back; recording stops by
+      muting it
 
   req F-2.3:
-    when: Whisper response is received
-    then: segments are filtered by no_speech_prob and aligned to absolute wall-clock timestamps
+    when: RealtimeKit delivers a transcript for this peer
+    then: revisions are ignored and each final segment is delivered once, timed by when it was spoken, in arrival order
 
   req F-2.4:
-    when: user is not speaking
-    then: only prefixBufferChunksAmount most-recent chunks are retained; older chunks discarded
+    when: EDGE is not configured
+    then: no microphone is requested and opening fails with TranscriptionNotConfiguredError
 ```
 
 ```mdl
@@ -364,18 +348,18 @@ scenario T-2: Record and persist segment
   given: a Transcript with a Feed, microphone capture active
   when: the user speaks and silence is detected
   then:
-    - Whisper returns at least one segment
+    - RealtimeKit delivers at least one final segment
     - a Message is appended to the Feed
     - Message.blocks contains at least one TranscriptSegment with non-empty text
 ```
 
 ```mdl
-scenario T-3: Deduplicate segments across chunk boundaries
-  given: two consecutive transcription tasks with overlapping Whisper output
-  when: the second task produces segments whose end timestamps fall before lastTimestamp
+scenario T-3: Keep only final segments
+  given: a transcriber is recording
+  when: RealtimeKit sends partial revisions of a segment, then its final text
   then:
-    - duplicate segments are filtered out
-    - only novel words (start >= lastTimestamp) are included
+    - only the final text is delivered
+    - another peer's segments in the same meeting are not delivered
 ```
 
 ```mdl
@@ -428,7 +412,7 @@ Transcription is enabled by default in every environment (`plugin-defs.tsx` `get
 ```mdl
 test QA-1: Create a transcript and read it back
   desc: |
-    The ECHO round-trip that does not require a live microphone or Whisper endpoint — create a
+    The ECHO round-trip that does not require a live microphone or transcription service — create a
     Transcript, and read its (empty) content back via op:openTranscript.
   actors: agent
   covers: [F-3.1, F-6.1, F-6.2, T-1, T-4]
@@ -471,7 +455,7 @@ test QA-2: Record, transcribe, and summarize a meeting
     - space: a space is open
     - transcript: a Transcript open in TranscriptionArticle within that space
     - microphone permission is granted in the browser
-    - the Whisper speech-recognition endpoint is reachable
+    - EDGE is configured and the identity has an account, so EDGE's RealtimeKit proxy admits it
     - recordedContent: a canned transcript string to summarize when the recording steps below are
       not run (they are `blocked` on hardware), so `summarizeTranscript` can still be exercised
       standalone
@@ -484,13 +468,13 @@ test QA-2: Record, transcribe, and summarize a meeting
       do: Say a short sentence aloud, then pause for a couple of seconds.
       expect: a Message with at least one TranscriptSegment of non-empty text is appended to the Feed
       blocked: |
-        Cannot run from the debug port: it requires a live microphone, real speech, and a real
-        Whisper HTTP call — none of which an automated snippet can produce or fake without
+        Cannot run from the debug port: it requires a live microphone, real speech, and a live
+        RealtimeKit session — none of which an automated snippet can produce or fake without
         reimplementing the recording pipeline. Human-only, and unverifiable by an agent even after
         the fact (Rule 9: no invoke, no capability substitute).
     - name: Stop recording
       do: Click the toolbar toggle again.
-      expect: capture stops, buffered chunks flush, and the final segment appears in the transcript
+      expect: capture stops, and the final segment appears in the transcript
       note: NO `invoke` — same as the start-recording step.
     - name: Summarize the transcript
       do: Invoke "Summarize" from the transcript's action menu (or via the assistant skill).
@@ -507,6 +491,51 @@ test QA-2: Record, transcribe, and summarize a meeting
       do: Right-click the Transcript in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$given.transcript], target: $given.space }
       expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+test QA-3: Transcribe an audio file in the Transcription story
+  desc: |
+    The recording pipeline end to end in storybook, with no microphone: the story plays an audio file, its track feeds
+    the transcriber, and each committed block appears as a message. Without EDGE, as in storybook, the scripted
+    transcriber stands in for RealtimeKit, so this checks the pipeline and the message list, not the service.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-2.4]
+  status: unverified
+  given:
+    - storybook serves `plugins/plugin-transcription/stories/Transcription` in isolation mode
+  steps:
+    - name: Play the file
+      do: Click Play in the story's toolbar.
+      expect: the button turns to Pause, and the first message appears within a few seconds
+    - name: Read the transcript
+      do: Wait while the file plays.
+      expect: messages from "You" keep appending, one per committed block, in order
+    - name: Pause
+      do: Click Pause.
+      expect: no further message appears
+
+test QA-4: Transcribe an audio file live through RealtimeKit
+  desc: |
+    QA-3 against the dev EDGE: the story's `Live` variant gives its client an EDGE, so the file's track streams to the
+    identity's one-person RealtimeKit meeting and RealtimeKit's transcript fills the list. Needs a network and an
+    identity with an account.
+  actors: agent
+  covers: [F-1.1, F-1.2, F-2.4]
+  status: unverified
+  given:
+    - storybook serves `plugins/plugin-transcription/stories/Transcription` `Live` in isolation mode
+    - the story's identity is bound to an account
+  steps:
+    - name: Play the file
+      do: Click Play in the story's toolbar.
+      expect: the button turns to Pause, and the first message appears once the first sentence has been spoken
+    - name: Read the transcript
+      do: Wait while the file plays.
+      expect: messages from "You" keep appending with the words the file speaks, in order
+    - name: Pause
+      do: Click Pause.
+      expect: no further message appears once the sentence in flight has landed
 ```
 
 ## Changelog
@@ -642,6 +671,25 @@ decision D-15: The Whistle hook, capture, protocol and worker move from the stor
   for: user:dmaretskyi
   affects: [F-7]
   why: Code Graph's command bar asked for the microphone and Whistle, and the stories held the only copy.
+```
+
+```mdl
+decision D-16: Live transcription streams through the identity's one-person RealtimeKit meeting instead of POSTing WAV chunks to Whisper at `/transcribe`, which is removed; `Transcriber` becomes an interface (`start`, `stop`, `flush`, `abort`) built through one `CreateTranscriber` seam, with a scripted one for offline stories and tests, which QA-3 runs.
+  date: 2026-11-10
+  by: user:mykola-vrmchk
+  affects: [F-1.2, F-1.3, F-2, F-2.1, T-2, T-3, QA-1, QA-2, QA-3]
+  why: Cloudflare recommends WebRTC for client-to-server audio, and one transcription path serves calls and everything else; batching is not wanted.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-17: The Transcription story's `Live` variant sets `parameters.edgeUrl` to the dev EDGE, which the story decorators turn into the client's EDGE config, so the story transcribes through RealtimeKit; QA-4 runs it. Fills in [D-16].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-4]
+  why: No story gave its client an EDGE, so the live path the story describes could not run in storybook.
+  source: https://github.com/dxos/dxos/pull/14186
 ```
 
 ## Appendix: Extension Definitions

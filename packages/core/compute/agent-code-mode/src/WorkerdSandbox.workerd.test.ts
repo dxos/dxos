@@ -5,9 +5,8 @@
 // Runs INSIDE the Cloudflare Workers runtime via `@cloudflare/vitest-pool-workers`, opted in with
 // `workerd` in this package's vite config. That is the point rather than a detail: `WorkerdSandbox`
 // loads the model's code through the `worker_loaders` binding, which exists in no other runtime,
-// and the loaded isolate's outbound `fetch` is pinned to the worker under test — which the pool
-// runs in THIS isolate, so the host handler a test registers is the one the sandbox answers
-// through. Nothing here is simulated.
+// and the loaded isolate calls back over Workers RPC into this test's invocation. Nothing here is
+// simulated.
 //
 // The workspace behind the dialect is in-memory rather than ECHO: `@dxos/echo-client` cannot load
 // in workerd at all (it crashes the isolate), which is the same constraint that forces the sandbox
@@ -23,9 +22,28 @@ import { describe, expect, test } from 'vitest';
 import type { BindingsContext, Dialect } from './Dialect.ts';
 import * as WorkerdSandbox from './WorkerdSandbox.ts';
 
+declare module 'cloudflare:test' {
+  interface ProvidedEnv {
+    /** The `worker_loaders` binding this package's vite config declares. */
+    readonly LOADER: WorkerdSandbox.WorkerLoader;
+  }
+}
+
 const TASK = 'com.example.type.task';
 
-type Row = { id: string; typename: string; [field: string]: unknown };
+/** What the workspace's `ref` makes: a reference holding the row it names. */
+type RowRef = { ref: Row };
+
+type Row = {
+  id: string;
+  typename: string;
+  title?: string;
+  owner?: RowRef;
+  parent?: string;
+  source?: string;
+  target?: string;
+  [field: string]: unknown;
+};
 
 /** A workspace with the plain dialect's shape and none of its machinery. */
 const makeWorkspace = () => {
@@ -33,10 +51,23 @@ const makeWorkspace = () => {
   let next = 0;
   const scored: string[] = [];
   const printed: string[] = [];
+  /** Every value printed, as the host's printer received it. */
+  const printedValues: unknown[] = [];
+  /** The inputs `assign` was invoked with. */
+  const inputs: { task: Row; owner: RowRef }[] = [];
+  const byId = (target: Row | string) => (typeof target === 'string' ? target : target.id);
 
   const bindings = {
-    print: (...values: unknown[]) =>
-      printed.push(values.map((value) => (typeof value === 'string' ? value : JSON.stringify(value))).join(' ')),
+    print: (...values: unknown[]) => {
+      printedValues.push(...values);
+      printed.push(values.map((value) => (typeof value === 'string' ? value : JSON.stringify(value))).join(' '));
+    },
+    describe: async (row: Row) => `${row.typename} ${row.id} "${String(row.title)}"`,
+    children: async (target: Row | string) => [...rows.values()].filter((row) => row.parent === byId(target)),
+    relations: async (target: Row | string, direction: 'out' | 'in' = 'out') =>
+      [...rows.values()].filter((row) => row[direction === 'out' ? 'source' : 'target'] === byId(target)),
+    referrers: async (target: Row | string) => [...rows.values()].filter((row) => row.owner?.ref.id === byId(target)),
+    ref: (row: Row): RowRef => ({ ref: row }),
     query: async (typename: string, props?: Record<string, unknown>) =>
       [...rows.values()].filter(
         (row) =>
@@ -54,18 +85,29 @@ const makeWorkspace = () => {
     },
     remove: async (row: Row) => void rows.delete(row.id),
     flush: async () => {},
-    update: (row: Row, mutator: (row: Row) => void) => mutator(row),
+    update: (row: Row, mutator: (row: Row) => void) => {
+      if (row.locked === true) {
+        throw new Error(`Locked: ${row.id}`);
+      }
+      mutator(row);
+    },
     ops: {
       score: async ({ title }: { title: string }) => {
         scored.push(title);
         return title.length;
       },
+      assign: async (input: { task: Row; owner: RowRef }) => {
+        inputs.push(input);
+        return { assigned: input.task.id };
+      },
+      /** Returns a live row inside a plain result, as an operation that looks an object up does. */
+      find: async ({ id }: { id: string }) => ({ found: rows.get(id) }),
       /** Never answers, so an evaluation awaiting it is bounded only by the sandbox's own budget. */
       stall: () => new Promise<never>(() => {}),
     },
   };
 
-  return { rows, scored, printed, bindings };
+  return { rows, scored, printed, printedValues, inputs, bindings };
 };
 
 /** Hands the sandbox the workspace above; the dialect seam is what makes this substitutable. */
@@ -78,12 +120,7 @@ const dialectOver = (bindings: Record<string, unknown>): Dialect => ({
 
 const setup = () => {
   const workspace = makeWorkspace();
-  const sandbox = WorkerdSandbox.make({
-    loader: (env as any).LOADER,
-    // The pool's own self-service binding: a real `Fetcher` back to the worker under test, which
-    // is this isolate. A deployment passes a service binding to itself here.
-    outbound: (env as any).__VITEST_POOL_WORKERS_SELF_SERVICE,
-  });
+  const sandbox = WorkerdSandbox.make({ loader: env.LOADER });
 
   const evaluate = (code: string, timeout?: Duration.Input) =>
     // `EffectEx.runPromise`, which the rule asks for, is unusable here: importing `@dxos/effect`
@@ -185,16 +222,155 @@ describe('workerd sandbox', () => {
     });
   });
 
-  test('an evaluation that never finishes is bounded, and by whichever bound is reached first', async () => {
+  test('a ref and a held object reach the host as a reference and the live object', async () => {
+    const { rows, inputs, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs' });
+    rows.set('p', { id: 'p', typename: TASK, title: 'Person' });
+
+    const output = await run(`
+      const [task] = await query('${TASK}', { title: 'Write the docs' });
+      const [person] = await query('${TASK}', { title: 'Person' });
+      const review = await make('${TASK}', { title: 'Review', owner: ref(person) });
+      await add(review);
+      update(task, (task) => { task.owner = ref(person); });
+      const result = await ops.assign({ task, owner: ref(person) });
+      print(result.assigned);
+    `);
+    expect(output).toEqual('a');
+
+    // `make` and `update` were handed the workspace's own reference, holding the live row.
+    const review = [...rows.values()].find((row) => row.title === 'Review');
+    expect(review?.owner?.ref).toBe(rows.get('p'));
+    expect(rows.get('a')?.owner?.ref).toBe(rows.get('p'));
+    // The operation got the live task, not the snapshot the isolate held, and a reference for `owner`.
+    expect(inputs).toEqual([{ task: rows.get('a'), owner: { ref: rows.get('p') } }]);
+    expect(inputs[0].task).toBe(rows.get('a'));
+  });
+
+  test('prints a held object as the live object, and describes it', async () => {
+    const { rows, printedValues, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs' });
+    const output = await run(`
+      const [task] = await query('${TASK}');
+      print(task);
+      print(await describe(task));
+    `);
+    expect(printedValues[0]).toBe(rows.get('a'));
+    expect(output.split('\n')[1]).toEqual(`${TASK} a "Write the docs"`);
+  });
+
+  test("reads an object's children, relations and referrers, by object or by id", async () => {
+    const { rows, run } = setup();
+    const parent: Row = { id: 'a', typename: TASK, title: 'Parent' };
+    rows.set('a', parent);
+    rows.set('b', { id: 'b', typename: TASK, title: 'Child', parent: 'a' });
+    rows.set('r', { id: 'r', typename: TASK, title: 'Link', source: 'a', target: 'b' });
+    rows.set('c', { id: 'c', typename: TASK, title: 'Owned', owner: { ref: parent } });
+    const output = await run(`
+      const [parent] = await query('${TASK}', { title: 'Parent' });
+      const titles = (objects) => objects.map((obj) => obj.title).join(',');
+      print(titles(await children(parent)), titles(await children('a')));
+      print(titles(await relations(parent)), titles(await relations('b', 'in')));
+      print(titles(await referrers(parent)));
+    `);
+    expect(output).toEqual(['Child Child', 'Link Link', 'Owned'].join('\n'));
+  });
+
+  test('applies an update the code did not await before the evaluation ends', async () => {
+    const { rows, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs', status: 'open' });
+    await run(`
+      const [task] = await query('${TASK}');
+      update(task, (task) => { task.status = 'done'; });
+    `);
+    expect(rows.get('a')?.status).toEqual('done');
+  });
+
+  test('reports a refused update the code did not await, but not one it caught', async () => {
+    const { rows, evaluate, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs', locked: true });
+    expect(
+      await evaluate(`const [task] = await query('${TASK}'); update(task, (task) => { task.status = 'done'; });`),
+    ).toEqual({ failure: 'Locked: a' });
+    const output = await run(`
+      const [task] = await query('${TASK}');
+      try {
+        await update(task, (task) => { task.status = 'done'; });
+      } catch (error) {
+        print('caught ' + error.message);
+      }
+    `);
+    expect(output).toEqual('caught Locked: a');
+  });
+
+  test('passes a changed copy of an object as data, and the object itself once updated', async () => {
+    const { rows, inputs, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs' });
+    rows.set('p', { id: 'p', typename: TASK, title: 'Person' });
+    await run(`
+      const [task] = await query('${TASK}', { title: 'Write the docs' });
+      const [person] = await query('${TASK}', { title: 'Person' });
+      await ops.assign({ task: { ...task, title: 'Edited' }, owner: ref(person) });
+      update(task, (task) => { task.status = 'done'; });
+      await ops.assign({ task, owner: ref(person.id) });
+    `);
+    // The copy kept its edit rather than being swapped for the live row.
+    expect(inputs[0].task).not.toBe(rows.get('a'));
+    expect(inputs[0].task.title).toEqual('Edited');
+    // The object the code updated is still the object, and `ref` took its id.
+    expect(inputs[1].task).toBe(rows.get('a'));
+    expect(inputs[1].owner.ref).toBe(rows.get('p'));
+  });
+
+  test('remembers the objects an operation returns, so the code can pass them back', async () => {
+    const { rows, inputs, run } = setup();
+    rows.set('a', { id: 'a', typename: TASK, title: 'Write the docs' });
+    rows.set('p', { id: 'p', typename: TASK, title: 'Person' });
+    await run(`
+      const { found } = await ops.find({ id: 'a' });
+      const { found: person } = await ops.find({ id: 'p' });
+      await ops.assign({ task: found, owner: ref(person) });
+    `);
+    expect(inputs[0].task).toBe(rows.get('a'));
+    expect(inputs[0].owner.ref).toBe(rows.get('p'));
+  });
+
+  test('refuses a ref nested deeper than it resolves, and a ref of nothing', async () => {
+    const { rows, evaluate } = setup();
+    rows.set('p', { id: 'p', typename: TASK, title: 'Person' });
+    const deep = await evaluate(`
+      const [person] = await query('${TASK}');
+      let value = ref(person);
+      for (let level = 0; level < 12; level++) {
+        value = { value };
+      }
+      await make('${TASK}', { title: 'Deep', value });
+    `);
+    expect(deep.failure).toMatch(/nested more than 8 levels deep/);
+    expect(await evaluate('ref(undefined);')).toEqual({
+      failure: 'ref() takes an object from query or make, or its id.',
+    });
+  });
+
+  test('an abandoned evaluation cannot write after its budget', async () => {
+    const { rows, evaluate } = setup();
+    const result = await evaluate(
+      `await new Promise((resolve) => setTimeout(resolve, 1_000)); await add(await make('${TASK}', { title: 'Late' }));`,
+      '200 millis',
+    );
+    expect(result.failure).toMatch(/the isolate was abandoned/);
+    // Past the point where the isolate, still running, tried to write.
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    expect([...rows.values()].map((row) => row.title)).not.toContain('Late');
+  });
+
+  test('an evaluation that never finishes is abandoned at its budget', async () => {
     const { evaluate } = setup();
-    // Two bounds exist and the runtime's is the tighter one: with nothing pending anywhere,
-    // workerd detects a request that can never respond and cancels it in milliseconds, long before
-    // the sandbox's own budget elapses. Asserting only the sandbox's message would be asserting a
-    // path this runtime does not take, so what is pinned is the property that matters — the turn
-    // comes back, with a failure, fast.
+    // The host's answer never comes, and nothing in the runtime can tell: the call is held open
+    // on this side, so only the sandbox's own budget ends it.
     const started = Date.now();
-    const result = await evaluate('await ops.stall({});', '30 seconds');
-    expect(result.failure).toBeDefined();
+    const result = await evaluate('await ops.stall({});', '1 second');
+    expect(result.failure).toMatch(/did not finish within 1s; the isolate was abandoned/);
     expect(Date.now() - started).toBeLessThan(5_000);
   });
 });
