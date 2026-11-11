@@ -20,6 +20,16 @@ import { SceneHandler, elementId } from '../../model/handler.ts';
 
 const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 
+/** A row of `n` small blocks, some of them marked in a tone; the deck's `feedStrip()`. */
+export const StudioFeed = Schema.Struct({
+  n: Schema.Number,
+  /** Block indexes (as strings, since JSON object keys are) to colour, by tone name. */
+  marks: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  /** A mono caption to the left of the strip (`feed`, `task`). */
+  label: Schema.optional(Schema.String),
+});
+export type StudioFeed = Schema.Schema.Type<typeof StudioFeed>;
+
 /** A card of the deck: a Phosphor icon, a title, its centre in slide units, and an optional accent. */
 export const StudioCard = Schema.Struct({
   icon: Schema.String,
@@ -28,8 +38,14 @@ export const StudioCard = Schema.Struct({
   cy: Schema.Number,
   w: Schema.optional(Schema.Number),
   h: Schema.optional(Schema.Number),
-  /** A CSS custom property of the deck (`var(--t-trip)`), resolved through {@link TONES}. */
+  /** A CSS custom property of the deck (`var(--t-trip)`), or a tone name (`ink`), resolved through {@link TONES}. */
   tone: Schema.optional(Schema.String),
+  /** The element kind the card wants; absent is the plain `card` of round 1. */
+  kind: Schema.optional(Schema.String),
+  /** Round 2 (`feed-card`): the feed strip, a sentence of body, and a mono footer under a hairline. */
+  feed: Schema.optional(StudioFeed),
+  body: Schema.optional(Schema.String),
+  footer: Schema.optional(Schema.String),
 });
 export type StudioCard = Schema.Schema.Type<typeof StudioCard>;
 
@@ -44,6 +60,16 @@ export const StudioRoute = Schema.Struct({
   dash: Schema.optional(Schema.Boolean),
   /** Where the caption sits, when the route moves it off the midpoint. */
   labelAt: Schema.optional(Point),
+  /** A named route the deck draws rather than a polyline: `curve-h` is its horizontal S-curve. */
+  route: Schema.optional(Schema.String),
+  /** A tone name for the stroke (`accent`). */
+  color: Schema.optional(Schema.String),
+  /** `none` where the link has no arrowhead (a reader's tap into a space). */
+  arrow: Schema.optional(Schema.String),
+  halo: Schema.optional(Schema.Boolean),
+  width: Schema.optional(Schema.Number),
+  /** A link that ends *inside* a component: the graph objects it reaches, and where it aims. */
+  tap: Schema.optional(Schema.Struct({ nodes: Schema.Array(Schema.Number), toward: Point })),
 });
 export type StudioRoute = Schema.Schema.Type<typeof StudioRoute>;
 
@@ -60,7 +86,12 @@ export const StudioText = Schema.Struct({
   x: Schema.Number,
   y: Schema.Number,
   text: Schema.String,
-  role: Schema.Literals(['heading', 'caption']),
+  role: Schema.Literals(['heading', 'caption', 'label', 'link-label', 'note']),
+  /** The width the deck lays the text out in; with `align`, how it sits in it. */
+  w: Schema.optional(Schema.Number),
+  align: Schema.optional(Schema.Literals(['left', 'center', 'right'])),
+  /** For a `link-label`: the links it captions. */
+  for: Schema.optional(Schema.Array(Schema.String)),
 });
 export type StudioText = Schema.Schema.Type<typeof StudioText>;
 
@@ -74,6 +105,19 @@ export const StudioFrame = Schema.Struct({
 });
 export type StudioFrame = Schema.Schema.Type<typeof StudioFrame>;
 
+/** A generated part of the slide: a circle of ECHO objects, placed by its frame and driven by `params`. */
+export const StudioComponent = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.String,
+  cx: Schema.Number,
+  cy: Schema.Number,
+  r: Schema.Number,
+  params: Schema.Record(Schema.String, Schema.Any),
+  /** Graph objects drawn lit, by index, with the tone they take. */
+  lit: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+});
+export type StudioComponent = Schema.Schema.Type<typeof StudioComponent>;
+
 /** A slide as `export.mjs` writes it: the whole model, of which the `.diagram` file is the expressible part. */
 export const StudioModel = Schema.Struct({
   id: Schema.String,
@@ -84,6 +128,7 @@ export const StudioModel = Schema.Struct({
   edges: Schema.Array(StudioEdge),
   frames: Schema.Array(StudioFrame),
   texts: Schema.optional(Schema.Array(StudioText)),
+  components: Schema.optional(Schema.Array(StudioComponent)),
 });
 export type StudioModel = Schema.Schema.Type<typeof StudioModel>;
 
@@ -99,8 +144,17 @@ export const TONES: Record<string, string> = {
   'var(--t-sheet)': '#ff7a45',
 };
 
+/**
+ * The DSL colour a sidecar tone names. `light-blue` rather than `blue`, which is a `Shape.Color` the SVG renderer's
+ * `COLOR_CLASS` has no entry for: the strong colours (`blue`, `green`, `red`, `violet`) silently draw neutral.
+ */
+const LINK_COLORS: Record<string, 'light-blue' | 'grey'> = { accent: 'light-blue', ink: 'grey' };
+
+/** The theme hue a sidecar tone names, for the canvas's own link renderer (which reads the link's `style`). */
+const LINK_HUES: Record<string, string> = { accent: 'blue', ink: 'neutral' };
+
 /** Text sizes in scene units by the role the sidecar gives a text; the DSL's only lever is `weight=s`. */
-const TEXT_SIZES: Record<string, number> = { heading: 20, caption: 15 };
+const TEXT_SIZES: Record<string, number> = { 'heading': 20, 'caption': 15, 'label': 19, 'link-label': 15, 'note': 15 };
 
 /**
  * The slide's title block, which the drawing does not hold. The deck draws the title and subtitle on the slide
@@ -121,7 +175,10 @@ const labelOf = (node: NodeBase): string | undefined =>
 const textOf = (node: NodeBase): string | undefined =>
   'text' in node && typeof node.text === 'string' ? node.text : undefined;
 
-/** Replaces the plain boxes the DSL produced with `card` elements, taking icon and tone from the sidecar. */
+/**
+ * Replaces the plain boxes the DSL produced with the card kind the sidecar names, taking everything the DSL could
+ * not say with it: the icon and tone of a `card`, and the feed strip, body and footer of a `feed-card` as well.
+ */
 const promoteCards = (content: ContentMap, model: StudioModel): void => {
   for (const [key, card] of Object.entries(model.nodes)) {
     const record = content[nodeKey(boxOf(key))];
@@ -131,10 +188,14 @@ const promoteCards = (content: ContentMap, model: StudioModel): void => {
       ...record,
       node: {
         ...node,
-        type: 'card',
+        type: card.kind ?? 'card',
         label: labelOf(record.node) ?? card.title,
         icon: card.icon,
         ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
+        ...(card.feed ? { feed: card.feed.n, marks: card.feed.marks ?? {} } : {}),
+        ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
+        ...(card.body ? { body: card.body } : {}),
+        ...(card.footer ? { footer: card.footer } : {}),
       },
     };
   }
@@ -148,49 +209,79 @@ const textWidth = (label: string, fontSize: number) => label.length * fontSize *
  * because the scene language has no notion of a heading: every size here comes from the sidecar's `role`.
  */
 const styleText = (content: ContentMap, model: StudioModel): void => {
-  const roles = new Map<string, number>(
-    (model.texts ?? []).map((text): [string, number] => [elementId(text.id, 'label'), TEXT_SIZES[text.role]]),
-  );
-
-  for (const [id, fontSize] of roles) {
+  for (const text of model.texts ?? []) {
+    const id = elementId(text.id, 'label');
     const record = content[nodeKey(id)];
     if (!isNodeRecord(record)) {
       continue;
     }
+    const fontSize = TEXT_SIZES[text.role];
     const { node } = record;
     // A note keeps its body in `text`; a label keeps it in `label`, which is what an unframed box draws.
     const label = labelOf(node) ?? textOf(node);
     const { text: _text, ...rest } = node;
+    // The sidecar's `w` is the box the deck lays the text out in; without one the box is as wide as the text.
+    const width = text.w ?? (label ? textWidth(label, fontSize) : node.size.width);
+    const align = text.align ?? 'left';
+    const height = fontSize * 1.9;
     content[nodeKey(id)] = {
       ...record,
       node: {
         ...rest,
         type: 'rect',
         label,
-        // The text is as wide as it needs to be and anchored at the left, the way the slide sets it.
-        size: { width: label ? textWidth(label, fontSize) : node.size.width, height: fontSize * 1.4 },
-        style: { fill: false, border: false, alignHorizontal: 'left', alignVertical: 'middle', fontSize },
+        center: { x: text.x + width / 2, y: text.y + height / 2 },
+        size: { width, height },
+        style: { fill: false, border: false, alignHorizontal: align, alignVertical: 'middle', fontSize },
       },
     };
   }
 };
 
 /**
- * Moves a frame's label out of the frame. A DSL frame can carry a label and the bridge brings it through, but a
- * box's label is drawn centred inside it, over whatever the frame contains; the deck sets its layer names beside
+ * Unfills a frame and moves its label out of it. A DSL frame can carry a label and the bridge brings it through, but
+ * a box's label is drawn centred inside it, over whatever the frame contains; the deck sets its layer names beside
  * the frame instead, which is a placement the scene language has no way to state.
  */
-const placeFrameLabels = (content: ContentMap, model: StudioModel): void => {
+/** How much empty room a frame has above the first card inside it. */
+const clearance = (model: StudioModel, frame: StudioFrame): number => {
+  const tops = Object.values(model.nodes)
+    .filter((card) => {
+      const [w, h] = [card.w ?? 0, card.h ?? 0];
+      return (
+        card.cx - w / 2 >= frame.x &&
+        card.cx + w / 2 <= frame.x + frame.w &&
+        card.cy - h / 2 >= frame.y &&
+        card.cy + h / 2 <= frame.y + frame.h
+      );
+    })
+    .map((card) => card.cy - (card.h ?? 0) / 2);
+  return tops.length === 0 ? frame.h : Math.min(...tops) - frame.y;
+};
+
+const styleFrames = (content: ContentMap, model: StudioModel): void => {
   const fontSize = TEXT_SIZES.heading;
   for (const frame of model.frames) {
     const key = nodeKey(elementId(frame.id, 'frame'));
     const record = content[key];
-    if (!isNodeRecord(record) || !frame.label) {
+    if (!isNodeRecord(record)) {
       continue;
     }
+    // The deck's frame is an unfilled region. `color=grey` alone gives the canvas a filled neutral box, which on the
+    // Agents slide paints over the generated space inside it; `fill=none` in the DSL would say this, and should.
     const { label: _label, ...node } = record.node;
-    content[key] = { ...record, node };
+    content[key] = { ...record, node: { ...node, style: { ...node.style, fill: false } } };
+    if (!frame.label) {
+      continue;
+    }
     const width = textWidth(frame.label, fontSize);
+    const height = fontSize * 1.9;
+    // Where the label goes is the thing neither the DSL nor the sidecar says. The deck puts it inside the frame
+    // when the frame has a margin at its top, and beside it when the content starts at the frame's own edge.
+    const inside = clearance(model, frame) >= height + 8;
+    const center = inside
+      ? { x: frame.x + 24 + width / 2, y: frame.y + 10 + height / 2 }
+      : { x: frame.x - 24 - width / 2, y: frame.y + frame.h / 2 };
     content[nodeKey(elementId(frame.id, 'title'))] = {
       kind: 'node',
       scene: record.scene,
@@ -198,10 +289,16 @@ const placeFrameLabels = (content: ContentMap, model: StudioModel): void => {
         type: 'rect',
         id: elementId(frame.id, 'title'),
         z: record.node.z,
-        center: { x: frame.x - 24 - width / 2, y: frame.y + frame.h / 2 },
-        size: { width, height: fontSize * 1.4 },
+        center,
+        size: { width, height },
         label: frame.label,
-        style: { fill: false, border: false, alignHorizontal: 'right', alignVertical: 'middle', fontSize },
+        style: {
+          fill: false,
+          border: false,
+          alignHorizontal: inside ? 'left' : 'right',
+          alignVertical: 'middle',
+          fontSize,
+        },
       },
     };
   }
@@ -221,7 +318,17 @@ export const findLink = (content: ContentMap, from: string, to: string): string 
     );
   });
 
-type Frame = { center: { x: number; y: number }; size: { width: number; height: number } };
+/** The link out of a card's box, whatever element it lands on: a tap ends on a component's `ring`, not a `box`. */
+const findLinkFrom = (content: ContentMap, from: string): string | undefined =>
+  Object.keys(content).find((key) => {
+    const record = content[key];
+    return isLinkRecord(record) && endpointNode(record.link.source) === boxOf(from);
+  });
+
+/** A point as the loader passes it about; `Point` is already the sidecar's schema above. */
+type Vec = { x: number; y: number };
+
+type Frame = { center: Vec; size: { width: number; height: number } };
 
 /** The frame of a card's node, once the bridge has placed it. */
 const frameOf = (content: ContentMap, key: string): Frame | undefined => {
@@ -234,7 +341,7 @@ const frameOf = (content: ContentMap, key: string): Frame | undefined => {
  * `diagramRoute` only takes a stored route whose two ends sit on the nodes' outlines (`ROUTE_SLACK`); a route of
  * bare waypoints is discarded and the connector re-routed, so the ends have to be computed rather than guessed.
  */
-const attach = (frame: Frame, toward: { x: number; y: number }): { x: number; y: number } => {
+const attach = (frame: Frame, toward: Vec): Vec => {
   const { center, size } = frame;
   const [halfWidth, halfHeight] = [size.width / 2, size.height / 2];
   return Math.abs(toward.y - center.y) <= halfHeight
@@ -242,10 +349,47 @@ const attach = (frame: Frame, toward: { x: number; y: number }): { x: number; y:
     : { x: center.x, y: center.y + (toward.y >= center.y ? halfHeight : -halfHeight) };
 };
 
+/** How many segments a curve is sampled into; a connector's route is a polyline, so the curve has to be flattened. */
+const CURVE_STEPS = 24;
+
+/**
+ * The deck's horizontal S-curve, sampled. `path.curve` in `lib/components.mjs` is a cubic whose handles leave each
+ * end horizontally; `connector.route` is a polyline, so the curve is flattened here — a scene connector has no curve
+ * of its own, and a `spline` link's control points are not the same shape.
+ */
+const curveBetween = (from: Vec, to: Vec): Vec[] => {
+  const dx = Math.max(40, Math.abs(to.x - from.x) * 0.5) * Math.sign(to.x - from.x || 1);
+  const controls = [from, { x: from.x + dx, y: from.y }, { x: to.x - dx, y: to.y }, to];
+  return Array.from({ length: CURVE_STEPS + 1 }, (_, step) => {
+    const t = step / CURVE_STEPS;
+    const u = 1 - t;
+    return {
+      x:
+        u ** 3 * controls[0].x + 3 * u * u * t * controls[1].x + 3 * u * t * t * controls[2].x + t ** 3 * controls[3].x,
+      y:
+        u ** 3 * controls[0].y + 3 * u * u * t * controls[1].y + 3 * u * t * t * controls[2].y + t ** 3 * controls[3].y,
+    };
+  });
+};
+
+/** The side midpoints an S-curve leaves from and arrives at: the deck draws these links edge to edge, horizontally. */
+const sides = (source: Frame, target: Frame): [Vec, Vec] => {
+  const forward = target.center.x >= source.center.x;
+  return [
+    { x: source.center.x + (forward ? 1 : -1) * (source.size.width / 2), y: source.center.y },
+    { x: target.center.x - (forward ? 1 : -1) * (target.size.width / 2), y: target.center.y },
+  ];
+};
+
 /** The waypoints of a route, including the elbow the sidecar states as a direction rather than a point. */
-const waypointsOf = (route: StudioRoute, source: Frame, target: Frame): { x: number; y: number }[] => {
+const waypointsOf = (route: StudioRoute, source: Frame, target: Frame): Vec[] => {
   if (route.via?.length) {
     return [...route.via];
+  }
+  if (route.route === 'curve-h') {
+    const [from, to] = sides(source, target);
+    // The ends are the attachment points, so only what lies between them is a waypoint.
+    return curveBetween(from, to).slice(1, -1);
   }
   switch (route.elbow) {
     case 'hv':
@@ -270,6 +414,15 @@ const routeLinks = (content: ContentMap, model: StudioModel): number => {
     if (!route || !source || !target) {
       continue;
     }
+    // A tap ends *inside* a component, which no canvas link can do: the generator draws those itself, from the
+    // reader it is bound to, so the link the DSL states would only duplicate it as a stub on the circle's edge.
+    if (route.tap) {
+      const tap = findLinkFrom(content, edge[0]);
+      if (tap !== undefined) {
+        delete content[tap];
+      }
+      continue;
+    }
     const waypoints = waypointsOf(route, source, target);
     if (waypoints.length === 0) {
       continue;
@@ -283,11 +436,14 @@ const routeLinks = (content: ContentMap, model: StudioModel): number => {
       ...record,
       link: {
         ...record.link,
+        // The link's own style is what the canvas's link renderer reads; `connector` below supplies the geometry.
+        ...(route.color ? { style: { ...record.link.style, hue: LINK_HUES[route.color] ?? 'blue' } } : {}),
         connector: {
           ...record.link.connector,
-          // A connector draws through the diagram renderer, which reads its stroke here rather than from the link's
-          // own `style`, so a dashed link would go solid the moment it is routed.
+          // A connector draws through the diagram renderer, which reads its stroke and colour here rather than from
+          // the link's own `style`, so a dashed accent link would go solid and grey the moment it is routed.
           ...(route.dash || record.link.style?.lineStyle === 'dashed' ? { stroke: 'dashed' } : {}),
+          ...(route.color ? { color: LINK_COLORS[route.color] ?? 'blue' } : {}),
           // A link's marker vocabulary is wider than a connector's head, so only the two they share carry over.
           ...(record.link.ends?.end === 'arrow' || record.link.ends?.end === 'triangle'
             ? { head: record.link.ends.end }
@@ -302,8 +458,49 @@ const routeLinks = (content: ContentMap, model: StudioModel): number => {
   return routed;
 };
 
+/**
+ * Replaces a component's placeholder with a generator node bound to its readers. The DSL says a component is an
+ * `ellipse ring` with `component=<kind>` in a comment, which the parser drops; the canvas has a node type for it
+ * (`generator`), so the shape stands in for one until the loader swaps it.
+ *
+ * `generators` maps a component kind to the reference of a `Generator` object in the space. With none, the ring is
+ * left as it parsed, which is how the drawing reads where the generator is not there.
+ */
+const placeGenerators = (content: ContentMap, model: StudioModel, generators: Generators): number => {
+  let placed = 0;
+  for (const component of model.components ?? []) {
+    const generator = generators[component.kind];
+    const key = nodeKey(elementId(component.id, 'ring'));
+    const record = content[key];
+    if (!generator || !isNodeRecord(record)) {
+      continue;
+    }
+    // Readers are node ids, in the order the sidecar's taps give them: the generator aims each one by its index.
+    const readers = (model.edges as readonly StudioEdge[]).flatMap((edge) =>
+      edge.length === 4 && edge[1] === component.id && edge[3].tap ? [boxOf(edge[0])] : [],
+    );
+    content[key] = {
+      ...record,
+      node: {
+        type: 'generator',
+        id: record.node.id,
+        z: record.node.z,
+        center: { x: component.cx, y: component.cy },
+        size: { width: component.r * 2, height: component.r * 2 },
+        generator: generator.reference,
+        params: { ...component.params, ...generator.params, readers },
+      },
+    };
+    placed++;
+  }
+  return placed;
+};
+
+/** A `Generator` object in the space, by the component kind it draws. */
+export type Generators = Record<string, { reference: string; params?: Record<string, unknown> }>;
+
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
-export type StudioReport = { problems: number; cards: number; routed: number };
+export type StudioReport = { problems: number; cards: number; routed: number; generators: number };
 
 /** Whether a command names the slide's title block, which the presenter's heading carries ({@link TITLE_OBJECT}). */
 const isTitle = (command: Scene.Command): boolean =>
@@ -314,7 +511,11 @@ const isTitle = (command: Scene.Command): boolean =>
  * illustrator bridge, then repairs from the sidecar what the DSL could not carry. Returns what it had to repair.
  */
 export const seedStudioSlide =
-  (source: string, model: StudioModel, report?: (report: StudioReport) => void) =>
+  (
+    source: string,
+    model: StudioModel,
+    { generators = {}, report }: { generators?: Generators; report?: (report: StudioReport) => void } = {},
+  ) =>
   (content: ContentMap): void => {
     const { commands, problems } = Dsl.parse(source);
     invariant(problems.length === 0, `${model.id}.diagram: ${problems.map(({ message }) => message).join('; ')}`);
@@ -325,7 +526,13 @@ export const seedStudioSlide =
     );
     promoteCards(content, model);
     styleText(content, model);
-    placeFrameLabels(content, model);
+    styleFrames(content, model);
     const routed = routeLinks(content, model);
-    report?.({ problems: problems.length, cards: Object.keys(model.nodes).length, routed });
+    const placed = placeGenerators(content, model, generators);
+    report?.({
+      problems: problems.length,
+      cards: Object.keys(model.nodes).length,
+      routed,
+      generators: placed,
+    });
   };

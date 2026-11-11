@@ -86,7 +86,11 @@ Two traps worth writing down, both found the hard way:
   re-routes the connector orthogonally. The sidecar holds waypoints only, so the loader computes an attachment
   point on each frame and brackets the waypoints with them.
 - **A routed link takes its stroke from the connector, not from the link's `style`.** A dashed link goes solid the
-  moment you give it a route, unless `connector.stroke` is set too.
+  moment you give it a route, unless `connector.stroke` is set too. (Round 2 refines this: the _colour_ does not
+  follow the same path — `connector.color` is only read when the canvas is in diagram-shapes mode, so an accent link
+  needs `style.hue` on the link itself. And `Shape.Color`'s strong colours — `blue`, `green`, `red`, `violet` — have
+  no entry in the SVG renderer's `COLOR_CLASS`, so they silently draw neutral; `light-blue` is the nearest that
+  works.)
 
 And one that cost the most time: the canvas content map is `Record<string, any>`, so a record that fails its schema
 is not rejected — `readViews` simply skips it and the element vanishes with no error. An `alignVertical: 'center'`
@@ -234,3 +238,61 @@ they exercise exactly the two things the card kind is missing — a card with bo
 connector that is not a plain arrow — and they would tell us whether the sidecar can be retired or has to grow.
 `06-agents` next, since a generated sub-graph is what canvas Generators are for. `01-hyperspace` and `04-composer`
 last: a portal onto another drawing is a different question from a diagram.
+
+## 9. Round 2: the Agents slide
+
+The deck's Agents slide ([`StudioAgents.stories.tsx`](../src/containers/CanvasArticle/StudioAgents.stories.tsx)),
+which needed two things the round-1 graph slides did not: a richer card, and a generated graph that links end inside.
+
+**The file parsed as exported.** `agents.diagram` reported no problems and round-tripped stably — the `ellipse`, the
+arrows with no `head=`, and the arrows ending on `space/ring` are all within the grammar. The `component=` and `tap=`
+conventions the studio README proposed survive as comments, which is to say they are dropped, which is the point.
+
+**The feed card** is an `ElementKindSpec` like the round-1 card: icon, title, a feed strip of `n` blocks with some
+marked, an optional body, a mono footer. Nine of them draw on the slide, and `WithoutPlugin` still reads, because the
+title is in `label`.
+
+**The space graph went in as a Generator**, through the operations an agent would use:
+`canvas.createGenerator` compiled it with no errors, and `canvas.inspectGenerator` reports deterministic, inside the
+4 ms budget, drawing 296 shapes (the ring, 68 empty lattice points, 126 links, 101 objects). `layout()`, `pick()` and
+`toward()` are the studio draft's, unchanged, and `space-graph.test.ts` is `check.mjs` ported: every cell, object,
+link and reader pick matches `golden-seed7.json`.
+
+Three things had to change to make it draw:
+
+1. **`x-binding` on `items` binds nothing.** `bindingsOf` reads the property, never what is inside it, so the draft's
+   `"readers": { "type": "array", "items": { "x-binding": "node" } }` resolved to nothing: no taps, nothing lit. Moved
+   to the array property itself, which `resolveBindings` already handles (it accepts an array value). The upstream
+   fix is one line in `bindingsOf`, and would let the schema read the way the draft wrote it.
+2. **The frame was painting over the graph.** `color=grey` gives a filled neutral box; the deck's layer region is
+   unfilled. `fill=none` in the DSL says it, and the exporter should emit it (§1 of
+   [STUDIO-EXPORT.md](./STUDIO-EXPORT.md)).
+3. **The tap links had to go.** The DSL states them and the canvas draws them — as stubs ending on the circle's
+   outline, duplicating what the generator already draws from its bound readers.
+
+### Generator or node type?
+
+**Generator, for this component.** It is agent-writable with no plugin build, its parameters are a JSON schema, its
+readers bind so moving a card moves its links, and the check harness is better than anything a React node type has.
+What it costs, measured rather than assumed:
+
+| The Generator API cannot                                                       | Consequence here                                                                                                         |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Dash a path (`Shape2D`'s `path` has `d`, `width`, `opacity`, `reveal`, colour) | The deck's dashed reader links draw solid.                                                                               |
+| Stroke a `circle` (circles and rects are filled only)                          | The ring is a `path`, not a circle. Fine, but it means "outline" is not a property of a shape.                           |
+| Expose its inner objects as link anchors                                       | A tap cannot be an ordinary connector: the generator draws its own, so they are not selectable, routable or re-bindable. |
+| Take a colour outside the theme hues                                           | The deck's `#2d6fff` becomes the `blue` hue.                                                                             |
+
+**A node type instead** would fix the third row and nothing else, at the cost of the schema, the binding and the
+check. The honest rule: a generated graph stays a Generator **until another drawing needs to link into it**. The
+moment a tap has to be a real connector — a reader on a different slide, or a person drawing one by hand — it has to
+be a node type whose objects are anchors (`space/object:28`), and that is a change to the canvas, not to the deck.
+
+### What matched, and what did not
+
+Matched: the nine feed cards with strips, marks, body and footers; the ink outline on the two agents; the frame and
+its label; the caption and the footnote; the graph, cell for cell, with eight objects lit and a curve from each
+sub-agent to the two it reaches.
+
+Did not: the reader links draw solid rather than dashed (above); the accent on the delegation links reaches their
+arrowheads but not their strokes; and the deck's exact blue becomes the theme's.

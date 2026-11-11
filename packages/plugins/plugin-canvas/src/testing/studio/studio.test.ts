@@ -42,7 +42,7 @@ describe('studio deck slides on a canvas', () => {
     const { source, model } = slide(name);
     const content: ContentMap = {};
     let report: StudioReport | undefined;
-    seedStudioSlide(source, model, (value) => (report = value))(content);
+    seedStudioSlide(source, model, { report: (value) => (report = value) })(content);
 
     const root = readViews(content)[ROOT_VIEW_ID];
     const nodes = Object.values(root.nodes);
