@@ -67,13 +67,24 @@ export const makeDiscordChannelBackend = ({
   mirrored: true,
   // No Discord call: EDGE's bot opens the DM with the token it holds when it posts the agent's message.
   openDirect: (_channel, person) =>
-    Effect.sync(() => {
-      // Only an id opens a DM; a handle an agent recorded instead names an account this cannot look up here.
-      const userId = (person.identities ?? [])
-        .filter(({ label }) => label?.toLowerCase() === 'discord')
-        .map(({ value }) => DiscordBot.bareName(value))
-        .find(DiscordBot.isUserId);
-      return userId === undefined ? undefined : DiscordChannel.pendingDmThread(userId);
+    Effect.gen(function* () {
+      const discord = DiscordBot.discordIdentities(person);
+      if (discord.length === 0) {
+        return undefined;
+      }
+      const ids = [...new Set(discord.filter(DiscordBot.isUserId))];
+      if (ids.length === 1) {
+        return DiscordChannel.pendingDmThread(ids[0]);
+      }
+      const name = person.fullName ?? person.nickname ?? 'This person';
+      return yield* Effect.fail(
+        new DiscordChannelError({
+          message:
+            ids.length > 1
+              ? `${name} has more than one Discord user id on record: ${ids.join(', ')}.`
+              : `${name}'s Discord identity (${discord.join(', ')}) is a handle, not a user id; record their Discord user id to message them directly.`,
+        }),
+      );
     }),
   threads: {
     send: (channel, thread, message) =>

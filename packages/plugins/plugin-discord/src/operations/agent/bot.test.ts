@@ -146,6 +146,10 @@ describe('resolveUser', () => {
         expect(lone.message).toBe(`No Discord member is called dim; similar: @dima (333333333333333333).${HINT}`);
         const nobody = yield* resolveUser(BOT, 'zed').pipe(Effect.flip);
         expect(nobody.message).toBe(`No Discord member is called zed.${HINT}`);
+        // An empty name would match a contact with no name at all.
+        for (const empty of ['', ' @ ']) {
+          expect((yield* resolveUser(BOT, empty).pipe(Effect.flip)).message).toBe(`Name the person to message.${HINT}`);
+        }
       }),
     ),
   );
@@ -225,7 +229,7 @@ describe('resolveUser', () => {
         expect(yield* resolveUser(BOT, 'Rich')).toBe('111111111111111111');
         const sam = yield* resolveUser(BOT, 'Sam').pipe(Effect.flip);
         expect(sam.message).toBe(
-          `Sam names contacts with different Discord accounts: 222222222222222222, 333333333333333333.${HINT}`,
+          `Sam names contacts with different Discord accounts: Sam (222222222222222222), Sam (333333333333333333).${HINT}`,
         );
       }),
     ),
@@ -245,7 +249,22 @@ describe('resolveUser', () => {
         yield* Database.flush();
 
         const display = yield* resolveUser(BOT, 'Rich Burdon').pipe(Effect.flip);
-        expect(display.message).toBe(`No Discord member is called rich burdon.${HINT}`);
+        expect(display.message).toBe(
+          `Rich Burdon records the Discord identity "Rich Burdon": No Discord member is called Rich Burdon.${HINT}`,
+        );
+
+        // Another contact of that name has an id; the unresolved one is still refused, naming the id it found.
+        yield* Database.add(
+          Obj.make(Person.Person, {
+            fullName: 'Rich Burdon',
+            identities: [{ label: 'discord', value: '666666666666666666' }],
+          }),
+        );
+        yield* Database.flush();
+        const mixed = yield* resolveUser(BOT, 'Rich Burdon').pipe(Effect.flip);
+        expect(mixed.message).toBe(
+          `Rich Burdon records the Discord identity "Rich Burdon": No Discord member is called Rich Burdon. Ids on record: Rich Burdon (666666666666666666).${HINT}`,
+        );
       }),
     ),
   );

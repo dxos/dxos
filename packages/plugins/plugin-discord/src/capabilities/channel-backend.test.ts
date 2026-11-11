@@ -131,15 +131,31 @@ describe('Discord channel backend', () => {
       expect(thread).toBe(DiscordChannel.pendingDmThread('700000000000000007'));
       expect(DiscordChannel.pendingDmUser(thread ?? '')).toBe('700000000000000007');
       expect(DiscordChannel.pendingDmUser('1400000000000000001')).toBeUndefined();
-      // No id on record, or only a handle an agent kept, which Discord does not open a DM with.
-      for (const person of [
-        Person.make({ fullName: 'Nobody' }),
-        Person.make({ fullName: 'Handle', identities: [{ label: 'discord', value: '@richburdon' }] }),
-      ]) {
-        expect(
-          yield* (backend.openDirect?.(channel, person) ?? Effect.succeed(undefined)).pipe(withCapabilities),
-        ).toBeUndefined();
-      }
+      const nobody = Person.make({ fullName: 'Nobody' });
+      expect(
+        yield* (backend.openDirect?.(channel, nobody) ?? Effect.succeed(undefined)).pipe(withCapabilities),
+      ).toBeUndefined();
+      // Only a handle an agent kept, which Discord opens no DM with, or two ids: refused, saying what to record.
+      const refused = (person: Person.Person) =>
+        (backend.openDirect?.(channel, person) ?? Effect.succeed(undefined)).pipe(withCapabilities, Effect.flip);
+      const handle = yield* refused(
+        Person.make({ fullName: 'Rich', identities: [{ label: 'discord', value: '@richburdon' }] }),
+      );
+      expect(handle.message).toBe(
+        "Rich's Discord identity (richburdon) is a handle, not a user id; record their Discord user id to message them directly.",
+      );
+      const twoIds = yield* refused(
+        Person.make({
+          fullName: 'Sam',
+          identities: [
+            { label: 'discord', value: '700000000000000007' },
+            { label: 'Discord', value: '700000000000000008' },
+          ],
+        }),
+      );
+      expect(twoIds.message).toBe(
+        'Sam has more than one Discord user id on record: 700000000000000007, 700000000000000008.',
+      );
       expect(discord.calls).toHaveLength(0);
     }).pipe(Effect.provide(testLayer())),
   );

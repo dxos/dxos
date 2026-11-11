@@ -28,8 +28,18 @@ export const isUserId = (value: string): boolean => /^\d{15,21}$/.test(value);
 export const bareName = (value: string): string =>
   value
     .trim()
-    .replace(/^<@!?(\d{15,21})>$/, '$1')
+    .replace(/^<@!?(\d+)>$/, '$1')
     .replace(/^@/, '');
+
+/**
+ * A contact's Discord identities, as written: ids, or handles and display names an agent kept from a message. Only
+ * these name a Discord account; another platform's handle names someone else there.
+ */
+export const discordIdentities = (person: { identities?: readonly { label?: string; value: string }[] }): string[] =>
+  (person.identities ?? [])
+    .filter(({ label }) => label?.toLowerCase() === 'discord')
+    .map(({ value }) => bareName(value))
+    .filter((value) => value.length > 0);
 
 /** Which bot acts, for which agent; the bot host refuses a space that does not own the bot. */
 export type Bot = {
