@@ -38,33 +38,45 @@ const SNOWFLAKE = /^\d{15,21}$/;
 /**
  * The Discord user a person names: a user id as is; else a contact's Discord identity, matched by name, nickname
  * or handle; else the one guild member whose username or nickname is the handle.
+ *
+ * A contact's Discord identity is a user id only when it is a snowflake: an agent recording a person from a message
+ * (`@richburdon`) may keep their handle there instead, and Discord refuses a direct message to anything but an id, so
+ * such a handle is looked up among the members like any other.
  */
 export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to: string) {
-  const name = to.trim().replace(/^@/, '');
-  if (SNOWFLAKE.test(name)) {
-    return name;
+  const asked = to.trim().replace(/^@/, '');
+  if (SNOWFLAKE.test(asked)) {
+    return asked;
   }
 
-  const wanted = name.toLowerCase();
+  let handle = asked;
   const people = yield* Database.query(Query.select(Filter.type(Person.Person))).run.pipe(Effect.orDie);
   for (const person of people) {
-    const userId = person.identities?.find(({ label }) => label === 'discord')?.value;
-    if (!userId) {
+    const identity = person.identities
+      ?.find(({ label }) => label === 'discord')
+      ?.value.trim()
+      .replace(/^@/, '');
+    if (!identity) {
       continue;
     }
     const names = [
       person.fullName,
       person.preferredName,
       person.nickname,
-      ...(person.identities ?? []).map(({ value }) => value),
+      ...(person.identities ?? []).map(({ value }) => value.trim().replace(/^@/, '')),
     ];
-    if (names.some((candidate) => candidate?.trim().toLowerCase() === wanted)) {
-      return userId;
+    if (names.some((candidate) => candidate?.trim().toLowerCase() === asked.toLowerCase())) {
+      if (SNOWFLAKE.test(identity)) {
+        return identity;
+      }
+      handle = identity;
+      break;
     }
   }
 
+  const wanted = handle.toLowerCase();
   const service = yield* DiscordBot.DiscordBotService;
-  const members = yield* service.findMembers(bot, name);
+  const members = yield* service.findMembers(bot, handle);
   const exact = members.filter(
     ({ username, displayName }) => username.toLowerCase() === wanted || displayName?.toLowerCase() === wanted,
   );

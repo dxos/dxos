@@ -117,6 +117,23 @@ describe('resolveUser', () => {
     }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
   );
 
+  it.effect('looks up a contact whose Discord identity is a handle among the members', () =>
+    Effect.gen(function* () {
+      // As an agent records someone it was asked to message: their handle where the user id belongs.
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'richburdon', identities: [{ label: 'discord', value: 'richburdon' }] }),
+      );
+      yield* Database.add(
+        Obj.make(Person.Person, { fullName: 'Dmytro', identities: [{ label: 'discord', value: '@dima' }] }),
+      );
+      yield* Database.flush();
+
+      expect(yield* resolveUser(BOT, 'richburdon')).toBe('111111111111111111');
+      expect(yield* resolveUser(BOT, '@richburdon')).toBe('111111111111111111');
+      expect(yield* resolveUser(BOT, 'Dmytro')).toBe('333333333333333333');
+    }).pipe(Effect.provide(Layer.merge(TestLayer, fakeBot(members)))),
+  );
+
   it.effect('refuses a name that matches nobody, or several members', () =>
     Effect.gen(function* () {
       const nobody = yield* resolveUser(BOT, 'zed').pipe(Effect.flip);
