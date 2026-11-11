@@ -72,11 +72,12 @@ export const makeDiscordChannelBackend = ({
       if (discord.length === 0) {
         return undefined;
       }
+      // A handle beside an id on the same contact is not looked up here (no member search): their own id is trusted.
       const ids = [...new Set(discord.filter(DiscordBot.isUserId))];
       if (ids.length === 1) {
         return DiscordChannel.pendingDmThread(ids[0]);
       }
-      const name = person.fullName ?? person.nickname ?? 'This person';
+      const name = person.fullName || person.nickname || 'This person';
       return yield* Effect.fail(
         new DiscordChannelError({
           message:

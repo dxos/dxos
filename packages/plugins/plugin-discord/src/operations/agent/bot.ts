@@ -44,18 +44,16 @@ type MemberLookup = { readonly userId: string } | { readonly reason: string };
  */
 export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to: string) {
   const service = yield* DiscordBot.DiscordBotService;
-  const fail = (message: string) =>
-    Effect.fail(
-      new DiscordBot.DiscordBotError({
-        message: `${message} Pass their user id instead, as the message header gives it (from, mentions).`,
-      }),
-    );
+  const fail = (
+    message: string,
+    hint = ' Pass their user id instead, as the message header gives it (from, mentions).',
+  ) => Effect.fail(new DiscordBot.DiscordBotError({ message: `${message}${hint}` }));
   const listed = (members: readonly DiscordBot.Member[]) =>
     members.map(({ username, userId }) => `@${username} (${userId})`).join(', ');
 
   const asked = DiscordBot.bareName(to);
   if (asked === '') {
-    return yield* fail('Name the person to message.');
+    return yield* fail('Name the person to message, or pass their user id from the message header.', '');
   }
   if (DiscordBot.isUserId(asked)) {
     return asked;
@@ -96,7 +94,7 @@ export const resolveUser = Effect.fnUntraced(function* (bot: DiscordBot.Bot, to:
     }
     for (const value of discord) {
       const entry = identities.get(value.toLowerCase()) ?? { value, contacts: new Set<string>() };
-      entry.contacts.add(person.fullName ?? person.preferredName ?? person.nickname ?? asked);
+      entry.contacts.add(person.fullName || person.preferredName || person.nickname || asked);
       identities.set(value.toLowerCase(), entry);
     }
   }

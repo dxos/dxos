@@ -148,7 +148,9 @@ describe('resolveUser', () => {
         expect(nobody.message).toBe(`No Discord member is called zed.${HINT}`);
         // An empty name would match a contact with no name at all.
         for (const empty of ['', ' @ ']) {
-          expect((yield* resolveUser(BOT, empty).pipe(Effect.flip)).message).toBe(`Name the person to message.${HINT}`);
+          expect((yield* resolveUser(BOT, empty).pipe(Effect.flip)).message).toBe(
+            'Name the person to message, or pass their user id from the message header.',
+          );
         }
       }),
     ),
