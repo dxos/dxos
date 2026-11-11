@@ -7629,6 +7629,9 @@ importers:
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../../core/compute/mcp-server
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability

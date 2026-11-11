@@ -14,10 +14,9 @@ import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import { getPort } from 'get-port-please';
 
-import { openBrowser } from '#platform';
-
 import { CommandConfig } from '../services/index.ts';
 import { PlatformError } from '../util/errors.ts';
+import { presentUrl } from '../util/present-url.ts';
 
 /** Default timeout for a full browser round-trip. */
 export const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000;
@@ -53,7 +52,7 @@ export type LocalCallbackServer = {
   readonly port: number;
   /** Origin (e.g. `http://localhost:1234`) to advertise as the redirect target. */
   readonly origin: string;
-  /** Opens `authUrl` in the browser via the local relay page. */
+  /** Prints the local relay page's link for `authUrl` and, unless the server was started with `open: false`, opens it. */
   readonly open: (authUrl: string) => Effect.Effect<void, Error>;
   /** Resolves with the captured callback query params, or fails on an `error` param / timeout. */
   readonly waitForResult: (timeoutMs?: number) => Effect.Effect<Record<string, string>, Error>;
@@ -69,6 +68,8 @@ export type LocalCallbackServerOptions = {
    * one (another local process, a page probing loopback ports) cannot end the wait.
    */
   readonly accept?: (params: Record<string, string>) => boolean;
+  /** Whether {@link LocalCallbackServer.open} launches the default browser; its link is printed either way. Defaults to true. */
+  readonly open?: boolean;
 };
 
 /**
@@ -83,7 +84,11 @@ export type LocalCallbackServerOptions = {
  */
 export const startLocalCallbackServer = (
   callbackPath: `/${string}`,
-  { successMessage = 'Authentication successful! You can close this window.', accept }: LocalCallbackServerOptions = {},
+  {
+    successMessage = 'Authentication successful! You can close this window.',
+    accept,
+    open: openInBrowser = true,
+  }: LocalCallbackServerOptions = {},
 ): Effect.Effect<LocalCallbackServer, Error> =>
   Effect.gen(function* () {
     // Probed on IPv4 loopback only: with no host, get-port-please also tries every other interface
@@ -196,7 +201,8 @@ export const startLocalCallbackServer = (
     return {
       port,
       origin,
-      open: (authUrl: string) => openBrowser(`${origin}/oauth-relay?authUrl=${encodeURIComponent(authUrl)}`),
+      open: (authUrl: string) =>
+        presentUrl(`${origin}/oauth-relay?authUrl=${encodeURIComponent(authUrl)}`, { open: openInBrowser }),
       waitForResult,
       stop: () => Scope.close(scope, Exit.void).pipe(Effect.catch(() => Effect.void)),
     } satisfies LocalCallbackServer;
