@@ -25,7 +25,7 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
 
 <div class="header">
   <div class="title-wrapper sl-flex">
-    <div data-nav-hide="logo-menu"><SiteTitle /></div>
+    <div data-nav-hide="logo-menu effect-tabs effect-picker"><SiteTitle /></div>
     <div data-nav-only="logo-menu"><TopicMenu /></div>
     <div data-nav-only="effect-tabs effect-picker"><EffectNav /></div>
   </div>
@@ -147,6 +147,15 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
 
   :global(html[data-topic-nav^='effect']) .search-wrap :global(button[data-open-modal] > span) {
     display: none;
+  }
+
+  /* The accent is kept for the current topic, so the social links drop to the text colour. */
+  :global(html[data-topic-nav^='effect']) .social-icons :global(a) {
+    color: var(--sl-color-white);
+  }
+
+  :global(html[data-topic-nav^='effect']) .social-icons :global(a:hover) {
+    opacity: 0.66;
   }
 
   .site-nav {

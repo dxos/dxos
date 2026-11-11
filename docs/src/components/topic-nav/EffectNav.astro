@@ -2,6 +2,7 @@
 // Variants "effect-tabs" and "effect-picker": Docs beside the logo where the marketing nav has it, a separator, then
 // the topics. "effect-tabs" lays them out as logotype tabs while they fit and falls back to the picker when they don't;
 // "effect-picker" always uses the picker.
+import DxosLogo from '../svg/DxosLogo.astro';
 import TopicList from './TopicList.astro';
 import TopicMark from './TopicMark.astro';
 import { TOPICS, currentTopic } from './topics.ts';
@@ -10,6 +11,7 @@ const topic = currentTopic(Astro.url.pathname);
 ---
 
 <div class="effect-nav">
+  <a class="logo" href="/" aria-label="DXOS home"><DxosLogo /></a>
   <a class="docs" href="/docs/echo/overview/" aria-current="page">Docs</a>
   <span class="sep" aria-hidden="true"></span>
   <div data-nav-only="effect-tabs">
@@ -61,17 +63,27 @@ const topic = currentTopic(Astro.url.pathname);
     align-items: center;
     display: flex;
     flex: none;
-    gap: 1rem;
+    /* Pixels throughout: the marketing nav is laid out on a 16px root, the docs on 17px. */
+    gap: 16px;
     /*
-     * Puts Docs where the marketing nav has it, so it stays put when crossing into the docs. There the text sits at
-     * 1% padding + 16px container padding + 89px logo + 16px gap + 16px link padding; this row starts 122.875px in.
+     * The same logo and Docs at the marketing nav's spots, so neither moves when crossing into the docs: the logo
+     * 1% + 16px from the edge, the Docs text a 16px gap and 16px link padding past it.
      */
-    margin-inline-start: calc(1vw + 14.125px);
+    margin-inline-start: calc(1vw + 16px - var(--sl-nav-pad-x));
+  }
+  .logo {
+    color: var(--sl-color-white);
+    display: flex;
+  }
+  .logo :global(svg) {
+    display: block;
+    height: 30px;
+    width: 89px;
   }
   .docs {
     color: var(--sl-color-white);
-    /* The marketing nav's type, in px since the docs' root font size differs. */
     font: 400 16px / 24px 'Kumbh Sans', sans-serif;
+    margin-inline-start: 16px;
     padding: 8px 0;
     text-decoration: none;
   }
@@ -92,9 +104,13 @@ const topic = currentTopic(Astro.url.pathname);
     display: flex;
     text-decoration: none;
   }
-  .tabs a:hover,
-  .tabs a.current {
+  .tabs a:hover {
     color: var(--sl-color-white);
+  }
+  /* The topic you are reading is the one thing in the bar in the accent. */
+  .tabs a.current,
+  summary > :global(:first-child) {
+    color: var(--sl-color-text-accent);
   }
   .tabs .soon {
     color: var(--sl-color-gray-5);
