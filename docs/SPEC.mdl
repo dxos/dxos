@@ -944,23 +944,22 @@ page app-framework-welcome: Overview
     - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
     - What ECHO does under it: spaces, typed objects, sync between devices and people, and agents that query the same graph
     - What a reader can build: a new object type with its own view, an operation, a panel, an integration
-    - Where to go next: Try Composer, Build a plugin with the assistant, or the learning path
+    - Where to go next: Why PLEX?, Build a plugin with the assistant, or the learning path
 ```
 
 ```mdl
-page app-framework-try-composer: Try Composer
-  Open Composer, make a space, and share it, in one short page.
+page why-plex: Why PLEX?
+  Why an app made of plugins, where a third-party plugin has the same powers as a built-in one.
   section: PLEX
-  route: /docs/plex/try/
+  route: /docs/plex/why-plex/
   group: Start here
-  template: tutorial
+  template: narrative
   status: spike
   covers:
-    - Open Composer on the web, or install the desktop app
-    - Create a space and a first object
-    - Invite a second device or person, and watch an edit reach the other replica
-    - Turn on a plugin from the plugin registry
-    - Links to the ECHO concepts behind each step (spaces, objects, sharing)
+    - The pattern: a plugin fills a role in a view it did not write, and the app renders whatever answers
+    - Comparison: an app with an extension API, against an app that is the plugins it loads
+    - Practical problems: extending a plugin you did not write, loading only what is used, one action for people and agents, data that syncs without plugin code
+    - What PLEX does not do: it does not store or sync data, and it is not a component library
 ```
 
 ```mdl
@@ -1344,9 +1343,9 @@ page app-framework-glossary: Glossary
   route: /docs/plex/resources/glossary/
   group: Resources
   template: reference
-  status: later
+  status: spike
   covers:
-    - Plugin, module, capability, activation event, surface, app graph, node, operation
+    - Action, activation event, App Toolkit, app graph, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role and surface
 ```
 ```mdl
 page plex-llms-txt: llms.txt
@@ -2899,6 +2898,14 @@ decision D-125: The docs' code samples are formatted to 80 columns, not the repo
   why: The Effect docs aim for 80 columns: of about 3,000 code lines across 12 of their pages, 12 are longer. At 120 columns, 9% of our sample lines scrolled in the old 782px column. Comments are rewrapped by hand, since the formatter does not wrap them.
   rejected:
     - Keep 120 columns and widen the column to fit them: about 1,140px, which puts the body text far past a readable line length.
+```
+
+```mdl
+decision D-126: PLEX's Start here group has Why PLEX? in place of Try Composer, like Why ECHO? and Why HALO?, and PLEX has a glossary in Resources like HALO's. `/docs/plex/try/` redirects to Why PLEX?. Fills in [D-90].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [why-plex, app-framework-glossary, app-framework-welcome]
+  why: The three sections open the same way, so a reader moving between them finds the same pages in the same places.
 ```
 
 ## Appendix: Extension Definitions

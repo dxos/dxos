@@ -81,6 +81,10 @@ const redirects: Record<string, string> = {
   // The llms.txt pages moved from each section's Agents group to its Resources group.
   '/docs/echo/agents/llms-txt': '/docs/echo/resources/llms-txt/',
   '/docs/plex/agents/llms-txt': '/docs/plex/resources/llms-txt/',
+  // Why PLEX? took Try Composer's place in Start here.
+  '/docs/app-framework/try': '/docs/plex/why-plex/',
+  '/docs/composer/try': '/docs/plex/why-plex/',
+  '/docs/plex/try': '/docs/plex/why-plex/',
   ...plexRedirects,
 };
 

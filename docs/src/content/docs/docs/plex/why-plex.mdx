@@ -1,0 +1,64 @@
+---
+title: Why PLEX?
+description: Why an app made of plugins, where a third-party plugin has the same powers as a built-in one.
+---
+
+import Snippet from '../../../../components/Snippet.astro';
+
+Most apps are one codebase with extension points added later. An extension gets the narrower API the app's team chose
+to expose, and two extensions rarely work with each other. A PLEX app is the plugins it loads. The navigation tree,
+the settings page and the assistant are plugins too, so a plugin from outside the team uses the same API as a built-in
+one.
+
+## The pattern
+
+A plugin says which object type it renders and where. The app asks for "the article for this object" and renders
+whatever plugin answers, without importing it.
+
+<Snippet file="app-framework-guide-surface" region="contribute" lang="tsx" />
+
+## An extension API against a plugin app
+
+|                                     | App with an extension API                        | PLEX app                                                                |
+| ----------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------- |
+| What the core is                    | Code the app's team writes                       | The plugins it loads, including the core UI                             |
+| What an extension can change        | What the extension API exposes                   | Anything a built-in plugin can, through the same capabilities           |
+| How two extensions work together    | Through the host, if it allows it                | One plugin reads another's capabilities and renders its surfaces        |
+| When extension code loads           | Usually at startup                               | Each module when its activation event fires                             |
+| How an agent acts                   | A separate API, if there is one                  | Through the same operations the UI runs                                 |
+| Where an extension keeps its data   | A store of its own                               | ECHO objects in spaces, which every plugin can query                    |
+
+## Practical problems
+
+### Extending a plugin you did not write
+
+Plugins extend each other through capabilities: typed slots that one module contributes to and another reads. A plugin
+can render inside another plugin's view by contributing a surface for a role, or add an action to another plugin's
+objects by adding nodes to the app graph. Neither plugin imports the other.
+[Surfaces](/docs/plex/concepts/surfaces/) and [The app graph](/docs/plex/concepts/app-graph/) explain both.
+
+### Loading only what is used
+
+An app with many plugins cannot load all of them at startup. Each module waits for an activation event, such as the
+first time a view is needed. A surface module loads the first time one of its roles is requested, and an operation
+handler loads the first time the operation runs. [ActivationEvent](/docs/plex/guides/activation-event/) lists the
+events.
+
+### One action for people and agents
+
+An operation is defined once, with a typed input and output. A button invokes it, the command palette lists it, and the
+assistant calls it as a tool, reading the schema to fill in the input. None of the three needs code of its own.
+[Operations](/docs/plex/concepts/operations/) explains how.
+
+### Data that syncs without plugin code
+
+A plugin's data is ECHO objects in spaces. It syncs between a user's devices and the people they share with, merges
+concurrent edits and works offline, with no sync code in the plugin. [Spaces](/docs/echo/concepts/spaces/) explains the
+model.
+
+## What PLEX does not do
+
+PLEX does not store or sync data; ECHO does. It is not a component library either: plugins build their views with
+`@dxos/react-ui`, or with any React components.
+
+Start with [Create a plugin](/docs/plex/learn/create-plugin/).
