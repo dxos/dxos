@@ -2,7 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useLabels } from '@dxos/echo-react';
@@ -79,6 +85,8 @@ const unsorted = () => ({
 export type ContactsProps = {
   space: Space;
   stage: Stage;
+  /** Buttons at the end of the toolbar. */
+  actions?: ReactNode;
   /**
    * Leaves out search and the view switch, for a peer that shares the embed
    * with another.
@@ -87,7 +95,7 @@ export type ContactsProps = {
 };
 
 /** The tutorial app: one space's organizations, people and events. */
-export const Contacts = ({ space, stage, compact }: ContactsProps) => {
+export const Contacts = ({ space, stage, actions, compact }: ContactsProps) => {
   const [typename, setTypename] = useState(Type.getTypename(Person));
   const [view, setView] = useState<View>('list');
   const [selected, setSelected] = useState<string>();
@@ -250,6 +258,7 @@ export const Contacts = ({ space, stage, compact }: ContactsProps) => {
                 ))}
               </ToggleGroup.Root>
             )}
+            {actions}
           </Toolbar.Root>
         </div>
 

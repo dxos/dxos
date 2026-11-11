@@ -14,6 +14,7 @@ const DXOS_COMMIT = '6bad7b6';
 const DXOS_PACKAGES = [
   'async',
   'client',
+  'config',
   'echo',
   'echo-react',
   'graph',
@@ -27,6 +28,7 @@ const DXOS_PACKAGES = [
   'react-ui-list',
   'react-ui-table',
   'ui-theme',
+  'vite-plugin-icons',
 ];
 
 const TUTORIAL_DIR = join(process.cwd(), 'src/tutorial');
@@ -103,6 +105,7 @@ const PACKAGE_JSON = {
     'react-dom': '~19.3.1',
   },
   devDependencies: {
+    '@phosphor-icons/core': '^2.1.1',
     '@types/react': '^19.2.0',
     '@types/react-dom': '^19.2.0',
     '@vitejs/plugin-react': '^6.1.1',
@@ -115,17 +118,40 @@ const PACKAGE_JSON = {
 };
 
 const VITE_CONFIG = `import react from '@vitejs/plugin-react';
+import { join } from 'node:path';
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
+
+const phosphor = join(import.meta.dirname, 'node_modules/@phosphor-icons/core/assets');
 
 export default defineConfig({
   build: { target: 'esnext' },
-  // ECHO loads WebAssembly in the page and in its workers.
-  optimizeDeps: { exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'] },
+  optimizeDeps: {
+    // ECHO loads WebAssembly in the page and in its workers.
+    exclude: ['@dxos/wa-sqlite', '@automerge/automerge', '@automerge/automerge-subduction'],
+    // CommonJS modules only the database worker imports, so the dependency scan does not find them.
+    include: ['chalk', 'lodash.defaultsdeep', '@dxos/node-std > deep-equal'],
+  },
   worker: { format: 'es', plugins: () => [wasm()] },
-  plugins: [ThemePlugin({}), react(), wasm()],
+  plugins: [
+    // The components' stylesheets read theme tokens that Tailwind emits only when a scanned file names them.
+    ThemePlugin({ content: ['node_modules/@dxos/*/src/**/*.css'] }),
+    // Builds the sprite the components' icons are drawn from.
+    IconsPlugin({
+      symbolPattern: iconSymbolPattern({ sets: ['ph'] }),
+      assetPath: (_set, name, variant) =>
+        join(phosphor, variant, variant === 'regular' ? \`\${name}.svg\` : \`\${name}-\${variant}.svg\`),
+      spriteFile: 'icons.svg',
+      contentPaths: [join(import.meta.dirname, 'src/**/*.{ts,tsx}')],
+      // Pre-bundled dependencies skip the plugin's transform, so their icons are found by scanning up front.
+      scanPaths: [join(import.meta.dirname, 'node_modules/@dxos/*/dist/**/*.mjs')],
+    }),
+    react(),
+    wasm(),
+  ],
 });
 `;
 

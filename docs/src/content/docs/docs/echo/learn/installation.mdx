@@ -49,11 +49,15 @@ A client acts for an identity. The identity owns the spaces it creates, and othe
 
    `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin` for Rollup and esbuild. Node needs no bundler setup.
 
-3. **Open the app's space.** The app does this in one function, in `client.ts`. `new Client` takes the app's types, which the next page declares. `initialize` opens local storage and connects to the network. The client then needs an identity before it can create a space; [HALO](/docs/halo/overview/) covers identities and devices. Last, it creates the space and waits until its database is ready.
+3. **Point the client at the network.** A client keeps its data on the device and reaches other devices through DXOS's EDGE network, which relays invitations and replicates spaces. The app's config, in `client.ts`, says where EDGE is and keeps the data across reloads. [Configure the client](#configure-the-client) covers loading config from files instead.
+
+   <Snippet file="tutorial/client" region="config" />
+
+4. **Open the app's space.** The app does this in one function, also in `client.ts`. `new Client` takes the app's types, which the next page declares, and the config. `createOpfsWorker` keeps the database in the browser's private file system. `initialize` opens local storage and connects to the network. The first time, the client needs an identity before it can create a space; [HALO](/docs/halo/overview/) covers identities and devices. After that, the app opens the space it made before.
 
    <Snippet file="tutorial/client" region="client" />
 
-   `space.db` is the database the rest of the learning path reads and writes. `services` is for running the client somewhere other than the default, as the embeds on these pages do: each runs its clients in memory in the page.
+   `space.db` is the database the rest of the learning path reads and writes. `services` replaces the network: the embeds on these pages pass in-memory services, so each runs its devices in the page and keeps nothing.
 
 </Steps>
 

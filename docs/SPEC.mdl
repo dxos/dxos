@@ -3034,6 +3034,16 @@ decision D-139: Each StackBlitz button shows StackBlitz's bolt logo before its l
   affects: [F-15.7, F-15.8]
 ```
 
+```mdl
+decision D-140: The tutorial app is one device: it opens its own space, and from Sharing a space on its toolbar has Invite, which copies a code, and Join, which takes one and switches the app to that space. The name and the online switch belong to a device frame the docs draw around each copy of the app, not to the app. Every embed shows one device except Sharing a space and The ECHO object, which show Alice's and Bob's side by side, each with a space of its own; only Alice's is seeded. The StackBlitz projects run the app as a real client, with no frame: `client.ts` configures EDGE and keeps the database in the browser's private file system, so a second browser can join, and the app reopens its space after a reload. The embeds keep their in-memory clients. Amends [D-137].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-15.3, F-15.7, F-15.8, installation, sharing, the-echo-object]
+  why: The embeds mixed the demo's controls into the app, so the finished app lacked sharing and the second peer opened on a join screen no real app has; the StackBlitz project is where a reader builds a real app, which an in-memory network is not.
+  rejected:
+    - In-memory devices in StackBlitz too, which cannot share with anything outside the page.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
