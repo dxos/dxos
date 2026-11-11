@@ -1729,7 +1729,8 @@ feat F-16: Docs sections
     when: a reader opens a section's root page
     then: the page is titled Overview in the sidebar and the browser tab, and it opens with a hero that shows the
           section's product name in large type as the page's only heading, over the section's brand background, with
-          a one-line tagline under it
+          a one-line tagline under it; at every page width the heading stays on one line and the section's mark in the
+          background stays whole
 ```
 
 ```mdl
@@ -2839,6 +2840,13 @@ decision D-120: The docs footer's Docs column lists ECHO, HALO and PLEX, in the 
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-7]
+```
+
+```mdl
+decision D-121: The Overview hero crops its background from the left and keeps the right edge, where the mark sits, so a narrow content column never cuts the mark off; it switches to its stacked layout by its own width rather than the viewport's, since the sidebars narrow it too.
+  date: 2026-11-11
+  by: agent:claude-code for user:wittjosiah
+  affects: [F-16.8]
 ```
 
 ## Appendix: Extension Definitions

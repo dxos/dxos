@@ -18,27 +18,35 @@ type Props = {
 
 const { section, tagline, background } = Astro.props;
 
-// Inlined, so the art paints with the page and costs no request; `slice` fills the banner at any aspect ratio.
-const art = BACKGROUNDS[background].replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" aria-hidden="true" ');
+// Inlined, so the art paints with the page and costs no request; `slice` fills the banner at any aspect ratio, and
+// `xMax` crops from the left so the icon on the right edge stays whole.
+const art = BACKGROUNDS[background].replace('<svg ', '<svg preserveAspectRatio="xMaxYMid slice" aria-hidden="true" ');
 ---
 
-<header class="welcome-hero">
-  <div class="art" set:html={art} />
-  <div class="text">
-    <!-- Starlight's skip link and the TOC's "Overview" entry target the page title by this id. -->
-    <h1 id="_top">{section}</h1>
-    <p class="tagline">{tagline}</p>
-  </div>
-</header>
+<div class="hero-frame">
+  <header class="welcome-hero">
+    <div class="art" set:html={art} />
+    <div class="text">
+      <!-- Starlight's skip link and the TOC's "Overview" entry target the page title by this id. -->
+      <h1 id="_top">{section}</h1>
+      <p class="tagline">{tagline}</p>
+    </div>
+  </header>
+</div>
 
 <style>
+  /* The layout follows the banner's own width, which the sidebars set as much as the viewport does. */
+  .hero-frame {
+    container-type: inline-size;
+    margin-top: 1rem;
+  }
+
   .welcome-hero {
     position: relative;
     /* Top-aligned: while the HTML streams in, lines parsed later extend the text downward instead of pushing what is painted. */
     display: flex;
     align-items: flex-start;
     height: 15rem;
-    margin-top: 1rem;
     overflow: hidden;
     border-radius: 0.5rem;
     background: rgb(29, 31, 32);
@@ -82,12 +90,12 @@ const art = BACKGROUNDS[background].replace('<svg ', '<svg preserveAspectRatio="
     color: rgb(255 255 255 / 0.85);
   }
 
-  @media (max-width: 50rem) {
+  @container (max-width: 32rem) {
     .welcome-hero {
       height: 12rem;
     }
 
-    /* A phone has no room beside the text, so the art spans the banner, dimmed behind it. */
+    /* A narrow banner has no room beside the text, so the art spans the banner, dimmed behind it. */
     .art {
       width: 100%;
       mask-image: none;
