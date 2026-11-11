@@ -73,6 +73,8 @@ export const NAV_VARIANTS = [
   { id: 'tabs', label: 'Tabs' },
   { id: 'sidebar-select', label: 'Sidebar picker' },
   { id: 'docs-menu', label: 'Docs menu' },
+  { id: 'effect-tabs', label: 'Effect tabs' },
+  { id: 'effect-picker', label: 'Effect picker' },
 ] as const;
 
 export type NavVariant = (typeof NAV_VARIANTS)[number]['id'];

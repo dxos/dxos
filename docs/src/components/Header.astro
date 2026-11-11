@@ -10,6 +10,7 @@ import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
 
 import { siteLinks } from './site-links.ts';
 import DocsMenu from './topic-nav/DocsMenu.astro';
+import EffectNav from './topic-nav/EffectNav.astro';
 import NavVariantPicker from './topic-nav/NavVariantPicker.astro';
 import TopicMenu from './topic-nav/TopicMenu.astro';
 import TopicTabs from './topic-nav/TopicTabs.astro';
@@ -26,12 +27,13 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
   <div class="title-wrapper sl-flex">
     <div data-nav-hide="logo-menu"><SiteTitle /></div>
     <div data-nav-only="logo-menu"><TopicMenu /></div>
+    <div data-nav-only="effect-tabs effect-picker"><EffectNav /></div>
   </div>
-  <div class="sl-flex print:hidden">
+  <div class="sl-flex print:hidden search-wrap">
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
-    <nav class="site-nav" aria-label="dxos.org" data-nav-hide="tabs">
+    <nav class="site-nav" aria-label="dxos.org" data-nav-hide="tabs effect-tabs effect-picker">
       {siteLinks.map((link) =>
         link.id === 'docs' ? (
           <>
@@ -118,6 +120,20 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
 
 <!-- Exploration styles sit outside Starlight's layer so the page revert does not undo them. -->
 <style>
+  /* The Effect-style designs lay the header out as one row: logo, Docs, topics, then search and the rest at the end. */
+  :global(html[data-topic-nav^='effect']) .header {
+    display: flex;
+  }
+
+  :global(html[data-topic-nav^='effect']) .title-wrapper {
+    flex: none;
+    overflow: visible;
+  }
+
+  :global(html[data-topic-nav^='effect']) .search-wrap {
+    margin-inline-start: auto;
+  }
+
   .site-nav {
     align-items: center;
     display: flex;

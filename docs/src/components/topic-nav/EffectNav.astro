@@ -1,0 +1,124 @@
+---
+// Variants "effect-tabs" and "effect-picker": Docs beside the logo where the marketing nav has it, a separator, then
+// the topics, either as logotype tabs or as a picker.
+import TopicList from './TopicList.astro';
+import TopicMark from './TopicMark.astro';
+import { TOPICS, currentTopic } from './topics.ts';
+
+const topic = currentTopic(Astro.url.pathname);
+---
+
+<div class="effect-nav">
+  <a class="docs" href="/docs/echo/overview/" aria-current="page">Docs</a>
+  <span class="sep" aria-hidden="true"></span>
+  <div data-nav-only="effect-tabs">
+    <nav class="tabs" aria-label="Docs topics">
+      {
+        TOPICS.map((item) =>
+          item.href ? (
+            <a href={item.href} class:list={{ current: item.id === topic?.id }} aria-current={item.id === topic?.id ? 'page' : undefined}>
+              <TopicMark topic={item} size={20} />
+            </a>
+          ) : (
+            <span class="soon" aria-disabled="true" title="Coming soon">
+              <TopicMark topic={item} size={20} />
+            </span>
+          ),
+        )
+      }
+    </nav>
+  </div>
+  <div data-nav-only="effect-picker">
+    <details class="picker" data-topic-popover>
+      <summary>
+        {topic ? <TopicMark topic={topic} size={20} /> : <span>Topics</span>}
+        <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.5l3-3 3 3M5 9.5l3 3 3-3" /></svg>
+      </summary>
+      <div class="panel">
+        <TopicList current={topic?.id} />
+      </div>
+    </details>
+  </div>
+</div>
+
+<style>
+  .effect-nav {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 1rem;
+    /* Puts Docs at the x the marketing nav's Docs link has, so it stays put when crossing into the docs. */
+    margin-inline-start: 27px;
+  }
+  .docs {
+    color: var(--sl-color-white);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+    text-decoration: none;
+  }
+  .sep {
+    background: var(--sl-color-gray-5);
+    height: 1.5rem;
+    width: 1px;
+  }
+  .tabs {
+    align-items: center;
+    display: flex;
+    gap: 1.25rem;
+  }
+  .tabs a,
+  .tabs span {
+    align-items: center;
+    color: var(--sl-color-gray-3);
+    display: flex;
+    text-decoration: none;
+  }
+  .tabs a:hover,
+  .tabs a.current {
+    color: var(--sl-color-white);
+  }
+  .tabs .soon {
+    color: var(--sl-color-gray-5);
+    cursor: default;
+  }
+  .picker {
+    position: relative;
+  }
+  summary {
+    align-items: center;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.625rem;
+    color: var(--sl-color-white);
+    cursor: pointer;
+    display: flex;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0.375rem 0.625rem 0.375rem 0.75rem;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary:hover,
+  .picker[open] summary {
+    background: var(--sl-color-gray-6);
+  }
+  .chevron {
+    fill: none;
+    height: 1rem;
+    stroke: var(--sl-color-gray-3);
+    stroke-width: 1.5;
+    width: 1rem;
+  }
+  .panel {
+    background: var(--sl-color-bg-nav);
+    border: 1px solid var(--sl-color-hairline-light);
+    border-radius: 0.75rem;
+    box-shadow: var(--sl-shadow-lg);
+    left: 0;
+    padding: 0.375rem;
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    width: 20rem;
+    z-index: 100;
+  }
+</style>
