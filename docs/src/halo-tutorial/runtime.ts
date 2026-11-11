@@ -107,6 +107,7 @@ export const startScene = async (scene: Scene): Promise<Device[]> => {
 };
 
 const run = <A, E>(device: Device, effect: Effect.Effect<A, E, Halo>) =>
+  // eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
   Effect.runPromise(effect.pipe(Effect.provide(device.halo)));
 
 const createSpace = (name: string) =>
@@ -119,8 +120,10 @@ const createSpace = (name: string) =>
 /** Lets `guest` into the space `spaceId` of `host`, with no authorization code. */
 const admit = async (host: Device, spaceId: SpaceId, guest: Device) => {
   const flow = await run(host, Space.share(spaceId, { authMethod: 'none' }));
+  // eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
   const code = await Effect.runPromise(flow.code);
   const guestFlow = await run(guest, Space.join(code));
+  // eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
   await Effect.runPromise(Stream.runDrain(guestFlow.events));
   // The space joins the guest's list a moment after the invitation succeeds.
   await run(

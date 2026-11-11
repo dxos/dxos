@@ -55,6 +55,7 @@ export const LinkCheckerModule = Capability.makeModule(() =>
 // #region operation
 export const CheckLink = Operation.make({
   meta: {
+    // eslint-disable-next-line @dxos/rules/operation-key-shape -- a sample key.
     key: DXN.make('com.example.operation.checkLink'),
     name: 'Check link',
   },

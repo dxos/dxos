@@ -54,6 +54,7 @@ export const openHalo = async (services?: ClientServicesProvider) => {
 
   const halo = layerClient(client);
   const run = <A, E>(effect: Effect.Effect<A, E, Halo>) =>
+    // eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
     Effect.runPromise(effect.pipe(Effect.provide(halo)));
   return { client, halo, run };
 };

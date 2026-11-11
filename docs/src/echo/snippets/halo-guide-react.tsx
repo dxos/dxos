@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useState } from 'react';
 
 import { type Client } from '@dxos/client';
-import { Invitation, Identity, Space } from '@dxos/halo';
+import { Identity, Invitation, Space } from '@dxos/halo';
 import {
   makeIdentityService,
   makeSpaceService,
@@ -92,6 +92,7 @@ export const Invite = ({ spaceId }: { spaceId: SpaceId }) => {
   const { event, code } = useInvitationFlow(flow);
 
   const share = () =>
+    // eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
     Effect.runPromise(
       Space.share(spaceId, { authMethod: 'shared-secret' }).pipe(
         Effect.provide(services),

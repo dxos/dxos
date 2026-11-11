@@ -40,7 +40,11 @@ export const visit = (bookmark: unknown) =>
 
 // #region undo
 const Rename = Operation.make({
-  meta: { key: DXN.make('com.example.operation.rename'), name: 'Rename' },
+  meta: {
+    // eslint-disable-next-line @dxos/rules/operation-key-shape -- a sample key.
+    key: DXN.make('com.example.operation.rename'),
+    name: 'Rename',
+  },
   input: Schema.Struct({ id: Schema.String, name: Schema.String }),
   output: Schema.Struct({ previous: Schema.String }),
 });

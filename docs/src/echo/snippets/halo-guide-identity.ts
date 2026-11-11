@@ -65,6 +65,7 @@ const rename = Identity.updateProfile({
   data: { emoji: '🦊' },
 });
 
+// eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
 const me = await Effect.runPromise(signIn.pipe(Effect.provide(halo)));
 console.log(me.did, me.displayName);
 // #endregion create

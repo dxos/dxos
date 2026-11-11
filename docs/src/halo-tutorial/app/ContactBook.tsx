@@ -41,6 +41,7 @@ type Run = <A, E>(effect: Effect.Effect<A, E, Halo>) => Promise<A>;
 /** The contact book on one device, with what `stage` has built. */
 export const ContactBook = ({ halo, stage }: ContactBookProps) => {
   const run: Run = (effect) =>
+    // eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
     Effect.runPromise(effect.pipe(Effect.provide(halo)));
   const [identity, loaded] = useStreamResult(halo, me);
   if (!loaded) {

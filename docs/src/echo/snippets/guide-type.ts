@@ -61,4 +61,4 @@ Obj.isObject(ada); // true
 Obj.instanceOf(Person, ada); // true
 // #endregion kind
 
-export { jsonSchema, Project, schema, typename, uri, version };
+export { Project, jsonSchema, schema, typename, uri, version };
