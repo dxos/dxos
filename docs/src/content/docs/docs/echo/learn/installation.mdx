@@ -3,7 +3,7 @@ title: Installation
 description: Add the packages and open a database in Node or the browser.
 ---
 
-import { Aside, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import { Steps, TabItem, Tabs } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
 
@@ -43,7 +43,9 @@ A client acts for an identity. The identity owns the spaces it creates, and othe
      </TabItem>
    </Tabs>
 
-   Install any other `@dxos` package from the same build, with its name in place of `client`. The tutorial app's [package.json](/echo/project/package.json) lists every package it uses at that build.
+   Install any other `@dxos` package from the same build, with its name in place of `client`. The tutorial app's [package.json](/echo/project/package.json) lists every package it uses at that build. Most of them are for its interface: the `@dxos/react-ui` packages, `@dxos/ui-theme`, `@dxos/vite-plugin-icons` and `tailwindcss`. An app with its own interface needs only `@dxos/client` (or `@dxos/react-client`) and `effect`.
+
+   In TypeScript, also add `@types/zen-observable` as a dev dependency. The client's observables, such as `client.spaces` and an invitation, take their `subscribe` method from it.
 
    In a React app, install `@dxos/react-client` instead and follow the [React guide](/docs/echo/guides/react/).
 
@@ -54,15 +56,15 @@ A client acts for an identity. The identity owns the spaces it creates, and othe
    - `optimizeDeps.exclude` for `@dxos/wa-sqlite`, `@automerge/automerge` and `@automerge/automerge-subduction`. Vite's pre-bundling would move their WebAssembly files away from the code that loads them.
    - `optimizeDeps.include` for the CommonJS modules that only the database worker imports. Vite's dependency scan starts from the page, so it does not find them, and the worker cannot import a CommonJS module that Vite has not pre-bundled.
 
-   `ConfigPlugin` loads the client's config from YAML files at the package root.
-
    <Snippet file="vite-config" title="vite.config.ts" />
 
-   `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin` for Rollup and esbuild. Node needs no bundler setup.
+   The tutorial app's [vite.config.ts](/echo/project/vite.config.ts) has these settings, plus React, the theme's `ThemePlugin` and an `IconsPlugin` for the icons of the `@dxos/react-ui` components. Node needs no bundler setup.
 
 3. **Point the client at the network.** A client keeps its data on the device and reaches other devices through DXOS's EDGE network, which relays invitations and replicates spaces. The app's config, in `client.ts`, says where EDGE is and keeps the data across reloads. [Configure the client](#configure-the-client) covers loading config from files instead.
 
    <Snippet file="tutorial/client" region="config" />
+
+   EDGE serves only identities linked to a DXOS account, which for now you can create only through [Composer](https://composer.space). Without one, the console shows `403` responses from `dxos.network` for `/db/spaces/…` and `/inbox`. They are expected: peers still find each other through EDGE and replicate directly.
 
 4. **Open the app's space.** The app does this in one function, also in `client.ts`. `new Client` takes the app's types, which the next page declares, and the config. `createOpfsWorker` keeps the database in the browser's private file system. `initialize` opens local storage and connects to the network. The first time, the client needs an identity before it can create a space; [HALO](/docs/halo/overview/) covers identities and devices. After that, the app opens the space it made before.
 
@@ -106,10 +108,15 @@ DX_PERSIST:
   type: boolean
 ```
 
-<Aside type="tip">
-  Vite exposes only variables prefixed with `VITE_`. To read any other variable at build time, list it in the
-  `env` option of `ConfigPlugin`, as in step 2. Its value appears at the config path `runtime.app.env.MY_ENV_VAR`.
-</Aside>
+### Loading the files in the browser
+
+In the browser, `Defaults`, `Local` and `Envs` read what the bundler puts in the page. Add `ConfigPlugin` from `@dxos/config/vite-plugin` to the `plugins` in `vite.config.ts`, and it loads the three files from the package root:
+
+```ts
+ConfigPlugin({ root: import.meta.dirname, env: ['MY_ENV_VAR'] }),
+```
+
+Vite exposes only variables prefixed with `VITE_`. To read any other variable at build time, list it in `env`. Its value appears at the config path `runtime.app.env.MY_ENV_VAR`. `@dxos/config/rollup-plugin` and `@dxos/config/esbuild-plugin` export the same `ConfigPlugin` for Rollup and esbuild. The tutorial app passes its config in code, as in step 3, so it has no `ConfigPlugin`.
 
 ## What you can do now
 

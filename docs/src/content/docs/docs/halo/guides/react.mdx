@@ -17,21 +17,21 @@ emits, so a component shows the current identity, devices or members without sub
 `HaloProvider` takes the HALO services as an Effect `Context`. Build it from a `Client` with the adapter's
 `makeIdentityService` and `makeSpaceService`, and wrap the part of the app that uses the hooks.
 
-<Snippet file="halo-guide-react" region="provider" />
+<Snippet file="halo-guide-react" region="provider" lang="tsx" />
 
 ## The identity
 
 `useIdentity` returns the identity, or `undefined` before one exists. It has the current value on the first render.
 `useDevices` and `useCredentials` return the identity's devices and credentials.
 
-<Snippet file="halo-guide-react" region="identity" />
+<Snippet file="halo-guide-react" region="identity" lang="tsx" />
 
 ## Spaces and members
 
 `useSpaces` returns the spaces that are ready; pass `{ all: true }` for every space. `useSpace` finds one by id, and
 `useMembers` returns a space's members.
 
-<Snippet file="halo-guide-react" region="spaces" />
+<Snippet file="halo-guide-react" region="spaces" lang="tsx" />
 
 ## Invitations
 
@@ -39,7 +39,7 @@ Start a flow with `Space.share` or `Identity.share`, run as an Effect with the s
 the flow: its latest event and its code. It needs no provider, since a flow carries what it needs. `useSpaceInvitations`
 and `useHaloInvitations` list the flows this device has open.
 
-<Snippet file="halo-guide-react" region="invitations" />
+<Snippet file="halo-guide-react" region="invitations" lang="tsx" />
 
 ## Hooks at a glance
 

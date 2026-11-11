@@ -44,11 +44,19 @@ Two rules decide when a component re-renders:
 
    <Snippet file="tutorial/app/PeerApp" region="provider" lang="tsx" />
 
+   <Aside type="caution">
+     Open the client once per page load. In development, `StrictMode` runs each effect twice, and two clients on the same
+     storage race to create the identity, so a reload can come back with the other one and none of its records. Start
+     `openSpace` at module level, `const opened = openSpace();`, and await that promise in the effect.
+   </Aside>
+
 3. **Query the space.** `useQuery` takes a database and a query, here the app's queries from [Querying](/docs/echo/learn/querying/). It returns the current results and re-renders the component when they change.
 
    <Snippet file="tutorial/app/Contacts" region="query" lang="tsx" />
 
    A query returns the same live object for an id every time, so a renamed record leaves the results array as it was. The app's list reads its labels with `useLabels`, which re-renders the list when a label changes.
+
+   To show only the records whose field has a value, put the field in the query, as in `Filter.type(Todo, { completed: false })`. The results then change when a record's field does. A `.filter()` over the results in render reads the fields straight off the objects, so the list goes stale.
 
 4. **Show a record.** `useObject` returns a snapshot of the object and re-renders the component when the object changes. The form's title reads the record's name through it.
 

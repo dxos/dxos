@@ -38,6 +38,10 @@ Both functions go in a new file, `sharing.ts`.
 
 </Steps>
 
+`openSpace` from [Installation](/docs/echo/learn/installation/) reopens the first space in `client.spaces.get()`, which
+after a join may be the guest's own empty space. To reopen the space a peer joined, remember its id, as the app does in
+`localStorage`, and on load open `client.spaces.get(id)` when it is there.
+
 ## Try it
 
 Two devices run the app side by side, each with a space of its own; Bob's is empty. On Alice's device, press **Invite** in the toolbar, which copies a code. On Bob's, press **Join**, paste the code and press **Join** again: Bob's app switches to Alice's space. Then edit a record on one device and watch the other follow. Switch a device offline, edit on both, then switch it back on: the replicas exchange what they missed.

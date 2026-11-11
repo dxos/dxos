@@ -3,6 +3,7 @@ title: Passkey recovery
 description: Register a passkey as a recovery credential and recover with it.
 ---
 
+import { Aside } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 
 A passkey can be an identity's recovery credential. The user then gets their identity back on a new device with a
@@ -10,6 +11,11 @@ fingerprint or a PIN, with no recovery code to keep. `@dxos/halo` writes and che
 that creates and uses the passkey runs in the app, because only the app knows its site and its UI.
 
 This guide uses the browser's WebAuthn API. Recovery goes through EDGE, so the client needs a network connection.
+
+<Aside type="caution">
+  Recovery needs a DXOS account. EDGE stores recovery credentials only for identities linked to an account, and for now
+  you can create an account only through [Composer](https://composer.space).
+</Aside>
 
 ## Register a passkey
 

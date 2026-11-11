@@ -28,6 +28,13 @@ Any string field can be edited this way; it needs no special declaration. Call t
 
 Read the field as usual: it is a string.
 
+## Text in an input
+
+A text field bound to an ECHO string, such as a `<textarea>` whose `value` is the field, loses its caret when a peer's
+edit arrives, because React sets the whole value again. Save the selection before the remote change renders, and move it
+by the number of characters the change inserted or removed before it. Write each local keystroke with `Text.update`, so
+it merges with what the peer typed.
+
 ## Members at a glance
 
 | Member | Summary |

@@ -95,9 +95,7 @@ const localImports = (root: string, path: string, seen = new Set<string>()): str
 /** Lint directives configure the repo's checks, not the reader's code. */
 const LINT_DIRECTIVE = /^[ \t]*\/\/ (eslint|oxlint)-disable.*\n/gm;
 
-/** Returns a snippet's visible code: one `// #region` if named, else every region, else the whole file past its imports. */
-export const snippetSource = (file: string, region?: string): string => {
-  const [, source] = findSource(file);
+const regionCode = (source: string, file: string, region?: string): string => {
   const pattern = region
     ? new RegExp(`// #region ${region}\\n([\\s\\S]*?)// #endregion`)
     : /\/\/ #region\n([\s\S]*?)\/\/ #endregion/;
@@ -108,31 +106,136 @@ export const snippetSource = (file: string, region?: string): string => {
   return match[1].replace(LINT_DIRECTIVE, '').trimEnd();
 };
 
+/** One name an import declaration binds, with the text that binds it (`type Foo`, `Bar as Baz`, `* as Effect`). */
+type Binding = { local: string; text: string; kind: 'default' | 'namespace' | 'named' };
+
+type ImportDeclaration = { text: string; module: string; typeOnly: boolean; bindings: Binding[] };
+
+const IMPORT = /^import\s+(type\s+)?([^;'"]*?)\s+from\s+'([^']+)';\n/gm;
+
+const parseImports = (source: string): ImportDeclaration[] =>
+  [...source.matchAll(IMPORT)].map(([text, typeOnly, clause, module]) => {
+    const bindings: Binding[] = [];
+    const braces = clause.match(/\{([\s\S]*)\}/);
+    const head = clause
+      .replace(/\{[\s\S]*\}/, '')
+      .replace(/,\s*$/, '')
+      .trim();
+    const namespace = head.match(/^\*\s+as\s+(\w+)$/);
+    if (namespace) {
+      bindings.push({ local: namespace[1], text: head, kind: 'namespace' });
+    } else if (head) {
+      bindings.push({ local: head, text: head, kind: 'default' });
+    }
+    for (const specifier of braces?.[1].split(',') ?? []) {
+      const text = specifier.trim().replace(/\s+/g, ' ');
+      if (text) {
+        bindings.push({ local: text.split(' ').at(-1)!, text, kind: 'named' });
+      }
+    }
+    return { text, module, typeOnly: Boolean(typeOnly), bindings };
+  });
+
+const printImport = ({ module, typeOnly }: ImportDeclaration, bindings: Binding[]): string => {
+  const head = bindings.find((binding) => binding.kind !== 'named');
+  const named = bindings.filter((binding) => binding.kind === 'named').map((binding) => binding.text);
+  const clause = [head?.text, named.length > 0 ? `{ ${named.join(', ')} }` : undefined].filter(Boolean).join(', ');
+  return `import ${typeOnly ? 'type ' : ''}${clause} from '${module}';`;
+};
+
+/**
+ * Splits a file's imports into the ones `code` uses and the rest, so a snippet can show where each name it uses comes
+ * from. A region that starts indented continues code the page showed earlier, so it shows none.
+ */
+const splitImports = (source: string, code: string): { shown: string[]; hidden: string[] } => {
+  const shown: string[] = [];
+  const hidden: string[] = [];
+  const quoted = /^\S/.test(code);
+  for (const declaration of parseImports(source)) {
+    const used = declaration.bindings.filter(
+      (binding) => quoted && new RegExp(`(?<![\\w$.])${binding.local.replace('$', '\\$')}(?![\\w$])`).test(code),
+    );
+    const unused = declaration.bindings.filter((binding) => !used.includes(binding));
+    if (used.length > 0) {
+      shown.push(printImport(declaration, used));
+    }
+    if (unused.length > 0) {
+      hidden.push(printImport(declaration, unused));
+    }
+  }
+  return { shown, hidden };
+};
+
+/**
+ * Returns a snippet's visible code: one `// #region` if named, else the file's unnamed region, headed by the imports
+ * that code uses.
+ */
+/** A shared snippet imports a project's module by its path from `snippets/`. */
+const PROJECT_IMPORT = /'\.\.\/\.\.\/((?:app-framework-|halo-)?tutorial)\/([^']+)'/g;
+
+/** The snippet with each project module imported as a sibling, which is how the page shows it and how it compiles. */
+const localize = (source: string) => source.replace(PROJECT_IMPORT, "'./$2'");
+
+export const snippetSource = (file: string, region?: string): string => {
+  const source = localize(findSource(file)[1]);
+  const code = regionCode(source, file, region);
+  const { shown } = splitImports(source, code);
+  return shown.length > 0 ? `${shown.join('\n')}\n\n${code}` : code;
+};
+
 /**
  * The snippet with the code around its region cut, so a compiler sees the whole module while the page shows only the
  * region. A region inside a component body needs the code after it to close.
  */
 export const snippetWithContext = (file: string, region?: string): string => {
-  const [path, source] = findSource(file);
+  const [path, original] = findSource(file);
+  const source = localize(original);
   const marker = region ? `// #region ${region}\n` : '// #region\n';
   const start = source.indexOf(marker);
   if (start < 0) {
     throw new Error(`Snippet ${file} has no region ${region ?? '(default)'}`);
   }
   const end = source.indexOf('// #endregion', start);
-  const before = stripRegions(source.slice(0, start));
+  // The imports the snippet shows move below the cut; the rest stay above it.
+  const { hidden } = splitImports(source, regionCode(source, file, region));
+  const before = [...hidden, stripRegions(source.slice(0, start)).replace(IMPORT, '')].join('\n');
   const after = stripRegions(source.slice(source.indexOf('\n', end) + 1));
   const cut = `${before}// ---cut---\n${snippetSource(file, region)}\n// ---cut-after---\n${after}`;
-  const root = PROJECTS.find((project) => path.startsWith(project));
-  if (!root) {
-    return cut;
+  const project = PROJECTS.find((project) => path.startsWith(project));
+  if (project) {
+    // Each module the snippet imports goes in as a file of its own, ahead of the snippet's.
+    const self = path.slice(project.length);
+    const files = localImports(project, self, new Set([self])).map(
+      (module) => `// @filename: ${module}\n${stripRegions(readSources()[`${project}${module}`])}`,
+    );
+    return compose(files, self, cut);
   }
 
-  // Each module the snippet imports goes in as a file of its own, ahead of the snippet's.
-  const self = path.slice(root.length);
-  const seen = new Set([self]);
-  const files = localImports(root, self, seen).map(
-    (module) => `// @filename: ${module}\n${stripRegions(readSources()[`${root}${module}`])}`,
+  // A shared snippet compiles beside the shared snippets it imports and the project modules they import.
+  const dir = path.slice(0, path.lastIndexOf('/') + 1);
+  const self = path.slice(dir.length);
+  const siblings = localImports(dir, self, new Set([self]));
+  const sources = [original, ...siblings.map((module) => readSources()[`${dir}${module}`])];
+  const shared = sources.flatMap((source) => [...source.matchAll(PROJECT_IMPORT)]);
+  if (shared.length === 0 && siblings.length === 0) {
+    return cut;
+  }
+  const seen = new Set<string>();
+  const files = shared.flatMap(([, name, module]) => {
+    const root = `../${name}/`;
+    if (seen.has(module)) {
+      return [];
+    }
+    seen.add(module);
+    return [...localImports(root, module, seen), module].map(
+      (module) => `// @filename: ${module}\n${stripRegions(readSources()[`${root}${module}`])}`,
+    );
+  });
+  files.push(
+    ...siblings.map((module) => `// @filename: ${module}\n${localize(stripRegions(readSources()[`${dir}${module}`]))}`),
   );
-  return ['// @allowImportingTsExtensions', '// @noEmit', ...files, `// @filename: ${self}`, cut].join('\n');
+  return compose(files, self, cut);
 };
+
+const compose = (files: string[], self: string, cut: string) =>
+  ['// @allowImportingTsExtensions', '// @noEmit', ...files, `// @filename: ${self}`, cut].join('\n');

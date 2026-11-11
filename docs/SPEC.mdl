@@ -867,6 +867,7 @@ page halo-recover-identity: Recover an identity
   template: tutorial
   status: spike
   covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Create a recovery code with `Identity.createRecoveryCredential`
     - Recover on a new device with `Identity.recover`, which brings back the name, spaces and contacts [D-172]
     - Revoke the code with `Identity.revokeRecoveryCredential`
@@ -932,6 +933,7 @@ page halo-recovery-credentials: Recovery and credentials
   template: concept
   status: spike
   covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Recovery kinds: passkey, recovery code and OAuth
     - The recovery key is a member of the identity's group
     - The recovery challenge, and what a recovered identity gets back
@@ -952,6 +954,7 @@ page halo-guide-passkey-recovery: Passkey recovery
   template: tutorial
   status: spike
   covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Create the passkey with WebAuthn in the app, since `@dxos/halo` leaves the ceremony to the caller
     - Register it with `Identity.createRecoveryCredential({ externalKey })`
     - Recover: `Identity.requestRecoveryChallenge`, sign the challenge with the passkey, then `Identity.recover`
@@ -985,6 +988,7 @@ page halo-guide-identity: Identity
   template: namespace
   status: spike
   covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
     - Get the `Identity.Service` with `layerClient`, and read the identity once, as a stream or as an atom
     - Create an identity, update its profile, and get its personal space id
     - List devices, share the identity and join from a device
@@ -3599,6 +3603,18 @@ decision D-172: Recover an identity's embed creates and revokes recovery codes l
   by: agent:claude
   affects: [halo-recover-identity]
   why: The embed shows what it can run; the reader runs the EDGE step against the real network.
+
+decision D-173: Every page that teaches recovery (Recover an identity, Recovery and credentials, Passkey recovery, and the Identity API page) carries a caution: recovery needs a DXOS account, because EDGE stores recovery credentials only for identities linked to one, and for now an account can be created only through Composer. The embeds keep showing recovery on in-memory clients.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-recover-identity, halo-recovery-credentials, halo-guide-passkey-recovery, halo-guide-identity]
+  why: Production EDGE answers 403 to identities without an account, so a reader's own app cannot recover until they have one.
+
+decision D-174: Each code sample shows the imports its code uses, above it; the snippet loader picks them from the quoted file and compiles the sample with the shared snippets and project modules it imports. The generated projects add `@types/zen-observable`, which types the `subscribe` of `client.spaces` and of an invitation. Installation's `vite.config.ts` matches the project's, with `ConfigPlugin` moved to Configure the client. Sharing says to remember a joined space, the React guide warns that StrictMode opens the client twice and filters by a field in the query, and Text covers the caret on remote edits.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [installation, sharing, guide-react, guide-text]
+  why: Three coding agents built apps from the ECHO pages alone, and each hit these gaps.
 
 decision D-200: PLEX's guides run in this order: Effect in plugins, Testing, Debugging, App capabilities, Settings and state, App Graph, React, Using ECHO in a plugin. Effect comes first because every module body and handler is an Effect.
   date: 2026-11-11

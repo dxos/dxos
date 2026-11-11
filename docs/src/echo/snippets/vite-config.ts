@@ -5,8 +5,6 @@
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
-import { ConfigPlugin } from '@dxos/config/vite-plugin';
-
 // #region
 export default defineConfig({
   build: { target: 'esnext' },
@@ -18,10 +16,7 @@ export default defineConfig({
     ],
     include: ['chalk', 'lodash.defaultsdeep', '@dxos/node-std > deep-equal'],
   },
-  plugins: [
-    ConfigPlugin({ root: import.meta.dirname, env: ['MY_ENV_VAR'] }),
-    wasm(),
-  ],
+  plugins: [wasm()],
   worker: {
     format: 'es',
     plugins: () => [wasm()],

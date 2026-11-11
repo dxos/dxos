@@ -106,6 +106,8 @@ const ECHO_PACKAGE_JSON = {
     '@phosphor-icons/core': '^2.1.1',
     '@types/react': '^19.2.0',
     '@types/react-dom': '^19.2.0',
+    // Types the `subscribe` of the client's observables, such as `client.spaces` and an invitation.
+    '@types/zen-observable': '^0.8.3',
     '@vitejs/plugin-react': '^6.1.1',
     'tailwindcss': '^4.3.0',
     'typescript': '^5.9.0',
@@ -225,6 +227,7 @@ const HALO_PACKAGE_JSON = {
   devDependencies: {
     '@types/react': '^19.2.0',
     '@types/react-dom': '^19.2.0',
+    '@types/zen-observable': '^0.8.3',
     '@vitejs/plugin-react': '^6.1.1',
     'typescript': '^5.9.0',
     'vite': '^8.3.7',

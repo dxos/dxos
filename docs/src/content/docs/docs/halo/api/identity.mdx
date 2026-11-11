@@ -6,6 +6,7 @@ tableOfContents:
   maxHeadingLevel: 3
 ---
 
+import { Aside } from '@astrojs/starlight/components';
 import Snippet from '../../../../../components/Snippet.astro';
 
 ```ts
@@ -65,6 +66,11 @@ To add one, `share` starts a device invitation and `join` accepts it on the new 
 `revokeRecoveryCredential` withdraws a credential by its lookup key. HALO refuses to revoke the last active one.
 
 <Snippet file="halo-guide-identity" region="recovery" />
+
+<Aside type="caution">
+  Recovery needs a DXOS account. EDGE stores recovery credentials only for identities linked to an account, and for now
+  you can create an account only through [Composer](https://composer.space).
+</Aside>
 
 A passkey signs a challenge before `recover`. `requestRecoveryChallenge` gets it from EDGE;
 [Passkey recovery](/docs/halo/guides/passkey-recovery/) walks through the whole ceremony.
