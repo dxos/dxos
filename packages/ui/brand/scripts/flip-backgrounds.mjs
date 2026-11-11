@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-// Writes a variant of each background with its icon on the other side: `bg-echo.svg` (icon left) gives `bg-echo-right.svg`.
+// Rewrites the other half of a background pair from the half you edited: `bg-echo-left.svg` gives `bg-echo-right.svg`.
 // The icon moves without mirroring, so asymmetric marks such as KUBE keep their orientation, and the lines move with it.
 // A line that reached the edge of the frame is extended back to the frame after the move, so no edge is left bare.
-// Usage: node scripts/flip-backgrounds.mjs
+// Usage: node scripts/flip-backgrounds.mjs <bg-name-left.svg | bg-name-right.svg>...
 
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '../assets/backgrounds');
@@ -129,18 +129,33 @@ const iconCentre = (group) => {
   return (Math.min(...xs) + Math.max(...xs)) / 2;
 };
 
-for (const file of readdirSync(DIR).filter((name) => /^bg-[a-z]+\.svg$/.test(name))) {
+const SIDES = { left: 'right', right: 'left' };
+
+const files = process.argv.slice(2).map((arg) => basename(arg));
+if (files.length === 0) {
+  console.error('Usage: node scripts/flip-backgrounds.mjs <bg-name-left.svg | bg-name-right.svg>...');
+  process.exit(1);
+}
+
+for (const file of files) {
+  const [, name, side] = file.match(/^(bg-[a-z]+)-(left|right)\.svg$/) ?? [];
+  if (!name) {
+    throw new Error(`${file}: expected a pair file named bg-<name>-left.svg or bg-<name>-right.svg.`);
+  }
+
   const svg = readFileSync(join(DIR, file), 'utf8');
   const icon = readGroup(svg, 'icon');
   const lines = readGroup(svg, 'lines');
   const centre = iconCentre(icon);
   if (Math.abs(centre - WIDTH / 2) < MIN_OFFSET) {
-    console.log(`${file}: icon is centred (x=${centre.toFixed(1)}); skipped.`);
-    continue;
+    throw new Error(`${file}: icon is centred (x=${centre.toFixed(1)}), so it has no other side.`);
+  }
+  // The name, not the art, says which half the user edited, so a misnamed file must not overwrite its partner.
+  if ((centre < WIDTH / 2 ? 'left' : 'right') !== side) {
+    throw new Error(`${file}: icon is on the other side (x=${centre.toFixed(1)}) from what the name says.`);
   }
 
   const offset = WIDTH - 2 * centre;
-  const side = centre < WIDTH / 2 ? 'right' : 'left';
   const output = svg
     .replace(
       lines,
@@ -150,7 +165,7 @@ for (const file of readdirSync(DIR).filter((name) => /^bg-[a-z]+\.svg$/.test(nam
       icon,
       replacePaths(icon, ({ points, closed }) => ({ points: points.map(([x, y]) => [x + offset, y]), closed })),
     );
-  const target = file.replace(/\.svg$/, `-${side}.svg`);
+  const target = `${name}-${SIDES[side]}.svg`;
   writeFileSync(join(DIR, target), output);
   console.log(`${file} -> ${target}: icon moved ${offset > 0 ? '+' : ''}${offset.toFixed(1)}.`);
 }
