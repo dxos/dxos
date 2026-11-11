@@ -114,7 +114,8 @@ const PACKAGE_JSON = {
     'vite': '^8.3.7',
     'vite-plugin-wasm': '^3.6.0',
   },
-  stackblitz: { startCommand: 'npm install && npm run dev' },
+  // StackBlitz installs dependencies before it runs the start command.
+  stackblitz: { startCommand: 'npm run dev' },
 };
 
 const VITE_CONFIG = `import react from '@vitejs/plugin-react';
