@@ -28,16 +28,20 @@ import * as Usage from '../Usage.ts';
 //
 // A user who says only "I want to build a Composer plugin" and what it should do, handed to Claude
 // Code with the dxos plugin loaded. The `composer-plugin-dev` skill has to fire on its own, and the
-// agent has to build World Clock (the Composer Plugin template's plugin) in an empty folder and load
-// it into a live Composer through the agent debug port.
+// agent has to build World Clock in an empty folder, load it into a live Composer from its dev
+// server, and test it there through the skill's debug-port add-on, which the brief asks for.
 //
 // The user's browser tab is a headless Chromium signed in to the target as the test account. A
 // simulated user answers the agent: it pastes the port's session id, clicks Enable under Dev Server
 // when asked, and leaves every other choice to the agent. Grading then builds, serves and loads the
-// plugin itself and reads the rendered page against World Clock's F-1 requirements.
+// plugin itself and uses it as the user would: it reads the clocks against the browser's own
+// timezone data, adds a clock, reloads, and removes it.
 //
-// Needs `DX_ANTHROPIC_API_KEY`, `claude` on PATH, and Playwright's Chromium. Publishing (skill steps
-// 6-8) is out of scope until targets carry dx's loopback login.
+// The plugin guide the skill follows carries World Clock as a worked example, so this case measures
+// following the guide more than building something new.
+//
+// Needs `DX_ANTHROPIC_API_KEY`, `claude` on PATH, and Playwright's Chromium. Publishing is out of
+// scope.
 //
 
 const API_KEY = process.env.DX_ANTHROPIC_API_KEY ?? '';
@@ -60,7 +64,7 @@ const RUN_TIMEOUT = 55 * 60_000;
 const BRIEF = trim`
   I want to build a Composer plugin: a world clock for each of my spaces. A map with a pin for each
   timezone, above a row of clocks that tick, so I can see what time it is for everyone on the team.
-  My Composer is open at ${TARGET}.
+  My Composer is open at ${TARGET}. Test it yourself in there before you hand it to me.
 `;
 
 /**
@@ -209,8 +213,9 @@ const personaReply = (session: string, agentMessage: string) =>
 
       You can do one thing in Composer: click Enable under Dev Server in the Plugins settings. When
       the agent asks for that, set enableDevServer and say you clicked it. For anything else you are
-      asked to click or check, say you would rather the agent check it through the debug port. When
-      the agent asks you to choose, tell it to decide.
+      asked to click, try or check, say you would rather the agent check it through the debug port.
+      Never say you tried, tested or saw anything in Composer yourself. When the agent asks you to
+      choose, tell it to decide.
 
       The agent's latest message:
       <message>
@@ -230,13 +235,18 @@ const personaReply = (session: string, agentMessage: string) =>
 
 const DIMENSIONS = {
   'skill-fired': 'The agent loaded composer-plugin-dev on its own.',
-  'pinned': "Every @dxos/* dependency is pinned to the target's commit.",
+  'pinned': 'Every @dxos/* dependency is pinned to one pkg.pr.new commit, by its 7-character SHA.',
   'builds': 'The plugin builds and its manifest names its key.',
   'loads': 'Served from the dev server, the plugin is enabled and active in the target.',
   'navtree-group': 'F-1.1: the space navtree holds a clock-named group with a page under it.',
   'map': 'F-1.2: the Clocks page renders a map.',
   'clocks-tick': 'F-1.3: the page shows HH:MM:SS clocks that change from one second to the next.',
   'timezone-shown': 'F-1.3: each clock names its timezone.',
+  'times-correct': 'Each clock reads the current time, to the minute, in the timezone it names.',
+  'add-clock': "Adding a timezone through the plugin's own UI shows a clock for it.",
+  'pins-follow-clocks': 'Adding a clock changes the map: it gets a pin.',
+  'persists': 'An added clock is still there after a reload.',
+  'remove-clock': "A clock can be removed through the plugin's own UI.",
   'speed': "Wall clock of the agent's turns, 1 at 5 minutes or less, 0 at 25.",
   'cost': "Claude Code's reported spend, 1 at $0.25 or less, 0 at $2.",
 } as const;
@@ -324,6 +334,256 @@ const waitForPort = async (port: number, timeout: number): Promise<boolean> => {
   return false;
 };
 
+const FINAL_SCREENSHOT = '.eval-final.png';
+const ADDED_SCREENSHOT = '.eval-added.png';
+
+/** Zones the grader adds, the first one the page does not already show. */
+const ADD_CANDIDATES = ['Asia/Tokyo', 'Australia/Sydney', 'America/Sao_Paulo', 'Africa/Nairobi'];
+
+const cityOf = (zone: string): string => zone.split('/').pop()!.replace(/_/g, ' ');
+
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Closes the app's own toasts (a passkey reminder, say), which can cover the plugin's controls. */
+const dismissToasts = async (page: Page): Promise<void> => {
+  for (const close of await page.getByTestId('toast.close').all()) {
+    await close.click({ timeout: 2_000 }).catch(() => undefined);
+  }
+};
+
+/** Opens the space's clock page from the navtree, as the user would. */
+const openClockPage = async (page: Page): Promise<{ group: boolean; opened: boolean }> => {
+  // A reload leaves a space's rail tab pending ("Loading space…") until the space opens; its
+  // navtree exists only once that tab is clicked. Prefer "My Space", the persona's test space.
+  const ready = '[data-testid^="spacePlugin.space"]:not([data-testid="spacePlugin.space.pending"])';
+  await page.waitForSelector(ready, { timeout: 180_000 }).catch(() => undefined);
+  const spaceTab = page.locator(ready, { hasText: 'My Space' }).or(page.locator(ready)).first();
+  if (await spaceTab.isVisible().catch(() => false)) {
+    await spaceTab.click();
+  }
+  // The brief names neither the group nor its page, so any clock-named group heading (uppercase
+  // by CSS) with a clock-named item under it passes.
+  const group = await page
+    .waitForFunction(() => /^[A-Z0-9 ]*CLOCK[A-Z0-9 ]*$/m.test(document.body.innerText), null, { timeout: 30_000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  // The last clock-named navtree entry outside `main` that is not the uppercase group heading.
+  const opened =
+    group &&
+    (await page.evaluate(() => {
+      const item = [...document.querySelectorAll('*')]
+        .filter(
+          (e) =>
+            e.childElementCount === 0 &&
+            /clock/i.test(e.textContent ?? '') &&
+            !e.closest('main') &&
+            getComputedStyle(e).textTransform !== 'uppercase',
+        )
+        .pop();
+      const target = item?.closest('a,button,[role=treeitem],li') ?? item;
+      (target as HTMLElement | undefined)?.click();
+      return !!target;
+    }));
+  return { group, opened };
+};
+
+const waitForTimes = (page: Page): Promise<unknown> =>
+  page
+    .waitForFunction(() => /\d{1,2}:\d{2}:\d{2}/.test(document.querySelector('main')?.innerText ?? ''), null, {
+      timeout: 20_000,
+    })
+    .catch(() => undefined);
+
+type Clock = { zone: string; time: string; correct: boolean };
+
+/**
+ * Every clock in `main`: the smallest element holding one time and a timezone, named by its IANA id
+ * or its city. Each clock's outermost single-time ancestor is tagged `data-eval-zone`, for
+ * `removeClock` to find its buttons.
+ */
+const readClocks = (page: Page): Promise<Clock[]> =>
+  page.evaluate(() => {
+    const main = document.querySelector('main');
+    if (!main) {
+      return [];
+    }
+    const timeRe = /\b(\d{1,2}):([0-5]\d):([0-5]\d)(?:\s*([AaPp])\.?[Mm]\b)?/g;
+    const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const names = [...(Intl as any).supportedValuesOf('timeZone'), 'UTC'].flatMap((zone: string) => [
+      { zone, pattern: new RegExp(`(^|[^\\w/])${escape(zone)}($|[^\\w/])`) },
+      { zone, pattern: new RegExp(`\\b${escape(zone.split('/').pop()!.replace(/_/g, ' '))}\\b`, 'i') },
+    ]);
+    const zoneOf = (text: string) => names.find(({ pattern }) => pattern.test(text))?.zone as string | undefined;
+    const text = (e: Element) => (e as HTMLElement).innerText ?? '';
+    const single = (e: Element) => (text(e).match(timeRe) ?? []).length === 1;
+    const found = [...main.querySelectorAll('*')].filter((e) => single(e) && zoneOf(text(e)) !== undefined);
+    const smallest = found.filter((e) => !found.some((other) => other !== e && e.contains(other)));
+    const now = new Date();
+    return smallest.map((e) => {
+      const zone = zoneOf(text(e))!;
+      const [time, hh, mm, , meridiem] = [...text(e).matchAll(timeRe)][0];
+      let hours = Number(hh) % (meridiem ? 12 : 24);
+      if (meridiem?.toLowerCase() === 'p') {
+        hours += 12;
+      }
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: zone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }).formatToParts(now);
+      const part = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+      const diff = Math.abs(hours * 60 + Number(mm) - (part('hour') * 60 + part('minute')));
+      let card = e;
+      while (card.parentElement && card.parentElement !== main && single(card.parentElement)) {
+        card = card.parentElement;
+      }
+      card.setAttribute('data-eval-zone', zone);
+      return { zone, time, correct: Math.min(diff, 1440 - diff) <= 1 };
+    });
+  });
+
+const waitForClock = async (page: Page, zone: string, present: boolean, timeout = 10_000): Promise<boolean> => {
+  const deadline = Date.now() + timeout;
+  do {
+    const shown = (await readClocks(page)).some((clock) => clock.zone === zone);
+    if (shown === present) {
+      return true;
+    }
+    await page.waitForTimeout(500);
+  } while (Date.now() < deadline);
+  return false;
+};
+
+/** The largest canvas, or path-heavy svg, in `main`, as pixels; overlaid pins are in the clip. */
+const mapImage = async (page: Page): Promise<Buffer | undefined> => {
+  const found = await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const area = (e: Element) => e.getBoundingClientRect().width * e.getBoundingClientRect().height;
+    const maps = main
+      ? [
+          ...main.querySelectorAll('canvas'),
+          ...[...main.querySelectorAll('svg')].filter((svg) => svg.querySelectorAll('path').length > 20),
+        ]
+      : [];
+    document.querySelectorAll('[data-eval-map]').forEach((e) => e.removeAttribute('data-eval-map'));
+    const map = maps.sort((a, b) => area(b) - area(a))[0];
+    map?.setAttribute('data-eval-map', '');
+    return map !== undefined && area(map) > 0;
+  });
+  return found
+    ? page
+        .locator('[data-eval-map]')
+        .first()
+        .screenshot()
+        .catch(() => undefined)
+    : undefined;
+};
+
+/**
+ * Adds `zone` through the plugin's own UI: its add button, then a picker or text field, then a
+ * submit if one appears. Returns why it failed, or undefined.
+ */
+const addClock = async (page: Page, zone: string): Promise<string | undefined> => {
+  const city = cityOf(zone);
+  await dismissToasts(page);
+  const visible = (locator: ReturnType<Page['locator']>) => locator.isVisible().catch(() => false);
+  const add = page
+    .locator('main')
+    .getByRole('button', { name: /add|new|\+/i })
+    .first();
+  if (!(await visible(add))) {
+    return 'no add button in the page';
+  }
+  await add.click();
+  await page.waitForTimeout(500);
+
+  const option = page.getByRole('option', { name: new RegExp(escapeRegExp(city), 'i') }).first();
+  const form = page.locator('main, [role=dialog]');
+  const combobox = form.getByRole('combobox').filter({ visible: true }).last();
+  const select = form.locator('select').filter({ visible: true }).last();
+  const field = page.locator('[role=dialog] input, form input, main input').filter({ visible: true }).last();
+  if (await visible(combobox)) {
+    const typed = await combobox.evaluate((e) => e.tagName === 'INPUT');
+    if (typed) {
+      await combobox.fill(city);
+    } else {
+      await combobox.click();
+    }
+    await page.waitForTimeout(500);
+    if (!(await visible(option)) && !typed) {
+      await page.keyboard.type(city);
+      await page.waitForTimeout(500);
+    }
+    if (await visible(option)) {
+      await option.click();
+    } else if (typed) {
+      await combobox.press('Enter');
+    } else {
+      return `no option for ${city} in the timezone picker`;
+    }
+  } else if (await visible(select)) {
+    const value = await select.evaluate(
+      (e, { zone, city }) =>
+        [...(e as HTMLSelectElement).options].find((o) => o.value === zone || o.text.includes(city))?.value,
+      { zone, city },
+    );
+    if (value === undefined) {
+      return `no option for ${city} in the timezone select`;
+    }
+    await select.selectOption(value);
+  } else if (await visible(field)) {
+    await field.fill(zone);
+  } else {
+    return 'the add button opened no picker or field';
+  }
+
+  if (await waitForClock(page, zone, true, 1_500)) {
+    return undefined;
+  }
+  // A form's submit may sit in no <form> element; its add button is gone once the form is open.
+  const scope = page.locator('main, [role=dialog]');
+  const submit = scope
+    .getByRole('button', { name: /^(save|ok|done|confirm|submit|create)\b/i })
+    .or(scope.getByRole('button', { name: /^add\b/i }))
+    .filter({ visible: true })
+    .first();
+  if (await visible(submit)) {
+    await submit.click();
+  } else {
+    await page.keyboard.press('Enter');
+  }
+  return (await waitForClock(page, zone, true)) ? undefined : `no clock for ${zone} after adding it`;
+};
+
+/** Removes `zone`'s clock through a button on it, confirming if asked. Returns why it failed, or undefined. */
+const removeClock = async (page: Page, zone: string): Promise<string | undefined> => {
+  await dismissToasts(page);
+  await readClocks(page);
+  const card = page.locator(`main [data-eval-zone="${zone}"]`).first();
+  await card.hover().catch(() => undefined);
+  const named = card.getByRole('button', { name: /remove|delete|close|trash|×|✕|✖|^x$/i });
+  const buttons = card.getByRole('button');
+  const button =
+    (await named.count()) > 0 ? named.first() : (await buttons.count()) === 1 ? buttons.first() : undefined;
+  if (!button) {
+    return 'no remove button on the clock';
+  }
+  await button.click();
+  await page.waitForTimeout(500);
+  const confirm = page
+    .locator('[role=dialog], [role=alertdialog]')
+    .getByRole('button', { name: /^(delete|remove|confirm|yes|ok)/i })
+    .filter({ visible: true })
+    .first();
+  if (await confirm.isVisible().catch(() => false)) {
+    await confirm.click();
+  }
+  return (await waitForClock(page, zone, false)) ? undefined : `the ${zone} clock was still there`;
+};
+
 /** Grades the folder and the tab the agent left. Every dimension the run never reached scores 0. */
 const grade = async (workdir: string, tab: Tab, events: readonly StreamEvent[]): Promise<Scorer.Scores> => {
   const scores: Scorer.Scores = {};
@@ -357,13 +617,10 @@ const gradeBuild = async (
   const pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
   progress.stage = 'boot';
   await boot(tab.page);
-  const commit: string = await tab.page.evaluate(
-    () => (globalThis as any).dxos.client.config.values.runtime?.app?.build?.commitHash ?? '',
-  );
-  const dxos = Object.entries({ ...pkg.dependencies, ...pkg.devDependencies }).filter(([name]) =>
-    name.startsWith('@dxos/'),
-  );
-  mark('pinned', dxos.length > 0 && dxos.every(([, spec]) => String(spec).endsWith(`@${commit.slice(0, 7)}`)));
+  const specs = Object.entries({ ...pkg.dependencies, ...pkg.devDependencies })
+    .filter(([name]) => name.startsWith('@dxos/'))
+    .map(([, spec]) => /^https:\/\/pkg\.pr\.new\/dxos\/dxos\/@dxos\/[\w-]+@([0-9a-f]{7})$/.exec(String(spec))?.[1]);
+  mark('pinned', specs.length > 0 && specs.every((sha) => sha !== undefined && sha === specs[0]));
 
   progress.stage = 'build';
   const built = run('npx', ['vite', 'build'], workdir);
@@ -414,41 +671,9 @@ const gradeBuild = async (
     mark('loads', loaded);
 
     progress.stage = 'navtree';
-    // A reload leaves a space's rail tab pending ("Loading space…") until the space opens; its
-    // navtree exists only once that tab is clicked. Prefer "My Space", the persona's test space.
-    const ready = '[data-testid^="spacePlugin.space"]:not([data-testid="spacePlugin.space.pending"])';
-    await page.waitForSelector(ready, { timeout: 180_000 }).catch(() => undefined);
-    const spaceTab = page.locator(ready, { hasText: 'My Space' }).or(page.locator(ready)).first();
-    if (await spaceTab.isVisible().catch(() => false)) {
-      await spaceTab.click();
-    }
-    // The brief names neither the group nor its page, so any clock-named group heading (uppercase
-    // by CSS) with a clock-named item under it passes.
-    const group = await page
-      .waitForFunction(() => /^[A-Z0-9 ]*CLOCK[A-Z0-9 ]*$/m.test(document.body.innerText), null, { timeout: 30_000 })
-      .then(
-        () => true,
-        () => false,
-      );
-    // The last clock-named navtree entry outside `main` that is not the uppercase group heading.
-    const openedPage =
-      group &&
-      (await page.evaluate(() => {
-        const item = [...document.querySelectorAll('*')]
-          .filter(
-            (e) =>
-              e.childElementCount === 0 &&
-              /clock/i.test(e.textContent ?? '') &&
-              !e.closest('main') &&
-              getComputedStyle(e).textTransform !== 'uppercase',
-          )
-          .pop();
-        const target = item?.closest('a,button,[role=treeitem],li') ?? item;
-        (target as HTMLElement | undefined)?.click();
-        return !!target;
-      }));
-    mark('navtree-group', openedPage);
-    if (!openedPage) {
+    const { group, opened } = await openClockPage(page);
+    mark('navtree-group', opened);
+    if (!opened) {
       await page.screenshot({ path: path.join(workdir, '.eval-navtree.png') }).catch(() => undefined);
       const tabs = await page
         .evaluate(() =>
@@ -462,11 +687,10 @@ const gradeBuild = async (
     progress.stage = 'clock page';
     const timePattern = /\b([01]\d|2[0-3]):[0-5]\d:[0-5]\d\b/g;
     const times = () => page.evaluate(() => document.querySelector('main')?.innerText ?? '');
-    await page
-      .waitForFunction(() => /\d{2}:\d{2}:\d{2}/.test(document.querySelector('main')?.innerText ?? ''), null, {
-        timeout: 20_000,
-      })
-      .catch(() => undefined);
+    await waitForTimes(page);
+    await dismissToasts(page);
+    await page.waitForTimeout(1_000);
+    await page.screenshot({ path: path.join(workdir, FINAL_SCREENSHOT) }).catch(() => undefined);
     const before = await times();
     await page.waitForTimeout(2_500);
     const after = await times();
@@ -474,11 +698,52 @@ const gradeBuild = async (
     const ticks = (before.match(timePattern) ?? []).join() !== (after.match(timePattern) ?? []).join();
     mark('clocks-tick', !broken && (after.match(timePattern) ?? []).length > 0 && ticks);
     mark('timezone-shown', !broken && /\b[A-Z][a-z]+\/[A-Z][A-Za-z_]+\b|\bUTC\b/.test(after));
-    const map = await page.evaluate(() => {
-      const main = document.querySelector('main');
-      return !!main && (main.querySelectorAll('canvas').length > 0 || main.querySelectorAll('svg path').length > 20);
-    });
-    mark('map', !broken && map);
+    const mapBefore = await mapImage(page);
+    mark('map', !broken && mapBefore !== undefined);
+    const shown = await readClocks(page);
+    mark(
+      'times-correct',
+      shown.length > 0 && shown.every((clock) => clock.correct),
+      shown.length === 0
+        ? 'no clock names a timezone'
+        : shown.some((clock) => !clock.correct)
+          ? JSON.stringify(shown.filter((clock) => !clock.correct))
+          : undefined,
+    );
+
+    progress.stage = 'add a clock';
+    await page.waitForTimeout(1_200);
+    const mapStill = await mapImage(page);
+    const zone = ADD_CANDIDATES.find((candidate) => !shown.some((clock) => clock.zone === candidate))!;
+    const addFailure = await addClock(page, zone);
+    mark('add-clock', addFailure === undefined, addFailure);
+    if (addFailure !== undefined) {
+      await page.screenshot({ path: path.join(workdir, '.eval-add-failed.png') }).catch(() => undefined);
+      for (const name of ['pins-follow-clocks', 'persists', 'remove-clock'] as const) {
+        mark(name, false, 'no clock was added');
+      }
+      return;
+    }
+    await page.waitForTimeout(1_500);
+    await page.screenshot({ path: path.join(workdir, ADDED_SCREENSHOT) }).catch(() => undefined);
+    const mapAfter = await mapImage(page);
+    const stable = mapBefore !== undefined && mapStill !== undefined && mapBefore.equals(mapStill);
+    mark(
+      'pins-follow-clocks',
+      stable && mapAfter !== undefined && !mapAfter.equals(mapStill!),
+      stable ? undefined : 'the map redraws on its own, so a new pin cannot be told apart',
+    );
+
+    progress.stage = 'reload';
+    await boot(page);
+    const reopened = await openClockPage(page);
+    await waitForTimes(page);
+    const persisted = reopened.opened && (await waitForClock(page, zone, true));
+    mark('persists', persisted);
+
+    progress.stage = 'remove a clock';
+    const removeFailure = persisted ? await removeClock(page, zone) : 'the added clock was gone after a reload';
+    mark('remove-clock', removeFailure === undefined, removeFailure);
   } finally {
     if (server.pid !== undefined) {
       try {
@@ -582,6 +847,11 @@ const task = async (): Promise<Output> => {
     const record = keep ? workdir : fs.mkdtempSync(path.join(os.tmpdir(), 'dx-plugin-eval-record-'));
     fs.writeFileSync(path.join(record, '.eval-output.json'), JSON.stringify(output, null, 2));
     fs.writeFileSync(path.join(record, '.eval-events.jsonl'), events.map((event) => JSON.stringify(event)).join('\n'));
+    for (const file of [FINAL_SCREENSHOT, ADDED_SCREENSHOT]) {
+      if (record !== workdir && fs.existsSync(path.join(workdir, file))) {
+        fs.copyFileSync(path.join(workdir, file), path.join(record, file));
+      }
+    }
     const summary = Object.entries(scores)
       .map(([name, { score }]) => `${name}=${Math.round(score * 100) / 100}`)
       .join(' ');
