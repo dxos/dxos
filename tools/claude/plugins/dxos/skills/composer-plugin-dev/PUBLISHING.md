@@ -65,6 +65,8 @@ joins.
 
 ## 2. Publish
 
+Skip this step when the user asks only to install a version already in the registry.
+
 Each version publishes once, and the first private release of a key claims it. Bump `version` in
 `package.json` (a prerelease such as `0.1.0-dev.3` is fine), then:
 
@@ -90,5 +92,6 @@ return 'opened';
 listed only to them.
 
 **Done when** DEBUG-PORT.md's plugin snippet shows `installedFrom` under
-`<edgeUrl>registry/private/modules/`, and every check in `.dxos/checks.md` passes. Then tell the user
+`<edgeUrl>registry/private/modules/`, and every line of [SKILL.md](SKILL.md) step 4's checklist passes
+again: through the checks in `.dxos/checks.md` if you wrote them, otherwise as the user confirms. Then tell the user
 to switch the port off in **Settings → Debug**.

@@ -31,7 +31,8 @@ mkdir -p ~/.dxos/debug-port && mkcert -cert-file ~/.dxos/debug-port/cert.pem -ke
 ```
 
 Set up the port client: fetch it, write the session id to `.dxos/session`, and write the wrapper
-below to `.dxos/port.sh` with `chmod +x`.
+below to `.dxos/port.sh` with `chmod +x`. The page calls the port over its own scheme, so for an HTTP
+target (a Composer served on `http://localhost`) leave out the three `COMPOSER_RECOVERY_*` lines.
 
 ```bash
 mkdir -p .dxos && curl -fsSL https://raw.githubusercontent.com/dxos/dxos/main/.agents/skills/composer-forensics/scripts/composer-recovery.js -o .dxos/port.mjs
