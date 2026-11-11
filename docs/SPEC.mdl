@@ -1578,6 +1578,11 @@ feat F-7: Relationship to dxos.org
     when: a reader is on `/echo`
     then: the demos and the architecture diagram are dark, like the page, whatever theme the reader's system
           prefers
+
+  req F-7.8:
+    when: a reader reaches a demo on `/echo` before it has loaded
+    then: the demo's place shows a placeholder of the demo's size that says it is loading, so the page does not
+          shift when the demo arrives
 ```
 
 ```mdl
@@ -2847,6 +2852,13 @@ decision D-121: The Overview hero crops its background from the left and keeps t
   date: 2026-11-11
   by: agent:claude-code for user:wittjosiah
   affects: [F-16.8]
+```
+
+```mdl
+decision D-122: Each `/echo` demo shows a loading placeholder in its frame until it hydrates. The placeholder is static markup in the page, so it costs nothing to compile and does not name the demo, whose title lives in the demo's own module.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-7.8]
 ```
 
 ## Appendix: Extension Definitions

@@ -97,7 +97,14 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
       </div>
       <div class="echo-demos">
         {DEMO_ORDER.map((id) => (
-          <div class="echo-demo dx-island"><EchoDemo id={id} client:only="react" /></div>
+          <div class="echo-demo dx-island">
+            <EchoDemo id={id} client:only="react">
+              <div slot="fallback" class="echo-demo-loading" role="status">
+                <span class="echo-demo-spinner" aria-hidden="true" />
+                Loading live demo…
+              </div>
+            </EchoDemo>
+          </div>
         ))}
       </div>
     </div>
@@ -260,6 +267,44 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 
   .echo-demo {
     height: 32rem;
+  }
+
+  /* Until its island hydrates, a demo holds its frame's size, so the page does not shift when it arrives. */
+  .echo-demo :global(astro-island),
+  .echo-demo-loading {
+    display: block;
+    height: 100%;
+  }
+
+  .echo-demo-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+    border-radius: 0.5rem;
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  .echo-demo-spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: echo-demo-spin 0.8s linear infinite;
+  }
+
+  @keyframes echo-demo-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .echo-demo-spinner {
+      animation-duration: 2.4s;
+    }
   }
 
   .echo-section :global(.diagram) {
