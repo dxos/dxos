@@ -209,7 +209,7 @@ page the-echo-object: The ECHO object
   status: spike
   covers:
     - What a live object is: typed, reactive, replicated
-    - The finished tutorial app, running, so the reader sees where the path ends
+    - The finished tutorial app, running, so the reader sees where the path ends, with Fork on StackBlitz
 ```
 ```mdl
 page installation: Installation
@@ -223,6 +223,7 @@ page installation: Installation
     - Install `@dxos/client` and the bundler setup the browser needs
     - Create a client and an identity, linking to HALO's Create an identity for the details
     - Create or open a space and get its database, in Node and in the browser
+    - Follow along in StackBlitz: the starter, with each page's code to write
 ```
 ```mdl
 page defining-types: Defining types
@@ -1689,6 +1690,28 @@ feat F-15: The tutorial app
     when: a reader moves between docs pages
     then: a page without an embed loads none of the embed's styles, so the sidebar and page paint at once instead
           of flashing blank while those styles load
+
+  req F-15.6:
+    when: a learning-path page shows ECHO code
+    then: the code is a region of one of the tutorial app's own modules, one module per page (`client.ts`,
+          `schema.ts`, `queries.ts`, `records.ts`, `sharing.ts`), which the app calls; no page quotes a script the
+          app does not run
+
+  req F-15.7:
+    when: a reader opens The ECHO object
+    then: it shows the finished app, live, with a Fork on StackBlitz button that opens the finished app as a new
+          StackBlitz project in its own tab
+
+  req F-15.8:
+    when: a reader opens Installation
+    then: it has a Follow along in StackBlitz button that opens the starter in its own tab: the tutorial app with
+          every region a learning-path page quotes replaced by a TODO naming that page; the starter boots before
+          anything is filled in, and the app shows which pieces are done and which page writes the next one
+
+  req F-15.9:
+    when: the docs build
+    then: the finished app and the starter are generated from the same modules the embeds import, with a
+          `package.json` that pins `@dxos/*` to one pkg.pr.new commit; nothing is kept in a second copy
 ```
 
 ```mdl
@@ -2980,6 +3003,17 @@ decision D-136: The PLEX page assumes an empty folder again, and the fixed lines
   by: user:wittjosiah
   affects: [plex-build-with-agent]
   why: The skill sets a plugin up as its own repository with npm; a monorepo needs the skill changed first.
+```
+
+```mdl
+decision D-137: The learning path does not embed StackBlitz in its pages. The ECHO object shows the finished app as the in-page embed, with Fork on StackBlitz; Installation, where the reader starts writing code, has Follow along in StackBlitz, which opens a starter with the learning path's code taken out. Both open in their own tab through the SDK's `openProject`, with files the docs build generates, so the docs need no isolation headers. To make the starter possible, each page's code moves from the standalone scripts in `src/tutorial/steps/` into the module of the app that runs it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-15.6, F-15.7, F-15.8, F-15.9, the-echo-object, installation, defining-types, querying, mutating-objects, sharing]
+  why: An inline StackBlitz embed needs `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy: require-corp` on the docs page, which restricts everything else the page loads, and in a 2026-11-11 test it ran only in WebKit; Chrome blocked its preview relay and Firefox's preview stayed blank.
+  rejected:
+    - A StackBlitz embed on every learning-path page that carries the reader's files from page to page: the isolation headers and browser support above.
+    - A StackBlitz project from a GitHub folder: the starter would be a second committed copy of the app.
 ```
 
 ## Appendix: Extension Definitions
