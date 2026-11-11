@@ -3026,6 +3026,13 @@ decision D-138: The StackBlitz buttons post a form to `stackblitz.com/run`, the 
     - Adding `@stackblitz/sdk` for one form post.
 ```
 
+```mdl
+decision D-139: Each StackBlitz button shows StackBlitz's bolt logo before its label, in the button's text color. The logo is Simple Icons' SVG (CC0), kept in `src/assets/brands/`. Amends [D-138].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-15.7, F-15.8]
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

@@ -2,6 +2,7 @@
 // Opens the tutorial app as a new StackBlitz project in its own tab. A form post to stackblitz.com/run is what the
 // StackBlitz SDK's `openProject` sends; posting it directly keeps the files in the page, so the tab opens on the click.
 
+import logo from '../assets/brands/stackblitz.svg?raw';
 import { tutorialProject, type TutorialProjectKind } from '../echo/tutorial-project.ts';
 
 type Props = {
@@ -31,7 +32,7 @@ const files = tutorialProject(kind);
   <input type="hidden" name="project[description]" value="The app the ECHO learning path builds." />
   <input type="hidden" name="project[template]" value="node" />
   {Object.entries(files).map(([path, content]) => <input type="hidden" name={`project[files][${path}]`} value={content} />)}
-  <button type="submit">{label}</button>
+  <button type="submit"><Fragment set:html={logo} />{label}</button>
 </form>
 
 <style>
@@ -40,6 +41,9 @@ const files = tutorialProject(kind);
   }
 
   button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.5rem 1rem;
     border: 1px solid var(--sl-color-text-accent);
     border-radius: 999rem;
@@ -49,6 +53,12 @@ const files = tutorialProject(kind);
     font-size: var(--sl-text-sm);
     font-weight: 600;
     cursor: pointer;
+  }
+
+  button :global(svg) {
+    flex: none;
+    width: 1.1em;
+    height: 1.1em;
   }
 
   button:hover {
