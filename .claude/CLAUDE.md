@@ -12,17 +12,29 @@
   lead the message, as a slash command does — so a mid-sentence mention of the
   command cannot flip the mode. The `$mode` sentinel has been removed.
 - **`/mode focus [task]`** adds a pinned task to `terse`. `focus` is not a third
-  mode value: the hook writes `terse` to `.claude/.mode` and the task to
-  `.claude/.focus`, so every reader of the mode is unchanged and the pin is just
-  that second file existing. With no task on the line the hook reads the
+  mode value: the hook has `scripts/mode.sh` write `terse` to `.claude/.mode`
+  and the task to `.claude/.focus`, so every reader of the mode is unchanged
+  and the pin is just that second file existing. With no task on the line the hook reads the
   previous user instruction out of the event's `transcript_path` and pins that —
   deriving it in the hook keeps the pin a mechanism rather than a request that
   the agent remember. Nothing pinnable means terse and no pin, said out loud.
   Any write to the mode clears the pin, so naming a verbosity is how you leave
   focus; the pin is per-worktree like the mode, so concurrent sessions in one
   worktree share it.
-- `bash .claude/scripts/mode.test.sh` exercises both files by feeding the hook
-  the JSON the `UserPromptSubmit` event carries. Run it after touching either.
+- **`/mode discuss|build|debug`** has the hook delegate a write of
+  `.claude/.phase` (default `discuss`) to `scripts/mode.sh`; `debug` also
+  creates `.claude/.debug`, which makes `context` append a `DIAGNOSTICS:`
+  footer. `focus` sets the phase to `build`. State files, like the mode, are
+  untracked and written only by `scripts/mode.sh` — the hook never touches
+  them itself.
+- `context` also renders `SERVERS:` (the dev-server watcher's status file, from
+  `diagnose.sh --status` under `tools/storybook-react`, env `DX_WATCH_DIR`) and
+  `CHECKLIST:`; `mode.sh servers` prints the same block on its own. Three
+  suites feed the hooks the JSON their events carry; run all three after
+  touching the hooks or the backend:
+  `bash .claude/scripts/mode.test.sh`,
+  `bash tools/storybook-react/scripts/diagnose.test.sh`, and
+  `bash .claude/hooks/guard-foreground.test.sh`.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
   branch, the instruction files actually consulted (including skills loaded this
   session), and the current mode — never the modes as numbered options, since a
