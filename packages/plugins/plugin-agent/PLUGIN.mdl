@@ -210,6 +210,29 @@ op ensureChannelChat
 ```
 
 ```mdl
+op ensureSessionChat
+  key: org.dxos.operation.agent.ensureSessionChat
+  desc: Finds or creates an agent's chat for a session, a conversation with a caller that is not a channel (an MCP client).
+  input:
+    agent?: string                  # the agent's URI or name; optional when the space has one agent
+    kind: string                    # the kind of caller, e.g. mcp
+    key: string                     # the caller's session id
+    title?: string                  # names a new chat
+    model?: string                  # a model NSID, kept on the chat for later turns
+  output: { agent: Ref<Agent>, agentName?: string, chat: Ref<Chat>, feed: Ref<Feed>, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database.Service]
+  note: |
+    Idempotent on (agent, kind, key): the chat carries the `Obj.Meta` key
+    `{ source: 'org.dxos.agent/session', id: '<kind>:<key>' }` (`AgentSession.sessionKey`); a chat with the key
+    parented to another agent is not a match. A new chat is parented to the agent, shares its Instructions, and is
+    bound to the agent's session skills, the objects of its current chat, and every channel's skills, so the agent
+    can act in its channels from the session. A model given on a later call replaces the chat's model. Called by
+    EDGE compute-service's `askAgent`, by key (`AgentSession.ENSURE_SESSION_CHAT_KEY`), which also finds an
+    existing session chat in the index by the same foreign key.
+```
+
+```mdl
 op sendMessage
   key: org.dxos.operation.agent.sendMessage
   desc: Delivers a message to a person through the agent's conversation with them.
@@ -1251,6 +1274,14 @@ decision D-10: `AgentList` takes the agents as the contacts they are and copies 
   rejected:
     - Passing each space's own colour to the chips: the space colour fix (dxos/dxos#14075) keeps every chip and the sidebar on the hash of the space id instead.
   source: https://github.com/dxos/dxos/pull/14076
+```
+
+```mdl
+decision D-11: `ensureSessionChat` moves into this plugin from EDGE's operation-service, renamed from `org.dxos.operation.agentSession.ensureChat`, and the plugin exports the session chat's foreign-key source (`AgentSession.SESSION_SOURCE`) for compute-service's MCP sessions.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [ensureSessionChat]
+  why: It reaches EDGE through this plugin's bundle like the agent's other operations (EDGE-PLUGINS D-81, D-82). The source keeps its value `org.dxos.agent/session`, since existing session chats are keyed by it.
 ```
 
 ---
