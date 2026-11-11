@@ -101,6 +101,8 @@ const redirects: Record<string, string> = {
   // App Graph and Translations are app-level, so they moved to Guides.
   '/docs/plex/concepts/app-graph': '/docs/plex/guides/app-graph/',
   '/docs/plex/guides/translations': '/docs/plex/guides/app-capabilities/',
+  // The manifest's fields are documented in the generated API reference.
+  '/docs/plex/resources/manifest': '/docs/plex/guides/plugin/',
   ...plexRedirects,
 };
 
