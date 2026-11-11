@@ -1,0 +1,117 @@
+---
+import dxos from '../../../packages/ui/brand/assets/backgrounds/bg-dxos.svg?raw';
+// The hero puts its art on the right, so each background is the variant with its icon on the right, clear of the title.
+import echo from '../../../packages/ui/brand/assets/backgrounds/bg-echo-right.svg?raw';
+import halo from '../../../packages/ui/brand/assets/backgrounds/bg-halo.svg?raw';
+import kube from '../../../packages/ui/brand/assets/backgrounds/bg-kube-right.svg?raw';
+import mesh from '../../../packages/ui/brand/assets/backgrounds/bg-mesh.svg?raw';
+
+/** Keyed by the `welcome.background` values that `content.config.ts` allows. */
+const BACKGROUNDS = { dxos, echo, halo, kube, mesh } as const;
+
+type Props = {
+  /** Section name shown above the title, e.g. `ECHO`. */
+  section: string;
+  title: string;
+  tagline: string;
+  background: keyof typeof BACKGROUNDS;
+};
+
+const { section, title, tagline, background } = Astro.props;
+
+// Inlined, so the art paints with the page and costs no request; `slice` fills the banner at any aspect ratio.
+const art = BACKGROUNDS[background].replace('<svg ', '<svg preserveAspectRatio="xMidYMid slice" aria-hidden="true" ');
+---
+
+<header class="welcome-hero">
+  <div class="art" set:html={art} />
+  <div class="text">
+    <p class="section">{section}</p>
+    <!-- Starlight's skip link and the TOC's "Overview" entry target the page title by this id. -->
+    <h1 id="_top">{title}</h1>
+    <p class="tagline">{tagline}</p>
+  </div>
+</header>
+
+<style>
+  .welcome-hero {
+    position: relative;
+    /* Top-aligned: while the HTML streams in, lines parsed later extend the text downward instead of pushing what is painted. */
+    display: flex;
+    align-items: flex-start;
+    height: 15rem;
+    margin-top: 1rem;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background: rgb(29, 31, 32);
+    color: #fff;
+  }
+
+  /* The art sits on the right and fades out to the left, so no stroke crosses the text. */
+  .art {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 60%;
+    mask-image: linear-gradient(to right, transparent, black 40%);
+  }
+
+  .art :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .text {
+    position: relative;
+    max-width: 55%;
+    padding: 1.5rem;
+  }
+
+  .section {
+    margin: 0;
+    font-family: 'Sharp Sans', var(--sl-font);
+    font-weight: 500;
+    font-size: var(--sl-text-sm);
+    letter-spacing: 0.3em;
+  }
+
+  /* By id, to outrank the theme's `h1#_top`, which colors the title for the page ground rather than this dark banner. */
+  .welcome-hero #_top {
+    margin: 0.25rem 0 0;
+    font-size: var(--sl-text-h1);
+    line-height: var(--sl-line-height-headings);
+    color: #fff;
+  }
+
+  .tagline {
+    margin: 0.5rem 0 0;
+    font-size: var(--sl-text-lg);
+    color: rgb(255 255 255 / 0.85);
+  }
+
+  @media (max-width: 50rem) {
+    .welcome-hero {
+      height: 12rem;
+    }
+
+    /* A phone has no room beside the text, so the art spans the banner, dimmed behind it. */
+    .art {
+      width: 100%;
+      mask-image: none;
+      opacity: 0.3;
+    }
+
+    .text {
+      max-width: none;
+      padding: 1rem;
+    }
+
+    .welcome-hero #_top {
+      font-size: var(--sl-text-h2);
+    }
+
+    .tagline {
+      font-size: var(--sl-text-base);
+    }
+  }
+</style>

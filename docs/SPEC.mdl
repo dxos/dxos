@@ -4,9 +4,9 @@ name: DXOS docs
 version: 0.1.0
 ---
 
-The DXOS docs teach a developer to build on ECHO, then to build apps from plugins with the App Framework, using
+The DXOS docs teach a developer to build on ECHO, then to build apps from plugins with PLEX, using
 Composer as the app those plugins run in. They have three sections: ECHO; HALO, which holds identity, devices and
-space membership; and App Framework, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Welcome page;
+space membership; and PLEX, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Welcome page;
 there is no separate docs home [F-16]. Every section has the same shape: Start here, a learning path that builds one
 thing step by step, core concepts, one guide per API namespace, and resources [F-17], [F-18].
 
@@ -49,7 +49,7 @@ uses org.dxos.echo.query: The query guarantees that the argument for ECHO rests 
 ```
 
 ```mdl
-uses org.dxos.app.composer: The app that the App Framework section uses as its host, and teaches the reader to extend.
+uses org.dxos.app.composer: The app that the PLEX section uses as its host, and teaches the reader to extend.
 ```
 
 ## Extensions
@@ -163,9 +163,9 @@ page welcome: Welcome
     - The model in four points: CRDT replication, peers over WebRTC, concurrent writers, offline writes that merge
     - What DXOS is, in two sentences, with ECHO as the lead
     - Spaces hold data and objects are its unit, with links to both concept pages
-    - How these docs are organized: the ECHO, HALO and App Framework sections, and in each the learning path, core
+    - How these docs are organized: the ECHO, HALO and PLEX sections, and in each the learning path, core
       concepts, guides and resources
-    - Where to go next: Why ECHO?, the learning path, and the App Framework for building apps on ECHO
+    - Where to go next: Why ECHO?, the learning path, and PLEX for building apps on ECHO
 ```
 ```mdl
 page why-echo: Why ECHO?
@@ -877,9 +877,9 @@ page halo-glossary: Glossary
     - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, role and space key
 ```
 
-## App Framework
+## PLEX
 
-The App Framework builds apps from plugins. Composer is built on it and is the app the section's examples run
+PLEX builds apps from plugins. Composer is built on it and is the app the section's examples run
 in, so each page teaches the framework first and shows the result in Composer. The routes are under
 `/docs/app-framework/`.
 
@@ -887,14 +887,14 @@ in, so each page teaches the framework first and shows the result in Composer. T
 
 ```mdl
 page app-framework-welcome: Welcome
-  What the App Framework is, how an app is made of plugins, and Composer as the app built on it.
-  section: App Framework
+  What PLEX is, how an app is made of plugins, and Composer as the app built on it.
+  section: PLEX
   route: /docs/app-framework/welcome/
   group: Start here
   template: narrative
   status: spike
   covers:
-    - What the App Framework is, in one screen: plugins made of modules that contribute capabilities, and an app that is the plugins it loads
+    - What PLEX is, in one screen: plugins made of modules that contribute capabilities, and an app that is the plugins it loads
     - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
     - What ECHO does under it: spaces, typed objects, sync between devices and people, and agents that query the same graph
     - What a reader can build: a new object type with its own view, an operation, a panel, an integration
@@ -904,7 +904,7 @@ page app-framework-welcome: Welcome
 ```mdl
 page app-framework-try-composer: Try Composer
   Open Composer, make a space, and share it, in one short page.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/try/
   group: Start here
   template: tutorial
@@ -920,7 +920,7 @@ page app-framework-try-composer: Try Composer
 ```mdl
 page app-framework-build-with-assistant: Build a plugin with the assistant
   Have Composer's assistant write, build and load a plugin for you, in the desktop app.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/build-a-plugin-with-the-assistant/
   group: Start here
   template: tutorial
@@ -939,7 +939,7 @@ page app-framework-build-with-assistant: Build a plugin with the assistant
 ```mdl
 page app-framework-create-plugin: Create a plugin
   Start the tutorial plugin: its metadata, its first module and its translations.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/learn/create-plugin/
   group: Learning path
   template: tutorial
@@ -955,7 +955,7 @@ page app-framework-create-plugin: Create a plugin
 ```mdl
 page app-framework-define-type: Define a type
   Give the plugin its own ECHO type and make it an object a person can create.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/learn/define-type/
   group: Learning path
   template: tutorial
@@ -969,7 +969,7 @@ page app-framework-define-type: Define a type
 ```mdl
 page app-framework-add-surface: Add a surface
   Render the plugin's objects by contributing a surface.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/learn/add-surface/
   group: Learning path
   template: tutorial
@@ -984,7 +984,7 @@ page app-framework-add-surface: Add a surface
 ```mdl
 page app-framework-add-operation: Add an operation
   Give the plugin an action that the UI, the command palette and agents can run.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/learn/add-operation/
   group: Learning path
   template: tutorial
@@ -999,7 +999,7 @@ page app-framework-add-operation: Add an operation
 ```mdl
 page app-framework-extend-app-graph: Extend the app graph
   Put the plugin's objects and actions into the app's navigation.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/learn/extend-app-graph/
   group: Learning path
   template: tutorial
@@ -1014,7 +1014,7 @@ page app-framework-extend-app-graph: Extend the app graph
 ```mdl
 page app-framework-publishing: Publishing a plugin
   Publish the finished plugin to your private registry, where Composer lists it only to you.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/publishing-plugins/
   group: Learning path
   template: tutorial
@@ -1033,7 +1033,7 @@ page app-framework-publishing: Publishing a plugin
 ```mdl
 page app-framework-anatomy: Anatomy of a plugin
   Plugins, modules, capabilities and activation events, and how they fit together.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/introduction/
   group: Core concepts
   template: concept
@@ -1049,7 +1049,7 @@ page app-framework-anatomy: Anatomy of a plugin
 ```mdl
 page app-framework-surfaces: Surfaces
   How the framework decides which component renders an object in a given place.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/concepts/surfaces/
   group: Core concepts
   template: concept
@@ -1064,7 +1064,7 @@ page app-framework-surfaces: Surfaces
 ```mdl
 page app-framework-app-graph: The app graph
   The graph of nodes and actions that an app's navigation and menus are built from.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/concepts/app-graph/
   group: Core concepts
   template: concept
@@ -1079,7 +1079,7 @@ page app-framework-app-graph: The app graph
 ```mdl
 page app-framework-operations: Operations
   Named, typed actions that the UI, the command palette and agents all run the same way.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/concepts/operations/
   group: Core concepts
   template: concept
@@ -1099,7 +1099,7 @@ React comes last.
 ```mdl
 page app-framework-guide-plugin: Plugin
   Define a plugin and its modules.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/plugin/
   group: Guides
   template: namespace
@@ -1114,7 +1114,7 @@ page app-framework-guide-plugin: Plugin
 ```mdl
 page app-framework-guide-capability: Capability
   Declare, contribute and request capabilities, including the built-in ones.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/capability/
   group: Guides
   template: namespace
@@ -1129,7 +1129,7 @@ page app-framework-guide-capability: Capability
 ```mdl
 page app-framework-guide-activation-event: ActivationEvent
   Declare activation events and use the built-in ones.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/activation-event/
   group: Guides
   template: namespace
@@ -1143,7 +1143,7 @@ page app-framework-guide-activation-event: ActivationEvent
 ```mdl
 page app-framework-guide-operation: Operation
   Define operations, implement their handlers and invoke them.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/operation/
   group: Guides
   template: namespace
@@ -1158,7 +1158,7 @@ page app-framework-guide-operation: Operation
 ```mdl
 page app-framework-guide-surface: Surface
   Contribute surfaces and render other plugins' surfaces.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/surface/
   group: Guides
   template: namespace
@@ -1173,7 +1173,7 @@ page app-framework-guide-surface: Surface
 ```mdl
 page app-framework-guide-app-graph: AppGraph
   Contribute nodes and actions to the app graph.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/app-graph/
   group: Guides
   template: namespace
@@ -1188,7 +1188,7 @@ page app-framework-guide-app-graph: AppGraph
 ```mdl
 page app-framework-guide-app-capabilities: AppCapabilities
   The app-level capabilities the App Toolkit defines for plugins to contribute.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/app-capabilities/
   group: Guides
   template: namespace
@@ -1202,7 +1202,7 @@ page app-framework-guide-app-capabilities: AppCapabilities
 ```mdl
 page app-framework-guide-react: React
   The React hooks for plugins.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/guides/react/
   group: Guides
   template: namespace
@@ -1218,8 +1218,8 @@ page app-framework-guide-react: React
 
 ```mdl
 page app-framework-api-reference: API reference
-  Generated API reference for the App Framework.
-  section: App Framework
+  Generated API reference for PLEX.
+  section: PLEX
   route: /docs/app-framework/resources/api-reference/
   group: Resources
   template: reference
@@ -1235,7 +1235,7 @@ These pages are in scope but not in the sidebar yet.
 ```mdl
 page app-framework-user-guide: Using Composer
   Spaces and sharing, the assistant, adding plugins, the quick palette, settings and editing.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/user-guide/
   group: Start here
   template: concept
@@ -1250,7 +1250,7 @@ page app-framework-user-guide: Using Composer
 ```mdl
 page app-framework-cli: The dx CLI
   The command-line tool for profiles, functions and publishing.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/tools/cli/
   group: Guides
   template: namespace
@@ -1264,7 +1264,7 @@ page app-framework-cli: The dx CLI
 ```mdl
 page app-framework-manifest: The plugin manifest
   `dx.config.ts`, capabilities and activation events, as reference.
-  section: App Framework
+  section: PLEX
   route: /docs/app-framework/reference/manifest/
   group: Resources
   template: reference
@@ -1276,8 +1276,8 @@ page app-framework-manifest: The plugin manifest
 
 ```mdl
 page app-framework-glossary: Glossary
-  Every Composer and App Framework term, defined once.
-  section: App Framework
+  Every Composer and PLEX term, defined once.
+  section: PLEX
   route: /docs/app-framework/resources/glossary/
   group: Resources
   template: reference
@@ -1460,7 +1460,7 @@ feat F-7: Relationship to dxos.org
   req F-7.1:
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
-          Plugins, Blog, Docs); the footer links the same pages, the ECHO, HALO and App Framework docs,
+          Plugins, Blog, Docs); the footer links the same pages, the ECHO, HALO and PLEX docs,
           GitHub and Discord
 
   req F-7.2:
@@ -1610,15 +1610,15 @@ feat F-16: Docs sections
 
   req F-16.1:
     when: a reader opens the docs
-    then: there are three sections, ECHO, HALO and App Framework, in that order in the topic switcher
+    then: there are three sections, ECHO, HALO and PLEX, in that order in the topic switcher
 
   req F-16.2:
     when: a reader looks for HALO
     then: HALO is its own section, and its pages are no longer a group of the ECHO section
 
   req F-16.3:
-    when: a page in the App Framework section introduces an idea
-    then: it presents the App Framework idea first and shows it in Composer, the app built on the framework, and
+    when: a page in the PLEX section introduces an idea
+    then: it presents the PLEX idea first and shows it in Composer, the app built on the framework, and
           links to the ECHO page for each ECHO idea it uses
 
   req F-16.4:
@@ -1637,7 +1637,8 @@ feat F-16: Docs sections
   req F-16.6:
     when: a reader looks at the topic switcher
     then: each section shows a DXOS brand mark, the same ones the brand package and the studio site use: ECHO's for
-          ECHO, HALO's for HALO, and KUBE's for App Framework
+          ECHO, HALO's for HALO, and KUBE's for PLEX; each mark has no box and takes its label's color, the accent
+          color for the current section
 ```
 
 ```mdl
@@ -1653,7 +1654,7 @@ feat F-17: Same shape in both sections
 
   req F-17.3:
     when: a learning path is built
-    then: its pages build one thing, the ECHO tutorial app or the App Framework tutorial plugin, and each page ends with
+    then: its pages build one thing, the ECHO tutorial app or the PLEX tutorial plugin, and each page ends with
           it as it stands after that page; HALO's learning path continues the ECHO tutorial app, adding people and
           devices to it
 ```
@@ -2656,6 +2657,20 @@ decision D-108: Pages without an embed load none of its styles. Astro walks up t
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-15.5]
+```
+
+```mdl
+decision D-109: The third section is called PLEX. Fills in [D-96].
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-16.1]
+```
+
+```mdl
+decision D-110: The topic switcher draws each brand mark without a box, in its label's color, so the current section's mark is the accent color and the others match their labels. Fills in [D-106].
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-16.6]
 ```
 
 ## Appendix: Extension Definitions

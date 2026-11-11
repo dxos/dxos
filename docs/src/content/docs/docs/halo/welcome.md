@@ -1,6 +1,10 @@
 ---
 title: Welcome
 description: What HALO is and how its pages are organized.
+welcome:
+  section: HALO
+  tagline: Identity for local-first apps, with keys that live on the user's devices.
+  background: halo
 ---
 
 HALO is identity management for local-first apps. It handles a user's identity, the devices and credentials that act for it, and who can join a space.

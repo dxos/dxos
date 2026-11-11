@@ -1,9 +1,13 @@
 ---
 title: Welcome
-description: What the App Framework is, how an app is made of plugins, and Composer as the app built on it.
+description: What PLEX is, how an app is made of plugins, and Composer as the app built on it.
+welcome:
+  section: PLEX
+  tagline: Build apps out of plugins that extend each other through typed contributions.
+  background: kube
 ---
 
-The App Framework builds apps out of plugins. An app is little more than the plugins it loads: each plugin adds types,
+PLEX builds apps out of plugins. An app is little more than the plugins it loads: each plugin adds types,
 views, actions and settings, and plugins extend each other through typed contributions instead of imports.
 
 ## How an app is put together
@@ -20,14 +24,14 @@ roles.
 
 ## Composer, the app built on it
 
-[Composer](/composer) is a local-first workspace built entirely with the App Framework. Its navigation tree, the deck
+[Composer](/composer) is a local-first workspace built entirely with PLEX. Its navigation tree, the deck
 of open items, the settings page and the assistant are all plugins, written against the same API a third-party plugin
 uses. A plugin from outside DXOS has the same powers as a built-in one, which is why these pages use Composer as the
 place your plugin runs.
 
 ## What ECHO does underneath
 
-ECHO is the database under every App Framework app. A plugin's data is ECHO objects in spaces, so it syncs between a
+ECHO is the database under every PLEX app. A plugin's data is ECHO objects in spaces, so it syncs between a
 user's devices and the people they share with, merges concurrent edits, and works offline, without the plugin doing
 anything for it. Agents read and write the same objects through the same queries.
 [Spaces](/docs/echo/concepts/spaces/) and [Objects and relations](/docs/echo/concepts/objects-relations/) explain the
@@ -42,7 +46,7 @@ model.
 
 ## Where to go next
 
-- [Try Composer](/docs/app-framework/try/) to see an App Framework app before you extend one.
+- [Try Composer](/docs/app-framework/try/) to see an PLEX app before you extend one.
 - [Build a plugin with the assistant](/docs/app-framework/build-a-plugin-with-the-assistant/) to have Composer's
   desktop app write one for you.
 - [Create a plugin](/docs/app-framework/learn/create-plugin/) to start the learning path, which builds a Bookmarks

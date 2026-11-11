@@ -56,7 +56,7 @@ const dxosIcons = path.join(rootDir, 'packages/ui/brand/assets/icons');
 const extendedIcons = path.join(rootDir, 'packages/ui/ui-icons/assets');
 
 // https://astro.build/config
-// The App Framework section moved from `/docs/composer/`; each of its pages keeps its old URL as a redirect.
+// The PLEX section moved from `/docs/composer/`; each of its pages keeps its old URL as a redirect.
 const APP_FRAMEWORK_CONTENT = path.join(import.meta.dirname, 'src/content/docs/docs/app-framework');
 const appFrameworkRedirects = Object.fromEntries(
   fs
@@ -150,6 +150,8 @@ export default defineConfig({
         Footer: './src/components/Footer.astro',
         Head: './src/components/Head.astro',
         Header: './src/components/Header.astro',
+        // Welcome pages put the title in a hero; see `WelcomeHero.astro`.
+        PageTitle: './src/components/PageTitle.astro',
         // Lists the topics with the DXOS brand marks; see `SidebarTopics.astro`.
         Sidebar: './src/components/Sidebar.astro',
         // TODO(wittjosiah): Uncomment to link logo to home page.
@@ -188,9 +190,9 @@ export default defineConfig({
             },
             {
               id: 'app-framework',
-              label: 'App Framework',
+              label: 'PLEX',
               link: '/docs/app-framework/welcome/',
-              items: sidebarFromSpec(specPages, 'App Framework'),
+              items: sidebarFromSpec(specPages, 'PLEX'),
             },
           ],
           // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.
