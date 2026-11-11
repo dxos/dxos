@@ -1,6 +1,6 @@
 ---
-title: Your name
-description: Create an identity with a display name, show it and change it.
+title: Your profile
+description: Create an identity with a profile, show it and change it.
 ---
 
 import { Steps, TabItem, Tabs } from '@astrojs/starlight/components';
@@ -8,8 +8,8 @@ import HaloEmbed from '../../../../../components/HaloEmbed.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
 
-By the end of this page the contact book will ask for your name the first time it runs, show it in the corner, and let
-you change it.
+By the end of this page the contact book will create your identity with a profile the first time it runs, show your
+name from it in the corner, and let you change it.
 
 To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages taken
 out. It runs from the start, and tells you which step to fill in next. Each page says which file its code goes in.
@@ -60,8 +60,8 @@ The code is Effect. `@dxos/halo` describes each operation as an `Effect` or a `S
 
    <Snippet file="halo-tutorial/client" region="client" />
 
-4. **Create your identity.** `Identity.create` makes the identity, with this device as its first member, and gives it your
-   name. The app calls this when you press **Start**. This and the next two steps go in `profile.ts`.
+4. **Create your identity.** `Identity.create` makes the identity, with this device as its first member, and gives its
+   profile your name. The app calls this when you press **Start**. This and the next two steps go in `profile.ts`.
 
    <Snippet file="halo-tutorial/profile" region="create" />
 
@@ -71,7 +71,7 @@ The code is Effect. `@dxos/halo` describes each operation as an `Effect` or a `S
 
    <Snippet file="halo-tutorial/profile" region="follow" />
 
-6. **Change your name.** `Identity.updateProfile` writes a new profile. `me` emits it, and so does every space member list
+6. **Change your profile.** `Identity.updateProfile` writes a new profile. `me` emits it, and so does every space member list
    that includes you. Clicking your name in the app calls this.
 
    <Snippet file="halo-tutorial/profile" region="rename" />
@@ -86,5 +86,5 @@ This device has no identity yet. Type a name and press **Start**, then click you
 
 ## What you can do now
 
-You can start a client, create an identity with a name, follow it as a stream, and change it. Next,
+You can start a client, create an identity with a profile, follow it as a stream, and change its profile. Next,
 [Your spaces](/docs/halo/learn/your-spaces/) gives it somewhere to invite people.
