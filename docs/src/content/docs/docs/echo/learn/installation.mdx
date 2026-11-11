@@ -43,7 +43,14 @@ A client acts for an identity. The identity owns the spaces it creates, and othe
 
    In a React app, install `@dxos/react-client` instead and follow the [React guide](/docs/echo/guides/react/).
 
-2. **Configure the bundler.** In the browser, ECHO loads WebAssembly in the page and in workers, so Vite needs `vite-plugin-wasm` for both. `ConfigPlugin` loads the client's config from YAML files at the package root.
+2. **Configure the bundler.** In the browser, ECHO runs its database in a worker and loads WebAssembly in the page and in that worker. Vite needs four settings for it:
+
+   - `vite-plugin-wasm` in `plugins` and in `worker.plugins`, so both can import WebAssembly.
+   - `build.target: 'esnext'`, since the WebAssembly modules are loaded with top-level `await`.
+   - `optimizeDeps.exclude` for `@dxos/wa-sqlite`, `@automerge/automerge` and `@automerge/automerge-subduction`. Vite's pre-bundling would move their WebAssembly files away from the code that loads them.
+   - `optimizeDeps.include` for the CommonJS modules that only the database worker imports. Vite's dependency scan starts from the page, so it does not find them, and the worker cannot import a CommonJS module that Vite has not pre-bundled.
+
+   `ConfigPlugin` loads the client's config from YAML files at the package root.
 
    <Snippet file="vite-config" title="vite.config.ts" />
 

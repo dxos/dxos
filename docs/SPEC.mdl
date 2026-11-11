@@ -220,7 +220,7 @@ page installation: Installation
   template: tutorial
   status: spike
   covers:
-    - Install `@dxos/client` and the bundler setup the browser needs
+    - Install `@dxos/client` and the bundler setup the browser needs: `vite-plugin-wasm` in the page and its workers, `build.target: 'esnext'`, the WebAssembly packages excluded from pre-bundling, and the worker's CommonJS dependencies pre-bundled
     - Create a client and an identity, linking to HALO's Create an identity for the details
     - Create or open a space and get its database, in Node and in the browser
     - Follow along in StackBlitz: the starter, with each page's code to write
@@ -3156,6 +3156,13 @@ decision D-144: PLEX learning-path pages may use Effect where the PLEX API is Ef
   date: 2026-11-11
   by: user:wittjosiah
   affects: [app-framework-add-operation, F-20]
+```
+
+```mdl
+decision D-145: Installation documents every piece of `vite.config.ts` that ECHO needs in the browser: `vite-plugin-wasm` in the page and in `worker.plugins`, `build.target: 'esnext'`, `optimizeDeps.exclude` for `@dxos/wa-sqlite`, `@automerge/automerge` and `@automerge/automerge-subduction`, and `optimizeDeps.include` for the CommonJS modules only the database worker imports. The icon sprite's dist scan and the Tailwind source for `@dxos` stylesheets stay in the StackBlitz template without explanation, since they serve react-ui, which the docs use only for demonstration.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [installation]
 ```
 
 ## Appendix: Extension Definitions

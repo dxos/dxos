@@ -9,6 +9,15 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
 // #region
 export default defineConfig({
+  build: { target: 'esnext' },
+  optimizeDeps: {
+    exclude: [
+      '@dxos/wa-sqlite',
+      '@automerge/automerge',
+      '@automerge/automerge-subduction',
+    ],
+    include: ['chalk', 'lodash.defaultsdeep', '@dxos/node-std > deep-equal'],
+  },
   plugins: [
     ConfigPlugin({ root: import.meta.dirname, env: ['MY_ENV_VAR'] }),
     wasm(),
