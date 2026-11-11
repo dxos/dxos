@@ -72,6 +72,13 @@ and that repair list is the finding:
 | A heading's or caption's size      | `texts[n].role`             | The DSL's only text-style lever is `weight=s`.                                                                                |
 | A layer label's placement          | `frames[n].label`           | See below — the DSL can place it, but not say what it belongs to.                                                             |
 
+One thing the loader drops rather than repairs: the slide's **title block**. The deck draws the title and subtitle
+on the slide because a slide is one HTML page; in a deck of canvas drawings they belong to the presenter's own
+heading, and a drawing that repeated them would be a second title inside the first. So `seedStudioSlide` filters
+the `title` object out of the parsed commands, and the text stays in the sidecar (`model.title`, `model.subtitle`)
+for the heading to read. The drawing is the diagram and nothing else, which is also what makes its extent a
+meaningful thing to fit to a slot — see §7.
+
 Two traps worth writing down, both found the hard way:
 
 - **A stored route must start and end on the nodes' outlines.** `diagramRoute` keeps `connector.route` only when

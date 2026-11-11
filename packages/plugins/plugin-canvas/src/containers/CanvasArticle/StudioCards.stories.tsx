@@ -4,7 +4,8 @@
 
 //
 // The studio deck's three graph slides as canvas drawings, each built from its `.diagram` file and its sidecar, with a
-// `card` element kind contributed the way a real plugin contributes one (`CanvasCapabilities.NodeType`).
+// `card` element kind contributed the way a real plugin contributes one (`CanvasCapabilities.NodeType`). The slide's
+// title and subtitle are not in the drawing: a presenter slide's heading carries them.
 // Findings: `packages/plugins/plugin-canvas/docs/STUDIO-CARDS.md`.
 //
 

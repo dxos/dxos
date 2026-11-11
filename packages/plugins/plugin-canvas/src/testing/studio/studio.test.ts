@@ -48,7 +48,8 @@ describe('studio deck slides on a canvas', () => {
     const nodes = Object.values(root.nodes);
     // Every record the loader rewrote is still a valid node: an invalid one is silently dropped by `readViews`,
     // since the content map is untyped.
-    const texts = (model.texts?.length ?? 0) + 2 + model.frames.filter((frame) => frame.label).length;
+    // The slide's title and subtitle are not in the drawing: the presenter's heading carries them.
+    const texts = (model.texts?.length ?? 0) + model.frames.filter((frame) => frame.label).length;
     expect(nodes).toHaveLength(Object.keys(model.nodes).length + model.frames.length + texts);
     const cards = nodes.filter((node) => node.type === 'card');
     expect(cards).toHaveLength(Object.keys(model.nodes).length);
@@ -67,6 +68,17 @@ describe('studio deck slides on a canvas', () => {
       const box = content[`node:${frame.id}/frame`];
       expect(isNodeRecord(box) && 'label' in box.node).toBe(false);
     }
+  });
+
+  test.for(SLIDES)('%s leaves its title and subtitle to the slide heading', (name, { expect }) => {
+    const { source, model } = slide(name);
+    const content: ContentMap = {};
+    seedStudioSlide(source, model)(content);
+    for (const id of ['title/heading', 'title/subtitle']) {
+      expect(content[`node:${id}`]).toBeUndefined();
+    }
+    // The text itself is still in the sidecar, which is where the heading reads it from.
+    expect([model.title, model.subtitle].every((text) => text.length > 0)).toBe(true);
   });
 
   test('the routes the sidecar carries are the ones the DSL dropped', ({ expect }) => {

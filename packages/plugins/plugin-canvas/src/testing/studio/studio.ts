@@ -11,7 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type ContentMap, Dsl, applyCommands } from '@dxos/diagram';
+import { type ContentMap, Dsl, type Scene, applyCommands } from '@dxos/diagram';
 import { invariant } from '@dxos/invariant';
 import { type NodeBase, endpointNode } from '@dxos/scene';
 
@@ -100,7 +100,15 @@ export const TONES: Record<string, string> = {
 };
 
 /** Text sizes in scene units by the role the sidecar gives a text; the DSL's only lever is `weight=s`. */
-const TEXT_SIZES: Record<string, number> = { 'heading': 20, 'caption': 15, 'title/heading': 56, 'title/subtitle': 26 };
+const TEXT_SIZES: Record<string, number> = { heading: 20, caption: 15 };
+
+/**
+ * The slide's title block, which the drawing does not hold. The deck draws the title and subtitle on the slide
+ * because the slide is one HTML page; in a deck of canvas drawings they belong to the presenter's own heading, and
+ * a drawing that repeated them would be a second title inside the first. The sidecar keeps the text (`model.title`,
+ * `model.subtitle`) for the heading to use.
+ */
+const TITLE_OBJECT = 'title';
 
 /** The element id of a card's box, which is how the bridge keys its node (`<object>/box`). */
 const boxOf = (key: string) => elementId(key, 'box');
@@ -140,11 +148,9 @@ const textWidth = (label: string, fontSize: number) => label.length * fontSize *
  * because the scene language has no notion of a heading: every size here comes from the sidecar's `role`.
  */
 const styleText = (content: ContentMap, model: StudioModel): void => {
-  const roles = new Map<string, number>([
-    ['title/heading', TEXT_SIZES['title/heading']],
-    ['title/subtitle', TEXT_SIZES['title/subtitle']],
-    ...(model.texts ?? []).map((text): [string, number] => [elementId(text.id, 'label'), TEXT_SIZES[text.role]]),
-  ]);
+  const roles = new Map<string, number>(
+    (model.texts ?? []).map((text): [string, number] => [elementId(text.id, 'label'), TEXT_SIZES[text.role]]),
+  );
 
   for (const [id, fontSize] of roles) {
     const record = content[nodeKey(id)];
@@ -299,16 +305,24 @@ const routeLinks = (content: ContentMap, model: StudioModel): number => {
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
 export type StudioReport = { problems: number; cards: number; routed: number };
 
+/** Whether a command names the slide's title block, which the presenter's heading carries ({@link TITLE_OBJECT}). */
+const isTitle = (command: Scene.Command): boolean =>
+  'object' in command ? command.object.id === TITLE_OBJECT : 'objectId' in command && command.objectId === TITLE_OBJECT;
+
 /**
- * Seeds a canvas from a slide: parses the `.diagram`, applies it through the illustrator bridge, then repairs from the
- * sidecar what the DSL could not carry. Returns what it had to repair.
+ * Seeds a canvas from a slide: parses the `.diagram`, drops the title block, applies the rest through the
+ * illustrator bridge, then repairs from the sidecar what the DSL could not carry. Returns what it had to repair.
  */
 export const seedStudioSlide =
   (source: string, model: StudioModel, report?: (report: StudioReport) => void) =>
   (content: ContentMap): void => {
     const { commands, problems } = Dsl.parse(source);
     invariant(problems.length === 0, `${model.id}.diagram: ${problems.map(({ message }) => message).join('; ')}`);
-    applyCommands(content, commands, SceneHandler);
+    applyCommands(
+      content,
+      commands.filter((command) => !isTitle(command)),
+      SceneHandler,
+    );
     promoteCards(content, model);
     styleText(content, model);
     placeFrameLabels(content, model);
