@@ -283,7 +283,7 @@ feat F-7: On-device Streaming Transcription (Whistle module)
     then: the word is committed; the unconfirmed tail is reported with every pass and replaced by the next
   req F-7.3: The pass interval is 1 s, as in Cactus's demo; a consumer can lower it to 200 ms, which commits sooner but agrees on half-heard words more often.
   req F-7.6: Keywords posted to the worker bias recognition from the next pass.
-  req F-7.7: The whole recording stays in the tab and can be played back or saved as WAV.
+  req F-7.7: The whole recording stays in the tab and can be saved as WAV.
   req F-7.8: The engine and model download on first use only and are kept in Cache Storage; loading the module downloads nothing.
   req F-7.10:
     when: the audio holds no sound louder than -35 dBFS for 0.15 s
@@ -719,6 +719,16 @@ decision D-23: `Live` and `File` transcribe through RealtimeKit on the preview E
   supersedes: D-19
   affects: [QA-4]
   why: A binding made while the client initialized could finish after the story rendered, so an early click reached calls-service unbound and was refused.
+  source: https://github.com/dxos/dxos/pull/14495
+```
+
+```mdl
+decision D-24: F-7.7 drops playback: the playback hook and the waveform were used only by the Whistle story and are removed with it, while `Recording` still saves WAV. Fills in [D-20].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-7.7]
+  why: Nothing outside the deleted story used them, and the repository's unused-code check fails on files no entry point reaches.
   source: https://github.com/dxos/dxos/pull/14495
 ```
 

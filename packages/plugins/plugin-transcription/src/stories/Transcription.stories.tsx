@@ -28,7 +28,7 @@ import React, {
 } from 'react';
 
 import { type CommitFn, makeCorrectionStage } from '@dxos/pipeline-transcription';
-import { useTestAccount } from '@dxos/plugin-client/testing';
+import { type TestAccountState, useTestAccount } from '@dxos/plugin-client/testing';
 import { useJoinTranscription } from '@dxos/react-client';
 import {
   type PipelinePhase,
@@ -121,10 +121,21 @@ const useResetOnFailure = (phase: PipelinePhase, setActive: (active: boolean) =>
   }, [phase, setActive]);
 };
 
-const TranscriptPanel = ({ model, children }: PropsWithChildren<{ model: TranscriptModel<Message.Message> }>) => (
+/** Why the story's controls cannot work, if they cannot: a failed account binding needs a reload to retry. */
+const accountError = (account: TestAccountState): string | undefined =>
+  account instanceof Error ? `Account binding failed (${account.message}); reload to retry.` : undefined;
+
+const TranscriptPanel = ({
+  model,
+  error,
+  children,
+}: PropsWithChildren<{ model: TranscriptModel<Message.Message>; error?: string }>) => (
   <Panel.Root>
     <Panel.Header>
-      <Toolbar.Root>{children}</Toolbar.Root>
+      <Toolbar.Root>
+        {children}
+        {error && <Toolbar.Text>{error}</Toolbar.Text>}
+      </Toolbar.Root>
     </Panel.Header>
     <ScrollContainer.Root pin>
       <Panel.Body asChild>
@@ -139,8 +150,10 @@ const TranscriptPanel = ({ model, children }: PropsWithChildren<{ model: Transcr
 );
 
 const LiveStory = () => {
-  const bound = useTestAccount(HUB_URL) === 'bound';
+  const account = useTestAccount(HUB_URL);
   const [recording, setRecording] = useState(false);
+  const [track, setTrack] = useState<MediaStreamTrack>();
+  const [micError, setMicError] = useState<string>();
   const { model, appendMessage } = useStoryMessages();
   const commit = useCommitMessages(appendMessage);
   const transcriber = useRealtimeKitTranscriber();
@@ -148,28 +161,53 @@ const LiveStory = () => {
     transcriber,
     segmentSentences: true,
     active: recording,
-    microphone: true,
+    track,
     stages: useStages(),
     commit,
   });
   useResetOnFailure(phase, setRecording);
 
+  // The track outlives Stop until the pipeline has drained, so the last words still reach the transcriber.
+  useEffect(() => {
+    if (!recording && phase === 'idle') {
+      setTrack(undefined);
+    }
+  }, [recording, phase]);
+  useEffect(() => () => track?.stop(), [track]);
+
+  const handleToggle = useCallback(async () => {
+    if (recording) {
+      setRecording(false);
+      return;
+    }
+
+    // Acquired here, not by the pipeline, so a refused microphone is reported instead of a Stop that records nothing.
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMicError(undefined);
+      setTrack(stream.getAudioTracks()[0]);
+      setRecording(true);
+    } catch (error) {
+      setMicError(`Microphone unavailable (${error instanceof Error ? error.message : String(error)}).`);
+    }
+  }, [recording]);
+
   return (
-    <TranscriptPanel model={model}>
+    <TranscriptPanel model={model} error={accountError(account) ?? micError}>
       <Button.Root
         iconOnly
         // A new session waits for the previous one to drain, which would otherwise end the new one's pipeline.
-        disabled={!transcriber || !bound || phase === 'draining'}
+        disabled={!transcriber || account !== 'bound' || phase === 'draining'}
         icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
         label={recording ? 'Stop' : 'Record'}
-        onClick={() => setRecording((value) => !value)}
+        onClick={handleToggle}
       />
     </TranscriptPanel>
   );
 };
 
 const FileStory = () => {
-  const bound = useTestAccount(HUB_URL) === 'bound';
+  const account = useTestAccount(HUB_URL);
   const [playing, setPlaying] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string>();
   useEffect(() => {
@@ -227,10 +265,12 @@ const FileStory = () => {
   return (
     <>
       <audio ref={audioRef} autoPlay />
-      <TranscriptPanel model={model}>
+      <TranscriptPanel model={model} error={accountError(account)}>
         <Button.Root
           iconOnly
-          disabled={!stream || !transcriber || !bound || phase === 'draining'}
+          // Not gated on the stream: until a user gesture, the browser holds the file's audio context suspended, and
+          // this click is that gesture; playback and transcription start once the stream arrives.
+          disabled={!transcriber || account !== 'bound' || phase === 'draining'}
           icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
           label={playing ? 'Pause' : 'Play'}
           onClick={() => setPlaying((value) => !value)}

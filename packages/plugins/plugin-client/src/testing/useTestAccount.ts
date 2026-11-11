@@ -24,8 +24,8 @@ export const useTestAccount = (hubUrl: string): TestAccountState => {
   const client = useClient();
   const identityDid = useIdentity()?.did;
   const key = identityDid && `${hubUrl} ${identityDid}`;
-  // Keyed, so a new identity or hub reads as pending until its own binding settles.
-  const [result, setResult] = useState<{ key: string; state: 'bound' | Error }>();
+  // Keyed, so a new client, identity or hub reads as pending until its own binding settles.
+  const [result, setResult] = useState<{ client: typeof client; key: string; state: 'bound' | Error }>();
   useEffect(() => {
     if (!key) {
       return;
@@ -33,11 +33,11 @@ export const useTestAccount = (hubUrl: string): TestAccountState => {
 
     const fiber = Effect.runFork(
       bindTestAccount(client, { hubUrl }).pipe(
-        Effect.flatMap(() => Effect.sync(() => setResult({ key, state: 'bound' }))),
+        Effect.flatMap(() => Effect.sync(() => setResult({ client, key, state: 'bound' }))),
         Effect.catch((error) =>
           Effect.sync(() => {
             log.catch(error);
-            setResult({ key, state: error });
+            setResult({ client, key, state: error });
           }),
         ),
       ),
@@ -47,5 +47,5 @@ export const useTestAccount = (hubUrl: string): TestAccountState => {
     };
   }, [client, key, hubUrl]);
 
-  return key !== undefined && result?.key === key ? result.state : 'pending';
+  return key !== undefined && result?.key === key && result.client === client ? result.state : 'pending';
 };
