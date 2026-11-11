@@ -8,6 +8,7 @@ import React, { type PropsWithChildren, createContext, useContext } from 'react'
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useDebugMode } from '#hooks';
 import { CallsCapabilities } from '#types';
@@ -61,8 +62,14 @@ const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
 const CallViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  // `group`: the call and lobby toolbars are hover-revealed (`groupHoverControlItemWithTransition`).
-  <Layout.Flex column {...Util.composableProps(props, { classNames: 'relative dx-expand group' })} ref={forwardedRef}>
+  // A controls container: the call and lobby toolbars show while the call is hovered or focused, and always on touch.
+  <Layout.Flex
+    column
+    {...Util.composableProps(props, {
+      classNames: mx('relative dx-expand', hoverableControls, hoverableFocusedWithinControls),
+    })}
+    ref={forwardedRef}
+  >
     {children}
   </Layout.Flex>
 ));
