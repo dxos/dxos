@@ -3,25 +3,37 @@
 //
 
 /**
- * Streaming file transcription into a message list. Loads an audio file and streams its transcript
- * through the recording engine (Transcriber → runLivePipeline → correction stage) **as it plays** —
- * appending each corrected block as a message rather than waiting for playback to stop.
+ * Transcription into a message list, one story per source:
  *
- * - `Default` plays a hosted m4a; the play/pause + upload toolbar gates playback and capture.
- * - `Live` transcribes the file through RealtimeKit on the dev EDGE, which needs a network and an identity with an
- *   account; elsewhere a scripted transcript stands in, so the pipeline and the message list still run offline.
+ * - `Live` transcribes the microphone through RealtimeKit on the preview EDGE.
+ * - `File` transcribes a hosted (or uploaded) audio file through RealtimeKit on the preview EDGE as it plays.
+ * - `TextMock` needs no audio and no network: scripted sentences are appended one at a time.
+ *
+ * `Live` and `File` bind their identity to a `test+*@dxos.org` account before enabling their controls, since
+ * calls-service serves account holders only, and stream into that identity's one-person transcription meeting; each
+ * committed block becomes a message.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import * as Fiber from 'effect/Fiber';
+import React, {
+  type ChangeEvent,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { type CommitFn, makeCorrectionStage } from '@dxos/pipeline-transcription';
-import { createScriptedTranscriber } from '@dxos/pipeline-transcription/testing';
+import { useTestAccount } from '@dxos/plugin-client/testing';
 import { useJoinTranscription } from '@dxos/react-client';
 import {
   type TrackTranscriber,
   Transcription,
+  type TranscriptModel,
   createRealtimeKitTranscriber,
   useAudioFile,
   useFeedModelAdapter,
@@ -37,34 +49,111 @@ import { createStoryDecorators } from '#testing';
 
 import { renderByline } from '../util/index.ts';
 
-/** Stands in for the file's words offline; punctuated, since the sentence buffer holds text until a sentence ends. */
-const SCRIPTED_TRANSCRIPT = [
+const EDGE_URL = 'https://preview.dxos.network/';
+const HUB_URL = new URL('hub/', EDGE_URL).href;
+
+// https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
+const AUDIO_URL = 'https://media.dxos.network/audio-london.m4a';
+
+const MOCK_SENTENCES = [
   'London is one of the busiest cities in Europe.',
-  'Millions of people travel into the centre every day,',
-  'most of them by underground train or by bus.',
+  'Millions of people travel into the centre every day, most of them by underground train or by bus.',
   'The city has hundreds of parks and green spaces.',
   'You can hear more than three hundred languages on its streets.',
   'Many people say that variety is the best thing about living here.',
-].map((text) => ({ text }));
+];
 
-const SCRIPTED_TRANSCRIBER: TrackTranscriber = () => createScriptedTranscriber({ segments: SCRIPTED_TRANSCRIPT });
+const MOCK_INTERVAL = '1500 millis';
 
-// In-memory message buffer + model adapter (production wires up a real space-backed `Feed`).
-const useStoryMessageModel = () => {
+const makeMessage = (block: ContentBlock.Transcript) =>
+  Message.make({ sender: { name: 'You' }, created: new Date().toISOString(), blocks: [block] });
+
+// Module-level: the model adapter rebuilds its model whenever the renderer's identity changes.
+const RENDER_BYLINE = renderByline([]);
+
+/** An in-memory message list and its model; production writes to a space-backed `Feed`. */
+const useStoryMessages = () => {
   const [messages, setMessages] = useState<Message.Message[]>([]);
   const appendMessage = useCallback((message: Message.Message) => setMessages((prev) => [...prev, message]), []);
-  const model = useFeedModelAdapter(renderByline([]), messages);
+  const model = useFeedModelAdapter(RENDER_BYLINE, messages);
   return { model, appendMessage };
 };
 
-type StoryArgs = {
-  audioUrl: string;
-  audioConstraints?: MediaTrackConstraints;
+/** Appends one message per committed block, keyed by block identity so a re-commit does not duplicate it. */
+const useCommitMessages = (appendMessage: (message: Message.Message) => void): CommitFn => {
+  const seen = useRef(new WeakSet<ContentBlock.Transcript>());
+  return useCallback<CommitFn>(
+    (write, window) =>
+      Effect.sync(() => {
+        for (const update of write.blockUpdates ?? []) {
+          const block = window[update.index];
+          if (!block || seen.current.has(block)) {
+            continue;
+          }
+          seen.current.add(block);
+          appendMessage(makeMessage({ ...block, text: update.corrected ?? block.text }));
+        }
+      }),
+    [appendMessage],
+  );
 };
 
-const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
-  // Decode the file/URL into a track; a play/pause button gates playback + capture.
-  const [running, setRunning] = useState(false);
+/** RealtimeKit for the session's track; absent until the client has an EDGE calls endpoint. */
+const useRealtimeKitTranscriber = (): TrackTranscriber | undefined => {
+  const join = useJoinTranscription();
+  return useMemo(() => join && ((track) => createRealtimeKitTranscriber({ audioStreamTrack: track, join })), [join]);
+};
+
+const useStages = () => useMemo(() => [makeCorrectionStage()], []);
+
+const TranscriptPanel = ({ model, children }: PropsWithChildren<{ model: TranscriptModel<Message.Message> }>) => (
+  <Panel.Root>
+    <Panel.Header>
+      <Toolbar.Root>{children}</Toolbar.Root>
+    </Panel.Header>
+    <ScrollContainer.Root pin>
+      <Panel.Body asChild>
+        <ScrollContainer.Content>
+          <ScrollContainer.Viewport>
+            <Transcription model={model} />
+          </ScrollContainer.Viewport>
+        </ScrollContainer.Content>
+      </Panel.Body>
+    </ScrollContainer.Root>
+  </Panel.Root>
+);
+
+const LiveStory = () => {
+  const bound = useTestAccount(HUB_URL);
+  const [recording, setRecording] = useState(false);
+  const { model, appendMessage } = useStoryMessages();
+  const commit = useCommitMessages(appendMessage);
+  const transcriber = useRealtimeKitTranscriber();
+  useRecordingPipeline({
+    transcriber,
+    segmentSentences: true,
+    active: recording,
+    microphone: true,
+    stages: useStages(),
+    commit,
+  });
+
+  return (
+    <TranscriptPanel model={model}>
+      <Button.Root
+        iconOnly
+        disabled={!transcriber || !bound}
+        icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
+        label={recording ? 'Stop' : 'Record'}
+        onClick={() => setRecording((value) => !value)}
+      />
+    </TranscriptPanel>
+  );
+};
+
+const FileStory = () => {
+  const bound = useTestAccount(HUB_URL);
+  const [playing, setPlaying] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string>();
   useEffect(() => {
     return () => {
@@ -78,15 +167,16 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
   const handleFileChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setRunning(false);
+      setPlaying(false);
       setUploadedUrl(URL.createObjectURL(file));
     }
-    // Reset so the same file can be re-selected.
+    // Reset so the same file can be picked again.
     event.target.value = '';
   }, []);
-  const { audio, stream, track } = useAudioFile(uploadedUrl ?? audioUrl, audioConstraints);
 
-  // Pipe the decoded stream into the <audio> element so the user hears playback, mirroring `running`.
+  const { audio, stream, track } = useAudioFile(uploadedUrl ?? AUDIO_URL);
+
+  // The decoded stream also feeds an <audio> element, so the file is heard while it is transcribed.
   const audioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
     if (audioRef.current && stream) {
@@ -97,108 +187,106 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
     if (!audio) {
       return;
     }
-    if (running) {
+    if (playing) {
       void audio.play();
     } else {
       audio.pause();
     }
-  }, [audio, running]);
+  }, [audio, playing]);
 
-  // Append one message per committed block (keyed by block identity so re-commits don't duplicate).
-  const { model, appendMessage } = useStoryMessageModel();
-  const seen = useRef(new WeakSet<ContentBlock.Transcript>());
-  const commit = useCallback<CommitFn>(
-    (write, window) =>
-      Effect.sync(() => {
-        for (const update of write.blockUpdates ?? []) {
-          const block = window[update.index];
-          if (!block || seen.current.has(block)) {
-            continue;
-          }
-          seen.current.add(block);
-          appendMessage(
-            Message.make({
-              sender: { name: 'You' },
-              created: new Date().toISOString(),
-              blocks: [{ ...block, text: update.corrected ?? block.text }],
-            }),
-          );
-        }
-      }),
-    [appendMessage],
-  );
-
-  const stages = useMemo(() => [makeCorrectionStage()], []);
-  const join = useJoinTranscription();
-  const transcriber = useMemo<TrackTranscriber>(
-    () => (join ? (track) => createRealtimeKitTranscriber({ audioStreamTrack: track, join }) : SCRIPTED_TRANSCRIBER),
-    [join],
-  );
+  const { model, appendMessage } = useStoryMessages();
+  const commit = useCommitMessages(appendMessage);
+  const transcriber = useRealtimeKitTranscriber();
   useRecordingPipeline({
     transcriber,
     segmentSentences: true,
-    active: running,
+    active: playing,
     track,
-    stages,
+    stages: useStages(),
     commit,
   });
 
   return (
     <>
       <audio ref={audioRef} autoPlay />
-      <Panel.Root>
-        <Panel.Header>
-          <Toolbar.Root>
-            <Button.Root
-              iconOnly
-              disabled={!stream}
-              icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-              label={running ? 'Pause' : 'Play'}
-              onClick={() => setRunning((value) => !value)}
-            />
-            <input ref={fileInputRef} type='file' accept='audio/*' className='hidden' onChange={handleFileChange} />
-            <Button.Root
-              iconOnly
-              icon='ph--upload--regular'
-              label='Upload audio'
-              onClick={() => fileInputRef.current?.click()}
-            />
-          </Toolbar.Root>
-        </Panel.Header>
-        <ScrollContainer.Root pin>
-          <Panel.Body asChild>
-            <ScrollContainer.Content>
-              <ScrollContainer.Viewport>
-                <Transcription model={model} />
-              </ScrollContainer.Viewport>
-            </ScrollContainer.Content>
-          </Panel.Body>
-        </ScrollContainer.Root>
-      </Panel.Root>
+      <TranscriptPanel model={model}>
+        <Button.Root
+          iconOnly
+          disabled={!stream || !transcriber || !bound}
+          icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={playing ? 'Pause' : 'Play'}
+          onClick={() => setPlaying((value) => !value)}
+        />
+        <input ref={fileInputRef} type='file' accept='audio/*' className='hidden' onChange={handleFileChange} />
+        <Button.Root
+          iconOnly
+          icon='ph--upload--regular'
+          label='Upload audio'
+          onClick={() => fileInputRef.current?.click()}
+        />
+      </TranscriptPanel>
     </>
+  );
+};
+
+const TextMockStory = () => {
+  const [running, setRunning] = useState(false);
+  const { model, appendMessage } = useStoryMessages();
+  const next = useRef(0);
+  useEffect(() => {
+    if (!running) {
+      return;
+    }
+    const fiber = Effect.runFork(
+      Effect.sleep(MOCK_INTERVAL).pipe(
+        Effect.flatMap(() =>
+          Effect.sync(() => {
+            // Not `next.current++`: the React Compiler turns a ref's post-increment into a pre-increment.
+            const index = next.current;
+            next.current = index + 1;
+            const text = MOCK_SENTENCES[index % MOCK_SENTENCES.length];
+            appendMessage(makeMessage({ _tag: 'transcript', started: new Date().toISOString(), text }));
+          }),
+        ),
+        Effect.forever,
+      ),
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, [running, appendMessage]);
+
+  return (
+    <TranscriptPanel model={model}>
+      <Button.Root
+        iconOnly
+        icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+        label={running ? 'Pause' : 'Play'}
+        onClick={() => setRunning((value) => !value)}
+      />
+    </TranscriptPanel>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-transcription/stories/Transcription',
-  render: DefaultStory,
   decorators: createStoryDecorators(),
-} satisfies Meta<StoryArgs>;
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://media.dxos.network/audio-london.m4a',
-  },
+export const Live: Story = {
+  render: () => <LiveStory />,
+  parameters: { edgeUrl: EDGE_URL },
 };
 
-export const Live: Story = {
-  args: {
-    audioUrl: 'https://media.dxos.network/audio-london.m4a',
-  },
-  parameters: { edgeUrl: 'https://dev.dxos.network/' },
+export const File: Story = {
+  render: () => <FileStory />,
+  parameters: { edgeUrl: EDGE_URL },
+};
+
+export const TextMock: Story = {
+  render: () => <TextMockStory />,
 };

@@ -61,7 +61,8 @@ const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
 const CallViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  <Layout.Flex column {...Util.composableProps(props, { classNames: 'relative dx-expand' })} ref={forwardedRef}>
+  // `group`: the call and lobby toolbars are hover-revealed (`groupHoverControlItemWithTransition`).
+  <Layout.Flex column {...Util.composableProps(props, { classNames: 'relative dx-expand group' })} ref={forwardedRef}>
     {children}
   </Layout.Flex>
 ));

@@ -181,16 +181,11 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@codemirror/state": "catalog:",
-    "@dxos/echo-doc": "workspace:*",
     "@dxos/fixtures": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",

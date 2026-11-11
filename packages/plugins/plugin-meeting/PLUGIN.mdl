@@ -221,7 +221,7 @@ feat F-3: Real-Time Transcription
       channel call's toggle does
 
   req F-3.7:
-    when: a transcript source other than a call writes (a simulated call, a scripted story)
+    when: a transcript source other than a call writes (a simulated call)
     then: it goes through the same sink into the meeting's feed, so the Transcript tab renders it with no live call
 ```
 
@@ -466,42 +466,20 @@ test QA-2: A four-person meeting call, with notes taken during it
 ```
 
 ```mdl
-test QA-3: A scripted source fills a meeting's transcript
-  desc: |
-    The meeting's transcript path with no call: a scripted source writes through the same TranscriptSink a call writes
-    through, and the meeting's Transcript tab renders each line under its speaker. Runs in storybook, offline.
-  actors: agent
-  covers: [F-3.5, F-3.7]
-  status: unverified
-  given:
-    - storybook serves `plugins/plugin-meeting/stories/MeetingTranscript` in isolation mode
-  steps:
-    - name: Open the transcript
-      do: Open the meeting's Transcript tab.
-      expect: the tab is empty
-    - name: Play the script
-      do: Click Play script.
-      expect: a line from Anna appears, then one from Ben, every 1.5 s, in spoken order
-      note: 2026-11-10, autocue/meeting-transcript.mjs — the first line is missing, or listed after the others seconds late; a fresh feed hides its first append from queries (ECHO, not the sink), so the take shows it only when the script repeats.
-    - name: Pause the script
-      do: Click Pause script.
-      expect: no further line appears
-
 test QA-4: A live call's transcript fills the meeting
   desc: |
-    The call path end to end against the dev EDGE: the CallTranscription story joins a RealtimeKit meeting, turns
-    transcription on, and RealtimeKit's transcript of the local speaker lands in the meeting's Transcript tab. Needs a
-    network, a microphone and an identity with an account; QA-3 runs the same sink offline.
+    The call path end to end against the preview EDGE: the Meeting story's `CallTranscription` variant joins the stories'
+    shared call room, turns transcription on, and RealtimeKit's transcript of the local speaker lands in the meeting's
+    Transcript tab. The story binds its identity to a test account itself. Needs a network and a microphone.
   actors: agent
   covers: [F-3.5, F-3.6, F-3.7]
   status: unverified
   given:
-    - storybook serves `plugins/plugin-meeting/stories/CallTranscription` in isolation mode, against the dev EDGE
-    - the story's identity is bound to an account
+    - storybook serves `plugins/plugin-meeting/stories/Meeting` `CallTranscription` in isolation mode
   steps:
-    - name: Start the call
-      do: Click Start call.
-      expect: the button turns to Leave call, and the local participant's tile appears
+    - name: Join the call
+      do: Point at the call, and click Join in its toolbar.
+      expect: the lobby gives way to the participant grid, with the local participant's tile
     - name: Unmute
       do: Click Unmute in the call's toolbar.
       expect: the tile no longer shows the muted marker
@@ -511,6 +489,30 @@ test QA-4: A live call's transcript fills the meeting
     - name: Read the transcript
       do: Speak, and watch the meeting's Transcript tab.
       expect: the spoken words appear under the speaker's name, one RealtimeKit segment per row, in spoken order
+
+test QA-5: Two tabs share one meeting through an invitation
+  desc: |
+    The Meeting story as Composer shows a meeting, against the preview EDGE: a fresh load makes a new space and
+    meeting, and its invite link opens the story as a guest that joins that space, so both tabs render the same meeting
+    and its Call tab puts them in one call. Needs a network; each tab binds its identity to a test account itself.
+  actors: agent
+  covers: [F-5.2, F-3.6]
+  status: unverified
+  given:
+    - storybook serves `plugins/plugin-meeting/stories/Meeting` `Meeting` in isolation mode
+  steps:
+    - name: Write notes as the host
+      do: Type "Agenda" in the meeting's Notes.
+      expect: the notes read "Agenda"
+    - name: Open the invite as a guest
+      do: Click Open as guest in the story's toolbar.
+      expect: a new tab opens the same story, and its Notes read "Agenda" once the space has joined
+    - name: Join the meeting's call from both tabs
+      do: In each tab, open the Call tab and click Join.
+      expect: each tab's grid shows two participants
+    - name: Start transcription
+      do: In the host tab, click Start transcription in the meeting's toolbar.
+      expect: both tabs' toolbars turn to Stop transcription
 ```
 
 ---
@@ -580,6 +582,58 @@ decision D-7: The meeting payload names the meeting by its absolute URI, which H
   affects: [HandlePayload, SetActive, QA-4]
   why: HandlePayload read the URI as a `space:object` id, so every call-state update cleared the active meeting and the sink dropped each segment; and CallExtension could start before the manager existed, which disabled the whole plugin.
   source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-8: The live meeting stories share one story file that loads the meeting plugin with all its dependencies and one hardcoded meeting id, so every live story connects to the same meeting; it includes a plain call story.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-4]
+```
+
+```mdl
+decision D-9: The hardcoded meeting is the call room `storybook:plugin-meeting:standup` on the preview EDGE, which names both the call's swarm and its RealtimeKit meeting, so every tab running the stories joins one call; each tab keeps its own identity, bound to a test account, and its own meeting hub, and the story's toolbar makes that hub the call's active meeting when it starts transcription. Fills in [D-8].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-4]
+  why: Stories boot a fresh identity and space per tab, so only the call can be shared without an invitation; MeetingArticle offers its transcription toggle only in the meeting's own room, which a fixed room is not.
+  rejected:
+    - Share one meeting object across tabs: needs a space invitation between story tabs.
+```
+
+```mdl
+decision D-10: The Meeting story shows the meeting as Composer does, one article; a fresh load makes a new space, and an invitation lets another tab join that space so both render the same meeting. The Call and CallTranscription stories stay as they are, with a shared call and transcript but separate spaces.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-5]
+```
+
+```mdl
+decision D-11: The Meeting story's meeting lives in its own open space, since an identity's default space is created locked to its owner; the invite is a standing multi-use invitation with no auth step, carried to the guest as the story's `invitation` arg, and the guest joins instead of seeding a meeting. Every story uses Composer's EDGE features (signaling and the subduction and feed replicators), so a guest receives the space's objects and the transcript feed. Fills in [D-10].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-5]
+  why: The default space refuses invitations, and without the replicators an invited tab sees the space but none of its objects.
+  rejected:
+    - Invite through the space plugin's members dialog: loads the space plugin and its navigation only to share.
+```
+
+```mdl
+decision D-12: The MeetingTranscript story is deleted.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-3, F-3.7]
+```
+
+```mdl
+decision D-13: QA-3 is removed with the story it ran, and F-3.7 names only the simulated call as a source other than a call; the sink's ordering stays covered by its unit test. Fills in [D-12].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-3, F-3.7]
+  why: No other story writes a scripted transcript into a meeting, so QA-3 had nothing left to run.
 ```
 
 ## Appendix: Extension Definitions

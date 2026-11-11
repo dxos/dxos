@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-// Runs the Whistle speech model (Cactus `needle` engine, Emscripten build) in Node exactly as the browser story does:
+// Runs the Whistle speech model (Cactus `needle` engine, Emscripten build) in Node exactly as the browser's Whistle worker does:
 // one stream, a pass every `passMs` of new audio, words two passes agree on committed. The engine and model are the
-// revisions the story pins, cached under ~/.cache/dxos/whistle.
+// revisions plugin-transcription pins, cached under ~/.cache/dxos/whistle.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -21,13 +21,13 @@ const PROTOCOL = join(REPO_ROOT, 'packages/plugins/plugin-transcription/src/whis
 const CACHE_DIR = join(homedir(), '.cache/dxos/whistle');
 const OUT_CAPACITY = 256 * 1024;
 
-/** Capture's render quantum: the story's endpointer sees audio in chunks this size. */
+/** Capture's render quantum: the worker's endpointer sees audio in chunks this size. */
 const FRAME = 128;
 
-/** As the story's worker: audio kept from before the stream opens. */
+/** As the Whistle worker: audio kept from before the stream opens. */
 const PRE_ROLL_SECONDS = 0.5;
 
-/** The engine and model URLs, read from the story's pinned revisions so the two never drift apart. */
+/** The engine and model URLs, read from plugin-transcription's pinned revisions so the two never drift apart. */
 const assetUrls = () => {
   const source = readFileSync(PROTOCOL, 'utf8');
   const revision = (name) => source.match(new RegExp(`${name} = '([0-9a-f]+)'`))?.[1];
@@ -99,7 +99,7 @@ export const loadWhistle = async ({ language = 'en', keywords = [] } = {}) => {
 
   /**
    * Replays `samples` as a live stream: a pass every `passMs` of audio, then the stop that commits the tail.
-   * With `gate` (the story's default), the stream opens only once the story's endpointer hears sound, keeping
+   * With `gate` (the worker's default), the stream opens only once the worker's endpointer hears sound, keeping
    * the same pre-roll, so silence before speech is never decoded. Returns one event per pass, timed in audio
    * seconds from the start of `samples` (`at`: how much audio had arrived when the pass ran).
    */

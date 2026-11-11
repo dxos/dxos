@@ -3,13 +3,13 @@
 // Copyright 2026 DXOS.org
 //
 
-// Replays an audio file through Whistle as the browser story streams it, and reports what happened on one clock:
+// Replays an audio file through Whistle as the browser's Whistle worker streams it, and reports what happened on one clock:
 // every pass (committed words, the pending tail, pass time), the final transcript, and the words worth a look —
 // committed in silence (likely invented), low confidence, or slow to commit.
 //
 // Usage: node whistle-replay.mjs <file> [--pass-ms 1000] [--keywords "ECHO, DXOS"] [--language en]
 //                                       [--reference "expected text"] [-o timeline.jsonl] [--json] [--no-gate]
-// --no-gate decodes from the first sample instead of waiting, as the story does, for sound.
+// --no-gate decodes from the first sample instead of waiting, as the Whistle worker does, for sound.
 
 import { writeFileSync } from 'node:fs';
 
