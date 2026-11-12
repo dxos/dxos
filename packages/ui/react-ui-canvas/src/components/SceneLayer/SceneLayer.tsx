@@ -1481,7 +1481,6 @@ export const HullNodeView = ({ node, editing }: NodeViewProps) => {
         LINE_ON_GRID,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
         sizeClass(node, 'text-sm'),
-        'text-fg-muted',
       )}
     >
       {label}

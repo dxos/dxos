@@ -11,6 +11,7 @@ import { type RenderList2D } from '../model/index.ts';
 import { wallCrossings } from './gutter-route.ts';
 import {
   HULL_MARGIN,
+  HULL_STYLE,
   type Wall,
   enclose,
   fitHulls,
@@ -181,7 +182,7 @@ describe('enclose', () => {
     const scene = sceneOf(corner());
     const inner = enclose(scene, ['a', 'b'], 'inner', { lattice: spec });
     const made = inner?.nodes.inner;
-    expect(made && isHullNode(made) && [made.parent, made.style?.guide]).toEqual(['h', true]);
+    expect(made && isHullNode(made) && [made.parent, made.style]).toEqual(['h', HULL_STYLE]);
     expect([inner?.nodes.a.parent, inner?.nodes.b.parent, inner?.nodes.c.parent]).toEqual(['inner', 'inner', 'h']);
     expect(Object.values(inner?.nodes ?? {}).every((node) => node.id === 'inner' || node.z > (made?.z ?? ''))).toBe(
       true,

@@ -17,7 +17,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { DEFAULT_LATTICE, type RenderList2D, cellBounds, createLink, fromRenderLists2D } from '@dxos/react-ui-canvas';
+import {
+  DEFAULT_LATTICE,
+  HULL_STYLE,
+  type RenderList2D,
+  cellBounds,
+  createLink,
+  fromRenderLists2D,
+} from '@dxos/react-ui-canvas';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
@@ -103,7 +110,7 @@ const boardOf = (shape: HullShape, lattice: boolean): RenderList2D => {
     size: FREE_SIZE,
     label: 'Storage',
     shape,
-    style: { guide: true, hue: 'blue' },
+    style: { ...HULL_STYLE, hue: 'blue' },
   };
   const links: Link[] = LINKS.map(([source, target], index) =>
     createLink({

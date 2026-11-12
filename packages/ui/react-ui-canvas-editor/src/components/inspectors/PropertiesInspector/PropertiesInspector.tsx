@@ -69,6 +69,7 @@ import {
   type StyleMap,
   isInstanceNode,
   isLink,
+  isHullNode,
   isNoteNode,
   isViewNode,
   showsContents,
@@ -176,9 +177,12 @@ const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
   isLink(element) ? (LINK_SCHEMAS[element.type] ?? LineLink) : (nodeDef(nodes, element)?.schema ?? BaseNode);
 
-/** Where a type places its text unless styled otherwise: a note from the top left, a label in the middle. */
+/**
+ * Where a type places its text unless styled otherwise: a note from the top left, a hull's name in its corner, a
+ * label in the middle.
+ */
 const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertical'> =>
-  isNoteNode(node)
+  isNoteNode(node) || isHullNode(node)
     ? { alignHorizontal: 'left', alignVertical: 'top' }
     : { alignHorizontal: 'center', alignVertical: 'middle' };
 

@@ -105,6 +105,20 @@ describe('latticeConstrain', () => {
     expect(moved?.elements.p.center).toEqual({ x: 10, y: 7 });
   });
 
+  test('a hull takes no cells: a shape lands on a cell its frame covers, whatever its style', ({ expect }) => {
+    // A hull's frame covers the shapes inside it, so as a shape of the lattice it would refuse every move among them.
+    const hull: Scene.Element2D = {
+      id: 'h',
+      type: 'hull',
+      center: { x: 192, y: 0 },
+      size: { width: 768, height: 192 },
+      overrides: { tone: 2, lineStyle: 'solid' },
+    };
+    const layout = layoutOf(hull, cellElement('a', 0, 0));
+    const moved = after(layout, { kind: 'move', ids: ['a'], delta: { x: 384, y: 0 } });
+    expect(moved?.elements.a.center).toEqual({ x: 384, y: 0 });
+  });
+
   test('a layout with no lattice is not constrained', ({ expect }) => {
     const { lattice: _lattice, ...free } = layoutOf(cellElement('a', 0, 0), cellElement('b', 1, 0));
     const intent: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: 384, y: 0 } };

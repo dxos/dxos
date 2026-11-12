@@ -39,14 +39,15 @@ const frameOf = (bounds: Bounds): { center: Point; size: Size } => ({
 const isLink = (element: Element): boolean => element.source !== undefined || element.target !== undefined;
 
 /**
- * Whether an element takes lattice cells: a shape with a frame of its own that is neither a guide nor a borderless
- * backdrop. A placed object with no size of its own reads its frame from the model, which the layout does not hold, so
+ * Whether an element takes lattice cells: a shape with a frame of its own that is neither a hull, a guide nor a
+ * borderless backdrop. A placed object with no size of its own reads its frame from the model, which the layout does not hold, so
  * it moves as given.
  */
 const onLattice = (element: Element): element is Framed =>
   element.center !== undefined &&
   element.size !== undefined &&
   !isLink(element) &&
+  element.type !== 'hull' &&
   !element.overrides?.guide &&
   element.overrides?.border !== false;
 

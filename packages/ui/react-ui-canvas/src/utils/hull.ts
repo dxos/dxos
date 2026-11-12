@@ -15,6 +15,7 @@ import {
   type HullNode,
   type HullShape,
   type Node,
+  type NodeStyle,
   type Point,
   isHullNode,
 } from '@dxos/scene';
@@ -23,6 +24,12 @@ import { type RenderList2D } from '../model/index.ts';
 import { type LatticeSpec, onLattice, toCell } from './lattice.ts';
 import { between, sortByZ } from './order.ts';
 import { createNode, nodeBounds } from './shapes.ts';
+
+/**
+ * The look a hull is made with: an outline, dashed. An ordinary style rather than a guide's, which is dashed and
+ * unfilled whatever it is set to, so a hull's border, fill and line are the ones its style asks for.
+ */
+export const HULL_STYLE: NodeStyle = { tone: 0, lineStyle: 'dashed' };
 
 /** How far a hull's border stands off the nodes inside it where no lattice places it, in scene px. */
 export const HULL_MARGIN = DEFAULT_GRID * 2;
@@ -476,8 +483,7 @@ export const enclose = (
       size: { width: bounds.width, height: bounds.height },
     }),
     type: 'hull',
-    // Dashed, as a guide is: the border marks the nodes inside it off rather than being a shape among them.
-    style: { guide: true },
+    style: HULL_STYLE,
     ...(shape ? { shape } : {}),
     ...(outer !== undefined && scene.nodes[outer] && isHullNode(scene.nodes[outer]) ? { parent: outer } : {}),
   };

@@ -37,7 +37,7 @@ import {
   createNodeRegistry,
   templateCompositeId,
 } from '../../model/index.ts';
-import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
+import { HULL_STYLE, NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
 import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
 import {
@@ -229,12 +229,10 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     schema: HullNode,
     component: HullNodeView,
     palette: false,
-    create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: { guide: true } }),
+    create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: HULL_STYLE }),
     defaultSize: NOMINAL_SIZES.hull,
     silhouette: (node, inset, radius) =>
       polylinePath(node.size, (isHullNode(node) && node.points) || UNIT_SQUARE, { inset, closed: true, radius }),
-    // The fill is the nodes' ground, so it shows only where the style asks for one.
-    filled: (node) => node.style?.fill === true,
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: false,
