@@ -217,6 +217,11 @@ const ORTHO_EPSILON = 0.5;
  * The polyline an orthogonal link follows: straight where its ends line up on an axis, one corner where their sides
  * are perpendicular, and otherwise two turns at the midpoint between them. It reads only its own two ends, so a shape
  * moving elsewhere never re-routes it — which is what makes it predictable to draw a diagram with.
+ *
+ * A free end (one being dragged, or left on empty canvas) has no side to leave by. It takes the axis its other end
+ * does not, so the two meet at one corner, and with both ends free the route leaves sideways. Neither choice reads
+ * which way the far end lies, so the corner holds still while an end is dragged, rather than jumping across the line
+ * each time the drag crosses the diagonal.
  */
 export const orthoPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
   const [a, b] = [from.point, to.point];
@@ -224,8 +229,7 @@ export const orthoPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
     return [a, b];
   }
   const sideways = (side: Side) => side === 'e' || side === 'w';
-  // A free end (one being dragged) has no side to leave by, so it takes whichever axis the other one does not.
-  const fromSideways = from.free ? Math.abs(b.x - a.x) >= Math.abs(b.y - a.y) : sideways(from.side);
+  const fromSideways = from.free ? to.free || !sideways(to.side) : sideways(from.side);
   const toSideways = to.free ? !fromSideways : sideways(to.side);
   if (fromSideways !== toSideways) {
     return [a, fromSideways ? { x: b.x, y: a.y } : { x: a.x, y: b.y }, b];

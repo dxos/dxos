@@ -71,6 +71,10 @@ The display panel's grid switch on a lattice scene can be turned off: pressing t
 or the grid) draws neither, as pressing dots or lines already did elsewhere. A lattice scene draws no grid when the
 look has none.
 
+A link's free end is drawn where it will land while it is dragged: on the port or node under the pointer, else on
+the grid. An orthogonal link with a free end keeps its corner on one side of the line while that end is dragged,
+rather than jumping across it at the diagonal.
+
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 
 A `diagram` fence in a markdown document draws as a diagram, in the editor's light or dark palette:

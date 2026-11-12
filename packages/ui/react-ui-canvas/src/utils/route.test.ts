@@ -271,6 +271,24 @@ describe('orthogonal routes', () => {
     ]);
   });
 
+  test('a dragged end does not move the corner across the line as it crosses the diagonal', ({ expect }) => {
+    // The far end a little above the diagonal, then a little below it: the corner stays on the same side of the line.
+    const corner = (route: readonly { x: number; y: number }[]) => route.slice(1, -1);
+    for (const [above, below] of [
+      [end(100, 98, 's', true), end(100, 102, 'e', true)],
+      [end(-100, 98, 's', true), end(-100, 102, 'w', true)],
+    ]) {
+      // Both ends free: the route leaves sideways, whichever way the far end lies.
+      expect(corner(orthoPoints(end(0, 0, 'e', true), above))).toEqual([{ x: above.point.x, y: 0 }]);
+      expect(corner(orthoPoints(end(0, 0, 's', true), below))).toEqual([{ x: below.point.x, y: 0 }]);
+      // The free end dragged, the other on a port: one corner on the port's axis, never the mid-span pair of turns.
+      expect(corner(orthoPoints(above, end(0, 0, 'w')))).toEqual([{ x: above.point.x, y: 0 }]);
+      expect(corner(orthoPoints(below, end(0, 0, 'w')))).toEqual([{ x: below.point.x, y: 0 }]);
+      expect(corner(orthoPoints(above, end(0, 0, 'n')))).toEqual([{ x: 0, y: above.point.y }]);
+      expect(corner(orthoPoints(below, end(0, 0, 'n')))).toEqual([{ x: 0, y: below.point.y }]);
+    }
+  });
+
   test('the route depends only on its own two ends, so an unrelated shape never moves it', ({ expect }) => {
     const first = orthoPoints(end(0, 0, 'e'), end(100, 60, 'w'));
     const second = orthoPoints(end(0, 0, 'e'), end(100, 60, 'w'));
