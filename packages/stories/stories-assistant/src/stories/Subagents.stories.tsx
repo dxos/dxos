@@ -4,8 +4,8 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -27,7 +27,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { StoryRole } from '../modules/index.ts';
 import { toCommits } from '../modules/trajectory-commits.ts';
-import { PLANS, SAVINGS_PROMPTS, Scripts } from '../scripts/index.ts';
+import { LAUNCH_REQUEST, LAUNCH_TASKS, PLANS, SAVINGS_PROMPTS, Scripts, SIDE_QUESTION } from '../scripts/index.ts';
 import { CalculatorSkill, ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 /**
@@ -182,9 +182,15 @@ type AgentColumnProps = {
 };
 
 /** The agent's own conversation, with the prompt and its checklist. */
+/** The prompts the agent's column offers as chips, in the order the demo sends them. */
+const SUGGESTIONS = [LAUNCH_REQUEST, SIDE_QUESTION];
+
 const AgentColumn = ({ db, chat, chatModel }: AgentColumnProps) => {
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const { preset, ...chatProps } = AssistantHooks.usePresets(settings, chat);
+  // One chip at a time: the side question only makes sense once the launch is under way.
+  const [sent, setSent] = useState(0);
+  const handleSelect = useCallback(() => setSent((count) => count + 1), []);
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel}>
       <ChatPlane.Column value={chat.id}>
@@ -197,6 +203,7 @@ const AgentColumn = ({ db, chat, chatModel }: AgentColumnProps) => {
         </ChatPlane.Cell>
         <ChatPlane.Prompt>
           <Chat.Activity />
+          <Chat.Suggestions suggestions={SUGGESTIONS.slice(sent, sent + 1)} onSelect={handleSelect} />
           <Chat.Prompt {...chatProps} outline preset={preset?.id} />
         </ChatPlane.Prompt>
       </ChatPlane.Column>
@@ -301,12 +308,49 @@ const ThreadColumns = () => {
  * The reader keeps talking meanwhile; each column closes once its subagent reports, and the result lands in the agent's
  * column.
  */
+const columnsDecorators = createDecorators({
+  skills: [MarkdownSkill.key, PlanningSkill.key],
+  scriptedModels: { scenes: { launchKit: Scripts.launchKit }, select: 'launchKit' },
+  assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
+});
+
+/** Waits until exactly `count` subagent and agent columns are open. */
+const waitForColumns = (canvasElement: HTMLElement, count: number, timeout: number) =>
+  waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="chat-plane.column"]').length).toBe(count), {
+    timeout,
+  });
+
 export const Columns: StoryObj = {
   render: () => <ThreadColumns />,
-  decorators: createDecorators({
-    skills: [MarkdownSkill.key, PlanningSkill.key],
-    scriptedModels: { scenes: { launchKit: Scripts.launchKit }, select: 'launchKit' },
-    assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
-  }),
+  decorators: columnsDecorators,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: LAUNCH_REQUEST }, { timeout: 60_000 }));
+
+    // A column per subagent opens beside the agent's.
+    await waitForColumns(canvasElement, 1 + LAUNCH_TASKS.length, 60_000);
+
+    // The agent keeps talking while they work.
+    const agentColumn = canvasElement.querySelector<HTMLElement>('[data-testid="chat-plane.column"]');
+    if (!agentColumn) {
+      throw new Error('The agent column is not open.');
+    }
+    await userEvent.click(agentColumn);
+    await userEvent.click(await canvas.findByRole('button', { name: SIDE_QUESTION }, { timeout: 30_000 }));
+    await canvas.findAllByText(/Tuesday the 18th/, {}, { timeout: 30_000 });
+
+    // Every subagent's column closes once it reports, and the summary lands in the agent's column with each document.
+    await waitForColumns(canvasElement, 1, 120_000);
+    await canvas.findAllByText(/The launch kit is ready/, {}, { timeout: 60_000 });
+    for (const { document } of LAUNCH_TASKS) {
+      await canvas.findAllByText(document, { exact: false });
+    }
+  },
+};
+
+/** {@link Columns} without its play function, for a recorded walkthrough that clicks the prompts itself. */
+export const ColumnsDemo: StoryObj = {
+  render: () => <ThreadColumns />,
+  decorators: columnsDecorators,
   tags: ['!test'],
 };
