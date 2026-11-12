@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import { beforeEach, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
@@ -27,8 +27,8 @@ import { AssistantOperationHandlerSet } from '#operations';
 
 EntityId.dangerouslyDisableRandomness();
 
-/** Chats the stubbed agent was asked to run in. */
-const ranInChats: Ref.Ref<Chat.Chat>[] = [];
+/** Chats the stubbed agent was asked to run in; reset per test. */
+let ranInChats: Ref.Ref<Chat.Chat>[] = [];
 
 // Stand-ins for handlers other plugins contribute: filing the chat, and the agent run itself.
 const StubHandlers = OperationHandlerSet.make(
@@ -63,6 +63,10 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('RunPromptInNewChat', () => {
+  beforeEach(() => {
+    ranInChats = [];
+  });
+
   it.effect(
     'binds context and runs in the background with no atom registry or client',
     Effect.fnUntraced(

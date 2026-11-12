@@ -24,19 +24,26 @@ import { AssistantOperation } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 
-const makeTestLayer = (manager: CapabilityManager.CapabilityManager) =>
-  AssistantTestLayer({
-    operationHandlers: AssistantOperationHandlerSet,
-    types: [Chat.Chat, Feed.Feed, Text.Text, ...TrajectoryStore.types],
-    extraServices: Layer.succeed(Capability.Service, manager),
-  });
-
 const sharedRegistry = AtomRegistry.make();
 const appManager = CapabilityManager.make({ registry: sharedRegistry });
 appManager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: sharedRegistry });
 
 // Mirrors an EDGE host, which contributes no atom registry.
 const headlessManager = CapabilityManager.make({ registry: AtomRegistry.make() });
+
+const types = [Chat.Chat, Feed.Feed, Text.Text, ...TrajectoryStore.types];
+
+const AppTestLayer = AssistantTestLayer({
+  operationHandlers: AssistantOperationHandlerSet,
+  types,
+  extraServices: Layer.succeed(Capability.Service, appManager),
+});
+
+const HeadlessTestLayer = AssistantTestLayer({
+  operationHandlers: AssistantOperationHandlerSet,
+  types,
+  extraServices: Layer.succeed(Capability.Service, headlessManager),
+});
 
 describe('CreateChat', () => {
   it.effect(
@@ -50,7 +57,7 @@ describe('CreateChat', () => {
         const feed = yield* Database.load(chat.feed);
         expect(Obj.instanceOf(Feed.Feed, feed)).toBe(true);
       },
-      Effect.provide(makeTestLayer(headlessManager)),
+      Effect.provide(HeadlessTestLayer),
       TestHelpers.provideTestContext,
     ),
   );
@@ -66,7 +73,7 @@ describe('CreateChat', () => {
         expect(set).toHaveBeenCalled();
         set.mockRestore();
       },
-      Effect.provide(makeTestLayer(appManager)),
+      Effect.provide(AppTestLayer),
       TestHelpers.provideTestContext,
     ),
   );
