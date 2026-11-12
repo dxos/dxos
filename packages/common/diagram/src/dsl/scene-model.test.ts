@@ -99,6 +99,30 @@ describe('composite statements', () => {
     expect(printScenes(document)).toContain('constrain=min,scale');
   });
 
+  test('a polyline authors its vertices as fractions of its own frame, and they round-trip', () => {
+    const source = `composite c {
+  element rule polyline @ 0,60 size=264x1 constrain=stretch,max points="0,0.5 1,0.5"
+}
+`;
+    const { document, problems } = readScenes(source);
+    expect(problems).toEqual([]);
+    const parts = document.layouts.find((layout) => layout.id === 'c');
+    expect(parts?.elements.rule?.props?.points).toEqual([
+      { x: 0, y: 0.5 },
+      { x: 1, y: 0.5 },
+    ]);
+    expect(printScenes(document)).toContain('points="0,0.5 1,0.5"');
+  });
+
+  test('points that are not pairs are reported', () => {
+    const { problems } = readScenes(`composite c {
+  element rule polyline @ 0,0 size=10x1 points="0,0.5"
+}
+`);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.message).toContain('points takes');
+  });
+
   test('a word that is not a constraint is reported', () => {
     const { problems } = readScenes(`composite c {
   element a rect @ 0,0 size=10x10 constrain=sideways

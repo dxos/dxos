@@ -277,11 +277,15 @@ editable. This phase makes the second form the one tools use, and gives a part a
 - **The scene DSL carries no text alignment, font or padding**, so the UML class's compartments are left-aligned
   where `ClassNodeView` centred and emboldened its name. The compartments draw their own borders, which is what
   reads as the class's two rules. Extending `readStyle` with alignment is the follow-up.
+- **A part with no stack has no hug.** `constrain` says how a part's fixed size follows the frame; none of its values
+  reads the part's content. "Hug" (`fit-content`) needs a measure pass the solver has no access to, and it makes the
+  parts on an axis depend on each other, which is a stack with hug/fill sizing rather than one more constraint value.
 - **A compartment does not grow to its content.** A class with more methods than its methods compartment holds
   clips them (`Ledger` in the class story), because a part is a fixed size the constraints place rather than one
   that hugs its text. A `content` constraint (Figma's "hug") is the fix, and it is what a card's body wants too.
 - **Free point endpoints are not expressible in the DSL** (`from=`/`to=` name nodes), so a template cannot author a
-  hairline as a line between two points; a part with a border stands in.
+  *link* between two points. A rule is not a link, though: the card's hairline is a `polyline` part, whose vertices
+  the DSL now authors as fractions of its own frame (`points="0,0.5 1,0.5"`), so it stretches with the card.
 
 ## Backlog
 

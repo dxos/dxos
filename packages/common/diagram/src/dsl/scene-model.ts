@@ -276,6 +276,26 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     return Object.keys(layout).length > 0 ? layout : undefined;
   };
 
+  /**
+   * `points="0,0.5 1,0.5"`: a polyline's vertices, each a fraction of the element's own frame, so a line stretches
+   * with the shape it is in. Quoted and space-separated, since an attribute value is one token.
+   */
+  const readPoints = (value: AttrValue | undefined, range: Range): readonly Model.Vec2[] | undefined => {
+    const text = asString(value);
+    if (text === undefined) {
+      return undefined;
+    }
+    const points = text
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((pair) => pair.split(',').map(Number.parseFloat));
+    if (points.length < 2 || points.some((pair) => pair.length !== 2 || pair.some(Number.isNaN))) {
+      report(range, 'points takes two or more "x,y" pairs, separated by spaces.');
+      return undefined;
+    }
+    return points.map(([x, y]) => ({ x, y }));
+  };
+
   /** The fields every element shares, read from its statement; geometry is the caller's. */
   const readBase = (statement: SyntaxNode, attrs: Map<string, AttrValue>, objects: ReadonlySet<string>) => {
     const id = readId(statement.getChild('Id')) ?? '';
@@ -292,6 +312,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     const members = asString(attrs.get('members'))?.split(/\s+/).filter(Boolean);
     const props = readProps(attrs, ELEMENT_KEYS);
     const constrain = readConstrain(attrs.get('constrain'), statement);
+    const points = readPoints(attrs.get('points'), statement);
     return {
       id,
       ...(objects.has(word) ? { object: word } : { type: word }),
@@ -320,7 +341,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
             },
           }
         : {}),
-      ...(props ? { props } : {}),
+      ...(props || points ? { props: { ...props, ...(points ? { points } : {}) } } : {}),
     };
   };
 
@@ -668,6 +689,7 @@ const ELEMENT_KEYS: ReadonlySet<string> = new Set([
   'members',
   'arrange',
   'constrain',
+  'points',
   ...STYLE_KEYS,
 ]);
 
@@ -699,6 +721,17 @@ const formatValue = (value: unknown): string | undefined => {
   }
   if (typeof value === 'string') {
     return formatWord(value);
+  }
+  if (Array.isArray(value)) {
+    const points = value.flatMap((entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      typeof Reflect.get(entry, 'x') === 'number' &&
+      typeof Reflect.get(entry, 'y') === 'number'
+        ? [formatVec2({ x: Reflect.get(entry, 'x'), y: Reflect.get(entry, 'y') })]
+        : [],
+    );
+    return points.length === value.length && points.length > 0 ? formatString(points.join(' ')) : undefined;
   }
   if (typeof value === 'object' && value !== null) {
     if ('width' in value && 'height' in value && typeof value.width === 'number' && typeof value.height === 'number') {

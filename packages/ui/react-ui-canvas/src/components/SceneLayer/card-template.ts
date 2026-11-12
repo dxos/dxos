@@ -23,7 +23,7 @@ const PAD = CELL;
 const GLYPH = CELL * 3;
 const FOOTER = CELL * 1.5;
 const TITLE = CELL * 2;
-/** The hairline over the footer: a filled sliver, since a part cannot carry a border on one side alone. */
+/** The hairline over the footer: a polyline across its own frame, which is the shape a rule actually is. */
 const RULE = 1;
 
 const LEFT = -CARD_SIZE.width / 2 + PAD;
@@ -50,9 +50,9 @@ const round = (value: number) => Math.round(value * 100) / 100;
 export const CARD_TEMPLATE = `composite cardObject size=${CARD_SIZE.width}x${CARD_SIZE.height} name="Card" {
   element frame rect @ 0,0 size=${CARD_SIZE.width}x${CARD_SIZE.height} constrain=stretch rounded=true
   element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} constrain=min bind=icon optional=true
-  element title note @ ${round((LEFT + GLYPH + CELL / 2 + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(WIDTH - GLYPH - CELL / 2)}x${TITLE} constrain=stretch,min bind=label padding=0,0 grow=icon
-  element body note @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${WIDTH}x${round(BODY_BOTTOM - BODY_TOP)} constrain=stretch bind=body padding=0,0 optional=true grow="footer rule"
-  element rule rect @ 0,${round(BOTTOM - FOOTER - CELL / 4)} size=${WIDTH}x${RULE} constrain=stretch,max surface=solid follows=footer
-  element footer note @ 0,${round(BOTTOM - FOOTER / 2)} size=${WIDTH}x${FOOTER} constrain=stretch,max bind=footer padding=0,0 optional=true
+  element title note "" @ ${round((LEFT + GLYPH + CELL / 2 + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(WIDTH - GLYPH - CELL / 2)}x${TITLE} constrain=stretch,min bind=label padding=0,0 grow=icon
+  element body note "" @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${WIDTH}x${round(BODY_BOTTOM - BODY_TOP)} constrain=stretch bind=body padding=0,0 optional=true grow="footer rule"
+  element rule polyline @ 0,${round(BOTTOM - FOOTER - CELL / 4)} size=${WIDTH}x${RULE} constrain=stretch,max points="0,0.5 1,0.5" follows=footer
+  element footer note "" @ 0,${round(BOTTOM - FOOTER / 2)} size=${WIDTH}x${FOOTER} constrain=stretch,max bind=footer padding=0,0 optional=true
 }
 `;

@@ -128,10 +128,12 @@ const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string, layer:
   const builtin = (NODE_TYPES as readonly string[]).includes(type);
   const { canvas: _canvas, ...props } = element.props ?? {};
   return {
-    ...props,
+    // The type's own defaults first, then what the element actually wrote: a template that gives a note its text or a
+    // polyline its points keeps them, rather than having `createNode`'s placeholder put back over the top.
     ...(builtin
       ? createNode({ type: type as BuiltinNodeType, id: element.id, z, center, size, scene: element.parts })
       : { type, id: element.id, z, center, size: size ?? FALLBACK_SIZE }),
+    ...props,
     ...(scaled ? { frame: scaled.frame } : {}),
     layer,
     ...(element.style !== undefined ? { class: element.style } : {}),

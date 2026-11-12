@@ -16,6 +16,11 @@ stays on its floor and its body grows. A tool declares its shape as DSL source
 every shape that tool draws is an Instance of one definition, so restyling any
 of them reaches them all while each one's text stays its own.
 
+A `polyline` part authors its vertices in the DSL (`points="0,0.5 1,0.5"`), as
+fractions of its own frame, so a template can draw a rule that stretches with the
+shape it is in — which is what a card's hairline now is, rather than a flat box
+standing in for one.
+
 A part may be `optional`: it is switched off for one Instance from the Properties
 panel, the part naming it in `grow` takes its room, and a part that `follows`
 another goes with it — so a card without a footer is the same Object as a card

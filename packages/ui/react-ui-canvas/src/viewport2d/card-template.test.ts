@@ -53,6 +53,22 @@ describe('the card template', () => {
     expect(Object.keys(composite().nodes).sort()).toEqual(['body', 'footer', 'frame', 'icon', 'rule', 'title']);
   });
 
+  test('draws its hairline as a line, not a box', () => {
+    const rule = composite().nodes.rule;
+    expect(rule?.type).toEqual('polyline');
+    // Fractions of its own frame, so the rule stretches with the card rather than being redrawn at each size.
+    expect(Reflect.get(rule ?? {}, 'points')).toEqual([
+      { x: 0, y: 0.5 },
+      { x: 1, y: 0.5 },
+    ]);
+  });
+
+  test('a bound part with nothing to show draws nothing, not its type’s placeholder', () => {
+    const bare = { ...card(), body: undefined };
+    const view = drawnParts(bare, composite(), () => [{ field: 'text', multiline: true }]);
+    expect(Reflect.get(view.nodes.body ?? {}, 'text')).toEqual('');
+  });
+
   test('binds each region to the card’s own field', () => {
     const view = drawnParts(card(), composite(), () => [{ field: 'text', multiline: true }]);
     expect(Reflect.get(view.nodes.title ?? {}, 'text')).toEqual('Title');
