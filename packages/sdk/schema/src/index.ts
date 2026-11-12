@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+/** Schema annotations, projections and object types shared across DXOS packages. */
+
 export * from './annotations/index.ts';
 export * from './graph/index.ts';
 export * from './projection/index.ts';
