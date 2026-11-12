@@ -664,6 +664,10 @@ feat F-4: Skills are exposed
     operation-service still serves. The enabled set is named in compute-service's EDGE config
     ([D-77]); the registry holds every plugin anyone published, so an unscoped union would offer
     skills nobody enabled.
+  req F-4.3: PluginHost seeds the registry of every space-scoped invocation with the plugin's own
+    skills and operation records, as operation-service does, so a skill the bundle binds by registry
+    URI resolves and its tools project from those records. No other plugin's skills or operations
+    are seeded ([D-88]).
 ```
 
 ```mdl
@@ -1917,4 +1921,14 @@ decision D-89: T-18 and its row in the tested-flows table expect plugin-space's 
   affects: [T-18]
   why: Under [D-88] no other plugin's capability reaches a bundle on EDGE, so plugin-inbox's identity rule is absent there; edge's `plugin-isolation.node.test.ts` asserts `{ groups: [] }` for the bundle (dxos/edge#1507).
   rejected: Keeping the cross-plugin answer as the requirement, which [D-88] puts out of scope.
+```
+
+```mdl
+decision D-90: PluginHost seeds each space-scoped invocation's registry with the primary plugin's skills and operation records, beside its types. Follows from [D-88].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3]
+  why: A skill bound by `Skill.registryURI` resolves only through the invocation's registry, so a bundle found none of its own skills (plugin-agent's `listSkills` returned `[]`); the tool resolver projects a skill's tools from `Operation.PersistentOperation` records in the same registry, so an agent session running in the bundle needs the primary's records too.
+  rejected: Seeding the skills alone, which leaves a bundled agent session unable to resolve its skills' tools by registry record; seeding other plugins' skills or the operations a skill definition lists, which [D-88] puts out of scope.
 ```

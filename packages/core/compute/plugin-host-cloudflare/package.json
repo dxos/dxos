@@ -57,6 +57,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "vitest": "catalog:"
