@@ -7,6 +7,8 @@ welcome:
   background: mesh
 ---
 
+import Diagram from '../../../../components/Diagram.astro';
+
 MESH is the networking under ECHO and HALO. It finds the other devices in a space and carries replication, presence and
 invitations to them. MESH multiplexes transports: a direct WebRTC link to a peer and the WebSocket to EDGE are both ways
 for it to reach another device, and a space uses both at once.
@@ -18,12 +20,7 @@ server that introduces peers to each other, and it is a peer of its own that hol
 introduction, two devices open a direct WebRTC link and replicate over it. When no direct link can be made, or the
 other device is offline, the data still reaches it through EDGE.
 
-```text
-  Device A ────── direct WebRTC link (Teleport) ────── Device B
-      │                                                    │
-      └──── WebSocket ──── EDGE ──── WebSocket ────────────┘
-            signaling, and replication to EDGE's copy
-```
+<Diagram name="mesh-links" alt="Device A and Device B share a direct WebRTC link through Teleport, and each also holds a WebSocket to EDGE." />
 
 ## Where ECHO and HALO use MESH
 

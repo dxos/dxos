@@ -7,20 +7,15 @@ welcome:
   background: edge
 ---
 
+import Diagram from '../../../../components/Diagram.astro';
+
 EDGE is the set of services DXOS runs on Cloudflare Workers. To a space it is one more peer, the one that is always
 online: it keeps a copy of the space, indexes it, and runs work for it while every device is asleep. Each space and each
 identity gets its own Durable Objects, small stateful servers that hold that space's or identity's state.
 
 ## What goes over each link
 
-```text
-  Device A ══════ direct link: replication, presence ══════ Device B
-      │                                                         │
-   WebSocket                                                WebSocket
-      │                                                         │
-      └──────────────────────────── EDGE ───────────────────────┘
-          signaling · replication to EDGE's copy · queries · recovery · compute
-```
+<Diagram name="edge-overview" alt="Two devices share a direct link and each connect to EDGE over WebSocket and HTTP; the front door routes to the router, db, identity and hub, and compute services." />
 
 Every device keeps one WebSocket to EDGE. Over it, EDGE introduces the device to its peers, receives and sends the
 changes for each of its spaces, answers queries over objects the device has not loaded, and runs the identity's

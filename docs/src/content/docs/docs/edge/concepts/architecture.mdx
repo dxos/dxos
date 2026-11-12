@@ -3,6 +3,8 @@ title: Architecture
 description: EDGE's services, the objects it keeps per space and per identity, and its environments.
 ---
 
+import Diagram from '../../../../../components/Diagram.astro';
+
 EDGE is a set of Cloudflare Workers behind one front door. Each worker is a service, and each service keeps its state in
 Durable Objects, one per space, identity or other key.
 
@@ -28,18 +30,17 @@ request to the service that owns its path.
 **Durable Objects.** A Durable Object is a small server with its own storage, created on first use and named by a key.
 EDGE keys them like this:
 
-```text
- per identity     RouterObject ── the identity's devices and their WebSockets
+<Diagram name="edge-objects" alt="Durable Objects keyed by identity (RouterObject), swarm topic (SwarmObject), space (Automerge replicator, FeedReplicator, SpaceStateMachine, Indexer) and agent (agent process)." />
 
- per swarm topic  SwarmObject ── which devices are on the topic
-
- per space        SubductionAutomergeReplicator ── the space's Automerge documents
-                  FeedReplicator, FeedSpace ── the space's feeds
-                  SpaceStateMachine ── members, credentials and other space state
-                  Indexer ── the space's index for queries
-
- per agent        agent process and memory, in compute
-```
+| Key         | Object                          | Keeps                                        |
+| ----------- | ------------------------------- | -------------------------------------------- |
+| Identity    | `RouterObject`                  | The identity's devices and their WebSockets  |
+| Swarm topic | `SwarmObject`                   | Which devices are on the topic               |
+| Space       | `SubductionAutomergeReplicator` | The space's Automerge documents              |
+| Space       | `FeedReplicator`, `FeedSpace`   | The space's feeds                            |
+| Space       | `SpaceStateMachine`             | Members, credentials and other space state   |
+| Space       | `Indexer`                       | The space's index for queries                |
+| Agent       | Agent process                   | The agent's process and memory, in compute   |
 
 ## Environments
 

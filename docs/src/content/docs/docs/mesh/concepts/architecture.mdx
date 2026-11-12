@@ -3,21 +3,13 @@ title: Architecture
 description: The layers of MESH, from the transport up to the extensions ECHO and HALO run.
 ---
 
+import Diagram from '../../../../../components/Diagram.astro';
+
 MESH is a stack of five layers. Each layer uses the one below it, and ECHO and HALO plug in at the top as extensions.
 
 ## Model
 
-```text
- Extensions   replication · Automerge · gossip · admission · notarization · invitations
- ───────────────────────────────────────────────────────────────────────────────────────
- Swarm        one per topic; a topology decides which peers to connect
- ───────────────────────────────────────────────────────────────────────────────────────
- Signaling    finds the peers on a topic and passes offers and answers between them
- ───────────────────────────────────────────────────────────────────────────────────────
- Teleport     one session per connection, many named streams over it
- ───────────────────────────────────────────────────────────────────────────────────────
- Transport    WebRTC · TCP · memory
-```
+<Diagram name="mesh-layers" alt="A swarm finds peers through signaling and opens Teleport sessions; extensions run on a session, and a transport carries it." />
 
 | Layer      | What it does                                                                    | Package in `packages/core/mesh`                     | Page                                                   |
 | ---------- | ------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
@@ -25,7 +17,7 @@ MESH is a stack of five layers. Each layer uses the one below it, and ECHO and H
 | Teleport   | Multiplexes streams over one connection and runs extensions on them             | `teleport`                                          | [Teleport](/docs/mesh/concepts/teleport/)              |
 | Signaling  | Introduces peers on a topic and relays the messages that set up a connection    | `messaging`, `network-manager` (`signal/`)          | [Signaling and discovery](/docs/mesh/concepts/signaling/) |
 | Swarm      | Keeps the set of connections for one topic, as its topology decides             | `network-manager` (`swarm/`, `topology/`)           | [Swarms and topology](/docs/mesh/concepts/swarms/)     |
-| Extensions | The protocols ECHO and HALO run over a connection                               | `teleport-extension-*`, and the client's own        | [Teleport](/docs/mesh/concepts/teleport/)              |
+| Extensions | The protocols ECHO and HALO run over a connection: replication, Automerge, gossip, admission, notarization, invitations | `teleport-extension-*`, and the client's own        | [Teleport](/docs/mesh/concepts/teleport/)              |
 
 `edge-client` sits beside the stack. It keeps the device's WebSocket to EDGE, which carries signaling and the
 replication to EDGE's copy of each space. See [Connecting](/docs/edge/concepts/connecting/).

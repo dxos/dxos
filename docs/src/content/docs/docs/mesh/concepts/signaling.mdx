@@ -3,6 +3,8 @@ title: Signaling and discovery
 description: How a device finds the peers in a space and sets up a direct link.
 ---
 
+import Diagram from '../../../../../components/Diagram.astro';
+
 Signaling is how a device learns which peers are on a topic and exchanges the messages that open a direct connection
 to one of them. EDGE is the signaling server.
 
@@ -23,15 +25,7 @@ leaves when it closes the space. EDGE tells each peer on the topic when another 
 or rejects it with an answer. The two then trade WebRTC signals, the session description and ICE candidates, until
 the direct link opens. From then on, nothing for that connection goes through signaling.
 
-```text
- Device A                    EDGE                     Device B
-    │── join(topic) ──────────▶│◀──────── join(topic) ──│
-    │◀─ peer B on topic ───────│── peer A on topic ────▶│
-    │── offer ────────────────▶│── offer ──────────────▶│
-    │◀─ answer ────────────────│◀─ answer ──────────────│
-    │◀═══ signals (SDP, ICE candidates) relayed ═══════▶│
-    │◀════════════ direct WebRTC link ═════════════════▶│
-```
+<Diagram name="mesh-signaling" alt="Both devices join a topic at EDGE, learn about each other, exchange an offer, an answer and ICE candidates through EDGE, then open a direct WebRTC link." />
 
 **ICE and TURN.** WebRTC finds a route between two devices from ICE candidates. Behind most home routers a direct
 route exists. Behind strict NATs and firewalls it does not, and the connection goes through a TURN server, which
