@@ -97,10 +97,10 @@ template tutorial: A learning path step
   purpose: Teach one skill. The reader ends with code that runs, and sees the piece of the tutorial app it builds.
   parts:
     - Title and a one-sentence outcome
-    - Background: the facts the steps rely on, with a link to the concept page for the rest; prose only, no code to write [D-193]
-    - Steps: under their own heading, numbered, each one action, one snippet and one observable result; a snippet from the tutorial app is titled with the file it goes in [D-194], numbered as that file is [D-196]
+    - Background: the facts the steps rely on, with a link to the concept page for the rest; prose only, no code to write [D-194]
+    - Steps: under their own heading, numbered, each one action, one snippet and one observable result; a snippet from the tutorial app is titled with the file it goes in [D-195], numbered as that file is [D-197]
     - Try it: the tutorial app as it stands after this page, live [F-15.1]
-    - What you can do now: what the reader can now do [D-193]
+    - What you can do now: what the reader can now do [D-194]
 ```
 
 ```mdl
@@ -224,7 +224,7 @@ page installation: Installation
     - Install `@dxos/client` and the bundler setup the browser needs: `vite-plugin-wasm` in the page and its workers, `build.target: 'esnext'`, the WebAssembly packages excluded from pre-bundling, and the worker's CommonJS dependencies pre-bundled
     - Create a client and an identity, linking to HALO's Create an identity for the details
     - Create or open a space and get its database, in Node and in the browser
-    - The client's config written inline in `client.ts`; loading config from files is the Configuration guide's [D-195]
+    - The client's config written inline in `client.ts`; loading config from files is the Configuration guide's [D-196]
     - Follow along in StackBlitz: the starter, with each page's code to write
 ```
 ```mdl
@@ -450,7 +450,7 @@ page guide-configuration: Configuration
   covers:
     - `Config` and its sources from `@dxos/config`: `Defaults`, `Local` and `Envs`, and their precedence
     - Mapping environment variables to config paths in `dx-env.yml`
-    - `ConfigPlugin` for Vite, Rollup and esbuild, which puts the files in the page [D-195]
+    - `ConfigPlugin` for Vite, Rollup and esbuild, which puts the files in the page [D-196]
 ```
 
 ### API
@@ -3775,7 +3775,7 @@ decision D-193: The World Clock example asks for a list of timezones kept for ea
 ```
 
 ```mdl
-decision D-193: Every learning path page in ECHO and HALO, and ECHO's React guide, uses PLEX's headings: `## Background` for the context the page's steps rely on, in place of Before you start, and `## Steps` above the steps. Background holds no code to write. PLEX's pages in turn end with ECHO's and HALO's `## What you can do now` in place of Recap.
+decision D-194: Every learning path page in ECHO and HALO, and ECHO's React guide, uses PLEX's headings: `## Background` for the context the page's steps rely on, in place of Before you start, and `## Steps` above the steps. Background holds no code to write. PLEX's pages in turn end with ECHO's and HALO's `## What you can do now` in place of Recap.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [the-echo-object, installation, defining-types, mutating-objects, querying, sharing, guide-react, halo-your-profile, halo-your-spaces, halo-your-contacts, halo-invite-people, halo-add-device, halo-recover-identity, app-framework-create-plugin, app-framework-define-type, app-framework-add-surface, app-framework-add-operation, app-framework-extend-app-graph, plex-run-in-composer]
@@ -3783,14 +3783,14 @@ decision D-193: Every learning path page in ECHO and HALO, and ECHO's React guid
 ```
 
 ```mdl
-decision D-194: A code sample quoted from a learning path's app is titled with the file it lives in: `src/<module>` for the ECHO and HALO apps, as the StackBlitz projects lay them out, and the path in the plugin for PLEX's Bookmarks. A sample with its own title keeps it.
+decision D-195: A code sample quoted from a learning path's app is titled with the file it lives in: `src/<module>` for the ECHO and HALO apps, as the StackBlitz projects lay them out, and the path in the plugin for PLEX's Bookmarks. A sample with its own title keeps it.
   date: 2026-11-12
   by: user:wittjosiah
   why: The reader following along could not tell which file each sample went in.
 ```
 
 ```mdl
-decision D-195: Installation's step 3 is the only config the learning path shows: the object passed to `new Config` in `client.ts`. Configure the client, which loaded config from `dx.yml`, `dx-local.yml` and `dx-env.yml`, moves to a Configuration guide, and the React guide links there. Amends [D-174].
+decision D-196: Installation's step 3 is the only config the learning path shows: the object passed to `new Config` in `client.ts`. Configure the client, which loaded config from `dx.yml`, `dx-local.yml` and `dx-env.yml`, moves to a Configuration guide, and the React guide links there. Amends [D-174].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [installation, guide-configuration, guide-react]
@@ -3798,14 +3798,14 @@ decision D-195: Installation's step 3 is the only config the learning path shows
 ```
 
 ```mdl
-decision D-196: A sample quoted from a learning path's app is numbered as its file is: it starts at the first import the region uses, shows only the imports that bind a name the region uses, and collapses the other imports and the lines before the region behind Expressive Code's collapsible-sections toggle. The generated projects drop `// #region` markers and lint directives, and the starter imports `todo` at the end of the file, so a reader who fills the steps in order finds each step's code at the line the page shows. Shared snippets keep the imports they use above the code, numbered from 1. Amends [D-174] for app samples.
+decision D-197: A sample quoted from a learning path's app is numbered as its file is: it starts at the first import the region uses, shows only the imports that bind a name the region uses, and collapses the other imports and the lines before the region behind Expressive Code's collapsible-sections toggle. The generated projects drop `// #region` markers and lint directives, and the starter imports `todo` at the end of the file, so a reader who fills the steps in order finds each step's code at the line the page shows. Shared snippets keep the imports they use above the code, numbered from 1. Amends [D-174] for app samples.
   date: 2026-11-12
   by: user:wittjosiah
   why: The app's code fills files the reader edits, where a step's code rarely starts at line 1, so a sample numbered from 1 did not say where it goes.
 ```
 
 ```mdl
-decision D-197: The contact book's embeds take focus only after the reader acts in them. The welcome screen's name field no longer focuses itself on load; a field that opens from a click still does.
+decision D-198: The contact book's embeds take focus only after the reader acts in them. The welcome screen's name field no longer focuses itself on load; a field that opens from a click still does.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [halo-your-profile, halo-the-halo-identity]
@@ -3813,7 +3813,7 @@ decision D-197: The contact book's embeds take focus only after the reader acts 
 ```
 
 ```mdl
-decision D-198: In ECHO's and HALO's apps, each step's code sits in the module that uses it, usually inside the component, as a named local declaration: a handler, a stream or a value. A larger piece becomes a function in that same module, not a module of its own, and the step modules and their one-line wrappers go away. The starter replaces each declaration in a quoted region with `todo('<page>, step <n>: <step>', '<file>', <order>)`, a stand-in that throws on any use, and a region that declares nothing with a call to one. The app shows every feature from the start; a panel that reaches a stand-in shows the error in its place, and a banner names the earliest step in path order the app has reached, with its file. The schema stays in `schema.ts` and the seed records in `seed.ts`, which other pages import. The embeds keep their stages. Replaces the stage detection of [D-138] and the one-module-per-page rule of [D-171].
+decision D-199: In ECHO's and HALO's apps, each step's code sits in the module that uses it, usually inside the component, as a named local declaration: a handler, a stream or a value. A larger piece becomes a function in that same module, not a module of its own, and the step modules and their one-line wrappers go away. The starter replaces each declaration in a quoted region with `todo('<page>, step <n>: <step>', '<file>', <order>)`, a stand-in that throws on any use, and a region that declares nothing with a call to one. The app shows every feature from the start; a panel that reaches a stand-in shows the error in its place, and a banner names the earliest step in path order the app has reached, with its file. The schema stays in `schema.ts` and the seed records in `seed.ts`, which other pages import. The embeds keep their stages. Replaces the stage detection of [D-138] and the one-module-per-page rule of [D-171].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [the-echo-object, installation, defining-types, mutating-objects, querying, sharing, guide-react, halo-your-profile, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity]
@@ -3821,7 +3821,7 @@ decision D-198: In ECHO's and HALO's apps, each step's code sits in the module t
 ```
 
 ```mdl
-decision D-199: HALO's app passes each device's services through React context: `openHalo` returns the services `@dxos/halo-adapter-client` makes from the client, the app and each embed device wrap the contact book in `HaloProvider` from `@dxos/halo-react`, and a component reads them with `useHaloServices()` and runs a piece with `.pipe(Effect.provide(services), Effect.runPromise)`. The `halo` and `run` props go away, and so does the app's own `useStream`: state comes from the package's hooks (`useIdentity`, `useSpaces`, `useMembers`, `useContacts`, `useDevices`, `useCredentials`, `useInvitationFlow`), and each step names the stream its hook follows. Changes stay Effects. `@dxos/halo-react` gains `useContacts`, which merges the members of every ready space by DID, leaves out the local identity and lists the spaces each contact shares; Contacts lists one row per contact on it.
+decision D-200: HALO's app passes each device's services through React context: `openHalo` returns the services `@dxos/halo-adapter-client` makes from the client, the app and each embed device wrap the contact book in `HaloProvider` from `@dxos/halo-react`, and a component reads them with `useHaloServices()` and runs a piece with `.pipe(Effect.provide(services), Effect.runPromise)`. The `halo` and `run` props go away, and so does the app's own `useStream`: state comes from the package's hooks (`useIdentity`, `useSpaces`, `useMembers`, `useContacts`, `useDevices`, `useCredentials`, `useInvitationFlow`), and each step names the stream its hook follows. Changes stay Effects. `@dxos/halo-react` gains `useContacts`, which merges the members of every ready space by DID, leaves out the local identity and lists the spaces each contact shares; Contacts lists one row per contact on it.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [halo-react, halo-the-halo-identity, halo-your-profile, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity]
@@ -3829,7 +3829,7 @@ decision D-199: HALO's app passes each device's services through React context: 
 ```
 
 ```mdl
-decision D-200: An app sample whose region opens a bracket it does not close, or closes one it did not open, also shows the lines that open and close the brackets around the region, and collapses the code between them. The manifest step in `dx.config.ts` shows `modules: [` followed by the modules, collapsed, and then `],` and `});`. A region that is balanced, such as one inside a component, is unchanged. Amends [D-196].
+decision D-201: An app sample whose region opens a bracket it does not close, or closes one it did not open, also shows the lines that open and close the brackets around the region, and collapses the code between them. The manifest step in `dx.config.ts` shows `modules: [` followed by the modules, collapsed, and then `],` and `});`. A region that is balanced, such as one inside a component, is unchanged. Amends [D-197].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-create-plugin]
@@ -3837,7 +3837,7 @@ decision D-200: An app sample whose region opens a bracket it does not close, or
 ```
 
 ```mdl
-decision D-201: A step can quote a region without a nested region that a later page adds, along with the imports only that nested region uses. The sample is then numbered as the file is at that step. Create a plugin's translations list only the plugin's own strings. Define a type adds a step, Name the type, that adds the Bookmark type's entry and its imports. Amends [D-196].
+decision D-202: A step can quote a region without a nested region that a later page adds, along with the imports only that nested region uses. The sample is then numbered as the file is at that step. Create a plugin's translations list only the plugin's own strings. Define a type adds a step, Name the type, that adds the Bookmark type's entry and its imports. Amends [D-197].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-create-plugin, app-framework-define-type]
@@ -3845,7 +3845,7 @@ decision D-201: A step can quote a region without a nested region that a later p
 ```
 
 ```mdl
-decision D-202: The PLEX path runs the plugin's tools through npm. Create a plugin gives `npm install` its own command block after the package files, and the dev server starts with `npm run dev`, the package's `dev` script, on all three pages: there, Run in Composer and the Debugging guide. No page uses `npx`. The inspector's empty state and its unreachable-server error name `npm run dev` too.
+decision D-203: The PLEX path runs the plugin's tools through npm. Create a plugin gives `npm install` its own command block after the package files, and the dev server starts with `npm run dev`, the package's `dev` script, on all three pages: there, Run in Composer and the Debugging guide. No page uses `npx`. The inspector's empty state and its unreachable-server error name `npm run dev` too.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-create-plugin, plex-run-in-composer, plex-guide-debugging]
@@ -3853,7 +3853,7 @@ decision D-202: The PLEX path runs the plugin's tools through npm. Create a plug
 ```
 
 ```mdl
-decision D-203: Create a plugin's manifest step shows the whole of `dx.config.ts`, including `export const { meta, make } = config;` and `export default config;`, with an empty `modules` array. Each later step adds its module to that array. `omit` takes a comma-separated list of regions. The manifest's `config` region holds the module regions, and step 3 omits all of them. This replaces the collapsed modules of [D-200]'s example; the bracket rule stays.
+decision D-204: Create a plugin's manifest step shows the whole of `dx.config.ts`, including `export const { meta, make } = config;` and `export default config;`, with an empty `modules` array. Each later step adds its module to that array. `omit` takes a comma-separated list of regions. The manifest's `config` region holds the module regions, and step 3 omits all of them. This replaces the collapsed modules of [D-201]'s example; the bracket rule stays.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-create-plugin]
@@ -3861,7 +3861,7 @@ decision D-203: Create a plugin's manifest step shows the whole of `dx.config.ts
 ```
 
 ```mdl
-decision D-204: The PLEX path goes Define a type, Add an operation, Add a surface, Extend the App Graph. Define a type registers the schema only. Add an operation starts with creating a bookmark, since the create-object module runs the Space plugin's AddObject operation, and then adds Record visit and its skill. Add a surface renders the bookmark and calls Record visit from its button. The create-object and operation-handler modules keep their names: other plugins name these modules the same way (`capabilities/create-object.ts`, `capabilities/operation-handler.ts`). The inspector lists module kinds in the new page order.
+decision D-205: The PLEX path goes Define a type, Add an operation, Add a surface, Extend the App Graph. Define a type registers the schema only. Add an operation starts with creating a bookmark, since the create-object module runs the Space plugin's AddObject operation, and then adds Record visit and its skill. Add a surface renders the bookmark and calls Record visit from its button. The create-object and operation-handler modules keep their names: other plugins name these modules the same way (`capabilities/create-object.ts`, `capabilities/operation-handler.ts`). The inspector lists module kinds in the new page order.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [plex-the-plex-plugin, app-framework-define-type, app-framework-add-operation, app-framework-add-surface, app-framework-extend-app-graph]
@@ -3869,7 +3869,7 @@ decision D-204: The PLEX path goes Define a type, Add an operation, Add a surfac
 ```
 
 ```mdl
-decision D-205: The PLEX path goes Define a type, Add an operation, Extend the App Graph, Add a surface, Run it in Composer, and the inspector lists module kinds in that order: Translations, Schema, Operations, Create object, App Graph, Surface, Skill. Add an operation defines Record visit first and then creates a bookmark through `AddObject`. The skill moves to Run it in Composer, as the step before the assistant runs Record visit. Amends [D-204].
+decision D-206: The PLEX path goes Define a type, Add an operation, Extend the App Graph, Add a surface, Run it in Composer, and the inspector lists module kinds in that order: Translations, Schema, Operations, Create object, App Graph, Surface, Skill. Add an operation defines Record visit first and then creates a bookmark through `AddObject`. The skill moves to Run it in Composer, as the step before the assistant runs Record visit. Amends [D-205].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [plex-the-plex-plugin, app-framework-add-operation, app-framework-extend-app-graph, app-framework-add-surface, plex-run-in-composer]
@@ -3877,7 +3877,7 @@ decision D-205: The PLEX path goes Define a type, Add an operation, Extend the A
 ```
 
 ```mdl
-decision D-206: On Extend the App Graph, each extension is a top-level `const` in `capabilities/app-graph-builder.ts`, so every sample is complete code that pastes as it is. A first step shows the file's imports once. The extension samples then show only their own code, numbered as the file is (`bare` on `Snippet`). A final code step shows the module that contributes the three extensions together. Amends [D-196] for this page.
+decision D-207: On Extend the App Graph, each extension is a top-level `const` in `capabilities/app-graph-builder.ts`, so every sample is complete code that pastes as it is. A first step shows the file's imports once. The extension samples then show only their own code, numbered as the file is (`bare` on `Snippet`). A final code step shows the module that contributes the three extensions together. Amends [D-197] for this page.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-extend-app-graph]
@@ -3885,7 +3885,7 @@ decision D-206: On Extend the App Graph, each extension is a top-level `const` i
 ```
 
 ```mdl
-decision D-207: Bookmarks saves links. A bookmark has `title`, `url` and `note`; `visits` and Record visit go away. The operation is Save link: it takes `{ url, title?, note? }`, adds a bookmark to the current space through `Database.Service`, files it with `DefaultParent.add`, and returns its URI, the way Composer's markdown Create operation does. Its App Graph action sits on the space's Bookmarks section and saves the address on the clipboard. The article edits the title and note and no longer runs an operation. The skill tells the assistant to save a link the user wants to keep, with a short title and their note. The inspector's operation form shows an input for an optional text field and leaves an empty field out of the input.
+decision D-208: Bookmarks saves links. A bookmark has `title`, `url` and `note`; `visits` and Record visit go away. The operation is Save link: it takes `{ url, title?, note? }`, adds a bookmark to the current space through `Database.Service`, files it with `DefaultParent.add`, and returns its URI, the way Composer's markdown Create operation does. Its App Graph action sits on the space's Bookmarks section and saves the address on the clipboard. The article edits the title and note and no longer runs an operation. The skill tells the assistant to save a link the user wants to keep, with a short title and their note. The inspector's operation form shows an input for an optional text field and leaves an empty field out of the input.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [plex-the-plex-plugin, app-framework-define-type, app-framework-add-operation, app-framework-extend-app-graph, app-framework-add-surface, plex-run-in-composer, app-framework-operations, plex-guide-testing, app-framework-publishing]
@@ -3893,7 +3893,7 @@ decision D-207: Bookmarks saves links. A bookmark has `title`, `url` and `note`;
 ```
 
 ```mdl
-decision D-208: The four live demos also appear on the PLEX Overview, under What you can build. Each demo, there and on `/echo`, has a narrative beside it. On `/echo` the narrative is about the data: the objects in the space and what ECHO does as peers edit, go offline and reconnect. On the PLEX Overview it is about the plugins: which plugins render the demo, what each contributes, and how they meet over the same objects. Both narratives sit in one file beside the demos, so the two pages describe the same demos. On the PLEX Overview each demo runs in its own iframe, with its own two peers and space, like the other embeds on docs pages.
+decision D-209: The four live demos also appear on the PLEX Overview, under What you can build. Each demo, there and on `/echo`, has a narrative beside it. On `/echo` the narrative is about the data: the objects in the space and what ECHO does as peers edit, go offline and reconnect. On the PLEX Overview it is about the plugins: which plugins render the demo, what each contributes, and how they meet over the same objects. Both narratives sit in one file beside the demos, so the two pages describe the same demos. On the PLEX Overview each demo runs in its own iframe, with its own two peers and space, like the other embeds on docs pages.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-welcome, F-7.9, F-7.10]
@@ -3903,16 +3903,16 @@ decision D-208: The four live demos also appear on the PLEX Overview, under What
 ```
 
 ```mdl
-decision D-209: The Bookmarks operation is Mark as read, which makes Bookmarks a reading list. A bookmark has `title`, `url`, `note` and `read`. Mark as read takes `{ bookmark }`, a reference to a bookmark, resolves it with `Database.resolve` and sets `read`; it has no output. Its App Graph action is on each bookmark's toolbar, through `createTypeExtension`. The article edits the title, the address and the note, and says whether the bookmark has been read. The skill tells the assistant to mark a bookmark as read when the user says they have read it. Bookmarks are created only through the + menu. The inspector passes a reference to the sample for a reference input, shows the sample after an operation with no output, and its sample picker follows the sample's label as it is edited. Supersedes the Save link parts of [D-207].
+decision D-210: The Bookmarks operation is Mark as read, which makes Bookmarks a reading list. A bookmark has `title`, `url`, `note` and `read`. Mark as read takes `{ bookmark }`, a reference to a bookmark, resolves it with `Database.resolve` and sets `read`; it has no output. Its App Graph action is on each bookmark's toolbar, through `createTypeExtension`. The article edits the title, the address and the note, and says whether the bookmark has been read. The skill tells the assistant to mark a bookmark as read when the user says they have read it. Bookmarks are created only through the + menu. The inspector passes a reference to the sample for a reference input, shows the sample after an operation with no output, and its sample picker follows the sample's label as it is edited. Supersedes the Save link parts of [D-208].
   date: 2026-11-12
   by: user:wittjosiah
-  supersedes: D-207
+  supersedes: D-208
   affects: [plex-the-plex-plugin, app-framework-define-type, app-framework-add-operation, app-framework-extend-app-graph, app-framework-add-surface, plex-run-in-composer, app-framework-operations, plex-guide-testing, app-framework-publishing]
   why: Save link did what the + menu's create-object already does. Marking a bookmark as read changes an object that exists, which the path did not show, and gives the assistant a reason to run the operation.
 ```
 
 ```mdl
-decision D-210: On `/echo` the four guarantee cards sit in two rows of two, and stack to one column on a narrow screen.
+decision D-211: On `/echo` the four guarantee cards sit in two rows of two, and stack to one column on a narrow screen.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [landing]
@@ -3920,7 +3920,7 @@ decision D-210: On `/echo` the four guarantee cards sit in two rows of two, and 
 ```
 
 ```mdl
-decision D-211: The editor demo loads the Mermaid plugin, and its document has a `mermaid` block that renders as a diagram. Its PLEX narrative says the Mermaid plugin extends the editor through the Markdown plugin's extension capability, and that a plugin can add custom widgets the same way. The canvas demo is titled Infinite canvas, after the plugin, not Architecture diagram, after its content. Its PLEX narrative says other plugins add element kinds and library items to the canvas through its `NodeType` and `LibraryItem` capabilities, and links to Build with a coding agent, which is to get a prompt for building a canvas tool.
+decision D-212: The editor demo loads the Mermaid plugin, and its document has a `mermaid` block that renders as a diagram. Its PLEX narrative says the Mermaid plugin extends the editor through the Markdown plugin's extension capability, and that a plugin can add custom widgets the same way. The canvas demo is titled Infinite canvas, after the plugin, not Architecture diagram, after its content. Its PLEX narrative says other plugins add element kinds and library items to the canvas through its `NodeType` and `LibraryItem` capabilities, and links to Build with a coding agent, which is to get a prompt for building a canvas tool.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-7.5, F-7.10, app-framework-welcome]
@@ -3928,7 +3928,7 @@ decision D-211: The editor demo loads the Mermaid plugin, and its document has a
 ```
 
 ```mdl
-decision D-212: The PLEX Overview's What you can build has no list of plugin pieces. After the demos it says they are examples, and that a plugin can add anything a built-in one can, since Composer's own UI is plugins.
+decision D-213: The PLEX Overview's What you can build has no list of plugin pieces. After the demos it says they are examples, and that a plugin can add anything a built-in one can, since Composer's own UI is plugins.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-welcome]
@@ -3936,7 +3936,7 @@ decision D-212: The PLEX Overview's What you can build has no list of plugin pie
 ```
 
 ```mdl
-decision D-213: Bookmarks' section sits in each space's Content group in the navigation tree, matched with `AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content)`. The type, the section and the plugin use the indigo hue. Mark as read has the `toolbar` and `list-item` dispositions, so it is on the bookmark's toolbar and in its menu in the tree.
+decision D-214: Bookmarks' section sits in each space's Content group in the navigation tree, matched with `AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content)`. The type, the section and the plugin use the indigo hue. Mark as read has the `toolbar` and `list-item` dispositions, so it is on the bookmark's toolbar and in its menu in the tree.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-extend-app-graph, app-framework-define-type, app-framework-publishing]
@@ -3944,7 +3944,7 @@ decision D-213: Bookmarks' section sits in each space's Content group in the nav
 ```
 
 ```mdl
-decision D-214: Bookmarks' section is built with `TypeSection.createTypeSectionExtension`, placed in the Content group with `match` and `groupSegment`, and given the URL key `bookmark`. It takes its label and hue from the type's annotations and lists the space's bookmarks, so Extend the App Graph drops its hand-written section and items steps. Amends [D-206] and [D-213].
+decision D-215: Bookmarks' section is built with `TypeSection.createTypeSectionExtension`, placed in the Content group with `match` and `groupSegment`, and given the URL key `bookmark`. It takes its label and hue from the type's annotations and lists the space's bookmarks, so Extend the App Graph drops its hand-written section and items steps. Amends [D-207] and [D-214].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [app-framework-extend-app-graph, app-framework-guide-app-graph]
@@ -3952,7 +3952,7 @@ decision D-214: Bookmarks' section is built with `TypeSection.createTypeSectionE
 ```
 
 ```mdl
-decision D-215: The learning path's plugin is Stash, a reading list like Pocket, and its type is Stashed link. The code names are `StashedLink`, `StashedLinkOperation`, `StashedLinkArticle`, `StashNamespace` and `StashSkill`; the keys are `com.example.plugin.stash`, `com.example.type.stashedLink`, `com.example.operation.stashedLink.markRead` and `com.example.skill.stash`; the section's URL key is `stash`, and the icon is `ph--tray-arrow-down--regular`. Mark as read's input is `{ link }`. Prose calls the objects links. Earlier decisions keep the Bookmarks name they were made under.
+decision D-216: The learning path's plugin is Stash, a reading list like Pocket, and its type is Stashed link. The code names are `StashedLink`, `StashedLinkOperation`, `StashedLinkArticle`, `StashNamespace` and `StashSkill`; the keys are `com.example.plugin.stash`, `com.example.type.stashedLink`, `com.example.operation.stashedLink.markRead` and `com.example.skill.stash`; the section's URL key is `stash`, and the icon is `ph--tray-arrow-down--regular`. Mark as read's input is `{ link }`. Prose calls the objects links. Earlier decisions keep the Bookmarks name they were made under.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [plex-the-plex-plugin, app-framework-create-plugin, app-framework-define-type, app-framework-add-operation, app-framework-extend-app-graph, app-framework-add-surface, plex-run-in-composer, app-framework-publishing, app-framework-anatomy, app-framework-welcome, plex-capabilities, app-framework-operations, app-framework-surfaces, app-framework-guide-app-capabilities, app-framework-guide-app-graph, plex-guide-effect, plex-guide-testing, plex-guide-settings-and-state, plex-guide-using-echo, plex-guide-plugin-manager]
@@ -3960,7 +3960,7 @@ decision D-215: The learning path's plugin is Stash, a reading list like Pocket,
 ```
 
 ```mdl
-decision D-216: Each learning path's app lives in a folder named for its section: `src/echo-tutorial` for ECHO's contact book, `src/halo-tutorial` for HALO's, and `src/plex-tutorial` for the Stash plugin. Snippets name them the same way, as `echo-tutorial/...` and `plex-tutorial/...`.
+decision D-217: Each learning path's app lives in a folder named for its section: `src/echo-tutorial` for ECHO's contact book, `src/halo-tutorial` for HALO's, and `src/plex-tutorial` for the Stash plugin. Snippets name them the same way, as `echo-tutorial/...` and `plex-tutorial/...`.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [installation, defining-types, mutating-objects, querying, sharing, guide-react, app-framework-create-plugin, app-framework-define-type, app-framework-add-operation, app-framework-extend-app-graph, app-framework-add-surface, plex-run-in-composer]
