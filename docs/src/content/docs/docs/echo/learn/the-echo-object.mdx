@@ -1,0 +1,43 @@
+---
+title: The ECHO object
+description: What a live object is, and the app the learning path builds, running.
+---
+
+import StackBlitzButton from '../../../../../components/StackBlitzButton.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+The learning path builds one app: a contact book of organizations, the people who work at them, and the events they attend. This page explains what the app is made of, and shows it finished.
+
+## What an object is
+
+Everything the app stores is an ECHO object. An object has three parts:
+
+- **An id.** Every peer that holds the object knows it by the same id.
+- **A type.** The type names a schema, which says what fields the object has. The compiler checks the fields, and so does ECHO when it stores them.
+- **Fields.** You read them like the fields of a plain object. A field can hold a reference to another object, which is how a person points at the organization they work for.
+
+Objects live in a space's database, on the device. Reading one never waits on the network. A change is written locally first and then reaches the other peers in the space. When two peers change the same object, ECHO merges their changes rather than keeping only one.
+
+An object is also live: code can subscribe to it, or to a query, and run whenever it changes, wherever the change came from. The app redraws itself this way.
+
+[Objects and relations](/docs/echo/concepts/objects-relations/) describes the model in full.
+
+## The finished app
+
+Here it runs on two devices side by side. Pick a type, open a record, and edit it in the form. Invite Bob from Alice's toolbar and join from his, and both devices show the same records. To change the code and run it yourself, fork it on StackBlitz.
+
+<TutorialEmbed stage="complete" peers={2} />
+
+<StackBlitzButton kind="complete" label="Fork on StackBlitz" file="src/schema.ts" />
+
+Each page of the learning path builds one piece of it:
+
+| Page | File | What it adds |
+| --- | --- | --- |
+| [Installation](/docs/echo/learn/installation/) | `client.ts` | A client on the network, an identity and the app's space |
+| [Defining types](/docs/echo/learn/defining-types/) | `schema.ts`, `seed.ts` | Organization, Person and Event, and the first records |
+| [Querying](/docs/echo/learn/querying/) | `queries.ts` | Sorted lists, search, a live count and the people at an organization |
+| [Mutating objects](/docs/echo/learn/mutating-objects/) | `records.ts` | Adding, editing and removing records |
+| [Sharing a space](/docs/echo/learn/sharing/) | `sharing.ts` | Invite and Join in the toolbar, so a second device can share the space |
+
+The pages show the app's ECHO code in plain TypeScript. The [React guide](/docs/echo/guides/react/) walks through the components that draw it.

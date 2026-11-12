@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1920 1080">
+  <rect id="background" width="1920" height="1080" style="fill: var(--dx-bg-fill, rgb(29,31,32))"/>
+  <g id="lines" fill="none" stroke-width="14" style="stroke: var(--dx-bg-lines, rgb(217,91,60))">
+    <path d="M98.7,1100.0 L395.6,506.2 L564.4,506.2"/>
+    <path d="M861.3,1100.0 L564.4,506.2"/>
+    <path d="M564.4,506.2 L193.3,1100.0"/>
+    <path d="M564.4,506.2 L677.1,-20.0"/>
+    <path d="M560.6,-20.0 L716.3,810.0"/>
+    <path d="M1122.3,1100.0 L480.0,641.3 L-20.0,998.4"/>
+    <path d="M243.7,810.0 L399.4,-20.0"/>
+    <path d="M282.9,-20.0 L395.6,506.2"/>
+    <path d="M395.6,506.2 L766.7,1100.0"/>
+  </g>
+  <g id="icon" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--dx-bg-icon, rgb(249,233,230))">
+    <path d="M243.7,810.0 L395.6,506.2 L564.4,506.2"/>
+    <path d="M716.3,810.0 L564.4,506.2"/>
+    <path d="M564.4,506.2 L480.0,641.3"/>
+    <path d="M564.4,506.2 L615.0,270.0 L716.3,810.0 L480.0,641.3 L243.7,810.0 L345.0,270.0 L395.6,506.2 L480.0,641.3"/>
+  </g>
+</svg>

@@ -1,0 +1,3772 @@
+---
+id: org.dxos.docs
+name: DXOS docs
+version: 0.1.0
+---
+
+The DXOS docs teach a developer to build on ECHO, then to build apps from plugins with PLEX, using
+Composer as the app those plugins run in. They have three sections: ECHO; HALO, which holds identity, devices and
+space membership; and PLEX, which holds the plugin docs and the tool chain. ECHO comes first, and `/docs/` opens its Overview page;
+there is no separate docs home [F-16]. Every section has the same shape: Start here, a learning path that builds one
+thing step by step, core concepts, an API group with one page per core namespace, guides, and resources [F-17], [F-18].
+
+This document is the source of truth for what the docs cover and how. Each `page` block gives the page's section,
+place in the sidebar, template and status, a one-line summary, and under `covers:` the points the page must cover.
+Pages are written, and rewritten when the APIs change, from these blocks [F-5].
+
+The ECHO developer site is the technical reference for building on ECHO, the typed, local-first
+object graph. It is for an engineer deciding whether to adopt ECHO, then learning it, then looking
+something up. It is part of dxos.org: the landing page is `dxos.org/echo`, a product page beside
+`/composer` and `/plugins`, and the written pages are the ECHO section of the dxos.org docs, which ECHO
+leads [F-7].
+
+The site is part of the dxos.org Astro build, with Starlight as the documentation shell. Its theme is the
+theme of every dxos.org docs page. The landing page is built on the dxos.org Webflow layout, like
+`/composer` and `/plugins`, and uses the theme's fonts and code colors inside it. Its look is flat and comes
+from the DXOS brand assets: logos, background art, fonts and palette. Its structure follows the Effect documentation: a short
+argument for the idea, then a learning path, core concepts, guides and a reference.
+
+The site opens with why ECHO exists: it is the data model that plugins code against, the place agents keep
+their memory, a schema an agent can inspect, and the graph where data from external systems meets [F-14].
+
+Three properties outrank everything else:
+
+- **Every code sample compiles against this commit.** The ECHO docs on dxos.org teach APIs that no
+  longer exist, so a sample that is not checked is assumed to be wrong [F-3].
+- **Every claim about behavior cites a spec item.** A page says what ECHO guarantees only when
+  `org.dxos.echo` or `org.dxos.echo.query` states it [F-4].
+- **The spec owns the site map.** The sidebar, the planned pages and what each page covers come from the
+  `page` blocks in this document [F-5].
+
+## Dependencies
+
+```mdl
+uses org.dxos.echo: The public API that the learning path and the reference document.
+```
+
+```mdl
+uses org.dxos.echo.query: The query guarantees that the argument for ECHO rests on.
+```
+
+```mdl
+uses org.dxos.app.composer: The app that the PLEX section uses as its host, and teaches the reader to extend.
+```
+
+## Extensions
+
+| Term       | URI                                 |
+| ---------- | ----------------------------------- |
+| `uses`     | `dxos.spec.core/uses`               |
+| `feat`     | `org.dxos.mdl.feat@1.0`             |
+| `scenario` | `org.dxos.mdl.scenario@1.0`         |
+| `decision` | `org.dxos.mdl.decision@1.0`         |
+| `question` | `org.dxos.mdl.question@1.0`         |
+| `template` | `org.dxos.docs.template@1.0`     |
+| `page`     | `org.dxos.docs.page@1.0`         |
+
+## Templates
+
+Each page uses exactly one template. The template fixes the order of the page's parts, so a reader
+always knows where to look.
+
+```mdl
+template landing: The front door
+  purpose: Answer what ECHO is and why it differs, in one screen, then route the reader.
+  parts:
+    - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip, two actions, ECHO background art
+    - Sample: the smallest complete example
+    - Guarantees: four cards, each a behavior with its spec citation
+    - Live: the live demos [F-7.5]
+    - Architecture: one diagram of the packages
+    - Routes: cards into the learning path, concepts and reference
+```
+
+```mdl
+template narrative: An argument
+  purpose: Explain why, in the order of the Effect page "Why Effect?".
+  parts:
+    - Title and one-paragraph answer
+    - The pattern: the smallest complete example and an anatomy strip of its key signature
+    - Comparison: the same task written without and with ECHO, side by side
+    - Practical problems: one H3 per problem, each with its mechanism and spec citation
+    - Closing: where to go next
+```
+
+```mdl
+template tutorial: A learning path step
+  purpose: Teach one skill. The reader ends with code that runs, and sees the piece of the tutorial app it builds.
+  parts:
+    - Title and a one-sentence outcome
+    - Background: the facts the steps rely on, with a link to the concept page for the rest
+    - Steps: numbered, each one action, one snippet and one observable result
+    - Try it: the tutorial app as it stands after this page, live [F-15.1]
+    - Recap: what the reader can now do
+```
+
+```mdl
+template concept: A core concept
+  purpose: Describe one idea completely, for a reader who has finished the learning path.
+  parts:
+    - Title and a definition in one sentence
+    - Model: the idea, with a diagram where the shape matters
+    - Behavior: what is guaranteed, with spec citations
+    - Limits: what is not guaranteed, and known divergences
+```
+
+```mdl
+template reference: One module
+  purpose: Answer a lookup in one glance. No narrative.
+  parts:
+    - Title, import line and a one-sentence summary
+    - Members table: strict columns of member, signature, summary
+    - One H3 per member family: signature, parameters, a compiled example
+```
+
+```mdl
+template namespace: One API namespace
+  purpose: Teach one namespace in a page a reader can read top to bottom, between the learning path and the generated API reference.
+  parts:
+    - Title, import line and a one-paragraph summary of what the namespace is for
+    - Common tasks: one H3 per task, each with a compiled example
+    - Members at a glance: a short table of the members a reader uses most, each linking to the API reference
+    - Related: the concept pages and learning-path steps that use the namespace
+```
+
+```mdl
+template stub: A planned page
+  purpose: Show the planned scope of a page that is not written yet.
+  parts:
+    - Title, a planned badge and the page's summary
+    - The page's `covers:` list
+```
+
+## Site map
+
+The order of these blocks is the order of the sidebar: section, then group, by first appearance. Routes are
+absolute. A page with status `later` is in scope but not yet in the sidebar. There is no docs home page:
+`/docs/` redirects to ECHO's Overview, the first page of the first section [F-16.5].
+
+## ECHO
+
+### Start here
+
+```mdl
+page welcome: Overview
+  What ECHO is and how these docs are organized.
+  section: ECHO
+  route: /docs/echo/overview/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - What ECHO is in one paragraph: a typed, local-first, peer-to-peer object graph for TypeScript
+    - The model in four points: CRDT replication, peers over WebRTC, concurrent writers, offline writes that merge
+    - What DXOS is, in two sentences, with ECHO as the lead
+    - Spaces hold data and objects are its unit, with links to both concept pages
+    - How these docs are organized: the ECHO, HALO and PLEX sections, and in each the learning path, core
+      concepts, guides and resources
+    - Where to go next: Why ECHO?, the learning path, and PLEX for building apps on ECHO
+```
+```mdl
+page why-echo: Why ECHO?
+  Why apps and agents share one data model: agent memory, introspection, external data, then the argument for a typed, local-first object graph.
+  section: ECHO
+  route: /docs/echo/why-echo/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - Agents need memory they can query, and a schema they can inspect
+    - External data needs one graph to meet in, and plugins code against that graph
+    - The ECHO pattern: the smallest complete example, then the same task without and with ECHO
+    - The practical problems ECHO solves, each with its mechanism and a spec citation
+    - How DXOS apps differ from SaaS apps, in the comparison table moved from the old docs home
+```
+
+```mdl
+page echo-build-with-agent: Build with a coding agent
+  Have Claude Code, Codex or Cursor build a small ECHO app, from a prompt the reader can edit first.
+  section: ECHO
+  route: /docs/echo/build-with-a-coding-agent/
+  group: Start here
+  template: tutorial
+  status: spike
+  covers:
+    - A prompt the reader can edit, with a picker of three sample apps above it: TodoMVC (the default), a kanban board and collaborative notes [D-187]
+    - The hidden part of the prompt points the agent at the learning path's project setup, pinned to a build of main, until the next npm release [D-188]
+    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a line the reader does not see before their text, which has the agent read `/echo/llms-full.txt` first
+    - What the reader does while the agent works, and how to try a shared app from a second browser
+```
+
+### Learning path
+
+```mdl
+page the-echo-object: The ECHO object
+  What a live object is, and the app the learning path builds, running.
+  section: ECHO
+  route: /docs/echo/learn/the-echo-object/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What a live object is: typed, reactive, replicated
+    - The finished tutorial app, running, so the reader sees where the path ends, with Fork on StackBlitz
+```
+```mdl
+page installation: Installation
+  Add the packages and open a database in Node or the browser.
+  section: ECHO
+  route: /docs/echo/learn/installation/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Install `@dxos/client` and the bundler setup the browser needs: `vite-plugin-wasm` in the page and its workers, `build.target: 'esnext'`, the WebAssembly packages excluded from pre-bundling, and the worker's CommonJS dependencies pre-bundled
+    - Create a client and an identity, linking to HALO's Create an identity for the details
+    - Create or open a space and get its database, in Node and in the browser
+    - Follow along in StackBlitz: the starter, with each page's code to write
+```
+```mdl
+page defining-types: Defining types
+  Declare the tutorial app's types, with references between them, and see the form ECHO derives from each.
+  section: ECHO
+  route: /docs/echo/learn/defining-types/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Declare the tutorial app's types with `Type`, including references between them
+    - Register the types with the client
+    - The form ECHO derives from each type
+```
+```mdl
+page querying: Querying
+  Select the tutorial app's records with Filter and Query, by type, sorted, searched, and live.
+  section: ECHO
+  route: /docs/echo/learn/querying/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Select records by type with `Query` and `Filter`
+    - Sort, search text and match fields
+    - Subscribe to a live query and see results update
+```
+```mdl
+page mutating-objects: Mutating objects
+  Create, change and remove the tutorial app's records, and observe each change.
+  section: ECHO
+  route: /docs/echo/learn/mutating-objects/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Create objects with `Obj.make` and add them to the database
+    - Change them with `Obj.update` and remove them
+    - Observe each change in the running app
+```
+```mdl
+page sharing: Sharing a space
+  Invite a second peer to the tutorial app's space and watch both replicas follow each other's edits.
+  section: ECHO
+  route: /docs/echo/learn/sharing/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Invite a second peer into the tutorial app's space
+    - Watch both replicas follow each other's edits, including offline edits that merge on reconnect
+```
+
+### Core concepts
+
+```mdl
+page types: Types and schema
+  What a type is, how ECHO identifies it, and how it changes over time.
+  section: ECHO
+  route: /docs/echo/concepts/types/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A type is an Effect Schema with a typename and a version; its DXN `dxn:<typename>:<version>` is what each object stores
+    - Object types and relation types: `Type.makeObject` and `Type.makeRelation`
+    - Annotations such as label and icon, and what tools derive from them
+    - Registering types with a database, and what fails without it
+    - JSON Schema in and out
+    - Types edited at runtime: `addFields` and `updateFields`
+    - Versions and migrations: `Migration.define`, `defineRename` and `defineContent` [D-155]
+    - Limits: peers on different versions of a type do not merge, and when migrations run outside a plugin is not documented yet
+```
+```mdl
+page objects-relations: Objects and relations
+  Typed records in one space, and the entities that join them.
+  section: ECHO
+  route: /docs/echo/concepts/objects-relations/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Objects are typed records in one space; relations are entities that join a source and a target
+    - The managed fields: id, type, meta keys and tags, label, deleted
+    - A relation next to a reference field, shown with a WorksAt relation beside `Person.employer` [D-160]
+    - Parents and children, and what removing a parent does
+    - Removal marks an object deleted, and it stays in history until the next epoch
+    - Snapshots versus live objects
+    - Limits: the top level of an object is a record, and a relation needs both ends
+```
+```mdl
+page references: References and DXNs
+  How objects point at each other, and how a reference resolves.
+  section: ECHO
+  route: /docs/echo/concepts/references/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - `Ref.Ref` stores the URI of its target
+    - EIDs (`echo:///id`, `echo://space/id`) versus DXNs
+    - `peek` versus `load` versus `Ref.loadAll`, and traversal in a query instead of loading
+    - Limits: dangling references, removed targets, arrays that keep dangling entries, and `Ref.equals`
+```
+```mdl
+page feeds: Feeds
+  An append log of ECHO objects, as a tree of branches.
+  section: ECHO
+  route: /docs/echo/concepts/feeds/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A feed is an append log of ECHO objects, a tree of branches [FEEDS.mdl F-1.1, F-1.2]
+    - Uses as examples, not kinds: AI chat, comments, messaging, event logs [F-3.1]
+    - Rewrite by id, logical removal, and rewind as a branch [F-1.3, F-1.4, F-1.5]
+    - Cursors, forward and backward walks, and fork points [F-5]
+    - Indexing on or off, partial sync, and retention per branch [F-2, F-4.4]
+    - When a feed fits better than objects
+    - Links to Changes and branches for branches of objects
+```
+```mdl
+page queries: Queries
+  Filters, query shapes, traversal and live results.
+  section: ECHO
+  route: /docs/echo/concepts/queries/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - `Filter` is the predicate and `Query` the shape around it
+    - Traversal in both directions [echo-client QUERY.mdl F-7]
+    - Order, windows and aggregates [F-8, F-9]
+    - Sources through `Scope`: this space, the registry, a feed
+    - Live results never finish; each source has only a pending state [F-3]. Never describe a query as complete
+    - Local writes show in results before the write returns [F-2]
+    - Limits: remote results are revalidated [F-5]
+```
+```mdl
+page spaces: Spaces and databases
+  The unit of sharing and replication, how it is stored, and the Hypergraph over all of them.
+  section: ECHO
+  route: /docs/echo/concepts/spaces/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A space is the unit of sharing and replication, with one database
+    - Storage: SQLite in a worker, browser file storage or disk; a space is never loaded into memory whole [echo-sqlite F-3]; indexing, and queries compiled to SQL [F-4]; writes and flush [F-6]
+    - Replication: each member holds a full copy, syncing over WebRTC or through EDGE
+    - The Hypergraph: every reachable space as one graph, qualified EIDs, references across spaces and unreachable spaces, the in-process registry a query searches without `from()`, and `db` versus Hypergraph
+    - Access in one paragraph: HALO controls members and roles, built on Keyhive, with a link [D-156]
+```
+```mdl
+page changes: Changes and branches
+  Every write as a change, how changes merge, history, and branches of objects.
+  section: ECHO
+  route: /docs/echo/concepts/changes/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Every write is a change on a CRDT document
+    - Merge rules: the merge table, assignment versus Text edits, offline writes, and a subscriber that writes during a notification makes its own commit
+    - History: `Obj.getChanges` with the device for each, `Obj.getVersion` at past heads, `Filter.changes`
+    - Branches: `createBranch` from the tip or past heads, covering the object and what it references; `switchBranch` per device, cascading to children; `mergeBranch`, `syncBranch`, `deleteBranch`; `db.branch` for a separate live copy shown side by side
+    - Feed branches stay on Feeds, linked
+    - Limits: ECHO does not know what a field means, rules across objects are not enforced, schema versions do not merge, and a switch does not follow you to other devices
+```
+
+### Guides
+
+The framework guides.
+
+```mdl
+page guide-effect: Effect
+  Use ECHO from Effect code: `Database.Service`, layers and typed errors.
+  section: ECHO
+  route: /docs/echo/guides/effect/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Get the database as `Database.Service`, and provide it with a layer
+    - Typed errors, and handling them
+    - The only page that teaches ECHO through Effect [D-158]
+```
+```mdl
+page guide-testing: Testing
+  Test code that uses ECHO, with isolated peers.
+  section: ECHO
+  route: /docs/echo/guides/testing/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Build a database with `EchoTestBuilder` from `@dxos/echo-client` testing
+    - Isolated peers, and replicating between them
+```
+```mdl
+page guide-react: React
+  The tutorial app's React layer: ClientProvider, useQuery, useObject and a schema form, and the reactivity rules behind them.
+  section: ECHO
+  route: /docs/echo/guides/react/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Set up `ClientProvider`
+    - Read data with `useQuery` and `useObject`
+    - Edit an object with a schema form
+    - The reactivity rules behind the hooks
+```
+
+### API
+
+One page per `@dxos/echo` namespace, at `/docs/echo/api/<namespace>/` [D-157]. Collection, View, Dataset, Registry, Json, Format, Key, Error, Migration and Tag appear only in the generated reference [D-182]. Every page uses the promise APIs [D-158].
+
+```mdl
+page guide-type: Type
+  Declare and inspect object and relation types, and convert them to and from JSON Schema.
+  section: ECHO
+  route: /docs/echo/api/type/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Declare object and relation types, with annotations
+    - Add, update and remove fields of a type at runtime
+    - Inspect a type: its typename, version and schema
+    - Check what kind of entity a value is
+    - Convert a type to and from JSON Schema, with `JsonSchema`
+```
+```mdl
+page guide-annotation: Annotation
+  The annotations tools read from a type.
+  section: ECHO
+  route: /docs/echo/api/annotation/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Label, icon, description and the other annotations
+    - Set and read an annotation
+    - What reads each one
+```
+```mdl
+page guide-obj: Obj
+  The runtime API for objects, their changes and the Entity helpers they share with relations.
+  section: ECHO
+  route: /docs/echo/api/obj/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Make objects, and the options `Obj.make` takes
+    - Read and update objects; snapshots versus live objects
+    - Subscribe to changes on one object
+    - Meta, keys, tags, labels and parent ownership
+    - Clone an object and convert it to JSON
+    - History and versions, with `Change`; the `Entity` helpers shared with relations
+```
+```mdl
+page guide-relation: Relation
+  The runtime API for relations.
+  section: ECHO
+  route: /docs/echo/api/relation/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Make a relation between a source and a target
+    - Read its endpoints and resolve them
+    - Update, subscribe to and sort relations
+```
+```mdl
+page guide-ref: Ref
+  Typed references between entities.
+  section: ECHO
+  route: /docs/echo/api/ref/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Make a reference to an object, or from a DXN
+    - Peek at, load, and load many references at once
+    - Compare references and check what they point at
+```
+```mdl
+page guide-database: Database
+  The database of one space, and the Hypergraph over every space.
+  section: ECHO
+  route: /docs/echo/api/database/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Get a database
+    - Add, remove and load objects; run a query
+    - Flush writes and read the sync state
+    - Add types to a database
+    - Branches of objects
+    - The `Hypergraph`: query and resolve across spaces
+```
+```mdl
+page guide-query: Query
+  Graph-shaped selections, traversal, ordering, aggregates, sources and results.
+  section: ECHO
+  route: /docs/echo/api/query/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Build a query with `select` and `type`, and combine with `all` and `without`
+    - Traverse references and relations from a selection
+    - Order results with `Order`, and aggregate them with `Aggregate`
+    - Choose the sources with `Scope`
+    - Run a query once or subscribe to it, and read it through `QueryResult`
+    - Opens with the two or three most common filters and links to Filter for the rest
+```
+```mdl
+page guide-filter: Filter
+  Predicate builders that compile to a query AST.
+  section: ECHO
+  route: /docs/echo/api/filter/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Match by type, id, tag and key
+    - Compare a field: equals, ranges, contains
+    - Combine filters with `and`, `or` and `not`
+    - Search text, and filter by creation and update time
+    - Filter by parent and child, and by change
+```
+```mdl
+page guide-feed: Feed
+  The append-only feed object.
+  section: ECHO
+  route: /docs/echo/api/feed/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Make a feed and append to it
+    - Read with cursors, walk and query a feed
+    - Indexing and retention options
+    - Fork a feed and read a branch
+```
+```mdl
+page guide-text: Text
+  Collaborative text fields.
+  section: ECHO
+  route: /docs/echo/api/text/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Declare a text field and make text
+    - Read and edit text, and what merges character by character
+```
+```mdl
+page guide-blob: Blob
+  Binary data stored beside objects.
+  section: ECHO
+  route: /docs/echo/api/blob/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Store a blob and reference it from an object
+    - Read a blob back
+```
+
+### Resources
+
+```mdl
+page api-reference: API reference
+  Generated API reference for the ECHO and client packages.
+  section: ECHO
+  route: /docs/additional-resources/api-reference/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to the generated reference for `@dxos/echo`, `@dxos/echo-react`, `@dxos/echo-solid`, `@dxos/client` and `@dxos/react-client`
+```
+```mdl
+page glossary: Glossary
+  Every ECHO term, defined once.
+  section: ECHO
+  route: /docs/additional-resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Every ECHO term, defined once: space, object, relation, reference, DXN, epoch, Hypergraph, registry, scope, branch, migration, content version and the rest
+    - Links to HALO's glossary for identity, device and invitation terms
+```
+```mdl
+page examples: Examples
+  Apps built on ECHO, with code and live links.
+  section: ECHO
+  route: /docs/additional-resources/samples/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Composer first, as the flagship app built on ECHO
+    - Tasks and TodoMVC, each with its code and a live link
+```
+```mdl
+page echo-llms-txt: llms.txt
+  The ECHO site map and full text for agents, in the llms.txt format.
+  section: ECHO
+  route: /docs/echo/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/echo/llms.txt`, each ECHO page with its summary and a link to its Markdown
+    - Links to `/echo/llms-full.txt`, every ECHO page in one file
+```
+
+### Later
+
+These pages are in scope but not in the sidebar yet.
+
+```mdl
+page schema-evolution: Schema evolution
+  Versioned types and object migrations.
+  section: ECHO
+  route: /docs/echo/concepts/schema-evolution/
+  group: Core concepts
+  template: concept
+  status: later
+  covers:
+    - Versioned types, and how objects migrate between versions
+```
+```mdl
+page guide-solid: Solid
+  The Solid.js bindings.
+  section: ECHO
+  route: /docs/echo/guides/solid/
+  group: Guides
+  template: tutorial
+  status: later
+  covers:
+    - The Solid.js bindings
+```
+```mdl
+page guide-foreign-records: Foreign records
+  Map records from another system onto ECHO types with panproto lenses.
+  section: ECHO
+  route: /docs/echo/guides/foreign-records/
+  group: Guides
+  template: tutorial
+  status: later
+  covers:
+    - Map records from another system onto ECHO types with panproto lenses
+```
+```mdl
+page architecture: Architecture
+  The packages, the processes they run in and the path of a write.
+  section: ECHO
+  route: /docs/echo/internals/architecture/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - The packages, the processes they run in and the path of a write
+```
+```mdl
+page query-engine: The query engine
+  LocalQueryEngine, working sets and remote sources.
+  section: ECHO
+  route: /docs/echo/internals/query-engine/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - LocalQueryEngine, working sets and remote sources
+```
+```mdl
+page indexing: Indexing
+  The host index and the SQL query plan.
+  section: ECHO
+  route: /docs/echo/internals/indexing/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - The host index and the SQL query plan
+```
+```mdl
+page versioning: Versioning
+  Heads, object versions and what a remote entry carries.
+  section: ECHO
+  route: /docs/echo/internals/versioning/
+  group: Internals
+  template: concept
+  status: later
+  covers:
+    - Heads, object versions and what a remote entry carries
+```
+
+## HALO
+
+HALO is DXOS's identity management: a user's identity, the devices and credentials that act for it, and who may
+enter a space. Its learning path builds a small app of its own, a contact book [D-169]. Data and replication stay in
+ECHO's Spaces and databases; members, access and invitations are HALO's, and each links to the other. Every page
+describes HALO in Keyhive's terms, in the present tense [D-163], and teaches `@dxos/halo` through Effect, run with
+`Effect.runPromise` [D-162].
+
+### Start here
+
+```mdl
+page halo-welcome: Overview
+  What HALO is and how its pages are organized.
+  section: HALO
+  route: /docs/halo/overview/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - What HALO is: identity management for local-first apps, covering identities, devices, credentials and space membership
+    - An identity is a key pair a client generates; no server issues it
+    - The three `@dxos/halo` namespaces, Identity, Invitation and Space, in one line each
+    - HALO is built on Keyhive: signed delegations and group encryption keys
+    - The learning path builds a contact book of its own; ECHO's Sharing a space is where ECHO meets HALO [D-169]
+```
+```mdl
+page why-halo: Why HALO?
+  Why identity is a key pair your device makes, not an account a server issues.
+  section: HALO
+  route: /docs/halo/why-halo/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - The pattern: create an identity and share a space with no sign-up server
+    - Comparison: an account a server issues and revokes, against a key pair the device holds
+    - Practical problems: one identity across devices, access that peers check without a server, recovery without a password reset
+    - What HALO does not do: it is not a login for third-party sites
+```
+
+### Learning path
+
+Seven pages build one app, a contact book: a name, a few named spaces, the people in them, a second device and a
+recovery code [D-169]. The embeds and StackBlitz projects work as ECHO's do [D-171].
+
+```mdl
+page halo-the-halo-identity: The HALO identity
+  What an identity is, and the app the learning path builds, running for three people.
+  section: HALO
+  route: /docs/halo/learn/the-halo-identity/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What an identity is, in a paragraph: a Keyhive group named by a DID, with a profile, whose members are its devices and recovery keys, and which joins spaces as a member [D-175]
+    - What the contact book does: a name, named spaces, and contacts, who are the people you share a space with [D-170]
+    - The finished app for Alice, Bob and Carol in two spaces, each in a device frame, with Fork on StackBlitz
+    - What each page adds
+```
+```mdl
+page halo-your-profile: Your profile
+  Create an identity with a profile, show it and change it.
+  section: HALO
+  route: /docs/halo/learn/your-profile/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Set up the project and provide the services with `layerClient(client)`, with Follow along in StackBlitz
+    - Create an identity with `Identity.create`, with the name the first run asks for
+    - Follow it with the `Identity.identity` stream and show it in the profile chip
+    - Rename with `Identity.updateProfile`
+    - In Keyhive terms: the identity is a group named by a DID, and this device its first member
+```
+```mdl
+page halo-your-spaces: Your spaces
+  Create named spaces and switch between them.
+  section: HALO
+  route: /docs/halo/learn/your-spaces/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Create a space with `Space.create({ name })`
+    - List spaces with the `Space.spaces` stream and switch between them in a dropdown
+    - In Keyhive terms: a space is a group, and its creator its first admin
+```
+```mdl
+page halo-invite-people: Invite people
+  Alice invites Bob into a space with an invitation code and an authorization code.
+  section: HALO
+  route: /docs/halo/learn/invite-people/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Start a space invitation with `Space.share` and read its code
+    - Join with `Space.join`, follow the flow with `Invitation.events`, and enter the authorization code with `Invitation.authenticate`
+    - In Keyhive terms: the two sides exchange contact cards and the host writes a delegation that admits the guest
+```
+```mdl
+page halo-your-contacts: Your contacts
+  List everyone you share a space with, and remove someone from a space.
+  section: HALO
+  route: /docs/halo/learn/your-contacts/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Read each space's members with `Space.members` and merge them by DID, with the spaces each person shares [D-170]
+    - Remove a member with `Space.removeMember`
+    - Changing a member's access is on the Space API page, not here
+    - In Keyhive terms: removal is a revocation, and the group key changes
+```
+```mdl
+page halo-add-device: Add a device
+  Join Alice's phone to her identity, so it shows the same contacts.
+  section: HALO
+  route: /docs/halo/learn/add-device/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Share the identity with `Identity.share` and join from the phone with `Identity.join`
+    - List the devices with the `Identity.devices` stream, with each device's kind and presence
+    - The phone shows Alice's name, spaces and contacts
+    - In Keyhive terms: the phone is a new member of the identity's group
+```
+```mdl
+page halo-recover-identity: Recover an identity
+  Make a recovery code, and get Alice's identity back on a new laptop.
+  section: HALO
+  route: /docs/halo/learn/recover-identity/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
+    - Create a recovery code with `Identity.createRecoveryCredential`
+    - Recover on a new device with `Identity.recover`, which brings back the name, spaces and contacts [D-172]
+    - Revoke the code with `Identity.revokeRecoveryCredential`
+    - In Keyhive terms: the recovery key is a member of the identity's group
+```
+
+### Core concepts
+
+Four pages, in this order, with Keyhive inside each and no page of its own [D-163] [D-164].
+
+```mdl
+page halo-identities-devices: Identities and devices
+  An identity is a Keyhive group named by a DID; its devices are its members.
+  section: HALO
+  route: /docs/halo/concepts/identities-devices/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An identity is a Keyhive group named by a DID, with a profile
+    - Each device is a member key, added by a delegation and removed by a revocation, with a kind and presence
+    - The personal space every identity has, and `Identity.personalSpaceId`
+    - Limits: when every device is lost and no recovery credential exists
+```
+```mdl
+page halo-spaces-membership: Spaces and membership
+  Who may enter a space, and what each member may do.
+  section: HALO
+  route: /docs/halo/concepts/spaces-membership/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Access levels pull, read, edit and admin, each including the ones before it
+    - The membership policy: invite or locked
+    - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
+    - The group key, which changes with membership and which pull members relay without reading
+    - EDGE as a pull member, and the explicit read a plaintext service such as AI or search needs
+    - Links to ECHO's Spaces and databases for data and replication
+```
+```mdl
+page halo-invitations: Invitations
+  How a device or a person is let into an identity or a space.
+  section: HALO
+  route: /docs/halo/concepts/invitations/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The two kinds, device and space, and the three types, interactive, delegated and multiuse
+    - The auth methods: none, shared secret and known public key
+    - The invitation flow, step by step, with its events [D-165]
+    - Admission: a contact-card exchange and a delegation
+    - Delegated invitations with the host offline: prekeys, and EDGE holding the signed operations until the guest connects
+    - Limits: expiry, cancellation and a code that fails to authenticate
+```
+```mdl
+page halo-recovery-credentials: Recovery and credentials
+  How an identity survives the loss of its devices, and what credentials it holds.
+  section: HALO
+  route: /docs/halo/concepts/recovery-credentials/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
+    - Recovery kinds: passkey, recovery code and OAuth
+    - The recovery key is a member of the identity's group
+    - The recovery challenge, and what a recovered identity gets back
+    - The credentials stream, service access and API tokens
+    - Limits: what a lost recovery credential means
+```
+
+### Guides
+
+Passkey recovery, then React [D-167].
+
+```mdl
+page halo-guide-passkey-recovery: Passkey recovery
+  Register a passkey as a recovery credential and recover with it.
+  section: HALO
+  route: /docs/halo/guides/passkey-recovery/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
+    - Create the passkey with WebAuthn in the app, since `@dxos/halo` leaves the ceremony to the caller
+    - Register it with `Identity.createRecoveryCredential({ externalKey })`
+    - Recover: `Identity.requestRecoveryChallenge`, sign the challenge with the passkey, then `Identity.recover`
+    - Revoke it with `Identity.revokeRecoveryCredential`
+```
+```mdl
+page halo-react: React
+  Read the identity, devices, spaces and members from React components.
+  section: HALO
+  route: /docs/halo/guides/react/
+  group: Guides
+  template: tutorial
+  status: spike
+  covers:
+    - Set up `HaloProvider` from `@dxos/halo-react`
+    - Read the identity, devices and credentials with `useIdentity`, `useDevices` and `useCredentials`
+    - Read spaces and members with `useSpaces`, `useSpace` and `useMembers`
+    - Drive invitations with `useSpaceInvitations`, `useHaloInvitations` and `useInvitationFlow`
+```
+
+### API
+
+One page per `@dxos/halo` namespace, at `/docs/halo/api/<namespace>/`, each ending with the errors it fails with [D-166].
+
+```mdl
+page halo-guide-identity: Identity
+  Create, follow, recover and share an identity.
+  section: HALO
+  route: /docs/halo/api/identity/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - A caution that recovery needs a DXOS account, created only through Composer for now [D-173]
+    - Get the `Identity.Service` with `layerClient`, and read the identity once, as a stream or as an atom
+    - Create an identity, update its profile, and get its personal space id
+    - List devices, share the identity and join from a device
+    - Create, revoke and use recovery credentials, and request a recovery challenge
+    - Read credentials, grant service access, create API tokens and get the EDGE identity
+    - Errors: IdentityError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
+```
+```mdl
+page halo-guide-invitation: Invitation
+  Drive an invitation flow from either side.
+  section: HALO
+  route: /docs/halo/api/invitation/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - The `Invitation.Flow` that `Identity.share`, `Identity.join`, `Space.share` and `Space.join` return
+    - Read the code, authenticate with it and cancel a flow
+    - Follow a flow with `Invitation.events`
+    - Share options: auth method, type and target
+    - Errors: InvitationError
+```
+```mdl
+page halo-guide-space: Space
+  Create spaces and manage their members.
+  section: HALO
+  route: /docs/halo/api/space/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Get the `Space.Service`, list spaces and get one by id
+    - Create a space and wait until it is ready
+    - List members, change a member's access and remove a member
+    - Share and join a space
+    - Export and import a space archive, and set EDGE replication
+    - Errors: SpaceError, and the Keyhive errors NotAuthorizedError, UnknownPrincipalError, InvalidSignatureError and MissingDependencyError
+```
+
+### Resources
+
+```mdl
+page halo-api-reference: API reference
+  Generated API reference for `@dxos/halo` and `@dxos/halo-react`.
+  section: HALO
+  route: /docs/halo/resources/api-reference/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to the generated reference for `@dxos/halo` and `@dxos/halo-react`; `@dxos/halo-adapter-client` gets none
+```
+```mdl
+page halo-glossary: Glossary
+  Every HALO term, defined once.
+  section: HALO
+  route: /docs/halo/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Identity, device, DID, invitation, auth method, authorization, recovery code, credential, Keyhive, member, access and space key
+    - Contact card, delegation, revocation, prekey, access level and group key
+```
+```mdl
+page halo-llms-txt: llms.txt
+  The HALO site map and full text for agents, in the llms.txt format.
+  section: HALO
+  route: /docs/halo/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/halo/llms.txt`, each HALO page with its summary and a link to its Markdown
+    - Links to `/halo/llms-full.txt`, every HALO page in one file
+```
+
+## PLEX
+
+PLEX builds apps from plugins. Composer is built on it and is the app the section's examples run
+in, so each page teaches the framework first and shows the result in Composer. The routes are under
+`/docs/plex/`.
+
+### Start here
+
+```mdl
+page app-framework-welcome: Overview
+  What PLEX is, how an app is made of plugins, and Composer as the app built on it.
+  section: PLEX
+  route: /docs/plex/overview/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - What PLEX is, in one screen: plugins made of modules that contribute capabilities, and an app that is the plugins it loads
+    - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
+    - What ECHO does under it: spaces, typed objects, sync between devices and people, and agents that query the same graph
+    - What a reader can build: a new object type with its own view, an operation, a panel, an integration
+    - Where to go next: Why PLEX?, Build with a coding agent, or the learning path
+```
+
+```mdl
+page why-plex: Why PLEX?
+  Why an app made of plugins, where a third-party plugin has the same powers as a built-in one.
+  section: PLEX
+  route: /docs/plex/why-plex/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - The pattern: a plugin fills a role in a view it did not write, and the app renders whatever answers
+    - Comparison: an app with a fixed core that outside code hooks into, against an app that is the plugins it loads
+    - Practical problems: extending a plugin you did not write, loading only what is used, one action for people and agents, data that syncs without plugin code
+    - What PLEX does not do: it does not store or sync data, and it is not a component library
+```
+
+```mdl
+page plex-build-with-agent: Build with a coding agent
+  Have Claude Code, Codex or Cursor build a plugin and load it into your Composer, from a prompt you can edit first.
+  section: PLEX
+  route: /docs/plex/build-with-a-coding-agent/
+  group: Start here
+  template: tutorial
+  status: spike
+  covers:
+    - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
+    - A picker above the prompt that fills it with one of four examples: World Clock, Expense splitter, Family tree and Tournament bracket [D-184]
+    - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
+    - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
+    - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
+    - What the reader does when the agent hands off: open Settings, then Plugins, click Enable under Dev Server, allow the browser's local-network prompt, and work through the agent's checklist
+```
+
+### Learning path
+
+```mdl
+page plex-the-plex-plugin: The PLEX plugin
+  What a plugin is, and the plugin the learning path builds, running in the plugin inspector.
+  section: PLEX
+  route: /docs/plex/learn/the-plex-plugin/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What a plugin is, in a paragraph: metadata and modules that contribute capabilities
+    - The finished Bookmarks plugin, running in the plugin inspector
+    - What each page of the path adds, and the file it goes in
+```
+
+```mdl
+page app-framework-create-plugin: Create a plugin
+  Start the tutorial plugin: its metadata, its first module and its translations.
+  section: PLEX
+  route: /docs/plex/learn/create-plugin/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Create the package and its `dx.config.ts` manifest
+    - Define the plugin and its metadata with `Plugin`
+    - Add a first module that contributes translations, and the activation event that loads it
+    - Start the plugin's dev server and click Load dev plugin, then see the Translations module and its strings in the inspector
+```
+
+```mdl
+page app-framework-define-type: Define a type
+  Give the plugin its own ECHO type and make it an object a person can create.
+  section: PLEX
+  route: /docs/plex/learn/define-type/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Declare the plugin's type with `Type`, linking to the ECHO Defining types page for the details
+    - Register the type with the app so it can create, list and name objects of it
+    - See the Schema and Create object modules in the inspector, and create an object of the new type
+```
+
+```mdl
+page app-framework-add-surface: Add a surface
+  Render the plugin's objects by contributing a surface.
+  section: PLEX
+  route: /docs/plex/learn/add-surface/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What a surface is, in one paragraph, linking to the Surfaces concept page
+    - Contribute an article surface that renders the new type
+    - Read and edit the object reactively in the component
+    - See the Surface module render the sample object in the inspector
+```
+
+```mdl
+page app-framework-add-operation: Add an operation
+  Give the plugin an action that the UI, the command palette and agents can run.
+  section: PLEX
+  route: /docs/plex/learn/add-operation/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Define an operation with its input and output schema
+    - Implement its handler and contribute it
+    - Write the handler as a short `Effect.gen`, since the operation API is Effect's
+    - Run it from the inspector's Operations module, and see the Skill module that hands it to the assistant
+```
+
+```mdl
+page app-framework-extend-app-graph: Extend the App Graph
+  Put the plugin's objects and actions into the app's navigation.
+  section: PLEX
+  route: /docs/plex/learn/extend-app-graph/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - What App Graph is, in one paragraph, linking to the App Graph concept page
+    - Contribute nodes for the plugin's objects
+    - Attach the operation from the previous page as an action on those nodes
+    - See the nodes and the action in the inspector's App Graph module
+```
+
+```mdl
+page plex-run-in-composer: Run it in Composer
+  Load the plugin from its dev server into Composer Preview, and use it there.
+  section: PLEX
+  route: /docs/plex/learn/run-in-composer/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - Sign in to Composer Preview, which loads plugins from a dev server; composer.space loads only its own
+    - Run the plugin's `vite` dev server, then open Settings, Plugins, and Enable under Dev Server, allowing the browser's local-network prompt
+    - Open a bookmark in the main area, and run Record visit from the command palette
+    - Have the assistant run the same operation from a chat with the Bookmarks skill
+```
+
+```mdl
+page app-framework-publishing: Publishing a plugin
+  Publish the finished plugin to your private registry, where Composer lists it only to you.
+  section: PLEX
+  route: /docs/plex/publishing-plugins/
+  group: Learning path
+  template: tutorial
+  status: spike
+  covers:
+    - How the private registry works, in a paragraph: hosted by DXOS, owned by your identity, no AT Protocol
+    - Install the `dx` CLI and log in to your DXOS identity, or use `DX_API_TOKEN`
+    - Describe the plugin in `dx.config.ts` and publish it with `dx registry publish --private`
+    - Confirm it in Composer's registry and publish an update
+    - A note that an experimental public registry exists, with a Discord link for anyone who wants to try it
+```
+
+### Core concepts
+
+```mdl
+page app-framework-anatomy: Plugins and modules
+  A plugin is metadata plus modules, and an app is the plugins it loads.
+  section: PLEX
+  route: /docs/plex/concepts/plugins/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A plugin is metadata plus modules; `Plugin.define`, `Plugin.addModule` and `Plugin.make` build one
+    - The `dx.config.ts` manifest, which describes the plugin for the registry and lists its modules
+    - Inline and lazy modules (`Capability.inlineModule`, `Capability.lazyModule`), and why a module's code loads only when it activates
+    - A diagram of the Bookmarks plugin's modules, their events and their capabilities
+```
+
+```mdl
+page plex-capabilities: Capabilities
+  Typed contributions that modules provide and request, which is how plugins extend each other.
+  section: PLEX
+  route: /docs/plex/concepts/capabilities/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A capability is a typed tag made with `Capability.make` or `Capability.makeSingleton`, and the values modules contribute under it
+    - Contributing and requesting: `Capability.get`, `getAll`, `waitFor` and `atom`
+    - `provides` and `requires`, which the compiler checks against what a module contributes and reads
+    - How one plugin extends another by contributing to a capability the other requests
+    - Capabilities that arrive after startup, when a module activates later or a plugin is added
+```
+
+```mdl
+page plex-activation: Activation
+  When a module runs: the events that activate it and the order the plugin manager follows.
+  section: PLEX
+  route: /docs/plex/concepts/activation/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Activation events, and combining them with `ActivationEvent.oneOf` and `allOf`
+    - The `Startup` and `Idle` events, and the events built-in capabilities fire, such as `SurfacesRequested`
+    - How the plugin manager orders activation, with events fired before and after a module activates
+    - Lazy loading: a module whose event never fires never loads
+    - Adding and removing plugins while the app runs
+```
+
+```mdl
+page app-framework-operations: Operations
+  Named, typed actions that the UI, the command palette and agents all run the same way.
+  section: PLEX
+  route: /docs/plex/concepts/operations/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An operation is a schema-typed action with a handler, defined once and invoked from anywhere
+    - Why the UI and agents share them: one definition gives a button, a command and an agent tool
+    - How handlers are contributed and resolved, and the operation invoker that runs them
+    - Typed errors, and undo through `UndoMapping`
+    - Skills (`AppCapabilities.SkillDefinition`), which give operations to the assistant as tools
+    - The finished Bookmarks plugin's Operations module in the inspector
+```
+
+```mdl
+page app-framework-surfaces: Surfaces
+  How the framework decides which component renders an object in a given place.
+  section: PLEX
+  route: /docs/plex/concepts/surfaces/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A surface is a named place in the UI (article, section, card, and so on) that plugins fill
+    - A table of the standard roles and what each one is given
+    - How a surface contribution matches the data it is given, and how competing contributions are ordered
+    - How one plugin renders inside another plugin's surface
+    - Limits: what a surface component may not assume about its container
+    - The finished Bookmarks plugin's Surface module in the inspector, and a link to the Surface API page
+```
+
+### Guides
+
+```mdl
+page plex-guide-effect: Effect
+  Use Effect services and layers from a plugin's modules.
+  section: PLEX
+  route: /docs/plex/guides/effect/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Read a capability as an Effect service with `Capability.Service`
+    - Contribute layers for operation services through `Capabilities.LayerSpec`
+    - Declare the services an operation needs in its `services`, and yield them in the handler
+```
+
+```mdl
+page plex-guide-testing: Testing
+  Test a plugin's modules without an app, with the App Framework test harness.
+  section: PLEX
+  route: /docs/plex/guides/testing/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Start a headless app with the plugin under test, with `Harness.createComposerTestApp` from `@dxos/plugin-testing`
+    - Fire activation events and read the capabilities that result
+    - Invoke an operation and check its result
+```
+
+```mdl
+page plex-guide-debugging: Debugging
+  Find out why a module did not activate or a contribution did not show.
+  section: PLEX
+  route: /docs/plex/guides/debugging/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Load the plugin from its dev server into the docs inspector, and read each module's status and error [D-147]
+    - The load errors the inspector names, and what each one means
+    - Debug the plugin in Composer Preview with the browser's devtools
+```
+
+```mdl
+page app-framework-guide-app-capabilities: App capabilities
+  The capabilities a workspace app such as Composer adds for plugins to contribute, from the App Toolkit.
+  section: PLEX
+  route: /docs/plex/guides/app-capabilities/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Why these are app capabilities, from `@dxos/app-toolkit`, and not part of the framework
+    - A tour of `AppCapabilities` in groups (layout, graph, settings, schema, agents and files), with one table of every capability
+    - Translations: contribute resources by namespace and language, the keys the app reads for a type, and read a string from a component
+    - The standard surface roles the app renders
+    - When to use an app capability and when to declare a new capability
+```
+
+```mdl
+page plex-guide-settings-and-state: Settings and state
+  Keep a plugin's settings, which sync, apart from its device state, which does not.
+  section: PLEX
+  route: /docs/plex/guides/settings-and-state/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Contribute synced settings with a schema, and the settings form the app renders from it
+    - Keep device-only values in a State capability keyed `${key}.state`
+    - Read and write both from a component
+```
+
+```mdl
+page app-framework-guide-app-graph: App Graph
+  The graph of nodes and actions that an app's navigation and menus are built from, and how a plugin adds to it.
+  section: PLEX
+  route: /docs/plex/guides/app-graph/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - What a node is, how nodes connect, and a node's identity as a `GraphPath`
+    - How App Graph expands lazily as the reader navigates, and what `AppGraphRetention` keeps
+    - Write a builder extension that contributes nodes for a type, and attach actions to nodes
+    - How the navigation tree, menus and the command palette read actions from it
+    - Expand and read the graph from a component
+    - The finished Bookmarks plugin's App Graph module in the inspector
+```
+
+```mdl
+page app-framework-guide-react: React
+  The React hooks for plugins.
+  section: PLEX
+  route: /docs/plex/guides/react/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Read capabilities from a component
+    - Invoke operations from a component
+    - Read plugin settings and translations
+    - The reactivity rules a plugin component follows
+```
+
+```mdl
+page plex-guide-using-echo: ECHO
+  Register a plugin's ECHO types with the app, so it can create, name and list their objects.
+  section: PLEX
+  route: /docs/plex/guides/using-echo/
+  group: Guides
+  template: namespace
+  status: spike
+  covers:
+    - Register ECHO types with the `Schema` capability
+    - Annotate a type with `AppAnnotation` so the app can name and list its objects
+    - Create objects from a plugin, and the create-object entry that adds them to the app's menus
+    - Links to ECHO's Defining types for the types themselves
+```
+
+### API
+
+One page per namespace, each a readable tour with compiled examples that links into the API reference.
+Snippets come from the Bookmarks tutorial modules [D-185].
+
+```mdl
+page app-framework-guide-plugin: Plugin
+  Define a plugin and its modules.
+  section: PLEX
+  route: /docs/plex/guides/plugin/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Define a plugin with its metadata
+    - Add modules and choose their activation events
+    - Contribute capabilities from a module
+    - Describe the plugin in `dx.config.ts`
+```
+
+```mdl
+page app-framework-guide-capability: Capability
+  Declare, contribute and request capabilities, including the built-in ones.
+  section: PLEX
+  route: /docs/plex/guides/capability/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Declare a new capability type
+    - Contribute an implementation and request all implementations
+    - The built-in capabilities in `Capabilities` that most plugins use
+    - React to capabilities that arrive after startup
+```
+
+```mdl
+page app-framework-guide-activation-event: ActivationEvent
+  Declare activation events and use the built-in ones.
+  section: PLEX
+  route: /docs/plex/guides/activation-event/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Declare an activation event
+    - Fire events before and after a module activates to order dependencies
+    - The built-in events in `ActivationEvents` and when each fires
+```
+
+```mdl
+page plex-guide-plugin-manager: PluginManager
+  Create the plugin manager, and add, enable and remove plugins.
+  section: PLEX
+  route: /docs/plex/guides/plugin-manager/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Create a plugin manager with its plugins and the ones enabled at start
+    - Add, enable, disable and remove a plugin while the app runs
+    - Load a plugin from a URL with a plugin loader
+    - Read which plugins and modules are active
+```
+
+```mdl
+page app-framework-guide-operation: Operation
+  Define operations, implement their handlers and invoke them.
+  section: PLEX
+  route: /docs/plex/guides/operation/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Define an operation with input and output schema, imported from `@dxos/compute/Operation`
+    - Implement handlers and group them with `OperationHandlerSet`
+    - Invoke an operation and handle its typed errors
+    - The built-in `LayoutOperation` operations for opening, closing and focusing items
+```
+
+```mdl
+page app-framework-guide-surface: Surface
+  Contribute surfaces and render other plugins' surfaces.
+  section: PLEX
+  route: /docs/plex/guides/surface/
+  group: API
+  template: namespace
+  status: spike
+  covers:
+    - Contribute a surface with `AppSurface` for an object type
+    - Match on data and set the order among competing surfaces
+    - Render a nested surface from a component
+    - The standard surface roles and what each one expects
+```
+
+### Resources
+
+```mdl
+page app-framework-api-reference: API reference
+  Generated API reference for PLEX.
+  section: PLEX
+  route: /docs/plex/resources/api-reference/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to the generated reference for `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/app-graph` and `@dxos/compute`
+```
+
+```mdl
+page app-framework-glossary: Glossary
+  Every Composer and PLEX term, defined once.
+  section: PLEX
+  route: /docs/plex/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Action, activation event, annotation, App Graph, App Toolkit, builder extension, capability, filter, handler, module, node, operation, operation invoker, plugin, plugin manager, role, schema registration and surface
+```
+
+```mdl
+page plex-llms-txt: llms.txt
+  The PLEX site map and full text for agents, in the llms.txt format.
+  section: PLEX
+  route: /docs/plex/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/plex/llms.txt`, each PLEX page with its summary and a link to its Markdown
+    - Links to `/plex/llms-full.txt`, every PLEX page in one file
+```
+
+### Later
+
+These pages are in scope but not in the sidebar yet.
+
+```mdl
+page app-framework-user-guide: Using Composer
+  Spaces and sharing, the assistant, adding plugins, the quick palette, settings and editing.
+  section: PLEX
+  route: /docs/plex/user-guide/
+  group: Start here
+  template: concept
+  status: later
+  covers:
+    - Spaces and sharing
+    - Working with the assistant
+    - Adding and removing plugins
+    - The quick palette, settings and editing documents
+```
+
+```mdl
+page app-framework-cli: The dx CLI
+  The command-line tool for profiles, functions and publishing.
+  section: PLEX
+  route: /docs/plex/tools/cli/
+  group: Guides
+  template: namespace
+  status: later
+  covers:
+    - Install the CLI and set up a profile
+    - Link the CLI to a Composer identity
+    - The commands a plugin author uses
+```
+
+## Features
+
+```mdl
+feat F-1: Build and delivery
+
+  req F-1.1:
+    when: the site is built
+    then: the output is static files, built by Astro with Starlight, with no server code
+
+  req F-1.2:
+    when: a reader searches
+    then: Pagefind answers from an index built with the site, with no third-party service
+
+  req F-1.3:
+    when: a reader moves between pages in a browser that supports it
+    then: a cross-document view transition keeps the header and sidebar in place, with no client router
+
+  req F-1.4:
+    when: the site is deployed
+    then: it ships in the dxos.org build: the landing page at `/echo`, the written and planned pages under
+          `/docs/echo`, and the agent routes under `/echo`
+```
+
+```mdl
+feat F-2: Brand and visual style
+
+  req F-2.1:
+    when: the site needs a color
+    then: it reads a CSS variable generated from the brand palette, never a literal
+
+  req F-2.2:
+    when: text renders
+    then: headings and body use DM Sans, labels and code use DM Mono, and Sharp Sans appears only
+          in a logotype
+
+  req F-2.3:
+    when: the site shows a logo, icon, font or background
+    then: the file comes from `@dxos/brand`, and is not copied into this package
+
+  req F-2.4:
+    when: a surface renders
+    then: it is flat, with a ground, one tinted surface and hairlines; no surface has a shadow,
+          a raised edge or an inset edge
+
+  req F-2.5:
+    when: a code sample renders
+    then: it sits on the tinted surface inside a hairline frame, with numbered lines and a rule beside
+          the numbers except in a side-by-side comparison, and a titled sample shows its title as a tab; a syntax theme colors it with a
+          contrast of at least 4.5:1 for every token, and long lines do not wrap: the sample scrolls sideways; the
+          samples are formatted to 80 columns, and where the window allows, 80 columns fit without scrolling, even
+          inside a numbered step
+
+  req F-2.13:
+    when: a reader is not pointing at a token in a code sample
+    then: the token carries no underline; its compiler hover card shows on hover
+
+  req F-2.6:
+    when: a table renders
+    then: every row shares fixed column tracks, and content wraps inside its track rather than
+          widening a column
+
+  req F-2.7:
+    when: single-line interface text would overflow (nav item, breadcrumb, chip)
+    then: it does not wrap; it truncates with an ellipsis
+
+  req F-2.8:
+    when: the reader's system or theme picker selects dark
+    then: the Graphite ground applies, with cyan replacing blue as the accent
+
+  req F-2.9:
+    when: the ECHO mark renders on a light ground
+    then: it uses the ECHO product hue; on a dark ground it uses the foreground color, since the
+          product hue falls below 3:1 there
+
+  req F-2.10:
+    when: the reader prefers reduced motion
+    then: hover and view transitions do not animate
+
+  req F-2.11:
+    when: the landing page renders
+    then: its hero shows the ECHO background art from `@dxos/brand`, centred on the art's icon
+
+  req F-2.12:
+    when: a list renders
+    then: its text and markers set `tabular-nums` and stay in DM Sans; the brand's DM Sans has no
+          tabular figures, so digits remain proportional until the font gains them
+
+  req F-2.14:
+    when: a docs page with a table of contents renders in a window too narrow to hold the sidebar, a
+          full-width text column and the table of contents side by side
+    then: the table of contents folds into the bar above the page, and the text column keeps its full width
+
+  req F-2.15:
+    when: a docs page renders in a window too narrow to hold the sidebar and a full-width text column side by
+          side
+    then: the sidebar folds behind the menu button in the header, as on a phone, and the text column keeps its
+          full width
+
+```
+
+```mdl
+feat F-3: Checked code samples
+
+  req F-3.1:
+    when: a page shows code longer than one line
+    then: the code comes from a file in the snippets directory, included by region
+
+  req F-3.2:
+    when: the site is built or typechecked
+    then: every snippet compiles against the workspace packages of this commit, so an API change
+          that breaks a sample fails the build
+
+  req F-3.3:
+    when: a snippet prints a result in a comment
+    then: a test runs that snippet against an in-memory database and asserts the result
+
+  req F-3.4:
+    when: a reader hovers an identifier in a sample on a docs page of a site build
+    then: its compiler-inferred type appears
+
+  req F-3.5:
+    when: the dev server renders a page
+    then: samples show their region without compiling, unless `DOCS_TWOSLASH=1` turns compiling on; a build compiles
+          unless `DOCS_TWOSLASH=0` turns it off
+
+  req F-3.6:
+    when: the dev server first renders a page that quotes code, such as `/echo`
+    then: it answers without compiling the tutorial app or the demos; those compile when the browser loads them
+```
+
+```mdl
+feat F-4: Accuracy
+
+  req F-4.1:
+    when: a page states a guarantee about ECHO's behavior
+    then: it links the spec item that states it, as `org.dxos.echo.query#F-2`
+
+  req F-4.2:
+    when: a reference page lists a member
+    then: the member is an export of the module in this commit; the reference is generated from
+          the TypeScript declarations, not from the spec's `module` blocks, which have drifted
+          from the code
+
+  req F-4.3:
+    when: the spec's own review marks a cited item as diverged or partial
+    then: the page's Limits section says so
+```
+
+```mdl
+feat F-5: The spec drives the site map
+
+  req F-5.1:
+    when: the docs are built
+    then: the sections, groups, order and labels of the sidebar come from the `page` blocks in this document
+
+  req F-5.2:
+    when: a `page` block has status `planned`
+    then: the page exists as a stub that shows its summary and its `covers:` list, with a planned badge in the
+          sidebar
+
+  req F-5.3:
+    when: a `page` block has status `spike` or `done`
+    then: a content file exists at its route, and the build fails if it does not
+
+  req F-5.4:
+    when: a `page` block has status `later`
+    then: the page is not in the sidebar and has no stub
+
+  req F-5.5:
+    when: a page is written or regenerated
+    then: it covers every item in its `covers:` list, within the scope of its summary
+```
+
+```mdl
+feat F-6: Reading by agents
+
+  req F-6.1:
+    when: an agent fetches `/echo/llms.txt`, `/halo/llms.txt` or `/plex/llms.txt`
+    then: it receives that section's site map, each page with its summary and link, in the llms.txt format; the
+          matching `llms-full.txt` has every page of the section in one file
+
+  req F-6.3:
+    when: a reader looks for the llms.txt files
+    then: each section's Resources group has an llms.txt page that links its two files; the site footer does not
+          list them
+
+  req F-6.2:
+    when: an agent fetches a written page's route with `.md` appended
+    then: it receives the page as Markdown, with snippet includes replaced by their code
+
+  req F-6.4:
+    when: a reader opens a Build with a coding agent page
+    then: it shows a prompt they can edit, prefilled for that section, and buttons that open it in Claude Code,
+          Codex or Cursor, or copy it; each puts the section's fixed lines, which the page does not show, before the
+          reader's text; the three open buttons look alike, each in the palette color nearest its agent's brand; the
+          prompt is prefilled in the agent, not sent
+```
+
+```mdl
+feat F-7: Relationship to dxos.org
+
+  req F-7.1:
+    when: a reader is on any dxos.org docs page
+    then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
+          Plugins, Blog, Docs); the footer links the same pages, the ECHO, HALO and PLEX docs,
+          GitHub and Discord
+
+  req F-7.2:
+    when: a reader looks for ECHO material on dxos.org
+    then: every ECHO page is a page of this site map; no other ECHO guide remains
+
+  req F-7.3:
+    when: a dxos.org Webflow page renders
+    then: its nav and footer link `/echo`, and the home page's ECHO card links `/echo`
+
+  req F-7.4:
+    when: a reader is on `/echo`
+    then: it has the dxos.org Webflow nav and footer, with no docs header, search or sidebar, and its
+          actions lead into `/docs/echo`; the Webflow styles sit in a cascade layer above the theme's global
+          reset and below its base, component and utility layers, and stop at each embedded component, so the
+          page keeps its typography and code samples and embedded components keep their styling
+
+  req F-7.5:
+    when: a reader is on `/echo`
+    then: it shows live demos, in order: a collaborative editor, a table and board over one data set, a graph
+          explorer, and an architecture diagram; they share two peers, Alice and Bob, and one space in the page;
+          each shows one or both peers, and has a switch per peer that takes it offline
+
+  req F-7.6:
+    when: a reader opens `/echo`
+    then: the demos start as the page loads, and each shows its content as soon as that content is in the space,
+          without waiting for the other demos
+
+  req F-7.7:
+    when: a reader is on `/echo`
+    then: the demos and the architecture diagram are dark, like the page, whatever theme the reader's system
+          prefers
+
+  req F-7.8:
+    when: a reader reaches a demo on `/echo` before it has loaded
+    then: the demo's place shows a placeholder of the demo's size that says it is loading, so the page does not
+          shift when the demo arrives
+```
+
+```mdl
+feat F-8: Live playground
+
+  desc: |
+    A browser playground runs a real ECHO database in the page, with two peers side by side, so a
+    reader can make a conflicting edit and watch the merge. Planned; the spike does not build it.
+
+  req F-8.1:
+    when: a reader edits a sample in the playground
+    then: the code runs against an in-memory database in the page, with no server
+
+feat F-9: Diagrams as canvas applications
+
+  desc: |
+    Each diagram is a stand-alone `plugin-canvas` application. `/echo` shows Composer's architecture
+    this way; the docs pages still render their diagrams as static images.
+
+  req F-9.1:
+    when: a page shows a diagram
+    then: the diagram is a stand-alone `plugin-canvas` application
+
+feat F-10: Live schema forms
+
+  desc: |
+    Defining types shows the live `react-ui-form` form the tutorial app derives from each of its types.
+
+  req F-10.1:
+    when: a reader opens the section on Schema
+    then: it shows a live form rendered with `react-ui-form`
+
+feat F-11: Graph visualizations
+
+  desc: |
+    A section on the graph shows visualizations from `react-ui-graph` and `plugin-explorer`.
+    `/echo` shows the `plugin-explorer` graph of a demo space; the tutorial app draws its records and references
+    with `react-ui-graph`.
+
+  req F-11.1:
+    when: a reader opens the section on the graph
+    then: it shows visualizations from `react-ui-graph` and `plugin-explorer`
+
+feat F-12: Real-time editor demo
+
+  desc: |
+    A section on real time shows a `react-ui-editor` demo. `/echo` shows it with two peers editing one
+    document; the docs section is planned.
+
+  req F-12.1:
+    when: a reader opens the section on real time
+    then: it shows a demo built with `react-ui-editor`
+
+feat F-13: Chat and hierarchical feeds demo
+
+  desc: |
+    A demo shows chat and hierarchical feeds with `plugin-assistant`. Planned; the spike does not
+    build it.
+
+  req F-13.1:
+    when: a reader opens the demo
+    then: it shows chat and hierarchical feeds with `plugin-assistant`
+
+feat F-14: Upfront motivation
+
+  desc: |
+    The site says why ECHO exists before it says how ECHO works.
+
+  req F-14.1:
+    when: a reader opens the landing page or Why ECHO?
+    then: before any other argument, it gives the motivation for agents and agent memory, the rationale
+          for being introspectable, and the role of tying together data from external sources, and it
+          says that ECHO is the data model that apps (plugins) code against
+
+  req F-14.2:
+    when: the motivation shows code
+    then: the sample is checked like every other sample [F-3], and each claim about an agent names the
+          skill or operation that does it
+```
+
+```mdl
+feat F-15: The tutorial app
+
+  desc: |
+    The learning path builds one app: a contact book of organizations, the people who work at them and the
+    events they attend. Each page explains what its steps rely on, has the reader build one piece, and ends
+    with the app as it stands, running in the page.
+
+  req F-15.1:
+    when: a reader finishes a learning-path page that builds part of the app
+    then: the page shows the app as it stands after that page, live, in an embed that runs an in-memory client
+          in the page with no server
+
+  req F-15.2:
+    when: a page shows the app's ECHO code
+    then: the code is quoted by region from the module the embed imports, so the code on the page is the code
+          that runs
+
+  req F-15.3:
+    when: a reader opens Sharing a space
+    then: its embed runs two peers in one space, each with a switch that takes it offline; every other embed runs one peer
+
+  req F-15.4:
+    when: an embed renders on a docs page
+    then: it follows the page's light or dark theme, and the page outside the embed keeps its own styles
+
+  req F-15.5:
+    when: a reader moves between docs pages
+    then: a page without an embed loads none of the embed's styles, so the sidebar and page paint at once instead
+          of flashing blank while those styles load
+
+  req F-15.6:
+    when: a learning-path page shows ECHO code
+    then: the code is a region of one of the tutorial app's own modules, one module per page (`client.ts`,
+          `schema.ts`, `queries.ts`, `records.ts`, `sharing.ts`), which the app calls; no page quotes a script the
+          app does not run
+
+  req F-15.7:
+    when: a reader opens The ECHO object
+    then: it shows the finished app, live, with a Fork on StackBlitz button that opens the finished app as a new
+          StackBlitz project in its own tab
+
+  req F-15.8:
+    when: a reader opens Installation
+    then: it has a Follow along in StackBlitz button that opens the starter in its own tab: the tutorial app with
+          every region a learning-path page quotes replaced by a TODO naming that page; the starter boots before
+          anything is filled in, and the app shows which pieces are done and which page writes the next one
+
+  req F-15.9:
+    when: the docs build
+    then: the finished app and the starter are generated from the same modules the embeds import, with a
+          `package.json` that pins `@dxos/*` to one pkg.pr.new commit; nothing is kept in a second copy
+```
+
+```mdl
+feat F-16: Docs sections
+
+  req F-16.1:
+    when: a reader opens the docs
+    then: there are three sections, ECHO, HALO and PLEX, in that order in the topic switcher
+
+  req F-16.2:
+    when: a reader looks for HALO
+    then: HALO is its own section, and its pages are no longer a group of the ECHO section
+
+  req F-16.3:
+    when: a page in the PLEX section introduces an idea
+    then: it presents the PLEX idea first and shows it in Composer, the app built on the framework, and
+          links to the ECHO page for each ECHO idea it uses
+
+  req F-16.4:
+    when: the docs are built
+    then: they do not document EDGE or the sync services
+
+  req F-16.5:
+    when: a reader opens `/docs/`
+    then: they land on ECHO's Overview page; there is no separate docs home page
+
+  req F-16.7:
+    when: a reader follows a redirected docs URL, such as `/docs` or an old `/docs/composer/` page
+    then: the server answers with a 301 to the new page, so no "Redirecting from" page shows in between; links in the
+          site's own navigation point at the destination directly
+
+  req F-16.6:
+    when: a reader looks at the topic switcher
+    then: each section shows a DXOS brand mark, the same ones the brand package and the studio site use: ECHO's for
+          ECHO, HALO's for HALO, and KUBE's for PLEX; each mark has no box and takes its label's color, the accent
+          color for the current section
+
+  req F-16.8:
+    when: a reader opens a section's root page
+    then: the page is titled Overview in the sidebar and the browser tab, and it opens with a hero that shows the
+          section's product name in large type as the page's only heading, over the section's brand background, with
+          a one-line tagline under it; at every page width the heading stays on one line and the section's mark in the
+          background stays whole
+```
+
+```mdl
+feat F-17: Same shape in both sections
+
+  req F-17.1:
+    when: a section is built
+    then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides, any groups of its own and
+          Resources, in that order
+
+  req F-17.2:
+    when: a page is written
+    then: it follows the template its `page` block names
+
+  req F-17.3:
+    when: a learning path is built
+    then: its pages build one thing, the ECHO tutorial app or the PLEX tutorial plugin, and each page ends with
+          it as it stands after that page; HALO's learning path continues the ECHO tutorial app, adding people and
+          devices to it
+```
+
+```mdl
+feat F-18: API by namespace
+
+  req F-18.1:
+    when: a section's API group is built
+    then: it has one page per core API namespace, written with the `namespace` template; the framework guides,
+          React among them, go in the Guides group
+
+  req F-18.2:
+    when: a reader wants every member of a namespace
+    then: the guide links to the generated API reference rather than repeating it
+```
+
+```mdl
+feat F-19: The plugin inspector
+
+  desc: |
+    A PLEX app that loads one plugin and shows what the framework could load and create from it. It is built
+    from plugins, its layout included, and runs on an in-memory client, so it needs no account or server.
+
+  req F-19.1:
+    when: the inspector loads a plugin
+    then: a header names the plugin and where it came from, and a sidebar lists its modules in the order the
+          learning path adds them, each with its status: active, waiting on its activation event, or failed with
+          the reason; a kind the plugin does not have yet is listed as not added
+
+  req F-19.3:
+    when: a reader selects a module
+    then: the main area shows that module working: translations as a table, a type's fields, Create for each
+          object the plugin can create, each surface rendered with the sample object, each operation run from a
+          form built from its input schema with its result, a skill with the operations it gives the assistant
+          (no model called), and the branches of App Graph that lead to the plugin's nodes, with those nodes
+          marked
+
+  req F-19.6:
+    when: the reader creates or picks an object
+    then: it is the sample object every module shows, chosen in the header
+
+  req F-19.7:
+    when: a learning-path page embeds the inspector
+    then: the embed loads nothing until the reader clicks Load dev plugin, which fetches
+          `http://localhost:3967/manifest.json` with the loader Composer uses; Reload loads it again after an
+          edit, and a failed load says whether the server was unreachable, the manifest was invalid, or a module
+          failed
+
+  req F-19.8:
+    when: a page embeds the inspector with the modules that page adds
+    then: a "This page adds" box checks each against the loaded plugin, so the reader sees what is still missing
+
+  req F-19.9:
+    when: the docs site is built
+    then: the inspector page carries an import map of the shared `@dxos/*` packages, as Composer does, so the
+          reader's plugin uses the page's copies; the reader's package pins `@dxos/*` to the version the docs
+          were built from
+
+  req F-19.5:
+    when: the inspector is published
+    then: it is the package `@dxos/plugin-inspector`
+```
+
+```mdl
+feat F-20: The tutorial plugin
+
+  desc: |
+    The PLEX learning path builds one plugin, Bookmarks, as ECHO's builds one app ([F-15]). Each page writes one
+    capability file and one region of `dx.config.ts`, and ends with the plugin as it stands, live in the inspector.
+
+  req F-20.1:
+    when: a PLEX learning-path page shows code
+    then: the code is a region of the module the inspector embed loads, one capability module per page
+
+  req F-20.2:
+    when: a reader finishes a learning-path page that builds part of the plugin
+    then: the page embeds the inspector, the reader loads their own plugin into it from its dev server, and no
+          page before Run it in Composer needs Composer; The PLEX plugin alone loads the finished Bookmarks
+          plugin by itself
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: A sample that stops compiling fails the build.
+  given: a snippet that calls `Obj.make`
+  when: the signature of `Obj.make` changes incompatibly
+  then: the site's build and typecheck fail, and the typecheck names the snippet
+```
+
+```mdl
+scenario T-2: A planned page is visible, and marked.
+  given: a `page` block with status `planned`
+  when: the site is built
+  then: the sidebar shows the page with a planned badge, and its route renders the stub template
+```
+
+```mdl
+scenario T-3: Both themes meet the contrast floor.
+  given: the brand palette and syntax themes
+  when: the theme script runs
+  then: body text on the ground is at least 7:1, muted text and code tokens are at least 4.5:1, and
+        the script fails otherwise
+```
+
+```mdl
+scenario T-4: A phone can read the site.
+  given: a 375 pixel wide viewport
+  when: any spike page renders
+  then: the page does not scroll sideways, and every line of a code sample is visible without scrolling
+```
+
+```mdl
+scenario T-5: An agent gets the code, not the include.
+  given: a page that includes a snippet
+  when: an agent fetches the page's `.md` route
+  then: the body contains the snippet's code and no `<Snippet` tag
+```
+
+## Changelog
+
+```mdl
+decision D-1: ECHO has a detailed technical developer website.
+  date: 2026-11-04
+  by: user:richburdon
+```
+
+```mdl
+decision D-2: The site complements the dxos.org website, which is coded in the dxos repository.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-7]
+```
+
+```mdl
+decision D-3: The site uses the design system from the `dxos/studio` repository.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2]
+```
+
+```mdl
+decision D-4: The site uses the state of the art.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-1, F-3, F-6]
+```
+
+```mdl
+decision D-5: The site's content sections are similar to the Effect page "Why Effect?".
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [why-echo]
+  source: https://effect.website/docs/v4/getting-started/why-effect
+```
+
+```mdl
+decision D-6: The site is a new private package built with Astro and Starlight, apart from the dxos.org build. Fills in [D-1] and [D-2].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1]
+  why: |
+    The dxos.org build already runs Astro and Starlight, so the repo's catalog, moon tasks and
+    deploy path apply unchanged. A separate package lets the theme replace Starlight's look without
+    touching the Webflow pages on dxos.org.
+  rejected:
+    - New pages inside the dxos.org build: its theme and sidebar serve Composer and HALO too.
+    - A custom Astro docs shell: it would rebuild search, sidebar, table of contents and pagination.
+```
+
+```mdl
+decision D-7: Depth marks what can be pressed; reading material stays flat. Fills in [D-3].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.3, F-2.4]
+  why: The kit is tuned for slides and social media. Soft shadows behind long text and tables lower contrast and add noise.
+  rejected:
+    - Neumorphism on every surface: paragraphs in raised cards read as slides.
+    - The brand kit's flat hairline grid alone: it drops the kit's most distinct feature.
+```
+
+```mdl
+decision D-8: Accent stays the kit's blue in light and cyan in dark; the ECHO product hue marks only the logo. Fills in [D-3].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.8, F-2.9]
+  why: The product hue `#96254f` has too little contrast on the dark ground to carry links.
+```
+
+```mdl
+decision D-9: Samples compile against the workspace, and hover types are a separate requirement. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3]
+  why: The ECHO pages on dxos.org still describe `@dxos/client` flows that have moved, so correctness has to be mechanical.
+```
+
+```mdl
+decision D-10: The reference is generated from TypeScript declarations, not from the `module` blocks of `org.dxos.echo`. Fills in [D-1].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.2]
+  why: The review of `org.dxos.echo` records members its `module` blocks list that the code lacks, such as `Obj.getDXN`.
+```
+
+```mdl
+decision D-11: The `page` blocks of this spec generate the sidebar and the planned stubs. Fills in [D-1].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5]
+  why: The plan is then visible in the running site, and the spec cannot drift from the navigation.
+```
+
+```mdl
+decision D-12: The site map follows Effect's split of start here, learning path and core concepts, and adds guides, internals and reference. Fills in [D-5].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [why-echo]
+  why: ECHO readers need the sync and query internals that Effect's docs have no counterpart for.
+```
+
+```mdl
+decision D-13: Agents read the site through `/llms.txt` and a Markdown route per page. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6]
+  why: Coding agents are a main reader of developer docs, and rendered HTML costs them more to read.
+```
+
+```mdl
+question Q-1: Where does the site live?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4]
+  options:
+    - echo.dxos.org: its own subdomain, as this spec assumes.
+    - dxos.org/echo: a path under the main site, which needs a route in the dxos.org Worker.
+```
+
+```mdl
+question Q-2: What happens to the ECHO pages on dxos.org?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2]
+  options:
+    - Redirect: each page redirects to its replacement once that page ships.
+    - Remove now: the pages are stale, so remove them and link the new site.
+    - Keep: both stay, and dxos.org's pages get a notice.
+```
+
+```mdl
+question Q-3: How do the studio tokens stay in sync?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.1]
+  options:
+    - Pinned copy: this package keeps a copy with its source commit, updated by hand, as the spike does.
+    - Move to `@dxos/brand`: the tokens move into this repo, and studio mirrors them as it mirrors the brand assets.
+```
+
+```mdl
+question Q-4: Is the live playground in the first release?
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8]
+  options:
+    - After launch: ship the written docs first.
+    - First release: build it before launch, since a merge is easier to show than to describe.
+```
+
+```mdl
+decision D-14: The site does not use the neumorphic design system. It uses only the logos and other brand assets.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-3
+  affects: [F-2]
+```
+
+```mdl
+decision D-15: Surfaces are flat, with a ground, one tinted surface and hairlines. Fills in [D-14].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-7
+  affects: [F-2.4, F-2.5]
+  why: With depth gone, the brand book's hairline grid is the remaining structure in the DXOS assets.
+```
+
+```mdl
+decision D-16: "Other brand assets" means the `@dxos/brand` logos, icons, fonts and background art, and the brand book's palette. Fills in [D-14].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-8
+  affects: [F-2.1, F-2.3, F-2.8, F-2.9, F-2.11]
+  why: A page still needs colors. Blue on Paper and cyan on Graphite are the brand book's values; the ECHO product hue has too little contrast on Graphite to carry links, so it marks only the logo and the art.
+```
+
+```mdl
+decision D-17: Code samples wrap long lines instead of scrolling. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5, T-4]
+  why: A signature cut off at the right edge hides the part of a sample the reader came for, in side-by-side comparisons above all.
+```
+
+```mdl
+decision D-18: No token copy exists to sync, since the palette is a small file in this package.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  answers: Q-3
+  why: [D-14] removes the studio token module, which is what the question was about.
+```
+
+```mdl
+decision D-19: Expressive Code's Twoslash plugin compiles each sample at build time and renders its hover types. Fills in [D-4].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.2, F-3.4]
+  why: One step then gives both the type check and the hover cards, and each sample keeps its context through a cut marker, so a page shows only its region.
+  rejected:
+    - Hand-written hover text: it goes stale the way the current ECHO docs have.
+```
+
+```mdl
+decision D-20: Lists use tabular numerals.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2.12]
+```
+
+```mdl
+decision D-21: List numbers stay in DM Sans, without a switch to DM Mono to align them.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2.12]
+```
+
+```mdl
+decision D-22: The site lives at dxos.org/echo.
+  date: 2026-11-04
+  by: user:richburdon
+  answers: Q-1
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-23: Routes sit directly under `/echo`, with no `docs` segment, and the landing page is `/echo/`. Fills in [D-22].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4, welcome]
+  why: `/echo/docs/why-echo` repeats what the path already says.
+```
+
+```mdl
+decision D-24: The site lives at docs.dxos.org/echo.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-22
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-25: Diagrams are stand-alone `plugin-canvas` applications.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-9]
+```
+
+```mdl
+decision D-26: Code blocks use a style similar to the blocks on effect.website.
+  date: 2026-11-04
+  by: user:richburdon
+  source: https://effect.website/blog/module-of-the-week/rcmap
+  affects: [F-2.5]
+```
+
+```mdl
+decision D-27: Take the frame, file tab, numbered gutter, spacing and token color roles; keep DM Mono and no shadow. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5, F-2.2, F-2.4]
+  why: [F-2.2] and [F-2.4] set the type and the flat surfaces, and [D-26] asks for a similar style, not the same one.
+  rejected:
+    - JetBrains Mono: it would add a second code face beside DM Mono.
+    - The frame's drop shadow: [F-2.4] rules out shadows, and on effect.website it is barely visible.
+```
+
+```mdl
+decision D-28: Compiler hover tokens show no underline until a reader points at them. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.13]
+  why: Nearly every token has a hover card, so resting underlines mark most of the sample.
+```
+
+```mdl
+decision D-29: A section on Schema shows a live `react-ui-form` form.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-10]
+```
+
+```mdl
+decision D-30: A section on the graph shows `react-ui-graph` and `plugin-explorer` visualizations.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-11]
+```
+
+```mdl
+decision D-31: A section on real time shows a `react-ui-editor` demo.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-12]
+```
+
+```mdl
+decision D-32: Samples in a side-by-side comparison have no line numbers. Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5]
+  why: The gutter takes about a fifth of a comparison column, and the extra wrapping costs more than the numbers give.
+```
+
+```mdl
+decision D-33: A demo shows chat and hierarchical feeds with `plugin-assistant`.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-13]
+```
+
+```mdl
+decision D-34: ECHO needs an upfront motivation for agents and agent memory, the rationale for being introspectable, and for being the glue that ties together data from external sources. It is the data model that apps (plugins) code against.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-14.1]
+```
+
+```mdl
+decision D-35: The motivation opens Why ECHO?, as four sections ahead of the local-first argument, and the landing page shows it as a "Why it exists" row above the guarantees. Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.1, why-echo, welcome]
+  why: The local-first argument explains how ECHO works, and it reads as the reason for ECHO when it comes first.
+```
+
+```mdl
+decision D-36: The landing headline becomes "The data model for apps and agents." Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.1]
+  why: The earlier headline said where the data lives, which is not why a reader would choose ECHO.
+```
+
+```mdl
+decision D-37: Each claim about an agent names the skill or operation that does it, such as `org.dxos.skill.memory` or `QueryTypes`. Fills in [D-34].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-14.2]
+  why: Agent behavior is not in the specs this site cites, so the name is the evidence a reader can check.
+```
+
+```mdl
+decision D-38: The ECHO site merges into the dxos.org docs site. Its landing page becomes `dxos.org/echo`, a product page like `/composer` and `/plugins`, and the home page's mention of ECHO links to it. The written and planned pages join the dxos.org docs, which put ECHO first and get most of their content from it for now.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-1.4, F-7]
+```
+
+```mdl
+decision D-39: `/echo` uses this site's Starlight theme, and the theme applies to every page of the dxos.org docs site.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-2, F-7.1]
+```
+
+```mdl
+decision D-40: `/echo` stays separate from the docs, at its own path, and the site navigation links it both ways: a reader on `/echo` can go into the docs or back to the main site, as from `/plugins` or `/blog`.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.1, F-7.3, F-7.4]
+```
+
+```mdl
+decision D-41: Every Starlight page gets a header that carries the dxos.org nav and the DXOS logo linking home, and a footer with the same links; the Webflow nav and footer gain an ECHO link. Fills in [D-40].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1, F-7.3]
+  why: The docs had no link back to the main site, and one header on every Starlight page covers `/echo` and the docs at once.
+  rejected:
+    - The ECHO lockup as the site title: it would label the Composer and HALO docs as ECHO.
+```
+
+```mdl
+decision D-42: The written and planned pages live under `/docs/echo`, beside the other docs, and the agent routes stay under `/echo`. Fills in [D-38].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.4, F-6]
+  why: The docs site serves its Starlight content under `/docs`, and `/echo` is the product page.
+```
+
+```mdl
+decision D-43: The earlier ECHO guides stay, collapsed under "Earlier guides" at the end of the ECHO section, until a page in the site map replaces each one. Fills in [D-38].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.2]
+  why: Other docs link to them, and the site map's pages that replace them are still planned.
+  rejected:
+    - Remove now: most of their replacements are stubs, so readers would lose the only installation and React pages.
+```
+
+```mdl
+decision D-44: `/echo` is a marketing page like `/composer` and `/plugins`, not a docs homepage. It does not look like the docs: no docs header line, search or different nav placement. It is built on the dxos.org Webflow layout. The Starlight theme still applies to the docs pages.
+  date: 2026-11-06
+  by: user:wittjosiah
+  supersedes: D-39
+  affects: [F-7.1, F-7.4]
+  why: The docs-styled `/echo` loaded slowly compared to `/composer` and `/plugins`, and its nav links sat in different places.
+```
+
+```mdl
+decision D-45: The earlier ECHO guides are ported into the pages of the site map as a first pass at their content, and then removed.
+  date: 2026-11-06
+  by: user:wittjosiah
+  supersedes: D-43
+  affects: [F-7.2]
+```
+
+```mdl
+decision D-46: On `/echo` the Webflow styles load into a `webflow` cascade layer declared before every other layer, and the page's samples and components style themselves in their own layers. Fills in [D-44].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.4]
+  why: Unlayered Webflow rules such as `body * { color: inherit }` beat any layered rule, so they stripped the code sample's token colors and fonts, and would do the same to the live demos' component styles.
+  rejected:
+    - Scoped overrides per conflict: each new component would need its own, and the demos use the react-ui theme's layers.
+```
+
+```mdl
+decision D-47: The sample on `/echo` renders without compiler hover types; samples on docs pages keep them. Fills in [D-44].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.4]
+  why: Twoslash compiles the sample on each dev request and more than doubles the page's HTML, which made `/echo` the slow page.
+```
+
+```mdl
+decision D-48: Welcome, spaces and objects-relations carry the earlier introduction; installation carries installation and configuration; mutating-objects carries mutations; querying carries queries; sharing carries the client API; the React guide carries the React pages. Each of these pages has spike status. Fills in [D-45].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.2]
+  why: Each earlier guide matches one site-map page's subject, and a spike status marks content that is written but not yet held to the page's template.
+```
+
+```mdl
+decision D-49: Ported samples follow the current API: spaces are listed with `client.spaces.get()` and identified by `space.id`, untyped objects stay `Expando`, and installation drops the top-level-await Vite plugin. Fills in [D-45].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.2]
+  why: Samples must compile against the workspace, and the earlier guides used `PublicKey` space keys and a Vite plugin the current build no longer needs.
+```
+
+```mdl
+decision D-50: The dxos.org nav lists Home, ECHO, Composer, Plugins, Blog and Docs, in that order.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.1, F-7.3]
+```
+
+```mdl
+decision D-51: On `/echo` the Webflow layer sits above Tailwind's preflight and below the react-ui theme's base, component and utility layers. A copy of the preflight, scoped to the demos and to the menus and dialogs they portal outside the Webflow content, sits above the Webflow layer. Fills in [D-44].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-46
+  affects: [F-7.4]
+  why: With the Webflow layer lowest, the theme's global preflight reset the page's headings, nav and code frames; with it above the preflight, Webflow's element rules would reach inside a demo, so the demos get their own scoped reset.
+  rejected:
+    - Shadow DOM around each demo: portalled menus and dialogs render outside it, and the theme's tokens sit on `:root`.
+    - Iframes: each demo would load its own page and copy of the theme.
+```
+
+```mdl
+decision D-52: `/echo` has live demos, built as React islands from Composer plugin surfaces and sample-space templates with in-memory clients and peers, not iframes: a markdown editor, two peers by default, with cursors; the nested DXOS architecture diagram on a canvas; a table and a kanban board over the same data, one view per peer; and the explorer's force-directed graph, which shows a card for a node. Each demo has a toolbar to show one or two peers, its peers are created and joined in advance, and a per-peer offline switch is optional. Demos are easy to add and reorder.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.5, F-9, F-11, F-12]
+```
+
+```mdl
+decision D-53: On `/echo` the Webflow styles are scoped to stop at each demo and at what a demo portals outside the Webflow content. Fills in [D-51].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.4]
+  why: Webflow class rules that share a name with a Tailwind utility reached into the demos: Webflow's `.grid` gives three columns and a 4rem gap, which laid a demo's toolbar beside its panes.
+  rejected:
+    - Renaming each colliding class: every plugin a demo adds brings classes that would need checking.
+```
+
+```mdl
+decision D-54: Each demo runs two peers, Alice and Bob, each a Composer plugin app with its own in-memory client. Alice creates the space and seeds it from the demo's sample-space partial; Bob joins it by invitation; both join when the page opens, so showing the second peer is instant. A demo names the object each peer opens, and a peer can switch between a demo's objects. The online switch takes a peer's network offline, and its edits merge when it comes back. The page lists its demos by id, in order. Fills in [D-52].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5]
+  why: One space per demo keeps the demos independent, and a list of ids is the one place that adds or reorders a demo.
+```
+
+```mdl
+decision D-55: The editor seeds a short checklist; the table, board and graph share six companies and their people; the diagram seeds Composer's architecture set, opening on its overview, read-only until a peer unlocks it. The board hides the column for companies with no status, and the graph opens a node's card on hover. Fills in [D-52].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5, F-9, F-11]
+  why: Composer's set is the nested architecture diagram the canvas plugin ships; every seeded company has a status, so that column stays empty; the explorer opens cards on hover, not on click.
+```
+
+```mdl
+decision D-56: The architecture diagram demo opens with one peer.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.5]
+```
+
+```mdl
+decision D-57: The hero's ECHO art is centred in its panel.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-2.11]
+```
+
+```mdl
+decision D-58: The `/echo` demos are ready as soon as possible after the page opens, and sit just before the Architecture section, so they have longer to load before a reader scrolls to them.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.6]
+```
+
+```mdl
+decision D-59: The architecture diagram and every demo on `/echo` are dark whatever the reader's system prefers: the Webflow page is always dark, and a light demo stands out against it.
+  date: 2026-11-06
+  by: user:wittjosiah
+  affects: [F-7.7]
+```
+
+```mdl
+decision D-60: The hero crops the art to the square around its icon. Fills in [D-57].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.11]
+  why: The icon is centred at (480, 540) of the art's 1920 by 1080 frame; the panel showed the frame's left 1080 units, whose centre is 60 units right of the icon.
+```
+
+```mdl
+decision D-61: The demos share two peers, Alice and Bob, each one in-memory client under every demo's plugin app, and one space that holds every demo's content. Alice creates the space and Bob joins it by invitation while Alice seeds it: first the content several demos show, then each demo's partial, with the diagram, the largest, last. A demo shows its objects as soon as they are written. A peer's online switch applies to that peer in every demo. A demo names the object each peer opens, a peer can switch between a demo's objects, and the page lists its demos by id, in order. Fills in [D-58].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-54
+  affects: [F-7.5, F-7.6]
+  why: A runtime per demo started eight clients and twenty spaces and ran four invitations; on a production build the demos were ready about 5.1 s after navigation, 3.7 s of it after the script loaded. Bob also waited for the seed's final flush, 1.5 s, before his invitation started.
+  rejected:
+    - One space per demo on the shared clients: an invitation per demo, where one is enough.
+```
+
+```mdl
+decision D-62: The graph demo keeps to the companies and their people with its Graph's saved query, which the explorer applies when it opens a graph. Fills in [D-61].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-11]
+  why: The shared space also holds the document, the board, the table and the diagram's shapes, and the explorer drew every object in the space, 85 nodes.
+  rejected:
+    - A space of its own for the graph demo: a second invitation.
+```
+
+```mdl
+decision D-63: The demos set the theme plugin's appearance setting to dark before they start. The architecture diagram adds dark rules for the `dark:` classes its renderer emits but does not compile, on the demo frames' surface colour. Fills in [D-59].
+  date: 2026-11-06
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.7]
+  why: The theme plugin follows the system preference unless its setting says otherwise, and on a light system it removes the page's dark class; the diagram renderer compiles only its light rules.
+```
+
+```mdl
+decision D-64: The learning path walks through building one ECHO app, made from the pieces of the echo-sqlite demo app, and embeds what each page has built so far. It teaches building apps with ECHO in general, not the SQLite backend.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-65: Each learning-path page starts with the information its steps need, then gives the reader something to do with it.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-66: The learning-path steps stay plain TypeScript; the embed runs the app built from them, and the React guide walks through the app's React layer. Fills in [D-64].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.1, F-15.2]
+  why: The learning path teaches ECHO, and a Solid guide is planned beside the React one, so the main path should not require React; the embeds still show the app growing page by page.
+  rejected:
+    - The learning path builds a React app step by step, which makes React a requirement for every reader.
+```
+
+```mdl
+decision D-67: The app is a contact book of Organization, Person and Event, the demo app's schema. Its ECHO code lives in modules that the pages quote by region and the embeds import. The ECHO object opens with the finished app; Defining types, Mutating objects and Querying each end with the app as it stands; Sharing a space runs two peers; Installation sets up a client and has no embed. Fills in [D-64] and [D-65].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15, F-10, F-11]
+  why: One running example with references between its types covers types, refs, queries and sharing; quoting the modules the embeds run keeps the pages and the app from drifting apart.
+  rejected:
+    - Keeping the Task examples beside a separate app, which teaches the same calls twice.
+```
+
+```mdl
+decision D-68: An embed on a docs page follows the Starlight theme by mirroring its `data-theme` to the `dark` class react-ui reads, and the page declares a layer order that keeps Starlight above the react-ui preflight outside the embed and the preflight above Starlight inside it. Fills in [D-64].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.4]
+  why: Starlight switches themes with a `data-theme` attribute while react-ui's dark variant keys on a class, and react-ui's global preflight would otherwise restyle the docs page.
+```
+
+```mdl
+decision D-69: The tutorial demonstrates two peers once, on Sharing a space, with controls reduced to fit the space; every other embed runs one peer, and the reader takes it that the rest works across both peers.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15.3]
+```
+
+```mdl
+decision D-70: Sharing's peers sit side by side at the Mutating objects stage: a type picker, a New button, the list and the form, with the form under the list. Fills in [D-69].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.3]
+  why: That stage already leaves out search and the view toggles, so the embed needs no mode of its own, and side by side shows an edit on one peer arriving at the other.
+  rejected: Stacking the peers one above the other, which keeps the full controls but pushes the second peer below the fold.
+```
+
+```mdl
+decision D-71: Querying comes before Mutating objects in the learning path.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-72: The tutorial's sample code follows the codebase's best practices and stays clean and readable, without exhaustive inline types.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15.2]
+```
+
+```mdl
+decision D-73: A learning-path page has no Next section; Starlight's previous and next links lead to the following page.
+  date: 2026-11-09
+  by: user:wittjosiah
+  affects: [F-15]
+```
+
+```mdl
+decision D-74: The docs include generated API reference for `@dxos/echo`, `@dxos/halo`, `@dxos/echo-react` and `@dxos/echo-solid`.
+  date: 2026-11-09
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-75: The steps call ECHO directly (`db.add(Obj.make(...))`, `Obj.update`, `db.remove`) rather than app helpers, the app edits a record with `ObjectForm` and creates one with `Form.Root`, and every component's props are a named type. Fills in [D-72].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.2]
+  why: Helpers such as `addPerson` needed their own inline prop types and hid the calls the pages teach; `ObjectForm` is how the codebase edits an object and writes each change as the reader types.
+  rejected: Deriving the helpers' props from the schema with `Obj.MakeProps`, which keeps a layer the reader has to learn on top of ECHO's.
+```
+
+```mdl
+decision D-76: The embed stages run types, queries, records, complete, and Sharing's peers drop search and the view switch with a compact option. Fills in [D-71].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-70
+  affects: [F-15.3]
+  why: With Querying first, the Mutating objects stage includes search and the table, so it no longer gives Sharing its reduced controls by itself.
+```
+
+```mdl
+decision D-77: Each of the four packages gets the `typedoc` task with `src/index.ts` as its entry point, and the docs copy the output beside the existing client references. Fills in [D-74].
+  date: 2026-11-09
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The docs already publish typedoc for client, react-client and app-framework this way, and `@dxos/echo`'s index re-exports each module as a namespace, so one entry point covers them.
+```
+
+```mdl
+decision D-78: The docs have two sections: ECHO, which also holds HALO for now, and Composer, which holds the plugin docs and the tool chain. EDGE and sync services are not documented yet.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1, F-16.2, F-16.4]
+```
+
+```mdl
+decision D-79: The docs lead with ECHO. Composer is presented as what was built with ECHO and as a system the reader can extend.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1, F-16.3]
+```
+
+```mdl
+decision D-80: The Composer section has the same groups as the ECHO section: Start here, Learning path, Core concepts, Guides and Resources.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-17.1]
+```
+
+```mdl
+decision D-81: The ECHO section has no Reference group. Its Guides group has one page per common `@dxos/echo` namespace, with React last, and the Composer Guides group has one page per core App Framework namespace, with React last.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-18.1]
+```
+
+```mdl
+decision D-82: The HALO pages stay as they are, in the ECHO section, until HALO gets its own section.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.2]
+```
+
+```mdl
+decision D-83: The spec is the source of truth for what the docs cover and how. Each page has a concise summary of what it must cover, and pages are regenerated from the spec as the APIs change.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-5]
+```
+
+```mdl
+decision D-84: One docs-wide spec holds the page templates and the page list of both sections, and the `page` block is the docs-wide extension `org.dxos.docs.page@1.0`.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-85: Each `page` block names its section, has an absolute route, and lists what the page must cover under `covers:`; a `later` status keeps an in-scope page out of the sidebar. Fills in [D-83] and [D-84].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.2, F-5.4, F-5.5]
+  why: A summary line alone is too thin to regenerate a page from; absolute routes let one list hold pages under `/docs/echo`, `/docs/halo` and `/docs/composer`; pages kept for later stay recorded without crowding the sidebar.
+```
+
+```mdl
+decision D-86: A `namespace` template sits between the learning path and the generated API reference: common tasks with compiled examples, then the most-used members linking to the API reference. Fills in [D-81].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1, F-18.2]
+  why: The `reference` template answers one lookup with no narrative, which is what the generated API reference already does.
+```
+
+```mdl
+decision D-87: The ECHO guides are Type, Obj, Relation, Ref, Database, Query, Filter and Feed. Query also covers `Order` and `QueryResult`, and opens with common filters that link to Filter. Fills in [D-81].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1]
+  why: These are the most-used `@dxos/echo` namespaces across the repository's packages (Obj about 11,700 member uses, Database 5,800, Ref 5,000, Filter 3,900, Type 3,000, Feed 2,100, Query 1,800); Relation is used less but is half of the object model; DXN is covered by the References and DXNs concept page.
+  rejected: Merging Query and Filter, which would put a how-to and a 43-member lookup list on one page.
+```
+
+```mdl
+decision D-88: The Composer guides are Plugin, Capability, ActivationEvent, Operation, Surface, AppGraph, AppCapabilities and React. Fills in [D-81].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-18.1]
+  why: These are the namespaces plugins use most (Operation about 3,700 uses across the plugins, Capability 2,700, AppSurface 1,500, Plugin 770); ActivationEvent and AppGraph are used less but every plugin needs them.
+  rejected: Separate guides for Capabilities, AppSurface, AppCapability and LayoutOperation, which each fold into the guide of the namespace they extend.
+```
+
+```mdl
+decision D-89: Build a plugin with the assistant is in Composer's Start here, and Publishing a plugin is the last step of its learning path, which splits the old plugin tutorial into five steps that build one plugin. Fills in [D-80].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-17.3]
+  why: Both pages walk through a task end to end, so they are tutorials rather than guides, and the assistant page is the fastest route to a working plugin.
+```
+
+```mdl
+decision D-90: References and DXNs and Concurrency and conflicts are written now; the query model, text and blobs, feeds, schema evolution, the Solid, Effect, testing and foreign-records guides, the internals pages, and the Composer user guide, CLI, manifest and glossary pages are `later`. Fills in [D-79].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The first reading of the docs needs the two concepts that the learning path already relies on; the rest deepen a topic a reader has already met.
+```
+
+```mdl
+decision D-91: The ECHO site spec and the docs spec are one spec, `org.dxos.docs`, for the whole docs site.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-5, F-16]
+```
+
+```mdl
+decision D-92: Each section is a sidebar topic, made with `starlight-sidebar-topics`: a list of the sections, ECHO first, sits above a sidebar that shows only the current section's pages. The sections' sidebars are generated from the `page` blocks, and a planned page's stub lists what it covers. Fills in [D-78].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5]
+  why: Josiah asked how large Starlight sites organize several related products; a topic per section keeps each sidebar to one section.
+  rejected:
+    - Starlight's built-in collapsed groups, which keep every section in one tree.
+    - `starlight-sidebar-topics-dropdown`, which hides the sections until opened and pays off only with more sections than two.
+```
+
+
+```mdl
+decision D-93: The docs have no separate home page. `/docs/` goes to ECHO's Welcome, which takes over the home page's description of DXOS, and the SaaS comparison table moves into Why ECHO?.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1, F-16.5]
+  why: Start here is where a reader starts, so its first page is the first page of the docs.
+  rejected: A docs home page in front of the sections, which repeats Start here.
+```
+
+```mdl
+decision D-94: HALO is the third section of the docs, after ECHO and Composer, with the same groups: Start here, a learning path that adds people and devices to the ECHO tutorial app, core concepts, one guide per `@dxos/halo` namespace (Identity, Invitation, Space) with React last, and resources. Using HALO in TypeScript folds into the Identity guide and the learning path. ECHO's Spaces and databases keeps data and replication; HALO's Spaces and membership has members, roles and access.
+  date: 2026-11-10
+  by: user:wittjosiah
+  supersedes: D-82
+  affects: [F-16.2, F-17.1, F-17.3, F-18.1]
+  rejected: Keeping HALO as a group of the ECHO section until later.
+```
+
+```mdl
+decision D-95: The sections are ordered ECHO, HALO, Composer, in the topic switcher and in this spec's site map. This replaces the order in [D-94], which put HALO third.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1]
+  rejected: ECHO, Composer, HALO, the order in D-94.
+```
+
+```mdl
+decision D-96: The third section is called App Framework, not Composer. Its pages keep their `/docs/app-framework/` routes. In ECHO's Welcome, App Framework links to that section, and Composer links to the `/composer` product page.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.1]
+```
+
+```mdl
+decision D-97: The App Framework section's routes and files move from `composer` to `app-framework`: pages under `/docs/app-framework/`, their sources in `src/content/docs/docs/app-framework/`, and the tutorial plugin in `src/app-framework-tutorial/`. Old `/docs/composer/` URLs redirect. The section's pages present the framework first and show it in Composer, the app built on it. This replaces the routes in [D-96].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.3, F-17.3]
+```
+```mdl
+decision D-98: HALO is introduced as identity management: identities, the devices and credentials that act for them, and space membership. It is not described as giving an app its users.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+```mdl
+decision D-99: The HALO pages describe HALO as built on Keyhive, even while the implementation has not moved to it yet, because Keyhive is the planned foundation. Spaces and membership presents membership as a Keyhive group of signed delegations with a shared group key; Identities and devices presents an identity as a Keyhive group of its devices; Welcome, Why HALO? and the glossary name it. ECHO's pages name Automerge as the document format the same way.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-100: Twoslash compiles samples in a site build and not on the dev server; `DOCS_TWOSLASH` turns it on or off in either. Without it a sample shows only its region, with no hover types.
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-3.4, F-3.5]
+```
+```mdl
+decision D-101: The HALO API reference covers `@dxos/halo` and `@dxos/halo-react`, each with generated typedoc. `@dxos/halo-adapter-client` has no reference.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+```mdl
+decision D-102: The layer that reverts the react-ui preflight on a docs page keeps elements with the `hidden` attribute hidden. Fills in [D-68].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.4]
+  why: Browsers apply `hidden` as a presentational hint at author level, so `all: revert` dropped it and every Starlight tab panel showed at once.
+```
+
+```mdl
+decision D-103: The App Framework learning path publishes to the private registry with `dx registry publish --private`. The public AT Protocol registry is mentioned once as experimental, with a Discord link for anyone who wants to try it, and its steps (app passwords, verification, publisher profile, records) leave the page.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-104: No page carries a "these docs are being written" caution. ECHO's Welcome drops its Limits section, which held only that caution.
+  date: 2026-11-10
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-105: The topic switcher renders its own list instead of the plugin's, so a topic can show an SVG from `packages/ui/brand/assets/icons` in place of a Starlight icon name. Fills in [D-92].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.6]
+```
+```mdl
+decision D-106: App Framework uses the KUBE brand mark in the topic switcher. Fills in [D-105].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.6]
+```
+
+```mdl
+decision D-107: The build writes Astro's redirects to a `_redirects` file that Cloudflare serves as 301s, and the nav, footer and home page link to `/docs/echo/welcome/` instead of `/docs`. Fills in [D-97].
+  date: 2026-11-10
+  by: user:wittjosiah
+  affects: [F-16.5, F-16.7]
+```
+
+```mdl
+decision D-108: Pages without an embed load none of its styles. Astro walks up the build graph from an island's styles to the pages that use it, and two links made that walk reach every docs page: `starlight-sidebar-topics` imports `astro:i18n`, which imports the page manifest, so the build aliases `astro:i18n` to a stub (the site has no locales); and every MDX page renders through Starlight's one docs route, so the tutorial embed is its own page, `/embed/contacts/`, shown in an iframe. Before this, each docs page loaded about 535 KB of the embed's CSS, and each navigation showed a blank sidebar while it loaded.
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.5]
+```
+
+```mdl
+decision D-109: The third section is called PLEX. Fills in [D-96].
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-16.1]
+```
+
+```mdl
+decision D-110: The topic switcher draws each brand mark without a box, in its label's color, so the current section's mark is the accent color and the others match their labels. Fills in [D-106].
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-16.6]
+```
+
+```mdl
+decision D-111: Each section's root page is titled Overview, keeps its `/welcome/` route, and opens with a hero whose heading is the product name (ECHO, HALO or PLEX) in large Sharp Sans, in place of the page title.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-16.8]
+```
+
+```mdl
+decision D-112: ECHO's sidebar has an API group holding one page per `@dxos/echo` namespace, Type to Feed; React stays in Guides.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-18.1]
+```
+
+```mdl
+decision D-113: The examples page is titled Examples.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [examples]
+```
+
+```mdl
+decision D-114: HALO and PLEX follow D-112: their namespace pages (Identity, Invitation, Space; Plugin to AppCapabilities) form an API group, and React and the dx CLI stay in Guides. Every moved page keeps its `…/guides/…` route.
+  date: 2026-11-10
+  by: agent:claude
+  for: user:richburdon
+  affects: [F-17.1, F-18.1]
+  why: F-17 gives every section the same shape.
+  rejected:
+    - Moving only ECHO, which would leave HALO and PLEX with a different shape
+    - New `/api/` routes, which would need a redirect for every moved page
+```
+
+```mdl
+decision D-115: Each section's root page lives at `…/overview/`, and PLEX's pages live under `/docs/plex/` (`/docs/echo/overview/`, `/docs/halo/overview/`, `/docs/plex/overview/`). Each old `…/welcome/` URL redirects to its Overview, and every `/docs/app-framework/…` and `/docs/composer/…` page redirects to the same page under `/docs/plex/`. This replaces the `/welcome/` route in [D-111] and the `/docs/app-framework/` routes in [D-97]; the rest of both stands.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [welcome, halo-welcome, app-framework-welcome]
+```
+
+```mdl
+decision D-116: PLEX has an Agents group, after Guides, with an Open in Claude page that shows the desktop app's `claude://code/new` link, and an llms.txt page backed by a placeholder `/plex/llms.txt`.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-17.1, plex-open-in-claude, plex-llms-txt]
+```
+
+```mdl
+decision D-117: ECHO has an Agents group too, after Guides, with an Open in Claude page and an llms.txt page that describes the existing `/echo/llms.txt` and `/echo/llms-full.txt`.
+  date: 2026-11-10
+  by: user:richburdon
+  affects: [F-17.1, echo-open-in-claude, echo-llms-txt]
+```
+
+```mdl
+decision D-118: The llms.txt pages move from the Agents groups to each section's Resources group, HALO gets one, and the footer drops its "For agents" column. `/halo/llms.txt`, `/plex/llms.txt` and their `llms-full.txt` are generated from the spec like ECHO's, so PLEX's file is no longer a placeholder. The old `/docs/echo/agents/llms-txt/` and `/docs/plex/agents/llms-txt/` redirect. Amends [D-116] and [D-117].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.1, F-6.3, echo-llms-txt, halo-llms-txt, plex-llms-txt]
+```
+
+```mdl
+decision D-119: The snippet sources are read from disk with `fs`, not imported through `import.meta.glob` with `?raw`. In dev, Astro collects a page's CSS by walking its imports, and it follows each `?raw` import into the real module's graph, so the first render of `/echo` compiled the tutorial app, the demos and their theme before it answered (about 11 s).
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.6]
+```
+
+```mdl
+decision D-120: The docs footer's Docs column lists ECHO, HALO and PLEX, in the topic switcher's order, each linking its section's Overview; the Composer entry goes. Fills in [F-7].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-7]
+```
+
+```mdl
+decision D-121: The Overview hero crops its background from the left and keeps the right edge, where the mark sits, so a narrow content column never cuts the mark off, and its heading never breaks. It stacks the art behind the text only on a phone; on wider windows it gets room from [D-123], not from a stacked layout.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-16.8]
+```
+
+```mdl
+decision D-122: Each `/echo` demo shows a loading placeholder in its frame until it hydrates. The placeholder is static markup in the page, so it costs nothing to compile and does not name the demo, whose title lives in the demo's own module.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-7.8]
+```
+
+```mdl
+decision D-123: Docs pages favor room for code. The table of contents folds into the bar above the page until the window fits the sidebar, a full text column and the table of contents (88rem), as the Effect docs do, and code samples no longer wrap: a long line scrolls sideways.
+  date: 2026-11-11
+  by: user:wittjosiah
+  supersedes: D-17
+  affects: [F-2.5, F-2.14, T-4]
+  why: Wrapped code is hard to read, since a wrapped line looks like two statements. A text column squeezed by the table of contents wraps or cuts off code that would otherwise fit.
+```
+
+```mdl
+decision D-124: The docs sidebar folds behind the menu button below 72rem, the width that fits the sidebar and a full text column, instead of Starlight's 50rem, as the Effect docs do. Fills in [D-123].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-2.15]
+  why: Between 50rem and 72rem the sidebar took a third of the window and left the code samples too narrow.
+```
+
+```mdl
+decision D-125: The docs' code samples are formatted to 80 columns, not the repository's 120, and the text column is 50rem (850px), the width that fits 80 columns of code inside a numbered step, beside the space Expressive Code keeps for its copy button. Fills in [D-123].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-2.5]
+  why: The Effect docs aim for 80 columns: of about 3,000 code lines across 12 of their pages, 12 are longer. At 120 columns, 9% of our sample lines scrolled in the old 782px column. Comments are rewrapped by hand, since the formatter does not wrap them.
+  rejected:
+    - Keep 120 columns and widen the column to fit them: about 1,140px, which puts the body text far past a readable line length.
+```
+
+```mdl
+decision D-126: PLEX's Start here group has Why PLEX? in place of Try Composer, like Why ECHO? and Why HALO?, and PLEX has a glossary in Resources like HALO's. `/docs/plex/try/` redirects to Why PLEX?. Fills in [D-90].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [why-plex, app-framework-glossary, app-framework-welcome]
+  why: The three sections open the same way, so a reader moving between them finds the same pages in the same places.
+```
+
+```mdl
+decision D-127: ECHO and PLEX have Build with a coding agent as the third page in Start here; HALO has none yet. PLEX's replaces Build a plugin with the assistant, whose route redirects to it. The page's prompt is a text box the reader edits before opening it in Claude Code (`claude://code/new?q=`), Codex (`codex://new?prompt=`) or Cursor (`cursor://anysphere.cursor-deeplink/prompt?text=`). PLEX's prompt starts with a fixed line that tells the agent to use the `composer-plugin-dev` skill, or to read it from the repository when it is not installed, since none of the three links can install a plugin. Its default text is the eval's World Clock brief without "test it yourself": the skill's default flow ends with the reader enabling the dev server, which needs no debug port.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.4, echo-build-with-agent, plex-build-with-agent, app-framework-welcome]
+  why: The `composer-plugin-dev` eval shows the skill plus a one-line brief builds a working plugin in 5 to 7 minutes for about $0.50, and readers use more than one coding agent.
+  rejected:
+    - An install link per agent: Claude's links only prefill a prompt; Codex's plugin-install link takes a Codex marketplace, which the `dxos` plugin is not in.
+```
+
+```mdl
+decision D-128: Agents may read a whole section in one fetch: `llms-full.txt` holds every page of it, examples included. A page must not assume an agent reads one page at a time, or that an example on one page is unknown to an agent reading another.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.1]
+  why: The `composer-plugin-dev` eval's agent reads the plugin guide, whose World Clock example matches its brief, so the eval measures how well an agent follows the guide.
+```
+
+```mdl
+decision D-129: The plugin guide keeps World Clock as its worked example, as the eval's guide-following case. New worked examples stay off the subjects the eval holds out, such as a habit tracker or a standup board; Bookmarks (PLEX learning path), Contacts (ECHO tutorial) and Notes (the Open in Claude prompt) are already taken. Check with the eval's owner before adding a plugin example.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: An example that matches a held-out brief lets the agent copy the answer, and the eval stops measuring what it is meant to.
+```
+
+```mdl
+decision D-130: Build with a coding agent replaces the Open in Claude pages, and the Agents groups go with them; their routes redirect to the section's Build with a coding agent page. The fixed lines move out of view: the page shows only the text the reader edits. PLEX's fixed lines install the `composer-plugin-dev` skill into the folder, downloading `SKILL.md` and the files it links from the repository into the agent's own skills folder (`.claude/skills`, `.agents/skills` or `.cursor/skills`), then have the agent follow it; the copied prompt names all three folders. ECHO's fixed line has the agent read `/echo/llms-full.txt` first. The three open buttons are all primary, each in the palette color nearest its agent's brand: Claude Code in the property orange, Codex in the string blue, Cursor in the foreground neutral. The Notes example goes with the Open in Claude pages. Amends [D-116], [D-117] and [D-127].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.4, F-17.1, echo-build-with-agent, plex-build-with-agent]
+  why: A reader should not need the `dxos` Claude Code plugin installed, or have to read a line they cannot change, and no one agent should look like the default.
+  rejected:
+    - Telling the agent to use the skill if installed and read it otherwise: it depends on the Claude Code plugin, and the other two agents have no way to install it.
+```
+
+```mdl
+decision D-131: Each open button shows its agent's logo before its label, in the button's text color. The logos are Lobe Icons' monochrome SVGs (MIT), kept in `src/assets/agents/`. Amends [D-130].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-6.4]
+  why: A reader finds their agent by its mark faster than by its name.
+  rejected:
+    - Simple Icons (CC0): it has the Claude and Cursor marks but dropped OpenAI's, and has no Codex mark.
+```
+
+```mdl
+decision D-132: Build with a coding agent does not explain the buttons. Amends [D-130].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [echo-build-with-agent, plex-build-with-agent]
+  why: Pressing a button shows the whole prompt, fixed lines included, before anything is sent.
+```
+
+```mdl
+decision D-133: Build with a coding agent targets Composer Preview (`https://preview.composer.space`), not composer.space, which loads only the plugins it ships with. The Composer address moves out of the editable prompt into PLEX's fixed lines, after the skill step, and the page says to sign in to Composer Preview first. Amends [D-127].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: composer.space cannot load a plugin from a dev server, and a reader should not have to know which Composer to name.
+```
+
+```mdl
+decision D-134: The PLEX page asks the reader to open an empty folder in their agent before pressing a button, and the prompt does not check the folder. Claude Code's link takes only an absolute `folder` path and Codex's an existing `path`; Cursor's takes none, and a web page cannot see the reader's files to fill one in. The skill sets the plugin up as its own repository with npm, so a folder inside a monorepo is not offered. Amends [D-130].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: One sentence of setup works the same in all three agents.
+  rejected:
+    - A prompt step that stops when the folder is not empty: the reader is told what to do, and the step adds a line they did not ask for.
+    - A folder field that fills `folder` and `path`: the folder must already exist, Cursor ignores it, and typing an absolute path is more work than opening the folder.
+    - Having the agent make the folder: Codex's sandbox and Claude Code's permissions block or prompt on writes outside the open folder.
+```
+
+```mdl
+decision D-135: The reader may open any folder, not only an empty one. When it is not empty, PLEX's fixed lines have the agent make a new folder for the plugin inside it: where the project keeps its packages, such as `packages/` in a monorepo, set up with the project's package manager, or else a folder named after the plugin. Amends [D-134].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: A reader should be able to start from wherever their agent already is, and a new folder inside the open one stays within the agent's sandbox.
+```
+
+```mdl
+decision D-136: The PLEX page assumes an empty folder again, and the fixed lines no longer have the agent make one. Placing a plugin inside an existing project, such as a monorepo, is follow-up work on the skill and this page. Reverts [D-135].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: The skill sets a plugin up as its own repository with npm; a monorepo needs the skill changed first.
+```
+
+```mdl
+decision D-137: The learning path does not embed StackBlitz in its pages. The ECHO object shows the finished app as the in-page embed, with Fork on StackBlitz; Installation, where the reader starts writing code, has Follow along in StackBlitz, which opens a starter with the learning path's code taken out. Both open in their own tab through the SDK's `openProject`, with files the docs build generates, so the docs need no isolation headers. To make the starter possible, each page's code moves from the standalone scripts in `src/tutorial/steps/` into the module of the app that runs it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-15.6, F-15.7, F-15.8, F-15.9, the-echo-object, installation, defining-types, querying, mutating-objects, sharing]
+  why: An inline StackBlitz embed needs `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy: require-corp` on the docs page, which restricts everything else the page loads, and in a 2026-11-11 test it ran only in WebKit; Chrome blocked its preview relay and Firefox's preview stayed blank.
+  rejected:
+    - A StackBlitz embed on every learning-path page that carries the reader's files from page to page: the isolation headers and browser support above.
+    - A StackBlitz project from a GitHub folder: the starter would be a second committed copy of the app.
+```
+
+```mdl
+decision D-138: The StackBlitz buttons post a form to `stackblitz.com/run`, the request the SDK's `openProject` sends, with the project's files in the page. The starter replaces each export in a quoted region with `todo('<page>, step <n>: <step>')`, and the app shows the stage the written pieces reach under a line naming the next step. `@dxos/*` pins pkg.pr.new commit `6bad7b6` of dxos#14487, its only published build, until that PR lands. Fills in [D-137].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-15.7, F-15.8, F-15.9]
+  why: A click that first fetched the files or loaded the SDK would open the tab after an await, which browsers block as a popup; the files are about 60 KB and only two pages carry them.
+  rejected:
+    - Adding `@stackblitz/sdk` for one form post.
+```
+
+```mdl
+decision D-139: Each StackBlitz button shows StackBlitz's bolt logo before its label, in the button's text color. The logo is Simple Icons' SVG (CC0), kept in `src/assets/brands/`. Amends [D-138].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-15.7, F-15.8]
+```
+
+```mdl
+decision D-140: The tutorial app is one device: it opens its own space, and from Sharing a space on its toolbar has Invite, which copies a code, and Join, which takes one and switches the app to that space. The name and the online switch belong to a device frame the docs draw around each copy of the app, not to the app. Every embed shows one device except Sharing a space and The ECHO object, which show Alice's and Bob's side by side, each with a space of its own; only Alice's is seeded. The StackBlitz projects run the app as a real client, with no frame: `client.ts` configures EDGE and keeps the database in the browser's private file system, so a second browser can join, and the app reopens its space after a reload. The embeds keep their in-memory clients. Amends [D-137].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-15.3, F-15.7, F-15.8, installation, sharing, the-echo-object]
+  why: The embeds mixed the demo's controls into the app, so the finished app lacked sharing and the second peer opened on a join screen no real app has; the StackBlitz project is where a reader builds a real app, which an in-memory network is not.
+  rejected:
+    - In-memory devices in StackBlitz too, which cannot share with anything outside the page.
+```
+
+```mdl
+decision D-141: The PLEX learning path ends each page in a plugin inspector, not in Composer. The inspector is a PLEX app on an in-memory client that loads the reader's plugin at its stage, with one panel per kind of contribution; the docs embed it, StackBlitz runs it, and the plugin's dev server serves it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-19, F-20, app-framework-create-plugin, app-framework-define-type, app-framework-add-surface, app-framework-add-operation, app-framework-extend-app-graph]
+  why: Seeing a step land in Composer needs an account, Composer Preview and a dev server from the first page; the inspector shows each contribution on its own, in the page, and the reader keeps it after the docs.
+  rejected:
+    - A cut-down Composer in the embed, which hides most contributions behind navigation and needs the whole app to boot.
+```
+
+```mdl
+decision D-142: The PLEX plugin is the path's first page: what a plugin is, the finished Bookmarks plugin in the inspector, and Fork on StackBlitz, as The ECHO object opens ECHO's path, so Create a plugin no longer shows it running. Follow along in StackBlitz is on Create a plugin.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-the-plex-plugin, app-framework-create-plugin, F-20.3]
+```
+
+```mdl
+decision D-143: Composer comes in on Run it in Composer, the page before Publishing: Composer Preview, the dev server, the command palette and the assistant. Create a plugin no longer loads the plugin into a local Composer, and Publishing no longer covers developing against one.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-run-in-composer, app-framework-create-plugin, app-framework-add-operation, app-framework-publishing]
+```
+
+```mdl
+decision D-144: PLEX learning-path pages may use Effect where the PLEX API is Effect's, such as an operation handler written as `Effect.gen`. ECHO's pages stay with the promise APIs.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-add-operation, F-20]
+```
+
+```mdl
+decision D-145: Installation documents every piece of `vite.config.ts` that ECHO needs in the browser: `vite-plugin-wasm` in the page and in `worker.plugins`, `build.target: 'esnext'`, `optimizeDeps.exclude` for `@dxos/wa-sqlite`, `@automerge/automerge` and `@automerge/automerge-subduction`, and `optimizeDeps.include` for the CommonJS modules only the database worker imports. The icon sprite's dist scan and the Tailwind source for `@dxos` stylesheets stay in the StackBlitz template without explanation, since they serve react-ui, which the docs use only for demonstration.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [installation]
+```
+
+```mdl
+decision D-146: The PLEX learning path has no StackBlitz projects: The PLEX plugin has no Fork on StackBlitz and Create a plugin has no Follow along in StackBlitz. The reader builds the plugin in a local package, and the inspector drops the starter placeholder. Amends [D-141] and [D-142].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-19, F-20, plex-the-plex-plugin, app-framework-create-plugin]
+  why: A plugin running in StackBlitz is served from StackBlitz's machine, where neither the docs inspector nor Composer can load it, so the reader would end up with a plugin they cannot carry into Run it in Composer.
+```
+
+```mdl
+decision D-147: The inspector is a module workbench: a header with the plugin, its source and the sample object; a sidebar of modules with their status; and a main area showing the selected module working. Learning-path pages load the reader's own plugin from its dev server with Load dev plugin, and check it against what the page adds; only The PLEX plugin loads the finished plugin by itself. The dev server no longer serves the inspector. Amends [D-141].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [F-19, F-20, plex-the-plex-plugin, app-framework-create-plugin, app-framework-define-type, app-framework-add-surface, app-framework-add-operation, app-framework-extend-app-graph, plex-run-in-composer]
+  why: Tabs per kind of contribution, filled from the docs' own copy of the plugin, did not show the reader what their own code did; the path adds one module per page, so the modules are the natural index.
+  rejected:
+    - A mini Composer, with a nav tree, an article and a command palette: it hides translations, schema and skills, and shows nothing until the app graph page.
+    - Serving the inspector from the plugin's dev server: the docs inspector reaches the dev server already.
+```
+
+```mdl
+decision D-148: PLEX's Core concepts are Plugins and modules, Capabilities, Activation, Operations, Surfaces and App Graph, in that order. Anatomy of a plugin becomes Plugins and modules at `/docs/plex/concepts/plugins/`, and `/docs/plex/introduction/` redirects to it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-anatomy, plex-capabilities, plex-activation, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
+  why: Anatomy of a plugin packed capabilities and activation into one page and still described the removed plugin context; a reader meets operations before surfaces on the learning path, so the concepts follow that order.
+```
+
+```mdl
+decision D-149: "App Graph" is a proper name in PLEX prose: two words, capitalized, without "the". The namespace stays `AppGraph`, and the learning-path page is Extend the App Graph at the same route.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-app-graph, app-framework-guide-app-graph, app-framework-extend-app-graph, app-framework-glossary]
+  why: It names one structure in the app, like ECHO or HALO, not a kind of graph.
+```
+
+```mdl
+decision D-150: PLEX's API group adds PluginManager and Translations. AppGraph covers `AppNode` and `GraphPath`, and AppCapabilities is a tour in groups with one table, not a section per capability.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-plugin-manager, plex-guide-translations, app-framework-guide-app-graph, app-framework-guide-app-capabilities]
+  why: A reader loading plugins at runtime or writing strings had no page; AppCapabilities has too many members for one heading each.
+```
+
+```mdl
+decision D-151: PLEX's Guides are Using ECHO in a plugin, Testing a plugin, Settings and state, Effect in plugins, Debugging a plugin and React. Using ECHO in a plugin is a guide, not a concept, because it joins ECHO and PLEX. The dx CLI stays later.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-using-echo, plex-guide-testing, plex-guide-settings-and-state, plex-guide-effect, plex-guide-debugging, app-framework-guide-react, app-framework-cli]
+  why: Each answers a task a plugin author hits after the learning path; registering ECHO types is integration work, not an idea of PLEX's own.
+  rejected:
+    - Objects in the app as a core concept: it is not a PLEX concept.
+```
+
+```mdl
+decision D-152: The PLEX API reference covers `@dxos/app-framework`, `@dxos/app-toolkit`, `@dxos/app-graph` and `@dxos/compute`. Operation is documented from `@dxos/compute/Operation`, since `@dxos/operation` exports only the invoker.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-api-reference, app-framework-guide-operation]
+  why: Those are the packages a plugin imports from.
+```
+
+```mdl
+decision D-153: The plugin manifest is written, in Resources, at `/docs/plex/resources/manifest/`. Concept and API snippets come from the Bookmarks modules, except Plugin's, which keep World Clock [D-129], and concept pages may embed the inspector with the finished plugin.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-manifest, app-framework-operations, app-framework-surfaces, app-framework-app-graph]
+  why: One plugin carried from the learning path into the reference lets a reader recognize each snippet.
+
+decision D-154: ECHO's Core concepts are Types and schema, Objects and relations, References and DXNs, Feeds, Queries, Spaces and databases, and Changes and branches, in that order. Text and blobs leaves the site map.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [types, objects-relations, references, feeds, queries, spaces, changes, text-blobs]
+  why: A reader needs types before objects, and objects before how they are queried, stored and changed.
+
+decision D-155: Versions and migrations are a section of Types and schema. Schema evolution stays later until the docs can say when migrations run outside a plugin.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [types, schema-evolution]
+  why: A version belongs to the type; a page of its own would promise more than the docs can say yet.
+
+decision D-156: Spaces and databases covers storage, replication and the Hypergraph, not joining. Access is HALO's, built on Keyhive.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [spaces]
+  why: HALO's Invitations page owns the handshake; ECHO links to it.
+
+decision D-157: ECHO's API group has thirteen namespace pages at `/docs/echo/api/<namespace>/`: Type, Annotation, Obj, Relation, Ref, Database, Query, Filter, Feed, Text, Blob, Migration and Tag. The old `/docs/echo/guides/<namespace>/` routes redirect. The other namespaces appear only in the generated reference.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-type, guide-annotation, guide-obj, guide-relation, guide-ref, guide-database, guide-query, guide-filter, guide-feed, guide-text, guide-blob, guide-migration, guide-tag]
+  why: API pages are reference, so they get their own route, apart from the guides.
+
+decision D-158: ECHO's concept and API pages use the promise APIs. Effect is taught only in the Effect guide.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-effect]
+  why: Most readers start without Effect; one page teaches it for those who want it.
+
+decision D-159: ECHO's Guides are Effect, Testing and React, with React last. Solid and Foreign records stay later, and Using ECHO in a plugin belongs to PLEX.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-effect, guide-testing, guide-react, guide-solid, guide-foreign-records]
+  why: These are the guides the docs can back with tested code today.
+
+decision D-160: Concept and API snippets use the tutorial's Person, Organization and Event types. Relation snippets add a WorksAt relation without changing the tutorial app. Queries and Changes and branches may embed the contacts app.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [objects-relations, queries, changes]
+  why: One set of types from the learning path lets a reader recognize each snippet.
+
+decision D-161: Concurrency and conflicts becomes Changes and branches at `/docs/echo/concepts/changes/`, taking in history and branches. `/docs/echo/concepts/conflicts/` redirects.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [changes, conflicts]
+  why: Merging, history and branches are one model: changes on a CRDT document.
+
+decision D-162: HALO's pages teach `@dxos/halo` in Effect, with no promise form, and run it with `Effect.runPromise`. ECHO's promise-only rule [D-158] does not apply to HALO.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-guide-identity, halo-guide-invitation, halo-guide-space, halo-guide-passkey-recovery]
+  why: `@dxos/halo` is Effect-only; a promise wrapper the package does not ship would teach an API that does not exist.
+
+decision D-163: HALO describes Keyhive in the present tense, inside each concept page, with no Keyhive page of its own. Code stays agnostic of what runs underneath.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-welcome, halo-identities-devices, halo-spaces-membership, halo-invitations, halo-recovery-credentials]
+  why: Keyhive is the model the API is shaped around; the docs describe the model, and the code does not change when the implementation does.
+
+decision D-164: HALO's core concepts are Identities and devices, Spaces and membership, Invitations, and Recovery and credentials, in that order.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-identities-devices, halo-spaces-membership, halo-invitations, halo-recovery-credentials]
+  why: Each page builds on the one before: a device belongs to an identity, a member to a space, an invitation adds either, and recovery restores the first.
+
+decision D-165: HALO's Invitations page owns the invitation handshake that ECHO's Spaces and databases leaves out [D-156]. Admission is a contact-card exchange and a delegation.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-invitations]
+  why: One page explains the handshake, and ECHO links to it.
+
+decision D-166: HALO's API pages move to `/docs/halo/api/<namespace>/`, and `/docs/halo/guides/<namespace>/` redirects, as ECHO's did [D-157]. Each page ends with an Errors section naming the classes from `@dxos/halo`'s `errors.ts`; there is no errors page.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-guide-identity, halo-guide-invitation, halo-guide-space]
+  why: API pages are reference and get their own route; a reader handling a failure looks on the page of the call that failed.
+
+decision D-167: HALO's Guides are Passkey recovery and React, in that order. React moves to `/docs/halo/guides/react/` and `/docs/halo/react/` redirects. Agents and API tokens stays later.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-guide-passkey-recovery, halo-react]
+  why: These are the guides the docs can back with tested code today, at the route ECHO and PLEX use for theirs.
+
+decision D-168: HALO's learning path is planned on its own, apart from the concepts, API and guides.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-the-halo-identity]
+  why: The path is an app with its own design questions.
+
+decision D-169: HALO's learning path builds its own app, a contact book, over seven pages: The contact book, Your name, Your spaces, Invite people, Your contacts, Add a device and Recover an identity. It has no ECHO types and does not continue ECHO's tutorial app; ECHO's Sharing a space stays. The four earlier pages are replaced, and `/docs/halo/learn/create-identity/` and `/docs/halo/learn/invite-member/` redirect to Your name and Invite people.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-the-halo-identity, halo-your-profile, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity, halo-welcome]
+  why: An app about identity teaches HALO without the reader carrying ECHO's app along.
+
+decision D-170: A contact is anyone the reader shares a space with: the members of every space, merged by DID, each with the spaces they share. There is no way to add a person outside a space.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-the-halo-identity, halo-your-contacts]
+  why: Contacts then come from HALO's own membership, with no list of their own to keep.
+
+decision D-171: HALO's path is built as ECHO's is [D-137] [D-138] [D-140]: the embeds run in-memory clients in device frames; the StackBlitz projects are real clients on EDGE with the browser's private file system; the starter replaces each quoted region with `todo()`. Each page's code is one module of the app, and pages quote only modules the app runs. The app provides `Identity.Service` and `Space.Service` with `layerClient(client)` from `@dxos/halo-adapter-client`.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-the-halo-identity, halo-your-profile, halo-your-spaces, halo-invite-people, halo-your-contacts, halo-add-device, halo-recover-identity]
+  why: The reader gets the same live, follow-along path in both sections.
+
+decision D-172: Recover an identity's embed creates and revokes recovery codes live, on in-memory clients. `Identity.recover` goes through EDGE, which the embeds have no route to, so the step that recovers on a new device runs only in the StackBlitz project. HALO refuses to revoke the last recovery credential, so the page makes a second code before it revokes the first.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [halo-recover-identity]
+  why: The embed shows what it can run; the reader runs the EDGE step against the real network.
+
+decision D-173: Every page that teaches recovery (Recover an identity, Recovery and credentials, Passkey recovery, and the Identity API page) carries a caution: recovery needs a DXOS account, because EDGE stores recovery credentials only for identities linked to one, and for now an account can be created only through Composer. The embeds keep showing recovery on in-memory clients.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-recover-identity, halo-recovery-credentials, halo-guide-passkey-recovery, halo-guide-identity]
+  why: Production EDGE answers 403 to identities without an account, so a reader's own app cannot recover until they have one.
+
+decision D-174: Each code sample shows the imports its code uses, above it; the snippet loader picks them from the quoted file and compiles the sample with the shared snippets and project modules it imports. The generated projects add `@types/zen-observable`, which types the `subscribe` of `client.spaces` and of an invitation. Installation's `vite.config.ts` matches the project's, with `ConfigPlugin` moved to Configure the client. Sharing says to remember a joined space, the React guide warns that StrictMode opens the client twice and filters by a field in the query, and Text covers the caret on remote edits.
+  date: 2026-11-11
+  by: agent:claude
+  affects: [installation, sharing, guide-react, guide-text]
+  why: Three coding agents built apps from the ECHO pages alone, and each hit these gaps.
+
+decision D-175: HALO's learning path opens with The HALO identity, as ECHO's opens with The ECHO object and PLEX's with The PLEX plugin: what an identity is first, then the contact book running. The page moves from /docs/halo/learn/contact-book/, which redirects to it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-the-halo-identity]
+  why: The three learning paths should start the same way, with the product's central idea.
+
+decision D-176: The learning path's second page is Your profile, at /docs/halo/learn/your-profile/, since the identity's display name is part of its profile. /docs/halo/learn/your-name/ redirects to it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [halo-your-profile]
+  why: The page sets and changes the identity's profile, not only a name.
+
+decision D-177: PLEX's guides run in this order: Effect in plugins, Testing, Debugging, App capabilities, Settings and state, App Graph, React, Using ECHO in a plugin. Effect comes first because every module body and handler is an Effect.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-testing, plex-guide-debugging, plex-guide-settings-and-state, app-framework-guide-react, plex-guide-effect, plex-guide-using-echo]
+  why: A reader works through the guides in order, so each should build on the last; ECHO is the most involved and goes last.
+
+decision D-178: App Graph, AppCapabilities and Translations are app-level, not core PLEX. App Graph becomes one guide that explains the idea and the API, Translations folds into an App capabilities guide, and both sit in Guides; Core concepts and API keep only what `@dxos/app-framework` defines.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-guide-app-graph, app-framework-guide-app-capabilities, app-framework-app-graph, plex-guide-translations]
+  why: A PLEX app without App Graph is still a PLEX app; App Graph matters most of the app-level pieces, so it gets its own guide.
+
+decision D-179: The plugin manifest page is omitted for now; `dx.config.ts` gets no reference of its own until there is a place for it.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [app-framework-manifest, app-framework-guide-plugin, app-framework-api-reference]
+  why: A hand-written table of the config's fields would drift from the type.
+
+decision D-180: The Build with a coding agent prompt no longer tells the agent where Composer is open. The composer-plugin-dev skill needs the target's URL only to publish, and reads it through the debug port then; the reader's steps still point at Composer Preview. The skill fetches its guide from `docs/plex/` and falls back to `docs/composer/` for commits before the move.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Building and loading a plugin never reaches Composer from the agent, so the URL was an unused instruction.
+
+decision D-181: Every section's navigation runs Start here, Learning path, Core concepts, Guides, API, Resources: from most guided to most lookup-like, with API beside Resources as reference.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-effect, halo-react, halo-guide-identity, app-framework-guide-plugin]
+  why: A reader looks for a how-to before an API page, and an API page is reference like the rest of Resources.
+```
+
+decision D-182: ECHO's API group drops Migration and Tag, leaving eleven namespace pages. Both appear only in the generated reference; Types and schema still explains versions and migrations.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [guide-migration, guide-tag, types]
+  why: Neither is something most readers call; the concept page carries what a reader needs to know about migrations.
+
+decision D-183: Guide names are short nouns in every section, without the section's name: PLEX's become Effect, Testing, Debugging and ECHO, alongside App capabilities, Settings and state, App Graph and React.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-guide-effect, plex-guide-testing, plex-guide-debugging, plex-guide-using-echo]
+  why: The section already says whose guide it is, so the names line up across the trees.
+
+decision D-184: PLEX's Build with a coding agent prompt has a picker of four examples above the text box: World Clock (the default, the eval's brief), Expense splitter, Family tree and Tournament bracket. Picking one replaces the text. The tournament works with any game in Composer: each match is a game of any kind, and the match records its own winner.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: A reader can try the agent without first thinking of a plugin, and each example exercises different parts of PLEX: data and a navtree group, relations and a drawn view, and another plugin's objects.
+
+decision D-185: World Clock leaves the docs. The plugin guide's second worked example becomes Bookmarks, from the PLEX learning path, and the With an assistant section no longer names a World Clock folder. Replaces [D-129] and amends [D-153]: every PLEX concept and API snippet comes from the Bookmarks modules. The in-app plugin templates keep World Clock.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [plex-build-with-agent, app-framework-publishing, app-framework-guide-plugin]
+  why: The skill fetches the guide and follows it, so a World Clock example handed the default brief its answer. The `composer-plugin-dev` eval now measures building from the guide's patterns; its first score after this lands is the new baseline, and a drop is expected rather than a regression.
+
+decision D-186: The StackBlitz projects pin `@dxos/*` to pkg.pr.new commit `20a14b9`, main after dxos#14487 landed, in place of that PR's own build `6bad7b6`. Amends [D-138].
+  date: 2026-11-11
+  by: agent:claude
+  why: dxos#14487 merged with a corrected `hasDefaultExport`, so main's builds now run outside the monorepo and the pin no longer needs to follow an open PR.
+
+decision D-187: ECHO's Build with a coding agent prompt has the PLEX page's picker [D-184] with three sample apps: TodoMVC (the default), Kanban board and Collaborative notes. Each builds a Vite and React app in the reader's folder; the learning path is no longer the prompt, and the page links to it instead.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [echo-build-with-agent]
+  why: A small, familiar app tests the docs better than repeating the learning path. The three cover objects and queries, references and replication, and concurrent text.
+
+decision D-188: Until the next npm release, ECHO's coding-agent prompt has the agent set up its project from the learning path's package.json, Vite config, tsconfig and index.html, served at `/echo/project/`, which pin every `@dxos` package to pkg.pr.new at `DXOS_COMMIT`. The prompt says not to install `@dxos` packages from npm. Remove the step once a release from main is on npm.
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [echo-build-with-agent]
+  why: Test runs of all three prompts installed `@dxos/client` 0.16.0, npm's latest, which predates the APIs these docs describe; the Kanban app crashed on its first write until the agent patched node_modules.
+
+decision D-189: Until the next npm release, Installation and the React guide install `@dxos/client` and `@dxos/react-client` from pkg.pr.new at `DXOS_COMMIT`, with `effect` (and React 19.3 for the React client), and link the tutorial project's package.json for the rest. Revert to plain npm installs with the release that removes [D-188].
+  date: 2026-11-11
+  by: user:wittjosiah
+  affects: [installation, guide-react]
+  why: npm's `latest` (0.16.0) is older than the APIs the docs teach.
+
+## Appendix: Extension Definitions
+
+```mdl
+ext template
+  uri: org.dxos.docs.template@1.0
+  desc: A page format, as the ordered parts every page of that template has.
+  fields:
+    purpose: Prose
+    parts: ProseList
+```
+
+```mdl
+ext page
+  uri: org.dxos.docs.page@1.0
+  desc: One page of the docs. The inline prose is its summary; the block's position sets its sidebar order.
+  inline-prose: true
+  fields:
+    section: Prose
+    route: URI
+    group: Prose
+    template: ExtRef
+    status: planned | spike | done | later
+    covers?: ProseList
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true, not as the edit that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
+```

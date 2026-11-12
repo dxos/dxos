@@ -1,0 +1,56 @@
+---
+title: Define a type
+description: Give the plugin its own ECHO type and make it an object a person can create.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the plugin has a Bookmark type, and the inspector can create a bookmark in its space.
+
+## Background
+
+A plugin's data is ECHO objects, and a type describes them. The app reads the type's annotations to name an object,
+pick its icon, and decide whether a person can create one. [Defining types](/docs/echo/learn/defining-types/) and the
+[Type](/docs/echo/api/type/) guide cover types in full; this page uses only what PLEX needs.
+
+## Steps
+
+1. **Declare the type.** `Type.makeObject` gives the schema a DXN and makes it an ECHO type. The annotations tell
+   the app which field is the object's label, which icon to show, and that the type is one a person creates
+   (`UserType`). The fields are optional because a new object starts empty.
+
+   <Snippet file="app-framework-tutorial/src/types/Bookmark" region="type" />
+
+2. **Add a factory.** `make` fills in defaults, so every caller creates a bookmark the same way.
+
+   <Snippet file="app-framework-tutorial/src/types/Bookmark" region="make" />
+
+3. **Register the type with the app.** Two modules do this. The schema module tells the app the type exists, so it can
+   query, store and name objects of it. The create-object module adds the type to the **+** menu and says how to add a
+   new bookmark to the space.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/schema" region="schema" />
+
+   <Snippet file="app-framework-tutorial/src/capabilities/create-object" region="create-object" />
+
+   `SpaceOperation.AddObject` is an operation from the Space plugin. Invoking it, rather than adding to the database
+   directly, puts the bookmark wherever the person asked, such as inside a collection.
+
+4. **Add the modules to the manifest.**
+
+   <Snippet file="app-framework-tutorial/dx.config" region="schema" />
+
+5. **Create a bookmark.** Click **Load dev plugin** below, or **Reload** if your plugin is loaded already. **Schema** shows the Bookmark type's fields. Select **Create object** and click **Create**: the inspector runs the module, as Composer's **+** menu would.
+
+   <InspectorEmbed adds={['schema', 'create-object']} />
+
+   A bookmark named "New bookmark" becomes the sample object in the inspector's header, which every module is shown with. It has no view yet; the next page adds one.
+
+## Recap
+
+You can now:
+
+- Declare a type with the annotations the app reads.
+- Register the type so the app can store and name it.
+- Let a person create an object of the type.

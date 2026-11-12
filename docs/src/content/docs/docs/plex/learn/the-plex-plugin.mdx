@@ -1,0 +1,33 @@
+---
+title: The PLEX plugin
+description: What a plugin is, and the plugin the learning path builds, running in the plugin inspector.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+
+The learning path builds one plugin: Bookmarks, which saves links in a space and counts how often each one is opened. This page explains what a plugin is made of, and shows Bookmarks finished.
+
+## What a plugin is
+
+A PLEX plugin is metadata and a set of modules. The metadata names the plugin and describes it in the registry. Each module waits for an activation event, such as the app starting or a view first needing it, and then contributes capabilities: typed values that the rest of the app looks up. Strings, types, views, operations and entries in the navigation tree are all capabilities. A module's code loads only when it activates, so a plugin costs nothing until it is used.
+
+Composer is built this way: every feature in it is a plugin, and your plugin uses the same APIs. [Plugins and modules](/docs/plex/concepts/plugins/) describes the parts in full.
+
+## The finished plugin
+
+Below, Bookmarks runs in the plugin inspector, a small PLEX app that loads one plugin and shows each of its modules working. The sidebar lists the modules. Click **New** in the header to create a sample bookmark, then select **Surface** to see its view, and **Operations** to run **Record visit** on it.
+
+<InspectorEmbed />
+
+Each page of the learning path builds one piece of it, and ends with that piece in the inspector:
+
+| Page | Files | What it adds |
+| --- | --- | --- |
+| [Create a plugin](/docs/plex/learn/create-plugin/) | `dx.config.ts`, `translations.ts` | The plugin's metadata and its strings |
+| [Define a type](/docs/plex/learn/define-type/) | `types/Bookmark.ts`, `capabilities/schema.ts`, `capabilities/create-object.ts` | The Bookmark type, and a way to create one |
+| [Add a surface](/docs/plex/learn/add-surface/) | `containers/BookmarkArticle.tsx`, `capabilities/react-surface.ts` | The view that shows a bookmark |
+| [Add an operation](/docs/plex/learn/add-operation/) | `types/BookmarkOperation.ts`, `operations/`, `skills/`, two capability files | Record visit, and the skill that gives it to the assistant |
+| [Extend the App Graph](/docs/plex/learn/extend-app-graph/) | `capabilities/app-graph-builder.ts` | A Bookmarks section in the navigation tree, with Record visit on each bookmark |
+| [Run it in Composer](/docs/plex/learn/run-in-composer/) | | The plugin in Composer, from the command palette and the assistant |
+
+From the next page on, the inspector on each page loads your own plugin from its dev server, and checks what that page adds.

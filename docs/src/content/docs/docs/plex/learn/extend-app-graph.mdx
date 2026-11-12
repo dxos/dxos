@@ -1,0 +1,56 @@
+---
+title: Extend the App Graph
+description: Put the plugin's objects and actions into the app's navigation.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page each space has a **Bookmarks** section in the navigation tree, and **Record visit** is on every
+bookmark's toolbar.
+
+## Background
+
+A PLEX app draws its navigation tree, toolbars and menus from one graph, App Graph. In Composer that
+is the tree on the left, the object toolbar and the context menus. Its nodes are the things a
+person can open, and its action nodes are what they can do to them. Plugins add to the graph with builder extensions:
+functions that match a node and return its children or its actions. The app runs them only for the nodes a person
+expands. [App Graph](/docs/plex/guides/app-graph/) explains the model.
+
+## Steps
+
+1. **Add a section under each space.** This extension matches space nodes. It returns a section node when the space has
+   at least one bookmark, so empty spaces show no empty heading. `get` reads the query's atom and reruns the extension
+   when the result changes.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="section" />
+
+2. **List the bookmarks in the section.** This extension matches the section by its type and returns one node per
+   bookmark. `AppNode.makeObject` builds the node from the type's label and icon annotations.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="items" />
+
+3. **Attach the operation as an action.** `createTypeExtension` matches every node whose data is a bookmark.
+   `AppNode.makeToolbarAction` puts the action on the bookmark's toolbar. Its `data` invokes the operation from the
+   previous page.
+
+   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="actions" />
+
+4. **Add the module to the manifest.** The App Graph maker activates the module when the app is idle after startup.
+
+   <Snippet file="app-framework-tutorial/dx.config" region="app-graph" />
+
+5. **See the result.** Load or reload your plugin below, create a sample bookmark with **New**, and select **App Graph**. The inspector shows the branches of the graph, as Composer builds it, that lead to what your plugin added, and marks those nodes.
+
+   <InspectorEmbed adds={['app-graph']} />
+
+   A **Bookmarks** section appears under the space, with the bookmark under it, and **Record visit** is the bookmark's action.
+
+## Recap
+
+You can now:
+
+- Add a section and child nodes to the navigation tree.
+- Attach an operation to a type's nodes as an action.
+
+The plugin is complete. [Run it in Composer](/docs/plex/learn/run-in-composer/) loads it into Composer from your machine.

@@ -1,0 +1,66 @@
+---
+title: Add an operation
+description: Give the plugin an action that the UI, the command palette and agents can run.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the bookmark view has a **Record visit** button, and a skill offers the same operation to the assistant.
+
+## Background
+
+An operation is a named action with a typed input and output. The plugin defines it once and contributes a handler.
+After that, a button, the command palette and the assistant all run it the same way, through the framework's
+operation invoker. [Operations](/docs/plex/concepts/operations/) explains why.
+
+## Steps
+
+1. **Define the operation.** The key is a DXN. The input and output are schemas; an agent reads their descriptions to
+   learn what to pass.
+
+   <Snippet file="app-framework-tutorial/src/types/BookmarkOperation" region="operation" />
+
+2. **Implement the handler.** `Operation.withHandler` attaches an Effect to the definition. Operations are built on [Effect](https://effect.website/), and `Effect.gen` reads like an async function, with `yield*` in place of `await`. This one adds one to the bookmark's visit count and returns the new count.
+
+   <Snippet file="app-framework-tutorial/src/operations/record-visit" region="handler" />
+
+3. **Contribute the handler.** A handler set lists the plugin's handlers. `Operation.lazyHandler` loads the handler's
+   file the first time the operation runs, not when the plugin starts.
+
+   <Snippet file="app-framework-tutorial/src/operations/index" region="handler-set" />
+
+   <Snippet file="app-framework-tutorial/src/capabilities/operation-handler" region="operation-handler" />
+
+4. **Invoke it from the UI.** `useOperation` binds the operation to a callback. Call it from the button, and from the
+   link so that following the link counts too.
+
+   <Snippet file="app-framework-tutorial/src/containers/BookmarkArticle" region="invoke" lang="tsx" />
+
+   <Snippet file="app-framework-tutorial/src/containers/BookmarkArticle" region="render" lang="tsx" />
+
+5. **Offer it to the assistant.** A skill gives the assistant a set of operations as tools, with instructions on when to
+   use them.
+
+   <Snippet file="app-framework-tutorial/src/skills/BookmarksSkill" region="skill" />
+
+   <Snippet file="app-framework-tutorial/src/capabilities/skill-definition" region="skill-definition" />
+
+6. **Add the modules to the manifest.**
+
+   <Snippet file="app-framework-tutorial/dx.config" region="operation" />
+
+7. **Run it.** Load or reload your plugin below, create a sample bookmark with **New**, select **Operations** and click **Run**. The form is built from the operation's input schema; the bookmark field takes the sample. The result is the output, `{ "visits": 1 }`. Click **Record visit** in the article under **Surface** and the count goes up the same way.
+
+   <InspectorEmbed adds={['operations', 'skill']} />
+
+   **Skill** lists the tool the Bookmarks skill gives the assistant. [Run it in Composer](/docs/plex/learn/run-in-composer/) runs the operation from the command palette and from a chat.
+
+## Recap
+
+You can now:
+
+- Define an operation with schemas for its input and output.
+- Implement a handler and load it lazily.
+- Run the operation from a component.
+- Give the assistant the operation through a skill.

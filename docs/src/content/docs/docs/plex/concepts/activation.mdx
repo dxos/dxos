@@ -1,0 +1,55 @@
+---
+title: Activation
+description: When a module runs, the events that activate it, and the order the plugin manager follows.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+Activation is the plugin manager running a module's body: once, when the module's event has fired and every
+capability it requires has been contributed.
+
+## Model
+
+An **activation event** is a named moment in the app's life, such as startup or the first time an article is shown.
+A module names the event it waits for in `activatesOn`, and can combine several: `ActivationEvent.oneOf` activates on
+the first of them, and `ActivationEvent.allOf` waits for all of them.
+
+<Snippet file="app-framework-guide-activation-event" region="activates-on" />
+
+A module's `requires` is the second gate. The **plugin manager** keeps a graph of which module provides each
+capability, and activates providers before the modules that require them, whichever event activated the provider.
+Registration order plays no part.
+
+<Snippet file="app-framework-guide-activation-event" region="requires" />
+
+## Behavior
+
+- The app fires `ActivationEvents.Startup` while it boots and `ActivationEvents.Idle` once it has painted and the
+  browser is idle. A module with no `activatesOn` belongs to the Idle wave, so only what the first screen needs runs
+  at startup.
+- The framework fires further events when something first needs a module. `ActivationEvents.SurfacesRequested(role)`
+  fires the first time a surface of that role renders; `CommandsRequested` fires when the command palette or CLI asks
+  for commands. The module makers in `AppCapability` choose the event, so the surface module of a plugin loads with
+  the first article, not at startup.
+- A module can fire an event itself with `Plugin.activate`, which is how one plugin loads another's modules on demand.
+
+<Snippet file="app-framework-guide-activation-event" region="fire" />
+
+- An event stays fired. A module added after its event, for example by a plugin a person turns on later, activates
+  at once.
+- A lazy module's code is imported only when it is about to activate. A module whose event never fires is never
+  loaded, which is what keeps a large app's boot small.
+- Plugins come and go while the app runs. Enabling one registers its modules and activates every module whose event
+  has fired; disabling one deactivates its modules in reverse order, runs their finalizers and removes their
+  contributions. [PluginManager](/docs/plex/guides/plugin-manager/) shows the calls.
+- A module that fails, or does not finish within 30 seconds, is recorded on the manager's `failed` list and its
+  plugin is disabled, so one broken plugin does not stop the app from starting.
+
+## Limits
+
+- Two modules that require each other's capabilities form a cycle, and the plugin manager fails them with
+  `DependencyCycleError` at runtime.
+- A module that requires a capability no enabled plugin provides waits forever, without an error. The
+  [inspector](/docs/plex/guides/debugging/) shows such a module as waiting.
+- Activation order is a graph, not a sequence. Do not rely on two modules with no requirement between them
+  activating in a particular order.

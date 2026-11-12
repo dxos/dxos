@@ -1,0 +1,148 @@
+---
+title: App capabilities
+description: The capabilities a workspace app such as Composer adds for plugins to contribute, from the App Toolkit.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+```
+
+The framework defines how plugins extend each other, but not what an app is made of. `@dxos/app-toolkit` adds that
+for a workspace app such as Composer: a layout, App Graph, settings, translations, the standard surface roles. Its
+capabilities are in `AppCapabilities`, and Composer and any other app built with the toolkit read them. `AppCapability` has a module
+maker for most of them, which sets the activation event and environments so a manifest only names the file.
+
+## A tour, by group
+
+Most plugins touch a handful of these. The rest exist for the plugins that build the app's own features, and a
+plugin that is not one of those can ignore them.
+
+- **Layout.** `Layout` is the current layout as an atom: what is open, the sidebar, the mode. Plugins read it; the
+  layout plugin provides it. Changing it goes through `LayoutOperation`.
+- **App Graph.** `AppGraphBuilder` adds nodes and actions, `AppGraph` is the graph itself for reading, and
+  `AppGraphRetention` keeps nodes loaded while they are off screen. [App Graph](/docs/plex/guides/app-graph/) covers
+  them.
+- **Settings and text.** `Settings` adds a section to the settings page, and `Translations` gives the plugin's
+  strings their text. [Settings and state](/docs/plex/guides/settings-and-state/) covers settings, and
+  [Translations](#translations) below covers text.
+- **Schema.** `Schema` registers the ECHO types the app can store, query and name.
+  [Using ECHO in a plugin](/docs/plex/guides/using-echo/) covers it.
+- **Agents.** `SkillDefinition` gives the assistant a skill, `Toolkit` adds tools outside a skill, and `McpServer`
+  exposes a built-in MCP server.
+- **Files and content.** `FileUploader` stores an uploaded file, `Exporter` adds an export format, `TextContent`
+  extracts an object's text for search and agents, and `PluginAsset` publishes a file other tools can read, such as
+  the plugin's spec.
+
+| Capability | Maker | What it adds |
+| --- | --- | --- |
+| `AppGraph` | none | The graph itself, for reading. |
+| `AppGraphBuilder` | `appGraphBuilder` | Nodes and actions in App Graph. |
+| `AppGraphRetention` | none | Nodes App Graph keeps loaded. |
+| `Exporter` | `exporter` | An export format for objects. |
+| `FileUploader` | none | Storage for files people add. |
+| `Layout` | none | The current layout, as an atom. |
+| `McpServer` | `mcpServer` | A built-in MCP server. |
+| `PluginAsset` | `pluginAsset` | A file other tools can read, such as the plugin's spec. |
+| `Schema` | `schema` | ECHO types the app can store, query and name. |
+| `Settings` | `settings` | A section in the settings page. |
+| `SkillDefinition` | `skillDefinition` | A skill the assistant can use. |
+| `SpaceTemplate` | `spaceTemplates` | A template for new spaces. |
+| `TextContent` | `textContent` | The text of an object, for search and agents. |
+| `Toolkit` | none | Tools for the assistant outside a skill. |
+| `Translations` | `translations` | Text for the plugin's strings and type labels. |
+
+`AppCapability.surface` and `AppCapability.operationHandler` make modules for the framework's `ReactSurface` and
+`OperationHandler` capabilities.
+
+## Translations
+
+A plugin never writes its UI text inline. It contributes translation resources, keyed by language and namespace, and
+reads strings by key, so the app can show them in the person's language and other plugins can label its objects.
+
+### Contribute translation resources
+
+A resource maps a language to namespaces, and each namespace to keys and their text. Use the plugin's key as the
+namespace for its own strings, and a type's typename for the strings that describe the type.
+`AppCapability.translations` contributes the resources; it activates at startup, since labels are needed for the
+first screen.
+
+<Snippet file="app-framework-tutorial/src/translations" region="translations" />
+
+<Snippet file="app-framework-tutorial/dx.config" region="translations" />
+
+### The keys the app reads for a type
+
+The app labels objects of a type from that type's namespace, so a type with these keys reads well in every menu:
+
+| Key | Where it shows |
+| --- | --- |
+| `typename.label` | The type's name, such as in the create menu. |
+| `typename.label_zero`, `_one`, `_other` | The plural forms, such as a section heading. |
+| `object-name.placeholder` | The name of a new object before the person names it. |
+| `add-object.label` | The create menu's entry for the type. |
+
+### Read a string from a component
+
+`useTranslation` takes a namespace and returns `t`. A key with a `count` picks its plural form.
+
+<Snippet file="plex-guide-translations" region="read" lang="tsx" />
+
+<Snippet file="plex-guide-translations" region="count" lang="tsx" />
+
+App Graph nodes and actions take a label as a key and namespace, `['record-visit.label', { ns }]`, and the app
+translates it where it renders.
+
+## Surface roles
+
+The roles a plugin fills most often are in `AppSurface` from `@dxos/app-toolkit`:
+
+| Role | Where it renders | What it is given |
+| --- | --- | --- |
+| `Article` | The main content area, one object at a time | `subject`, `attendableId` |
+| `Section` | An object inside a stack of objects | `subject`, `attendableId` |
+| `CardContent` | The body of a card, in search results and boards | `subject` |
+| `ObjectProperties` | The object's properties panel | `subject` |
+| `Dialog`, `Popover` | A dialog or popover a plugin opens by name | `component`, `props` |
+| `Navigation` | The navigation sidebar | `current`, the open item's id |
+| `StatusIndicator` | The status bar | no data |
+
+A plugin can render into any role another plugin defines, and declare its own. See
+[Surfaces](/docs/plex/concepts/surfaces/).
+
+## Contribute settings, metadata and schema registrations
+
+A settings contribution names a prefix, a schema and a writable atom. The app renders a form from the schema and writes
+the person's changes to the atom.
+
+<Snippet file="app-framework-guide-app-capabilities" region="settings" />
+
+In a manifest, each maker takes the loader of the module that contributes the value:
+
+<Snippet file="app-framework-guide-app-capabilities" region="makers" />
+
+The tutorial plugin registers its type with `AppCapability.schema`, whose module's default export is the list of types:
+
+<Snippet file="app-framework-tutorial/src/capabilities/schema" region="schema" />
+
+## App capability or a new one
+
+Use an app capability when you are adding to something the app already shows: a setting, a node, a skill. Declare a
+new capability when your plugin is the host and other plugins add to it, the way the Space plugin declares
+`SpaceCapabilities.CreateObjectEntry` for the types in its create menu. [Capability](/docs/plex/guides/capability/)
+shows how.
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Capability](/docs/plex/guides/capability/) | Declaring and reading capabilities. |
+| [Plugin](/docs/plex/guides/plugin/) | Modules and makers. |
+| [React](/docs/plex/guides/react/) | The other hooks a plugin component uses. |

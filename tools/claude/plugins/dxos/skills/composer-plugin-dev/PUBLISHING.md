@@ -47,7 +47,7 @@ Run the login in the background. `--no-open` keeps `dx` from opening the system 
 which may not be the one holding the target:
 
 ```bash
-.dxos/dx account login --method composer <origin> --no-open
+.dxos/dx account login --method composer <origin> --no-open  # origin from target.json
 ```
 
 `dx` prints a link and the code Composer should show. Open the link in the target, with `LINK` set
