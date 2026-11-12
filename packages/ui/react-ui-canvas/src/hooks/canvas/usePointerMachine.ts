@@ -155,7 +155,7 @@ export type UsePointerMachineOptions = {
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
   cell: number;
 } & Pick<SceneCamera, 'setCamera' | 'cancelAnimation' | 'isNavigating'> &
-  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'snapMinor' | 'isClick' | 'moveDelta'> &
+  Pick<SceneSnap, 'minor' | 'major' | 'snap' | 'isClick' | 'moveDelta'> &
   Pick<EditMode, 'exitEdit'>;
 
 export type PointerMachine = {
@@ -233,7 +233,6 @@ export const usePointerMachine = ({
   minor,
   major,
   snap,
-  snapMinor,
   isClick,
   moveDelta,
   exitEdit,
@@ -323,7 +322,7 @@ export const usePointerMachine = ({
         return;
       }
       const reach = VERTEX_SNAP_PX / registry.get(atoms.camera).zoom;
-      const vertex = { x: snapMinor(point.x), y: snapMinor(point.y) };
+      const vertex = { x: snap(point.x), y: snap(point.y) };
       // Where the press would place a vertex counts too: with snap on, that is where the user sees it land.
       const near = (placed: Point) =>
         Math.hypot(...distance(placed, point)) <= reach || Math.hypot(...distance(placed, vertex)) <= reach;
@@ -334,7 +333,7 @@ export const usePointerMachine = ({
         startDrag({ ...drawing, points: [...points, vertex], to: vertex }, event);
       }
     },
-    [registry, atoms.camera, finishVertices, snapMinor, startDrag],
+    [registry, atoms.camera, finishVertices, snap, startDrag],
   );
 
   const onBackgroundPointerDown = useCallback(
@@ -360,7 +359,7 @@ export const usePointerMachine = ({
       } else if (currentTool.kind === 'node') {
         if (capabilities.create && nodeRegistry[currentTool.type]?.createFromPoints) {
           select([]);
-          const vertex = { x: snapMinor(point.x), y: snapMinor(point.y) };
+          const vertex = { x: snap(point.x), y: snap(point.y) };
           startDrag({ kind: 'vertices', type: currentTool.type, points: [vertex], to: vertex }, event);
         } else if (capabilities.create) {
           const from = { x: snap(point.x), y: snap(point.y) };
@@ -392,7 +391,7 @@ export const usePointerMachine = ({
       capabilities.create,
       capabilities.link,
       snap,
-      snapMinor,
+      snap,
       nodeRegistry,
       onDrawingPointerDown,
       setDrag,
@@ -792,7 +791,7 @@ export const usePointerMachine = ({
           break;
         }
         case 'move': {
-          // Snap the pressed node's top-left to the major grid; the selection moves by the same offset.
+          // Snap the pressed node's top-left to the grid; the selection moves by the same offset.
           const point = toScene(event);
           const raw = { x: point.x - current.origin.x, y: point.y - current.origin.y };
           setDrag({
@@ -816,7 +815,7 @@ export const usePointerMachine = ({
                 minSize: def?.minSize ?? { width: major, height: major },
                 maxSize: def?.maxSize,
                 symmetric: event.shiftKey,
-                // The moving edge lands on the major grid, as a move does, so a node's edges stay on major lines.
+                // The moving edge lands on the grid, as a move does, so a node's edges stay on its lines.
                 snap,
               });
           setDrag({ ...current, bounds });
@@ -835,14 +834,14 @@ export const usePointerMachine = ({
         case 'vertices': {
           // The next segment follows the pointer to where a press would place its vertex.
           const point = toScene(event);
-          setDrag({ ...current, to: { x: snapMinor(point.x), y: snapMinor(point.y) } });
+          setDrag({ ...current, to: { x: snap(point.x), y: snap(point.y) } });
           break;
         }
         case 'vertex': {
           // A vertex lands on the minor grid, as the polyline tool places one.
           const point = toScene(event);
           const points = [...current.points];
-          points[current.index] = { x: snapMinor(point.x), y: snapMinor(point.y) };
+          points[current.index] = { x: snap(point.x), y: snap(point.y) };
           setDrag({ ...current, points });
           break;
         }
@@ -851,7 +850,7 @@ export const usePointerMachine = ({
           // creation and stays on the major grid.
           const point = toScene(event);
           const points = [...current.points];
-          points[current.index] = { x: snapMinor(point.x), y: snapMinor(point.y) };
+          points[current.index] = { x: snap(point.x), y: snap(point.y) };
           setDrag({ ...current, points });
           break;
         }
@@ -873,7 +872,7 @@ export const usePointerMachine = ({
       setDrag,
       toScene,
       snap,
-      snapMinor,
+      snap,
       isClick,
       moveDelta,
       scene.nodes,
@@ -1080,8 +1079,8 @@ export const usePointerMachine = ({
                 id: createId(source?.type ?? 'rect'),
                 z,
                 center: {
-                  x: snapMinor(drop.x - size.width / 2) + size.width / 2,
-                  y: snapMinor(drop.y - size.height / 2) + size.height / 2,
+                  x: snap(drop.x - size.width / 2) + size.width / 2,
+                  y: snap(drop.y - size.height / 2) + size.height / 2,
                 },
                 size,
               };
@@ -1174,7 +1173,7 @@ export const usePointerMachine = ({
       nodeEdit,
       minor,
       cell,
-      snapMinor,
+      snap,
       activate,
       rootRef,
     ],

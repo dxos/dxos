@@ -65,7 +65,9 @@ export const boxPrototype: NodeDefSpec = {
 export const cardPrototype: NodeDefSpec = {
   component: CardNodeView,
   parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
-  defaultSize: { width: 3, height: 2 },
+  // Tall enough to draw what a new card carries: its frame and padding take 32, and the header, a line of body and
+  // the footer over its hairline another 85, so two nominal units (96) would clip the footer it just created.
+  defaultSize: { width: 4, height: 3 },
   resizable: true,
   minSize: { width: 128, height: 64 },
 };

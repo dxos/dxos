@@ -265,7 +265,7 @@ const CanvasEngine = ({
 
   // Set once the user takes the camera over; a restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
-  const { minor, major, detent, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  const { minor, major, detent, snap, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
   const { fitting, enterFit, exitFit } = useSceneView({
     registry,
@@ -418,7 +418,6 @@ const CanvasEngine = ({
     minor,
     major,
     snap,
-    snapMinor,
     isClick,
     moveDelta,
     exitEdit,
@@ -447,7 +446,7 @@ const CanvasEngine = ({
     capabilities,
     cell,
     viewport,
-    snapMinor,
+    snap,
     createdNode,
     commitCreated,
   });
@@ -554,7 +553,7 @@ const CanvasEngine = ({
     [registry, atoms.drag, finishVertices, onElementDoubleClick],
   );
 
-  useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
+  useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snap, setDrag, cancelDrag, onPointerUp });
 
   // Once per atoms, so the providers' values hold still while the root re-renders.
   const timeAtoms = useMemo(() => ({ time: atoms.clock.time, playing: atoms.clock.playing }), [atoms]);
