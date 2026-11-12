@@ -18,6 +18,7 @@ import * as Schema from 'effect/Schema';
 import React, { type CSSProperties } from 'react';
 
 import { CardFrame, type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
+import { OptionsLookupAnnotation, iconOptions } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
 /**
@@ -37,7 +38,7 @@ export const feedCardFields = {
   /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
   label: Schema.String,
   /** A Phosphor icon name as the deck writes it (`chat-circle-dots`), without the `ph--…--regular` wrapping. */
-  icon: Schema.optional(Schema.String.annotate({ title: 'Icon' })),
+  icon: Schema.optional(Schema.String.annotate({ title: 'Icon' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
   /** An accent drawn as the card's outline; `ink` is the agents' dark edge. */
   tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
   /** How many blocks the feed strip has. */

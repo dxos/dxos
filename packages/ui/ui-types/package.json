@@ -39,6 +39,9 @@
   "dependencies": {
     "i18next": "catalog:"
   },
+  "devDependencies": {
+    "@phosphor-icons/core": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   }

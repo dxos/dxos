@@ -26,7 +26,7 @@ import { type ElementKindSpec, type NodeViewProps } from '@dxos/react-ui-canvas'
 import { StepAnnotation } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
-import { curve, layout, pick, toward } from './space-graph/space-graph.generator.ts';
+import { layout } from './space-graph/space-graph.generator.ts';
 
 /**
  * A hue of the canvas theme, and its classes written out. Tailwind only emits the classes it reads verbatim in
@@ -91,19 +91,7 @@ export const spaceGraphFields = {
       title: 'Object size',
     }),
   ),
-  /**
-   * The cards that read and write this space, by node id (`research/box`). Each one draws a leg to the
-   * `picks` objects nearest the point it aims at, and those objects light up — the agents reaching into
-   * the space. The view resolves each id against the scene, so a reader followed as its card moves.
-   */
-  readers: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Readers' })),
-  /** Objects each reader reaches, and lights. */
-  picks: Schema.optional(
-    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 6 })).annotate({
-      title: 'Objects per reader',
-    }),
-  ),
-  /** Lit objects and reader legs. */
+  /** The graph's colour. */
   hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue' })),
 };
 
@@ -118,9 +106,9 @@ type SpaceGraphFields = Schema.Struct.Type<typeof spaceGraphFields>;
 const isSpaceGraph = (node: NodeViewProps['node']): node is NodeViewProps['node'] & SpaceGraphFields =>
   node.type === 'space-graph';
 
-const DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, objectSize: 24, picks: 2, hue: 'blue' } as const;
+const DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, objectSize: 24, hue: 'neutral' } as const;
 
-export const SpaceGraphNodeView = ({ node, scene }: NodeViewProps) => {
+export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
   if (!isSpaceGraph(node)) {
     return null;
   }
@@ -133,29 +121,6 @@ export const SpaceGraphNodeView = ({ node, scene }: NodeViewProps) => {
   const center = { x: width / 2, y: height / 2 };
   const radius = Math.min(width, height) / 2;
   const { cells, nodes, links, nodeR } = layout(center, radius, params);
-  const origin = { x: node.center.x - width / 2, y: node.center.y - height / 2 };
-
-  // A reader is a node of the scene, read by id: no binding, and it follows the card as it moves.
-  const lit = new Map<number, number>();
-  const legs: string[] = [];
-  (node.readers ?? []).forEach((id, reader_index) => {
-    const reader = scene.nodes[id];
-    if (!reader) {
-      return;
-    }
-    // The reader in this node's own coordinates, so `toward` aims as it does on the slide.
-    const from = {
-      x: reader.center.x + reader.size.width / 2 - origin.x,
-      y: reader.center.y - origin.y,
-    };
-    for (const index of pick(nodes, params.picks, toward(center, radius, from, reader_index))) {
-      lit.set(index, index);
-      // The leg starts where the link from the card meets the circle, on the reader's side.
-      const angle = Math.atan2(from.y - center.y, from.x - center.x);
-      const edge = { x: center.x + Math.cos(angle) * radius, y: center.y + Math.sin(angle) * radius };
-      legs.push(curve(edge, nodes[index]));
-    }
-  });
 
   const on = new Set(nodes.map((point) => `${point.x},${point.y}`));
   const hue = params.hue;
@@ -192,18 +157,8 @@ export const SpaceGraphNodeView = ({ node, scene }: NodeViewProps) => {
           opacity={0.6}
         />
       ))}
-      {legs.map((d, index) => (
-        <path key={`leg-${index}`} d={d} className={`fill-none ${STROKE[hue]}`} strokeWidth={1.8} />
-      ))}
       {nodes.map((point, index) => (
-        <circle
-          key={`object-${index}`}
-          cx={point.x}
-          cy={point.y}
-          r={lit.has(index) ? nodeR + 2.4 : nodeR}
-          className={lit.has(index) ? FILL[hue] : 'fill-neutral-border'}
-          data-lit={lit.has(index) ? true : undefined}
-        />
+        <circle key={`object-${index}`} cx={point.x} cy={point.y} r={nodeR} className={FILL[hue]} />
       ))}
     </svg>
   );

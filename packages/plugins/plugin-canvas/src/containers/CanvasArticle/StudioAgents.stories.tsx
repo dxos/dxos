@@ -126,7 +126,7 @@ export const Default: Story = {
     await expect(getComputedStyle(marked[0]).backgroundColor).toBe('rgb(45, 111, 255)');
     // The space is an element of its own kind, so it is selectable and its fields are its configuration.
     const space = await canvas.findByTestId('space-graph-node');
-    await expect(space.querySelectorAll('[data-lit]').length).toBe(8);
+    await expect(space.querySelectorAll('circle').length).toBeGreaterThan(100);
   },
 };
 

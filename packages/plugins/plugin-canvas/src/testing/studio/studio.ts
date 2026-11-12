@@ -517,7 +517,6 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
     if (!kinds.has(component.kind) || !isNodeRecord(record)) {
       continue;
     }
-    const readers = readersOf(model, component.id);
     const { pitch, fill, extra, size, seed } = component.params;
     content[key] = {
       ...record,
@@ -532,9 +531,7 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
         ...(typeof fill === 'number' ? { fill } : {}),
         ...(typeof extra === 'number' ? { extra } : {}),
         ...(typeof size === 'number' ? { objectSize: size } : {}),
-        readers,
-        picks: 2,
-        hue: 'blue',
+        hue: 'neutral',
       },
     };
     placed++;

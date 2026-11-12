@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
 import {
@@ -11,6 +11,7 @@ import {
   NumberLayoutAnnotationId,
   StepAnnotationId,
   VectorAnnotationId,
+  phosphorIcons,
 } from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
@@ -73,6 +74,21 @@ export const autofill =
     deps: Deps,
     derive: (values: Pick<Values, Deps[number]>) => Effect.Effect<string | undefined, unknown>,
   ): Autofill => ({ deps, derive });
+
+/**
+ * Every Phosphor glyph as a combobox: a field annotated with it is typed into rather than picked from a grid, which
+ * is what 1,512 of them need. The value is the bare name (`chat-circle-dots`), as a node's `icon` field and the
+ * `Icon` component both take it; each row shows the glyph beside the name.
+ *
+ * The whole catalogue loads once (the lookup has no deps) and the combobox filters it as you type, so nothing is
+ * listed before the query narrows it. A name that is not in the list is still accepted: the registry resolves any
+ * symbol at runtime, so a glyph added to Phosphor after this build still works.
+ */
+export const iconOptions = (): OptionsLookup => ({
+  deps: [],
+  combobox: true,
+  load: () => Effect.succeed(phosphorIcons.map((name) => ({ value: name, label: name, icon: `ph--${name}--regular` }))),
+});
 
 /** Marks a field whose value is one of the theme's hues; the form renders the hue picker for it. */
 export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
