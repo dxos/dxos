@@ -28,6 +28,7 @@ import {
 
 import { type LinkRegistry, type NodeDefSpec, type NodeRegistry, createNodeRegistry } from '../../model/index.ts';
 import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
+import { CardNodeView, IconNodeView } from './CardNodeView.tsx';
 import {
   BoxNodeView,
   CloudNodeView,
@@ -56,7 +57,39 @@ export const boxPrototype: NodeDefSpec = {
   minSize: MIN_SIZE,
 };
 
-export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = { box: boxPrototype };
+/**
+ * A card: a header of an icon and a title, a body, and a footer under a hairline, each edited in place. A type
+ * extending it declares which of `icon`, `label`, `body` and `footer` it carries — a region whose field the node
+ * does not have is not drawn — and composes `CardFrame` in a view of its own when it has more to show.
+ */
+export const cardPrototype: NodeDefSpec = {
+  component: CardNodeView,
+  parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
+  defaultSize: { width: 3, height: 2 },
+  resizable: true,
+  minSize: { width: 128, height: 64 },
+};
+
+/**
+ * An icon alone, drawn from the node's `icon` field, with an optional caption under it. Any Phosphor name works: the
+ * icon registry fetches a symbol the sprite does not hold, so a type is not limited to the glyphs the UI draws.
+ */
+export const iconPrototype: NodeDefSpec = {
+  component: IconNodeView,
+  parts: [{ field: 'label' }],
+  defaultSize: { width: 1, height: 1 },
+  resizable: true,
+  minSize: { width: 32, height: 32 },
+  // The glyph is the shape; a frame around it would be a second shape.
+  bare: true,
+  portsPerSide: 1,
+};
+
+export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
+  box: boxPrototype,
+  card: cardPrototype,
+  icon: iconPrototype,
+};
 
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   rect: {

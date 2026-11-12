@@ -23,6 +23,7 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { type ElementKindSpec, type NodeViewProps } from '@dxos/react-ui-canvas';
+import { StepAnnotation } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
 import { curve, layout, pick, toward } from './space-graph/space-graph.generator.ts';
@@ -59,21 +60,49 @@ const STROKE: Record<Hue, string> = {
   violet: 'stroke-violet-border',
 };
 
+//
+// The form reads `Schema.isInt` and `Schema.isBetween` off a field's checks (react-ui-form
+// `fields/numeric-constraints.ts`): an integer field steps by 1 and a bounded one clamps, so the
+// constraints are declared rather than annotated with a step.
+//
+
 export const spaceGraphFields = {
   /** Same seed, same graph. */
-  seed: Schema.Number.annotate({ title: 'Seed' }),
+  seed: Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)).annotate({ title: 'Seed' }),
   /** Distance between neighbouring lattice points, in scene units: how far apart the objects sit. */
-  pitch: Schema.optional(Schema.Number.annotate({ title: 'Spacing' })),
+  pitch: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 8, maximum: 120 })).annotate({ title: 'Spacing' }),
+  ),
   /** Share of the lattice that becomes objects (0–1): how full the space is. */
-  fill: Schema.optional(Schema.Number.annotate({ title: 'Population' })),
+  fill: Schema.optional(
+    Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }))
+      .annotate({ title: 'Population' })
+      .pipe(StepAnnotation.set(0.05)),
+  ),
   /** Chance that each neighbouring pair beyond the spanning tree is linked (0–1): how connected the graph is. */
-  extra: Schema.optional(Schema.Number.annotate({ title: 'Link density' })),
+  extra: Schema.optional(
+    Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 }))
+      .annotate({ title: 'Link density' })
+      .pipe(StepAnnotation.set(0.05)),
+  ),
   /** Object radius as a percentage of pitch. Not `size`, which every element already has as its frame. */
-  objectSize: Schema.optional(Schema.Number.annotate({ title: 'Object size' })),
-  /** Node ids of the cards that read and write this space; each reaches `picks` objects, which light up. */
+  objectSize: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 5, maximum: 50 })).annotate({
+      title: 'Object size',
+    }),
+  ),
+  /**
+   * The cards that read and write this space, by node id (`research/box`). Each one draws a leg to the
+   * `picks` objects nearest the point it aims at, and those objects light up — the agents reaching into
+   * the space. The view resolves each id against the scene, so a reader followed as its card moves.
+   */
   readers: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Readers' })),
   /** Objects each reader reaches, and lights. */
-  picks: Schema.optional(Schema.Number.annotate({ title: 'Objects per reader' })),
+  picks: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 6 })).annotate({
+      title: 'Objects per reader',
+    }),
+  ),
   /** Lit objects and reader legs. */
   hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue' })),
 };

@@ -31,8 +31,12 @@ const SHARED_SLOTS: ReadonlySet<string> = new Set(['label']);
  * A plugin's element kind for the 2D editor: its element schema (`Schema.Struct({ ...Scene.Element2D.fields, type:
  * Schema.Literal(…), …own })`), a new element of it, and how the canvas draws and edits it (every other field is the
  * canvas's node definition, which {@link kindNodeDef} completes from the kind).
+ *
+ * A kind may name a prototype (`extends: 'card'`), as a built-in type does: the host resolves it against
+ * `defaultNodePrototypes` when it builds the registry, so a contributed kind inherits a shared look, parts and
+ * sizing instead of restating them.
  */
-export type ElementKindSpec = Omit<NodeDefSpec, 'schema' | 'create' | 'extends'> & {
+export type ElementKindSpec = Omit<NodeDefSpec, 'schema' | 'create'> & {
   schema: Schema.Codec<Scene.Element2D, unknown> & { readonly fields: Schema.Struct.Fields };
   create: (props: CreateProps) => Scene.Element2D;
 };

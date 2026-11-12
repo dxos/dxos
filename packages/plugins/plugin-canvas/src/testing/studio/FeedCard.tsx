@@ -17,8 +17,7 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React, { type CSSProperties } from 'react';
 
-import { type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
-import * as Icon from '@dxos/react-ui/Icon';
+import { CardFrame, type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
 import { Scene } from '@dxos/scene';
 
 /**
@@ -76,7 +75,7 @@ const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => (
         part='feedLabel'
         text={label}
         editing={editing}
-        classNames='studio-card-label font-mono shrink-0 text-[12px] mie-[2px]'
+        classNames='studio-card-label font-mono shrink-0 text-[12px] me-[2px]'
       >
         {label}
       </TextPart>
@@ -101,41 +100,26 @@ export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
     return null;
   }
   const tone = toneValue(node.tone);
-  const style: Styled = { padding: '14px 18px', gap: 10, ...(tone ? { '--sd-tone': tone } : {}) };
+  const style: Styled = { padding: '12px 18px', ...(tone ? { '--sd-tone': tone } : {}) };
   return (
     <div
-      className='studio-card dx-cover flex flex-col rounded-xl overflow-hidden'
+      className='studio-card dx-cover rounded-xl overflow-hidden'
       data-testid='feed-card-node'
       data-tone={tone ? true : undefined}
       style={style}
     >
-      <div className='flex items-center shrink-0' style={{ gap: 9 }}>
-        <Icon.Icon icon={`ph--${node.icon ?? 'square'}--regular`} size='lg' classNames='studio-card-icon shrink-0' />
-        <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate text-[23px] leading-none'>
-          {node.label}
-        </TextPart>
-      </div>
-      {node.feed ? <FeedStrip n={node.feed} label={node.feedLabel} marks={node.marks} editing={editing} /> : null}
-      {node.body !== undefined ? (
-        <TextPart part='body' text={node.body} editing={editing} classNames='studio-card-body text-[15px] leading-snug'>
-          {node.body}
-        </TextPart>
-      ) : null}
-      {node.footer !== undefined ? (
-        <TextPart
-          part='footer'
-          text={node.footer}
-          editing={editing}
-          classNames='studio-card-footer mt-auto shrink-0 font-mono truncate text-[13px] pbs-2'
-        >
-          {node.footer}
-        </TextPart>
-      ) : null}
+      {/* The core card prototype's frame draws the header, body and footer and makes each a part; the feed strip is
+          what this kind adds between the header and the body. */}
+      <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
+        {node.feed ? <FeedStrip n={node.feed} label={node.feedLabel} marks={node.marks} editing={editing} /> : null}
+      </CardFrame>
     </div>
   );
 };
 
 export const feedCardSpec: ElementKindSpec = {
+  // The card prototype supplies the sizing and the three text parts; this kind adds its own icon, strip and tone.
+  extends: 'card',
   name: 'Feed card',
   icon: 'ph--rows--regular',
   key: 'F',
@@ -143,7 +127,6 @@ export const feedCardSpec: ElementKindSpec = {
   component: FeedCardNodeView,
   create: ({ id, z, center, size }) => ({ type: 'feed-card', id, z, center, size, label: 'Feed', feed: 9 }),
   defaultSize: { width: 300, height: 138 },
-  resizable: true,
   // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so
   // Enter on a selected card edits its title; Tab moves on through the strip's caption, the body and the footer.
   parts: [{ field: 'label' }, { field: 'feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],
