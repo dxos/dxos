@@ -104,9 +104,6 @@ const HEADER = 24;
 const BODY = 40;
 const FOOTER = 16;
 const RULE = 1;
-/** A text node insets its text by a minor grid unit on each side, so its frame is that much wider than the text. */
-const TEXT_INSET = 12;
-
 const LEFT = -CARD_SIZE.width / 2 + INSET + PAD;
 const RIGHT = CARD_SIZE.width / 2 - INSET - PAD;
 const TOP = -CARD_SIZE.height / 2 + INSET + PAD;
@@ -114,7 +111,8 @@ const BOTTOM = CARD_SIZE.height / 2 - INSET - PAD;
 /** The footer sits on the bottom padding (`mt-auto`), so the hairline is as far above it as its own box is tall. */
 const RULE_Y = BOTTOM - FOOTER - GAP - RULE;
 
-/** A text node, placed by the box its TEXT occupies: the frame is wider by the inset the text box adds. */
+/** A text node of the card, its frame the box its text fills: a card's regions start on their own edge, not a grid
+ * cell inside it, so each takes no padding. */
 const text = (
   id: string,
   z: string,
@@ -126,9 +124,10 @@ const text = (
   type: 'note',
   z,
   center: { x: x + width / 2, y: y + height / 2 },
-  size: { width: width + TEXT_INSET * 2, height },
+  size: { width, height },
   text: value,
-  style: { fill: false, border: false, alignHorizontal: 'left', alignVertical: 'middle', fontSize },
+  padding: { x: 0, y: 0 },
+  style: { alignHorizontal: 'left', alignVertical: 'middle', fontSize },
 });
 
 const glyph = (id: string, z: string, center: { x: number; y: number }, type: string): IconNode => ({

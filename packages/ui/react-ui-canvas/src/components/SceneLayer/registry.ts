@@ -181,12 +181,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     minSize: { width: 16, height: 16 },
   },
   note: {
-    name: 'Note',
+    name: 'Text',
     icon: 'ph--text-t--regular',
     key: 'T',
     schema: NoteNode,
     component: NoteNodeView,
     parts: [{ field: 'text', multiline: true }],
+    // The text is the shape: a border and a fill around it would be a second one, and a rounded corner would cut its
+    // first line. A node that wants either sets them on its own style.
+    bare: true,
     create: (props) => createNode({ type: 'note', ...props }),
     defaultSize: NOMINAL_SIZES.note,
     resizable: true,

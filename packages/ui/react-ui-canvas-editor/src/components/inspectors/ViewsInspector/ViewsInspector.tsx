@@ -54,6 +54,8 @@ export type ViewsInspectorProps = InspectorProps & {
   scenes?: RenderLists2D;
   /** The canvas's root View. */
   root?: ViewId;
+  /** A row's icon by element type, as the rail's create tools draw them. */
+  icons?: Readonly<Record<string, string>>;
   /** The rows to show, built by the caller; otherwise built from `scenes` under `root`. */
   tree?: ViewTreeItem;
   /** What the canvas shows: the open View's path, or the Object open in isolation and the path within it. */
@@ -68,24 +70,17 @@ export type ViewsInspectorProps = InspectorProps & {
   onReorder?: (event: ViewReorder) => void;
 };
 
-const ICONS: Record<string, string> = {
-  rect: 'ph--square--regular',
-  ellipse: 'ph--circle--regular',
-  cloud: 'ph--cloud--regular',
-  polygon: 'ph--hexagon--regular',
-  polyline: 'ph--line-segments--regular',
-  note: 'ph--note--regular',
-  path: 'ph--pen-nib--regular',
-  view: 'ph--frame-corners--regular',
-  instance: 'ph--cube--regular',
-};
-
-const iconFor = (item: ViewTreeItem): string =>
-  item.kind === 'view'
+/**
+ * A row draws its type's own tool icon, so a text node reads as the T the palette draws rather than as a second idea
+ * of what a text node looks like; `icons` comes from the dimension's tools, which the registry builds.
+ */
+const iconFor = (item: ViewTreeItem, icons: ViewsInspectorProps['icons']): string =>
+  (item.type && icons?.[item.type]) ??
+  (item.kind === 'view'
     ? 'ph--frame-corners--regular'
     : item.kind === 'link'
       ? 'ph--line-segment--regular'
-      : ((item.type && ICONS[item.type]) ?? 'ph--shapes--regular');
+      : 'ph--shapes--regular');
 
 const EMPTY_TREE: ViewTreeItem = { id: 'empty', kind: 'view', path: [], label: '', children: [] };
 
@@ -114,6 +109,7 @@ export const ViewsInspector = ({
   readonly,
   scenes,
   root,
+  icons,
   tree: treeProp,
   place,
   selected,
@@ -163,7 +159,7 @@ export const ViewsInspector = ({
             isItem(row)
               ? {
                   label: row.label,
-                  icon: iconFor(row),
+                  icon: iconFor(row, icons),
                   testId: `views-row-${row.id}`,
                   ...(row.kind === 'view' ? { count: row.children.length } : {}),
                   draggable: row.container !== undefined,

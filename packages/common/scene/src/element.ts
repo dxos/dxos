@@ -211,6 +211,38 @@ export const boxFields = {
  * not know (its plugin is off) is drawn and edited as this, a box showing its label, so a type that keeps its title
  * in `label` still reads as itself.
  */
+/**
+ * Space between a shape's frame and the text it draws, in scene px. Unset, a text box pads itself by a minor grid
+ * cell either side, which is what puts a label's own lines on the grid; zero puts the text on the frame's edge, as a
+ * part of a composite card must be to sit where the card's own regions sit.
+ */
+export const Padding = Schema.Struct({
+  x: Schema.optional(Schema.Number.annotate({ title: 'X' })),
+  y: Schema.optional(Schema.Number.annotate({ title: 'Y' })),
+}).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }));
+export type Padding = Schema.Schema.Type<typeof Padding>;
+
+/** The fields of a shape whose text is inset from its frame: the rectangle and the text node. */
+export const paddingFields = {
+  padding: Schema.optional(Padding.annotate({ title: 'Padding' })),
+};
+
+/** A node's padding, when its type carries the field and the node sets it. */
+export const nodePadding = (node: NodeBase): Padding | undefined => {
+  const padding: unknown = Reflect.get(node, 'padding');
+  if (typeof padding !== 'object' || padding === null) {
+    return undefined;
+  }
+  const at = (field: string) => {
+    const value = Reflect.get(padding, field);
+    return typeof value === 'number' ? value : undefined;
+  };
+  const [x, y] = [at('x'), at('y')];
+  return x === undefined && y === undefined
+    ? undefined
+    : { ...(x !== undefined ? { x } : {}), ...(y !== undefined ? { y } : {}) };
+};
+
 export const BaseNode = Schema.Struct({ type: Schema.String, ...nodeBase, ...boxFields });
 export type BaseNode = Schema.Schema.Type<typeof BaseNode>;
 
@@ -218,6 +250,7 @@ export const RectNode = Schema.Struct({
   type: Schema.Literal('rect'),
   ...nodeBase,
   ...boxFields,
+  ...paddingFields,
 });
 export type RectNode = Schema.Schema.Type<typeof RectNode>;
 
@@ -300,6 +333,7 @@ export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
 export const NoteNode = Schema.Struct({
   type: Schema.Literal('note'),
   ...nodeBase,
+  ...paddingFields,
   text: Schema.String,
 });
 export type NoteNode = Schema.Schema.Type<typeof NoteNode>;

@@ -16,7 +16,7 @@ import { DEFAULT_GRID, MAJOR_GRID } from '@dxos/scene';
 import { CanvasPropertiesForm, type CanvasPropertiesProps } from '../components/index.ts';
 import { type DimensionConfig, type LibraryItem, type PropertyFormProps } from '../editor/index.ts';
 import { type Dimension2DOptions, createDimension2D } from './dimension2d.tsx';
-import { toolDragData2D, tools2D } from './tools2d.ts';
+import { toolDragData2D, tools2D, typeIcons2D } from './tools2d.ts';
 
 /** What the host adds to the 2D Properties form (its database, reference options, per-selection overrides). */
 export type UseProperties2D = (canvas: CanvasServices) => CanvasPropertiesProps;
@@ -50,6 +50,7 @@ export const createConfig2D = ({
     dim: '2d',
     create: createDimension2D({ ...options, constrain }),
     tools: tools2D(options.nodes),
+    icons: typeIcons2D(options.nodes),
     library,
     toolDragData: toolDragData2D,
     geometry: {

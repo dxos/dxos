@@ -150,7 +150,7 @@ export const PropertiesSection = () => {
 
 /** Views: the scene's layout tree; a row selects at its place (a composite's part inside the composite on its own), a View row opens. */
 export const ViewsSection = () => {
-  const { atoms, commands } = useSceneDocument('SceneEditor.Views');
+  const { atoms, commands, config } = useSceneDocument('SceneEditor.Views');
   const navigation = useSceneNavigation('SceneEditor.Views');
   const selection = useSceneSelection('SceneEditor.Views');
   const document = useAtomValue(atoms.document);
@@ -165,6 +165,7 @@ export const ViewsSection = () => {
     <InspectorSection section={VIEWS_INSPECTOR}>
       <ViewsInspector
         sceneChoice={sceneChoice}
+        icons={config.icons}
         readonly={readonly}
         tree={tree}
         selected={new Set(selected)}

@@ -45,6 +45,7 @@ import {
   isViewNode,
   linkMarkers,
   nodeFrame,
+  nodePadding,
   showsContents,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -584,6 +585,13 @@ const LatticeContext = createContext<LatticeSpec | undefined>(undefined);
 const MINOR_GRID = '--dx-minor-grid';
 
 /**
+ * The space a text box leaves between the frame's edge and its text, set per node by the `padding` field of the types
+ * that carry it. Unset, a text box pads itself by a minor grid cell, which is what puts its lines on the grid.
+ */
+const TEXT_PAD_X = '--dx-text-pad-x';
+const TEXT_PAD_Y = '--dx-text-pad-y';
+
+/**
  * A text part covers the frame from its outer edge, border included, so its lines start on the grid the frame's edge is
  * on rather than a border width inside it.
  */
@@ -591,7 +599,8 @@ const MINOR_GRID = '--dx-minor-grid';
 // The text's own box is flush with the frame's edge and pads its text a grid unit either side; its lines need no
 // padding above or below, being on the grid already. The child is the static text's span or the editor's root alike,
 // so the text does not move when editing starts.
-const TEXT_BOX = 'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-(--dx-minor-grid)';
+const TEXT_BOX =
+  'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-[var(--dx-text-pad-x,var(--dx-minor-grid))]';
 
 /**
  * A line is a whole number of half minor grid units tall, the text centred in it, so every pair of lines sits on the
@@ -606,7 +615,7 @@ const LINE_ON_GRID = mx(
  * A text node's lines are 1.5em, tighter than the grid's, and its block is padded so the text sits a minor grid unit
  * from the top and bottom, as it does from the sides; the padding gives back the line's own half-leading (0.25em).
  */
-const TEXT_LINES = mx('leading-[1.5]!', '[&>*]:py-[max(0px,calc(var(--dx-minor-grid)-0.25em))]');
+const TEXT_LINES = mx('leading-[1.5]!', '[&>*]:py-[max(0px,calc(var(--dx-text-pad-y,var(--dx-minor-grid))-0.25em))]');
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
 const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>
@@ -1044,6 +1053,7 @@ const NodeFrame = memo(
     const def = nodeDef(registry, node);
     const drawn = useMemo(() => bareNode(classedNode(node, styles), def?.bare), [node, styles, def?.bare]);
     const bounds = nodeBounds(node);
+    const padding = nodePadding(node);
     const interactive = handlers !== undefined && !ghost;
     const Component = def?.component ?? BoxNodeView;
     const Toolbar = interactive ? def?.toolbar : undefined;
@@ -1090,6 +1100,8 @@ const NodeFrame = memo(
       ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
       [FRAME_BORDER]: chromeFade || borderless ? '0px' : `${border}px`,
       [MINOR_GRID]: `${cell / MAJOR_GRID_RATIO}px`,
+      ...(padding?.x !== undefined ? { [TEXT_PAD_X]: `${padding.x}px` } : {}),
+      ...(padding?.y !== undefined ? { [TEXT_PAD_Y]: `${padding.y}px` } : {}),
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
       // An outline, so the frame's layout is untouched; a screen pixel at any zoom.
