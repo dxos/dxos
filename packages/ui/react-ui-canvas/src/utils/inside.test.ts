@@ -9,7 +9,7 @@ import { type InstanceNode, type Node, type NoteNode } from '@dxos/scene';
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
 import { moveNodes, updateElement } from './edits.ts';
-import { insideScene, insideWrites } from './inside.ts';
+import { insideScene, insideWrites, leavesObject } from './inside.ts';
 import { nodeBounds } from './shapes.ts';
 
 const note = (id: string, x: number, y: number, text: string, constrain?: Node['constrain']): NoteNode => ({
@@ -87,6 +87,20 @@ describe('insideScene', () => {
     const { scene } = insideScene(OUTER(instance()), instance(), CARD);
     expect(scene.nodes.other?.locked).toBe(true);
     expect(scene.nodes.title?.locked).toBeUndefined();
+  });
+});
+
+describe('leavesObject', () => {
+  test('a point off the frame the parts fill leaves the Object; one between two parts does not', () => {
+    const node = instance({ width: 300, height: 200 });
+    const { scene } = insideScene(OUTER(node), node, CARD, defaultNodeRegistry);
+    // Between the title and the footer, on the Object's frame part.
+    expect(leavesObject(scene, CARD, { x: 0, y: 0 })).toBe(false);
+    // The stretched Instance reaches further than the card as authored.
+    expect(leavesObject(scene, CARD, { x: 140, y: 90 })).toBe(false);
+    expect(leavesObject(scene, CARD, { x: 160, y: 0 })).toBe(true);
+    // On the shape beside it, which is locked while the Object is open.
+    expect(leavesObject(scene, CARD, { x: 400, y: 0 })).toBe(true);
   });
 });
 

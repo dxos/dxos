@@ -19,6 +19,7 @@ import { mx } from '@dxos/ui-theme';
 import { type DrawState, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
+  SCENE_OVERLAY_ATTRIBUTE,
   SceneLookContext,
   type UseDrawSceneOptions,
   useCanvasController,
@@ -52,7 +53,7 @@ import {
   keyAction,
   neuVars,
 } from '../../model/index.ts';
-import { fitFrame, latticeGrid, visibleView } from '../../utils/index.ts';
+import { fitFrame, latticeGrid, leavesObject, visibleView } from '../../utils/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
@@ -547,11 +548,21 @@ const CanvasEngine = ({
     (event: MouseEvent) => {
       if (registry.get(atoms.drag)?.kind === 'vertices') {
         finishVertices(false);
-      } else {
-        onElementDoubleClick(event);
+        return;
       }
+      // Inside an Object, a double-click off it leaves the Object, as one on it entered it. A panel floating over the
+      // canvas takes its own double-clicks, wherever on the canvas it happens to float.
+      const inside = registry.get(atoms.inside);
+      const composite = inside && registry.get(store.views)[inside.composite];
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const onPanel = target instanceof Element && target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`) !== null;
+      if (composite && !onPanel && leavesObject(scene, composite, toScene(event))) {
+        navigation.exitInside();
+        return;
+      }
+      onElementDoubleClick(event);
     },
-    [registry, atoms.drag, finishVertices, onElementDoubleClick],
+    [registry, atoms.drag, atoms.inside, store, scene, toScene, navigation, finishVertices, onElementDoubleClick],
   );
 
   useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snap, setDrag, cancelDrag, onPointerUp });

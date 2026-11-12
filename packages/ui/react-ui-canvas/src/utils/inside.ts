@@ -21,6 +21,7 @@ import {
   type NodeId,
   type PartLayout,
   type PlacedComposite,
+  type Point,
   type ViewId,
   nodeFrame,
   unsolvePartBounds,
@@ -28,6 +29,7 @@ import {
 
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { compositeBounds, drawnParts, instanceView } from './compose.ts';
+import { containsPoint, unionBounds } from './hit.ts';
 import { nodeParts } from './parts.ts';
 import { nodeBounds, resizeNode } from './shapes.ts';
 
@@ -36,6 +38,17 @@ export type Inside = { instance: NodeId; composite: ViewId };
 
 /** What the editor shows while inside an Object: one scene, and which of its elements are the Object's own parts. */
 export type InsideScene = { scene: RenderList2D; parts: ReadonlySet<ElementId> };
+
+/**
+ * Whether `point` is off the Object being edited: outside the frame its parts fill in `scene`, the scene the editor
+ * shows while inside it. A press between two parts is still on the Object, so it does not leave it.
+ */
+export const leavesObject = (scene: RenderList2D, composite: RenderList2D, point: Point): boolean => {
+  const frame = unionBounds(
+    Object.keys(composite.nodes).flatMap((id) => (scene.nodes[id] ? [nodeBounds(scene.nodes[id])] : [])),
+  );
+  return frame === undefined || !containsPoint(frame, point);
+};
 
 /**
  * The outer scene with the Instance replaced by its parts, drawn where it drew them. Everything else is locked, so a
