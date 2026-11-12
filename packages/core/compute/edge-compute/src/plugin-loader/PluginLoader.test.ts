@@ -62,6 +62,14 @@ describe('PluginLoader', () => {
     expect(main).not.toContain('deps/');
   });
 
+  // A headless host cannot know what Composer it links to; EDGE says so in the isolate's env, the same on every call.
+  test("makes the plugin with the options EDGE gives the isolate's env", async ({ expect }) => {
+    const { main } = await PluginLoader.workerCode(bundle());
+    expect(main).toContain('PluginHost.fromManifest(plugin.manifest, plugin.loaders, env?.PLUGIN_OPTIONS)');
+    expect(main).toContain('(await getHost(this.env)).describe()');
+    expect(main).toContain('(await getHost(this.env)).invoke(request, this.env, scope)');
+  });
+
   // A bundle keeps the host it was published with; the main module, generated at load, reports its version.
   test("reports the vendored host's protocol version, 1 for a host that predates versioning", async ({ expect }) => {
     const { main } = await PluginLoader.workerCode(bundle());

@@ -44,6 +44,11 @@ export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERV
    * backend and offers it as a file backend, so no plugin contributes one on EDGE. Without it a bundle stores inline.
    */
   readonly BLOB_SERVICE?: BlobService;
+  /**
+   * The options EDGE makes the bundle's plugin with (its factory's `make(options)`), for what a headless host cannot
+   * know on its own, such as plugin-space's `shareableLinkOrigin`. A host that predates it builds the plugin without.
+   */
+  readonly PLUGIN_OPTIONS?: unknown;
 };
 
 /**

@@ -5,9 +5,14 @@
 import { next as A } from '@automerge/automerge';
 import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Skill from '@dxos/compute/Skill';
 import { Fibonacci, Reply } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -15,6 +20,7 @@ import { EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol } from '@dxos/protocols';
 import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
+import * as PluginActivation from './PluginActivation.ts';
 import * as PluginHost from './PluginHost.ts';
 import {
   Adopt,
@@ -51,6 +57,41 @@ describe('PluginHost', () => {
     expect(catalog.skills[0].agentCanEnable).toBe(true);
     const operations = JSON.stringify(catalog.operations);
     expect(operations).toContain(String(Reply.meta.key));
+  });
+
+  // A headless host cannot know what a plugin needs from it, such as the Composer it links to; EDGE passes the options
+  // the plugin is made with in `PluginProtocol.Env.PLUGIN_OPTIONS`.
+  test('makes a plugin from its manifest with the options it is given', async ({ expect }) => {
+    const skillKey = 'org.example.skill.fromOptions';
+    const manifest = {
+      key: 'org.example.plugin.options',
+      name: 'Options',
+      version: '0.0.1',
+      assets: ['options.mjs'],
+      modules: [
+        {
+          id: 'Options',
+          url: './options.mjs',
+          activatesOn: { id: ActivationEvents.Startup.id },
+          requires: [],
+          provides: [{ identifier: AppCapabilities.SkillDefinition.identifier, arity: 'multi' }],
+        },
+      ],
+    };
+    const OptionsModule = Capability.makeModule((options: { skillKey: string }) =>
+      Effect.succeed(
+        Capability.contribute(AppCapabilities.SkillDefinition, {
+          key: options.skillKey,
+          make: () => Skill.make({ key: options.skillKey, name: 'From options' }),
+        }),
+      ),
+    );
+    const loaders = { './options.mjs': async () => ({ default: OptionsModule }) };
+
+    const activation = await PluginActivation.activate({
+      primary: PluginHost.fromManifest(manifest, loaders, { skillKey }),
+    });
+    expect(activation.skills.map(({ key }) => String(key))).toEqual([skillKey]);
   });
 
   // EDGE speaks to a bundle at the version of the host it was published with (EDGE-PLUGINS F-6.9).

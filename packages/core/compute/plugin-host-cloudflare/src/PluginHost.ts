@@ -67,9 +67,10 @@ const operationKeyName = (key: string): string => (DXN.isDXN(key) ? DXN.getName(
 
 /**
  * A plugin from its bundle's `manifest.json`, the way every host builds one: each module body loads through `loaders`,
- * keyed by the URL the manifest gives it, when the module activates.
+ * keyed by the URL the manifest gives it, when the module activates. `options` are what the plugin is made with, as
+ * EDGE passes them in `PluginProtocol.Env.PLUGIN_OPTIONS`.
  */
-export const fromManifest = (manifest: unknown, loaders: Plugin.ManifestLoaders): Plugin.Plugin => {
+export const fromManifest = (manifest: unknown, loaders: Plugin.ManifestLoaders, options?: unknown): Plugin.Plugin => {
   // A plugin runs alone on EDGE: what it imports from another plugin's package is vendored, and no other plugin is
   // activated beside it, so its `dependsOn` is not resolved.
   const { dependsOn: _dependsOn, ...standalone } = Schema.decodeUnknownSync(PluginManifest.Manifest)(manifest);
@@ -77,7 +78,7 @@ export const fromManifest = (manifest: unknown, loaders: Plugin.ManifestLoaders)
   if (definition === undefined) {
     throw new InvalidRequestError({ message: 'The plugin manifest lists no modules.' });
   }
-  return Plugin.fromManifest(definition, loaders).make();
+  return Plugin.fromManifest<unknown>(definition, loaders).make(options);
 };
 
 /**

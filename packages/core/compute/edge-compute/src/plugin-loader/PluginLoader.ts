@@ -221,8 +221,9 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
     'let host;',
     // A host that predates versioning exports no `PROTOCOL_VERSION`.
     'let protocolVersion;',
-    // Imported inside a request: module evaluation runs in global scope, where workerd disallows timers.
-    'const getHost = async () => {',
+    // Imported inside a request: module evaluation runs in global scope, where workerd disallows timers. `env` is the
+    // isolate's, the same on every call, so the plugin is made once with its `PLUGIN_OPTIONS`.
+    'const getHost = async (env) => {',
     '  if (host === undefined) {',
     // Without a vendored host the bundle still loads, so its modules can be checked; only starting the plugin fails.
     host === undefined
@@ -230,7 +231,9 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
       : `    const { PluginHost } = await import('./${host}');`,
     `    const plugin = ${plugin};`,
     '    protocolVersion = PluginHost.PROTOCOL_VERSION ?? 1;',
-    '    host ??= PluginHost.make(() => ({ primary: PluginHost.fromManifest(plugin.manifest, plugin.loaders) }));',
+    '    host ??= PluginHost.make(() => ({',
+    '      primary: PluginHost.fromManifest(plugin.manifest, plugin.loaders, env?.PLUGIN_OPTIONS),',
+    '    }));',
     '  }',
     '  return host;',
     '};',
@@ -238,15 +241,15 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
     // Workers RPC drops an error's stack, which is the whole diagnosis of a failed activation.
     '  async describe() {',
     '    try {',
-    '      return await (await getHost()).describe();',
+    '      return await (await getHost(this.env)).describe();',
     '    } catch (error) {',
     '      throw new Error(String(error?.stack ?? error));',
     '    }',
     '  }',
-    '  async invoke(request, scope) { return (await getHost()).invoke(request, this.env, scope); }',
+    '  async invoke(request, scope) { return (await getHost(this.env)).invoke(request, this.env, scope); }',
     // Starting the host does not activate the plugin: that happens on the first describe or invoke.
     '  async protocolVersion() {',
-    '    await getHost();',
+    '    await getHost(this.env);',
     '    return protocolVersion;',
     '  }',
     '}',
