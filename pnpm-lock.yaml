@@ -2303,6 +2303,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-client
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../packages/core/echo/echo-doc
       '@dxos/echo-host':
         specifier: workspace:*
         version: link:../packages/core/echo/echo-host
@@ -2405,6 +2408,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../packages/ui/react-ui-attention
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-editor
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../packages/ui/react-ui-form
@@ -2435,6 +2441,9 @@ importers:
       '@dxos/ui':
         specifier: workspace:*
         version: link:../packages/ui/ui
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../packages/ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../packages/ui/ui-theme
@@ -24258,6 +24267,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -25361,6 +25373,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -25610,6 +25625,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -26068,6 +26086,9 @@ importers:
       resize-observer-polyfill:
         specifier: 'catalog:'
         version: 1.5.1
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -26285,6 +26306,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -27618,6 +27642,9 @@ importers:
       esbuild:
         specifier: '>=0.28.0'
         version: 0.28.2
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
