@@ -5,7 +5,7 @@
 import { type Client } from '@dxos/client';
 import { EID, Filter, Obj, Query } from '@dxos/echo';
 
-import { Person } from '../../tutorial/schema.ts';
+import { Person } from '../../echo-tutorial/schema.ts';
 
 declare const client: Client;
 

@@ -331,9 +331,9 @@ export type TutorialProjectId = 'echo' | 'halo';
 
 const PROJECTS: Record<TutorialProjectId, Project> = {
   echo: {
-    dir: 'src/tutorial',
+    dir: 'src/echo-tutorial',
     learnDir: 'src/content/docs/docs/echo/learn',
-    snippetDir: 'tutorial',
+    snippetDir: 'echo-tutorial',
     // The page that reads the stage from the embed's URL.
     skipped: new Set(['app/ContactsEmbedPage.tsx']),
     title: 'Contacts',

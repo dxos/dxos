@@ -3959,6 +3959,14 @@ decision D-215: The learning path's plugin is Stash, a reading list like Pocket,
   why: Composer already has a plugin called Bookmarks, and the tutorial plugin should not share its name.
 ```
 
+```mdl
+decision D-216: Each learning path's app lives in a folder named for its section: `src/echo-tutorial` for ECHO's contact book, `src/halo-tutorial` for HALO's, and `src/plex-tutorial` for the Stash plugin. Snippets name them the same way, as `echo-tutorial/...` and `plex-tutorial/...`.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [installation, defining-types, mutating-objects, querying, sharing, guide-react, app-framework-create-plugin, app-framework-define-type, app-framework-add-operation, app-framework-extend-app-graph, app-framework-add-surface, plex-run-in-composer]
+  why: The ECHO app's folder was plain `tutorial` and the plugin's was `app-framework-tutorial`, after a section that is now PLEX; naming both by section matches `halo-tutorial`.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

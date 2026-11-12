@@ -46,7 +46,7 @@ plugin manager owns it.
   plugin's create menu this way: the Space plugin declares `SpaceCapabilities.CreateObjectEntry` and lists every
   contribution in its menu, and Stash contributes one entry.
 
-<Snippet file="app-framework-tutorial/src/capabilities/create-object" region="create-object" />
+<Snippet file="plex-tutorial/src/capabilities/create-object" region="create-object" />
 
 - Contributions change after startup, when a module activates late or a person turns a plugin on or off.
   `Capability.contributions` and `Capability.atom` stay current; a value read once with `getAll` does not.

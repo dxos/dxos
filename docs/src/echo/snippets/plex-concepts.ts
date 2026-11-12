@@ -12,8 +12,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 
-import { type StashedLink } from '../../app-framework-tutorial/src/types/StashedLink.ts';
-import { MarkRead } from '../../app-framework-tutorial/src/types/StashedLinkOperation.ts';
+import { type StashedLink } from '../../plex-tutorial/src/types/StashedLink.ts';
+import { MarkRead } from '../../plex-tutorial/src/types/StashedLinkOperation.ts';
 
 // #region wait
 // `waitFor` suspends until some module contributes the capability, so this

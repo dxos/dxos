@@ -27,34 +27,34 @@ A field can hold a reference to another object, with `Ref.Ref(Type)`. A referenc
 
 1. **Declare an organization.** `Type.makeObject` takes the name and the schema, and returns a class that is both the schema and the TypeScript type of its instances.
 
-   <Snippet file="tutorial/schema" region="organization" />
+   <Snippet file="echo-tutorial/schema" region="organization" />
 
    `Format.URL` marks the website as a URL, so a form offers a URL field for it. `IconAnnotation` gives the type an icon and a hue, which the app's list and graph use.
 
 2. **Point a person at an organization.** `employer` is a reference to an `Organization`.
 
-   <Snippet file="tutorial/schema" region="person" />
+   <Snippet file="echo-tutorial/schema" region="person" />
 
 3. **Point an event at many people.** A list of references gives an event its attendees. `LabelAnnotation` says which field names an event, since it has a `title` rather than a `name`.
 
-   <Snippet file="tutorial/schema" region="event" />
+   <Snippet file="echo-tutorial/schema" region="event" />
 
 4. **List the types.** The client is given this list when the app starts, in [Installation](/docs/echo/learn/installation/).
    Steps 1 to 4 all go in `schema.ts`.
 
-   <Snippet file="tutorial/schema" region="types" />
+   <Snippet file="echo-tutorial/schema" region="types" />
 
 5. **Create instances.** `Obj.make` takes the props the schema allows, and `Ref.make` makes a reference to an object.
    The app starts with these records, in `seed.ts`:
 
-   <Snippet file="tutorial/seed" region="instance" />
+   <Snippet file="echo-tutorial/seed" region="instance" />
 
    Leave out a person's `name` and the compiler rejects the call.
 
 6. **Follow a reference.** `peek` reads the target, if it is loaded, without waiting. The list shows each person's
    employer beside their name with this, in `Contacts.tsx`:
 
-   <Snippet file="tutorial/app/Contacts" region="follow" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Contacts" region="follow" lang="tsx" />
 
 </Steps>
 

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-import { Event } from '../../tutorial/schema.ts';
+import { Event } from '../../echo-tutorial/schema.ts';
 
 // #region schema
 class Project extends Type.makeObject<Project>(

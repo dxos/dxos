@@ -13,9 +13,9 @@ import { join } from 'node:path';
 const SOURCE_DIRS = [
   './snippets/',
   // The tutorial app's own modules, quoted where a page builds that piece of it.
-  '../tutorial/',
+  '../echo-tutorial/',
   // The Composer learning path's plugin, quoted the same way.
-  '../app-framework-tutorial/',
+  '../plex-tutorial/',
   // HALO's contact book, quoted the same way.
   '../halo-tutorial/',
 ];
@@ -45,7 +45,7 @@ const readSources = (): Record<string, string> =>
   );
 
 /** Directories whose modules compile with their local imports beside them. */
-const PROJECTS = ['../tutorial/', '../app-framework-tutorial/', '../halo-tutorial/'];
+const PROJECTS = ['../echo-tutorial/', '../plex-tutorial/', '../halo-tutorial/'];
 
 const findSource = (file: string): [path: string, source: string] => {
   const entry = Object.entries(readSources()).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));
@@ -178,8 +178,8 @@ const localize = (source: string) => source.replace(PROJECT_IMPORT, "'./$2'");
 
 /** Where each app's modules sit in the project the reader builds; StackBlitz puts ECHO's and HALO's under `src/`. */
 const PROJECT_PATHS: Record<string, string> = {
-  '../tutorial/': 'src/',
-  '../app-framework-tutorial/': '',
+  '../echo-tutorial/': 'src/',
+  '../plex-tutorial/': '',
   '../halo-tutorial/': 'src/',
 };
 

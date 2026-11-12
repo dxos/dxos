@@ -5,11 +5,11 @@ group events "Activation events" {
   node Idle "Idle" below Article ref="packages/sdk/app-framework/src/common/activation-events.ts"
 }
 group modules "Stash modules" right-of events {
-  node Translations "translations" same-row Startup ref="docs/src/app-framework-tutorial/src/translations.ts"
-  node Schema "schema" below Translations ref="docs/src/app-framework-tutorial/src/capabilities/schema.ts"
-  node Ops "operation-handler" below Schema ref="docs/src/app-framework-tutorial/src/capabilities/operation-handler.ts"
-  node Surface "react-surface" below Ops ref="docs/src/app-framework-tutorial/src/capabilities/react-surface.ts"
-  node Graph "app-graph-builder" below Surface ref="docs/src/app-framework-tutorial/src/capabilities/app-graph-builder.ts"
+  node Translations "translations" same-row Startup ref="docs/src/plex-tutorial/src/translations.ts"
+  node Schema "schema" below Translations ref="docs/src/plex-tutorial/src/capabilities/schema.ts"
+  node Ops "operation-handler" below Schema ref="docs/src/plex-tutorial/src/capabilities/operation-handler.ts"
+  node Surface "react-surface" below Ops ref="docs/src/plex-tutorial/src/capabilities/react-surface.ts"
+  node Graph "app-graph-builder" below Surface ref="docs/src/plex-tutorial/src/capabilities/app-graph-builder.ts"
 }
 group caps "Capabilities" right-of modules {
   node CTranslations "Translations" same-row Translations ref="packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts"

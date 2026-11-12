@@ -27,7 +27,7 @@ Both go in `Share.tsx`, which draws the toolbar's Invite and Join buttons.
    to the network, its encoded form is the code to send. Opening the **Invite** popover runs this, and the app
    copies the code.
 
-   <Snippet file="tutorial/app/Share" region="invite" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Share" region="invite" lang="tsx" />
 
    Anyone with the code can join while the invitation is open. For a code that is not enough on its own, leave out
    `authMethod` and send the authentication code the invitation then asks for over a different channel.
@@ -36,7 +36,7 @@ Both go in `Share.tsx`, which draws the toolbar's Invite and Join buttons.
    decodes the code and joins; once the invitation succeeds, the space is among the guest's spaces, and both peers
    replicate it. The **Join** button calls this.
 
-   <Snippet file="tutorial/app/Share" region="join" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Share" region="join" lang="tsx" />
 
 </Steps>
 

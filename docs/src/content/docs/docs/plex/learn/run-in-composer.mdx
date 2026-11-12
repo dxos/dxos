@@ -34,13 +34,13 @@ Until now the inspector has loaded the plugin. Composer loads it the same way, f
 6. **Offer the operation to the assistant.** A skill gives the assistant a set of operations as tools, with
    instructions on when to use them.
 
-   <Snippet file="app-framework-tutorial/src/skills/StashSkill" region="skill" />
+   <Snippet file="plex-tutorial/src/skills/StashSkill" region="skill" />
 
-   <Snippet file="app-framework-tutorial/src/capabilities/skill-definition" region="skill-definition" />
+   <Snippet file="plex-tutorial/src/capabilities/skill-definition" region="skill-definition" />
 
    Add the module to the manifest, then reload Composer to load it.
 
-   <Snippet file="app-framework-tutorial/dx.config" region="skill" />
+   <Snippet file="plex-tutorial/dx.config" region="skill" />
 
 7. **Run it from the assistant.** Create a second link and give it a title. Open a chat, add the **Stash** skill, and write "I've read" followed by that title. The assistant finds the link, calls the Mark as read tool with a reference to it, and the article changes to **Read**.
 

@@ -4,7 +4,7 @@
 
 import { type Database, Filter, Query } from '@dxos/echo';
 
-import { Event, Person } from '../../tutorial/schema.ts';
+import { Event, Person } from '../../echo-tutorial/schema.ts';
 
 declare const db: Database.Database;
 declare const launch: Event;

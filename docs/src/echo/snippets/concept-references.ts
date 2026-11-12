@@ -4,7 +4,7 @@
 
 import { type Database, EID, Obj, Ref, Type } from '@dxos/echo';
 
-import { Person } from '../../tutorial/schema.ts';
+import { Person } from '../../echo-tutorial/schema.ts';
 
 declare const db: Database.Database;
 

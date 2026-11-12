@@ -4,7 +4,7 @@
 
 import { type Database, Obj, Ref, Tag } from '@dxos/echo';
 
-import { Organization, Person } from '../../tutorial/schema.ts';
+import { Organization, Person } from '../../echo-tutorial/schema.ts';
 
 declare const db: Database.Database;
 const acme = db.add(Obj.make(Organization, { name: 'Acme' }));

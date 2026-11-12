@@ -22,7 +22,7 @@ expands. [App Graph](/docs/plex/guides/app-graph/) explains the model.
 1. **Start the module's file.** The extensions on this page go in `capabilities/app-graph-builder.ts`, with these
    imports.
 
-   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="imports" />
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="imports" />
 
 2. **Add a section for the type.** The navigation tree groups each space's sections under headings such as Content
    and System. `TypeSection.createTypeSectionExtension` builds the usual section for an object type: it matches the
@@ -30,7 +30,7 @@ expands. [App Graph](/docs/plex/guides/app-graph/) explains the model.
    annotations, and hides the heading when the space has none. `urlKey` gives each link an address in the app's
    URL, which is how Composer opens one when a person clicks it.
 
-   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="section" bare />
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="section" bare />
 
 3. **Attach the operation as an action.** `createTypeExtension` matches every node whose object is a link, and
    this extension returns an action instead of children. Its `disposition` says where it shows: `toolbar` puts it on
@@ -38,16 +38,16 @@ expands. [App Graph](/docs/plex/guides/app-graph/) explains the model.
    either way. Its `data` invokes Mark as read from
    [Add an operation](/docs/plex/learn/add-operation/) with a reference to the link, in the link's space.
 
-   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="actions" bare />
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="actions" bare />
 
 4. **Contribute the extensions.** The module builds both and contributes them together as the App Graph builder
    capability.
 
-   <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="module" bare />
+   <Snippet file="plex-tutorial/src/capabilities/app-graph-builder" region="module" bare />
 
 5. **Add the module to the manifest.** The App Graph maker activates the module when the app is idle after startup.
 
-   <Snippet file="app-framework-tutorial/dx.config" region="app-graph" />
+   <Snippet file="plex-tutorial/dx.config" region="app-graph" />
 
 6. **See the result.** Load or reload your plugin below, create a sample link with **New**, and select **App Graph**. The inspector shows the branches of the graph, as Composer builds it, that lead to what your plugin added, and marks those nodes.
 

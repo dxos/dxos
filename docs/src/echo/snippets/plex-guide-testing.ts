@@ -8,9 +8,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Ref } from '@dxos/echo';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { make as makePlugin } from '../../app-framework-tutorial/dx.config.ts';
-import { make } from '../../app-framework-tutorial/src/types/StashedLink.ts';
-import { MarkRead } from '../../app-framework-tutorial/src/types/StashedLinkOperation.ts';
+import { make as makePlugin } from '../../plex-tutorial/dx.config.ts';
+import { make } from '../../plex-tutorial/src/types/StashedLink.ts';
+import { MarkRead } from '../../plex-tutorial/src/types/StashedLinkOperation.ts';
 
 // #region boot
 // A headless app with the core plugins Composer gives a plugin, plus this one.

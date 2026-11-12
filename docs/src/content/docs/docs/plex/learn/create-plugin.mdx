@@ -29,21 +29,21 @@ A plugin is a set of modules. Each module activates on an event and contributes 
 
 2. **Name the plugin.** The plugin's key is a reverse-domain name that no other plugin uses. Its last segment must be camelCase. Put it in a file of its own, so the manifest and any capability tags the plugin declares can both import it.
 
-   <Snippet file="app-framework-tutorial/src/namespace" region="namespace" />
+   <Snippet file="plex-tutorial/src/namespace" region="namespace" />
 
 3. **Write the manifest.** `Plugin.config` takes the plugin's registry metadata and its modules. It returns the plugin's `meta` and a `make` function that the app's plugin manager calls to create it. The file's default export is what the dev server reads. `modules` starts empty; each step that follows adds one.
 
-   <Snippet file="app-framework-tutorial/dx.config" region="config" omit="translations, schema, operation, app-graph, surface, skill" />
+   <Snippet file="plex-tutorial/dx.config" region="config" omit="translations, schema, operation, app-graph, surface, skill" />
 
    The `tags` field starts with a quality tier. A new plugin is `labs`.
 
 4. **Add the first module.** Translations give the plugin's strings their text. The module lists the translation resource by namespace. For now it has one entry, for the plugin's own strings; the next page adds one for its type.
 
-   <Snippet file="app-framework-tutorial/src/translations" region="translations" omit="type" />
+   <Snippet file="plex-tutorial/src/translations" region="translations" omit="type" />
 
    Add it to the manifest's `modules`. `AppCapability.translations` is a module maker: it fixes the capability the module contributes and the event it activates on, so the manifest only names the file to load.
 
-   <Snippet file="app-framework-tutorial/dx.config" region="translations" />
+   <Snippet file="plex-tutorial/dx.config" region="translations" />
 
 5. **Load it in the inspector.** Start the dev server in the plugin's directory with the package's `dev` script:
 

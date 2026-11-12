@@ -12,7 +12,7 @@ import '@dxos/node-std/globals';
 import { Inspector, type KindId } from '@dxos/plugin-inspector';
 import '@dxos/react-ui/theme.css';
 
-import { make } from '../app-framework-tutorial/dx.config.ts';
+import { make } from '../plex-tutorial/dx.config.ts';
 
 const KIND_IDS: readonly KindId[] = [
   'app-graph',

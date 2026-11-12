@@ -6,7 +6,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 
-import { Event, Person } from '../../tutorial/schema.ts';
+import { Event, Person } from '../../echo-tutorial/schema.ts';
 
 declare const client: Client;
 declare const space: Space;

@@ -44,7 +44,7 @@ Two rules decide when a component re-renders:
 
 2. **Provide the client.** `ClientProvider` gives the hooks below it a client. The app opens its client and space with `openSpace` from [Installation](/docs/echo/learn/installation/), and the app renders one provider for it. The app also keeps the space it shows in state, so Join can switch it to another.
 
-   <Snippet file="tutorial/app/PeerApp" region="provider" lang="tsx" />
+   <Snippet file="echo-tutorial/app/PeerApp" region="provider" lang="tsx" />
 
    <Aside type="caution">
      Open the client once per page load. In development, `StrictMode` runs each effect twice, and two clients on the same
@@ -54,7 +54,7 @@ Two rules decide when a component re-renders:
 
 3. **Query the space.** `useQuery` takes a database and a query, here the app's queries from [Querying](/docs/echo/learn/querying/). It returns the current results and re-renders the component when they change.
 
-   <Snippet file="tutorial/app/Contacts" region="query" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Contacts" region="query" lang="tsx" />
 
    A query returns the same live object for an id every time, so a renamed record leaves the results array as it was. The app's list reads its labels with `useLabels`, which re-renders the list when a label changes.
 
@@ -62,7 +62,7 @@ Two rules decide when a component re-renders:
 
 4. **Show a record.** `useObject` returns a snapshot of the object and re-renders the component when the object changes. The form's title reads the record's name through it.
 
-   <Snippet file="tutorial/app/RecordForm" region="title" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="title" lang="tsx" />
 
    <Aside type="caution">
      Read fields through the snapshot from `useObject`. A field read straight off the ECHO object shows its value at
@@ -71,7 +71,7 @@ Two rules decide when a component re-renders:
 
 5. **Edit a record.** The app's form is `Form.Root` from `@dxos/react-ui-form`, given the record's type and the values from `useObject`. `onValuesChanged` writes each change back inside `Obj.update`, as in [Mutating objects](/docs/echo/learn/mutating-objects/). A reference field lists the records of the type it points at.
 
-   <Snippet file="tutorial/app/RecordForm" region="edit" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="edit" lang="tsx" />
 
    `ObjectForm` from the same package does all of this in one component:
 
@@ -81,7 +81,7 @@ Two rules decide when a component re-renders:
 
 6. **Create a record.** For a new record, `Form.Root` takes the type's schema and hands its values to `onSave`, which adds the record as in [Mutating objects](/docs/echo/learn/mutating-objects/).
 
-   <Snippet file="tutorial/app/RecordForm" region="create" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="create" lang="tsx" />
 
 </Steps>
 

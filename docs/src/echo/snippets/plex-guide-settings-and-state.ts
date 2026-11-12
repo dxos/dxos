@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { StashNamespace } from '../../app-framework-tutorial/src/namespace.ts';
+import { StashNamespace } from '../../plex-tutorial/src/namespace.ts';
 
 // #region settings
 export const Settings = Schema.Struct({

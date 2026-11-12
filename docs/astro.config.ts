@@ -239,11 +239,11 @@ export default defineConfig({
     inspectorImportMap(),
     react({
       include: [
-        '**/src/app-framework-tutorial/**',
+        '**/src/plex-tutorial/**',
         '**/src/demos/**',
         '**/src/halo-tutorial/**/*.{ts,tsx}',
         '**/src/plex/**',
-        '**/src/tutorial/**',
+        '**/src/echo-tutorial/**',
       ],
     }),
     starlight({

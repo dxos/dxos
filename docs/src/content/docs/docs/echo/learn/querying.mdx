@@ -28,27 +28,27 @@ Each query goes in the component that runs it: the lists, search and count in `C
 1. **List each type, sorted.** `Filter.type` selects the objects of a type, and `orderBy` sorts them by a field. The
    app's lists use these.
 
-   <Snippet file="tutorial/app/Contacts" region="by-type" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Contacts" region="by-type" lang="tsx" />
 
 2. **Search text.** `Filter.text` matches objects whose text contains the words, whatever their type. The space indexes
    text as objects are written. The search box uses this.
 
-   <Snippet file="tutorial/app/Contacts" region="search" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Contacts" region="search" lang="tsx" />
 
 3. **Follow references backwards.** `referencedBy` steps from an organization to the people whose `employer` points at
    it.
 
-   <Snippet file="tutorial/app/RecordForm" region="employees" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="employees" lang="tsx" />
 
 4. **Run a query.** `db.query(query).run()` returns the matches once, typed, so each result is a `Person`. An
    organization's form lists its people with this.
 
-   <Snippet file="tutorial/app/RecordForm" region="run" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="run" lang="tsx" />
 
 5. **Keep a query live.** `subscribe` calls back with the current results each time they change, and returns a function
    that stops it. `fire: true` calls back once at the start too. The toolbar's count of people uses this.
 
-   <Snippet file="tutorial/app/Contacts" region="live" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Contacts" region="live" lang="tsx" />
 
    The callback runs again whenever a person is added, changed or removed, on this peer or another. [Mutating objects](/docs/echo/learn/mutating-objects/) makes those changes.
 

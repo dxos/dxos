@@ -4,7 +4,7 @@
 
 import { type Database, Obj, Text } from '@dxos/echo';
 
-import { Event } from '../../tutorial/schema.ts';
+import { Event } from '../../echo-tutorial/schema.ts';
 
 declare const db: Database.Database;
 const launch = db.add(

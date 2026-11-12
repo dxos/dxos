@@ -26,21 +26,21 @@ Each change goes in the component that makes it: adding and editing in `RecordFo
 1. **Add records.** `db.add` takes an object made with `Obj.make` and returns it, now tracked. The **New** form saves
    with this.
 
-   <Snippet file="tutorial/app/RecordForm" region="add" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="add" lang="tsx" />
 
 2. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the
    subscription. The graph redraws an edge with this when a reference moves.
 
-   <Snippet file="tutorial/app/RecordGraph" region="subscribe" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordGraph" region="subscribe" lang="tsx" />
 
 3. **Change a record.** Every change goes inside `Obj.update`, which hands the callback a mutable view. The form calls
    this as you type.
 
-   <Snippet file="tutorial/app/RecordForm" region="update" lang="tsx" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="update" lang="tsx" />
 
 4. **Remove a record.** The **×** on a row calls this.
 
-   <Snippet file="tutorial/app/Contacts" region="remove" lang="tsx" />
+   <Snippet file="echo-tutorial/app/Contacts" region="remove" lang="tsx" />
 
    <Aside type="note">
      ECHO does not delete a removed object at once. It marks the object as removed and keeps it in the change history

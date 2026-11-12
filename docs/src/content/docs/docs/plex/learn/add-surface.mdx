@@ -22,7 +22,7 @@ the best one. [Surfaces](/docs/plex/concepts/surfaces/) explains the matching.
    re-renders the component when it changes, whether the change came from this tab, another device or the assistant.
    Writes go through `Obj.update`, like any ECHO write.
 
-   <Snippet file="app-framework-tutorial/src/containers/StashedLinkArticle" region="article" lang="tsx" />
+   <Snippet file="plex-tutorial/src/containers/StashedLinkArticle" region="article" lang="tsx" />
 
    `Panel.Root` with the surface's `role` gives the view the standard article layout.
 
@@ -30,12 +30,12 @@ the best one. [Surfaces](/docs/plex/concepts/surfaces/) explains the matching.
    subject is a link. `props` maps the surface's data onto the component's props, and is type-checked against the
    filter.
 
-   <Snippet file="app-framework-tutorial/src/capabilities/react-surface" region="surface" />
+   <Snippet file="plex-tutorial/src/capabilities/react-surface" region="surface" />
 
 3. **Add the module to the manifest.** The `roles` list lets the plugin manager load the module only when it first needs an
    article surface.
 
-   <Snippet file="app-framework-tutorial/dx.config" region="surface" />
+   <Snippet file="plex-tutorial/dx.config" region="surface" />
 
 4. **See the view.** Load or reload your plugin below, click **New** in the header to create a sample link, and select **Surface**. The inspector renders each of the module's surfaces whose filter accepts the sample: here, the article.
 

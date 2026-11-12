@@ -6,7 +6,7 @@ import React from 'react';
 
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { StashNamespace } from '../../app-framework-tutorial/src/namespace.ts';
+import { StashNamespace } from '../../plex-tutorial/src/namespace.ts';
 
 // #region read
 export const PluginTitle = () => {
