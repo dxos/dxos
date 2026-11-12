@@ -28,6 +28,7 @@ import { kebabize } from '@dxos/util';
 import { createSyncProgressKey, withPendingSyncMonitor } from '#sync';
 import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
+import { ATTACHMENT_NODE_TYPE, type AttachmentRef } from '../attachment-ref.ts';
 import { MAILBOX_MENU_DISPOSITION, MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants.ts';
 import { InboxNamespace } from '../namespace.ts';
 import {
@@ -64,20 +65,6 @@ const liveBindingFor = (target: Obj.Unknown, get: Atom.AtomContext): Binding.Bin
       )
     : undefined;
 };
-
-export const ATTACHMENT_NODE_TYPE = `${Type.getTypename(Message.Message)}-attachment`;
-
-/**
- * A single attachment, addressed as its owning message plus an index — an attachment is an entry in
- * `message.attachments`, not an object, so it has no identity a surface could match on its own.
- */
-export type AttachmentRef = { message: Message.Message; index: number };
-
-export const isAttachmentRef = (value: unknown): value is AttachmentRef =>
-  typeof value === 'object' &&
-  value !== null &&
-  typeof (value as AttachmentRef).index === 'number' &&
-  Obj.instanceOf(Message.Message, (value as AttachmentRef).message);
 
 const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 const CALENDAR_FILTER_TYPE = `${calendarTypename}-filter`;

@@ -28,9 +28,9 @@ import {
 import { type QueryFilterOwner } from '#hooks';
 import { Calendar, Mailbox } from '#types';
 
+import { isAttachmentRef } from '../attachment-ref.ts';
 import { POPOVER_SAVE_FILTER } from '../constants.ts';
 import { getSubscriptionsId } from '../paths.ts';
-import { isAttachmentRef } from './app-graph-builder.ts';
 import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx';
 
 /** A draft that has gone out: it reads as part of its conversation, and must not be offered for sending again. */
