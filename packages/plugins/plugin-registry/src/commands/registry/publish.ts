@@ -19,7 +19,7 @@ import * as Schema from 'effect/Schema';
 import { type Client, ClientService } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient, type PluginBundleUploadResult, formatPluginBundleLoad } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
 import * as BundleDescriber from '../../BundleDescriber.ts';
@@ -366,6 +366,10 @@ const uploadToEdge = ({
     return yield* uploadBundle({ client, key, version, outdir, channel, auth: !!client.halo.identity.get() });
   });
 
+/** Prints what loading the bundle cost EDGE, when the registry described it on this upload. */
+const logLoad = ({ edge }: PluginBundleUploadResult) =>
+  edge?.load ? Console.log(`EDGE load: ${formatPluginBundleLoad(edge.load)}`) : Effect.void;
+
 /**
  * Upload the build output to the edge registry via the authenticated edge client.
  * The edge gates `/registry/upload` on the caller's hub identity (verifiable
@@ -391,10 +395,11 @@ const uploadBundle = ({
   Effect.gen(function* () {
     const files = yield* readBundleFiles(outdir);
 
-    const { moduleUrl } = yield* Effect.tryPromise(() =>
+    const result = yield* Effect.tryPromise(() =>
       client.edge.http.uploadPluginBundle(Context.default(), { slug: key, version, files, channel }, { auth }),
     );
-    return moduleUrl;
+    yield* logLoad(result);
+    return result.moduleUrl;
   });
 
 /**
@@ -418,7 +423,7 @@ const uploadBundleDirect = ({
   Effect.gen(function* () {
     const files = yield* readBundleFiles(outdir);
 
-    const { moduleUrl } = yield* Effect.tryPromise({
+    const result: PluginBundleUploadResult = yield* Effect.tryPromise({
       try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files, channel }, { auth: false }),
       // Keep EdgeCallFailedError intact for the conflict recovery below; type everything else.
       catch: (error) =>
@@ -436,5 +441,6 @@ const uploadBundleDirect = ({
         },
       ),
     );
-    return moduleUrl;
+    yield* logLoad(result);
+    return result.moduleUrl;
   });
