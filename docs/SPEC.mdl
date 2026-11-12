@@ -3714,7 +3714,7 @@ decision D-240: PLEX's coding-agent examples are instructions to the agent. Each
   affects: [plex-build-with-agent]
   why: Review feedback that "I want to..." reads as a wish rather than a prompt; a declarative brief tells the agent what to make.
 
-decision D-241: PLEX's coding-agent picker has five examples: World clock (the default), Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket. Expense splitter and Family tree leave. Sankey adds a panel beside every sheet that draws its first three columns as flows, since a plugin cannot add a chart type to the sheet's own Charts companion. Receipts adds a mailbox toolbar action, through `InboxCapabilities.MailboxAction`, and a page charting spending per month. QR code adds an element kind to the canvas palette through `CanvasCapabilities.NodeType`. Amends [D-184].
+decision D-241: PLEX's coding-agent picker has five examples: World clock (the default), Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket. Expense splitter and Family tree leave. Sankey adds a chart type to the sheet's Charts companion, drawn from a range of from, to and amount columns; the companion has no way yet for another plugin to add a chart type. Receipts adds a mailbox toolbar action, through `InboxCapabilities.MailboxAction`, and a page charting spending per month. QR code adds an element kind to the canvas palette through `CanvasCapabilities.NodeType`. Amends [D-184].
   date: 2026-11-12
   by: agent:claude
   for: user:wittjosiah
