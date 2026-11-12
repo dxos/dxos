@@ -111,9 +111,9 @@ const round = (value: number) => Math.round(value * 100) / 100;
 const CARD_TEMPLATE = `composite cardObject size=${CARD_SIZE.width}x${CARD_SIZE.height} name="Card" {
   element frame rect @ 0,0 size=${CARD_SIZE.width}x${CARD_SIZE.height} constrain=stretch rounded=true
   element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} constrain=min icon=command
-  element title note "Composite" @ ${round((LEFT + GLYPH + CELL / 2 + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(RIGHT - LEFT - GLYPH - CELL / 2)}x${CELL * 2} constrain=stretch,min
-  element body note "A frame, a glyph and three texts, grouped into an object." @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${round(RIGHT - LEFT)}x${round(BODY_BOTTOM - BODY_TOP)} constrain=stretch
-  element footer note "composite · five parts" @ 0,${round(BOTTOM - FOOTER / 2)} size=${round(RIGHT - LEFT)}x${FOOTER} constrain=stretch,max
+  element title note "Composite" @ ${round((LEFT + GLYPH + CELL / 2 + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(RIGHT - LEFT - GLYPH - CELL / 2)}x${CELL * 2} constrain=stretch,min padding=0,0
+  element body note "A frame, a glyph and three texts, grouped into an object." @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${round(RIGHT - LEFT)}x${round(BODY_BOTTOM - BODY_TOP)} constrain=stretch padding=0,0
+  element footer note "composite · five parts" @ 0,${round(BOTTOM - FOOTER / 2)} size=${round(RIGHT - LEFT)}x${FOOTER} constrain=stretch,max padding=0,0
 }
 `;
 
