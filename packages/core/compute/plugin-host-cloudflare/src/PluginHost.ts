@@ -14,7 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManifest from '@dxos/app-framework/PluginManifest';
-import { wrapFunctionHandler } from '@dxos/compute-runtime';
+import { wrapFunctionHandler } from '@dxos/compute-runtime/protocol';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import * as EffectEx from '@dxos/effect/EffectEx';
