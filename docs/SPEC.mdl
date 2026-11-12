@@ -1115,8 +1115,8 @@ page plex-build-with-agent: Build with a coding agent
   template: tutorial
   status: spike
   covers:
-    - A prompt the reader can edit, prefilled with the World Clock example: a list of timezones for each space, as a map of pins above a row of ticking clocks [D-192]
-    - A picker above the prompt that fills it with one of five examples: World clock, Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket [D-184, D-191]
+    - A prompt the reader can edit, prefilled with the World Clock example: a list of timezones for each space, as a map of pins above a row of ticking clocks [D-193]
+    - A picker above the prompt that fills it with one of five examples: World clock, Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket [D-184, D-191, D-192]
     - Examples written as instructions: each names the plugin and says what it should provide [D-190]
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
@@ -3716,19 +3716,28 @@ decision D-190: PLEX's coding-agent examples are instructions to the agent. Each
 ```
 
 ```mdl
-decision D-191: PLEX's coding-agent picker has five examples: World clock (the default), Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket. Expense splitter and Family tree leave. Sankey adds a chart type to the sheet's Charts companion through `SheetCapabilities.ChartType`, drawn from a range of from, to and amount columns; its scenario is any budget, with income flowing into spending categories. Receipts adds a mailbox toolbar action, through `InboxCapabilities.MailboxAction`, and a page charting spending per month. QR code adds an element kind to the canvas palette through `CanvasCapabilities.NodeType`. Amends [D-184].
+decision D-191: PLEX's coding-agent picker has five examples: World clock (the default), Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket. Expense splitter and Family tree leave. Sankey is a new chart type for sheet charts, Receipts an email filter, and QR code a canvas tool. Amends [D-184].
   date: 2026-11-12
-  by: agent:claude
-  for: user:wittjosiah
+  by: user:wittjosiah
   affects: [plex-build-with-agent]
-  why: Josiah chose the five subjects; the agent picked the scenarios. Each example extends a plugin that ships with Composer (sheet, inbox, canvas) or uses another plugin's objects (tournament), so the picker shows plugins adding to what is already there, not only standalone pages.
+  why: Three of the five extend a plugin that ships with Composer (sheet, inbox, canvas), so the picker shows plugins adding to what is already there, not only standalone pages.
 
 ```
 
 ```mdl
-decision D-192: The World Clock example asks for a list of timezones kept for each space, shown as a map with a pin for each above a row of ticking clocks. Fills in [D-190].
+decision D-192: The scenarios for [D-191]'s new examples. Sankey adds a chart type to the sheet's Charts companion through `SheetCapabilities.ChartType`, drawn from a range of from, to and amount columns; its scenario is any budget, with income flowing into spending categories. Receipts adds a mailbox toolbar action, through `InboxCapabilities.MailboxAction`, and a page charting spending per month. QR code adds an element kind to the canvas palette through `CanvasCapabilities.NodeType`.
   date: 2026-11-12
-  by: agent:claude
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Each scenario needs no context from the reader's own spaces and is something Composer does not ship by default.
+
+```
+
+```mdl
+decision D-193: The World Clock example asks for a list of timezones kept for each space, shown as a map with a pin for each above a row of ticking clocks. Fills in [D-190].
+  date: 2026-11-12
+  by: agent:claude-code
   for: user:wittjosiah
   affects: [plex-build-with-agent]
   why: In one `composer-plugin-dev` eval run each, a brief that asked for clocks "that show the time for everyone on the team" led the agent to draw one clock per space member with no way to add a timezone, scoring 58% against the first-person brief's 76%. Naming the list keeps the brief's meaning in the declarative form.

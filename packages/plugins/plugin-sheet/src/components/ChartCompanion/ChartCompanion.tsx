@@ -234,7 +234,18 @@ type ChartDetailProps = Pick<ChartCompanionProps, 'getValues' | 'chartTypes'> & 
 const ChartDetail = ({ chart, editing, getValues, chartTypes, typeOptions, onUpdate, onCancel }: ChartDetailProps) => {
   const { id: _id, ...values } = chart;
   const fieldMap = useMemo<FormFieldMap>(
-    () => ({ type: (props) => <SelectField {...props} options={typeOptions} /> }),
+    () => ({
+      type: (props) => (
+        <Form.Field
+          path={props.jsonPath}
+          label={props.label}
+          readonly={props.readonly}
+          presentation={props.presentation}
+        >
+          <SelectField {...props} options={typeOptions} />
+        </Form.Field>
+      ),
+    }),
     [typeOptions],
   );
   return editing ? (
