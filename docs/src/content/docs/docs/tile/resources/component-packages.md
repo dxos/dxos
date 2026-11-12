@@ -4,15 +4,17 @@ description: The other react-ui packages, one line each.
 ---
 
 These packages build on `@dxos/react-ui`. Each has its stories in the DXOS Storybook, and its source in
-[`packages/ui`](https://github.com/dxos/dxos/tree/main/packages/ui). They are grouped by what they need besides the core.
+[`packages/ui`](https://github.com/dxos/dxos/tree/main/packages/ui). They are grouped by the data they are designed for.
 
-## Standalone
+## General purpose
 
-These need only `@dxos/react-ui`, so they work in any React app.
+These work with any data, in any React app.
 
 | Package                             | What it holds                                                   |
 | ----------------------------------- | --------------------------------------------------------------- |
 | `@dxos/react-ui-list`               | Lists, list boxes, ordered lists and trees                      |
+| `@dxos/react-ui-menu`               | Menus and toolbars built from actions                           |
+| `@dxos/react-ui-editor`             | The text editor                                                 |
 | `@dxos/react-ui-attention`          | The attention system: which part of the app the user is working in |
 | `@dxos/react-ui-pickers`            | Pickers for an emoji, a hue or an icon                          |
 | `@dxos/react-ui-syntax-highlighter` | Highlighted source code                                         |
@@ -39,9 +41,9 @@ These need only `@dxos/react-ui`, so they work in any React app.
 | `@dxos/react-ui-components`         | General-purpose components                                      |
 | `@dxos/react-ui-experimental`       | Components still being tried out                                |
 
-## Built on ECHO
+## Designed for ECHO
 
-These render or edit ECHO objects, so they need `@dxos/echo`.
+These are built with ECHO's objects and schemas in mind, such as a form generated from an object's type.
 
 | Package                           | What it holds                                                 |
 | --------------------------------- | ------------------------------------------------------------- |
@@ -57,19 +59,10 @@ These render or edit ECHO objects, so they need `@dxos/echo`.
 | `@dxos/react-ui-assistant`        | The assistant's chat thread                                   |
 | `@dxos/react-ui-transcription`    | Audio capture and transcription                               |
 | `@dxos/react-ui-canvas-editor`    | The scene editor on `react-ui-canvas`                         |
-| `@dxos/react-ui-canvas-compute`   | A compute graph for the canvas editor. Also needs PLEX and the client |
-| `@dxos/react-ui-trace`            | Process trees and trace timelines. Also needs the client      |
+| `@dxos/react-ui-canvas-compute`   | A compute graph for the canvas editor                         |
+| `@dxos/react-ui-trace`            | Process trees and trace timelines                             |
+| `@dxos/react-ui-mosaic`           | Stacks, decks and other layouts of objects                    |
 
-## The plugin shell
-
-These need PLEX's app graph, or are used mostly by the shell around plugins.
-
-| Package                  | What it holds                                                          |
-| ------------------------ | ---------------------------------------------------------------------- |
-| `@dxos/react-ui-menu`    | Menus and toolbars built from the app's actions. Needs `@dxos/app-graph` |
-| `@dxos/react-ui-editor`  | The text editor. Needs `@dxos/app-graph`                               |
-| `@dxos/react-ui-mosaic`  | Stacks, decks and other layouts of surfaces. Needs ECHO                |
-
-Four of these have guides: [Lists](/docs/tile/guides/lists/),
+Four packages have guides: [Lists](/docs/tile/guides/lists/),
 [Forms](/docs/tile/guides/forms/), [Menus and toolbars](/docs/tile/guides/menus-and-toolbars/) and
 [Text editor](/docs/tile/guides/text-editor/).
