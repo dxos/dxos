@@ -32,6 +32,12 @@ import { restackZ } from './view-tree.ts';
  */
 export const HULL_STYLE: NodeStyle = { tone: 0, lineStyle: 'dashed' };
 
+/**
+ * A hull's name in scene px when its style sets no size: small, as a caption in the corner of its border, where a
+ * shape's label fills the shape. The view draws it with the class of the same size (`text-sm`).
+ */
+export const HULL_FONT_SIZE = 14;
+
 /** How far a hull's border stands off the nodes inside it where no lattice places it, in scene px. */
 export const HULL_MARGIN = DEFAULT_GRID * 2;
 

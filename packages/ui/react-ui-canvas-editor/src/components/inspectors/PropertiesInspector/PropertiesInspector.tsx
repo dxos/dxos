@@ -19,6 +19,7 @@ import { type Database } from '@dxos/echo';
 import {
   type CanvasAtoms,
   type DrawScene,
+  HULL_FONT_SIZE,
   type LinkRegistry,
   NO_STYLES,
   type NodeRegistry,
@@ -196,6 +197,9 @@ const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertic
     ? { alignHorizontal: 'left', alignVertical: 'top' }
     : { alignHorizontal: 'center', alignVertical: 'middle' };
 
+/** The size a type draws its text at unless styled otherwise, where that is not a shape label's: a hull's name is a caption. */
+const textSize = (node: Node): Pick<NodeStyle, 'fontSize'> => (isHullNode(node) ? { fontSize: HULL_FONT_SIZE } : {});
+
 /**
  * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
  * contents read as they look and an unset port count as the type's.
@@ -211,7 +215,7 @@ const formValues = (
     : {
         ...element,
         layer: elementLayer(element, layers),
-        style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
+        style: { ...textAlign(element), ...textSize(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
       };

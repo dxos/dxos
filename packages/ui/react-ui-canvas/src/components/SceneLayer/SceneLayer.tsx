@@ -1480,6 +1480,7 @@ export const HullNodeView = ({ node, editing }: NodeViewProps) => {
         'whitespace-pre-wrap',
         LINE_ON_GRID,
         alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
+        // `HULL_FONT_SIZE`, as a static class so Tailwind generates it.
         sizeClass(node, 'text-sm'),
       )}
     >
