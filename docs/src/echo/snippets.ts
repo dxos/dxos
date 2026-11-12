@@ -18,6 +18,8 @@ const SOURCE_DIRS = [
   '../plex-tutorial/',
   // HALO's contact book, quoted the same way.
   '../halo-tutorial/',
+  // TILE's contacts screen, quoted the same way.
+  '../tile-tutorial/',
 ];
 
 const ECHO_DIR = join(process.cwd(), 'src/echo');
@@ -45,7 +47,7 @@ const readSources = (): Record<string, string> =>
   );
 
 /** Directories whose modules compile with their local imports beside them. */
-const PROJECTS = ['../echo-tutorial/', '../plex-tutorial/', '../halo-tutorial/'];
+const PROJECTS = ['../echo-tutorial/', '../plex-tutorial/', '../halo-tutorial/', '../tile-tutorial/'];
 
 const findSource = (file: string): [path: string, source: string] => {
   const entry = Object.entries(readSources()).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));

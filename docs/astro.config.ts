@@ -213,6 +213,7 @@ export default defineConfig({
           path.join(rootDir, '{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
           path.join(import.meta.dirname, 'src/demos/**/*.{ts,tsx}'),
           path.join(import.meta.dirname, 'src/echo/snippets/tile-*.tsx'),
+          path.join(import.meta.dirname, 'src/tile-tutorial/**/*.{ts,tsx}'),
         ],
         scanPaths: [path.join(rootDir, 'packages/ui/ui-icons/src/index.ts')],
       }),

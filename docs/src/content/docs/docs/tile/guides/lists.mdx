@@ -1,0 +1,53 @@
+---
+title: Lists
+description: Lists, list boxes and trees with @dxos/react-ui-list.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+`@dxos/react-ui-list` has a part for each shape of list: `Listbox` for a flat list the user picks from, `OrderedList`
+for rows the user drags into order, and `Tree` for nested rows. Each one handles keyboard navigation and the current and
+selected states, and each sets its own spacing, so put it in a panel's body with no padding around it.
+
+```sh
+npm install @dxos/react-ui-list
+```
+
+## Pick from a list
+
+`Listbox` takes its options as `items`, each with a `value`, a `label` and an optional `description`. Pass `value` and
+`onValueChange` to make one row selectable. Leave both out and the list is only for display. Inside each `Listbox.Item`,
+the parts read the item, so `Listbox.ItemText` shows its label without being told:
+
+<Snippet file="tile-guide-lists" region="listbox" lang="tsx" />
+
+<TilePreview id="people-listbox" height="12rem" />
+
+## Let the user reorder rows
+
+`OrderedList` gives each row a drag handle. Dropping a row calls `onMove` with the old and the new index, and you
+update your state. `getLabel` names each row for screen readers as it moves. The root's child is a function of the
+items, so the rows always follow the order you hold:
+
+<Snippet file="tile-guide-lists" region="ordered" lang="tsx" />
+
+<TilePreview id="agenda" height="14rem" />
+
+## Show nested rows
+
+`Tree` reads its rows from a model. `createStaticTreeModel` makes one over data you already hold, given how to find an
+item's children and what to show for it:
+
+<Snippet file="tile-guide-lists" region="data" lang="ts" />
+
+The model keeps each row's open and current state in an atom, so the tree needs a registry from
+`@effect/atom-react` above it: wrap your app in `RegistryProvider`. Open a row or select it, and the tree calls
+`onOpenChange` or `onSelect`. Write the new state to the row's atom, and the tree draws it:
+
+<Snippet file="tile-guide-lists" region="tree" lang="tsx" />
+
+<TilePreview id="folder-tree" height="14rem" />
+
+A tree over the app graph, such as Composer's navigation, gets its model from the graph instead of from
+`createStaticTreeModel`.
