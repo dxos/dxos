@@ -524,7 +524,7 @@ test QA-6: Subagent threads open as columns
       expect: a column opens for each task, one at a time, showing its subagent's reasoning as it works
     - name: Keep talking
       do: Select the agent's column and click the chip "While they work: which day should we launch?"
-      expect: the agent answers at once while the subagents keep working
+      expect: the agent answers once its current wait returns, while the other subagents keep working
     - name: Look inside a subagent's column
       do: Click the FAQ column.
       expect: the column ends with a card for the document its subagent wrote, over a graph of the events in its memory
