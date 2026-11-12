@@ -13,6 +13,8 @@ import {
   collapseHulls,
   createLink,
   drawnLists2D,
+  drawnWrites,
+  enclose,
   fromRenderLists2D,
   moveWrites,
   viewMove,
@@ -159,6 +161,31 @@ describe('hull rows', () => {
     expect(nesting(left)).toEqual({ root: ['a', 'x'], g: ['b'], h: ['c'] });
     // The link from X ends at the shape itself again, not at the group it left.
     expect(left.layouts.find((layout) => layout.id === 'board')?.elements.xa.target).toEqual({ node: 'a' });
+  });
+
+  test('a hull made round shapes keeps the links that cross its border', ({ expect }) => {
+    // The same board with no hull yet: A, B and X stand in the scene, X linked to A and A to B.
+    const flat: RenderList2D = {
+      id: 'board',
+      nodes: Object.fromEntries([box('a', 0), box('b', 200), box('x', 1000)].map((node) => [node.id, node])),
+      links: { xa: smart('xa', 'x', 'a'), ab: smart('ab', 'a', 'b') },
+    };
+    const stored = fromRenderLists2D([flat], { root: 'board' });
+    const drawn = Object.fromEntries(drawnLists2D(stored).lists.map((list) => [list.id, list]));
+    const enclosed = enclose(drawn.board, ['a', 'b'], 'g');
+    const next = enclosed ? written(stored, drawnWrites(stored, drawn, { ...drawn, board: enclosed })) : stored;
+    // Stored, the link from outside ends at the group; the one between the two shapes is the group's own.
+    const board = next.layouts.find((layout) => layout.id === 'board');
+    expect(Object.keys(board?.elements ?? {}).sort()).toEqual(['g', 'x', 'xa']);
+    expect(board?.elements.xa.target).toEqual({ node: 'g', port: 'a' });
+    expect(Object.keys(next.layouts.find((layout) => layout.id === 'g-parts')?.elements ?? {}).sort()).toEqual([
+      'a',
+      'ab',
+      'b',
+    ]);
+    // Drawn, both links are there, each ending at the shape it was drawn to.
+    const shown = drawnLists2D(next).lists.find((list) => list.id === 'board');
+    expect([shown?.links.xa?.target, shown?.links.ab?.source]).toEqual([{ node: 'a' }, { node: 'a' }]);
   });
 
   test('a hull, a link and a row already in the hull are not moved into one', ({ expect }) => {
