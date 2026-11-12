@@ -29,7 +29,7 @@ import { CanvasCapabilities } from '#types';
 import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
-import { STUDIO_SLIDES } from '../../testing/studio/slides.ts';
+import { STUDIO_SLIDES, type StudioSlide, studioSlide } from '../../testing/studio/slides.ts';
 import { STUDIO_CANVAS, seedStudioSlide } from '../../testing/studio/studio.ts';
 
 /** Every kind the deck's slides use, contributed once for all of them. */
@@ -60,12 +60,12 @@ const square = (cells: ModuleSpec[]): ModuleSpec[][] => {
   return Array.from({ length: columns }, (_, column) => cells.filter((_cell, index) => index % columns === column));
 };
 
-const decorators = () =>
+const decorators = (slides: readonly StudioSlide[] = STUDIO_SLIDES) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), StudioKindsPlugin()],
     onInit: async ({ space }) => {
-      const drawings = STUDIO_SLIDES.map(({ id, source, model }) => {
+      const drawings = slides.map(({ id, source, model }) => {
         // Every component is drawn as a kind: the space graph's Generator is exercised by `StudioAgents`, and nine
         // compiled generators on one page would say nothing the one story does not.
         // Read-only, so each cell is the slide rather than nine editors: the rail, the actions and the inspectors
@@ -81,7 +81,6 @@ const decorators = () =>
 const meta: Meta<typeof ModuleContainer> = {
   title: 'plugins/plugin-canvas/containers/StudioDeck',
   render: ModuleContainer,
-  decorators: decorators(),
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -94,6 +93,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Every slide draws, and every component kind of the deck's table draws on the slide that places it. */
 export const Default: Story = {
+  decorators: decorators(),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const views = await canvas.findAllByTestId('scene-view', undefined, { timeout: 60_000 });
@@ -110,3 +110,21 @@ export const Default: Story = {
     await expect(count('studio-chips')).toBe(3);
   },
 };
+
+//
+// One story per slide, so a slide has a link of its own to read, screenshot and compare against the deck's own
+// render. They are the same drawing the nine-up places; only the number of cells differs.
+//
+
+/** A slide on its own, at the one cell's full size. */
+const only = (id: string): Story => ({ decorators: decorators([studioSlide(id)]) });
+
+export const Hyperspace = only('hyperspace');
+export const EchoLayers = only('echo-layers');
+export const Plugins = only('plugins');
+export const Composer = only('composer');
+export const Architecture = only('architecture');
+export const Agents = only('agents');
+export const Ontology = only('ontology');
+export const Chat = only('chat');
+export const Agent = only('agent');
