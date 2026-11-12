@@ -20,8 +20,8 @@ import {
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '@dxos/scene';
 
+import { spaceGraphSpec } from '../../components/index.ts';
 import { feedCardSpec } from './FeedCard.tsx';
-import { spaceGraphSpec } from './SpaceGraph.tsx';
 
 const registry = () =>
   createNodeRegistry(

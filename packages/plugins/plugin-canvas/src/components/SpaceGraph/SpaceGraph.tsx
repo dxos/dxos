@@ -3,21 +3,15 @@
 //
 
 //
-// The deck's space graph as a canvas element kind rather than a Generator: one ECHO space drawn as a circle holding a
-// connected graph of objects on a hexagonal lattice, generated from a seed.
-//
-// Why a kind and not a generator (STUDIO-CARDS.md §9): a kind's fields are its configuration — they show in the
-// Properties panel, so the seed, the density and the readers are edited rather than written into a parameter blob —
-// and a kind's view reads the scene, so a reader card is resolved by id and followed as it moves without the
-// binding machinery. The geometry is the same module either way (`space-graph.generator.ts`), so the golden check
+// One ECHO space as a canvas element kind: a circle holding a connected graph of objects on a hexagonal lattice,
+// generated from a seed. It began as a slide of the studio deck, drawn there by a Generator; as a kind its fields are
+// its configuration, so the seed, the density and the hue are edited in the Properties panel rather than written into
+// a parameter blob. The geometry is the same module either way (`generator/space-graph.generator.ts`), so the golden check
 // covers both.
 //
 // What a kind still cannot do: anchor a link to an object *inside* it. A `Port` sits on a side of the frame at an
-// offset, so there is no port at an interior point. The canvas link therefore ends on the circle, and the node
-// draws the leg from there to the object it taps.
+// offset, so there is no port at an interior point. The canvas link therefore ends on the circle.
 //
-
-import './theme.css';
 
 import * as Schema from 'effect/Schema';
 import React from 'react';
@@ -26,7 +20,7 @@ import { type ElementKindSpec, type NodeViewProps } from '@dxos/react-ui-canvas'
 import { StepAnnotation } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
-import { layout } from './space-graph/space-graph.generator.ts';
+import { layout } from './generator/space-graph.generator.ts';
 
 /**
  * A hue of the canvas theme, and its classes written out. Tailwind only emits the classes it reads verbatim in

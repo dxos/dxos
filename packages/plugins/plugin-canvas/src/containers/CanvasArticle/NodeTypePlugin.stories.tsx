@@ -141,6 +141,18 @@ export const WithPlugin: Story = {
     const canvas = within(canvasElement);
     await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
     await expect((await canvas.findAllByTestId('task-node')).length).toBe(2);
+    // A contributed kind's tool stands apart from the canvas's own: the task shares a group of the rail with the
+    // plugin's own extension tools, and the select tool and the shapes are in other groups. Folded, a group shows
+    // one of its tools, so either may be the one in the rail.
+    const palette = await canvas.findByTestId('palette');
+    const extension = palette.querySelector(
+      '[data-testid="canvas.tool.node:task"], [data-testid="canvas.tool.node:space-graph"]',
+    );
+    const group = extension?.closest('[data-testid="palette"] > *');
+    await expect(group).toBeTruthy();
+    await expect(
+      group?.querySelector('[data-testid="canvas.tool.node:rect"], [data-testid="canvas.tool.select"]'),
+    ).toBeNull();
   },
 };
 

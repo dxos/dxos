@@ -340,6 +340,11 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       names its own grid (the DSL has no cell size of its own), now `grid=384x256`, with `compiled.json` and the
       `.dx.svg` renders regenerated.
 - [x] Properties: a hull's border and inset side by side (`HullField`).
+- [x] Extension tools: plugin-canvas's `extension-node-types` module contributes the space graph
+      (`src/components/SpaceGraph`, its geometry in `generator/`, moved out of `src/testing/studio`); a contributed kind is offered in the
+      `Extensions` group of the rail. The studio branch imports the moved files from their old paths in four files.
+- [ ] Extension tools: the studio kinds other than the space graph (card, feed card, chip, plank, app frame,
+      substrate) are still story-only, and contributed kinds are 2D only.
 - [ ] A shape off its cell (snapping off) is re-seated on the nearest one, so two could land on the same cell.
 - [ ] Views tree: moving a row into a plain Group, another View or an Object's definition (a move between two
       drawings, which needs a place for the shape in the other's coordinates), and any of it in 3D.

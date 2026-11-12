@@ -97,6 +97,11 @@ default lattice from now on takes the new one; a drawing already on a lattice ke
 reference diagrams are drawn on it: their `.dx` sources name `grid=384x256`, and their compiled commands and SVG
 renders are regenerated.
 
+plugin-canvas contributes its own extension tools through `CanvasCapabilities.NodeType`, the space graph first: one
+ECHO space as a circle of objects on a hexagonal lattice, with its seed, spacing and hue as Properties. A kind a
+plugin contributes is offered in an `Extensions` group of the tools panel (`CanvasCapabilities.EXTENSIONS_GROUP`)
+unless it names a group of its own, so plugin-uml's class is there too.
+
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
 
 `@dxos/ui-types/phosphor` exports `phosphorIcons`, the name of every regular Phosphor glyph. It is an entry of its

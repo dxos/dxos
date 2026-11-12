@@ -25,8 +25,8 @@ import { CanvasViewNodeView, CanvasViewToolbar } from './CanvasViewNodeView.tsx'
 import { ImageNodeView } from './ImageNodeView.tsx';
 
 /**
- * The built-in node types and whatever other plugins contribute (a contribution may replace a built-in).
- * The canvas's frame shows an object (`object`) as that object's surface.
+ * The built-in node types and whatever plugins contribute (a contribution may replace a built-in, and is then
+ * offered where the built-in was). The canvas's frame shows an object (`object`) as that object's surface.
  */
 export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefined): NodeRegistry => {
   const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
@@ -55,7 +55,15 @@ export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefin
             // The picture is the shape: no fill or border unless the style asks for them.
             bare: true,
           },
-          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, kindNodeDef(type, spec)])),
+          ...Object.fromEntries(
+            contributed.map(({ type, spec }) => [
+              type,
+              kindNodeDef(type, {
+                ...(type in defaultNodeTypes ? {} : { group: CanvasCapabilities.EXTENSIONS_GROUP }),
+                ...spec,
+              }),
+            ]),
+          ),
         },
         defaultNodePrototypes,
       ),

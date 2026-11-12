@@ -26,6 +26,8 @@ import { translations } from '#translations';
 import { CanvasCapabilities, Generator } from '#types';
 
 import types from '../../capabilities/schema.ts';
+import generatorParams from '../../components/SpaceGraph/generator/params.schema.json?raw';
+import generatorSource from '../../components/SpaceGraph/generator/space-graph.generator.ts?raw';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentsSource from '../../testing/studio/agents.diagram?raw';
 import agentsModel from '../../testing/studio/agents.json?raw';
@@ -35,8 +37,6 @@ import chatModel from '../../testing/studio/chat.json?raw';
 import { feedCardSpec } from '../../testing/studio/FeedCard.tsx';
 import ontologySource from '../../testing/studio/ontology.diagram?raw';
 import ontologyModel from '../../testing/studio/ontology.json?raw';
-import generatorParams from '../../testing/studio/space-graph/params.schema.json?raw';
-import generatorSource from '../../testing/studio/space-graph/space-graph.generator.ts?raw';
 import { type Generators, STUDIO_CANVAS, parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
 
 /** Both card kinds, so one plugin serves every slide. */

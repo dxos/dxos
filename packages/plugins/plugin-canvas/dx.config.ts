@@ -68,6 +68,17 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
       () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
+    // Browser-only: the plugin's own extension tools, which carry React views; they ride illustrator's start, as the
+    // canvas variant that offers them does.
+    Capability.lazyModule(
+      'extension-node-types',
+      {
+        provides: [CanvasCapabilities.NodeType],
+        activatesOn: IllustratorEvents.Start,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/extension-node-types.ts', { with: { type: 'module-url' } }),
+    ),
     // Browser-only: the variant supplies the React article that renders a drawing.
     Capability.lazyModule(
       'drawing-variant',

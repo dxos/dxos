@@ -26,16 +26,15 @@ import { translations } from '#translations';
 import { CanvasCapabilities, Generator } from '#types';
 
 import types from '../../capabilities/schema.ts';
+import generatorParams from '../../components/SpaceGraph/generator/params.schema.json?raw';
+import generatorSource from '../../components/SpaceGraph/generator/space-graph.generator.ts?raw';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentsSource from '../../testing/studio/agents.diagram?raw';
 import agentsModel from '../../testing/studio/agents.json?raw';
 import { feedCardSpec } from '../../testing/studio/FeedCard.tsx';
-import generatorParams from '../../testing/studio/space-graph/params.schema.json?raw';
-import generatorSource from '../../testing/studio/space-graph/space-graph.generator.ts?raw';
-import { spaceGraphSpec } from '../../testing/studio/SpaceGraph.tsx';
 import { type ComponentMode, STUDIO_CANVAS, parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
 
-/** A plugin contributing the slide's two kinds, the way a real one contributes its own. */
+/** A plugin contributing the slide's card, the way a real one contributes its own; the space graph is plugin-canvas's. */
 const StudioKindsPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvasStudioFeedCard'), name: 'Studio Kinds' }),
 ).pipe(
@@ -44,10 +43,7 @@ const StudioKindsPlugin = Plugin.define(
     activatesOn: IllustratorEvents.Start,
     provides: [CanvasCapabilities.NodeType],
     activate: () =>
-      Effect.succeed([
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec }),
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'space-graph', spec: spaceGraphSpec }),
-      ]),
+      Effect.succeed([Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec })]),
   }),
   Plugin.make,
 );
