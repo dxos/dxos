@@ -347,7 +347,9 @@ export const PropertiesInspector = ({
     // A spline's control points run the other way after a flip, so a selected point's index names another one.
     registry.set(atoms.point, undefined);
   }, [draw, links, registry, atoms.point]);
-  const flip = !readonly && links.length > 0 && links.length === elements.length ? onFlip : undefined;
+  // Every selected element is a link: only then is `type` theirs to pick, and only then does flipping mean anything.
+  const onlyLinks = links.length > 0 && links.length === elements.length;
+  const flip = !readonly && onlyLinks ? onFlip : undefined;
 
   // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for
   // every kind: its fill rows only when every element is a node, since a link has a colour but no fill.
@@ -396,7 +398,7 @@ export const PropertiesInspector = ({
                     {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
                     <Form.Viewport scroll={false}>
                       <Form.Content>
-                        <Form.Fields exclude={links ? HIDDEN_LINK : HIDDEN} sort={fieldOrder} />
+                        <Form.Fields exclude={onlyLinks ? HIDDEN_LINK : HIDDEN} sort={fieldOrder} />
                       </Form.Content>
                     </Form.Viewport>
                   </Form.Root>

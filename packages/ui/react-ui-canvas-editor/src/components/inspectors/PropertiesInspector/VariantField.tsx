@@ -20,10 +20,8 @@ export const VariantField: FormFieldRenderer = ({ jsonPath, label, readonly }) =
   const registry = useContext(LinkVariantsContext);
   const field = useFormFieldState('VariantField', (jsonPath ?? 'type').split('.'));
   const value: unknown = field.getValue();
-  const items = LINK_TYPES.flatMap((type) => {
-    const def = registry?.[type];
-    return def ? [{ value: type, label: def.name }] : [];
-  });
+  // The registry's own order, so the default variant leads as it does in the palette.
+  const items = Object.values(registry ?? {}).map(({ type, name }) => ({ value: type, label: name }));
   if (items.length === 0) {
     return null;
   }
