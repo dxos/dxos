@@ -76,22 +76,18 @@ const HeadlessTestLayer = AssistantTestLayer({
 
 const SCRIPTED_PROMPTS = ['Summarize my notes', 'Plan the week', 'Draft a status update'];
 
-/** Every model call answers with the same prompts, so a test can count the calls generation made. */
-const scriptedGenerations = () => {
-  const requests: ScriptedLanguageModel.ScriptedRequest[] = [];
-  const layer = AssistantTestLayer({
-    operationHandlers: AssistantOperationHandlerSet,
-    types: [TestNote],
-    extraServices: Layer.succeed(Capability.Service, headlessManager),
-    aiService: ScriptedLanguageModel.scriptedAiService((request) => {
-      requests.push(request);
-      return { parts: [ScriptedLanguageModel.text(JSON.stringify({ prompts: SCRIPTED_PROMPTS }))] };
-    }),
-  });
-  return { requests, layer };
-};
+/** Every model call answers with the same prompts, recorded so a test can count the calls generation made. */
+const scriptedRequests: ScriptedLanguageModel.ScriptedRequest[] = [];
 
-const scripted = scriptedGenerations();
+const ScriptedTestLayer = AssistantTestLayer({
+  operationHandlers: AssistantOperationHandlerSet,
+  types: [TestNote],
+  extraServices: Layer.succeed(Capability.Service, headlessManager),
+  aiService: ScriptedLanguageModel.scriptedAiService((request) => {
+    scriptedRequests.push(request);
+    return { parts: [ScriptedLanguageModel.text(JSON.stringify({ prompts: SCRIPTED_PROMPTS }))] };
+  }),
+});
 
 describe('GenerateHomeSuggestions', () => {
   it.effect(
@@ -211,9 +207,9 @@ describe('GenerateHomeSuggestions without an atom registry', () => {
 
         expect(first.prompts).toEqual(SCRIPTED_PROMPTS);
         expect(second.prompts).toEqual(SCRIPTED_PROMPTS);
-        expect(scripted.requests).toHaveLength(2);
+        expect(scriptedRequests).toHaveLength(2);
       },
-      Effect.provide(scripted.layer),
+      Effect.provide(ScriptedTestLayer),
       TestHelpers.provideTestContext,
     ),
   );
