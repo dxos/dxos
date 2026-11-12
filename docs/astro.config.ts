@@ -259,7 +259,7 @@ export default defineConfig({
         // The sidebar folds into a menu below 72rem; see `PageFrame.astro`.
         PageFrame: './src/components/PageFrame.astro',
         PageTitle: './src/components/PageTitle.astro',
-        // Lists the topics with the DXOS brand marks; see `SidebarTopics.astro`.
+        // Drops the topic list; the header switches topics. See `topic-nav/TopicNav.astro`.
         Sidebar: './src/components/Sidebar.astro',
         // TODO(wittjosiah): Uncomment to link logo to home page.
         // SiteTitle: './src/components/CustomSiteTitle.astro',
@@ -299,7 +299,7 @@ export default defineConfig({
               id: 'mesh',
               label: 'MESH',
               link: '/docs/mesh/overview/',
-              // Exploration: an overview only, so the topic switcher has every topic to land on.
+              // An overview only for now, so every topic in the header has a page to land on.
               items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/mesh/overview/' }] }],
             },
             {
@@ -312,14 +312,14 @@ export default defineConfig({
               id: 'edge',
               label: 'EDGE',
               link: '/docs/edge/overview/',
-              // Exploration: an overview only, so the topic switcher has every topic to land on.
+              // An overview only for now, so every topic in the header has a page to land on.
               items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/edge/overview/' }] }],
             },
             {
               id: 'tile',
               label: 'TILE',
               link: '/docs/tile/overview/',
-              // Exploration: an overview only, so the topic switcher has every topic to land on.
+              // An overview only for now, so every topic in the header has a page to land on.
               items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/tile/overview/' }] }],
             },
           ],

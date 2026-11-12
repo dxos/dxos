@@ -8,7 +8,6 @@ import dmSansRegular from '../../node_modules/@dxos/brand/assets/fonts/dm-sans/D
 import sharpSansMedium from '../../node_modules/@dxos/brand/assets/fonts/sharp-sans/SharpSansDispNo1-Medium.ttf?url';
 import { DOCS_LAYERS } from '../demos/layers.ts';
 import PostHog from './PostHog.astro';
-import TopicNavBoot from './topic-nav/TopicNavBoot.astro';
 
 /** The faces every page paints with; the browser otherwise finds them only after parsing the stylesheet. */
 const PRELOAD_FONTS = [dmSansRegular, dmSansMedium, dmSansBold, dmMonoRegular, sharpSansMedium];
@@ -40,5 +39,4 @@ const PAGE_REVERT = `@layer page-revert {
     new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   }
 </script>
-<TopicNavBoot />
 <PostHog />

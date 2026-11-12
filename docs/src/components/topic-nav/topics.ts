@@ -8,7 +8,7 @@ import halo from '../../../../packages/ui/brand/assets/logotypes/halo-horizontal
 import mesh from '../../../../packages/ui/brand/assets/logotypes/mesh-horizontal-black.svg?raw';
 import plex from '../../../../packages/ui/brand/assets/logotypes/plex-horizontal-black.svg?raw';
 
-// The brand has no TILE logotype yet; this is the exploration's proposal, drawn to the other logotypes' frame.
+// The brand has no TILE logotype yet; this one is drawn to the other logotypes' frame.
 import tile from '../../assets/topic-nav/logotypes/tile-horizontal-black.svg?raw';
 
 /** The logotype's mark is outlined in black; the label's color replaces it, as it does the unset fill. */
@@ -21,8 +21,6 @@ export type Topic = {
   href?: string;
   description: string;
   logotype?: string;
-  /** A square mark drawn beside the label, for a topic with no logotype. */
-  icon?: string;
 };
 
 /** Every docs topic, built or planned, in nav order. */
@@ -74,18 +72,3 @@ export const TOPICS: Topic[] = [
 /** The topic whose pages hold `pathname`. */
 export const currentTopic = (pathname: string): Topic | undefined =>
   TOPICS.find((topic) => pathname.startsWith(`/docs/${topic.id}/`) || pathname === `/docs/${topic.id}`);
-
-/** The switcher designs under comparison; `?nav=<id>` picks one and the choice persists. */
-export const NAV_VARIANTS = [
-  { id: 'sidebar', label: 'Today' },
-  { id: 'logo-menu', label: 'Logo menu' },
-  { id: 'tabs', label: 'Tabs' },
-  { id: 'sidebar-select', label: 'Sidebar picker' },
-  { id: 'docs-menu', label: 'Docs menu' },
-  { id: 'effect-tabs', label: 'Effect, tabs to picker' },
-  { id: 'effect-picker', label: 'Effect picker' },
-] as const;
-
-export type NavVariant = (typeof NAV_VARIANTS)[number]['id'];
-
-export const DEFAULT_NAV_VARIANT: NavVariant = 'sidebar';

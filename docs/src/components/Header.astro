@@ -1,51 +1,26 @@
 ---
-// Starlight's header with the main site's nav beside the search, so every docs page links back to dxos.org.
+// Starlight's header as one row: the logo, Docs and the topics, then search, the social links and the theme picker.
 import config from 'virtual:starlight/user-config';
 
 import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
 import Search from 'virtual:starlight/components/Search';
-import SiteTitle from 'virtual:starlight/components/SiteTitle';
 import SocialIcons from 'virtual:starlight/components/SocialIcons';
 import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
 
-import { siteLinks } from './site-links.ts';
-import DocsMenu from './topic-nav/DocsMenu.astro';
-import EffectNav from './topic-nav/EffectNav.astro';
-import NavVariantPicker from './topic-nav/NavVariantPicker.astro';
-import TopicMenu from './topic-nav/TopicMenu.astro';
-import TopicTabs from './topic-nav/TopicTabs.astro';
+import TopicNav from './topic-nav/TopicNav.astro';
 
 const shouldRenderSearch =
   config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
-
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
-const isCurrent = (href: string) => (href === '/' ? path === '/' : path === href || path.startsWith(`${href}/`));
-const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? link.section : link.href);
 ---
 
 <div class="header">
   <div class="title-wrapper sl-flex">
-    <div data-nav-hide="logo-menu effect-tabs effect-picker"><SiteTitle /></div>
-    <div data-nav-only="logo-menu"><TopicMenu /></div>
-    <div data-nav-only="effect-tabs effect-picker"><EffectNav /></div>
+    <TopicNav />
   </div>
   <div class="sl-flex print:hidden search-wrap">
     {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex print:hidden right-group">
-    <nav class="site-nav" aria-label="dxos.org" data-nav-hide="tabs effect-tabs effect-picker">
-      {siteLinks.map((link) =>
-        link.id === 'docs' ? (
-          <>
-            <a href={link.href} data-nav-hide="docs-menu" aria-current={isCurrent(sectionOf(link)) ? 'page' : undefined}>{link.label}</a>
-            <div data-nav-only="docs-menu"><DocsMenu /></div>
-          </>
-        ) : (
-          <a href={link.href} aria-current={isCurrent(sectionOf(link)) ? 'page' : undefined}>{link.label}</a>
-        ),
-      )}
-    </nav>
-    <div data-nav-only="tabs"><a class="back-home" href="/">dxos.org<span aria-hidden="true"> ↗</span></a></div>
     <div class="sl-flex social-icons">
       <SocialIcons />
     </div>
@@ -53,129 +28,62 @@ const sectionOf = (link: (typeof siteLinks)[number]) => ('section' in link ? lin
     <LanguageSelect />
   </div>
 </div>
-<div data-nav-only="tabs"><TopicTabs /></div>
-<NavVariantPicker />
 
+<!-- Outside Starlight's layer so the page revert does not undo it. -->
 <style>
-  @layer starlight.core {
-    .header {
-      display: flex;
-      gap: var(--sl-nav-gap);
-      justify-content: space-between;
-      align-items: center;
-      height: 100%;
-    }
-
-    .title-wrapper {
-      overflow: clip;
-      padding: 0.25rem;
-      margin: -0.25rem;
-      min-width: 0;
-    }
-
-    /* The topic menu's panel hangs below the header. */
-    :global(html[data-topic-nav='logo-menu']) .title-wrapper {
-      overflow: visible;
-    }
-
-    .right-group,
-    .social-icons {
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .site-nav::after,
-    .social-icons::after {
-      content: '';
-      height: 2rem;
-      border-inline-end: 1px solid var(--sl-color-gray-5);
-    }
-
-    @media (min-width: 50rem) {
-      :global(:root[data-has-sidebar]) {
-        --__sidebar-pad: calc(2 * var(--sl-nav-pad-x));
-      }
-      :global(:root:not([data-has-toc])) {
-        --__toc-width: 0rem;
-      }
-      .header {
-        --__sidebar-width: max(0rem, var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x));
-        --__main-column-fr: calc(
-          (
-              100% + var(--__sidebar-pad, 0rem) - var(--__toc-width, var(--sl-sidebar-width)) -
-                (2 * var(--__toc-width, var(--sl-nav-pad-x))) - var(--sl-content-inline-start, 0rem) -
-                var(--sl-content-width)
-            ) / 2
-        );
-        display: grid;
-        grid-template-columns:
-          minmax(calc(var(--__sidebar-width) + max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))), auto)
-          1fr
-          auto;
-        align-content: center;
-      }
+  /* The marketing nav is 72px tall; the extra pixel is the header's border, so the logo and Docs line up across both. */
+  @media (min-width: 50rem) {
+    :global(:root) {
+      --sl-nav-height: 73px;
     }
   }
-</style>
 
-<!-- Exploration styles sit outside Starlight's layer so the page revert does not undo them. -->
-<style>
-  /* The Effect-style designs lay the header out as one row: logo, Docs, topics, then search and the rest at the end. */
-  :global(html[data-topic-nav^='effect']) .header {
+  .header {
+    align-items: center;
     display: flex;
+    gap: var(--sl-nav-gap);
+    height: 100%;
   }
 
-  :global(html[data-topic-nav^='effect']) .title-wrapper {
+  .title-wrapper {
     flex: none;
-    overflow: visible;
+    min-width: 0;
   }
 
-  :global(html[data-topic-nav^='effect']) .search-wrap {
+  .search-wrap {
     flex: none;
     margin-inline-start: auto;
   }
 
-  :global(html[data-topic-nav^='effect']) .right-group {
+  .right-group,
+  .social-icons {
+    align-items: center;
     flex: none;
+    gap: 1rem;
   }
 
-  /* Effect's docs show only the magnifier and the shortcut. */
-  :global(html[data-topic-nav^='effect']) .search-wrap :global(button[data-open-modal]) {
+  .social-icons::after {
+    border-inline-end: 1px solid var(--sl-color-gray-5);
+    content: '';
+    height: 2rem;
+  }
+
+  /* Only the magnifier and the shortcut. */
+  .search-wrap :global(button[data-open-modal]) {
     gap: 0.75rem;
     width: auto;
   }
 
-  :global(html[data-topic-nav^='effect']) .search-wrap :global(button[data-open-modal] > span) {
+  .search-wrap :global(button[data-open-modal] > span) {
     display: none;
   }
 
-  /* The accent is kept for the current topic, so the social links drop to the text colour. */
-  :global(html[data-topic-nav^='effect']) .social-icons :global(a) {
+  /* The accent marks the current topic, so the social links take the text colour. */
+  .social-icons :global(a) {
     color: var(--sl-color-white);
   }
 
-  :global(html[data-topic-nav^='effect']) .social-icons :global(a:hover) {
+  .social-icons :global(a:hover) {
     opacity: 0.66;
-  }
-
-  .site-nav {
-    align-items: center;
-    display: flex;
-    gap: 1rem;
-  }
-
-  .back-home {
-    border: 1px solid var(--sl-color-gray-5);
-    border-radius: 999px;
-    color: var(--sl-color-gray-2);
-    font-size: var(--sl-text-sm);
-    padding: 0.25rem 0.75rem;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-
-  .back-home:hover {
-    border-color: var(--sl-color-gray-3);
-    color: var(--sl-color-white);
   }
 </style>

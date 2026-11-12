@@ -35,11 +35,9 @@ const accent = currentPage !== 'home' ? ' c' : '';
       </div>
       <nav role="navigation" id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfe2-658ccfd6" class="nav-menu is-page-height-tablet w-nav-menu">
         <div class="div-block-9">
-          <a href="/docs/echo/overview/" data-nav-only="effect-tabs effect-picker" class={`nav-link${accent} w-inline-block`}>
+          <!-- Docs comes first and the logo is the way home, so Docs sits where the docs header has it. -->
+          <a href="/docs/echo/overview/" class={`nav-link${accent} w-inline-block`}>
             <div>Docs</div>
-          </a>
-          <a href="/" data-nav-hide="effect-tabs effect-picker" {...(currentPage === 'home' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'home' ? ' w--current' : ''}`}>
-            <div>Home</div>
           </a>
           <a href="/echo" {...(currentPage === 'echo' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'echo' ? ' w--current' : ''}`}>
             <div>ECHO</div>
@@ -55,9 +53,6 @@ const accent = currentPage !== 'home' ? ' c' : '';
               <div>Blog</div>
             </a>
           )}
-          <a href="/docs/echo/overview/" data-nav-hide="effect-tabs effect-picker" class={`nav-link${accent} w-inline-block`}>
-            <div>Docs</div>
-          </a>
         </div>
       </nav>
       <div id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfea-658ccfd6" class="nav_button-wrap">
@@ -83,14 +78,14 @@ const accent = currentPage !== 'home' ? ' c' : '';
   </div>
 </div>
 
-<!-- Exploration: the Effect-style designs put the nav beside the logo, so Docs sits where the docs header has it. -->
+<!-- The links sit beside the logo rather than centred, matching the docs header. -->
 <style is:inline>
   @media screen and (min-width: 992px) {
-    html[data-topic-nav^='effect'] .nav_container {
+    .nav_container {
       display: flex;
       gap: 1rem;
     }
-    html[data-topic-nav^='effect'] .nav_button-wrap {
+    .nav_button-wrap {
       margin-left: auto;
     }
   }

@@ -21,7 +21,6 @@ const margin = -((height - size) / 2);
     </span>
   ) : (
     <span class="text" style={`--s:${size}px`}>
-      {topic.icon && <span class="icon" aria-hidden="true"><Fragment set:html={topic.icon} /></span>}
       {topic.label}
     </span>
   )
@@ -45,17 +44,7 @@ const margin = -((height - size) / 2);
     font-family: 'Sharp Sans', var(--sl-font);
     font-size: calc(var(--s) * 0.72);
     font-weight: 400;
-    gap: calc(var(--s) * 0.15);
     letter-spacing: 0.1em;
     line-height: 1;
-  }
-  /* Sized and spaced to sit like a logotype's mark beside its letters. */
-  .icon {
-    display: inline-flex;
-  }
-  .icon :global(svg) {
-    fill: currentColor;
-    height: var(--s);
-    width: var(--s);
   }
 </style>

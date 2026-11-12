@@ -1,7 +1,6 @@
 ---
-// Variants "effect-tabs" and "effect-picker": Docs beside the logo where the marketing nav has it, a separator, then
-// the topics. "effect-tabs" lays them out as logotype tabs while they fit and falls back to the picker when they don't;
-// "effect-picker" always uses the picker.
+// The docs header's left side: the logo and Docs where the marketing nav has them, a separator, then the topics, as
+// logotype tabs while the sidebar shows and as a picker once it folds into a menu.
 import DxosLogo from '../svg/DxosLogo.astro';
 import TopicList from './TopicList.astro';
 import TopicMark from './TopicMark.astro';
@@ -10,56 +9,67 @@ import { TOPICS, currentTopic } from './topics.ts';
 const topic = currentTopic(Astro.url.pathname);
 ---
 
-<div class="effect-nav">
+<div class="topic-nav">
   <a class="logo" href="/" aria-label="DXOS home"><DxosLogo /></a>
   <a class="docs" href="/docs/echo/overview/" aria-current="page">Docs</a>
   <span class="sep" aria-hidden="true"></span>
-  <div data-nav-only="effect-tabs">
-    <nav class="tabs" aria-label="Docs topics">
-      {
-        TOPICS.map((item) =>
-          item.href ? (
-            <a href={item.href} class:list={{ current: item.id === topic?.id }} aria-current={item.id === topic?.id ? 'page' : undefined}>
-              <TopicMark topic={item} size={20} />
-            </a>
-          ) : (
-            <span class="soon" aria-disabled="true" title="Coming soon">
-              <TopicMark topic={item} size={20} />
-            </span>
-          ),
-        )
-      }
-    </nav>
-  </div>
-  <div data-nav-only="effect-tabs effect-picker">
-    <details class="picker" data-topic-popover>
-      <summary>
-        {topic ? <TopicMark topic={topic} size={20} /> : <span>Topics</span>}
-        <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.5l3-3 3 3M5 9.5l3 3 3-3" /></svg>
-      </summary>
-      <div class="panel">
-        <TopicList current={topic?.id} />
-      </div>
-    </details>
-  </div>
+  <nav class="tabs" aria-label="Docs topics">
+    {
+      TOPICS.map((item) =>
+        item.href ? (
+          <a href={item.href} class:list={{ current: item.id === topic?.id }} aria-current={item.id === topic?.id ? 'page' : undefined}>
+            <TopicMark topic={item} size={20} />
+          </a>
+        ) : (
+          <span class="soon" aria-disabled="true" title="Coming soon">
+            <TopicMark topic={item} size={20} />
+          </span>
+        ),
+      )
+    }
+  </nav>
+  <details class="picker">
+    <summary>
+      {topic ? <TopicMark topic={topic} size={20} /> : <span>Topics</span>}
+      <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.5l3-3 3 3M5 9.5l3 3 3-3" /></svg>
+    </summary>
+    <div class="panel">
+      <TopicList current={topic?.id} />
+    </div>
+  </details>
 </div>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400&display=swap" />
 
+<script>
+  // Closes the picker on a click outside it or on Escape.
+  const picker = document.querySelector<HTMLDetailsElement>('.topic-nav .picker');
+  document.addEventListener('click', (event) => {
+    if (picker?.open && !picker.contains(event.target as Node)) {
+      picker.open = false;
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (picker?.open && event.key === 'Escape') {
+      picker.open = false;
+    }
+  });
+</script>
+
 <style>
   /* The tabs give way to the picker where the sidebar folds into a menu (PageFrame's 72rem). */
   @media (min-width: 72rem) {
-    :global(html[data-topic-nav='effect-tabs']) .picker {
+    .topic-nav .picker {
       display: none;
     }
   }
   @media (max-width: 71.99rem) {
-    .effect-nav .tabs {
+    .topic-nav .tabs {
       display: none;
     }
   }
 
-  .effect-nav {
+  .topic-nav {
     align-items: center;
     display: flex;
     flex: none;
@@ -155,5 +165,22 @@ const topic = currentTopic(Astro.url.pathname);
     top: calc(100% + 0.5rem);
     width: 20rem;
     z-index: 100;
+  }
+
+  /* Phones have room for the logo and the picker only; the logo is the way back, and the panel spans the screen. */
+  @media (max-width: 49.99rem) {
+    .topic-nav {
+      margin-inline-start: 0;
+    }
+    .docs,
+    .sep {
+      display: none;
+    }
+    .panel {
+      inset-inline: 1rem;
+      position: fixed;
+      top: calc(var(--sl-nav-height) - 0.25rem);
+      width: auto;
+    }
   }
 </style>

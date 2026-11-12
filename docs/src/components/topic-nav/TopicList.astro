@@ -5,13 +5,12 @@ import { TOPICS } from './topics.ts';
 
 interface Props {
   current?: string;
-  layout?: 'rows' | 'grid';
 }
 
-const { current, layout = 'rows' } = Astro.props;
+const { current } = Astro.props;
 ---
 
-<ul class:list={['topic-list', layout]}>
+<ul class="topic-list">
   {
     TOPICS.map((topic) => {
       const Tag = topic.href ? 'a' : 'span';
@@ -42,10 +41,6 @@ const { current, layout = 'rows' } = Astro.props;
     padding: 0;
     display: grid;
     gap: 0.125rem;
-  }
-  .topic-list.grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.25rem 0.5rem;
   }
   .item {
     min-width: 0;
