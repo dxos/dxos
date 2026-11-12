@@ -330,7 +330,13 @@ export const Columns: StoryObj = {
     // A column per subagent opens beside the agent's.
     await waitForColumns(canvasElement, 1 + LAUNCH_TASKS.length, 60_000);
 
-    // The reader keeps talking while they work; the reply comes once the agent's current wait returns.
+    // The reader keeps talking while they work; the reply comes once the agent's current wait returns. Selecting the
+    // agent's column brings its composer, and the next chip, back.
+    const agentColumn = canvasElement.querySelector<HTMLElement>('[data-testid="chat-plane.column"]');
+    if (!agentColumn) {
+      throw new Error('The agent column is not open.');
+    }
+    await userEvent.click(agentColumn);
     await userEvent.click(await canvas.findByRole('button', { name: SIDE_QUESTION }, { timeout: 30_000 }));
     await canvas.findAllByText(/Tuesday the 18th/, {}, { timeout: 90_000 });
 
