@@ -62,18 +62,18 @@ const STROKE: Record<Hue, string> = {
 export const spaceGraphFields = {
   /** Same seed, same graph. */
   seed: Schema.Number.annotate({ title: 'Seed' }),
-  /** Distance between neighbouring lattice points, in scene units. */
-  pitch: Schema.optional(Schema.Number.annotate({ title: 'Pitch' })),
-  /** Share of lattice points that become objects (0–1). */
-  fill: Schema.optional(Schema.Number.annotate({ title: 'Fill' })),
-  /** Chance that each other pair of neighbouring objects is linked (0–1). */
-  extra: Schema.optional(Schema.Number.annotate({ title: 'Extra links' })),
+  /** Distance between neighbouring lattice points, in scene units: how far apart the objects sit. */
+  pitch: Schema.optional(Schema.Number.annotate({ title: 'Spacing' })),
+  /** Share of the lattice that becomes objects (0–1): how full the space is. */
+  fill: Schema.optional(Schema.Number.annotate({ title: 'Population' })),
+  /** Chance that each neighbouring pair beyond the spanning tree is linked (0–1): how connected the graph is. */
+  extra: Schema.optional(Schema.Number.annotate({ title: 'Link density' })),
   /** Object radius as a percentage of pitch. Not `size`, which every element already has as its frame. */
   objectSize: Schema.optional(Schema.Number.annotate({ title: 'Object size' })),
   /** Node ids of the cards that read and write this space; each reaches `picks` objects, which light up. */
   readers: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Readers' })),
-  /** Objects each reader reaches. */
-  picks: Schema.optional(Schema.Number.annotate({ title: 'Picks' })),
+  /** Objects each reader reaches, and lights. */
+  picks: Schema.optional(Schema.Number.annotate({ title: 'Objects per reader' })),
   /** Lit objects and reader legs. */
   hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue' })),
 };
