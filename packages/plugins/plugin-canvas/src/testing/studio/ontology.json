@@ -2,6 +2,10 @@
   "id": "ontology",
   "title": "Ontology",
   "subtitle": "Entities and how they relate; value types and containers alongside",
+  "page": {
+    "w": 1600,
+    "h": 900
+  },
   "size": {
     "w": 236,
     "h": 66

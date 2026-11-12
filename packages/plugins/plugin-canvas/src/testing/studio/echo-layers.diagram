@@ -1,0 +1,60 @@
+# ECHO: A typed, local-first database shared by people and agents
+# Exported from studio assets/deck (slide "echo-layers"), 1600 × 900 slide units.
+
+object title @ 80,40 {
+  text heading 0,0 "ECHO"
+  text subtitle 0,44 "A typed, local-first database shared by people and agents"
+}
+
+object runtimes @ 1250,142 {
+  rect frame 0,0 270x742 color=grey stroke=dashed
+}
+object l-runtime @ 1250,110 {
+  text label 0,0 "Runtime"
+}   # role=label
+
+object types @ 80,142 {
+  rect box 0,0 1136x172 "Types"
+}   # card icon=brackets-curly chips="shield-check:Validation:every write | file-ts:TypeScript:Effect Schema | brackets-angle:JSON Schema:agent tools | link:URI:dxn:type:org.dxos/Task | git-branch:Versioning:semver per type | arrows-clockwise:Schema migration:lenses" cols=3
+object graph @ 80,326 {
+  rect box 0,0 371x178 "Graph"
+}   # card icon=graph footer="one Automerge doc per object" body="Typed objects and relations: a property graph per space."
+object feeds @ 463,326 {
+  rect box 0,0 371x178 "Feeds"
+}   # card icon=queue footer="EDGE: FeedSpace DO" body="Append-only logs: chat, transcripts, agent trajectories."
+object blobs @ 845,326 {
+  rect box 0,0 371x178 "Blobs"
+}   # card icon=files footer="EDGE: R2" body="Files and binary content, referenced from objects."
+object crdt @ 80,516 {
+  rect box 0,0 371x178 "CRDT"
+}   # card icon=git-merge footer="no locks · no primary" body="Automerge: concurrent edits from people and agents merge deterministically."
+object sync @ 463,516 {
+  rect box 0,0 371x178 "Sync"
+}   # card icon=arrows-clockwise footer="EDGE: replicator DO" body="Subduction exchanges compacted history fragments by fingerprint."
+object cache @ 845,516 {
+  rect box 0,0 371x178 "Cache"
+}   # card icon=lightning footer="OPFS · KV fast path" body="A full replica on every device; reads never wait on the network."
+object pipeline @ 80,706 {
+  rect box 0,0 371x178 "Pipeline"
+}   # card icon=flow-arrow footer="EDGE: Scheduler DO · alarms" body="Triggers on queries, feeds, cron, webhooks and email run functions on each change."
+object index @ 463,706 {
+  rect box 0,0 371x178 "Index"
+}   # card icon=list-magnifying-glass footer="EDGE: Indexer DO · vectors planned" body="SQLite everywhere: typed queries, full-text search, reverse references. 0.4–1.8 ms at 10k objects."
+object memory @ 845,706 {
+  rect box 0,0 371x178 "Memory"
+}   # card icon=brain footer="EDGE: Agent DO · BrainObject" body="Shared memory for people and agents: branches, provenance, facts and rules."
+object browser @ 1268,160 {
+  rect box 0,0 234x226 "Browser"
+}   # card icon=browser footer="wa-sqlite on OPFS" body="Full replica in the tab; works offline."
+object "node" @ 1268,400 {
+  rect box 0,0 234x226 "Node"
+}   # card icon=terminal-window footer="native SQLite" body="Agents, CLIs and servers."
+object worker @ 1268,640 {
+  rect box 0,0 234x226 "Worker"
+}   # card icon=cloud footer="Workers · DO SQLite" body="Always-on peer, sync hub and index per space."
+
+object links @ 0,0 {
+}
+
+# layout layers stack @ 80,142 1136x742 rows=1,3,3,3 heights=172,178,178,178 gap=12
+# layout runtimes down @ 1268,160 234x706 n=3 gap=14

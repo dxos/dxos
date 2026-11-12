@@ -38,8 +38,9 @@ export const StudioCard = Schema.Struct({
   cy: Schema.Number,
   w: Schema.optional(Schema.Number),
   h: Schema.optional(Schema.Number),
-  /** A CSS custom property of the deck (`var(--t-trip)`), or a tone name (`ink`), resolved through {@link TONES}. */
-  tone: Schema.optional(Schema.String),
+  /** A CSS custom property of the deck (`var(--t-trip)`), or a tone name (`ink`), resolved through {@link TONES}.
+   * Nullish: a sidecar writes JSON `null` for a card the slide gives no tone, which is not `undefined`. */
+  tone: Schema.optional(Schema.NullOr(Schema.String)),
   /** The element kind the card wants; absent is the plain `card` of round 1. */
   kind: Schema.optional(Schema.String),
   /** Round 2 (`feed-card`): the feed strip, a sentence of body, and a mono footer under a hairline. */
@@ -86,7 +87,7 @@ export const StudioText = Schema.Struct({
   x: Schema.Number,
   y: Schema.Number,
   text: Schema.String,
-  role: Schema.Literals(['heading', 'caption', 'label', 'link-label', 'note']),
+  role: Schema.Literals(['heading', 'caption', 'col-heading', 'label', 'link-label', 'note']),
   /** The width the deck lays the text out in; with `align`, how it sits in it. */
   w: Schema.optional(Schema.Number),
   align: Schema.optional(Schema.Literals(['left', 'center', 'right'])),
@@ -105,14 +106,35 @@ export const StudioFrame = Schema.Struct({
 });
 export type StudioFrame = Schema.Schema.Type<typeof StudioFrame>;
 
-/** A generated part of the slide: a circle of ECHO objects, placed by its frame and driven by `params`. */
+/** A named region of a component a link may end on: the app frame's `r-doc`, with the anchor the deck aims at. */
+export const StudioPart = Schema.Struct({
+  id: Schema.String,
+  x: Schema.Number,
+  y: Schema.Number,
+  w: Schema.Number,
+  h: Schema.Number,
+  anchor: Schema.optional(Point),
+});
+export type StudioPart = Schema.Schema.Type<typeof StudioPart>;
+
+/**
+ * A part of the slide the deck draws itself, which the canvas draws as a kind, a Generator or plain shapes. Round 2's
+ * space graph is a circle (`cx`, `cy`, `r`); round 3's are boxes (`x`, `y`, `w`, `h`), so both forms are optional and
+ * {@link componentFrame} reads whichever one a component carries.
+ */
 export const StudioComponent = Schema.Struct({
   id: Schema.String,
   kind: Schema.String,
-  cx: Schema.Number,
-  cy: Schema.Number,
-  r: Schema.Number,
+  cx: Schema.optional(Schema.Number),
+  cy: Schema.optional(Schema.Number),
+  r: Schema.optional(Schema.Number),
+  x: Schema.optional(Schema.Number),
+  y: Schema.optional(Schema.Number),
+  w: Schema.optional(Schema.Number),
+  h: Schema.optional(Schema.Number),
   params: Schema.Record(Schema.String, Schema.Any),
+  /** The regions a link may end on (the app frame's six). */
+  parts: Schema.optional(Schema.Array(StudioPart)),
   /** Graph objects drawn lit, by index, with the tone they take. */
   lit: Schema.optional(Schema.Record(Schema.String, Schema.String)),
 });
@@ -122,7 +144,10 @@ export type StudioComponent = Schema.Schema.Type<typeof StudioComponent>;
 export const StudioModel = Schema.Struct({
   id: Schema.String,
   title: Schema.String,
-  subtitle: Schema.String,
+  /** Nullish: a slide with no subtitle writes JSON `null`. */
+  subtitle: Schema.optional(Schema.NullOr(Schema.String)),
+  /** The slide's own box, so every drawing of the deck imports at one scale whatever it draws. */
+  page: Schema.optional(Schema.Struct({ w: Schema.Number, h: Schema.Number })),
   size: Schema.Struct({ w: Schema.Number, h: Schema.Number }),
   nodes: Schema.Record(Schema.String, StudioCard),
   edges: Schema.Array(StudioEdge),
@@ -134,6 +159,19 @@ export type StudioModel = Schema.Schema.Type<typeof StudioModel>;
 
 /** Reads a sidecar, so a drifted export fails here rather than halfway through a drawing. */
 export const parseStudioModel = (text: string): StudioModel => Schema.decodeUnknownSync(StudioModel)(JSON.parse(text));
+
+/** The box a component occupies, from the circle or the rectangle its sidecar records. */
+export const componentFrame = (component: StudioComponent): { x: number; y: number; w: number; h: number } => {
+  const { cx, cy, r, x, y, w, h } = component;
+  if (cx !== undefined && cy !== undefined && r !== undefined) {
+    return { x: cx - r, y: cy - r, w: r * 2, h: r * 2 };
+  }
+  invariant(
+    x !== undefined && y !== undefined && w !== undefined && h !== undefined,
+    `component "${component.id}" has neither a circle nor a box`,
+  );
+  return { x, y, w, h };
+};
 
 /**
  * The deck's tone names, by the custom property its sidecar writes (`assets/deck/lib/deck.css`). A card's `tone` is
@@ -157,7 +195,15 @@ const LINK_COLORS: Record<string, 'light-blue' | 'grey'> = { accent: 'light-blue
 const LINK_HUES: Record<string, string> = { accent: 'blue', ink: 'neutral' };
 
 /** Text sizes in scene units by the role the sidecar gives a text; the DSL's only lever is `weight=s`. */
-const TEXT_SIZES: Record<string, number> = { 'heading': 20, 'caption': 15, 'label': 19, 'link-label': 15, 'note': 15 };
+const TEXT_SIZES: Record<string, number> = {
+  'heading': 20,
+  'caption': 15,
+  // A column's own heading, which the deck sets smaller than the slide's.
+  'col-heading': 17,
+  'label': 19,
+  'link-label': 15,
+  'note': 15,
+};
 
 /**
  * The slide's title block, which the drawing does not hold. The deck draws the title and subtitle on the slide
@@ -503,8 +549,10 @@ const placeGenerators = (content: ContentMap, model: StudioModel, generators: Ge
         type: 'generator',
         id: record.node.id,
         z: record.node.z,
-        center: { x: component.cx, y: component.cy },
-        size: { width: component.r * 2, height: component.r * 2 },
+        // The placeholder's own frame, not the sidecar's: it has been snapped to the drawing's grid, and the links
+        // were routed to meet it there.
+        center: record.node.center,
+        size: record.node.size,
         generator: generator.reference,
         params: { ...component.params, ...generator.params, readers },
       },
@@ -537,8 +585,8 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
         type: component.kind,
         id: record.node.id,
         z: record.node.z,
-        center: { x: component.cx, y: component.cy },
-        size: { width: component.r * 2, height: component.r * 2 },
+        center: record.node.center,
+        size: record.node.size,
         ...(typeof seed === 'number' ? { seed } : { seed: 0 }),
         ...(typeof pitch === 'number' ? { pitch } : {}),
         ...(typeof fill === 'number' ? { fill } : {}),
