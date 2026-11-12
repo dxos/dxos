@@ -52,11 +52,14 @@ const StudioKindsPlugin = Plugin.define(
   Plugin.make,
 );
 
-/** The cells as a square, filled column by column, so the deck reads as a grid rather than one long row. */
+/**
+ * The cells as a square, in reading order: slide 1 top left, slide 3 top right, slide 9 bottom right. A
+ * `ModuleLayout`'s outer array is its columns, so the deck is dealt across them rather than sliced down them —
+ * sliced, column one would hold slides 1 to 3 and the deck would read downwards.
+ */
 const square = (cells: ModuleSpec[]): ModuleSpec[][] => {
   const columns = Math.max(1, Math.ceil(Math.sqrt(cells.length)));
-  const rows = Math.ceil(cells.length / columns);
-  return Array.from({ length: columns }, (_, column) => cells.slice(column * rows, (column + 1) * rows));
+  return Array.from({ length: columns }, (_, column) => cells.filter((_cell, index) => index % columns === column));
 };
 
 const decorators = () =>
