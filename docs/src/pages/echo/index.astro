@@ -61,7 +61,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
         <div class="all-caps echo-eyebrow">Why it exists</div>
         <h2 class="heading-style-h2">One graph for apps, agents and external data</h2>
       </div>
-      <div class="echo-grid">
+      <div class="echo-grid echo-grid-four">
         {reasons.map(({ title, body }) => (
           <div class="echo-card">
             <div class="heading-style-h5">{title}</div>
@@ -78,7 +78,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
         <div class="all-caps echo-eyebrow">What it guarantees</div>
         <h2 class="heading-style-h2">Behavior you can rely on</h2>
       </div>
-      <div class="echo-grid echo-grid-pairs">
+      <div class="echo-grid echo-grid-four">
         {guarantees.map(({ title, body, cite }) => (
           <div class="echo-card">
             <div class="heading-style-h5">{title}</div>
@@ -234,14 +234,20 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
     border-left: 1px solid var(--base-color-neutral--neutral-mid);
   }
 
-  /* Four cards read as two rows of two rather than three and one. */
-  .echo-grid-pairs {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  /* Four cards sit in one row, then two rows of two, then one column; never three and one. */
+  .echo-grid-four {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  @media (min-width: 48rem) {
-    .echo-grid-pairs {
-      grid-template-columns: repeat(2, 1fr);
+  @media (min-width: 40rem) {
+    .echo-grid-four {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .echo-grid-four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 
