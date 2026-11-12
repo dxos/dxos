@@ -30,6 +30,28 @@ export const StudioFeed = Schema.Struct({
 });
 export type StudioFeed = Schema.Schema.Type<typeof StudioFeed>;
 
+/**
+ * A chip of a card's body, or of a standalone chip node. The sidecar writes JSON `null` and `false` where a slide
+ * gives no tone and no ghost state, so both are nullish rather than absent.
+ */
+export const StudioChip = Schema.Struct({
+  icon: Schema.optional(Schema.String),
+  label: Schema.String,
+  note: Schema.optional(Schema.NullOr(Schema.String)),
+  tone: Schema.optional(Schema.NullOr(Schema.String)),
+  ghost: Schema.optional(Schema.NullOr(Schema.Boolean)),
+});
+export type StudioChip = Schema.Schema.Type<typeof StudioChip>;
+
+/** A card's chips: a wrapping row, or a grid of `cols` columns whose gap the slide chose. */
+export const StudioChips = Schema.Struct({
+  items: Schema.Array(StudioChip),
+  cols: Schema.optional(Schema.Number),
+  flat: Schema.optional(Schema.Boolean),
+  columnGap: Schema.optional(Schema.Number),
+});
+export type StudioChips = Schema.Schema.Type<typeof StudioChips>;
+
 /** A card of the deck: a Phosphor icon, a title, its centre in slide units, and an optional accent. */
 export const StudioCard = Schema.Struct({
   icon: Schema.String,
@@ -47,6 +69,10 @@ export const StudioCard = Schema.Struct({
   feed: Schema.optional(StudioFeed),
   body: Schema.optional(Schema.String),
   footer: Schema.optional(Schema.String),
+  /** Round 3 (`card`, `chip`): the chips in a card's body, and a chip node's own mono note and ghost state. */
+  chips: Schema.optional(StudioChips),
+  note: Schema.optional(Schema.NullOr(Schema.String)),
+  ghost: Schema.optional(Schema.NullOr(Schema.Boolean)),
 });
 export type StudioCard = Schema.Schema.Type<typeof StudioCard>;
 
@@ -106,16 +132,34 @@ export const StudioFrame = Schema.Struct({
 });
 export type StudioFrame = Schema.Schema.Type<typeof StudioFrame>;
 
+/** A box of a component, relative to its own origin. */
+const Box = Schema.Struct({ x: Schema.Number, y: Schema.Number, w: Schema.Number, h: Schema.Number });
+
 /** A named region of a component a link may end on: the app frame's `r-doc`, with the anchor the deck aims at. */
 export const StudioPart = Schema.Struct({
   id: Schema.String,
-  x: Schema.Number,
-  y: Schema.Number,
-  w: Schema.Number,
-  h: Schema.Number,
+  ...Box.fields,
   anchor: Schema.optional(Point),
 });
 export type StudioPart = Schema.Schema.Type<typeof StudioPart>;
+
+/**
+ * A plugin that opens a space of the substrate: which space it resolved to, and one lit object per element it shows,
+ * with the object's type and where it sits. The resolution itself (nearest entry, a ranked walk, a route that avoids
+ * links an earlier flow took) stays in the deck; this is its output.
+ */
+export const StudioFlow = Schema.Struct({
+  id: Schema.String,
+  space: Schema.Number,
+  objects: Schema.Array(
+    Schema.Struct({
+      i: Schema.Number,
+      type: Schema.String,
+      at: Schema.Tuple([Schema.Number, Schema.Number]),
+    }),
+  ),
+});
+export type StudioFlow = Schema.Schema.Type<typeof StudioFlow>;
 
 /**
  * A part of the slide the deck draws itself, which the canvas draws as a kind, a Generator or plain shapes. Round 2's
@@ -132,11 +176,21 @@ export const StudioComponent = Schema.Struct({
   y: Schema.optional(Schema.Number),
   w: Schema.optional(Schema.Number),
   h: Schema.optional(Schema.Number),
+  /** The box's own text, where the DSL gives the placeholder one (a plank's heading). */
+  label: Schema.optional(Schema.String),
   params: Schema.Record(Schema.String, Schema.Any),
   /** The regions a link may end on (the app frame's six). */
   parts: Schema.optional(Schema.Array(StudioPart)),
+  /** Where inside a region the deck lines a card up, by region (`a-doc`); the app frame's. */
+  anchors: Schema.optional(Schema.Record(Schema.String, Box)),
   /** Graph objects drawn lit, by index, with the tone they take. */
   lit: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  /** The substrate's packed spaces, `[x, y, r]` in slide units and in packing order. */
+  spaces: Schema.optional(Schema.Array(Schema.Tuple([Schema.Number, Schema.Number, Schema.Number]))),
+  /** How many links the field runs between spaces. */
+  bridges: Schema.optional(Schema.Number),
+  /** What each plugin flow resolved to; only the lit objects and where they sit are drawn. */
+  flows: Schema.optional(Schema.Array(StudioFlow)),
 });
 export type StudioComponent = Schema.Schema.Type<typeof StudioComponent>;
 
@@ -223,6 +277,23 @@ const marksOf = (feed: StudioFeed): number[] =>
     .filter(Number.isInteger)
     .sort((left, right) => left - right);
 
+/**
+ * A card's chips as the chip kind takes them. The sidecar writes a `null` tone and a `false` ghost where the slide
+ * gives neither, and a kind's optional field is absent rather than empty, so both are dropped here.
+ */
+const chipsOf = ({ items, cols, flat, columnGap }: StudioChips) => ({
+  items: items.map(({ icon, label, note, tone, ghost }) => ({
+    label,
+    ...(icon ? { icon } : {}),
+    ...(note ? { note } : {}),
+    ...(tone ? { tone: TONES[tone] ?? tone } : {}),
+    ...(ghost ? { ghost } : {}),
+  })),
+  ...(cols !== undefined ? { cols } : {}),
+  ...(flat !== undefined ? { flat } : {}),
+  ...(columnGap !== undefined ? { columnGap } : {}),
+});
+
 /** The element id of a card's box, which is how the bridge keys its node (`<object>/box`). */
 const boxOf = (key: string) => elementId(key, 'box');
 
@@ -255,6 +326,9 @@ const promoteCards = (content: ContentMap, model: StudioModel): void => {
         ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
         ...(card.body ? { body: card.body } : {}),
         ...(card.footer ? { footer: card.footer } : {}),
+        ...(card.chips ? { chips: chipsOf(card.chips) } : {}),
+        ...(card.note ? { note: card.note } : {}),
+        ...(card.ghost ? { ghost: card.ghost } : {}),
       },
     };
   }
@@ -495,10 +569,15 @@ const routeLinks = (content: ContentMap, model: StudioModel, components: Compone
     if (key === undefined || !isLinkRecord(record)) {
       continue;
     }
+    // A DSL `arrow` always has a head; the deck draws several of its wires without one (a reader's tap into a
+    // space, a plugin's wire into a region), which the sidecar says and the DSL cannot.
+    const { end, ...start } = record.link.ends ?? {};
+    const ends = route.arrow === 'none' ? start : record.link.ends;
     content[key] = {
       ...record,
       link: {
         ...record.link,
+        ...(route.arrow === 'none' ? { ends } : {}),
         // The link's own style is what the canvas's link renderer reads; `connector` below supplies the geometry.
         ...(route.color ? { style: { ...record.link.style, hue: LINK_HUES[route.color] ?? 'blue' } } : {}),
         connector: {
@@ -508,9 +587,7 @@ const routeLinks = (content: ContentMap, model: StudioModel, components: Compone
           ...(route.dash || record.link.style?.lineStyle === 'dashed' ? { stroke: 'dashed' } : {}),
           ...(route.color ? { color: LINK_COLORS[route.color] ?? 'blue' } : {}),
           // A link's marker vocabulary is wider than a connector's head, so only the two they share carry over.
-          ...(record.link.ends?.end === 'arrow' || record.link.ends?.end === 'triangle'
-            ? { head: record.link.ends.end }
-            : {}),
+          ...(ends?.end === 'arrow' || ends?.end === 'triangle' ? { head: ends.end } : {}),
           route: [attach(source, waypoints[0]), ...waypoints, attach(target, waypoints[waypoints.length - 1])],
           ...(route.labelAt ? { caption: { x: route.labelAt.x, y: route.labelAt.y } } : {}),
         },
@@ -566,6 +643,91 @@ const placeGenerators = (content: ContentMap, model: StudioModel, generators: Ge
 export type Generators = Record<string, { reference: string; params?: Record<string, unknown> }>;
 
 /**
+ * The element the DSL left standing for a component. Round 2's space graph is an `ellipse ring`; round 3's are a
+ * `rect box`, which is also how a card parses — so the kind is swapped onto whichever of the two the slide wrote.
+ */
+const placeholderOf = (content: ContentMap, component: StudioComponent): string | undefined =>
+  ['ring', 'box'].map((part) => nodeKey(elementId(component.id, part))).find((key) => isNodeRecord(content[key]));
+
+/** A lattice component's geometry: the seed and the density, which are its Properties panel. */
+const latticeFields = ({ params }: StudioComponent) => {
+  const { pitch, fill, extra, size, seed } = params;
+  return {
+    ...(typeof seed === 'number' ? { seed } : { seed: 0 }),
+    ...(typeof pitch === 'number' ? { pitch } : {}),
+    ...(typeof fill === 'number' ? { fill } : {}),
+    ...(typeof extra === 'number' ? { extra } : {}),
+    ...(typeof size === 'number' ? { objectSize: size } : {}),
+    hue: 'neutral',
+  };
+};
+
+/**
+ * The substrate's packed spaces and lit objects as fractions of the component's own box, so the field scales with
+ * the node rather than carrying the slide's coordinates into a drawing that may be resized.
+ *
+ * The packing and the flow resolution are the deck's, not ported: what the sidecar records is their output, and it
+ * is the input here. Each space's own lattice graph is generated as the space graph's is, from the seed and the
+ * space's index, so the field is the same geometry at nine scales rather than nine stored graphs.
+ */
+const substrateFields = (component: StudioComponent) => {
+  const frame = componentFrame(component);
+  const spaces = (component.spaces ?? []).map(([x, y, r]) => ({
+    x: (x - frame.x) / frame.w,
+    y: (y - frame.y) / frame.h,
+    r: r / frame.w,
+  }));
+  const lit = (component.flows ?? []).flatMap(({ objects }) =>
+    objects.map(({ type, at: [x, y] }) => ({
+      x: (x - frame.x) / frame.w,
+      y: (y - frame.y) / frame.h,
+      tone: type,
+    })),
+  );
+  return {
+    ...latticeFields(component),
+    ...(spaces.length > 0 ? { spaces } : {}),
+    ...(lit.length > 0 ? { lit } : {}),
+    ...(typeof component.bridges === 'number' ? { bridges: component.bridges } : {}),
+  };
+};
+
+/** The app frame draws its own regions, so all it takes from the sidecar is which of them are outlined, and in what. */
+const appFrameFields = ({ params }: StudioComponent) => {
+  const colors = params.colors;
+  return {
+    ...(params.highlight ? { highlight: true } : {}),
+    ...(isRecord(colors)
+      ? {
+          colors: Object.fromEntries(
+            Object.entries(colors).flatMap(([region, tone]) =>
+              typeof tone === 'string' ? [[region, TONES[tone] ?? tone]] : [],
+            ),
+          ),
+        }
+      : {}),
+  };
+};
+
+/** The plank mounts one wireframe component of the kit, under a header of its title and the package it comes from. */
+const plankFields = ({ label, params }: StudioComponent) => ({
+  label: typeof params.title === 'string' ? params.title : (label ?? ''),
+  ...(typeof params.comp === 'string' ? { comp: params.comp } : {}),
+  ...(typeof params.package === 'string' ? { package: params.package } : {}),
+});
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A component's own fields on the node of its kind, by kind; one the table does not name takes the lattice's. */
+const COMPONENT_FIELDS: Record<string, (component: StudioComponent) => Record<string, unknown>> = {
+  'space-graph': latticeFields,
+  'substrate': substrateFields,
+  'app-frame': appFrameFields,
+  'plank': plankFields,
+};
+
+/**
  * Replaces a component's placeholder with an element of its own kind, whose fields are its configuration: the
  * Properties panel edits the seed, the density and the readers, and the view reads its readers out of the scene by
  * id. The alternative is {@link placeGenerators}, which puts the same geometry in a `Generator` instead.
@@ -573,12 +735,11 @@ export type Generators = Record<string, { reference: string; params?: Record<str
 const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: ReadonlySet<string>): number => {
   let placed = 0;
   for (const component of model.components ?? []) {
-    const key = nodeKey(elementId(component.id, 'ring'));
-    const record = content[key];
-    if (!kinds.has(component.kind) || !isNodeRecord(record)) {
+    const key = placeholderOf(content, component);
+    const record = key === undefined ? undefined : content[key];
+    if (key === undefined || !kinds.has(component.kind) || !isNodeRecord(record)) {
       continue;
     }
-    const { pitch, fill, extra, size, seed } = component.params;
     content[key] = {
       ...record,
       node: {
@@ -587,17 +748,79 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
         z: record.node.z,
         center: record.node.center,
         size: record.node.size,
-        ...(typeof seed === 'number' ? { seed } : { seed: 0 }),
-        ...(typeof pitch === 'number' ? { pitch } : {}),
-        ...(typeof fill === 'number' ? { fill } : {}),
-        ...(typeof extra === 'number' ? { extra } : {}),
-        ...(typeof size === 'number' ? { objectSize: size } : {}),
-        hue: 'neutral',
+        ...(COMPONENT_FIELDS[component.kind] ?? latticeFields)(component),
       },
     };
     placed++;
   }
   return placed;
+};
+
+/**
+ * The seven-point arrow of `fatArrow()` (studio `lib/components.mjs`), in the frame's unit space. The slide's own
+ * 72 x 44 viewBox: pointing up, mirrored vertically where it points down.
+ */
+const FAT_ARROW: readonly { x: number; y: number }[] = [
+  { x: 36 / 72, y: 4 / 44 },
+  { x: 68 / 72, y: 30 / 44 },
+  { x: 50 / 72, y: 30 / 44 },
+  { x: 50 / 72, y: 40 / 44 },
+  { x: 22 / 72, y: 40 / 44 },
+  { x: 22 / 72, y: 30 / 44 },
+  { x: 4 / 72, y: 30 / 44 },
+];
+
+/**
+ * The components the canvas draws as plain shapes rather than a kind of their own: the two fat arrows above and
+ * below the EDGE service list, which say the list runs on past the slide. A closed `polyline` is a filled polygon,
+ * so the arrow needs nothing the canvas does not already have — which is why it is not a kind.
+ */
+const placeShapes = (content: ContentMap, model: StudioModel): number => {
+  let placed = 0;
+  for (const component of model.components ?? []) {
+    const key = component.kind === 'fat-arrow' ? placeholderOf(content, component) : undefined;
+    const record = key === undefined ? undefined : content[key];
+    if (key === undefined || !isNodeRecord(record)) {
+      continue;
+    }
+    const up = component.params.up !== false;
+    content[key] = {
+      ...record,
+      node: {
+        type: 'polyline',
+        id: record.node.id,
+        z: record.node.z,
+        center: record.node.center,
+        size: record.node.size,
+        points: up ? FAT_ARROW : FAT_ARROW.map(({ x, y }) => ({ x, y: 1 - y })),
+        params: { closed: true },
+        // Muted and half transparent, so it reads as a hint rather than a connector.
+        style: { hue: 'neutral', fill: true, border: false, opacity: 0.45 },
+      },
+    };
+    placed++;
+  }
+  return placed;
+};
+
+/**
+ * Hides the region rects of a component that draws its own picture. The app frame's six regions are what its wires
+ * end on (`frame/r-doc` is an ordinary link target), so they stay in the scene as geometry; the kind draws the panes
+ * themselves, and a visible rect over them would be the same box twice.
+ */
+const hideParts = (content: ContentMap, model: StudioModel, kinds: ReadonlySet<string>): void => {
+  for (const component of model.components ?? []) {
+    if (!kinds.has(component.kind)) {
+      continue;
+    }
+    for (const part of component.parts ?? []) {
+      const key = nodeKey(elementId(component.id, part.id));
+      const record = content[key];
+      if (isNodeRecord(record)) {
+        content[key] = { ...record, node: { ...record.node, style: { fill: false, border: false } } };
+      }
+    }
+  }
 };
 
 /**
@@ -663,6 +886,13 @@ const snapToGrid = (content: ContentMap, grid: number): number => {
 /** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
 export type ComponentMode = 'kind' | 'generator';
 
+/**
+ * The component kinds the studio stories register (`testing/studio/*.tsx`). A host that has registered fewer passes
+ * its own set to {@link seedStudioSlide}; a kind the host does not have is left as the DSL's placeholder, which is
+ * how the drawing reads where the kind is not there. `fat-arrow` is not here: it draws as plain shapes.
+ */
+export const STUDIO_COMPONENT_KINDS: ReadonlySet<string> = new Set(['space-graph', 'substrate', 'app-frame', 'plank']);
+
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
 export type StudioReport = {
   problems: number;
@@ -688,7 +918,7 @@ export const seedStudioSlide =
     {
       components = 'kind',
       grid = STUDIO_GRID,
-      kinds = new Set(['space-graph']),
+      kinds = STUDIO_COMPONENT_KINDS,
       generators = {},
       report,
     }: {
@@ -718,11 +948,15 @@ export const seedStudioSlide =
       components === 'generator'
         ? placeGenerators(content, model, generators)
         : placeComponentKinds(content, model, kinds);
+    if (components === 'kind') {
+      hideParts(content, model, kinds);
+    }
+    const shapes = placeShapes(content, model);
     report?.({
       problems: problems.length,
       cards: Object.keys(model.nodes).length,
       snapped,
       routed,
-      components: placed,
+      components: placed + shapes,
     });
   };

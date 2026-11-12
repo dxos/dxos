@@ -162,6 +162,35 @@ describe('studio deck slides on a canvas', () => {
     expect(model.subtitle === null || model.subtitle === undefined || model.subtitle.length > 0).toBe(true);
   });
 
+  test.for(SLIDES)('%s draws every component as its kind', (name, { expect }) => {
+    const { source, model } = slide(name);
+    const content: ContentMap = {};
+    seedStudioSlide(source, model)(content);
+    for (const component of model.components ?? []) {
+      // The placeholder is an `ellipse ring` on the round-2 slide and a `rect box` on the round-3 ones.
+      const key = ['ring', 'box']
+        .map((part) => `node:${component.id}/${part}`)
+        .find((candidate) => isNodeRecord(content[candidate]));
+      const record = key === undefined ? undefined : content[key];
+      expect(isNodeRecord(record)).toBe(true);
+      const node = isNodeRecord(record) ? record.node : undefined;
+      if (component.kind === 'fat-arrow') {
+        // Plain shapes: a closed polyline is a filled polygon, so the arrow needs no kind of its own.
+        expect(node?.type).toBe('polyline');
+        expect(node && 'points' in node && node.points).toHaveLength(7);
+        expect(node && 'params' in node && node.params).toEqual({ closed: true });
+      } else {
+        expect(node?.type).toBe(component.kind);
+      }
+      // A component that draws its own picture keeps its regions as geometry for its links to end on, and the
+      // loader makes them invisible: the app frame's panes are drawn once, by the kind.
+      for (const part of component.parts ?? []) {
+        const region = content[`node:${component.id}/${part.id}`];
+        expect(isNodeRecord(region) && region.node.style).toEqual({ fill: false, border: false });
+      }
+    }
+  });
+
   test('the routes the sidecar carries are the ones the DSL dropped', ({ expect }) => {
     const { source, model } = slide('agent');
     const content: ContentMap = {};

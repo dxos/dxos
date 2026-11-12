@@ -3,9 +3,14 @@
 //
 
 //
-// The deck's `card({ variant: 'simple' })` as a canvas element kind: a Phosphor icon, a title, a soft raised panel,
-// and an optional coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's
-// fill level. The look comes from the deck tokens in `theme.css`, so the card follows the canvas's mode.
+// The deck's `card()` as a canvas element kind: a Phosphor icon, a title, a soft raised panel, and an optional
+// coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's fill level. The look
+// comes from the deck tokens in `theme.css`, so the card follows the canvas's mode.
+//
+// Both of the deck's variants are this one kind, as they are one `card()` there: a card of nothing but an icon and a
+// title is the `simple` row, and one that carries chips, a body or a footer draws through the shared card frame —
+// which is what the `compact` variant is. Chips are a field rather than a kind of their own so the grid, the
+// wrapping and the ghost state are laid out once (`Chip.tsx`) instead of per slide.
 //
 
 import './theme.css';
@@ -13,16 +18,19 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, IconSpec, type NodeViewProps, TextPart, iconSymbol } from '@dxos/react-ui-canvas';
+import {
+  CardFrame,
+  type ElementKindSpec,
+  IconSpec,
+  type NodeViewProps,
+  TextPart,
+  iconSymbol,
+} from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
+import { ChipList, Chips } from './Chip.tsx';
 import { type Styled, toneValue } from './FeedCard.tsx';
-
-//
-// The card kind: the deck's `.d-card.simple` — a Phosphor icon, a title, a soft raised shadow, and an optional
-// coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's fill level.
-//
 
 export const cardFields = {
   /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
@@ -31,13 +39,17 @@ export const cardFields = {
   icon: Schema.optional(IconSpec),
   /** An accent, drawn as the card's outline (`#2d6fff`). */
   tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
+  /** A row or grid of chips in the card's body: what the layer holds, or which services it runs. */
+  chips: Schema.optional(ChipList.annotate({ title: 'Chips' })),
+  body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
+  footer: Schema.optional(Schema.String.annotate({ title: 'Footer' })),
 };
 
 export const CardNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('card'), ...cardFields });
 
-const isCardNode = (
-  node: NodeViewProps['node'],
-): node is NodeViewProps['node'] & Schema.Struct.Type<typeof cardFields> => node.type === 'card';
+type CardFields = Schema.Struct.Type<typeof cardFields>;
+
+const isCardNode = (node: NodeViewProps['node']): node is NodeViewProps['node'] & CardFields => node.type === 'card';
 
 const CardNodeView = ({ node, editing }: NodeViewProps) => {
   if (!isCardNode(node)) {
@@ -47,6 +59,23 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
   const symbol = iconSymbol(node.icon ?? {});
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
   const style: Styled = tone ? { '--sd-tone': tone } : {};
+  const compact = node.chips !== undefined || node.body !== undefined || node.footer !== undefined;
+  if (compact) {
+    return (
+      <div
+        className='studio-card dx-cover rounded-xl overflow-hidden'
+        data-testid='card-node'
+        data-tone={tone ? true : undefined}
+        style={{ padding: '12px 18px', ...style }}
+      >
+        {/* The core card prototype's frame draws the header, body and footer and makes each a part; the chips are
+            what this variant adds between the header and the body. */}
+        <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
+          {node.chips ? <Chips {...node.chips} /> : null}
+        </CardFrame>
+      </div>
+    );
+  }
   return (
     <div
       className='studio-card dx-cover flex items-center gap-3 px-4 rounded-xl'
@@ -72,5 +101,6 @@ export const cardSpec: ElementKindSpec = {
   // Nominal units (one unit is the major grid cell, 48px): the deck's 236 x 66 card, give or take.
   defaultSize: { width: 5, height: 1.5 },
   resizable: true,
-  parts: [{ field: 'label' }],
+  // Composite: the title first, so Enter on a selected card edits it, then the body and footer the frame draws.
+  parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
 };

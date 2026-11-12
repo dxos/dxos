@@ -28,10 +28,8 @@ import { CanvasCapabilities } from '#types';
 
 import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
-import { cardSpec } from '../../testing/studio/Card.tsx';
-import { feedCardSpec } from '../../testing/studio/FeedCard.tsx';
+import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
 import { STUDIO_SLIDES } from '../../testing/studio/slides.ts';
-import { spaceGraphSpec } from '../../testing/studio/SpaceGraph.tsx';
 import { STUDIO_CANVAS, seedStudioSlide } from '../../testing/studio/studio.ts';
 
 /** Every kind the deck's slides use, contributed once for all of them. */
@@ -43,11 +41,11 @@ const StudioKindsPlugin = Plugin.define(
     activatesOn: IllustratorEvents.Start,
     provides: [CanvasCapabilities.NodeType],
     activate: () =>
-      Effect.succeed([
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'card', spec: cardSpec }),
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec }),
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'space-graph', spec: spaceGraphSpec }),
-      ]),
+      Effect.succeed(
+        Object.entries(STUDIO_KINDS).map(([type, spec]) =>
+          Capability.contribute(CanvasCapabilities.NodeType, { type, spec }),
+        ),
+      ),
   }),
   Plugin.make,
 );
@@ -94,13 +92,21 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Every slide draws, and the one that places a space graph draws that too. */
+/** Every slide draws, and every component kind of the deck's table draws on the slide that places it. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const views = await canvas.findAllByTestId('scene-view', undefined, { timeout: 60_000 });
     await expect(views.length).toBe(STUDIO_SLIDES.length);
-    const graphs = STUDIO_SLIDES.filter(({ spaceGraph }) => spaceGraph).length;
-    await expect(canvasElement.querySelectorAll('[data-testid="space-graph-node"]').length).toBe(graphs);
+    const count = (testid: string) => canvasElement.querySelectorAll(`[data-testid="${testid}"]`).length;
+    await expect(count('space-graph-node')).toBe(STUDIO_SLIDES.filter(({ spaceGraph }) => spaceGraph).length);
+    // The Hyperspace slide's three planks and its one field of spaces, the Composer slide's window, and the five
+    // standalone chips of the Plugins slide. A kind the loader left as its placeholder draws none of these.
+    await expect(count('plank-node')).toBe(3);
+    await expect(count('substrate-node')).toBe(1);
+    await expect(count('app-frame-node')).toBe(1);
+    await expect(count('chip-node')).toBe(5);
+    // The chips inside a card: the ECHO layers slide's Types grid and the Architecture slide's two service rows.
+    await expect(count('studio-chips')).toBe(3);
   },
 };

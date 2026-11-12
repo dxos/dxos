@@ -109,3 +109,237 @@
   background: var(--sd-mark, var(--sd-accent));
   box-shadow: none;
 }
+
+/*
+ * A chip of the deck (`.d-chip`): a pill of icon, label and an optional mono note. Every length here is the slide's
+ * own `cqw` resolved at 1cqw = 16 slide units, which is what a drawing's scene units are, so a chip imported from a
+ * slide is the size the slide drew it.
+ */
+.studio-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8.8px;
+  align-content: flex-start;
+}
+
+.studio-chips[data-grid] {
+  display: grid;
+}
+
+.studio-chip {
+  gap: 8px;
+  padding: 6.7px 12.8px;
+  border-radius: 99px;
+  color: var(--sd-fg);
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.studio-chip[data-flat] {
+  border-radius: 7px;
+  box-shadow: 1px 1px 3px var(--sd-lo);
+}
+
+.studio-chip[data-tone] {
+  box-shadow:
+    var(--sd-raised-sm),
+    inset 0 0 0 1.6px var(--sd-tone);
+}
+
+/* A ghost chip: present elsewhere, not here. */
+.studio-chip[data-ghost] {
+  color: var(--sd-muted);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.6px var(--sd-line);
+  opacity: 0.75;
+}
+
+.studio-chip-icon {
+  color: var(--sd-tone, var(--sd-muted));
+}
+
+.studio-chip[data-ghost] .studio-chip-icon {
+  color: var(--sd-line);
+}
+
+.studio-chip-note {
+  font-size: 13px;
+  color: var(--sd-muted);
+}
+
+/* The standalone chip of the Plugins slide (`.d-chip-fill.lg`): the whole node, centred. */
+.studio-chip[data-large] {
+  width: 100%;
+  justify-content: center;
+  gap: 9.6px;
+  padding: 9.6px 16px;
+  font-size: 23px;
+}
+
+/*
+ * The wireframe pieces a plank and the app frame are drawn from (studio `lib/kit.mjs`, `lib/frame.mjs`): a run of
+ * text as a bar, a column as an inset well, a card as a raised one. Lengths are slide units, as above.
+ */
+.studio-wire-line {
+  height: 9px;
+  border-radius: 3px;
+  background: var(--sd-line);
+}
+
+.studio-wire-line[data-strong] {
+  height: 10px;
+  background: var(--sd-muted);
+}
+
+.studio-wire-col {
+  background: var(--sd-bg);
+  box-shadow: var(--sd-inset-sm);
+}
+
+.studio-wire-card,
+.studio-wire-bubble {
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+}
+
+.studio-wire-bubble[data-me] {
+  background: var(--sd-accent);
+  box-shadow: none;
+}
+
+.studio-wire-bubble[data-me] .studio-wire-line {
+  background: light-dark(hsl(0 0% 100% / 0.8), hsl(220 10% 12% / 0.65));
+}
+
+.studio-wire-compose {
+  box-shadow: var(--sd-inset-sm);
+}
+
+.studio-wire-cell {
+  background: var(--sd-deep);
+}
+
+.studio-wire-cell[data-head] {
+  background: var(--sd-line);
+}
+
+.studio-wire-cell[data-selected] {
+  box-shadow: inset 0 0 0 1.6px var(--sd-accent);
+}
+
+/* A plank: the kit component under a header of its title and the package it comes from. */
+.studio-plank-header {
+  font-size: 20px;
+  font-weight: 500;
+  border-block-end: 1px solid var(--sd-line);
+}
+
+.studio-plank-package {
+  font-size: 14px;
+  color: var(--sd-muted);
+}
+
+/*
+ * The Composer window of the Composer slide (`.d-frame`): a soft panel of a title bar, three columns and a status
+ * bar. `--sd-hl` is the region's own outline colour, set per pane where the slide highlights it.
+ */
+.studio-frame {
+  color: var(--sd-fg);
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+}
+
+.studio-frame-bar {
+  border-block-end: 1px solid var(--sd-line);
+}
+
+.studio-frame-foot {
+  border-block-start: 1px solid var(--sd-line);
+}
+
+.studio-frame-dot {
+  background: var(--sd-line);
+}
+
+.studio-frame-heading {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--sd-muted);
+}
+
+.studio-frame-caption {
+  margin-block-end: 6.4px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--sd-muted);
+}
+
+.studio-frame-glyph {
+  color: var(--sd-muted);
+}
+
+.studio-frame-glyph-accent {
+  color: var(--sd-accent);
+}
+
+.studio-frame-pane,
+.studio-frame-doc {
+  border-radius: 8px;
+}
+
+.studio-frame-pane {
+  background: var(--sd-bg);
+}
+
+.studio-frame-object[data-selected] {
+  border-radius: 6.4px;
+  background: var(--sd-deep);
+}
+
+.studio-frame-embed {
+  padding: 9.6px;
+  border-radius: 12.8px;
+  background: var(--sd-bg);
+  box-shadow: var(--sd-inset-sm);
+}
+
+.studio-frame-message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 11.2px;
+  border-radius: 11.2px;
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+}
+
+.studio-frame-message[data-me] {
+  background: var(--sd-accent);
+  box-shadow: none;
+}
+
+.studio-frame-message[data-me] .studio-wire-line {
+  background: light-dark(hsl(0 0% 100% / 0.8), hsl(220 10% 12% / 0.65));
+}
+
+.studio-frame-input {
+  padding: 9.6px 11.2px;
+  border-radius: 11.2px;
+  box-shadow: var(--sd-inset-sm);
+}
+
+/* A highlighted region: outlined in the colour of the plugin card that supplies it. */
+.studio-frame [data-highlight] {
+  box-shadow: inset 0 0 0 1.9px var(--sd-hl);
+}
+
+.studio-frame .studio-frame-embed[data-highlight] {
+  box-shadow:
+    var(--sd-inset-sm),
+    inset 0 0 0 1.9px var(--sd-hl);
+}
