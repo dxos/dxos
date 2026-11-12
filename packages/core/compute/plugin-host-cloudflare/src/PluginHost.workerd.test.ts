@@ -5,13 +5,19 @@
 import { next as A } from '@automerge/automerge';
 import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { create } from '@bufbuild/protobuf';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Fibonacci, Reply } from '@dxos/compute/testing';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol } from '@dxos/protocols';
 import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
@@ -24,6 +30,7 @@ import {
   Greet,
   Greeter,
   GREETER_WIRE_KEY,
+  Hidden,
   Inspect,
   InspectEvent,
   Nest,
@@ -215,8 +222,32 @@ describe('PluginHost', () => {
         expect(operations).toContain(String(Reply.meta.key));
         expect(operations).toContain(String(ResolveRegistry.meta.key));
         expect(operations).not.toContain(String(Fibonacci.meta.key));
+        expect(operations).not.toContain(String(Hidden.meta.key));
       },
     );
+
+    // A pending `waitForCancel` pins the invocation until its stub is disposed.
+    test('a skill that fails to make leaves no cancellation wait pending', { timeout: 20_000 }, async ({ expect }) => {
+      let waiting = false;
+      let disposed = false;
+      const cancellation: PluginProtocol.CancellationSignal & Disposable = {
+        waitForCancel: () => {
+          waiting = true;
+          return new Promise<void>(() => {});
+        },
+        [Symbol.dispose]: () => {
+          disposed = true;
+        },
+      };
+      const spaceId = SpaceId.random();
+      const result = await PluginHost.make(() => ({ primary: BrokenSkillPlugin() })).invoke(
+        { operationKey: String(Reply.meta.key), spaceId, input: {} },
+        makeSpaceEnv(spaceId),
+        { cancellation },
+      );
+      expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining('No skill.') } });
+      expect(disposed).toBe(waiting);
+    });
   });
 
   // Services only EDGE holds, and other plugins' operations (EDGE-PLUGINS F-5.7).
@@ -415,5 +446,29 @@ const makeSpaceEnv = (spaceId: SpaceId): PluginProtocol.Env => ({
   QUEUE_SERVICE: { queryQueue: unserved, insertIntoQueue: unserved, deleteFromQueue: unserved },
   FUNCTIONS_AI_SERVICE: { fetch: unserved },
 });
+
+/** A plugin whose one skill throws when made, as a skill with a broken definition does. */
+const BrokenSkillPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hostTestBroken'), name: 'Broken skill' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule('BrokenOperations', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed(Capability.contribute(Capabilities.OperationHandler, OperationHandlerSet.make(ReplyHandler))),
+    ),
+  ),
+  Plugin.addModule(
+    Capability.inlineModule('BrokenSkill', { provides: [AppCapabilities.SkillDefinition] }, () =>
+      Effect.succeed(
+        Capability.contribute(AppCapabilities.SkillDefinition, {
+          key: 'org.dxos.skill.hostTestBroken',
+          make: () => {
+            throw new Error('No skill.');
+          },
+        }),
+      ),
+    ),
+  ),
+  Plugin.make,
+);
 
 const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin() }));
