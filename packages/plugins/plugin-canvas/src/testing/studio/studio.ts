@@ -557,7 +557,13 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
  * the "Studio soft theme". No `theme` id, so the canvas follows the app's mode; a story pins one with `theme`
  * (`neu-light` / `neu-dark`) when it wants a drawing in a mode of its own.
  */
-export const STUDIO_CANVAS = { styleSet: 'neu', background: 'neu' } as const;
+export const STUDIO_CANVAS = {
+  styleSet: 'neu',
+  background: 'neu',
+  // The Neu ground draws no grid of its own ("the shapes' relief is the only texture"), which leaves a drawing with
+  // nothing to place against; `backgroundGrid` overrides the background's own.
+  backgroundGrid: 'dots',
+} as const;
 
 /** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
 export type ComponentMode = 'kind' | 'generator';

@@ -11,7 +11,14 @@ import { type ContentMap, Dsl } from '@dxos/diagram';
 import { iconOf } from '@dxos/react-ui-canvas';
 
 import { ROOT_VIEW_ID, isLinkRecord, isNodeRecord, readViews } from '../../model/content.ts';
-import { type StudioModel, type StudioReport, findLink, parseStudioModel, seedStudioSlide } from './studio.ts';
+import {
+  STUDIO_CANVAS,
+  type StudioModel,
+  type StudioReport,
+  findLink,
+  parseStudioModel,
+  seedStudioSlide,
+} from './studio.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +40,11 @@ const routedEdges = (model: StudioModel): number =>
   model.edges.filter((edge) => edge.length === 4 && (edge[3].via?.length || edge[3].elbow)).length;
 
 describe('studio deck slides on a canvas', () => {
+  test('every slide draws on the grid', ({ expect }) => {
+    // The Neu ground draws none of its own, so a drawing would have nothing to place against.
+    expect(STUDIO_CANVAS.backgroundGrid).toEqual('dots');
+  });
+
   test.for(SLIDES)('%s.diagram parses with no problems', (name, { expect }) => {
     const { source } = slide(name);
     const { problems } = Dsl.parse(source);
