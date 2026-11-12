@@ -736,8 +736,9 @@ feat F-6: compute-service routes invocations to published plugins
     a bundle that does not handle the key, and a bundle whose protocol version it cannot serve
     ([F-6.9]).
 
-  req F-6.7: operation-service is removed once every plugin in its static list is published, and no
-    caller binds `OPERATION_SERVICE`.
+  req F-6.7: operation-service is removed entirely, and no caller binds `OPERATION_SERVICE`: every
+    plugin in its static list is published, and the base types its BasePlugin registers come from
+    plugin-ontology's bundle ([D-87]).
 
   req F-6.8: The KV operation catalog is rebuilt from bundle catalogs on every upload or revoke, not
     by a cron that activates plugins.
@@ -1118,14 +1119,12 @@ TODO: an override per DXN.
   compute-service refuses a bundle the data plane cannot serve, or the data service protocol is
   versioned instead.
 
-- **Hooks on EDGE.** A bundle's catalog carries operations, skills and types but no hooks, and an
-  agent turn reads every plugin's hooks from the plugin manager it runs in. How a hook a plugin
-  contributes reaches an agent turn on EDGE once its plugin runs only in a bundle is open.
-- **Other plugins' contributions.** A bundle sees only what its own plugin contributes, so an
-  operation that reads every plugin's contributions — skills, schemas, subject-context providers,
-  identity specs, space templates, exporters, operation handlers — sees only its own in a bundle.
-  How those reach a bundle (published through the registry, or served by compute-service) is open.
-  Until then such an operation may not work on EDGE.
+- **Other plugins' capabilities (answered, [D-88]).** A plugin reading other plugins' capabilities
+  — skills, subject contexts, schemas, hooks, delegation strategies, model resolvers, operation
+  handlers — is out of scope for EDGE for now. A bundle sees only what its own plugin contributes,
+  so hooks do not reach an agent turn on EDGE, no other plugin's contributions reach a bundle, and
+  plugin-agent's `ensureReplySent` does not find other plugins' operation handlers there. These were
+  the open questions of [D-85].
 
 ## Changelog
 
@@ -1887,4 +1886,25 @@ decision D-85: An operation that needs other plugins' contributions — plugin-s
   date: 2026-11-11
   by: user:dmaretskyi
   affects: [F-6.4, F-6.7]
+```
+
+```mdl
+decision D-86: operation-service is removed entirely.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-87: The base types operation-service's BasePlugin registers — `AccessToken`, `Cursor`, `Blob`, `Collection`, `Expando`, `SpaceProperties`, `Message`, `Organization` and `Person` — live in a new dxos plugin named plugin-ontology.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-88: A plugin reading other plugins' capabilities (skills, subject contexts, schemas, hooks, delegation strategies, model resolvers, operation handlers) is out of scope for EDGE for now. This answers the open questions of [D-85]: how hooks reach an agent turn on EDGE, how other plugins' contributions reach a bundle, and how plugin-agent's `ensureReplySent` finds other plugins' operation handlers.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.4]
 ```
