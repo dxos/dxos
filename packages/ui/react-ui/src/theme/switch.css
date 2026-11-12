@@ -4,6 +4,9 @@
 
 @layer dx-components {
   .dx-switch {
+    /* Holds the visually hidden input, which is positioned: left to an ancestor, it stays put while the switch
+       scrolls, and focusing it scrolls that ancestor to wherever it was. */
+    position: relative;
     display: inline-flex;
     align-items: center;
     /* Start, not centre: in a column (Field) the cross axis is horizontal, so centre would float it mid-track. */
