@@ -10,11 +10,11 @@ value, so one theme change reaches all of them.
 
 **Three tiers of color tokens.** Each tier is built from the one below it:
 
-| Tier     | Example                                   | Use                                                   |
-| -------- | ----------------------------------------- | ----------------------------------------------------- |
-| Scale    | `--color-neutral-150`, `--color-blue-600` | Raw values. Never used directly by a component        |
-| Hue role | `--color-red-surface`, `--color-red-fg`   | One set of roles per hue, for color that carries data |
-| Semantic | `--color-card-surface`, `--color-fg-muted`, `--color-error-text` | Named parts of the UI. The tier to reach for |
+| Tier     | Example                                                          | Use                                                   |
+| -------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
+| Scale    | `--color-neutral-150`, `--color-blue-600`                        | Raw values. Never used directly by a component        |
+| Hue role | `--color-red-surface`, `--color-red-fg`                          | One set of roles per hue, for color that carries data |
+| Semantic | `--color-card-surface`, `--color-fg-muted`, `--color-error-text` | Named parts of the UI. The tier to reach for          |
 
 **A token becomes utilities.** Every `--color-<name>` token yields the Tailwind utilities `bg-<name>`, `text-<name>` and
 `border-<name>`. So `--color-card-surface` gives `bg-card-surface`.
@@ -26,13 +26,13 @@ no surface). A state such as `hover` comes last.
 **Surfaces form a ladder.** Six levels, from `sunken` up through `chrome`, `base`, `raised` and `overlay` to `popup`.
 Higher surfaces are lighter in dark mode, so a menu reads as sitting above a card, which sits above the page.
 
-| Level     | Named surfaces                              |
-| --------- | ------------------------------------------- |
-| `sunken`  | `deck-surface`                              |
-| `chrome`  | `sidebar-surface`, `header-surface`         |
-| `base`    | `base-surface`                              |
-| `raised`  | `card-surface`                              |
-| `overlay` | `modal-surface`: dialogs, sheets, drawers   |
+| Level     | Named surfaces                               |
+| --------- | -------------------------------------------- |
+| `sunken`  | `deck-surface`                               |
+| `chrome`  | `sidebar-surface`, `header-surface`          |
+| `base`    | `base-surface`                               |
+| `raised`  | `card-surface`                               |
+| `overlay` | `modal-surface`: dialogs, sheets, drawers    |
 | `popup`   | `popover-surface`: menus, popovers, tooltips |
 
 **Light and dark in one value.** A semantic token holds both values with CSS `light-dark()`. The theme sets

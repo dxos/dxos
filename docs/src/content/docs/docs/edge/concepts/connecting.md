@@ -22,12 +22,12 @@ messages addressed to the identity or to one of its devices.
 
 **Feature flags.** `runtime.client.edgeFeatures` turns on what the device uses EDGE for:
 
-| Flag                   | Turns on                                                               |
-| ---------------------- | ---------------------------------------------------------------------- |
+| Flag                   | Turns on                                                                |
+| ---------------------- | ----------------------------------------------------------------------- |
 | `signaling`            | EDGE as the signaling server for [MESH](/docs/mesh/concepts/signaling/) |
-| `subductionReplicator` | Replicating Automerge documents with EDGE's copy                       |
-| `feedReplicator`       | Replicating feeds with EDGE's copy                                     |
-| `agents`               | Agents that run on EDGE                                                |
+| `subductionReplicator` | Replicating Automerge documents with EDGE's copy                        |
+| `feedReplicator`       | Replicating feeds with EDGE's copy                                      |
+| `agents`               | Agents that run on EDGE                                                 |
 
 ## Behavior
 

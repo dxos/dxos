@@ -15,16 +15,16 @@ the bytes between them.
 **Extensions.** An extension is a protocol with a name. Each side adds the extensions it runs, and an extension opens
 once both sides have added it. A peer that does not know an extension never opens it.
 
-| Extension                                  | Added by          | Does                                                                            |
-| ------------------------------------------ | ----------------- | ------------------------------------------------------------------------------- |
-| `dxos.mesh.teleport.control`               | Teleport itself   | Heartbeats, and tells the other side which extensions this side has            |
-| `dxos.mesh.teleport.auth`                  | ECHO, HALO        | Each side proves it holds a key the space or identity admitted                  |
-| `dxos.mesh.teleport.automerge`             | ECHO              | Replicates the space's Automerge documents                                      |
-| `dxos.mesh.teleport.replicator`            | ECHO, HALO        | Replicates the space's feeds                                                    |
-| `dxos.mesh.teleport.gossip`                | ECHO, HALO        | Carries [presence](/docs/mesh/concepts/presence/) announcements                 |
-| `dxos.mesh.teleport.admission-discovery`   | ECHO              | Lets a newly admitted member fetch the credential that admitted it              |
-| `dxos.mesh.teleport.notarization`          | ECHO              | Lets a member ask another to write a credential to the space for it             |
-| `dxos.halo.invitations`                    | HALO              | Runs an [invitation](/docs/halo/concepts/invitations/) between host and guest   |
+| Extension                                | Added by        | Does                                                                          |
+| ---------------------------------------- | --------------- | ----------------------------------------------------------------------------- |
+| `dxos.mesh.teleport.control`             | Teleport itself | Heartbeats, and tells the other side which extensions this side has           |
+| `dxos.mesh.teleport.auth`                | ECHO, HALO      | Each side proves it holds a key the space or identity admitted                |
+| `dxos.mesh.teleport.automerge`           | ECHO            | Replicates the space's Automerge documents                                    |
+| `dxos.mesh.teleport.replicator`          | ECHO, HALO      | Replicates the space's feeds                                                  |
+| `dxos.mesh.teleport.gossip`              | ECHO, HALO      | Carries [presence](/docs/mesh/concepts/presence/) announcements               |
+| `dxos.mesh.teleport.admission-discovery` | ECHO            | Lets a newly admitted member fetch the credential that admitted it            |
+| `dxos.mesh.teleport.notarization`        | ECHO            | Lets a member ask another to write a credential to the space for it           |
+| `dxos.halo.invitations`                  | HALO            | Runs an [invitation](/docs/halo/concepts/invitations/) between host and guest |
 
 ## Behavior
 

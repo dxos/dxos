@@ -15,13 +15,13 @@ device's WebSocket, so a third device that comes online later gets it from EDGE.
 
 ## A server path against a direct link
 
-|                                     | Through EDGE only                      | Direct link between devices                  |
-| ----------------------------------- | -------------------------------------- | -------------------------------------------- |
-| Latency between two nearby devices  | A round trip to the nearest data centre | The local network, or the shortest route     |
-| Devices never online together       | Works: EDGE holds the copy             | Does not work on its own                     |
-| EDGE unreachable                    | Sync stops                             | Sync continues between the devices it links  |
-| Who handles the data in transit     | EDGE                                   | Only the two devices                         |
-| Peers behind strict NAT             | Works                                  | Needs a TURN relay                           |
+|                                    | Through EDGE only                       | Direct link between devices                 |
+| ---------------------------------- | --------------------------------------- | ------------------------------------------- |
+| Latency between two nearby devices | A round trip to the nearest data centre | The local network, or the shortest route    |
+| Devices never online together      | Works: EDGE holds the copy              | Does not work on its own                    |
+| EDGE unreachable                   | Sync stops                              | Sync continues between the devices it links |
+| Who handles the data in transit    | EDGE                                    | Only the two devices                        |
+| Peers behind strict NAT            | Works                                   | Needs a TURN relay                          |
 
 Neither column is enough alone, so MESH uses both. EDGE is one more transport, not a separate path beside MESH.
 

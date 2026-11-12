@@ -15,13 +15,13 @@ EDGE when it wakes.
 
 ## An app server against an always-online peer
 
-|                                   | App server                                    | EDGE                                                   |
-| --------------------------------- | --------------------------------------------- | ------------------------------------------------------ |
-| Where the data lives              | On the server; devices hold a cache           | On the devices; EDGE holds a copy                      |
-| Works offline                     | Read-only, at best                            | Fully; changes sync later                              |
-| Who resolves conflicts            | The server                                    | CRDT merging, the same on every peer                   |
-| If the service disappears         | The data goes with it                         | The devices still have everything                      |
-| Who decides access                | The server, on every request                  | The space's members, through HALO                      |
+|                           | App server                          | EDGE                                 |
+| ------------------------- | ----------------------------------- | ------------------------------------ |
+| Where the data lives      | On the server; devices hold a cache | On the devices; EDGE holds a copy    |
+| Works offline             | Read-only, at best                  | Fully; changes sync later            |
+| Who resolves conflicts    | The server                          | CRDT merging, the same on every peer |
+| If the service disappears | The data goes with it               | The devices still have everything    |
+| Who decides access        | The server, on every request        | The space's members, through HALO    |
 
 EDGE can read a space only when the space gives it more than `pull` access. See HALO's [Spaces and membership](/docs/halo/concepts/spaces-membership/).
 

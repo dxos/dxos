@@ -1,6 +1,6 @@
 ---
 title: Identity services
-description: "What EDGE does for HALO: recovery, accounts, invitations and service access."
+description: 'What EDGE does for HALO: recovery, accounts, invitations and service access.'
 ---
 
 HALO identities are key pairs that devices make, and most of HALO needs no server. EDGE handles the parts that do:

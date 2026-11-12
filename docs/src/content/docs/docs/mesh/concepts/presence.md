@@ -16,11 +16,11 @@ space's members; HALO uses it for an identity's devices.
 
 **Network status.** `client.mesh.networkStatus` is an observable of the device's own state:
 
-| Field            | Meaning                                                      |
-| ---------------- | ------------------------------------------------------------ |
+| Field            | Meaning                                                                |
+| ---------------- | ---------------------------------------------------------------------- |
 | `swarm`          | `ONLINE` while the device joins swarms, `OFFLINE` after it leaves them |
-| `signaling`      | The state of each signaling server connection                |
-| `connectionInfo` | The swarms the device is in, and their connections           |
+| `signaling`      | The state of each signaling server connection                          |
+| `connectionInfo` | The swarms the device is in, and their connections                     |
 
 **Going offline.** `client.mesh.updateConfig(ConnectionState.OFFLINE)` makes the device leave every swarm.
 `ConnectionState.ONLINE` joins them again. The tutorials' offline switch calls it, so a reader can watch two windows

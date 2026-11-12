@@ -8,12 +8,12 @@ link reaches it, and a space uses more than one at once.
 
 ## Model
 
-| Transport      | Where                 | Notes                                                                                     |
-| -------------- | --------------------- | ----------------------------------------------------------------------------------------- |
-| WebRTC         | Browsers and Electron | The default between devices. Uses ICE to find a route, and TURN when there is none        |
-| TCP            | Node                  | For Node peers, such as agents and tests, that can reach each other directly              |
-| Memory         | Tests                 | Connects peers in the same process                                                        |
-| EDGE WebSocket | Everywhere            | The device's one connection to EDGE; carries signaling and replication to EDGE's copy     |
+| Transport      | Where                 | Notes                                                                                 |
+| -------------- | --------------------- | ------------------------------------------------------------------------------------- |
+| WebRTC         | Browsers and Electron | The default between devices. Uses ICE to find a route, and TURN when there is none    |
+| TCP            | Node                  | For Node peers, such as agents and tests, that can reach each other directly          |
+| Memory         | Tests                 | Connects peers in the same process                                                    |
+| EDGE WebSocket | Everywhere            | The device's one connection to EDGE; carries signaling and replication to EDGE's copy |
 
 WebRTC, TCP and memory carry a [Teleport](/docs/mesh/concepts/teleport/) session between two devices. The EDGE WebSocket
 is different: it links a device to EDGE, not to another device, and it multiplexes its own channels, one per EDGE

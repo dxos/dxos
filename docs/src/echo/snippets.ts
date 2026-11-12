@@ -189,7 +189,9 @@ const PROJECT_PATHS: Record<string, string> = {
 export const snippetProjectPath = (file: string): string | undefined => {
   const [path] = findSource(file);
   const root = PROJECTS.find((dir) => path.startsWith(dir));
-  return root === undefined || !(root in PROJECT_PATHS) ? undefined : `${PROJECT_PATHS[root]}${path.slice(root.length)}`;
+  return root === undefined || !(root in PROJECT_PATHS)
+    ? undefined
+    : `${PROJECT_PATHS[root]}${path.slice(root.length)}`;
 };
 
 const REGION_MARKER = /^[ \t]*\/\/ #(end)?region.*\n/gm;

@@ -17,12 +17,12 @@ topology picks which candidates to connect to and when to drop a connection, and
 
 ## Topologies
 
-| Topology        | Rule                                                                 | Used for                       |
-| --------------- | -------------------------------------------------------------------- | ------------------------------ |
-| MMST            | Connect a few peers, chosen so the whole swarm stays connected       | Space swarms                   |
-| Invitation      | The host dials one guest at a time; guests accept every connection   | Invitations                    |
-| Fully connected | Connect to every peer                                                | Tests                          |
-| Star            | Every peer connects to one central peer                              | Tests                          |
+| Topology        | Rule                                                               | Used for     |
+| --------------- | ------------------------------------------------------------------ | ------------ |
+| MMST            | Connect a few peers, chosen so the whole swarm stays connected     | Space swarms |
+| Invitation      | The host dials one guest at a time; guests accept every connection | Invitations  |
+| Fully connected | Connect to every peer                                              | Tests        |
+| Star            | Every peer connects to one central peer                            | Tests        |
 
 **MMST** keeps the swarm reachable without connecting every pair. Each device opens connections until it has a minimum
 number, choosing from a random sample of candidates the ones nearest its own key by XOR distance. It refuses offers once
