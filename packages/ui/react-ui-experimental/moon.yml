@@ -15,7 +15,11 @@ tasks:
     command: pnpm run --silent glsl
     inputs:
       - src/shaders/glsl/*.*
+    # Each file by name: a directory output is satisfied by an empty directory, which then caches as a success.
     outputs:
-      - src/shaders/glsl/gen
+      - src/shaders/glsl/gen/dof.frag
+      - src/shaders/glsl/gen/dof.vert
+      - src/shaders/glsl/gen/sim.frag
+      - src/shaders/glsl/gen/sim.vert
     tags:
       - prebuild
