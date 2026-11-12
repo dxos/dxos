@@ -62,12 +62,24 @@ type FeedCardFields = Schema.Struct.Type<typeof feedCardFields>;
 const isFeedCard = (node: NodeViewProps['node']): node is NodeViewProps['node'] & FeedCardFields =>
   node.type === 'feed-card';
 
-const FeedStrip = ({ n, label, marks }: { n: number; label?: string; marks?: Record<string, string> }) => (
+type FeedStripProps = {
+  n: number;
+  label?: string;
+  marks?: Record<string, string>;
+  editing?: NodeViewProps['editing'];
+};
+
+const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => (
   <div className='flex items-center shrink-0' style={{ gap: 5 }} data-testid='feed-strip'>
-    {label && (
-      <span className='studio-card-label font-mono shrink-0' style={{ fontSize: 12, marginInlineEnd: 2 }}>
+    {label !== undefined && (
+      <TextPart
+        part='feedLabel'
+        text={label}
+        editing={editing}
+        classNames='studio-card-label font-mono shrink-0 text-[12px] mie-[2px]'
+      >
         {label}
-      </span>
+      </TextPart>
     )}
     {Array.from({ length: n }, (_, index) => {
       const mark = toneValue(marks?.[String(index)]);
@@ -103,19 +115,21 @@ export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
           {node.label}
         </TextPart>
       </div>
-      {node.feed ? <FeedStrip n={node.feed} label={node.feedLabel} marks={node.marks} /> : null}
-      {node.body ? (
-        <div className='studio-card-body' style={{ fontSize: 15, lineHeight: 1.3 }}>
+      {node.feed ? <FeedStrip n={node.feed} label={node.feedLabel} marks={node.marks} editing={editing} /> : null}
+      {node.body !== undefined ? (
+        <TextPart part='body' text={node.body} editing={editing} classNames='studio-card-body text-[15px] leading-snug'>
           {node.body}
-        </div>
+        </TextPart>
       ) : null}
-      {node.footer ? (
-        <div
-          className='studio-card-footer mt-auto shrink-0 font-mono truncate'
-          style={{ paddingBlockStart: 8, fontSize: 13 }}
+      {node.footer !== undefined ? (
+        <TextPart
+          part='footer'
+          text={node.footer}
+          editing={editing}
+          classNames='studio-card-footer mt-auto shrink-0 font-mono truncate text-[13px] pbs-2'
         >
           {node.footer}
-        </div>
+        </TextPart>
       ) : null}
     </div>
   );
@@ -130,5 +144,7 @@ export const feedCardSpec: ElementKindSpec = {
   create: ({ id, z, center, size }) => ({ type: 'feed-card', id, z, center, size, label: 'Feed', feed: 9 }),
   defaultSize: { width: 300, height: 138 },
   resizable: true,
-  parts: [{ field: 'label' }],
+  // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so
+  // Enter on a selected card edits its title; Tab moves on through the strip's caption, the body and the footer.
+  parts: [{ field: 'label' }, { field: 'feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],
 };

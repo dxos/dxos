@@ -406,7 +406,7 @@ const waypointsOf = (route: StudioRoute, source: Frame, target: Frame): Vec[] =>
  * routes survive the export only as `# route=` comments, which the parser drops. The scene model does carry them —
  * `connector.route` on a link whose ends stay bound to their nodes — so this is a DSL gap, not a canvas one.
  */
-const routeLinks = (content: ContentMap, model: StudioModel): number => {
+const routeLinks = (content: ContentMap, model: StudioModel, components: ComponentMode): number => {
   let routed = 0;
   for (const edge of model.edges) {
     const route = edge.length === 4 ? edge[3] : undefined;
@@ -414,14 +414,18 @@ const routeLinks = (content: ContentMap, model: StudioModel): number => {
     if (!route || !source || !target) {
       continue;
     }
-    // A tap ends *inside* a component, which no canvas link can do: the generator draws those itself, from the
-    // reader it is bound to, so the link the DSL states would only duplicate it as a stub on the circle's edge.
+    // A tap ends *inside* a component, which no canvas link can do (a `Port` sits on a side of a frame, so there is
+    // no port at an interior point). The link is kept and routed to the circle; the component kind draws the leg
+    // from there to the object it reaches. A `Generator` cannot be linked to at all, so `components: 'generator'`
+    // drops the link and the generator draws the whole run.
     if (route.tap) {
-      const tap = findLinkFrom(content, edge[0]);
-      if (tap !== undefined) {
-        delete content[tap];
+      if (components === 'generator') {
+        const tap = findLinkFrom(content, edge[0]);
+        if (tap !== undefined) {
+          delete content[tap];
+        }
+        continue;
       }
-      continue;
     }
     const waypoints = waypointsOf(route, source, target);
     if (waypoints.length === 0) {
@@ -466,6 +470,10 @@ const routeLinks = (content: ContentMap, model: StudioModel): number => {
  * `generators` maps a component kind to the reference of a `Generator` object in the space. With none, the ring is
  * left as it parsed, which is how the drawing reads where the generator is not there.
  */
+/** The cards that tap a component, in the order the sidecar gives them: each one is aimed by its index. */
+const readersOf = (model: StudioModel, component: string): string[] =>
+  model.edges.flatMap((edge) => (edge.length === 4 && edge[1] === component && edge[3].tap ? [boxOf(edge[0])] : []));
+
 const placeGenerators = (content: ContentMap, model: StudioModel, generators: Generators): number => {
   let placed = 0;
   for (const component of model.components ?? []) {
@@ -475,10 +483,7 @@ const placeGenerators = (content: ContentMap, model: StudioModel, generators: Ge
     if (!generator || !isNodeRecord(record)) {
       continue;
     }
-    // Readers are node ids, in the order the sidecar's taps give them: the generator aims each one by its index.
-    const readers = (model.edges as readonly StudioEdge[]).flatMap((edge) =>
-      edge.length === 4 && edge[1] === component.id && edge[3].tap ? [boxOf(edge[0])] : [],
-    );
+    const readers = readersOf(model, component.id);
     content[key] = {
       ...record,
       node: {
@@ -500,14 +505,55 @@ const placeGenerators = (content: ContentMap, model: StudioModel, generators: Ge
 export type Generators = Record<string, { reference: string; params?: Record<string, unknown> }>;
 
 /**
+ * Replaces a component's placeholder with an element of its own kind, whose fields are its configuration: the
+ * Properties panel edits the seed, the density and the readers, and the view reads its readers out of the scene by
+ * id. The alternative is {@link placeGenerators}, which puts the same geometry in a `Generator` instead.
+ */
+const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: ReadonlySet<string>): number => {
+  let placed = 0;
+  for (const component of model.components ?? []) {
+    const key = nodeKey(elementId(component.id, 'ring'));
+    const record = content[key];
+    if (!kinds.has(component.kind) || !isNodeRecord(record)) {
+      continue;
+    }
+    const readers = readersOf(model, component.id);
+    const { pitch, fill, extra, size, seed } = component.params;
+    content[key] = {
+      ...record,
+      node: {
+        type: component.kind,
+        id: record.node.id,
+        z: record.node.z,
+        center: { x: component.cx, y: component.cy },
+        size: { width: component.r * 2, height: component.r * 2 },
+        ...(typeof seed === 'number' ? { seed } : { seed: 0 }),
+        ...(typeof pitch === 'number' ? { pitch } : {}),
+        ...(typeof fill === 'number' ? { fill } : {}),
+        ...(typeof extra === 'number' ? { extra } : {}),
+        ...(typeof size === 'number' ? { objectSize: size } : {}),
+        readers,
+        picks: 2,
+        hue: 'blue',
+      },
+    };
+    placed++;
+  }
+  return placed;
+};
+
+/**
  * The canvas settings a deck slide wants: the Neu style set on the Neu ground, which is the look `deck.css` calls
  * the "Studio soft theme". No `theme` id, so the canvas follows the app's mode; a story pins one with `theme`
  * (`neu-light` / `neu-dark`) when it wants a drawing in a mode of its own.
  */
 export const STUDIO_CANVAS = { styleSet: 'neu', background: 'neu' } as const;
 
+/** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
+export type ComponentMode = 'kind' | 'generator';
+
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
-export type StudioReport = { problems: number; cards: number; routed: number; generators: number };
+export type StudioReport = { problems: number; cards: number; routed: number; components: number };
 
 /** Whether a command names the slide's title block, which the presenter's heading carries ({@link TITLE_OBJECT}). */
 const isTitle = (command: Scene.Command): boolean =>
@@ -521,7 +567,18 @@ export const seedStudioSlide =
   (
     source: string,
     model: StudioModel,
-    { generators = {}, report }: { generators?: Generators; report?: (report: StudioReport) => void } = {},
+    {
+      components = 'kind',
+      kinds = new Set(['space-graph']),
+      generators = {},
+      report,
+    }: {
+      components?: ComponentMode;
+      /** The component kinds the host has registered; one it has not is left as the DSL's ring. */
+      kinds?: ReadonlySet<string>;
+      generators?: Generators;
+      report?: (report: StudioReport) => void;
+    } = {},
   ) =>
   (content: ContentMap): void => {
     const { commands, problems } = Dsl.parse(source);
@@ -534,12 +591,15 @@ export const seedStudioSlide =
     promoteCards(content, model);
     styleText(content, model);
     styleFrames(content, model);
-    const routed = routeLinks(content, model);
-    const placed = placeGenerators(content, model, generators);
+    const routed = routeLinks(content, model, components);
+    const placed =
+      components === 'generator'
+        ? placeGenerators(content, model, generators)
+        : placeComponentKinds(content, model, kinds);
     report?.({
       problems: problems.length,
       cards: Object.keys(model.nodes).length,
       routed,
-      generators: placed,
+      components: placed,
     });
   };

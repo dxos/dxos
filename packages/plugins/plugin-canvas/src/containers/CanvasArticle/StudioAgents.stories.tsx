@@ -32,18 +32,22 @@ import agentsModel from '../../testing/studio/agents.json?raw';
 import { feedCardSpec } from '../../testing/studio/FeedCard.tsx';
 import generatorParams from '../../testing/studio/space-graph/params.schema.json?raw';
 import generatorSource from '../../testing/studio/space-graph/space-graph.generator.ts?raw';
-import { STUDIO_CANVAS, parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
+import { spaceGraphSpec } from '../../testing/studio/SpaceGraph.tsx';
+import { type ComponentMode, STUDIO_CANVAS, parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
 
-/** A plugin contributing the feed card, the way a real one contributes a kind. */
-const FeedCardPlugin = Plugin.define(
-  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvasStudioFeedCard'), name: 'Studio Feed Card' }),
+/** A plugin contributing the slide's two kinds, the way a real one contributes its own. */
+const StudioKindsPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvasStudioFeedCard'), name: 'Studio Kinds' }),
 ).pipe(
   Plugin.addModule({
-    id: 'feed-card-node-type',
+    id: 'studio-node-types',
     activatesOn: IllustratorEvents.Start,
     provides: [CanvasCapabilities.NodeType],
     activate: () =>
-      Effect.succeed([Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec })]),
+      Effect.succeed([
+        Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec }),
+        Capability.contribute(CanvasCapabilities.NodeType, { type: 'space-graph', spec: spaceGraphSpec }),
+      ]),
   }),
   Plugin.make,
 );
@@ -53,30 +57,32 @@ const model = parseStudioModel(agentsModel);
 /** The deck's accent is blue; the generator's schema defaults to violet, so the drawing names it. */
 const SPACE_PARAMS = { picks: 2, hue: 'blue' };
 
-type Options = { withGenerator?: boolean; plugins?: Plugin.Plugin[] };
+type Options = { components?: ComponentMode; plugins?: Plugin.Plugin[] };
 
-const decorators = ({ withGenerator = true, plugins = [FeedCardPlugin()] }: Options = {}) =>
+const decorators = ({ components = 'kind', plugins = [StudioKindsPlugin()] }: Options = {}) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), ...plugins],
     onInit: async ({ space }) => {
       // The generator is an object in the space, exactly as `canvas.createGenerator` saves it; the drawing's
       // component node names it by reference and the view compiles it.
-      const generator = withGenerator
-        ? space.db.add(
-            Generator.make({
-              name: 'Space graph',
-              description: 'One ECHO space: a connected graph of objects on a hexagonal lattice inside a circle.',
-              source: generatorSource,
-              params: JSON.parse(generatorParams),
-            }),
-          )
-        : undefined;
+      const generator =
+        components === 'generator'
+          ? space.db.add(
+              Generator.make({
+                name: 'Space graph',
+                description: 'One ECHO space: a connected graph of objects on a hexagonal lattice inside a circle.',
+                source: generatorSource,
+                params: JSON.parse(generatorParams),
+              }),
+            )
+          : undefined;
       await space.db.flush();
 
       const canvas = addTestCanvas(
         space.db,
         seedStudioSlide(agentsSource, model, {
+          components,
           generators: generator
             ? { 'space-graph': { reference: Generator.referenceOf(generator), params: SPACE_PARAMS } }
             : {},
@@ -102,7 +108,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The whole slide: nine feed cards, S-curve links, and the generated space the sub-agents read. */
+/** The whole slide: nine feed cards, S-curve links, and the space graph the four sub-agents read. */
 export const Default: Story = {
   decorators: decorators(),
   play: async ({ canvasElement }) => {
@@ -118,10 +124,13 @@ export const Default: Story = {
     );
     // The deck's accent, from the theme tokens rather than a colour named in the view.
     await expect(getComputedStyle(marked[0]).backgroundColor).toBe('rgb(45, 111, 255)');
+    // The space is an element of its own kind, so it is selectable and its fields are its configuration.
+    const space = await canvas.findByTestId('space-graph-node');
+    await expect(space.querySelectorAll('[data-lit]').length).toBe(8);
   },
 };
 
-/** The same slide with no feed-card plugin: each card falls back to the core base, a box showing its title. */
+/** The same slide with no kinds contributed: each card falls back to the core base, a box showing its title. */
 export const WithoutPlugin: Story = {
   decorators: decorators({ plugins: [] }),
   play: async ({ canvasElement }) => {
@@ -132,12 +141,18 @@ export const WithoutPlugin: Story = {
   },
 };
 
-/** The slide without the generator: the component is still the `ellipse ring` the DSL drew, and nothing fills it. */
-export const WithoutGenerator: Story = {
-  decorators: decorators({ withGenerator: false }),
+/**
+ * The same space drawn by a `Generator` instead of an element kind: the geometry is the same module, but its
+ * parameters are a blob rather than properties, and its reader links are its own paths rather than canvas links.
+ */
+export const WithGenerator: Story = {
+  decorators: decorators({ components: 'generator' }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
     await expect((await canvas.findAllByTestId('feed-card-node')).length).toBe(Object.keys(model.nodes).length);
+    // The generator draws onto its own layer; there is no element to select or configure.
+    await expect(canvas.queryAllByTestId('space-graph-node')).toHaveLength(0);
+    await expect(await canvas.findByTestId('generator-layer')).toBeInTheDocument();
   },
 };

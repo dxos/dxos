@@ -252,6 +252,11 @@ conventions the studio README proposed survive as comments, which is to say they
 marked, an optional body, a mono footer. Nine of them draw on the slide, and `WithoutPlugin` still reads, because the
 title is in `label`.
 
+It is **composite**: `parts` lists `label`, `feedLabel`, `body` and `footer`, so each text is edited in place rather
+than only the title (`parts[0]` is the node's main text, which Enter on a selected card edits). Everything else —
+the icon, the tone, the block count, the marks — is a field of the kind's schema, so it is a row in the Properties
+panel. A card is configured, not redrawn.
+
 **The space graph went in as a Generator**, through the operations an agent would use:
 `canvas.createGenerator` compiled it with no errors, and `canvas.inspectGenerator` reports deterministic, inside the
 4 ms budget, drawing 296 shapes (the ring, 68 empty lattice points, 126 links, 101 objects). `layout()`, `pick()` and
@@ -283,10 +288,25 @@ What it costs, measured rather than assumed:
 | Expose its inner objects as link anchors                                       | A tap cannot be an ordinary connector: the generator draws its own, so they are not selectable, routable or re-bindable. |
 | Take a colour outside the theme hues                                           | The deck's `#2d6fff` becomes the `blue` hue.                                                                             |
 
-**A node type instead** would fix the third row and nothing else, at the cost of the schema, the binding and the
-check. The honest rule: a generated graph stays a Generator **until another drawing needs to link into it**. The
-moment a tap has to be a real connector — a reader on a different slide, or a person drawing one by hand — it has to
-be a node type whose objects are anchors (`space/object:28`), and that is a change to the canvas, not to the deck.
+**A node type instead** fixes the third row and nothing else, at the cost of the schema, the binding and the check.
+The honest rule: a generated graph stays a Generator **until another drawing needs to link into it**.
+
+**Decided (2026-11-11): the kind.** Both exist — the geometry is one module either way, so the golden check covers
+both — and the `Default` story draws the space as a `space-graph` element while `WithGenerator` keeps the generator
+for comparison. What the kind buys, seen in the running story:
+
+- **Its fields are its configuration.** Seed, Pitch, Fill, Extra links, Object size, Readers (a list, each entry
+  removable), Picks and Hue are rows in the Properties panel. Changing the seed to 11 redraws the graph at once.
+  A generator's parameters are a blob on its node, edited as JSON.
+- **Readers need no binding.** The view reads `scene.nodes[id]`, so a reader is resolved by id and followed as it
+  moves — `x-binding` and its `items` trap do not arise.
+- **The taps are canvas links again.** The DSL's `arrow <reader>/box -> space/ring` is kept and routed to the
+  circle; the node draws the leg from there to the object it reaches. Under `components: 'generator'` the link is
+  dropped and the generator draws the whole run, as before.
+
+What the kind still cannot do is the thing that motivated the question: **anchor a link to an object inside it.** A
+`Port` is `{ id, side, offset }` — a point on a side of the frame — so there is no port at an interior point. Until
+`Port` can be a point, "a link ending on object 28" is two halves: a link to the circle and a leg the node draws.
 
 ### What matched, and what did not
 
