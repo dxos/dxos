@@ -71,5 +71,5 @@ These need PLEX's app graph, or are used mostly by the shell around plugins.
 | `@dxos/react-ui-mosaic`  | Stacks, decks and other layouts of surfaces. Needs ECHO                |
 
 Four of these have guides: [Lists](/docs/tile/guides/lists/),
-[Forms from a schema](/docs/tile/guides/forms/), [Menus and toolbars](/docs/tile/guides/menus-and-toolbars/) and
+[Forms](/docs/tile/guides/forms/), [Menus and toolbars](/docs/tile/guides/menus-and-toolbars/) and
 [Text editor](/docs/tile/guides/text-editor/).
