@@ -17,17 +17,22 @@ export const examples = [
   {
     label: 'World clock',
     prompt:
-      'Create a Composer plugin called World Clock. It should provide a world clock for each space: a map with a pin for each timezone, above a row of ticking clocks that show the time for everyone on the team.',
+      "Create a Composer plugin called World Clock. For each space it should keep a list of timezones, shown as a map with a pin for each above a row of ticking clocks, so the team can see everyone's local time.",
   },
   {
-    label: 'Expense splitter',
+    label: 'Sankey chart',
     prompt:
-      'Create a Composer plugin called Expense Splitter. It should provide a page in the navtree for each group of people, listing its expenses and a balance for each person. Each expense records who paid and who shares it, and a Settle up button records who pays whom.',
+      'Create a Composer plugin called Sankey. It should add a Sankey panel beside every sheet that draws the flows in its first three columns: from, to and amount. A household budget with income flowing into spending categories then shows where the money goes, and the chart redraws as cells change.',
   },
   {
-    label: 'Family tree',
+    label: 'Receipts filter',
     prompt:
-      'Create a Composer plugin called Family Tree. It should provide a page for each person with their parents, partner and children, and a tree view that draws the whole family. Adding a child to a person updates the tree.',
+      'Create a Composer plugin called Receipts. It should add a Find receipts action to the mailbox toolbar that tags every receipt or invoice in the mailbox and reads its total, and a Receipts page for each mailbox that lists them and charts spending per month.',
+  },
+  {
+    label: 'QR code canvas tool',
+    prompt:
+      'Create a Composer plugin called QR Code. It should add a QR code tool to the canvas palette: the element holds a URL or text, draws a QR code for it that a phone can scan, and redraws when the text changes.',
   },
   {
     label: 'Tournament bracket',

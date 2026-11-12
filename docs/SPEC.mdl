@@ -1116,7 +1116,7 @@ page plex-build-with-agent: Build with a coding agent
   status: spike
   covers:
     - A prompt the reader can edit, prefilled with the World Clock example
-    - A picker above the prompt that fills it with one of four examples: World Clock, Expense splitter, Family tree and Tournament bracket [D-184]
+    - A picker above the prompt that fills it with one of five examples: World clock, Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket [D-184, D-241]
     - Examples written as instructions: each names the plugin and says what it should provide [D-240]
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
@@ -3713,6 +3713,13 @@ decision D-240: PLEX's coding-agent examples are instructions to the agent. Each
   by: user:wittjosiah
   affects: [plex-build-with-agent]
   why: Review feedback that "I want to..." reads as a wish rather than a prompt; a declarative brief tells the agent what to make.
+
+decision D-241: PLEX's coding-agent picker has five examples: World clock (the default), Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket. Expense splitter and Family tree leave. Sankey adds a panel beside every sheet that draws its first three columns as flows, since a plugin cannot add a chart type to the sheet's own Charts companion. Receipts adds a mailbox toolbar action, through `InboxCapabilities.MailboxAction`, and a page charting spending per month. QR code adds an element kind to the canvas palette through `CanvasCapabilities.NodeType`. Amends [D-184].
+  date: 2026-11-12
+  by: agent:claude
+  for: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Josiah chose the five subjects; the agent picked the scenarios. Each example extends a plugin that ships with Composer (sheet, inbox, canvas) or uses another plugin's objects (tournament), so the picker shows plugins adding to what is already there, not only standalone pages.
 
 ## Appendix: Extension Definitions
 
