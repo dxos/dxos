@@ -38,8 +38,18 @@ export type Turn =
 /** One thread's dialogue, named in errors. */
 export type Conversation = { readonly name: string; readonly turns: readonly Turn[] };
 
+/**
+ * The escape hatch: a thread whose turns are computed rather than written out, for logic the turns cannot express. It
+ * answers every call whose prompt matches, with whatever `generate` returns.
+ */
+export type Generated = {
+  readonly name: string;
+  readonly prompt: Pattern;
+  readonly generate: ScriptedLanguageModel.ScriptedTurnGenerator;
+};
+
 /** Every conversation a scripted model plays, and how it is matched; built with {@link make}, played with {@link play}. */
-export type Scene = { readonly conversations: readonly Conversation[]; readonly options: Options };
+export type Scene = { readonly conversations: readonly (Conversation | Generated)[]; readonly options: Options };
 
 /** A side call the harness makes outside any conversation (naming a chat, a planning reminder), answered alike each time. */
 export type Aside = {
@@ -176,12 +186,19 @@ const fillPart = (
 // Builders.
 //
 
-export const make = (conversations: readonly Conversation[], options: Options = {}): Scene => ({
+export const make = (conversations: readonly (Conversation | Generated)[], options: Options = {}): Scene => ({
   conversations,
   options,
 });
 
 export const conversation = (name: string, turns: readonly Turn[]): Conversation => ({ name, turns });
+
+/** A thread played by `generate` rather than by written turns; see {@link Generated}. */
+export const generated = (
+  name: string,
+  prompt: Pattern,
+  generate: ScriptedLanguageModel.ScriptedTurnGenerator,
+): Generated => ({ name, prompt, generate });
 
 export function turn(role: 'user' | 'tool', pattern: Pattern): Turn;
 export function turn(
@@ -233,8 +250,12 @@ export const find = (request: ScriptedLanguageModel.ScriptedRequest, pattern: Re
 
 /** What the last tool call returned, as text; empty when the request does not follow a tool call. */
 const lastToolResult = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): string => {
-  const last = prompt.content.at(-1);
-  return last?.role === 'tool' ? shown(last.content) : '';
+  // Every tool message since the last assistant turn: a turn that made several calls gets all their results.
+  const start = prompt.content.findLastIndex((message) => message.role !== 'tool') + 1;
+  return prompt.content
+    .slice(start)
+    .map((message) => shown(message.content))
+    .join('\n');
 };
 
 //
@@ -302,14 +323,20 @@ export const play = ({
   conversations,
   options: { asides = [], promptOf = lastUserPrompt },
 }: Scene): ScriptedLanguageModel.ScriptedTurnGenerator => {
-  const compiled = conversations.map(({ name, turns }) => ({
-    name,
-    turns: turns.map((turn): MatchedTurn | AssistantTurn =>
-      turn.role === 'assistant'
-        ? turn
-        : { role: turn.role, match: compile(turn.pattern), pattern: describe(turn.pattern) },
-    ),
-  }));
+  const generators = conversations
+    .filter((entry): entry is Generated => 'generate' in entry)
+    .map(({ name, prompt, generate }) => ({ name, match: compile(prompt), generate }));
+  let calls = 0;
+  const compiled = conversations
+    .filter((entry): entry is Conversation => 'turns' in entry)
+    .map(({ name, turns }) => ({
+      name,
+      turns: turns.map((turn): MatchedTurn | AssistantTurn =>
+        turn.role === 'assistant'
+          ? turn
+          : { role: turn.role, match: compile(turn.pattern), pattern: describe(turn.pattern) },
+      ),
+    }));
   const positions: Position[] = compiled.map(() => ({ cursor: 0, bindings: new Map() }));
 
   // Runs the `user` and `tool` turns at the cursor against the request: where it stops and what it captured.
@@ -338,6 +365,11 @@ export const play = ({
     }
 
     const prompt = promptOf(request);
+    const call = calls++;
+    const generator = generators.find(({ match }) => match(prompt) !== undefined);
+    if (generator) {
+      return generator.generate(request, call);
+    }
     // A thread under way keeps its conversation, so those are tried before any that would open on this prompt.
     const order = positions
       .map((position, index) => ({ index, continuing: position.prompt === prompt }))

@@ -103,4 +103,47 @@ describe('ScriptedScene', () => {
       expect(error.message).toContain('expected: "Write me a haiku"');
     }, Effect.provide(script())),
   );
+
+  test('reads every result of a turn that made several calls, and hands a generated thread to its generator', ({
+    expect,
+  }) => {
+    const play = ScriptedScene.play(
+      ScriptedScene.make([
+        ScriptedScene.conversation('fan out', [
+          ScriptedScene.turn('user', 'Start both'),
+          ScriptedScene.turn('assistant', [
+            ScriptedScene.toolCall('start', { name: 'a' }),
+            ScriptedScene.toolCall('start', { name: 'b' }),
+          ]),
+          ScriptedScene.turn('tool', `started ${ScriptedScene.threadId('a')} for a`),
+          ScriptedScene.turn('tool', `started ${ScriptedScene.threadId('b')} for b`),
+          ScriptedScene.turn('assistant', [
+            ScriptedScene.text(`${ScriptedScene.threadId('a')} and ${ScriptedScene.threadId('b')}`),
+          ]),
+        ]),
+        ScriptedScene.generated('echo', /^echo /, (request, index) => ({
+          parts: [ScriptedLanguageModel.text(`call ${index}: ${ScriptedScene.lastUserPrompt(request).slice(5)}`)],
+        })),
+      ]),
+    );
+    const request = (...content: Prompt.MessageEncoded[]): ScriptedLanguageModel.ScriptedRequest => ({
+      system: '',
+      text: '',
+      prompt: Prompt.make(content),
+      tools: [],
+    });
+
+    play(request(user('Start both')), 0);
+    const reply = play(
+      request(
+        user('Start both'),
+        toolCall('call-a', 'start'),
+        toolResult('call-a', 'start', 'started thread-a for a'),
+        toolResult('call-b', 'start', 'started thread-b for b'),
+      ),
+      1,
+    );
+    expect(reply).toMatchObject({ parts: [{ _tag: 'text', text: 'thread-a and thread-b' }] });
+    expect(play(request(user('echo hello')), 2)).toMatchObject({ parts: [{ _tag: 'text', text: 'call 2: hello' }] });
+  });
 });
