@@ -462,6 +462,27 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@dxos/brand',
     // A peer of `expressive-code-twoslash`, which `ec.config.mjs` loads outside knip's graph.
     'twoslash',
+    // Shared packages in the inspector page's import map, found by path in `docs/node_modules`, never imported.
+    '@dxos/client-protocol',
+    '@dxos/crypto',
+    '@dxos/debug',
+    '@dxos/display-name',
+    '@dxos/echo-protocol',
+    '@dxos/echo-query',
+    '@dxos/errors',
+    '@dxos/invariant',
+    '@dxos/operation',
+    '@dxos/random',
+    '@dxos/react-hooks',
+    '@dxos/react-ui-menu',
+    '@dxos/timeframe',
+    '@dxos/tracing',
+    '@dxos/ui',
+    '@dxos/ui-types',
+    '@dxos/util',
+    '@dxos/web-context',
+    '@dxos/web-context-react',
+    'decode-named-character-reference',
   ],
   // `@opentui/core` reaches its native library through a dynamic import interpolating
   // `process.platform`/`process.arch`, which bun folds into a constant per `--compile` target, so
