@@ -31,4 +31,4 @@ the menu it opens all take the same size, so they line up without per-component 
 ## No ECHO or PLEX required
 
 `@dxos/react-ui` depends on neither. It works in any React app that adds its Vite plugin and stylesheet. The
-[Installation](/docs/tile/installation/) page sets that up from scratch.
+[Installation](/docs/tile/learn/installation/) page sets that up from scratch.
