@@ -11,7 +11,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import { makeCreateObjectUrl } from '../capabilities/helpers.ts';
+import { DEFAULT_SHAREABLE_LINK_ORIGIN, makeCreateObjectUrl } from '../capabilities/helpers.ts';
 import GetObjectLinkHandler from './get-object-link.ts';
 import GetObjectsHandler from './get-objects.ts';
 import ResolveUrlHandler from './resolve-url.ts';
@@ -43,7 +43,16 @@ describe('SpaceOperation.GetObjectLink', () => {
     ),
   );
 
-  it('has no link builder on a host without a public origin', ({ expect }) => {
-    expect(makeCreateObjectUrl({})).toBeUndefined();
-  });
+  it.effect(
+    'a headless host given no origin links objects to preview Composer',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const object = yield* Database.add(Obj.make(TestObject, { name: 'first' }));
+        const url = makeCreateObjectUrl({})?.(object);
+        expect(url && new URL(url).origin).toBe(DEFAULT_SHAREABLE_LINK_ORIGIN);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });
