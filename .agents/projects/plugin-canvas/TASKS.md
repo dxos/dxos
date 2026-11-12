@@ -1,6 +1,6 @@
 # plugin-canvas — Tasks
 
-_Resume: PR #13249 (branch `claude/infinite-canvas-depth-7e0949-ojem5i`, mirrored to `claude/infinite-canvas-depth-7e0949`) carries PR 0 (`@dxos/diagram`, published) and the phase 1 engine (`src/scene/`, typed nodes and links, four stories smoke-tested headlessly); CI green except Depot runner drop-outs documented on the PR. Next: the user's answers to the mobile-mode questions (§6b), the migration decisions in `docs/MIGRATION.md` §3, then M1 or phase 2. Once PR 0 lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
+_Resume: PR #14501 (draft, `claude/plugin-canvas-composite-objects-cb1372`) carries phase 7 — composite objects with constrained parts, DSL templates, in-place editing, the ortho link variant and the UML class conversion. CI was pending when it was opened and has not been chased. Next: the UML class story (the harness needs a node registry), then the deviations listed in phase 7. Uncommitted: none._
 
 ## Phase 0: audit + design
 
@@ -249,8 +249,14 @@ editable. This phase makes the second form the one tools use, and gives a part a
 - [x] **`react-ui-canvas`: Make object framing and shared style edits** (D3, D5).
 - [x] **`react-ui-canvas`: the `ortho` variant and the Variant selector** (D6, D7, D8).
 - [x] **`plugin-uml`: the class as a composite template** (D9).
-- [ ] **Verify**: package builds and tests, `pnpm format`, lint, and the Cards stories (`Default` and `Composite`)
-      rendered on a storybook served from this worktree on an alternate port.
+- [x] **Verify**: full repo build green; scene 86, diagram 297, react-ui-canvas 541, react-ui-canvas-editor 179 and
+      plugin-uml 9 tests pass; `pnpm format` and lint clean across the five packages. The Composite story was read
+      back from the DOM on a storybook served from this worktree on port 9010: at 288x192 and 384x288 the glyph is
+      30x30 at (10,10) in both, the footer 15px tall and 10px from the bottom in both, and the body grows 84px to
+      163px — the constraints, measured rather than eyeballed. The Variant selector shows for a link alone.
+- [ ] **Not visually verified: the UML class.** Its old story went with `ClassNodeView`, and `SceneEditorStory` takes
+      no node registry, so a plugin kind cannot be rendered through it. The class is covered by four unit tests
+      (`ClassNode.composite.test.ts`). Giving the harness a registry, and a class story with it, is the next step.
 
 ### Deviations and follow-ups
 
