@@ -59,7 +59,7 @@ export const nominalSize = (size: Size, cell: number = DEFAULT_CELL): Size => ({
  * new shape scales with the drawing's grid.
  */
 export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
-  rect: { width: 2, height: 1 },
+  rect: { width: 4, height: 2 },
   ellipse: { width: 2, height: 2 },
   cloud: { width: 3, height: 2 },
   polygon: { width: 2, height: 2 },
