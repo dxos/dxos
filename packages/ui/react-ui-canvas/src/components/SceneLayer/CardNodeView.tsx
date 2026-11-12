@@ -12,13 +12,32 @@
 // inherits its parts, sizing and ports.
 //
 
+import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
+import { OptionsLookupAnnotation, iconOptions } from '@dxos/react-ui-form';
 import * as Icon from '@dxos/react-ui/Icon';
+import { type NodeBase, nodeBase } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { type NodeViewProps } from '../../model/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
+
+/**
+ * The `icon` type's schema: a glyph and an optional caption. Declared here rather than in `@dxos/scene` because it
+ * is a type of the 2D editor, not of the scene model — the same place `image` is declared.
+ */
+export const IconNode = Schema.Struct({
+  type: Schema.Literal('icon'),
+  ...nodeBase,
+  /** A Phosphor name (`rocket`); the picker offers the whole catalogue. */
+  icon: Schema.optional(Schema.String.annotate({ title: 'Icon' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
+  /** A caption under the glyph. */
+  label: Schema.optional(Schema.String.annotate({ title: 'Label' })),
+});
+export type IconNode = Schema.Schema.Type<typeof IconNode>;
+
+export const isIconNode = (node: NodeBase): node is IconNode => node.type === 'icon';
 
 /** The icon name of a node that declares one; the full Phosphor set resolves at runtime (`useIconHref`). */
 export const iconOf = (node: NodeViewProps['node']): string | undefined =>

@@ -68,7 +68,8 @@ export const cardSpec: ElementKindSpec = {
   schema: CardNode,
   component: CardNodeView,
   create: ({ id, z, center, size }) => ({ type: 'card', id, z, center, size, label: 'Card' }),
-  defaultSize: { width: 236, height: 66 },
+  // Nominal units (one unit is the major grid cell, 48px): the deck's 236 x 66 card, give or take.
+  defaultSize: { width: 5, height: 1.5 },
   resizable: true,
   parts: [{ field: 'label' }],
 };

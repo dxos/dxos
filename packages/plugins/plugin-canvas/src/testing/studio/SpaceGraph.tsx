@@ -171,7 +171,8 @@ export const spaceGraphSpec: ElementKindSpec = {
   schema: SpaceGraphNode,
   component: SpaceGraphNodeView,
   create: ({ id, z, center, size }) => ({ type: 'space-graph', id, z, center, size, seed: 7 }),
-  defaultSize: { width: 392, height: 392 },
+  // Nominal units (one unit is the major grid cell, 48px): the deck's 392-unit circle, give or take.
+  defaultSize: { width: 8, height: 8 },
   resizable: true,
   minSize: { width: 120, height: 120 },
   // The frame is the inscribed circle, and the type draws everything it shows: no box, no fill, no border.

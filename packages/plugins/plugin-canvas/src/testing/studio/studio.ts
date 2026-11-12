@@ -135,13 +135,16 @@ export type StudioModel = Schema.Schema.Type<typeof StudioModel>;
 /** Reads a sidecar, so a drifted export fails here rather than halfway through a drawing. */
 export const parseStudioModel = (text: string): StudioModel => Schema.decodeUnknownSync(StudioModel)(JSON.parse(text));
 
-/** The deck's accent colours (`assets/deck/lib/deck.css`), by the custom property the model names. */
+/**
+ * The deck's tone names, by the custom property its sidecar writes (`assets/deck/lib/deck.css`). A card's `tone` is
+ * a name rather than a colour, so the field is a select and the value follows the mode.
+ */
 export const TONES: Record<string, string> = {
-  'var(--t-event)': '#d83eff',
-  'var(--t-message)': '#1fd58a',
-  'var(--t-file)': '#f2c14e',
-  'var(--t-trip)': '#2d6fff',
-  'var(--t-sheet)': '#ff7a45',
+  'var(--t-event)': 'event',
+  'var(--t-message)': 'message',
+  'var(--t-file)': 'file',
+  'var(--t-trip)': 'trip',
+  'var(--t-sheet)': 'sheet',
 };
 
 /**
@@ -163,6 +166,16 @@ const TEXT_SIZES: Record<string, number> = { 'heading': 20, 'caption': 15, 'labe
  * `model.subtitle`) for the heading to use.
  */
 const TITLE_OBJECT = 'title';
+
+/**
+ * The indexes of a strip's filled blocks. The sidecar keys them by index with the tone each one takes, which is the
+ * same tone on every slide; the element carries the indexes and takes the card's tone.
+ */
+const marksOf = (feed: StudioFeed): number[] =>
+  Object.keys(feed.marks ?? {})
+    .map(Number)
+    .filter(Number.isInteger)
+    .sort((left, right) => left - right);
 
 /** The element id of a card's box, which is how the bridge keys its node (`<object>/box`). */
 const boxOf = (key: string) => elementId(key, 'box');
@@ -192,7 +205,7 @@ const promoteCards = (content: ContentMap, model: StudioModel): void => {
         label: labelOf(record.node) ?? card.title,
         icon: card.icon,
         ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
-        ...(card.feed ? { feed: card.feed.n, marks: card.feed.marks ?? {} } : {}),
+        ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
         ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
         ...(card.body ? { body: card.body } : {}),
         ...(card.footer ? { footer: card.footer } : {}),

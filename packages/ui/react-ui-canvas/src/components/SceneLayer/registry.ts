@@ -28,7 +28,7 @@ import {
 
 import { type LinkRegistry, type NodeDefSpec, type NodeRegistry, createNodeRegistry } from '../../model/index.ts';
 import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
-import { CardNodeView, IconNodeView } from './CardNodeView.tsx';
+import { CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
 import {
   BoxNodeView,
   CloudNodeView,
@@ -74,7 +74,7 @@ export const cardPrototype: NodeDefSpec = {
  * An icon alone, drawn from the node's `icon` field, with an optional caption under it. Any Phosphor name works: the
  * icon registry fetches a symbol the sprite does not hold, so a type is not limited to the glyphs the UI draws.
  */
-export const iconPrototype: NodeDefSpec = {
+export const glyphPrototype: NodeDefSpec = {
   component: IconNodeView,
   parts: [{ field: 'label' }],
   defaultSize: { width: 1, height: 1 },
@@ -88,7 +88,9 @@ export const iconPrototype: NodeDefSpec = {
 export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
   box: boxPrototype,
   card: cardPrototype,
-  icon: iconPrototype,
+  // Not `icon`: a type may not name a prototype it shares a name with (`inherit` reads that as a cycle), and the
+  // type a person places is the `icon` below.
+  glyph: glyphPrototype,
 };
 
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
@@ -241,6 +243,14 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     minSize: { width: 4, height: 4 },
     palette: false,
     bare: true,
+  },
+  icon: {
+    extends: 'glyph',
+    name: 'Icon',
+    icon: 'ph--smiley--regular',
+    key: 'G',
+    schema: IconNode,
+    create: (props) => ({ type: 'icon', ...props, icon: 'star' }),
   },
   diagram: {
     name: 'Diagram shape',

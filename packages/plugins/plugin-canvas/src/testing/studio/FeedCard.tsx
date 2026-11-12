@@ -21,32 +21,45 @@ import { CardFrame, type ElementKindSpec, type NodeViewProps, TextPart } from '@
 import { OptionsLookupAnnotation, iconOptions } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
-/**
- * A tone as a CSS value. The deck's own names resolve to theme tokens (`theme.css`), so they follow the mode;
- * anything else is taken as a colour of its own, which is how a `var(--t-trip)` from a sidecar still works.
- */
 /** A style that also sets custom properties, which `CSSProperties` alone does not allow. */
 export type Styled = CSSProperties & Record<`--${string}`, string>;
 
-export const toneValue = (tone: string | undefined): string | undefined =>
-  tone === undefined ? undefined : tone === 'accent' ? 'var(--sd-accent)' : tone === 'ink' ? 'var(--sd-fg)' : tone;
+/**
+ * The deck's tones by name: its two emphases and the five object types (`deck.css` `--t-*`). Names rather than CSS,
+ * so the field is a select rather than free text and every value resolves to a token that follows the mode — a
+ * sidecar's `var(--t-trip)` is mapped to `trip` when a slide is loaded.
+ */
+export const TONES = ['accent', 'ink', 'event', 'message', 'file', 'trip', 'sheet'] as const;
 
-/** A feed block that is marked, by index, with the tone it takes; the deck keys these as strings, as JSON does. */
-const Marks = Schema.Record(Schema.String, Schema.String);
+export type Tone = (typeof TONES)[number];
+
+const TONE_TOKENS: Record<Tone, string> = {
+  accent: 'var(--sd-accent)',
+  ink: 'var(--sd-fg)',
+  event: 'var(--sd-t-event)',
+  message: 'var(--sd-t-message)',
+  file: 'var(--sd-t-file)',
+  trip: 'var(--sd-t-trip)',
+  sheet: 'var(--sd-t-sheet)',
+};
+
+/** The token a tone draws in; an unknown name draws nothing rather than an unresolved colour. */
+export const toneValue = (tone: string | undefined): string | undefined =>
+  tone === undefined ? undefined : TONE_TOKENS[tone as Tone];
 
 export const feedCardFields = {
   /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
   label: Schema.String,
   /** A Phosphor icon name as the deck writes it (`chat-circle-dots`), without the `ph--…--regular` wrapping. */
   icon: Schema.optional(Schema.String.annotate({ title: 'Icon' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
-  /** An accent drawn as the card's outline; `ink` is the agents' dark edge. */
-  tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
+  /** An accent drawn as the card's outline and its icon; `ink` is the agents' dark edge. */
+  tone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Tone' })),
   /** How many blocks the feed strip has. */
   feed: Schema.optional(Schema.Number.annotate({ title: 'Feed blocks' })),
   /** A mono caption to the left of the strip (`feed`, `task`). */
   feedLabel: Schema.optional(Schema.String.annotate({ title: 'Feed label' })),
-  /** Which blocks are coloured, by index. */
-  marks: Schema.optional(Marks),
+  /** Which blocks of the strip are filled, by 0-based index; a filled block takes the deck's accent. */
+  marks: Schema.optional(Schema.Array(Schema.Number).annotate({ title: 'Marked blocks' })),
   body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
   footer: Schema.optional(Schema.String.annotate({ title: 'Footer' })),
 };
@@ -65,36 +78,38 @@ const isFeedCard = (node: NodeViewProps['node']): node is NodeViewProps['node'] 
 type FeedStripProps = {
   n: number;
   label?: string;
-  marks?: Record<string, string>;
+  /** The 0-based indexes of the filled blocks; a filled block takes the accent, whatever the card's tone. */
+  marks?: readonly number[];
   editing?: NodeViewProps['editing'];
 };
 
-const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => (
-  <div className='flex items-center shrink-0' style={{ gap: 5 }} data-testid='feed-strip'>
-    {label !== undefined && (
-      <TextPart
-        part='feedLabel'
-        text={label}
-        editing={editing}
-        classNames='studio-card-label font-mono shrink-0 text-[12px] me-[2px]'
-      >
-        {label}
-      </TextPart>
-    )}
-    {Array.from({ length: n }, (_, index) => {
-      const mark = toneValue(marks?.[String(index)]);
-      const style: Styled = { width: 17, height: 17, ...(mark ? { '--sd-mark': mark } : {}) };
-      return (
-        <i
-          key={index}
-          data-marked={mark ? true : undefined}
-          className='studio-feed-block block shrink-0 rounded-[3px]'
-          style={{ width: 17, height: 17, ...(mark ? { '--sd-mark': mark } : ({} as Styled)) } satisfies Styled}
-        />
-      );
-    })}
-  </div>
-);
+const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => {
+  const filled = new Set(marks ?? []);
+  return (
+    <div className='flex items-center shrink-0' style={{ gap: 5 }} data-testid='feed-strip'>
+      {label !== undefined && (
+        <TextPart
+          part='feedLabel'
+          text={label}
+          editing={editing}
+          classNames='studio-card-label font-mono shrink-0 text-[12px] me-[2px]'
+        >
+          {label}
+        </TextPart>
+      )}
+      {Array.from({ length: n }, (_, index) => {
+        return (
+          <i
+            key={index}
+            data-marked={filled.has(index) ? true : undefined}
+            className='studio-feed-block block shrink-0 rounded-[3px]'
+            style={{ width: 17, height: 17 }}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
   if (!isFeedCard(node)) {
@@ -126,8 +141,9 @@ export const feedCardSpec: ElementKindSpec = {
   key: 'F',
   schema: FeedCardNode,
   component: FeedCardNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'feed-card', id, z, center, size, label: 'Feed', feed: 9 }),
-  defaultSize: { width: 300, height: 138 },
+  create: ({ id, z, center, size }) => ({ type: 'feed-card', id, z, center, size, label: 'Feed', feed: 9, marks: [] }),
+  // Nominal units (one unit is the major grid cell, 48px): the deck's 300 x 138 card, give or take.
+  defaultSize: { width: 6, height: 3 },
   // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so
   // Enter on a selected card edits its title; Tab moves on through the strip's caption, the body and the footer.
   parts: [{ field: 'label' }, { field: 'feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],
