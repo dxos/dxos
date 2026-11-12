@@ -63,7 +63,7 @@ export const TOPICS: Topic[] = [
     id: 'tile',
     label: 'TILE',
     href: '/docs/tile/overview/',
-    description: 'UI components and the design system.',
+    description: 'Design system and UI components.',
     logotype: inherit(tile),
   },
 ];
