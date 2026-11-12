@@ -13,6 +13,7 @@ import { iconOf } from '@dxos/react-ui-canvas';
 import { ROOT_VIEW_ID, isLinkRecord, isNodeRecord, readViews } from '../../model/content.ts';
 import {
   STUDIO_CANVAS,
+  STUDIO_GRID,
   type StudioModel,
   type StudioReport,
   findLink,
@@ -49,6 +50,40 @@ describe('studio deck slides on a canvas', () => {
     const { source } = slide(name);
     const { problems } = Dsl.parse(source);
     expect(problems.map((problem) => problem.message)).toEqual([]);
+  });
+
+  test.for(SLIDES)('%s lands every shape on the grid the drawing carries', (name, { expect }) => {
+    // The deck was laid out by eye, so the import rounds its geometry to the pitch the drawing carries. Edges are
+    // rounded, not centres and sizes, so a shape that was flush with another still is; and the shift is bounded by
+    // half a cell, which is what keeps a slide looking like the slide.
+    const { source, model } = slide(name);
+    const [before, after]: ContentMap[] = [{}, {}];
+    seedStudioSlide(source, model, { grid: 1 })(before);
+    seedStudioSlide(source, model)(after);
+    const nodes = (content: ContentMap) =>
+      Object.entries(content).flatMap(([key, record]) => (isNodeRecord(record) ? [[key, record.node] as const] : []));
+    const was = new Map(nodes(before));
+    for (const [key, node] of nodes(after)) {
+      for (const edge of [
+        node.center.x - node.size.width / 2,
+        node.center.y - node.size.height / 2,
+        node.center.x + node.size.width / 2,
+        node.center.y + node.size.height / 2,
+      ]) {
+        // A text's box is measured from its own content, so only its top-left is on the grid.
+        const derived = node.style?.fill === false && node.style?.border === false;
+        expect({ key, off: derived ? 0 : edge % STUDIO_GRID }).toEqual({ key, off: 0 });
+      }
+      const original = was.get(key);
+      expect(original).toBeDefined();
+      for (const axis of ['x', 'y'] as const) {
+        expect({ key, axis, far: Math.abs(node.center[axis] - (original?.center[axis] ?? 0)) > STUDIO_GRID }).toEqual({
+          key,
+          axis,
+          far: false,
+        });
+      }
+    }
   });
 
   test.for(SLIDES)('%s builds every card, frame and connector', (name, { expect }) => {

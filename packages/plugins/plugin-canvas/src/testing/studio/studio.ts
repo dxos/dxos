@@ -557,19 +557,73 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
  * the "Studio soft theme". No `theme` id, so the canvas follows the app's mode; a story pins one with `theme`
  * (`neu-light` / `neu-dark`) when it wants a drawing in a mode of its own.
  */
+/**
+ * The pitch the studio drawings sit on. The deck was laid out by eye — the coordinates of a slide share no common
+ * factor, so no scale puts it on a grid and the drawing has to take the pitch its own numbers are nearest. Measured
+ * over the four slides' edges, 8 moves the average edge 1.6–2.4px and none more than 4, and an 8px cell is drawn
+ * (so snapped to) at any zoom above 0.75, which a slide is read at. A slide that a snap breaks takes its own pitch
+ * rather than being hand-placed: that is what the layout's `grid` is for.
+ */
+export const STUDIO_GRID = 8;
+
 export const STUDIO_CANVAS = {
   styleSet: 'neu',
   background: 'neu',
+  grid: STUDIO_GRID,
   // The Neu ground draws no grid of its own ("the shapes' relief is the only texture"), which leaves a drawing with
   // nothing to place against; `backgroundGrid` overrides the background's own.
   backgroundGrid: 'dots',
 } as const;
 
+/** A value on the drawing's grid. */
+const onGrid = (value: number, grid: number): number => Math.round(value / grid) * grid;
+
+/**
+ * Puts every shape on the drawing's grid: the edges are rounded, not the centre and the size, so two shapes that
+ * were flush stay flush and a frame that enclosed its cards still encloses them. A text's box is measured from its
+ * own content rather than authored (`styleText` derives the height from the font size), so only its top-left moves.
+ *
+ * Runs before the links are routed, since a route is taken from the outlines it meets and `diagramRoute` drops one
+ * whose ends have drifted past `ROUTE_SLACK`.
+ */
+const snapToGrid = (content: ContentMap, grid: number): number => {
+  let moved = 0;
+  for (const [key, record] of Object.entries(content)) {
+    if (!isNodeRecord(record)) {
+      continue;
+    }
+    const { center, size, style } = record.node;
+    const derived = style?.fill === false && style?.border === false;
+    const [left, top] = [onGrid(center.x - size.width / 2, grid), onGrid(center.y - size.height / 2, grid)];
+    // A shape of no width or height would vanish; the smallest it rounds to is one cell.
+    const [width, height] = derived
+      ? [size.width, size.height]
+      : [
+          Math.max(grid, onGrid(center.x + size.width / 2, grid) - left),
+          Math.max(grid, onGrid(center.y + size.height / 2, grid) - top),
+        ];
+    const next = { x: left + width / 2, y: top + height / 2 };
+    if (next.x === center.x && next.y === center.y && width === size.width && height === size.height) {
+      continue;
+    }
+    content[key] = { ...record, node: { ...record.node, center: next, size: { width, height } } };
+    moved++;
+  }
+  return moved;
+};
+
 /** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
 export type ComponentMode = 'kind' | 'generator';
 
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
-export type StudioReport = { problems: number; cards: number; routed: number; components: number };
+export type StudioReport = {
+  problems: number;
+  cards: number;
+  /** Shapes the grid snap moved. */
+  snapped: number;
+  routed: number;
+  components: number;
+};
 
 /** Whether a command names the slide's title block, which the presenter's heading carries ({@link TITLE_OBJECT}). */
 const isTitle = (command: Scene.Command): boolean =>
@@ -585,11 +639,14 @@ export const seedStudioSlide =
     model: StudioModel,
     {
       components = 'kind',
+      grid = STUDIO_GRID,
       kinds = new Set(['space-graph']),
       generators = {},
       report,
     }: {
       components?: ComponentMode;
+      /** The pitch the slide's geometry is rounded to, which is the drawing's own grid. */
+      grid?: number;
       /** The component kinds the host has registered; one it has not is left as the DSL's ring. */
       kinds?: ReadonlySet<string>;
       generators?: Generators;
@@ -607,6 +664,7 @@ export const seedStudioSlide =
     promoteCards(content, model);
     styleText(content, model);
     styleFrames(content, model);
+    const snapped = snapToGrid(content, grid);
     const routed = routeLinks(content, model, components);
     const placed =
       components === 'generator'
@@ -615,6 +673,7 @@ export const seedStudioSlide =
     report?.({
       problems: problems.length,
       cards: Object.keys(model.nodes).length,
+      snapped,
       routed,
       components: placed,
     });
