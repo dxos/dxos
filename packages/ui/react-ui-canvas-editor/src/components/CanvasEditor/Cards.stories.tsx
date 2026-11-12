@@ -16,10 +16,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { type IconNode, type RenderList2D, fromRenderLists2D } from '@dxos/react-ui-canvas';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { type Scene } from '@dxos/scene';
+import { type InstanceNode, type Node, type RectNode, type Scene } from '@dxos/scene';
 
 import { FullEditor, SceneEditorStory } from '../../testing/index.ts';
 
@@ -74,100 +75,103 @@ const DOCUMENT: Scene.SceneDocument = (() => {
 })();
 
 //
-// The same card as a composite object: a scene marked `kind: 'composite'`, placed by `instance` nodes.
+// The same card as a composite object: a scene marked `kind: 'composite'`, placed by `instance` nodes. The document
+// is written through `fromRenderLists2D` rather than by hand, because an instance names its definition through a
+// model `Object2D` (`parts`), not a field of its own — writing the element by hand silently makes a node that is not
+// an instance, with no parts to expand.
+//
+// The parts are laid out as `CardFrame` lays out the kind: 12px padding, a 24-unit header, the body under it, and a
+// footer on a hairline at the bottom.
 //
 
-const CARD: Scene.Element2D[] = [
-  {
-    id: 'frame',
-    type: 'rect',
-    z: 'a0',
-    center: { x: 0, y: 0 },
-    size: { width: 288, height: 168 },
-    props: { canvas: { style: { rounded: true } } },
-  },
-  {
-    id: 'icon',
-    type: 'icon',
-    z: 'a1',
-    center: { x: -120, y: -60 },
-    size: { width: 24, height: 24 },
-    props: { canvas: { icon: { type: 'command' } } },
-  },
-  {
-    id: 'title',
-    type: 'rect',
-    z: 'a2',
-    center: { x: -6, y: -60 },
-    size: { width: 180, height: 24 },
-    props: {
-      canvas: {
-        label: 'Composite',
-        style: { fill: false, border: false, alignHorizontal: 'left', fontSize: 18 },
-      },
-    },
-  },
-  {
-    id: 'body',
-    type: 'note',
-    z: 'a3',
-    center: { x: 0, y: 0 },
-    size: { width: 240, height: 48 },
-    props: { canvas: { text: 'A frame, an icon and three texts, grouped into an object.', style: { fontSize: 14 } } },
-  },
-  {
-    id: 'footer',
-    type: 'rect',
-    z: 'a4',
-    center: { x: 0, y: 48 },
-    size: { width: 240, height: 24 },
-    props: {
-      canvas: {
-        label: 'composite · five parts',
-        style: { fill: false, border: false, alignHorizontal: 'left', fontSize: 12 },
-      },
-    },
-  },
-];
+const CARD_SIZE = { width: 288, height: 168 };
 
-const instanceOf = (id: string, z: string, [x, y]: [number, number], overrides?: object): Scene.Element2D => ({
+const text = (id: string, z: string, box: [number, number, number, number], label: string, size: number): RectNode => ({
   id,
-  type: 'instance',
+  type: 'rect',
   z,
-  center: { x, y },
-  size: { width: 288, height: 168 },
-  props: { canvas: { composite: 'card', ...(overrides ? { overrides } : {}) } },
+  center: { x: box[0] + box[2] / 2, y: box[1] + box[3] / 2 },
+  size: { width: box[2], height: box[3] },
+  label,
+  style: { fill: false, border: false, alignHorizontal: 'left', alignVertical: 'middle', fontSize: size },
 });
 
-const COMPOSITE: Scene.SceneDocument = {
-  scenes: [{ id: 'root', dim: '2d', layout: 'board', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
-  layouts: [
-    {
-      id: 'board',
-      dim: '2d',
-      name: 'Board',
-      elements: Object.fromEntries(
-        [
-          instanceOf('plain', 'b0', [-168, 0]),
-          // One instance overriding parts of the definition: a blue glyph and its own title.
-          instanceOf('toned', 'b1', [168, 0], {
-            icon: { style: { hue: 'blue' } },
-            title: { label: 'Overridden' },
-            footer: { label: 'composite · one override' },
-          }),
-        ].map((element) => [element.id, element]),
-      ),
-    },
-    {
-      id: 'card',
-      dim: '2d',
-      name: 'Card',
-      kind: 'composite',
-      elements: Object.fromEntries(CARD.map((element) => [element.id, element])),
-    },
-  ],
-  models: [],
+const glyph = (id: string, z: string, center: { x: number; y: number }, type: string): IconNode => ({
+  id,
+  type: 'icon',
+  z,
+  center,
+  size: { width: 24, height: 24 },
+  icon: { type },
+});
+
+/** The definition: a frame, a glyph, a title, a body, a hairline and a footer, on the 12px grid. */
+const CARD: RenderList2D = {
+  id: 'card',
+  name: 'Card',
+  kind: 'composite',
+  links: {},
+  nodes: Object.fromEntries(
+    (
+      [
+        {
+          id: 'frame',
+          type: 'rect' as const,
+          z: 'a0',
+          center: { x: 0, y: 0 },
+          size: CARD_SIZE,
+          style: { rounded: true },
+        },
+        glyph('icon', 'a1', { x: -120, y: -60 }, 'command'),
+        text('title', 'a2', [-84, -72, 192, 24], 'Composite', 18),
+        text('body', 'a3', [-132, -36, 264, 48], 'A frame, an icon and three texts, grouped into an object.', 14),
+        {
+          id: 'rule',
+          type: 'rect' as const,
+          z: 'a4',
+          center: { x: 0, y: 36 },
+          size: { width: 264, height: 1 },
+          style: { hue: 'neutral', fill: true, border: false },
+        },
+        text('footer', 'a5', [-132, 48, 264, 24], 'composite · six parts', 12),
+      ] satisfies Node[]
+    ).map((node) => [node.id, node]),
+  ),
 };
+
+const instanceOf = (
+  id: string,
+  z: string,
+  [x, y]: [number, number],
+  overrides?: InstanceNode['overrides'],
+): InstanceNode => ({
+  type: 'instance',
+  id,
+  z,
+  center: { x, y },
+  size: CARD_SIZE,
+  composite: 'card',
+  ...(overrides ? { overrides } : {}),
+});
+
+const BOARD: RenderList2D = {
+  id: 'board',
+  name: 'Board',
+  links: {},
+  nodes: Object.fromEntries(
+    [
+      instanceOf('plain', 'b0', [-168, 0]),
+      // One instance overriding parts of the definition: a blue glyph and two of its texts.
+      instanceOf('toned', 'b1', [168, 0], {
+        icon: { style: { hue: 'blue' } },
+        title: { label: 'Overridden' },
+        footer: { label: 'composite · one override' },
+      }),
+    ].map((node) => [node.id, node]),
+  ),
+};
+
+const COMPOSITE: Scene.SceneDocument = fromRenderLists2D([BOARD, CARD], { root: 'board' });
 
 const DefaultStory = () => (
   <SceneEditorStory document={DOCUMENT} docked>
