@@ -5,20 +5,18 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ThemeMode, between, latticeGrid } from '@dxos/react-ui-canvas';
+import { type ThemeMode, between, gridPitch, moveWrites } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import {
   DEFAULT_GRID,
   type Layer,
-  MAJOR_GRID_RATIO,
   type NamedStyle,
   type NamedStyle2D,
   type NamedStyle3D,
   type Scene,
   findLayout,
-  resolveLayout,
 } from '@dxos/scene';
 
 import {
@@ -49,13 +47,12 @@ import {
   useSceneTools,
 } from './aspects/index.ts';
 import {
-  DEFAULT_LATTICE,
   type DrawingValues,
   drawingOverrides,
+  drawingSaves,
   drawingSchema,
-  drawingWrites,
   latticeGutterType,
-  latticeValues,
+  latticeInForm,
 } from './drawing-form.ts';
 import {
   duplicateObject,
@@ -65,6 +62,7 @@ import {
   movedLayers,
   objectEntries,
   restackIntent,
+  selectedElement,
 } from './scene-rows.ts';
 
 const NO_LAYERS = Atom.make<readonly Layer[]>([]);
@@ -124,13 +122,13 @@ export const PropertiesSection = () => {
   // A form over a whole selection is given the first element; any other shows only for one.
   const id =
     selection.length === 1 || (config.propertyFormSelection && selection.length > 0) ? selection[0] : undefined;
-  const element = useMemo(
-    () => (record && id !== undefined && record.elements[id] ? resolveLayout(document, record)[id] : undefined),
+  const selected = useMemo(
+    () => (record && id !== undefined ? selectedElement(document, record, id) : undefined),
     [document, record, id],
   );
   const layers = useMemo(() => (record ? layersOf(record) : []), [record]);
   const Form = config.propertyForm;
-  if (!element || layout === undefined) {
+  if (!selected || layout === undefined) {
     return propertiesShown({ docked, selected: false }) === 'empty' ? <PropertiesEmpty /> : null;
   }
   return (
@@ -138,10 +136,10 @@ export const PropertiesSection = () => {
       {config.propertyInfo?.({ face })}
       <LayersContext.Provider value={layers}>
         <Form
-          key={element.id}
-          element={element}
+          key={selected.element.id}
+          element={selected.element}
           readonly={readonly}
-          onIntents={(intents) => intents.length > 0 && commands.intent(layout, { kind: 'batch', intents })}
+          onIntents={(intents) => intents.length > 0 && commands.intent(selected.layout, { kind: 'batch', intents })}
         />
       </LayersContext.Provider>
     </InspectorSection>
@@ -178,6 +176,25 @@ export const ViewsSection = () => {
             : ({ container, element, target, position }) => {
                 const layout = findLayout(document, container);
                 layout && commands.intent(container, restackIntent(layout, element, target, position));
+              }
+        }
+        // Hulls are the 2D editor's: a row joins or leaves one as its shape would on the canvas, in one step.
+        onMove={
+          readonly || config.dim !== '2d'
+            ? undefined
+            : (move) => {
+                const writes = moveWrites(document, move, record);
+                const model = findLayout(document, move.scene)?.model;
+                writes.length > 0 &&
+                  commands.transaction(() => {
+                    for (const write of writes) {
+                      if (write.kind === 'layout') {
+                        commands.intent(write.layout, write.intent);
+                      } else if (model !== undefined) {
+                        commands.modelIntent({ kind: 'define', model, object: write.object });
+                      }
+                    }
+                  });
               }
         }
       />
@@ -448,24 +465,31 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
 export const DrawingSection = () => {
   const { atoms, commands } = useSceneDocument('SceneEditor.Drawing');
   const readonly = useAtomValue(atoms.readonly);
+  const document = useAtomValue(atoms.document);
   const layout = useAtomValue(atoms.layout);
   const record = useOpenLayout('SceneEditor.Drawing');
   const drawing = record?.dim === '2d' ? record : undefined;
-  const values = useMemo(
-    (): DrawingValues => ({
-      // The pitch in force, so the field is never blank: a layout without one draws on its lattice's grid or the default.
-      grid: drawing?.grid ?? ((drawing?.lattice && latticeGrid(drawing.lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID),
-      lattice: drawing?.lattice !== undefined,
-      ...latticeValues(drawing?.lattice ?? DEFAULT_LATTICE),
-    }),
-    [drawing],
-  );
+  // The lattice each layout last had while this editor has been open: a layout off its lattice stores none.
+  const lattices = useRef(new Map<string, Scene.Lattice>());
+  useEffect(() => {
+    layout !== undefined && drawing?.lattice && lattices.current.set(layout, drawing.lattice);
+  }, [layout, drawing?.lattice]);
+  const values = useMemo((): DrawingValues => {
+    // The pitch in force, so the field is never blank: a layout without one draws on its lattice's grid or the default.
+    const grid = drawing ? gridPitch(drawing) : DEFAULT_GRID;
+    const last = layout === undefined ? undefined : lattices.current.get(layout);
+    return { grid, ...latticeInForm(drawing?.lattice, last, grid) };
+  }, [drawing, layout]);
   const overrides = useMemo(() => drawingOverrides({ lattice: values.lattice === true }), [values.lattice]);
   const onSave = (next: DrawingValues) => {
-    const intents = drawingWrites(values, next);
-    layout !== undefined &&
-      intents.length > 0 &&
-      commands.intent(layout, intents.length === 1 ? intents[0] : { kind: 'batch', intents });
+    const saves = layout === undefined ? [] : drawingSaves(document, layout, values, next);
+    // A lattice that changes size moves the shapes on it, a hull's in its own layout: one step to undo.
+    saves.length > 0 &&
+      commands.transaction(() => {
+        for (const save of saves) {
+          commands.intent(save.layout, save.intent);
+        }
+      });
   };
   // Only a 2D layout has a grid and a lattice; a 3D scene's drawing has nothing of its own to show.
   if (!drawing) {

@@ -444,8 +444,8 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
 - Tests: `pnpm --filter <pkg> exec vitest run --project=node <file>`; typecheck `npx tsc --noEmit -p tsconfig.json` in
   the package (rebuild a dependency with `moon run <pkg>:build` when a consumer reads stale dist); lint `npx oxlint`;
   format `npx oxfmt` before every commit; commit by pathspec.
-- Storybook on :9009 is shared and serves this worktree; never start a second one; restart it (by PID from
-  `lsof -ti :9009 -sTCP:LISTEN`, `moon run storybook-react:serve-nodeps`) after deleting or renaming story files.
+- Storybook: the session's own server on a free port (`AGENTS.md`, "Long-running servers"); restart it (by the PID
+  on that port, `moon run storybook-react:serve-nodeps -- --port=<port>`) after deleting or renaming story files.
 - Never touch `tools/autocue/showcase/echo3d/*`.
 
 ## Where the expectations don't hold

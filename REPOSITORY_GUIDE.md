@@ -186,9 +186,11 @@ bash tools/storybook-react/diagnose.sh --watch    # capture whenever it next wed
 ```
 
 **Do not restart before capturing** — that is the whole difficulty. And check for
-a second server first: an orphaned keeper daemon from a previous session was found
-restarting storybook on another port for five days, doubling the watcher and
-memory load against the same repo.
+an orphaned server first: each session runs its own storybook on its own port
+(`AGENTS.md`, "Long-running servers"), so several live ones are expected, but a
+keeper daemon left by a finished session was once found restarting storybook on
+another port for five days, adding a watcher and its memory to the same repo for
+nobody.
 
 ### Fast dev mode (`serve-fast`)
 

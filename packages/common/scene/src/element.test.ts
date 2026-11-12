@@ -10,12 +10,21 @@ describe('element base', () => {
   test('the scene element base has every react-ui-canvas node and link field', () => {
     expect(Object.keys(nodeBase).sort()).toEqual(
       [
+        'bind',
         'center',
         'class',
+        'composite',
+        'constrain',
         'exposed',
+        'follows',
+        'grow',
+        'hidden',
         'id',
         'layer',
         'locked',
+        'optional',
+        'overrides',
+        'parent',
         'ports',
         'portsPerSide',
         'rotation',
@@ -25,7 +34,20 @@ describe('element base', () => {
       ].sort(),
     );
     expect(Object.keys(linkBase).sort()).toEqual(
-      ['class', 'connector', 'ends', 'id', 'layer', 'locked', 'source', 'style', 'target', 'text', 'z'].sort(),
+      [
+        'class',
+        'connector',
+        'constrain',
+        'ends',
+        'id',
+        'layer',
+        'locked',
+        'source',
+        'style',
+        'target',
+        'text',
+        'z',
+      ].sort(),
     );
     expect(Object.keys(boxFields)).toEqual(['label']);
   });

@@ -23,6 +23,7 @@ import {
   type Port,
   type SplineLink,
   endpointNode,
+  isInstanceNode,
   isPointEndpoint,
   isPolylineNode,
   isViewNode,
@@ -89,6 +90,7 @@ import {
   topOfView,
   updateElement,
 } from '../../utils/index.ts';
+import { templateComposite } from '../../viewport2d/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
 import { type EditMode } from './useEditMode.ts';
@@ -367,9 +369,11 @@ export const usePointerMachine = ({
         }
       } else if (currentTool.kind === 'link') {
         // A link tool on empty canvas draws a free-ended link (decision 3); dropping on a node attaches that end.
+        // The free end starts on the grid, as it lands on it, so the line is drawn from where it will be.
         if (capabilities.link) {
+          const from = { x: snap(point.x), y: snap(point.y) };
           startDrag(
-            { kind: 'link', type: currentTool.type, source: { point }, from: point, fromSide: 'e', to: point },
+            { kind: 'link', type: currentTool.type, source: { point: from }, from, fromSide: 'e', to: from },
             event,
           );
         }
@@ -823,12 +827,13 @@ export const usePointerMachine = ({
         }
         case 'link': {
           // Everything the drop makes is one undo step, so the node it creates and the link to it go together.
-          // The band follows the pointer exactly; it snaps as it lands (`settle`). A free source keeps
-          // facing the far end.
+          // The far end is drawn where it will land: on the port or node under the pointer, else on the grid, so the
+          // pointer pulls it from one to the next rather than carrying it between them. A free source keeps facing it.
           const point = toScene(event);
           const target = linkTarget(point, endpointNode(current.source), 'in');
-          const fromSide = isPointEndpoint(current.source) ? sideToward(current.from, point) : current.fromSide;
-          setDrag({ ...current, to: point, fromSide, target });
+          const to = target ? point : { x: snap(point.x), y: snap(point.y) };
+          const fromSide = isPointEndpoint(current.source) ? sideToward(current.from, to) : current.fromSide;
+          setDrag({ ...current, to, fromSide, target });
           break;
         }
         case 'vertices': {
@@ -859,7 +864,8 @@ export const usePointerMachine = ({
           const link = scene.links[current.id];
           const other = link ? endpointNode(current.end === 'source' ? link.target : link.source) : undefined;
           const target = linkTarget(point, other, current.end === 'source' ? 'out' : 'in');
-          setDrag({ ...current, to: point, target });
+          // As a new link's far end: where it will land, on what is under the pointer or else on the grid.
+          setDrag({ ...current, to: target ? point : { x: snap(point.x), y: snap(point.y) }, target });
           break;
         }
       }
@@ -964,6 +970,14 @@ export const usePointerMachine = ({
    */
   const nodeEdit = useCallback(
     (node: Node): SceneEdit => {
+      // A tool's first shape brings its template into the drawing; every later one is another instance of that same
+      // composite, which is what makes a style edit on one reach them all.
+      if (isInstanceNode(node) && !registry.get(store.views)[node.composite]) {
+        const definition = templateComposite(nodeRegistry, node.composite);
+        if (definition) {
+          registry.set(store.views, { ...registry.get(store.views), [definition.id]: definition });
+        }
+      }
       if (isViewNode(node)) {
         registry.set(store.views, {
           ...registry.get(store.views),

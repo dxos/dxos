@@ -13,6 +13,7 @@ import {
   DiagramNode,
   EllipseNode,
   GeneratorNode,
+  HullNode,
   InstanceNode,
   MAJOR_GRID_RATIO,
   type NodeType,
@@ -24,12 +25,20 @@ import {
   type Size,
   ViewNode,
   isCloudNode,
+  isHullNode,
   isPolygonNode,
   isPolylineNode,
 } from '@dxos/scene';
 
-import { type LinkRegistry, type NodeDefSpec, type NodeRegistry, createNodeRegistry } from '../../model/index.ts';
-import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
+import {
+  type LinkRegistry,
+  type NodeDefSpec,
+  type NodeRegistry,
+  createNodeRegistry,
+  templateCompositeId,
+} from '../../model/index.ts';
+import { HULL_STYLE, NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
+import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
 import {
   BoxNodeView,
@@ -37,6 +46,7 @@ import {
   DiagramNodeView,
   EllipseNodeView,
   GeneratorNodeView,
+  HullNodeView,
   InstanceNodeView,
   NoteNodeView,
   PathNodeView,
@@ -48,6 +58,14 @@ import {
 // Every minimum is a whole number of the finest grid level (a quarter of the minor cell), so a shape resized to its
 // floor still has its edges on a line the canvas draws.
 const MIN_SIZE: Size = { width: 48, height: 24 };
+
+/** A hull's border before anything is inside it: its own frame. */
+const UNIT_SQUARE = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+];
 
 /**
  * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
@@ -92,10 +110,28 @@ export const iconPrototype: NodeDefSpec = {
   portsPerSide: 1,
 };
 
+/**
+ * A tool whose shape is a composite object: it places an Instance of the template the type declares, which the
+ * editor registers on the first drop and every later one reuses. A type extending this writes `template` and nothing
+ * else about how it draws — the composite's own parts say that.
+ */
+export const objectPrototype: NodeDefSpec = {
+  schema: InstanceNode,
+  component: InstanceNodeView,
+  defaultSize: NOMINAL_SIZES.instance,
+  resizable: true,
+  minSize: { width: 48, height: 24 },
+  // Double-click edits the Object's parts in place.
+  openable: true,
+  // The composite's own parts draw everything; a frame around them would be a second shape.
+  bare: true,
+};
+
 export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
   box: boxPrototype,
   card: cardPrototype,
   icon: iconPrototype,
+  object: objectPrototype,
 };
 
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
@@ -186,6 +222,21 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: { width: 12, height: 12 },
   },
+  // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
+  hull: {
+    name: 'Hull',
+    icon: 'ph--bounding-box--regular',
+    key: 'B',
+    schema: HullNode,
+    component: HullNodeView,
+    create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: HULL_STYLE }),
+    defaultSize: NOMINAL_SIZES.hull,
+    silhouette: (node, inset, radius) =>
+      polylinePath(node.size, (isHullNode(node) && node.points) || UNIT_SQUARE, { inset, closed: true, radius }),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: false,
+  },
   note: {
     name: 'Text',
     icon: 'ph--text-t--regular',
@@ -254,21 +305,28 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     bare: true,
   },
   card: {
-    extends: 'card',
+    extends: 'object',
     name: 'Card',
-    icon: 'ph--cards--regular',
+    icon: 'ph--article--regular',
     key: 'D',
     schema: CardNode,
-    // Placeholder regions, so a new card reads as a card before it is edited (as a new UML class does): the frame
-    // draws a region only where the node carries its field.
+    // A composite object (`card-template.ts`), not a shape a view paints: the canvas places an Instance of it and
+    // binds each region to the card's own field, so the regions are edited in place and the data stays typed.
+    template: CARD_TEMPLATE,
+    // Placeholder regions, so a new card reads as a card before it is edited (as a new UML class does).
     create: (props) => ({
       type: 'card',
       ...props,
+      composite: templateCompositeId('card'),
       icon: { type: 'command' },
       label: 'Card',
       body: 'Body',
       footer: 'Footer',
     }),
+    defaultSize: cardPrototype.defaultSize,
+    resizable: true,
+    minSize: cardPrototype.minSize,
+    parts: cardPrototype.parts,
   },
   icon: {
     extends: 'icon',
@@ -297,10 +355,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
 
 export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
 
-// The palette lists link types in this order, so the default (smart) leads.
+/**
+ * The link variants, in the order the palette and the Properties panel list them, the default (elbow) first. A link's
+ * stored `type` is the variant: `elbow` leaves each port along its normal and joins with one corner, `straight` runs
+ * between the ends as they are, and `orthogonal` turns at right angles.
+ */
 export const defaultLinkRegistry: LinkRegistry = {
-  smart: { type: 'smart', name: 'Smart line', icon: 'ph--flow-arrow--regular', key: 'O' },
-  line: { type: 'line', name: 'Line', icon: 'ph--line-segment--regular', key: 'L' },
+  smart: { type: 'smart', name: 'Elbow', icon: 'ph--flow-arrow--regular', key: 'O' },
+  line: { type: 'line', name: 'Straight', icon: 'ph--line-segment--regular', key: 'L' },
+  ortho: { type: 'ortho', name: 'Orthogonal', icon: 'ph--arrow-elbow-right-up--regular', key: 'H' },
   curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
   spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
 };

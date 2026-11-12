@@ -6,6 +6,7 @@ import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useSta
 
 import {
   type RenderLists2D,
+  type ViewMove,
   type ViewPlace,
   type ViewReorder,
   type ViewRowSelection,
@@ -17,6 +18,7 @@ import {
   samePlace,
   selectRows,
   useRegistry,
+  viewMove,
   viewReorder,
 } from '@dxos/react-ui-canvas';
 import { SelectControl } from '@dxos/react-ui-form';
@@ -68,6 +70,8 @@ export type ViewsInspectorProps = InspectorProps & {
   onOpen?: (path: ViewId[]) => void;
   /** A row was dragged before or after a sibling in the open View: restack its element in `container`'s drawing order. */
   onReorder?: (event: ViewReorder) => void;
+  /** A row was dragged onto a hull, or beside a row another hull (or none) holds: its element joins that hull. */
+  onMove?: (event: ViewMove) => void;
 };
 
 /**
@@ -116,6 +120,7 @@ export const ViewsInspector = ({
   onSelect,
   onOpen,
   onReorder,
+  onMove,
 }: ViewsInspectorProps) => {
   const registry = useRegistry();
   const treeRef = useRef<TreeRootHandle>(null);
@@ -245,21 +250,39 @@ export const ViewsInspector = ({
     [rows, onOpen],
   );
 
-  // A row moves only among its siblings, as a restack of their container's drawing order.
-  const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
-    const from: Row = source.item;
-    const to: Row = target.item;
-    return isItem(from) && isItem(to) && canRestack(from, to);
-  }, []);
+  // A row moves among its siblings, as a restack of their container's drawing order, or into, out of and between
+  // hulls of the one drawing; which of the two a drop is depends on where on the target row it lands.
+  const dropOf = useCallback(
+    (from: Row, to: Row, instruction: string): { move: ViewMove } | { reorder: ViewReorder } | undefined => {
+      if (!isItem(from) || !isItem(to)) {
+        return undefined;
+      }
+      const move = onMove ? viewMove(from, to, instruction) : undefined;
+      if (move) {
+        return { move };
+      }
+      const reorder = onReorder && canRestack(from, to) ? viewReorder(from, to, instruction) : undefined;
+      return reorder && { reorder };
+    },
+    [onMove, onReorder],
+  );
+  const canDrop = useCallback(
+    ({ source, target }: { source: TreeData; target: TreeData }) =>
+      ['reorder-above', 'reorder-below', 'make-child'].some(
+        (instruction) => dropOf(source.item, target.item, instruction) !== undefined,
+      ),
+    [dropOf],
+  );
   const handleDrop = useCallback(
     ({ instruction, source, target }: TreeDropEvent<Row>) => {
-      const from: Row = source.item;
-      const to: Row = target.item;
-      const reorder =
-        isItem(from) && isItem(to) && canRestack(from, to) ? viewReorder(from, to, instruction.type) : undefined;
-      reorder && onReorder?.(reorder);
+      const drop = dropOf(source.item, target.item, instruction.type);
+      if (drop && 'move' in drop) {
+        onMove?.(drop.move);
+      } else if (drop) {
+        onReorder?.(drop.reorder);
+      }
     },
-    [onReorder],
+    [dropOf, onMove, onReorder],
   );
 
   return (
@@ -309,11 +332,11 @@ export const ViewsInspector = ({
         id={TREE_ID}
         selectionMode='multiple'
         columns={COLUMNS}
-        draggable={onReorder !== undefined}
+        draggable={onReorder !== undefined || onMove !== undefined}
         canSelect={({ item }) => isItem(item) && (isSelectableRow(item) || item.kind === 'view')}
         canDrop={canDrop}
-        getDropKind={({ instruction }) =>
-          instruction.type === 'reorder-above' || instruction.type === 'reorder-below' ? 'move' : 'reject'
+        getDropKind={({ instruction, source, target }) =>
+          dropOf(source.item, target.item, instruction.type) ? 'move' : 'reject'
         }
         onOpenChange={onOpenChange}
         onSelect={handleSelect}

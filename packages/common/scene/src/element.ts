@@ -166,6 +166,33 @@ export const styleFields = {
 export const NodeStyle = Schema.Struct(styleFields);
 export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
 
+/**
+ * How a part of a composite follows its frame on one axis when an instance is resized (ANIMATION.md §4.1): `min`
+ * pins it to the left or top edge, `max` to the right or bottom, `stretch` makes both of its edges follow, `center`
+ * keeps its offset from the middle, and `scale` keeps its proportion of the axis.
+ */
+export const PartConstraint = Schema.Literals(['min', 'max', 'stretch', 'center', 'scale']);
+export type PartConstraint = Schema.Schema.Type<typeof PartConstraint>;
+
+/**
+ * A part's constraint on each axis. An axis left unset is `scale`, which is the uniform fit every composite had
+ * before constraints existed, so an Object written by an older editor keeps drawing as it did.
+ */
+export const PartLayout = Schema.Struct({
+  x: Schema.optional(PartConstraint.annotate({ title: 'Horizontal' })),
+  y: Schema.optional(PartConstraint.annotate({ title: 'Vertical' })),
+}).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }));
+export type PartLayout = Schema.Schema.Type<typeof PartLayout>;
+
+/** The constraint field a node and a link both carry; read only while the element is a part of a composite. */
+export const constrainFields = {
+  constrain: Schema.optional(PartLayout.annotate({ title: 'Constrain' })),
+};
+
+/** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
+export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
+export type InstanceFit = (typeof INSTANCE_FITS)[number];
+
 /** The fields every node type shares; a type's schema is `Schema.Struct({ ...nodeBase, type: Literal, ... })`. */
 export const nodeBase = {
   id: Schema.String,
@@ -195,6 +222,47 @@ export const nodeBase = {
    * instance attach to it (ANIMATION.md §4.1).
    */
   exposed: Schema.optional(Schema.Boolean.annotate({ title: 'Exposed' })),
+  /**
+   * Inside a composite, the field of the Instance this part shows (`bind: 'attributes'`): the part draws the
+   * Instance's own value and typing in it writes that value back, so a tool keeps its typed data on the Instance
+   * while the composite says how it is laid out.
+   */
+  bind: Schema.optional(Schema.String.annotate({ title: 'Bind' })),
+  /**
+   * Inside a composite, the part may be turned off on one Instance: the Properties panel shows a switch for it, so a
+   * tool offers a card without a footer without needing a second definition.
+   */
+  optional: Schema.optional(Schema.Boolean.annotate({ title: 'Optional' })),
+  /** The part is not drawn. An Instance turns an optional part off by overriding this, which is its own alone. */
+  hidden: Schema.optional(Schema.Boolean.annotate({ title: 'Hidden' })),
+  /**
+   * Inside a composite, the parts whose room this one takes when they are hidden (`grow: 'footer'`, several separated
+   * by spaces): a card with its footer off grows its body into the space rather than leaving a gap.
+   */
+  grow: Schema.optional(Schema.String.annotate({ title: 'Grow' })),
+  /**
+   * Inside a composite, the part this one belongs to: it is not drawn whenever that one is hidden, so a card's
+   * hairline goes with the footer it underlines rather than floating over nothing.
+   */
+  follows: Schema.optional(Schema.String.annotate({ title: 'Follows' })),
+  /**
+   * The composite Object this node draws, where it places one: the generic `instance` always, and a type of its own
+   * that declares a template. Naming one is what makes a node a {@link PlacedComposite}.
+   */
+  composite: Schema.optional(Schema.String),
+  /**
+   * Values of the composite's parts set for this node alone, shallow per field (`style` merges per key): what makes
+   * one card's own text, and the parts it switches off, its own while every card draws the same Object. Read only
+   * where the node names a `composite`.
+   */
+  overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
+  /**
+   * The hull this node is inside, by id, in the scene the 2D editor draws. It is not how a hull is stored: a hull is
+   * a group, an Instance (`hull`) whose parts are the nodes inside it, and the editor reads that group opened out so
+   * its nodes stand in the scene beside everything else, each naming the hull it came from.
+   */
+  parent: Schema.optional(Schema.String.annotate({ title: 'Parent' })),
+  ...constrainFields,
 };
 
 /** Any node as the engine sees it: the shared fields and a type name; the registry knows the rest. */
@@ -329,6 +397,41 @@ export const PolylineNode = Schema.Struct({
 });
 export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
 
+/**
+ * How a hull's border runs: `perimeter` follows the outline of the nodes inside it, `box` is the rectangle that
+ * bounds them.
+ */
+export const HULL_SHAPES = ['perimeter', 'box'] as const;
+export type HullShape = (typeof HULL_SHAPES)[number];
+
+/**
+ * A border drawn round the nodes that name it as their `parent`: a hull's group as the 2D editor draws it, opened out
+ * (see `parent`). Its frame and `points` (the border, in the frame's unit space as a polyline's are) follow those
+ * nodes, so neither is set by hand; with nothing inside it has no group to be stored as, and keeps the frame it was
+ * given.
+ */
+export const HullNode = Schema.Struct({
+  type: Schema.Literal('hull'),
+  ...nodeBase,
+  ...boxFields,
+  /** Unset, `perimeter`. */
+  shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
+  /**
+   * How far inside its line the border is drawn, in cells of the drawing's grid: on a lattice the line is the centre
+   * of the gutter round its nodes, which the inset leaves clear; off one it is the margin the border stands off them.
+   */
+  inset: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)).annotate({
+      title: 'Inset',
+      [StepAnnotationId]: 1,
+    }),
+  ),
+  points: Schema.optional(Schema.Array(Point)),
+  /** The composite its nodes are stored in; unset until the hull is first written. */
+  group: Schema.optional(Schema.String),
+});
+export type HullNode = Schema.Schema.Type<typeof HullNode>;
+
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
   type: Schema.Literal('note'),
@@ -362,10 +465,6 @@ export const ViewNode = Schema.Struct({
 });
 export type ViewNode = Schema.Schema.Type<typeof ViewNode>;
 
-/** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
-export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
-export type InstanceFit = (typeof INSTANCE_FITS)[number];
-
 /**
  * A composite object placed in a scene (ANIMATION.md §4.1): it draws the composite scene `composite` scaled into its
  * frame. Every instance shares the definition; `overrides` set values of the definition's nodes for this instance
@@ -374,11 +473,23 @@ export type InstanceFit = (typeof INSTANCE_FITS)[number];
 export const InstanceNode = Schema.Struct({
   type: Schema.Literal('instance'),
   ...nodeBase,
+  // The generic Object always names one; every other type that draws a composite may.
   composite: Schema.String,
-  overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
+  /**
+   * How the composite fills the frame, and which region of it the frame shows. Only the generic Object scales its
+   * parts as a picture, so these stay here rather than on the base — a type with its own template places its parts
+   * by their constraints. `fit` is also a polygon's own legacy field, which is the other reason not to share it.
+   */
   fit: Schema.optional(Schema.Literals(INSTANCE_FITS).annotate({ title: 'Fit' })),
   /** The composite region the frame shows, fixed: its parts at the instance's scale (decision 18). */
   frame: Schema.optional(Bounds),
+  /**
+   * The border the Instance draws round its parts, which makes it a hull: a group whose parts the 2D editor shows and
+   * edits in the scene itself rather than behind the Instance, and whose border a link's route keeps to one side of.
+   */
+  hull: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
+  /** A hull's `inset`, kept with the group it is stored as. */
+  hullInset: Schema.optional(Schema.Number),
 });
 export type InstanceNode = Schema.Schema.Type<typeof InstanceNode>;
 
@@ -515,6 +626,7 @@ export const linkBase = {
   style: Schema.optional(LineStyle),
   /** Drawn as a diagram connector rather than in the canvas's own link style. */
   connector: Schema.optional(DiagramConnector),
+  ...constrainFields,
 };
 
 /** A layer id, unique within its scene. */
@@ -570,6 +682,7 @@ export const BuiltinNode = Schema.Union([
   CloudNode,
   PolygonNode,
   PolylineNode,
+  HullNode,
   NoteNode,
   ViewNode,
   InstanceNode,
@@ -585,6 +698,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'polygon',
   'cloud',
   'polyline',
+  'hull',
   'note',
   'view',
   'instance',
@@ -604,9 +718,24 @@ export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type 
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
+export const isHullNode = (node: NodeBase): node is HullNode => node.type === 'hull';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
-export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
+/**
+ * The fields a node placing a composite Object carries, whatever its own type: the generic `instance`, and a type of
+ * its own that declares a template (a UML class), which keeps its type and its typed fields and draws through the
+ * composite all the same.
+ */
+export type PlacedComposite = NodeBase & {
+  readonly composite: ViewId;
+  readonly overrides?: InstanceNode['overrides'];
+  readonly fit?: InstanceFit;
+  readonly frame?: Bounds;
+};
+
+/** Whether the node places a composite, which is what naming one makes it — not what its type is called. */
+export const isInstanceNode = (node: NodeBase): node is PlacedComposite =>
+  typeof Reflect.get(node, 'composite') === 'string';
 
 /** The fixed child region a portal or instance shows, when it places a composite at a scale. */
 export const nodeFrame = (node: NodeBase): Bounds | undefined =>
@@ -653,6 +782,14 @@ export const withLegacyParams = (node: NodeBase): NodeBase => {
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
 export type LineLink = Schema.Schema.Type<typeof LineLink>;
 
+/**
+ * Horizontal and vertical segments between its ends: straight where they line up, one corner where their sides are
+ * perpendicular, and otherwise two turns at the midpoint between them. Nothing is stored, so the route follows the
+ * shapes as they move, and it is deterministic — a shape moving elsewhere never re-routes it.
+ */
+export const OrthoLink = Schema.Struct({ type: Schema.Literal('ortho'), ...linkBase });
+export type OrthoLink = Schema.Schema.Type<typeof OrthoLink>;
+
 /** Cubic Bézier leaving each port along its side's normal. */
 export const CurveLink = Schema.Struct({ type: Schema.Literal('curve'), ...linkBase });
 export type CurveLink = Schema.Schema.Type<typeof CurveLink>;
@@ -672,10 +809,10 @@ export type SplineLink = Schema.Schema.Type<typeof SplineLink>;
 export const SmartLink = Schema.Struct({ type: Schema.Literal('smart'), ...linkBase });
 export type SmartLink = Schema.Schema.Type<typeof SmartLink>;
 
-export const Link = Schema.Union([LineLink, CurveLink, SplineLink, SmartLink]);
+export const Link = Schema.Union([LineLink, OrthoLink, CurveLink, SplineLink, SmartLink]);
 export type Link = Schema.Schema.Type<typeof Link>;
 export type LinkType = Link['type'];
-export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline', 'smart'];
+export const LINK_TYPES: readonly LinkType[] = ['line', 'ortho', 'curve', 'spline', 'smart'];
 
 export type Element = Node | Link;
 

@@ -11,7 +11,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/reactivity/Atom';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
@@ -19,6 +19,8 @@ import { type Database } from '@dxos/echo';
 import {
   type CanvasAtoms,
   type DrawScene,
+  HULL_FONT_SIZE,
+  type LinkRegistry,
   NO_STYLES,
   type NodeRegistry,
   SCENE_OVERLAY_ATTRIBUTE,
@@ -27,6 +29,7 @@ import {
   classedLink,
   classedNode,
   commonSchema,
+  defaultLinkRegistry,
   defaultNodeRegistry,
   elementLayer,
   flipLink,
@@ -36,7 +39,9 @@ import {
   patchValues,
   portsPerSideOf,
   resolveStyle,
+  retypeLink,
   splitClassEdit,
+  templateComposite,
   updateElement,
   useRegistry,
   viewLayers,
@@ -59,10 +64,13 @@ import {
   type LinkType,
   type Node,
   type NodeStyle,
+  OrthoLink,
   SmartLink,
   SplineLink,
   type StyleClass,
   type StyleMap,
+  isHullNode,
+  isInstanceNode,
   isLink,
   isNoteNode,
   isViewNode,
@@ -77,15 +85,20 @@ import { StyleClassesContext } from './ClassField.tsx';
 import { FontField, FontSizeField } from './FontField.tsx';
 import { FrameField } from './FrameField.tsx';
 import { GeometryField } from './GeometryField.tsx';
+import { HullField } from './HullField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { FlipLinksContext, MarkerField } from './MarkerField.tsx';
+import { OptionalPartsContext, PartsField } from './PartsField.tsx';
 import { PolygonFitField } from './PolygonFitField.tsx';
+import { LinkVariantsContext, VariantField } from './VariantField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
-// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached;
-// an instance's `overrides` have no editor until the canvas can set them.
+// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached.
+// `composite`, `bind`, `optional`, `hidden`, `grow` and `follows` say how a tool's Object is put together: they are
+// written in the template, not set on a shape. `overrides` is where a part's switch writes (`PartsField`), and is
+// shown only for an Instance whose Object has an optional part.
 const HIDDEN = [
   'id',
   'type',
@@ -99,7 +112,19 @@ const HIDDEN = [
   'connector',
   'exposed',
   'overrides',
+  'composite',
+  'bind',
+  'optional',
+  'hidden',
+  'grow',
+  'follows',
+  'parent',
+  'group',
+  'hullInset',
 ];
+
+/** A link's `type` is its variant, which the panel does show: straight, orthogonal, elbow, curve or spline. */
+const HIDDEN_LINK = HIDDEN.filter((name) => name !== 'type');
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
@@ -139,26 +164,44 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'center': GeometryField,
   'rotation': FrameField,
   'params.fit': PolygonFitField,
+  'shape': HullField,
   'scene': ViewField,
   'layer': LayerClassField,
+  'type': VariantField,
+  'overrides': PartsField,
 };
 
+/** Every way a link may be drawn: the panel's `type` field picks among them, so a link's form accepts any. */
+const LinkVariant = Schema.Literals(['line', 'ortho', 'curve', 'spline', 'smart']);
+
+// Each link type's schema with its `type` opened to any of them. A form validates what it is about to save, and
+// with the type held to the link's own a pick of another was refused before it could be written.
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
-  line: LineLink,
-  curve: CurveLink,
-  spline: SplineLink,
-  smart: SmartLink,
+  line: Schema.Struct({ ...LineLink.fields, type: LinkVariant }),
+  curve: Schema.Struct({ ...CurveLink.fields, type: LinkVariant }),
+  // A spline's points are its own, set by its handles: a link drawn another way has none to show the form.
+  spline: Schema.Struct({ ...SplineLink.fields, type: LinkVariant, points: Schema.optional(SplineLink.fields.points) }),
+  ortho: Schema.Struct({ ...OrthoLink.fields, type: LinkVariant }),
+  smart: Schema.Struct({ ...SmartLink.fields, type: LinkVariant }),
 };
+
+const isLinkType = Schema.is(LinkVariant);
 
 /** An element's own schema; a type the registry does not know gets the core base's (`BaseNode`, or a line). */
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
-  isLink(element) ? (LINK_SCHEMAS[element.type] ?? LineLink) : (nodeDef(nodes, element)?.schema ?? BaseNode);
+  isLink(element) ? (LINK_SCHEMAS[element.type] ?? LINK_SCHEMAS.line) : (nodeDef(nodes, element)?.schema ?? BaseNode);
 
-/** Where a type places its text unless styled otherwise: a note from the top left, a label in the middle. */
+/**
+ * Where a type places its text unless styled otherwise: a note from the top left, a hull's name in its corner, a
+ * label in the middle.
+ */
 const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertical'> =>
-  isNoteNode(node)
+  isNoteNode(node) || isHullNode(node)
     ? { alignHorizontal: 'left', alignVertical: 'top' }
     : { alignHorizontal: 'center', alignVertical: 'middle' };
+
+/** The size a type draws its text at unless styled otherwise, where that is not a shape label's: a hull's name is a caption. */
+const textSize = (node: Node): Pick<NodeStyle, 'fontSize'> => (isHullNode(node) ? { fontSize: HULL_FONT_SIZE } : {});
 
 /**
  * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
@@ -175,7 +218,7 @@ const formValues = (
     : {
         ...element,
         layer: elementLayer(element, layers),
-        style: { ...textAlign(element), ...resolveStyle(classedNode(element, styles).style) },
+        style: { ...textAlign(element), ...textSize(element), ...resolveStyle(classedNode(element, styles).style) },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
       };
@@ -192,6 +235,8 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
   'size': { hidden: true },
+  // Drawn beside the hull's border by `HullField`.
+  'inset': { hidden: true },
   'scene': { label: 'View' },
   'layer': { label: 'Layer' },
 };
@@ -209,6 +254,8 @@ export type PropertiesInspectorProps = InspectorProps & {
   draw: DrawScene;
   atoms: CanvasAtoms;
   nodes?: NodeRegistry;
+  /** The link variants the panel offers; the engine's own unless a host adds to them. */
+  linkTypes?: LinkRegistry;
   fields?: FormFieldMap;
   /** The database a reference field picks from; without it reference fields are read-only. */
   db?: Database.Database;
@@ -231,6 +278,7 @@ export const PropertiesInspector = ({
   draw,
   atoms,
   nodes = defaultNodeRegistry,
+  linkTypes = defaultLinkRegistry,
   fields,
   readonly: readonlyProp = false,
   db,
@@ -303,14 +351,18 @@ export const PropertiesInspector = ({
       const edits = elements.map((element) => {
         const shown = formValues(nodes, element, styleMap, layers);
         // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
-        const patch = patchValues({ ...shown, style: element.style }, values, paths);
+        const { type: picked, ...patch } = patchValues({ ...shown, style: element.style }, values, paths);
+        // A link drawn another way is a different link type, which a field update never changes.
+        const retype = isLink(element) && isLinkType(picked) ? [retypeLink(element.id, picked)] : [];
+        const write = (next: Record<string, unknown>) =>
+          chainEdits([...retype, ...(Object.keys(next).length > 0 ? [updateElement(element.id, next)] : [])]);
         const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
         if (typeof patch.class === 'string') {
-          return updateElement(element.id, { ...patch, style: undefined });
+          return write({ ...patch, style: undefined });
         }
         if (!styleClass || !('style' in patch)) {
-          return updateElement(element.id, patch);
+          return write(patch);
         }
         // A link's look is the common base of its class's style; a node's, the whole of it.
         const look = isLink(element)
@@ -318,7 +370,7 @@ export const PropertiesInspector = ({
           : resolveStyle(classedNode(element, styleMap).style);
         const split = splitClassEdit(look, patch.style, styleClass.style ?? {}, element.style);
         classes[styleClass.id] = { ...styleClass, style: split.classLook };
-        return updateElement(element.id, { ...patch, style: split.own });
+        return write({ ...patch, style: split.own });
       });
       if (styles && Object.keys(classes).length > 0) {
         registry.set(styles, { ...styleMap, ...classes });
@@ -335,7 +387,23 @@ export const PropertiesInspector = ({
     // A spline's control points run the other way after a flip, so a selected point's index names another one.
     registry.set(atoms.point, undefined);
   }, [draw, links, registry, atoms.point]);
-  const flip = !readonly && links.length > 0 && links.length === elements.length ? onFlip : undefined;
+  // Every selected element is a link: only then is `type` theirs to pick, and only then does flipping mean anything.
+  const onlyLinks = links.length > 0 && links.length === elements.length;
+  const flip = !readonly && onlyLinks ? onFlip : undefined;
+  // An Instance of a tool's Object shows a switch for each part its template marks optional (`PartsField`). Every
+  // other selection keeps `overrides` out of the panel, where there is nothing in it to set.
+  const optionalParts = useMemo(() => {
+    const [element] = elements;
+    if (elements.length !== 1 || !element || isLink(element) || !isInstanceNode(element)) {
+      return [];
+    }
+    const definition = templateComposite(nodes, element.composite);
+    return Object.values(definition?.nodes ?? {}).filter((part) => part.optional === true);
+  }, [elements, nodes]);
+  const exclude = useMemo(
+    () => (onlyLinks ? HIDDEN_LINK : optionalParts.length > 0 ? HIDDEN.filter((name) => name !== 'overrides') : HIDDEN),
+    [onlyLinks, optionalParts],
+  );
 
   // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for
   // every kind: its fill rows only when every element is a node, since a link has a colour but no fill.
@@ -362,35 +430,39 @@ export const PropertiesInspector = ({
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
       {schema && (
-        <FlipLinksContext.Provider value={flip}>
-          <LayersContext.Provider value={layers}>
-            <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
-              <ViewOptionsContext.Provider value={viewOptions ?? []}>
-                <Form.Root
-                  key={[...selection].join()}
-                  schema={schema}
-                  values={values}
-                  fieldOverrides={fieldOverrides}
-                  fieldMap={fieldMap}
-                  db={db}
-                  getOptions={getOptions}
-                  readonly={readonly}
-                  autoSave
-                  // A typed value writes the scene once, when the field blurs, not on every keystroke.
-                  commitOn='blur'
-                  onSave={onSave}
-                >
-                  {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
-                  <Form.Viewport scroll={false}>
-                    <Form.Content>
-                      <Form.Fields exclude={HIDDEN} sort={fieldOrder} />
-                    </Form.Content>
-                  </Form.Viewport>
-                </Form.Root>
-              </ViewOptionsContext.Provider>
-            </StyleClassesContext.Provider>
-          </LayersContext.Provider>
-        </FlipLinksContext.Provider>
+        <OptionalPartsContext.Provider value={optionalParts}>
+          <LinkVariantsContext.Provider value={linkTypes}>
+            <FlipLinksContext.Provider value={flip}>
+              <LayersContext.Provider value={layers}>
+                <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
+                  <ViewOptionsContext.Provider value={viewOptions ?? []}>
+                    <Form.Root
+                      key={[...selection].join()}
+                      schema={schema}
+                      values={values}
+                      fieldOverrides={fieldOverrides}
+                      fieldMap={fieldMap}
+                      db={db}
+                      getOptions={getOptions}
+                      readonly={readonly}
+                      autoSave
+                      // A typed value writes the scene once, when the field blurs, not on every keystroke.
+                      commitOn='blur'
+                      onSave={onSave}
+                    >
+                      {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
+                      <Form.Viewport scroll={false}>
+                        <Form.Content>
+                          <Form.Fields exclude={exclude} sort={fieldOrder} />
+                        </Form.Content>
+                      </Form.Viewport>
+                    </Form.Root>
+                  </ViewOptionsContext.Provider>
+                </StyleClassesContext.Provider>
+              </LayersContext.Provider>
+            </FlipLinksContext.Provider>
+          </LinkVariantsContext.Provider>
+        </OptionalPartsContext.Provider>
       )}
       {summary && (
         <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>

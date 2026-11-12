@@ -44,7 +44,6 @@ import {
   isPathNode,
   isViewNode,
   linkMarkers,
-  nodeFrame,
   nodePadding,
   showsContents,
 } from '@dxos/scene';
@@ -89,12 +88,12 @@ import {
   diagramLinkMarkup,
   diagramNodeMarkup,
   elementLayer,
+  fitHulls,
   frameClasses,
   grooveBounds,
   grooveHeads,
   grooveTrim,
-  instanceTransform,
-  instanceView,
+  instancePlacement,
   isMultiline,
   lineClasses,
   markerFrame,
@@ -159,6 +158,11 @@ export type SceneLayerProps = {
   editing?: { id: NodeId; part: PartKey };
   /** A node in an edit mode of its own (its vertices), drawn translucent so its handles read over it. */
   dimmed?: NodeId;
+  /**
+   * The elements outside the Object being edited in place: drawn back, so the Object's own parts are what the eye
+   * and the pointer find while it is open (`utils/inside.ts`).
+   */
+  faded?: ReadonlySet<ElementId>;
   /** The node whose embedded content takes input. */
   active?: NodeId;
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
@@ -189,6 +193,7 @@ export const SceneLayer = memo(
     hoveredLink,
     opening,
     focus,
+    faded,
     editing,
     dimmed,
     active,
@@ -207,7 +212,12 @@ export const SceneLayer = memo(
     const inheritedLattice = useContext(LatticeContext);
     const lattice = latticeProp ?? inheritedLattice;
     // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
-    const scene = useMemo(() => visibleView(sceneProp), [sceneProp]);
+    // Fitted here as well as where the list is built: a shape in flight is moved in the list this layer is given, and
+    // its hull follows it.
+    const scene = useMemo(
+      () => fitHulls(visibleView(sceneProp), lattice, cell / MAJOR_GRID_RATIO),
+      [sceneProp, lattice, cell],
+    );
     const links = useMemo(
       () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],
@@ -281,7 +291,7 @@ export const SceneLayer = memo(
                       height={1}
                     >
                       {run.links.map(({ link, path, diagram }) => (
-                        <g key={link.id}>
+                        <g key={link.id} style={faded?.has(link.id) ? OUTSIDE : undefined}>
                           {/* A wide transparent twin makes the thin stroke easy to press. */}
                           {handlers && (
                             <path
@@ -387,7 +397,15 @@ export const SceneLayer = memo(
                           selected={!plain && (selected?.has(node.id) ?? false)}
                           hovered={hover === node.id}
                           opening={opening === node.id}
-                          fade={focus && focus.id !== node.id ? fadeStyle : dimmed === node.id ? DIMMED : undefined}
+                          fade={
+                            focus && focus.id !== node.id
+                              ? fadeStyle
+                              : faded?.has(node.id)
+                                ? OUTSIDE
+                                : dimmed === node.id
+                                  ? DIMMED
+                                  : undefined
+                          }
                           chromeFade={focus?.id === node.id ? fadeStyle : undefined}
                           editingPart={editing?.id === node.id ? editing.part : undefined}
                           active={active === node.id}
@@ -1388,6 +1406,9 @@ const SilhouetteRelief = ({ outline, node, border, radius, relief, className, st
 /** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
 const DIMMED: CSSProperties = { opacity: 0.5 };
 
+/** How far back the drawing around an Object goes while the Object is edited in place. */
+const OUTSIDE: CSSProperties = { opacity: 0.25 };
+
 const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
   const opacity = node.style?.opacity;
   if (opacity === undefined || opacity >= 1) {
@@ -1448,6 +1469,28 @@ export const CloudNodeView = LabelNodeView;
 export const PolygonNodeView = LabelNodeView;
 
 export const PolylineNodeView = LabelNodeView;
+
+/** A hull's name, in the corner of its border rather than over the nodes inside it. */
+export const HullNodeView = ({ node, editing }: NodeViewProps) => {
+  const label = baseLabel(node);
+  return (
+    <TextPart
+      part='label'
+      text={label}
+      editing={editing}
+      classNames={mx(
+        TEXT_BOX,
+        'whitespace-pre-wrap',
+        LINE_ON_GRID,
+        alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
+        // `HULL_FONT_SIZE`, as a static class so Tailwind generates it.
+        sizeClass(node, 'text-sm'),
+      )}
+    >
+      {label}
+    </TextPart>
+  );
+};
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (
@@ -1547,20 +1590,18 @@ export const ViewNodeView = (props: NodeViewProps) => {
  */
 export const InstanceNodeView = ({ node, lists, registry, zoom, depth, liveDepth }: NodeViewProps) => {
   const composite = useAtomValue(lists.view(isInstanceNode(node) ? node.composite : ''));
-  const drawn = useMemo(
-    () => (composite && isInstanceNode(node) ? instanceView(node, composite) : undefined),
-    [node, composite],
-  );
   const bounds = nodeBounds(node);
-  const transform = useMemo(
+  const placement = useMemo(
     () =>
-      drawn && isInstanceNode(node)
-        ? instanceTransform(bounds, nodeFrame(node) ?? compositeBounds(drawn), node.fit)
+      composite && isInstanceNode(node)
+        ? instancePlacement(node, composite, (part) => nodeParts(registry, part))
         : undefined,
     // Keyed on the geometry rather than the bounds object, which is new on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [drawn, node, bounds.x, bounds.y, bounds.width, bounds.height],
+    [composite, node, bounds.x, bounds.y, bounds.width, bounds.height],
   );
+  const drawn = placement?.view;
+  const transform = placement?.transform;
   if (!drawn || !transform) {
     return <UnknownNodeView node={node} />;
   }

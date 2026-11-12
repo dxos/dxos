@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { applyIntent } from '@dxos/scene';
+import { type Scene as Model, applyIntent } from '@dxos/scene';
 
 import { EXEMPLAR_NAMES, EXEMPLARS } from '../testing.ts';
 import { parse } from './parse.ts';
@@ -24,6 +24,147 @@ model shapes dim=2d {
   object box rect size=100x60 border=true rounded=true
 }
 `;
+
+const COMPOSITE = `scene root dim=2d layout=board {
+  camera center=0,0 zoom=1
+}
+
+layout board dim=2d model=composites {
+  element one tile @ 0,0 size=288x192
+  element two tile @ 384,0 size=288x384
+}
+
+composite tile size=288x192 name="Tile" {
+  element frame rect @ 0,0 size=288x192 constrain=stretch rounded=true
+  element icon icon @ -126,-78 size=36x36 constrain=min
+  element title note "Card" @ -24,-78 size=204x24 constrain=stretch,min
+  element body note "Body" @ 0,6 size=264x84 constrain=stretch
+  element footer note "Footer" @ 0,87 size=264x18 constrain=stretch,max
+}
+`;
+
+describe('composite statements', () => {
+  test('a composite is a named composite layout and the instance object that places it', () => {
+    const { document, problems } = readScenes(COMPOSITE);
+    expect(problems).toEqual([]);
+    const parts = document.layouts.find((layout) => layout.id === 'tile');
+    expect(parts).toMatchObject({ dim: '2d', kind: 'composite', name: 'Tile' });
+    expect(parts?.anonymous).toBeUndefined();
+    expect(Object.keys(parts?.elements ?? {})).toEqual(['frame', 'icon', 'title', 'body', 'footer']);
+    const model = document.models.find((candidate) => candidate.id === 'composites');
+    expect(model?.dim === '2d' && model.objects.tile).toEqual({
+      id: 'tile',
+      type: 'instance',
+      parts: 'tile',
+      size: { width: 288, height: 192 },
+    });
+  });
+
+  test('a layout places a composite by naming it, at a size of its own', () => {
+    const { document } = readScenes(COMPOSITE);
+    const board = document.layouts.find((layout) => layout.id === 'board');
+    expect(board?.elements.one).toEqual({
+      id: 'one',
+      object: 'tile',
+      center: { x: 0, y: 0 },
+      size: { width: 288, height: 192 },
+    });
+    expect(board?.elements.two?.size).toEqual({ width: 288, height: 384 });
+  });
+
+  test('constraints read per axis, and one word sets both', () => {
+    const { document } = readScenes(COMPOSITE);
+    const parts = document.layouts.find((layout) => layout.id === 'tile');
+    expect(parts?.elements.frame?.constrain).toEqual({ x: 'stretch', y: 'stretch' });
+    expect(parts?.elements.icon?.constrain).toEqual({ x: 'min', y: 'min' });
+    expect(parts?.elements.title?.constrain).toEqual({ x: 'stretch', y: 'min' });
+    expect(parts?.elements.footer?.constrain).toEqual({ x: 'stretch', y: 'max' });
+  });
+
+  test('a composite round-trips through the text, constraints and all', () => {
+    const { document } = readScenes(COMPOSITE);
+    expect(printScenes(document)).toBe(COMPOSITE);
+  });
+
+  test('an axis set to scale is the default, so it is neither stored nor printed', () => {
+    const { document, problems } = readScenes(`composite c {
+  element a rect @ 0,0 size=10x10 constrain=scale
+  element b rect @ 0,0 size=10x10 constrain=min,scale
+}
+`);
+    expect(problems).toEqual([]);
+    const parts = document.layouts.find((layout) => layout.id === 'c');
+    expect(parts?.elements.a?.constrain).toBeUndefined();
+    expect(parts?.elements.b?.constrain).toEqual({ x: 'min' });
+    expect(printScenes(document)).toContain('constrain=min,scale');
+  });
+
+  test('a polyline authors its vertices as fractions of its own frame, and they round-trip', () => {
+    const source = `composite c {
+  element rule polyline @ 0,60 size=264x1 constrain=stretch,max points="0,0.5 1,0.5"
+}
+`;
+    const { document, problems } = readScenes(source);
+    expect(problems).toEqual([]);
+    const parts = document.layouts.find((layout) => layout.id === 'c');
+    expect(parts?.elements.rule?.props?.points).toEqual([
+      { x: 0, y: 0.5 },
+      { x: 1, y: 0.5 },
+    ]);
+    expect(printScenes(document)).toContain('points="0,0.5 1,0.5"');
+  });
+
+  test('a prop that is a list but not points is left alone, rather than printed as one', () => {
+    // The same vertices under a name no attribute claims. Only `points` has a spelling the reader reads back,
+    // so any other list is dropped rather than printed as a string the reader would hand back verbatim.
+    const document: Model.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'c',
+          dim: '2d',
+          kind: 'composite',
+          elements: {
+            rule: {
+              id: 'rule',
+              type: 'polyline',
+              center: { x: 0, y: 0 },
+              size: { width: 10, height: 1 },
+              props: {
+                vertices: [
+                  { x: 0, y: 0.5 },
+                  { x: 1, y: 0.5 },
+                ],
+              },
+            },
+          },
+        },
+      ],
+      models: [],
+    };
+    const printed = printScenes(document);
+    expect(printed).toContain('element rule polyline');
+    expect(printed).not.toContain('vertices=');
+  });
+
+  test('points that are not pairs are reported', () => {
+    const { problems } = readScenes(`composite c {
+  element rule polyline @ 0,0 size=10x1 points="0,0.5"
+}
+`);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.message).toContain('points takes');
+  });
+
+  test('a word that is not a constraint is reported', () => {
+    const { problems } = readScenes(`composite c {
+  element a rect @ 0,0 size=10x10 constrain=sideways
+}
+`);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.message).toContain('constrain takes');
+  });
+});
 
 describe('readScenes', () => {
   test('a group is a composite placed by an element with no fit; links to its members end on its ports', () => {

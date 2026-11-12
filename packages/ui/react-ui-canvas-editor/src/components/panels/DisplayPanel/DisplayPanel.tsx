@@ -146,9 +146,14 @@ export type DisplayPanelProps = PanelProps & {
   onTimelineToggle?: () => void;
 };
 
+/** The grid a lattice scene's switch draws on its grid side: lines, where the view offers them. */
+const latticeGrid = (offered?: readonly Exclude<BackgroundGrid, 'none'>[]): Exclude<BackgroundGrid, 'none'> =>
+  !offered || offered.includes('lines') ? 'lines' : (offered[0] ?? 'lines');
+
 /**
- * The canvas's look: the snap, guides and axes toggles, a switch between dots and lines over the background (pressing the one
- * drawn turns the grid off), or on a lattice scene between its cells and the grid, and the theme selector last.
+ * The canvas's look: the snap, guides and axes toggles, a switch over what is drawn behind the shapes (dots or lines;
+ * on a lattice scene its cells or the grid), and the theme selector last. Pressing the option that is drawn turns it
+ * off, so the switch has three states with two buttons.
  */
 export const DisplayPanel = ({
   classNames,
@@ -215,7 +220,7 @@ export const DisplayPanel = ({
         onPressedChange={onAxesToggle}
       />
     )}
-    {/* A lattice scene snaps to its cells or to the grid, so exactly one of the two is drawn. */}
+    {/* A lattice scene snaps to its cells or to the grid, so at most one of the two is drawn. */}
     {lattice === true && (
       <Button.Group compact role='group' aria-label='Grid'>
         <Button.Toggle
@@ -226,7 +231,14 @@ export const DisplayPanel = ({
           disabled={readonly || !onGuidesToggle}
           pressed={guides === true}
           data-testid='toolbar-lattice'
-          onPressedChange={(pressed) => pressed && guides !== true && onGuidesToggle?.()}
+          onPressedChange={(pressed) => {
+            if (pressed === (guides === true)) {
+              return;
+            }
+            onGuidesToggle?.();
+            // Pressed again it goes off, and off draws no grid in its place either.
+            !pressed && grid !== 'none' && onGridChange?.(themeGrid === 'none' ? undefined : 'none');
+          }}
         />
         <Button.Toggle
           variant='ghost'
@@ -234,9 +246,13 @@ export const DisplayPanel = ({
           icon='ph--grid-four--regular'
           label={`Grid (${shortcutFor('guides')}): show the grid and snap to it, off the lattice`}
           disabled={readonly || !onGuidesToggle}
-          pressed={guides !== true}
+          pressed={guides !== true && grid !== 'none'}
           data-testid='toolbar-lattice-grid'
-          onPressedChange={(pressed) => pressed && guides === true && onGuidesToggle?.()}
+          onPressedChange={(pressed) => {
+            const next: BackgroundGrid = pressed ? latticeGrid(gridOptions) : 'none';
+            pressed && guides === true && onGuidesToggle?.();
+            next !== grid && onGridChange?.(next === themeGrid ? undefined : next);
+          }}
         />
       </Button.Group>
     )}

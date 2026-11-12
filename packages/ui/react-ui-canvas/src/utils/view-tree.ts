@@ -42,6 +42,15 @@ export type ViewTreeItem = {
   readonly?: boolean;
   /** For an object's contents, where the element is drawn inside the (innermost) object, which is where it is edited. */
   object?: ViewPlace;
+  /** The row is a hull: its children are the shapes inside it, and a row dropped on it joins them. */
+  hull?: boolean;
+  /**
+   * The hull that holds the row's element, and the scene that hull is drawn in. A hull's shapes are stored in its
+   * group (their `container`) but drawn, selected and moved in the scene that places it, so two rows are in one
+   * drawing when their scenes agree, whatever holds each.
+   */
+  group?: ElementId;
+  scene?: ViewId;
   children: ViewTreeItem[];
 };
 
@@ -281,6 +290,51 @@ export const canRestack = (from: ViewTreeItem, to: ViewTreeItem): boolean =>
   from.container !== undefined &&
   from.container === to.container &&
   (from.kind === 'link') === (to.kind === 'link');
+
+/** A row dropped into, out of or between hulls: `element` joins `group` (none: no hull), beside `target` if given. */
+export type ViewMove = {
+  /** The scene both rows are drawn in. */
+  scene: ViewId;
+  element: ElementId;
+  group?: ElementId;
+  target?: ElementId;
+  position?: 'before' | 'after';
+};
+
+/** The scene a row's element is drawn in: its hull's, where a hull holds it, else its own container. */
+const drawnIn = (item: ViewTreeItem): ViewId | undefined => item.scene ?? item.container;
+
+/**
+ * The move a drop of `from` on `to` asks for, where it changes which hull holds `from`: dropped on a hull it joins
+ * it; dropped beside a row it takes that row's hull (or none) and its place in the drawing order. Undefined for a
+ * drop that leaves it where it is (a restack, {@link viewReorder}), for a link, a View or a hull, which no hull
+ * holds, and for rows of two drawings.
+ */
+export const viewMove = (from: ViewTreeItem, to: ViewTreeItem, instruction: string): ViewMove | undefined => {
+  const scene = drawnIn(from);
+  const movable = (from.kind === 'node' || from.kind === 'instance') && !from.hull && !from.readonly;
+  if (!movable || from.element === undefined || to.element === undefined || scene === undefined) {
+    return undefined;
+  }
+  if (scene !== drawnIn(to) || to.readonly || from.element === to.element) {
+    return undefined;
+  }
+  if (instruction === 'make-child') {
+    return to.hull && from.group !== to.element ? { scene, element: from.element, group: to.element } : undefined;
+  }
+  if ((instruction !== 'reorder-above' && instruction !== 'reorder-below') || to.kind === 'link') {
+    return undefined;
+  }
+  return from.group === to.group
+    ? undefined
+    : {
+        scene,
+        element: from.element,
+        ...(to.group !== undefined ? { group: to.group } : {}),
+        target: to.element,
+        position: instruction === 'reorder-above' ? 'before' : 'after',
+      };
+};
 
 /** The restack a drop above or below `to` asks for; undefined for any other drop. */
 export const viewReorder = (from: ViewTreeItem, to: ViewTreeItem, instruction: string): ViewReorder | undefined =>

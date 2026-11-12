@@ -22,12 +22,14 @@ import {
   type Side,
   isCloudNode,
   isEllipseNode,
+  isHullNode,
   isPointEndpoint,
 } from '@dxos/scene';
 
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
+import { type HullWalls, hullRegions, routeWalls } from './hull.ts';
 import { type LatticeSpec, onLattice, quantize } from './lattice.ts';
 import {
   type PortTerminal,
@@ -133,12 +135,17 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
       return linePath(from.point, to.point);
     case 'curve':
       return curvePath(from, to);
+    case 'ortho':
+      return splinePath(orthoPoints(from, to));
     case 'spline':
       return splinePath([from.point, ...link.points, to.point]);
     case 'smart':
       // A free end (one being dragged) takes no gutter: the route runs straight to it.
       return splinePath(
-        (lattice && !from.free && !to.free && gutterRoute(lattice.nodes, lattice.spec, from, to)) ||
+        (lattice &&
+          !from.free &&
+          !to.free &&
+          gutterRoute(lattice.nodes, lattice.spec, from, to, lattice.walls?.(link))) ||
           smartPoints(from, to),
       );
     default:
@@ -147,8 +154,30 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
   }
 };
 
-/** What gutter routing needs: the lattice and the nodes whose frames block it. */
-export type LatticeRoute = { spec: LatticeSpec; nodes: readonly Node[] };
+/**
+ * What gutter routing needs: the lattice, the nodes whose frames block it, and the hull borders a link answers to,
+ * which depend on the hulls its two ends are inside.
+ */
+export type LatticeRoute = {
+  spec: LatticeSpec;
+  nodes: readonly Node[];
+  walls?: (link: Link) => HullWalls | undefined;
+};
+
+/** The gutter routing of a scene on a lattice; its hulls are measured once for every link routed with it. */
+export const latticeRoute = (scene: RenderList2D, spec: LatticeSpec): LatticeRoute => {
+  const nodes = Object.values(scene.nodes);
+  const regions = hullRegions(nodes, spec);
+  return {
+    spec,
+    nodes,
+    walls: (link) => {
+      const source = isPointEndpoint(link.source) ? undefined : scene.nodes[link.source.node];
+      const target = isPointEndpoint(link.target) ? undefined : scene.nodes[link.target.node];
+      return source && target ? routeWalls(regions, spec, source, target) : undefined;
+    },
+  };
+};
 
 /**
  * Whether a link may take the gutters: each node end that keeps to the lattice sits on whole cells. A shape between
@@ -167,18 +196,66 @@ const onCells = (scene: RenderList2D, link: Link, spec: LatticeSpec): boolean =>
     return (['x', 'y', 'width', 'height'] as const).every((key) => Math.abs(cell[key] - bounds[key]) < 1e-6);
   });
 
+/** Two coordinates count as lined up within this, in scene px: a sub-pixel offset is not a bend worth drawing. */
+const ORTHO_EPSILON = 0.5;
+
+const isSideways = (side: Side): boolean => side === 'e' || side === 'w';
+
+/**
+ * The elbow a smart link draws to an end on no port: two turns, halfway between its ends, so the line splits evenly
+ * and stays so while either end is dragged. It leaves a port along the port's own axis and reaches the free end along
+ * the same one; with neither end on a port it runs sideways first. Ends that line up on an axis join straight.
+ */
+const elbowPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
+  const [a, b] = [from.point, to.point];
+  if (Math.abs(a.x - b.x) < ORTHO_EPSILON || Math.abs(a.y - b.y) < ORTHO_EPSILON) {
+    return [a, b];
+  }
+  const sideways = from.free ? to.free || isSideways(to.side) : isSideways(from.side);
+  const [midX, midY] = [(a.x + b.x) / 2, (a.y + b.y) / 2];
+  return sideways ? [a, { x: midX, y: a.y }, { x: midX, y: b.y }, b] : [a, { x: a.x, y: midY }, { x: b.x, y: midY }, b];
+};
+
 /**
  * The polyline a smart link follows: a stub out of each port along its side's normal, then one segment
  * joining them. `splinePath` rounds where they meet, so a pair of facing ports reads as the elbow the
- * ports imply rather than a straight line cutting across their own nodes.
+ * ports imply rather than a straight line cutting across their own nodes. An end on no port has no normal to leave
+ * along, so the link draws an even elbow to it instead ({@link elbowPoints}).
  */
 export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
-  // A free end has no stub: the route runs straight to it.
-  const stub = (end: RouteEnd): Point[] => {
+  if (from.free || to.free) {
+    return elbowPoints(from, to);
+  }
+  const stub = (end: RouteEnd): Point => {
     const normal = sideNormal(end.side);
-    return end.free ? [] : [{ x: end.point.x + normal.x * SMART_STUB, y: end.point.y + normal.y * SMART_STUB }];
+    return { x: end.point.x + normal.x * SMART_STUB, y: end.point.y + normal.y * SMART_STUB };
   };
-  return [from.point, ...stub(from), ...stub(to).reverse(), to.point];
+  return [from.point, stub(from), stub(to), to.point];
+};
+
+/**
+ * The polyline an orthogonal link follows: straight where its ends line up on an axis, one corner where their sides
+ * are perpendicular, and otherwise two turns at the midpoint between them. It reads only its own two ends, so a shape
+ * moving elsewhere never re-routes it — which is what makes it predictable to draw a diagram with.
+ *
+ * A free end (one being dragged, or left on empty canvas) has no side to leave by. It takes the axis its other end
+ * does not, so the two meet at one corner, and with both ends free the route leaves sideways. Neither choice reads
+ * which way the far end lies, so the corner holds still while an end is dragged, rather than jumping across the line
+ * each time the drag crosses the diagonal.
+ */
+export const orthoPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
+  const [a, b] = [from.point, to.point];
+  if (Math.abs(a.x - b.x) < ORTHO_EPSILON || Math.abs(a.y - b.y) < ORTHO_EPSILON) {
+    return [a, b];
+  }
+  const fromSideways = from.free ? to.free || !isSideways(to.side) : isSideways(from.side);
+  const toSideways = to.free ? !fromSideways : isSideways(to.side);
+  if (fromSideways !== toSideways) {
+    return [a, fromSideways ? { x: b.x, y: a.y } : { x: a.x, y: b.y }, b];
+  }
+  return fromSideways
+    ? [a, { x: (a.x + b.x) / 2, y: a.y }, { x: (a.x + b.x) / 2, y: b.y }, b]
+    : [a, { x: a.x, y: (a.y + b.y) / 2 }, { x: b.x, y: (a.y + b.y) / 2 }, b];
 };
 
 export type LinkGeometry = {
@@ -301,11 +378,14 @@ export const latticeEnds = (
       distance: Math.hypot(pair.from.point.x - pair.to.point.x, pair.from.point.y - pair.to.point.y),
     }))
     .sort((left, right) => left.least - right.least || left.distance - right.distance);
-  let best: { from: RouteEnd; to: RouteEnd; points: Point[]; bends: number } | undefined;
+  const walls = route.walls?.(link);
+  const least = walls?.least ?? 0;
+  let best: { from: RouteEnd; to: RouteEnd; points: Point[]; bends: number; crossings: number } | undefined;
   // Within a tier only the nearest few are searched: a farther pair seldom routes better, and each search has a cost.
   const tried = new Map<number, number>();
   for (const pair of pairs) {
-    if (best && pair.least >= best.bends) {
+    // A route that crosses a hull's border more often than it must is worse than any that bends more.
+    if (best && best.crossings <= least && pair.least >= best.bends) {
       break;
     }
     const count = tried.get(pair.least) ?? 0;
@@ -313,11 +393,14 @@ export const latticeEnds = (
       continue;
     }
     tried.set(pair.least, count + 1);
-    const routed = gutterRouteWithCost(route.nodes, route.spec, pair.from, pair.to);
+    const routed = gutterRouteWithCost(route.nodes, route.spec, pair.from, pair.to, walls);
     // The route's points are its ends and its corners.
     const bends = routed ? routed.points.length - 2 : Infinity;
-    if (routed && (!best || bends < best.bends)) {
-      best = { from: pair.from, to: pair.to, points: routed.points, bends };
+    const better =
+      routed &&
+      (!best || routed.crossings < best.crossings || (routed.crossings === best.crossings && bends < best.bends));
+    if (routed && better) {
+      best = { from: pair.from, to: pair.to, points: routed.points, bends, crossings: routed.crossings };
     }
   }
   return best;
@@ -337,8 +420,7 @@ export const linkGeometry = (
   if (diagram) {
     return diagram;
   }
-  const route =
-    lattice && onCells(scene, link, lattice) ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
+  const route = lattice && onCells(scene, link, lattice) ? latticeRoute(scene, lattice) : undefined;
   const routed = route && latticeEnds(scene, registry, link, route);
   if (routed) {
     return { link, path: splinePath(routed.points), source: routed.from, target: routed.to };
@@ -413,7 +495,7 @@ const resolveEnds = (
   target: Endpoint,
   type?: Link['type'],
 ): [RouteEnd, RouteEnd] | undefined => {
-  if (type !== undefined && type !== 'smart') {
+  if (type !== undefined && type !== 'smart' && type !== 'ortho') {
     return centredEnds(scene, registry, source, target);
   }
   if (isPointEndpoint(source)) {
@@ -482,7 +564,7 @@ export const viewLinkGeometry = (
     const node = isPointEndpoint(end) ? undefined : scene.nodes[end.node];
     return node ? rect(nodeBounds(node)) : undefined;
   };
-  const route = { spec: lattice, nodes };
+  const route = latticeRoute(scene, lattice);
   const routed = links
     .filter((link) => !diagrams.has(link.id))
     .flatMap((link) => {
@@ -500,8 +582,12 @@ export const viewLinkGeometry = (
         return [];
       }
       const [from, to] = ends;
+      // An end on no port stands off the lattice's cells, so its link takes no gutter: it is drawn as it is anywhere.
+      const gutters = link.type === 'smart' && !from.free && !to.free;
       const points =
-        link.type === 'smart' ? (gutterRoute(nodes, lattice, from, to) ?? smartPoints(from, to)) : undefined;
+        link.type === 'smart'
+          ? (gutters && gutterRoute(nodes, lattice, from, to, route.walls?.(link))) || smartPoints(from, to)
+          : undefined;
       return [{ link, from, to, points }];
     });
   const smart = routed.filter((entry) => entry.points !== undefined);
@@ -511,7 +597,11 @@ export const viewLinkGeometry = (
       source: frameOf(link.source),
       target: frameOf(link.target),
     })),
-    { spacing: DEFAULT_GRID, obstacles: nodes.map((node) => rect(nodeBounds(node))) },
+    // A hull's frame covers the nodes inside it, so as an obstacle it would hold every lane inside it where it is.
+    {
+      spacing: DEFAULT_GRID,
+      obstacles: nodes.filter((node) => !isHullNode(node)).map((node) => rect(nodeBounds(node))),
+    },
   );
   const lanes = new Map(smart.map((entry, index) => [entry.link.id, nudged[index]]));
   const geometries = new Map(

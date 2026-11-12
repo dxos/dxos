@@ -12,7 +12,6 @@ import {
   NumberLayoutAnnotationId,
   StepAnnotationId,
   VectorAnnotationId,
-  phosphorIcons,
 } from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
@@ -88,7 +87,13 @@ export const autofill =
 export const iconOptions = (): OptionsLookup => ({
   deps: [],
   combobox: true,
-  load: () => Effect.succeed(phosphorIcons.map((name) => ({ value: name, label: name, icon: `ph--${name}--regular` }))),
+  // The catalogue is some 1,500 names, so it is fetched when a picker first asks for it rather than with the app.
+  load: () =>
+    Effect.promise(() => import('@dxos/ui-types/phosphor')).pipe(
+      Effect.map(({ phosphorIcons }) =>
+        phosphorIcons.map((name) => ({ value: name, label: name, icon: `ph--${name}--regular` })),
+      ),
+    ),
 });
 
 /**

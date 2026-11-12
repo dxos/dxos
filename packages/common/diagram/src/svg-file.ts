@@ -561,12 +561,42 @@ export const sceneTree = (
 export const sceneMarkup = (objects: readonly Scene.WorldObject[], options: SceneMarkupOptions = {}): string =>
   serialize(sceneTree(objects, options));
 
+/** The palette a standalone file inlines. */
+export type SvgTheme = 'light' | 'dark';
+
+export type SvgFileOptions = {
+  /** Unset, light: a file on disk is read on a white page. */
+  theme?: SvgTheme;
+  /** Leaves the ground unpainted, for a host that draws its own surface behind the picture. */
+  transparent?: boolean;
+};
+
+/** Each theme's ink and surface, and what its `dark:` utilities resolve to (Tailwind's neutral palette). */
+const THEMES: Record<SvgTheme, { ink: string; surface: string; variants: string }> = {
+  light: { ink: INK_HEX, surface: SURFACE_HEX, variants: '' },
+  dark: {
+    ink: '#e5e5e5',
+    surface: '#171717',
+    // After the base rules, which they match in specificity, so the variant wins wherever an element carries both.
+    variants: `
+  .dark\\:text-neutral-200 { color: #e5e5e5; }
+  .dark\\:text-neutral-400 { color: #a3a3a3; }
+  .dark\\:text-neutral-500 { color: #737373; }
+  .dark\\:fill-neutral-200 { fill: #e5e5e5; }
+  .dark\\:fill-neutral-800 { fill: #262626; }
+  .dark\\:stroke-neutral-200 { stroke: #e5e5e5; }
+`,
+  },
+};
+
 /**
  * The renderer styles with Tailwind utilities; a file on disk has no stylesheet, so the export
- * inlines the handful it uses (light theme, Tailwind's neutral palette).
+ * inlines the handful it uses (Tailwind's neutral palette, in the theme asked for).
  */
-const STYLE = `
-  svg { font-family: ui-sans-serif, system-ui, sans-serif; color: ${INK_HEX}; background: ${SURFACE_HEX}; }
+const styleOf = ({ theme = 'light', transparent = false }: SvgFileOptions): string => {
+  const { ink, surface, variants } = THEMES[theme];
+  return `
+  svg { font-family: ui-sans-serif, system-ui, sans-serif; color: ${ink}; background: ${transparent ? 'transparent' : surface}; }
   .stroke-current { stroke: currentColor; }
   .fill-current { fill: currentColor; }
   .fill-transparent { fill: transparent; }
@@ -575,20 +605,21 @@ const STYLE = `
   .fill-neutral-100 { fill: #f5f5f5; }
   .fill-neutral-800 { fill: #262626; }
   .stroke-neutral-800 { stroke: #262626; }
-  svg { --surface-bg: ${SURFACE_HEX}; }
+  svg { --surface-bg: ${surface}; }
 ${Object.entries(TEXT_HEX)
   .map(([name, hex]) => `  .${name} { color: ${hex}; }\n`)
   .join('')}  .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
-`;
+${variants}`;
+};
 
 /**
  * A standalone SVG file of a scene: the markup, width and height from its viewBox, and the inline styles.
  * Without the editor's background grid, which on a page is ink that carries no information.
  */
-export const toSvgFile = (objects: readonly Scene.WorldObject[]): string => {
+export const toSvgFile = (objects: readonly Scene.WorldObject[], options: SvgFileOptions = {}): string => {
   const markup = sceneMarkup(objects);
   const viewBox = /viewBox="([^"]+)"/.exec(markup)?.[1].split(' ').map(Number) ?? [0, 0, 0, 0];
   return markup
     .replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${viewBox[2]}" height="${viewBox[3]}" `)
-    .replace('<defs>', `<style>${STYLE}</style><defs>`);
+    .replace('<defs>', `<style>${styleOf(options)}</style><defs>`);
 };
