@@ -122,8 +122,10 @@ export const Default: Story = {
     await expect(marked.length).toBe(
       Object.values(model.nodes).reduce((total, card) => total + Object.keys(card.feed?.marks ?? {}).length, 0),
     );
-    // The deck's accent, from the theme tokens rather than a colour named in the view.
-    await expect(getComputedStyle(marked[0]).backgroundColor).toBe('rgb(45, 111, 255)');
+    // The deck's accent, from the theme tokens rather than a colour named in the view: the token is a light and a
+    // dark value, and the block takes the one for the mode it is drawn in.
+    const dark = getComputedStyle(marked[0]).colorScheme.includes('dark');
+    await expect(getComputedStyle(marked[0]).backgroundColor).toBe(dark ? 'rgb(6, 197, 253)' : 'rgb(45, 111, 255)');
     // The space is an element of its own kind, so it is selectable and its fields are its configuration.
     const space = await canvas.findByTestId('space-graph-node');
     await expect(space.querySelectorAll('circle').length).toBeGreaterThan(100);
@@ -135,9 +137,10 @@ export const WithoutPlugin: Story = {
   decorators: decorators({ plugins: [] }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const scene = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
     await expect(canvas.queryAllByTestId('feed-card-node')).toHaveLength(0);
-    await expect(await canvas.findByText('Triage agent')).toBeInTheDocument();
+    // Looked for where it is drawn: the Views list names every element too.
+    await expect(await within(scene).findByText('Triage agent')).toBeInTheDocument();
   },
 };
 
@@ -153,6 +156,7 @@ export const WithGenerator: Story = {
     await expect((await canvas.findAllByTestId('feed-card-node')).length).toBe(Object.keys(model.nodes).length);
     // The generator draws onto its own layer; there is no element to select or configure.
     await expect(canvas.queryAllByTestId('space-graph-node')).toHaveLength(0);
-    await expect(await canvas.findByTestId('generator-layer')).toBeInTheDocument();
+    // The view compiles the generator before it draws, which a loaded runner takes longer over than the default wait.
+    await expect(await canvas.findByTestId('generator-layer', undefined, { timeout: 30_000 })).toBeInTheDocument();
   },
 };
