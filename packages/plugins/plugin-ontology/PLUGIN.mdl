@@ -1,0 +1,114 @@
+---
+id: org.dxos.plugin.ontology
+name: OntologyPlugin
+version: 0.1.0
+---
+
+A **headless** plugin that registers the base ECHO types no product plugin owns. On EDGE a plugin
+runs alone, with only the types its own bundle registers, so these types need a plugin of their own
+to reach the registry. Until now EDGE's operation-service registered them in its `BasePlugin`; this
+plugin replaces that schema module, so operation-service can be removed.
+
+The plugin contributes one module, a schema module, and has no UI, operations or skills.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+### Existing types registered by this plugin
+
+| Type                        | Source                         |
+| --------------------------- | ------------------------------ |
+| `AccessToken.AccessToken`   | `@dxos/link`                   |
+| `Cursor.Cursor`             | `@dxos/link`                   |
+| `Blob.Blob`                 | `@dxos/echo`                   |
+| `Collection.Collection`     | `@dxos/echo`                   |
+| `Expando.Expando`           | `@dxos/schema`                 |
+| `SpaceProperties`           | `@dxos/client-protocol/types`  |
+| `Message.Message`           | `@dxos/types`                  |
+| `Organization.Organization` | `@dxos/types`                  |
+| `Person.Person`             | `@dxos/types`                  |
+
+## Features
+
+```mdl
+feat F-1: Base types
+
+  req F-1.1: The plugin's schema module registers exactly the types in the table above, and no
+    others.
+
+  req F-1.2: The schema module loads in every runtime (`browser`, `tauri`, `node`, `workerd`), and
+    the plugin contributes no operations, skills or UI.
+
+  req F-1.3: The plugin is released to EDGE as its own bundle, which activates alone in `workerd`.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: The plugin registers the base types
+  given: The plugin is activated headless, alone.
+  then:
+    - No module fails to activate.
+    - The registered typenames are exactly those of the types in the table above.
+    - No operation or skill is contributed.
+```
+
+```mdl
+scenario T-2: The EDGE bundle activates alone
+  given: The plugin's bundle is built as an EDGE release.
+  then: The bundle loads and activates alone in `workerd` and contributes its types.
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: operation-service is removed entirely.
+  date: 2026-11-12
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-2: The base types operation-service's BasePlugin registers — `AccessToken`, `Cursor`, `Blob`, `Collection`, `Expando`, `SpaceProperties`, `Message`, `Organization` and `Person` — live in a new dxos plugin named plugin-ontology.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-1.1]
+```
+
+```mdl
+decision D-3: The plugin contributes only a schema module. BasePlugin's file backend and stub operation invoker do not move to it. Fills in [D-2].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.2]
+  why: compute-service provides the default file backend on EDGE, and a bundle runs no operation invoker of its own.
+  rejected: Moving the file backend, which would register a second default backend beside compute-service's.
+```
+
+```mdl
+decision D-4: The plugin's key is `org.dxos.plugin.ontology` and its name is "Ontology". It is headless, with no UI or translations, carries the `labs` quality tier, and its schema module runs in every runtime. Fills in [D-2].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: Keys follow `org.dxos.plugin.<package>`; `labs` is the default tier for a new plugin; the types are needed on EDGE (`workerd`) and wherever else a host runs plugins headless.
+  rejected: The `system` tier, which force-enables a plugin in Composer; whether Composer loads this plugin is not part of [D-2].
+```
+
+```mdl
+decision D-5: The plugin is released to EDGE as its own bundle, and its tests check that it activates alone and registers exactly the base types. Fills in [D-2].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3, T-1, T-2]
+  why: A plugin runs alone on EDGE, so the bundle must activate without any other plugin.
+```
