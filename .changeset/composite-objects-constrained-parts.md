@@ -6,6 +6,7 @@
 '@dxos/plugin-uml': minor
 '@dxos/plugin-canvas': minor
 '@dxos/plugin-markdown': patch
+'@dxos/react-ui-form': patch
 ---
 
 Composite objects whose parts follow their frame, declared in the scene DSL.
@@ -74,6 +75,10 @@ look has none.
 A link's free end is drawn where it will land while it is dragged: on the port or node under the pointer, else on
 the grid. An orthogonal link with a free end keeps its corner on one side of the line while that end is dragged,
 rather than jumping across it at the diagonal.
+
+An elbow link to an end on no port turns twice, halfway between its ends, on a lattice scene too, where it used to
+follow the nearest gutter line. The Properties panel's Type field now changes how a link is drawn: it was refused by
+the form and ignored by the edit behind it. A form field's error icon shows the error in a tooltip.
 
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 

@@ -11,7 +11,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/reactivity/Atom';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
@@ -38,6 +38,7 @@ import {
   patchValues,
   portsPerSideOf,
   resolveStyle,
+  retypeLink,
   splitClassEdit,
   templateComposite,
   updateElement,
@@ -166,17 +167,25 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'overrides': PartsField,
 };
 
+/** Every way a link may be drawn: the panel's `type` field picks among them, so a link's form accepts any. */
+const LinkVariant = Schema.Literals(['line', 'ortho', 'curve', 'spline', 'smart']);
+
+// Each link type's schema with its `type` opened to any of them. A form validates what it is about to save, and
+// with the type held to the link's own a pick of another was refused before it could be written.
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
-  line: LineLink,
-  curve: CurveLink,
-  spline: SplineLink,
-  ortho: OrthoLink,
-  smart: SmartLink,
+  line: Schema.Struct({ ...LineLink.fields, type: LinkVariant }),
+  curve: Schema.Struct({ ...CurveLink.fields, type: LinkVariant }),
+  // A spline's points are its own, set by its handles: a link drawn another way has none to show the form.
+  spline: Schema.Struct({ ...SplineLink.fields, type: LinkVariant, points: Schema.optional(SplineLink.fields.points) }),
+  ortho: Schema.Struct({ ...OrthoLink.fields, type: LinkVariant }),
+  smart: Schema.Struct({ ...SmartLink.fields, type: LinkVariant }),
 };
+
+const isLinkType = Schema.is(LinkVariant);
 
 /** An element's own schema; a type the registry does not know gets the core base's (`BaseNode`, or a line). */
 const schemaOf = (nodes: NodeRegistry, element: Element): Schema.Codec<any, any> =>
-  isLink(element) ? (LINK_SCHEMAS[element.type] ?? LineLink) : (nodeDef(nodes, element)?.schema ?? BaseNode);
+  isLink(element) ? (LINK_SCHEMAS[element.type] ?? LINK_SCHEMAS.line) : (nodeDef(nodes, element)?.schema ?? BaseNode);
 
 /**
  * Where a type places its text unless styled otherwise: a note from the top left, a hull's name in its corner, a
@@ -333,14 +342,18 @@ export const PropertiesInspector = ({
       const edits = elements.map((element) => {
         const shown = formValues(nodes, element, styleMap, layers);
         // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
-        const patch = patchValues({ ...shown, style: element.style }, values, paths);
+        const { type: picked, ...patch } = patchValues({ ...shown, style: element.style }, values, paths);
+        // A link drawn another way is a different link type, which a field update never changes.
+        const retype = isLink(element) && isLinkType(picked) ? [retypeLink(element.id, picked)] : [];
+        const write = (next: Record<string, unknown>) =>
+          chainEdits([...retype, ...(Object.keys(next).length > 0 ? [updateElement(element.id, next)] : [])]);
         const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
         if (typeof patch.class === 'string') {
-          return updateElement(element.id, { ...patch, style: undefined });
+          return write({ ...patch, style: undefined });
         }
         if (!styleClass || !('style' in patch)) {
-          return updateElement(element.id, patch);
+          return write(patch);
         }
         // A link's look is the common base of its class's style; a node's, the whole of it.
         const look = isLink(element)
@@ -348,7 +361,7 @@ export const PropertiesInspector = ({
           : resolveStyle(classedNode(element, styleMap).style);
         const split = splitClassEdit(look, patch.style, styleClass.style ?? {}, element.style);
         classes[styleClass.id] = { ...styleClass, style: split.classLook };
-        return updateElement(element.id, { ...patch, style: split.own });
+        return write({ ...patch, style: split.own });
       });
       if (styles && Object.keys(classes).length > 0) {
         registry.set(styles, { ...styleMap, ...classes });

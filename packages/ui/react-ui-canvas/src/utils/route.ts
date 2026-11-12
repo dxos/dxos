@@ -196,22 +196,42 @@ const onCells = (scene: RenderList2D, link: Link, spec: LatticeSpec): boolean =>
     return (['x', 'y', 'width', 'height'] as const).every((key) => Math.abs(cell[key] - bounds[key]) < 1e-6);
   });
 
+/** Two coordinates count as lined up within this, in scene px: a sub-pixel offset is not a bend worth drawing. */
+const ORTHO_EPSILON = 0.5;
+
+const isSideways = (side: Side): boolean => side === 'e' || side === 'w';
+
+/**
+ * The elbow a smart link draws to an end on no port: two turns, halfway between its ends, so the line splits evenly
+ * and stays so while either end is dragged. It leaves a port along the port's own axis and reaches the free end along
+ * the same one; with neither end on a port it runs sideways first. Ends that line up on an axis join straight.
+ */
+const elbowPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
+  const [a, b] = [from.point, to.point];
+  if (Math.abs(a.x - b.x) < ORTHO_EPSILON || Math.abs(a.y - b.y) < ORTHO_EPSILON) {
+    return [a, b];
+  }
+  const sideways = from.free ? to.free || isSideways(to.side) : isSideways(from.side);
+  const [midX, midY] = [(a.x + b.x) / 2, (a.y + b.y) / 2];
+  return sideways ? [a, { x: midX, y: a.y }, { x: midX, y: b.y }, b] : [a, { x: a.x, y: midY }, { x: b.x, y: midY }, b];
+};
+
 /**
  * The polyline a smart link follows: a stub out of each port along its side's normal, then one segment
  * joining them. `splinePath` rounds where they meet, so a pair of facing ports reads as the elbow the
- * ports imply rather than a straight line cutting across their own nodes.
+ * ports imply rather than a straight line cutting across their own nodes. An end on no port has no normal to leave
+ * along, so the link draws an even elbow to it instead ({@link elbowPoints}).
  */
 export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
-  // A free end has no stub: the route runs straight to it.
-  const stub = (end: RouteEnd): Point[] => {
+  if (from.free || to.free) {
+    return elbowPoints(from, to);
+  }
+  const stub = (end: RouteEnd): Point => {
     const normal = sideNormal(end.side);
-    return end.free ? [] : [{ x: end.point.x + normal.x * SMART_STUB, y: end.point.y + normal.y * SMART_STUB }];
+    return { x: end.point.x + normal.x * SMART_STUB, y: end.point.y + normal.y * SMART_STUB };
   };
-  return [from.point, ...stub(from), ...stub(to).reverse(), to.point];
+  return [from.point, stub(from), stub(to), to.point];
 };
-
-/** Two coordinates count as lined up within this, in scene px: a sub-pixel offset is not a bend worth drawing. */
-const ORTHO_EPSILON = 0.5;
 
 /**
  * The polyline an orthogonal link follows: straight where its ends line up on an axis, one corner where their sides
@@ -228,9 +248,8 @@ export const orthoPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
   if (Math.abs(a.x - b.x) < ORTHO_EPSILON || Math.abs(a.y - b.y) < ORTHO_EPSILON) {
     return [a, b];
   }
-  const sideways = (side: Side) => side === 'e' || side === 'w';
-  const fromSideways = from.free ? to.free || !sideways(to.side) : sideways(from.side);
-  const toSideways = to.free ? !fromSideways : sideways(to.side);
+  const fromSideways = from.free ? to.free || !isSideways(to.side) : isSideways(from.side);
+  const toSideways = to.free ? !fromSideways : isSideways(to.side);
   if (fromSideways !== toSideways) {
     return [a, fromSideways ? { x: b.x, y: a.y } : { x: a.x, y: b.y }, b];
   }
@@ -563,9 +582,11 @@ export const viewLinkGeometry = (
         return [];
       }
       const [from, to] = ends;
+      // An end on no port stands off the lattice's cells, so its link takes no gutter: it is drawn as it is anywhere.
+      const gutters = link.type === 'smart' && !from.free && !to.free;
       const points =
         link.type === 'smart'
-          ? (gutterRoute(nodes, lattice, from, to, route.walls?.(link)) ?? smartPoints(from, to))
+          ? (gutters && gutterRoute(nodes, lattice, from, to, route.walls?.(link))) || smartPoints(from, to)
           : undefined;
       return [{ link, from, to, points }];
     });

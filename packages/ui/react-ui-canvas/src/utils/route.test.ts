@@ -118,14 +118,52 @@ describe('route', () => {
     expect(half?.source.side).toBe('w');
   });
 
-  test('a route runs straight to a free end rather than turning to its side', ({ expect }) => {
+  test('a curve runs straight to a free end rather than turning to its side', ({ expect }) => {
     const port = { point: { x: 0, y: 0 }, side: 'e' as const };
     const free = { point: { x: 100, y: 37 }, side: 'w' as const, free: true };
-    // A curve's control point at a free end is the end itself, and a smart link has no stub there.
+    // A curve's control point at a free end is the end itself.
     expect(
       linkPath({ type: 'curve', id: 'c', z: 'a', source: { node: 'n' }, target: { point: free.point } }, port, free),
     ).toMatch(/, 100 37, 100 37$/);
-    expect(smartPoints(port, free)).toEqual([port.point, { x: STUB, y: 0 }, free.point]);
+  });
+
+  test('a smart link to a free end is an even elbow: two turns, halfway between its ends', ({ expect }) => {
+    const free = (x: number, y: number) => ({ point: { x, y }, side: 'w' as const, free: true });
+    // Neither end on a port: it runs sideways first, and the split is at the middle wherever the far end is.
+    expect(smartPoints(free(0, 0), free(200, 80))).toEqual([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 80 },
+      { x: 200, y: 80 },
+    ]);
+    expect(smartPoints(free(0, 0), free(40, 300))[1]).toEqual({ x: 20, y: 0 });
+    // From a port it leaves along the port's own axis, so a port on top turns halfway down instead.
+    expect(smartPoints({ point: { x: 0, y: 0 }, side: 's' }, free(200, 80))).toEqual([
+      { x: 0, y: 0 },
+      { x: 0, y: 40 },
+      { x: 200, y: 40 },
+      { x: 200, y: 80 },
+    ]);
+    // Ends that line up join straight, with nothing to split.
+    expect(smartPoints(free(0, 0), free(200, 0))).toEqual([
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+    ]);
+  });
+
+  test('on a lattice a link with a free end takes no gutter, so its elbow is as even as anywhere', ({ expect }) => {
+    const link: Link = {
+      type: 'smart',
+      id: 'free',
+      z: 'a1',
+      source: { point: { x: 0, y: 240 } },
+      target: { point: { x: 340, y: 70 } },
+    };
+    const scene: RenderList2D = { id: 'root', nodes: {}, links: { free: link } };
+    const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+    // The vertical run is midway between the ends (x = 170), not on the gutter line nearest them.
+    expect(geometry.path).toMatch(/^M 0 240 L 1\d\d(\.\d+)? 240 Q 170 240, 170 /);
+    expect(geometry.path).toMatch(/ L 340 70$/);
   });
 
   test('on a lattice a smart link takes the ports whose gutter route bends least', ({ expect }) => {

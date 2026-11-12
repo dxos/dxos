@@ -12,6 +12,7 @@ import {
   type Bounds,
   type ElementId,
   type Link,
+  type LinkType,
   type Node,
   type NodeId,
   type Point,
@@ -167,6 +168,22 @@ export const updateElement =
       return { ...scene, links: { ...scene.links, [id]: Object.assign({}, link, values, { id, type: link.type }) } };
     }
     return scene;
+  };
+
+/**
+ * Draws a link another way: its `type` changes and everything else about it stays, between the same ends. A spline
+ * starts with no control points of its own, and any other type keeps none.
+ */
+export const retypeLink =
+  (id: ElementId, type: LinkType): SceneEdit =>
+  (scene) => {
+    const link = scene.links[id];
+    if (!link || link.type === type) {
+      return scene;
+    }
+    const { points: _points, ...rest }: Link & { points?: readonly Point[] } = link;
+    const next: Link = type === 'spline' ? { ...rest, type, points: [] } : { ...rest, type };
+    return { ...scene, links: { ...scene.links, [id]: next } };
   };
 
 /** Arranges the scene, or just `ids` when the selection is what was asked to be tidied. */
