@@ -7,21 +7,20 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { BookmarksNamespace } from './src/namespace.ts';
+import { StashNamespace } from './src/namespace.ts';
 
 // #region config
 const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: BookmarksNamespace.key,
-    name: 'Bookmarks',
+    key: StashNamespace.key,
+    name: 'Stash',
     author: 'Example',
     description:
-      'Save links in a space and count how often each one is opened.',
-    icon: { key: 'ph--bookmark-simple--regular', hue: 'amber' },
+      'A reading list: save links with a note, and mark them as read.',
+    icon: { key: 'ph--tray-arrow-down--regular', hue: 'indigo' },
     tags: ['labs'],
   },
   modules: [
-    // #endregion
     // #region translations
     AppCapability.translations(
       () => import('./src/translations.ts', { with: { type: 'module-url' } }),
@@ -34,9 +33,25 @@ const config: Plugin.PluginConfig = Plugin.config({
           with: { type: 'module-url' },
         }),
     ),
+    // #endregion
+    // #region operation
+    AppCapability.operationHandler(
+      () =>
+        import('./src/capabilities/operation-handler.ts', {
+          with: { type: 'module-url' },
+        }),
+    ),
     SpaceCapability.createObject(
       () =>
         import('./src/capabilities/create-object.ts', {
+          with: { type: 'module-url' },
+        }),
+    ),
+    // #endregion
+    // #region app-graph
+    AppCapability.appGraphBuilder(
+      () =>
+        import('./src/capabilities/app-graph-builder.ts', {
           with: { type: 'module-url' },
         }),
     ),
@@ -52,13 +67,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
     ),
     // #endregion
-    // #region operation
-    AppCapability.operationHandler(
-      () =>
-        import('./src/capabilities/operation-handler.ts', {
-          with: { type: 'module-url' },
-        }),
-    ),
+    // #region skill
     AppCapability.skillDefinition(
       () =>
         import('./src/capabilities/skill-definition.ts', {
@@ -66,15 +75,6 @@ const config: Plugin.PluginConfig = Plugin.config({
         }),
     ),
     // #endregion
-    // #region app-graph
-    AppCapability.appGraphBuilder(
-      () =>
-        import('./src/capabilities/app-graph-builder.ts', {
-          with: { type: 'module-url' },
-        }),
-    ),
-    // #endregion
-    // #region end
   ],
 });
 

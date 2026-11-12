@@ -61,12 +61,6 @@ export const types = [Organization, Person, Event];
 
 export type ContactRecord = Organization | Person | Event;
 
-// #region follow
-/** The name of the organization `person` works for, if it is loaded. */
-export const employerName = (person: Person): string | undefined =>
-  person.employer?.peek()?.name;
-// #endregion
-
 /** The glyph and hue a type declares on its schema. */
 export const getTypeIcon = (
   type: Type.AnyObj,

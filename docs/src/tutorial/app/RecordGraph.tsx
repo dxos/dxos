@@ -21,7 +21,6 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 
-import { watchRecord } from '../records.ts';
 import { getTypeIcon, types } from '../schema.ts';
 
 /** The hue the schema of `typename` declares. */
@@ -56,18 +55,19 @@ export const RecordGraph = ({
   }, []);
 
   // A field changed in place leaves the query's array as it was, so the graph
-  // subscribes to each record to redraw
-  // an edge whose reference moved.
+  // subscribes to each record to redraw an edge whose reference moved.
+  // #region subscribe
   const [revision, setRevision] = useState(0);
   useEffect(
     () =>
       combine(
         ...records.map((record) =>
-          watchRecord(record, () => setRevision((revision) => revision + 1)),
+          Obj.subscribe(record, () => setRevision((revision) => revision + 1)),
         ),
       ),
     [records],
   );
+  // #endregion
 
   const model = useMemo(() => {
     const model = GraphModel.make();

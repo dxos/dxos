@@ -15,7 +15,7 @@ An operation **definition** has a key (a DXN), metadata for people and agents, a
 **handler** is an Effect that takes the input and returns the output. Definitions and handlers are separate values, so a
 plugin can export a definition for other plugins to call without exposing how it runs.
 
-<Snippet file="app-framework-tutorial/src/types/BookmarkOperation" region="operation" />
+<Snippet file="app-framework-tutorial/src/types/StashedLinkOperation" region="operation" />
 
 Plugins contribute handlers in an **operation handler set** through the `OperationHandler` capability. The **operation
 invoker** looks up the handler by the definition's key and runs it. Any module, handler or graph action can invoke an
@@ -26,9 +26,9 @@ operation with `Operation.invoke`; a component uses `useOperation`.
 A **skill** hands operations to the assistant. It is a name, instructions, and a list of operations that become the
 assistant's tools; a plugin contributes it through `AppCapabilities.SkillDefinition`.
 
-<Snippet file="app-framework-tutorial/src/skills/BookmarksSkill" region="skill" />
+<Snippet file="app-framework-tutorial/src/skills/StashSkill" region="skill" />
 
-Bookmarks' Operations module in the inspector runs Record visit from a form built from its input schema:
+Stash's Operations module in the inspector runs Mark as read from a form built from its input schema:
 
 <InspectorEmbed module="operations" />
 

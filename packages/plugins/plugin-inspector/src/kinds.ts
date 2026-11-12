@@ -16,11 +16,11 @@ export type Kind = { id: KindId; label: string; capability: Capability.Interface
 export const KINDS: readonly Kind[] = [
   { id: 'translations', label: 'Translations', capability: AppCapabilities.Translations },
   { id: 'schema', label: 'Schema', capability: AppCapabilities.Schema },
-  { id: 'create-object', label: 'Create object', capability: SpaceCapabilities.CreateObjectEntry },
-  { id: 'surface', label: 'Surface', capability: Capabilities.ReactSurface },
   { id: 'operations', label: 'Operations', capability: Capabilities.OperationHandler },
-  { id: 'skill', label: 'Skill', capability: AppCapabilities.SkillDefinition },
+  { id: 'create-object', label: 'Create object', capability: SpaceCapabilities.CreateObjectEntry },
   { id: 'app-graph', label: 'App Graph', capability: AppCapabilities.AppGraphBuilder },
+  { id: 'surface', label: 'Surface', capability: Capabilities.ReactSurface },
+  { id: 'skill', label: 'Skill', capability: AppCapabilities.SkillDefinition },
 ];
 
 /** The kind of a module, by the first capability it provides that the inspector knows. */

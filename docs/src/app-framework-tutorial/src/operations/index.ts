@@ -5,10 +5,10 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { RecordVisit } from '../types/BookmarkOperation.ts';
+import { MarkRead } from '../types/StashedLinkOperation.ts';
 
 // #region handler-set
-export const BookmarkOperationHandlerSet = OperationHandlerSet.lazy([
-  RecordVisit.pipe(Operation.lazyHandler(() => import('./record-visit.ts'))),
+export const StashOperationHandlerSet = OperationHandlerSet.lazy([
+  MarkRead.pipe(Operation.lazyHandler(() => import('./mark-read.ts'))),
 ]);
 // #endregion

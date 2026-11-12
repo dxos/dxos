@@ -216,6 +216,9 @@ catalogs:
     '@excalidraw/excalidraw':
       specifier: ^0.18.0
       version: 0.18.1
+    '@expressive-code/plugin-collapsible-sections':
+      specifier: 0.44.2
+      version: 0.44.2
     '@expressive-code/plugin-line-numbers':
       specifier: 0.44.2
       version: 0.44.2
@@ -2366,6 +2369,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../packages/plugins/plugin-markdown
+      '@dxos/plugin-mermaid':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-mermaid
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../packages/plugins/plugin-preview
@@ -2490,6 +2496,9 @@ importers:
       '@dxos/vite-plugin-module-url':
         specifier: workspace:*
         version: link:../tools/vite-plugin-module-url
+      '@expressive-code/plugin-collapsible-sections':
+        specifier: 'catalog:'
+        version: 0.44.2
       '@expressive-code/plugin-line-numbers':
         specifier: 'catalog:'
         version: 0.44.2
@@ -31411,6 +31420,9 @@ packages:
   '@expressive-code/core@0.44.2':
     resolution: {integrity: sha512-Yw5KonQCD1HoOO2P89y4wifqS9qrJcGVY0LkVMUsVZjhi++bhz4WwQ37inenKFNOEVo50P7cjoVsCdaVnUbq8w==}
 
+  '@expressive-code/plugin-collapsible-sections@0.44.2':
+    resolution: {integrity: sha512-iT8PPitb32Te5tGd1LiIlVeZve/HDZUtygwLjqg3f47aHR3AeUreDXDZUis5qMHr+/Vrt8tKfQSWtT7qm8Fkng==}
+
   '@expressive-code/plugin-frames@0.44.2':
     resolution: {integrity: sha512-gVLm6TQMNIRWIaM7o+mCtxkGNjLZY5/2faSTLoXeo9wv/Pkj/0QAtZyXPVPrRsPARqiipATNFmfvQFLJudxPHQ==}
 
@@ -54045,6 +54057,10 @@ snapshots:
       postcss-nested: 6.0.1(postcss@8.5.12)
       unist-util-visit: 5.1.0
       unist-util-visit-parents: 6.0.2
+
+  '@expressive-code/plugin-collapsible-sections@0.44.2':
+    dependencies:
+      '@expressive-code/core': 0.44.2
 
   '@expressive-code/plugin-frames@0.44.2':
     dependencies:

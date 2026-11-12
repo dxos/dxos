@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Bookmark } from '../types/Bookmark.ts';
+import { StashedLink } from '../types/StashedLink.ts';
 
 // #region schema
-export default [Bookmark];
+export default [StashedLink];
 // #endregion

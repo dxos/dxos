@@ -9,7 +9,7 @@ import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
 By the end of this page you will know how the tutorial app's components get their data, and why they re-render when any peer changes it.
 
-## Before you start
+## Background
 
 The [learning path](/docs/echo/learn/the-echo-object/) builds the app's ECHO code in plain TypeScript: its types, its add and update functions, and its queries. This guide covers the React layer on top, which `@dxos/react-client` connects to ECHO.
 
@@ -17,6 +17,8 @@ Two rules decide when a component re-renders:
 
 - A hook subscribes the component to what it returns. `useQuery` re-renders when the query's results change, and `useObject` when the object changes.
 - Reading a field of an ECHO object during render subscribes to nothing. A component that reads `person.name` straight off the object does not re-render when the name changes.
+
+## Steps
 
 <Steps>
 
@@ -67,7 +69,7 @@ Two rules decide when a component re-renders:
      render time, and the component does not re-render when the field changes.
    </Aside>
 
-5. **Edit a record.** The app's form is `Form.Root` from `@dxos/react-ui-form`, given the record's type and the values from `useObject`. `onValuesChanged` writes each change back with `updateRecord` from [Mutating objects](/docs/echo/learn/mutating-objects/). A reference field lists the records of the type it points at.
+5. **Edit a record.** The app's form is `Form.Root` from `@dxos/react-ui-form`, given the record's type and the values from `useObject`. `onValuesChanged` writes each change back inside `Obj.update`, as in [Mutating objects](/docs/echo/learn/mutating-objects/). A reference field lists the records of the type it points at.
 
    <Snippet file="tutorial/app/RecordForm" region="edit" lang="tsx" />
 
@@ -85,7 +87,7 @@ Two rules decide when a component re-renders:
 
 ## Try it
 
-The app with every piece in place: the lists, the table and the graph are all `useQuery`, and the form writes through `updateRecord`.
+The app with every piece in place: the lists, the table and the graph are all `useQuery`, and the form writes inside `Obj.update`.
 
 <TutorialEmbed stage="complete" />
 
@@ -105,7 +107,7 @@ Create the client yourself to use it outside React too.
 
 ### Pass a config
 
-`config` takes a function that returns a `Config`, built from the same sources as in [Configure the client](/docs/echo/learn/installation/#configure-the-client).
+`config` takes a function that returns a `Config`, built from the same sources as in the [Configuration guide](/docs/echo/guides/configuration/).
 
 <Snippet file="react" region="config" lang="tsx" />
 

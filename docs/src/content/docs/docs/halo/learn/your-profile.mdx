@@ -12,11 +12,12 @@ By the end of this page the contact book will create your identity with a profil
 name from it in the corner, and let you change it.
 
 To write the code as you read, open the starter on StackBlitz. It is the finished app with the code from these pages taken
-out. It runs from the start, and tells you which step to fill in next. Each page says which file its code goes in.
+out. It runs from the start, and when the app reaches code you have not written yet, a line at the top names the step and
+its file. Each sample on these pages is titled with the file it goes in, and numbered as that file is.
 
-<StackBlitzButton project="halo" kind="starter" label="Follow along in StackBlitz" file="src/client.ts" />
+<StackBlitzButton project="halo" kind="starter" label="Follow along in StackBlitz" file="src/app/App.tsx" />
 
-## Before you start
+## Background
 
 An identity stands for you. In Keyhive, which HALO is built on, it is a group named by a DID, such as
 `did:halo:BA25QRC2…`. Its members are your devices, and the first member is the device that creates it. No server issues
@@ -26,23 +27,26 @@ The identity also has a profile: a display name, and any other data the app want
 space with sees it.
 
 The code is Effect. `@dxos/halo` describes each operation as an `Effect` or a `Stream` that needs `Identity.Service` or
-`Space.Service`, and `layerClient` from `@dxos/halo-adapter-client` provides both from a client.
+`Space.Service`. `@dxos/halo-adapter-client` makes both from a client, and `@dxos/halo-react` hands them to the
+components through React context, with hooks that follow the streams.
+
+## Steps
 
 <Steps>
 
-1. **Install the packages.** `@dxos/client` holds the client, `@dxos/halo` the API these pages use, and
-   `@dxos/halo-adapter-client` the layer between them. Until the next npm release, install the build of main these pages
+1. **Install the packages.** `@dxos/client` holds the client, `@dxos/halo` the API these pages use,
+   `@dxos/halo-adapter-client` the services between them, and `@dxos/halo-react` the provider for React. Until the next npm release, install the build of main these pages
    describe, from pkg.pr.new.
 
    <Tabs>
      <TabItem label="pnpm">
        ```bash
-       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 effect@4.0.4
+       pnpm add https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-react@20a14b9 effect@4.0.4
        ```
      </TabItem>
      <TabItem label="npm">
        ```bash
-       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 effect@4.0.4
+       npm install --save https://pkg.pr.new/dxos/dxos/@dxos/client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-adapter-client@20a14b9 https://pkg.pr.new/dxos/dxos/@dxos/halo-react@20a14b9 effect@4.0.4
        ```
      </TabItem>
    </Tabs>
@@ -51,30 +55,31 @@ The code is Effect. `@dxos/halo` describes each operation as an `Effect` or a `S
    StackBlitz project has it already.
 
 2. **Configure the client.** The client keeps the device's keys and data on the device, and reaches other devices through
-   EDGE, DXOS's network, which relays invitations and replicates spaces. This goes in `client.ts`.
+   EDGE, DXOS's network, which relays invitations and replicates spaces.
 
-   <Snippet file="halo-tutorial/client" region="config" />
+   <Snippet file="halo-tutorial/app/App" region="config" lang="tsx" />
 
-3. **Start the client.** `openHalo` starts a client and returns `run`, which runs a piece of HALO code against it with
-   `Effect.runPromise`. The app calls it once, at startup.
+3. **Start the client.** `openHalo` starts a client and returns it with the HALO services it backs. The app calls it
+   once, at startup, and puts the services in a `HaloProvider`. Below it, a component gets them with `useHaloServices()`
+   and runs each piece of HALO code with `Effect.provide(services)` and `Effect.runPromise`.
 
-   <Snippet file="halo-tutorial/client" region="client" />
+   <Snippet file="halo-tutorial/app/App" region="client" lang="tsx" />
 
 4. **Create your identity.** `Identity.create` makes the identity, with this device as its first member, and gives its
-   profile your name. The app calls this when you press **Start**. This and the next two steps go in `profile.ts`.
+   profile your name. **Start** on the welcome screen calls this.
 
-   <Snippet file="halo-tutorial/profile" region="create" />
+   <Snippet file="halo-tutorial/app/Welcome" region="create" lang="tsx" />
 
-5. **Follow your identity.** `Identity.identity` is a stream: it emits the identity straight away, as an `Option` that is
-   empty before there is one, and again on every change. `me` turns the empty case into `undefined`, and the app follows
-   it to show either the name prompt or your name.
+5. **Follow your identity.** `useIdentity` returns the identity, or `undefined` before there is one, and re-renders the
+   component on every change. It follows `Identity.identity`, a stream of the identity. The contact book reads it to show
+   either the welcome screen or your name.
 
-   <Snippet file="halo-tutorial/profile" region="follow" />
+   <Snippet file="halo-tutorial/app/ContactBook" region="follow" lang="tsx" />
 
-6. **Change your profile.** `Identity.updateProfile` writes a new profile. `me` emits it, and so does every space member list
-   that includes you. Clicking your name in the app calls this.
+6. **Change your profile.** `Identity.updateProfile` writes a new profile. `useIdentity` re-renders with it, and so does
+   every space member list that includes you. Clicking your name, then **Save**, calls this.
 
-   <Snippet file="halo-tutorial/profile" region="rename" />
+   <Snippet file="halo-tutorial/app/Profile" region="rename" lang="tsx" />
 
 </Steps>
 
@@ -86,5 +91,5 @@ This device has no identity yet. Type a name and press **Start**, then click you
 
 ## What you can do now
 
-You can start a client, create an identity with a profile, follow it as a stream, and change its profile. Next,
+You can start a client, create an identity with a profile, follow it from a component, and change its profile. Next,
 [Your spaces](/docs/halo/learn/your-spaces/) gives it somewhere to invite people.

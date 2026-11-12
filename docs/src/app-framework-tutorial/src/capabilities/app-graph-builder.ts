@@ -2,97 +2,66 @@
 // Copyright 2026 DXOS.org
 //
 
+// #region imports
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import { isSpace } from '@dxos/client/echo';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
-import { Filter } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 
-import { BookmarksNamespace } from '../namespace.ts';
-import { Bookmark } from '../types/Bookmark.ts';
-import { RecordVisit } from '../types/BookmarkOperation.ts';
+import { StashNamespace } from '../namespace.ts';
+import { StashedLink } from '../types/StashedLink.ts';
+import { MarkRead } from '../types/StashedLinkOperation.ts';
+// #endregion
 
-const SECTION_TYPE = 'bookmarks-section';
+// #region section
+/** A "Stashed links" section in each space's Content group, once it has one. */
+const section = TypeSection.createTypeSectionExtension(StashedLink, {
+  match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
+  groupSegment: GraphPath.GroupSegments.content,
+  // The link's address in Composer's URL: `/w/<space>/stash/<id>`.
+  urlKey: 'stash',
+});
+// #endregion
 
+// #region actions
+/** An action on every link, on its toolbar and its menu in the tree. */
+const stashedLinkActions = AppGraphBuilder.createTypeExtension({
+  id: 'stashedLinkActions',
+  type: StashedLink,
+  actions: (link) =>
+    Effect.succeed([
+      {
+        id: 'markRead',
+        data: () =>
+          Operation.invoke(
+            MarkRead,
+            { link: Ref.make(link) },
+            { spaceId: Obj.getDatabase(link)?.spaceId },
+          ),
+        properties: {
+          label: ['mark-read.label', { ns: StashNamespace.key }],
+          icon: 'ph--check-circle--regular',
+          disposition: ['toolbar', 'list-item'],
+        },
+      },
+    ]),
+});
+// #endregion
+
+// #region module
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extensions = yield* Effect.all([
-      // #region section
-      // A "Bookmarks" section under each space that has at least one bookmark.
-      AppGraphBuilder.createExtension({
-        id: 'section',
-        match: AppNodeMatcher.whenSpace,
-        connector: (space, get) => {
-          const bookmarks = get(space.db.query(Filter.type(Bookmark)).atom);
-          if (bookmarks.length === 0) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            AppNode.makeSection({
-              id: 'bookmarksSection',
-              type: SECTION_TYPE,
-              label: ['plugin.name', { ns: BookmarksNamespace.key }],
-              icon: 'ph--bookmark-simple--regular',
-              space,
-            }),
-          ]);
-        },
-      }),
-      // #endregion
-      // #region items
-      // One node per bookmark, under the section.
-      AppGraphBuilder.createExtension({
-        id: 'sectionItems',
-        match: (node) => {
-          const space = isSpace(node.properties.space)
-            ? node.properties.space
-            : undefined;
-          return node.type === SECTION_TYPE && space
-            ? Option.some(space)
-            : Option.none();
-        },
-        connector: (space, get) => {
-          const bookmarks = get(space.db.query(Filter.type(Bookmark)).atom);
-          return Effect.succeed(
-            bookmarks
-              .map((bookmark) =>
-                AppNode.makeObject({ get, db: space.db, object: bookmark }),
-              )
-              .filter(
-                (node): node is NonNullable<typeof node> => node !== null,
-              ),
-          );
-        },
-      }),
-      // #endregion
-      // #region actions
-      // A toolbar action on every bookmark node that runs the operation.
-      AppGraphBuilder.createTypeExtension({
-        id: 'bookmarkActions',
-        type: Bookmark,
-        actions: (bookmark) =>
-          Effect.succeed([
-            AppNode.makeToolbarAction({
-              id: 'recordVisit',
-              data: () => Operation.invoke(RecordVisit, { bookmark }),
-              label: ['record-visit.label', { ns: BookmarksNamespace.key }],
-              icon: 'ph--cursor-click--regular',
-            }),
-          ]),
-      }),
-      // #endregion
-    ]);
-
+    const extensions = yield* Effect.all([section, stashedLinkActions]);
     return Capability.contribute(
       AppCapabilities.AppGraphBuilder,
       extensions.flat(),
     );
   }),
 );
+// #endregion

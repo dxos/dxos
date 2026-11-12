@@ -4,7 +4,7 @@ group events "Activation events" {
   node Article "Article requested" below Startup ref="packages/sdk/app-framework/src/common/activation-events.ts"
   node Idle "Idle" below Article ref="packages/sdk/app-framework/src/common/activation-events.ts"
 }
-group modules "Bookmarks modules" right-of events {
+group modules "Stash modules" right-of events {
   node Translations "translations" same-row Startup ref="docs/src/app-framework-tutorial/src/translations.ts"
   node Schema "schema" below Translations ref="docs/src/app-framework-tutorial/src/capabilities/schema.ts"
   node Ops "operation-handler" below Schema ref="docs/src/app-framework-tutorial/src/capabilities/operation-handler.ts"

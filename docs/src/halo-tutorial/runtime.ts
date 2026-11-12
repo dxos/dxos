@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import type * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Identity, Space } from '@dxos/halo';
+import { type HaloServices } from '@dxos/halo-react';
 import { type SpaceId } from '@dxos/keys';
 
-import { type Halo, openHalo } from './client.ts';
+import { openHalo } from './app/App.tsx';
 
 /** The setup an embed starts from. */
 export type Scene =
@@ -45,7 +46,7 @@ export type Device = {
   readonly label: string;
   readonly hue: string;
   readonly client: Client;
-  readonly halo: Layer.Layer<Halo>;
+  readonly services: Context.Context<HaloServices>;
 };
 
 const HUES = { Alice: 'cyan', Bob: 'amber', Carol: 'violet' } as const;
@@ -60,10 +61,10 @@ type Person = keyof typeof HUES;
 export const startScene = async (scene: Scene): Promise<Device[]> => {
   const builder = new TestBuilder();
   const start = async (label: string, hue: string): Promise<Device> => {
-    const { client, halo } = await openHalo(
+    const { client, services } = await openHalo(
       builder.createLocalClientServices(),
     );
-    return { label, hue, client, halo };
+    return { label, hue, client, services };
   };
   const person = async (name: Person, label = `${name}'s device`) => {
     const device = await start(label, HUES[name]);
@@ -106,9 +107,9 @@ export const startScene = async (scene: Scene): Promise<Device[]> => {
   }
 };
 
-const run = <A, E>(device: Device, effect: Effect.Effect<A, E, Halo>) =>
+const run = <A, E>(device: Device, effect: Effect.Effect<A, E, HaloServices>) =>
   // eslint-disable-next-line @dxos/rules/no-effect-run-promise -- readers run Effects with the published API.
-  Effect.runPromise(effect.pipe(Effect.provide(device.halo)));
+  Effect.runPromise(effect.pipe(Effect.provide(device.services)));
 
 const createSpace = (name: string) =>
   Effect.gen(function* () {

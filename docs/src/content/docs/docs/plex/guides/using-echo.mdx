@@ -29,7 +29,7 @@ Annotations on the schema tell the app how to present an object:
 - `UserType` marks a type people create themselves, so it appears in the app's create menus. Leave it off types
   that only a plugin creates, such as a sync cursor.
 
-<Snippet file="app-framework-tutorial/src/types/Bookmark" region="type" />
+<Snippet file="app-framework-tutorial/src/types/StashedLink" region="type" />
 
 The type's name in the menus comes from the plugin's translations, keyed by its typename. See
 [App capabilities](/docs/plex/guides/app-capabilities/#translations).
@@ -38,7 +38,7 @@ The type's name in the menus comes from the plugin's translations, keyed by its 
 
 Give each type a `make` function that fills in defaults, so every plugin that creates one gets a valid object.
 
-<Snippet file="app-framework-tutorial/src/types/Bookmark" region="make" />
+<Snippet file="app-framework-tutorial/src/types/StashedLink" region="make" />
 
 To add the type to the app's create menu, contribute a `SpaceCapabilities.CreateObjectEntry`. The Space plugin lists
 every entry, and calls `createObject` with the properties the person entered and the place they chose.

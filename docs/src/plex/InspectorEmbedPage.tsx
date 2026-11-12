@@ -28,7 +28,7 @@ const isKindId = (value: string): value is KindId => KIND_IDS.some((kind) => kin
 
 /**
  * The inspector as `/embed/inspector/` renders it. With `?dev&adds=<kind>,…` it loads the reader's plugin from its dev
- * server and checks the kinds of module the page adds; without, it shows the finished Bookmarks plugin, opened at
+ * server and checks the kinds of module the page adds; without, it shows the finished Stash plugin, opened at
  * `?module=<kind>` when a page names one.
  */
 export const InspectorEmbedPage = () => {

@@ -5,25 +5,27 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { BookmarksNamespace } from './namespace.ts';
-import { Bookmark } from './types/Bookmark.ts';
+import { StashNamespace } from './namespace.ts';
+import { StashedLink } from './types/StashedLink.ts';
 
 // #region translations
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Bookmark)]: {
-        'typename.label': 'Bookmark',
-        'typename.label_zero': 'Bookmarks',
-        'typename.label_one': 'Bookmark',
-        'typename.label_other': 'Bookmarks',
-        'object-name.placeholder': 'New bookmark',
-        'add-object.label': 'Add bookmark',
+      [StashNamespace.key]: {
+        'plugin.name': 'Stash',
+        'mark-read.label': 'Mark as read',
       },
-      [BookmarksNamespace.key]: {
-        'plugin.name': 'Bookmarks',
-        'record-visit.label': 'Record visit',
+      // #region type
+      [Type.getTypename(StashedLink)]: {
+        'typename.label': 'Stashed link',
+        'typename.label_zero': 'Stashed links',
+        'typename.label_one': 'Stashed link',
+        'typename.label_other': 'Stashed links',
+        'object-name.placeholder': 'New link',
+        'add-object.label': 'Add link',
       },
+      // #endregion
     },
   },
 ] as const satisfies Theme.Resource[];

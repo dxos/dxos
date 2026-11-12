@@ -10,13 +10,13 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { Bookmark, make } from '../types/Bookmark.ts';
+import { StashedLink, make } from '../types/StashedLink.ts';
 
 // #region create-object
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-      id: Type.getTypename(Bookmark),
+      id: Type.getTypename(StashedLink),
       createObject: (props, options) =>
         Operation.invoke(
           SpaceOperation.AddObject,

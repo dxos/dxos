@@ -3,6 +3,7 @@
 //
 
 import { defineEcConfig } from '@astrojs/starlight/expressive-code';
+import { pluginCollapsibleSections } from '@expressive-code/plugin-collapsible-sections';
 import { pluginLineNumbers } from '@expressive-code/plugin-line-numbers';
 import ecTwoSlash from 'expressive-code-twoslash';
 
@@ -11,7 +12,7 @@ import { twoslash } from './twoslash.mjs';
 
 export default defineEcConfig({
   themes: codeThemes,
-  plugins: [pluginLineNumbers(), ...(twoslash ? [ecTwoSlash()] : [])],
+  plugins: [pluginCollapsibleSections(), pluginLineNumbers(), ...(twoslash ? [ecTwoSlash()] : [])],
   minSyntaxHighlightingColorContrast: 5.5,
   defaultProps: { wrap: false, showLineNumbers: true },
   styleOverrides: {

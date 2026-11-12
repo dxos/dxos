@@ -9,8 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
-import { BookmarkArticle } from '../containers/BookmarkArticle.tsx';
-import { Bookmark } from '../types/Bookmark.ts';
+import { StashedLinkArticle } from '../containers/StashedLinkArticle.tsx';
+import { StashedLink } from '../types/StashedLink.ts';
 
 // #region surface
 export default Capability.makeModule(() =>
@@ -19,8 +19,8 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'article',
-        filter: AppSurface.object(AppSurface.Article, Bookmark),
-        component: BookmarkArticle,
+        filter: AppSurface.object(AppSurface.Article, StashedLink),
+        component: StashedLinkArticle,
         props: ({ role, data: { subject, attendableId } }) => ({
           role,
           subject,

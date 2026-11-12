@@ -9,7 +9,7 @@ import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
 By the end of this page the app will have its three types: organizations, the people who work at them, and the events they attend.
 
-## Before you start
+## Background
 
 A type is a schema with a name. ECHO uses the schema three ways:
 
@@ -20,6 +20,8 @@ A type is a schema with a name. ECHO uses the schema three ways:
 The schema is an [Effect Schema](https://effect.website/docs/schema/introduction/). The name is a DXN: a reverse-domain name and a version, such as `com.example.type.person` at `0.1.0`. Use a domain you control, since the name is global.
 
 A field can hold a reference to another object, with `Ref.Ref(Type)`. A reference stores the target's identity, not a copy, so the graph stays consistent when the target changes.
+
+## Steps
 
 <Steps>
 
@@ -50,9 +52,9 @@ A field can hold a reference to another object, with `Ref.Ref(Type)`. A referenc
    Leave out a person's `name` and the compiler rejects the call.
 
 6. **Follow a reference.** `peek` reads the target, if it is loaded, without waiting. The list shows each person's
-   employer beside their name with this, in `schema.ts`:
+   employer beside their name with this, in `Contacts.tsx`:
 
-   <Snippet file="tutorial/schema" region="follow" />
+   <Snippet file="tutorial/app/Contacts" region="follow" lang="tsx" />
 
 </Steps>
 

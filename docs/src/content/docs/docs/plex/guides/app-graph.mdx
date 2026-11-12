@@ -37,11 +37,13 @@ A node's identity is its **path**: the ids from the root down to it, joined like
 operations take paths. In Composer the address bar shows the open node's path.
 
 Plugins add nodes through **builder extensions**. An extension has a matcher and a connector: the matcher picks the
-nodes it applies to, and the connector returns the nodes to connect to them.
+nodes it applies to, and the connector returns the nodes to connect to them. For the usual section that lists an
+object type, `TypeSection.createTypeSectionExtension` builds the extensions for you, with an address for each object.
+Stash uses it:
 
 <Snippet file="app-framework-tutorial/src/capabilities/app-graph-builder" region="section" />
 
-Bookmarks' App Graph module in the inspector shows the branches that lead to what it added:
+Stash's App Graph module in the inspector shows the branches that lead to what it added:
 
 <InspectorEmbed module="app-graph" />
 

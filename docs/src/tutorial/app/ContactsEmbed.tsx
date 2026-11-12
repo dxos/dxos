@@ -19,8 +19,8 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { type Stage } from '../progress.ts';
 import { type Peer, startPeers } from '../runtime.ts';
+import { type Stage } from './Contacts.tsx';
 import { PeerApp } from './PeerApp.tsx';
 
 const translations = [

@@ -4,14 +4,70 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { type Client } from '@dxos/client';
+import { Client, type ClientServicesProvider } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { Config } from '@dxos/config';
 
-import { openSpace } from '../client.ts';
-import { getProgress } from '../progress.ts';
+import { types } from '../schema.ts';
 import { seed } from '../seed.ts';
 import { Themed } from './ContactsEmbed.tsx';
 import { PeerApp } from './PeerApp.tsx';
+
+// #region config
+/**
+ * Keeps the app's data on the device and reaches other devices through DXOS's
+ * EDGE network, which relays invitations and replicates spaces.
+ */
+const config = new Config({
+  runtime: {
+    client: {
+      storage: { persistent: true },
+      edgeFeatures: {
+        signaling: true,
+        subductionReplicator: true,
+        feedReplicator: true,
+      },
+    },
+    services: {
+      edge: { url: 'https://dxos.network/' },
+      iceProviders: [{ urls: 'https://dxos.network/ice' }],
+    },
+  },
+});
+// #endregion
+
+// #region client
+/**
+ * Starts a client that knows the app's types, gives it an identity the first
+ * time, and opens the space the app keeps its records in, creating it the
+ * first time.
+ */
+export const openSpace = async (services?: ClientServicesProvider) => {
+  const client = new Client(
+    services
+      ? { types, services }
+      : {
+          types,
+          config,
+          // Keeps the database in the browser's private file system.
+          createOpfsWorker: () =>
+            new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), {
+              type: 'module',
+            }),
+        },
+  );
+  await client.initialize();
+  if (!client.halo.identity.get()) {
+    await client.halo.createIdentity();
+  }
+
+  const space =
+    client.spaces.get()[0] ??
+    (await client.spaces.create({ name: 'Contacts' }));
+  await space.waitUntilReady();
+  return { client, space };
+};
+// #endregion
 
 /** The space the app showed last, which may be one it joined. */
 const CURRENT_SPACE = 'contacts:space';
@@ -19,18 +75,12 @@ const seededKey = (space: Space) => `contacts:seeded:${space.id}`;
 
 /**
  * The app as a project of its own, as StackBlitz runs it: one real client,
- * kept on this device, as far as its modules are written, under the step that
- * writes the next piece.
+ * kept on this device.
  */
 export const App = () => {
-  const { stage, next } = getProgress();
   const [opened, setOpened] = useState<{ client: Client; space: Space }>();
   const [error, setError] = useState<string>();
   useEffect(() => {
-    if (!stage) {
-      return;
-    }
-
     const open = async () => {
       const { client, space } = await openSpace();
       if (localStorage.getItem(seededKey(space)) === null) {
@@ -44,41 +94,23 @@ export const App = () => {
       setOpened({ client, space: saved ?? space });
     };
     open().catch((error) => setError(String(error)));
-  }, [stage]);
+  }, []);
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {next && (
-        <p
-          style={{
-            margin: 0,
-            padding: '0.75rem 1rem',
-            font: '14px system-ui',
-            background: '#fff4d6',
-            color: '#3d2c00',
-          }}
-        >
-          <strong>Next:</strong> {next}. Fill in the TODO for it, and the app
-          picks it up when you save.
-        </p>
-      )}
-      <div style={{ flex: 1, minHeight: 0 }}>
-        {error && <p style={{ padding: '1rem' }}>{error}</p>}
-        {stage && opened && (
-          <Themed>
-            <div className='dx-grow'>
-              <PeerApp
-                client={opened.client}
-                space={opened.space}
-                stage={stage}
-                onSpaceChange={(space) =>
-                  localStorage.setItem(CURRENT_SPACE, space.id)
-                }
-              />
-            </div>
-          </Themed>
-        )}
+  if (error) {
+    return <p style={{ padding: '1rem' }}>{error}</p>;
+  }
+  return opened ? (
+    <Themed>
+      <div className='dx-grow'>
+        <PeerApp
+          client={opened.client}
+          space={opened.space}
+          stage='complete'
+          onSpaceChange={(space) =>
+            localStorage.setItem(CURRENT_SPACE, space.id)
+          }
+        />
       </div>
-    </div>
-  );
+    </Themed>
+  ) : null;
 };

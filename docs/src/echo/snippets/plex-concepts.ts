@@ -10,9 +10,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
-import { DXN } from '@dxos/echo';
+import { DXN, Ref } from '@dxos/echo';
 
-import { RecordVisit } from '../../app-framework-tutorial/src/types/BookmarkOperation.ts';
+import { type StashedLink } from '../../app-framework-tutorial/src/types/StashedLink.ts';
+import { MarkRead } from '../../app-framework-tutorial/src/types/StashedLinkOperation.ts';
 
 // #region wait
 // `waitFor` suspends until some module contributes the capability, so this
@@ -32,9 +33,9 @@ export const GraphReadyModule = Capability.inlineModule(
 
 // #region invoke
 // Any module, handler or action can run an operation by its definition.
-export const visit = (bookmark: unknown) =>
-  Operation.invoke(RecordVisit, { bookmark }).pipe(
-    Effect.catchTag('NoHandlerError', () => Effect.succeed({ visits: 0 })),
+export const markRead = (link: StashedLink) =>
+  Operation.invoke(MarkRead, { link: Ref.make(link) }).pipe(
+    Effect.catchTag('NoHandlerError', () => Effect.succeed(undefined)),
   );
 // #endregion
 

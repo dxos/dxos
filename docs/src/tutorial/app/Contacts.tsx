@@ -3,6 +3,7 @@
 //
 
 import React, {
+  Component,
   type ReactNode,
   useCallback,
   useEffect,
@@ -10,7 +11,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useLabels } from '@dxos/echo-react';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
@@ -19,34 +20,19 @@ import * as Select from '@dxos/react-ui/Select';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { type Stage } from '../progress.ts';
-import {
-  events,
-  organizations,
-  people,
-  search,
-  watchCount,
-} from '../queries.ts';
-import { removeRecord } from '../records.ts';
-import {
-  Event,
-  Organization,
-  Person,
-  employerName,
-  getTypeIcon,
-} from '../schema.ts';
+import { Event, Organization, Person, getTypeIcon } from '../schema.ts';
 import { RecordForm } from './RecordForm.tsx';
 import { RecordGraph } from './RecordGraph.tsx';
 import { type Entry, RecordList } from './RecordList.tsx';
 import { RecordTable } from './RecordTable.tsx';
 
-export { type Stage };
-
 /**
- * How far the learning path has built the app: `types` shows each type's
- * records, `queries` adds search and a table, `records` adds creating, editing
- * and removing, and `complete` adds the graph.
+ * How far an embed shows the app: `types` shows each type's records, `queries`
+ * adds search and a table, `records` adds creating, editing and removing, and
+ * `complete` adds the graph and sharing.
  */
+export type Stage = 'types' | 'queries' | 'records' | 'complete';
+
 const STAGES: readonly Stage[] = ['types', 'queries', 'records', 'complete'];
 export const reached = (stage: Stage, at: Stage) =>
   STAGES.indexOf(stage) >= STAGES.indexOf(at);
@@ -74,6 +60,24 @@ const VIEW_STAGES: Record<View, Stage> = {
   table: 'queries',
   graph: 'complete',
 };
+
+// #region follow
+/** The name of the organization `person` works for, if it is loaded. */
+const employerName = (person: Person): string | undefined =>
+  person.employer?.peek()?.name;
+// #endregion
+
+// #region by-type
+const organizations = Query.select(Filter.type(Organization)).orderBy(
+  Order.property<Organization>('name', 'asc'),
+);
+const people = Query.select(Filter.type(Person)).orderBy(
+  Order.property<Person>('name', 'asc'),
+);
+const events = Query.select(Filter.type(Event)).orderBy(
+  Order.property<Event>('title', 'asc'),
+);
+// #endregion
 
 /** Every record of each type, before Querying sorts them. */
 const unsorted = () => ({
@@ -111,11 +115,16 @@ export const Contacts = ({ space, stage, actions, compact }: ContactsProps) => {
   const allEvents = useQuery(space.db, lists.events);
   // #endregion
 
+  // #region live
   const [count, setCount] = useState<number>();
   useEffect(
-    () => (sorted ? watchCount(space.db, setCount) : undefined),
-    [space, sorted],
+    () =>
+      space.db
+        .query(people)
+        .subscribe(({ results }) => setCount(results.length), { fire: true }),
+    [space],
   );
+  // #endregion
 
   const records: Obj.Unknown[] = useMemo(
     () => [...allOrganizations, ...allPeople, ...allEvents],
@@ -126,12 +135,17 @@ export const Contacts = ({ space, stage, actions, compact }: ContactsProps) => {
     Person;
   const searchable = reached(stage, 'queries') && !compact;
   const searching = searchable && text.trim().length > 0;
-  // Searches only while there is text to search for: an empty search has
-  // nothing to match.
+  // #region search
+  // Searches only while there is text: an empty search has nothing to match.
   const found = useQuery(
     searching ? space.db : undefined,
-    searching ? search(text.trim()) : Query.select(Filter.nothing()),
+    Query.select(
+      searching
+        ? Filter.text(text.trim(), { type: 'full-text' })
+        : Filter.nothing(),
+    ),
   );
+  // #endregion
   const shown = useMemo(
     () =>
       searching
@@ -165,16 +179,18 @@ export const Contacts = ({ space, stage, actions, compact }: ContactsProps) => {
     () => records.find((record) => record.id === selected),
     [records, selected],
   );
+  // #region remove
   const handleRemove = useCallback(
     (id: string) => {
       const record = records.find((record) => record.id === id);
       if (record) {
-        removeRecord(space.db, record);
+        space.db.remove(record);
         setSelected((current) => (current === id ? undefined : current));
       }
     },
     [space, records],
   );
+  // #endregion
   const handleCreate = useCallback(
     (record: Obj.Unknown) => setSelected(record.id),
     [],
@@ -228,7 +244,7 @@ export const Contacts = ({ space, stage, actions, compact }: ContactsProps) => {
               />
             )}
             <Toolbar.Separator variant='gap' />
-            {count !== undefined && !compact && (
+            {sorted && count !== undefined && !compact && (
               <span className='text-sm text-description'>
                 {count} {count === 1 ? 'person' : 'people'}
               </span>
@@ -284,16 +300,35 @@ export const Contacts = ({ space, stage, actions, compact }: ContactsProps) => {
         </div>
 
         <div className='overflow-y-auto'>
-          <RecordForm
-            db={space.db}
-            type={type}
-            record={subject}
-            editable={reached(stage, 'records')}
-            showStaff={reached(stage, 'queries')}
-            onCreate={handleCreate}
-          />
+          <Boundary key={subject?.id}>
+            <RecordForm
+              db={space.db}
+              type={type}
+              record={subject}
+              editable={reached(stage, 'records')}
+              showStaff={reached(stage, 'queries')}
+              onCreate={handleCreate}
+            />
+          </Boundary>
         </div>
       </div>
     </div>
   );
 };
+
+/** Shows the error in place of `children` when they fail to render. */
+class Boundary extends Component<{ children: ReactNode }, { error?: unknown }> {
+  override state: { error?: unknown } = {};
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error };
+  }
+
+  override render() {
+    return this.state.error === undefined ? (
+      this.props.children
+    ) : (
+      <p className='p-3 text-sm text-error-text'>{String(this.state.error)}</p>
+    );
+  }
+}

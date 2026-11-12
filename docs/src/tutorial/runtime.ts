@@ -6,7 +6,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 
-import { openSpace } from './client.ts';
+import { openSpace } from './app/App.tsx';
 import { seed } from './seed.ts';
 
 export type Peer = {

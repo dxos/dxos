@@ -4,13 +4,11 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type Database, Obj, Type } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Form, omitId } from '@dxos/react-ui-form';
 
-import { staffOf } from '../queries.ts';
-import { addRecord, updateRecord } from '../records.ts';
-import { Organization, type Person } from '../schema.ts';
+import { Organization, Person } from '../schema.ts';
 
 // #region title
 /** Re-renders whenever any peer renames the record. */
@@ -53,10 +51,13 @@ type NewRecordProps = {
 /** A blank form for `type`; saving adds the new record to the database. */
 const NewRecord = ({ db, type, onCreate }: NewRecordProps) => {
   const schema = useMemo(() => omitId(type), [type]);
+  // #region add
   const handleSave = useCallback(
-    (values: Record<string, unknown>) => onCreate(addRecord(db, type, values)),
+    (values: Record<string, unknown>) =>
+      onCreate(db.add(Obj.make(type, values))),
     [db, type, onCreate],
   );
+  // #endregion
 
   return (
     <Form.Root schema={schema} db={db} onSave={handleSave}>
@@ -84,6 +85,7 @@ const EditRecord = ({ db, type, record }: EditRecordProps) => {
     () => Object.fromEntries(Object.entries(snapshot ?? {})),
     [snapshot],
   );
+  // #region update
   const handleChange = useCallback(
     (
       values: Record<string, unknown>,
@@ -99,16 +101,17 @@ const EditRecord = ({ db, type, record }: EditRecordProps) => {
           .map((path) => path.split(/[.[]/)[0]),
       );
       if (isValid && fields.size > 0) {
-        updateRecord(
-          record,
-          Object.fromEntries(
-            [...fields].map((field) => [field, values[field]]),
-          ),
+        const changes = Object.fromEntries(
+          [...fields].map((field) => [field, values[field]]),
         );
+        Obj.update(record, (record) => {
+          Object.assign(record, changes);
+        });
       }
     },
     [record],
   );
+  // #endregion
 
   return (
     <Form.Root
@@ -135,7 +138,15 @@ const Staff = ({
 }) => {
   const [staff, setStaff] = useState<Person[]>();
   useEffect(() => {
-    void staffOf(db, organization).then(setStaff);
+    // #region employees
+    const employees = Query.select(Filter.id(organization.id)).referencedBy(
+      Person,
+      'employer',
+    );
+    // #endregion
+    // #region run
+    void db.query(employees).run().then(setStaff);
+    // #endregion
   }, [db, organization]);
 
   return staff && staff.length > 0 ? (

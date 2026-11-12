@@ -7,7 +7,7 @@ import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 import PluginPackage from '../../../../../components/PluginPackage.astro';
 import Snippet from '../../../../../components/Snippet.astro';
 
-By the end of this page the inspector on this page loads your plugin, named Bookmarks, from your machine, with one module: its strings. The next four pages give it a type, a view, an action and a place in the navigation tree.
+By the end of this page the inspector on this page loads your plugin, named Stash, from your machine, with one module: its strings. The next four pages give it a type, a view, an action and a place in the navigation tree.
 
 ## Background
 
@@ -15,9 +15,15 @@ A plugin is a set of modules. Each module activates on an event and contributes 
 
 ## Steps
 
-1. **Create the package.** Make a directory for the plugin with a `package.json` and a `vite.config.ts`, then run `npm install` in it.
+1. **Create the package.** Make a directory for the plugin with a `package.json` and a `vite.config.ts`.
 
    <PluginPackage />
+
+   Then install the dependencies in that directory:
+
+   ```bash
+   npm install
+   ```
 
    The `@dxos/*` packages are pinned to the build these docs run, so the inspector on each page can load your plugin. `composerPlugin` serves the plugin from Vite's dev server on port 3967, with a manifest that describes it at `http://localhost:3967/manifest.json`. [Publishing a plugin](/docs/plex/publishing-plugins/) pins them to a Composer release instead.
 
@@ -25,24 +31,24 @@ A plugin is a set of modules. Each module activates on an event and contributes 
 
    <Snippet file="app-framework-tutorial/src/namespace" region="namespace" />
 
-3. **Write the manifest.** `Plugin.config` takes the plugin's registry metadata and its modules. It returns the plugin's `meta` and a `make` function that the app's plugin manager calls to create it.
+3. **Write the manifest.** `Plugin.config` takes the plugin's registry metadata and its modules. It returns the plugin's `meta` and a `make` function that the app's plugin manager calls to create it. The file's default export is what the dev server reads. `modules` starts empty; each step that follows adds one.
 
-   <Snippet file="app-framework-tutorial/dx.config" region="config" />
+   <Snippet file="app-framework-tutorial/dx.config" region="config" omit="translations, schema, operation, app-graph, surface, skill" />
 
    The `tags` field starts with a quality tier. A new plugin is `labs`.
 
-4. **Add the first module.** Translations give the plugin's strings their text. The module lists the translation resource by namespace: one entry for the plugin's own strings, and one for the type the next page adds.
+4. **Add the first module.** Translations give the plugin's strings their text. The module lists the translation resource by namespace. For now it has one entry, for the plugin's own strings; the next page adds one for its type.
 
-   <Snippet file="app-framework-tutorial/src/translations" region="translations" />
+   <Snippet file="app-framework-tutorial/src/translations" region="translations" omit="type" />
 
    Add it to the manifest's `modules`. `AppCapability.translations` is a module maker: it fixes the capability the module contributes and the event it activates on, so the manifest only names the file to load.
 
    <Snippet file="app-framework-tutorial/dx.config" region="translations" />
 
-5. **Load it in the inspector.** Start the dev server in the plugin's directory:
+5. **Load it in the inspector.** Start the dev server in the plugin's directory with the package's `dev` script:
 
    ```bash
-   npx vite
+   npm run dev
    ```
 
    Then click **Load dev plugin** below. The browser asks to reach devices on your local network: allow it, since your plugin's code comes from your machine. The inspector lists your plugin's modules on the left, with Translations active, and shows its strings by namespace. **This page adds** turns to a check once the module loads.
@@ -51,9 +57,7 @@ A plugin is a set of modules. Each module activates on an event and contributes 
 
    Leave the dev server running for the rest of the path. After an edit, click **Reload** in the inspector.
 
-## Recap
-
-You can now:
+## What you can do now
 
 - Name a plugin with a namespace and describe it in `dx.config.ts`.
 - Add a module with a module maker.
