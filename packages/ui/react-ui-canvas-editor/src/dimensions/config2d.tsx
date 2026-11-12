@@ -9,9 +9,9 @@ import {
   type CanvasServices,
   constrain2D,
   defaultThemeRegistry,
+  drawnLists2D,
+  drawnWrites,
   enclose,
-  layoutWrites,
-  toRenderLists2D,
   useCanvasServices,
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID, findLayout } from '@dxos/scene';
@@ -47,9 +47,9 @@ const COMMANDS_2D: readonly ExtraCommandDef[] = [
     label: 'Enclose',
     icon: 'ph--bounding-box--regular',
     enabled: ({ selection }) => selection.length > 0,
-    // Draws a hull round the selected shapes, which then name it as their parent.
-    run: ({ document, layout, selection, onIntent, select }) => {
-      const { lists } = toRenderLists2D(document);
+    // Draws a hull round the selected shapes, stored as a group of them as the Group command would store it.
+    run: ({ document, layout, selection, onIntent, onModelIntent, select }) => {
+      const { lists } = drawnLists2D(document);
       const view = lists.find((list) => list.id === layout);
       const stored = findLayout(document, layout);
       if (!view) {
@@ -65,8 +65,13 @@ const COMMANDS_2D: readonly ExtraCommandDef[] = [
         return;
       }
       const lists2D = Object.fromEntries(lists.map((list) => [list.id, list]));
-      for (const write of layoutWrites(document, lists2D, { ...lists2D, [layout]: next })) {
-        write.kind === 'layout' && onIntent(write.layout, write.intent);
+      const model = stored?.dim === '2d' ? stored.model : undefined;
+      for (const write of drawnWrites(document, lists2D, { ...lists2D, [layout]: next })) {
+        if (write.kind === 'layout') {
+          onIntent(write.layout, write.intent);
+        } else if (model !== undefined) {
+          onModelIntent({ kind: 'define', model, object: write.object });
+        }
       }
       select([id]);
     },

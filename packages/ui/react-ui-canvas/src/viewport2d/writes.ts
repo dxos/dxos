@@ -4,9 +4,15 @@
 
 import { type LayoutIntent, type Scene, type ViewId, applyIntent, findLayout, layoutChanges } from '@dxos/scene';
 
-import { type ConstrainContext, type ConstrainIntent, type RenderLists2D, type ViewportProps } from '../model/index.ts';
-import { type SceneEdit } from '../utils/index.ts';
-import { fromRenderList2D, toRenderList2D } from './render-list.ts';
+import {
+  type ConstrainContext,
+  type ConstrainIntent,
+  type RenderList2D,
+  type RenderLists2D,
+  type ViewportProps,
+} from '../model/index.ts';
+import { type SceneEdit, collapseHulls, expandHulls, fitHulls } from '../utils/index.ts';
+import { fromRenderList2D, toRenderList2D, toRenderLists2D } from './render-list.ts';
 
 /**
  * One write a 2D engine change makes: an intent on a layout (`created` when the engine opened a layout the document has
@@ -117,6 +123,67 @@ export const layoutWrites = (
   }
   return [...created, ...defines.values(), ...updated];
 };
+
+/** A document's 2D layouts as the engine draws them, and which of them hold a hull's group opened out. */
+export type DrawnLists2D = { lists: RenderList2D[]; root: ViewId; opened: ReadonlySet<ViewId> };
+
+/**
+ * A document's 2D layouts as the lists the engine draws (`toRenderLists2D`), with every hull's group opened out in
+ * the scene that places it: what the 2D editor shows and edits, in place of the group as it is stored.
+ */
+export const drawnLists2D = (document: Scene.SceneDocument, scene?: Scene.SceneRecord): DrawnLists2D => {
+  const { lists, root } = scene === undefined ? toRenderLists2D(document) : toRenderLists2D(document, scene);
+  const stored: RenderLists2D = Object.fromEntries(lists.map((list) => [list.id, list]));
+  const opened = expandHulls(stored);
+  // Fitted as it is read, on the layout's own lattice, so the frame the editor selects by is the border it draws.
+  const fitted = (list: RenderList2D): RenderList2D => {
+    const layout = findLayout(document, list.id);
+    return fitHulls(list, layout?.dim === '2d' ? layout.lattice : undefined);
+  };
+  const drawn: RenderLists2D =
+    opened === stored
+      ? stored
+      : Object.fromEntries(
+          Object.values(opened).map((list) => [list.id, stored[list.id] === list ? list : fitted(list)]),
+        );
+  return {
+    lists: lists.flatMap((list) => drawn[list.id] ?? []),
+    root,
+    opened: new Set(
+      lists.flatMap((list) => (drawn[list.id] !== undefined && drawn[list.id] !== list ? [list.id] : [])),
+    ),
+  };
+};
+
+/**
+ * What a change to the lists the engine draws writes to the document ({@link layoutWrites}), each hull closed into
+ * its group first, so what is stored is the group and never the scene it was opened out in.
+ */
+export const drawnWrites = (
+  document: Scene.SceneDocument,
+  previous: RenderLists2D,
+  next: RenderLists2D,
+): LayoutWrite[] => layoutWrites(document, collapseHulls(previous), collapseHulls(next));
+
+/**
+ * The document with each layout of `opened` holding what the engine draws of it, a hull's nodes among its own: what a
+ * layout's mode is asked about, since it places every node of the scene, the ones inside a hull included. The
+ * document itself when no hull is opened out.
+ */
+export const drawnDocument = (
+  document: Scene.SceneDocument,
+  lists: RenderLists2D,
+  opened: ReadonlySet<ViewId>,
+): Scene.SceneDocument =>
+  opened.size === 0
+    ? document
+    : {
+        ...document,
+        layouts: document.layouts.map((layout) => {
+          const list = layout.dim === '2d' && opened.has(layout.id) ? lists[layout.id] : undefined;
+          return list && layout.dim === '2d' ? { ...layout, elements: fromRenderList2D(list).layout.elements } : layout;
+        }),
+      };
 
 /**
  * What the layout's `mode` would store of `edit` to list `sceneId`: the edit as given when the mode leaves it be, the

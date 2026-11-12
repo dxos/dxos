@@ -457,8 +457,9 @@ export type EncloseOptions = {
 
 /**
  * The scene with a new hull `id` round the nodes `ids`, drawn under everything so a press on a node inside it reaches
- * the node. Where the nodes were all inside one hull the new one goes inside it too, so the hierarchy nests; undefined
- * when none of `ids` is a node of the scene, or `id` is taken.
+ * the node. A node already inside a hull leaves it for the new one, and a hull is not put inside another: a hull is
+ * stored as a group of its nodes, which holds shapes and not other hulls' borders. Undefined when none of `ids` is
+ * such a node of the scene, or `id` is taken.
  */
 export const enclose = (
   scene: RenderList2D,
@@ -466,13 +467,11 @@ export const enclose = (
   id: string,
   { lattice, shape }: EncloseOptions = {},
 ): RenderList2D | undefined => {
-  const members = ids.flatMap((member) => scene.nodes[member] ?? []);
+  const members = ids.flatMap((member) => scene.nodes[member] ?? []).filter((member) => !isHullNode(member));
   if (members.length === 0 || scene.nodes[id] !== undefined || scene.links[id] !== undefined) {
     return undefined;
   }
   const [lowest] = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
-  const outers = new Set(members.map((member) => member.parent));
-  const [outer] = outers.size === 1 ? [...outers] : [];
   const bounds = boundsOf(members.flatMap((member) => boundsCorners(nodeBounds(member))));
   const hull: HullNode = {
     ...createNode({
@@ -485,7 +484,6 @@ export const enclose = (
     type: 'hull',
     style: HULL_STYLE,
     ...(shape ? { shape } : {}),
-    ...(outer !== undefined && scene.nodes[outer] && isHullNode(scene.nodes[outer]) ? { parent: outer } : {}),
   };
   const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: id }]));
   return fitHulls({ ...scene, nodes: { ...scene.nodes, ...inside, [id]: hull } }, lattice);

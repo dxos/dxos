@@ -257,8 +257,9 @@ export const nodeBase = {
    */
   overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
   /**
-   * The hull this node is inside, by id (a hull may itself be inside another): what makes the nodes of a scene a
-   * hierarchy, which a link's route respects by staying inside the hull that holds both of its ends.
+   * The hull this node is inside, by id, in the scene the 2D editor draws. It is not how a hull is stored: a hull is
+   * a group, an Instance (`hull`) whose parts are the nodes inside it, and the editor reads that group opened out so
+   * its nodes stand in the scene beside everything else, each naming the hull it came from.
    */
   parent: Schema.optional(Schema.String.annotate({ title: 'Parent' })),
   ...constrainFields,
@@ -404,9 +405,10 @@ export const HULL_SHAPES = ['perimeter', 'box'] as const;
 export type HullShape = (typeof HULL_SHAPES)[number];
 
 /**
- * A border drawn round the nodes that name it as their `parent`. Its frame and `points` (the border, in the frame's
- * unit space as a polyline's are) follow those nodes, so neither is set by hand; with nothing inside it keeps the
- * frame it was given.
+ * A border drawn round the nodes that name it as their `parent`: a hull's group as the 2D editor draws it, opened out
+ * (see `parent`). Its frame and `points` (the border, in the frame's unit space as a polyline's are) follow those
+ * nodes, so neither is set by hand; with nothing inside it has no group to be stored as, and keeps the frame it was
+ * given.
  */
 export const HullNode = Schema.Struct({
   type: Schema.Literal('hull'),
@@ -415,6 +417,8 @@ export const HullNode = Schema.Struct({
   /** Unset, `perimeter`. */
   shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
   points: Schema.optional(Schema.Array(Point)),
+  /** The composite its nodes are stored in; unset until the hull is first written. */
+  group: Schema.optional(Schema.String),
 });
 export type HullNode = Schema.Schema.Type<typeof HullNode>;
 
@@ -469,6 +473,11 @@ export const InstanceNode = Schema.Struct({
   fit: Schema.optional(Schema.Literals(INSTANCE_FITS).annotate({ title: 'Fit' })),
   /** The composite region the frame shows, fixed: its parts at the instance's scale (decision 18). */
   frame: Schema.optional(Bounds),
+  /**
+   * The border the Instance draws round its parts, which makes it a hull: a group whose parts the 2D editor shows and
+   * edits in the scene itself rather than behind the Instance, and whose border a link's route keeps to one side of.
+   */
+  hull: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
 });
 export type InstanceNode = Schema.Schema.Type<typeof InstanceNode>;
 

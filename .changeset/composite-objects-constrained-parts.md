@@ -54,12 +54,18 @@ Cards, text shapes and gestures also sit on the canvas's own grid:
 
 Hulls: a border round a set of shapes, which a link's route respects.
 
-- Enclose (on a selection, in the 2D editor) draws a `hull` round the selected shapes, which then name it as their
-  `parent`; a hull's Hull property is `perimeter` (round the shapes) or `box` (the rectangle that bounds them), and
-  its frame follows whatever is inside it.
+- The Hull tool drags a frame that takes the shapes inside it, and Enclose draws a hull round the selection. A hull's
+  Hull property is `perimeter` (round the shapes) or `box` (the rectangle that bounds them); its frame follows
+  whatever is inside it, moving it moves them, and it is styled as any shape is.
+- A hull is stored as a group: an Instance with `hull` set over an anonymous composite of its shapes, as the Group
+  command makes one. The 2D editor draws that group opened out, so a shape inside a hull is selected, moved and
+  linked directly.
 - On a lattice the border runs along the gutters, and an elbow link keeps to the side of it both its ends are on: a
   link between two shapes inside stays inside, one from outside crosses the border once, and one between two shapes
   outside goes round the hull.
+- The lattice no longer snaps a composite's parts, which are placed about the composite's own centre.
+
+A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 
 A `diagram` fence in a markdown document draws as a diagram, in the editor's light or dark palette:
 `SvgFile.toSvgFile` takes `{ theme, transparent }`, `diagramPreview()` follows the editor's colour mode, and

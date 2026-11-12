@@ -67,9 +67,9 @@ import {
   SplineLink,
   type StyleClass,
   type StyleMap,
+  isHullNode,
   isInstanceNode,
   isLink,
-  isHullNode,
   isNoteNode,
   isViewNode,
   showsContents,
@@ -116,6 +116,7 @@ const HIDDEN = [
   'grow',
   'follows',
   'parent',
+  'group',
 ];
 
 /** A link's `type` is its variant, which the panel does show: straight, orthogonal, elbow, curve or spline. */

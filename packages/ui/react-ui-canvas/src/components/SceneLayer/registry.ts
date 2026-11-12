@@ -222,13 +222,13 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: { width: 12, height: 12 },
   },
-  // Not a palette tool: a hull is made round a selection (the Enclose command), never dragged out empty.
+  // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
   hull: {
     name: 'Hull',
     icon: 'ph--bounding-box--regular',
+    key: 'B',
     schema: HullNode,
     component: HullNodeView,
-    palette: false,
     create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: HULL_STYLE }),
     defaultSize: NOMINAL_SIZES.hull,
     silhouette: (node, inset, radius) =>
@@ -307,7 +307,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   card: {
     extends: 'object',
     name: 'Card',
-    icon: 'ph--cards--regular',
+    icon: 'ph--article--regular',
     key: 'D',
     schema: CardNode,
     // A composite object (`card-template.ts`), not a shape a view paints: the canvas places an Instance of it and

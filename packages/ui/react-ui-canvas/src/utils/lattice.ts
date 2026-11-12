@@ -140,11 +140,12 @@ export const coveredCells = ({ col, row, spanX, spanY }: LatticeCell): string[] 
 export type Occupancy = ReadonlyMap<string, ElementId>;
 
 /**
- * Whether a node takes part in the lattice: a guide (a group's backdrop), a bare caption or a hull annotates the shapes
- * rather than being one, so it neither snaps, occupies cells nor blocks a gutter route.
+ * Whether a node takes part in the lattice: a guide (a group's backdrop), a bare caption or a hull (as drawn, or as the
+ * group it is stored as) annotates the shapes rather than being one, so it neither snaps, occupies cells nor blocks a
+ * gutter route.
  */
 export const onLattice = (node: Node): boolean =>
-  !node.style?.guide && node.style?.border !== false && !isHullNode(node);
+  !node.style?.guide && node.style?.border !== false && !isHullNode(node) && Reflect.get(node, 'hull') === undefined;
 
 export const occupancy = (
   nodes: Iterable<Node>,

@@ -3,15 +3,20 @@
 //
 
 //
-// A hull is a border round the shapes that name it as their parent. These stories draw the same six shapes and the
-// same eight elbow links three ways, to compare the two borders a hull may take and what a lattice adds to them:
-// there the border runs along the gutters, and each link keeps to the side of it its two ends are on.
+// A hull is a border round a set of shapes. It is stored as a group of them (an Instance over its own parts, as the
+// Group command makes one) and drawn opened out, so its shapes are selected, moved and linked like any others. These
+// stories draw the same six shapes and the same eight elbow links three ways, to compare the two borders a hull may
+// take and what a lattice adds to them: there the border runs along the gutters, and each link keeps to the side of
+// it its two ends are on.
 //
-// 1. Select shapes and run Enclose (the inspector's toolbar, or the right-click menu) to draw a hull round them.
-// 2. Select a hull and change Hull in Properties between Perimeter and Box.
-// 3. Move a shape inside a hull: the border follows it. On the lattice the links re-route as it lands.
+// 1. Pick the Hull tool (B) and drag a frame round some shapes, or select them and run Enclose: a hull is drawn
+//    round them.
+// 2. Select a hull and change Hull in Properties between Perimeter and Box, or restyle it as any shape.
+// 3. Move a shape inside a hull: the border follows it. Drag the hull: its shapes go with it. On the lattice the
+//    links re-route as they land.
 // 4. Storage holds Space, Queue and Index. A link between two of them stays inside its border; a link from outside
 //    crosses the border once, to the shape it ends at; a link between two shapes outside goes round the hull.
+// 5. Delete a hull: its shapes stay where they are.
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -22,6 +27,7 @@ import {
   HULL_STYLE,
   type RenderList2D,
   cellBounds,
+  collapseHulls,
   createLink,
   fromRenderLists2D,
 } from '@dxos/react-ui-canvas';
@@ -130,7 +136,9 @@ const boardOf = (shape: HullShape, lattice: boolean): RenderList2D => {
 };
 
 const documentOf = (shape: HullShape, lattice: boolean): Scene.SceneDocument => {
-  const document = fromRenderLists2D([boardOf(shape, lattice)], { root: 'board' });
+  // Stored as the editor stores it: the hull a group, its shapes the group's parts.
+  const board = boardOf(shape, lattice);
+  const document = fromRenderLists2D(Object.values(collapseHulls({ [board.id]: board })), { root: 'board' });
   return lattice
     ? {
         ...document,

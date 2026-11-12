@@ -178,12 +178,18 @@ describe('hull', () => {
 });
 
 describe('enclose', () => {
-  test('a new hull holds the nodes named, under everything, and nests inside the hull they shared', ({ expect }) => {
+  test('a new hull holds the nodes named, under everything; a node inside another hull leaves it', ({ expect }) => {
     const scene = sceneOf(corner());
-    const inner = enclose(scene, ['a', 'b'], 'inner', { lattice: spec });
+    const inner = enclose(scene, ['a', 'b', 'h'], 'inner', { lattice: spec });
     const made = inner?.nodes.inner;
-    expect(made && isHullNode(made) && [made.parent, made.style]).toEqual(['h', HULL_STYLE]);
-    expect([inner?.nodes.a.parent, inner?.nodes.b.parent, inner?.nodes.c.parent]).toEqual(['inner', 'inner', 'h']);
+    // A hull is not put inside a hull, whether it was named or the nodes named were inside one.
+    expect(made && isHullNode(made) && [made.parent, made.style]).toEqual([undefined, HULL_STYLE]);
+    expect([inner?.nodes.a.parent, inner?.nodes.b.parent, inner?.nodes.c.parent, inner?.nodes.h.parent]).toEqual([
+      'inner',
+      'inner',
+      'h',
+      undefined,
+    ]);
     expect(Object.values(inner?.nodes ?? {}).every((node) => node.id === 'inner' || node.z > (made?.z ?? ''))).toBe(
       true,
     );
@@ -192,8 +198,8 @@ describe('enclose', () => {
       { x: 192, y: 0 },
       { width: 768, height: 192 },
     ]);
-    // The outer hull still holds all three.
-    expect(hullMembers(Object.values(inner?.nodes ?? {}), 'h').length).toBe(3);
+    // The hull they left holds what is left.
+    expect(hullMembers(Object.values(inner?.nodes ?? {}), 'h').map((node) => node.id)).toEqual(['c']);
   });
 
   test('nothing is made of ids that are not nodes, or under an id that is taken', ({ expect }) => {

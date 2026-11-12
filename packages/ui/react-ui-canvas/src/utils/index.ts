@@ -18,6 +18,7 @@ export * from './frames.ts';
 export * from './highlight.ts';
 export * from './hit.ts';
 export * from './hull.ts';
+export * from './hull-group.ts';
 export * from './inside.ts';
 export * from './lattice.ts';
 export * from './link-ends.ts';

@@ -39,15 +39,22 @@ const frameOf = (bounds: Bounds): { center: Point; size: Size } => ({
 const isLink = (element: Element): boolean => element.source !== undefined || element.target !== undefined;
 
 /**
- * Whether an element takes lattice cells: a shape with a frame of its own that is neither a hull, a guide nor a
- * borderless backdrop. A placed object with no size of its own reads its frame from the model, which the layout does not hold, so
+ * Whether an element takes lattice cells: a shape with a frame of its own that is neither a hull (as drawn or as
+ * stored), a guide nor a borderless backdrop. A placed object with no size of its own reads its frame from the model, which the layout does not hold, so
  * it moves as given.
  */
+/** Whether an element is a hull as it is stored: a group's Instance drawing a border round its parts. */
+const isHullGroup = (element: Element): boolean => {
+  const canvas: unknown = element.props?.canvas;
+  return typeof canvas === 'object' && canvas !== null && Reflect.get(canvas, 'hull') !== undefined;
+};
+
 const onLattice = (element: Element): element is Framed =>
   element.center !== undefined &&
   element.size !== undefined &&
   !isLink(element) &&
   element.type !== 'hull' &&
+  !isHullGroup(element) &&
   !element.overrides?.guide &&
   element.overrides?.border !== false;
 
@@ -205,6 +212,9 @@ const constrain = (layout: Scene.LayoutRecord2D, intent: LayoutIntent, spec: Lat
  * `intent` rewritten onto `layout`'s lattice, or undefined when it would overlap occupied cells; the intent as given
  * when the layout has no lattice. Frames (create, move, scale, a centre or size `update`) are snapped; everything else
  * passes through. A batch is checked step by step and refused whole if any step is.
+ *
+ * A composite's parts are left as given: they are placed about the composite's own centre and drawn by the Instance
+ * that places it, so a cell of the lattice means nothing in their coordinates.
  */
 export const latticeConstrain = (layout: Scene.LayoutRecord2D, intent: LayoutIntent): LayoutIntent | undefined =>
-  layout.lattice ? constrain(layout, intent, layout.lattice) : intent;
+  layout.lattice && layout.kind !== 'composite' ? constrain(layout, intent, layout.lattice) : intent;

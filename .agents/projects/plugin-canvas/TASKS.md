@@ -289,41 +289,52 @@ editable. This phase makes the second form the one tools use, and gives a part a
 
 ## Phase 8: hulls and themed diagram fences (started 2026-11-12)
 
-A hull is a border round the shapes that name it as their `parent`. First cut, built to be evaluated in
-`ui/react-ui-canvas-editor/components/Hull` before the editing gestures are built on it.
+A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-editor/components/Hull`.
 
-### Decisions (the agent's, 2026-11-12, not yet confirmed by the user)
+### Decisions
 
-- **Hierarchy by `parent`, in one layout.** A hull is a node (`type: 'hull'`) and each shape inside it names it as
-  `parent`; a hull may name a hull. Not the Group composite: a group moves its members into a layout of their own, so
-  a link from outside ends at the group rather than at the member, and members are edited only after entering it.
-- **The frame is derived.** `fitHulls` sets a hull's `center`, `size` and `points` from what is inside it, where a
-  layout is read (`toRenderList2D`) and again where a scene is drawn, so a hull follows a shape in flight.
+- **A hull is stored as a group** (the user, 2026-11-12: "Rebuild on composites"; the first cut kept every shape in
+  one layout with a `parent` pointer, which was a second hierarchy beside composites). The stored form is what the
+  Group command makes: an Instance (`fit: 'none'`, now with `hull: 'perimeter' | 'box'`) of an anonymous composite
+  whose parts are the shapes, the links among them inside it, and a link across the border ending at the Instance on
+  the port named by the part.
+- **The 2D editor draws the group opened out** (the agent, 2026-11-12). `expandHulls` puts the parts back in the
+  scene, each naming the hull as `parent`, with a `hull` node for the Instance; `collapseHulls` closes it before a
+  change is written (`utils/hull-group.ts`, bound in `useDocumentStore`). So a shape inside a hull is selected, moved
+  and linked like any other, a link from outside reaches the shape, and the lattice places it. `parent` is therefore
+  a field of the drawn scene only, never of the stored document.
+- **The frame is derived.** `fitHulls` sets a hull's `center`, `size` and `points` from what is inside it.
 - **On a lattice the border is on gutter centre lines**, round the tiles (a cell and half of each gutter beside it)
   its shapes stand on. Each gutter the border runs along has a track a quarter of the gutter either side of it.
 - **A route answers to borders by where its ends are.** A hull holding both ends or neither is closed to it; a hull
-  holding one it crosses once (a crossing costs more than any number of bends). Containment is by tile, not by
-  `parent`, since the border is where it is.
+  holding one it crosses once (a crossing costs more than any number of bends). Containment is by tile.
+- **A composite's parts are off the lattice**: they are placed about the composite's centre, so `latticeConstrain`
+  leaves a `kind: 'composite'` layout as given. Before this a Group's parts were snapped as if they were cells.
+- **A hull is an ordinary styled shape** (dashed outline by default), not a guide, so its border, fill and line style
+  are its style's.
 
 ### Tasks
 
-- [x] `HullNode` and `parent` in `@dxos/scene`; `hull` a 2D kind.
+- [x] `HullNode`, `parent`, `InstanceNode.hull` in `@dxos/scene`; `hull` a 2D kind.
 - [x] `utils/hull.ts`: members, tiles (box, perimeter with bridging), outline, `fitHulls`, `hullRegions`,
       `routeWalls`, `enclose`.
+- [x] `utils/hull-group.ts`: `expandHulls`, `collapseHulls`; `drawnLists2D`, `drawnWrites`, `drawnDocument`.
 - [x] `gutter-route.ts`: walls, tracks, crossing cost; `route.ts`: `latticeRoute` carries each link's walls.
-- [x] `hull` node type drawn as a closed polyline; Enclose command on the selection (2D).
+- [x] The Hull tool (B) drags a frame that takes the shapes inside it; Enclose makes one round the selection.
+- [x] Moving a hull moves what is inside it; deleting one leaves its shapes where they are.
 - [x] Story `Hull` (Perimeter, Box, Lattice, LatticeBox), each with the same eight elbow links.
-- [x] `diagram` fences in a markdown document draw in the editor's colour mode (`SvgFile.toSvgFile({ theme })`,
-      `diagramPreview`), contributed to the markdown editor by plugin-canvas.
-- [ ] Moving a hull moves what is inside it; today a hull's own move is undone by the next fit.
-- [ ] Deleting a hull clears `parent` on what was inside it (a dangling `parent` is ignored meanwhile).
-- [ ] Dragging a shape across a border changes its `parent`.
-- [ ] Nested hulls on a lattice share a border where their edges coincide; give each depth its own track.
+- [x] `diagram` fences in a markdown document draw in the editor's colour mode, contributed by plugin-canvas.
+- [x] A double-click off an Object being edited leaves it (2D and 3D).
+- [ ] Dragging a shape across a border changes which hull holds it (today the hull stretches to follow it).
+- [ ] A hull inside a hull: `enclose` and `collapseHulls` keep hulls flat.
+- [ ] A group placed twice, or inside another Object, is drawn closed, without its border.
+- [ ] Deleting a hull leaves its composite layout in the document, unplaced.
 - [ ] Off a lattice an elbow link has no obstacle avoidance, so it does not yet keep to its side of a border.
 - [ ] Lanes: more than three links on one quarter-gutter track are nudged past the border (`Nudge` knows no walls).
-- [ ] The Views tree lists a hull's shapes under it; the `.dx` DSL reads and prints `parent` and `hull`.
-- [ ] 3D: what a hull is there (a bounding volume), per the 2D/3D parity rule.
-- [ ] `PLUGIN.mdl`: record the hull once the model is confirmed.
+- [ ] The Views tree lists a hull's shapes beside it, not under it.
+- [ ] Not checked: the `.dx` DSL round trip of `hull`, the SVG export, and what 3D draws of a hull's group.
+- [ ] `PLUGIN.mdl`: record the hull.
+- [ ] In-place editing: a scene node whose id is a part's id (the Cards story's `footer` card) is taken for a part.
 
 ## Backlog
 

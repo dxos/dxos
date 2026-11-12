@@ -119,6 +119,12 @@ describe('latticeConstrain', () => {
     expect(moved?.elements.a.center).toEqual({ x: 384, y: 0 });
   });
 
+  test("a composite's parts are left where they are given, about its own centre", ({ expect }) => {
+    const parts: Scene.LayoutRecord2D = { ...layoutOf(cellElement('a', 0, 0)), kind: 'composite' };
+    const intent: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: -192, y: -96 } };
+    expect(latticeConstrain(parts, intent)).toBe(intent);
+  });
+
   test('a layout with no lattice is not constrained', ({ expect }) => {
     const { lattice: _lattice, ...free } = layoutOf(cellElement('a', 0, 0), cellElement('b', 1, 0));
     const intent: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: 384, y: 0 } };
