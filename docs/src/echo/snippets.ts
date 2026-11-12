@@ -171,7 +171,7 @@ const splitImports = (source: string, code: string): { shown: string[]; hidden: 
  * that code uses.
  */
 /** A shared snippet imports a project's module by its path from `snippets/`. */
-const PROJECT_IMPORT = /'\.\.\/\.\.\/((?:app-framework-|halo-)?tutorial)\/([^']+)'/g;
+const PROJECT_IMPORT = /'\.\.\/\.\.\/((?:echo|halo|plex)-tutorial)\/([^']+)'/g;
 
 /** The snippet with each project module imported as a sibling, which is how the page shows it and how it compiles. */
 const localize = (source: string) => source.replace(PROJECT_IMPORT, "'./$2'");
