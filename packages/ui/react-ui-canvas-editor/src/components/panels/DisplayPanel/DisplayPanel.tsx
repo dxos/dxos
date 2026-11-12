@@ -92,11 +92,14 @@ const isTheme = (theme: Theme | ThemeOption): theme is Theme => 'background' in 
 /** The value of the option that clears the override, so the drawing takes the user's default. */
 const DEFAULT_VALUE = '';
 
-/** The grids the switch offers; pressing the one drawn turns the grid off, so no option of its own is needed. */
+/** The grids the switch offers, ahead of its last option, which draws none. */
 const GRID_OPTIONS: readonly { grid: Exclude<BackgroundGrid, 'none'>; icon: string; label: string }[] = [
   { grid: 'dots', icon: 'ph--dots-nine--regular', label: 'Dots on the minor grid' },
   { grid: 'lines', icon: 'ph--grid-four--regular', label: 'Lines on the minor and major grid' },
 ];
+
+/** The last option of the grid switch on any scene: nothing is drawn behind the shapes. */
+const GRID_OFF = { icon: 'ph--square--regular', label: 'Off: draw no grid' };
 
 const barClasses = mx('w-full', FLOATING_BAR);
 
@@ -147,8 +150,9 @@ export type DisplayPanelProps = PanelProps & {
 };
 
 /**
- * The canvas's look: the snap, guides and axes toggles, a switch between dots and lines over the background (pressing the one
- * drawn turns the grid off), or on a lattice scene between its cells and the grid, and the theme selector last.
+ * The canvas's look: the snap, guides and axes toggles, a three-way switch over what is drawn behind the shapes (dots,
+ * lines or nothing; on a lattice scene its cells, the grid or nothing), and the theme selector last. One option of
+ * the switch is always pressed.
  */
 export const DisplayPanel = ({
   classNames,
@@ -172,157 +176,192 @@ export const DisplayPanel = ({
   lattice,
   timeline,
   onTimelineToggle,
-}: DisplayPanelProps) => (
-  // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
-  <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-display'>
-    {/* Snapping is to the grid, so its toggles sit with the grid's. */}
-    {onSnapToggle && (
-      <Button.Toggle
-        variant='ghost'
-        iconOnly
-        icon='ph--magnet--regular'
-        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the ${lattice && guides ? "lattice's cells" : 'major grid'}`}
-        disabled={readonly}
-        pressed={snap === true}
-        data-testid='toolbar-snap'
-        onPressedChange={onSnapToggle}
-      />
-    )}
-    {/* Snapping is behaviour, the rest is what the canvas draws. */}
-    {onSnapToggle && <Toolbar.Separator variant='line' />}
-    {/* A guide is drawn on the grid, so the toggle leads the grid options; on a lattice scene it is one side of the switch. */}
-    {onGuidesToggle && lattice !== true && (
-      <Button.Toggle
-        variant='ghost'
-        iconOnly
-        icon='ph--squares-four--regular'
-        label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
-        disabled={readonly}
-        pressed={guides === true}
-        data-testid='toolbar-guides'
-        onPressedChange={onGuidesToggle}
-      />
-    )}
-    {onAxesToggle && (
-      <Button.Toggle
-        variant='ghost'
-        iconOnly
-        icon={dim === '3d' ? 'ph--vector-three--regular' : 'ph--vector-two--regular'}
-        label='Axes: show the axes through the origin'
-        // A viewing aid, not an edit, so a read-only scene offers it too.
-        pressed={axes === true}
-        data-testid='toolbar-axes'
-        onPressedChange={onAxesToggle}
-      />
-    )}
-    {/* A lattice scene snaps to its cells or to the grid, so exactly one of the two is drawn. */}
-    {lattice === true && (
-      <Button.Group compact role='group' aria-label='Grid'>
+}: DisplayPanelProps) => {
+  const offered = GRID_OPTIONS.filter((option) => !gridOptions || gridOptions.includes(option.grid));
+  // The theme's own grid is the default, so picking it clears the override rather than setting one.
+  const pickGrid = (next: BackgroundGrid) => onGridChange?.(next === themeGrid ? undefined : next);
+  // On a lattice the grid side of the switch draws lines, where the view offers them.
+  const latticeGrid = offered.find((option) => option.grid === 'lines')?.grid ?? offered[0]?.grid ?? 'lines';
+  return (
+    // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
+    <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-display'>
+      {/* Snapping is to the grid, so its toggles sit with the grid's. */}
+      {onSnapToggle && (
+        <Button.Toggle
+          variant='ghost'
+          iconOnly
+          icon='ph--magnet--regular'
+          label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the ${lattice && guides ? "lattice's cells" : 'major grid'}`}
+          disabled={readonly}
+          pressed={snap === true}
+          data-testid='toolbar-snap'
+          onPressedChange={onSnapToggle}
+        />
+      )}
+      {/* Snapping is behaviour, the rest is what the canvas draws. */}
+      {onSnapToggle && <Toolbar.Separator variant='line' />}
+      {/* A guide is drawn on the grid, so the toggle leads the grid options; on a lattice scene it is one side of the switch. */}
+      {onGuidesToggle && lattice !== true && (
         <Button.Toggle
           variant='ghost'
           iconOnly
           icon='ph--squares-four--regular'
-          label={`Lattice (${shortcutFor('guides')}): show the lattice cells and snap to them`}
-          disabled={readonly || !onGuidesToggle}
+          label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
+          disabled={readonly}
           pressed={guides === true}
-          data-testid='toolbar-lattice'
-          onPressedChange={(pressed) => pressed && guides !== true && onGuidesToggle?.()}
+          data-testid='toolbar-guides'
+          onPressedChange={onGuidesToggle}
         />
+      )}
+      {onAxesToggle && (
         <Button.Toggle
           variant='ghost'
           iconOnly
-          icon='ph--grid-four--regular'
-          label={`Grid (${shortcutFor('guides')}): show the grid and snap to it, off the lattice`}
-          disabled={readonly || !onGuidesToggle}
-          pressed={guides !== true}
-          data-testid='toolbar-lattice-grid'
-          onPressedChange={(pressed) => pressed && guides === true && onGuidesToggle?.()}
+          icon={dim === '3d' ? 'ph--vector-three--regular' : 'ph--vector-two--regular'}
+          label='Axes: show the axes through the origin'
+          // A viewing aid, not an edit, so a read-only scene offers it too.
+          pressed={axes === true}
+          data-testid='toolbar-axes'
+          onPressedChange={onAxesToggle}
         />
-      </Button.Group>
-    )}
-    {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off. */}
-    {lattice !== true && (
-      <Button.Group compact role='group' aria-label='Grid'>
-        {GRID_OPTIONS.filter((option) => !gridOptions || gridOptions.includes(option.grid)).map((option) => (
+      )}
+      {/* A lattice scene snaps to its cells or to the grid, so at most one of the two is drawn. */}
+      {lattice === true && (
+        <Button.Group compact role='group' aria-label='Grid'>
           <Button.Toggle
-            key={option.grid}
             variant='ghost'
             iconOnly
-            icon={option.icon}
-            label={option.label}
-            disabled={readonly || !onGridChange}
-            pressed={grid === option.grid}
-            data-testid={`theme-grid-${option.grid}`}
+            icon='ph--squares-four--regular'
+            label={`Lattice (${shortcutFor('guides')}): show the lattice cells and snap to them`}
+            disabled={readonly || !onGuidesToggle}
+            pressed={guides === true}
+            data-testid='toolbar-lattice'
+            onPressedChange={(pressed) => pressed && guides !== true && onGuidesToggle?.()}
+          />
+          <Button.Toggle
+            variant='ghost'
+            iconOnly
+            icon='ph--grid-four--regular'
+            label={`Grid (${shortcutFor('guides')}): show the grid and snap to it, off the lattice`}
+            disabled={readonly || !onGuidesToggle}
+            pressed={guides !== true && grid !== 'none'}
+            data-testid='toolbar-lattice-grid'
             onPressedChange={(pressed) => {
-              const next: BackgroundGrid = pressed ? option.grid : 'none';
-              onGridChange?.(next === themeGrid ? undefined : next);
+              if (pressed) {
+                guides === true && onGuidesToggle?.();
+                grid === 'none' && pickGrid(latticeGrid);
+              }
             }}
           />
-        ))}
-      </Button.Group>
-    )}
-    {/* Playing a shot is viewing, as the axes are, so a read-only scene offers it too. */}
-    {onTimelineToggle && (
-      <>
-        <Toolbar.Separator variant='line' />
-        <Button.Toggle
-          variant='ghost'
-          iconOnly
-          icon='ph--film-strip--regular'
-          label='Timeline: show the shots staging the scene'
-          pressed={timeline === true}
-          data-testid='toolbar-timeline'
-          onPressedChange={onTimelineToggle}
-        />
-      </>
-    )}
-    <Toolbar.Separator variant='line' />
-    <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
-      {/* A way of viewing, as the axes are: open in a read-only scene. */}
-      <Menu.Trigger asChild disabled={!onThemeChange}>
-        <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
-          {registry && isTheme(theme) && <ThemeSwatch theme={theme} registry={registry} />}
-          <span className='truncate'>{theme.name}</span>
-          <Icon.Icon icon='ph--caret-up-down--regular' size='xs' />
-        </Button.Root>
-      </Menu.Trigger>
-      <Menu.Content>
-        <Menu.RadioItemGroup
-          value={override ?? DEFAULT_VALUE}
-          onValueChange={({ value }) => onThemeChange?.(value === DEFAULT_VALUE ? undefined : value)}
-        >
-          <Menu.RadioItem item={{ value: DEFAULT_VALUE, label: 'Default' }} data-testid='theme-option-default'>
-            <span className='w-7 shrink-0' />
-            <Menu.ItemText />
-            <Menu.ItemIndicator />
-          </Menu.RadioItem>
-          {registry &&
-            Object.values(registry.themes).map((option) => (
-              <Menu.RadioItem
-                key={option.id}
-                item={{ value: option.id, label: option.name }}
-                data-testid={`theme-option-${option.id}`}
-              >
-                <ThemeSwatch theme={option} registry={registry} />
-                <Menu.ItemText />
-                <ModeIcon mode={option.mode} />
-                <Menu.ItemIndicator />
-              </Menu.RadioItem>
-            ))}
-          {!registry &&
-            themes?.map((option) => (
-              <Menu.RadioItem
-                key={option.id}
-                item={{ value: option.id, label: option.name }}
-                data-testid={`theme-option-${option.id}`}
-              >
-                <Menu.ItemText />
-                <ModeIcon mode={option.mode} />
-                <Menu.ItemIndicator />
-              </Menu.RadioItem>
-            ))}
-        </Menu.RadioItemGroup>
-      </Menu.Content>
-    </Menu.Root>
-  </Toolbar.Root>
-);
+          <Button.Toggle
+            variant='ghost'
+            iconOnly
+            icon={GRID_OFF.icon}
+            label={GRID_OFF.label}
+            disabled={readonly || !onGuidesToggle}
+            pressed={guides !== true && grid === 'none'}
+            data-testid='toolbar-lattice-off'
+            onPressedChange={(pressed) => {
+              if (pressed) {
+                guides === true && onGuidesToggle?.();
+                grid !== 'none' && pickGrid('none');
+              }
+            }}
+          />
+        </Button.Group>
+      )}
+      {/* One group of toggles, exactly one pressed: a kind of grid, or none. */}
+      {lattice !== true && (
+        <Button.Group compact role='group' aria-label='Grid'>
+          {offered.map((option) => (
+            <Button.Toggle
+              key={option.grid}
+              variant='ghost'
+              iconOnly
+              icon={option.icon}
+              label={option.label}
+              disabled={readonly || !onGridChange}
+              pressed={grid === option.grid}
+              data-testid={`theme-grid-${option.grid}`}
+              onPressedChange={(pressed) => pressed && pickGrid(option.grid)}
+            />
+          ))}
+          <Button.Toggle
+            variant='ghost'
+            iconOnly
+            icon={GRID_OFF.icon}
+            label={GRID_OFF.label}
+            disabled={readonly || !onGridChange}
+            // A grid this view does not offer is not one of its options, so the switch reads as off.
+            pressed={!offered.some((option) => option.grid === grid)}
+            data-testid='theme-grid-none'
+            onPressedChange={(pressed) => pressed && pickGrid('none')}
+          />
+        </Button.Group>
+      )}
+      {/* Playing a shot is viewing, as the axes are, so a read-only scene offers it too. */}
+      {onTimelineToggle && (
+        <>
+          <Toolbar.Separator variant='line' />
+          <Button.Toggle
+            variant='ghost'
+            iconOnly
+            icon='ph--film-strip--regular'
+            label='Timeline: show the shots staging the scene'
+            pressed={timeline === true}
+            data-testid='toolbar-timeline'
+            onPressedChange={onTimelineToggle}
+          />
+        </>
+      )}
+      <Toolbar.Separator variant='line' />
+      <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
+        {/* A way of viewing, as the axes are: open in a read-only scene. */}
+        <Menu.Trigger asChild disabled={!onThemeChange}>
+          <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
+            {registry && isTheme(theme) && <ThemeSwatch theme={theme} registry={registry} />}
+            <span className='truncate'>{theme.name}</span>
+            <Icon.Icon icon='ph--caret-up-down--regular' size='xs' />
+          </Button.Root>
+        </Menu.Trigger>
+        <Menu.Content>
+          <Menu.RadioItemGroup
+            value={override ?? DEFAULT_VALUE}
+            onValueChange={({ value }) => onThemeChange?.(value === DEFAULT_VALUE ? undefined : value)}
+          >
+            <Menu.RadioItem item={{ value: DEFAULT_VALUE, label: 'Default' }} data-testid='theme-option-default'>
+              <span className='w-7 shrink-0' />
+              <Menu.ItemText />
+              <Menu.ItemIndicator />
+            </Menu.RadioItem>
+            {registry &&
+              Object.values(registry.themes).map((option) => (
+                <Menu.RadioItem
+                  key={option.id}
+                  item={{ value: option.id, label: option.name }}
+                  data-testid={`theme-option-${option.id}`}
+                >
+                  <ThemeSwatch theme={option} registry={registry} />
+                  <Menu.ItemText />
+                  <ModeIcon mode={option.mode} />
+                  <Menu.ItemIndicator />
+                </Menu.RadioItem>
+              ))}
+            {!registry &&
+              themes?.map((option) => (
+                <Menu.RadioItem
+                  key={option.id}
+                  item={{ value: option.id, label: option.name }}
+                  data-testid={`theme-option-${option.id}`}
+                >
+                  <Menu.ItemText />
+                  <ModeIcon mode={option.mode} />
+                  <Menu.ItemIndicator />
+                </Menu.RadioItem>
+              ))}
+          </Menu.RadioItemGroup>
+        </Menu.Content>
+      </Menu.Root>
+    </Toolbar.Root>
+  );
+};
