@@ -8,6 +8,8 @@ import {
   type ElementEndpoint,
   Scene as Model,
   type Part,
+  PartConstraint,
+  type PartLayout,
   type Style2D,
   type Style3D,
   applyArrangement,
@@ -39,6 +41,9 @@ const STYLE_KEYS = ['hue', 'tone', 'surface', 'border', 'rounded', 'opacity'] as
 const SURFACES = ['solid', 'tint', 'glass', 'none'] as const;
 const TONES = [0, 1, 2, 3] as const;
 const ARRANGE_PARAM = 'arrange-';
+
+/** The model a `composite` statement puts its object in when it names none; a layout placing one declares it. */
+const COMPOSITES_MODEL = 'composites';
 
 /** Suffix of the model the reader makes for a layout with groups and no model of its own; the printer leaves it out. */
 const GROUPS_MODEL = '/groups';
@@ -193,6 +198,10 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
         return raw === 'true' ? true : raw === 'false' ? false : raw;
       case 'Dimension':
         return raw;
+      // A word pair (`constrain=stretch,max`) is handed on as its own text: the field that claims it reads the pair,
+      // and one no field claims keeps its spelling through `props`.
+      case 'Pair':
+        return raw;
       case 'Size': {
         const [width, height] = raw.split('x').map(Number.parseFloat);
         return { width, height };
@@ -247,6 +256,26 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     return Object.keys(style).length > 0 ? style : undefined;
   };
 
+  /**
+   * `constrain=stretch,max`, or one word for both axes. An axis set to `scale` is dropped, since that is what an
+   * unset axis already means — which is also what makes the printed pair read back as the record it came from.
+   */
+  const readConstrain = (value: AttrValue | undefined, range: Range): PartLayout | undefined => {
+    const text = asString(value);
+    if (text === undefined) {
+      return undefined;
+    }
+    const words = text.split(',').map((word) => word.trim());
+    const read = (word: string | undefined) => PartConstraint.literals.find((candidate) => candidate === word);
+    const [x, y] = words.length === 1 ? [read(words[0]), read(words[0])] : [read(words[0]), read(words[1])];
+    if (words.length > 2 || !x || !y) {
+      report(range, `constrain takes one or two of ${PartConstraint.literals.join(', ')}.`);
+      return undefined;
+    }
+    const layout = { ...(x === 'scale' ? {} : { x }), ...(y === 'scale' ? {} : { y }) };
+    return Object.keys(layout).length > 0 ? layout : undefined;
+  };
+
   /** The fields every element shares, read from its statement; geometry is the caller's. */
   const readBase = (statement: SyntaxNode, attrs: Map<string, AttrValue>, objects: ReadonlySet<string>) => {
     const id = readId(statement.getChild('Id')) ?? '';
@@ -262,9 +291,11 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     const arrangeKind = asString(attrs.get('arrange'));
     const members = asString(attrs.get('members'))?.split(/\s+/).filter(Boolean);
     const props = readProps(attrs, ELEMENT_KEYS);
+    const constrain = readConstrain(attrs.get('constrain'), statement);
     return {
       id,
       ...(objects.has(word) ? { object: word } : { type: word }),
+      ...(constrain ? { constrain } : {}),
       ...(labelNode ? { label: unquote(slice(labelNode)) } : {}),
       ...optionalString('z', attrs.get('order')),
       ...optionalString('layer', attrs.get('layer')),
@@ -465,6 +496,47 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
   }
 
   const layouts: Model.LayoutRecord[] = [];
+  // Composites declared on their own: the layout of parts, and the model object that places it. One statement for
+  // both, so a tool's template cannot ship a layout whose object says something else.
+  for (const statement of statementsOf('CompositeDecl')) {
+    const id = readId(statement.getChild('Id')) ?? '';
+    const attrs = readAttrs(statement);
+    const dim = attrs.get('dim');
+    if (dim !== undefined && dim !== '2d') {
+      report(statement, `composite "${id}" is 2D; a 3D Object is written as a group.`);
+      continue;
+    }
+    ranges.set(`layout:${id}`, statement);
+    const elements: Record<string, Model.Element2D> = {};
+    for (const element of bodyOf(statement, 'CompositeBody', 'ElementStmt')) {
+      const { record } = readElement2D(element, new Set());
+      ranges.set(`layout:${id}/${record.id}`, element);
+      elements[keyFor(elements, record.id, element)] = record;
+    }
+    layouts.push({
+      id,
+      dim: '2d',
+      kind: 'composite',
+      ...optionalString('name', attrs.get('name')),
+      elements,
+    });
+    const size = attrs.get('size');
+    const object: Model.Object2D = {
+      id,
+      type: 'instance',
+      parts: id,
+      ...(isSize2(size) ? { size } : {}),
+    };
+    const modelId = asString(attrs.get('model')) ?? COMPOSITES_MODEL;
+    const index = models.findIndex((candidate) => candidate.id === modelId && candidate.dim === '2d');
+    const current = models[index];
+    if (current?.dim === '2d') {
+      models[index] = { ...current, objects: { ...current.objects, [id]: object } };
+    } else {
+      models.push({ id: modelId, dim: '2d', objects: { [id]: object } });
+    }
+  }
+
   for (const statement of statementsOf('LayoutDecl')) {
     const head = readHead('layout', statement);
     if (!head) {
@@ -595,6 +667,7 @@ const ELEMENT_KEYS: ReadonlySet<string> = new Set([
   'to',
   'members',
   'arrange',
+  'constrain',
   ...STYLE_KEYS,
 ]);
 
@@ -656,9 +729,19 @@ const formatStyleAndProps = (tokens: StyleTokens, item: { props?: Record<string,
   ...Object.entries(item.props ?? {}).flatMap(([key, value]) => attr(key, value)),
 ];
 
+/** `constrain=stretch,max`, or one word where both axes agree; an axis left unset prints as its default, `scale`. */
+const formatConstrain = (constrain: PartLayout | undefined): string[] => {
+  if (!constrain || (constrain.x === undefined && constrain.y === undefined)) {
+    return [];
+  }
+  const [x, y] = [constrain.x ?? 'scale', constrain.y ?? 'scale'];
+  return [`constrain=${x === y ? x : `${x},${y}`}`];
+};
+
 /** The attributes every element shares, in the canonical order after its geometry. */
 const formatBase = (element: Model.Element, tokens: StyleTokens, context: LayoutContext): string[] => [
   ...attr('order', element.z),
+  ...formatConstrain(element.constrain),
   ...attr('layer', element.layer),
   ...attr('hidden', element.hidden),
   ...attr('locked', element.locked),
@@ -818,16 +901,58 @@ const formatLayoutRecord = (
   );
 };
 
-const formatModelRecord = (model: Model.ModelRecord, composites: ReadonlyMap<string, Model.LayoutRecord>): string =>
-  formatBlock(
+const formatModelRecord = (
+  model: Model.ModelRecord,
+  composites: ReadonlyMap<string, Model.LayoutRecord>,
+  declared: ReadonlyMap<string, DeclaredComposite>,
+): string => {
+  const own = (object: { id: string }) => !composites.has(object.id) && !declared.has(object.id);
+  return formatBlock(
     ['model', formatId(model.id), `dim=${model.dim}`, ...name(model.name)],
     model.dim === '2d'
       ? Object.values(model.objects)
-          .filter((object) => !composites.has(object.id))
+          .filter(own)
           .map((object) => formatObject(object, tokensOf2D(object.overrides)))
       : Object.values(model.objects)
-          .filter((object) => !composites.has(object.id))
+          .filter(own)
           .map((object) => formatObject(object, tokensOf3D(object.overrides))),
+  );
+};
+
+/** A composite written as a `composite` statement: its parts layout, the object that places it, and that object's model. */
+type DeclaredComposite = { layout: Model.LayoutRecord2D; object: Model.Object2D; model: string };
+
+/**
+ * The composites a document declares in its own right: a named `kind: 'composite'` layout that an `instance` object of
+ * the same id places. An anonymous one is a `group` inside its layout and is written there ({@link groupComposites}).
+ */
+const declaredComposites = (doc: Model.SceneDocument): Map<string, DeclaredComposite> => {
+  const found = new Map<string, DeclaredComposite>();
+  for (const layout of doc.layouts) {
+    if (layout.dim !== '2d' || layout.kind !== 'composite' || layout.anonymous) {
+      continue;
+    }
+    for (const model of doc.models) {
+      const object = model.dim === '2d' ? model.objects[layout.id] : undefined;
+      if (object?.type === 'instance' && object.parts === layout.id) {
+        found.set(layout.id, { layout, object, model: model.id });
+        break;
+      }
+    }
+  }
+  return found;
+};
+
+const formatCompositeRecord = ({ layout, object, model }: DeclaredComposite): string =>
+  formatBlock(
+    [
+      'composite',
+      formatId(layout.id),
+      ...attr('size', object.size),
+      ...(model === COMPOSITES_MODEL ? [] : [`model=${formatWord(model)}`]),
+      ...name(layout.name),
+    ],
+    Object.values(layout.elements).map((element) => formatElement2D(element, { groups: new Map() })),
   );
 
 /**
@@ -855,14 +980,18 @@ const groupComposites = (doc: Model.SceneDocument): Map<string, Model.LayoutReco
  */
 export const printScenes = (doc: Model.SceneDocument): string => {
   const composites = groupComposites(doc);
-  // A model the reader made only to hold a layout's groups is left out with them.
+  const declared = declaredComposites(doc);
+  // A model the reader made only to hold a layout's groups, or the one a `composite` statement defaults to, is left
+  // out with them: its objects are written by the statements that own them.
   const made = (model: Model.ModelRecord) =>
-    model.id.endsWith(GROUPS_MODEL) && Object.keys(model.objects).every((id) => composites.has(id));
+    (model.id.endsWith(GROUPS_MODEL) || model.id === COMPOSITES_MODEL) &&
+    Object.keys(model.objects).every((id) => composites.has(id) || declared.has(id));
   return [
     ...doc.scenes.map(formatSceneRecord),
     ...doc.layouts
-      .filter((layout) => !composites.has(layout.id))
+      .filter((layout) => !composites.has(layout.id) && !declared.has(layout.id))
       .map((layout) => formatLayoutRecord(layout, composites)),
-    ...doc.models.filter((model) => !made(model)).map((model) => formatModelRecord(model, composites)),
+    ...[...declared.values()].map(formatCompositeRecord),
+    ...doc.models.filter((model) => !made(model)).map((model) => formatModelRecord(model, composites, declared)),
   ].join('\n');
 };

@@ -17,14 +17,20 @@ import {
   type Link,
   type Node,
   type NodeId,
+  type PartLayout,
   type Point,
   type Port,
   type Side,
   type ViewId,
   endpointNode,
+  hasConstraints,
   isInstanceNode,
+  isPointEndpoint,
   isViewNode,
+  mapPoint,
   nodeFrame,
+  pointBounds,
+  solvePartBounds,
 } from '@dxos/scene';
 
 import { type RenderList2D, type RenderLists2D, pruneOrphaned } from '../model/index.ts';
@@ -185,6 +191,87 @@ export const instanceView = (instance: InstanceNode, composite: RenderList2D): R
       }
     : composite;
 
+/** `bounds` where the uniform fit puts them: what a part took before it could constrain an axis. */
+const scaledBounds = ({ scale, offset }: InstanceTransform, bounds: Bounds): Bounds => ({
+  x: offset.x + bounds.x * scale,
+  y: offset.y + bounds.y * scale,
+  width: bounds.width * scale,
+  height: bounds.height * scale,
+});
+
+const boundsCentre = ({ x, y, width, height }: Bounds): Point => ({ x: x + width / 2, y: y + height / 2 });
+
+/** The box a link's free ends span; none when both of its ends are on nodes, which move with the nodes. */
+const linkBounds = (link: Link): Bounds | undefined => {
+  const points = [link.source, link.target].flatMap((end) => (isPointEndpoint(end) ? [end.point] : []));
+  const [first, second] = points;
+  return first ? pointBounds(first, second ?? first) : undefined;
+};
+
+/**
+ * Every part of `composite` placed in the frame `to`, by its own constraint. None when no part constrains an axis:
+ * there the uniform fit still applies and an instance draws its parts through one transform, which scales their text
+ * with them — a picture rather than a resized card. Constraining any part opts the whole composite into the solve.
+ */
+export const placeParts = (
+  composite: RenderList2D,
+  from: Bounds,
+  to: Bounds,
+  fit?: InstanceFit,
+): RenderList2D | undefined => {
+  const elements = [...Object.values(composite.nodes), ...Object.values(composite.links)];
+  if (!hasConstraints(elements)) {
+    return undefined;
+  }
+  const transform = instanceTransform(to, from, fit);
+  const solve = (bounds: Bounds, constrain: PartLayout | undefined) =>
+    solvePartBounds(bounds, scaledBounds(transform, bounds), { from, to }, constrain);
+  const nodes = Object.values(composite.nodes).map((node): Node => {
+    const solved = solve(nodeBounds(node), node.constrain);
+    return { ...node, center: boundsCentre(solved), size: { width: solved.width, height: solved.height } };
+  });
+  const links = Object.values(composite.links).map((link): Link => {
+    const box = linkBounds(link);
+    if (!box) {
+      return link;
+    }
+    const solved = solve(box, link.constrain);
+    const move = (end: Endpoint): Endpoint =>
+      isPointEndpoint(end) ? { point: mapPoint(end.point, box, solved) } : end;
+    return {
+      ...link,
+      source: move(link.source),
+      target: move(link.target),
+      ...(link.type === 'spline' ? { points: link.points.map((point) => mapPoint(point, box, solved)) } : {}),
+    };
+  });
+  return {
+    ...composite,
+    nodes: Object.fromEntries(nodes.map((node) => [node.id, node])),
+    links: Object.fromEntries(links.map((link) => [link.id, link])),
+  };
+};
+
+/** How an instance draws its composite: the parts it draws, and how their coordinates reach the scene. */
+export type InstancePlacement = {
+  /** The composite with this instance's overrides, and its parts solved into the scene when any of them is constrained. */
+  readonly view: RenderList2D;
+  /** The transform from the view's coordinates to the scene's; the identity once the parts are already placed. */
+  readonly transform: InstanceTransform;
+};
+
+/** What `instance` draws for `composite`: its overrides, then its constraints ({@link placeParts}). */
+export const instancePlacement = (instance: InstanceNode, composite: RenderList2D): InstancePlacement => {
+  const view = instanceView(instance, composite);
+  const to = nodeBounds(instance);
+  // Measured against the definition's box, not this instance's overridden copy of it: an override moves one part, it
+  // does not move the frame every other part is placed against, which would make one instance's edit shift them all.
+  const from = nodeFrame(instance) ?? compositeBounds(composite);
+  const transform = instanceTransform(to, from, instance.fit);
+  const placed = from && placeParts(view, from, to, instance.fit);
+  return placed ? { view: placed, transform: { scale: 1, offset: { x: 0, y: 0 } } } : { view, transform };
+};
+
 /** The side of `frame` that a ray from its centre through `point` leaves by, and how far along it (0 to 1). */
 const sideToward = (frame: Bounds, point: Point): { side: Side; offset: number } => {
   const halfWidth = frame.width / 2 || 1;
@@ -202,10 +289,16 @@ const sideToward = (frame: Bounds, point: Point): { side: Side; offset: number }
  * that faces where the node is drawn.
  */
 export const instancePorts = (frame: Bounds, composite: RenderList2D, fit?: InstanceFit): Port[] => {
-  const transform = instanceTransform(frame, compositeBounds(composite), fit);
-  return Object.values(composite.nodes)
+  const content = compositeBounds(composite);
+  const placed = content && placeParts(composite, content, frame, fit);
+  // A solved part is already in the scene's coordinates; an unconstrained one is still in the composite's.
+  const transform = placed ? undefined : instanceTransform(frame, content, fit);
+  return Object.values((placed ?? composite).nodes)
     .filter((node) => node.exposed)
-    .map((node) => ({ id: node.id, ...sideToward(frame, toInstance(transform, node.center)) }));
+    .map((node) => ({
+      id: node.id,
+      ...sideToward(frame, transform ? toInstance(transform, node.center) : node.center),
+    }));
 };
 
 export type ComposeOptions = {
@@ -323,19 +416,16 @@ export const ungroupInstance = (
   composite: RenderList2D,
   createId: (prefix: string) => string,
 ): Ungrouping => {
-  const transform = instanceTransform(
-    nodeBounds(instance),
-    nodeFrame(instance) ?? compositeBounds(composite),
-    instance.fit,
-  );
-  const ids = new Map(Object.keys(composite.nodes).map((id) => [id, createId('node')]));
+  // The parts are placed exactly as the instance draws them, constraints and all, so ungrouping leaves the picture
+  // where it was rather than snapping back to the composite's own proportions.
+  const { view, transform } = instancePlacement(instance, composite);
+  const ids = new Map(Object.keys(view.nodes).map((id) => [id, createId('node')]));
   const map = (point: Point) => toInstance(transform, point);
   const mapEnd = (end: Endpoint): Endpoint =>
     'point' in end ? { point: map(end.point) } : { ...end, node: ids.get(end.node) ?? end.node };
   let z = topZ(Object.values(scene.nodes));
-  const created: Node[] = Object.values(composite.nodes).map((source) => {
-    const node = overriddenNode(instance, source);
-    const { exposed: _, ...rest } = node;
+  const created: Node[] = Object.values(view.nodes).map((node) => {
+    const { exposed: _, constrain: __, ...rest } = node;
     z = topZ([{ id: '', z }]);
     return {
       ...rest,
@@ -346,14 +436,17 @@ export const ungroupInstance = (
       ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
     };
   });
-  const linked: Link[] = Object.values(composite.links).map((source) => ({
-    ...source,
-    id: createId('link'),
-    source: mapEnd(source.source),
-    target: mapEnd(source.target),
-    ...(source.type === 'spline' ? { points: source.points.map(map) } : {}),
-    ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
-  }));
+  const linked: Link[] = Object.values(view.links).map((source) => {
+    const { constrain: _, ...rest } = source;
+    return {
+      ...rest,
+      id: createId('link'),
+      source: mapEnd(source.source),
+      target: mapEnd(source.target),
+      ...(source.type === 'spline' ? { points: source.points.map(map) } : {}),
+      ...(instance.layer !== undefined ? { layer: instance.layer } : {}),
+    };
+  });
   const onInstance = (end: Endpoint): Endpoint =>
     'node' in end && end.node === instance.id
       ? { node: (end.port && ids.get(end.port)) ?? ids.values().next().value ?? end.node }

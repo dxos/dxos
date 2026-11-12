@@ -17,10 +17,20 @@ import type * as Schema from 'effect/Schema';
 import type { ComponentType } from 'react';
 
 import type { FormFieldMap } from '@dxos/react-ui-form';
-import { type LinkType, type Node, type NodeBase, type NodeType, type Point, type Port, type Size } from '@dxos/scene';
+import {
+  type InstanceNode,
+  type LinkType,
+  type Node,
+  type NodeBase,
+  type NodeType,
+  type Point,
+  type Port,
+  type Size,
+} from '@dxos/scene';
 
 import { type PartEditing, type PartField } from '../utils/index.ts';
 import { type DrawnLists } from './lists.ts';
+import { templateCompositeId } from './template.ts';
 import { type RenderList2D } from './types.ts';
 
 export type NodeViewProps = {
@@ -118,6 +128,13 @@ export type NodeDef = {
   bare?: boolean;
   /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
   unclipped?: boolean;
+  /**
+   * The type's shape as a composite object, written in the scene DSL (`composite <id> { element … }`): the tool draws
+   * an Instance of it rather than a node its view paints, so its parts are edited in place and a part may say how it
+   * follows the frame (`constrain`). One definition per tool per drawing, so a style edit on any instance reaches
+   * them all, while each instance's own text stays its own.
+   */
+  template?: string;
 };
 
 /**
@@ -156,7 +173,20 @@ export const createNodeRegistry = (
     Object.entries(types).map(([type, spec]) => {
       // The chain holds prototype names only: a type and a prototype are different namespaces, so a `card` type built
       // on the `card` prototype is ordinary inheritance, not a cycle.
-      const { extends: _, ...resolved } = inherit(spec, []);
+      const { extends: _, ...inherited } = inherit(spec, []);
+      // A template type places an Instance of its own composite, so it needs no `create` of its own; one it declares
+      // anyway still wins, for a tool that seeds its instance with more than the composite says.
+      const resolved: NodeDefSpec =
+        inherited.template !== undefined && !inherited.create
+          ? {
+              ...inherited,
+              create: (props: CreateProps): InstanceNode => ({
+                type: 'instance',
+                ...props,
+                composite: templateCompositeId(type),
+              }),
+            }
+          : inherited;
       const { name, icon, schema, component, create, defaultSize } = resolved;
       if (!name || !icon || !schema || !component || !create || !defaultSize) {
         throw new Error(`Node type ${type} is missing a required field`);

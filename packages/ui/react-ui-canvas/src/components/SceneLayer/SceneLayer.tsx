@@ -93,8 +93,7 @@ import {
   grooveBounds,
   grooveHeads,
   grooveTrim,
-  instanceTransform,
-  instanceView,
+  instancePlacement,
   isMultiline,
   lineClasses,
   markerFrame,
@@ -1547,20 +1546,15 @@ export const ViewNodeView = (props: NodeViewProps) => {
  */
 export const InstanceNodeView = ({ node, lists, registry, zoom, depth, liveDepth }: NodeViewProps) => {
   const composite = useAtomValue(lists.view(isInstanceNode(node) ? node.composite : ''));
-  const drawn = useMemo(
-    () => (composite && isInstanceNode(node) ? instanceView(node, composite) : undefined),
-    [node, composite],
-  );
   const bounds = nodeBounds(node);
-  const transform = useMemo(
-    () =>
-      drawn && isInstanceNode(node)
-        ? instanceTransform(bounds, nodeFrame(node) ?? compositeBounds(drawn), node.fit)
-        : undefined,
+  const placement = useMemo(
+    () => (composite && isInstanceNode(node) ? instancePlacement(node, composite) : undefined),
     // Keyed on the geometry rather than the bounds object, which is new on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [drawn, node, bounds.x, bounds.y, bounds.width, bounds.height],
+    [composite, node, bounds.x, bounds.y, bounds.width, bounds.height],
   );
+  const drawn = placement?.view;
+  const transform = placement?.transform;
   if (!drawn || !transform) {
     return <UnknownNodeView node={node} />;
   }

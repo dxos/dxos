@@ -92,10 +92,28 @@ export const iconPrototype: NodeDefSpec = {
   portsPerSide: 1,
 };
 
+/**
+ * A tool whose shape is a composite object: it places an Instance of the template the type declares, which the
+ * editor registers on the first drop and every later one reuses. A type extending this writes `template` and nothing
+ * else about how it draws — the composite's own parts say that.
+ */
+export const objectPrototype: NodeDefSpec = {
+  schema: InstanceNode,
+  component: InstanceNodeView,
+  defaultSize: NOMINAL_SIZES.instance,
+  resizable: true,
+  minSize: { width: 48, height: 24 },
+  // Double-click edits the Object's parts in place.
+  openable: true,
+  // The composite's own parts draw everything; a frame around them would be a second shape.
+  bare: true,
+};
+
 export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
   box: boxPrototype,
   card: cardPrototype,
   icon: iconPrototype,
+  object: objectPrototype,
 };
 
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {

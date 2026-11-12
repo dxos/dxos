@@ -23,6 +23,7 @@ import {
   type Port,
   type SplineLink,
   endpointNode,
+  isInstanceNode,
   isPointEndpoint,
   isPolylineNode,
   isViewNode,
@@ -89,6 +90,7 @@ import {
   topOfView,
   updateElement,
 } from '../../utils/index.ts';
+import { templateComposite } from '../../viewport2d/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
 import { type EditMode } from './useEditMode.ts';
@@ -964,6 +966,14 @@ export const usePointerMachine = ({
    */
   const nodeEdit = useCallback(
     (node: Node): SceneEdit => {
+      // A tool's first shape brings its template into the drawing; every later one is another instance of that same
+      // composite, which is what makes a style edit on one reach them all.
+      if (isInstanceNode(node) && !registry.get(store.views)[node.composite]) {
+        const definition = templateComposite(nodeRegistry, node.composite);
+        if (definition) {
+          registry.set(store.views, { ...registry.get(store.views), [definition.id]: definition });
+        }
+      }
       if (isViewNode(node)) {
         registry.set(store.views, {
           ...registry.get(store.views),

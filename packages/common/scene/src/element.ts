@@ -166,6 +166,29 @@ export const styleFields = {
 export const NodeStyle = Schema.Struct(styleFields);
 export type NodeStyle = Schema.Schema.Type<typeof NodeStyle>;
 
+/**
+ * How a part of a composite follows its frame on one axis when an instance is resized (ANIMATION.md §4.1): `min`
+ * pins it to the left or top edge, `max` to the right or bottom, `stretch` makes both of its edges follow, `center`
+ * keeps its offset from the middle, and `scale` keeps its proportion of the axis.
+ */
+export const PartConstraint = Schema.Literals(['min', 'max', 'stretch', 'center', 'scale']);
+export type PartConstraint = Schema.Schema.Type<typeof PartConstraint>;
+
+/**
+ * A part's constraint on each axis. An axis left unset is `scale`, which is the uniform fit every composite had
+ * before constraints existed, so an Object written by an older editor keeps drawing as it did.
+ */
+export const PartLayout = Schema.Struct({
+  x: Schema.optional(PartConstraint.annotate({ title: 'Horizontal' })),
+  y: Schema.optional(PartConstraint.annotate({ title: 'Vertical' })),
+}).pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }));
+export type PartLayout = Schema.Schema.Type<typeof PartLayout>;
+
+/** The constraint field a node and a link both carry; read only while the element is a part of a composite. */
+export const constrainFields = {
+  constrain: Schema.optional(PartLayout.annotate({ title: 'Constrain' })),
+};
+
 /** The fields every node type shares; a type's schema is `Schema.Struct({ ...nodeBase, type: Literal, ... })`. */
 export const nodeBase = {
   id: Schema.String,
@@ -195,6 +218,7 @@ export const nodeBase = {
    * instance attach to it (ANIMATION.md §4.1).
    */
   exposed: Schema.optional(Schema.Boolean.annotate({ title: 'Exposed' })),
+  ...constrainFields,
 };
 
 /** Any node as the engine sees it: the shared fields and a type name; the registry knows the rest. */
@@ -515,6 +539,7 @@ export const linkBase = {
   style: Schema.optional(LineStyle),
   /** Drawn as a diagram connector rather than in the canvas's own link style. */
   connector: Schema.optional(DiagramConnector),
+  ...constrainFields,
 };
 
 /** A layer id, unique within its scene. */

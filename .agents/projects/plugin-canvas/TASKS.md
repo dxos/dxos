@@ -212,6 +212,46 @@ before), not reasoned about from the source.
       `artifact` fit to their own bounds. That is the open framing question below, not a separate
       fault.
 
+## Phase 7: composite objects with constrained parts (started 2026-11-11)
+
+Branch `claude/plugin-canvas-composite-objects-cb1372`, fast-forwarded onto `claude/studio-diagrams-canvas-500640`
+(`fece1e4986e`). A tool today draws one shape whose regions are painted by its React view (`CardNodeView`,
+`ClassNodeView`); the `Composite` story draws the same card as an Object of primitives whose parts are separately
+editable. This phase makes the second form the one tools use, and gives a part a say in how it follows its frame.
+
+### Decisions (agreed with the user, 2026-11-11)
+
+| #   | Decision                                                                                                                                                                                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | **Part layout is per-axis constraints**, as Figma's: `constrain?: { x, y }` over `min \| max \| stretch \| center \| scale`, on `nodeBase` and `linkBase`. `scale` is the default and is today's uniform behaviour. |
+| D2  | **A tool declares its composite in the DSL, not in code.** `NodeDefSpec.template` is DSL source; one shared definition per tool per document, instances holding their own content as `overrides`.                   |
+| D2b | The DSL gains a top-level **`composite <id> { element … }`** statement, which reads back as a `kind: 'composite'` layout plus the model object that places it.                                                      |
+| D2c | A part's constraint is one attribute carrying the pair: **`constrain=stretch,max`**; a single value applies to both axes.                                                                                           |
+| D3  | **Text edits are local, style and part geometry are shared.** Typing into a part writes the instance's `overrides`; style or a part's own geometry writes the definition, so every instance changes.                |
+| D4  | **Double-click edits a composite in place** — the rest of the scene fades, Escape leaves — matching what `Scene3DEditor` already does in 3D. Isolation stays reachable from the Objects panel.                      |
+| D5  | **Make object keeps the content's own bounds**: the instance's frame is the selection's bounds with a 1:1 transform, so handles sit on the shape's edges and no group box is drawn.                                 |
+| D6  | **The link `type` is presented as a Variant selector** — straight, orthogonal, elbow, curve, spline — with one new `ortho` type. Nothing stored changes meaning.                                                    |
+| D7  | `smart` is labelled **elbow** (it leaves each port along its normal and joins with one corner).                                                                                                                     |
+| D8  | `orthogonal` routes with **midpoint bends and no obstacle avoidance**: straight when the ports align, else one or two bends at the midpoint. Deterministic, so an unrelated shape moving never re-routes it.        |
+| D9  | **plugin-uml keeps `ClassNode`'s typed schema** and gains a DSL template; `ClassNodeView.tsx` goes away.                                                                                                            |
+| D10 | One branch, **one PR**, seven commits.                                                                                                                                                                              |
+
+### Tasks
+
+- [ ] **`@dxos/scene`: part constraints.** `PartConstraint` / `PartLayout` schemas, `constrain` on `nodeBase` and
+      `linkBase`, and the solver that maps a definition's bounds into an instance's frame per axis. Unit tests over
+      each constraint and over a link's free point ends.
+- [ ] **`@dxos/diagram`: the `composite` statement.** Grammar, reader, printer, linter and completion for
+      `composite <id> … { element … }` and the `constrain` attribute; round-trip tests.
+- [ ] **`react-ui-canvas`: templates and re-solve.** `NodeDefSpec.template` (DSL source) compiled once per document;
+      an instance's resize re-solves its parts by their constraints instead of scaling uniformly.
+- [ ] **`react-ui-canvas`: in-place composite editing** (D4), with 2D/3D parity against `Scene3DEditor`.
+- [ ] **`react-ui-canvas`: Make object framing and shared style edits** (D3, D5).
+- [ ] **`react-ui-canvas`: the `ortho` variant and the Variant selector** (D6, D7, D8).
+- [ ] **`plugin-uml`: the class as a composite template** (D9).
+- [ ] **Verify**: package builds and tests, `pnpm format`, lint, and the Cards stories (`Default` and `Composite`)
+      rendered on a storybook served from this worktree on an alternate port.
+
 ## Backlog
 
 - [x] **Import a tldraw diagram as a canvas** (tracked 2026-10-18; built 2026-10-19). `src/import/tldraw.ts`

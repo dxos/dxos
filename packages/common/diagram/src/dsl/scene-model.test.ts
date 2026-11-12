@@ -25,6 +25,90 @@ model shapes dim=2d {
 }
 `;
 
+const COMPOSITE = `scene root dim=2d layout=board {
+  camera center=0,0 zoom=1
+}
+
+layout board dim=2d model=composites {
+  element one tile @ 0,0 size=288x192
+  element two tile @ 384,0 size=288x384
+}
+
+composite tile size=288x192 name="Tile" {
+  element frame rect @ 0,0 size=288x192 constrain=stretch rounded=true
+  element icon icon @ -126,-78 size=36x36 constrain=min
+  element title note "Card" @ -24,-78 size=204x24 constrain=stretch,min
+  element body note "Body" @ 0,6 size=264x84 constrain=stretch
+  element footer note "Footer" @ 0,87 size=264x18 constrain=stretch,max
+}
+`;
+
+describe('composite statements', () => {
+  test('a composite is a named composite layout and the instance object that places it', () => {
+    const { document, problems } = readScenes(COMPOSITE);
+    expect(problems).toEqual([]);
+    const parts = document.layouts.find((layout) => layout.id === 'tile');
+    expect(parts).toMatchObject({ dim: '2d', kind: 'composite', name: 'Tile' });
+    expect(parts?.anonymous).toBeUndefined();
+    expect(Object.keys(parts?.elements ?? {})).toEqual(['frame', 'icon', 'title', 'body', 'footer']);
+    const model = document.models.find((candidate) => candidate.id === 'composites');
+    expect(model?.dim === '2d' && model.objects.tile).toEqual({
+      id: 'tile',
+      type: 'instance',
+      parts: 'tile',
+      size: { width: 288, height: 192 },
+    });
+  });
+
+  test('a layout places a composite by naming it, at a size of its own', () => {
+    const { document } = readScenes(COMPOSITE);
+    const board = document.layouts.find((layout) => layout.id === 'board');
+    expect(board?.elements.one).toEqual({
+      id: 'one',
+      object: 'tile',
+      center: { x: 0, y: 0 },
+      size: { width: 288, height: 192 },
+    });
+    expect(board?.elements.two?.size).toEqual({ width: 288, height: 384 });
+  });
+
+  test('constraints read per axis, and one word sets both', () => {
+    const { document } = readScenes(COMPOSITE);
+    const parts = document.layouts.find((layout) => layout.id === 'tile');
+    expect(parts?.elements.frame?.constrain).toEqual({ x: 'stretch', y: 'stretch' });
+    expect(parts?.elements.icon?.constrain).toEqual({ x: 'min', y: 'min' });
+    expect(parts?.elements.title?.constrain).toEqual({ x: 'stretch', y: 'min' });
+    expect(parts?.elements.footer?.constrain).toEqual({ x: 'stretch', y: 'max' });
+  });
+
+  test('a composite round-trips through the text, constraints and all', () => {
+    const { document } = readScenes(COMPOSITE);
+    expect(printScenes(document)).toBe(COMPOSITE);
+  });
+
+  test('an axis set to scale is the default, so it is neither stored nor printed', () => {
+    const { document, problems } = readScenes(`composite c {
+  element a rect @ 0,0 size=10x10 constrain=scale
+  element b rect @ 0,0 size=10x10 constrain=min,scale
+}
+`);
+    expect(problems).toEqual([]);
+    const parts = document.layouts.find((layout) => layout.id === 'c');
+    expect(parts?.elements.a?.constrain).toBeUndefined();
+    expect(parts?.elements.b?.constrain).toEqual({ x: 'min' });
+    expect(printScenes(document)).toContain('constrain=min,scale');
+  });
+
+  test('a word that is not a constraint is reported', () => {
+    const { problems } = readScenes(`composite c {
+  element a rect @ 0,0 size=10x10 constrain=sideways
+}
+`);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]?.message).toContain('constrain takes');
+  });
+});
+
 describe('readScenes', () => {
   test('a group is a composite placed by an element with no fit; links to its members end on its ports', () => {
     const { document } = readScenes(EXEMPLARS.cluster);
