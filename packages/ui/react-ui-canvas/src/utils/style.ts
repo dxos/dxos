@@ -181,11 +181,16 @@ export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
 };
 
 /**
- * A node of a `bare` type as it is drawn: no fill or border unless its style sets them, since the type draws all it
- * shows. The properties panel reads the same node, so a toggle shows what is drawn.
+ * A node as its type draws it where its style sets no fill or border: a `bare` type draws neither, since it draws
+ * all it shows, and an `outline` type draws its border alone. The properties panel reads the same node, so a toggle
+ * shows what is drawn.
  */
-export const bareNode = (node: Node, bare: boolean | undefined): Node =>
-  bare ? { ...node, style: { fill: false, border: false, ...node.style } } : node;
+export const bareNode = (node: Node, def: { bare?: boolean; outline?: boolean } | undefined): Node =>
+  def?.bare
+    ? { ...node, style: { fill: false, border: false, ...node.style } }
+    : def?.outline
+      ? { ...node, style: { fill: false, ...node.style } }
+      : node;
 
 /**
  * A node's style with the defaults the frame draws spelled out: an unset `fill`, `border` or `rounded` is drawn (the

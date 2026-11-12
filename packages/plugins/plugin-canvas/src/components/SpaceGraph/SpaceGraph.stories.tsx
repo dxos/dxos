@@ -83,7 +83,8 @@ export const Default: Story = {};
 /**
  * 1. Two space graphs are drawn, each a circle holding its objects.
  * 2. The Space graph tool is in the rail, in a group of its own: not among the shapes and links.
- * 3. Select a graph: Border reads off. Turn it on: the frame takes a border and the inspector stays in place.
+ * 3. Select a graph: Border reads on and Fill off. Turn Border off: the ring goes, nothing inside it moves, and the
+ *    inspector stays in place.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -101,15 +102,26 @@ export const Test: Story = {
       group?.querySelector('[data-testid="canvas.tool.node:rect"], [data-testid="canvas.tool.select"]'),
     ).toBeNull();
 
-    // A graph draws its own circle, so its frame has no border until one is asked for: Border reads off, and turning
-    // it on leaves the inspector where it is (the switch's hidden input once sat outside it, and focusing it scrolled
-    // the whole panel away).
+    // The ring is the frame's border, so Border is on, and turning it off takes the ring away without moving what
+    // is inside it. The inspector stays where it is (the switch's hidden input once sat outside it, and focusing it
+    // scrolled the whole panel away).
     await userEvent.click(graphs[0]);
     const dock = await canvas.findByTestId('scene-view-dock');
     const border = await within(dock).findByRole('switch', { name: 'Border' });
-    await expect(border).not.toBeChecked();
+    await expect(border).toBeChecked();
+    // Selected, the ring keeps its own colour: the selection frame marks the graph.
+    await expect(canvas.getAllByTestId('space-graph-node')[0].closest('[data-node-id]')?.className).not.toContain(
+      'border-focus',
+    );
+    await expect(await within(dock).findByRole('switch', { name: 'Fill' })).not.toBeChecked();
+    const placed = () => {
+      const { x, y, width, height } = canvas.getAllByTestId('space-graph-node')[0].getBoundingClientRect();
+      return [x, y, width, height];
+    };
+    const before = placed();
     await userEvent.click(border);
-    await waitFor(() => expect(within(dock).getByRole('switch', { name: 'Border' })).toBeChecked());
+    await waitFor(() => expect(within(dock).getByRole('switch', { name: 'Border' })).not.toBeChecked());
+    await expect(placed()).toEqual(before);
     await expect(
       Array.from(dock.querySelectorAll('*')).filter(
         (element) => element.scrollTop > 0 && getComputedStyle(element).overflowY === 'hidden',

@@ -109,8 +109,11 @@ The Properties panel shows a shape selected inside a hull, where it showed nothi
 A switch or checkbox keeps its visually hidden input inside itself (`position: relative` on `.dx-switch` and
 `.dx-checkbox`): in a scrolling form the input was left behind, and focusing it scrolled a clipped ancestor, which took
 the Properties panel out of view when a toggle far down it was pressed. The Properties panel shows Fill and Border as
-a shape draws them, so a type that draws its own outline (text, an icon, the space graph) reads off until one is
-asked for. A vector field's stack no longer asks a plain fieldset for a gutter, which logged a warning.
+a shape draws them, so a type that draws all it shows (text, an icon) reads off until one is asked for. A node type
+may be an `outline` (`NodeDefSpec.outline`): its border is the frame's and is on, with no fill unless asked for one.
+Being part of the drawing, an outline keeps its colour while the node is selected or hovered; the selection frame
+alone marks it. The space graph is one, so its ring is its Border, and turning it off or on moves nothing inside it.
+A vector field's stack no longer asks a plain fieldset for a gutter, which logged a warning.
 
 `@dxos/ui-types/phosphor` exports `phosphorIcons`, the name of every regular Phosphor glyph. It is an entry of its
 own rather than part of the package's index, and `iconOptions()` imports it when a picker first asks, so the

@@ -126,6 +126,12 @@ export type NodeDef = {
   palette?: boolean;
   /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
   bare?: boolean;
+  /**
+   * The frame draws its border but no fill unless the node's style asks for one: the border is the type's own
+   * outline (a ring round what it draws), so it is the frame's, and turning it on or off moves nothing inside it.
+   * Being part of the drawing, it keeps its colour while the node is selected or hovered.
+   */
+  outline?: boolean;
   /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
   unclipped?: boolean;
   /**

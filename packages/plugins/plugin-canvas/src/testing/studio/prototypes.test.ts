@@ -97,7 +97,7 @@ describe('core prototypes', () => {
   test('a kind naming no prototype is unaffected', ({ expect }) => {
     const space = registry()['space-graph'];
     expect(space.ellipse).toBe(true);
-    expect(space.bare).toBe(true);
+    expect([space.bare, space.outline]).toEqual([undefined, true]);
     expect(space.minSize).toEqual({ width: 120, height: 120 });
   });
 });

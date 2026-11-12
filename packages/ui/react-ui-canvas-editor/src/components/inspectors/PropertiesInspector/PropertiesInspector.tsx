@@ -204,9 +204,9 @@ const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertic
 /** The size a type draws its text at unless styled otherwise, where that is not a shape label's: a hull's name is a caption. */
 const textSize = (node: Node): Pick<NodeStyle, 'fontSize'> => (isHullNode(node) ? { fontSize: HULL_FONT_SIZE } : {});
 
-/** A node as the view draws it: its class's look under its own, and a bare type's fill and border off unless set. */
+/** A node as the view draws it: its class's look under its own, and its type's fill and border where it sets none. */
 const drawnNode = (nodes: NodeRegistry, node: Node, styles: StyleMap): Node =>
-  bareNode(classedNode(node, styles), nodeDef(nodes, node)?.bare);
+  bareNode(classedNode(node, styles), nodeDef(nodes, node));
 
 /**
  * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show

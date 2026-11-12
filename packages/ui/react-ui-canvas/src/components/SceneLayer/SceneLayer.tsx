@@ -1062,7 +1062,7 @@ const NodeFrame = memo(
     const cell = useContext(CellContext);
     // A type the registry does not know is drawn as the core base: a box with its label.
     const def = nodeDef(registry, node);
-    const drawn = useMemo(() => bareNode(classedNode(node, styles), def?.bare), [node, styles, def?.bare]);
+    const drawn = useMemo(() => bareNode(classedNode(node, styles), def), [node, styles, def]);
     const bounds = nodeBounds(node);
     const padding = nodePadding(node);
     const interactive = handlers !== undefined && !ghost;
@@ -1120,9 +1120,12 @@ const NodeFrame = memo(
       ...fade,
       ...nodeOpacity(drawn, fade),
     };
+    // An outline's border is part of what the type draws, so selecting or hovering it leaves its colour alone: the
+    // selection frame marks it, and a ring turned off stays off.
+    const marked = def?.outline !== true;
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
-      : frameClasses(drawn, selected, hovered, def?.ellipse, look);
+      : frameClasses(drawn, marked && selected, marked && hovered, def?.ellipse, look);
     const silhouetteFilled = def?.filled?.(drawn) ?? true;
     const silhouetteRadius = RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))];
     const relief = silhouette && silhouetteFilled ? nodeRelief(drawn, look) : undefined;

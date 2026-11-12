@@ -126,7 +126,6 @@ export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
       height={height}
       data-testid='space-graph-node'
     >
-      <circle cx={center.x} cy={center.y} r={radius} className='fill-none stroke-neutral-border' strokeWidth={1.8} />
       {cells
         .filter((cell) => !on.has(`${cell.x},${cell.y}`))
         .map((cell, index) => (
@@ -169,7 +168,8 @@ export const spaceGraphSpec: ElementKindSpec = {
   defaultSize: { width: 8, height: 8 },
   resizable: true,
   minSize: { width: 120, height: 120 },
-  // The frame is the inscribed circle, and the type draws everything it shows: no box, no fill, no border.
+  // The frame is the inscribed circle and its border is the space's ring, so Border, the hue and the line style are
+  // the ring's, and it takes no fill unless asked for one.
   ellipse: true,
-  bare: true,
+  outline: true,
 };
