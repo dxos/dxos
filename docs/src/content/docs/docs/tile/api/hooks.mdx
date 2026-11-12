@@ -1,0 +1,41 @@
+---
+title: Hooks
+description: The hooks react-ui exports.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Hooks from '@dxos/react-ui/Hooks';
+```
+
+## Theme
+
+| Hook                    | Returns                                                                    |
+| ----------------------- | -------------------------------------------------------------------------- |
+| `useTranslation(ns)`    | `t`, which reads keys from the namespace `ns`                              |
+| `useThemeMode()`        | `'light'` or `'dark'`, as given to `Theme.Provider`                        |
+| `usePlatform()`         | `'mobile'`, `'desktop'` or nothing, as given to `Theme.Provider`           |
+| `useIosKeyboard()`      | Whether focusing an input outside a click opens the iOS on-screen keyboard |
+| `useSafeArea()`         | The device's safe-area insets                                              |
+| `useVisualViewport()`   | The visual viewport, which shrinks under an on-screen keyboard             |
+
+<Snippet file="tile-guides" region="use-translation" lang="tsx" />
+
+## General
+
+These come from `@dxos/react-hooks`, and react-ui re-exports them so a component needs one import.
+
+| Hook                                         | Use                                                              |
+| -------------------------------------------- | ---------------------------------------------------------------- |
+| `useControllableState`, `useControlledState` | A value that a parent may control or leave to the component      |
+| `useAsyncState`, `useAsyncEffect`            | A value from a promise, and an effect that can tell it was unmounted |
+| `useAtomState`                               | A writable atom with its current value and setter                |
+| `useMediaQuery`                              | Whether a media query matches                                    |
+| `useSize`, `useViewportResize`               | An element's size, and window resizes                            |
+| `useTimeout`, `useInterval`                  | Timers that stop on unmount                                      |
+| `useId`                                      | A stable id                                                      |
+| `useComposedRefs`, `useForwardedRef`, `useMergeRefs` | Combine a forwarded ref with a ref of your own          |
+| `useDefaultValue`, `useDefaults`             | A stable default for a value that may be missing, and a memoized merge with defaults |
+| `useIsFocused`                               | Whether an element has focus                                     |
+| `useFileDownload`                            | A function that saves a blob as a file                           |

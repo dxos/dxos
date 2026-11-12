@@ -1,0 +1,90 @@
+---
+title: Installation
+description: Add react-ui to a Vite app, with the theme plugin, the stylesheets, the provider, icons and dark mode.
+---
+
+import Snippet from '../../../../components/Snippet.astro';
+
+This page adds TILE to a React app built with [Vite](https://vite.dev). It needs no ECHO or PLEX. The
+[StackBlitz](/docs/echo/learn/installation/) projects for the ECHO learning path use this same setup.
+
+## Install the packages
+
+```sh
+npm install @dxos/react-ui @dxos/ui-theme effect @effect/atom-react react react-dom
+npm install --save-dev @dxos/vite-plugin-icons @phosphor-icons/core @vitejs/plugin-react tailwindcss vite
+```
+
+`@dxos/ui-theme` is a peer dependency of `@dxos/react-ui`. It holds the tokens and the Vite plugin that turns them into
+CSS. Until the next npm release, install `@dxos` packages the way [ECHO's Installation](/docs/echo/learn/installation/)
+does.
+
+## Configure Vite
+
+Two plugins do the work:
+
+- `ThemePlugin` from `@dxos/ui-theme/plugin` generates the theme's CSS with Tailwind. Tailwind emits only the classes
+  that a scanned file names, so `content` points it at the components' own stylesheets.
+- `IconsPlugin` from `@dxos/vite-plugin-icons` builds `/icons.svg`, a sprite of every icon your code and the components
+  name.
+
+```ts title="vite.config.ts"
+import react from '@vitejs/plugin-react';
+import { join } from 'node:path';
+import { defineConfig } from 'vite';
+
+import { ThemePlugin } from '@dxos/ui-theme/plugin';
+import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
+
+const phosphor = join(import.meta.dirname, 'node_modules/@phosphor-icons/core/assets');
+
+export default defineConfig({
+  plugins: [
+    ThemePlugin({ content: ['node_modules/@dxos/*/src/**/*.css'] }),
+    IconsPlugin({
+      symbolPattern: iconSymbolPattern({ sets: ['ph'] }),
+      assetPath: (_set, name, variant) =>
+        join(phosphor, variant, variant === 'regular' ? `${name}.svg` : `${name}-${variant}.svg`),
+      spriteFile: 'icons.svg',
+      contentPaths: [join(import.meta.dirname, 'src/**/*.{ts,tsx}')],
+      // Pre-bundled dependencies skip the plugin's transform, so their icons are found by scanning up front.
+      scanPaths: [join(import.meta.dirname, 'node_modules/@dxos/*/dist/**/*.mjs')],
+    }),
+    react(),
+  ],
+});
+```
+
+## Load the styles
+
+The app's entry imports two stylesheets before any component: `@dxos-theme`, the virtual module `ThemePlugin` serves,
+and `@dxos/react-ui/theme.css`, the components' own rules.
+
+```tsx title="src/main.tsx"
+import '@dxos-theme';
+import '@dxos/react-ui/theme.css';
+```
+
+`@dxos/ui-theme` declares the `@dxos-theme` module for TypeScript.
+
+## Wrap the app in the theme provider
+
+`Theme.Provider` gives every component the theme function that maps its props to classes, and the translations its
+built-in labels read. `Theme.defaultTx` is the default theme, and `translations` holds react-ui's own strings.
+
+<Snippet file="tile-setup" region="provider" lang="tsx" />
+
+## Dark mode
+
+The dark values of every token apply under a `dark` class on the root element. Set it before the page paints, so the
+first frame has the right colors, and keep it in step with the system setting:
+
+<Snippet file="tile-setup" region="dark" lang="tsx" />
+
+To let the user choose, toggle the class from your own setting instead. [Custom themes and dark mode](/docs/tile/guides/custom-themes/)
+covers both.
+
+## Next
+
+[Theme and tokens](/docs/tile/concepts/theme-and-tokens/) explains what the plugin generates, and the API pages show
+each family of components.

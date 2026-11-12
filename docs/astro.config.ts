@@ -212,6 +212,7 @@ export default defineConfig({
           path.join(rootDir, '{packages,tools}/**/dist/**/*.{mjs,html}'),
           path.join(rootDir, '{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
           path.join(import.meta.dirname, 'src/demos/**/*.{ts,tsx}'),
+          path.join(import.meta.dirname, 'src/echo/snippets/tile-*.tsx'),
         ],
         scanPaths: [path.join(rootDir, 'packages/ui/ui-icons/src/index.ts')],
       }),
@@ -299,8 +300,13 @@ export default defineConfig({
               id: 'mesh',
               label: 'MESH',
               link: '/docs/mesh/overview/',
-              // An overview only for now, so every topic in the header has a page to land on.
-              items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/mesh/overview/' }] }],
+              items: sidebarFromSpec(specPages, 'MESH'),
+            },
+            {
+              id: 'edge',
+              label: 'EDGE',
+              link: '/docs/edge/overview/',
+              items: sidebarFromSpec(specPages, 'EDGE'),
             },
             {
               id: 'plex',
@@ -309,18 +315,10 @@ export default defineConfig({
               items: sidebarFromSpec(specPages, 'PLEX'),
             },
             {
-              id: 'edge',
-              label: 'EDGE',
-              link: '/docs/edge/overview/',
-              // An overview only for now, so every topic in the header has a page to land on.
-              items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/edge/overview/' }] }],
-            },
-            {
               id: 'tile',
               label: 'TILE',
               link: '/docs/tile/overview/',
-              // An overview only for now, so every topic in the header has a page to land on.
-              items: [{ label: 'Start here', items: [{ label: 'Overview', link: '/docs/tile/overview/' }] }],
+              items: sidebarFromSpec(specPages, 'TILE'),
             },
           ],
           // Pages missing from a section's sidebar, such as the old plugin tutorial, still belong to it.

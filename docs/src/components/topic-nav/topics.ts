@@ -7,7 +7,6 @@ import edge from '../../../../packages/ui/brand/assets/logotypes/edge-horizontal
 import halo from '../../../../packages/ui/brand/assets/logotypes/halo-horizontal-black.svg?raw';
 import mesh from '../../../../packages/ui/brand/assets/logotypes/mesh-horizontal-black.svg?raw';
 import plex from '../../../../packages/ui/brand/assets/logotypes/plex-horizontal-black.svg?raw';
-
 // The brand has no TILE logotype yet; this one is drawn to the other logotypes' frame.
 import tile from '../../assets/topic-nav/logotypes/tile-horizontal-black.svg?raw';
 
@@ -47,18 +46,18 @@ export const TOPICS: Topic[] = [
     logotype: inherit(mesh),
   },
   {
-    id: 'plex',
-    label: 'PLEX',
-    href: '/docs/plex/overview/',
-    description: 'Plugin framework for Composer-style apps.',
-    logotype: inherit(plex),
-  },
-  {
     id: 'edge',
     label: 'EDGE',
     href: '/docs/edge/overview/',
     description: 'Hosted services: sync, functions, agents.',
     logotype: inherit(edge),
+  },
+  {
+    id: 'plex',
+    label: 'PLEX',
+    href: '/docs/plex/overview/',
+    description: 'Plugin framework for Composer-style apps.',
+    logotype: inherit(plex),
   },
   {
     id: 'tile',

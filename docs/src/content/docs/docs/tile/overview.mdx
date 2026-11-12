@@ -1,0 +1,41 @@
+---
+title: Overview
+description: What TILE is, the core and component packages, and where to start.
+welcome:
+  section: TILE
+  tagline: React components and the design system.
+  background: tile
+---
+
+import TilePreview from '../../../../components/TilePreview.astro';
+
+TILE is the DXOS design system: themed React components, and the tokens and build plugin behind them. Composer and every
+plugin draw their UI with it. Its core is `@dxos/react-ui`, which needs `@dxos/ui-theme` for its styles. It does not need
+ECHO or PLEX, so it works in any React app.
+
+The buttons below are the real components, rendered in this page. They follow the page's light or dark theme.
+
+<TilePreview id="buttons" />
+
+## Core and component packages
+
+| Package                               | What it holds                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `@dxos/react-ui`                      | The components: buttons, inputs, overlays, menus, layout, status, icons, and the theme provider |
+| `@dxos/ui-theme`                      | The color and size tokens, the cascade layers, and the Vite plugin that generates the styles |
+| The other `@dxos/react-ui-*` packages | Lists, forms, editors, tables and the plugin shell, built on the core                       |
+
+These pages document the core. The other packages are listed in [Component packages](/docs/tile/resources/component-packages/).
+
+## How these pages are organized
+
+- **Start here**: [Why TILE?](/docs/tile/why-tile/) makes the case for the design, and
+  [Installation](/docs/tile/installation/) adds TILE to a Vite app.
+- **Learning path** builds a contacts screen step by step. It is planned.
+- **Core concepts** describe one idea each: [Theme and tokens](/docs/tile/concepts/theme-and-tokens/),
+  [Composite components](/docs/tile/concepts/composite-components/), [Layout](/docs/tile/concepts/layout/),
+  [Density and sizes](/docs/tile/concepts/density-and-sizes/),
+  [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/) and
+  [Translations and icons](/docs/tile/concepts/translations-and-icons/).
+- **API** has one page per family of components, each with a live preview.
+- **Guides** cover theming, using TILE in a [PLEX](/docs/plex/overview/) plugin, and stories and tests.

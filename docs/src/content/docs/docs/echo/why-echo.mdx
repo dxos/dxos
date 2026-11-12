@@ -119,7 +119,7 @@ same call that made it, so a list does not need an optimistic copy of itself. <S
 
 ### A query can see more than this device holds
 
-Queries also read the host index and EDGE, which hold objects this tab has not loaded. ECHO treats those answers as evidence.
+Queries also read the host index and [EDGE's index](/docs/edge/concepts/indexing/), which hold objects this tab has not loaded. ECHO treats those answers as evidence.
 It re-evaluates each remote entry against the local document and drops the entry when local state contradicts it, so a slow
 server cannot bring back an object you deleted. <SpecCite item="org.dxos.echo.query#F-5" />
 

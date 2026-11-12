@@ -1,0 +1,42 @@
+---
+title: Testing and stories
+description: Storybook stories and tests for TILE components.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+A component that takes its data as props can be shown in a [Storybook](https://storybook.js.org) story without an app
+around it. DXOS writes a story for each component, and runs the stories as tests.
+
+## A story
+
+A story needs the theme provider and react-ui's translations. `withTheme` from `@dxos/react-ui/testing` wraps the story
+in `Theme.Provider` with `Theme.defaultTx`, and passes the story's `translations` parameter as its resources:
+
+<Snippet file="tile-guides" region="story" lang="tsx" />
+
+Each export after the default is one story: here, a list with contacts and an empty list. A story per state, rather
+than one with every state at once, is what makes a visual change easy to spot.
+
+`withTheme` reads the light or dark mode from Storybook's `theme` global, so the theme switcher in the toolbar applies
+to the story.
+
+## The Storybook setup
+
+The app's Storybook needs the same Vite setup as the app: `ThemePlugin` and `IconsPlugin` from
+[Installation](/docs/tile/installation/), and the two stylesheet imports in its preview file.
+
+## Helpers and tests
+
+`@dxos/react-ui/testing` also exports the helpers DXOS's own stories use:
+
+| Export                    | Use                                                                    |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `withTheme`               | The theme provider for a story                                         |
+| `withLayout`              | A frame around the story, with `classNames` for its size and padding   |
+| `withSizes`, `SIZE_ARG_TYPES` | Render the story at each size, with a control to pick one          |
+| `Loading`                 | A loading placeholder for a story                                      |
+| `ThrowError`              | A component that throws after a delay, for trying an error boundary    |
+
+Storybook's play functions run in the browser, so a story can also test behavior: open a dialog, press a key, and check
+where focus went. Target elements by `data-testid`; TILE parts pass it through to their element.

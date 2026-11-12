@@ -1,0 +1,51 @@
+---
+title: Replication and backup
+description: How EDGE keeps an always-online copy of each space.
+---
+
+EDGE keeps a copy of every space that replicates through it. Devices sync with that copy whenever they are online, so
+two devices that never meet still converge.
+
+## Model
+
+**Two replicators per space.** A space holds two kinds of data, and EDGE replicates each with its own Durable Object:
+
+| Data                  | Replicator                         | Protocol                                                                   |
+| --------------------- | ---------------------------------- | -------------------------------------------------------------------------- |
+| Automerge documents   | `SubductionAutomergeReplicator`    | Subduction, which syncs a space's documents by comparing compact summaries of their history |
+| Feeds                 | `FeedReplicator`                   | Appends each feed's new blocks                                             |
+
+**A copy, not the authority.** EDGE merges changes the same way every device does. A conflict between two devices
+resolves the same on EDGE as on each device, so EDGE never has to decide who wins.
+
+```text
+ Laptop ── changes ──▶ EDGE's copy ──▶ Phone (later)
+                           ▲
+ Peers online together also sync directly over MESH.
+```
+
+## Turning it off
+
+`Space.setEdgeReplication` turns replication through EDGE on or off for one space. With it off:
+
+- the space syncs only between devices online at the same time;
+- EDGE stops receiving the space's changes, so they are not backed up there and EDGE cannot index or run compute on them;
+- a device that recovers the identity gets the space only from another device.
+
+## Archives, backups and deletion
+
+- `Space.exportSpace` writes a space to an archive file on the device, and `importSpace` creates a new space from one.
+  This works with or without EDGE.
+- EDGE's copy is the backup for a space whose devices are all lost: a recovered identity syncs its spaces from it.
+- Deleting a space queues EDGE's copy for deletion too.
+
+## Behavior
+
+- A change that reaches EDGE reaches every member's device that later connects.
+- The same change may arrive both from EDGE and over a direct link. It is applied once.
+
+## Limits
+
+- EDGE's copy trails the devices by however long they take to send it. A change made offline is on EDGE only after the
+  device reconnects.
+- EDGE stores space content in plaintext today. See [What EDGE can see](/docs/edge/concepts/what-edge-can-see/).

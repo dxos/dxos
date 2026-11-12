@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** The sections whose pages are exported to agents, by the path segment their routes and llms.txt files use. */
-export const AGENT_SECTION_IDS = ['echo', 'halo', 'plex'] as const;
+export const AGENT_SECTION_IDS = ['echo', 'halo', 'mesh', 'edge', 'plex', 'tile'] as const;
 
 export type AgentSection = (typeof AGENT_SECTION_IDS)[number];
 
@@ -21,9 +21,23 @@ export const AGENT_SECTIONS: Record<AgentSection, { label: string; summary: stri
     summary:
       "Identity management for local-first apps: a user's identity, the devices and credentials that act for it, and who can join a space.",
   },
+  mesh: {
+    label: 'MESH',
+    summary:
+      'Peer networking for ECHO and HALO: swarms, signaling and the transports that carry replication, presence and invitations.',
+  },
+  edge: {
+    label: 'EDGE',
+    summary:
+      "DXOS's services on Cloudflare Workers: an always-online peer for every space and identity, with replication, indexing, identity services and compute.",
+  },
   plex: {
     label: 'PLEX',
     summary: 'An agentic framework for building apps out of plugins.',
+  },
+  tile: {
+    label: 'TILE',
+    summary: 'The DXOS design system: themed React components and the tokens behind them, usable in any React app.',
   },
 };
 

@@ -1,0 +1,41 @@
+---
+title: Theme
+description: The theme provider and the theme function.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Theme from '@dxos/react-ui/Theme';
+import { translations } from '@dxos/react-ui/translations';
+```
+
+`Theme` holds the provider every TILE component needs above it, and the default theme function. Set-up is on
+[Installation](/docs/tile/installation/).
+
+<Snippet file="tile-setup" region="provider" lang="tsx" />
+
+## `Theme.Provider`
+
+| Prop                 | Type                        | Default         | Effect                                                                          |
+| -------------------- | --------------------------- | --------------- | ------------------------------------------------------------------------------- |
+| `tx`                 | theme function              | none            | Maps a component's name and props to its classes. Pass `Theme.defaultTx`       |
+| `resourceExtensions` | translation resources       | none            | The strings components and your code read. Include react-ui's `translations`   |
+| `themeMode`          | `'light' \| 'dark'`         | `'dark'`        | What `useThemeMode` reports. The colors follow the `dark` class, not this prop |
+| `appNs`              | string                      | none            | The namespace `useTranslation` uses when it is given none                      |
+| `fallback`           | React node                  | `null`          | Shown while translations load                                                  |
+| `platform`           | `'mobile' \| 'desktop'`     | none            | What `usePlatform` reports, for layouts that differ on phones                  |
+
+The provider also loads the icon sprite once into the page, and tracks whether the user is moving by keyboard.
+
+## `Theme.defaultTx`
+
+The theme function TILE ships, which Composer and its plugins use. A custom look comes from changing tokens rather than
+writing a new function. See [Custom themes and dark mode](/docs/tile/guides/custom-themes/).
+
+## Also exported
+
+- `useTranslation(ns)`, also exported from [`Hooks`](/docs/tile/api/hooks/).
+- `useThemeContext()`, which returns the provider's value.
+- The `Resource` type, for a translation resource, and `toLocalizedString` for a label that may be a string or a
+  `[key, { ns }]` pair.

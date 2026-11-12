@@ -1,0 +1,54 @@
+---
+title: Layout
+description: The Panel and ScrollArea container model, and the layout primitives.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../components/TilePreview.astro';
+
+TILE lays out a screen with a few primitives instead of hand-written flex and grid classes. A `Panel` is the shell of a
+pane, `ScrollArea` makes its body scroll, and `Flex`, `Grid` and `Container` arrange what is inside.
+
+## Model
+
+**A panel has three rows.** `Panel.Root` is a grid whose rows are `Panel.Header`, `Panel.Body` and `Panel.Footer`. The
+header and footer take the height of their content, and the body takes the rest. The panel fills its parent, so its
+parent needs a height.
+
+**The height chain.** For the body to scroll, every element between the panel and the scrolling content must pass the
+height down. `Panel.Body asChild` makes the `ScrollArea.Root` the body itself, and `ScrollArea.Viewport asChild` makes
+the content the viewport, so no extra element breaks the chain.
+
+<Snippet file="tile-components" region="panel" lang="tsx" />
+
+<TilePreview id="panel" height="20rem" />
+
+**Layout primitives.** All of these are in the `Layout` namespace, and each takes `asChild` to lay out a semantic element
+such as a `<header>` or `<ul>` without an extra wrapper:
+
+| Primitive   | Arranges                                                                                       |
+| ----------- | ---------------------------------------------------------------------------------------------- |
+| `Flex`      | Children along one axis. `column`, `gap`, `align`, `justify`, `wrap`, `grow`, `center`         |
+| `Grid`      | Children in tracks. `cols={3}` for equal columns, `cols={['min', 'fill']}` for a label column and the rest, `cols='subgrid'` to share a parent's tracks |
+| `Container` | Content between two gutters, so rows line up with the panel's edges. `gutter='rail'` leaves room for an icon column |
+| `Block`     | One slot in a container's rail, sized so an icon and an icon button line up                    |
+| `Columns`   | A horizontal run of as many columns as fit, which scrolls one column at a time                 |
+| `Separator` | A rule between groups                                                                          |
+
+**`gap` takes steps, not numbers.** `Flex` and `Grid` take `gap='xs'` through `'2xl'`, plus `'form'` and
+`'form-section'` for the spacing between fields. Steps keep spacing consistent; a literal such as `gap-2` drifts.
+
+## Behavior
+
+- **Sizing is physical.** Use `w-*`, `h-*`, `min-w-*` and `max-h-*` for width and height.
+- **Spacing that depends on direction is logical.** Use `ps-*` and `pe-*` for padding, `ms-*` and `me-*` for margin,
+  and `start-*` and `end-*` for insets. These flip in a right-to-left language.
+- `Flex` sets no `align` by default, so children stretch as plain CSS does.
+- `grow` on a `Flex` or `Grid` makes it take the slack of its parent and clip what overflows. That is the link a
+  scrolling child needs.
+
+## Limits
+
+- A wrapper `<div>` between `Panel.Body` and the scrolling content breaks the height chain, and the content grows
+  instead of scrolling. Use `asChild`.
+- Components such as forms and lists own their spacing. Padding added around them doubles it.

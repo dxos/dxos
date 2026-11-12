@@ -1,0 +1,65 @@
+---
+title: Architecture
+description: EDGE's services, the objects it keeps per space and per identity, and its environments.
+---
+
+EDGE is a set of Cloudflare Workers behind one front door. Each worker is a service, and each service keeps its state in
+Durable Objects, one per space, identity or other key.
+
+## Model
+
+**The front door.** One worker, `edge`, takes every request and WebSocket. It authenticates the caller and forwards the
+request to the service that owns its path.
+
+**Services.**
+
+| Service   | Path         | Does                                                                                         |
+| --------- | ------------ | -------------------------------------------------------------------------------------------- |
+| Router    | (WebSocket)  | Holds each device's WebSocket, routes messages between an identity's devices, and runs signaling |
+| db        | `/db`        | Replicates spaces, indexes them, and keeps each space's state                               |
+| Identity  | `/identity`  | Identity recovery and agent identities                                                       |
+| Compute   | `/compute`   | Functions, triggers, the scheduler and agent processes                                       |
+| KMS       | `/kms`       | Keeps secrets for a space, such as OAuth tokens for the services it connects to              |
+| Hub       | `/hub`       | Accounts, invitations and email verification                                                 |
+| AI        | `/ai`        | Model access for agents and the assistant                                                    |
+| Blob      | `/blob`      | File upload and download                                                                     |
+| Registry  | `/registry`  | The plugin registry and the bundles it hosts                                                 |
+
+**Durable Objects.** A Durable Object is a small server with its own storage, created on first use and named by a key.
+EDGE keys them like this:
+
+```text
+ per identity     RouterObject ── the identity's devices and their WebSockets
+
+ per swarm topic  SwarmObject ── which devices are on the topic
+
+ per space        SubductionAutomergeReplicator ── the space's Automerge documents
+                  FeedReplicator, FeedSpace ── the space's feeds
+                  SpaceStateMachine ── members, credentials and other space state
+                  Indexer ── the space's index for queries
+
+ per agent        agent process and memory, in compute
+```
+
+## Environments
+
+| Environment | URL                              | For                          |
+| ----------- | -------------------------------- | ---------------------------- |
+| Production  | `https://dxos.network/`          | Apps, Composer               |
+| Preview     | `https://preview.dxos.network/`  | Testing the next release     |
+| Dev         | `https://dev.dxos.network/`      | DXOS's own development       |
+
+An app chooses one with `runtime.services.edge.url`. Every service answers under that one URL, at its path. See
+[Configuration](/docs/edge/resources/configuration/).
+
+## Behavior
+
+- A space's Durable Objects run in one place at a time, so all writes to a space's copy go through one server and need no
+  coordination between servers.
+- EDGE authenticates every request with the caller's HALO identity. See [Connecting](/docs/edge/concepts/connecting/).
+
+## Limits
+
+- DXOS operates every environment. There is no self-hosted EDGE, and its source is not public.
+- EDGE serves only identities linked to a DXOS account. For now an account is created through
+  [Composer](https://composer.space).

@@ -39,7 +39,8 @@ member with `pull` stores and relays the data without reading it. When membershi
 
 **EDGE.** EDGE, DXOS's sync service, joins a space as a `pull` member. It holds and relays the encrypted changes, so
 devices that are never online together still sync, and it cannot read them. A service that works on plaintext, such as
-AI or search, needs `read`, which an admin grants explicitly.
+AI or search, needs `read`, which an admin grants explicitly. This is the model Keyhive brings; until its encryption
+is running, EDGE stores spaces in plaintext. See [What EDGE can see](/docs/edge/concepts/what-edge-can-see/).
 
 ## Behavior
 
