@@ -11,7 +11,7 @@
  * @title Subagent columns
  * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-6
  * @app storybook via `DX_STORIES=stories/stories-assistant moon run storybook-react:serve` on :9009,
- *   story `stories-stories-assistant-subagents--columns` in isolation mode
+ *   story `stories-stories-assistant-subagents--columns-demo` in isolation mode
  */
 
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';
@@ -24,10 +24,9 @@ const waitForCount = async (page, selector, count, timeout) =>
     timeout,
   });
 
+/** Sends a prompt by clicking its chip above the composer, then waits for it to show in the thread. */
 const send = async ({ demo, page }, value) => {
-  await demo.click({ selector: PROMPT, label: 'Prompt' });
-  await demo.type({ selector: PROMPT, value, delay: 30 });
-  await demo.press({ key: 'Enter', hud: false });
+  await demo.click({ selector: `[data-testid="chat.suggestion"]:has-text("${value}")`, label: 'Suggestion' });
   await page.getByText(value, { exact: false }).first().waitFor({ state: 'visible', timeout: 15_000 });
 };
 
