@@ -1115,8 +1115,9 @@ page plex-build-with-agent: Build with a coding agent
   template: tutorial
   status: spike
   covers:
-    - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
+    - A prompt the reader can edit, prefilled with the World Clock example
     - A picker above the prompt that fills it with one of four examples: World Clock, Expense splitter, Family tree and Tournament bracket [D-184]
+    - Examples written as instructions: each names the plugin and says what it should provide [D-240]
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
@@ -3706,6 +3707,12 @@ decision D-189: Until the next npm release, Installation and the React guide ins
   by: user:wittjosiah
   affects: [installation, guide-react]
   why: npm's `latest` (0.16.0) is older than the APIs the docs teach.
+
+decision D-240: PLEX's coding-agent examples are instructions to the agent. Each opens with "Create a Composer plugin called <name>." and goes on with what it should provide, never "I want to build". World Clock stays the default subject, but its text no longer matches the `composer-plugin-dev` eval's brief, which keeps its first-person wording. Amends [D-127] and [D-184].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Review feedback that "I want to..." reads as a wish rather than a prompt; a declarative brief tells the agent what to make.
 
 ## Appendix: Extension Definitions
 
