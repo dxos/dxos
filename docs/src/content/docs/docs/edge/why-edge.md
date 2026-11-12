@@ -23,7 +23,7 @@ EDGE when it wakes.
 | If the service disappears         | The data goes with it                         | The devices still have everything                      |
 | Who decides access                | The server, on every request                  | The space's members, through HALO                      |
 
-EDGE reads space content today. [What EDGE can see](/docs/edge/concepts/what-edge-can-see/) says what that means.
+EDGE can read a space only when the space gives it more than `pull` access. See HALO's [Spaces and membership](/docs/halo/concepts/spaces-membership/).
 
 ## Practical problems
 

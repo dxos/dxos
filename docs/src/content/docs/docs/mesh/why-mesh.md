@@ -44,8 +44,8 @@ reaches them: each syncs with EDGE's copy when it is online. See [Replication an
 
 ### Data that stays between devices
 
-A direct link carries data only between the two devices on it. Today the same data also goes to EDGE, which can read it;
-[What EDGE can see](/docs/edge/concepts/what-edge-can-see/) says what that means and what is changing.
+A direct link carries data only between the two devices on it. The same data also goes to EDGE, which can read it only
+if the space gives EDGE more than `pull` access; see HALO's [Spaces and membership](/docs/halo/concepts/spaces-membership/).
 
 ## Today: both at once
 

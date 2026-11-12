@@ -38,9 +38,10 @@ with `NotAuthorizedError`.
 member with `pull` stores and relays the data without reading it. When membership changes, the key changes too.
 
 **EDGE.** EDGE, DXOS's sync service, joins a space as a `pull` member. It holds and relays the encrypted changes, so
-devices that are never online together still sync, and it cannot read them. A service that works on plaintext, such as
-AI or search, needs `read`, which an admin grants explicitly. This is the model Keyhive brings; until its encryption
-is running, EDGE stores spaces in plaintext. See [What EDGE can see](/docs/edge/concepts/what-edge-can-see/).
+devices that are never online together still sync, and it cannot read them. An admin who gives EDGE more than `pull`
+makes the space readable on EDGE, so EDGE can index it, run functions and agents on it, and send it to AI. EDGE still
+stores the data encrypted and keeps the keys apart from it, and reading the data needs both. The two come together while
+an operation works on the data. That is the trade-off for using EDGE's indexing, compute and other services.
 
 ## Behavior
 

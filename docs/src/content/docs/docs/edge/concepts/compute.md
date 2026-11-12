@@ -37,5 +37,5 @@ packages installed. The registry service indexes published plugins and hosts the
 
 ## Limits
 
-- Compute reads space content, so it runs only for spaces that replicate through EDGE.
+- Compute reads space content, so it runs only for spaces that give EDGE more than `pull` access.
 - The AI service sends prompts and space content to the model provider a request names.
