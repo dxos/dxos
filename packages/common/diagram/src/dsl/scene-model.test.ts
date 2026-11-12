@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { applyIntent } from '@dxos/scene';
+import { type Scene as Model, applyIntent } from '@dxos/scene';
 
 import { EXEMPLAR_NAMES, EXEMPLARS } from '../testing.ts';
 import { parse } from './parse.ts';
@@ -112,6 +112,39 @@ describe('composite statements', () => {
       { x: 1, y: 0.5 },
     ]);
     expect(printScenes(document)).toContain('points="0,0.5 1,0.5"');
+  });
+
+  test('a prop that is a list but not points is left alone, rather than printed as one', () => {
+    // The same vertices under a name no attribute claims. Only `points` has a spelling the reader reads back,
+    // so any other list is dropped rather than printed as a string the reader would hand back verbatim.
+    const document: Model.SceneDocument = {
+      scenes: [],
+      layouts: [
+        {
+          id: 'c',
+          dim: '2d',
+          kind: 'composite',
+          elements: {
+            rule: {
+              id: 'rule',
+              type: 'polyline',
+              center: { x: 0, y: 0 },
+              size: { width: 10, height: 1 },
+              props: {
+                vertices: [
+                  { x: 0, y: 0.5 },
+                  { x: 1, y: 0.5 },
+                ],
+              },
+            },
+          },
+        },
+      ],
+      models: [],
+    };
+    const printed = printScenes(document);
+    expect(printed).toContain('element rule polyline');
+    expect(printed).not.toContain('vertices=');
   });
 
   test('points that are not pairs are reported', () => {

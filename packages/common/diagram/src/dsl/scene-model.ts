@@ -722,17 +722,6 @@ const formatValue = (value: unknown): string | undefined => {
   if (typeof value === 'string') {
     return formatWord(value);
   }
-  if (Array.isArray(value)) {
-    const points = value.flatMap((entry) =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      typeof Reflect.get(entry, 'x') === 'number' &&
-      typeof Reflect.get(entry, 'y') === 'number'
-        ? [formatVec2({ x: Reflect.get(entry, 'x'), y: Reflect.get(entry, 'y') })]
-        : [],
-    );
-    return points.length === value.length && points.length > 0 ? formatString(points.join(' ')) : undefined;
-  }
   if (typeof value === 'object' && value !== null) {
     if ('width' in value && 'height' in value && typeof value.width === 'number' && typeof value.height === 'number') {
       return `${formatNumber(value.width)}x${formatNumber(value.height)}`;
@@ -756,10 +745,33 @@ const formatScale = (scale: Model.Vec3): string =>
     ? formatNumber(scale.x)
     : `${formatNumber(scale.x)}x${formatNumber(scale.y)}x${formatNumber(scale.z)}`;
 
+/**
+ * `points="0,0.5 1,0.5"`, the spelling {@link readPoints} reads back. Only the `points` attribute is written this
+ * way: any other prop holding a list is left to {@link formatValue}, which declines it rather than printing a list
+ * as a string the reader would hand back as a string.
+ */
+const formatPoints = (value: unknown): string | undefined => {
+  if (!Array.isArray(value) || value.length < 2) {
+    return undefined;
+  }
+  const points = value.flatMap((entry) => {
+    const x = typeof entry === 'object' && entry !== null ? Reflect.get(entry, 'x') : undefined;
+    const y = typeof entry === 'object' && entry !== null ? Reflect.get(entry, 'y') : undefined;
+    return typeof x === 'number' && typeof y === 'number' ? [formatVec2({ x, y })] : [];
+  });
+  return points.length === value.length ? formatString(points.join(' ')) : undefined;
+};
+
 /** Style tokens, then props, the order every element and object ends with. */
 const formatStyleAndProps = (tokens: StyleTokens, item: { props?: Record<string, unknown> }): string[] => [
   ...STYLE_KEYS.flatMap((key) => attr(key, tokens[key])),
-  ...Object.entries(item.props ?? {}).flatMap(([key, value]) => attr(key, value)),
+  ...Object.entries(item.props ?? {}).flatMap(([key, value]) => {
+    if (key !== 'points') {
+      return attr(key, value);
+    }
+    const points = formatPoints(value);
+    return points === undefined ? [] : [`points=${points}`];
+  }),
 ];
 
 /** `constrain=stretch,max`, or one word where both axes agree; an axis left unset prints as its default, `scale`. */
