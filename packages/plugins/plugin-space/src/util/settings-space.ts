@@ -4,13 +4,16 @@
 
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceProperties, SpaceState } from '@dxos/client/echo';
-import { Annotation, Filter, Obj, Query } from '@dxos/echo';
+import { Annotation, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -75,6 +78,33 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
   yield* Effect.promise(() => space.waitUntilReady());
   yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   return space;
+});
+
+/**
+ * The settings object the settings space names. Named at genesis; a space that predates the name is
+ * given one here, and so is one whose name dangles, since nothing else would ever repoint it.
+ */
+export const resolveAppSettings = Effect.fnUntraced(function* (space: Space) {
+  const nameFresh = Effect.sync(() => {
+    const settings = space.db.add(AppSettings.make());
+    Obj.update(space.properties, (properties) => {
+      Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
+    });
+    return settings;
+  });
+
+  return yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
+    Option.match({
+      onSome: (ref) =>
+        Database.load(ref).pipe(
+          Effect.catchTag('EntityNotFoundError', () => {
+            log.warn('settings object not found; naming a fresh one', { uri: ref.uri });
+            return nameFresh;
+          }),
+        ),
+      onNone: () => nameFresh,
+    }),
+  );
 });
 
 /**

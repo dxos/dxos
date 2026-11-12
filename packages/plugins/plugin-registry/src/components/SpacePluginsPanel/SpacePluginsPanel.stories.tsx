@@ -13,28 +13,45 @@ import { translations } from '#translations';
 
 import { type SpacePluginRow, SpacePluginsPanel } from './SpacePluginsPanel.tsx';
 
-const PLUGINS: readonly Omit<SpacePluginRow, 'enabled'>[] = [
-  { key: 'org.dxos.plugin.kanban', name: 'Kanban', description: 'Track work across columns.' },
-  { key: 'org.dxos.plugin.markdown', name: 'Markdown', description: 'Write and edit documents.' },
-  { key: 'org.dxos.plugin.sheet', name: 'Sheet', description: 'Spreadsheets with formulas.' },
-  { key: 'org.dxos.plugin.table', name: 'Table', description: 'Structured records in a grid.' },
-  { key: 'org.dxos.plugin.thread', name: 'Thread', description: 'Comment threads and channels.' },
+const PLUGINS: readonly Omit<SpacePluginRow, 'range'>[] = [
+  { key: 'org.dxos.plugin.kanban', name: 'Kanban', description: 'Track work across columns.', defaultRange: '^1.2.0' },
+  {
+    key: 'org.dxos.plugin.markdown',
+    name: 'Markdown',
+    description: 'Write and edit documents.',
+    defaultRange: '^3.0.1',
+  },
+  { key: 'org.dxos.plugin.sheet', name: 'Sheet', description: 'Spreadsheets with formulas.', defaultRange: '*' },
+  { key: 'org.dxos.plugin.table', name: 'Table', description: 'Structured records in a grid.', defaultRange: '^2.4.0' },
+  {
+    key: 'org.dxos.plugin.thread',
+    name: 'Thread',
+    description: 'Comment threads and channels.',
+    defaultRange: '^1.4.0',
+  },
 ];
 
 const DefaultStory = ({ initial = [] }: { initial?: readonly string[] }) => {
-  const [decisions, setDecisions] = useState<Record<string, boolean>>(
-    Object.fromEntries(initial.map((key) => [key, true])),
+  const [named, setNamed] = useState<Record<string, string>>(
+    Object.fromEntries(initial.map((key) => [key, PLUGINS.find((plugin) => plugin.key === key)?.defaultRange ?? '*'])),
   );
-  const handleChange = useCallback(
-    (key: string, enabled: boolean) => setDecisions((current) => ({ ...current, [key]: enabled })),
-    [],
-  );
-  const handleReset = useCallback(() => setDecisions({}), []);
+  const handleChange = useCallback((key: string, range: string | undefined) => {
+    setNamed((current) => {
+      const next = { ...current };
+      if (range === undefined) {
+        delete next[key];
+      } else {
+        next[key] = range;
+      }
+      return next;
+    });
+  }, []);
+  const handleReset = useCallback(() => setNamed({}), []);
 
   return (
     <SpacePluginsPanel
-      plugins={PLUGINS.map((plugin) => ({ ...plugin, enabled: decisions[plugin.key] === true }))}
-      scoped={Object.values(decisions).some((enabled) => enabled)}
+      plugins={PLUGINS.map((plugin) => ({ ...plugin, range: named[plugin.key] }))}
+      scoped={Object.keys(named).length > 0}
       onChange={handleChange}
       onReset={handleReset}
     />

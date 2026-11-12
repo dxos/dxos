@@ -2,19 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { createBuf, fromPublicKey } from '@dxos/protocols/buf';
 import { SpaceMemberSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Expando } from '@dxos/schema';
 
-import * as AppSettings from '../types/AppSettings.ts';
 import * as AppSpace from './AppSpace.ts';
 
 describe('space tags', () => {
@@ -153,93 +150,58 @@ describe('space templates', () => {
   });
 });
 
-/**
- * The decisions live in the space's own settings object, so these need a real database: naming the
- * object writes an annotation and adds to `db`, and reading it back loads a ref.
- */
 describe('space plugins', () => {
   const THREAD = 'org.dxos.plugin.thread';
   const TABLE = 'org.dxos.plugin.table';
 
-  let builder: EchoTestBuilder;
-
-  beforeEach(async () => {
-    builder = await new EchoTestBuilder().open();
-  });
-
-  afterEach(async () => {
-    await builder.close();
-  });
-
-  /** A space as the plugin helpers use it: a database to name the settings object in, and properties to name it on. */
-  const makeSpaceWithDb = async (): Promise<Space> => {
-    const { db } = await builder.createDatabase({ types: [AppSettings.AppSettings, Expando.Expando] });
-    const properties = db.add(Obj.make(Expando.Expando, {}));
-    await db.flush();
-    return { db, properties } as unknown as Space;
-  };
-
-  const setEnabled = (space: Space, id: string, enabled: boolean) =>
-    EffectEx.runPromise(AppSpace.setSpacePluginEnabled(space, id, enabled));
-
-  test('an untouched space has made no choice, so its members run their own sets', async ({ expect }) => {
-    const space = await makeSpaceWithDb();
+  test('a space that names nothing defers to its members', ({ expect }) => {
+    const space = makeReadySpace('a', []);
     expect(AppSpace.getSpacePlugins(space)).toEqual({});
-    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
+    expect(AppSpace.getSpacePluginIds(space)).toBeUndefined();
   });
 
-  test('the first decision names the space a settings object', async ({ expect }) => {
-    const space = await makeSpaceWithDb();
-    expect(AppSpace.getAppSettings(space)).toBeUndefined();
+  test('naming a plugin records the range the space accepts', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
 
-    await setEnabled(space, THREAD, true);
-
-    // The same object and annotation the settings space holds the identity's set in.
-    const settings = AppSpace.getAppSettings(space);
-    expect(settings && Obj.instanceOf(AppSettings.AppSettings, settings)).toBe(true);
+    expect(AppSpace.getSpacePlugins(space)).toEqual({ [THREAD]: '^1.4.0' });
+    expect(AppSpace.getSpacePluginIds(space)).toEqual([THREAD]);
+    expect(AppSpace.getSpacePluginRange(space, THREAD)).toBe('^1.4.0');
+    expect(AppSpace.getSpacePluginRange(space, TABLE)).toBeUndefined();
   });
 
-  test('decisions are recorded under the shared plugins namespace', async ({ expect }) => {
-    const space = await makeSpaceWithDb();
-    await setEnabled(space, THREAD, true);
-    await setEnabled(space, TABLE, false);
+  test('a second plugin joins the first rather than replacing the map', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, TABLE, '*');
 
-    const settings = AppSpace.getAppSettings(space)!;
-    expect(Obj.getSnapshot(settings).shared[AppSettings.PLUGINS_NAMESPACE]).toEqual({
-      [THREAD]: true,
-      [TABLE]: false,
-    });
-    expect(AppSpace.getSpacePlugins(space)).toEqual({ [THREAD]: true, [TABLE]: false });
-    expect(AppSpace.getEnabledSpacePlugins(space)).toEqual([THREAD]);
+    expect(AppSpace.getSpacePlugins(space)).toEqual({ [THREAD]: '^1.4.0', [TABLE]: '*' });
   });
 
-  test('a record naming nothing enabled is the space having made no choice', async ({ expect }) => {
-    // Not "the space runs nothing": a space with every plugin off can do nothing, so the two collapse
-    // and the fallback to each member's own set survives (spec D-81).
-    const space = await makeSpaceWithDb();
-    await setEnabled(space, THREAD, false);
-    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
+  test('re-naming a plugin moves its range', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, THREAD, '^2.0.0');
+
+    expect(AppSpace.getSpacePluginRange(space, THREAD)).toBe('^2.0.0');
   });
 
-  test('disabling the last plugin returns the space to deferring to its members', async ({ expect }) => {
-    const space = await makeSpaceWithDb();
-    await setEnabled(space, THREAD, true);
-    await setEnabled(space, THREAD, false);
-    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
-  });
-
-  test('a reset drops the namespace, leaving the settings object for anything else it holds', async ({ expect }) => {
-    const space = await makeSpaceWithDb();
-    await setEnabled(space, THREAD, true);
-    const settings = AppSpace.getAppSettings(space)!;
-    Obj.update(settings, (settings) => {
-      AppSettings.setValue({ shared: settings.shared, local: {} }, 'com.example.other', 'keep', true);
-    });
-
-    await EffectEx.runPromise(AppSpace.clearSpacePlugins(space));
+  test('clearing a range stops the space naming that plugin', ({ expect }) => {
+    // Absent, not present-and-off: there is no way to say "this space runs nothing".
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, THREAD, undefined);
 
     expect(AppSpace.getSpacePlugins(space)).toEqual({});
-    expect(AppSpace.getEnabledSpacePlugins(space)).toBeUndefined();
-    expect(Obj.getSnapshot(settings).shared['com.example.other']).toEqual({ keep: true });
+    expect(AppSpace.getSpacePluginIds(space)).toBeUndefined();
+  });
+
+  test('a reset drops every plugin the space named', ({ expect }) => {
+    const space = makeReadySpace('a', []);
+    AppSpace.setSpacePlugin(space, THREAD, '^1.4.0');
+    AppSpace.setSpacePlugin(space, TABLE, '*');
+    AppSpace.clearSpacePlugins(space);
+
+    expect(AppSpace.getSpacePluginIds(space)).toBeUndefined();
   });
 });

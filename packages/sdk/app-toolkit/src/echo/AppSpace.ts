@@ -12,9 +12,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Annotation, Database, Obj, Ref } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -27,7 +26,6 @@ import {
 
 import { AppCapabilities } from '../app-framework/index.ts';
 import { GraphPath } from '../app/index.ts';
-import * as AppSettings from '../types/AppSettings.ts';
 import * as AppAnnotation from './AppAnnotation.ts';
 
 //
@@ -326,95 +324,53 @@ export const getActiveSpace = (client: Client, capabilities: CapabilityManager.C
 };
 
 //
-// Space settings.
-//
-
-/**
- * The settings object a space names, created and named on its `properties` if it has none.
- *
- * Any space, not only the settings space: the object, the annotation that names it and the namespaces
- * inside it are the same everywhere, so a space's own configuration is stored the way the identity's
- * is rather than as a second, space-shaped mechanism. What differs is only the device layer — a
- * space's settings are shared by its members and pinned by nobody, so every write lands in `shared`.
- *
- * A space whose named object has gone is given a fresh one, since nothing else would ever repoint it.
- */
-export const resolveAppSettings = Effect.fnUntraced(function* (space: Space) {
-  const nameFresh = Effect.sync(() => {
-    const settings = space.db.add(AppSettings.make());
-    Obj.update(space.properties, (properties) => {
-      Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(settings));
-    });
-    return settings;
-  });
-
-  return yield* Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(
-    Option.match({
-      onSome: (ref) =>
-        Database.load(ref).pipe(
-          Effect.catchTag('EntityNotFoundError', () => {
-            log.warn('settings object not found; naming a fresh one', { uri: ref.uri });
-            return nameFresh;
-          }),
-        ),
-      onNone: () => nameFresh,
-    }),
-  );
-});
-
-/** The settings object a space names, if it has one and it is already loaded. */
-export const getAppSettings = (space: Space): AppSettings.AppSettings | undefined =>
-  Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrUndefined)?.target as
-    | AppSettings.AppSettings
-    | undefined;
-
-//
 // Space plugins.
 //
 
 /**
- * The space's plugin decisions, keyed by plugin id: present means decided, `true` means enabled.
+ * The plugins this space runs, by NSID, each with the semver range the space accepts.
  *
- * Stored under {@link AppSettings.PLUGINS_NAMESPACE} in the space's own settings object — the same
- * namespace and the same value shape as the identity's set, which the settings space holds.
+ * Lives on `space.properties` rather than in a settings object: it decides which types exist and
+ * which version of each plugin runs, for every member and for EDGE, which reads the same map off the
+ * space it is invoked in.
  *
- * Empty is the space having made no choice, so each member's own enabled set applies. "The space runs
- * nothing" is not a state worth expressing: a space with every plugin off can do nothing, and
- * collapsing the two keeps one meaning per shape. EDGE reads the same distinction when it scopes a
- * headless invocation (spec D-78), where a published empty list does mean nothing is enabled — so
- * Composer clears a space's published scope rather than publishing an empty one.
+ * Empty is a space that names no plugins, so each member runs their own set. "The space runs
+ * nothing" is not a state worth expressing: a space with no plugins can do nothing.
  */
-export const getSpacePlugins = (space: Space): Record<string, boolean> => {
-  const settings = getAppSettings(space);
-  return settings ? AppSettings.getPluginDecisions(settings) : {};
+export const getSpacePlugins = (space: Space): Record<string, string> => ({ ...space.properties.plugins });
+
+/** The NSIDs the space names, or `undefined` when it names none. */
+export const getSpacePluginIds = (space: Space): string[] | undefined => {
+  const ids = Object.keys(space.properties.plugins ?? {});
+  return ids.length === 0 ? undefined : ids;
 };
 
-/** Plugin ids the space enables, or `undefined` when it has made no choice. */
-export const getEnabledSpacePlugins = (space: Space): string[] | undefined => {
-  const enabled = AppSettings.getEnabledPlugins(getSpacePlugins(space));
-  return enabled.length === 0 ? undefined : enabled;
-};
+/** The range the space accepts for one plugin, or `undefined` when it does not name it. */
+export const getSpacePluginRange = (space: Space, id: string): string | undefined => space.properties.plugins?.[id];
 
 /**
- * Record one decision for the space, naming it a settings object if it has none.
+ * Name a plugin in the space at `range`, or stop naming it when `range` is `undefined`.
  *
- * Writes through {@link AppSettings.setValue} with an empty device layer, so the space's decisions
- * take the same path as the identity's rather than a parallel one.
+ * A range rather than a pin, so a patch release reaches the space without a write.
  */
-export const setSpacePluginEnabled = Effect.fnUntraced(function* (space: Space, id: string, enabled: boolean) {
-  const settings = yield* resolveAppSettings(space);
-  Obj.update(settings, (settings) => {
-    AppSettings.setValue({ shared: settings.shared, local: {} }, AppSettings.PLUGINS_NAMESPACE, id, enabled);
+export const setSpacePlugin = (space: Space, id: string, range: string | undefined): void => {
+  Obj.update(space.properties, (properties) => {
+    const plugins = { ...properties.plugins };
+    if (range === undefined) {
+      delete plugins[id];
+    } else {
+      plugins[id] = range;
+    }
+    properties.plugins = plugins;
   });
-});
+};
 
-/** Drop every decision, so the space defers to its members' own enabled sets again. */
-export const clearSpacePlugins = Effect.fnUntraced(function* (space: Space) {
-  const settings = yield* resolveAppSettings(space);
-  Obj.update(settings, (settings) => {
-    delete settings.shared[AppSettings.PLUGINS_NAMESPACE];
+/** Stop naming any plugin, so the space defers to its members' own sets again. */
+export const clearSpacePlugins = (space: Space): void => {
+  Obj.update(space.properties, (properties) => {
+    properties.plugins = {};
   });
-});
+};
 
 //
 // Home content visibility.

@@ -13,18 +13,22 @@ import { RegistryNamespace } from '../../namespace.ts';
 
 /** One optional plugin, as the panel lists it. */
 export type SpacePluginRow = {
+  /** Plugin NSID (`org.dxos.plugin.thread`). */
   key: string;
   name: string;
   description?: string;
-  /** Whether the space enables it. */
-  enabled: boolean;
+  /** The semver range the space accepts, or `undefined` when the space does not name it. */
+  range?: string;
+  /** The range to write when the plugin is turned on, derived from the version this client has. */
+  defaultRange: string;
 };
 
 export type SpacePluginsPanelProps = {
   plugins: readonly SpacePluginRow[];
   /** Whether the space names a set of its own, rather than deferring to each member's. */
   scoped: boolean;
-  onChange: (key: string, enabled: boolean) => void;
+  /** Name the plugin at `range`, or stop naming it when `range` is `undefined`. */
+  onChange: (key: string, range: string | undefined) => void;
   onReset: () => void;
 };
 
@@ -47,11 +51,16 @@ export const SpacePluginsPanel = ({ plugins, scoped, onChange, onReset }: SpaceP
             description={t(scoped ? 'space-plugins.description' : 'space-plugins.unscoped.description')}
           >
             {plugins.length === 0 && <p className='text-description'>{t('space-plugins.empty.message')}</p>}
-            {plugins.map(({ key, name, description, enabled }) => (
-              <Form.Field key={key} label={name} description={description}>
+            {plugins.map(({ key, name, description, range, defaultRange }) => (
+              <Form.Field
+                key={key}
+                label={name}
+                // The range is the space's contract with the plugin, so it reads beside the plugin it binds.
+                description={range ? `${description ? `${description} ` : ''}(${range})` : description}
+              >
                 <Input.Switch
-                  checked={enabled}
-                  onCheckedChange={({ checked }) => onChange(key, checked)}
+                  checked={range !== undefined}
+                  onCheckedChange={({ checked }) => onChange(key, checked ? defaultRange : undefined)}
                   data-testid={`spacePlugins.toggle.${key}`}
                 />
               </Form.Field>

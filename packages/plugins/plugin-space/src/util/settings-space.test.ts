@@ -18,7 +18,12 @@ import { Expando } from '@dxos/schema';
 import { SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace, readSpacesOrder } from '../migrations/settings-space.ts';
-import { healDuplicateSettingsSpaces, resolveSettingsSpace, runSettingsSpaceHealing } from './settings-space.ts';
+import {
+  healDuplicateSettingsSpaces,
+  resolveAppSettings,
+  resolveSettingsSpace,
+  runSettingsSpaceHealing,
+} from './settings-space.ts';
 
 describe('resolveSettingsSpace', () => {
   it.effect('waits out identity genesis instead of racing it into a duplicate', () =>
@@ -103,7 +108,7 @@ describe('resolveAppSettings', () => {
       });
       space.db.remove(missing);
 
-      const settings = yield* AppSpace.resolveAppSettings(space);
+      const settings = yield* resolveAppSettings(space);
 
       expect(settings.id).not.toBe(missing.id);
       const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrThrow);
