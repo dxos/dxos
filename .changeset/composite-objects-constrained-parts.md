@@ -87,8 +87,14 @@ re-seats a layout's shapes when a `layout` intent writes a new lattice.
 
 A hull has an `inset`: a whole number of grid cells its border is drawn inside its line. On a lattice the line is the
 centre of the gutter, which the inset leaves clear, and a link inside the hull runs between the border and the shapes;
-off a lattice the inset comes off the margin. `fitHulls`, `hullOutline` and `enclose` take the grid pitch, and
-`gridPitch` is the one rule for the pitch a drawing is on.
+off a lattice the inset comes off the margin. A link outside an inset hull runs along the gutter's centre line, as it
+would with no hull there. `fitHulls`, `hullOutline` and `enclose` take the grid pitch, and `gridPitch` is the one rule
+for the pitch a drawing is on. The Properties panel shows a hull's border and inset side by side.
+
+The default lattice's gutter is 8 by 8 grid cells (128 by 128 px, where it was 128 by 64). A drawing put on the
+default lattice from now on takes the new one; a drawing already on a lattice keeps its own. plugin-canvas's
+reference diagrams stay on the lattice they were drawn for (`DIAGRAM_LATTICE`), and `setLayoutLattice` takes the
+lattice to set.
 
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
 

@@ -21,11 +21,12 @@ import {
   hullTiles,
   tilesOutline,
 } from './hull.ts';
-import { DEFAULT_LATTICE, cellBounds } from './lattice.ts';
+import { type LatticeSpec, cellBounds } from './lattice.ts';
 import { latticeEnds, latticeRoute } from './route.ts';
 import { createNode } from './shapes.ts';
 
-const spec = DEFAULT_LATTICE;
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const spec: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 /** A one-cell shape on the lattice, inside the hull `parent` when it names one. */
 const cell = (id: string, col: number, row: number, parent?: string): Node => {
@@ -317,9 +318,9 @@ describe('hull routing', () => {
     const fitted = fitHulls(sceneOf([inset(h, 1), ...rest]), spec, 16);
     const nodes = Object.values(fitted.nodes);
     const [region] = hullRegions(nodes, spec);
-    // Each wall is still the gutter line, and says how far inside it the border is.
+    // Each wall is where the border is drawn, and says how far inside its gutter line that is.
     expect(region.walls.map((wall) => wall.inset)).toEqual(Array.from({ length: 6 }, () => 16));
-    expect(region.walls[0]).toMatchObject({ from: { x: -192, y: -96 }, to: { x: 576, y: -96 } });
+    expect(region.walls[0]).toMatchObject({ from: { x: -176, y: -80 }, to: { x: 560, y: -80 } });
     // Down the gutter between A's column and B's the border is at 176, so the track inside it is at 152, halfway to
     // C's edge at 128, where it was at 160 with the border on the line.
     const route = latticeEnds(fitted, defaultNodeRegistry, smart('bc', 'b', 'c'), latticeRoute(fitted, spec))?.points;
@@ -332,5 +333,47 @@ describe('hull routing', () => {
     // A link from outside still crosses the border once.
     const across = latticeEnds(fitted, defaultNodeRegistry, smart('xb', 'x', 'b'), latticeRoute(fitted, spec))?.points;
     expect(wallCrossings(across ?? [], region.walls)).toBe(1);
+  });
+
+  test('an inset hull leaves its gutter line to the links outside it', ({ expect }) => {
+    // P stands in the notch under B, and Q beside B, both outside the hull; R, under Q, is in the way of a straight run.
+    const [h, ...rest] = corner();
+    const others = [cell('p', 1, 1), cell('q', 2, 0), cell('r', 2, 1)];
+    const routed = (count: number) => {
+      const fitted = fitHulls(sceneOf([inset(h, count), ...rest, ...others]), spec, 16);
+      const [region] = hullRegions(Object.values(fitted.nodes), spec);
+      const points = latticeEnds(
+        fitted,
+        defaultNodeRegistry,
+        smart('pq', 'p', 'q'),
+        latticeRoute(fitted, spec),
+      )?.points;
+      return { points: points ?? [], region };
+    };
+    // Inset, the border beside B is at 560, so the link runs up the gutter's centre line at 576, as it would with no
+    // hull there.
+    const clear = routed(1);
+    expect(clear.points).toEqual([
+      { x: 512, y: 192 },
+      { x: 576, y: 192 },
+      { x: 576, y: 0 },
+      { x: 640, y: 0 },
+    ]);
+    expect([wallCrossings(clear.points, clear.region.walls), onWall(clear.points, clear.region.walls)]).toEqual([
+      0,
+      false,
+    ]);
+    // On the line, the border takes it, and the link keeps to the track a quarter of the gutter outside it.
+    const pushed = routed(0);
+    expect(pushed.points).toEqual([
+      { x: 512, y: 192 },
+      { x: 608, y: 192 },
+      { x: 608, y: 0 },
+      { x: 640, y: 0 },
+    ]);
+    expect([wallCrossings(pushed.points, pushed.region.walls), onWall(pushed.points, pushed.region.walls)]).toEqual([
+      0,
+      false,
+    ]);
   });
 });

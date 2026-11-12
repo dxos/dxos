@@ -334,7 +334,12 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       shapes; the walls stay on the line and carry the inset, so the inside track runs between border and shapes.
       Stored on the group's Instance as `hullInset`.
 - [x] Properties shows a shape selected inside a hull (`selectedElement` finds it in the hull's group).
-- [ ] Hull inset: the outside track stays a quarter gutter out, so the gutter's centre line is still not a track.
+- [x] Hull inset: a wall is where the border is drawn, so the gutter's centre line is the track outside an inset
+      hull (`wallLines`, `gutterExit`).
+- [x] `DEFAULT_LATTICE` gutter 8 by 8 grid cells (128 by 128); the reference diagrams keep `DIAGRAM_LATTICE`.
+- [x] Properties: a hull's border and inset side by side (`HullField`).
+- [ ] The `.dx` DSL's `box`/`grid` cells are the old default lattice's (384 by 192 pitch): a DSL diagram put on the
+      default lattice is off its cells until the DSL's metrics follow, or it names its own lattice.
 - [ ] A shape off its cell (snapping off) is re-seated on the nearest one, so two could land on the same cell.
 - [ ] Views tree: moving a row into a plain Group, another View or an Object's definition (a move between two
       drawings, which needs a place for the shape in the other's coordinates), and any of it in 3D.

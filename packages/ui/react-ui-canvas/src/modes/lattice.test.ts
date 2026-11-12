@@ -6,8 +6,11 @@ import { describe, test } from 'vitest';
 
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
-import { DEFAULT_LATTICE } from '../utils/index.ts';
+import { type LatticeSpec } from '../utils/index.ts';
 import { latticeConstrain } from './lattice.ts';
+
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 /** A one-cell shape at lattice cell (`col`, `row`). */
 const cellElement = (id: string, col: number, row: number): Scene.Element2D => ({
@@ -20,7 +23,7 @@ const cellElement = (id: string, col: number, row: number): Scene.Element2D => (
 const layoutOf = (...elements: Scene.Element2D[]): Scene.LayoutRecord2D => ({
   id: 'l',
   dim: '2d',
-  lattice: DEFAULT_LATTICE,
+  lattice: LATTICE,
   elements: Object.fromEntries(elements.map((element) => [element.id, element])),
 });
 
@@ -144,7 +147,7 @@ describe('latticeConstrain', () => {
       ['g', guide.center, guide.size],
     ]);
     // The same lattice written again, and any other field of the layout, moves nothing.
-    const same: LayoutIntent = { kind: 'layout', patch: { lattice: DEFAULT_LATTICE } };
+    const same: LayoutIntent = { kind: 'layout', patch: { lattice: LATTICE } };
     const grid: LayoutIntent = { kind: 'layout', patch: { grid: 8 } };
     expect([latticeConstrain(layout, same), latticeConstrain(layout, grid)]).toEqual([same, grid]);
   });

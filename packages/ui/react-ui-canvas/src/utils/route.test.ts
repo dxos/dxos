@@ -9,7 +9,7 @@ import { DEFAULT_GRID, type Endpoint, type Link, MAJOR_GRID, type Side } from '@
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
-import { DEFAULT_LATTICE } from './lattice.ts';
+import { type LatticeSpec } from './lattice.ts';
 import {
   type RouteEnd,
   insertIndex,
@@ -21,6 +21,9 @@ import {
   splinePath,
   viewLinkGeometry,
 } from './route.ts';
+
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
@@ -160,7 +163,7 @@ describe('route', () => {
       target: { point: { x: 340, y: 70 } },
     };
     const scene: RenderList2D = { id: 'root', nodes: {}, links: { free: link } };
-    const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+    const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], LATTICE);
     // The vertical run is midway between the ends (x = 170), not on the gutter line nearest them.
     expect(geometry.path).toMatch(/^M 0 240 L 1\d\d(\.\d+)? 240 Q 170 240, 170 /);
     expect(geometry.path).toMatch(/ L 340 70$/);
@@ -182,7 +185,7 @@ describe('route', () => {
       nodes: { mesh: box('mesh', 4, 1), edge: box('edge', 3, 4) },
       links: { link },
     };
-    const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+    const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], LATTICE);
     expect([geometry.source.side, geometry.source.point, geometry.target.side, geometry.target.point]).toEqual([
       's',
       { x: 1536, y: 256 },
@@ -192,7 +195,7 @@ describe('route', () => {
     // One bend: a single rounded corner between the two straight runs.
     expect(geometry.path.match(/Q/g)).toHaveLength(1);
     // The same choice for the link on its own, so hit-testing and handles agree with what is drawn.
-    const single = linkGeometry(scene, defaultNodeRegistry, link, DEFAULT_LATTICE);
+    const single = linkGeometry(scene, defaultNodeRegistry, link, LATTICE);
     expect([single?.source.side, single?.target.side]).toEqual(['s', 'e']);
   });
 
@@ -214,7 +217,7 @@ describe('route', () => {
         nodes: { a: box('a', 0, 0), c: box('c', 6 + step * 6.4, 195 + step * 3.2) },
         links: { link },
       };
-      const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+      const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], LATTICE);
       expect(geometry.path).toBe(linkGeometry(scene, defaultNodeRegistry, link)?.path);
       return `${geometry.source.side}${geometry.target.side}`;
     });

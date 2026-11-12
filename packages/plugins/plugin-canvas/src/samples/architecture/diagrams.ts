@@ -54,6 +54,12 @@ export type CanvasDrawingProps = {
   readonly?: boolean;
 };
 
+/**
+ * The lattice the reference diagrams are drawn on: their `box`, `grid` and `@` origins are its cells, so it is theirs
+ * whatever lattice a new drawing takes by default.
+ */
+export const DIAGRAM_LATTICE = { width: 256, height: 128, gutterX: 128, gutterY: 64 } as const;
+
 /** The tone the reference diagrams' plain boxes take: the style set's second (index 1). */
 export const DIAGRAM_BOX_TONE = 1;
 
@@ -72,7 +78,7 @@ export const addCanvasDrawing = (
   db.add(canvas);
   CanvasLayoutBuilder.apply(canvas, commands);
   if (lattice) {
-    setLayoutLattice(canvas, true);
+    setLayoutLattice(canvas, true, DIAGRAM_LATTICE);
   }
   return db.add(Drawing.make({ name, canvas }));
 };
@@ -156,7 +162,7 @@ export const loadDiagramDrawings = async (
     editDrawingContent(drawing, (content) => nestDrills(content, set, own, id, rootOf(content), new Set([id])));
     // The nested scenes are new layouts, which take the lattice the drawing's own layout has.
     const canvas = drawing.canvas.target;
-    Canvas.isCanvas(canvas) && setLayoutLattice(canvas, true);
+    Canvas.isCanvas(canvas) && setLayoutLattice(canvas, true, DIAGRAM_LATTICE);
   }
 
   return drawings;

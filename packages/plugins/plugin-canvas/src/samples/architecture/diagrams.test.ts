@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { DEFAULT_LATTICE, type RenderList2D, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
+import { type RenderList2D, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
 import { isViewNode } from '@dxos/scene';
 
 import { elementId, isNodeRecord, objectUri, readViews, rootOf } from '#model';
@@ -14,6 +14,7 @@ import { DIAGRAM_COMMANDS as files } from './compiled.ts';
 import {
   DIAGRAM_BOX_TONE,
   DIAGRAM_GROUP_TONE,
+  DIAGRAM_LATTICE,
   canvasDrawingSchemas,
   loadDiagramDrawings,
   loadDiagramSet,
@@ -61,7 +62,7 @@ describe('loadDiagramSet', () => {
       .filter((node) => onLattice(node))
       .filter((node) => {
         const bounds = nodeBounds(node);
-        return JSON.stringify(quantize(bounds, DEFAULT_LATTICE)) !== JSON.stringify(bounds);
+        return JSON.stringify(quantize(bounds, DIAGRAM_LATTICE)) !== JSON.stringify(bounds);
       })
       .map((node) => node.id);
     expect(offLattice).toEqual([]);

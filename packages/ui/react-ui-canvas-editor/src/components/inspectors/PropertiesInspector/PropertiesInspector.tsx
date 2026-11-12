@@ -85,6 +85,7 @@ import { StyleClassesContext } from './ClassField.tsx';
 import { FontField, FontSizeField } from './FontField.tsx';
 import { FrameField } from './FrameField.tsx';
 import { GeometryField } from './GeometryField.tsx';
+import { HullField } from './HullField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { FlipLinksContext, MarkerField } from './MarkerField.tsx';
@@ -163,6 +164,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'center': GeometryField,
   'rotation': FrameField,
   'params.fit': PolygonFitField,
+  'shape': HullField,
   'scene': ViewField,
   'layer': LayerClassField,
   'type': VariantField,
@@ -233,6 +235,8 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
   'size': { hidden: true },
+  // Drawn beside the hull's border by `HullField`.
+  'inset': { hidden: true },
   'scene': { label: 'View' },
   'layer': { label: 'Layer' },
 };

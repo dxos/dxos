@@ -10,6 +10,8 @@
 // multi-cell shape spans is covered by the shape, so it is not a track. A hull's border runs along a gutter's centre
 // line, so there the gutter has two tracks, a quarter of the gutter either side of the border, and no route runs
 // along the border itself; a route crosses a border only to reach an end the hull holds and the other end does not.
+// A hull drawn inset leaves the centre line clear: that line is then the track outside it, and the track inside it
+// is halfway between the border and the shapes.
 //
 
 import { type Bounds, type Node, type Point } from '@dxos/scene';
@@ -71,14 +73,19 @@ const inwardOf = (wall: Wall): Point => ({
   y: Math.sign(wall.to.x - wall.from.x),
 });
 
+/** How far inside a wall its hull's track is, across a gutter `gutter` wide: halfway from the wall to the shapes. */
+const insideTrack = (wall: Wall, gutter: number): number => (gutter / 2 - (wall.inset ?? 0)) / 2;
+
 /**
- * How far from a wall's line its track on each side is, across a gutter `gutter` wide: outside the hull a quarter of
- * the gutter, and inside it halfway between the border as drawn (the wall's `inset` inside the line) and the shapes.
+ * The lines a wall at `at` adds to the search across a gutter `gutter` wide, `inward` being the step towards its
+ * hull: the track inside it, and outside it either a track a quarter of the gutter out, where the wall is on the
+ * centre line, or, where it is inset, the wall's own line, so the search has a point on the border to count a
+ * crossing at; the centre line it leaves clear is the track outside it, and a line of the grid already.
  */
-const trackOffsets = (wall: Wall, gutter: number): { inside: number; outside: number } => ({
-  inside: gutter / 4 + (wall.inset ?? 0) / 2,
-  outside: gutter / 4,
-});
+const wallLines = (wall: Wall, at: number, inward: number, gutter: number): number[] => [
+  at + inward * insideTrack(wall, gutter),
+  wall.inset ? at : at - (inward * gutter) / 4,
+];
 
 /**
  * Where an end meets the gutter beside its port: straight out along the side's normal, half a gutter. Where that is
@@ -92,15 +99,15 @@ const gutterExit = (end: RouteEnd, spec: LatticeSpec, walls?: HullWalls): Point 
     y: end.point.y + normal.y * distance,
   });
   const centre = out(gutter / 2);
-  const wall = walls?.closed.find((closed) => touches(centre, centre, closed));
+  // A wall on the centre line is met there, and one drawn inset is met on the way to it, from inside its hull.
+  const wall = walls?.closed.find((closed) => touches(end.point, centre, closed));
   if (!wall) {
     return centre;
   }
   // The end faces the wall from inside its hull when the way out of the shape is the way out of the hull.
   const inward = inwardOf(wall);
   const inside = normal.x * inward.x + normal.y * inward.y < 0;
-  const { inside: within, outside } = trackOffsets(wall, gutter);
-  return out(gutter / 2 - (inside ? within : outside));
+  return out(inside ? insideTrack(wall, gutter) : gutter / 4);
 };
 
 /** The gutter centre lines (`(k + 1/2) x pitch`) in `[low, high]`, widened by `MARGIN` lines either side. */
@@ -232,23 +239,17 @@ const searchGrid = (
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const verticals = gutterLines(region.left, region.right, pitchX);
   const horizontals = gutterLines(region.top, region.bottom, pitchY);
-  // A border takes its gutter's centre line, so the gutter's tracks are the lines either side of it.
+  // No route runs along a border, so each adds the lines either side of it that one may run along.
   const within = (lines: readonly number[]) => (value: number) =>
     value > lines[0] - EPSILON && value < lines[lines.length - 1] + EPSILON;
   const borders = walls?.borders ?? [];
   const tracksX = borders
     .filter((wall) => Math.abs(wall.from.x - wall.to.x) < EPSILON)
-    .flatMap((wall) => {
-      const { inside, outside } = trackOffsets(wall, spec.gutterX);
-      return [wall.from.x + inwardOf(wall).x * inside, wall.from.x - inwardOf(wall).x * outside];
-    })
+    .flatMap((wall) => wallLines(wall, wall.from.x, inwardOf(wall).x, spec.gutterX))
     .filter(within(verticals));
   const tracksY = borders
     .filter((wall) => Math.abs(wall.from.y - wall.to.y) < EPSILON)
-    .flatMap((wall) => {
-      const { inside, outside } = trackOffsets(wall, spec.gutterY);
-      return [wall.from.y + inwardOf(wall).y * inside, wall.from.y - inwardOf(wall).y * outside];
-    })
+    .flatMap((wall) => wallLines(wall, wall.from.y, inwardOf(wall).y, spec.gutterY))
     .filter(within(horizontals));
   const xs = sortedUnique([...verticals, ...tracksX, start.x, end.x]);
   const ys = sortedUnique([...horizontals, ...tracksY, start.y, end.y]);

@@ -42,8 +42,8 @@ export const HULL_FONT_SIZE = 14;
 export const HULL_MARGIN = DEFAULT_GRID * 2;
 
 /**
- * An axis-aligned run of a hull's border on a lattice, along a gutter's centre line with the hull on its right.
- * `inset` is how far inside that line the border is drawn, in scene px, where the hull is inset.
+ * An axis-aligned run of a hull's border on a lattice, as it is drawn, with the hull on its right. `inset` is how
+ * far inside its gutter's centre line the run is, in scene px; unset, it is on that line.
  */
 export type Wall = { readonly from: Point; readonly to: Point; readonly inset?: number };
 
@@ -467,9 +467,9 @@ export const fitHulls = (scene: RenderList2D, lattice?: LatticeSpec, grid = DEFA
 };
 
 /**
- * Every hull's reach on a lattice: its tiles, and its border as the walls a gutter route answers to. A wall is the
- * gutter line the border belongs to, and says how far inside it the border is drawn, which is read off the hull as it
- * is fitted ({@link fitHulls}): its frame is its border's, so the frame's edge is that far inside the line.
+ * Every hull's reach on a lattice: its tiles, and its border as the walls a gutter route answers to. A wall is where
+ * the border is drawn, and says how far inside its gutter's centre line that is, which is read off the hull as it is
+ * fitted ({@link fitHulls}): its frame is its border's, so the frame's edge is that far inside the line.
  */
 export const hullRegions = (nodes: readonly Node[], spec: LatticeSpec): HullRegion[] =>
   nodes.filter(isHullNode).flatMap((hull) => {
@@ -481,8 +481,9 @@ export const hullRegions = (nodes: readonly Node[], spec: LatticeSpec): HullRegi
     const [line, drawn] = [boundsOf(ring), nodeBounds(hull)];
     const within = (inset: number, gutter: number) => (inset > 0 && inset < gutter / 2 ? inset : 0);
     const inset = { x: within(drawn.x - line.x, spec.gutterX), y: within(drawn.y - line.y, spec.gutterY) };
-    const walls = ring.map((from, index): Wall => {
-      const to = ring[(index + 1) % ring.length];
+    const border = insetRing(ring, inset);
+    const walls = border.map((from, index): Wall => {
+      const to = border[(index + 1) % border.length];
       const by = from.x === to.x ? inset.x : inset.y;
       return by > 0 ? { from, to, inset: by } : { from, to };
     });

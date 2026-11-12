@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type HullNode, type Node, type RectNode } from '@dxos/scene';
 
 import {
-  DEFAULT_LATTICE,
+  type LatticeSpec,
   cellBounds,
   collides,
   coveredCells,
@@ -22,7 +22,8 @@ import {
 } from './lattice.ts';
 import { createNode } from './shapes.ts';
 
-const spec = DEFAULT_LATTICE;
+// The lattice these positions are worked out on: a pitch of 384 by 192.
+const spec: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
 describe('lattice', () => {
   test('the lattice grid puts a major line on every cell edge', ({ expect }) => {

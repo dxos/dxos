@@ -15,7 +15,8 @@ import { nodeBounds, resizeNode } from './shapes.ts';
 /** The size of a one-cell shape and the gutter between shapes, in scene units. */
 export type LatticeSpec = { width: number; height: number; gutterX: number; gutterY: number };
 
-export const DEFAULT_LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+/** The lattice a drawing takes by default: on its grid of 16 a cell is 16 by 8 and the gutter 8 each way. */
+export const DEFAULT_LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 128, gutterY: 128 };
 
 const gcd = (left: number, right: number): number => (right === 0 ? left : gcd(right, left % right));
 
