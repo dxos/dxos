@@ -15,10 +15,20 @@ import agentSource from './agent.diagram?raw';
 import agentModel from './agent.json?raw';
 import agentsSource from './agents.diagram?raw';
 import agentsModel from './agents.json?raw';
+import architectureSource from './architecture.diagram?raw';
+import architectureModel from './architecture.json?raw';
 import chatSource from './chat.diagram?raw';
 import chatModel from './chat.json?raw';
+import composerSource from './composer.diagram?raw';
+import composerModel from './composer.json?raw';
+import echoLayersSource from './echo-layers.diagram?raw';
+import echoLayersModel from './echo-layers.json?raw';
+import hyperspaceSource from './hyperspace.diagram?raw';
+import hyperspaceModel from './hyperspace.json?raw';
 import ontologySource from './ontology.diagram?raw';
 import ontologyModel from './ontology.json?raw';
+import pluginsSource from './plugins.diagram?raw';
+import pluginsModel from './plugins.json?raw';
 import { type StudioModel, parseStudioModel } from './studio.ts';
 
 export type StudioSlide = {
@@ -38,14 +48,20 @@ const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide
 });
 
 /**
- * The slides in deck order. Rounds 1 and 2 brought four; the remaining five (Hyperspace, ECHO layers, Plugins,
- * Composer, Architecture) are exported from the studio repo's `assets/deck/canvas` and land here as they arrive.
+ * The nine slides in deck order (`s1 hyperspace` … `s9 agent`), as the studio repo's `../slides/index.mjs` lists
+ * them. Every sidecar records the same 1600 x 900 page, and a slide unit is a scene px, so the drawings are at one
+ * scale: a card on one slide is the size of a card on another.
  */
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
+  slide('hyperspace', hyperspaceSource, hyperspaceModel),
+  slide('echo-layers', echoLayersSource, echoLayersModel),
+  slide('plugins', pluginsSource, pluginsModel),
+  slide('composer', composerSource, composerModel),
+  slide('architecture', architectureSource, architectureModel),
+  slide('agents', agentsSource, agentsModel, { spaceGraph: true }),
   slide('ontology', ontologySource, ontologyModel),
   slide('chat', chatSource, chatModel),
   slide('agent', agentSource, agentModel),
-  slide('agents', agentsSource, agentsModel, { spaceGraph: true }),
 ];
 
 export const studioSlide = (id: string): StudioSlide => {
