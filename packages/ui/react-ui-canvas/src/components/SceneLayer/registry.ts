@@ -9,10 +9,12 @@
 
 import {
   CloudNode,
+  DEFAULT_GRID,
   DiagramNode,
   EllipseNode,
   GeneratorNode,
   InstanceNode,
+  MAJOR_GRID_RATIO,
   type NodeType,
   NoteNode,
   PathNode,
@@ -67,12 +69,10 @@ export const boxPrototype: NodeDefSpec = {
 export const cardPrototype: NodeDefSpec = {
   component: CardNodeView,
   parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
-  // Tall enough to draw what a new card carries: its frame and padding take 32, and the header, a line of body and
-  // the footer over its hairline another 85, so two nominal units (96) would clip the footer it just created.
-  defaultSize: { width: 4, height: 3 },
+  defaultSize: { width: 4, height: 2 },
   resizable: true,
-  // Two cells of padding, a three-cell header, its gaps and a two-cell footer: what a card must have to read as one.
-  minSize: { width: 120, height: 96 },
+  // Two cells of padding, a three-cell header and a two-cell footer: what a card must keep to still read as one.
+  minSize: { width: 96, height: 72 },
 };
 
 /**
@@ -117,7 +117,8 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: true,
-    minSize: MIN_SIZE,
+    // A quarter of a nominal unit each way: a dot on a diagram is an ellipse, so its floor is the finest grid level.
+    minSize: { width: DEFAULT_GRID / MAJOR_GRID_RATIO, height: DEFAULT_GRID / MAJOR_GRID_RATIO },
   },
   polygon: {
     name: 'Polygon',
