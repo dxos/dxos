@@ -1,0 +1,34 @@
+---
+import { type Stage } from '../tutorial/app/Contacts.tsx';
+
+interface Props {
+  stage: Stage;
+  peers?: 1 | 2;
+}
+
+const { stage, peers = 1 } = Astro.props;
+---
+
+<!-- The app runs on its own page so that its theme CSS stays off the docs pages; see `pages/embed/contacts.astro`. -->
+<iframe
+  class="tutorial-embed not-content"
+  data-peers={peers}
+  src={`/embed/contacts/?${new URLSearchParams({ stage, peers: String(peers) })}`}
+  title="The tutorial app"
+  loading="lazy"></iframe>
+
+<style>
+  .tutorial-embed {
+    display: block;
+    width: 100%;
+    height: 30rem;
+    margin-block: 1.5rem;
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+  }
+
+  /* Two peers sit side by side, each with its form under its list. */
+  .tutorial-embed[data-peers='2'] {
+    height: 36rem;
+  }
+</style>

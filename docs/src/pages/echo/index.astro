@@ -1,0 +1,333 @@
+---
+import { Code } from 'astro-expressive-code/components';
+
+import art from '../../../node_modules/@dxos/brand/assets/backgrounds/bg-echo-left.svg?raw';
+import Diagram from '../../components/Diagram.astro';
+import { EchoDemo } from '../../demos/EchoDemo.tsx';
+import SpecCite from '../../components/SpecCite.astro';
+import WebflowFooter from '../../components/WebflowFooter.astro';
+import WebflowNav from '../../components/WebflowNav.astro';
+import { guarantees, reasons, routes } from '../../echo/home.ts';
+import { snippetSource } from '../../echo/snippets.ts';
+import WebflowLayout from '../../layouts/WebflowLayout.astro';
+import '../../styles/tokens.generated.css';
+import '../../styles/fonts.css';
+
+// The art's icon is centred at (480, 540) of its 1920×1080 frame, so the square panel shows the square around it.
+const cropped = art.replace('viewBox="0 0 1920 1080"', 'viewBox="0 60 960 960"');
+
+/** The live demos shown, in order, by id in `DEMOS`. */
+const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
+---
+<WebflowLayout
+  title="ECHO by DXOS"
+  description="ECHO is the typed, local-first object graph: the data model that apps and agents share."
+  ogImage="/webflow/images/dxos-home-og-image.png"
+  wfPageId="echo"
+  demos
+>
+  <WebflowNav currentPage="echo" />
+
+  <section class="echo-hero">
+    <div class="container-large echo-hero-grid">
+      <div class="echo-hero-copy">
+        <div class="all-caps echo-eyebrow">ECHO by DXOS</div>
+        <h1 class="heading-style-h1">The data model for <span class="echo-highlight">apps and agents</span></h1>
+        <p class="text-size-large text-style-muted">
+          A typed object graph on the device. Plugins code against it, agents keep their memory in it and read its
+          schema, and data from other systems meets in it. Writes land before the call returns, and peers merge when
+          they connect.
+        </p>
+        <div class="echo-install">pnpm add @dxos/echo</div>
+        <div class="button-group">
+          <a href="/docs/echo/why-echo/" class="button is-secondary echo-primary w-inline-block"><div>Why ECHO?</div></a>
+          <a href="/docs/echo/learn/defining-types/" class="button is-tertiary w-inline-block"><div>Start the learning path</div></a>
+        </div>
+      </div>
+      <div class="echo-art" aria-hidden="true" set:html={cropped} />
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large echo-sample">
+      <Code code={snippetSource('hero')} lang="ts" title="task.ts" />
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Why it exists</div>
+        <h2 class="heading-style-h2">One graph for apps, agents and external data</h2>
+      </div>
+      <div class="echo-grid">
+        {reasons.map(({ title, body }) => (
+          <div class="echo-card">
+            <div class="heading-style-h5">{title}</div>
+            <p class="text-style-muted">{body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">What it guarantees</div>
+        <h2 class="heading-style-h2">Behavior you can rely on</h2>
+      </div>
+      <div class="echo-grid">
+        {guarantees.map(({ title, body, cite }) => (
+          <div class="echo-card">
+            <div class="heading-style-h5">{title}</div>
+            <p class="text-style-muted">{body}</p>
+            <span class="echo-cite"><SpecCite item={cite} /></span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Live</div>
+        <h2 class="heading-style-h2">Two peers, one space</h2>
+      </div>
+      <div class="echo-demos">
+        {DEMO_ORDER.map((id) => (
+          <div class="echo-demo dx-island">
+            <EchoDemo id={id} client:only="react">
+              <div slot="fallback" class="echo-demo-loading" role="status">
+                <span class="echo-demo-spinner" aria-hidden="true" />
+                Loading live demo…
+              </div>
+            </EchoDemo>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Architecture</div>
+        <h2 class="heading-style-h2">How the packages fit</h2>
+      </div>
+      <Diagram
+        dark
+        name="packages"
+        alt="The @dxos packages in your process, echo-react, echo and echo-client, reach echo-host, index-core and EDGE through QueryService."
+      />
+    </div>
+  </section>
+
+  <section class="echo-section">
+    <div class="container-large">
+      <div class="echo-section-header">
+        <div class="all-caps echo-eyebrow">Docs</div>
+        <h2 class="heading-style-h2">Where to go</h2>
+      </div>
+      <div class="echo-grid">
+        {routes.map(({ title, body, href }) => (
+          <a class="echo-card echo-card-link" href={href}>
+            <div class="heading-style-h5">{title}</div>
+            <p class="text-style-muted">{body}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <WebflowFooter accent="blue" />
+</WebflowLayout>
+
+<style>
+  .echo-hero {
+    padding: 10rem 5% 6rem;
+    background-color: var(--black);
+  }
+
+  .echo-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .echo-hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .echo-hero-copy h1,
+  .echo-hero-copy p {
+    margin: 0;
+  }
+
+  .echo-eyebrow {
+    color: var(--base-color-system--purple);
+  }
+
+  .echo-highlight {
+    border-bottom: 2px solid var(--base-color-system--purple);
+  }
+
+  .echo-install {
+    align-self: flex-start;
+    padding: 0.75rem 1.125rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+    border-radius: 0.5rem;
+    font-family: 'DM Mono', ui-monospace, monospace;
+    font-size: 0.9375rem;
+  }
+
+  .button.echo-primary {
+    border-color: var(--base-color-system--purple);
+    background-color: var(--base-color-system--purple);
+  }
+
+  .echo-art {
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    --dx-bg-fill: #020202;
+  }
+
+  .echo-art :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .echo-section {
+    padding: 4rem 5%;
+    border-top: 1px solid var(--base-color-neutral--neutral-mid);
+    background-color: var(--black);
+  }
+
+  .echo-section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .echo-section-header h2 {
+    margin: 0;
+  }
+
+  .echo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    border-top: 1px solid var(--base-color-neutral--neutral-mid);
+    border-left: 1px solid var(--base-color-neutral--neutral-mid);
+  }
+
+  .echo-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 2rem;
+    border-right: 1px solid var(--base-color-neutral--neutral-mid);
+    border-bottom: 1px solid var(--base-color-neutral--neutral-mid);
+    text-decoration: none;
+  }
+
+  .echo-card p {
+    margin: 0;
+  }
+
+  .echo-card-link {
+    transition: background-color 0.2s ease;
+  }
+
+  .echo-card-link:hover {
+    background-color: #ffffff0d;
+  }
+
+  .echo-cite {
+    margin-top: auto;
+    font-family: 'DM Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+
+  .echo-sample :global(.expressive-code) {
+    max-width: 60rem;
+  }
+
+  .echo-demos {
+    display: grid;
+    gap: 3rem;
+  }
+
+  .echo-demo {
+    height: 32rem;
+  }
+
+  /* Until its island hydrates, a demo holds its frame's size, so the page does not shift when it arrives. */
+  .echo-demo :global(astro-island),
+  .echo-demo-loading {
+    display: block;
+    height: 100%;
+  }
+
+  .echo-demo-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+    border-radius: 0.5rem;
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  .echo-demo-spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: echo-demo-spin 0.8s linear infinite;
+  }
+
+  @keyframes echo-demo-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .echo-demo-spinner {
+      animation-duration: 2.4s;
+    }
+  }
+
+  .echo-section :global(.diagram) {
+    display: block;
+    width: 100%;
+    max-width: 60rem;
+    padding: 1rem;
+    border: 1px solid var(--base-color-neutral--neutral-mid);
+    border-radius: 0.5rem;
+    background: oklch(0.205 0.001 190);
+  }
+
+  @media (max-width: 991px) {
+    .echo-hero {
+      padding-top: 7rem;
+    }
+    .echo-hero-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2.5rem;
+    }
+    .echo-art {
+      order: -1;
+      aspect-ratio: 16 / 9;
+    }
+  }
+</style>

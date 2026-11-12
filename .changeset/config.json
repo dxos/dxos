@@ -307,6 +307,7 @@
       "@dxos/plugin-ideogram",
       "@dxos/plugin-illustrator",
       "@dxos/plugin-inbox",
+      "@dxos/plugin-inspector",
       "@dxos/plugin-iroh-beacon",
       "@dxos/plugin-jmap",
       "@dxos/plugin-kanban",

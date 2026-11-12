@@ -54,6 +54,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "d3": "catalog:",
+    "opentype.js": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

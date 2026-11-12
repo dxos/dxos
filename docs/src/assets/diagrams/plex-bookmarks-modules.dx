@@ -1,0 +1,30 @@
+diagram flow=right
+group events "Activation events" {
+  node Startup "Startup" ref="packages/sdk/app-framework/src/common/activation-events.ts"
+  node Article "Article requested" below Startup ref="packages/sdk/app-framework/src/common/activation-events.ts"
+  node Idle "Idle" below Article ref="packages/sdk/app-framework/src/common/activation-events.ts"
+}
+group modules "Bookmarks modules" right-of events {
+  node Translations "translations" same-row Startup ref="docs/src/app-framework-tutorial/src/translations.ts"
+  node Schema "schema" below Translations ref="docs/src/app-framework-tutorial/src/capabilities/schema.ts"
+  node Ops "operation-handler" below Schema ref="docs/src/app-framework-tutorial/src/capabilities/operation-handler.ts"
+  node Surface "react-surface" below Ops ref="docs/src/app-framework-tutorial/src/capabilities/react-surface.ts"
+  node Graph "app-graph-builder" below Surface ref="docs/src/app-framework-tutorial/src/capabilities/app-graph-builder.ts"
+}
+group caps "Capabilities" right-of modules {
+  node CTranslations "Translations" same-row Translations ref="packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts"
+  node CSchema "Schema" same-row Schema ref="packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts"
+  node COps "OperationHandler" same-row Ops ref="packages/sdk/app-framework/src/common/capabilities.ts"
+  node CSurface "ReactSurface" same-row Surface ref="packages/sdk/app-framework/src/common/capabilities.ts"
+  node CGraph "AppGraphBuilder" same-row Graph ref="packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts"
+}
+edge Startup -> Translations
+edge Startup -> Schema
+edge Startup -> Ops
+edge Article -> Surface
+edge Idle -> Graph
+edge Translations -> CTranslations
+edge Schema -> CSchema
+edge Ops -> COps
+edge Surface -> CSurface
+edge Graph -> CGraph

@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
-import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { AnthropicResolver } from '@dxos/ai/anthropic';
 import { type BlobBackend } from '@dxos/blob';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';

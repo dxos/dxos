@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+/** Effect helpers shared across DXOS packages. */
+
 export * as AtomEx from './AtomEx.ts';
 export * as DynamicRuntime from './dynamic-runtime.ts';
 export * as EffectEx from './EffectEx.ts';

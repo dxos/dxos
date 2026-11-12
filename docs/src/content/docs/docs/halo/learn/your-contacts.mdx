@@ -1,0 +1,51 @@
+---
+title: Your contacts
+description: List everyone you share a space with, and remove someone from a space.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the contact book lists everyone you share a space with, once each, with the spaces you share,
+and you can remove someone from one of them.
+
+## Before you start
+
+A contact is anyone who shares a space with you. The contact book keeps no list of its own: it reads each space's members
+with `Space.members` and merges them by DID, the name every member has in every space.
+
+A member is an identity with an access level: `pull`, `read`, `edit` or `admin`. Removing a member is a revocation, the
+signed opposite of the delegation that let them in. The space's group key changes with it, so they cannot read anything
+written after. An admin can remove anyone; changing a member's access instead is on the
+[Space](/docs/halo/api/space/) API page.
+
+Both pieces go in a new file, `contacts.ts`.
+
+<Steps>
+
+1. **List your contacts.** For each space in `spaces`, follow `Space.members`, then merge the lists by DID, leaving out
+   yourself. `Stream.switchMap` starts over when you join or leave a space, and `Stream.zipLatestAll` emits whenever any
+   space's members change. The Contacts tab follows this.
+
+   <Snippet file="halo-tutorial/contacts" region="contacts" />
+
+2. **Remove someone from a space.** `Space.removeMember` revokes their membership. The **×** on a space beside a contact
+   calls this; if it was the last space you shared, they leave your contacts too.
+
+   <Snippet file="halo-tutorial/contacts" region="remove" />
+
+</Steps>
+
+## Try it
+
+Alice, Bob and Carol are all in Book club, and Alice and Carol are in Climbing. Open Contacts on any device: Alice sees
+Bob in one space and Carol in two. Remove Carol from Climbing on Alice's device, and Climbing leaves her row. Remove Bob
+from Book club, the only space Alice shares with him, and he leaves Alice's contacts.
+
+<HaloEmbed stage="contacts" scene="book" />
+
+## What you can do now
+
+You can list everyone you share a space with and remove someone from a space. Next, [Add a device](/docs/halo/learn/add-device/)
+puts the same contacts on your phone.

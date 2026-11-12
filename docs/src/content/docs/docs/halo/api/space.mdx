@@ -1,0 +1,89 @@
+---
+title: Space
+description: Create spaces and manage their members.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Space } from '@dxos/halo';
+```
+
+`Space` manages spaces as units of membership: which spaces exist, who belongs to each and what they may do. It does not
+read or write the data inside a space; that is ECHO's [Database](/docs/echo/api/database/), reached by the same space
+id. Every function needs `Space.Service`, which `layerClient` provides along with `Identity.Service`.
+
+## List spaces
+
+`Space.spaces` is a stream of every space the identity belongs to. It emits the current list straight away, so take one
+value to read it once. `Space.get` looks one up by id.
+
+<Snippet file="halo-guide-space" region="list" />
+
+## Create a space
+
+`create` returns the new space's id, name and state. Wait for `waitReady` before you open its database.
+`membershipPolicy: 'locked'` creates a space no one else can join.
+
+<Snippet file="halo-guide-space" region="create" />
+
+## Members
+
+`members` is a stream of the member list. Each member has a DID, a display name, an access level (`role`) and whether
+it is online. `updateMemberRole` changes a member's access and `removeMember` revokes it; both take the member's DID and
+need `admin`, or [causal seniority](/docs/halo/concepts/spaces-membership/) to revoke.
+
+<Snippet file="halo-guide-space" region="members" />
+
+## Share and join
+
+`share` starts a space invitation and `join` accepts one. Both return an [`Invitation.Flow`](/docs/halo/api/invitation/).
+
+<Snippet file="halo-guide-space" region="share" />
+
+## Archives and EDGE replication
+
+`exportSpace` writes the space to an archive, and `importSpace` creates a new space from one. `setEdgeReplication` turns
+replication through EDGE on or off; with it off, the space syncs only between peers that are online together.
+
+<Snippet file="halo-guide-space" region="archive" />
+
+## Members at a glance
+
+| Member                                  | Summary                                         |
+| --------------------------------------- | ----------------------------------------------- |
+| `Service`                               | The Effect service                              |
+| `spaces` `get`                          | The identity's spaces                           |
+| `create` `waitReady`                    | Make a space and wait until it opens            |
+| `members`                               | The member list as a stream                     |
+| `updateMemberRole` `removeMember`       | Change a member's access                        |
+| `share` `join` `invitations`            | Space invitations                               |
+| `exportSpace` `importSpace`             | Archives                                        |
+| `setEdgeReplication`                    | Sync through EDGE, or only peer to peer         |
+
+The full list is in the [API reference](/docs/halo/resources/api-reference/).
+
+## Errors
+
+Every function that can fail fails with `SpaceError`, whose message says what went wrong.
+
+<Snippet file="halo-guide-space" region="errors" />
+
+A membership change Keyhive refuses names the reason with one of the errors `@dxos/halo` exports:
+
+| Error                    | Raised when                                                              |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `NotAuthorizedError`     | The acting member lacks the access, such as revoking without seniority   |
+| `UnknownPrincipalError`  | The member named is not known to the space                               |
+| `InvalidSignatureError`  | A signed operation fails verification                                    |
+| `MissingDependencyError` | An operation refers to earlier operations that have not arrived          |
+
+## Related
+
+- [Spaces and membership](/docs/halo/concepts/spaces-membership/)
+- [Spaces and databases](/docs/echo/concepts/spaces/) for the data in a space.
+- [Your spaces](/docs/halo/learn/your-spaces/), [Invite people](/docs/halo/learn/invite-people/) and
+  [Your contacts](/docs/halo/learn/your-contacts/) in the learning path.

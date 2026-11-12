@@ -1,0 +1,60 @@
+---
+title: Create a plugin
+description: Start the tutorial plugin with its metadata, its first module and its translations.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import PluginPackage from '../../../../../components/PluginPackage.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the inspector on this page loads your plugin, named Bookmarks, from your machine, with one module: its strings. The next four pages give it a type, a view, an action and a place in the navigation tree.
+
+## Background
+
+A plugin is a set of modules. Each module activates on an event and contributes capabilities, which are typed values that other parts of the app look up. [The PLEX plugin](/docs/plex/learn/the-plex-plugin/) explains how they fit. In this tutorial the whole plugin is defined in one file, `dx.config.ts`, and each module's code lives in its own file that loads only when the module activates.
+
+## Steps
+
+1. **Create the package.** Make a directory for the plugin with a `package.json` and a `vite.config.ts`, then run `npm install` in it.
+
+   <PluginPackage />
+
+   The `@dxos/*` packages are pinned to the build these docs run, so the inspector on each page can load your plugin. `composerPlugin` serves the plugin from Vite's dev server on port 3967, with a manifest that describes it at `http://localhost:3967/manifest.json`. [Publishing a plugin](/docs/plex/publishing-plugins/) pins them to a Composer release instead.
+
+2. **Name the plugin.** The plugin's key is a reverse-domain name that no other plugin uses. Its last segment must be camelCase. Put it in a file of its own, so the manifest and any capability tags the plugin declares can both import it.
+
+   <Snippet file="app-framework-tutorial/src/namespace" region="namespace" />
+
+3. **Write the manifest.** `Plugin.config` takes the plugin's registry metadata and its modules. It returns the plugin's `meta` and a `make` function that the app's plugin manager calls to create it.
+
+   <Snippet file="app-framework-tutorial/dx.config" region="config" />
+
+   The `tags` field starts with a quality tier. A new plugin is `labs`.
+
+4. **Add the first module.** Translations give the plugin's strings their text. The module lists the translation resource by namespace: one entry for the plugin's own strings, and one for the type the next page adds.
+
+   <Snippet file="app-framework-tutorial/src/translations" region="translations" />
+
+   Add it to the manifest's `modules`. `AppCapability.translations` is a module maker: it fixes the capability the module contributes and the event it activates on, so the manifest only names the file to load.
+
+   <Snippet file="app-framework-tutorial/dx.config" region="translations" />
+
+5. **Load it in the inspector.** Start the dev server in the plugin's directory:
+
+   ```bash
+   npx vite
+   ```
+
+   Then click **Load dev plugin** below. The browser asks to reach devices on your local network: allow it, since your plugin's code comes from your machine. The inspector lists your plugin's modules on the left, with Translations active, and shows its strings by namespace. **This page adds** turns to a check once the module loads.
+
+   <InspectorEmbed adds={['translations']} />
+
+   Leave the dev server running for the rest of the path. After an edit, click **Reload** in the inspector.
+
+## Recap
+
+You can now:
+
+- Name a plugin with a namespace and describe it in `dx.config.ts`.
+- Add a module with a module maker.
+- See what a plugin contributes in the inspector.

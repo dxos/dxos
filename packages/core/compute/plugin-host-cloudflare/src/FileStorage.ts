@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type BlobBackend, type BlobStore, type BlobTransport } from '@dxos/blob';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
-import { type BlobBackendRegistration } from '@dxos/compute-runtime';
+import { type BlobBackendRegistration } from '@dxos/compute-runtime/protocol';
 import { Blob } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { PluginProtocol } from '@dxos/protocols';

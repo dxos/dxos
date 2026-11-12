@@ -1,0 +1,246 @@
+---
+// An editable prompt with links that open it in a coding agent. Plain HTML and a small script, not a React
+// island, so a docs page that uses it loads no component styles.
+
+import claude from '../assets/agents/claude.svg?raw';
+import codex from '../assets/agents/codex.svg?raw';
+import cursor from '../assets/agents/cursor.svg?raw';
+import { SKILLS_URL } from '../utils/agent-skills.ts';
+
+type Example = { label: string; prompt: string };
+
+type Props = {
+  /** The text box's starting text. */
+  prompt: string;
+  /** Prompts the reader can pick to fill the text box; the one whose text is `prompt` starts selected. */
+  examples?: Example[];
+  /** Lines each link puts before the reader's text, after any skill step, not shown, such as where the docs are. */
+  context?: string;
+  /** A DXOS skill the agent installs into the folder and follows before the reader's text, not shown. */
+  skill?: string;
+};
+
+const { prompt, examples = [], context, skill } = Astro.props;
+
+/** Each link prefills its agent's prompt without sending it; `skills` is where that agent loads project skills from. */
+const AGENTS = [
+  { id: 'claude', label: 'Open in Claude Code', logo: claude, base: 'claude://code/new?q=', skills: '.claude/skills' },
+  { id: 'codex', label: 'Open in Codex', logo: codex, base: 'codex://new?prompt=', skills: '.agents/skills' },
+  {
+    id: 'cursor',
+    label: 'Open in Cursor',
+    logo: cursor,
+    base: 'cursor://anysphere.cursor-deeplink/prompt?text=',
+    skills: '.cursor/skills',
+  },
+] as const;
+
+const install = (dir: string) =>
+  skill &&
+  `Install the ${skill} skill in this folder: download ${SKILLS_URL}/${skill}/SKILL.md to ${dir}/${skill}/SKILL.md, ` +
+    `with each file it links, from the same folder, beside it. Then read ${dir}/${skill}/SKILL.md and follow it for ` +
+    'the task below.';
+
+const preamble = (dir: string) => [install(dir), context].filter(Boolean).join('\n\n');
+const full = (lines: string, text: string) => (lines ? `${lines}\n\n${text}` : text);
+
+/** The copied prompt goes to an agent we cannot name, so it lists each one's skills folder. */
+const copyPreamble = preamble("your agent's project skills folder (.claude/skills, .agents/skills or .cursor/skills)");
+---
+
+<div class="agent-prompt not-content" data-preamble={copyPreamble}>
+  {
+    examples.length > 0 && (
+      <div class="examples" role="group" aria-label="Example prompts">
+        {examples.map((example) => (
+          <button
+            class="example"
+            type="button"
+            data-prompt={example.prompt}
+            aria-pressed={example.prompt === prompt ? 'true' : 'false'}
+          >
+            {example.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
+  <label>
+    <span class="sr-only">Prompt</span>
+    <textarea rows="6" spellcheck="true">{prompt}</textarea>
+  </label>
+  <div class="actions">
+    {
+      AGENTS.map(({ id, label, logo, base, skills }) => (
+        <a
+          class="action"
+          data-agent={id}
+          data-base={base}
+          data-preamble={preamble(skills)}
+          href={base + encodeURIComponent(full(preamble(skills), prompt))}
+        >
+          <Fragment set:html={logo} />
+          {label}
+        </a>
+      ))
+    }
+    <button class="action" type="button" data-copy>Copy prompt</button>
+  </div>
+</div>
+
+<script>
+  const full = (lines: string, text: string) => (lines ? `${lines}\n\n${text}` : text);
+
+  for (const root of document.querySelectorAll<HTMLElement>('.agent-prompt')) {
+    const textarea = root.querySelector('textarea');
+    if (!textarea) {
+      continue;
+    }
+
+    textarea.addEventListener('input', () => {
+      for (const link of root.querySelectorAll<HTMLAnchorElement>('a[data-base]')) {
+        link.href = (link.dataset.base ?? '') + encodeURIComponent(full(link.dataset.preamble ?? '', textarea.value));
+      }
+    });
+
+    const examples = root.querySelectorAll<HTMLButtonElement>('[data-prompt]');
+    const markSelected = () => {
+      for (const example of examples) {
+        example.setAttribute('aria-pressed', String(example.dataset.prompt === textarea.value));
+      }
+    };
+    textarea.addEventListener('input', markSelected);
+    for (const example of examples) {
+      example.addEventListener('click', () => {
+        textarea.value = example.dataset.prompt ?? '';
+        textarea.dispatchEvent(new Event('input'));
+      });
+    }
+
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy]');
+    copy?.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(full(root.dataset.preamble ?? '', textarea.value));
+      copy.textContent = 'Copied';
+      setTimeout(() => (copy.textContent = 'Copy prompt'), 1500);
+    });
+  }
+</script>
+
+<style>
+  .agent-prompt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-block: 1.5rem;
+  }
+
+  .examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .example {
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 999rem;
+    background: transparent;
+    color: var(--sl-color-gray-2);
+    font: inherit;
+    font-size: var(--sl-text-sm);
+    cursor: pointer;
+  }
+
+  .example:hover {
+    border-color: var(--sl-color-text-accent);
+  }
+
+  .example[aria-pressed='true'] {
+    border-color: var(--sl-color-text-accent);
+    color: var(--sl-color-white);
+  }
+
+  textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.5rem;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-white);
+    font: inherit;
+    line-height: var(--sl-line-height);
+    resize: vertical;
+  }
+
+  textarea:focus-visible {
+    outline: 2px solid var(--sl-color-text-accent);
+    outline-offset: 1px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Each agent's button takes the palette color nearest its brand (src/theme/palette.mjs). */
+  .action {
+    --action-bg: var(--sl-color-white);
+    --action-fg: var(--sl-color-black);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--action-bg);
+    border-radius: 999rem;
+    background: var(--action-bg);
+    color: var(--action-fg);
+    font: inherit;
+    font-size: var(--sl-text-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .action :global(svg) {
+    flex: none;
+    width: 1.1em;
+    height: 1.1em;
+  }
+
+  .action[data-agent='claude'] {
+    --action-bg: #a34606;
+    --action-fg: #ffffff;
+  }
+
+  .action[data-agent='codex'] {
+    --action-bg: #1d4fc4;
+    --action-fg: #ffffff;
+  }
+
+  :global([data-theme='dark']) .action[data-agent='claude'] {
+    --action-bg: #ffab70;
+    --action-fg: #020202;
+  }
+
+  :global([data-theme='dark']) .action[data-agent='codex'] {
+    --action-bg: #7cc4ff;
+    --action-fg: #020202;
+  }
+
+  .action[data-copy] {
+    --action-bg: transparent;
+    --action-fg: var(--sl-color-white);
+
+    border-color: var(--sl-color-hairline);
+  }
+
+  .action:hover {
+    filter: brightness(1.1);
+  }
+
+  .action[data-copy]:hover {
+    border-color: var(--sl-color-text-accent);
+  }
+</style>

@@ -1,0 +1,41 @@
+---
+title: Run it in Composer
+description: Load the plugin from its dev server into Composer Preview, and use it there.
+---
+
+By the end of this page Bookmarks runs in Composer: a bookmark opens in the main area, **Record visit** runs from the command palette, and the assistant runs it from a chat.
+
+## Background
+
+Until now the inspector has loaded the plugin. Composer loads it the same way, from a manifest the plugin's dev server serves, and gives it the parts the inspector leaves out: a navigation tree, a command palette and the assistant. Only [Composer Preview](https://preview.composer.space) loads plugins from a dev server; composer.space loads only the plugins it ships with.
+
+## Steps
+
+1. **Sign in to Composer Preview.** Open [preview.composer.space](https://preview.composer.space) and sign in or create an identity. Keep the tab open.
+
+2. **Keep the dev server running.** It is the one the inspector has loaded from since [Create a plugin](/docs/plex/learn/create-plugin/). If you stopped it, start it again in the plugin's directory:
+
+   ```bash
+   npx vite
+   ```
+
+   It serves the manifest at `http://localhost:3967/manifest.json`, which points at your unbundled source. If the port is taken, Vite fails rather than moving to another one, since Composer loads from 3967.
+
+3. **Enable the dev plugin.** In Composer, click **Plugin Settings** in the rail and open **Plugins**. Under **Dev Server**, leave the manifest URL as it is and click **Enable**. Allow the browser's prompt to reach devices on your local network: the plugin's source comes from your machine.
+
+   Bookmarks appears in the list of plugins, turned on. It stays on until you click **Disable**, and every reload of Composer loads it again from the dev server, so an edit is one reload away.
+
+4. **Open a bookmark.** Click **+** on a space and choose **Bookmark**. The bookmark appears in the space's **Bookmarks** section and opens in the main area, in the article from [Add a surface](/docs/plex/learn/add-surface/).
+
+5. **Run the operation from the command palette.** With the bookmark open, open the command palette and run **Record visit**. The count in the article goes up. The toolbar's **Record visit** does the same; both come from the action [Extend the App Graph](/docs/plex/learn/extend-app-graph/) added.
+
+6. **Run it from the assistant.** Open a chat, add the **Bookmarks** skill, and write "I just opened this bookmark". The assistant calls the Record visit tool, and the count goes up again, without a reload.
+
+## Recap
+
+You can now:
+
+- Load a plugin into Composer Preview from its dev server.
+- Run a plugin's operation from the command palette and from the assistant.
+
+[Publishing a plugin](/docs/plex/publishing-plugins/) puts it in your private registry, so Composer lists it for you on every device.

@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import { countWork, markWork } from '@dxos/util';
 
 import { DocumentUnavailableError } from '../errors.ts';
+import { stringifyAutomergeUrl } from './automerge-url.ts';
 import * as Doc from './Doc.ts';
 import { sameHeads } from './heads.ts';
 

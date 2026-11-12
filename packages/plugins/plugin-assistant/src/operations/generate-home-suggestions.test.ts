@@ -63,6 +63,16 @@ const TestLayer = AssistantTestLayer({
   extraServices: Layer.succeed(Capability.Service, testManager),
 });
 
+// Mirrors an EDGE host: schemas are contributed, but no atom registry and no suggestions cache.
+const headlessManager = CapabilityManager.make({ registry: Registry.make() });
+headlessManager.contribute({ module: 'test', interface: AppCapabilities.Schema, implementation: [TestNote] });
+
+const HeadlessTestLayer = AssistantTestLayer({
+  operationHandlers: AssistantOperationHandlerSet,
+  types: [TestNote],
+  extraServices: Layer.succeed(Capability.Service, headlessManager),
+});
+
 describe('GenerateHomeSuggestions', () => {
   it.effect(
     'empty space returns empty prompts (fallback path)',
@@ -136,6 +146,36 @@ describe('GenerateHomeSuggestions', () => {
         expect(result.prompts).toEqual(stored);
       },
       Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+describe('GenerateHomeSuggestions without an atom registry', () => {
+  it.effect(
+    'empty space returns empty prompts',
+    Effect.fnUntraced(
+      function* (_) {
+        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+
+        expect(result.prompts).toHaveLength(0);
+      },
+      Effect.provide(HeadlessTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'fewer recent objects than the minimum use the fallback',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addNotes(4);
+
+        const result = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+
+        expect(result.prompts).toHaveLength(0);
+      },
+      Effect.provide(HeadlessTestLayer),
       TestHelpers.provideTestContext,
     ),
   );

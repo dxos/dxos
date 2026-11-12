@@ -1,0 +1,39 @@
+---
+import { type KindId } from '@dxos/plugin-inspector';
+
+interface Props {
+  /**
+   * The kinds of module the page adds. With it, the embed loads the reader's own plugin from its dev server and checks
+   * them; without, it shows the finished plugin.
+   */
+  adds?: KindId[];
+  /** The module the finished plugin opens at, for a page about one idea. */
+  module?: KindId;
+}
+
+const { adds, module } = Astro.props;
+const query = adds
+  ? `?${new URLSearchParams({ dev: '', adds: adds.join(',') })}`
+  : module
+    ? `?${new URLSearchParams({ module })}`
+    : '';
+---
+
+<!-- The inspector runs on its own page so that its theme CSS stays off the docs pages; see `pages/embed/inspector.astro`. -->
+<iframe
+  class="inspector-embed not-content"
+  src={`/embed/inspector/${query}`}
+  title="The plugin inspector"
+  allow="local-network-access"
+  loading="lazy"></iframe>
+
+<style>
+  .inspector-embed {
+    display: block;
+    width: 100%;
+    height: 34rem;
+    margin-block: 1.5rem;
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+  }
+</style>
