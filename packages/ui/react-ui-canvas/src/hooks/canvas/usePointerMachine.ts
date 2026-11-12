@@ -106,11 +106,13 @@ export const PREVIEW_NODE_ID = 'preview-node';
 const distance = (left: Point, right: Point): [number, number] => [left.x - right.x, left.y - right.y];
 
 /**
- * Whether a link gesture has gone far enough to be a link: at least one grid cell (`minimum`, scene
- * units) from where it started. Short of that it is a click, so it neither previews nor lands.
+ * Whether a link gesture has gone far enough to be a link: the pointer at least one grid cell (`minimum`,
+ * scene units) from where it started. Short of that it is a click, so it neither previews nor lands. It is
+ * the pointer that is measured, not the link's ends: a free end snaps to the grid, so a pointer that moved a
+ * pixel across a grid line would otherwise have drawn a link a whole cell long.
  */
-export const isLinkDrawn = ({ from, to }: { from: Point; to: Point }, minimum: number): boolean =>
-  Math.hypot(to.x - from.x, to.y - from.y) >= minimum;
+export const isLinkDrawn = ({ press, pointer }: { press: Point; pointer: Point }, minimum: number): boolean =>
+  Math.hypot(pointer.x - press.x, pointer.y - press.y) >= minimum;
 
 /**
  * Whether the pointer is over the canvas itself: not over a panel the view hosts, nor over a popup portalled from one,
@@ -373,7 +375,16 @@ export const usePointerMachine = ({
         if (capabilities.link) {
           const from = { x: snap(point.x), y: snap(point.y) };
           startDrag(
-            { kind: 'link', type: currentTool.type, source: { point: from }, from, fromSide: 'e', to: from },
+            {
+              kind: 'link',
+              type: currentTool.type,
+              source: { point: from },
+              from,
+              fromSide: 'e',
+              to: from,
+              press: point,
+              pointer: point,
+            },
             event,
           );
         }
@@ -453,7 +464,19 @@ export const usePointerMachine = ({
         const from = toScene(event);
         // The band leaves the side of the node the press is nearest; routing picks the real side on drop.
         const fromSide = sideToward(boundsCenter(nodeBounds(node)), from);
-        startDrag({ kind: 'link', type: currentTool.type, source: { node: node.id }, from, fromSide, to: from }, event);
+        startDrag(
+          {
+            kind: 'link',
+            type: currentTool.type,
+            source: { node: node.id },
+            from,
+            fromSide,
+            to: from,
+            press: from,
+            pointer: from,
+          },
+          event,
+        );
         return;
       }
       const next = clickSelect(node.id, event);
@@ -527,7 +550,17 @@ export const usePointerMachine = ({
       const currentTool = registry.get(atoms.tool);
       const type = currentTool.kind === 'link' ? currentTool.type : registry.get(atoms.linkType);
       startDrag(
-        { kind: 'link', type, source: { node: node.id, port: port.id }, from, fromSide: port.side, to: from },
+        {
+          kind: 'link',
+          type,
+          source: { node: node.id, port: port.id },
+          from,
+          fromSide: port.side,
+          to: from,
+          // Measured from the port, as the band is drawn from it.
+          press: from,
+          pointer: from,
+        },
         event,
       );
     },
@@ -833,7 +866,7 @@ export const usePointerMachine = ({
           const target = linkTarget(point, endpointNode(current.source), 'in');
           const to = target ? point : { x: snap(point.x), y: snap(point.y) };
           const fromSide = isPointEndpoint(current.source) ? sideToward(current.from, to) : current.fromSide;
-          setDrag({ ...current, to, fromSide, target });
+          setDrag({ ...current, to, pointer: point, fromSide, target });
           break;
         }
         case 'vertices': {

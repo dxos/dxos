@@ -51,9 +51,21 @@ export type Drag =
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
   /**
    * Rubber band from a port, or from a free point under a link tool; `target` is set while hovering a
-   * valid drop, and the link is then previewed as created.
+   * valid drop, and the link is then previewed as created. `from` and `to` are where the link is drawn, which
+   * a free end snaps to the grid; `press` and `pointer` are where the gesture began and where the pointer is,
+   * unsnapped, which is how far it has gone.
    */
-  | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; fromSide: Side; to: Point; target?: Endpoint }
+  | {
+      kind: 'link';
+      type: LinkType;
+      source: Endpoint;
+      from: Point;
+      fromSide: Side;
+      to: Point;
+      press: Point;
+      pointer: Point;
+      target?: Endpoint;
+    }
   /**
    * Drawing a new node with a tool. `dropped` marks one dragged in from the palette or a host's
    * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
