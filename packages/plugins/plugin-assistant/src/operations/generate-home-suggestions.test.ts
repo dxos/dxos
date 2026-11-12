@@ -10,6 +10,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
@@ -72,6 +73,25 @@ const HeadlessTestLayer = AssistantTestLayer({
   types: [TestNote],
   extraServices: Layer.succeed(Capability.Service, headlessManager),
 });
+
+const SCRIPTED_PROMPTS = ['Summarize my notes', 'Plan the week', 'Draft a status update'];
+
+/** Every model call answers with the same prompts, so a test can count the calls generation made. */
+const scriptedGenerations = () => {
+  const requests: ScriptedLanguageModel.ScriptedRequest[] = [];
+  const layer = AssistantTestLayer({
+    operationHandlers: AssistantOperationHandlerSet,
+    types: [TestNote],
+    extraServices: Layer.succeed(Capability.Service, headlessManager),
+    aiService: ScriptedLanguageModel.scriptedAiService((request) => {
+      requests.push(request);
+      return { parts: [ScriptedLanguageModel.text(JSON.stringify({ prompts: SCRIPTED_PROMPTS }))] };
+    }),
+  });
+  return { requests, layer };
+};
+
+const scripted = scriptedGenerations();
 
 describe('GenerateHomeSuggestions', () => {
   it.effect(
@@ -176,6 +196,24 @@ describe('GenerateHomeSuggestions without an atom registry', () => {
         expect(result.prompts).toHaveLength(0);
       },
       Effect.provide(HeadlessTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'generates on every call, since no cache holds the prompts',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addNotes(5);
+
+        const first = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+        const second = yield* Operation.invoke(AssistantOperation.GenerateHomeSuggestions, {});
+
+        expect(first.prompts).toEqual(SCRIPTED_PROMPTS);
+        expect(second.prompts).toEqual(SCRIPTED_PROMPTS);
+        expect(scripted.requests).toHaveLength(2);
+      },
+      Effect.provide(scripted.layer),
       TestHelpers.provideTestContext,
     ),
   );
