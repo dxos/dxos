@@ -77,7 +77,7 @@ template landing: The front door
   parts:
     - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip, two actions, ECHO background art
     - Sample: the smallest complete example
-    - Guarantees: four cards in two rows of two, each a behavior with its spec citation
+    - Guarantees: four cards in one row, falling to two rows of two and then one column, each a behavior with its spec citation
     - Live: the live demos [F-7.5]
     - Architecture: one diagram of the packages
     - Routes: cards into the learning path, concepts and reference
@@ -5006,6 +5006,14 @@ decision D-246: Each Overview hero follows the page's theme. In dark mode it is 
   by: user:wittjosiah
   affects: [F-16.8]
   why: Josiah asked for light and dark versions of the header images; a dark banner on a light page stood out, and a gray one still read as a box where the dark hero blends in.
+```
+
+```mdl
+decision D-247: On `/echo` the four reason cards and the four guarantee cards each sit in one row on a wide screen, in two rows of two on a medium one, and in one column on a narrow one. They never wrap to three and one. Amends [D-211].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [landing]
+  why: Josiah meant two rows of two as the fallback at a breakpoint, not the layout at every width.
 ```
 
 ## Appendix: Extension Definitions
