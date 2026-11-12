@@ -50,4 +50,13 @@ describe('automerge-url', () => {
       expect(interpretAsDocumentId(id)).toBe(Repo.interpretAsDocumentId(id));
     }
   });
+
+  test('interpretAsDocumentId converts a legacy UUID as automerge-repo does', ({ expect }) => {
+    const isLegacyDocumentId = (value: string): value is Repo.LegacyDocumentId => value.includes('-');
+    const uuids = [crypto.randomUUID(), '00000000-0000-0000-0000-000000000000'].filter(isLegacyDocumentId);
+    expect(uuids).toHaveLength(2);
+    for (const uuid of uuids) {
+      expect(interpretAsDocumentId(uuid)).toBe(Repo.interpretAsDocumentId(uuid));
+    }
+  });
 });
