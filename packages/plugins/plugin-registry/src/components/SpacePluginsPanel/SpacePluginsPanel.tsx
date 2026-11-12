@@ -8,6 +8,7 @@ import { Form } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
+import * as Status from '@dxos/react-ui/Status';
 
 import { RegistryNamespace } from '../../namespace.ts';
 
@@ -50,7 +51,7 @@ export const SpacePluginsPanel = ({ plugins, scoped, onChange, onReset }: SpaceP
             label={t('space-plugins.label')}
             description={t(scoped ? 'space-plugins.description' : 'space-plugins.unscoped.description')}
           >
-            {plugins.length === 0 && <p className='text-description'>{t('space-plugins.empty.message')}</p>}
+            {plugins.length === 0 && <Status.Empty>{t('space-plugins.empty.message')}</Status.Empty>}
             {plugins.map(({ key, name, description, range, defaultRange }) => (
               <Form.Field
                 key={key}
