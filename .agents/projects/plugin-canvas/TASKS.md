@@ -284,7 +284,7 @@ editable. This phase makes the second form the one tools use, and gives a part a
   clips them (`Ledger` in the class story), because a part is a fixed size the constraints place rather than one
   that hugs its text. A `content` constraint (Figma's "hug") is the fix, and it is what a card's body wants too.
 - **Free point endpoints are not expressible in the DSL** (`from=`/`to=` name nodes), so a template cannot author a
-  *link* between two points. A rule is not a link, though: the card's hairline is a `polyline` part, whose vertices
+  _link_ between two points. A rule is not a link, though: the card's hairline is a `polyline` part, whose vertices
   the DSL now authors as fractions of its own frame (`points="0,0.5 1,0.5"`), so it stretches with the card.
 
 ## Backlog
