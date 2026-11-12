@@ -463,7 +463,7 @@ export const Columns: StoryObj = {
   render: () => <ThreadColumns />,
   decorators: createDecorators({
     skills: [MarkdownSkill.key, PlanningSkill.key],
-    scriptedModel: { name: 'launch-kit', script: composerScript(Scripts['launch-kit']) },
+    scriptedModels: { scripts: { launchKit: composerScript(Scripts.launchKit) }, select: 'launchKit' },
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   tags: ['!test'],

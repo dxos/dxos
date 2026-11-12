@@ -7,8 +7,6 @@ import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Operation from '@dxos/compute/Operation';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 
-const { capture, conversation, objectId, reasoning, text, threadId, toolCall, turn } = ScriptedScene;
-
 /** One part of the launch: a task on the agent's checklist, handed to a subagent that writes one document. */
 type LaunchTask = {
   /** Names its captures; letters only, since a RegExp group name must be an identifier. */
@@ -113,49 +111,57 @@ const CHECKLIST = new RegExp(
 );
 
 /** The agent: plans the work, delegates one task per turn, then waits for each subagent and checks its task off. */
-const agent = conversation('agent', [
-  turn('user', LAUNCH_REQUEST),
-  turn(
+const agent = ScriptedScene.conversation('agent', [
+  ScriptedScene.turn('user', LAUNCH_REQUEST),
+  ScriptedScene.turn(
     'assistant',
     [
-      reasoning('Four documents with no dependencies between them: each can go to a subagent of its own.'),
-      text('I will split this into four tasks and hand each one to a subagent.'),
-      toolCall(UPDATE_TASKS, { changes: LAUNCH_TASKS.map(({ title }) => ({ create: true, title })) }),
+      ScriptedScene.reasoning(
+        'Four documents with no dependencies between them: each can go to a subagent of its own.',
+      ),
+      ScriptedScene.text('I will split this into four tasks and hand each one to a subagent.'),
+      ScriptedScene.toolCall(UPDATE_TASKS, { changes: LAUNCH_TASKS.map(({ title }) => ({ create: true, title })) }),
     ],
     { delay: '1500 millis' },
   ),
-  turn('tool', CHECKLIST),
+  ScriptedScene.turn('tool', CHECKLIST),
 
   ...LAUNCH_TASKS.flatMap(({ key, title, prompt }) => [
-    turn(
+    ScriptedScene.turn(
       'assistant',
       [
-        text(`Delegating the ${title.toLowerCase()}.`),
-        toolCall(UPDATE_TASKS, { changes: [{ task: capture(key), status: 'started' }] }),
-        toolCall('thread_delegate', { task: prompt, purpose: title }),
+        ScriptedScene.text(`Delegating the ${title.toLowerCase()}.`),
+        ScriptedScene.toolCall(UPDATE_TASKS, { changes: [{ task: ScriptedScene.capture(key), status: 'started' }] }),
+        ScriptedScene.toolCall('thread_delegate', { task: prompt, purpose: title }),
       ],
       { delay: '1200 millis' },
     ),
-    turn('tool', `Started subagent thread ${threadId(`${key}Thread`)} ("${title}")`),
+    ScriptedScene.turn('tool', `Started subagent thread ${ScriptedScene.threadId(`${key}Thread`)} ("${title}")`),
   ]),
 
   // Waits in order; each turn checks off the task whose subagent just reported.
   ...LAUNCH_TASKS.map(({ key }, index) =>
-    turn('assistant', [
+    ScriptedScene.turn('assistant', [
       ...(index > 0
-        ? [toolCall(UPDATE_TASKS, { changes: [{ task: capture(LAUNCH_TASKS[index - 1].key), status: 'done' }] })]
+        ? [
+            ScriptedScene.toolCall(UPDATE_TASKS, {
+              changes: [{ task: ScriptedScene.capture(LAUNCH_TASKS[index - 1].key), status: 'done' }],
+            }),
+          ]
         : []),
-      toolCall('thread_wait', { thread: threadId(`${key}Thread`) }),
+      ScriptedScene.toolCall('thread_wait', { thread: ScriptedScene.threadId(`${key}Thread`) }),
     ]),
   ),
-  turn('assistant', [
-    text('Every subagent has reported.'),
-    toolCall(UPDATE_TASKS, { changes: [{ task: capture(LAUNCH_TASKS[LAUNCH_TASKS.length - 1].key), status: 'done' }] }),
+  ScriptedScene.turn('assistant', [
+    ScriptedScene.text('Every subagent has reported.'),
+    ScriptedScene.toolCall(UPDATE_TASKS, {
+      changes: [{ task: ScriptedScene.capture(LAUNCH_TASKS[LAUNCH_TASKS.length - 1].key), status: 'done' }],
+    }),
   ]),
-  turn(
+  ScriptedScene.turn(
     'assistant',
     [
-      text(
+      ScriptedScene.text(
         [
           'The launch kit is ready:',
           '',
@@ -171,46 +177,53 @@ const agent = conversation('agent', [
 
 /** A subagent thinks aloud at each step: outline, fill in, check its work, then report with the document. */
 const subagent = ({ title, prompt, document, brief, outline, body, review, pace }: LaunchTask) =>
-  conversation(title, [
-    turn('user', prompt),
-    turn(
+  ScriptedScene.conversation(title, [
+    ScriptedScene.turn('user', prompt),
+    ScriptedScene.turn(
       'assistant',
       [
-        reasoning(brief),
-        text('Outline first, so the structure is settled before any wording.'),
-        toolCall(CREATE_DOCUMENT, { name: document, content: outline }),
+        ScriptedScene.reasoning(brief),
+        ScriptedScene.text('Outline first, so the structure is settled before any wording.'),
+        ScriptedScene.toolCall(CREATE_DOCUMENT, { name: document, content: outline }),
       ],
       { delay: `${pace} seconds` },
     ),
-    turn('tool', `"id":"${objectId('doc')}"`),
-    turn(
+    ScriptedScene.turn('tool', `"id":"${ScriptedScene.objectId('doc')}"`),
+    ScriptedScene.turn(
       'assistant',
       [
-        reasoning('The outline holds. Each section needs one concrete line, nothing more.'),
-        text('Filling in the sections.'),
-        toolCall(UPDATE_DOCUMENT, { doc: objectId('doc'), edits: [{ newString: `\n${body}\n` }] }),
+        ScriptedScene.reasoning('The outline holds. Each section needs one concrete line, nothing more.'),
+        ScriptedScene.text('Filling in the sections.'),
+        ScriptedScene.toolCall(UPDATE_DOCUMENT, {
+          doc: ScriptedScene.objectId('doc'),
+          edits: [{ newString: `\n${body}\n` }],
+        }),
       ],
       { delay: `${pace} seconds` },
     ),
-    turn(
+    ScriptedScene.turn(
       'assistant',
       [
-        reasoning(review),
-        text('Saving a checkpoint for review.'),
-        toolCall(CHECKPOINT_DOCUMENT, { doc: objectId('doc'), name: 'Ready for review' }),
+        ScriptedScene.reasoning(review),
+        ScriptedScene.text('Saving a checkpoint for review.'),
+        ScriptedScene.toolCall(CHECKPOINT_DOCUMENT, { doc: ScriptedScene.objectId('doc'), name: 'Ready for review' }),
       ],
       { delay: `${pace / 2} seconds` },
     ),
-    turn('assistant', [text(`Wrote **${document}**.\n\n![${document}](${objectId('doc')})`)], { delay: '600 millis' }),
+    ScriptedScene.turn(
+      'assistant',
+      [ScriptedScene.text(`Wrote **${document}**.\n\n![${document}](${ScriptedScene.objectId('doc')})`)],
+      { delay: '600 millis' },
+    ),
   ]);
 
 /** A question the reader sends mid-run, answered at once in a light thread. */
-const sideQuestion = conversation('side question', [
-  turn('user', 'which day should we launch'),
-  turn(
+const sideQuestion = ScriptedScene.conversation('side question', [
+  ScriptedScene.turn('user', 'which day should we launch'),
+  ScriptedScene.turn(
     'assistant',
     [
-      text(
+      ScriptedScene.text(
         'Tuesday the 18th: midweek launches get the most attention, and it leaves Monday for a last check of the documents.',
       ),
     ],
@@ -219,4 +232,4 @@ const sideQuestion = conversation('side question', [
 ]);
 
 /** The launch kit: an agent splits a request into four tasks, each written by a subagent in a thread of its own. */
-export const launchKit: readonly ScriptedScene.Conversation[] = [agent, ...LAUNCH_TASKS.map(subagent), sideQuestion];
+export const launchKit = ScriptedScene.make([agent, ...LAUNCH_TASKS.map(subagent), sideQuestion]);

@@ -28,15 +28,15 @@ const OBJECT = 'echo://@/01J0000000000000000000000A';
 
 const script = () =>
   ScriptedLanguageModel.layer(
-    ScriptedScene.make(
-      [
+    ScriptedScene.play(
+      ScriptedScene.make([
         ScriptedScene.conversation('haiku', [
           ScriptedScene.turn('user', 'Write me a haiku'),
           ScriptedScene.turn('assistant', [ScriptedScene.text('Calm.')]),
           ScriptedScene.turn('user', /another one/i),
           ScriptedScene.turn('assistant', [ScriptedScene.text('Calm again.')]),
         ]),
-      ],
+      ]),
       { asides: [ScriptedScene.aside('name', (request) => request.tools.length > 0, 'A name')] },
     ),
   );
@@ -56,18 +56,20 @@ describe('ScriptedScene', () => {
   test('captures placeholders from the prompt and from tool results, and writes them into later turns', ({
     expect,
   }) => {
-    const play = ScriptedScene.make([
-      ScriptedScene.conversation('print', [
-        ScriptedScene.turn('user', `Print me object ${ScriptedScene.objectId('object a')}`),
-        ScriptedScene.turn('assistant', [
-          ScriptedScene.toolCall('object-get', { id: ScriptedScene.objectId('object a') }),
-        ]),
-        ScriptedScene.turn('tool', `"title":"${ScriptedScene.capture('title', /[^"]+/)}"`),
-        ScriptedScene.turn('assistant', [
-          ScriptedScene.text(`${ScriptedScene.capture('title', /x/)} is ${ScriptedScene.objectId('object a')}.`),
+    const play = ScriptedScene.play(
+      ScriptedScene.make([
+        ScriptedScene.conversation('print', [
+          ScriptedScene.turn('user', `Print me object ${ScriptedScene.objectId('object a')}`),
+          ScriptedScene.turn('assistant', [
+            ScriptedScene.toolCall('object-get', { id: ScriptedScene.objectId('object a') }),
+          ]),
+          ScriptedScene.turn('tool', `"title":"${ScriptedScene.capture('title', /[^"]+/)}"`),
+          ScriptedScene.turn('assistant', [
+            ScriptedScene.text(`${ScriptedScene.capture('title')} is ${ScriptedScene.objectId('object a')}.`),
+          ]),
         ]),
       ]),
-    ]);
+    );
     const request = (...content: Prompt.MessageEncoded[]): ScriptedLanguageModel.ScriptedRequest => ({
       system: '',
       text: '',

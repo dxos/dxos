@@ -35,6 +35,9 @@ export type Turn =
 /** One thread's dialogue, named in errors. */
 export type Conversation = { readonly name: string; readonly turns: readonly Turn[] };
 
+/** Every conversation a scripted model plays; built with {@link make}, played with {@link play}. */
+export type Scene = { readonly conversations: readonly Conversation[] };
+
 /** A side call the harness makes outside any conversation (naming a chat, a planning reminder), answered alike each time. */
 export type Aside = {
   readonly name: string;
@@ -170,6 +173,8 @@ const fillPart = (
 // Builders.
 //
 
+export const make = (conversations: readonly Conversation[]): Scene => ({ conversations });
+
 export const conversation = (name: string, turns: readonly Turn[]): Conversation => ({ name, turns });
 
 export function turn(role: 'user' | 'tool', pattern: Pattern): Turn;
@@ -247,13 +252,13 @@ const failure = (description: string): ScriptedLanguageModel.ScriptedTurn => ({
 const snippet = (value: string): string => JSON.stringify(value.length > 120 ? `${value.slice(0, 120)}…` : value);
 
 /**
- * The script the scripted model plays the conversations with. A call goes to an aside; else to the conversation already
+ * The script the scripted model plays a scene with. A call goes to an aside; else to the conversation already
  * answering the call's prompt; else to the first conversation whose next turn is a `user` turn matching that prompt.
  * `tool` turns before the next `assistant` turn are matched against the last tool result; they are optional, and a
  * missing one accepts any result.
  */
-export const make = (
-  conversations: readonly Conversation[],
+export const play = (
+  { conversations }: Scene,
   { asides = [], promptOf = lastUserPrompt }: Options = {},
 ): ScriptedLanguageModel.ScriptedTurnGenerator => {
   const compiled = conversations.map(({ name, turns }) => ({

@@ -153,10 +153,10 @@ type DecoratorsProps = Merge<
      */
     scripted?: ScriptedLanguageModel.Script;
     /**
-     * Register a script as a model of its own (see `ScriptedLanguageModel.resolver`) and start the story's chat on it.
-     * Unlike `scripted`, every other model still resolves as usual.
+     * Serve each script as a model of its own (see `ScriptedLanguageModel.resolver`), offered in the chat's model picker
+     * beside the real models; the chat starts on `select`. Unlike `scripted`, every other model still resolves as usual.
      */
-    scriptedModel?: { name: string; script: ScriptedLanguageModel.Script };
+    scriptedModels?: { scripts: Record<string, ScriptedLanguageModel.Script>; select?: string };
     /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
     assistantSettings?: Partial<Assistant.Settings>;
   },
@@ -238,7 +238,7 @@ const toStoryDecoratorsProps = ({
   config: configProp = config.remote,
   skills,
   scripted,
-  scriptedModel,
+  scriptedModels,
   createAgent,
   types = [],
   plugins = [],
@@ -276,11 +276,11 @@ const toStoryDecoratorsProps = ({
     ),
     TranscriptionPlugin.make(),
     StoryPlugin({
-      onChatCreated: scriptedModel ? onScriptedChat(scriptedModel.name, onChatCreated) : onChatCreated,
+      onChatCreated: scriptedModels?.select ? onScriptedChat(scriptedModels.select, onChatCreated) : onChatCreated,
       createAgent,
       onReady,
     }),
-    ...(scriptedModel ? [ScriptedModelPlugin({ scripts: { [scriptedModel.name]: scriptedModel.script } })] : []),
+    ...(scriptedModels ? [ScriptedModelPlugin({ scripts: scriptedModels.scripts })] : []),
     ...plugins,
   ],
   Wrapper:
@@ -342,7 +342,7 @@ const onScriptedChat =
     await next?.(props);
   };
 
-/** Serves scripts as models of their own, beside the models the assistant resolves. */
+/** Serves scripts as models of their own, beside the models the assistant resolves, and offers them in the picker. */
 const ScriptedModelPlugin = Plugin.define<{ scripts: Record<string, ScriptedLanguageModel.Script> }>(
   Plugin.makeMeta({ key: DXN.make('com.example.plugin.scriptedModel'), name: 'Scripted model' }),
 ).pipe(
@@ -350,9 +350,18 @@ const ScriptedModelPlugin = Plugin.define<{ scripts: Record<string, ScriptedLang
     id: 'com.example.plugin.scriptedModel.module.resolver',
     // Startup: the AI service reads every resolver once, when its layer is first built.
     activatesOn: ActivationEvents.Startup,
-    provides: [AppCapabilities.AiModelResolver],
+    provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.ModelPreset],
     activate: () =>
-      Effect.succeed([Capability.contribute(AppCapabilities.AiModelResolver, ScriptedLanguageModel.resolver(scripts))]),
+      Effect.succeed([
+        Capability.contribute(AppCapabilities.AiModelResolver, ScriptedLanguageModel.resolver(scripts)),
+        ...Object.keys(scripts).map((name) =>
+          Capability.contribute(AssistantCapabilities.ModelPreset, {
+            model: ScriptedLanguageModel.modelId(name),
+            provider: ScriptedLanguageModel.provider.id,
+            label: `Scripted · ${name}`,
+          }),
+        ),
+      ]),
   })),
   Plugin.make,
 );

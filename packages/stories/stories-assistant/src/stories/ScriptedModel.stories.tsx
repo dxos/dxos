@@ -7,20 +7,31 @@ import { type ComponentProps } from 'react';
 
 import { StoryRole } from '../modules/index.ts';
 import { type ScriptName, Scripts } from '../scripts/index.ts';
-import { ModuleContainer, composerScript, createDecorators, storyParameters } from '../testing/index.ts';
+import {
+  CalculatorSkill,
+  ModuleContainer,
+  composerScript,
+  createDecorators,
+  storyParameters,
+} from '../testing/index.ts';
 
 type StoryArgs = ComponentProps<typeof ModuleContainer> & { script: ScriptName };
 
 /**
- * A chat on a scripted model: the script named by the `script` arg is served as a model of its own, and the chat starts
- * on it. Scripts live in `src/scripts`, so a different one is a different arg, not a different story.
+ * A chat on a scripted model: every script in `src/scripts` is served as a model of its own and offered in the model
+ * picker, and the chat starts on the one the `script` arg names.
  */
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-assistant/ScriptedModel',
   render: ModuleContainer,
   parameters: storyParameters,
   decorators: createDecorators<StoryArgs>(({ args }) => ({
-    scriptedModel: { name: args.script, script: composerScript(Scripts[args.script]) },
+    // Every script is offered in the model picker; the chat starts on the one the `script` arg names.
+    scriptedModels: {
+      scripts: Object.fromEntries(Object.entries(Scripts).map(([name, scene]) => [name, composerScript(scene)])),
+      select: args.script,
+    },
+    skills: [CalculatorSkill.key],
   })),
   args: { layout: [[StoryRole.Chat]] },
 };

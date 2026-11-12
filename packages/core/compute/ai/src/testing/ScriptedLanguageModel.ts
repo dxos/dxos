@@ -21,6 +21,7 @@ import * as AiModelResolver from '../AiModelResolver.ts';
 import * as AiService from '../AiService.ts';
 import * as AiTelemetry from '../AiTelemetry.ts';
 import { AiModelNotAvailableError } from '../errors.ts';
+import * as Provider from '../Provider.ts';
 
 //
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.
@@ -438,7 +439,10 @@ export const scriptedAiServiceMiddleware = (script: Script): ((upstream: AiServi
   return (upstream) => ({ ...upstream, languageModel });
 };
 
-/** The model a script is played as when it is registered with {@link resolver}. */
+/** The provider scripted models are offered under in a model picker; {@link resolver} serves them whatever is asked. */
+export const provider = Provider.make('org.dxos.provider.scripted', { label: 'Scripted' });
+
+/** The model a script is played as when it is registered with {@link resolver}; `name` is camelCase, as a DXN needs. */
 export const modelId = (name: string): DXN.DXN => DXN.make(`org.dxos.model.scripted.${name}`);
 
 /**

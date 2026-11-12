@@ -4,8 +4,9 @@
 
 import { ScriptedLanguageModel, ScriptedScene } from '@dxos/ai/testing';
 
-/** A status line the runtime appends about other threads; never the request itself. */
-const isStatusLine = (value: string) => /^Thread \S+ .* is (running|done)/.test(value);
+/** A line the runtime writes about other threads or an earlier tool call; never the request itself. */
+const isRuntimeNote = (value: string) =>
+  /^Thread \S+ .* is (running|done)/.test(value) || value.startsWith('[Result of the earlier');
 
 /**
  * The prompt a thread answers: the last text of the last user message that is neither a runtime status line nor a
@@ -22,7 +23,7 @@ export const threadPrompt = ({ prompt }: ScriptedLanguageModel.ScriptedRequest):
       typeof message.content === 'string'
         ? [message.content]
         : message.content.flatMap((part) => (part.type === 'text' ? [part.text] : []));
-    const request = parts.filter((part) => !isStatusLine(part) && !part.includes('<thread ')).at(-1);
+    const request = parts.filter((part) => !isRuntimeNote(part) && !part.includes('<thread ')).at(-1);
     if (request !== undefined) {
       return request;
     }
@@ -37,6 +38,6 @@ export const composerAsides: readonly ScriptedScene.Aside[] = [
   ScriptedScene.aside('chat-name', (request) => request.tools.length === 0, 'Scripted chat'),
 ];
 
-/** Conversations played against Composer's harness: its asides answered, and each thread matched on its own prompt. */
-export const composerScript = (conversations: readonly ScriptedScene.Conversation[]): ScriptedLanguageModel.Script =>
-  ScriptedScene.make(conversations, { asides: composerAsides, promptOf: threadPrompt });
+/** A scene played against Composer's harness: its asides answered, and each thread matched on its own prompt. */
+export const composerScript = (scene: ScriptedScene.Scene): ScriptedLanguageModel.Script =>
+  ScriptedScene.play(scene, { asides: composerAsides, promptOf: threadPrompt });

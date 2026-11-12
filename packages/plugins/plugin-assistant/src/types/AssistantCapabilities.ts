@@ -16,6 +16,7 @@ import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
+import type { DXN } from '@dxos/keys';
 import { type Message } from '@dxos/types';
 
 import { AssistantNamespace } from '../namespace.ts';
@@ -25,6 +26,14 @@ import * as Ollama from './Ollama.ts';
 export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Settings>>()(
   `${AssistantNamespace.key}.capability.settings`,
 );
+
+/**
+ * A model a plugin serves beyond the built-in catalog (a scripted model, say), offered in the chat's model picker. The
+ * plugin also contributes the `AiModelResolver` that serves it.
+ */
+export type ModelPreset = { readonly model: DXN.DXN; readonly provider: DXN.DXN; readonly label: string };
+
+export const ModelPreset = Capability.make<ModelPreset>()(`${AssistantNamespace.key}.capability.modelPreset`);
 
 export const OllamaManager = Capability.makeSingleton<Ollama.Manager>()(
   `${AssistantNamespace.key}.capability.ollamaManager`,
