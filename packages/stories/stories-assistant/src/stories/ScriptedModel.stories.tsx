@@ -7,13 +7,7 @@ import { type ComponentProps } from 'react';
 
 import { StoryRole } from '../modules/index.ts';
 import { type ScriptName, Scripts } from '../scripts/index.ts';
-import {
-  CalculatorSkill,
-  ModuleContainer,
-  composerScript,
-  createDecorators,
-  storyParameters,
-} from '../testing/index.ts';
+import { CalculatorSkill, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 type StoryArgs = ComponentProps<typeof ModuleContainer> & { script: ScriptName };
 
@@ -27,10 +21,7 @@ const meta: Meta<StoryArgs> = {
   parameters: storyParameters,
   decorators: createDecorators<StoryArgs>(({ args }) => ({
     // Every script is offered in the model picker; the chat starts on the one the `script` arg names.
-    scriptedModels: {
-      scripts: Object.fromEntries(Object.entries(Scripts).map(([name, scene]) => [name, composerScript(scene)])),
-      select: args.script,
-    },
+    scriptedModels: { scenes: Scripts, select: args.script },
     skills: [CalculatorSkill.key],
   })),
   args: { layout: [[StoryRole.Chat]] },

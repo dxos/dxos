@@ -13,7 +13,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
-import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
+import { ScriptedLanguageModel, ScriptedScene, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -156,7 +156,7 @@ type DecoratorsProps = Merge<
      * Serve each script as a model of its own (see `ScriptedLanguageModel.resolver`), offered in the chat's model picker
      * beside the real models; the chat starts on `select`. Unlike `scripted`, every other model still resolves as usual.
      */
-    scriptedModels?: { scripts: Record<string, ScriptedLanguageModel.Script>; select?: string };
+    scriptedModels?: { scenes: Readonly<Record<string, ScriptedScene.Scene>>; select?: string };
     /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
     assistantSettings?: Partial<Assistant.Settings>;
   },
@@ -280,7 +280,7 @@ const toStoryDecoratorsProps = ({
       createAgent,
       onReady,
     }),
-    ...(scriptedModels ? [ScriptedModelPlugin({ scripts: scriptedModels.scripts })] : []),
+    ...(scriptedModels ? [ScriptedModelPlugin({ scenes: scriptedModels.scenes })] : []),
     ...plugins,
   ],
   Wrapper:
@@ -343,18 +343,23 @@ const onScriptedChat =
   };
 
 /** Serves scripts as models of their own, beside the models the assistant resolves, and offers them in the picker. */
-const ScriptedModelPlugin = Plugin.define<{ scripts: Record<string, ScriptedLanguageModel.Script> }>(
+const ScriptedModelPlugin = Plugin.define<{ scenes: Readonly<Record<string, ScriptedScene.Scene>> }>(
   Plugin.makeMeta({ key: DXN.make('com.example.plugin.scriptedModel'), name: 'Scripted model' }),
 ).pipe(
-  Plugin.addModule(({ scripts }) => ({
+  Plugin.addModule(({ scenes }) => ({
     id: 'com.example.plugin.scriptedModel.module.resolver',
     // Startup: the AI service reads every resolver once, when its layer is first built.
     activatesOn: ActivationEvents.Startup,
     provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.ModelPreset],
     activate: () =>
       Effect.succeed([
-        Capability.contribute(AppCapabilities.AiModelResolver, ScriptedLanguageModel.resolver(scripts)),
-        ...Object.keys(scripts).map((name) =>
+        Capability.contribute(
+          AppCapabilities.AiModelResolver,
+          ScriptedLanguageModel.resolver(
+            Object.fromEntries(Object.entries(scenes).map(([name, scene]) => [name, ScriptedScene.play(scene)])),
+          ),
+        ),
+        ...Object.keys(scenes).map((name) =>
           Capability.contribute(AssistantCapabilities.ModelPreset, {
             model: ScriptedLanguageModel.modelId(name),
             provider: ScriptedLanguageModel.provider.id,

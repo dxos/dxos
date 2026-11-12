@@ -20,7 +20,10 @@ import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
  * later turn of the conversation, in text or anywhere in a tool's input, is replaced with the captured value.
  */
 
-export const { text, reasoning, toolCall } = ScriptedLanguageModel;
+/** Re-exported so a script needs `ScriptedScene` alone. */
+export const text = ScriptedLanguageModel.text;
+export const reasoning = ScriptedLanguageModel.reasoning;
+export const toolCall = ScriptedLanguageModel.toolCall;
 
 export type Pattern = string | RegExp;
 
@@ -35,8 +38,8 @@ export type Turn =
 /** One thread's dialogue, named in errors. */
 export type Conversation = { readonly name: string; readonly turns: readonly Turn[] };
 
-/** Every conversation a scripted model plays; built with {@link make}, played with {@link play}. */
-export type Scene = { readonly conversations: readonly Conversation[] };
+/** Every conversation a scripted model plays, and how it is matched; built with {@link make}, played with {@link play}. */
+export type Scene = { readonly conversations: readonly Conversation[]; readonly options: Options };
 
 /** A side call the harness makes outside any conversation (naming a chat, a planning reminder), answered alike each time. */
 export type Aside = {
@@ -173,7 +176,10 @@ const fillPart = (
 // Builders.
 //
 
-export const make = (conversations: readonly Conversation[]): Scene => ({ conversations });
+export const make = (conversations: readonly Conversation[], options: Options = {}): Scene => ({
+  conversations,
+  options,
+});
 
 export const conversation = (name: string, turns: readonly Turn[]): Conversation => ({ name, turns });
 
@@ -235,7 +241,18 @@ const lastToolResult = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): stri
 // Player.
 //
 
-type MatchedTurn = { readonly role: 'user' | 'tool'; readonly match: Matcher };
+type MatchedTurn = { readonly role: 'user' | 'tool'; readonly match: Matcher; readonly pattern: string };
+
+/** A pattern as its author wrote it, placeholders shown by name, for errors. */
+const describe = (pattern: Pattern): string =>
+  pattern instanceof RegExp
+    ? String(pattern)
+    : JSON.stringify(
+        pattern.replace(PLACEHOLDER, (_, body: string) => {
+          const { kind, name } = parsePlaceholder(body);
+          return `\${${kind}('${name}')}`;
+        }),
+      );
 type AssistantTurn = Extract<Turn, { role: 'assistant' }>;
 
 /** Where a conversation stands: its next turn, what it captured, and the prompt its thread is answering. */
@@ -249,7 +266,31 @@ const failure = (description: string): ScriptedLanguageModel.ScriptedTurn => ({
   }),
 });
 
-const snippet = (value: string): string => JSON.stringify(value.length > 120 ? `${value.slice(0, 120)}…` : value);
+/** Long enough to show a whole checklist or tool result; a prompt is quoted in full up to this. */
+const QUOTE_LIMIT = 4_000;
+
+const quote = (value: string): string =>
+  JSON.stringify(value.length > QUOTE_LIMIT ? `${value.slice(0, QUOTE_LIMIT)}…` : value);
+
+/** Where the `user` and `tool` turns at a conversation's cursor leave it: ready to play, or stopped at one that failed. */
+type Step =
+  | { readonly mismatch: Mismatch }
+  | { readonly cursor: number; readonly captured: Record<string, string>; readonly opened: boolean };
+
+type Mismatch = {
+  readonly turn: number;
+  readonly role: 'user' | 'tool';
+  readonly pattern: string;
+  readonly value: string;
+};
+
+/** Exactly what failed to match: the turn, its pattern as written, and the text it was tested against. */
+const mismatchReport = (conversation: string, { turn, role, pattern, value }: Mismatch): string =>
+  [
+    `Conversation "${conversation}", turn ${turn} (${role}): the ${role === 'user' ? 'prompt' : 'tool result'} did not match.`,
+    `  expected: ${pattern}`,
+    `  got:      ${quote(value)}`,
+  ].join('\n');
 
 /**
  * The script the scripted model plays a scene with. A call goes to an aside; else to the conversation already
@@ -257,28 +298,31 @@ const snippet = (value: string): string => JSON.stringify(value.length > 120 ? `
  * `tool` turns before the next `assistant` turn are matched against the last tool result; they are optional, and a
  * missing one accepts any result.
  */
-export const play = (
-  { conversations }: Scene,
-  { asides = [], promptOf = lastUserPrompt }: Options = {},
-): ScriptedLanguageModel.ScriptedTurnGenerator => {
+export const play = ({
+  conversations,
+  options: { asides = [], promptOf = lastUserPrompt },
+}: Scene): ScriptedLanguageModel.ScriptedTurnGenerator => {
   const compiled = conversations.map(({ name, turns }) => ({
     name,
     turns: turns.map((turn): MatchedTurn | AssistantTurn =>
-      turn.role === 'assistant' ? turn : { role: turn.role, match: compile(turn.pattern) },
+      turn.role === 'assistant'
+        ? turn
+        : { role: turn.role, match: compile(turn.pattern), pattern: describe(turn.pattern) },
     ),
   }));
   const positions: Position[] = compiled.map(() => ({ cursor: 0, bindings: new Map() }));
 
   // Runs the `user` and `tool` turns at the cursor against the request: where it stops and what it captured.
-  const advance = (index: number, prompt: string, request: ScriptedLanguageModel.ScriptedRequest) => {
+  const advance = (index: number, prompt: string, request: ScriptedLanguageModel.ScriptedRequest): Step => {
     const { turns } = compiled[index];
     let cursor = positions[index].cursor;
     const captured: Record<string, string> = {};
     let opened = false;
     for (let next = turns[cursor]; next !== undefined && next.role !== 'assistant'; next = turns[cursor]) {
-      const found = next.match(next.role === 'user' ? prompt : lastToolResult(request));
+      const value = next.role === 'user' ? prompt : lastToolResult(request);
+      const found = next.match(value);
       if (found === undefined) {
-        return undefined;
+        return { mismatch: { turn: cursor + 1, role: next.role, pattern: next.pattern, value } };
       }
       opened ||= next.role === 'user';
       Object.assign(captured, found);
@@ -300,13 +344,20 @@ export const play = (
       .sort((left, right) => Number(right.continuing) - Number(left.continuing));
     for (const { index, continuing } of order) {
       const step = advance(index, prompt, request);
-      if (step === undefined || (!continuing && !step.opened)) {
+      if ('mismatch' in step) {
+        // A thread under way that gets a tool result its script did not expect is a script error, not another thread.
+        if (continuing && step.mismatch.role === 'tool') {
+          return failure(mismatchReport(compiled[index].name, step.mismatch));
+        }
+        continue;
+      }
+      if (!continuing && !step.opened) {
         continue;
       }
       const { name, turns } = compiled[index];
       const next = turns[step.cursor];
       if (next === undefined || next.role !== 'assistant') {
-        return failure(`Conversation "${name}" has no assistant turn left for ${snippet(prompt)}.`);
+        return failure(`Conversation "${name}" has no assistant turn left for ${quote(prompt)}.`);
       }
       const position = positions[index];
       for (const [key, value] of Object.entries(step.captured)) {
@@ -323,6 +374,11 @@ export const play = (
         return failure(`Conversation "${name}": ${error instanceof Error ? error.message : String(error)}.`);
       }
     }
-    return failure(`No scripted conversation expects ${snippet(prompt)}.`);
+    // Every conversation's reason for passing on the prompt, so the script can be put right without guessing.
+    const reasons = order.flatMap(({ index }) => {
+      const step = advance(index, prompt, request);
+      return 'mismatch' in step ? [mismatchReport(compiled[index].name, step.mismatch)] : [];
+    });
+    return failure([`No scripted conversation expects the prompt ${quote(prompt)}.`, ...reasons].join('\n\n'));
   };
 };

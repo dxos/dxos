@@ -29,15 +29,17 @@ const OBJECT = 'echo://@/01J0000000000000000000000A';
 const script = () =>
   ScriptedLanguageModel.layer(
     ScriptedScene.play(
-      ScriptedScene.make([
-        ScriptedScene.conversation('haiku', [
-          ScriptedScene.turn('user', 'Write me a haiku'),
-          ScriptedScene.turn('assistant', [ScriptedScene.text('Calm.')]),
-          ScriptedScene.turn('user', /another one/i),
-          ScriptedScene.turn('assistant', [ScriptedScene.text('Calm again.')]),
-        ]),
-      ]),
-      { asides: [ScriptedScene.aside('name', (request) => request.tools.length > 0, 'A name')] },
+      ScriptedScene.make(
+        [
+          ScriptedScene.conversation('haiku', [
+            ScriptedScene.turn('user', 'Write me a haiku'),
+            ScriptedScene.turn('assistant', [ScriptedScene.text('Calm.')]),
+            ScriptedScene.turn('user', /another one/i),
+            ScriptedScene.turn('assistant', [ScriptedScene.text('Calm again.')]),
+          ]),
+        ],
+        { asides: [ScriptedScene.aside('name', (request) => request.tools.length > 0, 'A name')] },
+      ),
     ),
   );
 
@@ -95,7 +97,10 @@ describe('ScriptedScene', () => {
     'fails loudly on a prompt no conversation expects',
     Effect.fnUntraced(function* ({ expect }) {
       const error = yield* LanguageModel.generateText({ prompt: [user('Something else.')] }).pipe(Effect.flip);
-      expect(error.message).toContain('No scripted conversation expects');
+      // Says what each conversation was waiting for, pattern as written, beside the text it got.
+      expect(error.message).toContain('No scripted conversation expects the prompt "Something else."');
+      expect(error.message).toContain('Conversation "haiku", turn 1 (user): the prompt did not match.');
+      expect(error.message).toContain('expected: "Write me a haiku"');
     }, Effect.provide(script())),
   );
 });

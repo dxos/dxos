@@ -37,7 +37,3 @@ export const composerAsides: readonly ScriptedScene.Aside[] = [
   // Naming a chat is the one call that offers no tools.
   ScriptedScene.aside('chat-name', (request) => request.tools.length === 0, 'Scripted chat'),
 ];
-
-/** A scene played against Composer's harness: its asides answered, and each thread matched on its own prompt. */
-export const composerScript = (scene: ScriptedScene.Scene): ScriptedLanguageModel.Script =>
-  ScriptedScene.play(scene, { asides: composerAsides, promptOf: threadPrompt });

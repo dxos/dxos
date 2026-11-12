@@ -7,6 +7,8 @@ import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Operation from '@dxos/compute/Operation';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 
+import { composerAsides, threadPrompt } from '../testing/scripted.ts';
+
 /** One part of the launch: a task on the agent's checklist, handed to a subagent that writes one document. */
 type LaunchTask = {
   /** Names its captures; letters only, since a RegExp group name must be an identifier. */
@@ -105,7 +107,7 @@ const CHECKPOINT_DOCUMENT = Operation.toolName(MarkdownOperation.CreateCheckpoin
 
 /** The checklist update-tasks returns, with each task's URI captured under its key. */
 const CHECKLIST = new RegExp(
-  LAUNCH_TASKS.map(({ key, title }) => String.raw`\] ${title}\s+ref: \[[^\]]*\]\((?<${key}>echo://[^)\s]+)\)`).join(
+  LAUNCH_TASKS.map(({ key, title }) => String.raw`\] ${title}\s+\(?ref: \[[^\]]*\]\((?<${key}>echo://[^)\s]+)\)`).join(
     String.raw`[\s\S]*?`,
   ),
 );
@@ -232,4 +234,7 @@ const sideQuestion = ScriptedScene.conversation('side question', [
 ]);
 
 /** The launch kit: an agent splits a request into four tasks, each written by a subagent in a thread of its own. */
-export const launchKit = ScriptedScene.make([agent, ...LAUNCH_TASKS.map(subagent), sideQuestion]);
+export const launchKit = ScriptedScene.make([agent, ...LAUNCH_TASKS.map(subagent), sideQuestion], {
+  asides: composerAsides,
+  promptOf: threadPrompt,
+});

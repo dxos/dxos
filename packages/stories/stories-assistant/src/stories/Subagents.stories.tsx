@@ -34,13 +34,10 @@ import {
   Calculate,
   CalculatorSkill,
   ModuleContainer,
-  composerScript,
   createDecorators,
   storyParameters,
   submitPrompt,
 } from '../testing/index.ts';
-
-const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
 /**
  * Subagents on light threads: the agent delegates self-contained tasks with `thread_delegate`; each runs in a
@@ -123,16 +120,16 @@ const subagent = (plan: Plan, step: number): ScriptedLanguageModel.ScriptedTurn 
     return {
       delay: `${4 + plan.rate / 2} seconds`,
       parts: [
-        reasoning(`Balance after ${years} years at ${plan.rate}%.`),
-        text(`After ${years} years…`),
-        toolCall(CALCULATE, { expression: `10000*(1+${plan.rate}/100)^${years}` }),
+        ScriptedLanguageModel.reasoning(`Balance after ${years} years at ${plan.rate}%.`),
+        ScriptedLanguageModel.text(`After ${years} years…`),
+        ScriptedLanguageModel.toolCall(CALCULATE, { expression: `10000*(1+${plan.rate}/100)^${years}` }),
       ],
     };
   }
   return {
     delay: '600 millis',
     parts: [
-      text(
+      ScriptedLanguageModel.text(
         `At ${plan.rate}%, $10,000 grows to $${plan.values[0]} after 10 years, $${plan.values[1]} after 20 and ` +
           `$${plan.values[2]} after 30.`,
       ),
@@ -147,7 +144,7 @@ const subagent = (plan: Plan, step: number): ScriptedLanguageModel.ScriptedTurn 
 const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
   // Side calls (chat naming) offer no tools.
   if (!request.tools.includes(CALCULATE)) {
-    return { parts: [text('Savings plans')] };
+    return { parts: [ScriptedLanguageModel.text('Savings plans')] };
   }
   const { text: current, index } = currentRequest(request);
   const step = toolResultsSince(request, index);
@@ -156,7 +153,7 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
     return subagent(plan, step);
   }
   if (current.includes('17 × 23')) {
-    return { delay: '900 millis', parts: [text('17 × 23 = 391.')] };
+    return { delay: '900 millis', parts: [ScriptedLanguageModel.text('17 × 23 = 391.')] };
   }
   if (current.includes('savings plans')) {
     const prompt = JSON.stringify(request.prompt.content);
@@ -165,10 +162,15 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
       return {
         delay: '1200 millis',
         parts: [
-          reasoning('Each plan is independent, so each can be worked out by a subagent in parallel.'),
-          text('I will hand each plan to a subagent and compare their results.'),
+          ScriptedLanguageModel.reasoning(
+            'Each plan is independent, so each can be worked out by a subagent in parallel.',
+          ),
+          ScriptedLanguageModel.text('I will hand each plan to a subagent and compare their results.'),
           ...PLANS.map((candidate) =>
-            toolCall('thread_delegate', { task: taskOf(candidate), purpose: purposeOf(candidate) }),
+            ScriptedLanguageModel.toolCall('thread_delegate', {
+              task: taskOf(candidate),
+              purpose: purposeOf(candidate),
+            }),
           ),
         ],
       };
@@ -177,13 +179,16 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
     if (pending !== -1) {
       return {
         delay: '500 millis',
-        parts: [text(`Waiting for ${PLANS[pending].name}.`), toolCall('thread_wait', { thread: threads[pending] })],
+        parts: [
+          ScriptedLanguageModel.text(`Waiting for ${PLANS[pending].name}.`),
+          ScriptedLanguageModel.toolCall('thread_wait', { thread: threads[pending] }),
+        ],
       };
     }
     return {
       delay: '1500 millis',
       parts: [
-        text(
+        ScriptedLanguageModel.text(
           [
             'After 30 years, $10,000 grows to:',
             '',
@@ -201,7 +206,7 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
       ],
     };
   }
-  return { parts: [text('Done.')] };
+  return { parts: [ScriptedLanguageModel.text('Done.')] };
 };
 
 const decorators = createDecorators({
@@ -463,7 +468,7 @@ export const Columns: StoryObj = {
   render: () => <ThreadColumns />,
   decorators: createDecorators({
     skills: [MarkdownSkill.key, PlanningSkill.key],
-    scriptedModels: { scripts: { launchKit: composerScript(Scripts.launchKit) }, select: 'launchKit' },
+    scriptedModels: { scenes: { launchKit: Scripts.launchKit }, select: 'launchKit' },
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   tags: ['!test'],
