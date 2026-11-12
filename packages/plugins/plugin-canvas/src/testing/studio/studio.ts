@@ -203,7 +203,7 @@ const promoteCards = (content: ContentMap, model: StudioModel): void => {
         ...node,
         type: card.kind ?? 'card',
         label: labelOf(record.node) ?? card.title,
-        icon: { name: card.icon },
+        icon: { type: card.icon },
         ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
         ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
         ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),

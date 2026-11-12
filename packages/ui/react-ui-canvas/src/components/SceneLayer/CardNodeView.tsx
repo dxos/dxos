@@ -23,7 +23,7 @@ import {
   pairLayout,
 } from '@dxos/react-ui-form';
 import * as Icon from '@dxos/react-ui/Icon';
-import { type NodeBase, nodeBase } from '@dxos/scene';
+import { type NodeBase, STYLE_HUES, nodeBase } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { type NodeViewProps } from '../../model/index.ts';
@@ -39,10 +39,11 @@ export type IconWeight = (typeof ICON_WEIGHTS)[number];
  * a form layout names the fields it draws, so a pair belongs in a pair (as `LinkEnds` does for a link's markers).
  */
 export const IconSpec = Schema.Struct({
-  /** A Phosphor name (`rocket`); the picker offers the whole catalogue. */
-  name: Schema.optional(Schema.String.annotate({ title: 'Icon' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
+  /** Which glyph: a Phosphor name (`rocket`), from a picker over the whole catalogue. Not `name`, which under the
+   * group's own "Icon" heading would read as "Icon / Icon". */
+  type: Schema.optional(Schema.String.annotate({ title: 'Type' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
   weight: Schema.optional(Schema.Literals(ICON_WEIGHTS).annotate({ title: 'Weight' })),
-}).pipe(FormLayoutAnnotation.set({ [DEFAULT_LAYOUT_NAME]: pairLayout('name', 'weight') }));
+}).pipe(FormLayoutAnnotation.set({ [DEFAULT_LAYOUT_NAME]: pairLayout('type', 'weight') }));
 export type IconSpec = Schema.Schema.Type<typeof IconSpec>;
 
 /**
@@ -77,6 +78,12 @@ export type IconNode = Schema.Schema.Type<typeof IconNode>;
 
 export const isIconNode = (node: NodeBase): node is IconNode => node.type === 'icon';
 
+/** The hue a node's style names, which an icon draws its glyph in (`STYLE_HUES` are theme hues). */
+const hueOf = (node: NodeViewProps['node']): Icon.IconHue | undefined => {
+  const hue = node.style?.hue;
+  return STYLE_HUES.find((value) => value === hue);
+};
+
 /** A string field of a value, when it has one. */
 const stringAt = (value: unknown, field: string): string | undefined => {
   const found = typeof value === 'object' && value !== null ? Reflect.get(value, field) : undefined;
@@ -87,14 +94,14 @@ const stringAt = (value: unknown, field: string): string | undefined => {
 export const iconOf = (node: NodeViewProps['node']): IconSpec | undefined => {
   const icon: unknown = Reflect.get(node, 'icon');
   if (typeof icon === 'string') {
-    return { name: icon };
+    return { type: icon };
   }
-  const name = stringAt(icon, 'name');
-  if (name === undefined) {
+  const type = stringAt(icon, 'type');
+  if (type === undefined) {
     return undefined;
   }
   const weight = ICON_WEIGHTS.find((value) => value === stringAt(icon, 'weight'));
-  return { name, ...(weight ? { weight } : {}) };
+  return { type, ...(weight ? { weight } : {}) };
 };
 
 /** A node's text field, which only a type declaring it has. */
@@ -104,8 +111,8 @@ export const textOf = (node: NodeViewProps['node'], field: string): string | und
 };
 
 /** The symbol the icon component takes; a name that already names a set and weight is passed through. */
-export const iconSymbol = ({ name, weight }: IconSpec): string | undefined =>
-  name === undefined ? undefined : name.includes('--') ? name : `ph--${name}--${weight ?? 'regular'}`;
+export const iconSymbol = ({ type, weight }: IconSpec): string | undefined =>
+  type === undefined ? undefined : type.includes('--') ? type : `ph--${type}--${weight ?? 'regular'}`;
 
 export type CardFrameProps = PropsWithChildren<{
   node: NodeViewProps['node'];
@@ -131,7 +138,7 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
     <div className={mx('flex flex-col size-full gap-2 p-3 overflow-hidden', classNames)} data-part='card'>
       {(symbol || label !== undefined) && (
         <div className='flex items-center gap-2 shrink-0' data-part='card-header'>
-          {symbol && <Icon.Icon icon={symbol} size='lg' classNames='shrink-0' />}
+          {symbol && <Icon.Icon icon={symbol} size='lg' hue={hueOf(node)} classNames='shrink-0' />}
           {label !== undefined && (
             <TextPart part='label' text={label} editing={editing} classNames='grow truncate'>
               {label}
@@ -175,7 +182,7 @@ export const IconNodeView = ({ node, editing }: NodeViewProps) => {
   const label = textOf(node, 'label');
   return (
     <div className='dx-cover flex flex-col items-center justify-center gap-1 overflow-hidden' data-part='icon'>
-      {symbol && <Icon.Icon icon={symbol} classNames='w-[70%] h-[70%] min-w-0' />}
+      {symbol && <Icon.Icon icon={symbol} hue={hueOf(node)} classNames='w-[70%] h-[70%] min-w-0' />}
       {label !== undefined && label.length > 0 && (
         <TextPart part='label' text={label} editing={editing} classNames='shrink-0 text-xs truncate max-w-full'>
           {label}

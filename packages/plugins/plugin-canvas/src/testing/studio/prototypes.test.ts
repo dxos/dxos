@@ -18,6 +18,7 @@ import {
   iconPrototype,
   kindNodeDef,
 } from '@dxos/react-ui-canvas';
+import { MAJOR_GRID_RATIO } from '@dxos/scene';
 
 import { feedCardSpec } from './FeedCard.tsx';
 import { spaceGraphSpec } from './SpaceGraph.tsx';
@@ -50,12 +51,19 @@ describe('core prototypes', () => {
     expect(registry()['card'].parts?.map(({ field }) => field)).toEqual(['label', 'body', 'footer']);
   });
 
-  test('every default size is in nominal units, not scene pixels', ({ expect }) => {
-    // One unit is the major grid cell (48px), so a size in the hundreds would drop a shape the size of a screen.
-    for (const [type, def] of Object.entries(registry())) {
-      expect({ type, ...def.defaultSize }).toMatchObject({ type });
-      expect(def.defaultSize.width).toBeLessThanOrEqual(16);
-      expect(def.defaultSize.height).toBeLessThanOrEqual(16);
+  test('every default size is in nominal units, and a whole number of minor ones', ({ expect }) => {
+    // One nominal unit is the major grid cell (48px), so a size in the hundreds would drop a shape the size of a
+    // screen; and a shape whose default is not a whole number of minor units (12px) lands off the grid it is
+    // dropped on, which is `MAJOR_GRID_RATIO` (4) times the nominal unit.
+    for (const [type, { defaultSize }] of Object.entries(registry())) {
+      for (const length of [defaultSize.width, defaultSize.height]) {
+        expect({ type, length, minor: length * MAJOR_GRID_RATIO }).toMatchObject({
+          type,
+          length: expect.any(Number),
+          minor: Math.round(length * MAJOR_GRID_RATIO),
+        });
+        expect(length).toBeLessThanOrEqual(16);
+      }
     }
   });
 

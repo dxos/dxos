@@ -67,7 +67,7 @@ describe('studio deck slides on a canvas', () => {
     const cards = nodes.filter((node) => node.type === 'card');
     expect(cards).toHaveLength(Object.keys(model.nodes).length);
     // Every card carries the icon the DSL could not say, as a glyph the frame can draw at a weight.
-    expect(cards.every((card) => typeof iconOf(card)?.name === 'string')).toBe(true);
+    expect(cards.every((card) => typeof iconOf(card)?.type === 'string')).toBe(true);
     // Every link survived as a link bound to two nodes, captions included.
     expect(Object.keys(root.links)).toHaveLength(model.edges.length);
     expect(report?.routed).toBe(routedEdges(model));
