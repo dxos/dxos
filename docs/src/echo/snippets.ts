@@ -185,11 +185,11 @@ const PROJECT_PATHS: Record<string, string> = {
   '../halo-tutorial/': 'src/',
 };
 
-/** The file `file` lives in, in the reader's project; undefined for a snippet outside the apps. */
+/** The file `file` lives in, in the reader's project; undefined for a snippet outside a project the reader builds. */
 export const snippetProjectPath = (file: string): string | undefined => {
   const [path] = findSource(file);
   const root = PROJECTS.find((dir) => path.startsWith(dir));
-  return root === undefined ? undefined : `${PROJECT_PATHS[root]}${path.slice(root.length)}`;
+  return root === undefined || !(root in PROJECT_PATHS) ? undefined : `${PROJECT_PATHS[root]}${path.slice(root.length)}`;
 };
 
 const REGION_MARKER = /^[ \t]*\/\/ #(end)?region.*\n/gm;

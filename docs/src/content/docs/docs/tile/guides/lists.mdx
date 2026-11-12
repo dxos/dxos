@@ -39,7 +39,7 @@ items, so the rows always follow the order you hold:
 `Tree` reads its rows from a model. `createStaticTreeModel` makes one over data you already hold, given how to find an
 item's children and what to show for it:
 
-<Snippet file="tile-guide-lists" region="data" lang="ts" />
+<Snippet file="tile-guide-lists" region="data" lang="tsx" />
 
 The model keeps each row's open and current state in an atom, so the tree needs a registry from
 `@effect/atom-react` above it: wrap your app in `RegistryProvider`. Open a row or select it, and the tree calls
