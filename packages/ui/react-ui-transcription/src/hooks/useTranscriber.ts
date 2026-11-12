@@ -2,38 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import { type Transcriber } from '@dxos/pipeline-transcription';
 
 import { type CreateTranscriberOptions, createTranscriber } from '../capture/index.ts';
 
 /**
- * Records audio while the user is speaking and transcribes it after they pause. Builds a
- * {@link Transcriber} directly from {@link createTranscriber} (no app-framework capability needed,
- * since the browser construction lives in this package); returns `undefined` until a track and
- * `onSegments` handler are supplied.
+ * Transcribes a track live while started. Builds a {@link Transcriber} directly from {@link createTranscriber} (no
+ * app-framework capability needed, since the browser construction lives in this package); returns `undefined` until a
+ * track, a join function and an `onSegments` handler are supplied.
  */
 export const useTranscriber = ({
   audioStreamTrack,
-  recorderConfig,
-  transcriberConfig,
-  transcribe,
+  join,
   onSegments,
+  onEnded,
 }: Partial<CreateTranscriberOptions>): Transcriber | undefined => {
+  // Read through a ref, so a new `onEnded` closure does not rebuild (and so restart) the transcriber.
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
   const transcriber = useMemo<Transcriber | undefined>(() => {
-    if (!audioStreamTrack || !onSegments) {
+    if (!audioStreamTrack || !join || !onSegments) {
       return undefined;
     }
 
-    return createTranscriber({
-      audioStreamTrack,
-      recorderConfig,
-      transcriberConfig,
-      transcribe,
-      onSegments,
-    });
-  }, [audioStreamTrack, recorderConfig, transcriberConfig, transcribe, onSegments]);
+    return createTranscriber({ audioStreamTrack, join, onSegments, onEnded: (reason) => onEndedRef.current?.(reason) });
+  }, [audioStreamTrack, join, onSegments]);
 
   useEffect(() => {
     return () => {

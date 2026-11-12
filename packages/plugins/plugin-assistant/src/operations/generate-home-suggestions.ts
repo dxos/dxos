@@ -5,6 +5,7 @@
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
@@ -45,8 +46,9 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
         const { db } = yield* Database.Service;
         const spaceId = db.spaceId;
 
-        const cache = yield* Capabilities.getAtomValue(AssistantCapabilities.HomeSuggestionsCache);
-        const entry = cache[spaceId];
+        // The cache is per-client UI state; a host without it (EDGE) generates on every call.
+        const cache = yield* Capabilities.getAtomValueOption(AssistantCapabilities.HomeSuggestionsCache);
+        const entry = Option.getOrUndefined(cache)?.[spaceId];
         const age = entry ? Date.now() - entry.generatedAt : Infinity;
         if (entry && age < MIN_REFRESH_MS) {
           return { prompts: [...entry.prompts] };
@@ -103,7 +105,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.GenerateHomeSugge
         const prompts = yield* generateSuggestions(items);
         const validPrompts = prompts.map((prompt) => prompt.trim()).filter((prompt) => prompt.length > 0);
 
-        if (validPrompts.length > 0) {
+        if (validPrompts.length > 0 && Option.isSome(cache)) {
           yield* Capabilities.updateAtomValue(AssistantCapabilities.HomeSuggestionsCache, (current) => ({
             ...current,
             [spaceId]: { generatedAt: Date.now(), prompts: validPrompts, fingerprint },

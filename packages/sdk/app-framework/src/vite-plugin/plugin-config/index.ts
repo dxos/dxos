@@ -214,7 +214,8 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
     },
     async load(id) {
       const file = id.split('?')[0];
-      if (!CONFIG_FILE.test(file)) {
+      // `?raw` asks for the file's text, which Vite's own loader serves.
+      if (!CONFIG_FILE.test(file) || new URLSearchParams(id.split('?')[1] ?? '').has('raw')) {
         return null;
       }
 
@@ -271,6 +272,10 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
           return specifier;
         }
         if (this.environment.mode !== 'build') {
+          // A package the dev server leaves external, such as a shared adapter, stays bare for the host's import map.
+          if (!moduleFile.startsWith('/')) {
+            return moduleFile;
+          }
           const url = `/@fs${moduleFile}`;
           // A static import, so the dev server's hot-module transform finds the body and makes it hot-replaceable.
           if (specifier.startsWith('.') || specifier.startsWith('#')) {

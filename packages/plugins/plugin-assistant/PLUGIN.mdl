@@ -798,6 +798,41 @@ decision D-22: The thread can show the estimated token count of each block in a 
   affects: [F-9.1, F-9.2, F-9.3, QA-6]
 ```
 
+```mdl
+decision D-23: plugin-assistant's operations must not require an atom registry; EDGE hosts do not provide one.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+```
+
+```mdl
+decision D-24: CreateChat, BindChatContext and RunPromptInNewChat pass the atom registry to the context binder only when one is contributed; without one the binder uses a registry of its own. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CreateChat, RunPromptInNewChat]
+  why: The registry only carries the binder's atoms to UI subscribers, and a headless host has none.
+  rejected:
+    - Contribute an atom registry on the EDGE hosts: the registry is a UI concept, and [D-23] keeps it off them.
+```
+
+```mdl
+decision D-25: GenerateHomeSuggestions reads and writes its suggestions cache only when both the atom registry and the cache are contributed; without them it generates prompts on every call. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The cache is per-client UI state, so a host without it has nothing to reuse.
+```
+
+```mdl
+decision D-26: RunPromptInNewChat binds context through the database it is given rather than looking the space up through the client. Fills in [D-23].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RunPromptInNewChat]
+  why: EDGE hosts contribute no client either, and the handler already provides that database.
+```
+
 ---
 
 ## Appendix: Extension Definitions

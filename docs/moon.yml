@@ -17,14 +17,24 @@ tasks:
       - typedoc
     inputs:
       - astro.config.ts
+      - SPEC.mdl
       - '@group(sources)'
     outputs:
       - .astro
       - dist
   prebuild:
     command: pnpm exec astro sync
+    # `astro sync` loads astro.config.ts, whose Vite plugins resolve to these packages' dist.
+    deps:
+      - app-framework:build
+      - ui-theme:build
+      - vite-plugin-icons:build
+      - vite-plugin-import-source:build
+      - vite-plugin-log:build
+      - vite-plugin-module-url:build
     inputs:
       - astro.config.ts
+      - SPEC.mdl
       - '@group(sources)'
     outputs:
       - .astro
@@ -38,8 +48,12 @@ tasks:
     preset: server
   typedoc:
     command: pnpm run --silent typedoc
+    # collect-typedoc.sh also copies packages docs does not depend on.
     deps:
       - ^:typedoc
+      - echo-solid:typedoc
+      - halo:typedoc
+      - halo-react:typedoc
     inputs:
       - scripts/collect-typedoc.sh
     outputs:

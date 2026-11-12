@@ -8,6 +8,8 @@ export default defineConfig({
   entry: {
     'index': 'src/index.ts',
     'resolvers': 'src/resolvers/index.ts',
+    // Apart from the `resolvers` barrel, so a runtime that only talks to Anthropic does not bundle every other provider.
+    'anthropic': 'src/resolvers/anthropic/index.ts',
     // Its own entry, apart from the `resolvers` barrel: the adapter itself depends on nothing but
     // `effect`, so a consumer that only needs an OpenAI/Ollama chat-completions language model
     // should not pull in the DXN-keyed resolver machinery the barrel brings with it.

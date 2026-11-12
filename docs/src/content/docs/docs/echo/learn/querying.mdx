@@ -1,0 +1,65 @@
+---
+title: Querying
+description: Select the tutorial app's records with Filter and Query, by type, sorted, searched, and live.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Snippet from '../../../../../components/Snippet.astro';
+import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
+
+By the end of this page the app will list its records sorted, search them, and find the people who work at an organization.
+
+## Background
+
+A query has two parts. A **filter** says which objects match: by type, by field values, by text. A **query** wraps the filter and adds what to do with the matches: their order, a limit, or a step to the objects they reference or that reference them.
+
+A query is a value. Building one runs nothing; `db.query(query)` runs it against the database on the device, so a query never waits on the network. `run` returns the matches once. `subscribe` returns them, then runs again whenever an object that could match changes, whichever peer changed it.
+
+The client returns typed objects only for the types it knows. The app passes its types to the client when it starts, in [Installation](/docs/echo/learn/installation/).
+
+[The Filter guide](/docs/echo/api/filter/) lists every comparison and combinator.
+
+Each query goes in the component that runs it: the lists, search and count in `Contacts.tsx`, and an organization's people in `RecordForm.tsx`.
+
+## Steps
+
+<Steps>
+
+1. **List each type, sorted.** `Filter.type` selects the objects of a type, and `orderBy` sorts them by a field. The
+   app's lists use these.
+
+   <Snippet file="echo-tutorial/app/Contacts" region="by-type" lang="tsx" />
+
+2. **Search text.** `Filter.text` matches objects whose text contains the words, whatever their type. The space indexes
+   text as objects are written. The search box uses this.
+
+   <Snippet file="echo-tutorial/app/Contacts" region="search" lang="tsx" />
+
+3. **Follow references backwards.** `referencedBy` steps from an organization to the people whose `employer` points at
+   it.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="employees" lang="tsx" />
+
+4. **Run a query.** `db.query(query).run()` returns the matches once, typed, so each result is a `Person`. An
+   organization's form lists its people with this.
+
+   <Snippet file="echo-tutorial/app/RecordForm" region="run" lang="tsx" />
+
+5. **Keep a query live.** `subscribe` calls back with the current results each time they change, and returns a function
+   that stops it. `fire: true` calls back once at the start too. The toolbar's count of people uses this.
+
+   <Snippet file="echo-tutorial/app/Contacts" region="live" lang="tsx" />
+
+   The callback runs again whenever a person is added, changed or removed, on this peer or another. [Mutating objects](/docs/echo/learn/mutating-objects/) makes those changes.
+
+</Steps>
+
+## Try it
+
+Type in the search box to search every record. Choose Organizations and open one to see its people. The table button shows the records of the chosen type with one column per field. Each list is a live query, which the next page puts to work.
+
+<TutorialEmbed stage="queries" />
+
+## What you can do now
+
+You can select records by type, sort them, search their text, follow references backwards, and keep a query running as the results change.

@@ -10,6 +10,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import { Config } from '@dxos/react-client';
 import { IndexKind_Kind } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
@@ -53,26 +54,28 @@ type StoryDecoratorsOptions = {
  */
 export const createStoryDecorators = ({ enableVectorIndex = false }: StoryDecoratorsOptions = {}): Decorator[] => [
   withLayout({ layout: 'column' }),
-  withPluginManager({
-    plugins: [
-      ...CorePlugins.make(),
-      StorybookPlugin.make({}),
-      ClientPlugin.make({
-        types: [TestItem, Person.Person, Organization.Organization],
-        onClientInitialized: ({ client }) =>
-          Effect.gen(function* () {
-            const { defaultSpace } = yield* initializeIdentity(client);
-            if (enableVectorIndex) {
-              yield* enableQueryIndexes(client.services.services);
-            }
-            yield* Effect.promise(() => seedTestData(defaultSpace));
-          }),
-      }),
-      PreviewPlugin.make(),
-      TranscriptionPlugin.make(),
-    ],
-    // setupEvents (not fireEvents) so capabilities activate during app setup, before the always-mounted
-    // driver renders: SetupSettings registers the session/settings/status capabilities it reads,
-    // SetupAppGraph the graph + transcriber contributions.
+  withPluginManager(({ parameters }) => {
+    // A story sets `parameters.edgeUrl` to transcribe live: the RealtimeKit join goes through that EDGE's `/calls`.
+    const edgeUrl = typeof parameters.edgeUrl === 'string' ? parameters.edgeUrl : undefined;
+    return {
+      plugins: [
+        ...CorePlugins.make(),
+        StorybookPlugin.make({}),
+        ClientPlugin.make({
+          types: [TestItem, Person.Person, Organization.Organization],
+          config: edgeUrl ? new Config({ runtime: { services: { edge: { url: edgeUrl } } } }) : undefined,
+          onClientInitialized: ({ client }) =>
+            Effect.gen(function* () {
+              const { defaultSpace } = yield* initializeIdentity(client);
+              if (enableVectorIndex) {
+                yield* enableQueryIndexes(client.services.services);
+              }
+              yield* Effect.promise(() => seedTestData(defaultSpace));
+            }),
+        }),
+        PreviewPlugin.make(),
+        TranscriptionPlugin.make(),
+      ],
+    };
   }),
 ];

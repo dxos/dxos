@@ -177,6 +177,22 @@ describe('move-task', () => {
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
   );
 
+  it.effect('derives the set from the task when `taskSet` is omitted, as the project skill documents', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      const [parent, child, grandchild] = yield* seedTasks(taskSet, ['a', 'b', 'c']);
+
+      yield* moveTask.handler({ task: Ref.make(child), parentTask: Ref.make(parent) });
+      // A sub-task's set is found through its root, so a nested move works too.
+      yield* moveTask.handler({ task: Ref.make(grandchild), parentTask: Ref.make(child) });
+
+      expect(Task.parentTaskId(child)).toBe(parent.id);
+      expect(Task.parentTaskId(grandchild)).toBe(child.id);
+      expect(taskSet.tasks.map(Task.refEntityId)).toEqual([parent.id]);
+    }).pipe(Effect.provide(TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }))),
+  );
+
   it.effect('rejects a task that is not a member of the given set, leaving both sets untouched', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));

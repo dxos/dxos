@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
+
+import { interpretAsDocumentId } from './automerge-url.ts';
 
 const URL_PREFIX = 'automerge:';
 

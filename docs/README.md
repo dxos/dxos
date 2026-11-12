@@ -1,7 +1,7 @@
 # DXOS Docs
 
 - Current focus is around building a Composer plugin
-- later the docs for ECHO, HALO, App Framework, etc. should evolve independently
+- later the docs for ECHO, HALO, PLEX, etc. should evolve independently
 - as more content is added, use https://diataxis.fr/ to guide structure
 
 ## Starlight Starter Kit: Basics

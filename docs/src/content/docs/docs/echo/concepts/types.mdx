@@ -1,0 +1,71 @@
+---
+title: Types and schema
+description: What a type is, how ECHO names it, and how it changes over time.
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+A type describes the fields an object or relation has, and ECHO uses it to check every write and to tell other peers
+what the data means.
+
+## Model
+
+A type is an [Effect Schema](https://effect.website/docs/schema/introduction/) with a **typename** and a **version**.
+Together they make the type's DXN, `dxn:<typename>:<version>`, and every object stores the DXN of its type.
+[Defining types](/docs/echo/learn/defining-types/) builds the Person, Organization and Event types that the snippets on
+this page use.
+
+<Snippet file="concept-types" region="identity" />
+
+There are two kinds of type:
+
+- An **object type**, made with `Type.makeObject`, describes a record such as a person.
+- A **relation type**, made with `Type.makeRelation`, describes an entity that joins a source and a target, and can carry
+  fields of its own. [Objects and relations](/docs/echo/concepts/objects-relations/) shows when to use one.
+
+<Snippet file="works-at" region="relation" />
+
+**Annotations** add what the schema alone does not say: which field labels an object, which icon it has, how a form
+orders its fields. ECHO reads some of them itself; `Obj.getLabel` returns the field the label annotation names. Tools
+such as Composer read the rest. [Annotation](/docs/echo/api/annotation/) lists them.
+
+<Snippet file="concept-types" region="annotations" />
+
+## Behavior
+
+- A database accepts only objects of types it knows. Register types with the client, when you make it or later; types
+  registered there apply to every space.
+
+  <Snippet file="concept-types" region="register" />
+
+- A type converts to and from [JSON Schema](https://json-schema.org/), so a type can come from a form, an agent or
+  another system as well as from code.
+
+  <Snippet file="concept-types" region="json-schema" />
+
+- `db.addType` stores a type in the space, as an object of its own, so it replicates to the other members like data.
+  Fields of a stored type can be added, changed and removed at runtime.
+
+  <Snippet file="concept-types" region="fields" />
+
+### Versions and migrations
+
+A change to a type that old data does not fit, such as a field that becomes an array, is a new version of the type. A
+**migration** moves objects from one version to the next:
+
+- `Migration.define` reads an object of the old version and returns the fields of the new one.
+- `Migration.defineRename` gives a type a new typename and points every reference at it.
+- `Migration.defineContent` upgrades a content format that an object carries in a field, such as a drawing's scene,
+  without changing the type's version.
+
+<Snippet file="concept-types" region="migration" />
+
+A plugin contributes its migrations to Composer, which runs them on every space once the plugin is active. The
+[API reference](/docs/additional-resources/api-reference/) covers each kind.
+
+## Limits
+
+- Objects of two versions of one type do not merge. Peers must run the same migration before they edit the same
+  objects.
+- The docs do not yet say how to run migrations outside a Composer plugin.
+- Adding a field to a stored type is safe; changing or removing one leaves the old values in objects already written.

@@ -708,6 +708,11 @@ feat F-5: Operations are exposed and callable
     holds, served per invocation through `InvocationScope.services`, and `Operation.Service`, which
     runs the bundle's own operations in process and re-enters EDGE's router for any other through
     `InvocationScope.operations`.
+
+  req F-5.8: An invocation runs a published bundle only where the bundle's plugin is in scope: the
+    plugins the space names on its own `properties`, else the globally enabled set, else unscoped
+    ([D-80], [D-81]). A plugin outside it is not routed, and the key falls back to operation-service
+    as any other unroutable key does.
 ```
 
 ```mdl
@@ -736,8 +741,9 @@ feat F-6: compute-service routes invocations to published plugins
     a bundle that does not handle the key, and a bundle whose protocol version it cannot serve
     ([F-6.9]).
 
-  req F-6.7: operation-service is removed once every plugin in its static list is published, and no
-    caller binds `OPERATION_SERVICE`.
+  req F-6.7: operation-service is removed entirely, and no caller binds `OPERATION_SERVICE`: every
+    plugin in its static list is published, and the base types its BasePlugin registers come from
+    plugin-ontology's bundle ([D-87]).
 
   req F-6.8: The KV operation catalog is rebuilt from bundle catalogs on every upload or revoke, not
     by a cron that activates plugins.
@@ -862,7 +868,7 @@ requires; where the test expects the opposite today, the table says so ([D-62]).
 | T-15     | edge       | `edge` `plugin-store.node.test.ts` › EDGE plugins: a plugin published with the dx CLI › serves its operation once published               | Skipped unless a `dx` binary is installed or named by `DX_CLI`.                            |
 | T-16     | edge       | `edge` `plugin-seed.node.test.ts` › first-party plugins seeded into the registry (2 tests)                                                | Skipped unless first-party bundles are available; `plugins-mode.yml` provides them.        |
 | T-17     | edge       | `edge` `operation-fallbacks.node.test.ts` › operations without a bundle in plugins mode (2 tests)                                         | Same condition as T-16.                                                                    |
-| T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes with operation-service; fails in plugins routing by [D-41] until the case is resolved. |
+| T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes: plugin-space's bundle answers `{ groups: [] }` without plugin-inbox's rule ([D-88]). |
 | T-19     | edge       | `plugins-mode.yml`: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins`                                                               | Advisory; per-test failures are recorded in edge's operation-fallbacks plan.               |
 | T-20     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B invokes A's operation                                      | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
 | T-21     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B uses A's type                                              | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
@@ -1026,10 +1032,10 @@ scenario T-17: Every operation that falls back to operation-service is inventori
 ```
 
 ```mdl
-scenario T-18: An operation that reads another plugin's capability answers alike in both routings
+scenario T-18: An operation that reads another plugin's capability sees only its own plugin's on EDGE
   given: three Persons in a space, two of them with emails that differ only in case
-  when: `space.findDuplicates` runs on Person
-  then: it returns one group of those two, by the identity rule plugin-inbox contributes, whether operation-service or plugin-space's bundle runs it
+  when: `space.findDuplicates` runs on Person in plugin-space's bundle, alone on EDGE
+  then: it returns `{ groups: [] }`, since the identity rule plugin-inbox contributes does not reach the bundle ([D-88])
   tags: [edge]
 ```
 
@@ -1117,6 +1123,13 @@ TODO: an override per DXN.
   opening a space root. Whether a manifest records the SDK version it was built from, and
   compute-service refuses a bundle the data plane cannot serve, or the data service protocol is
   versioned instead.
+
+- **Other plugins' capabilities (answered, [D-88]).** A plugin reading other plugins' capabilities
+  — skills, subject contexts, schemas, hooks, delegation strategies, model resolvers, operation
+  handlers — is out of scope for EDGE for now. A bundle sees only what its own plugin contributes,
+  so hooks do not reach an agent turn on EDGE, no other plugin's contributions reach a bundle, and
+  plugin-agent's `ensureReplySent` does not find other plugins' operation handlers there. These were
+  the open questions of [D-85].
 
 ## Changelog
 
@@ -1833,4 +1846,93 @@ decision D-79: `OPERATION_SERVICE_PLUGINS` decides both halves of a key: the plu
   for: user:dmaretskyi
   affects: [F-4.2, F-5.1, F-6.6]
   why: Reviewing [D-76] showed [F-6.6] still promised a published bundle always wins, which the holdback list contradicts, and that nothing said which channel enumeration reads. The space-scoped case needs a space id on the enumeration RPC and is not worth it while the held set is shrinking to nothing.
+decision D-80: A space names the plugins it runs on its OWN `properties`: `plugins`, a map of plugin NSID to the semver range the space accepts, a system field of `org.dxos.type.spaceProperties`. EDGE reads it from the space, with one index query of the type (`DataService.execQuery`, as mcp-space-service already reads properties) — the indexer covers every space, so this costs a type lookup rather than opening the space's Automerge document. registry-service stores nothing about which plugins anyone runs. Fills in [D-78].
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1, F-5.8]
+  why: Which plugins a space runs decides which types exist, which operations resolve and which version of each runs — the space's own structure, not a user preference, and not registry-service's to hold. One record, in the space, so EDGE and the members cannot disagree and nothing has to be published or kept in step. The range rather than a pin lets a patch release reach every space without a write to each one, and it is what `channelOf` needs: until now every space resolved to `latest`. Rejected: a projection published to registry-service's D1, which puts user state in the registry and can go stale against the space; a boolean enablement map, which carries no version and so cannot answer which bundle to load; storing it in the space's `AppSettings` object, which files core structure as a setting.
+```
+
+```mdl
+decision D-81: Scope precedence is the space's list, else `EDGE_CONFIG.plugins.enabled`, else unscoped; there is no identity scope on EDGE. A space that names nothing falls through, exactly as a space that has never been configured does — "this space runs nothing" is not expressible, since a space with no plugins can do nothing. The user's own enabled set stays in Composer (the settings space's `AppSettings`, with its device pins) and is never sent to EDGE.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-5.8]
+  why: A space states what it runs, and a member who has not enabled a plugin personally does not stop the space running it — which is what installing a plugin into a shared space means, so precedence rather than intersection. Dropping the identity scope keeps every record of who-runs-what inside a space: EDGE would otherwise need to resolve an identity to its settings space, which it cannot do (space tags are client-side metadata), and the only way to give it one was to publish a copy into registry-service. Almost every EDGE invocation carries a space, and the MCP gateway's grant carries one too, so the space-less case falls back to the deployment's own list rather than needing user state.
+```
+
+```mdl
+decision D-80: Durable operations (`Operation.Durable`, such as the agent process) are not contributed by plugins yet: compute-service registers them in its built-in process registry and hosts them in its `Process` Durable Object. Plugins may later contribute durable operations that run through the Worker Loader in a Durable Object facet. Fills in [D-8].
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-8]
+```
+
+```mdl
+decision D-81: The `agentSession.ensureChat` operation, which finds or creates an agent's chat for an MCP client's session, belongs in plugin-agent rather than in an EDGE-owned plugin, so it reaches EDGE through plugin-agent's bundle like the agent's other operations.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-82: The operation is renamed `org.dxos.operation.agent.ensureSessionChat`, plugin-agent exports the chat's foreign-key source, and compute-service's MCP sessions call the new key. Fills in [D-81].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.7]
+  why: Every other plugin-agent key is `org.dxos.operation.agent.*`, and a new key cannot collide with the EDGE-owned handler while both are deployed during the switch.
+  rejected: Keeping `org.dxos.operation.agentSession.ensureChat`, which two handlers would register at once until the EDGE-owned plugin is removed.
+```
+
+```mdl
+decision D-83: mcp-space-service lists operations, skills and types from compute-service's merged catalog rather than from operation-service's, so a plugin that runs in its bundle stays discoverable over MCP. Fills in [D-76].
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-4.2, F-5.1]
+```
+
+```mdl
+decision D-84: compute-service provides a file storage backend by default, so no plugin has to contribute one on EDGE.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.4]
+```
+
+```mdl
+decision D-85: An operation that needs other plugins' contributions — plugin-space's templates, exporters and identity specs, plugin-assistant's home suggestions — may not work on EDGE until those contributions reach a bundle. How hooks reach an agent turn on EDGE, how other plugins' contributions reach a bundle, and how plugin-agent's `ensureReplySent` finds other plugins' operation handlers stay open questions.
+  date: 2026-11-11
+  by: user:dmaretskyi
+  affects: [F-6.4, F-6.7]
+```
+
+```mdl
+decision D-86: operation-service is removed entirely.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-87: The base types operation-service's BasePlugin registers — `AccessToken`, `Cursor`, `Blob`, `Collection`, `Expando`, `SpaceProperties`, `Message`, `Organization` and `Person` — live in a new dxos plugin named plugin-ontology.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.7]
+```
+
+```mdl
+decision D-88: A plugin reading other plugins' capabilities (skills, subject contexts, schemas, hooks, delegation strategies, model resolvers, operation handlers) is out of scope for EDGE for now. This answers the open questions of [D-85]: how hooks reach an agent turn on EDGE, how other plugins' contributions reach a bundle, and how plugin-agent's `ensureReplySent` finds other plugins' operation handlers.
+  date: 2026-11-12
+  by: user:dmaretskyi
+  affects: [F-6.4]
+```
+
+```mdl
+decision D-89: T-18 and its row in the tested-flows table expect plugin-space's bundle, running alone on EDGE, to answer `space.findDuplicates` on Person with `{ groups: [] }`, no longer the group plugin-inbox's identity rule would find. Follows from [D-88].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-18]
+  why: Under [D-88] no other plugin's capability reaches a bundle on EDGE, so plugin-inbox's identity rule is absent there; edge's `plugin-isolation.node.test.ts` asserts `{ groups: [] }` for the bundle (dxos/edge#1507).
+  rejected: Keeping the cross-plugin answer as the requirement, which [D-88] puts out of scope.
 ```

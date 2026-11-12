@@ -10,16 +10,19 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as Position from '@dxos/util/Position';
 
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
 import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories.ts';
+import { SPACE_SETTINGS_ID, SPACE_SETTINGS_TYPE } from '../constants.ts';
 import { RegistryNamespace } from '../namespace.ts';
 import { PLUGINS_SEGMENT, REGISTRY_ID } from '../paths.ts';
 
@@ -53,6 +56,22 @@ export default Capability.makeModule(
     const pluginManagerAtom = yield* Capability.atom(Capabilities.PluginManager);
 
     const extensions = yield* Effect.all([
+      // The plugins panel in each space's settings section (spec D-78).
+      AppGraphBuilder.createExtension({
+        id: 'spaceSettingsPlugins',
+        url: { key: SPACE_SETTINGS_ID, kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
+        match: GraphNodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeSettingsPanel({
+              id: SPACE_SETTINGS_ID,
+              type: SPACE_SETTINGS_TYPE,
+              label: ['space-plugins.label', { ns: RegistryNamespace.key }],
+              icon: 'ph--squares-four--regular',
+              position: Position.last,
+            }),
+          ]),
+      }),
       AppGraphBuilder.createExtension({
         id: 'openRegistry',
         match: GraphNodeMatcher.whenRoot,

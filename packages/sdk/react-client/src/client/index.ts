@@ -10,5 +10,6 @@ export * from './useClient.ts';
 export * from './useClientStatus.ts';
 export * from './useConfig.ts';
 export * from './useEdgeServiceEndpoint.ts';
+export * from './useJoinTranscription.ts';
 export * from './useShell.ts';
 export * from './useStatus.ts';

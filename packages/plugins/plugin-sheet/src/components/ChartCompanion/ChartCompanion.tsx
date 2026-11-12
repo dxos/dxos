@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, SelectField, type SelectFieldOption } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PlotValue } from '@dxos/react-ui-plot';
@@ -14,13 +14,15 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Typography from '@dxos/react-ui/Typography';
+import { toLocalizedString } from '@dxos/ui-types';
 
-import { Sheet } from '#types';
+import { Sheet, type SheetCapabilities } from '#types';
 
 import { SheetNamespace } from '../../namespace.ts';
 import { ChartView } from './ChartView.tsx';
 
 const DEFAULT_RANGE = 'A1:B5';
+const UNKNOWN_CHART_ICON = 'ph--chart-bar--regular';
 
 // The list opens showing whole rows; a two-line row is 3.5rem.
 const LIST_ROW_HEIGHT = 3.5;
@@ -43,6 +45,8 @@ export type ChartCompanionProps = {
   selection?: string;
   /** Called with a chart's range when it is chosen, so the host can select it in the sheet. */
   onSelectRange?: (range: string) => void;
+  /** Every chart type, from `SheetCapabilities.ChartType`; a new chart starts as the first. */
+  chartTypes: readonly SheetCapabilities.ChartTypeContribution[];
 };
 
 /** Master-detail editor of a sheet's charts: the list of ranges above, the selected chart and its settings below. */
@@ -55,15 +59,19 @@ export const ChartCompanion = ({
   getValues,
   selection,
   onSelectRange,
+  chartTypes,
 }: ChartCompanionProps) => {
   const { t } = Hooks.useTranslation(SheetNamespace.key);
   const [selected, setSelected] = useState<string | undefined>(charts[0]?.id);
   const [editing, setEditing] = useState(false);
   const current = charts.find((chart) => chart.id === selected) ?? charts[0];
 
+  const defaultType = chartTypes[0]?.type;
   const handleAdd = useCallback(() => {
-    setSelected(onAdd({ range: selection ?? DEFAULT_RANGE, type: 'bar', header: true }));
-  }, [selection, onAdd]);
+    if (defaultType) {
+      setSelected(onAdd({ range: selection ?? DEFAULT_RANGE, type: defaultType, header: true }));
+    }
+  }, [defaultType, selection, onAdd]);
 
   const handleDelete = useCallback(() => {
     const index = charts.findIndex((chart) => chart.id === current?.id);
@@ -95,7 +103,15 @@ export const ChartCompanion = ({
     () =>
       MenuBuilder.make()
         .root({ label: ['chart-actions.label', { ns: SheetNamespace.key }] })
-        .action('add', { label: ['add-chart.label', { ns: SheetNamespace.key }], icon: 'ph--plus--regular' }, handleAdd)
+        .action(
+          'add',
+          {
+            label: ['add-chart.label', { ns: SheetNamespace.key }],
+            icon: 'ph--plus--regular',
+            disabled: !defaultType,
+          },
+          handleAdd,
+        )
         .action(
           'use-selection',
           {
@@ -118,17 +134,26 @@ export const ChartCompanion = ({
           ),
         )
         .build(),
-    [current, selection, handleAdd, handleUpdate, handleDelete],
+    [current, selection, defaultType, handleAdd, handleUpdate, handleDelete],
+  );
+
+  const typeOptions = useMemo<SelectFieldOption[]>(
+    () => chartTypes.map(({ type, label, icon }) => ({ value: type, label: toLocalizedString(label, t), icon })),
+    [chartTypes, t],
   );
 
   const items = useMemo(
     () =>
-      charts.map((chart) => ({
-        value: chart.id,
-        label: chart.name || chart.range,
-        description: t('chart-description.label', { range: chart.range, type: t(`chart-type.${chart.type}.label`) }),
-      })),
-    [charts, t],
+      charts.map((chart) => {
+        const option = typeOptions.find((option) => option.value === chart.type);
+        return {
+          value: chart.id,
+          label: chart.name || chart.range,
+          description: t('chart-description.label', { range: chart.range, type: option?.label ?? chart.type }),
+          icon: option?.icon ?? UNKNOWN_CHART_ICON,
+        };
+      }),
+    [charts, typeOptions, t],
   );
 
   return (
@@ -150,7 +175,7 @@ export const ChartCompanion = ({
                   <Listbox.Content aria-label={t('chart-list.label')}>
                     {items.map((item) => (
                       <Listbox.Item key={item.value} id={item.value} data-testid='chart-companion.item'>
-                        <Listbox.ItemIcon icon={chartIcon(charts.find((chart) => chart.id === item.value)?.type)} />
+                        <Listbox.ItemIcon icon={item.icon} />
                         <Listbox.ItemText />
                         <Listbox.ItemDescription />
                         <SystemButton.Edit
@@ -177,6 +202,8 @@ export const ChartCompanion = ({
                 chart={current}
                 editing={editing}
                 getValues={getValues}
+                chartTypes={chartTypes}
+                typeOptions={typeOptions}
                 onUpdate={(values) => {
                   handleUpdate(values);
                   setEditing(false);
@@ -195,18 +222,34 @@ export const ChartCompanion = ({
 
 ChartCompanion.displayName = 'ChartCompanion';
 
-type ChartDetailProps = Pick<ChartCompanionProps, 'getValues'> & {
+type ChartDetailProps = Pick<ChartCompanionProps, 'getValues' | 'chartTypes'> & {
   chart: ChartItem;
+  typeOptions: SelectFieldOption[];
   editing: boolean;
   onUpdate: (values: Partial<Sheet.ChartProperties>) => void;
   onCancel: () => void;
 };
 
 /** The selected chart, or its settings form while editing. */
-const ChartDetail = ({ chart, editing, getValues, onUpdate, onCancel }: ChartDetailProps) => {
+const ChartDetail = ({ chart, editing, getValues, chartTypes, typeOptions, onUpdate, onCancel }: ChartDetailProps) => {
   const { id: _id, ...values } = chart;
+  const fieldMap = useMemo<FormFieldMap>(
+    () => ({
+      type: (props) => (
+        <Form.Field
+          path={props.jsonPath}
+          label={props.label}
+          readonly={props.readonly}
+          presentation={props.presentation}
+        >
+          <SelectField {...props} options={typeOptions} />
+        </Form.Field>
+      ),
+    }),
+    [typeOptions],
+  );
   return editing ? (
-    <Form.Root schema={Sheet.ChartProperties} values={values} onSave={onUpdate} onCancel={onCancel}>
+    <Form.Root schema={Sheet.ChartProperties} values={values} fieldMap={fieldMap} onSave={onUpdate} onCancel={onCancel}>
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Fields />
@@ -215,28 +258,6 @@ const ChartDetail = ({ chart, editing, getValues, onUpdate, onCancel }: ChartDet
       </Form.Viewport>
     </Form.Root>
   ) : (
-    <ChartView chart={values} getValues={getValues} onUpdate={onUpdate} />
+    <ChartView chart={values} getValues={getValues} onUpdate={onUpdate} chartTypes={chartTypes} />
   );
-};
-
-const chartIcon = (type?: Sheet.ChartType) => {
-  switch (type) {
-    case 'pie':
-      return 'ph--chart-pie--regular';
-    case 'xy':
-      return 'ph--chart-line--regular';
-    case 'scatter':
-      return 'ph--chart-scatter--regular';
-    case 'heatmap':
-      return 'ph--squares-four--regular';
-    case 'radar':
-      return 'ph--chart-polar--regular';
-    case 'map':
-      return 'ph--globe-hemisphere-west--regular';
-    case 'timeline':
-      return 'ph--line-segments--regular';
-    case 'bar':
-    default:
-      return 'ph--chart-bar--regular';
-  }
 };

@@ -252,11 +252,11 @@ export const labelEvalCall =
     };
   };
 
-const operationNames = ({ name, definition }: SandboxOperation): string[] => [
-  name,
-  camelCase(name),
-  ...(definition ? [String(definition.meta.key)] : []),
-];
+const operationNames = ({ name, definition }: SandboxOperation): string[] => {
+  const key = definition === undefined ? undefined : String(definition.meta.key);
+  // The key with and without `dxn:`, as the plain dialect binds `ops` under both.
+  return [name, camelCase(name), ...(key === undefined ? [] : [...new Set([key, key.replace(/^dxn:/, '')])])];
+};
 
 /** The `code` argument of an eval call. */
 const evalCode = (input: string): string => {

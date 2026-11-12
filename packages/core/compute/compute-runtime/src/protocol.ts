@@ -11,14 +11,15 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
-import { AnthropicResolver } from '@dxos/ai/resolvers';
+import { AnthropicResolver } from '@dxos/ai/anthropic';
+import { type BlobBackend } from '@dxos/blob';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
+import { Database, type Entity, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -64,6 +65,11 @@ export interface FunctionWrappingOptions {
   types?: Type.AnyEntity[];
 
   /**
+   * Entities other than types to add to the database's registry, e.g. skills a handler binds by registry URI.
+   */
+  registry?: readonly Entity.Unknown[];
+
+  /**
    * Toolkits to make available via the `OpaqueToolkitProvider`.
    */
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
@@ -74,11 +80,26 @@ export interface FunctionWrappingOptions {
   typeSource?: TypeSource;
 
   /**
+   * Blob storage backends to register for the invocation, after the S3 backend this runtime registers itself.
+   *
+   * Supplied by the host, since a hosted store is reached through what the host holds (on EDGE, a service binding).
+   * Without one a handler has inline storage only, and `Blob.fromUpload` fails `backend-not-registered`.
+   */
+  blobBackends?: readonly BlobBackendRegistration[];
+
+  /**
    * Loads a reference envelope (`{ '/': uri }`) left where the input schema takes a live object, as a plugin bundle's
    * nested call to another plugin's operation sends one.
    */
   resolveObjectReferences?: boolean;
 }
+
+/** A blob backend a host registers under `name`; `default` makes it the storage `Blob.fromBytes` picks when none is named. */
+export type BlobBackendRegistration = {
+  readonly name: string;
+  readonly backend: BlobBackend;
+  readonly default?: boolean;
+};
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
@@ -223,7 +244,7 @@ export class FunctionContext extends Resource {
   db: DatabaseImpl | undefined;
   readonly opts: FunctionWrappingOptions;
   /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
-  #unregisterBlobBackend: (() => void) | undefined;
+  #unregisterBlobBackends: (() => void)[] = [];
   #unregisterTypeSource: (() => void) | undefined;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
@@ -298,6 +319,9 @@ export class FunctionContext extends Resource {
     if (this.opts.types?.length && this.db) {
       this.db.graph.registry.add(this.opts.types);
     }
+    if (this.opts.registry?.length && this.db) {
+      this.db.graph.registry.add(this.opts.registry);
+    }
     if (this.opts.typeSource && this.client) {
       this.#unregisterTypeSource = this.client.graph.registerTypeSource(this.opts.typeSource);
     }
@@ -313,16 +337,26 @@ export class FunctionContext extends Resource {
     if (this.client && this.db) {
       const db = this.db;
       const { S3_BACKEND, createS3BlobBackend } = await import('@dxos/blob/s3');
-      this.#unregisterBlobBackend = this.client.graph.registerBlobBackend(
-        S3_BACKEND,
-        createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+      this.#unregisterBlobBackends.push(
+        this.client.graph.registerBlobBackend(
+          S3_BACKEND,
+          createS3BlobBackend(createS3Host({ getDatabase: (spaceId) => (spaceId === db.spaceId ? db : undefined) })),
+        ),
       );
+
+      // The host's own backends, after S3 so a host naming one as the default gets it: `registerBlobBackend` keeps
+      // the last `default` it is given.
+      for (const { name, backend, default: isDefault } of this.opts.blobBackends ?? []) {
+        this.#unregisterBlobBackends.push(this.client.graph.registerBlobBackend(name, backend, { default: isDefault }));
+      }
     }
   }
 
   override async _close() {
-    this.#unregisterBlobBackend?.();
-    this.#unregisterBlobBackend = undefined;
+    for (const unregister of this.#unregisterBlobBackends) {
+      unregister();
+    }
+    this.#unregisterBlobBackends = [];
     this.#unregisterTypeSource?.();
     this.#unregisterTypeSource = undefined;
     await this.db?.close();

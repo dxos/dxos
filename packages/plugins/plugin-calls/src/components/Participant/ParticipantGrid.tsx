@@ -31,14 +31,18 @@ export const ParticipantGrid = ({ classNames, self, users, fullscreen, debug }: 
 
       allUsers.push({ ...user, isSelf: user.id === self.id });
       if (user.tracks?.screenshareEnabled) {
+        // Built field by field: spreading `user` would carry its message type, which the partial `tracks` breaks.
         const screenshare: UserState = {
-          ...user,
           id: user.id + SCREENSHARE_SUFFIX,
+          name: user.name,
+          joined: user.joined,
+          raisedHand: user.raisedHand,
+          speaking: user.speaking,
           tracks: {
-            ...user.tracks,
-            video: user.tracks.screenshare,
+            audioEnabled: user.tracks.audioEnabled,
             videoEnabled: user.tracks.screenshareEnabled,
-          } as any, // TODO(burdon): Remove cast.
+            screenshareEnabled: user.tracks.screenshareEnabled,
+          },
         };
 
         allUsers.push(screenshare);
