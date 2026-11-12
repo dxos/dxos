@@ -78,7 +78,9 @@ describe('studio deck slides on a canvas', () => {
   test.for(SLIDES)('%s lands every shape on the grid the drawing carries', (name, { expect }) => {
     // The deck was laid out by eye, so the import rounds its geometry to the pitch the drawing carries. Edges are
     // rounded, not centres and sizes, so a shape that was flush with another still is; and the shift is bounded by
-    // half a cell, which is what keeps a slide looking like the slide.
+    // half a cell, which is what keeps a slide looking like the slide. A member of a layout run is the exception: the
+    // run takes one size and one pitch for all of it, which redistributes its members, so what holds for them is that
+    // they stay inside the run's own box.
     const { source, model } = slide(name);
     const [before, after]: ContentMap[] = [{}, {}];
     seedStudioSlide(source, model, { grid: 1 })(before);
@@ -99,6 +101,20 @@ describe('studio deck slides on a canvas', () => {
       }
       const original = was.get(key);
       expect(original).toBeDefined();
+      const run = (model.layout ?? []).find(
+        ({ kind, n, x, y, w, h }) =>
+          kind !== 'stack' &&
+          (n ?? 0) > 1 &&
+          (original?.center.x ?? 0) > x &&
+          (original?.center.x ?? 0) < x + w &&
+          (original?.center.y ?? 0) > y &&
+          (original?.center.y ?? 0) < y + h,
+      );
+      if (run) {
+        expect({ key, inside: node.center.x > run.x && node.center.x < run.x + run.w }).toEqual({ key, inside: true });
+        expect({ key, inside: node.center.y > run.y && node.center.y < run.y + run.h }).toEqual({ key, inside: true });
+        continue;
+      }
       for (const axis of ['x', 'y'] as const) {
         expect({ key, axis, far: Math.abs(node.center[axis] - (original?.center[axis] ?? 0)) > STUDIO_GRID }).toEqual({
           key,

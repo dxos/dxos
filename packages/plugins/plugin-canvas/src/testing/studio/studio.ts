@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap, Dsl, type Scene, applyCommands } from '@dxos/diagram';
 import { invariant } from '@dxos/invariant';
-import { type NodeBase, endpointNode } from '@dxos/scene';
+import { type Node, type NodeBase, endpointNode } from '@dxos/scene';
 
 import { isLinkRecord, isNodeRecord, nodeKey } from '../../model/content.ts';
 import { SceneHandler, elementId } from '../../model/handler.ts';
@@ -65,6 +65,8 @@ export const StudioCard = Schema.Struct({
   tone: Schema.optional(Schema.NullOr(Schema.String)),
   /** The element kind the card wants; absent is the plain `card` of round 1. */
   kind: Schema.optional(Schema.String),
+  /** The deck's own card variant (`.d-card.simple` and friends); absent is `full`. */
+  variant: Schema.optional(Schema.Literals(['full', 'compact', 'simple'])),
   /** Round 2 (`feed-card`): the feed strip, a sentence of body, and a mono footer under a hairline. */
   feed: Schema.optional(StudioFeed),
   body: Schema.optional(Schema.String),
@@ -121,6 +123,25 @@ export const StudioText = Schema.Struct({
   for: Schema.optional(Schema.Array(Schema.String)),
 });
 export type StudioText = Schema.Schema.Type<typeof StudioText>;
+
+/**
+ * A run of elements the deck laid out together: `down` and `across` are `n` elements of ONE size on a constant pitch,
+ * `stack` is a column whose rows each take their own height. The sidecar records the run's own box, so the import can
+ * lay the run out on the drawing's grid rather than rounding each element's recorded edges on its own — which is what
+ * turned ten 60.4-unit service cards into a column of 56s and 64s.
+ */
+export const StudioRun = Schema.Struct({
+  id: Schema.String,
+  kind: Schema.Literals(['down', 'across', 'stack']),
+  x: Schema.Number,
+  y: Schema.Number,
+  w: Schema.Number,
+  h: Schema.Number,
+  /** How many elements the run holds; a `stack` has none, since its rows differ. */
+  n: Schema.optional(Schema.Number),
+  gap: Schema.optional(Schema.Number),
+});
+export type StudioRun = Schema.Schema.Type<typeof StudioRun>;
 
 export const StudioFrame = Schema.Struct({
   id: Schema.String,
@@ -208,6 +229,7 @@ export const StudioModel = Schema.Struct({
   frames: Schema.Array(StudioFrame),
   texts: Schema.optional(Schema.Array(StudioText)),
   components: Schema.optional(Schema.Array(StudioComponent)),
+  layout: Schema.optional(Schema.Array(StudioRun)),
 });
 export type StudioModel = Schema.Schema.Type<typeof StudioModel>;
 
@@ -252,8 +274,8 @@ const LINK_HUES: Record<string, string> = { accent: 'blue', ink: 'neutral' };
 const TEXT_SIZES: Record<string, number> = {
   'heading': 20,
   'caption': 15,
-  // A column's own heading, which the deck sets smaller than the slide's.
-  'col-heading': 17,
+  // A column's own heading (`.d-colh`, 1.6cqw), which the deck sets smaller than the slide's title.
+  'col-heading': 26,
   'label': 19,
   'link-label': 15,
   'note': 15,
@@ -321,6 +343,7 @@ const promoteCards = (content: ContentMap, model: StudioModel): void => {
         type: card.kind ?? 'card',
         label: labelOf(record.node) ?? card.title,
         icon: { type: card.icon },
+        ...(card.variant ? { variant: card.variant } : {}),
         ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
         ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
         ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
@@ -883,6 +906,60 @@ const snapToGrid = (content: ContentMap, grid: number): number => {
   return moved;
 };
 
+/**
+ * Lays each of the sidecar's layout runs out on the grid: every element of the run takes one size, and they sit on one
+ * pitch, both rounded once for the whole run. {@link snapToGrid} rounds an element's edges independently, so two
+ * elements the deck drew the same size land on different sizes whenever their fractional offsets differ — which is
+ * what a column of equal cards must not do. A `stack` is left alone: its rows take their own heights by definition.
+ *
+ * Membership is geometric, since a run names no members: an element belongs when its centre is inside the run's box.
+ */
+const layoutRuns = (content: ContentMap, model: StudioModel, grid: number): number => {
+  let laid = 0;
+  for (const run of model.layout ?? []) {
+    const count = run.n ?? 0;
+    if (run.kind === 'stack' || count < 2) {
+      continue;
+    }
+    const down = run.kind === 'down';
+    const members: { key: string; node: Node }[] = [];
+    for (const [key, record] of Object.entries(content)) {
+      if (!isNodeRecord(record)) {
+        continue;
+      }
+      const { x, y } = record.node.center;
+      if (x > run.x && x < run.x + run.w && y > run.y && y < run.y + run.h) {
+        members.push({ key, node: record.node });
+      }
+    }
+    if (members.length !== count) {
+      continue;
+    }
+    members.sort((left, right) =>
+      down ? left.node.center.y - right.node.center.y : left.node.center.x - right.node.center.x,
+    );
+    // The run's own box divided by what it holds: one element's extent, then the step that spreads them across it.
+    const span = down ? run.h : run.w;
+    const extent = Math.max(grid, onGrid((span - (run.gap ?? 0) * (count - 1)) / count, grid));
+    const pitch = Math.max(extent, onGrid((span - extent) / (count - 1), grid));
+    const start = onGrid(down ? run.y : run.x, grid);
+    const across = onGrid(down ? run.x : run.y, grid);
+    const breadth = Math.max(grid, onGrid(down ? run.w : run.h, grid));
+    const [width, height] = down ? [breadth, extent] : [extent, breadth];
+    members.forEach(({ key, node }, index) => {
+      const along = start + index * pitch + extent / 2;
+      const center = down ? { x: across + width / 2, y: along } : { x: along, y: across + height / 2 };
+      const record = content[key];
+      if (!isNodeRecord(record)) {
+        return;
+      }
+      content[key] = { ...record, node: { ...node, center, size: { width, height } } };
+      laid++;
+    });
+  }
+  return laid;
+};
+
 /** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
 export type ComponentMode = 'kind' | 'generator';
 
@@ -899,6 +976,8 @@ export type StudioReport = {
   cards: number;
   /** Shapes the grid snap moved. */
   snapped: number;
+  /** Elements a layout run sized and spaced as one. */
+  laid: number;
   routed: number;
   components: number;
 };
@@ -943,6 +1022,9 @@ export const seedStudioSlide =
     styleText(content, model);
     styleFrames(content, model);
     const snapped = snapToGrid(content, grid);
+    // After the snap and before the routes: a route is taken from the outlines it meets, so the run has to be laid
+    // out while they are still what the links will be measured against.
+    const laid = layoutRuns(content, model, grid);
     const routed = routeLinks(content, model, components);
     const placed =
       components === 'generator'
@@ -956,6 +1038,7 @@ export const seedStudioSlide =
       problems: problems.length,
       cards: Object.keys(model.nodes).length,
       snapped,
+      laid,
       routed,
       components: placed + shapes,
     });

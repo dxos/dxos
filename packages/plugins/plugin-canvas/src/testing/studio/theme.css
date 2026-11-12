@@ -343,3 +343,30 @@
     var(--sd-inset-sm),
     inset 0 0 0 1.9px var(--sd-hl);
 }
+
+/* `.d-card.simple`: the EDGE services of the Hyperspace slide. One row of icon and title, with the footer under the
+   title — indented to the title's own column, and with no rule over it, which is what separates it from `full`.
+   The block padding is the deck's less the 3px its own type scale leaves over: a run gives every card one height
+   (64 units here), and the deck's 11.2 would push the footer past it. */
+.studio-card-simple {
+  padding: 8px 19.2px;
+  gap: 2px;
+}
+
+.studio-card-simple [data-part='label'] {
+  font-size: 21.6px;
+  line-height: 1.1;
+}
+
+.studio-card-simple .studio-card-icon {
+  inline-size: 30.4px;
+  block-size: 30.4px;
+  margin-inline-end: 12.8px;
+}
+
+.studio-card-simple .studio-card-note {
+  margin-inline-start: 43.2px;
+  font-size: 13.6px;
+  line-height: 1.3;
+  color: var(--sd-muted);
+}

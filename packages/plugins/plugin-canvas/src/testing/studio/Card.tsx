@@ -39,6 +39,11 @@ export const cardFields = {
   icon: Schema.optional(IconSpec),
   /** An accent, drawn as the card's outline (`#2d6fff`). */
   tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
+  /**
+   * The deck's card variants: `full` (the default) and `compact` draw through the shared card frame, `simple` is the
+   * one-line row of an EDGE service — icon, title, and the footer under the title with no rule over it.
+   */
+  variant: Schema.optional(Schema.Literals(['full', 'compact', 'simple']).annotate({ title: 'Variant' })),
   /** A row or grid of chips in the card's body: what the layer holds, or which services it runs. */
   chips: Schema.optional(ChipList.annotate({ title: 'Chips' })),
   body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
@@ -59,8 +64,26 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
   const symbol = iconSymbol(node.icon ?? {});
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
   const style: Styled = tone ? { '--sd-tone': tone } : {};
-  const compact = node.chips !== undefined || node.body !== undefined || node.footer !== undefined;
-  if (compact) {
+  if (node.variant === 'simple') {
+    return (
+      <div
+        className='studio-card studio-card-simple dx-cover flex flex-col justify-center rounded-xl overflow-hidden'
+        data-testid='card-node'
+        data-tone={tone ? true : undefined}
+        style={style}
+      >
+        <div className='flex items-center min-w-0'>
+          {symbol && <Icon.Icon icon={symbol} classNames='studio-card-icon shrink-0' />}
+          <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate'>
+            {node.label}
+          </TextPart>
+        </div>
+        {node.footer && <div className='studio-card-note font-mono truncate'>{node.footer}</div>}
+      </div>
+    );
+  }
+  const framed = node.chips !== undefined || node.body !== undefined || node.footer !== undefined;
+  if (framed) {
     return (
       <div
         className='studio-card dx-cover rounded-xl overflow-hidden'
