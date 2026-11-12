@@ -114,6 +114,7 @@ import {
 import { TextPart } from '../PartEditor/index.ts';
 import { renderMarkup } from './markup.ts';
 import { paintRuns } from './paint-order.ts';
+import { LINE_ON_GRID, PARAGRAPH_ON_GRID } from './text.ts';
 
 /** Screen px below which a portal shows only its title; above it a portal showing its contents mounts the child live. */
 export const DOT_PX = 40;
@@ -603,19 +604,10 @@ const TEXT_BOX =
   'absolute inset-[calc(-1*var(--scene-frame-border,2px))] [&>*]:px-[var(--dx-text-pad-x,var(--dx-minor-grid))]';
 
 /**
- * A line is a whole number of half minor grid units tall, the text centred in it, so every pair of lines sits on the
- * grid; half a unit rather than a whole one, as a whole one leaves a line of body text looking adrift in its own box.
+ * A text node's lines are a paragraph's, and its block is padded so the text sits a minor grid cell from the top and
+ * bottom, as it does from the sides; the padding gives back the line's own half-leading (0.25em).
  */
-const LINE_ON_GRID = mx(
-  // Important: a size class (`text-lg`) carries its own leading, which would otherwise win.
-  '[--dx-line:round(up,1.2em,calc(var(--dx-minor-grid)/2))] leading-(--dx-line)!',
-);
-
-/**
- * A text node's lines are 1.5em, tighter than the grid's, and its block is padded so the text sits a minor grid unit
- * from the top and bottom, as it does from the sides; the padding gives back the line's own half-leading (0.25em).
- */
-const TEXT_LINES = mx('leading-[1.5]!', '[&>*]:py-[max(0px,calc(var(--dx-text-pad-y,var(--dx-minor-grid))-0.25em))]');
+const TEXT_LINES = mx(PARAGRAPH_ON_GRID, '[&>*]:py-[max(0px,calc(var(--dx-text-pad-y,var(--dx-minor-grid))-0.25em))]');
 
 /** A line pattern's dashes in scene units, relative to the stroke; a dot is a zero-length dash with a round cap. */
 const dashArray = (dash: LineStyle['lineStyle'], width = LINK_WIDTH): string | undefined =>

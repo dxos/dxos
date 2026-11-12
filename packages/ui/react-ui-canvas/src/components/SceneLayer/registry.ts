@@ -43,7 +43,9 @@ import {
   ViewNodeView,
 } from './SceneLayer.tsx';
 
-const MIN_SIZE: Size = { width: 64, height: 32 };
+// Every minimum is a whole number of the finest grid level (a quarter of the minor cell), so a shape resized to its
+// floor still has its edges on a line the canvas draws.
+const MIN_SIZE: Size = { width: 48, height: 24 };
 
 /**
  * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
@@ -69,7 +71,8 @@ export const cardPrototype: NodeDefSpec = {
   // the footer over its hairline another 85, so two nominal units (96) would clip the footer it just created.
   defaultSize: { width: 4, height: 3 },
   resizable: true,
-  minSize: { width: 128, height: 64 },
+  // Two cells of padding, a three-cell header, its gaps and a two-cell footer: what a card must have to read as one.
+  minSize: { width: 120, height: 96 },
 };
 
 /**
@@ -81,7 +84,7 @@ export const iconPrototype: NodeDefSpec = {
   parts: [{ field: 'label' }],
   defaultSize: { width: 1, height: 1 },
   resizable: true,
-  minSize: { width: 32, height: 32 },
+  minSize: { width: 24, height: 24 },
   // The glyph is the shape; a frame around it would be a second shape.
   bare: true,
   portsPerSide: 1,
@@ -178,7 +181,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: true,
-    minSize: { width: 16, height: 16 },
+    minSize: { width: 12, height: 12 },
   },
   note: {
     name: 'Text',
@@ -216,7 +219,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     create: (props) => createNode({ type: 'instance', ...props }),
     defaultSize: NOMINAL_SIZES.instance,
     resizable: true,
-    minSize: { width: 16, height: 16 },
+    minSize: { width: 12, height: 12 },
     // Double-clicking opens the composite in isolation (ANIMATION.md §4.3).
     openable: true,
     palette: false,
@@ -230,7 +233,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     create: (props) => createNode({ type: 'generator', ...props }),
     defaultSize: NOMINAL_SIZES.generator,
     resizable: true,
-    minSize: { width: 16, height: 16 },
+    minSize: { width: 12, height: 12 },
     // Placed by an agent (`canvas.addGenerator`) with its parameters and bindings, not drawn from the palette.
     palette: false,
     bare: true,
@@ -243,7 +246,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     create: (props) => createNode({ type: 'path', ...props }),
     defaultSize: NOMINAL_SIZES.path,
     resizable: true,
-    minSize: { width: 4, height: 4 },
+    minSize: { width: 3, height: 3 },
     palette: false,
     bare: true,
   },
@@ -282,7 +285,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     parts: [{ field: 'label' }],
     defaultSize: NOMINAL_SIZES.rect,
     resizable: true,
-    minSize: { width: 16, height: 16 },
+    minSize: { width: 12, height: 12 },
     palette: false,
     bare: true,
     unclipped: true,

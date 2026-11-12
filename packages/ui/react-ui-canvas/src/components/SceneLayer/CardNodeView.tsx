@@ -28,6 +28,17 @@ import { mx } from '@dxos/ui-theme';
 
 import { type NodeViewProps } from '../../model/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
+import { LINE_ON_GRID, PAD_TO_GRID, PARAGRAPH_ON_GRID } from './text.ts';
+
+/** Every region of a card is half a cell from the next. Spelled out: Tailwind emits only what it can read verbatim. */
+const GAP_ON_GRID = 'gap-[calc(var(--dx-minor-grid)/2)]';
+
+/**
+ * The header's glyph: three minor cells, so the row it sets is three cells tall. A type whose own type scale is not
+ * the canvas's (the studio deck's cards) sets `--dx-card-glyph` to the size its header was drawn at.
+ */
+const HEADER_GLYPH =
+  'w-[var(--dx-card-glyph,calc(var(--dx-minor-grid)*3))] h-[var(--dx-card-glyph,calc(var(--dx-minor-grid)*3))]';
 
 /** Phosphor's six weights; the extended `px` set is drawn at `regular` only. */
 export const ICON_WEIGHTS = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'] as const;
@@ -135,12 +146,16 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
   const footer = textOf(node, 'footer');
   return (
     // Sized by its parent rather than `dx-cover`, so a type may put the frame inside its own padded shell.
-    <div className={mx('flex flex-col size-full gap-2 p-3 overflow-hidden', classNames)} data-part='card'>
+    <div
+      className={mx('flex flex-col size-full overflow-hidden', GAP_ON_GRID, PAD_TO_GRID, classNames)}
+      data-part='card'
+    >
       {(symbol || label !== undefined) && (
-        <div className='flex items-center gap-2 shrink-0' data-part='card-header'>
-          {symbol && <Icon.Icon icon={symbol} size='lg' hue={hueOf(node)} classNames='shrink-0' />}
+        // The glyph is three cells and sets the row's height: a card is read by its icon before its title.
+        <div className={mx('flex items-center shrink-0', GAP_ON_GRID)} data-part='card-header'>
+          {symbol && <Icon.Icon icon={symbol} hue={hueOf(node)} classNames={mx('shrink-0', HEADER_GLYPH)} />}
           {label !== undefined && (
-            <TextPart part='label' text={label} editing={editing} classNames='grow truncate'>
+            <TextPart part='label' text={label} editing={editing} classNames={mx('grow truncate', LINE_ON_GRID)}>
               {label}
             </TextPart>
           )}
@@ -148,16 +163,26 @@ export const CardFrame = ({ node, editing, children, classNames }: CardFrameProp
       )}
       {children}
       {body !== undefined && (
-        <TextPart part='body' text={body} editing={editing} classNames='text-sm whitespace-pre-wrap'>
+        // The body takes what the header and the footer leave, its text at the top of it.
+        <TextPart
+          part='body'
+          text={body}
+          editing={editing}
+          classNames={mx('grow overflow-hidden text-sm whitespace-pre-wrap', PARAGRAPH_ON_GRID)}
+        >
           {body}
         </TextPart>
       )}
       {footer !== undefined && (
+        // Half a cell above the text, less the hairline's own pixel, so the whole block is two cells tall.
         <TextPart
           part='footer'
           text={footer}
           editing={editing}
-          classNames='mt-auto shrink-0 pt-2 border-bs border-separator text-xs text-description truncate'
+          classNames={mx(
+            'mt-auto shrink-0 pt-[calc(var(--dx-minor-grid)/2-1px)] border-bs border-separator text-xs text-description truncate',
+            LINE_ON_GRID,
+          )}
         >
           {footer}
         </TextPart>

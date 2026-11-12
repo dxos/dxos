@@ -93,23 +93,26 @@ const DOCUMENT: Scene.SceneDocument = (() => {
 // type) and the hairline is a `line` link between two free points, rather than rectangles standing in for both.
 //
 
-/** The frame a shape draws around its content, inside its own size. */
-const INSET = 4;
-/** `CardFrame`'s `p-3` and `gap-2`. */
-const PAD = 12;
-const GAP = 8;
-/** The glyph at `size='lg'`, and the line heights of the three regions: 16/24, 14/20 and 12/16. */
-const GLYPH = 20;
-const HEADER = 24;
-const BODY = 40;
-const FOOTER = 16;
-const RULE = 1;
-const LEFT = -CARD_SIZE.width / 2 + INSET + PAD;
-const RIGHT = CARD_SIZE.width / 2 - INSET - PAD;
-const TOP = -CARD_SIZE.height / 2 + INSET + PAD;
-const BOTTOM = CARD_SIZE.height / 2 - INSET - PAD;
-/** The footer sits on the bottom padding (`mt-auto`), so the hairline is as far above it as its own box is tall. */
-const RULE_Y = BOTTOM - FOOTER - GAP - RULE;
+/**
+ * `CardFrame`'s box model in scene px. The card pads to the minor cell measured from its own edge, and every region
+ * is a whole number of half cells: a three-cell header set by its glyph, the body between, and a two-cell footer of
+ * the hairline, half a cell and its line.
+ */
+const CELL = 12;
+const PAD = CELL;
+const GAP = CELL / 2;
+const GLYPH = CELL * 3;
+/** One line at 16px and at 12px, each rounded up to a whole number of half cells. */
+const TITLE_LINE = CELL * 2;
+const FOOTER_LINE = CELL * 1.5;
+const FOOTER = CELL * 2;
+
+const LEFT = -CARD_SIZE.width / 2 + PAD;
+const RIGHT = CARD_SIZE.width / 2 - PAD;
+const TOP = -CARD_SIZE.height / 2 + PAD;
+const BOTTOM = CARD_SIZE.height / 2 - PAD;
+/** The footer sits on the bottom padding (`mt-auto`), with the hairline on the top of its own block. */
+const RULE_Y = BOTTOM - FOOTER;
 
 /** A text node of the card, its frame the box its text fills: a card's regions start on their own edge, not a grid
  * cell inside it, so each takes no padding. */
@@ -127,7 +130,7 @@ const text = (
   size: { width, height },
   text: value,
   padding: { x: 0, y: 0 },
-  style: { alignHorizontal: 'left', alignVertical: 'middle', fontSize },
+  style: { alignHorizontal: 'left', alignVertical: 'top', fontSize },
 });
 
 const glyph = (id: string, z: string, center: { x: number; y: number }, type: string): IconNode => ({
@@ -155,16 +158,30 @@ const CARD: RenderList2D = {
           size: CARD_SIZE,
           style: { rounded: true },
         },
-        glyph('icon', 'a1', { x: LEFT + GLYPH / 2, y: TOP + HEADER / 2 }, 'command'),
-        text('title', 'a2', [LEFT + GLYPH + GAP, TOP, RIGHT - LEFT - GLYPH - GAP, HEADER], 'Composite', 16),
+        glyph('icon', 'a1', { x: LEFT + GLYPH / 2, y: TOP + GLYPH / 2 }, 'command'),
+        // The title's line is centred in the taller row its glyph sets.
+        text(
+          'title',
+          'a2',
+          [LEFT + GLYPH + GAP, TOP + (GLYPH - TITLE_LINE) / 2, RIGHT - LEFT - GLYPH - GAP, TITLE_LINE],
+          'Composite',
+          16,
+        ),
+        // The body takes what the header and the footer leave, as the kind's does.
         text(
           'body',
           'a3',
-          [LEFT, TOP + HEADER + GAP, RIGHT - LEFT, BODY],
+          [LEFT, TOP + GLYPH + GAP, RIGHT - LEFT, BOTTOM - FOOTER - GAP - (TOP + GLYPH + GAP)],
           'A frame, a glyph, three texts and a line, grouped into an object.',
           14,
         ),
-        text('footer', 'a4', [LEFT, BOTTOM - FOOTER, RIGHT - LEFT, FOOTER], 'composite · five shapes and a line', 12),
+        text(
+          'footer',
+          'a4',
+          [LEFT, BOTTOM - FOOTER_LINE, RIGHT - LEFT, FOOTER_LINE],
+          'composite · five shapes and a line',
+          12,
+        ),
       ] satisfies Node[]
     ).map((node) => [node.id, node]),
   ),

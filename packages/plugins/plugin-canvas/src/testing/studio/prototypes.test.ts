@@ -18,7 +18,7 @@ import {
   iconPrototype,
   kindNodeDef,
 } from '@dxos/react-ui-canvas';
-import { MAJOR_GRID_RATIO } from '@dxos/scene';
+import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '@dxos/scene';
 
 import { feedCardSpec } from './FeedCard.tsx';
 import { spaceGraphSpec } from './SpaceGraph.tsx';
@@ -63,6 +63,17 @@ describe('core prototypes', () => {
           minor: Math.round(length * MAJOR_GRID_RATIO),
         });
         expect(length).toBeLessThanOrEqual(16);
+      }
+    }
+  });
+
+  test('every minimum size is a whole number of the finest grid level', ({ expect }) => {
+    // A shape resized to its floor still has its edges on a line the canvas draws: the quarter cell is the finest
+    // level the grid ever shows, so a minimum off it can never be snapped to.
+    const finest = DEFAULT_GRID / MAJOR_GRID_RATIO;
+    for (const [type, { minSize }] of Object.entries(registry())) {
+      for (const length of [minSize?.width, minSize?.height]) {
+        expect({ type, off: length === undefined ? 0 : length % finest }).toEqual({ type, off: 0 });
       }
     }
   });

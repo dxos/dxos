@@ -64,7 +64,12 @@
   color: var(--sd-muted);
 }
 
-/* The deck's type scale inside the shared card frame. */
+/* The deck's type scale inside the shared card frame: its own glyph, drawn beside a 23px title rather than on the
+   canvas's three-cell header, which would push a 120px card's footer out of its frame. */
+.studio-card-frame {
+  --dx-card-glyph: 26px;
+}
+
 .studio-card-frame [data-part='card-header'] {
   gap: 9px;
 }
