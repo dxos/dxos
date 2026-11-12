@@ -18,7 +18,6 @@ import {
   type NamedStyle3D,
   type Scene,
   findLayout,
-  resolveLayout,
 } from '@dxos/scene';
 
 import {
@@ -64,6 +63,7 @@ import {
   movedLayers,
   objectEntries,
   restackIntent,
+  selectedElement,
 } from './scene-rows.ts';
 
 const NO_LAYERS = Atom.make<readonly Layer[]>([]);
@@ -123,13 +123,13 @@ export const PropertiesSection = () => {
   // A form over a whole selection is given the first element; any other shows only for one.
   const id =
     selection.length === 1 || (config.propertyFormSelection && selection.length > 0) ? selection[0] : undefined;
-  const element = useMemo(
-    () => (record && id !== undefined && record.elements[id] ? resolveLayout(document, record)[id] : undefined),
+  const selected = useMemo(
+    () => (record && id !== undefined ? selectedElement(document, record, id) : undefined),
     [document, record, id],
   );
   const layers = useMemo(() => (record ? layersOf(record) : []), [record]);
   const Form = config.propertyForm;
-  if (!element || layout === undefined) {
+  if (!selected || layout === undefined) {
     return propertiesShown({ docked, selected: false }) === 'empty' ? <PropertiesEmpty /> : null;
   }
   return (
@@ -137,10 +137,10 @@ export const PropertiesSection = () => {
       {config.propertyInfo?.({ face })}
       <LayersContext.Provider value={layers}>
         <Form
-          key={element.id}
-          element={element}
+          key={selected.element.id}
+          element={selected.element}
           readonly={readonly}
-          onIntents={(intents) => intents.length > 0 && commands.intent(layout, { kind: 'batch', intents })}
+          onIntents={(intents) => intents.length > 0 && commands.intent(selected.layout, { kind: 'batch', intents })}
         />
       </LayersContext.Provider>
     </InspectorSection>

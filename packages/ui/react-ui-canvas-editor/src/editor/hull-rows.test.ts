@@ -23,7 +23,7 @@ import {
 import { type HullNode, type Link, type RectNode, type Scene, applyIntent, findLayout } from '@dxos/scene';
 
 import { DEFAULT_LATTICE, type DrawingValues, drawingSaves, latticeValues } from './drawing-form.ts';
-import { layoutTree } from './scene-rows.ts';
+import { layoutTree, selectedElement } from './scene-rows.ts';
 
 const box = (id: string, x: number, parent?: string): RectNode => ({
   type: 'rect',
@@ -244,5 +244,22 @@ describe('hull rows', () => {
       'board',
     ]);
     expect(drawingSaves(DOCUMENT, 'board', off, off)).toEqual([]);
+  });
+
+  test("a shape selected inside a hull is found in the hull's group, which is where its edits are written", ({
+    expect,
+  }) => {
+    const board = findLayout(DOCUMENT, 'board');
+    const pick = (id: string) => {
+      const selected = board && selectedElement(DOCUMENT, board, id);
+      return selected && [selected.element.id, selected.layout];
+    };
+    expect([pick('a'), pick('c'), pick('x'), pick('g'), pick('none')]).toEqual([
+      ['a', 'g-parts'],
+      ['c', 'h-parts'],
+      ['x', 'board'],
+      ['g', 'board'],
+      undefined,
+    ]);
   });
 });

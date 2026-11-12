@@ -85,6 +85,8 @@ size, so a new grid size rescales it. Turning the lattice off and on again bring
 A lattice that changes size keeps every shape on the cells it had, the shapes inside a hull included: the lattice mode
 re-seats a layout's shapes when a `layout` intent writes a new lattice.
 
+The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
+
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 
 A `diagram` fence in a markdown document draws as a diagram, in the editor's light or dark palette:

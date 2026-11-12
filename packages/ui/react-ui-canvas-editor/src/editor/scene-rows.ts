@@ -71,6 +71,33 @@ const isHull = (element: Scene.Element): boolean => {
   );
 };
 
+/** A selected element as its layout resolves it, and the layout that stores it. */
+export type SelectedElement = { element: ReturnType<typeof resolveLayout>[string]; layout: string };
+
+/**
+ * The element `id` selected in `layout`, and the layout it is stored in: `layout` itself, or the group of a hull it
+ * places, since a hull's shapes are drawn and selected in the scene but stored with the group.
+ */
+export const selectedElement = (
+  doc: Scene.SceneDocument,
+  layout: Scene.LayoutRecord,
+  id: string,
+): SelectedElement | undefined => {
+  const resolved = resolveLayout(doc, layout);
+  if (layout.elements[id]) {
+    return resolved[id] && { element: resolved[id], layout: layout.id };
+  }
+  for (const holder of Object.values(layout.elements).filter(isHull)) {
+    const parts = resolved[holder.id]?.parts;
+    const group = parts === undefined ? undefined : findLayout(doc, parts);
+    const element = group?.elements[id] && resolveLayout(doc, group)[id];
+    if (group && element) {
+      return { element, layout: group.id };
+    }
+  }
+  return undefined;
+};
+
 /** The hull a row's element is inside, and the scene that hull is drawn in. */
 type Held = { scene: string; group: string };
 
