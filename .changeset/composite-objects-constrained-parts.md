@@ -80,6 +80,9 @@ An elbow link to an end on no port turns twice, halfway between its ends, on a l
 follow the nearest gutter line. The Properties panel's Type field now changes how a link is drawn: it was refused by
 the form and ignored by the edit behind it. A form field's error icon shows the error in a tooltip.
 
+The Drawing section's Cell and Gutter are whole counts of grid cells: the lattice stored is the counts times the grid
+size, so a new grid size rescales it. Turning the lattice off and on again brings back the lattice the drawing had.
+
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 
 A `diagram` fence in a markdown document draws as a diagram, in the editor's light or dark palette:
