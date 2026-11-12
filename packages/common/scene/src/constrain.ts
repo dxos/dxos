@@ -21,16 +21,18 @@ const spanY = ({ y, height }: Bounds): Span => ({ start: y, length: height });
 const end = ({ start, length }: Span): number => start + length;
 
 /**
- * `part` placed in `to`, given that it was authored in `from`. `scaled` is where the instance's own uniform fit puts
- * it, which `scale` — the default — takes as it is, so a composite with no constraint on this axis is unchanged.
+ * `part` placed in `to`, given that it was authored in `from`. `scale` — what an axis means when it says nothing —
+ * keeps the part's proportion of the axis, so a composite fills the frame it is given rather than being letterboxed
+ * inside it; the instance's `fit` still decides that for a composite no part of which is constrained at all.
  */
-const solveSpan = (part: Span, scaled: Span, from: Span, to: Span, constraint: PartConstraint = 'scale'): Span => {
-  if (constraint === 'scale') {
-    return scaled;
-  }
+const solveSpan = (part: Span, from: Span, to: Span, constraint: PartConstraint = 'scale'): Span => {
   // The gaps the part keeps from each edge of the frame it was authored in.
   const lead = part.start - from.start;
   const trail = end(from) - end(part);
+  if (constraint === 'scale') {
+    const ratio = from.length === 0 ? 1 : to.length / from.length;
+    return { start: to.start + lead * ratio, length: part.length * ratio };
+  }
   switch (constraint) {
     case 'min':
       return { start: to.start + lead, length: part.length };
@@ -44,6 +46,35 @@ const solveSpan = (part: Span, scaled: Span, from: Span, to: Span, constraint: P
       const offset = part.start + part.length / 2 - (from.start + from.length / 2);
       return { start: to.start + to.length / 2 + offset - part.length / 2, length: part.length };
     }
+    default:
+      return part;
+  }
+};
+
+/**
+ * The inverse of {@link solveSpan}: where a part dragged to `solved` in the instance's frame sits in the composite's
+ * own coordinates. Every constraint is a translation and a scale of one axis, so each one inverts exactly — which is
+ * what lets a part be edited where it is drawn and still be stored in the definition it came from.
+ */
+const unsolveSpan = (solved: Span, from: Span, to: Span, constraint: PartConstraint = 'scale'): Span => {
+  switch (constraint) {
+    case 'min':
+      return { start: from.start + (solved.start - to.start), length: solved.length };
+    case 'max':
+      return { start: end(from) - (end(to) - end(solved)) - solved.length, length: solved.length };
+    case 'stretch': {
+      const lead = solved.start - to.start;
+      const trail = end(to) - end(solved);
+      return { start: from.start + lead, length: Math.max(0, from.length - lead - trail) };
+    }
+    case 'center': {
+      const offset = solved.start + solved.length / 2 - (to.start + to.length / 2);
+      return { start: from.start + from.length / 2 + offset - solved.length / 2, length: solved.length };
+    }
+    default: {
+      const ratio = to.length === 0 ? 1 : from.length / to.length;
+      return { start: from.start + (solved.start - to.start) * ratio, length: solved.length * ratio };
+    }
   }
 };
 
@@ -55,18 +86,17 @@ export type PartContext = {
   readonly to: Bounds;
 };
 
-/**
- * A part's bounds in the instance's frame. `scaled` is the same part under the instance's uniform fit, which an axis
- * with no constraint keeps, so this is the identity for every composite authored before constraints existed.
- */
-export const solvePartBounds = (
-  part: Bounds,
-  scaled: Bounds,
-  { from, to }: PartContext,
-  layout?: PartLayout,
-): Bounds => {
-  const x = solveSpan(spanX(part), spanX(scaled), spanX(from), spanX(to), layout?.x);
-  const y = solveSpan(spanY(part), spanY(scaled), spanY(from), spanY(to), layout?.y);
+/** A part's bounds in the instance's frame, each axis solved by its own constraint. */
+export const solvePartBounds = (part: Bounds, { from, to }: PartContext, layout?: PartLayout): Bounds => {
+  const x = solveSpan(spanX(part), spanX(from), spanX(to), layout?.x);
+  const y = solveSpan(spanY(part), spanY(from), spanY(to), layout?.y);
+  return { x: x.start, y: y.start, width: x.length, height: y.length };
+};
+
+/** A part's bounds back in the composite's own coordinates: the inverse of {@link solvePartBounds}. */
+export const unsolvePartBounds = (solved: Bounds, { from, to }: PartContext, layout?: PartLayout): Bounds => {
+  const x = unsolveSpan(spanX(solved), spanX(from), spanX(to), layout?.x);
+  const y = unsolveSpan(spanY(solved), spanY(from), spanY(to), layout?.y);
   return { x: x.start, y: y.start, width: x.length, height: y.length };
 };
 

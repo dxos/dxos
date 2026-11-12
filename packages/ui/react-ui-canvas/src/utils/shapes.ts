@@ -179,6 +179,7 @@ export const createLink = ({ type, id, z, source, target, ends }: CreateLinkProp
   const base = { id, z, source, target, ...(ends ? { ends } : {}) };
   switch (type) {
     case 'line':
+    case 'ortho':
     case 'curve':
     case 'smart':
       return { type, ...base };

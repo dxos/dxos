@@ -4,13 +4,23 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_GRID, type Endpoint, type Link, MAJOR_GRID } from '@dxos/scene';
+import { DEFAULT_GRID, type Endpoint, type Link, MAJOR_GRID, type Side } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
-import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath, viewLinkGeometry } from './route.ts';
+import {
+  insertIndex,
+  linkGeometry,
+  linkPath,
+  orthoPoints,
+  type RouteEnd,
+  sideToward,
+  smartPoints,
+  splinePath,
+  viewLinkGeometry,
+} from './route.ts';
 
 const from = { point: { x: 0, y: 0 }, side: 'e' as const };
 const to = { point: { x: 300, y: 0 }, side: 'w' as const };
@@ -208,5 +218,62 @@ describe('route', () => {
     const smart = geometry('smart');
     expect([smart?.source.side, smart?.target.side].every((side) => side !== undefined)).toBe(true);
     expect(Math.abs(smart?.source.point.x ?? 0) === 100 || Math.abs(smart?.source.point.y ?? 0) === 50).toBe(true);
+  });
+});
+
+describe('orthogonal routes', () => {
+  const end = (x: number, y: number, side: Side, free?: boolean): RouteEnd => ({
+    point: { x, y },
+    side,
+    ...(free ? { free: true } : {}),
+  });
+
+  test('ends that line up on an axis run straight, with no bend', ({ expect }) => {
+    expect(orthoPoints(end(0, 0, 'e'), end(100, 0, 'w'))).toEqual([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ]);
+    expect(orthoPoints(end(0, 0, 's'), end(0, 100, 'n'))).toEqual([
+      { x: 0, y: 0 },
+      { x: 0, y: 100 },
+    ]);
+  });
+
+  test('perpendicular sides meet at one corner', ({ expect }) => {
+    expect(orthoPoints(end(0, 0, 'e'), end(100, 60, 'n'))).toEqual([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 60 },
+    ]);
+  });
+
+  test('facing sides turn twice, at the midpoint between them', ({ expect }) => {
+    expect(orthoPoints(end(0, 0, 'e'), end(100, 60, 'w'))).toEqual([
+      { x: 0, y: 0 },
+      { x: 50, y: 0 },
+      { x: 50, y: 60 },
+      { x: 100, y: 60 },
+    ]);
+    expect(orthoPoints(end(0, 0, 's'), end(100, 60, 'n'))).toEqual([
+      { x: 0, y: 0 },
+      { x: 0, y: 30 },
+      { x: 100, y: 30 },
+      { x: 100, y: 60 },
+    ]);
+  });
+
+  test('a free end takes whichever axis the other does not, so a drag reads as a route', ({ expect }) => {
+    // Dragging away from a port on the east side: the route leaves sideways and turns once.
+    expect(orthoPoints(end(0, 0, 'e'), end(100, 60, 'n', true))).toEqual([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 60 },
+    ]);
+  });
+
+  test('the route depends only on its own two ends, so an unrelated shape never moves it', ({ expect }) => {
+    const first = orthoPoints(end(0, 0, 'e'), end(100, 60, 'w'));
+    const second = orthoPoints(end(0, 0, 'e'), end(100, 60, 'w'));
+    expect(first).toEqual(second);
   });
 });

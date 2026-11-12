@@ -27,6 +27,8 @@ import {
   classedLink,
   classedNode,
   commonSchema,
+  type LinkRegistry,
+  defaultLinkRegistry,
   defaultNodeRegistry,
   elementLayer,
   flipLink,
@@ -56,6 +58,7 @@ import {
   type Element,
   type Layer,
   LineLink,
+  OrthoLink,
   type LinkType,
   type Node,
   type NodeStyle,
@@ -81,6 +84,7 @@ import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { FlipLinksContext, MarkerField } from './MarkerField.tsx';
 import { PolygonFitField } from './PolygonFitField.tsx';
+import { LinkVariantsContext, VariantField } from './VariantField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
@@ -100,6 +104,9 @@ const HIDDEN = [
   'exposed',
   'overrides',
 ];
+
+/** A link's `type` is its variant, which the panel does show: straight, orthogonal, elbow, curve or spline. */
+const HIDDEN_LINK = HIDDEN.filter((name) => name !== 'type');
 
 /**
  * A string list as one entry per line: a UML compartment reads as a block of text, so a textarea
@@ -141,12 +148,14 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'params.fit': PolygonFitField,
   'scene': ViewField,
   'layer': LayerClassField,
+  'type': VariantField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
   line: LineLink,
   curve: CurveLink,
   spline: SplineLink,
+  ortho: OrthoLink,
   smart: SmartLink,
 };
 
@@ -209,6 +218,8 @@ export type PropertiesInspectorProps = InspectorProps & {
   draw: DrawScene;
   atoms: CanvasAtoms;
   nodes?: NodeRegistry;
+  /** The link variants the panel offers; the engine's own unless a host adds to them. */
+  linkTypes?: LinkRegistry;
   fields?: FormFieldMap;
   /** The database a reference field picks from; without it reference fields are read-only. */
   db?: Database.Database;
@@ -231,6 +242,7 @@ export const PropertiesInspector = ({
   draw,
   atoms,
   nodes = defaultNodeRegistry,
+  linkTypes = defaultLinkRegistry,
   fields,
   readonly: readonlyProp = false,
   db,
@@ -362,35 +374,37 @@ export const PropertiesInspector = ({
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
       {schema && (
-        <FlipLinksContext.Provider value={flip}>
-          <LayersContext.Provider value={layers}>
-            <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
-              <ViewOptionsContext.Provider value={viewOptions ?? []}>
-                <Form.Root
-                  key={[...selection].join()}
-                  schema={schema}
-                  values={values}
-                  fieldOverrides={fieldOverrides}
-                  fieldMap={fieldMap}
-                  db={db}
-                  getOptions={getOptions}
-                  readonly={readonly}
-                  autoSave
-                  // A typed value writes the scene once, when the field blurs, not on every keystroke.
-                  commitOn='blur'
-                  onSave={onSave}
-                >
-                  {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
-                  <Form.Viewport scroll={false}>
-                    <Form.Content>
-                      <Form.Fields exclude={HIDDEN} sort={fieldOrder} />
-                    </Form.Content>
-                  </Form.Viewport>
-                </Form.Root>
-              </ViewOptionsContext.Provider>
-            </StyleClassesContext.Provider>
-          </LayersContext.Provider>
-        </FlipLinksContext.Provider>
+        <LinkVariantsContext.Provider value={linkTypes}>
+          <FlipLinksContext.Provider value={flip}>
+            <LayersContext.Provider value={layers}>
+              <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
+                <ViewOptionsContext.Provider value={viewOptions ?? []}>
+                  <Form.Root
+                    key={[...selection].join()}
+                    schema={schema}
+                    values={values}
+                    fieldOverrides={fieldOverrides}
+                    fieldMap={fieldMap}
+                    db={db}
+                    getOptions={getOptions}
+                    readonly={readonly}
+                    autoSave
+                    // A typed value writes the scene once, when the field blurs, not on every keystroke.
+                    commitOn='blur'
+                    onSave={onSave}
+                  >
+                    {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
+                    <Form.Viewport scroll={false}>
+                      <Form.Content>
+                        <Form.Fields exclude={links ? HIDDEN_LINK : HIDDEN} sort={fieldOrder} />
+                      </Form.Content>
+                    </Form.Viewport>
+                  </Form.Root>
+                </ViewOptionsContext.Provider>
+              </StyleClassesContext.Provider>
+            </LayersContext.Provider>
+          </FlipLinksContext.Provider>
+        </LinkVariantsContext.Provider>
       )}
       {summary && (
         <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>

@@ -678,6 +678,14 @@ export const withLegacyParams = (node: NodeBase): NodeBase => {
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
 export type LineLink = Schema.Schema.Type<typeof LineLink>;
 
+/**
+ * Horizontal and vertical segments between its ends: straight where they line up, one corner where their sides are
+ * perpendicular, and otherwise two turns at the midpoint between them. Nothing is stored, so the route follows the
+ * shapes as they move, and it is deterministic — a shape moving elsewhere never re-routes it.
+ */
+export const OrthoLink = Schema.Struct({ type: Schema.Literal('ortho'), ...linkBase });
+export type OrthoLink = Schema.Schema.Type<typeof OrthoLink>;
+
 /** Cubic Bézier leaving each port along its side's normal. */
 export const CurveLink = Schema.Struct({ type: Schema.Literal('curve'), ...linkBase });
 export type CurveLink = Schema.Schema.Type<typeof CurveLink>;
@@ -697,10 +705,10 @@ export type SplineLink = Schema.Schema.Type<typeof SplineLink>;
 export const SmartLink = Schema.Struct({ type: Schema.Literal('smart'), ...linkBase });
 export type SmartLink = Schema.Schema.Type<typeof SmartLink>;
 
-export const Link = Schema.Union([LineLink, CurveLink, SplineLink, SmartLink]);
+export const Link = Schema.Union([LineLink, OrthoLink, CurveLink, SplineLink, SmartLink]);
 export type Link = Schema.Schema.Type<typeof Link>;
 export type LinkType = Link['type'];
-export const LINK_TYPES: readonly LinkType[] = ['line', 'curve', 'spline', 'smart'];
+export const LINK_TYPES: readonly LinkType[] = ['line', 'ortho', 'curve', 'spline', 'smart'];
 
 export type Element = Node | Link;
 

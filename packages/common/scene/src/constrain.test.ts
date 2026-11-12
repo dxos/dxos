@@ -13,7 +13,7 @@ const FROM: Bounds = { x: 0, y: 0, width: 288, height: 192 };
 /** The same card placed twice as wide and twice as tall. */
 const TO: Bounds = { x: 0, y: 0, width: 576, height: 384 };
 
-/** Where the uniform fit would put `part` in `TO`: every coordinate doubled. */
+/** Where a part with nothing to say lands: every coordinate doubled, since the frame doubled on both axes. */
 const scaled = ({ x, y, width, height }: Bounds): Bounds => ({
   x: x * 2,
   y: y * 2,
@@ -21,11 +21,11 @@ const scaled = ({ x, y, width, height }: Bounds): Bounds => ({
   height: height * 2,
 });
 
-const solve = (part: Bounds, layout?: Parameters<typeof solvePartBounds>[3]) =>
-  solvePartBounds(part, scaled(part), { from: FROM, to: TO }, layout);
+const solve = (part: Bounds, layout?: Parameters<typeof solvePartBounds>[2]) =>
+  solvePartBounds(part, { from: FROM, to: TO }, layout);
 
 describe('part constraints', () => {
-  test('an unconstrained part takes the uniform fit, as it did before constraints existed', () => {
+  test('an unconstrained part keeps its proportion of each axis, which is what `scale` means', () => {
     const part: Bounds = { x: 12, y: 12, width: 36, height: 36 };
     expect(solve(part)).toEqual(scaled(part));
     expect(solve(part, { x: 'scale', y: 'scale' })).toEqual(scaled(part));
@@ -50,7 +50,7 @@ describe('part constraints', () => {
   test('a frame smaller than the part gaps collapses it rather than inverting it', () => {
     const body: Bounds = { x: 100, y: 0, width: 88, height: 192 };
     const tiny: Bounds = { x: 0, y: 0, width: 120, height: 192 };
-    const solved = solvePartBounds(body, body, { from: FROM, to: tiny }, { x: 'stretch' });
+    const solved = solvePartBounds(body, { from: FROM, to: tiny }, { x: 'stretch' });
     expect(solved.width).toEqual(0);
     expect(solved.x).toEqual(100);
   });
@@ -102,7 +102,7 @@ describe('free points', () => {
       { x: 276, y: 162, width: 0, height: 0 },
     ];
     const box = pointBounds({ x: left.x, y: left.y }, { x: right.x, y: right.y });
-    const solved = solvePartBounds(box, scaled(box), { from: FROM, to: TO }, { x: 'stretch', y: 'max' });
+    const solved = solvePartBounds(box, { from: FROM, to: TO }, { x: 'stretch', y: 'max' });
     expect(mapPoint({ x: 12, y: 162 }, box, solved)).toEqual({ x: 12, y: 354 });
     expect(mapPoint({ x: 276, y: 162 }, box, solved)).toEqual({ x: 564, y: 354 });
   });

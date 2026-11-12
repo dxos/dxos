@@ -12,6 +12,7 @@ import {
   type NamedStyle2D,
   type Node,
   type NodeStyle,
+  LINK_TYPES,
   NODE_TYPES,
   type Resolved2D,
   Scene,
@@ -371,12 +372,10 @@ const toEndpoint = (end: ElementEndpoint | undefined, stored: unknown): Endpoint
     ? { point: { x: stored.point.x, y: stored.point.y } }
     : undefined);
 
-const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = {
-  line: 'line',
-  curve: 'curve',
-  spline: 'spline',
-  smart: 'smart',
-};
+/** Every link type by name, so one a newer editor wrote reads back as itself rather than as the default. */
+const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = Object.fromEntries(
+  LINK_TYPES.map((type) => [type, type]),
+);
 
 const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
 

@@ -191,14 +191,6 @@ export const instanceView = (instance: InstanceNode, composite: RenderList2D): R
       }
     : composite;
 
-/** `bounds` where the uniform fit puts them: what a part took before it could constrain an axis. */
-const scaledBounds = ({ scale, offset }: InstanceTransform, bounds: Bounds): Bounds => ({
-  x: offset.x + bounds.x * scale,
-  y: offset.y + bounds.y * scale,
-  width: bounds.width * scale,
-  height: bounds.height * scale,
-});
-
 const boundsCentre = ({ x, y, width, height }: Bounds): Point => ({ x: x + width / 2, y: y + height / 2 });
 
 /** The box a link's free ends span; none when both of its ends are on nodes, which move with the nodes. */
@@ -223,9 +215,7 @@ export const placeParts = (
   if (!hasConstraints(elements)) {
     return undefined;
   }
-  const transform = instanceTransform(to, from, fit);
-  const solve = (bounds: Bounds, constrain: PartLayout | undefined) =>
-    solvePartBounds(bounds, scaledBounds(transform, bounds), { from, to }, constrain);
+  const solve = (bounds: Bounds, constrain: PartLayout | undefined) => solvePartBounds(bounds, { from, to }, constrain);
   const nodes = Object.values(composite.nodes).map((node): Node => {
     const solved = solve(nodeBounds(node), node.constrain);
     return { ...node, center: boundsCentre(solved), size: { width: solved.width, height: solved.height } };
@@ -270,6 +260,47 @@ export const instancePlacement = (instance: InstanceNode, composite: RenderList2
   const transform = instanceTransform(to, from, instance.fit);
   const placed = from && placeParts(view, from, to, instance.fit);
   return placed ? { view: placed, transform: { scale: 1, offset: { x: 0, y: 0 } } } : { view, transform };
+};
+
+/** Whether a transform leaves its coordinates where they are, which a constrained composite's always does. */
+const isIdentity = ({ scale, offset }: InstanceTransform): boolean => scale === 1 && offset.x === 0 && offset.y === 0;
+
+/**
+ * The composite's parts as the instance draws them, in the scene's own coordinates: a constrained composite is solved
+ * there already, and any other is mapped through the instance's transform. What editing an Object in place, and what
+ * ungrouping one, both work on.
+ */
+export const drawnParts = (instance: InstanceNode, composite: RenderList2D): RenderList2D => {
+  const { view, transform } = instancePlacement(instance, composite);
+  if (isIdentity(transform)) {
+    return view;
+  }
+  const map = (point: Point) => toInstance(transform, point);
+  const mapEnd = (end: Endpoint): Endpoint => (isPointEndpoint(end) ? { point: map(end.point) } : end);
+  return {
+    ...view,
+    nodes: Object.fromEntries(
+      Object.values(view.nodes).map((node) => [
+        node.id,
+        {
+          ...node,
+          center: map(node.center),
+          size: { width: node.size.width * transform.scale, height: node.size.height * transform.scale },
+        },
+      ]),
+    ),
+    links: Object.fromEntries(
+      Object.values(view.links).map((link) => [
+        link.id,
+        {
+          ...link,
+          source: mapEnd(link.source),
+          target: mapEnd(link.target),
+          ...(link.type === 'spline' ? { points: link.points.map(map) } : {}),
+        },
+      ]),
+    ),
+  };
 };
 
 /** The side of `frame` that a ray from its centre through `point` leaves by, and how far along it (0 to 1). */
@@ -351,7 +382,15 @@ export const composeSelection = (
   );
 
   const layers = viewLayers(scene);
-  const placed = <T extends Node | Link>(element: T): T => ({ ...element, layer: elementLayer(element, layers) });
+  // The Object stands exactly where the selection did and resizes as it would have: one shape becomes an Object of
+  // itself, its part following the frame on both axes, so nothing is drawn around it and its handles are its own.
+  // Several shapes keep their proportions of the frame (`scale`), which fills it rather than letterboxing them in it.
+  const constrain: PartLayout = nodes.length === 1 ? { x: 'stretch', y: 'stretch' } : { x: 'scale', y: 'scale' };
+  const placed = <T extends Node | Link>(element: T): T => ({
+    ...element,
+    constrain,
+    layer: elementLayer(element, layers),
+  });
   const shiftPoint = (point: Point): Point => ({ x: point.x + shift.x, y: point.y + shift.y });
   const shiftEnd = (end: Endpoint): Endpoint => ('point' in end ? { point: shiftPoint(end.point) } : end);
   const childNodes = nodes.map((node) =>
@@ -382,6 +421,9 @@ export const composeSelection = (
     center: centre,
     size: { width: bounds.width, height: bounds.height },
     composite: compositeId,
+    // The frame is the selection's own box and the parts fill it, so the Object draws where the shapes drew and no
+    // second rectangle appears around them.
+    fit: 'none',
     ports: instancePorts(bounds, composite),
     ...(layer !== undefined ? { layer } : {}),
   };

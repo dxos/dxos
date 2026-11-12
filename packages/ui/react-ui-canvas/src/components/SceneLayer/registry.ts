@@ -315,10 +315,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
 
 export const defaultNodeRegistry: NodeRegistry = createNodeRegistry(defaultNodeTypes, defaultNodePrototypes);
 
-// The palette lists link types in this order, so the default (smart) leads.
+/**
+ * The link variants, in the order the palette and the Properties panel list them, the default (elbow) first. A link's
+ * stored `type` is the variant: `elbow` leaves each port along its normal and joins with one corner, `straight` runs
+ * between the ends as they are, and `orthogonal` turns at right angles.
+ */
 export const defaultLinkRegistry: LinkRegistry = {
-  smart: { type: 'smart', name: 'Smart line', icon: 'ph--flow-arrow--regular', key: 'O' },
-  line: { type: 'line', name: 'Line', icon: 'ph--line-segment--regular', key: 'L' },
+  smart: { type: 'smart', name: 'Elbow', icon: 'ph--flow-arrow--regular', key: 'O' },
+  line: { type: 'line', name: 'Straight', icon: 'ph--line-segment--regular', key: 'L' },
+  ortho: { type: 'ortho', name: 'Orthogonal', icon: 'ph--arrow-elbow-right-up--regular', key: 'H' },
   curve: { type: 'curve', name: 'Curve', icon: 'ph--bezier-curve--regular', key: 'K' },
   spline: { type: 'spline', name: 'Spline', icon: 'ph--wave-sine--regular', key: 'P' },
 };

@@ -211,6 +211,7 @@ const CanvasEngine = ({
     constrain: preview,
     lattice,
     history,
+    nodeRegistry,
   });
   const scene = useAtomValue(draw.scene);
   // A lattice scene's grid runs along its cell edges unless the layout sets its own pitch.

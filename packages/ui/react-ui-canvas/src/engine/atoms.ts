@@ -25,7 +25,7 @@ import {
 } from '@dxos/scene';
 
 import { type Camera, type Tool } from '../model/index.ts';
-import { type Clipboard, type PartKey } from '../utils/index.ts';
+import { type Clipboard, type Inside, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
@@ -132,6 +132,11 @@ export type CanvasAtoms = {
   clock: Clock;
   /** The composite open in isolation, if any. */
   isolation: Atom.Writable<Isolation | undefined>;
+  /**
+   * The Object being edited in place, if any (ANIMATION.md §4.2): its parts are what the editor acts on and the rest
+   * of the scene is drawn faded behind them. Unlike isolation this moves no camera and opens no view.
+   */
+  inside: Atom.Writable<Inside | undefined>;
 };
 
 /**
@@ -160,4 +165,5 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
   clock: createClock(),
   isolation: Atom.keepAlive(Atom.make<Isolation | undefined>(undefined)),
+  inside: Atom.keepAlive(Atom.make<Inside | undefined>(undefined)),
 });

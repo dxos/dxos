@@ -133,6 +133,8 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
       return linePath(from.point, to.point);
     case 'curve':
       return curvePath(from, to);
+    case 'ortho':
+      return splinePath(orthoPoints(from, to));
     case 'spline':
       return splinePath([from.point, ...link.points, to.point]);
     case 'smart':
@@ -179,6 +181,31 @@ export const smartPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
     return end.free ? [] : [{ x: end.point.x + normal.x * SMART_STUB, y: end.point.y + normal.y * SMART_STUB }];
   };
   return [from.point, ...stub(from), ...stub(to).reverse(), to.point];
+};
+
+/** Two coordinates count as lined up within this, in scene px: a sub-pixel offset is not a bend worth drawing. */
+const ORTHO_EPSILON = 0.5;
+
+/**
+ * The polyline an orthogonal link follows: straight where its ends line up on an axis, one corner where their sides
+ * are perpendicular, and otherwise two turns at the midpoint between them. It reads only its own two ends, so a shape
+ * moving elsewhere never re-routes it — which is what makes it predictable to draw a diagram with.
+ */
+export const orthoPoints = (from: RouteEnd, to: RouteEnd): Point[] => {
+  const [a, b] = [from.point, to.point];
+  if (Math.abs(a.x - b.x) < ORTHO_EPSILON || Math.abs(a.y - b.y) < ORTHO_EPSILON) {
+    return [a, b];
+  }
+  const sideways = (side: Side) => side === 'e' || side === 'w';
+  // A free end (one being dragged) has no side to leave by, so it takes whichever axis the other one does not.
+  const fromSideways = from.free ? Math.abs(b.x - a.x) >= Math.abs(b.y - a.y) : sideways(from.side);
+  const toSideways = to.free ? !fromSideways : sideways(to.side);
+  if (fromSideways !== toSideways) {
+    return [a, fromSideways ? { x: b.x, y: a.y } : { x: a.x, y: b.y }, b];
+  }
+  return fromSideways
+    ? [a, { x: (a.x + b.x) / 2, y: a.y }, { x: (a.x + b.x) / 2, y: b.y }, b]
+    : [a, { x: a.x, y: (a.y + b.y) / 2 }, { x: b.x, y: (a.y + b.y) / 2 }, b];
 };
 
 export type LinkGeometry = {
@@ -413,7 +440,7 @@ const resolveEnds = (
   target: Endpoint,
   type?: Link['type'],
 ): [RouteEnd, RouteEnd] | undefined => {
-  if (type !== undefined && type !== 'smart') {
+  if (type !== undefined && type !== 'smart' && type !== 'ortho') {
     return centredEnds(scene, registry, source, target);
   }
   if (isPointEndpoint(source)) {

@@ -244,6 +244,7 @@ const EVERY_TYPE: RenderList2D = {
       points: [{ x: 3, y: 4 }],
     },
     smart: { type: 'smart', id: 'smart', z: 'b3', source: { node: 'polygon' }, target: { node: 'path' }, class: 'c' },
+    ortho: { type: 'ortho', id: 'ortho', z: 'b4', source: { node: 'rect' }, target: { node: 'polygon' } },
   },
 };
 
