@@ -37,7 +37,7 @@ export const AGENT_SECTIONS: Record<AgentSection, { label: string; summary: stri
   },
   tile: {
     label: 'TILE',
-    summary: 'The DXOS design system: themed React components and the tokens behind them, usable in any React app.',
+    summary: 'The DXOS design system: themed UI components and the tokens behind them, usable in any React app.',
   },
 };
 
