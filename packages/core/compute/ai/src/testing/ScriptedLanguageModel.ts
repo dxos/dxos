@@ -6,7 +6,7 @@
 
 import * as AiError from 'effect/ai/AiError';
 import * as LanguageModel from 'effect/ai/LanguageModel';
-import type * as Prompt from 'effect/ai/Prompt';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Response from 'effect/ai/Response';
 import * as Telemetry from 'effect/ai/Telemetry';
 import * as Duration from 'effect/Duration';
@@ -45,8 +45,19 @@ const ZERO_USAGE = { inputTokens: { total: 0 }, outputTokens: { total: 0 } } as 
  * {@link toolCall}.
  */
 export type ScriptedPart =
-  | { readonly _tag: 'text'; readonly text: string }
-  | { readonly _tag: 'reasoning'; readonly text: string }
+  | { readonly _tag: 'text'; readonly text: Deferred<string> }
+  | { readonly _tag: 'reasoning'; readonly text: Deferred<string> }
+  | { readonly _tag: 'toolCall'; readonly name: string; readonly input: unknown; readonly id?: string };
+
+/**
+ * A value worked out when the turn is emitted, from the request it answers: a script is fixed before the session
+ * starts, so a value naming something the session creates (a ref, an id a tool returned) only exists by then.
+ */
+export type Deferred<T> = T | ((request: ScriptedRequest) => T);
+
+/** A part with every deferred value worked out, as the encoders emit it. */
+type ResolvedPart =
+  | { readonly _tag: 'text' | 'reasoning'; readonly text: string }
   | { readonly _tag: 'toolCall'; readonly name: string; readonly input: unknown; readonly id?: string };
 
 /**
@@ -80,17 +91,16 @@ export type ScriptedTurn =
   | { readonly fail: AiError.AiError };
 
 /** Scripts a text fragment. */
-export const text = (content: string): ScriptedPart => ({ _tag: 'text', text: content });
+export const text = (content: Deferred<string>): ScriptedPart => ({ _tag: 'text', text: content });
 
 /** Scripts a reasoning (thinking) fragment, emitted as the provider-native reasoning parts. */
-export const reasoning = (content: string): ScriptedPart => ({ _tag: 'reasoning', text: content });
+export const reasoning = (content: Deferred<string>): ScriptedPart => ({ _tag: 'reasoning', text: content });
 
 /**
  * Scripts a tool call. `name` must match a tool registered on the toolkit under test; `input` is
  * serialized as the tool arguments. Supply `id` to assert against a specific tool-call id.
  *
- * `input` may be a function, called when the turn is emitted: a script is fixed before the session
- * starts, so an argument naming an object the session creates (a ref, an id) only exists by then.
+ * `input` may be a function, called with the request when the turn is emitted (see {@link Deferred}).
  */
 export const toolCall = (name: string, input: unknown, id?: string): ScriptedPart => ({
   _tag: 'toolCall',
@@ -101,9 +111,14 @@ export const toolCall = (name: string, input: unknown, id?: string): ScriptedPar
 
 const isFailure = (turn: ScriptedTurn): turn is { readonly fail: AiError.AiError } => 'fail' in turn;
 
+const resolve = <T>(value: Deferred<T>, request: ScriptedRequest): T =>
+  typeof value === 'function' ? (value as (request: ScriptedRequest) => T)(request) : value;
+
 /** Tool arguments are JSON, so a function can only be a deferred input. */
-const resolveInput = (part: { readonly input: unknown }): unknown =>
-  typeof part.input === 'function' ? part.input() : part.input;
+const resolvePart = (part: ScriptedPart, request: ScriptedRequest): ResolvedPart =>
+  part._tag === 'toolCall'
+    ? { ...part, input: typeof part.input === 'function' ? part.input(request) : part.input }
+    : { _tag: part._tag, text: resolve(part.text, request) };
 
 /**
  * The request a routing predicate inspects: the flattened system prompt, the concatenated text
@@ -172,10 +187,10 @@ const toRoutes = (script: readonly ScriptedTurn[] | readonly ScriptedRoute[]): r
   isRouteScript(script) ? script : [{ match: () => true, turns: script }];
 
 /** A turn with no explicit reason finishes on `tool-calls` when it emits a tool call, else `stop`. */
-const finishReasonFor = (parts: readonly ScriptedPart[]): Response.FinishReason =>
+const finishReasonFor = (parts: readonly { readonly _tag: string }[]): Response.FinishReason =>
   parts.some((part) => part._tag === 'toolCall') ? 'tool-calls' : 'stop';
 
-const toolCallId = (part: Extract<ScriptedPart, { _tag: 'toolCall' }>, turnIndex: number, partIndex: number): string =>
+const toolCallId = (part: Extract<ResolvedPart, { _tag: 'toolCall' }>, turnIndex: number, partIndex: number): string =>
   part.id ?? `toolu_${turnIndex}_${partIndex}`;
 
 const responseMetadata = (turnIndex: number): Response.ResponseMetadataPartEncoded => ({
@@ -193,7 +208,7 @@ const finishPart = (reason: Response.FinishReason): Response.FinishPartEncoded =
 
 /** Encodes a turn as the streamed parts a real provider would emit (deltas). */
 const encodeStreamTurn = (
-  parts: readonly ScriptedPart[],
+  parts: readonly ResolvedPart[],
   turnIndex: number,
   reason: Response.FinishReason,
   { deferToolEnds = false, emitToolCalls = false }: { deferToolEnds?: boolean; emitToolCalls?: boolean } = {},
@@ -214,10 +229,10 @@ const encodeStreamTurn = (
     } else {
       const id = toolCallId(part, turnIndex, partIndex);
       out.push({ type: 'tool-params-start', id, name: part.name });
-      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(resolveInput(part)) });
+      out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(part.input) });
       (deferToolEnds ? deferred : out).push({ type: 'tool-params-end', id });
       if (emitToolCalls) {
-        (deferToolEnds ? deferred : out).push({ type: 'tool-call', id, name: part.name, params: resolveInput(part) });
+        (deferToolEnds ? deferred : out).push({ type: 'tool-call', id, name: part.name, params: part.input });
       }
     }
   });
@@ -235,7 +250,7 @@ const annotate = (span: LanguageModel.ProviderOptions['span']): void =>
 
 /** Encodes a turn as the aggregated parts a non-streaming `generateText` would return. */
 const encodeTurn = (
-  parts: readonly ScriptedPart[],
+  parts: readonly ResolvedPart[],
   turnIndex: number,
   reason: Response.FinishReason,
 ): Response.PartEncoded[] => {
@@ -250,7 +265,7 @@ const encodeTurn = (
         type: 'tool-call',
         id: toolCallId(part, turnIndex, partIndex),
         name: part.name,
-        params: resolveInput(part),
+        params: part.input,
       });
     }
   });
@@ -301,7 +316,7 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
         const request = flattenRequest(options);
         if (generator) {
           const index = yield* Ref.getAndUpdate(calls, (value) => value + 1);
-          return { index, turn: generator(request, index) };
+          return { index, request, turn: generator(request, index) };
         }
         const routeIndex = routes.findIndex((route) => route.match(request));
         if (routeIndex < 0) {
@@ -314,14 +329,14 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
           return yield* Effect.fail(exhausted(turnIndex, route.turns.length, route.name ?? `#${routeIndex}`));
         }
         const index = yield* Ref.getAndUpdate(calls, (value) => value + 1);
-        return { index, turn };
+        return { index, request, turn };
       });
 
     return yield* LanguageModel.make({
       generateText: (options) =>
         Effect.gen(function* () {
           annotate(options.span);
-          const { index, turn } = yield* nextTurn(options);
+          const { index, request, turn } = yield* nextTurn(options);
           if (isFailure(turn)) {
             return yield* Effect.fail(turn.fail);
           }
@@ -331,13 +346,14 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
           if (turn.gate) {
             yield* Effect.promise(turn.gate);
           }
-          return encodeTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts));
+          const parts = turn.parts.map((part) => resolvePart(part, request));
+          return encodeTurn(parts, index, turn.finishReason ?? finishReasonFor(parts));
         }),
       streamText: (options) =>
         Stream.unwrap(
           Effect.gen(function* () {
             annotate(options.span);
-            const { index, turn } = yield* nextTurn(options);
+            const { index, request, turn } = yield* nextTurn(options);
             if (isFailure(turn)) {
               return Stream.fail(turn.fail);
             }
@@ -348,10 +364,15 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
               yield* Effect.promise(turn.gate);
             }
             return Stream.fromIterable(
-              encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts), {
-                deferToolEnds: turn.deferToolEnds,
-                emitToolCalls: turn.emitToolCalls,
-              }),
+              encodeStreamTurn(
+                turn.parts.map((part) => resolvePart(part, request)),
+                index,
+                turn.finishReason ?? finishReasonFor(turn.parts),
+                {
+                  deferToolEnds: turn.deferToolEnds,
+                  emitToolCalls: turn.emitToolCalls,
+                },
+              ),
             );
           }),
         ),
@@ -361,11 +382,23 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
 /**
  * Internal encoders exposed for unit-testing the wire format. Not part of the public API.
  */
+const EMPTY_REQUEST: ScriptedRequest = { system: '', text: '', prompt: Prompt.empty, tools: [] };
+
 export const __testing = {
-  encodeStreamTurn,
-  encodeTurn,
+  encodeStreamTurn: (parts: readonly ScriptedPart[], ...rest: Tail<Parameters<typeof encodeStreamTurn>>) =>
+    encodeStreamTurn(
+      parts.map((part) => resolvePart(part, EMPTY_REQUEST)),
+      ...rest,
+    ),
+  encodeTurn: (parts: readonly ScriptedPart[], ...rest: Tail<Parameters<typeof encodeTurn>>) =>
+    encodeTurn(
+      parts.map((part) => resolvePart(part, EMPTY_REQUEST)),
+      ...rest,
+    ),
   finishReasonFor,
 };
+
+type Tail<T extends readonly unknown[]> = T extends readonly [unknown, ...infer Rest] ? Rest : never;
 
 /** A {@link LanguageModel.LanguageModel} layer backed by the scripted model. */
 export const layer = (script: Script): Layer.Layer<LanguageModel.LanguageModel> =>
