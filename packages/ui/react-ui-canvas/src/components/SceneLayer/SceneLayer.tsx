@@ -79,6 +79,7 @@ import {
   type PartEditing,
   type PartKey,
   alignClasses,
+  bareNode,
   canvasFillClass,
   classedLink,
   classedNode,
@@ -1417,10 +1418,6 @@ const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties
   const faded = typeof fade?.opacity === 'number' ? fade.opacity : 1;
   return { opacity: Math.max(0, opacity) * faded };
 };
-
-/** A node of a `bare` type: no fill or border unless its style sets them. */
-const bareNode = (node: Node, bare: boolean | undefined): Node =>
-  bare ? { ...node, style: { fill: false, border: false, ...node.style } } : node;
 
 /**
  * A part's own size class, or nothing when the node overrides `fontSize`: a Tailwind size wins over the

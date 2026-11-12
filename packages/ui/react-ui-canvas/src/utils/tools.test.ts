@@ -5,7 +5,16 @@
 import { describe, expect, test } from 'vitest';
 
 import { defaultLinkRegistry, defaultNodeRegistry } from '../components/index.ts';
-import { CREATE_GROUP, LINK_FOLD, TOOLS_GROUP, foldRuns, pressSelects, toolGroups } from './tools.ts';
+import {
+  CONTAINERS_GROUP,
+  CREATE_GROUP,
+  EXTENSIONS_GROUP,
+  LINK_FOLD,
+  TOOLS_GROUP,
+  foldRuns,
+  pressSelects,
+  toolGroups,
+} from './tools.ts';
 
 describe('toolGroups', () => {
   test('the link tools sit with the shapes, in the create group, after the fixed tools', () => {
@@ -20,6 +29,23 @@ describe('toolGroups', () => {
     expect(create?.entries.some((entry) => entry.tool.kind === 'node')).toBe(true);
     expect(create?.entries.at(-1)?.tool.kind).toBe('link');
     expect(groups.filter((group) => group.entries.some((entry) => entry.tool.kind === 'link'))).toHaveLength(1);
+  });
+
+  test('the containers and the card are offered in groups of their own, after the shapes', () => {
+    const groups = toolGroups(defaultNodeRegistry, defaultLinkRegistry, {
+      create: true,
+      link: true,
+      update: true,
+      delete: true,
+    });
+    const types = (name: string) =>
+      groups
+        .find((group) => group.name === name)
+        ?.entries.flatMap((entry) => (entry.tool.kind === 'node' ? [entry.tool.type] : []));
+    expect(groups.map((group) => group.name)).toEqual([TOOLS_GROUP, CREATE_GROUP, CONTAINERS_GROUP, EXTENSIONS_GROUP]);
+    expect(types(CONTAINERS_GROUP)).toEqual(['hull', 'view']);
+    expect(types(EXTENSIONS_GROUP)).toEqual(['card']);
+    expect(types(CREATE_GROUP)).toEqual(['rect', 'ellipse', 'polygon', 'cloud', 'polyline', 'note', 'icon']);
   });
 
   test('the link types share one flyout at the end of the create group', () => {

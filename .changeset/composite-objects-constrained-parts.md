@@ -6,6 +6,7 @@
 '@dxos/plugin-uml': minor
 '@dxos/plugin-canvas': minor
 '@dxos/plugin-markdown': patch
+'@dxos/react-ui': patch
 '@dxos/react-ui-form': patch
 '@dxos/ui-types': minor
 ---
@@ -98,11 +99,18 @@ reference diagrams are drawn on it: their `.dx` sources name `grid=384x256`, and
 renders are regenerated.
 
 plugin-canvas contributes its own extension tools through `CanvasCapabilities.NodeType`, the space graph first: one
-ECHO space as a circle of objects on a hexagonal lattice, with its seed, spacing and hue as Properties. A kind a
-plugin contributes is offered in an `Extensions` group of the tools panel (`CanvasCapabilities.EXTENSIONS_GROUP`)
-unless it names a group of its own, so plugin-uml's class is there too.
+ECHO space as a circle of objects on a hexagonal lattice, with its seed, spacing and hue as Properties. The tools
+panel has two more groups after the shapes: `Containers` (the hull and the view) and `Extensions` (the card, and
+every kind a plugin contributes unless it names a group of its own, so plugin-uml's class is there too);
+react-ui-canvas exports `CONTAINERS_GROUP` and `EXTENSIONS_GROUP`.
 
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
+
+A switch or checkbox keeps its visually hidden input inside itself (`position: relative` on `.dx-switch` and
+`.dx-checkbox`): in a scrolling form the input was left behind, and focusing it scrolled a clipped ancestor, which took
+the Properties panel out of view when a toggle far down it was pressed. The Properties panel shows Fill and Border as
+a shape draws them, so a type that draws its own outline (text, an icon, the space graph) reads off until one is
+asked for. A vector field's stack no longer asks a plain fieldset for a gutter, which logged a warning.
 
 `@dxos/ui-types/phosphor` exports `phosphorIcons`, the name of every regular Phosphor glyph. It is an entry of its
 own rather than part of the package's index, and `iconOptions()` imports it when a picker first asks, so the

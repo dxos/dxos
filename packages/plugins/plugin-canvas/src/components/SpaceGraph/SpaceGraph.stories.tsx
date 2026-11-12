@@ -10,9 +10,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import {
+  EXTENSIONS_GROUP,
   type RenderList2D,
   createNodeRegistry,
   defaultNodePrototypes,
@@ -26,13 +27,12 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Node, type Scene } from '@dxos/scene';
 
-import * as CanvasCapabilities from '../../types/CanvasCapabilities.ts';
 import { spaceGraphSpec } from './SpaceGraph.tsx';
 
 const NODES = createNodeRegistry(
   {
     ...defaultNodeTypes,
-    'space-graph': kindNodeDef('space-graph', { group: CanvasCapabilities.EXTENSIONS_GROUP, ...spaceGraphSpec }),
+    'space-graph': kindNodeDef('space-graph', { group: EXTENSIONS_GROUP, ...spaceGraphSpec }),
   },
   defaultNodePrototypes,
 );
@@ -83,6 +83,7 @@ export const Default: Story = {};
 /**
  * 1. Two space graphs are drawn, each a circle holding its objects.
  * 2. The Space graph tool is in the rail, in a group of its own: not among the shapes and links.
+ * 3. Select a graph: Border reads off. Turn it on: the frame takes a border and the inspector stays in place.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -99,5 +100,20 @@ export const Test: Story = {
     await expect(
       group?.querySelector('[data-testid="canvas.tool.node:rect"], [data-testid="canvas.tool.select"]'),
     ).toBeNull();
+
+    // A graph draws its own circle, so its frame has no border until one is asked for: Border reads off, and turning
+    // it on leaves the inspector where it is (the switch's hidden input once sat outside it, and focusing it scrolled
+    // the whole panel away).
+    await userEvent.click(graphs[0]);
+    const dock = await canvas.findByTestId('scene-view-dock');
+    const border = await within(dock).findByRole('switch', { name: 'Border' });
+    await expect(border).not.toBeChecked();
+    await userEvent.click(border);
+    await waitFor(() => expect(within(dock).getByRole('switch', { name: 'Border' })).toBeChecked());
+    await expect(
+      Array.from(dock.querySelectorAll('*')).filter(
+        (element) => element.scrollTop > 0 && getComputedStyle(element).overflowY === 'hidden',
+      ),
+    ).toEqual([]);
   },
 };

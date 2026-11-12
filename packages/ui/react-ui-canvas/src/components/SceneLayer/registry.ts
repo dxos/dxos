@@ -37,7 +37,16 @@ import {
   createNodeRegistry,
   templateCompositeId,
 } from '../../model/index.ts';
-import { HULL_STYLE, NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
+import {
+  CONTAINERS_GROUP,
+  EXTENSIONS_GROUP,
+  HULL_STYLE,
+  NOMINAL_SIZES,
+  cloudPath,
+  createNode,
+  polygonPath,
+  polylinePath,
+} from '../../utils/index.ts';
 import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
 import {
@@ -227,6 +236,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'Hull',
     icon: 'ph--bounding-box--regular',
     key: 'B',
+    group: CONTAINERS_GROUP,
     schema: HullNode,
     component: HullNodeView,
     create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: HULL_STYLE }),
@@ -257,6 +267,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'View',
     icon: 'ph--frame-corners--regular',
     key: 'F',
+    group: CONTAINERS_GROUP,
     schema: ViewNode,
     component: ViewNodeView,
     create: (props) => createNode({ type: 'view', ...props }),
@@ -309,6 +320,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'Card',
     icon: 'ph--article--regular',
     key: 'D',
+    group: EXTENSIONS_GROUP,
     schema: CardNode,
     // A composite object (`card-template.ts`), not a shape a view paints: the canvas places an Instance of it and
     // binds each region to the card's own field, so the regions are edited in place and the data stays typed.

@@ -25,6 +25,7 @@ import {
   type NodeRegistry,
   SCENE_OVERLAY_ATTRIBUTE,
   type ViewOption,
+  bareNode,
   chainEdits,
   classedLink,
   classedNode,
@@ -203,6 +204,10 @@ const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertic
 /** The size a type draws its text at unless styled otherwise, where that is not a shape label's: a hull's name is a caption. */
 const textSize = (node: Node): Pick<NodeStyle, 'fontSize'> => (isHullNode(node) ? { fontSize: HULL_FONT_SIZE } : {});
 
+/** A node as the view draws it: its class's look under its own, and a bare type's fill and border off unless set. */
+const drawnNode = (nodes: NodeRegistry, node: Node, styles: StyleMap): Node =>
+  bareNode(classedNode(node, styles), nodeDef(nodes, node)?.bare);
+
 /**
  * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
  * contents read as they look and an unset port count as the type's.
@@ -218,7 +223,11 @@ const formValues = (
     : {
         ...element,
         layer: elementLayer(element, layers),
-        style: { ...textAlign(element), ...textSize(element), ...resolveStyle(classedNode(element, styles).style) },
+        style: {
+          ...textAlign(element),
+          ...textSize(element),
+          ...resolveStyle(drawnNode(nodes, element, styles).style),
+        },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
       };
@@ -367,7 +376,7 @@ export const PropertiesInspector = ({
         // A link's look is the common base of its class's style; a node's, the whole of it.
         const look = isLink(element)
           ? classedLink(element, styleMap).style
-          : resolveStyle(classedNode(element, styleMap).style);
+          : resolveStyle(drawnNode(nodes, element, styleMap).style);
         const split = splitClassEdit(look, patch.style, styleClass.style ?? {}, element.style);
         classes[styleClass.id] = { ...styleClass, style: split.classLook };
         return write({ ...patch, style: split.own });

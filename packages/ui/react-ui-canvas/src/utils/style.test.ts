@@ -8,13 +8,16 @@ import { type Node, type NodeTone, type StyleMap } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { CLASSIC_LOOK, NEU_STYLE_SET, defaultThemeRegistry, resolveLook } from '../model/index.ts';
+import { createNode } from './shapes.ts';
 import {
+  bareNode,
   canvasFillClass,
   classedLink,
   classedNode,
   frameClasses,
   hueClasses,
   nodeRelief,
+  resolveStyle,
   splitClassEdit,
   surfaceClasses,
   variantClasses,
@@ -194,5 +197,17 @@ describe('Neu without a hue', () => {
         expect(variantClasses(undefined, variant, tone)).toEqual(variantClasses('neutral', variant, tone));
       }
     }
+  });
+
+  test('a bare type draws no fill or border unless its style sets them, and the panel reads the same', ({ expect }) => {
+    const node = createNode({ type: 'rect', id: 't', z: 'a0', center: { x: 0, y: 0 } });
+    // Unset, the frame's defaults are on; a bare type's are off, so that is what a toggle shows.
+    expect(resolveStyle(node.style)).toMatchObject({ fill: true, border: true });
+    expect(resolveStyle(bareNode(node, true).style)).toMatchObject({ fill: false, border: false });
+    expect(resolveStyle(bareNode({ ...node, style: { border: true } }, true).style)).toMatchObject({
+      fill: false,
+      border: true,
+    });
+    expect(bareNode(node, undefined)).toBe(node);
   });
 });
