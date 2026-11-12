@@ -863,7 +863,7 @@ requires; where the test expects the opposite today, the table says so ([D-62]).
 | T-15     | edge       | `edge` `plugin-store.node.test.ts` › EDGE plugins: a plugin published with the dx CLI › serves its operation once published               | Skipped unless a `dx` binary is installed or named by `DX_CLI`.                            |
 | T-16     | edge       | `edge` `plugin-seed.node.test.ts` › first-party plugins seeded into the registry (2 tests)                                                | Skipped unless first-party bundles are available; `plugins-mode.yml` provides them.        |
 | T-17     | edge       | `edge` `operation-fallbacks.node.test.ts` › operations without a bundle in plugins mode (2 tests)                                         | Same condition as T-16.                                                                    |
-| T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes with operation-service; fails in plugins routing by [D-41] until the case is resolved. |
+| T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes: plugin-space's bundle answers `{ groups: [] }` without plugin-inbox's rule ([D-88]). |
 | T-19     | edge       | `plugins-mode.yml`: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins`                                                               | Advisory; per-test failures are recorded in edge's operation-fallbacks plan.               |
 | T-20     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B invokes A's operation                                      | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
 | T-21     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B uses A's type                                              | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
@@ -1027,10 +1027,10 @@ scenario T-17: Every operation that falls back to operation-service is inventori
 ```
 
 ```mdl
-scenario T-18: An operation that reads another plugin's capability answers alike in both routings
+scenario T-18: An operation that reads another plugin's capability sees only its own plugin's on EDGE
   given: three Persons in a space, two of them with emails that differ only in case
-  when: `space.findDuplicates` runs on Person
-  then: it returns one group of those two, by the identity rule plugin-inbox contributes, whether operation-service or plugin-space's bundle runs it
+  when: `space.findDuplicates` runs on Person in plugin-space's bundle, alone on EDGE
+  then: it returns `{ groups: [] }`, since the identity rule plugin-inbox contributes does not reach the bundle ([D-88])
   tags: [edge]
 ```
 
@@ -1907,4 +1907,14 @@ decision D-88: A plugin reading other plugins' capabilities (skills, subject con
   date: 2026-11-12
   by: user:dmaretskyi
   affects: [F-6.4]
+```
+
+```mdl
+decision D-89: T-18 and its row in the tested-flows table expect plugin-space's bundle, running alone on EDGE, to answer `space.findDuplicates` on Person with `{ groups: [] }`, no longer the group plugin-inbox's identity rule would find. Follows from [D-88].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-18]
+  why: Under [D-88] no other plugin's capability reaches a bundle on EDGE, so plugin-inbox's identity rule is absent there; edge's `plugin-isolation.node.test.ts` asserts `{ groups: [] }` for the bundle (dxos/edge#1507).
+  rejected: Keeping the cross-plugin answer as the requirement, which [D-88] puts out of scope.
 ```
