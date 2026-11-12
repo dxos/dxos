@@ -5000,6 +5000,14 @@ decision D-245: Each section's Overview hero uses the background from the final 
   why: Josiah asked that the docs use the real backgrounds from the final suite; the EDGE and PLEX heroes did not.
 ```
 
+```mdl
+decision D-246: Each Overview hero follows the page's theme. In dark mode it is unchanged. In light mode its ground is the light surface color, its mark and title are the page's text color, and its tagline is the muted text color. The rays keep the section's color in both themes. Amends [D-245].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-16.8]
+  why: Josiah asked for light and dark versions of the header images; a dark banner on a light page stood out.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

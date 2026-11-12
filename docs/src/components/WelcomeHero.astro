@@ -88,6 +88,21 @@ const art = BACKGROUNDS[background].replace('<svg ', '<svg preserveAspectRatio="
     color: rgb(255 255 255 / 0.85);
   }
 
+  /* Light: the art's ground and mark follow the page through the SVG's own variables; its lines keep the section's color. */
+  :global(:root[data-theme='light']) .welcome-hero {
+    --dx-bg-fill: var(--c-surface);
+    --dx-bg-icon: var(--c-fg);
+    background: var(--c-surface);
+  }
+
+  :global(:root[data-theme='light']) .welcome-hero #_top {
+    color: var(--c-fg);
+  }
+
+  :global(:root[data-theme='light']) .tagline {
+    color: var(--c-muted);
+  }
+
   @media (max-width: 50rem) {
     .welcome-hero {
       height: 12rem;
