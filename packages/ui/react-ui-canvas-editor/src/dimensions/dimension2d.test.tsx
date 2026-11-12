@@ -126,14 +126,11 @@ describe('the 2D dimension under SceneEditor', () => {
     expect(screen.queryByTestId('toolbar-guides')).toBeNull();
     await act(async () => screen.getByTestId('theme-grid-dots').click());
     await waitFor(() => expect(display.current).toMatchObject({ grid: true, gridKind: 'dots' }));
-    // One of the three is always pressed: pressing the one drawn again leaves it drawn, and Off draws none.
+    // Pressing the one drawn turns the grid off: two buttons, three states.
     await act(async () => screen.getByTestId('theme-grid-dots').click());
-    expect(display.current).toMatchObject({ grid: true, gridKind: 'dots' });
-    await waitFor(() => expect(screen.getByTestId('theme-grid-dots').getAttribute('aria-pressed')).toBe('true'));
-    expect(screen.getByTestId('theme-grid-none').getAttribute('aria-pressed')).toBe('false');
-    await act(async () => screen.getByTestId('theme-grid-none').click());
     await waitFor(() => expect(display.current).toMatchObject({ grid: false }));
-    await waitFor(() => expect(screen.getByTestId('theme-grid-none').getAttribute('aria-pressed')).toBe('true'));
+    await waitFor(() => expect(screen.getByTestId('theme-grid-dots').getAttribute('aria-pressed')).toBe('false'));
+    expect(screen.getByTestId('theme-grid-lines').getAttribute('aria-pressed')).toBe('false');
     unmount();
 
     // A lattice switches between its cells (its guides) and the grid, which is what a shape snaps to.
@@ -152,15 +149,18 @@ describe('the 2D dimension under SceneEditor', () => {
     expect(screen.getByTestId('toolbar-lattice').getAttribute('aria-pressed')).toBe('true');
     await act(async () => screen.getByTestId('toolbar-lattice-grid').click());
     await waitFor(() => expect(display.current).toMatchObject({ guides: false }));
-    // Off draws neither the cells nor the grid, and from there the lattice comes back with its cells.
-    await act(async () => screen.getByTestId('toolbar-lattice').click());
-    await waitFor(() => expect(display.current).toMatchObject({ guides: true }));
-    await act(async () => screen.getByTestId('toolbar-lattice-off').click());
+    // Pressing the grid again turns it off, with no cells in its place; pressing it once more draws it again.
+    await act(async () => screen.getByTestId('toolbar-lattice-grid').click());
     await waitFor(() => expect(display.current).toMatchObject({ guides: false, grid: false }));
-    await waitFor(() => expect(screen.getByTestId('toolbar-lattice-off').getAttribute('aria-pressed')).toBe('true'));
-    expect(screen.getByTestId('toolbar-lattice-grid').getAttribute('aria-pressed')).toBe('false');
+    await waitFor(() => expect(screen.getByTestId('toolbar-lattice-grid').getAttribute('aria-pressed')).toBe('false'));
+    expect(screen.getByTestId('toolbar-lattice').getAttribute('aria-pressed')).toBe('false');
     await act(async () => screen.getByTestId('toolbar-lattice-grid').click());
     await waitFor(() => expect(display.current).toMatchObject({ guides: false, grid: true, gridKind: 'lines' }));
+    // The lattice pressed while it is on goes off too, and takes no grid with it.
+    await act(async () => screen.getByTestId('toolbar-lattice').click());
+    await waitFor(() => expect(display.current).toMatchObject({ guides: true }));
+    await act(async () => screen.getByTestId('toolbar-lattice').click());
+    await waitFor(() => expect(display.current).toMatchObject({ guides: false, grid: false }));
   });
 
   test('an aid the engine’s own key toggles reaches the host’s display, so the editor’s constrain reads it too', async () => {

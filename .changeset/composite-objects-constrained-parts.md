@@ -67,8 +67,9 @@ Hulls: a border round a set of shapes, which a link's route respects.
 - In the Views inspector a hull's shapes are rows under it, and a row dragged onto a hull, or beside a row of
   another hull or of none, moves its shape into, between or out of hulls.
 
-The display panel's grid switch has three options, one always pressed: dots, lines or off, and on a lattice its
-cells, the grid or off. A lattice scene draws no grid when the look has none.
+The display panel's grid switch on a lattice scene can be turned off: pressing the option that is drawn (its cells,
+or the grid) draws neither, as pressing dots or lines already did elsewhere. A lattice scene draws no grid when the
+look has none.
 
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 
