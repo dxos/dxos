@@ -39,6 +39,7 @@ import {
   portsPerSideOf,
   resolveStyle,
   splitClassEdit,
+  templateComposite,
   updateElement,
   useRegistry,
   viewLayers,
@@ -66,6 +67,7 @@ import {
   SplineLink,
   type StyleClass,
   type StyleMap,
+  isInstanceNode,
   isLink,
   isNoteNode,
   isViewNode,
@@ -83,13 +85,16 @@ import { GeometryField } from './GeometryField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
 import { FlipLinksContext, MarkerField } from './MarkerField.tsx';
+import { OptionalPartsContext, PartsField } from './PartsField.tsx';
 import { PolygonFitField } from './PolygonFitField.tsx';
 import { LinkVariantsContext, VariantField } from './VariantField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
-// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached;
-// an instance's `overrides` have no editor until the canvas can set them.
+// `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached.
+// `composite`, `bind`, `optional`, `hidden`, `grow` and `follows` say how a tool's Object is put together: they are
+// written in the template, not set on a shape. `overrides` is where a part's switch writes (`PartsField`), and is
+// shown only for an Instance whose Object has an optional part.
 const HIDDEN = [
   'id',
   'type',
@@ -103,6 +108,12 @@ const HIDDEN = [
   'connector',
   'exposed',
   'overrides',
+  'composite',
+  'bind',
+  'optional',
+  'hidden',
+  'grow',
+  'follows',
 ];
 
 /** A link's `type` is its variant, which the panel does show: straight, orthogonal, elbow, curve or spline. */
@@ -149,6 +160,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'scene': ViewField,
   'layer': LayerClassField,
   'type': VariantField,
+  'overrides': PartsField,
 };
 
 const LINK_SCHEMAS: Record<LinkType, Schema.Codec<any, any>> = {
@@ -350,6 +362,20 @@ export const PropertiesInspector = ({
   // Every selected element is a link: only then is `type` theirs to pick, and only then does flipping mean anything.
   const onlyLinks = links.length > 0 && links.length === elements.length;
   const flip = !readonly && onlyLinks ? onFlip : undefined;
+  // An Instance of a tool's Object shows a switch for each part its template marks optional (`PartsField`). Every
+  // other selection keeps `overrides` out of the panel, where there is nothing in it to set.
+  const optionalParts = useMemo(() => {
+    const [element] = elements;
+    if (elements.length !== 1 || !element || isLink(element) || !isInstanceNode(element)) {
+      return [];
+    }
+    const definition = templateComposite(nodes, element.composite);
+    return Object.values(definition?.nodes ?? {}).filter((part) => part.optional === true);
+  }, [elements, nodes]);
+  const exclude = useMemo(
+    () => (onlyLinks ? HIDDEN_LINK : optionalParts.length > 0 ? HIDDEN.filter((name) => name !== 'overrides') : HIDDEN),
+    [onlyLinks, optionalParts],
+  );
 
   // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for
   // every kind: its fill rows only when every element is a node, since a link has a colour but no fill.
@@ -376,37 +402,39 @@ export const PropertiesInspector = ({
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
       {schema && (
-        <LinkVariantsContext.Provider value={linkTypes}>
-          <FlipLinksContext.Provider value={flip}>
-            <LayersContext.Provider value={layers}>
-              <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
-                <ViewOptionsContext.Provider value={viewOptions ?? []}>
-                  <Form.Root
-                    key={[...selection].join()}
-                    schema={schema}
-                    values={values}
-                    fieldOverrides={fieldOverrides}
-                    fieldMap={fieldMap}
-                    db={db}
-                    getOptions={getOptions}
-                    readonly={readonly}
-                    autoSave
-                    // A typed value writes the scene once, when the field blurs, not on every keystroke.
-                    commitOn='blur'
-                    onSave={onSave}
-                  >
-                    {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
-                    <Form.Viewport scroll={false}>
-                      <Form.Content>
-                        <Form.Fields exclude={onlyLinks ? HIDDEN_LINK : HIDDEN} sort={fieldOrder} />
-                      </Form.Content>
-                    </Form.Viewport>
-                  </Form.Root>
-                </ViewOptionsContext.Provider>
-              </StyleClassesContext.Provider>
-            </LayersContext.Provider>
-          </FlipLinksContext.Provider>
-        </LinkVariantsContext.Provider>
+        <OptionalPartsContext.Provider value={optionalParts}>
+          <LinkVariantsContext.Provider value={linkTypes}>
+            <FlipLinksContext.Provider value={flip}>
+              <LayersContext.Provider value={layers}>
+                <StyleClassesContext.Provider value={styles ? styleMap : undefined}>
+                  <ViewOptionsContext.Provider value={viewOptions ?? []}>
+                    <Form.Root
+                      key={[...selection].join()}
+                      schema={schema}
+                      values={values}
+                      fieldOverrides={fieldOverrides}
+                      fieldMap={fieldMap}
+                      db={db}
+                      getOptions={getOptions}
+                      readonly={readonly}
+                      autoSave
+                      // A typed value writes the scene once, when the field blurs, not on every keystroke.
+                      commitOn='blur'
+                      onSave={onSave}
+                    >
+                      {/* The inspector panel scrolls its sections together, so the form keeps no scroll of its own. */}
+                      <Form.Viewport scroll={false}>
+                        <Form.Content>
+                          <Form.Fields exclude={exclude} sort={fieldOrder} />
+                        </Form.Content>
+                      </Form.Viewport>
+                    </Form.Root>
+                  </ViewOptionsContext.Provider>
+                </StyleClassesContext.Provider>
+              </LayersContext.Provider>
+            </FlipLinksContext.Provider>
+          </LinkVariantsContext.Provider>
+        </OptionalPartsContext.Provider>
       )}
       {summary && (
         <p className='p-2 text-center text-sm text-fg-muted' data-testid='properties-summary'>

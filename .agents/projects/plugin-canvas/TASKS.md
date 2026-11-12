@@ -1,6 +1,6 @@
 # plugin-canvas — Tasks
 
-_Resume: PR #14501 (draft, `claude/plugin-canvas-composite-objects-cb1372`) carries phase 7 — composite objects with constrained parts, DSL templates, in-place editing, the ortho link variant and the UML class conversion. CI was pending when it was opened and has not been chased. Next: the UML class story (the harness needs a node registry), then the deviations listed in phase 7. Uncommitted: none._
+_Resume: PR #14501 (draft, `claude/plugin-canvas-composite-objects-cb1372`) carries phase 7 — composite objects with constrained parts, DSL templates, in-place editing, the ortho link variant, and the Card and UML class tools converted to composites. CI has not been chased. Next: the deviations listed in phase 7, the first being a part that hugs its content. Uncommitted: none._
 
 ## Phase 0: audit + design
 
@@ -254,9 +254,20 @@ editable. This phase makes the second form the one tools use, and gives a part a
       back from the DOM on a storybook served from this worktree on port 9010: at 288x192 and 384x288 the glyph is
       30x30 at (10,10) in both, the footer 15px tall and 10px from the bottom in both, and the body grows 84px to
       163px — the constraints, measured rather than eyeballed. The Variant selector shows for a link alone.
-- [ ] **Not visually verified: the UML class.** Its old story went with `ClassNodeView`, and `SceneEditorStory` takes
-      no node registry, so a plugin kind cannot be rendered through it. The class is covered by four unit tests
-      (`ClassNode.composite.test.ts`). Giving the harness a registry, and a class story with it, is the next step.
+- [x] **`react-ui-canvas`: the `card` tool as a composite template** (D10, D11, D12). The built-in Card no longer
+      paints a view: it declares `CARD_TEMPLATE` and places an Instance of it, with each region bound to the card's
+      own field. `bind` reaches any field, not only text, so the glyph is the card's typed `icon`. Optional parts
+      (`optional`) are switched off per Instance from the Properties panel (`PartsField` writes `overrides`), the
+      part naming a hidden one in `grow` takes its room, and a part that `follows` another goes with it (the
+      hairline with the footer). `cardPrototype`/`CardFrame` stay, for a kind that paints a view of its own
+      (studio's feed card).
+- [x] **The composite round trip for a typed tool.** `nodeElement` keyed on `type === 'instance'`, so a `card`
+      node's composite was not written as the element's `parts` and the Views tree showed a leaf. It now keys on
+      `isInstanceNode` and keeps the node's own type; `canvasNode` reads an Object back by whether it names a
+      composite, not by what it is called.
+- [x] **Visually verified: the UML class.** `SceneEditorStory` now takes a `nodes` registry (the editor exposes
+      `@dxos/react-ui-canvas-editor/testing`), so a plugin kind renders through the shared editor:
+      `plugins-plugin-uml-classnode--default` draws three classes, each expanding into its three compartments.
 
 ### Deviations and follow-ups
 
@@ -266,6 +277,9 @@ editable. This phase makes the second form the one tools use, and gives a part a
 - **The scene DSL carries no text alignment, font or padding**, so the UML class's compartments are left-aligned
   where `ClassNodeView` centred and emboldened its name. The compartments draw their own borders, which is what
   reads as the class's two rules. Extending `readStyle` with alignment is the follow-up.
+- **A compartment does not grow to its content.** A class with more methods than its methods compartment holds
+  clips them (`Ledger` in the class story), because a part is a fixed size the constraints place rather than one
+  that hugs its text. A `content` constraint (Figma's "hug") is the fix, and it is what a card's body wants too.
 - **Free point endpoints are not expressible in the DSL** (`from=`/`to=` name nodes), so a template cannot author a
   hairline as a line between two points; a part with a border stands in.
 

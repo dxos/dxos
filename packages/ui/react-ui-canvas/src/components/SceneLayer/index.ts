@@ -5,3 +5,4 @@
 export * from './SceneLayer.tsx';
 export * from './registry.ts';
 export * from './CardNodeView.tsx';
+export * from './card-template.ts';

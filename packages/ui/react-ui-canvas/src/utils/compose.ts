@@ -195,9 +195,58 @@ const boundText = (value: unknown): string | undefined => {
  * the shape is laid out and the Instance stays the thing that holds the data.
  */
 export const boundNode = (instance: PlacedComposite, node: Node, fields: readonly PartField[]): Node => {
-  const text = node.bind === undefined ? undefined : boundText(Reflect.get(instance, node.bind));
+  if (node.bind === undefined) {
+    return node;
+  }
+  const value = Reflect.get(instance, node.bind);
+  if (value === undefined) {
+    return node;
+  }
+  const text = boundText(value);
   const [part] = fields;
-  return text === undefined || !part ? node : { ...node, [part.field]: text };
+  // Text reaches the part's own text field, whatever the Instance calls it, so a class's `attributes` fill a note's
+  // `text`. Anything else — a glyph, a number — is written under the name it binds, which the part's type reads.
+  return text !== undefined && part ? { ...node, [part.field]: text } : { ...node, [node.bind]: value };
+};
+
+/**
+ * The composite without the parts an Instance has turned off, each grower taking the room of the hidden parts it
+ * names (`grow`), so a card with its footer off grows its body into the space rather than leaving a gap. The frame
+ * the parts are solved against is unchanged: turning a part off redistributes the inside, it does not resize the
+ * Object. A link with an end on a hidden part goes with it.
+ */
+export const visibleParts = (view: RenderList2D): RenderList2D => {
+  const hidden = new Set(Object.values(view.nodes).flatMap((node) => (node.hidden === true ? [node.id] : [])));
+  if (hidden.size === 0) {
+    return view;
+  }
+  // A part that belongs to another goes with it, however deep the chain: a hairline follows its footer.
+  for (let added = true; added;) {
+    added = false;
+    for (const node of Object.values(view.nodes)) {
+      if (node.follows !== undefined && hidden.has(node.follows) && !hidden.has(node.id)) {
+        hidden.add(node.id);
+        added = true;
+      }
+    }
+  }
+  const boundsOf = (id: NodeId): Bounds[] => {
+    const node = view.nodes[id];
+    return node ? [nodeBounds(node)] : [];
+  };
+  const grown = Object.values(view.nodes)
+    .filter((node) => !hidden.has(node.id))
+    .map((node): Node => {
+      const taken = (node.grow ?? '').split(/\s+/).filter((id) => hidden.has(id));
+      const box = taken.length === 0 ? undefined : unionBounds([nodeBounds(node), ...taken.flatMap(boundsOf)]);
+      return box ? { ...node, center: boundsCentre(box), size: { width: box.width, height: box.height } } : node;
+    });
+  const touches = (link: Link) => [link.source, link.target].some((end) => hidden.has(endpointNode(end) ?? ''));
+  return {
+    ...view,
+    nodes: Object.fromEntries(grown.map((node) => [node.id, node])),
+    links: Object.fromEntries(Object.entries(view.links).filter(([, link]) => !touches(link))),
+  };
 };
 
 /**
@@ -211,9 +260,9 @@ export const instanceView = (
 ): RenderList2D => {
   const bound = Object.values(composite.nodes).some((node) => node.bind !== undefined);
   if (!instance.overrides && !bound) {
-    return composite;
+    return visibleParts(composite);
   }
-  return {
+  return visibleParts({
     ...composite,
     nodes: Object.fromEntries(
       Object.values(composite.nodes).map((node) => {
@@ -221,7 +270,7 @@ export const instanceView = (
         return [node.id, boundNode(instance, overridden, parts(overridden))];
       }),
     ),
-  };
+  });
 };
 
 const boundsCentre = ({ x, y, width, height }: Bounds): Point => ({ x: x + width / 2, y: y + height / 2 });

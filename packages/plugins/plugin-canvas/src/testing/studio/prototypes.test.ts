@@ -34,21 +34,25 @@ const registry = () =>
   );
 
 describe('core prototypes', () => {
-  test('the card and icon prototypes are registered', ({ expect }) => {
-    expect(Object.keys(defaultNodePrototypes).sort()).toEqual(['box', 'card', 'icon']);
+  test('the shape prototypes are registered', ({ expect }) => {
+    // `object` is the prototype a tool whose shape is a composite extends (the `card` type, a UML class).
+    expect(Object.keys(defaultNodePrototypes).sort()).toEqual(['box', 'card', 'icon', 'object']);
     // A prototype carries a look and an editing model, not a schema: a type brings that.
     expect(cardPrototype.schema).toBeUndefined();
     expect(iconPrototype.schema).toBeUndefined();
   });
 
   test("a type may share its prototype's name", ({ expect }) => {
-    // Types and prototypes are different namespaces, so `card` on `card` is inheritance, not a cycle.
+    // Types and prototypes are different namespaces, so `card` on `card` is inheritance, not a cycle, and the
+    // `card` prototype stays for a kind that paints its own view (the feed card below).
     for (const type of ['card', 'icon']) {
       expect(registry()[type].name).toEqual(type === 'card' ? 'Card' : 'Icon');
     }
     expect(registry()['icon'].component).toEqual(iconPrototype.component);
     expect(registry()['icon'].bare).toBe(true);
     expect(registry()['card'].parts?.map(({ field }) => field)).toEqual(['label', 'body', 'footer']);
+    // The `card` type itself is a composite object now: it declares a template and draws no view of its own.
+    expect(registry()['card'].template).toBeDefined();
   });
 
   test('every default size is in nominal units, and a whole number of minor ones', ({ expect }) => {

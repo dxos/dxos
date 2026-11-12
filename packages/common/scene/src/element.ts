@@ -189,6 +189,10 @@ export const constrainFields = {
   constrain: Schema.optional(PartLayout.annotate({ title: 'Constrain' })),
 };
 
+/** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
+export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
+export type InstanceFit = (typeof INSTANCE_FITS)[number];
+
 /** The fields every node type shares; a type's schema is `Schema.Struct({ ...nodeBase, type: Literal, ... })`. */
 export const nodeBase = {
   id: Schema.String,
@@ -225,10 +229,33 @@ export const nodeBase = {
    */
   bind: Schema.optional(Schema.String.annotate({ title: 'Bind' })),
   /**
+   * Inside a composite, the part may be turned off on one Instance: the Properties panel shows a switch for it, so a
+   * tool offers a card without a footer without needing a second definition.
+   */
+  optional: Schema.optional(Schema.Boolean.annotate({ title: 'Optional' })),
+  /** The part is not drawn. An Instance turns an optional part off by overriding this, which is its own alone. */
+  hidden: Schema.optional(Schema.Boolean.annotate({ title: 'Hidden' })),
+  /**
+   * Inside a composite, the parts whose room this one takes when they are hidden (`grow: 'footer'`, several separated
+   * by spaces): a card with its footer off grows its body into the space rather than leaving a gap.
+   */
+  grow: Schema.optional(Schema.String.annotate({ title: 'Grow' })),
+  /**
+   * Inside a composite, the part this one belongs to: it is not drawn whenever that one is hidden, so a card's
+   * hairline goes with the footer it underlines rather than floating over nothing.
+   */
+  follows: Schema.optional(Schema.String.annotate({ title: 'Follows' })),
+  /**
    * The composite Object this node draws, where it places one: the generic `instance` always, and a type of its own
    * that declares a template. Naming one is what makes a node a {@link PlacedComposite}.
    */
   composite: Schema.optional(Schema.String),
+  /**
+   * Values of the composite's parts set for this node alone, shallow per field (`style` merges per key): what makes
+   * one card's own text, and the parts it switches off, its own while every card draws the same Object. Read only
+   * where the node names a `composite`.
+   */
+  overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
   ...constrainFields,
 };
 
@@ -397,10 +424,6 @@ export const ViewNode = Schema.Struct({
 });
 export type ViewNode = Schema.Schema.Type<typeof ViewNode>;
 
-/** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
-export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
-export type InstanceFit = (typeof INSTANCE_FITS)[number];
-
 /**
  * A composite object placed in a scene (ANIMATION.md §4.1): it draws the composite scene `composite` scaled into its
  * frame. Every instance shares the definition; `overrides` set values of the definition's nodes for this instance
@@ -409,8 +432,13 @@ export type InstanceFit = (typeof INSTANCE_FITS)[number];
 export const InstanceNode = Schema.Struct({
   type: Schema.Literal('instance'),
   ...nodeBase,
+  // The generic Object always names one; every other type that draws a composite may.
   composite: Schema.String,
-  overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
+  /**
+   * How the composite fills the frame, and which region of it the frame shows. Only the generic Object scales its
+   * parts as a picture, so these stay here rather than on the base — a type with its own template places its parts
+   * by their constraints. `fit` is also a polygon's own legacy field, which is the other reason not to share it.
+   */
   fit: Schema.optional(Schema.Literals(INSTANCE_FITS).annotate({ title: 'Fit' })),
   /** The composite region the frame shows, fixed: its parts at the instance's scale (decision 18). */
   frame: Schema.optional(Bounds),

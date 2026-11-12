@@ -23,6 +23,7 @@ import {
   type StyleMap,
   type ViewId,
   findLayout,
+  isInstanceNode,
   nodeFrame,
   resolveLayout2D,
   rootScene,
@@ -247,11 +248,13 @@ const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.El
     objects.set(object.id, object);
     placed = { object: object.id };
     extra.type = 'view';
-  } else if (node.type === 'instance' && typeof fields.composite === 'string') {
-    const object = { id: `${INSTANCE_PREFIX}${fields.composite}`, type: 'rect', parts: fields.composite };
+  } else if (isInstanceNode(node)) {
+    const object = { id: `${INSTANCE_PREFIX}${node.composite}`, type: 'rect', parts: node.composite };
     objects.set(object.id, object);
     placed = { object: object.id };
-    extra.type = 'instance';
+    // Its own name, not `instance`: a type that draws a composite (a card, a UML class) reads back as that type,
+    // with its typed fields, and is an Object because it names one — not because it is called `instance`.
+    extra.type = node.type;
   } else {
     placed = { type: node.type };
   }
@@ -333,7 +336,11 @@ const canvasNode = (doc: Scene.SceneDocument, element: Resolved2D, canvas: Field
   // A placed composite is a portal unless its object says it is an Object: a `view` node is a place to drill into and
   // an Instance is a symbol repeated, and only the object knows which of the two its parts are meant to be.
   const placed = element.parts === undefined ? element.type : element.type === 'instance' ? 'instance' : 'view';
-  const type = storedType === 'view' || storedType === 'instance' ? storedType : placed;
+  // A type of its own that draws a composite kept its own name, so anything stored wins over what the object says.
+  const type = typeof storedType === 'string' && storedType.length > 0 ? storedType : placed;
+  // An Object is a symbol repeated and a `view` is a place to drill into: a node naming a composite is the first,
+  // however it is spelled, and only a portal takes the parts as a scene.
+  const isObject = type === 'instance' || typeof extra.composite === 'string';
   const style = canvasStyle(element.overrides, extraStyle);
   return {
     ...extra,
@@ -355,11 +362,7 @@ const canvasNode = (doc: Scene.SceneDocument, element: Resolved2D, canvas: Field
     ...(element.locked !== undefined ? { locked: element.locked } : {}),
     ...(element.style !== undefined ? { class: element.style } : {}),
     ...(style ? { style } : {}),
-    ...(element.parts === undefined
-      ? {}
-      : type === 'instance'
-        ? { composite: element.parts }
-        : { scene: element.parts }),
+    ...(element.parts === undefined ? {} : isObject ? { composite: element.parts } : { scene: element.parts }),
   };
 };
 

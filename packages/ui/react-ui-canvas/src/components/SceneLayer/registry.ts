@@ -28,8 +28,15 @@ import {
   isPolylineNode,
 } from '@dxos/scene';
 
-import { type LinkRegistry, type NodeDefSpec, type NodeRegistry, createNodeRegistry } from '../../model/index.ts';
+import {
+  type LinkRegistry,
+  type NodeDefSpec,
+  type NodeRegistry,
+  createNodeRegistry,
+  templateCompositeId,
+} from '../../model/index.ts';
 import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
+import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
 import {
   BoxNodeView,
@@ -272,21 +279,28 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     bare: true,
   },
   card: {
-    extends: 'card',
+    extends: 'object',
     name: 'Card',
     icon: 'ph--cards--regular',
     key: 'D',
     schema: CardNode,
-    // Placeholder regions, so a new card reads as a card before it is edited (as a new UML class does): the frame
-    // draws a region only where the node carries its field.
+    // A composite object (`card-template.ts`), not a shape a view paints: the canvas places an Instance of it and
+    // binds each region to the card's own field, so the regions are edited in place and the data stays typed.
+    template: CARD_TEMPLATE,
+    // Placeholder regions, so a new card reads as a card before it is edited (as a new UML class does).
     create: (props) => ({
       type: 'card',
       ...props,
+      composite: templateCompositeId('card'),
       icon: { type: 'command' },
       label: 'Card',
       body: 'Body',
       footer: 'Footer',
     }),
+    defaultSize: cardPrototype.defaultSize,
+    resizable: true,
+    minSize: cardPrototype.minSize,
+    parts: cardPrototype.parts,
   },
   icon: {
     extends: 'icon',
