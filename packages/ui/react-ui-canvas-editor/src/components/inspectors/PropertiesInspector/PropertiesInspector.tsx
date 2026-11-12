@@ -114,6 +114,7 @@ const HIDDEN = [
   'hidden',
   'grow',
   'follows',
+  'parent',
 ];
 
 /** A link's `type` is its variant, which the panel does show: straight, orthogonal, elbow, curve or spline. */

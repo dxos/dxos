@@ -24,6 +24,7 @@ describe('element base', () => {
         'locked',
         'optional',
         'overrides',
+        'parent',
         'ports',
         'portsPerSide',
         'rotation',

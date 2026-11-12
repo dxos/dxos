@@ -287,6 +287,44 @@ editable. This phase makes the second form the one tools use, and gives a part a
   _link_ between two points. A rule is not a link, though: the card's hairline is a `polyline` part, whose vertices
   the DSL now authors as fractions of its own frame (`points="0,0.5 1,0.5"`), so it stretches with the card.
 
+## Phase 8: hulls and themed diagram fences (started 2026-11-12)
+
+A hull is a border round the shapes that name it as their `parent`. First cut, built to be evaluated in
+`ui/react-ui-canvas-editor/components/Hull` before the editing gestures are built on it.
+
+### Decisions (the agent's, 2026-11-12, not yet confirmed by the user)
+
+- **Hierarchy by `parent`, in one layout.** A hull is a node (`type: 'hull'`) and each shape inside it names it as
+  `parent`; a hull may name a hull. Not the Group composite: a group moves its members into a layout of their own, so
+  a link from outside ends at the group rather than at the member, and members are edited only after entering it.
+- **The frame is derived.** `fitHulls` sets a hull's `center`, `size` and `points` from what is inside it, where a
+  layout is read (`toRenderList2D`) and again where a scene is drawn, so a hull follows a shape in flight.
+- **On a lattice the border is on gutter centre lines**, round the tiles (a cell and half of each gutter beside it)
+  its shapes stand on. Each gutter the border runs along has a track a quarter of the gutter either side of it.
+- **A route answers to borders by where its ends are.** A hull holding both ends or neither is closed to it; a hull
+  holding one it crosses once (a crossing costs more than any number of bends). Containment is by tile, not by
+  `parent`, since the border is where it is.
+
+### Tasks
+
+- [x] `HullNode` and `parent` in `@dxos/scene`; `hull` a 2D kind.
+- [x] `utils/hull.ts`: members, tiles (box, perimeter with bridging), outline, `fitHulls`, `hullRegions`,
+      `routeWalls`, `enclose`.
+- [x] `gutter-route.ts`: walls, tracks, crossing cost; `route.ts`: `latticeRoute` carries each link's walls.
+- [x] `hull` node type drawn as a closed polyline; Enclose command on the selection (2D).
+- [x] Story `Hull` (Perimeter, Box, Lattice, LatticeBox), each with the same eight elbow links.
+- [x] `diagram` fences in a markdown document draw in the editor's colour mode (`SvgFile.toSvgFile({ theme })`,
+      `diagramPreview`), contributed to the markdown editor by plugin-canvas.
+- [ ] Moving a hull moves what is inside it; today a hull's own move is undone by the next fit.
+- [ ] Deleting a hull clears `parent` on what was inside it (a dangling `parent` is ignored meanwhile).
+- [ ] Dragging a shape across a border changes its `parent`.
+- [ ] Nested hulls on a lattice share a border where their edges coincide; give each depth its own track.
+- [ ] Off a lattice an elbow link has no obstacle avoidance, so it does not yet keep to its side of a border.
+- [ ] Lanes: more than three links on one quarter-gutter track are nudged past the border (`Nudge` knows no walls).
+- [ ] The Views tree lists a hull's shapes under it; the `.dx` DSL reads and prints `parent` and `hull`.
+- [ ] 3D: what a hull is there (a bounding volume), per the 2D/3D parity rule.
+- [ ] `PLUGIN.mdl`: record the hull once the model is confirmed.
+
 ## Backlog
 
 - [x] **Import a tldraw diagram as a canvas** (tracked 2026-10-18; built 2026-10-19). `src/import/tldraw.ts`

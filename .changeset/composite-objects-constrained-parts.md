@@ -4,6 +4,8 @@
 '@dxos/react-ui-canvas': minor
 '@dxos/react-ui-canvas-editor': minor
 '@dxos/plugin-uml': minor
+'@dxos/plugin-canvas': minor
+'@dxos/plugin-markdown': patch
 ---
 
 Composite objects whose parts follow their frame, declared in the scene DSL.
@@ -49,3 +51,16 @@ Cards, text shapes and gestures also sit on the canvas's own grid:
   grid cell it was hardcoded to.
 - Default and minimum sizes are whole numbers of grid cells: a rectangle is 4 x 2 nominal units and a
   card 4 x 3, and an ellipse resizes down to a quarter unit.
+
+Hulls: a border round a set of shapes, which a link's route respects.
+
+- Enclose (on a selection, in the 2D editor) draws a `hull` round the selected shapes, which then name it as their
+  `parent`; a hull's Hull property is `perimeter` (round the shapes) or `box` (the rectangle that bounds them), and
+  its frame follows whatever is inside it.
+- On a lattice the border runs along the gutters, and an elbow link keeps to the side of it both its ends are on: a
+  link between two shapes inside stays inside, one from outside crosses the border once, and one between two shapes
+  outside goes round the hull.
+
+A `diagram` fence in a markdown document draws as a diagram, in the editor's light or dark palette:
+`SvgFile.toSvgFile` takes `{ theme, transparent }`, `diagramPreview()` follows the editor's colour mode, and
+plugin-canvas contributes it to the markdown editor.

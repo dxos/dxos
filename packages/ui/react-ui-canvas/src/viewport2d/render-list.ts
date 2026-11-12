@@ -31,7 +31,7 @@ import {
 } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
-import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
+import { DEFAULT_LAYER, createNode, fitHulls, initialKeys } from '../utils/index.ts';
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 /**
@@ -423,11 +423,15 @@ const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
  * other (a `.dx` document's) is drawn with the default layer and the scene kinds react-ui-canvas has nodes for.
  */
 export const toRenderList2D = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): RenderList2D =>
-  layout.layers !== undefined ||
-  layout.kind !== undefined ||
-  Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
-    ? storedView(doc, layout)
-    : toView(doc, layout);
+  // A hull's frame is wherever the nodes inside it are, so it is set as the list is read rather than trusted as stored.
+  fitHulls(
+    layout.layers !== undefined ||
+      layout.kind !== undefined ||
+      Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
+      ? storedView(doc, layout)
+      : toView(doc, layout),
+    layout.lattice,
+  );
 
 /** An element's layer when its layout declares it; otherwise the default layer, which the list then declares. */
 const layerOf = (layout: Scene.LayoutRecord2D, element: Resolved2D): string =>

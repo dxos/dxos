@@ -37,6 +37,7 @@ export const KINDS_2D: readonly string[] = [
   'cloud',
   'polygon',
   'polyline',
+  'hull',
   'path',
   'note',
   'image',

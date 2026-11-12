@@ -8,7 +8,7 @@
 // on each axis and covers the gutters between them, so every channel between shapes is one gutter wide.
 //
 
-import { type Bounds, type ElementId, type Node } from '@dxos/scene';
+import { type Bounds, type ElementId, type Node, isHullNode } from '@dxos/scene';
 
 import { nodeBounds } from './shapes.ts';
 
@@ -140,10 +140,11 @@ export const coveredCells = ({ col, row, spanX, spanY }: LatticeCell): string[] 
 export type Occupancy = ReadonlyMap<string, ElementId>;
 
 /**
- * Whether a node takes part in the lattice: a guide (a group's backdrop) or a bare caption annotates the shapes rather
- * than being one, so it neither snaps, occupies cells nor blocks a gutter route.
+ * Whether a node takes part in the lattice: a guide (a group's backdrop), a bare caption or a hull annotates the shapes
+ * rather than being one, so it neither snaps, occupies cells nor blocks a gutter route.
  */
-export const onLattice = (node: Node): boolean => !node.style?.guide && node.style?.border !== false;
+export const onLattice = (node: Node): boolean =>
+  !node.style?.guide && node.style?.border !== false && !isHullNode(node);
 
 export const occupancy = (
   nodes: Iterable<Node>,

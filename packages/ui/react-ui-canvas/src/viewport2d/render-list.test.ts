@@ -200,6 +200,8 @@ const EVERY_TYPE: RenderList2D = {
     cloud: node({ type: 'cloud', id: 'cloud', z: 'a2', center: at, size: box, params: { bumps: 7 } }),
     polygon: node({ type: 'polygon', id: 'polygon', z: 'a3', center: at, size: box, params: { sides: 5 } }),
     polyline: node({ type: 'polyline', id: 'polyline', z: 'a4', center: at, size: box, points: [at, { x: 1, y: 1 }] }),
+    // With nothing inside it, so it keeps the frame it is given.
+    hull: node({ type: 'hull', id: 'hull', z: 'a41', center: at, size: box, shape: 'box' }),
     note: node({ type: 'note', id: 'note', z: 'a5', center: at, size: box, text: 'Note' }),
     path: node({
       type: 'path',

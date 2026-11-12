@@ -256,6 +256,11 @@ export const nodeBase = {
    * where the node names a `composite`.
    */
   overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
+  /**
+   * The hull this node is inside, by id (a hull may itself be inside another): what makes the nodes of a scene a
+   * hierarchy, which a link's route respects by staying inside the hull that holds both of its ends.
+   */
+  parent: Schema.optional(Schema.String.annotate({ title: 'Parent' })),
   ...constrainFields,
 };
 
@@ -390,6 +395,28 @@ export const PolylineNode = Schema.Struct({
   params: Schema.optional(PolylineParams),
 });
 export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;
+
+/**
+ * How a hull's border runs: `perimeter` follows the outline of the nodes inside it, `box` is the rectangle that
+ * bounds them.
+ */
+export const HULL_SHAPES = ['perimeter', 'box'] as const;
+export type HullShape = (typeof HULL_SHAPES)[number];
+
+/**
+ * A border drawn round the nodes that name it as their `parent`. Its frame and `points` (the border, in the frame's
+ * unit space as a polyline's are) follow those nodes, so neither is set by hand; with nothing inside it keeps the
+ * frame it was given.
+ */
+export const HullNode = Schema.Struct({
+  type: Schema.Literal('hull'),
+  ...nodeBase,
+  ...boxFields,
+  /** Unset, `perimeter`. */
+  shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
+  points: Schema.optional(Schema.Array(Point)),
+});
+export type HullNode = Schema.Schema.Type<typeof HullNode>;
 
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
@@ -634,6 +661,7 @@ export const BuiltinNode = Schema.Union([
   CloudNode,
   PolygonNode,
   PolylineNode,
+  HullNode,
   NoteNode,
   ViewNode,
   InstanceNode,
@@ -649,6 +677,7 @@ export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'polygon',
   'cloud',
   'polyline',
+  'hull',
   'note',
   'view',
   'instance',
@@ -668,6 +697,7 @@ export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type 
 export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
 export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
+export const isHullNode = (node: NodeBase): node is HullNode => node.type === 'hull';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
 /**

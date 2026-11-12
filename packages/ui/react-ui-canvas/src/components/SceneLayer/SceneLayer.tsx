@@ -88,6 +88,7 @@ import {
   diagramLinkMarkup,
   diagramNodeMarkup,
   elementLayer,
+  fitHulls,
   frameClasses,
   grooveBounds,
   grooveHeads,
@@ -211,7 +212,9 @@ export const SceneLayer = memo(
     const inheritedLattice = useContext(LatticeContext);
     const lattice = latticeProp ?? inheritedLattice;
     // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
-    const scene = useMemo(() => visibleView(sceneProp), [sceneProp]);
+    // Fitted here as well as where the list is built: a shape in flight is moved in the list this layer is given, and
+    // its hull follows it.
+    const scene = useMemo(() => fitHulls(visibleView(sceneProp), lattice), [sceneProp, lattice]);
     const links = useMemo(
       () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],
@@ -1463,6 +1466,28 @@ export const CloudNodeView = LabelNodeView;
 export const PolygonNodeView = LabelNodeView;
 
 export const PolylineNodeView = LabelNodeView;
+
+/** A hull's name, in the corner of its border rather than over the nodes inside it. */
+export const HullNodeView = ({ node, editing }: NodeViewProps) => {
+  const label = baseLabel(node);
+  return (
+    <TextPart
+      part='label'
+      text={label}
+      editing={editing}
+      classNames={mx(
+        TEXT_BOX,
+        'whitespace-pre-wrap',
+        LINE_ON_GRID,
+        alignClasses(node.style, { horizontal: 'left', vertical: 'top' }),
+        sizeClass(node, 'text-sm'),
+        'text-fg-muted',
+      )}
+    >
+      {label}
+    </TextPart>
+  );
+};
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (

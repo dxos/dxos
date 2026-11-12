@@ -13,6 +13,7 @@ import {
   DiagramNode,
   EllipseNode,
   GeneratorNode,
+  HullNode,
   InstanceNode,
   MAJOR_GRID_RATIO,
   type NodeType,
@@ -24,6 +25,7 @@ import {
   type Size,
   ViewNode,
   isCloudNode,
+  isHullNode,
   isPolygonNode,
   isPolylineNode,
 } from '@dxos/scene';
@@ -44,6 +46,7 @@ import {
   DiagramNodeView,
   EllipseNodeView,
   GeneratorNodeView,
+  HullNodeView,
   InstanceNodeView,
   NoteNodeView,
   PathNodeView,
@@ -55,6 +58,14 @@ import {
 // Every minimum is a whole number of the finest grid level (a quarter of the minor cell), so a shape resized to its
 // floor still has its edges on a line the canvas draws.
 const MIN_SIZE: Size = { width: 48, height: 24 };
+
+/** A hull's border before anything is inside it: its own frame. */
+const UNIT_SQUARE = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+];
 
 /**
  * A framed shape with a centred, editable label: resizable, with ports spread along every side. The
@@ -210,6 +221,23 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     parts: [{ field: 'label' }],
     resizable: true,
     minSize: { width: 12, height: 12 },
+  },
+  // Not a palette tool: a hull is made round a selection (the Enclose command), never dragged out empty.
+  hull: {
+    name: 'Hull',
+    icon: 'ph--bounding-box--regular',
+    schema: HullNode,
+    component: HullNodeView,
+    palette: false,
+    create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: { guide: true } }),
+    defaultSize: NOMINAL_SIZES.hull,
+    silhouette: (node, inset, radius) =>
+      polylinePath(node.size, (isHullNode(node) && node.points) || UNIT_SQUARE, { inset, closed: true, radius }),
+    // The fill is the nodes' ground, so it shows only where the style asks for one.
+    filled: (node) => node.style?.fill === true,
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: false,
   },
   note: {
     name: 'Text',
