@@ -108,14 +108,10 @@ export const openLayout2D = (canvas: Canvas.Canvas): Scene.Layout2D | undefined 
 /** Whether the canvas's open 2D scene lays its shapes on a lattice. */
 export const layoutLattice = (canvas: Canvas.Canvas): boolean => openLayout2D(canvas)?.lattice !== undefined;
 
-/** Puts every 2D layout of the canvas on a lattice (`spec`, the default unless given), or takes them off it. */
-export const setLayoutLattice = (
-  canvas: Canvas.Canvas,
-  lattice: boolean,
-  spec: Scene.Lattice = DEFAULT_LATTICE,
-): void => {
+/** Puts every 2D layout of the canvas on the default lattice, or takes them off it. */
+export const setLayoutLattice = (canvas: Canvas.Canvas, lattice: boolean): void => {
   for (const layout of layouts2D(canvas)) {
     (layout.lattice !== undefined) !== lattice &&
-      applyLayoutIntent(layout, { kind: 'layout', patch: { lattice: lattice ? spec : undefined } });
+      applyLayoutIntent(layout, { kind: 'layout', patch: { lattice: lattice ? DEFAULT_LATTICE : undefined } });
   }
 };
