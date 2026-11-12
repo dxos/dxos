@@ -690,9 +690,9 @@ feat F-5: Operations are exposed and callable
   req F-5.3: A handler's nested `Operation.invoke` re-enters compute-service through a service
     binding, so a call chain across plugins never holds more than one Dynamic Worker per I/O context.
 
-  req F-5.7: An invocation runs a published bundle only where the bundle's plugin is in the caller's
-    scope: the space's published list, else the identity's, else the globally enabled set, else
-    unscoped ([D-79]). A plugin outside it is not routed, and the key falls back to operation-service
+  req F-5.7: An invocation runs a published bundle only where the bundle's plugin is in scope: the
+    plugins the space names on its own `properties`, else the globally enabled set, else unscoped
+    ([D-80], [D-81]). A plugin outside it is not routed, and the key falls back to operation-service
     as any other unroutable key does.
 
   req F-5.4: An operation key belongs to exactly one plugin key; an upload whose catalog claims a key
