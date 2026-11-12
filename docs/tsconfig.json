@@ -121,6 +121,9 @@
       "path": "../packages/plugins/plugin-markdown"
     },
     {
+      "path": "../packages/plugins/plugin-mermaid"
+    },
+    {
       "path": "../packages/plugins/plugin-preview"
     },
     {

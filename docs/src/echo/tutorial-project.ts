@@ -5,6 +5,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { projectSource } from './snippets.ts';
+import { parsePages, readSpec } from './spec.ts';
+
 /**
  * The pkg.pr.new build every `@dxos/*` dependency of the project pins. It must be a commit whose packages run outside
  * the monorepo, which main has had since #14487. The install commands in Installation and the React guide name it too.
@@ -31,19 +34,25 @@ const DXOS_PACKAGES = [
   'vite-plugin-icons',
 ];
 
+/** A step of a learning-path page, and where it falls in the path. */
+type Step = { name: string; order: number };
+
 /** The step of a learning-path page that writes a region, by `module#region`. */
-const readSteps = (project: Project): Map<string, string> => {
-  const steps = new Map<string, string>();
+const readSteps = (project: Project): Map<string, Step> => {
+  const steps = new Map<string, Step>();
   const learnDir = join(process.cwd(), project.learnDir);
+  // The path runs in the order the spec lists its pages.
+  const routes = parsePages(readSpec()).map((page) => page.route);
   const snippet = new RegExp(`<Snippet file="${project.snippetDir}/([\\w/]+)" region="([\\w-]+)"`);
   for (const file of readdirSync(learnDir).filter((file) => file.endsWith('.mdx'))) {
     const source = readFileSync(join(learnDir, file), 'utf8');
     const page = source.match(/^title: (.+)$/m)?.[1] ?? file;
-    let step: string | undefined;
+    const position = routes.findIndex((route) => route.endsWith(`/${file.replace(/\.mdx$/, '')}/`));
+    let step: Step | undefined;
     for (const line of source.split('\n')) {
       const heading = line.match(/^(\d+)\. \*\*(.+?)\.?\*\*/);
       if (heading) {
-        step = `${page}, step ${heading[1]}: ${heading[2]}`;
+        step = { name: `${page}, step ${heading[1]}: ${heading[2]}`, order: position * 100 + Number(heading[1]) };
       }
       const match = line.match(snippet);
       if (match && step) {
@@ -54,38 +63,48 @@ const readSteps = (project: Project): Map<string, string> => {
   return steps;
 };
 
-const REGION = /^\/\/ #region ([\w-]+)\n([\s\S]*?)^\/\/ #endregion\n/gm;
-const EXPORT = /^export (?:const|class|function|async function) (\w+)/gm;
+const REGION = /^([ \t]*)\/\/ #region ([\w-]+)\n([\s\S]*?)^\1\/\/ #endregion\n/gm;
+
+/** A declaration at the start of a line: its export, and the name or destructuring pattern it binds. */
+const DECLARATION =
+  /^(export )?(?:(?:const|let) (\[[^\]]*\]|\{[^}]*\}|[\w$]+)|(?:async )?function\*? ([\w$]+)|class ([\w$]+))/;
 
 /**
- * `source` with each region a learning-path page quotes replaced by a placeholder for every value it exports, named
- * after the step that writes it. The module's imports stay, so the reader's code needs none.
+ * `source` with each region a learning-path page quotes replaced by a stand-in for every name it declares, naming
+ * the step that writes it and the file; a region that declares nothing becomes a call that throws where it ran. Regions
+ * no step quotes keep their code, and the regions inside them are replaced. The module's imports stay, so the reader's
+ * code needs none.
  */
-const toStarter = (module: string, source: string, steps: Map<string, string>): string => {
+const toStarter = (module: string, file: string, source: string, steps: Map<string, Step>): string => {
   // A module's own imports keep their depth; `todo.ts` sits at the project's root.
   const todoPath = `${'../'.repeat(module.split('/').length - 1) || './'}todo.ts`;
   let replaced = false;
-  const starter = source.replace(REGION, (region, name: string, body: string) => {
-    const step = steps.get(`${module}#${name}`);
-    if (!step) {
-      return region;
-    }
-    replaced = true;
-    const values = [...body.matchAll(EXPORT)].map(([, value]) => value);
-    return values.map((value) => `export const ${value} = todo(${JSON.stringify(step)});\n`).join('');
-  });
+  const replace = (code: string): string =>
+    code.replace(REGION, (region, indent: string, name: string, body: string) => {
+      const step = steps.get(`${module}#${name}`);
+      if (!step) {
+        return `${indent}// #region ${name}\n${replace(body)}${indent}// #endregion\n`;
+      }
+      replaced = true;
+      const args = `${JSON.stringify(step.name)}, ${JSON.stringify(file)}, ${step.order}`;
+      const names = body
+        .split('\n')
+        .filter((line) => line.startsWith(indent) && !/^\s/.test(line.slice(indent.length)))
+        .flatMap((line) => {
+          const match = line.slice(indent.length).match(DECLARATION);
+          return match ? [{ exported: match[1] ?? '', binding: match[2] ?? match[3] ?? match[4] }] : [];
+        });
+      return names.length === 0
+        ? `${indent}todo(${args})();\n`
+        : names.map(({ exported, binding }) => `${indent}${exported}const ${binding} = todo(${args});\n`).join('');
+    });
+  const starter = replace(source);
   if (!replaced) {
     return source;
   }
-  // The placeholder import goes after the last import, or after the copyright header.
-  const imports = [...starter.matchAll(/^import [\s\S]*?;\n/gm)];
-  const at = imports.length > 0 ? imports[imports.length - 1].index + imports[imports.length - 1][0].length : 0;
-  return `${starter.slice(0, at)}import { todo } from '${todoPath}';\n${starter.slice(at)}`;
+  // The stand-in's import goes last, so the lines above keep the numbers the pages show; imports are hoisted.
+  return `${starter}\nimport { todo } from '${todoPath}';\n`;
 };
-
-/** Rewrites imports that only resolve inside the docs site. */
-const standalone = (source: string): string =>
-  source.replace(/^import '\.\.\/\.\.\/styles\/island-base\.generated\.css';\n/m, '');
 
 const ECHO_PACKAGE_JSON = {
   name: 'echo-contacts',
@@ -188,26 +207,66 @@ const indexHtml = (title: string) => `<!doctype html>
 </html>
 `;
 
-const MAIN = `import React from 'react';
+const MAIN = `/// <reference types="vite/client" />
+import React, { Component, type ReactNode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-const root = createRoot(document.getElementById('root')!);
+import { App } from './app/App.tsx';
+import { type Todo, onTodo } from './todo.ts';
 
-// A module that uses a piece the learning path has not written yet fails as it loads; this says so instead of
-// leaving the page blank.
-import('./app/App.tsx').then(
-  ({ App }) => root.render(<App />),
-  (error) =>
-    root.render(
-      <pre style={{ margin: 0, padding: '1rem', whiteSpace: 'pre-wrap' }}>
-        {String(error)}
-        {'\\n\\nFill in the TODOs in the order the learning path writes them.'}
-      </pre>,
-    ),
+// Each save may write the step the app stopped at, so the app starts over from it with its client.
+import.meta.hot?.on('vite:beforeUpdate', () => location.reload());
+
+/** Names the step to write next, once the app reaches code the learning path has not written yet. */
+const Next = () => {
+  const [todo, setTodo] = useState<Todo>();
+  useEffect(() => onTodo(setTodo), []);
+  return todo ? (
+    <p style={{ margin: 0, padding: '0.75rem 1rem', background: '#fef3c7', color: '#78350f', font: '14px system-ui' }}>
+      <strong>Next:</strong> {todo.step}, in <code>{todo.file}</code>. Save, and the app reloads.
+    </p>
+  ) : null;
+};
+
+/** Shows what failed in place of the app, until the next save reloads it. */
+class Failed extends Component<{ children: ReactNode }, { error?: unknown }> {
+  override state: { error?: unknown } = {};
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error };
+  }
+
+  override render() {
+    return this.state.error === undefined ? (
+      this.props.children
+    ) : (
+      <pre style={{ margin: 0, padding: '1rem', whiteSpace: 'pre-wrap' }}>{String(this.state.error)}</pre>
+    );
+  }
+}
+
+createRoot(document.getElementById('root')!).render(
+  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Next />
+    <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+      <Failed>
+        <App />
+      </Failed>
+    </div>
+  </div>,
 );
 `;
 
-const HALO_PACKAGES = ['client', 'config', 'halo', 'halo-adapter-client', 'keys', 'node-std', 'protocols'];
+const HALO_PACKAGES = [
+  'client',
+  'config',
+  'halo',
+  'halo-adapter-client',
+  'halo-react',
+  'keys',
+  'node-std',
+  'protocols',
+];
 
 const HALO_PACKAGE_JSON = {
   name: 'halo-contact-book',
@@ -272,9 +331,9 @@ export type TutorialProjectId = 'echo' | 'halo';
 
 const PROJECTS: Record<TutorialProjectId, Project> = {
   echo: {
-    dir: 'src/tutorial',
+    dir: 'src/echo-tutorial',
     learnDir: 'src/content/docs/docs/echo/learn',
-    snippetDir: 'tutorial',
+    snippetDir: 'echo-tutorial',
     // The page that reads the stage from the embed's URL.
     skipped: new Set(['app/ContactsEmbedPage.tsx']),
     title: 'Contacts',
@@ -311,9 +370,11 @@ export const tutorialProject = (kind: TutorialProjectKind, id: TutorialProjectId
     if (!/\.(tsx?|css)$/.test(file) || project.skipped.has(file)) {
       continue;
     }
-    const source = standalone(readFileSync(join(dir, file), 'utf8'));
+    const source = readFileSync(join(dir, file), 'utf8');
     const module = file.replace(/\.tsx?$/, '');
-    files[`src/${file}`] = kind === 'starter' && /\.tsx?$/.test(file) ? toStarter(module, source, steps) : source;
+    files[`src/${file}`] = !/\.tsx?$/.test(file)
+      ? source
+      : projectSource(kind === 'starter' ? toStarter(module, `src/${file}`, source, steps) : source);
   }
   return files;
 };

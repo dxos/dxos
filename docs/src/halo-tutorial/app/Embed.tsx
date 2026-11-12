@@ -10,9 +10,10 @@ import React, { useEffect, useState } from 'react';
 // else.
 import '@dxos/node-std/globals';
 import { ConnectionState } from '@dxos/client/mesh';
+import { HaloProvider } from '@dxos/halo-react';
 
-import { type Stage } from '../progress.ts';
 import { type Device, type Scene, startScene } from '../runtime.ts';
+import { type Stage } from '../stage.ts';
 import { ContactBook } from './ContactBook.tsx';
 
 export type EmbedProps = {
@@ -75,7 +76,9 @@ const Frame = ({ device, stage }: { device: Device; stage: Stage }) => {
           {online ? 'Online' : 'Offline'}
         </label>
       </header>
-      <ContactBook halo={device.halo} stage={stage} />
+      <HaloProvider services={device.services}>
+        <ContactBook stage={stage} />
+      </HaloProvider>
     </section>
   );
 };

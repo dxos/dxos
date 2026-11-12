@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Operation from '@dxos/compute/Operation';
+import { Obj, Ref } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
@@ -33,29 +34,47 @@ export const OperationsView = ({ moduleId, space, sample }: ViewProps) => {
   );
 };
 
-type Field = { name: string; kind: 'boolean' | 'number' | 'object' | 'string'; description?: string };
+type Field = { name: string; kind: 'boolean' | 'number' | 'object' | 'ref' | 'string'; description?: string };
 
 const describe = (description: unknown): string | undefined =>
   typeof description === 'string' ? description : undefined;
 
-/** One form field per top-level input property; anything not a scalar takes the selected object. */
+/** One form field per top-level input property; anything not a scalar takes the selected object, or a ref to it. */
 const fieldsOf = (definition: Operation.Definition.Any): Field[] => {
   const ast = SchemaAST.toType(definition.input.ast);
   if (!SchemaAST.isObjects(ast)) {
     return [];
   }
-  return SchemaAST.getPropertySignatures(ast).map(({ name, type }) => ({
-    name: String(name),
-    kind: SchemaAST.isStringKeyword(type)
-      ? 'string'
-      : SchemaAST.isNumberKeyword(type)
-        ? 'number'
-        : SchemaAST.isBooleanKeyword(type)
-          ? 'boolean'
-          : 'object',
-    description: describe(SchemaAST.getDescriptionAnnotation(type)),
-  }));
+  return SchemaAST.getPropertySignatures(ast).map(({ name, type: declared }) => {
+    const type = withoutUndefined(declared);
+    return {
+      name: String(name),
+      kind: SchemaAST.isStringKeyword(type)
+        ? 'string'
+        : SchemaAST.isNumberKeyword(type)
+          ? 'number'
+          : SchemaAST.isBooleanKeyword(type)
+            ? 'boolean'
+            : Ref.isRefType(type)
+              ? 'ref'
+              : 'object',
+      description: describe(SchemaAST.getDescriptionAnnotation(type)),
+    };
+  });
 };
+
+/** An optional field's type is a union with `undefined`; the form edits the other member. */
+const withoutUndefined = (type: SchemaAST.AST): SchemaAST.AST => {
+  if (!SchemaAST.isUnion(type)) {
+    return type;
+  }
+  const defined = type.types.filter((member) => !SchemaAST.isUndefinedKeyword(member));
+  return defined.length === 1 ? defined[0] : type;
+};
+
+/** The object's own fields, without its id and metadata. */
+const fieldsOfObject = (object: Obj.Unknown): Record<string, unknown> =>
+  Object.fromEntries(Object.entries(Obj.toJSON(object)).filter(([key]) => !key.startsWith('@') && key !== 'id'));
 
 type OperationFormProps = Pick<ViewProps, 'space' | 'sample'> & {
   definition: Operation.Definition.Any;
@@ -68,23 +87,35 @@ const OperationForm = ({ definition, space, sample }: OperationFormProps) => {
   const [result, setResult] = useState<string>();
 
   const handleRun = async () => {
+    // An empty field is left out, so an optional input takes its default.
     const input = Object.fromEntries(
-      fields.map(({ name, kind }) => [
-        name,
-        kind === 'object'
-          ? sample
-          : kind === 'number'
-            ? Number(values[name])
-            : kind === 'boolean'
-              ? values[name] === 'true'
-              : values[name],
-      ]),
+      fields
+        .filter(({ name, kind }) => kind === 'object' || kind === 'ref' || values[name])
+        .map(({ name, kind }) => [
+          name,
+          kind === 'ref'
+            ? sample && Ref.make(sample)
+            : kind === 'object'
+              ? sample
+              : kind === 'number'
+                ? Number(values[name])
+                : kind === 'boolean'
+                  ? values[name] === 'true'
+                  : values[name],
+        ]),
     );
     const { data, error } = await invokePromise(definition, input, { spaceId: space?.id });
-    setResult(error ? `Error: ${error.message}` : JSON.stringify(data, null, 2));
+    if (error) {
+      setResult(`Error: ${error.message}`);
+    } else if (data !== undefined) {
+      setResult(JSON.stringify(data, null, 2));
+    } else {
+      // An operation with no output changes something; show the sample it ran on.
+      setResult(sample ? `The sample is now:\n${JSON.stringify(fieldsOfObject(sample), null, 2)}` : 'Done.');
+    }
   };
 
-  const needsSubject = fields.some(({ kind }) => kind === 'object');
+  const needsSubject = fields.some(({ kind }) => kind === 'object' || kind === 'ref');
 
   return (
     <Section title={definition.meta.name ?? definition.meta.key}>
@@ -95,7 +126,7 @@ const OperationForm = ({ definition, space, sample }: OperationFormProps) => {
             <span className='font-mono'>{name}</span>
             {description && <span className='text-description'> {description}</span>}
           </span>
-          {kind === 'object' ? (
+          {kind === 'object' || kind === 'ref' ? (
             <span className='text-description'>{sample ? 'The sample object.' : 'Create a sample object first.'}</span>
           ) : (
             <Input.Root

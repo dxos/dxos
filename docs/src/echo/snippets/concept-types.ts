@@ -17,7 +17,12 @@ import {
   Type,
 } from '@dxos/echo';
 
-import { Event, Organization, Person, types } from '../../tutorial/schema.ts';
+import {
+  Event,
+  Organization,
+  Person,
+  types,
+} from '../../echo-tutorial/schema.ts';
 import { WorksAt } from './works-at.ts';
 
 declare const db: Database.Database;

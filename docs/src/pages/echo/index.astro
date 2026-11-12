@@ -8,6 +8,7 @@ import SpecCite from '../../components/SpecCite.astro';
 import WebflowFooter from '../../components/WebflowFooter.astro';
 import WebflowNav from '../../components/WebflowNav.astro';
 import { guarantees, reasons, routes } from '../../echo/home.ts';
+import { NARRATIVES } from '../../demos/narratives.ts';
 import { snippetSource } from '../../echo/snippets.ts';
 import WebflowLayout from '../../layouts/WebflowLayout.astro';
 import '../../styles/tokens.generated.css';
@@ -77,7 +78,7 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
         <div class="all-caps echo-eyebrow">What it guarantees</div>
         <h2 class="heading-style-h2">Behavior you can rely on</h2>
       </div>
-      <div class="echo-grid">
+      <div class="echo-grid echo-grid-pairs">
         {guarantees.map(({ title, body, cite }) => (
           <div class="echo-card">
             <div class="heading-style-h5">{title}</div>
@@ -97,13 +98,19 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
       </div>
       <div class="echo-demos">
         {DEMO_ORDER.map((id) => (
-          <div class="echo-demo dx-island">
-            <EchoDemo id={id} client:only="react">
-              <div slot="fallback" class="echo-demo-loading" role="status">
-                <span class="echo-demo-spinner" aria-hidden="true" />
-                Loading live demo…
-              </div>
-            </EchoDemo>
+          <div class="echo-demo-block">
+            <div class="echo-demo-copy">
+              <h3 class="heading-style-h5">{NARRATIVES[id].title}</h3>
+              <p class="text-style-muted" set:html={NARRATIVES[id].data} />
+            </div>
+            <div class="echo-demo dx-island">
+              <EchoDemo id={id} client:only="react">
+                <div slot="fallback" class="echo-demo-loading" role="status">
+                  <span class="echo-demo-spinner" aria-hidden="true" />
+                  Loading live demo…
+                </div>
+              </EchoDemo>
+            </div>
           </div>
         ))}
       </div>
@@ -227,6 +234,17 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
     border-left: 1px solid var(--base-color-neutral--neutral-mid);
   }
 
+  /* Four cards read as two rows of two rather than three and one. */
+  .echo-grid-pairs {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  }
+
+  @media (min-width: 48rem) {
+    .echo-grid-pairs {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   .echo-card {
     display: flex;
     flex-direction: column;
@@ -263,6 +281,29 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
   .echo-demos {
     display: grid;
     gap: 3rem;
+  }
+
+  .echo-demo-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .echo-demo-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 48rem;
+  }
+
+  .echo-demo-copy h3,
+  .echo-demo-copy p {
+    margin: 0;
+  }
+
+  .echo-demo-copy :global(code) {
+    font-family: 'DM Mono', ui-monospace, monospace;
+    font-size: 0.875em;
   }
 
   .echo-demo {

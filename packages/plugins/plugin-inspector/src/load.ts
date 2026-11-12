@@ -98,7 +98,7 @@ const causeMessage = (error: unknown): string =>
 const describe = (error: unknown, manifestUrl: string): string => {
   const why = reasons(error);
   if (why.includes('fetch-failed')) {
-    return `Couldn't reach ${manifestUrl}. Check that vite is running in your plugin's folder, and that the browser may reach your local network.`;
+    return `Couldn't reach ${manifestUrl}. Check that npm run dev is running in your plugin's folder, and that the browser may reach your local network.`;
   }
   if (why.includes('http-error') || why.includes('parse-failed') || why.includes('invalid')) {
     return `The dev server answered, but ${manifestUrl} is not a plugin manifest. Check that vite.config.ts adds composerPlugin.`;

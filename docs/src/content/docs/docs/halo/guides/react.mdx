@@ -49,11 +49,12 @@ and `useHaloInvitations` list the flows this device has open.
 | `useDevices` `useCredentials`              | The identity's devices and credentials        |
 | `useSpaces` `useSpace`                     | Spaces, and one space by id                   |
 | `useMembers`                               | A space's members                             |
+| `useContacts`                              | Everyone you share a space with, once each    |
 | `useSpaceInvitations` `useHaloInvitations` | Open space and device invitations             |
 | `useInvitationFlow`                        | One flow's latest event and code              |
 
 ## Related
 
 - [Identity](/docs/halo/api/identity/), [Space](/docs/halo/api/space/) and [Invitation](/docs/halo/api/invitation/)
-- The [contact book](/docs/halo/learn/the-halo-identity/) in the learning path uses the Effect API directly, with its own
-  `useStream` hook in place of these.
+- The [contact book](/docs/halo/learn/the-halo-identity/) in the learning path is built on `HaloProvider` and these
+  hooks.

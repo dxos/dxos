@@ -32,18 +32,20 @@ switch a device offline. To change the code and run it yourself, fork it on Stac
 
 <HaloEmbed stage="recovery" scene="book" />
 
-<StackBlitzButton project="halo" kind="complete" label="Fork on StackBlitz" file="src/profile.ts" />
+<StackBlitzButton project="halo" kind="complete" label="Fork on StackBlitz" file="src/app/ContactBook.tsx" />
 
 Each page of the learning path builds one piece of it:
 
-| Page | File | What it adds |
+| Page | Files | What it adds |
 | --- | --- | --- |
-| [Your profile](/docs/halo/learn/your-profile/) | `client.ts`, `profile.ts` | A client, an identity with a profile, and renaming |
-| [Your spaces](/docs/halo/learn/your-spaces/) | `spaces.ts` | Named spaces, and a list to switch between them |
-| [Invite people](/docs/halo/learn/invite-people/) | `invitations.ts` | Invite and Join, with an authorization code |
-| [Your contacts](/docs/halo/learn/your-contacts/) | `contacts.ts` | Everyone you share a space with, and removing them |
-| [Add a device](/docs/halo/learn/add-device/) | `devices.ts` | Your phone, with the same name, spaces and contacts |
-| [Recover an identity](/docs/halo/learn/recover-identity/) | `recovery.ts` | A recovery code, and your identity back on a new device |
+| [Your profile](/docs/halo/learn/your-profile/) | `App.tsx`, `Welcome.tsx`, `ContactBook.tsx`, `Profile.tsx` | A client, an identity with a profile, and renaming |
+| [Your spaces](/docs/halo/learn/your-spaces/) | `Spaces.tsx`, `ContactBook.tsx` | Named spaces, and a list to switch between them |
+| [Invite people](/docs/halo/learn/invite-people/) | `Invitations.tsx` | Invite and Join, with an authorization code |
+| [Your contacts](/docs/halo/learn/your-contacts/) | `Contacts.tsx` | Everyone you share a space with, and removing them |
+| [Add a device](/docs/halo/learn/add-device/) | `Devices.tsx`, `Welcome.tsx` | Your phone, with the same name, spaces and contacts |
+| [Recover an identity](/docs/halo/learn/recover-identity/) | `Recovery.tsx`, `Welcome.tsx` | A recovery code, and your identity back on a new device |
 
-The code is Effect. Each function is an `Effect` or a `Stream` that needs the HALO services, and the app runs it with
-`Effect.runPromise`. The pages show the app's HALO code; the components that draw it are in the project.
+The code is Effect. Each change is an `Effect` that needs the HALO services. A `HaloProvider` from `@dxos/halo-react`
+holds each device's services. A component reads state with that package's hooks, such as `useIdentity` and `useSpaces`,
+and runs a change with `useHaloServices`, `Effect.provide` and `Effect.runPromise`. Each piece sits in the component that uses it; the samples show it there, with the rest of the
+component folded away.

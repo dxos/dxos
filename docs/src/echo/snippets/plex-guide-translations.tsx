@@ -6,19 +6,19 @@ import React from 'react';
 
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { BookmarksNamespace } from '../../app-framework-tutorial/src/namespace.ts';
+import { StashNamespace } from '../../plex-tutorial/src/namespace.ts';
 
 // #region read
 export const PluginTitle = () => {
   // Strings resolve in the plugin's namespace; the app picks the language.
-  const { t } = UiHooks.useTranslation(BookmarksNamespace.key);
+  const { t } = UiHooks.useTranslation(StashNamespace.key);
   return <h2>{t('plugin.name')}</h2>;
 };
 // #endregion
 
 // #region count
-export const BookmarkCount = ({ count }: { count: number }) => {
-  const { t } = UiHooks.useTranslation('com.example.type.bookmark');
+export const LinkCount = ({ count }: { count: number }) => {
+  const { t } = UiHooks.useTranslation('com.example.type.stashedLink');
   // `count` picks `typename.label_zero`, `_one` or `_other`.
   return <span>{`${count} ${t('typename.label', { count })}`}</span>;
 };

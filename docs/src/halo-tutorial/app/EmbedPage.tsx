@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { isStage } from '../progress.ts';
 import { isScene } from '../runtime.ts';
+import { isStage } from '../stage.ts';
 import { Embed } from './Embed.tsx';
 
 /** {@link Embed} for the `stage` and `scene` in the page's query, as `/embed/halo/` renders it. */

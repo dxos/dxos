@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Type } from '@dxos/echo';
 
-import { Organization, Person } from '../../tutorial/schema.ts';
+import { Organization, Person } from '../../echo-tutorial/schema.ts';
 
 // #region relation
 export class WorksAt extends Type.makeRelation<WorksAt>(

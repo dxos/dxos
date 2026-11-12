@@ -15,7 +15,7 @@ By the end of this page Alice has a recovery code, and with it gets her name, sp
   you can create an account only through [Composer](https://composer.space).
 </Aside>
 
-## Before you start
+## Background
 
 If every device is lost, the identity is lost with them, unless it has a recovery credential: a key kept outside every
 device. A recovery code is one such key, written as twelve words. Making it adds the key to the identity's group as a
@@ -28,29 +28,30 @@ new member of the same identity, with the same DID, and syncs its spaces from ED
 HALO shows a recovery code once and keeps only its public half, and it will not revoke the last code you have: make the
 new one first. A passkey works the same way; see [Passkey recovery](/docs/halo/guides/passkey-recovery/).
 
-The functions go in a new file, `recovery.ts`.
+## Steps
 
 <Steps>
 
 1. **Make a recovery code.** `Identity.createRecoveryCredential` makes the key, adds it to the identity, and returns the
    words. **Make a recovery code** on the Recovery tab calls this.
 
-   <Snippet file="halo-tutorial/recovery" region="create" />
+   <Snippet file="halo-tutorial/app/Recovery" region="create" lang="tsx" />
 
-2. **List your codes.** `Identity.credentials` is a stream of the identity's credentials. A recovery credential carries
+2. **List your codes.** `useCredentials` returns the identity's credentials and re-renders when one is written. It
+   follows `Identity.credentials`. A recovery credential carries
    its kind, a label, the date it was made, a lookup key and whether it was revoked. The Recovery tab lists the ones still
    active.
 
-   <Snippet file="halo-tutorial/recovery" region="list" />
+   <Snippet file="halo-tutorial/app/Recovery" region="list" lang="tsx" />
 
 3. **Revoke a code.** `Identity.revokeRecoveryCredential` takes the lookup key. Revoke a code you think someone has seen.
 
-   <Snippet file="halo-tutorial/recovery" region="revoke" />
+   <Snippet file="halo-tutorial/app/Recovery" region="revoke" lang="tsx" />
 
 4. **Recover on a new device.** On a device with no identity, `Identity.recover` takes the words and gets the identity
    back. **Recover with a code** calls this.
 
-   <Snippet file="halo-tutorial/recovery" region="recover" />
+   <Snippet file="halo-tutorial/app/Welcome" region="recover" lang="tsx" />
 
 </Steps>
 
@@ -67,7 +68,7 @@ too, and HALO refuses.
   window, choose **Recover with a code** and enter the words.
 </Aside>
 
-<StackBlitzButton project="halo" kind="complete" label="Fork on StackBlitz" file="src/recovery.ts" />
+<StackBlitzButton project="halo" kind="complete" label="Fork on StackBlitz" file="src/app/Recovery.tsx" />
 
 ## What you can do now
 

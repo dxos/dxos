@@ -46,3 +46,9 @@ export const pageRuntime = (): DemoRuntime => {
   }
   return runtime;
 };
+
+/** One demo on a page of its own, as the PLEX Overview embeds it, with its own peers and space. */
+export const embedRuntime = (demo: Demo): DemoRuntime => {
+  pinDarkAppearance();
+  return new DemoRuntime({ title: demo.title, shared: [companies], demos: [demo] });
+};

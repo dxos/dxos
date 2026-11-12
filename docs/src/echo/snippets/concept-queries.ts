@@ -12,7 +12,7 @@ import {
   Type,
 } from '@dxos/echo';
 
-import { Event, Organization, Person } from '../../tutorial/schema.ts';
+import { Event, Organization, Person } from '../../echo-tutorial/schema.ts';
 
 declare const db: Database.Database;
 

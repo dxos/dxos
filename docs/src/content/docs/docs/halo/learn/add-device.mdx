@@ -9,7 +9,7 @@ import Snippet from '../../../../../components/Snippet.astro';
 
 By the end of this page Alice's phone joins her identity, and shows her name, her spaces and her contacts.
 
-## Before you start
+## Background
 
 Each device has its own key. Adding a device is the same handshake as inviting a person, with a device invitation
 instead of a space invitation: the device already in the identity is the host, and the new device the guest. At the end,
@@ -18,25 +18,26 @@ the host writes a delegation that makes the new device a member of the identity'
 The new device then syncs the identity's personal space and every space the identity is in, from the other device or
 through EDGE. Nothing about the identity has to be typed in again.
 
-The functions go in a new file, `devices.ts`.
+## Steps
 
 <Steps>
 
 1. **Share your identity.** `Identity.share` starts a device invitation on the device you have. **Add a device** on the
    Devices tab calls this and shows the code.
 
-   <Snippet file="halo-tutorial/devices" region="share" />
+   <Snippet file="halo-tutorial/app/Devices" region="share" lang="tsx" />
 
 2. **Join from the new device.** On the new device, before it has an identity, `Identity.join` redeems the code. The
-   handshake and its authorization code are the same as for a space, so the app follows it with `progress` and
-   `authenticate` from `invitations.ts`. **Join your other device** calls this.
+   handshake and its authorization code are the same as for a space, so the welcome screen hands the flow to the same
+   guest panel as **Join**. **Join your other device** calls this.
 
-   <Snippet file="halo-tutorial/devices" region="join" />
+   <Snippet file="halo-tutorial/app/Welcome" region="join" lang="tsx" />
 
-3. **List your devices.** `Identity.devices` is a stream of the identity's devices. Each has a key, a kind, whether it is
-   online, and whether it is the device the code runs on. The Devices tab follows this.
+3. **List your devices.** `useDevices` returns the identity's devices and re-renders when one joins or comes online. It
+   follows `Identity.devices`. Each device has a key, a kind, whether it is online, and whether it is the device the code
+   runs on. The Devices tab shows them.
 
-   <Snippet file="halo-tutorial/devices" region="list" />
+   <Snippet file="halo-tutorial/app/Devices" region="list" lang="tsx" />
 
 </Steps>
 

@@ -9,7 +9,7 @@ import { Database, Filter, Hypergraph, Obj, type Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type SpaceId } from '@dxos/keys';
 
-import { Organization, Person } from '../../tutorial/schema.ts';
+import { Organization, Person } from '../../echo-tutorial/schema.ts';
 
 declare const client: Client;
 declare const db: Database.Database;

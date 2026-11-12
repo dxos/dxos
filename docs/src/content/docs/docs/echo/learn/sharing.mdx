@@ -9,7 +9,7 @@ import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
 By the end of this page a second peer will have joined the app's space, and each peer will see the other's edits.
 
-## Before you start
+## Background
 
 A space is shared by invitation. The host creates an invitation, and the guest uses its code to find the host and open a secure connection. An invitation can also ask the guest for an authentication code, which the host passes on by another channel, to prove the guest received the invitation from the host. The app leaves that out, so pasting the code is enough.
 
@@ -17,15 +17,17 @@ Once the guest is in, both peers hold a full replica of the space's database. Ea
 
 [Invitations](/docs/halo/concepts/invitations/) explains the handshake in detail.
 
-Both functions go in a new file, `sharing.ts`.
+Both go in `Share.tsx`, which draws the toolbar's Invite and Join buttons.
+
+## Steps
 
 <Steps>
 
 1. **Invite a peer.** `space.share` starts an invitation and reports each change to its state. Once it is connecting
-   to the network, its encoded form is the code to send. The **Create invitation** button calls this and copies the
-   code.
+   to the network, its encoded form is the code to send. Opening the **Invite** popover runs this, and the app
+   copies the code.
 
-   <Snippet file="tutorial/sharing" region="invite" />
+   <Snippet file="echo-tutorial/app/Share" region="invite" lang="tsx" />
 
    Anyone with the code can join while the invitation is open. For a code that is not enough on its own, leave out
    `authMethod` and send the authentication code the invitation then asks for over a different channel.
@@ -34,7 +36,7 @@ Both functions go in a new file, `sharing.ts`.
    decodes the code and joins; once the invitation succeeds, the space is among the guest's spaces, and both peers
    replicate it. The **Join** button calls this.
 
-   <Snippet file="tutorial/sharing" region="join" />
+   <Snippet file="echo-tutorial/app/Share" region="join" lang="tsx" />
 
 </Steps>
 

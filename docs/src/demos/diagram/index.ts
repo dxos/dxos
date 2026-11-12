@@ -30,7 +30,7 @@ const partial = SampleSpace.partial('echo-demo-diagram', {
 /** Composer's architecture as nested canvas drawings: a box with a level beneath it opens it. */
 export const DiagramDemo = Demo.make({
   id: 'diagram',
-  title: 'Architecture diagram',
+  title: 'Infinite canvas',
   partial,
   plugins: () => [IllustratorPlugin.make(), CanvasPlugin.make()],
   views: { overview: 'Overview' },

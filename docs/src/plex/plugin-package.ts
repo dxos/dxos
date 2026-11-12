@@ -4,7 +4,7 @@
 
 import { DXOS_COMMIT } from '../echo/tutorial-project.ts';
 
-/** The `@dxos/*` packages the Bookmarks plugin imports, and their peers. */
+/** The `@dxos/*` packages the Stash plugin imports, and their peers. */
 const DXOS_PACKAGES = [
   'app-framework',
   'app-graph',
@@ -24,7 +24,7 @@ const DXOS_PACKAGES = [
  * `effect` replace the plugin's own at runtime, so they match the docs'.
  */
 export const PACKAGE_JSON = {
-  name: 'bookmarks',
+  name: 'stash',
   version: '0.1.0',
   private: true,
   type: 'module',

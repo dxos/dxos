@@ -31,7 +31,7 @@ export const CountSchemasModule = Capability.makeModule(() =>
 export class LinkChecker extends Context.Service<
   LinkChecker,
   { readonly check: (url: string) => Effect.Effect<boolean> }
->()('com.example.plugin.bookmarks.LinkChecker') {}
+>()('com.example.plugin.stash.LinkChecker') {}
 
 const LinkCheckerLive = Layer.succeed(LinkChecker, {
   check: (url) => Effect.succeed(url.startsWith('https://')),

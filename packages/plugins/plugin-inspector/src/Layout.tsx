@@ -14,7 +14,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Filter, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useLabels, useQuery, useSpaces } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import * as Select from '@dxos/react-ui/Select';
 import { useTranslation } from '@dxos/react-ui/Theme';
@@ -120,8 +120,8 @@ const LoadPrompt = ({ manifestUrl, loading, error }: { manifestUrl?: string; loa
       <>
         <p className='font-medium'>{loading ? 'Loading your plugin…' : 'Load your plugin from its dev server'}</p>
         <p className='text-sm text-description max-w-prose'>
-          Run <code>vite</code> in your plugin's folder, then click <b>Load dev plugin</b>. The browser may ask to reach
-          devices on your local network: allow it, since your plugin's code comes from your machine.
+          Run <code>npm run dev</code> in your plugin's folder, then click <b>Load dev plugin</b>. The browser may ask
+          to reach devices on your local network: allow it, since your plugin's code comes from your machine.
         </p>
         {error && <p className='text-sm text-error-text max-w-prose'>{error}</p>}
       </>
@@ -349,12 +349,14 @@ const SamplePicker = ({ plugin, space, sample, onSample }: SamplePickerProps): R
     SpaceCapabilities.CreateObjectEntry,
   );
   const { create } = useCreateSample(space);
+  // The query re-renders when objects come and go, not when one is renamed; the labels follow each object.
+  const labels = useLabels(objects);
   if (!entry && objects.length === 0) {
     return null;
   }
 
   const label = (object: Obj.Unknown): string =>
-    Obj.getLabel(object) ?? t('object-name.placeholder', { ns: Obj.getTypename(object), defaultValue: object.id });
+    labels.get(object) ?? t('object-name.placeholder', { ns: Obj.getTypename(object), defaultValue: object.id });
 
   return (
     <div className='flex items-center gap-1'>

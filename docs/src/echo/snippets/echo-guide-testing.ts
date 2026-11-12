@@ -8,7 +8,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { PublicKey } from '@dxos/keys';
 
-import { Person, types } from '../../tutorial/schema.ts';
+import { Person, types } from '../../echo-tutorial/schema.ts';
 
 // #region database
 // In memory, with nothing to clean up on disk.

@@ -5,7 +5,7 @@ description: What a plugin is, and the plugin the learning path builds, running 
 
 import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
 
-The learning path builds one plugin: Bookmarks, which saves links in a space and counts how often each one is opened. This page explains what a plugin is made of, and shows Bookmarks finished.
+The learning path builds one plugin: Stash, a reading list like Pocket: each stashed link has an address, a note on why it is worth reading, and whether you have read it. This page explains what a plugin is made of, and shows Stash finished.
 
 ## What a plugin is
 
@@ -15,7 +15,7 @@ Composer is built this way: every feature in it is a plugin, and your plugin use
 
 ## The finished plugin
 
-Below, Bookmarks runs in the plugin inspector, a small PLEX app that loads one plugin and shows each of its modules working. The sidebar lists the modules. Click **New** in the header to create a sample bookmark, then select **Surface** to see its view, and **Operations** to run **Record visit** on it.
+Below, Stash runs in the plugin inspector, a small PLEX app that loads one plugin and shows each of its modules working. The sidebar lists the modules. Click **New** in the header to create a sample link, then select **Operations** to mark it as read with **Mark as read**, **App Graph** to see where links sit in the navigation tree, and **Surface** to see a link's view.
 
 <InspectorEmbed />
 
@@ -24,10 +24,10 @@ Each page of the learning path builds one piece of it, and ends with that piece 
 | Page | Files | What it adds |
 | --- | --- | --- |
 | [Create a plugin](/docs/plex/learn/create-plugin/) | `dx.config.ts`, `translations.ts` | The plugin's metadata and its strings |
-| [Define a type](/docs/plex/learn/define-type/) | `types/Bookmark.ts`, `capabilities/schema.ts`, `capabilities/create-object.ts` | The Bookmark type, and a way to create one |
-| [Add a surface](/docs/plex/learn/add-surface/) | `containers/BookmarkArticle.tsx`, `capabilities/react-surface.ts` | The view that shows a bookmark |
-| [Add an operation](/docs/plex/learn/add-operation/) | `types/BookmarkOperation.ts`, `operations/`, `skills/`, two capability files | Record visit, and the skill that gives it to the assistant |
-| [Extend the App Graph](/docs/plex/learn/extend-app-graph/) | `capabilities/app-graph-builder.ts` | A Bookmarks section in the navigation tree, with Record visit on each bookmark |
-| [Run it in Composer](/docs/plex/learn/run-in-composer/) | | The plugin in Composer, from the command palette and the assistant |
+| [Define a type](/docs/plex/learn/define-type/) | `types/StashedLink.ts`, `capabilities/schema.ts` | The Stashed link type |
+| [Add an operation](/docs/plex/learn/add-operation/) | `types/StashedLinkOperation.ts`, `operations/`, `capabilities/operation-handler.ts`, `capabilities/create-object.ts` | A way to create a link from the + menu, and Mark as read |
+| [Extend the App Graph](/docs/plex/learn/extend-app-graph/) | `capabilities/app-graph-builder.ts` | A Stashed links section in the navigation tree, with Mark as read on each link's toolbar |
+| [Add a surface](/docs/plex/learn/add-surface/) | `containers/StashedLinkArticle.tsx`, `capabilities/react-surface.ts` | The view that edits a link's title, address and note, and shows whether it has been read |
+| [Run it in Composer](/docs/plex/learn/run-in-composer/) | `skills/`, `capabilities/skill-definition.ts` | The plugin in Composer, and the skill that gives Mark as read to the assistant |
 
 From the next page on, the inspector on each page loads your own plugin from its dev server, and checks what that page adds.

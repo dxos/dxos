@@ -415,8 +415,8 @@ Things to know:
 
 ### Example: data, an operation and another plugin's menu
 
-Bookmarks, the plugin the [learning path](/docs/plex/learn/the-plex-plugin/) builds, stores an ECHO type in the space, adds
-itself to the Space plugin's create menu, shows each bookmark in an article, and counts visits with an operation that
+Stash, the plugin the [learning path](/docs/plex/learn/the-plex-plugin/) builds, stores an ECHO type in the space, adds
+itself to the Space plugin's create menu, shows each link in an article, and marks links as read with an operation that
 people and the assistant both run. It is defined entirely in `dx.config.ts`, with one file per module body:
 
 ```ts
@@ -428,11 +428,11 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 export default Plugin.config({
   plugin: {
-    key: 'com.example.plugin.bookmarks',
-    name: 'Bookmarks',
+    key: 'com.example.plugin.stash',
+    name: 'Stash',
     description:
-      'Save links in a space and count how often each one is opened.',
-    icon: { key: 'ph--bookmark-simple--regular', hue: 'amber' },
+      'A reading list: save links with a note, and mark them as read.',
+    icon: { key: 'ph--tray-arrow-down--regular', hue: 'indigo' },
     tags: ['labs'],
   },
   modules: [
@@ -473,48 +473,50 @@ export default Plugin.config({
 });
 ```
 
-The type, with the annotations Composer reads: the field that labels a bookmark, its icon, and `UserType`, which puts
+The type, with the annotations Composer reads: the field that labels a link, its icon, and `UserType`, which puts
 it in pickers and the navigation tree. The schema module registers it, so the space can store it:
 
 ```ts
-// src/types/Bookmark.ts
+// src/types/StashedLink.ts
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
-export class Bookmark extends Type.makeObject<Bookmark>(
-  DXN.make('com.example.type.bookmark', '0.1.0'),
+export class StashedLink extends Type.makeObject<StashedLink>(
+  DXN.make('com.example.type.stashedLink', '0.1.0'),
 )(
   Schema.Struct({
-    name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+    title: Schema.optional(Schema.String.annotate({ title: 'Title' })),
     url: Schema.optional(Schema.String.annotate({ title: 'URL' })),
-    visits: Schema.optional(Schema.Number.annotate({ title: 'Visits' })),
+    note: Schema.optional(Schema.String.annotate({ title: 'Note' })),
+    read: Schema.optional(Schema.Boolean.annotate({ title: 'Read' })),
   }).pipe(
-    Annotation.LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({
-      icon: 'ph--bookmark-simple--regular',
-      hue: 'amber',
+      icon: 'ph--tray-arrow-down--regular',
+      hue: 'indigo',
     }),
     Annotation.UserType.set(),
   ),
 ) {}
 
 export const make = (
-  props: Partial<Obj.MakeProps<typeof Bookmark>> = {},
-): Bookmark =>
-  Obj.make(Bookmark, {
-    name: props.name,
+  props: Partial<Obj.MakeProps<typeof StashedLink>> = {},
+): StashedLink =>
+  Obj.make(StashedLink, {
+    title: props.title,
     url: props.url,
-    visits: props.visits ?? 0,
+    note: props.note ?? '',
+    read: props.read ?? false,
   });
 
 // src/capabilities/schema.ts
-import { Bookmark } from '../types/Bookmark.ts';
+import { StashedLink } from '../types/StashedLink.ts';
 
-export default [Bookmark];
+export default [StashedLink];
 ```
 
-The create menu belongs to the Space plugin. It lists every `CreateObjectEntry` contribution, so Bookmarks contributes
+The create menu belongs to the Space plugin. It lists every `CreateObjectEntry` contribution, so Stash contributes
 one; the space shows its form, built from the type's fields, and calls `createObject` with what the person typed:
 
 ```ts
@@ -527,12 +529,12 @@ import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { Bookmark, make } from '../types/Bookmark.ts';
+import { StashedLink, make } from '../types/StashedLink.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
-      id: Type.getTypename(Bookmark),
+      id: Type.getTypename(StashedLink),
       createObject: (props, options) =>
         Operation.invoke(
           SpaceOperation.AddObject,
@@ -547,46 +549,48 @@ export default Capability.makeModule(() =>
 The operation is defined once, with a schema for its input and output, and its handler loads only when it first runs:
 
 ```ts
-// src/types/BookmarkOperation.ts
+// src/types/StashedLinkOperation.ts
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { DXN } from '@dxos/echo';
+import { Database, DXN, Ref } from '@dxos/echo';
 
-export const RecordVisit = Operation.make({
+import { StashedLink } from './StashedLink.ts';
+
+export const MarkRead = Operation.make({
   meta: {
-    key: DXN.make('com.example.operation.bookmark.recordVisit'),
-    name: 'Record visit',
-    description: 'Count one visit to a bookmark.',
-    icon: 'ph--cursor-click--regular',
+    key: DXN.make('com.example.operation.stashedLink.markRead'),
+    name: 'Mark as read',
+    description: 'Mark a link as read.',
+    icon: 'ph--check-circle--regular',
   },
+  // The handler resolves the reference in the link's space.
+  services: [Database.Service],
   input: Schema.Struct({
-    bookmark: Schema.Any.annotate({
-      description: 'The bookmark that was visited.',
+    link: Ref.Ref(StashedLink).annotate({
+      description: 'The link that was read.',
     }),
   }),
-  output: Schema.Struct({
-    visits: Schema.Number.annotate({
-      description: 'The visit count after this visit.',
-    }),
-  }),
+  output: Schema.Void,
 });
 
-// src/operations/record-visit.ts
+// src/operations/mark-read.ts
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 
-import { RecordVisit } from '../types/BookmarkOperation.ts';
+import { StashedLink } from '../types/StashedLink.ts';
+import { MarkRead } from '../types/StashedLinkOperation.ts';
 
-const handler: Operation.WithHandler<typeof RecordVisit> = RecordVisit.pipe(
-  Operation.withHandler(({ bookmark }) =>
+const handler: Operation.WithHandler<typeof MarkRead> = MarkRead.pipe(
+  Operation.withHandler(({ link: ref }) =>
     Effect.gen(function* () {
-      Obj.update(bookmark, (bookmark) => {
-        bookmark.visits = (bookmark.visits ?? 0) + 1;
+      // The assistant passes a reference by id, so look it up in the space.
+      const link = yield* Database.resolve(ref, StashedLink);
+      Obj.update(link, (link) => {
+        link.read = true;
       });
-      return { visits: bookmark.visits };
     }),
   ),
 );
@@ -601,15 +605,15 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { RecordVisit } from '../types/BookmarkOperation.ts';
+import { MarkRead } from '../types/StashedLinkOperation.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.OperationHandler,
       OperationHandlerSet.lazy([
-        RecordVisit.pipe(
-          Operation.lazyHandler(() => import('../operations/record-visit.ts')),
+        MarkRead.pipe(
+          Operation.lazyHandler(() => import('../operations/mark-read.ts')),
         ),
       ]),
     ),
@@ -628,20 +632,21 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 
-import { RecordVisit } from '../types/BookmarkOperation.ts';
+import { MarkRead } from '../types/StashedLinkOperation.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.SkillDefinition, {
-      key: 'com.example.skill.bookmarks',
+      key: 'com.example.skill.stash',
       make: () =>
         Skill.make({
-          key: 'com.example.skill.bookmarks',
-          name: 'Bookmarks',
-          tools: Skill.toolDefinitions({ operations: [RecordVisit] }),
+          key: 'com.example.skill.stash',
+          name: 'Stash',
+          tools: Skill.toolDefinitions({ operations: [MarkRead] }),
           instructions: Template.make({
             source:
-              'When the user says they opened a bookmark, record a visit to it.',
+              'When the user says they have read a page they stashed, find its ' +
+              'link and mark it as read.',
           }),
         }),
     }),
@@ -649,7 +654,7 @@ export default Capability.makeModule(() =>
 );
 ```
 
-The article surface matches any bookmark the person opens, and runs the operation from a button:
+The article surface matches any link the person opens, and edits its title and note:
 
 ```tsx
 // src/capabilities/react-surface.ts
@@ -660,8 +665,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
-import { BookmarkArticle } from '../containers/BookmarkArticle.tsx';
-import { Bookmark } from '../types/Bookmark.ts';
+import { StashedLinkArticle } from '../containers/StashedLinkArticle.tsx';
+import { StashedLink } from '../types/StashedLink.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -669,8 +674,8 @@ export default Capability.makeModule(() =>
       Capabilities.ReactSurface,
       Surface.create({
         id: 'article',
-        filter: AppSurface.object(AppSurface.Article, Bookmark),
-        component: BookmarkArticle,
+        filter: AppSurface.object(AppSurface.Article, StashedLink),
+        component: StashedLinkArticle,
         props: ({ role, data: { subject, attendableId } }) => ({
           role,
           subject,
@@ -681,52 +686,64 @@ export default Capability.makeModule(() =>
   ),
 );
 
-// src/containers/BookmarkArticle.tsx
+// src/containers/StashedLinkArticle.tsx
 import React from 'react';
 
-import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { type Bookmark } from '../types/Bookmark.ts';
-import { RecordVisit } from '../types/BookmarkOperation.ts';
+import { type StashedLink } from '../types/StashedLink.ts';
 
-export const BookmarkArticle = ({
+export type StashedLinkArticleProps =
+  AppSurface.ObjectArticleProps<StashedLink>;
+
+export const StashedLinkArticle = ({
   role,
   subject,
-}: AppSurface.ObjectArticleProps<Bookmark>) => {
-  // Re-renders when the object changes, here or on another peer.
-  const [bookmark] = useObject(subject);
-  const recordVisit = Hooks.useOperation(RecordVisit, () => ({
-    bookmark: subject,
-  }));
+}: StashedLinkArticleProps) => {
+  // A snapshot that re-renders the component when the object changes, here or
+  // on another peer.
+  const [link] = useObject(subject);
 
   return (
     <Panel.Root role={role}>
-      <Panel.Body>
-        <Input.Root
-          value={bookmark.name ?? ''}
-          onChange={(event) =>
-            Obj.update(
-              subject,
-              (subject) => (subject.name = event.target.value),
-            )
-          }
-        />
-        <a
-          href={bookmark.url}
-          target='_blank'
-          rel='noreferrer'
-          onClick={() => recordVisit()}
-        >
-          {bookmark.url}
-        </a>
-        <p>Visited {bookmark.visits ?? 0} times.</p>
-        <Button.Root onClick={() => recordVisit()}>Record visit</Button.Root>
+      <Panel.Body asChild>
+        <Layout.Flex column gap='sm' classNames='p-2'>
+          <Input.Root
+            placeholder='Title'
+            value={link.title ?? ''}
+            onChange={(event) =>
+              Obj.update(subject, (subject) => {
+                subject.title = event.target.value;
+              })
+            }
+          />
+          <Input.Root
+            placeholder='https://'
+            value={link.url ?? ''}
+            onChange={(event) =>
+              Obj.update(subject, (subject) => {
+                subject.url = event.target.value;
+              })
+            }
+          />
+          <Input.Textarea
+            placeholder='Why is this worth keeping?'
+            value={link.note ?? ''}
+            onChange={(event) =>
+              Obj.update(subject, (subject) => {
+                subject.note = event.target.value;
+              })
+            }
+          />
+          <p className='text-description'>
+            {link.read ? 'Read' : 'Not read yet'}
+          </p>
+        </Layout.Flex>
       </Panel.Body>
     </Panel.Root>
   );
@@ -735,11 +752,11 @@ export const BookmarkArticle = ({
 
 Things to know:
 
-- Read an object you render with `useObject`: it re-renders on a field change. Reading `subject.visits` directly in
+- Read an object you render with `useObject`: it re-renders on a field change. Reading `subject.note` directly in
   render does not subscribe, so an update is saved but never shown.
 - Write inside `Obj.update`; a write outside it throws.
-- An operation that people and the assistant both run is one definition: the button calls it through
-  `useOperation`, and the skill gives it to the assistant as a tool.
+- An operation that people and the assistant both run is one definition: a person runs it from the app, and
+  the skill gives it to the assistant as a tool.
 - A type without `UserType` is internal: Composer does not offer it in the create menu or show it in the
   navigation tree.
 

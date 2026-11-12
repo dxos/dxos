@@ -74,9 +74,9 @@ namespace for its own strings, and a type's typename for the strings that descri
 `AppCapability.translations` contributes the resources; it activates at startup, since labels are needed for the
 first screen.
 
-<Snippet file="app-framework-tutorial/src/translations" region="translations" />
+<Snippet file="plex-tutorial/src/translations" region="translations" />
 
-<Snippet file="app-framework-tutorial/dx.config" region="translations" />
+<Snippet file="plex-tutorial/dx.config" region="translations" />
 
 ### The keys the app reads for a type
 
@@ -97,7 +97,7 @@ The app labels objects of a type from that type's namespace, so a type with thes
 
 <Snippet file="plex-guide-translations" region="count" lang="tsx" />
 
-App Graph nodes and actions take a label as a key and namespace, `['record-visit.label', { ns }]`, and the app
+App Graph nodes and actions take a label as a key and namespace, `['mark-read.label', { ns }]`, and the app
 translates it where it renders.
 
 ## Surface roles
@@ -130,7 +130,7 @@ In a manifest, each maker takes the loader of the module that contributes the va
 
 The tutorial plugin registers its type with `AppCapability.schema`, whose module's default export is the list of types:
 
-<Snippet file="app-framework-tutorial/src/capabilities/schema" region="schema" />
+<Snippet file="plex-tutorial/src/capabilities/schema" region="schema" />
 
 ## App capability or a new one
 

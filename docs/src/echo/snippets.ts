@@ -13,9 +13,9 @@ import { join } from 'node:path';
 const SOURCE_DIRS = [
   './snippets/',
   // The tutorial app's own modules, quoted where a page builds that piece of it.
-  '../tutorial/',
+  '../echo-tutorial/',
   // The Composer learning path's plugin, quoted the same way.
-  '../app-framework-tutorial/',
+  '../plex-tutorial/',
   // HALO's contact book, quoted the same way.
   '../halo-tutorial/',
 ];
@@ -45,7 +45,7 @@ const readSources = (): Record<string, string> =>
   );
 
 /** Directories whose modules compile with their local imports beside them. */
-const PROJECTS = ['../tutorial/', '../app-framework-tutorial/', '../halo-tutorial/'];
+const PROJECTS = ['../echo-tutorial/', '../plex-tutorial/', '../halo-tutorial/'];
 
 const findSource = (file: string): [path: string, source: string] => {
   const entry = Object.entries(readSources()).find(([path]) => path.match(new RegExp(`/${file}\\.tsx?$`)));
@@ -171,10 +171,210 @@ const splitImports = (source: string, code: string): { shown: string[]; hidden: 
  * that code uses.
  */
 /** A shared snippet imports a project's module by its path from `snippets/`. */
-const PROJECT_IMPORT = /'\.\.\/\.\.\/((?:app-framework-|halo-)?tutorial)\/([^']+)'/g;
+const PROJECT_IMPORT = /'\.\.\/\.\.\/((?:echo|halo|plex)-tutorial)\/([^']+)'/g;
 
 /** The snippet with each project module imported as a sibling, which is how the page shows it and how it compiles. */
 const localize = (source: string) => source.replace(PROJECT_IMPORT, "'./$2'");
+
+/** Where each app's modules sit in the project the reader builds; StackBlitz puts ECHO's and HALO's under `src/`. */
+const PROJECT_PATHS: Record<string, string> = {
+  '../echo-tutorial/': 'src/',
+  '../plex-tutorial/': '',
+  '../halo-tutorial/': 'src/',
+};
+
+/** The file `file` lives in, in the reader's project; undefined for a snippet outside the apps. */
+export const snippetProjectPath = (file: string): string | undefined => {
+  const [path] = findSource(file);
+  const root = PROJECTS.find((dir) => path.startsWith(dir));
+  return root === undefined ? undefined : `${PROJECT_PATHS[root]}${path.slice(root.length)}`;
+};
+
+const REGION_MARKER = /^[ \t]*\/\/ #(end)?region.*\n/gm;
+
+/** The docs site's stylesheet, which the embeds import and the generated projects do not have. */
+const DOCS_ONLY_IMPORT = /^import '\.\.\/\.\.\/styles\/island-base\.generated\.css';\n/m;
+
+/**
+ * An app module as the reader's project has it, without the markers and directives the docs need, so its line numbers
+ * are the ones a page shows.
+ */
+export const projectSource = (source: string): string =>
+  source.replace(DOCS_ONLY_IMPORT, '').replace(REGION_MARKER, '').replace(LINT_DIRECTIVE, '');
+
+const lineCount = (text: string) => text.split('\n').length - 1;
+
+/** A sample from an app, numbered as the reader's file is. */
+export type AppSample = {
+  /** The file from its first import the shown code uses through the end of the region, or the bracket closing it. */
+  code: string;
+  /** The same, between the rest of the module, for twoslash to compile. */
+  context: string;
+  /** The file's line number of the first line shown. */
+  startLine: number;
+  /** The lines hidden behind a toggle, counted from the first line shown: other imports, and code outside the region. */
+  collapse: [from: number, to: number][];
+};
+
+/** Each bracket pair in `lines`, by the 1-based lines of its open and close; strings and comments are skipped. */
+const bracketPairs = (lines: string[]): { open: number; close: number }[] => {
+  const pairs: { open: number; close: number }[] = [];
+  const stack: number[] = [];
+  let quote: string | undefined;
+  let blockComment = false;
+  lines.forEach((text, index) => {
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      if (blockComment) {
+        if (char === '*' && text[i + 1] === '/') {
+          blockComment = false;
+          i++;
+        }
+      } else if (quote) {
+        if (char === '\\') {
+          i++;
+        } else if (char === quote) {
+          quote = undefined;
+        }
+      } else if (char === '/' && text[i + 1] === '/') {
+        break;
+      } else if (char === '/' && text[i + 1] === '*') {
+        blockComment = true;
+        i++;
+      } else if (char === "'" || char === '"' || char === '`') {
+        quote = char;
+      } else if ('([{'.includes(char)) {
+        stack.push(index + 1);
+      } else if (')]}'.includes(char) && stack.length > 0) {
+        pairs.push({ open: stack.pop()!, close: index + 1 });
+      }
+    }
+    // Only a template literal spans lines.
+    if (quote !== '`') {
+      quote = undefined;
+    }
+  });
+  return pairs;
+};
+
+/** Where `region` sits in `source`: its start marker, the body after it, and its end marker. */
+const findRegion = (source: string, file: string, region?: string) => {
+  const marker = new RegExp(`^[ \\t]*// #region${region ? ` ${region}` : ''}\\n`, 'm').exec(source);
+  if (!marker) {
+    throw new Error(`Snippet ${file} has no region ${region ?? '(default)'}`);
+  }
+  const bodyStart = marker.index + marker[0].length;
+  // A region can hold others, so it ends at the end marker that closes no inner region.
+  let depth = 0;
+  const endMarker = [...source.slice(bodyStart).matchAll(/^[ \t]*\/\/ #(end)?region.*$/gm)].find((match) => {
+    depth += match[1] ? -1 : 1;
+    return depth < 0;
+  });
+  if (!endMarker) {
+    throw new Error(`Snippet ${file} has no end to region ${region ?? '(default)'}`);
+  }
+  return { marker, bodyStart, endMarker };
+};
+
+/** `source` without `region` and without the imports only it used: the file as it is before a later page adds it. */
+const omitRegion = (source: string, file: string, region: string): string => {
+  const { marker, bodyStart, endMarker } = findRegion(source, file, region);
+  const end = bodyStart + endMarker.index + endMarker[0].length + 1;
+  const removed = source.slice(bodyStart, bodyStart + endMarker.index);
+  const rest = source.slice(0, marker.index) + source.slice(end);
+  const uses = (text: string, local: string) =>
+    new RegExp(`(?<![\\w$.])${local.replace('$', '\\$')}(?![\\w$])`).test(text);
+  const code = rest.replace(/^import [\s\S]*?;\n/gm, '');
+  return rest.replace(/^import [\s\S]*?;\n/gm, (statement) =>
+    parseImports(statement).every(({ bindings }) =>
+      bindings.every(({ local }) => uses(removed, local) && !uses(code, local)),
+    )
+      ? ''
+      : statement,
+  );
+};
+
+/**
+ * The sample for a region of an app module, from the first import the region uses: other imports and the code between
+ * the imports and the region are collapsed, so every line keeps its number in the reader's file. A region that opens a
+ * bracket it does not close, or closes one it did not open, also shows the lines that open and close the brackets
+ * around it, with the code between them collapsed. With `omit`, a comma-separated list, the sample leaves out those regions and the
+ * imports only they use, as the file is before a later page adds it. With `bare`, it shows the region alone, for a
+ * file whose imports a step of their own shows. Undefined for a snippet outside the apps.
+ */
+export const appSample = (file: string, region?: string, omit?: string, bare = false): AppSample | undefined => {
+  const [path, full] = findSource(file);
+  if (!PROJECTS.some((dir) => path.startsWith(dir))) {
+    return undefined;
+  }
+  const source = (omit?.split(/[\s,]+/) ?? []).reduce((text, name) => omitRegion(text, file, name), full);
+  const { marker, bodyStart, endMarker } = findRegion(source, file, region);
+  const lines = projectSource(source).split('\n');
+  // The region's first and last lines, through its last non-blank line.
+  const regionStart = lineCount(projectSource(source.slice(0, marker.index))) + 1;
+  let regionEnd = lineCount(projectSource(source.slice(0, bodyStart + endMarker.index)));
+  while (regionEnd >= regionStart && lines[regionEnd - 1].trim() === '') {
+    regionEnd--;
+  }
+  const inRegion = (line: number) => line >= regionStart && line <= regionEnd;
+  const shown = new Set<number>();
+  for (let line = regionStart; line <= regionEnd; line++) {
+    shown.add(line);
+  }
+  // The lines that open and close the brackets an unbalanced region sits in.
+  const pairs = bracketPairs(lines);
+  if (pairs.some(({ open, close }) => inRegion(open) !== inRegion(close))) {
+    for (const { open, close } of pairs) {
+      if (open < regionStart && close >= regionStart) {
+        shown.add(open);
+      }
+      if (close > regionEnd && open <= regionEnd) {
+        shown.add(close);
+      }
+    }
+  }
+  // The imports that bind a name the shown code uses.
+  const body = [...shown].map((line) => lines[line - 1]).join('\n');
+  const prefix = lines.slice(0, regionStart - 1).join('\n') + '\n';
+  for (const match of bare ? [] : prefix.matchAll(/^import [\s\S]*?;\n/gm)) {
+    const used = parseImports(match[0]).some(({ bindings }) =>
+      bindings.some(({ local }) => new RegExp(`(?<![\\w$.])${local.replace('$', '\\$')}(?![\\w$])`).test(body)),
+    );
+    if (used) {
+      const start = lineCount(prefix.slice(0, match.index)) + 1;
+      for (let line = start; line < start + lineCount(match[0]); line++) {
+        shown.add(line);
+      }
+    }
+  }
+  const first = Math.min(...shown);
+  const end = Math.max(...shown);
+  // Each run of hidden lines collapses, unless it is only blank lines.
+  const collapse: [number, number][] = [];
+  for (let line = first; line <= end; line++) {
+    if (shown.has(line)) {
+      continue;
+    }
+    let to = line;
+    while (to + 1 <= end && !shown.has(to + 1)) {
+      to++;
+    }
+    if (lines.slice(line - 1, to).some((text) => text.trim() !== '')) {
+      collapse.push([line - first + 1, to - first + 1]);
+    }
+    line = to;
+  }
+  const code = lines.slice(first - 1, end).join('\n');
+  const head = lines.slice(0, first - 1).join('\n');
+  const tail = lines.slice(end).join('\n');
+  const cut = `${head}${head ? '\n' : ''}// ---cut---\n${code}\n// ---cut-after---\n${tail}`;
+  const root = PROJECTS.find((dir) => path.startsWith(dir))!;
+  const self = path.slice(root.length);
+  const files = localImports(root, self, new Set([self])).map(
+    (module) => `// @filename: ${module}\n${stripRegions(readSources()[`${root}${module}`])}`,
+  );
+  return { code, context: compose(files, self, cut), startLine: first, collapse };
+};
 
 export const snippetSource = (file: string, region?: string): string => {
   const source = localize(findSource(file)[1]);
@@ -237,5 +437,13 @@ export const snippetWithContext = (file: string, region?: string): string => {
   return compose(files, self, cut);
 };
 
+// Stylesheets and polyfills are imported for their effect, and have no types to check.
 const compose = (files: string[], self: string, cut: string) =>
-  ['// @allowImportingTsExtensions', '// @noEmit', ...files, `// @filename: ${self}`, cut].join('\n');
+  [
+    '// @allowImportingTsExtensions',
+    '// @noEmit',
+    '// @noUncheckedSideEffectImports: false',
+    ...files,
+    `// @filename: ${self}`,
+    cut,
+  ].join('\n');

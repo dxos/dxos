@@ -8,14 +8,14 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 
-import { make } from '../../app-framework-tutorial/dx.config.ts';
+import { make } from '../../plex-tutorial/dx.config.ts';
 
 // #region make
-const bookmarks = make();
+const stash = make();
 
 export const manager = PluginManager.make({
-  plugins: [bookmarks],
-  enabled: [bookmarks.meta.profile.key],
+  plugins: [stash],
+  enabled: [stash.meta.profile.key],
   // Turns an id `add` is given into a plugin; this one loads manifest URLs.
   pluginLoader: UrlLoader.make([]),
 });

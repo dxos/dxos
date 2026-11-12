@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { BookmarksNamespace } from '../../app-framework-tutorial/src/namespace.ts';
+import { StashNamespace } from '../../plex-tutorial/src/namespace.ts';
 
 // #region settings
 export const Settings = Schema.Struct({
@@ -24,10 +24,10 @@ export const Settings = Schema.Struct({
 export const SettingsModule = Capability.makeModule(() =>
   Effect.sync(() =>
     Capability.contribute(AppCapabilities.Settings, {
-      prefix: BookmarksNamespace.key,
+      prefix: StashNamespace.key,
       schema: Settings,
       atom: KvsStore.make({
-        key: BookmarksNamespace.key,
+        key: StashNamespace.key,
         schema: Settings,
         defaultValue: () => ({ openInNewTab: true }),
       }),
@@ -43,11 +43,11 @@ export const State = Schema.Struct({
 
 // Device state is the plugin's own capability, stored under its own key.
 export const StateCapability =
-  BookmarksNamespace.makeSingleton<ReturnType<typeof makeState>>()('state');
+  StashNamespace.makeSingleton<ReturnType<typeof makeState>>()('state');
 
 const makeState = () =>
   KvsStore.make({
-    key: `${BookmarksNamespace.key}.state`,
+    key: `${StashNamespace.key}.state`,
     schema: State,
     defaultValue: () => ({}),
   });

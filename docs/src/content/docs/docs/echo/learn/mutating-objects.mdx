@@ -9,7 +9,7 @@ import TutorialEmbed from '../../../../../components/TutorialEmbed.astro';
 
 By the end of this page the app will add, edit and remove records, and you will watch a record change.
 
-## Before you start
+## Background
 
 An object you make with `Obj.make` exists only in memory until you add it to a database. `db.add` starts tracking it: from then on the database stores every change and sends it to the space's other peers.
 
@@ -17,28 +17,30 @@ A tracked object is read like any other, but it is changed only inside `Obj.upda
 
 Writes are local. `db.add` and `Obj.update` return once the change is in the local database, and replication runs after. Two peers that change the same object concurrently both keep their edits: ECHO merges them field by field.
 
-Every function on this page goes in a new file, `records.ts`.
+Each change goes in the component that makes it: adding and editing in `RecordForm.tsx`, removing in `Contacts.tsx`, and watching in `RecordGraph.tsx`.
+
+## Steps
 
 <Steps>
 
 1. **Add records.** `db.add` takes an object made with `Obj.make` and returns it, now tracked. The **New** form saves
    with this.
 
-   <Snippet file="tutorial/records" region="add" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="add" lang="tsx" />
 
 2. **Watch a record.** `Obj.subscribe` calls back after each change to the object, and returns a function that stops the
    subscription. The graph redraws an edge with this when a reference moves.
 
-   <Snippet file="tutorial/records" region="subscribe" />
+   <Snippet file="echo-tutorial/app/RecordGraph" region="subscribe" lang="tsx" />
 
 3. **Change a record.** Every change goes inside `Obj.update`, which hands the callback a mutable view. The form calls
    this as you type.
 
-   <Snippet file="tutorial/records" region="update" />
+   <Snippet file="echo-tutorial/app/RecordForm" region="update" lang="tsx" />
 
 4. **Remove a record.** The **×** on a row calls this.
 
-   <Snippet file="tutorial/records" region="remove" />
+   <Snippet file="echo-tutorial/app/Contacts" region="remove" lang="tsx" />
 
    <Aside type="note">
      ECHO does not delete a removed object at once. It marks the object as removed and keeps it in the change history

@@ -12,7 +12,7 @@ import '@dxos/node-std/globals';
 import { Inspector, type KindId } from '@dxos/plugin-inspector';
 import '@dxos/react-ui/theme.css';
 
-import { make } from '../app-framework-tutorial/dx.config.ts';
+import { make } from '../plex-tutorial/dx.config.ts';
 
 const KIND_IDS: readonly KindId[] = [
   'app-graph',
@@ -28,7 +28,7 @@ const isKindId = (value: string): value is KindId => KIND_IDS.some((kind) => kin
 
 /**
  * The inspector as `/embed/inspector/` renders it. With `?dev&adds=<kind>,…` it loads the reader's plugin from its dev
- * server and checks the kinds of module the page adds; without, it shows the finished Bookmarks plugin, opened at
+ * server and checks the kinds of module the page adds; without, it shows the finished Stash plugin, opened at
  * `?module=<kind>` when a page names one.
  */
 export const InspectorEmbedPage = () => {

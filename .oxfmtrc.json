@@ -52,11 +52,11 @@
   "overrides": [
     {
       "files": [
-        "docs/src/app-framework-tutorial/**",
         "docs/src/content/docs/**",
+        "docs/src/echo-tutorial/**",
         "docs/src/echo/snippets/**",
         "docs/src/halo-tutorial/**",
-        "docs/src/tutorial/**"
+        "docs/src/plex-tutorial/**"
       ],
       "options": {
         "printWidth": 80
