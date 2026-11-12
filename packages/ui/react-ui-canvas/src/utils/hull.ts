@@ -22,8 +22,9 @@ import {
 
 import { type RenderList2D } from '../model/index.ts';
 import { type LatticeSpec, onLattice, toCell } from './lattice.ts';
-import { between, sortByZ } from './order.ts';
+import { between, sortByZ, topZ } from './order.ts';
 import { createNode, nodeBounds } from './shapes.ts';
+import { restackZ } from './view-tree.ts';
 
 /**
  * The look a hull is made with: an outline, dashed. An ordinary style rather than a guide's, which is dashed and
@@ -487,4 +488,26 @@ export const enclose = (
   };
   const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: id }]));
   return fitHulls({ ...scene, nodes: { ...scene.nodes, ...inside, [id]: hull } }, lattice);
+};
+
+/**
+ * The scene with the node `id` inside the hull `hull`, or inside none: beside `beside.target` in the drawing order
+ * where one is given, else over everything. Undefined when `id` is no node that a hull may hold (a hull itself), or
+ * `hull` is no hull of the scene.
+ */
+export const moveToHull = (
+  scene: RenderList2D,
+  id: string,
+  hull: string | undefined,
+  beside?: { target: string; position: 'before' | 'after' },
+): RenderList2D | undefined => {
+  const node = scene.nodes[id];
+  const holder = hull === undefined ? undefined : scene.nodes[hull];
+  if (!node || isHullNode(node) || (hull !== undefined && !(holder && isHullNode(holder)))) {
+    return undefined;
+  }
+  const z = beside ? (restackZ(scene, id, beside.target, beside.position) ?? node.z) : topZ(Object.values(scene.nodes));
+  const { parent: _parent, ...rest } = node;
+  const moved: Node = { ...rest, z, ...(hull !== undefined ? { parent: hull } : {}) };
+  return { ...scene, nodes: { ...scene.nodes, [id]: moved } };
 };

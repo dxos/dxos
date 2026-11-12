@@ -325,13 +325,17 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] Story `Hull` (Perimeter, Box, Lattice, LatticeBox), each with the same eight elbow links.
 - [x] `diagram` fences in a markdown document draw in the editor's colour mode, contributed by plugin-canvas.
 - [x] A double-click off an Object being edited leaves it (2D and 3D).
+- [x] The Views tree nests a hull's shapes under it, selected where they stand; a row dragged onto a hull, or beside
+      a row another hull (or none) holds, moves into that hull (`viewMove`, `moveToHull`, `moveWrites`).
+- [ ] Views tree: moving a row into a plain Group, another View or an Object's definition (a move between two
+      drawings, which needs a place for the shape in the other's coordinates), and any of it in 3D.
+- [ ] Views tree: a hull with nothing inside it is a leaf row, which takes no drop.
 - [ ] Dragging a shape across a border changes which hull holds it (today the hull stretches to follow it).
 - [ ] A hull inside a hull: `enclose` and `collapseHulls` keep hulls flat.
 - [ ] A group placed twice, or inside another Object, is drawn closed, without its border.
 - [ ] Deleting a hull leaves its composite layout in the document, unplaced.
 - [ ] Off a lattice an elbow link has no obstacle avoidance, so it does not yet keep to its side of a border.
 - [ ] Lanes: more than three links on one quarter-gutter track are nudged past the border (`Nudge` knows no walls).
-- [ ] The Views tree lists a hull's shapes beside it, not under it.
 - [ ] Not checked: the `.dx` DSL round trip of `hull`, the SVG export, and what 3D draws of a hull's group.
 - [ ] `PLUGIN.mdl`: record the hull.
 - [ ] In-place editing: a scene node whose id is a part's id (the Cards story's `footer` card) is taken for a part.

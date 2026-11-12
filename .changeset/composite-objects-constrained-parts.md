@@ -64,6 +64,8 @@ Hulls: a border round a set of shapes, which a link's route respects.
   link between two shapes inside stays inside, one from outside crosses the border once, and one between two shapes
   outside goes round the hull.
 - The lattice no longer snaps a composite's parts, which are placed about the composite's own centre.
+- In the Views inspector a hull's shapes are rows under it, and a row dragged onto a hull, or beside a row of
+  another hull or of none, moves its shape into, between or out of hulls.
 
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 

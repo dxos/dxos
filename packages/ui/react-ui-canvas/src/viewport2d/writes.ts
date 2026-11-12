@@ -11,7 +11,7 @@ import {
   type RenderLists2D,
   type ViewportProps,
 } from '../model/index.ts';
-import { type SceneEdit, collapseHulls, expandHulls, fitHulls } from '../utils/index.ts';
+import { type SceneEdit, type ViewMove, collapseHulls, expandHulls, fitHulls, moveToHull } from '../utils/index.ts';
 import { fromRenderList2D, toRenderList2D, toRenderLists2D } from './render-list.ts';
 
 /**
@@ -164,6 +164,26 @@ export const drawnWrites = (
   previous: RenderLists2D,
   next: RenderLists2D,
 ): LayoutWrite[] => layoutWrites(document, collapseHulls(previous), collapseHulls(next));
+
+/**
+ * What moving an element into, out of or between hulls writes to the document: the move is made in the scene as the
+ * engine draws it, so the links on the element, and the frames of the hulls it leaves and joins, follow as they do
+ * for a move on the canvas. Nothing when the move is not one the scene allows.
+ */
+export const moveWrites = (document: Scene.SceneDocument, move: ViewMove, scene?: Scene.SceneRecord): LayoutWrite[] => {
+  const { lists } = drawnLists2D(document, scene);
+  const drawn: RenderLists2D = Object.fromEntries(lists.map((list) => [list.id, list]));
+  const shown = drawn[move.scene];
+  const moved =
+    shown &&
+    moveToHull(
+      shown,
+      move.element,
+      move.group,
+      move.target !== undefined && move.position ? { target: move.target, position: move.position } : undefined,
+    );
+  return moved ? drawnWrites(document, drawn, { ...drawn, [move.scene]: moved }) : [];
+};
 
 /**
  * The document with each layout of `opened` holding what the engine draws of it, a hull's nodes among its own: what a

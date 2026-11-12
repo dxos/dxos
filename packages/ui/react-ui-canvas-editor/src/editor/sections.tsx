@@ -7,7 +7,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useMemo, useState } from 'react';
 
-import { type ThemeMode, between, latticeGrid } from '@dxos/react-ui-canvas';
+import { type ThemeMode, between, latticeGrid, moveWrites } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import {
   DEFAULT_GRID,
@@ -178,6 +178,25 @@ export const ViewsSection = () => {
             : ({ container, element, target, position }) => {
                 const layout = findLayout(document, container);
                 layout && commands.intent(container, restackIntent(layout, element, target, position));
+              }
+        }
+        // Hulls are the 2D editor's: a row joins or leaves one as its shape would on the canvas, in one step.
+        onMove={
+          readonly || config.dim !== '2d'
+            ? undefined
+            : (move) => {
+                const writes = moveWrites(document, move, record);
+                const model = findLayout(document, move.scene)?.model;
+                writes.length > 0 &&
+                  commands.transaction(() => {
+                    for (const write of writes) {
+                      if (write.kind === 'layout') {
+                        commands.intent(write.layout, write.intent);
+                      } else if (model !== undefined) {
+                        commands.modelIntent({ kind: 'define', model, object: write.object });
+                      }
+                    }
+                  });
               }
         }
       />

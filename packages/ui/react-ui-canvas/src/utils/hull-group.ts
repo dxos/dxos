@@ -30,6 +30,7 @@ import {
 import { type RenderList2D, type RenderLists2D } from '../model/index.ts';
 import { compositeBounds, instancePorts } from './compose.ts';
 import { unionBounds } from './hit.ts';
+import { between, sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** A hull as it is stored: a group's Instance, with the border it draws and the name it carries. */
@@ -86,10 +87,12 @@ const expandGroup = (scene: RenderList2D, instance: PlacedComposite, shape: Hull
     const { constrain: _constrain, ...rest } = movedLink(link, by);
     return rest;
   });
+  // Under its own shapes however the Instance is stacked, so a press on a shape inside it reaches the shape.
+  const [lowest] = sortByZ(members);
   const hull: HullNode = {
     type: 'hull',
     id: instance.id,
-    z: instance.z,
+    z: lowest === undefined || instance.z < lowest.z ? instance.z : between(undefined, lowest.z),
     center: instance.center,
     size: instance.size,
     shape,
