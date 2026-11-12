@@ -18,7 +18,7 @@ export type SheetChartsProps = {
   attendableId?: string;
   sheet: Sheet.Sheet;
   model: SheetModel;
-  chartTypes?: readonly SheetCapabilities.ChartTypeContribution[];
+  chartTypes: readonly SheetCapabilities.ChartTypeContribution[];
 };
 
 /** The sheet's charts in the charts companion; shares the sheet's selection through the `Selection` view state. */

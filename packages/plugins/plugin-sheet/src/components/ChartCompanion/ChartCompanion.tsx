@@ -14,6 +14,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Typography from '@dxos/react-ui/Typography';
+import { toLocalizedString } from '@dxos/ui-types';
 
 import { Sheet, type SheetCapabilities } from '#types';
 
@@ -21,6 +22,7 @@ import { SheetNamespace } from '../../namespace.ts';
 import { ChartView } from './ChartView.tsx';
 
 const DEFAULT_RANGE = 'A1:B5';
+const UNKNOWN_CHART_ICON = 'ph--chart-bar--regular';
 
 // The list opens showing whole rows; a two-line row is 3.5rem.
 const LIST_ROW_HEIGHT = 3.5;
@@ -43,8 +45,8 @@ export type ChartCompanionProps = {
   selection?: string;
   /** Called with a chart's range when it is chosen, so the host can select it in the sheet. */
   onSelectRange?: (range: string) => void;
-  /** Chart types other plugins contribute, offered after the built-in ones. */
-  chartTypes?: readonly SheetCapabilities.ChartTypeContribution[];
+  /** Every chart type, from `SheetCapabilities.ChartType`; a new chart starts as the first. */
+  chartTypes: readonly SheetCapabilities.ChartTypeContribution[];
 };
 
 /** Master-detail editor of a sheet's charts: the list of ranges above, the selected chart and its settings below. */
@@ -57,16 +59,19 @@ export const ChartCompanion = ({
   getValues,
   selection,
   onSelectRange,
-  chartTypes = [],
+  chartTypes,
 }: ChartCompanionProps) => {
   const { t } = Hooks.useTranslation(SheetNamespace.key);
   const [selected, setSelected] = useState<string | undefined>(charts[0]?.id);
   const [editing, setEditing] = useState(false);
   const current = charts.find((chart) => chart.id === selected) ?? charts[0];
 
+  const defaultType = chartTypes[0]?.type;
   const handleAdd = useCallback(() => {
-    setSelected(onAdd({ range: selection ?? DEFAULT_RANGE, type: 'bar', header: true }));
-  }, [selection, onAdd]);
+    if (defaultType) {
+      setSelected(onAdd({ range: selection ?? DEFAULT_RANGE, type: defaultType, header: true }));
+    }
+  }, [defaultType, selection, onAdd]);
 
   const handleDelete = useCallback(() => {
     const index = charts.findIndex((chart) => chart.id === current?.id);
@@ -98,7 +103,15 @@ export const ChartCompanion = ({
     () =>
       MenuBuilder.make()
         .root({ label: ['chart-actions.label', { ns: SheetNamespace.key }] })
-        .action('add', { label: ['add-chart.label', { ns: SheetNamespace.key }], icon: 'ph--plus--regular' }, handleAdd)
+        .action(
+          'add',
+          {
+            label: ['add-chart.label', { ns: SheetNamespace.key }],
+            icon: 'ph--plus--regular',
+            disabled: !defaultType,
+          },
+          handleAdd,
+        )
         .action(
           'use-selection',
           {
@@ -121,18 +134,11 @@ export const ChartCompanion = ({
           ),
         )
         .build(),
-    [current, selection, handleAdd, handleUpdate, handleDelete],
+    [current, selection, defaultType, handleAdd, handleUpdate, handleDelete],
   );
 
   const typeOptions = useMemo<SelectFieldOption[]>(
-    () => [
-      ...Sheet.ChartType.literals.map((type) => ({
-        value: type,
-        label: t(`chart-type.${type}.label`),
-        icon: chartIcon(type),
-      })),
-      ...chartTypes.map(({ type, label, icon }) => ({ value: type, label, icon })),
-    ],
+    () => chartTypes.map(({ type, label, icon }) => ({ value: type, label: toLocalizedString(label, t), icon })),
     [chartTypes, t],
   );
 
@@ -144,7 +150,7 @@ export const ChartCompanion = ({
           value: chart.id,
           label: chart.name || chart.range,
           description: t('chart-description.label', { range: chart.range, type: option?.label ?? chart.type }),
-          icon: option?.icon ?? chartIcon(),
+          icon: option?.icon ?? UNKNOWN_CHART_ICON,
         };
       }),
     [charts, typeOptions, t],
@@ -243,26 +249,4 @@ const ChartDetail = ({ chart, editing, getValues, chartTypes, typeOptions, onUpd
   ) : (
     <ChartView chart={values} getValues={getValues} onUpdate={onUpdate} chartTypes={chartTypes} />
   );
-};
-
-const chartIcon = (type?: Sheet.ChartType): string => {
-  switch (type) {
-    case 'pie':
-      return 'ph--chart-pie--regular';
-    case 'xy':
-      return 'ph--chart-line--regular';
-    case 'scatter':
-      return 'ph--chart-scatter--regular';
-    case 'heatmap':
-      return 'ph--squares-four--regular';
-    case 'radar':
-      return 'ph--chart-polar--regular';
-    case 'map':
-      return 'ph--globe-hemisphere-west--regular';
-    case 'timeline':
-      return 'ph--line-segments--regular';
-    case 'bar':
-    default:
-      return 'ph--chart-bar--regular';
-  }
 };

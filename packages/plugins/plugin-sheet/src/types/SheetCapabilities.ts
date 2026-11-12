@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type ComputeGraphRegistry as ComputeGraphRegistryType } from '@dxos/compute-hyperformula';
 import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { type PlotData } from '@dxos/react-ui-plot';
+import { type Label } from '@dxos/ui-types';
 
 import { SheetNamespace } from '../namespace.ts';
 import * as Sheet from './Sheet.ts';
@@ -32,18 +33,25 @@ export const ComputeGraphRegistry = Capability.makeSingleton<ComputeGraphRegistr
 /** Registry of active grid instances keyed by attendable ID. */
 export const GridInstances = Capability.makeSingleton<GridRegistry>()(`${SheetNamespace.key}.capability.gridInstances`);
 
-/** What a contributed chart type draws: the chart's settings and its range's values, header row split off. */
+/** What a chart type draws: the chart's settings and its range's values, header row split off. */
 export type ChartTypeProps = {
   chart: Sheet.ChartProperties;
   data: PlotData;
+  /** Shows the chart's own toolbars; off in a slide. */
+  chrome?: boolean;
+  /** Saves settings changed from the chart's own toolbar; read-only without one. */
+  onUpdate?: (props: Partial<Sheet.ChartProperties>) => void;
 };
 
-/** A chart type another plugin adds to the charts companion. */
+/**
+ * A chart type in the charts companion. The sheet contributes its own the same way; another plugin's module
+ * activates on `SheetEvents.Start`.
+ */
 export type ChartTypeContribution = {
-  /** Stored in a chart's `type`; namespace it (`org.example.sankey`) so it cannot clash with a built-in. */
+  /** Stored in a chart's `type`; another plugin namespaces it (`org.example.sankey`). */
   type: string;
   /** Shown in the chart-type select and the chart list. */
-  label: string;
+  label: Label;
   /** Phosphor icon name. */
   icon: string;
   component: FC<ChartTypeProps>;

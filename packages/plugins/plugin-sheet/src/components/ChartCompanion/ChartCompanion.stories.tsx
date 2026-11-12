@@ -25,6 +25,7 @@ import {
 import { translations } from '#translations';
 import { Sheet, type SheetCapabilities } from '#types';
 
+import { chartTypes as sheetChartTypes } from '../../capabilities/chart-types.tsx';
 import { useSheetContext } from '../SheetRoot/index.ts';
 import { SheetCharts } from './SheetCharts.tsx';
 
@@ -49,7 +50,7 @@ const rowsChartType: SheetCapabilities.ChartTypeContribution = {
 };
 
 /** The sheet's charts, as the app's charts companion shows them. */
-const Companion = ({ chartTypes }: Pick<StoryArgs, 'chartTypes'>) => {
+const Companion = ({ chartTypes = sheetChartTypes }: Pick<StoryArgs, 'chartTypes'>) => {
   const { model } = useSheetContext();
   return <SheetCharts sheet={model.sheet} model={model} chartTypes={chartTypes} />;
 };
@@ -98,7 +99,7 @@ export const Default: Story = {};
 export const ContributedChartType: Story = {
   args: {
     charts: [{ name: 'Regions', range: 'A1:C7', type: rowsChartType.type, header: true }, ...initialCharts],
-    chartTypes: [rowsChartType],
+    chartTypes: [...sheetChartTypes, rowsChartType],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
