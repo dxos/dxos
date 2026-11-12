@@ -40,7 +40,7 @@ export const createInsideScene = ({ registry, store, outer, inside, nodeRegistry
     const instance = scene.nodes[inside.instance];
     const composite = registry.get(store.views)[inside.composite];
     return instance && isInstanceNode(instance) && composite
-      ? { ...insideScene(scene, instance, composite), instance, composite }
+      ? { ...insideScene(scene, instance, composite, nodeRegistry), instance, composite }
       : undefined;
   };
   return {
@@ -51,7 +51,7 @@ export const createInsideScene = ({ registry, store, outer, inside, nodeRegistry
         const instance = scene.nodes[inside.instance];
         const composite = get(store.views)[inside.composite];
         return instance && isInstanceNode(instance) && composite
-          ? insideScene(scene, instance, composite).scene
+          ? insideScene(scene, instance, composite, nodeRegistry).scene
           : (scene ?? EMPTY);
       }),
     ),
@@ -68,15 +68,16 @@ export const createInsideScene = ({ registry, store, outer, inside, nodeRegistry
       if (writes.composite) {
         registry.set(store.views, { ...registry.get(store.views), [current.composite.id]: writes.composite });
       }
-      if (writes.overrides !== undefined || 'overrides' in writes) {
+      // The Instance changes when a part's text is its own, or when a bound part wrote one of its fields.
+      if ('overrides' in writes || writes.bound) {
         const { overrides, ...rest } = current.instance;
-        outer.apply((scene) => ({
-          ...scene,
-          nodes: {
-            ...scene.nodes,
-            [current.instance.id]: writes.overrides ? { ...rest, overrides: writes.overrides } : rest,
-          },
-        }));
+        const next = {
+          ...rest,
+          ...writes.bound,
+          ...(writes.overrides ? { overrides: writes.overrides } : {}),
+          ...('overrides' in writes ? {} : overrides ? { overrides } : {}),
+        };
+        outer.apply((scene) => ({ ...scene, nodes: { ...scene.nodes, [current.instance.id]: next } }));
       }
     },
   };

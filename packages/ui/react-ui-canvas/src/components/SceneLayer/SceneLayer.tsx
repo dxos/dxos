@@ -44,7 +44,6 @@ import {
   isPathNode,
   isViewNode,
   linkMarkers,
-  nodeFrame,
   nodePadding,
   showsContents,
 } from '@dxos/scene';
@@ -1565,7 +1564,10 @@ export const InstanceNodeView = ({ node, lists, registry, zoom, depth, liveDepth
   const composite = useAtomValue(lists.view(isInstanceNode(node) ? node.composite : ''));
   const bounds = nodeBounds(node);
   const placement = useMemo(
-    () => (composite && isInstanceNode(node) ? instancePlacement(node, composite) : undefined),
+    () =>
+      composite && isInstanceNode(node)
+        ? instancePlacement(node, composite, (part) => nodeParts(registry, part))
+        : undefined,
     // Keyed on the geometry rather than the bounds object, which is new on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [composite, node, bounds.x, bounds.y, bounds.width, bounds.height],

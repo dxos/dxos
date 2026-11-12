@@ -160,6 +160,8 @@ export const BaseElement = Schema.Struct({
   pinned: Schema.optional(Schema.Boolean),
   /** How the element follows its frame when it is a part of a composite and an instance is resized. */
   constrain: Schema.optional(PartLayout),
+  /** The composite Object the element draws, where its type declares one (a UML class). */
+  composite: Schema.optional(Schema.String),
   /** The DSL statement that made the element, so compiling the source again updates it rather than adding a copy. */
   dsl: Schema.optional(DslIdentity),
   /** Kind-specific fields, validated by the kind's registration. */

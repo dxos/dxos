@@ -20,6 +20,7 @@ import {
   type Node,
   type NodeId,
   type PartLayout,
+  type PlacedComposite,
   type ViewId,
   nodeFrame,
   unsolvePartBounds,
@@ -40,8 +41,13 @@ export type InsideScene = { scene: RenderList2D; parts: ReadonlySet<ElementId> }
  * The outer scene with the Instance replaced by its parts, drawn where it drew them. Everything else is locked, so a
  * gesture inside an Object never moves the drawing around it; leaving puts the Instance back.
  */
-export const insideScene = (outer: RenderList2D, instance: InstanceNode, composite: RenderList2D): InsideScene => {
-  const drawn = drawnParts(instance, composite);
+export const insideScene = (
+  outer: RenderList2D,
+  instance: PlacedComposite,
+  composite: RenderList2D,
+  registry?: NodeRegistry,
+): InsideScene => {
+  const drawn = drawnParts(instance, composite, registry && ((node) => nodeParts(registry, node)));
   const parts = new Set<ElementId>([...Object.keys(drawn.nodes), ...Object.keys(drawn.links)]);
   const locked = <T extends Node | Link>(element: T): T => ({ ...element, locked: true });
   const nodes = Object.fromEntries(
@@ -64,10 +70,12 @@ export const insideScene = (outer: RenderList2D, instance: InstanceNode, composi
 export type InsideWrites = {
   composite?: RenderList2D;
   overrides?: InstanceNode['overrides'];
+  /** Fields of the Instance itself that a bound part wrote (a UML class's `attributes`). */
+  bound?: Record<string, unknown>;
 };
 
 /** The frame a part's coordinates are solved between: the definition's own box, and the Instance's frame. */
-const context = (instance: InstanceNode, composite: RenderList2D) => {
+const context = (instance: PlacedComposite, composite: RenderList2D) => {
   const from = nodeFrame(instance) ?? compositeBounds(composite);
   return from ? { from, to: nodeBounds(instance) } : undefined;
 };
@@ -95,14 +103,15 @@ const toDefinition = (
  */
 export const insideWrites = (
   registry: NodeRegistry,
-  instance: InstanceNode,
+  instance: PlacedComposite,
   composite: RenderList2D,
   edited: RenderList2D,
   parts: ReadonlySet<ElementId>,
 ): InsideWrites => {
   const frames = context(instance, composite);
   // The parts are compared against what this Instance draws, so an override it already carries reads as unchanged.
-  const shown = instanceView(instance, composite);
+  const shown = instanceView(instance, composite, (node) => nodeParts(registry, node));
+  const bound: Record<string, unknown> = {};
   const overrides: Record<NodeId, Record<string, unknown>> = { ...instance.overrides };
   const nodes: Record<NodeId, Node> = {};
   let overridesChanged = false;
@@ -127,8 +136,18 @@ export const insideWrites = (
         definition[key] = value;
         continue;
       }
-      // Text the person did not touch leaves its override as it was; text typed back to the definition's clears it.
+      // Text the person did not touch leaves what holds it as it was.
       if (!changed(value, Reflect.get(current, key))) {
+        continue;
+      }
+      // A bound part shows the Instance's own field, so typing in it writes that field rather than an override.
+      if (stored.bind !== undefined) {
+        bound[stored.bind] = Array.isArray(Reflect.get(instance, stored.bind))
+          ? String(value ?? '')
+              .split('\n')
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0)
+          : value;
         continue;
       }
       changed(value, Reflect.get(stored, key)) ? (own[key] = value) : delete own[key];
@@ -152,6 +171,7 @@ export const insideWrites = (
   );
   const next: RenderList2D = { ...composite, nodes, links };
   return {
+    ...(Object.keys(bound).length > 0 ? { bound } : {}),
     ...(changed(next, composite) ? { composite: next } : {}),
     ...(overridesChanged || changed(overrides, instance.overrides ?? {})
       ? { overrides: Object.keys(overrides).length > 0 ? overrides : undefined }

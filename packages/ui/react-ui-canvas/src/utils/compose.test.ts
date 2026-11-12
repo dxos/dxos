@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type InstanceNode, type Node, isInstanceNode } from '@dxos/scene';
+import { type InstanceNode, type Node, type PlacedComposite, isInstanceNode } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { type RenderList2D } from '../model/index.ts';
@@ -43,7 +43,7 @@ const counter = () => {
   return (prefix: string) => `${prefix}-${next++}`;
 };
 
-const instanceOf = (parent: RenderList2D, id: string): InstanceNode => {
+const instanceOf = (parent: RenderList2D, id: string): PlacedComposite => {
   const node = parent.nodes[id];
   if (!node || !isInstanceNode(node)) {
     throw new Error(`no instance ${id}`);

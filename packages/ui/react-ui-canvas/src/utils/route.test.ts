@@ -11,11 +11,11 @@ import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import {
+  type RouteEnd,
   insertIndex,
   linkGeometry,
   linkPath,
   orthoPoints,
-  type RouteEnd,
   sideToward,
   smartPoints,
   splinePath,

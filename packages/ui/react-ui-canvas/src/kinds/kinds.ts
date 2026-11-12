@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 
 import { KindRegistry, type LayoutIntent, type Node, type Port, Scene, nodeBase } from '@dxos/scene';
 
-import type { CreateProps, NodeDefSpec } from '../model/index.ts';
+import { type CreateProps, type NodeDefSpec, templateCompositeId } from '../model/index.ts';
 
 /** An element as a layout stores it: the 2D base and any field of its kind. */
 export type KindElement = Scene.LayoutRecord2D['elements'][string];
@@ -50,10 +50,15 @@ const ownOf = <V>(fields: Readonly<Record<string, V>>, shared: boolean): Record<
  * palette, in-place editing and Properties form read the kind's fields from the node.
  */
 export const kindNodeDef = (type: string, { schema, create, ...spec }: ElementKindSpec): NodeDefSpec => {
+  // A kind that declares a composite template keeps its own type and fields and names the composite it draws, so its
+  // data stays typed while its parts are a composite's (`PlacedComposite`).
+  const composite = spec.template === undefined ? {} : { composite: templateCompositeId(type) };
   return {
+    // A templated kind draws through the Instance view and needs no component of its own.
+    ...(spec.template === undefined ? {} : { extends: 'object' }),
     ...spec,
     schema: Schema.Struct({ ...ownOf(schema.fields, true), ...nodeBase, type: Schema.Literal(type) }),
-    create: (props: CreateProps): Node => ({ ...ownOf(create(props), true), ...props, type }),
+    create: (props: CreateProps): Node => ({ ...ownOf(create(props), true), ...props, ...composite, type }),
   };
 };
 

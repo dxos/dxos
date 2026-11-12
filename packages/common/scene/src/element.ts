@@ -218,6 +218,17 @@ export const nodeBase = {
    * instance attach to it (ANIMATION.md §4.1).
    */
   exposed: Schema.optional(Schema.Boolean.annotate({ title: 'Exposed' })),
+  /**
+   * Inside a composite, the field of the Instance this part shows (`bind: 'attributes'`): the part draws the
+   * Instance's own value and typing in it writes that value back, so a tool keeps its typed data on the Instance
+   * while the composite says how it is laid out.
+   */
+  bind: Schema.optional(Schema.String.annotate({ title: 'Bind' })),
+  /**
+   * The composite Object this node draws, where it places one: the generic `instance` always, and a type of its own
+   * that declares a template. Naming one is what makes a node a {@link PlacedComposite}.
+   */
+  composite: Schema.optional(Schema.String),
   ...constrainFields,
 };
 
@@ -631,7 +642,21 @@ export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type 
 export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.type === 'polyline';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
-export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
+/**
+ * The fields a node placing a composite Object carries, whatever its own type: the generic `instance`, and a type of
+ * its own that declares a template (a UML class), which keeps its type and its typed fields and draws through the
+ * composite all the same.
+ */
+export type PlacedComposite = NodeBase & {
+  readonly composite: ViewId;
+  readonly overrides?: InstanceNode['overrides'];
+  readonly fit?: InstanceFit;
+  readonly frame?: Bounds;
+};
+
+/** Whether the node places a composite, which is what naming one makes it — not what its type is called. */
+export const isInstanceNode = (node: NodeBase): node is PlacedComposite =>
+  typeof Reflect.get(node, 'composite') === 'string';
 
 /** The fixed child region a portal or instance shows, when it places a composite at a scale. */
 export const nodeFrame = (node: NodeBase): Bounds | undefined =>

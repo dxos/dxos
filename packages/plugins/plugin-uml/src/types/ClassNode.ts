@@ -10,6 +10,8 @@ import type { CreateProps } from '@dxos/react-ui-canvas';
 import { type ElementKindSpec, kindRegistry } from '@dxos/react-ui-canvas';
 import { type KindRegistry, Scene } from '@dxos/scene';
 
+import { SIZE, TEMPLATE } from './template.ts';
+
 /** The element type a UML class is stored as. */
 export const TYPE = 'class';
 
@@ -32,7 +34,10 @@ export const isClassNode = <T extends { readonly type?: string }>(
   node: T,
 ): node is T & { type: 'class' } & ClassFields => node.type === TYPE;
 
-/** A new class with placeholder members, so the compartments read as a class before it is edited. */
+/**
+ * A new class with placeholder members, so the compartments read as a class before it is edited. It is an Instance of
+ * the class template: the typed fields stay on the element and the composite's bound parts draw them.
+ */
 export const make = ({ id, z, center, size }: CreateProps): ClassNode => ({
   type: TYPE,
   id,
@@ -44,16 +49,21 @@ export const make = ({ id, z, center, size }: CreateProps): ClassNode => ({
   methods: ['save(): void'],
 });
 
-/** Everything about the kind except its view, which the capability adds (keeping React out of this module). */
+/**
+ * The kind: a composite object declared in the DSL (`template`), not a shape a React view paints. The canvas draws an
+ * Instance of it and binds each compartment to the class's own field, so the compartments are edited in place and the
+ * data stays typed.
+ */
 export const spec: ElementKindSpec = {
   name: 'Class',
   icon: 'ph--rows--regular',
   key: 'C',
   schema: ClassNode,
   create: make,
+  template: TEMPLATE,
   defaultSize: { width: 2, height: 2 },
   resizable: true,
-  minSize: { width: 128, height: 96 },
+  minSize: { width: SIZE.width / 2, height: SIZE.height / 2 },
   parts: [{ field: 'label' }, { field: 'attributes', lines: true }, { field: 'methods', lines: true }],
 };
 

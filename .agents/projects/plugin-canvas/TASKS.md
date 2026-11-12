@@ -238,19 +238,30 @@ editable. This phase makes the second form the one tools use, and gives a part a
 
 ### Tasks
 
-- [ ] **`@dxos/scene`: part constraints.** `PartConstraint` / `PartLayout` schemas, `constrain` on `nodeBase` and
+- [x] **`@dxos/scene`: part constraints.** `PartConstraint` / `PartLayout` schemas, `constrain` on `nodeBase` and
       `linkBase`, and the solver that maps a definition's bounds into an instance's frame per axis. Unit tests over
       each constraint and over a link's free point ends.
-- [ ] **`@dxos/diagram`: the `composite` statement.** Grammar, reader, printer, linter and completion for
+- [x] **`@dxos/diagram`: the `composite` statement.** Grammar, reader, printer, linter and completion for
       `composite <id> … { element … }` and the `constrain` attribute; round-trip tests.
-- [ ] **`react-ui-canvas`: templates and re-solve.** `NodeDefSpec.template` (DSL source) compiled once per document;
+- [x] **`react-ui-canvas`: templates and re-solve.** `NodeDefSpec.template` (DSL source) compiled once per document;
       an instance's resize re-solves its parts by their constraints instead of scaling uniformly.
-- [ ] **`react-ui-canvas`: in-place composite editing** (D4), with 2D/3D parity against `Scene3DEditor`.
-- [ ] **`react-ui-canvas`: Make object framing and shared style edits** (D3, D5).
-- [ ] **`react-ui-canvas`: the `ortho` variant and the Variant selector** (D6, D7, D8).
-- [ ] **`plugin-uml`: the class as a composite template** (D9).
+- [x] **`react-ui-canvas`: in-place composite editing** (D4), with 2D/3D parity against `Scene3DEditor`.
+- [x] **`react-ui-canvas`: Make object framing and shared style edits** (D3, D5).
+- [x] **`react-ui-canvas`: the `ortho` variant and the Variant selector** (D6, D7, D8).
+- [x] **`plugin-uml`: the class as a composite template** (D9).
 - [ ] **Verify**: package builds and tests, `pnpm format`, lint, and the Cards stories (`Default` and `Composite`)
       rendered on a storybook served from this worktree on an alternate port.
+
+### Deviations and follow-ups
+
+- **A composite's id may not be a kind's.** `card`, `icon` and `view` became kinds a 2D layout may hold (they are
+  built-in editor types a template is made of), and an object id may not also be a kind, so a template names its
+  composite something else; `compileTemplate` renames it to `template:<type>` anyway.
+- **The scene DSL carries no text alignment, font or padding**, so the UML class's compartments are left-aligned
+  where `ClassNodeView` centred and emboldened its name. The compartments draw their own borders, which is what
+  reads as the class's two rules. Extending `readStyle` with alignment is the follow-up.
+- **Free point endpoints are not expressible in the DSL** (`from=`/`to=` name nodes), so a template cannot author a
+  hairline as a line between two points; a part with a border stands in.
 
 ## Backlog
 

@@ -10,8 +10,10 @@ describe('element base', () => {
   test('the scene element base has every react-ui-canvas node and link field', () => {
     expect(Object.keys(nodeBase).sort()).toEqual(
       [
+        'bind',
         'center',
         'class',
+        'composite',
         'constrain',
         'exposed',
         'id',

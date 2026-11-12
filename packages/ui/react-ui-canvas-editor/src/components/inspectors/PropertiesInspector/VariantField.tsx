@@ -6,7 +6,7 @@ import React, { createContext, useContext } from 'react';
 
 import { type LinkRegistry } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
-import { LINK_TYPES, LineLink, type LinkType } from '@dxos/scene';
+import { LineLink, LINK_TYPES, type LinkType } from '@dxos/scene';
 
 /**
  * How a link is drawn between its ends, which is its stored `type`: `Straight` runs between them as they are,

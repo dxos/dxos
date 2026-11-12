@@ -12,12 +12,12 @@ import {
   type Bounds,
   type Endpoint,
   type InstanceFit,
-  type InstanceNode,
   type LayerId,
   type Link,
   type Node,
   type NodeId,
   type PartLayout,
+  type PlacedComposite,
   type Point,
   type Port,
   type Side,
@@ -38,6 +38,7 @@ import { type SceneEdit, chainEdits, deleteElements, insertLink, insertNode, upd
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
 import { topZ } from './order.ts';
+import { type PartField } from './parts.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** Whether a scene is a composite's definition. */
@@ -165,7 +166,7 @@ export const instanceTransform = (
 };
 
 /** The composite's node with this instance's overrides of it, shallow per field (`style` merges per key). */
-export const overriddenNode = (instance: InstanceNode, node: Node): Node => {
+export const overriddenNode = (instance: PlacedComposite, node: Node): Node => {
   const override = instance.overrides?.[node.id];
   if (!override) {
     return node;
@@ -180,16 +181,48 @@ export const overriddenNode = (instance: InstanceNode, node: Node): Node => {
   };
 };
 
-/** The composite with an instance's overrides applied to its nodes, as the instance draws it. */
-export const instanceView = (instance: InstanceNode, composite: RenderList2D): RenderList2D =>
-  instance.overrides
-    ? {
-        ...composite,
-        nodes: Object.fromEntries(
-          Object.values(composite.nodes).map((node) => [node.id, overriddenNode(instance, node)]),
-        ),
-      }
-    : composite;
+/** A bound value as a part's text: a list reads one entry per line, as the part that edits it writes it back. */
+const boundText = (value: unknown): string | undefined => {
+  if (Array.isArray(value)) {
+    return value.filter((entry) => typeof entry === 'string').join('\n');
+  }
+  return typeof value === 'string' ? value : undefined;
+};
+
+/**
+ * The part showing the Instance's own field (`bind`), where it names one the Instance carries. A tool that keeps
+ * typed data on its shape — a UML class's attributes — draws it through a part this way, so the composite says how
+ * the shape is laid out and the Instance stays the thing that holds the data.
+ */
+export const boundNode = (instance: PlacedComposite, node: Node, fields: readonly PartField[]): Node => {
+  const text = node.bind === undefined ? undefined : boundText(Reflect.get(instance, node.bind));
+  const [part] = fields;
+  return text === undefined || !part ? node : { ...node, [part.field]: text };
+};
+
+/**
+ * The composite with an instance's overrides applied to its nodes and its bound parts filled in, as the instance
+ * draws it. `parts` says where a node type keeps its text, so a bound part writes into the right field.
+ */
+export const instanceView = (
+  instance: PlacedComposite,
+  composite: RenderList2D,
+  parts: (node: Node) => readonly PartField[] = () => [],
+): RenderList2D => {
+  const bound = Object.values(composite.nodes).some((node) => node.bind !== undefined);
+  if (!instance.overrides && !bound) {
+    return composite;
+  }
+  return {
+    ...composite,
+    nodes: Object.fromEntries(
+      Object.values(composite.nodes).map((node) => {
+        const overridden = overriddenNode(instance, node);
+        return [node.id, boundNode(instance, overridden, parts(overridden))];
+      }),
+    ),
+  };
+};
 
 const boundsCentre = ({ x, y, width, height }: Bounds): Point => ({ x: x + width / 2, y: y + height / 2 });
 
@@ -251,8 +284,12 @@ export type InstancePlacement = {
 };
 
 /** What `instance` draws for `composite`: its overrides, then its constraints ({@link placeParts}). */
-export const instancePlacement = (instance: InstanceNode, composite: RenderList2D): InstancePlacement => {
-  const view = instanceView(instance, composite);
+export const instancePlacement = (
+  instance: PlacedComposite,
+  composite: RenderList2D,
+  parts?: (node: Node) => readonly PartField[],
+): InstancePlacement => {
+  const view = instanceView(instance, composite, parts);
   const to = nodeBounds(instance);
   // Measured against the definition's box, not this instance's overridden copy of it: an override moves one part, it
   // does not move the frame every other part is placed against, which would make one instance's edit shift them all.
@@ -270,8 +307,12 @@ const isIdentity = ({ scale, offset }: InstanceTransform): boolean => scale === 
  * there already, and any other is mapped through the instance's transform. What editing an Object in place, and what
  * ungrouping one, both work on.
  */
-export const drawnParts = (instance: InstanceNode, composite: RenderList2D): RenderList2D => {
-  const { view, transform } = instancePlacement(instance, composite);
+export const drawnParts = (
+  instance: PlacedComposite,
+  composite: RenderList2D,
+  parts?: (node: Node) => readonly PartField[],
+): RenderList2D => {
+  const { view, transform } = instancePlacement(instance, composite, parts);
   if (isIdentity(transform)) {
     return view;
   }
@@ -414,7 +455,7 @@ export const composeSelection = (
     links: Object.fromEntries(childLinks.map((link) => [link.id, link])),
     layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
   };
-  const instance: InstanceNode = {
+  const instance: PlacedComposite = {
     type: 'instance',
     id: instanceId,
     z: topZ(Object.values(scene.nodes)),
@@ -454,7 +495,7 @@ export type Ungrouping = { edit: SceneEdit; created: NodeId[] };
  */
 export const ungroupInstance = (
   scene: RenderList2D,
-  instance: InstanceNode,
+  instance: PlacedComposite,
   composite: RenderList2D,
   createId: (prefix: string) => string,
 ): Ungrouping => {
@@ -552,10 +593,10 @@ export const copyComposite = (
 
 /** The instance pointed at the composite copy `compositeId`, its overrides and ports renamed as the copy's nodes were. */
 export const retargetInstance = (
-  instance: InstanceNode,
+  instance: PlacedComposite,
   compositeId: ViewId,
   rename: (id: NodeId) => NodeId,
-): InstanceNode => ({
+): PlacedComposite => ({
   ...instance,
   composite: compositeId,
   ...(instance.overrides
@@ -565,7 +606,7 @@ export const retargetInstance = (
 });
 
 /** The links in `scene` attached to an instance's ports, renamed after `copyComposite` renamed the ports. */
-export const renamePortLinks = (scene: RenderList2D, before: InstanceNode, after: InstanceNode): SceneEdit[] => {
+export const renamePortLinks = (scene: RenderList2D, before: PlacedComposite, after: PlacedComposite): SceneEdit[] => {
   const names = new Map((before.ports ?? []).map((port, index) => [port.id, after.ports?.[index]?.id ?? port.id]));
   const rename = (end: Endpoint): Endpoint =>
     'node' in end && end.node === before.id && end.port ? { ...end, port: names.get(end.port) ?? end.port } : end;

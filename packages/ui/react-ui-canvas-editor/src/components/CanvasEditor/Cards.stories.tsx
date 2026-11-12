@@ -17,11 +17,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { type IconNode, type RenderList2D, fromRenderLists2D } from '@dxos/react-ui-canvas';
+import { type RenderList2D, compileTemplate, fromRenderLists2D, isCompiled } from '@dxos/react-ui-canvas';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { type InstanceNode, type Node, type NoteNode, type Scene } from '@dxos/scene';
+import { type InstanceNode, type Scene } from '@dxos/scene';
 
 import { FullEditor, SceneEditorStory } from '../../testing/index.ts';
 
@@ -83,133 +83,63 @@ const DOCUMENT: Scene.SceneDocument = (() => {
 })();
 
 //
-// The same card as a composite object: a scene marked `kind: 'composite'`, placed by `instance` nodes. The document
-// is written through `fromRenderLists2D` rather than by hand, because an instance names its definition through a
-// model `Object2D` (`parts`), not a field of its own — writing the element by hand silently makes a node that is not
-// an instance, with no parts to expand.
-//
-// Its parts are placed from `CardFrame`'s own box model, measured off the rendered kind, so the two stories are the
-// same picture and a different model — which is the point. The title, body and footer are `note` nodes (the text
-// type) and the hairline is a `line` link between two free points, rather than rectangles standing in for both.
+// The same card as a composite object, written the way a tool ships one: a `composite` statement in the scene DSL,
+// compiled once and placed by instances. Every part says how it follows the frame (`constrain`), so the third card —
+// the same Object at half again the height — keeps its glyph in the corner, its footer on the floor and grows its
+// body, rather than scaling like a picture. The two stories are the same card and a different model, which is the
+// point: an instance's parts are in the Views tree, are edited in place, and any field of any part can be overridden
+// for one instance alone.
 //
 
 /**
- * `CardFrame`'s box model in scene px. The card pads to the minor cell measured from its own edge, and every region
- * is a whole number of half cells: a three-cell header set by its glyph, the body between, and a two-cell footer of
- * the hairline, half a cell and its line.
+ * The card's box model, in scene px: it pads to the minor cell, its header is the three cells its glyph sets, and
+ * its footer two. Written out as DSL rather than built as nodes, because that is what a tool contributes.
  */
 const CELL = 12;
 const PAD = CELL;
-const GAP = CELL / 2;
 const GLYPH = CELL * 3;
-/** One line at 16px and at 12px, each rounded up to a whole number of half cells. */
-const TITLE_LINE = CELL * 2;
-const FOOTER_LINE = CELL * 1.5;
-const FOOTER = CELL * 2;
-
+const FOOTER = CELL * 1.5;
 const LEFT = -CARD_SIZE.width / 2 + PAD;
-const RIGHT = CARD_SIZE.width / 2 - PAD;
 const TOP = -CARD_SIZE.height / 2 + PAD;
+const RIGHT = CARD_SIZE.width / 2 - PAD;
 const BOTTOM = CARD_SIZE.height / 2 - PAD;
-/** The footer sits on the bottom padding (`mt-auto`), with the hairline on the top of its own block. */
-const RULE_Y = BOTTOM - FOOTER;
+const BODY_TOP = TOP + GLYPH + CELL / 2;
+const BODY_BOTTOM = BOTTOM - FOOTER - CELL / 2;
 
-/** A text node of the card, its frame the box its text fills: a card's regions start on their own edge, not a grid
- * cell inside it, so each takes no padding. */
-const text = (
-  id: string,
-  z: string,
-  [x, y, width, height]: [number, number, number, number],
-  value: string,
-  fontSize: number,
-): NoteNode => ({
-  id,
-  type: 'note',
-  z,
-  center: { x: x + width / 2, y: y + height / 2 },
-  size: { width, height },
-  text: value,
-  padding: { x: 0, y: 0 },
-  style: { alignHorizontal: 'left', alignVertical: 'top', fontSize },
-});
+const round = (value: number) => Math.round(value * 100) / 100;
 
-const glyph = (id: string, z: string, center: { x: number; y: number }, type: string): IconNode => ({
-  id,
-  type: 'icon',
-  z,
-  center,
-  size: { width: GLYPH, height: GLYPH },
-  icon: { type },
-});
+const CARD_TEMPLATE = `composite cardObject size=${CARD_SIZE.width}x${CARD_SIZE.height} name="Card" {
+  element frame rect @ 0,0 size=${CARD_SIZE.width}x${CARD_SIZE.height} constrain=stretch rounded=true
+  element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} constrain=min
+  element title note "Composite" @ ${round((LEFT + GLYPH + CELL / 2 + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(RIGHT - LEFT - GLYPH - CELL / 2)}x${CELL * 2} constrain=stretch,min
+  element body note "A frame, a glyph and three texts, grouped into an object." @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${round(RIGHT - LEFT)}x${round(BODY_BOTTOM - BODY_TOP)} constrain=stretch
+  element footer note "composite · five parts" @ 0,${round(BOTTOM - FOOTER / 2)} size=${round(RIGHT - LEFT)}x${FOOTER} constrain=stretch,max
+}
+`;
 
-/** The definition: the card's frame, its glyph, its three texts and the hairline over the footer. */
-const CARD: RenderList2D = {
-  id: 'card',
-  name: 'Card',
-  kind: 'composite',
-  nodes: Object.fromEntries(
-    (
-      [
-        {
-          id: 'frame',
-          type: 'rect' as const,
-          z: 'a0',
-          center: { x: 0, y: 0 },
-          size: CARD_SIZE,
-          style: { rounded: true },
-        },
-        glyph('icon', 'a1', { x: LEFT + GLYPH / 2, y: TOP + GLYPH / 2 }, 'command'),
-        // The title's line is centred in the taller row its glyph sets.
-        text(
-          'title',
-          'a2',
-          [LEFT + GLYPH + GAP, TOP + (GLYPH - TITLE_LINE) / 2, RIGHT - LEFT - GLYPH - GAP, TITLE_LINE],
-          'Composite',
-          16,
-        ),
-        // The body takes what the header and the footer leave, as the kind's does.
-        text(
-          'body',
-          'a3',
-          [LEFT, TOP + GLYPH + GAP, RIGHT - LEFT, BOTTOM - FOOTER - GAP - (TOP + GLYPH + GAP)],
-          'A frame, a glyph, three texts and a line, grouped into an object.',
-          14,
-        ),
-        text(
-          'footer',
-          'a4',
-          [LEFT, BOTTOM - FOOTER_LINE, RIGHT - LEFT, FOOTER_LINE],
-          'composite · five shapes and a line',
-          12,
-        ),
-      ] satisfies Node[]
-    ).map((node) => [node.id, node]),
-  ),
-  // The hairline the footer sits under: a line between two free points, so it is a line rather than a 1px shape.
-  links: {
-    rule: {
-      id: 'rule',
-      type: 'line',
-      z: 'b0',
-      source: { point: { x: LEFT, y: RULE_Y } },
-      target: { point: { x: RIGHT, y: RULE_Y } },
-      style: { hue: 'neutral' },
-    },
-  },
-};
+const COMPOSITE_ID = 'card-object';
+
+const compiled = compileTemplate(CARD_TEMPLATE, COMPOSITE_ID);
+if (!isCompiled(compiled)) {
+  throw new Error(`The card template does not compile: ${compiled.problems.join(' ')}`);
+}
+const CARD: RenderList2D = compiled.composite;
 
 const instanceOf = (
   id: string,
   z: string,
   [x, y]: [number, number],
+  size: { width: number; height: number } = CARD_SIZE,
   overrides?: InstanceNode['overrides'],
 ): InstanceNode => ({
   type: 'instance',
   id,
   z,
   center: { x, y },
-  size: CARD_SIZE,
-  composite: 'card',
+  size,
+  composite: COMPOSITE_ID,
+  // The parts fill the frame by their constraints, so the Object is drawn at the size it is given.
+  fit: 'none',
   ...(overrides ? { overrides } : {}),
 });
 
@@ -219,13 +149,27 @@ const BOARD: RenderList2D = {
   links: {},
   nodes: Object.fromEntries(
     [
-      instanceOf('plain', 'b0', [-192, 0]),
+      instanceOf('plain', 'b0', [-384, 0]),
       // One instance overriding parts of the definition: a blue glyph and two of its texts.
-      instanceOf('toned', 'b1', [192, 0], {
+      instanceOf('toned', 'b1', [0, 0], CARD_SIZE, {
         icon: { style: { hue: 'blue' } },
         title: { text: 'Overridden' },
         footer: { text: 'composite · one override' },
       }),
+      // The same Object, taller and wider: its glyph stays in the corner and its footer on the floor.
+      instanceOf(
+        'stretched',
+        'b2',
+        [396, 48],
+        { width: 384, height: 288 },
+        {
+          title: { text: 'Constrained' },
+          body: {
+            text: 'The same object at another size: the glyph keeps the corner, the footer the floor, and the body takes what is left.',
+          },
+          footer: { text: 'composite · constrained parts' },
+        },
+      ),
     ].map((node) => [node.id, node]),
   ),
 };

@@ -10,8 +10,7 @@ import { type Bounds, type ElementId, MAJOR_GRID_RATIO } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { isMoving } from '../../engine/index.ts';
-import { PREVIEW_NODE_ID } from '../../hooks/index.ts';
-import { useRegistry } from '../../hooks/useRegistry.ts';
+import { PREVIEW_NODE_ID, useRegistry } from '../../hooks/index.ts';
 import { type Camera } from '../../model/index.ts';
 import { MIN_ZOOM, cameraTransform, visibleView } from '../../utils/index.ts';
 import { ControlFrame } from '../ControlFrame/index.ts';

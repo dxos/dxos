@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { isInstanceNode } from '@dxos/scene';
 
-import { defaultNodePrototypes, defaultNodeTypes } from '../components/SceneLayer/registry.ts';
+import { defaultNodePrototypes, defaultNodeTypes } from '../components/index.ts';
 import { createNodeRegistry, templateCompositeId } from '../model/index.ts';
 import { nodeBounds } from '../utils/index.ts';
 import { compileTemplate, isCompiled, templateComposite } from './template.ts';

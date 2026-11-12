@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type InstanceNode, type Node, type NoteNode } from '@dxos/scene';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/registry.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
 import { moveNodes, updateElement } from './edits.ts';
 import { insideScene, insideWrites } from './inside.ts';
