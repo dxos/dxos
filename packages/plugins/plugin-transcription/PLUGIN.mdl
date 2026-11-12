@@ -273,61 +273,31 @@ feat F-6: Skill Integration
 ```
 
 ```mdl
-feat F-7: On-device Streaming Transcription (Whistle story)
+feat F-7: On-device Streaming Transcription (Whistle module)
 
   req F-7.1:
-    when: the user presses Record, or holds Space outside a text field
+    when: a consumer of `useWhistle` activates capture, for example with push-to-talk (Space held outside a text field)
     then: the microphone streams into Whistle in a worker as one stream, re-decoded after every pass interval of new audio; nothing leaves the tab
   req F-7.2:
     when: two consecutive passes agree on a word
-    then: the word is committed; the unconfirmed tail is shown in italics after the last paragraph
-  req F-7.3: The pass interval is 1 s, as in Cactus's demo; Low latency makes it 200 ms, which commits sooner but agrees on half-heard words more often.
-  req F-7.4:
-    when: the audio holds 1.5 s of silence or more between two committed words, or the stream stops
-    then: a new paragraph starts; silence is measured in the audio against the noise floor, not between the model's word times
-  req F-7.5: Without a pause, a paragraph closes at the first sentence end after 30 words.
-  req F-7.6: Keywords bias recognition from the next pass; the list is prefilled with DXOS terms.
-  req F-7.7: The whole recording stays in the tab; each paragraph can be played back or saved as WAV, and so can the whole recording.
-  req F-7.8: The engine and model download on first use only and are kept in Cache Storage; mounting the story downloads nothing.
-  req F-7.9: After first use the microphone stays open, so push-to-talk does not clip the first word.
+    then: the word is committed; the unconfirmed tail is reported with every pass and replaced by the next
+  req F-7.3: The pass interval is 1 s, as in Cactus's demo; a consumer can lower it to 200 ms, which commits sooner but agrees on half-heard words more often.
+  req F-7.6: Keywords posted to the worker bias recognition from the next pass.
+  req F-7.7: The whole recording stays in the tab and can be saved as WAV.
+  req F-7.8: The engine and model download on first use only and are kept in Cache Storage; loading the module downloads nothing.
   req F-7.10:
     when: the audio holds no sound louder than -35 dBFS for 0.15 s
     then: no stream is opened and nothing is decoded, so Whistle cannot invent words in silence or room tone; the last 0.5 s before sound is kept so the first word is heard from its onset
 ```
 
 ```mdl
-feat F-8: On-device Voice Home Assistant (Home story)
-
-  req F-8.1:
-    when: the user holds Space, or toggles Talk, and says a request such as "turn on the kitchen lights"
-    then: Whistle transcribes it as it is spoken, and Needle 3, loaded into the same engine and worker, answers it against five home tools when the request ends
-  req F-8.2: The tools are set_lights, set_thermostat, operate_door, set_blinds and play_music; each call changes a mock home drawn as a floor plan, and the rooms it touched are highlighted.
-  req F-8.3:
-    when: a request ends
-    then: it is answered from the stream's committed words and its latest unconfirmed tail, before the stream's closing pass; audio after a pass that already heard 0.15 s of silence is not decoded again
-  req F-8.4: Low latency (on by default) caps the answer at 32 tokens, which skips the model's reasoning line; a request that joins actions with "and", "then" or "also" keeps the 128-token budget so every call survives.
-  req F-8.5:
-    when: Hands-free is on and the microphone is open
-    then: a request ends after 0.7 s of silence following speech (0.5 s in Low latency), found in the audio as it reaches the worker, and capture continues into the next request
-  req F-8.10: Silence is handled in the worker, in audio time: passes pause once the stream has heard 0.15 s of silence, and a stream that hears nothing for 1 s is ended at the next silence, so each request's stream holds little more than the request.
-  req F-8.6:
-    when: the model withholds a call (suppressed_calls)
-    then: it is offered as "Did you mean …?" and runs only when the user confirms it
-  req F-8.7:
-    when: no tool serves the request
-    then: the log says so and nothing changes
-  req F-8.8: Each command in the log shows its transcript, what changed, the calls, the time from the end of the request to the answer, and the model's time and confidence.
-  req F-8.9: Call arguments are checked against the home before they apply; an argument outside the schema is an error in the log, never a change.
-```
-
-```mdl
 feat F-9: Audio Tooling and Evals
 
-  req F-9.1: The audio-view skill describes a recording's levels and speech/silence timeline as text, draws a labelled spectrogram, and replays it through the pinned Whistle engine in Node exactly as the story streams it.
+  req F-9.1: The audio-view skill describes a recording's levels and speech/silence timeline as text, draws a labelled spectrogram, and replays it through the pinned Whistle engine in Node exactly as the worker streams it.
   req F-9.2: Recordings with real voices are private fixtures in the encrypted test-fixtures bucket, never in git; the agents scope holds whistle-silence, whistle-one-two-three, whistle-echo-query-a and whistle-echo-query-b.
   req F-9.3:
     when: the manual Whistle evals run and a fixture is present
-    then: each recording is replayed through the story's silence gate and its word error rate against the expected transcript, the words committed during silence and keyword recall are reported; whistle-silence must commit no words; a missing fixture skips its test, and CI does not run them
+    then: each recording is replayed through the worker's silence gate and its word error rate against the expected transcript, the words committed during silence and keyword recall are reported; whistle-silence must commit no words; a missing fixture skips its test, and CI does not run them
   req F-9.4: A compare script runs one recording through larger hosted models (OpenAI whisper-1 and gpt-4o-transcribe, Cloudflare Workers AI whisper-large-v3-turbo), skips a provider without credentials, and prints the transcripts side by side with word error rate against a reference. Anthropic's API takes no audio input, so it is not compared.
 ```
 
@@ -494,45 +464,45 @@ test QA-2: Record, transcribe, and summarize a meeting
 ```
 
 ```mdl
-test QA-3: Transcribe an audio file in the Transcription story
+test QA-3: Append mock text in the Transcription story
   desc: |
-    The recording pipeline end to end in storybook, with no microphone: the story plays an audio file, its track feeds
-    the transcriber, and each committed block appears as a message. Without EDGE, as in storybook, the scripted
-    transcriber stands in for RealtimeKit, so this checks the pipeline and the message list, not the service.
-  actors: agent
-  covers: [F-1.1, F-1.2, F-2.4]
+    The message list with no audio and no network: the story's `TextMock` variant appends one scripted sentence at a
+    time, as committed transcript blocks would arrive, so this checks the list, not the pipeline or the service.
+  actors: human
+  covers: [F-4.2]
   status: unverified
   given:
-    - storybook serves `plugins/plugin-transcription/stories/Transcription` in isolation mode
+    - storybook serves `plugins/plugin-transcription/stories/Transcription` `TextMock` in isolation mode
   steps:
-    - name: Play the file
+    - name: Play the script
       do: Click Play in the story's toolbar.
-      expect: the button turns to Pause, and the first message appears within a few seconds
+      expect: the button turns to Pause, and the first sentence appears as a message from "You" within two seconds
     - name: Read the transcript
-      do: Wait while the file plays.
-      expect: messages from "You" keep appending, one per committed block, in order
+      do: Wait for three more sentences.
+      expect: each sentence appears as its own message, after the one before it
     - name: Pause
       do: Click Pause.
       expect: no further message appears
+```
 
+```mdl
 test QA-4: Transcribe an audio file live through RealtimeKit
   desc: |
-    QA-3 against the dev EDGE: the story's `Live` variant gives its client an EDGE, so the file's track streams to the
-    identity's one-person RealtimeKit meeting and RealtimeKit's transcript fills the list. Needs a network and an
-    identity with an account.
-  actors: agent
+    The recording pipeline end to end against the preview EDGE: the story's `File` variant gives its client an EDGE and
+    binds its identity to a test account, so the file's track streams to the identity's one-person RealtimeKit meeting
+    and RealtimeKit's transcript fills the list. Needs a network.
+  actors: human
   covers: [F-1.1, F-1.2, F-2.4]
   status: unverified
   given:
-    - storybook serves `plugins/plugin-transcription/stories/Transcription` `Live` in isolation mode
-    - the story's identity is bound to an account
+    - storybook serves `plugins/plugin-transcription/stories/Transcription` `File` in isolation mode
   steps:
     - name: Play the file
       do: Click Play in the story's toolbar.
       expect: the button turns to Pause, and the first message appears once the first sentence has been spoken
     - name: Read the transcript
       do: Wait while the file plays.
-      expect: messages from "You" keep appending with the words the file speaks, in order
+      expect: messages from "You" keep appending with the words the file speaks, in order, and no other text appears
     - name: Pause
       do: Click Pause.
       expect: no further message appears once the sentence in flight has landed
@@ -690,6 +660,76 @@ decision D-17: The Transcription story's `Live` variant sets `parameters.edgeUrl
   affects: [QA-4]
   why: No story gave its client an EDGE, so the live path the story describes could not run in storybook.
   source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-18: The Transcription stories are three: `Live` transcribes the microphone, `File` transcribes an audio file, and `TextMock` adds text to the transcription sentence by sentence; the Home, Keyword, Pipeline and Whistle stories are removed.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [F-7, F-8, QA-3, QA-4]
+  why: The story that played a file also showed mocked transcription, and there was no logic to the transcription stories.
+```
+
+```mdl
+decision D-19: `Live` and `File` transcribe through RealtimeKit on the preview EDGE with no scripted fallback, and the story decorators bind each story identity to a `test+*@dxos.org` account, since calls-service serves account holders only. Fills in [D-18].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  supersedes: D-17
+  affects: [QA-4]
+  why: The scripted fallback ran whenever the story had no EDGE, which is what put mocked text over a playing file; an unbound identity is refused by calls-service.
+  rejected:
+    - Keep the scripted fallback: it hides a missing EDGE behind text the file never speaks.
+    - Leave account binding to the person: every story load creates a fresh identity, so it would be needed on every reload.
+```
+
+```mdl
+decision D-20: F-7 specifies the Whistle module that remains (`@dxos/plugin-transcription/Whistle`): its worker stream, pass agreement, pass interval, keywords, recording and silence gate; the paragraph rules (F-7.4, F-7.5), the DXOS keyword prefill and the open microphone (F-7.9) went with the Whistle story, and F-8 went with the Home story. Fills in [D-18].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-7, F-8, F-9.1, F-9.3]
+  why: Those requirements were implemented by the stories themselves, not by the module, so deleting the stories removed them.
+```
+
+```mdl
+decision D-21: QA-3 runs the `TextMock` story offline and covers the message list; QA-4 runs the `File` story on the preview EDGE. Fills in [D-18].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-3, QA-4]
+  why: No story transcribes a file offline any more, so the offline flow can check only the list.
+```
+
+```mdl
+decision D-22: QA-3 and QA-4 are `actors: human`, since none of their steps names an operation. Fills in [D-21].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-3, QA-4]
+  why: The QA dialect allows `actors: agent` only when every step names an operation.
+  source: https://github.com/dxos/dxos/pull/14495
+```
+
+```mdl
+decision D-23: `Live` and `File` transcribe through RealtimeKit on the preview EDGE with no scripted fallback; each story binds its own identity to a `test+*@dxos.org` account with `useTestAccount` and keeps its controls disabled until the binding lands, since calls-service serves account holders only. Supersedes [D-19], which put the binding in the story decorators.
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  supersedes: D-19
+  affects: [QA-4]
+  why: A binding made while the client initialized could finish after the story rendered, so an early click reached calls-service unbound and was refused.
+  source: https://github.com/dxos/dxos/pull/14495
+```
+
+```mdl
+decision D-24: F-7.7 drops playback: the playback hook and the waveform were used only by the Whistle story and are removed with it, while `Recording` still saves WAV. Fills in [D-20].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-7.7]
+  why: Nothing outside the deleted story used them, and the repository's unused-code check fails on files no entry point reaches.
+  source: https://github.com/dxos/dxos/pull/14495
 ```
 
 ## Appendix: Extension Definitions

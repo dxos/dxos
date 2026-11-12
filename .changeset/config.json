@@ -328,6 +328,7 @@
       "@dxos/plugin-navtree",
       "@dxos/plugin-observability",
       "@dxos/plugin-onboarding",
+      "@dxos/plugin-ontology",
       "@dxos/plugin-osrm",
       "@dxos/plugin-payments",
       "@dxos/plugin-pipeline",

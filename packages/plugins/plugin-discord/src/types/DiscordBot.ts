@@ -18,6 +18,38 @@ import { BaseError } from '@dxos/errors';
 
 export class DiscordBotError extends BaseError.extend('DiscordBotError', 'Discord bot request failed.') {}
 
+/** A Discord user id (a snowflake), which a direct message needs: the message header names people by one. */
+export const isUserId = (value: string): boolean => /^\d{15,21}$/.test(value);
+
+/**
+ * The user id `value` gives unambiguously: one written bare, as the message header writes it, or as a mention
+ * (`<@id>`, `<@!id>`). `@` before digits is not one: it may be a numeric username.
+ */
+export const explicitUserId = (value: string): string | undefined => {
+  const bare = value.trim().replace(/^<@!?(\d+)>$/, '$1');
+  return isUserId(bare) ? bare : undefined;
+};
+
+/**
+ * A user id, handle or name as written, without a mention's markup (`<@id>`, `<@!id>`), a handle's `@` or
+ * surrounding space: the form a name is compared in.
+ */
+export const bareName = (value: string): string =>
+  value
+    .trim()
+    .replace(/^<@!?(\d+)>$/, '$1')
+    .replace(/^@/, '');
+
+/**
+ * A contact's Discord identities, as written: ids, or handles and display names an agent kept from a message. Only
+ * these name a Discord account; another platform's handle names someone else there.
+ */
+export const discordIdentities = (person: { identities?: readonly { label?: string; value: string }[] }): string[] =>
+  (person.identities ?? [])
+    .filter(({ label }) => label?.toLowerCase() === 'discord')
+    .map(({ value }) => value.trim())
+    .filter((value) => bareName(value).length > 0);
+
 /** Which bot acts, for which agent; the bot host refuses a space that does not own the bot. */
 export type Bot = {
   readonly applicationId: string;
