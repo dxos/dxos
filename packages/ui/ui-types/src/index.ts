@@ -11,7 +11,6 @@ export * from './icons.ts';
 export * from './menu.ts';
 export * from './message.ts';
 export * from './palette.ts';
-export * from './phosphor.ts';
 export * from './size.ts';
 export * from './slot.ts';
 export * from './theme.ts';

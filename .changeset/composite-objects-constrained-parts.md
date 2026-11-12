@@ -7,6 +7,7 @@
 '@dxos/plugin-canvas': minor
 '@dxos/plugin-markdown': patch
 '@dxos/react-ui-form': patch
+'@dxos/ui-types': minor
 ---
 
 Composite objects whose parts follow their frame, declared in the scene DSL.
@@ -97,6 +98,10 @@ reference diagrams are drawn on it: their `.dx` sources name `grid=384x256`, and
 renders are regenerated.
 
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
+
+`@dxos/ui-types/phosphor` exports `phosphorIcons`, the name of every regular Phosphor glyph. It is an entry of its
+own rather than part of the package's index, and `iconOptions()` imports it when a picker first asks, so the
+catalogue is not downloaded with the app.
 
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 
