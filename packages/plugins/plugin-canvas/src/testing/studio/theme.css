@@ -349,8 +349,14 @@
    The block padding is the deck's less the 3px its own type scale leaves over: a run gives every card one height
    (64 units here), and the deck's 11.2 would push the footer past it. */
 .studio-card-simple {
-  padding: 8px 19.2px;
-  gap: 2px;
+  padding: 4px 19.2px;
+  gap: 0;
+}
+
+/* Nothing in the row compresses: the card is the height its run gives it, and a shrunk line box clips the mono
+   descenders rather than overflowing. */
+.studio-card-simple > * {
+  flex-shrink: 0;
 }
 
 .studio-card-simple [data-part='label'] {
@@ -359,14 +365,15 @@
 }
 
 .studio-card-simple .studio-card-icon {
-  inline-size: 30.4px;
-  block-size: 30.4px;
+  inline-size: 28px;
+  block-size: 28px;
   margin-inline-end: 12.8px;
 }
 
+/* The line box holds the mono descenders: `truncate` clips to it, so 1.3 cut the tails off `query` and `free/busy`. */
 .studio-card-simple .studio-card-note {
   margin-inline-start: 43.2px;
-  font-size: 13.6px;
-  line-height: 1.3;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--sd-muted);
 }
