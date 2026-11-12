@@ -291,6 +291,18 @@ feat F-7: Anchor Navigation
     then: that range's thread becomes the current comment
 ```
 
+```mdl
+feat F-8: Contributed Chart Types
+
+  req F-8.1: A plugin adds a chart type to the Charts companion by contributing `SheetCapabilities.ChartType`: the type a chart stores, a label, an icon and a component that draws the chart's range [D-5].
+  req F-8.2:
+    when: the reader edits a chart
+    then: the chart-type select lists the built-in types, then each contributed type by its label and icon
+  req F-8.3:
+    when: a chart's type is contributed by a plugin that is not enabled
+    then: the chart shows a message naming the type in place of the chart, and keeps its settings
+```
+
 ## Acceptance
 
 ```mdl
@@ -563,6 +575,16 @@ decision D-4: The published selection is what the member's grid shows, kept by c
   rejected:
     - Keep the last cell selected while a header has focus: peers keep seeing a cell the member left.
     - Rename the selection to the row now at its position when its row is gone: a filter makes that a record the member never chose.
+```
+
+```mdl
+decision D-5: A chart's `type` is a string: one of the built-in `Sheet.ChartType` literals, which the companion draws itself, or the type of a `SheetCapabilities.ChartType` contribution, whose component gets the chart's settings and its range as `PlotData` with the header row split off. Contributed types add no settings of their own to the chart's form.
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [F-8.1, F-8.2, F-8.3]
+  why: The PLEX docs' coding-agent example has an agent build a Sankey chart type as its own plugin, and the companion's closed list of types left it nowhere to plug in.
+  rejected:
+    - A panel of its own beside every sheet: it leaves the chart out of the companion's list and out of documents and slides, which embed `Sheet.Chart` objects.
 ```
 
 ---

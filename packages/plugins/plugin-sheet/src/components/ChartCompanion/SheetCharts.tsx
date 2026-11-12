@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 
-import { Sheet } from '#types';
+import { Sheet, type SheetCapabilities } from '#types';
 
 import { type SheetModel } from '../../model/index.ts';
 import { ChartCompanion } from './ChartCompanion.tsx';
@@ -18,10 +18,11 @@ export type SheetChartsProps = {
   attendableId?: string;
   sheet: Sheet.Sheet;
   model: SheetModel;
+  chartTypes?: readonly SheetCapabilities.ChartTypeContribution[];
 };
 
 /** The sheet's charts in the charts companion; shares the sheet's selection through the `Selection` view state. */
-export const SheetCharts = ({ attendableId, sheet, model }: SheetChartsProps) => {
+export const SheetCharts = ({ attendableId, sheet, model, chartTypes }: SheetChartsProps) => {
   const [{ charts: refs = [] } = {}] = useObject(sheet);
   const charts = useObjects(refs);
   const getValues = useRangeValues(model);
@@ -70,6 +71,7 @@ export const SheetCharts = ({ attendableId, sheet, model }: SheetChartsProps) =>
       getValues={getValues}
       selection={selection && (selection.from === selection.to ? selection.from : `${selection.from}:${selection.to}`)}
       onSelectRange={handleSelectRange}
+      chartTypes={chartTypes}
     />
   );
 };
