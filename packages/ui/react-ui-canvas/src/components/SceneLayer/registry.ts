@@ -250,7 +250,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     icon: 'ph--smiley--regular',
     key: 'G',
     schema: IconNode,
-    create: (props) => ({ type: 'icon', ...props, icon: 'star' }),
+    create: (props) => ({ type: 'icon', ...props, icon: { name: 'star' } }),
   },
   diagram: {
     name: 'Diagram shape',

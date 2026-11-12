@@ -15,13 +15,35 @@
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { OptionsLookupAnnotation, iconOptions } from '@dxos/react-ui-form';
+import {
+  DEFAULT_LAYOUT_NAME,
+  FormLayoutAnnotation,
+  OptionsLookupAnnotation,
+  iconOptions,
+  pairLayout,
+} from '@dxos/react-ui-form';
 import * as Icon from '@dxos/react-ui/Icon';
 import { type NodeBase, nodeBase } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { type NodeViewProps } from '../../model/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
+
+/** Phosphor's six weights; the extended `px` set is drawn at `regular` only. */
+export const ICON_WEIGHTS = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'] as const;
+
+export type IconWeight = (typeof ICON_WEIGHTS)[number];
+
+/**
+ * A glyph: which one and at what weight. A struct of its own so the two sit side by side in the Properties panel —
+ * a form layout names the fields it draws, so a pair belongs in a pair (as `LinkEnds` does for a link's markers).
+ */
+export const IconSpec = Schema.Struct({
+  /** A Phosphor name (`rocket`); the picker offers the whole catalogue. */
+  name: Schema.optional(Schema.String.annotate({ title: 'Icon' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
+  weight: Schema.optional(Schema.Literals(ICON_WEIGHTS).annotate({ title: 'Weight' })),
+}).pipe(FormLayoutAnnotation.set({ [DEFAULT_LAYOUT_NAME]: pairLayout('name', 'weight') }));
+export type IconSpec = Schema.Schema.Type<typeof IconSpec>;
 
 /**
  * The `icon` type's schema: a glyph and an optional caption. Declared here rather than in `@dxos/scene` because it
@@ -30,8 +52,7 @@ import { TextPart } from '../PartEditor/index.ts';
 export const IconNode = Schema.Struct({
   type: Schema.Literal('icon'),
   ...nodeBase,
-  /** A Phosphor name (`rocket`); the picker offers the whole catalogue. */
-  icon: Schema.optional(Schema.String.annotate({ title: 'Icon' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
+  icon: Schema.optional(IconSpec),
   /** A caption under the glyph. */
   label: Schema.optional(Schema.String.annotate({ title: 'Label' })),
 });
@@ -39,9 +60,25 @@ export type IconNode = Schema.Schema.Type<typeof IconNode>;
 
 export const isIconNode = (node: NodeBase): node is IconNode => node.type === 'icon';
 
-/** The icon name of a node that declares one; the full Phosphor set resolves at runtime (`useIconHref`). */
-export const iconOf = (node: NodeViewProps['node']): string | undefined =>
-  'icon' in node && typeof node.icon === 'string' ? node.icon : undefined;
+/** A string field of a value, when it has one. */
+const stringAt = (value: unknown, field: string): string | undefined => {
+  const found = typeof value === 'object' && value !== null ? Reflect.get(value, field) : undefined;
+  return typeof found === 'string' ? found : undefined;
+};
+
+/** The glyph a node declares, if it declares one; a bare string is the older spelling and still reads. */
+export const iconOf = (node: NodeViewProps['node']): IconSpec | undefined => {
+  const icon: unknown = Reflect.get(node, 'icon');
+  if (typeof icon === 'string') {
+    return { name: icon };
+  }
+  const name = stringAt(icon, 'name');
+  if (name === undefined) {
+    return undefined;
+  }
+  const weight = ICON_WEIGHTS.find((value) => value === stringAt(icon, 'weight'));
+  return { name, ...(weight ? { weight } : {}) };
+};
 
 /** A node's text field, which only a type declaring it has. */
 export const textOf = (node: NodeViewProps['node'], field: string): string | undefined => {
@@ -49,8 +86,9 @@ export const textOf = (node: NodeViewProps['node'], field: string): string | und
   return typeof value === 'string' ? value : undefined;
 };
 
-/** A Phosphor name as the icon component takes it; a name that already names a set is passed through. */
-export const iconName = (icon: string): string => (icon.includes('--') ? icon : `ph--${icon}--regular`);
+/** The symbol the icon component takes; a name that already names a set and weight is passed through. */
+export const iconSymbol = ({ name, weight }: IconSpec): string | undefined =>
+  name === undefined ? undefined : name.includes('--') ? name : `ph--${name}--${weight ?? 'regular'}`;
 
 export type CardFrameProps = PropsWithChildren<{
   node: NodeViewProps['node'];
@@ -67,15 +105,16 @@ export type CardFrameProps = PropsWithChildren<{
  */
 export const CardFrame = ({ node, editing, children, classNames }: CardFrameProps) => {
   const icon = iconOf(node);
+  const symbol = icon && iconSymbol(icon);
   const label = textOf(node, 'label');
   const body = textOf(node, 'body');
   const footer = textOf(node, 'footer');
   return (
     // Sized by its parent rather than `dx-cover`, so a type may put the frame inside its own padded shell.
     <div className={mx('flex flex-col size-full gap-2 p-3 overflow-hidden', classNames)} data-part='card'>
-      {(icon || label !== undefined) && (
+      {(symbol || label !== undefined) && (
         <div className='flex items-center gap-2 shrink-0' data-part='card-header'>
-          {icon && <Icon.Icon icon={iconName(icon)} size='lg' classNames='shrink-0' />}
+          {symbol && <Icon.Icon icon={symbol} size='lg' classNames='shrink-0' />}
           {label !== undefined && (
             <TextPart part='label' text={label} editing={editing} classNames='grow truncate'>
               {label}
@@ -115,10 +154,11 @@ export const CardNodeView = ({ node, editing }: NodeViewProps) => (
  */
 export const IconNodeView = ({ node, editing }: NodeViewProps) => {
   const icon = iconOf(node);
+  const symbol = icon && iconSymbol(icon);
   const label = textOf(node, 'label');
   return (
     <div className='dx-cover flex flex-col items-center justify-center gap-1 overflow-hidden' data-part='icon'>
-      {icon && <Icon.Icon icon={iconName(icon)} classNames='w-[70%] h-[70%] min-h-0 min-w-0' />}
+      {symbol && <Icon.Icon icon={symbol} classNames='w-[70%] h-[70%] min-w-0' />}
       {label !== undefined && label.length > 0 && (
         <TextPart part='label' text={label} editing={editing} classNames='shrink-0 text-xs truncate max-w-full'>
           {label}

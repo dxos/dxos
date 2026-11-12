@@ -17,8 +17,7 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React, { type CSSProperties } from 'react';
 
-import { CardFrame, type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
-import { OptionsLookupAnnotation, iconOptions } from '@dxos/react-ui-form';
+import { CardFrame, type ElementKindSpec, IconSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
 import { Scene } from '@dxos/scene';
 
 /** A style that also sets custom properties, which `CSSProperties` alone does not allow. */
@@ -50,8 +49,8 @@ export const toneValue = (tone: string | undefined): string | undefined =>
 export const feedCardFields = {
   /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
   label: Schema.String,
-  /** A Phosphor icon name as the deck writes it (`chat-circle-dots`), without the `ph--…--regular` wrapping. */
-  icon: Schema.optional(Schema.String.annotate({ title: 'Icon' }).pipe(OptionsLookupAnnotation.set(iconOptions()))),
+  /** The glyph and its weight, as the core card prototype's frame draws them. */
+  icon: Schema.optional(IconSpec),
   /** An accent drawn as the card's outline and its icon; `ink` is the agents' dark edge. */
   tone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Tone' })),
   /** How many blocks the feed strip has. */
@@ -141,7 +140,17 @@ export const feedCardSpec: ElementKindSpec = {
   key: 'F',
   schema: FeedCardNode,
   component: FeedCardNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'feed-card', id, z, center, size, label: 'Feed', feed: 9, marks: [] }),
+  create: ({ id, z, center, size }) => ({
+    type: 'feed-card',
+    id,
+    z,
+    center,
+    size,
+    label: 'Feed',
+    icon: { name: 'queue' },
+    feed: 9,
+    marks: [],
+  }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 300 x 138 card, give or take.
   defaultSize: { width: 6, height: 3 },
   // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so

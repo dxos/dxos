@@ -13,7 +13,7 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
+import { type ElementKindSpec, IconSpec, type NodeViewProps, TextPart, iconSymbol } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
@@ -27,8 +27,8 @@ import { type Styled, toneValue } from './FeedCard.tsx';
 export const cardFields = {
   /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
   label: Schema.String,
-  /** A Phosphor icon name as the deck writes it (`users-three`), without the `ph--…--regular` wrapping. */
-  icon: Schema.optional(Schema.String.annotate({ title: 'Icon' })),
+  /** The glyph and its weight, as the core card prototype's frame draws them. */
+  icon: Schema.optional(IconSpec),
   /** An accent, drawn as the card's outline (`#2d6fff`). */
   tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
 };
@@ -44,6 +44,7 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
     return null;
   }
   const tone = toneValue(node.tone);
+  const symbol = iconSymbol(node.icon ?? {});
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
   const style: Styled = tone ? { '--sd-tone': tone } : {};
   return (
@@ -53,7 +54,7 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
       data-tone={tone ? true : undefined}
       style={style}
     >
-      <Icon.Icon icon={`ph--${node.icon ?? 'square'}--regular`} size='lg' classNames='studio-card-icon shrink-0' />
+      {symbol && <Icon.Icon icon={symbol} size='lg' classNames='studio-card-icon shrink-0' />}
       <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate text-lg'>
         {node.label}
       </TextPart>

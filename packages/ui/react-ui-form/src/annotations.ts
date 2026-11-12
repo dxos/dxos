@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Annotation } from '@dxos/echo';
 import { createAnnotationHelper } from '@dxos/echo/internal';
 import {
   HueAnnotationId,
@@ -89,6 +90,18 @@ export const iconOptions = (): OptionsLookup => ({
   combobox: true,
   load: () => Effect.succeed(phosphorIcons.map((name) => ({ value: name, label: name, icon: `ph--${name}--regular` }))),
 });
+
+/**
+ * Lays a struct's fields out with the FormLayout DSL, under a name (`'default'` unless one is asked for). Re-exported
+ * here so a package that renders forms need not depend on `@dxos/echo` for the annotation alone; `pairLayout` is the
+ * common case, two fields side by side.
+ */
+export const FormLayoutAnnotation = Annotation.FormLayoutAnnotation;
+export const DEFAULT_LAYOUT_NAME = Annotation.DEFAULT_LAYOUT_NAME;
+
+/** Two fields side by side in one row. */
+export const pairLayout = (first: string, second: string): string =>
+  `<grid cols="2" fixed="true"><field name="${first}"/><field name="${second}"/></grid>`;
 
 /** Marks a field whose value is one of the theme's hues; the form renders the hue picker for it. */
 export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
