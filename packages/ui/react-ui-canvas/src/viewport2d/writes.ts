@@ -18,6 +18,7 @@ import {
   collapseHulls,
   expandHulls,
   fitHulls,
+  gridPitch,
   moveToHull,
   reseat,
 } from '../utils/index.ts';
@@ -147,7 +148,7 @@ export const drawnLists2D = (document: Scene.SceneDocument, scene?: Scene.SceneR
   // Fitted as it is read, on the layout's own lattice, so the frame the editor selects by is the border it draws.
   const fitted = (list: RenderList2D): RenderList2D => {
     const layout = findLayout(document, list.id);
-    return fitHulls(list, layout?.dim === '2d' ? layout.lattice : undefined);
+    return layout?.dim === '2d' ? fitHulls(list, layout.lattice, gridPitch(layout)) : fitHulls(list);
   };
   const drawn: RenderLists2D =
     opened === stored

@@ -41,8 +41,11 @@ export const HULL_FONT_SIZE = 14;
 /** How far a hull's border stands off the nodes inside it where no lattice places it, in scene px. */
 export const HULL_MARGIN = DEFAULT_GRID * 2;
 
-/** An axis-aligned run of a hull's border on a lattice. */
-export type Wall = { readonly from: Point; readonly to: Point };
+/**
+ * An axis-aligned run of a hull's border on a lattice, along a gutter's centre line with the hull on its right.
+ * `inset` is how far inside that line the border is drawn, in scene px, where the hull is inset.
+ */
+export type Wall = { readonly from: Point; readonly to: Point; readonly inset?: number };
 
 /** A hull's reach on a lattice: the tiles it covers and the runs of its border. */
 export type HullRegion = { readonly id: string; readonly tiles: ReadonlySet<string>; readonly walls: readonly Wall[] };
@@ -358,23 +361,64 @@ const boundsOf = (points: readonly Point[]): Bounds => {
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
+/** A hull's inset in scene px on a grid of `grid`: a whole number of its cells, and never an outset. */
+const insetOf = (hull: HullNode, grid: number): number => Math.max(0, Math.round(hull.inset ?? 0)) * grid;
+
+/**
+ * How far inside its gutter line a lattice hull's border is drawn on each axis, in scene px: its inset, short of the
+ * last grid cell before its nodes, which is left for the links inside it to run in.
+ */
+const latticeInset = (hull: HullNode, spec: LatticeSpec, grid: number): Point => ({
+  x: Math.min(insetOf(hull, grid), Math.max(0, spec.gutterX / 2 - grid)),
+  y: Math.min(insetOf(hull, grid), Math.max(0, spec.gutterY / 2 - grid)),
+});
+
+/**
+ * A ring of right-angled runs, clockwise, drawn `inset` inside itself: each corner moves in from both of the runs
+ * that meet at it, so a run keeps its direction and an inner corner is as square as an outer one.
+ */
+const insetRing = (ring: readonly Point[], inset: Point): Point[] =>
+  inset.x === 0 && inset.y === 0
+    ? [...ring]
+    : ring.map((point, index) => {
+        const before = ring[(index + ring.length - 1) % ring.length];
+        const after = ring[(index + 1) % ring.length];
+        // Clockwise, the inside is on the right of a run: below one heading right, left of one heading down.
+        const inward = (from: Point, to: Point): Point => ({
+          x: -Math.sign(to.y - from.y),
+          y: Math.sign(to.x - from.x),
+        });
+        const [arriving, leaving] = [inward(before, point), inward(point, after)];
+        return {
+          x: point.x + (arriving.x + leaving.x) * inset.x,
+          y: point.y + (arriving.y + leaving.y) * inset.y,
+        };
+      });
+
 /**
  * A hull's border as the corners of a closed ring in scene coordinates; undefined while nothing is inside it. On a
  * lattice it follows the hull's tiles; off one, or where none of its nodes keeps to the lattice, it stands
- * `HULL_MARGIN` off the nodes directly inside it (a hull inside it counting by its own frame).
+ * `HULL_MARGIN` off the nodes directly inside it (a hull inside it counting by its own frame). Either way it is drawn
+ * the hull's `inset` cells of `grid` inside that line, as far as its nodes allow.
  */
-export const hullOutline = (nodes: readonly Node[], hull: HullNode, lattice?: LatticeSpec): Point[] | undefined => {
+export const hullOutline = (
+  nodes: readonly Node[],
+  hull: HullNode,
+  lattice?: LatticeSpec,
+  grid = DEFAULT_GRID,
+): Point[] | undefined => {
   if (lattice) {
     const tiles = hullTiles(nodes, hull, lattice);
     if (tiles.size > 0) {
-      return tilesOutline(tiles, lattice);
+      return insetRing(tilesOutline(tiles, lattice), latticeInset(hull, lattice, grid));
     }
   }
   const frames = nodes.filter((node) => node.parent === hull.id && node.id !== hull.id).map(nodeBounds);
   if (frames.length === 0) {
     return undefined;
   }
-  const points = frames.flatMap((frame) => boundsCorners(grown(frame, HULL_MARGIN)));
+  const margin = Math.max(0, HULL_MARGIN - insetOf(hull, grid));
+  const points = frames.flatMap((frame) => boundsCorners(grown(frame, margin)));
   return hull.shape === 'box' ? boundsCorners(boundsOf(points)) : convexHull(points);
 };
 
@@ -386,9 +430,9 @@ const samePoints = (left: readonly Point[] | undefined, right: readonly Point[])
 /**
  * The scene with every hull's frame and border set from the nodes inside it, innermost first so a hull is fitted
  * round the hulls inside it as they are drawn. A hull already fitted is returned as it is, and so is a scene with no
- * hull to fit.
+ * hull to fit. `grid` is the pitch a hull's inset counts in.
  */
-export const fitHulls = (scene: RenderList2D, lattice?: LatticeSpec): RenderList2D => {
+export const fitHulls = (scene: RenderList2D, lattice?: LatticeSpec, grid = DEFAULT_GRID): RenderList2D => {
   const hulls = Object.values(scene.nodes).filter(isHullNode);
   if (hulls.length === 0) {
     return scene;
@@ -396,7 +440,7 @@ export const fitHulls = (scene: RenderList2D, lattice?: LatticeSpec): RenderList
   const nodes: Record<string, Node> = { ...scene.nodes };
   let changed = false;
   for (const hull of [...hulls].sort((left, right) => depthOf(nodes, right) - depthOf(nodes, left))) {
-    const outline = hullOutline(Object.values(nodes), hull, lattice);
+    const outline = hullOutline(Object.values(nodes), hull, lattice, grid);
     if (!outline || outline.length < 3) {
       continue;
     }
@@ -422,14 +466,27 @@ export const fitHulls = (scene: RenderList2D, lattice?: LatticeSpec): RenderList
   return changed ? { ...scene, nodes } : scene;
 };
 
-/** Every hull's reach on a lattice: its tiles, and its border as the walls a gutter route answers to. */
+/**
+ * Every hull's reach on a lattice: its tiles, and its border as the walls a gutter route answers to. A wall is the
+ * gutter line the border belongs to, and says how far inside it the border is drawn, which is read off the hull as it
+ * is fitted ({@link fitHulls}): its frame is its border's, so the frame's edge is that far inside the line.
+ */
 export const hullRegions = (nodes: readonly Node[], spec: LatticeSpec): HullRegion[] =>
   nodes.filter(isHullNode).flatMap((hull) => {
     const tiles = hullTiles(nodes, hull, spec);
     const ring = tiles.size === 0 ? [] : tilesOutline(tiles, spec);
-    return ring.length < 3
-      ? []
-      : [{ id: hull.id, tiles, walls: ring.map((from, index) => ({ from, to: ring[(index + 1) % ring.length] })) }];
+    if (ring.length < 3) {
+      return [];
+    }
+    const [line, drawn] = [boundsOf(ring), nodeBounds(hull)];
+    const within = (inset: number, gutter: number) => (inset > 0 && inset < gutter / 2 ? inset : 0);
+    const inset = { x: within(drawn.x - line.x, spec.gutterX), y: within(drawn.y - line.y, spec.gutterY) };
+    const walls = ring.map((from, index): Wall => {
+      const to = ring[(index + 1) % ring.length];
+      const by = from.x === to.x ? inset.x : inset.y;
+      return by > 0 ? { from, to, inset: by } : { from, to };
+    });
+    return [{ id: hull.id, tiles, walls }];
   });
 
 /**
@@ -458,6 +515,8 @@ export const routeWalls = (
 
 export type EncloseOptions = {
   lattice?: LatticeSpec;
+  /** The drawing's grid pitch, which a hull's inset counts in. */
+  grid?: number;
   /** Unset, `perimeter`. */
   shape?: HullShape;
 };
@@ -472,7 +531,7 @@ export const enclose = (
   scene: RenderList2D,
   ids: readonly string[],
   id: string,
-  { lattice, shape }: EncloseOptions = {},
+  { lattice, grid, shape }: EncloseOptions = {},
 ): RenderList2D | undefined => {
   const members = ids.flatMap((member) => scene.nodes[member] ?? []).filter((member) => !isHullNode(member));
   if (members.length === 0 || scene.nodes[id] !== undefined || scene.links[id] !== undefined) {
@@ -493,7 +552,7 @@ export const enclose = (
     ...(shape ? { shape } : {}),
   };
   const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: id }]));
-  return fitHulls({ ...scene, nodes: { ...scene.nodes, ...inside, [id]: hull } }, lattice);
+  return fitHulls({ ...scene, nodes: { ...scene.nodes, ...inside, [id]: hull } }, lattice, grid);
 };
 
 /**

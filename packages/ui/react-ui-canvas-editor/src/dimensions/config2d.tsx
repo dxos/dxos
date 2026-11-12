@@ -12,6 +12,7 @@ import {
   drawnLists2D,
   drawnWrites,
   enclose,
+  gridPitch,
   useCanvasServices,
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID, findLayout } from '@dxos/scene';
@@ -60,7 +61,12 @@ const COMMANDS_2D: readonly ExtraCommandDef[] = [
         index++;
       }
       const id = `hull-${index}`;
-      const next = enclose(view, selection, id, { lattice: stored?.dim === '2d' ? stored.lattice : undefined });
+      const next = enclose(
+        view,
+        selection,
+        id,
+        stored?.dim === '2d' ? { lattice: stored.lattice, grid: gridPitch(stored) } : {},
+      );
       if (!next) {
         return;
       }

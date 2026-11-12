@@ -214,7 +214,10 @@ export const SceneLayer = memo(
     // A hidden layer's elements are not drawn (nor, for the root, hit: the view hit-tests the same visible scene).
     // Fitted here as well as where the list is built: a shape in flight is moved in the list this layer is given, and
     // its hull follows it.
-    const scene = useMemo(() => fitHulls(visibleView(sceneProp), lattice), [sceneProp, lattice]);
+    const scene = useMemo(
+      () => fitHulls(visibleView(sceneProp), lattice, cell / MAJOR_GRID_RATIO),
+      [sceneProp, lattice, cell],
+    );
     const links = useMemo(
       () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
       [scene, registry, lattice],

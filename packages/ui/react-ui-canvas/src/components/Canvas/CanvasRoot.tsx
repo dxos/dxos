@@ -13,7 +13,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
-import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId, findLayout } from '@dxos/scene';
+import { MAJOR_GRID_RATIO, type ViewId, findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { type DrawState, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
@@ -53,7 +53,7 @@ import {
   keyAction,
   neuVars,
 } from '../../model/index.ts';
-import { fitFrame, latticeGrid, leavesObject, visibleView } from '../../utils/index.ts';
+import { fitFrame, gridPitch, leavesObject, visibleView } from '../../utils/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
@@ -216,7 +216,7 @@ const CanvasEngine = ({
   });
   const scene = useAtomValue(draw.scene);
   // A lattice scene's grid runs along its cell edges unless the layout sets its own pitch.
-  const grid = gridProp ?? ((draw.lattice && latticeGrid(draw.lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID);
+  const grid = gridPitch({ grid: gridProp, lattice: draw.lattice });
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
     scene,

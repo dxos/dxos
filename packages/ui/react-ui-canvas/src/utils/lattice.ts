@@ -8,7 +8,7 @@
 // on each axis and covers the gutters between them, so every channel between shapes is one gutter wide.
 //
 
-import { type Bounds, type ElementId, type Node, isHullNode } from '@dxos/scene';
+import { type Bounds, DEFAULT_GRID, type ElementId, MAJOR_GRID_RATIO, type Node, isHullNode } from '@dxos/scene';
 
 import { nodeBounds, resizeNode } from './shapes.ts';
 
@@ -44,6 +44,13 @@ export const latticeGrid = ({ width, height, gutterX, gutterY }: LatticeSpec, ra
   }
   return 0;
 };
+
+/**
+ * The minor grid pitch a drawing is on: its own, else the one its lattice's cell edges fall on, else the default.
+ * One rule, so the canvas, its forms and a hull's inset all count in the same cells.
+ */
+export const gridPitch = ({ grid, lattice }: { grid?: number; lattice?: LatticeSpec }): number =>
+  grid ?? ((lattice && latticeGrid(lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID);
 
 /** A shape on the lattice: its first (top-left) cell and how many cells it spans on each axis. */
 export type LatticeCell = { col: number; row: number; spanX: number; spanY: number };

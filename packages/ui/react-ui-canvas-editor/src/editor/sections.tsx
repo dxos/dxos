@@ -7,12 +7,11 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ThemeMode, between, latticeGrid, moveWrites } from '@dxos/react-ui-canvas';
+import { type ThemeMode, between, gridPitch, moveWrites } from '@dxos/react-ui-canvas';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import {
   DEFAULT_GRID,
   type Layer,
-  MAJOR_GRID_RATIO,
   type NamedStyle,
   type NamedStyle2D,
   type NamedStyle3D,
@@ -477,8 +476,7 @@ export const DrawingSection = () => {
   }, [layout, drawing?.lattice]);
   const values = useMemo((): DrawingValues => {
     // The pitch in force, so the field is never blank: a layout without one draws on its lattice's grid or the default.
-    const grid =
-      drawing?.grid ?? ((drawing?.lattice && latticeGrid(drawing.lattice, MAJOR_GRID_RATIO)) || DEFAULT_GRID);
+    const grid = drawing ? gridPitch(drawing) : DEFAULT_GRID;
     const last = layout === undefined ? undefined : lattices.current.get(layout);
     return { grid, ...latticeInForm(drawing?.lattice, last, grid) };
   }, [drawing, layout]);

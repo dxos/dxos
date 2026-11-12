@@ -31,7 +31,7 @@ import {
 } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
-import { DEFAULT_LAYER, createNode, fitHulls, initialKeys } from '../utils/index.ts';
+import { DEFAULT_LAYER, createNode, fitHulls, gridPitch, initialKeys } from '../utils/index.ts';
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 /**
@@ -431,6 +431,7 @@ export const toRenderList2D = (doc: Scene.SceneDocument, layout: Scene.LayoutRec
       ? storedView(doc, layout)
       : toView(doc, layout),
     layout.lattice,
+    gridPitch(layout),
   );
 
 /** An element's layer when its layout declares it; otherwise the default layer, which the list then declares. */

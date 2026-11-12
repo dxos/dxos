@@ -179,4 +179,16 @@ describe('a hull in the scene the editor draws', () => {
       { width: 600, height: 150 },
     ]);
   });
+
+  test("a hull's inset is kept with its group, through the document and back", ({ expect }) => {
+    const flat: RenderLists2D = { board: listOf('board', [hull('h', { inset: 2 }), box('a', 0, 0, 'h')]) };
+    const stored = collapseHulls(flat);
+    expect(Reflect.get(stored.board.nodes.h, 'hullInset')).toBe(2);
+    const document = fromRenderLists2D(Object.values(stored), { root: 'board' });
+    const { lists } = toRenderLists2D(document);
+    const { board } = expandHulls(Object.fromEntries(lists.map((list) => [list.id, list])));
+    expect(isHullNode(board.nodes.h) && board.nodes.h.inset).toBe(2);
+    // A hull with no inset stores none.
+    expect(Reflect.get(collapseHulls(FLAT).board.nodes.h, 'hullInset')).toBeUndefined();
+  });
 });

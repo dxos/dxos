@@ -33,8 +33,8 @@ import { unionBounds } from './hit.ts';
 import { between, sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
-/** A hull as it is stored: a group's Instance, with the border it draws and the name it carries. */
-type HullGroup = PlacedComposite & { readonly hull: HullShape; readonly label?: string };
+/** A hull as it is stored: a group's Instance, with the border it draws, its inset and the name it carries. */
+type HullGroup = PlacedComposite & { readonly hull: HullShape; readonly hullInset?: number; readonly label?: string };
 
 const isHullShape = (value: unknown): value is HullShape => HULL_SHAPES.some((shape) => shape === value);
 
@@ -47,6 +47,11 @@ export const groupHull = (node: Node): HullShape | undefined => {
 const labelOf = (node: Node): string | undefined => {
   const label: unknown = Reflect.get(node, 'label');
   return typeof label === 'string' ? label : undefined;
+};
+
+const insetOf = (node: Node): number | undefined => {
+  const inset: unknown = Reflect.get(node, isHullNode(node) ? 'inset' : 'hullInset');
+  return typeof inset === 'number' ? inset : undefined;
 };
 
 /** The fields a hull and its group's Instance share: what the hull looks like and where it is in the stack. */
@@ -97,6 +102,7 @@ const expandGroup = (scene: RenderList2D, instance: PlacedComposite, shape: Hull
     size: instance.size,
     shape,
     group: instance.composite,
+    ...(insetOf(instance) !== undefined ? { inset: insetOf(instance) } : {}),
     ...shared(instance),
   };
   // A link from outside ended at the group, on the port named by the part it was drawn to: it ends at the part again.
@@ -218,6 +224,7 @@ const collapseGroup = (
     fit: 'none',
     ports: instancePorts(bounds, composite),
     hull: hull.shape ?? 'perimeter',
+    ...(insetOf(hull) !== undefined ? { hullInset: insetOf(hull) } : {}),
     ...shared(hull),
   };
   const onGroup = (end: Endpoint): Endpoint => {

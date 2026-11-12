@@ -330,6 +330,11 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] Drawing section: Cell and Gutter are whole counts of grid cells (the lattice stored is the counts times the
       grid, written with it); the lattice survives off then on; a lattice that changes size re-seats every shape on
       the cells it had (`reseat`: the lattice mode for a layout's own shapes, `reseatWrites` for a hull's).
+- [x] A hull's `inset` (grid cells): the border is drawn inside its gutter line, at most to the last cell before its
+      shapes; the walls stay on the line and carry the inset, so the inside track runs between border and shapes.
+      Stored on the group's Instance as `hullInset`.
+- [x] Properties shows a shape selected inside a hull (`selectedElement` finds it in the hull's group).
+- [ ] Hull inset: the outside track stays a quarter gutter out, so the gutter's centre line is still not a track.
 - [ ] A shape off its cell (snapping off) is re-seated on the nearest one, so two could land on the same cell.
 - [ ] Views tree: moving a row into a plain Group, another View or an Object's definition (a move between two
       drawings, which needs a place for the shape in the other's coordinates), and any of it in 3D.

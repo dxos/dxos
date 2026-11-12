@@ -416,6 +416,16 @@ export const HullNode = Schema.Struct({
   ...boxFields,
   /** Unset, `perimeter`. */
   shape: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
+  /**
+   * How far inside its line the border is drawn, in cells of the drawing's grid: on a lattice the line is the centre
+   * of the gutter round its nodes, which the inset leaves clear; off one it is the margin the border stands off them.
+   */
+  inset: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)).annotate({
+      title: 'Inset',
+      [StepAnnotationId]: 1,
+    }),
+  ),
   points: Schema.optional(Schema.Array(Point)),
   /** The composite its nodes are stored in; unset until the hull is first written. */
   group: Schema.optional(Schema.String),
@@ -478,6 +488,8 @@ export const InstanceNode = Schema.Struct({
    * edits in the scene itself rather than behind the Instance, and whose border a link's route keeps to one side of.
    */
   hull: Schema.optional(Schema.Literals(HULL_SHAPES).annotate({ title: 'Hull' })),
+  /** A hull's `inset`, kept with the group it is stored as. */
+  hullInset: Schema.optional(Schema.Number),
 });
 export type InstanceNode = Schema.Schema.Type<typeof InstanceNode>;
 

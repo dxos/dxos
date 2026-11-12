@@ -65,18 +65,42 @@ const runsAlong = (from: Point, to: Point, wall: Wall): boolean => {
   );
 };
 
+/** The side of a wall its hull is on, as a unit step: a wall runs clockwise round the hull, so it is on the right. */
+const inwardOf = (wall: Wall): Point => ({
+  x: -Math.sign(wall.to.y - wall.from.y),
+  y: Math.sign(wall.to.x - wall.from.x),
+});
+
+/**
+ * How far from a wall's line its track on each side is, across a gutter `gutter` wide: outside the hull a quarter of
+ * the gutter, and inside it halfway between the border as drawn (the wall's `inset` inside the line) and the shapes.
+ */
+const trackOffsets = (wall: Wall, gutter: number): { inside: number; outside: number } => ({
+  inside: gutter / 4 + (wall.inset ?? 0) / 2,
+  outside: gutter / 4,
+});
+
 /**
  * Where an end meets the gutter beside its port: straight out along the side's normal, half a gutter. Where that is
- * on a border closed to the route, a quarter, which is the track on the end's own side of the border.
+ * on a border closed to the route, the track on the end's own side of the border.
  */
 const gutterExit = (end: RouteEnd, spec: LatticeSpec, walls?: HullWalls): Point => {
   const normal = sideNormal(end.side);
-  const out = (share: number) => ({
-    x: end.point.x + normal.x * spec.gutterX * share,
-    y: end.point.y + normal.y * spec.gutterY * share,
+  const gutter = Math.abs(normal.x) * spec.gutterX + Math.abs(normal.y) * spec.gutterY;
+  const out = (distance: number) => ({
+    x: end.point.x + normal.x * distance,
+    y: end.point.y + normal.y * distance,
   });
-  const centre = out(1 / 2);
-  return walls?.closed.some((wall) => touches(centre, centre, wall)) ? out(1 / 4) : centre;
+  const centre = out(gutter / 2);
+  const wall = walls?.closed.find((closed) => touches(centre, centre, closed));
+  if (!wall) {
+    return centre;
+  }
+  // The end faces the wall from inside its hull when the way out of the shape is the way out of the hull.
+  const inward = inwardOf(wall);
+  const inside = normal.x * inward.x + normal.y * inward.y < 0;
+  const { inside: within, outside } = trackOffsets(wall, gutter);
+  return out(gutter / 2 - (inside ? within : outside));
 };
 
 /** The gutter centre lines (`(k + 1/2) x pitch`) in `[low, high]`, widened by `MARGIN` lines either side. */
@@ -208,17 +232,23 @@ const searchGrid = (
   const [pitchX, pitchY] = [spec.width + spec.gutterX, spec.height + spec.gutterY];
   const verticals = gutterLines(region.left, region.right, pitchX);
   const horizontals = gutterLines(region.top, region.bottom, pitchY);
-  // A border takes its gutter's centre line, so the gutter's tracks are the lines a quarter of it either side.
+  // A border takes its gutter's centre line, so the gutter's tracks are the lines either side of it.
   const within = (lines: readonly number[]) => (value: number) =>
     value > lines[0] - EPSILON && value < lines[lines.length - 1] + EPSILON;
   const borders = walls?.borders ?? [];
   const tracksX = borders
     .filter((wall) => Math.abs(wall.from.x - wall.to.x) < EPSILON)
-    .flatMap((wall) => [wall.from.x - spec.gutterX / 4, wall.from.x + spec.gutterX / 4])
+    .flatMap((wall) => {
+      const { inside, outside } = trackOffsets(wall, spec.gutterX);
+      return [wall.from.x + inwardOf(wall).x * inside, wall.from.x - inwardOf(wall).x * outside];
+    })
     .filter(within(verticals));
   const tracksY = borders
     .filter((wall) => Math.abs(wall.from.y - wall.to.y) < EPSILON)
-    .flatMap((wall) => [wall.from.y - spec.gutterY / 4, wall.from.y + spec.gutterY / 4])
+    .flatMap((wall) => {
+      const { inside, outside } = trackOffsets(wall, spec.gutterY);
+      return [wall.from.y + inwardOf(wall).y * inside, wall.from.y - inwardOf(wall).y * outside];
+    })
     .filter(within(horizontals));
   const xs = sortedUnique([...verticals, ...tracksX, start.x, end.x]);
   const ys = sortedUnique([...horizontals, ...tracksY, start.y, end.y]);

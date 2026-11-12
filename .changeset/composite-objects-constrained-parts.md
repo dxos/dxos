@@ -85,6 +85,11 @@ size, so a new grid size rescales it. Turning the lattice off and on again bring
 A lattice that changes size keeps every shape on the cells it had, the shapes inside a hull included: the lattice mode
 re-seats a layout's shapes when a `layout` intent writes a new lattice.
 
+A hull has an `inset`: a whole number of grid cells its border is drawn inside its line. On a lattice the line is the
+centre of the gutter, which the inset leaves clear, and a link inside the hull runs between the border and the shapes;
+off a lattice the inset comes off the margin. `fitHulls`, `hullOutline` and `enclose` take the grid pitch, and
+`gridPitch` is the one rule for the pitch a drawing is on.
+
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
 
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.

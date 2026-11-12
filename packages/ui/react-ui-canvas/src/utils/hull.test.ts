@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type HullShape, type Link, type Node, type Point, isHullNode } from '@dxos/scene';
+import { type HullNode, type HullShape, type Link, type Node, type Point, isHullNode } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
@@ -47,6 +47,15 @@ const hull = (id: string, shape?: HullShape, parent?: string): Node => ({
   ...(shape ? { shape } : {}),
   ...(parent ? { parent } : {}),
 });
+
+/** A hull drawn `count` grid cells inside its line; any other node as it is. */
+const inset = (node: Node, count: number): Node => {
+  if (!isHullNode(node)) {
+    return node;
+  }
+  const drawn: HullNode = { ...node, inset: count };
+  return drawn;
+};
 
 const sceneOf = (nodes: readonly Node[], links: readonly Link[] = []): RenderList2D => ({
   id: 'root',
@@ -260,5 +269,68 @@ describe('hull routing', () => {
       { x: 384, y: 192 },
       { x: 128, y: 192 },
     ]);
+  });
+
+  test('an inset border is drawn that many grid cells inside its gutter lines, short of the last before its shapes', ({
+    expect,
+  }) => {
+    const [h, ...rest] = corner();
+    const outline = (count: number) => {
+      const drawn = inset(h, count);
+      return isHullNode(drawn) ? hullOutline([drawn, ...rest], drawn, spec, 16) : [];
+    };
+    // One cell of 16 in from every run, the inner corner as square as the outer ones.
+    expect(outline(1)).toEqual([
+      { x: -176, y: -80 },
+      { x: 560, y: -80 },
+      { x: 560, y: 80 },
+      { x: 176, y: 80 },
+      { x: 176, y: 272 },
+      { x: -176, y: 272 },
+    ]);
+    // The gutter is 128 across and 64 down, so three cells fit across and one down: a cell is left for the links.
+    expect(outline(9)?.slice(0, 2)).toEqual([
+      { x: -144, y: -80 },
+      { x: 528, y: -80 },
+    ]);
+    expect(outline(0)).toEqual(isHullNode(h) && hullOutline([h, ...rest], h, spec));
+  });
+
+  test('off a lattice an inset takes its grid cells off the margin, down to the shapes themselves', ({ expect }) => {
+    const member: Node = {
+      ...createNode({ type: 'rect', id: 'a', z: 'a', center: { x: 0, y: 0 }, size: { width: 100, height: 50 } }),
+      parent: 'h',
+    };
+    const sized = (count: number) => {
+      const scene = sceneOf([inset(hull('h', 'box'), count), member]);
+      return fitHulls(scene, undefined, 12).nodes.h.size;
+    };
+    expect([sized(0), sized(1), sized(5)]).toEqual([
+      { width: 100 + 2 * HULL_MARGIN, height: 50 + 2 * HULL_MARGIN },
+      { width: 100 + 2 * (HULL_MARGIN - 12), height: 50 + 2 * (HULL_MARGIN - 12) },
+      { width: 100, height: 50 },
+    ]);
+  });
+
+  test('a link inside an inset hull runs between the border as drawn and the shapes', ({ expect }) => {
+    const [h, ...rest] = corner();
+    const fitted = fitHulls(sceneOf([inset(h, 1), ...rest]), spec, 16);
+    const nodes = Object.values(fitted.nodes);
+    const [region] = hullRegions(nodes, spec);
+    // Each wall is still the gutter line, and says how far inside it the border is.
+    expect(region.walls.map((wall) => wall.inset)).toEqual(Array.from({ length: 6 }, () => 16));
+    expect(region.walls[0]).toMatchObject({ from: { x: -192, y: -96 }, to: { x: 576, y: -96 } });
+    // Down the gutter between A's column and B's the border is at 176, so the track inside it is at 152, halfway to
+    // C's edge at 128, where it was at 160 with the border on the line.
+    const route = latticeEnds(fitted, defaultNodeRegistry, smart('bc', 'b', 'c'), latticeRoute(fitted, spec))?.points;
+    expect(route).toEqual([
+      { x: 256, y: 0 },
+      { x: 152, y: 0 },
+      { x: 152, y: 192 },
+      { x: 128, y: 192 },
+    ]);
+    // A link from outside still crosses the border once.
+    const across = latticeEnds(fitted, defaultNodeRegistry, smart('xb', 'x', 'b'), latticeRoute(fitted, spec))?.points;
+    expect(wallCrossings(across ?? [], region.walls)).toBe(1);
   });
 });
