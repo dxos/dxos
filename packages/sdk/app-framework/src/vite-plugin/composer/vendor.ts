@@ -3,7 +3,7 @@
 //
 
 import type { Plugin as EsbuildPlugin } from 'esbuild';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { builtinModules } from 'node:module';
 import { dirname, join } from 'node:path';
 
@@ -81,7 +81,8 @@ const resolveEntries = (specifiers: readonly VendorSpecifier[], root: string): E
       const specifier = args.path.slice(ENTRY_PREFIX.length);
       const path = bySpecifier.get(specifier)?.path;
       if (path !== undefined) {
-        return { path };
+        // Its real path: under pnpm a package's dependencies sit beside its store directory, not beside the plugin's link.
+        return { path: await realpath(path) };
       }
       const importers = bySpecifier.get(specifier)?.importers ?? [];
       const directories = [...new Set([...importers.map((file) => dirname(file)), root])];
