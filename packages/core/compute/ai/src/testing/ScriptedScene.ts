@@ -2,13 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type Script,
-  type ScriptedRequest,
-  type ScriptedRoute,
-  type ScriptedTurn,
-  text,
-} from './ScriptedLanguageModel.ts';
+import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 
 /**
  * One thread's part in a scripted conversation: the prompt the thread answers, and the turns the model takes there, in
@@ -20,14 +14,14 @@ export type Scene = {
   readonly name: string;
   /** The prompt the scene answers: a substring, or a pattern tested against it. */
   readonly prompt: string | RegExp;
-  readonly turns: readonly ScriptedTurn[];
+  readonly turns: readonly ScriptedLanguageModel.ScriptedTurn[];
 };
 
 /** A side call the harness makes outside any scene (naming a chat, a planning reminder), answered the same each time. */
 export type Aside = {
   readonly name: string;
-  readonly match: (request: ScriptedRequest) => boolean;
-  readonly turn: ScriptedTurn;
+  readonly match: (request: ScriptedLanguageModel.ScriptedRequest) => boolean;
+  readonly turn: ScriptedLanguageModel.ScriptedTurn;
 };
 
 /** Everything a scripted model plays: the scenes, and the side calls answered before any scene is tried. */
@@ -35,24 +29,32 @@ export type Play = {
   readonly scenes: readonly Scene[];
   readonly asides?: readonly Aside[];
   /** The prompt a request answers; the text of the last user message unless a harness says otherwise. */
-  readonly promptOf?: (request: ScriptedRequest) => string;
+  readonly promptOf?: (request: ScriptedLanguageModel.ScriptedRequest) => string;
 };
 
-export const scene = (name: string, prompt: string | RegExp, turns: readonly ScriptedTurn[]): Scene => ({
+export const scene = (
+  name: string,
+  prompt: string | RegExp,
+  turns: readonly ScriptedLanguageModel.ScriptedTurn[],
+): Scene => ({
   name,
   prompt,
   turns,
 });
 
 /** A side call answered with the same text every time it comes. */
-export const aside = (name: string, match: (request: ScriptedRequest) => boolean, reply: string): Aside => ({
+export const aside = (
+  name: string,
+  match: (request: ScriptedLanguageModel.ScriptedRequest) => boolean,
+  reply: string,
+): Aside => ({
   name,
   match,
-  turn: { parts: [text(reply)] },
+  turn: { parts: [ScriptedLanguageModel.text(reply)] },
 });
 
 /** The text of the last user message in the request. */
-export const lastUserPrompt = ({ prompt }: ScriptedRequest): string => {
+export const lastUserPrompt = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): string => {
   const message = prompt.content.findLast((message) => message.role === 'user');
   if (message === undefined || typeof message.content === 'string') {
     return message?.content ?? '';
@@ -65,7 +67,7 @@ export const lastUserPrompt = ({ prompt }: ScriptedRequest): string => {
  * and line breaks are unescaped first, so a pattern reads as the text the model was shown. Returns the first capture group if the
  * pattern has one, else the whole match.
  */
-export const find = (request: ScriptedRequest, pattern: RegExp): string | undefined => {
+export const find = (request: ScriptedLanguageModel.ScriptedRequest, pattern: RegExp): string | undefined => {
   const messages = JSON.stringify(request.prompt.content).replace(/\\"/g, '"').replace(/\\n/g, '\n');
   const haystack = `${request.system}\n${messages}`;
   const match = pattern.exec(haystack);
@@ -79,13 +81,13 @@ const matches = (pattern: string | RegExp, value: string): boolean =>
   typeof pattern === 'string' ? value.includes(pattern) : pattern.test(value);
 
 /** The routes the scripted model plays a {@link Play} with: asides first, then each scene on the prompt it answers. */
-export const play = ({ scenes, asides = [], promptOf = lastUserPrompt }: Play): Script => [
-  ...asides.map(({ name, match, turn }): ScriptedRoute => ({
+export const play = ({ scenes, asides = [], promptOf = lastUserPrompt }: Play): ScriptedLanguageModel.Script => [
+  ...asides.map(({ name, match, turn }): ScriptedLanguageModel.ScriptedRoute => ({
     name,
     match,
     turns: Array.from({ length: ASIDE_REPEATS }, () => turn),
   })),
-  ...scenes.map(({ name, prompt, turns }): ScriptedRoute => ({
+  ...scenes.map(({ name, prompt, turns }): ScriptedLanguageModel.ScriptedRoute => ({
     name,
     match: (request) => matches(prompt, promptOf(request)),
     turns,
