@@ -6345,6 +6345,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      bs58check:
+        specifier: 'catalog:'
+        version: 4.0.0
       effect:
         specifier: 4.0.4
         version: 4.0.4
