@@ -1115,8 +1115,9 @@ page plex-build-with-agent: Build with a coding agent
   template: tutorial
   status: spike
   covers:
-    - A prompt the reader can edit, prefilled with the World Clock brief the `composer-plugin-dev` eval uses, minus its request to test in the browser and the Composer address
-    - A picker above the prompt that fills it with one of four examples: World Clock, Expense splitter, Family tree and Tournament bracket [D-184]
+    - A prompt the reader can edit, prefilled with the World Clock example: a list of timezones for each space, as a map of pins above a row of ticking clocks [D-193]
+    - A picker above the prompt that fills it with one of five examples: World clock, Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket [D-184, D-191, D-192]
+    - Examples written as instructions: each names the plugin and says what it should provide [D-190]
     - That only Composer Preview loads plugins from a dev server, so the reader signs in there first; the fixed lines point the agent at it
     - That the reader opens an empty folder in their agent first, since the links cannot choose or make one
     - Buttons that open the prompt in Claude Code, Codex or Cursor, and one that copies it; each puts a step the reader does not see before their text, which installs the `composer-plugin-dev` skill into the folder and has the agent follow it
@@ -3658,7 +3659,6 @@ decision D-181: Every section's navigation runs Start here, Learning path, Core 
   by: user:wittjosiah
   affects: [plex-guide-effect, halo-react, halo-guide-identity, app-framework-guide-plugin]
   why: A reader looks for a how-to before an API page, and an API page is reference like the rest of Resources.
-```
 
 decision D-182: ECHO's API group drops Migration and Tag, leaving eleven namespace pages. Both appear only in the generated reference; Types and schema still explains versions and migrations.
   date: 2026-11-11
@@ -3706,6 +3706,44 @@ decision D-189: Until the next npm release, Installation and the React guide ins
   by: user:wittjosiah
   affects: [installation, guide-react]
   why: npm's `latest` (0.16.0) is older than the APIs the docs teach.
+
+decision D-190: PLEX's coding-agent examples are instructions to the agent. Each opens with "Create a Composer plugin called <name>." and goes on with what it should provide, never "I want to build". World Clock stays the default subject, but its text no longer matches the `composer-plugin-dev` eval's brief, which keeps its first-person wording. Amends [D-127] and [D-184].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Review feedback that "I want to..." reads as a wish rather than a prompt; a declarative brief tells the agent what to make.
+
+```
+
+```mdl
+decision D-191: PLEX's coding-agent picker has five examples: World clock (the default), Sankey chart, Receipts filter, QR code canvas tool and Tournament bracket. Expense splitter and Family tree leave. Sankey is a new chart type for sheet charts, Receipts an email filter, and QR code a canvas tool. Amends [D-184].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Three of the five extend a plugin that ships with Composer (sheet, inbox, canvas), so the picker shows plugins adding to what is already there, not only standalone pages.
+
+```
+
+```mdl
+decision D-192: The scenarios for [D-191]'s new examples. Sankey adds a chart type to the sheet's Charts companion through `SheetCapabilities.ChartType`, drawn from a range of from, to and amount columns; its scenario is any budget, with income flowing into spending categories. Receipts adds a mailbox toolbar action, through `InboxCapabilities.MailboxAction`, and a page charting spending per month. QR code adds an element kind to the canvas palette through `CanvasCapabilities.NodeType`.
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: Each scenario needs no context from the reader's own spaces and is something Composer does not ship by default.
+
+```
+
+```mdl
+decision D-193: The World Clock example asks for a list of timezones kept for each space, shown as a map with a pin for each above a row of ticking clocks. Fills in [D-190].
+  date: 2026-11-12
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [plex-build-with-agent]
+  why: In one `composer-plugin-dev` eval run each, a brief that asked for clocks "that show the time for everyone on the team" led the agent to draw one clock per space member with no way to add a timezone, scoring 58% against the first-person brief's 76%. Naming the list keeps the brief's meaning in the declarative form.
+  rejected:
+    - "Ticking clocks that show the time for everyone on the team": read as one clock per member, so the add, persist and remove checks failed.
+```
 
 ## Appendix: Extension Definitions
 

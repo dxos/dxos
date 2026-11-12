@@ -75,6 +75,7 @@ export const translations = [
         'chart-type.map.label': 'Map',
         'chart-type.timeline.label': 'Timeline',
         'invalid-range.message': 'Invalid range',
+        'unknown-chart-type.message': 'No plugin draws "{{type}}" charts',
 
         'timeline-actions.label': 'Timeline actions',
         'timeline-spine.label': 'Spine',
