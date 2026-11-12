@@ -152,6 +152,11 @@ type DecoratorsProps = Merge<
      * (supervisor + sub-agents).
      */
     scripted?: ScriptedLanguageModel.Script;
+    /**
+     * Register a script as a model of its own (see `ScriptedLanguageModel.resolver`) and start the story's chat on it.
+     * Unlike `scripted`, every other model still resolves as usual.
+     */
+    scriptedModel?: { name: string; script: ScriptedLanguageModel.Script };
     /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
     assistantSettings?: Partial<Assistant.Settings>;
   },
@@ -233,6 +238,7 @@ const toStoryDecoratorsProps = ({
   config: configProp = config.remote,
   skills,
   scripted,
+  scriptedModel,
   createAgent,
   types = [],
   plugins = [],
@@ -269,7 +275,12 @@ const toStoryDecoratorsProps = ({
       scripted ? { aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(scripted) } : {},
     ),
     TranscriptionPlugin.make(),
-    StoryPlugin({ onChatCreated, createAgent, onReady }),
+    StoryPlugin({
+      onChatCreated: scriptedModel ? onScriptedChat(scriptedModel.name, onChatCreated) : onChatCreated,
+      createAgent,
+      onReady,
+    }),
+    ...(scriptedModel ? [ScriptedModelPlugin({ scripts: { [scriptedModel.name]: scriptedModel.script } })] : []),
     ...plugins,
   ],
   Wrapper:
@@ -320,6 +331,31 @@ type StoryPluginOptions = {
    */
   onReady?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
 };
+
+/** Starts the chat on the scripted model, then runs the story's own hook. */
+const onScriptedChat =
+  (name: string, next: StoryPluginOptions['onChatCreated']): NonNullable<StoryPluginOptions['onChatCreated']> =>
+  async (props) => {
+    Obj.update(props.chat, (chat) => {
+      chat.session = { ...chat.session, model: ScriptedLanguageModel.modelId(name) };
+    });
+    await next?.(props);
+  };
+
+/** Serves scripts as models of their own, beside the models the assistant resolves. */
+const ScriptedModelPlugin = Plugin.define<{ scripts: Record<string, ScriptedLanguageModel.Script> }>(
+  Plugin.makeMeta({ key: DXN.make('com.example.plugin.scriptedModel'), name: 'Scripted model' }),
+).pipe(
+  Plugin.addModule(({ scripts }) => ({
+    id: 'com.example.plugin.scriptedModel.module.resolver',
+    // Startup: the AI service reads every resolver once, when its layer is first built.
+    activatesOn: ActivationEvents.Startup,
+    provides: [AppCapabilities.AiModelResolver],
+    activate: () =>
+      Effect.succeed([Capability.contribute(AppCapabilities.AiModelResolver, ScriptedLanguageModel.resolver(scripts))]),
+  })),
+  Plugin.make,
+);
 
 /** Marks the chat this harness creates, so a reload finds it among any chats a story seeded. */
 const HARNESS_CHAT_KEY = { source: 'com.example.plugin.testing', id: 'chat' };

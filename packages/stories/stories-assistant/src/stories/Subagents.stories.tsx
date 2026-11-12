@@ -15,12 +15,11 @@ import * as AssistantChat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { type Database, Feed, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
+import { type Database, Feed, Filter, Order, Query, Scope } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as ChatPlane from '@dxos/plugin-assistant/ChatPlane';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
-import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { useObject, useQuery, useRegistry, useResolveRef, useSpaces } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
@@ -30,10 +29,12 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { StoryRole } from '../modules/index.ts';
 import { toCommits } from '../modules/trajectory-commits.ts';
+import { Scripts } from '../scripts/index.ts';
 import {
   Calculate,
   CalculatorSkill,
   ModuleContainer,
+  composerScript,
   createDecorators,
   storyParameters,
   submitPrompt,
@@ -244,239 +245,6 @@ export const Demo: Story = {
 // Columns: a complex request split into subagent threads, each in a column of its own.
 //
 
-/** One part of the launch; the agent puts it on its checklist and hands it to a subagent that writes one document. */
-type LaunchTask = {
-  readonly title: string;
-  readonly task: string;
-  readonly document: string;
-  readonly brief: string;
-  readonly outline: string;
-  readonly body: string;
-  readonly review: string;
-  /** Seconds each of the subagent's turns takes, so the threads finish at different times. */
-  readonly pace: number;
-};
-
-const LAUNCH_TASKS: readonly LaunchTask[] = [
-  {
-    title: 'Blog post',
-    task: 'Draft the launch blog post for Composer 1.0: what it is, who it is for, and the three features to try first.',
-    document: 'Launch blog post',
-    brief: 'Readers are new to Composer. Lead with the problem it solves before naming any feature.',
-    outline: ['# Composer 1.0', '', '## Why', '', '## Three things to try first', ''].join('\n'),
-    body: [
-      'Your documents, tables and agents in one local-first workspace.',
-      '',
-      '1. **Spaces** that sync between your devices and your team.',
-      '2. **Agents** that work on the same objects you do.',
-      '3. **Plugins** that turn a space into a tool for your job.',
-    ].join('\n'),
-    review: 'Three features, one example each, under 300 words. Good to hand back.',
-    pace: 5,
-  },
-  {
-    title: 'Release notes',
-    task: 'Write the release notes for Composer 1.0, grouped into new features, improvements and fixes.',
-    document: 'Release notes 1.0',
-    brief: 'Release notes are scanned, not read: one change per line, grouped so each reader finds their part.',
-    outline: ['# Release notes · 1.0', '', '## New', '## Improved', '## Fixed', ''].join('\n'),
-    body: [
-      '- New: parallel agent threads, each in a column of its own.',
-      '- Improved: spaces open twice as fast.',
-      '- Fixed: comments keep their position after an edit.',
-    ].join('\n'),
-    review: 'Every line is one change and starts with its group. Done.',
-    pace: 6,
-  },
-  {
-    title: 'FAQ',
-    task: 'Draft an FAQ for the launch page that answers the questions new users ask most.',
-    document: 'Launch FAQ',
-    brief: 'The first question is always where the data lives, so that one goes first.',
-    outline: ['# FAQ', ''].join('\n'),
-    body: [
-      '**Where is my data?** On your devices first; it syncs through EDGE when you share.',
-      '',
-      '**Does it work offline?** Yes. Changes merge when you reconnect.',
-      '',
-      '**Can agents see everything?** Only the spaces you give them.',
-    ].join('\n'),
-    review: 'Each answer is two sentences at most. The privacy answer is first, as planned.',
-    pace: 7,
-  },
-  {
-    title: 'Announcement email',
-    task: 'Write the announcement email to existing users, under 150 words, with one call to action.',
-    document: 'Announcement email',
-    brief: 'Existing users already know Composer; tell them what changed and give them one link.',
-    outline: ['# Composer 1.0 is here', '', 'Hi there,', ''].join('\n'),
-    body: [
-      'Composer 1.0 lets agents work beside you, each on its own task, in the same space.',
-      '',
-      '**[Open Composer](https://composer.space)** and try it on your next project.',
-    ].join('\n'),
-    review: 'Under 150 words with a single link. Ready.',
-    pace: 5.5,
-  },
-];
-
-/** What the reader types: one request too large for a single thread. */
-const LAUNCH_REQUEST =
-  'Plan the Composer 1.0 launch: we need a blog post, release notes, an FAQ and an announcement email.';
-
-/** Sent while the subagents work, to show the agent keeps talking. */
-const SIDE_QUESTION = 'While they work: which day should we launch?';
-
-const CREATE_DOCUMENT = Operation.toolName(MarkdownOperation.Create);
-const UPDATE_DOCUMENT = Operation.toolName(MarkdownOperation.Update);
-const CHECKPOINT_DOCUMENT = Operation.toolName(MarkdownOperation.CreateCheckpoint);
-const UPDATE_TASKS = Operation.toolName(PlanningSkill.Operations.UpdateTasks);
-
-/** The agent's chat, read at turn time: the checklist names tasks by URI, which exists only once a task is created. */
-let launchChat: AssistantChat.Chat | undefined;
-
-/** The URI of the checklist task titled `title`, as the update-tasks tool takes it. */
-const taskUri = (title: string): string | undefined => {
-  const task = launchChat && AssistantChat.resolveTasks(launchChat).find((candidate) => candidate.title === title);
-  return task && Obj.getURI(task).toString();
-};
-
-/** The thread a launch task's subagent was started in, from the delegating call's result. */
-const startedLaunchThread = (prompt: string, task: LaunchTask) =>
-  new RegExp(`Started subagent thread ([\\w@-]+) \\(\\\\*"${task.title}`).exec(prompt)?.[1];
-
-/** The URI of the document the subagent created, from the create tool's result. */
-const createdDocument = (prompt: string) => /(echo:\/\/[^"\\\s]+|dxn:echo:[^"\\\s]+)/.exec(prompt)?.[1];
-
-/** A subagent thinks aloud at every step: it outlines, fills in, checks its work, then reports with the document. */
-const launchSubagent = (
-  request: ScriptedLanguageModel.ScriptedRequest,
-  task: LaunchTask,
-  step: number,
-): ScriptedLanguageModel.ScriptedTurn => {
-  const uri = createdDocument(JSON.stringify(request.prompt.content.slice(currentRequest(request).index + 1)));
-  switch (step) {
-    case 0:
-      return {
-        delay: `${task.pace} seconds`,
-        parts: [
-          reasoning(task.brief),
-          text('Outline first, so the structure is settled before any wording.'),
-          toolCall(CREATE_DOCUMENT, { name: task.document, content: task.outline }),
-        ],
-      };
-    case 1:
-      return {
-        delay: `${task.pace} seconds`,
-        parts: [
-          reasoning('The outline holds. Each section needs one concrete line, nothing more.'),
-          text('Filling in the sections.'),
-          toolCall(UPDATE_DOCUMENT, { doc: uri, edits: [{ newString: `\n${task.body}\n` }] }),
-        ],
-      };
-    case 2:
-      return {
-        delay: `${task.pace / 2} seconds`,
-        parts: [
-          reasoning(task.review),
-          text('Saving a checkpoint for review.'),
-          toolCall(CHECKPOINT_DOCUMENT, { doc: uri, name: 'Ready for review' }),
-        ],
-      };
-    default:
-      return {
-        delay: '600 millis',
-        parts: [text([`Wrote **${task.document}**.`, '', ...(uri ? [`![${task.document}](${uri})`] : [])].join('\n'))],
-      };
-  }
-};
-
-/**
- * The agent puts the work on its checklist, delegates one task per turn so the columns open one by one, then waits for
- * each subagent, checking its task off as it reports.
- */
-const launchScript: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
-  if (request.text.includes('Reply with exactly one word')) {
-    return { parts: [text('stop')] };
-  }
-  if (!request.tools.includes(CREATE_DOCUMENT)) {
-    return { parts: [text('Composer 1.0 launch')] };
-  }
-  const { text: current, index } = currentRequest(request);
-  const task = LAUNCH_TASKS.find((candidate) => current === candidate.task);
-  if (task !== undefined) {
-    return launchSubagent(request, task, toolResultsSince(request, index));
-  }
-  if (current.includes('which day')) {
-    return {
-      delay: '1200 millis',
-      parts: [
-        text(
-          'Tuesday the 18th: midweek launches get the most attention, and it leaves Monday for a last check of the documents.',
-        ),
-      ],
-    };
-  }
-  if (!current.includes('Composer 1.0 launch')) {
-    return { parts: [text('Done.')] };
-  }
-
-  const prompt = JSON.stringify(request.prompt.content);
-  if (LAUNCH_TASKS.some(({ title }) => taskUri(title) === undefined)) {
-    return {
-      delay: '1500 millis',
-      parts: [
-        reasoning('Four documents with no dependencies between them: each can go to a subagent of its own.'),
-        text('I will split this into four tasks and hand each one to a subagent.'),
-        toolCall(UPDATE_TASKS, { changes: LAUNCH_TASKS.map(({ title }) => ({ create: true, title })) }),
-      ],
-    };
-  }
-  const threads = LAUNCH_TASKS.map((candidate) => startedLaunchThread(prompt, candidate));
-  const next = threads.findIndex((thread) => thread === undefined);
-  if (next !== -1) {
-    const nextTask = LAUNCH_TASKS[next];
-    return {
-      delay: '1200 millis',
-      parts: [
-        text(`Delegating the ${nextTask.title.toLowerCase()}.`),
-        toolCall(UPDATE_TASKS, { changes: [{ task: taskUri(nextTask.title), status: 'started' }] }),
-        toolCall('thread_delegate', { task: nextTask.task, purpose: nextTask.title }),
-      ],
-    };
-  }
-  // Check off every task whose subagent has reported, then wait for the next one still working.
-  const reported = LAUNCH_TASKS.filter(({ document }) => prompt.includes(`Wrote **${document}**`));
-  const unchecked = reported.filter(({ title }) => {
-    const task = launchChat && AssistantChat.resolveTasks(launchChat).find((candidate) => candidate.title === title);
-    return task?.status !== 'done';
-  });
-  const checkOff = unchecked.length
-    ? [toolCall(UPDATE_TASKS, { changes: unchecked.map(({ title }) => ({ task: taskUri(title), status: 'done' })) })]
-    : [];
-  const pending = LAUNCH_TASKS.findIndex((candidate) => !reported.includes(candidate));
-  if (pending !== -1) {
-    return { delay: '500 millis', parts: [...checkOff, toolCall('thread_wait', { thread: threads[pending] })] };
-  }
-  if (checkOff.length > 0) {
-    return { delay: '500 millis', parts: [text('Every subagent has reported.'), ...checkOff] };
-  }
-  return {
-    delay: '1200 millis',
-    parts: [
-      text(
-        [
-          'The launch kit is ready:',
-          '',
-          ...LAUNCH_TASKS.map(({ title, document }) => `- **${title}:** ${document}`),
-          '',
-          'Each document has a checkpoint named "Ready for review", so you can compare any later edit against it.',
-        ].join('\n'),
-      ),
-    ],
-  };
-};
-
 type ChatModel = NonNullable<ReturnType<typeof AssistantHooks.useChatModel>>;
 
 /** The chat model of the agent's conversation, or of one subagent thread when `lane` is given. */
@@ -677,7 +445,6 @@ const ThreadColumns = () => {
   const db = space?.db;
   const chats = useQuery(db, Filter.type(AssistantChat.Chat));
   const chat = chats.at(-1);
-  launchChat = chat;
   const chatModel = useThreadModel(db, chat);
   if (!db || !chat || !chatModel) {
     return null;
@@ -696,7 +463,7 @@ export const Columns: StoryObj = {
   render: () => <ThreadColumns />,
   decorators: createDecorators({
     skills: [MarkdownSkill.key, PlanningSkill.key],
-    scripted: launchScript,
+    scriptedModel: { name: 'launch-kit', script: composerScript(Scripts['launch-kit']) },
     assistantSettings: { parallelThreads: true, parallelThreadLimit: 6 },
   }),
   tags: ['!test'],

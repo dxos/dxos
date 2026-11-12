@@ -37,6 +37,6 @@ export const composerAsides: readonly ScriptedScene.Aside[] = [
   ScriptedScene.aside('chat-name', (request) => request.tools.length === 0, 'Scripted chat'),
 ];
 
-/** A scripted model's play, run against Composer's harness: its asides answered, and scenes matched per thread. */
-export const composerPlay = (scenes: readonly ScriptedScene.Scene[]): ScriptedLanguageModel.Script =>
-  ScriptedScene.play({ scenes, asides: composerAsides, promptOf: threadPrompt });
+/** Conversations played against Composer's harness: its asides answered, and each thread matched on its own prompt. */
+export const composerScript = (conversations: readonly ScriptedScene.Conversation[]): ScriptedLanguageModel.Script =>
+  ScriptedScene.make(conversations, { asides: composerAsides, promptOf: threadPrompt });

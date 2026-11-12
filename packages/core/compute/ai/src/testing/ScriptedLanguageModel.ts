@@ -15,8 +15,12 @@ import * as Layer from 'effect/Layer';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
+import { DXN } from '@dxos/keys';
+
+import * as AiModelResolver from '../AiModelResolver.ts';
 import * as AiService from '../AiService.ts';
 import * as AiTelemetry from '../AiTelemetry.ts';
+import { AiModelNotAvailableError } from '../errors.ts';
 
 //
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.
@@ -57,7 +61,8 @@ export type Deferred<T> = T | ((request: ScriptedRequest) => T);
 
 /** A part with every deferred value worked out, as the encoders emit it. */
 type ResolvedPart =
-  | { readonly _tag: 'text' | 'reasoning'; readonly text: string }
+  | { readonly _tag: 'text'; readonly text: string }
+  | { readonly _tag: 'reasoning'; readonly text: string }
   | { readonly _tag: 'toolCall'; readonly name: string; readonly input: unknown; readonly id?: string };
 
 /**
@@ -118,7 +123,9 @@ const resolve = <T>(value: Deferred<T>, request: ScriptedRequest): T =>
 const resolvePart = (part: ScriptedPart, request: ScriptedRequest): ResolvedPart =>
   part._tag === 'toolCall'
     ? { ...part, input: typeof part.input === 'function' ? part.input(request) : part.input }
-    : { _tag: part._tag, text: resolve(part.text, request) };
+    : part._tag === 'text'
+      ? { _tag: 'text', text: resolve(part.text, request) }
+      : { _tag: 'reasoning', text: resolve(part.text, request) };
 
 /**
  * The request a routing predicate inspects: the flattened system prompt, the concatenated text
@@ -430,3 +437,21 @@ export const scriptedAiServiceMiddleware = (script: Script): ((upstream: AiServi
   const languageModel = sharedModel(script);
   return (upstream) => ({ ...upstream, languageModel });
 };
+
+/** The model a script is played as when it is registered with {@link resolver}. */
+export const modelId = (name: string): DXN.DXN => DXN.make(`org.dxos.model.scripted.${name}`);
+
+/**
+ * A model resolver that serves each script as a model of its own ({@link modelId}), whatever provider is asked; every
+ * other model goes to the resolvers below it. Contribute it as `AppCapabilities.AiModelResolver` and pick the model on
+ * a chat to play the script there, beside the real models.
+ */
+export const resolver = (scripts: Readonly<Record<string, Script>>): Layer.Layer<AiModelResolver.AiModelResolver> =>
+  AiModelResolver.resolver(
+    { name: 'Scripted' },
+    Effect.sync(() => {
+      const models = new Map(Object.entries(scripts).map(([name, script]) => [modelId(name), sharedModel(script)]));
+      return (model: DXN.DXN, options?: AiService.ResolveOptions) =>
+        models.get(model)?.(model, options) ?? Layer.unwrap(Effect.fail(new AiModelNotAvailableError(model)));
+    }),
+  );
