@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { reseatWrites } from '@dxos/react-ui-canvas';
 import { type FormFieldOverride } from '@dxos/react-ui-form';
 import { DEFAULT_GRID, type LayoutIntent, type Scene } from '@dxos/scene';
 import { NumberLayoutAnnotationId, StepAnnotationId, VECTOR_AXIS_LAYOUT, VectorAnnotationId } from '@dxos/ui-types';
@@ -118,4 +119,36 @@ export const drawingWrites = (current: DrawingValues, next: DrawingValues): Layo
     return [];
   }
   return [{ kind: 'layout', patch: { grid, ...(changed ? { lattice } : {}) } }];
+};
+
+/** One intent a save writes, and the layout it is written to. */
+export type DrawingSave = { layout: string; intent: LayoutIntent };
+
+/**
+ * What a save writes to the document: the open layout's own fields ({@link drawingWrites}) and, when its lattice
+ * changes size, every shape re-seated on the cells it had. The open layout's shapes travel in one batch with the
+ * lattice, so its mode checks them against the new cells rather than the old; a hull's shapes are stored in the
+ * hull's group, so they are a write to that layout.
+ */
+export const drawingSaves = (
+  document: Scene.SceneDocument,
+  layout: string,
+  current: DrawingValues,
+  next: DrawingValues,
+): DrawingSave[] => {
+  const [intent] = drawingWrites(current, next);
+  if (!intent) {
+    return [];
+  }
+  const lattice = intent.kind === 'layout' ? intent.patch.lattice : undefined;
+  const seated = lattice
+    ? reseatWrites(document, layout, lattice).flatMap((write) => (write.kind === 'layout' ? [write] : []))
+    : [];
+  const own = seated.filter((write) => write.layout === layout).map((write) => write.intent);
+  return [
+    { layout, intent: own.length > 0 ? { kind: 'batch', intents: [intent, ...own] } : intent },
+    ...seated
+      .filter((write) => write.layout !== layout)
+      .map((write) => ({ layout: write.layout, intent: write.intent })),
+  ];
 };

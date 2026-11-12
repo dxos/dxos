@@ -82,6 +82,8 @@ the form and ignored by the edit behind it. A form field's error icon shows the 
 
 The Drawing section's Cell and Gutter are whole counts of grid cells: the lattice stored is the counts times the grid
 size, so a new grid size rescales it. Turning the lattice off and on again brings back the lattice the drawing had.
+A lattice that changes size keeps every shape on the cells it had, the shapes inside a hull included: the lattice mode
+re-seats a layout's shapes when a `layout` intent writes a new lattice.
 
 A double-click off an Object being edited leaves it. The Card tool's icon is `ph--article`.
 

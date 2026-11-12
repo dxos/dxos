@@ -11,7 +11,16 @@ import {
   type RenderLists2D,
   type ViewportProps,
 } from '../model/index.ts';
-import { type SceneEdit, type ViewMove, collapseHulls, expandHulls, fitHulls, moveToHull } from '../utils/index.ts';
+import {
+  type LatticeSpec,
+  type SceneEdit,
+  type ViewMove,
+  collapseHulls,
+  expandHulls,
+  fitHulls,
+  moveToHull,
+  reseat,
+} from '../utils/index.ts';
 import { fromRenderList2D, toRenderList2D, toRenderLists2D } from './render-list.ts';
 
 /**
@@ -183,6 +192,26 @@ export const moveWrites = (document: Scene.SceneDocument, move: ViewMove, scene?
       move.target !== undefined && move.position ? { target: move.target, position: move.position } : undefined,
     );
   return moved ? drawnWrites(document, drawn, { ...drawn, [move.scene]: moved }) : [];
+};
+
+/**
+ * What a change of `layout`'s lattice to `lattice` writes besides the lattice itself: every shape drawn on it keeps
+ * its cells ({@link reseat}). The layout's mode places its own shapes with the lattice, but a hull's shapes are
+ * stored in the hull's group, about the group's centre, so they are placed here, in the scene as the engine draws it.
+ * Nothing when the layout has no lattice yet, since its shapes are then on no cells to keep.
+ */
+export const reseatWrites = (
+  document: Scene.SceneDocument,
+  layout: ViewId,
+  lattice: LatticeSpec,
+  scene?: Scene.SceneRecord,
+): LayoutWrite[] => {
+  const stored = findLayout(document, layout);
+  const from = stored?.dim === '2d' ? stored.lattice : undefined;
+  const { lists } = drawnLists2D(document, scene);
+  const drawn: RenderLists2D = Object.fromEntries(lists.map((list) => [list.id, list]));
+  const shown = drawn[layout];
+  return from && shown ? drawnWrites(document, drawn, { ...drawn, [layout]: reseat(shown, from, lattice) }) : [];
 };
 
 /**

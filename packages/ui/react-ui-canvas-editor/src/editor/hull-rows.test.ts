@@ -11,6 +11,7 @@ import {
   type ViewTreeItem,
   canRestack,
   collapseHulls,
+  constrain2D,
   createLink,
   drawnLists2D,
   drawnWrites,
@@ -19,8 +20,9 @@ import {
   moveWrites,
   viewMove,
 } from '@dxos/react-ui-canvas';
-import { type HullNode, type Link, type RectNode, type Scene, applyIntent } from '@dxos/scene';
+import { type HullNode, type Link, type RectNode, type Scene, applyIntent, findLayout } from '@dxos/scene';
 
+import { DEFAULT_LATTICE, type DrawingValues, drawingSaves, latticeValues } from './drawing-form.ts';
 import { layoutTree } from './scene-rows.ts';
 
 const box = (id: string, x: number, parent?: string): RectNode => ({
@@ -195,5 +197,52 @@ describe('hull rows', () => {
     expect(viewMove(rowOf(tree, 'a'), rowOf(tree, 'g'), 'make-child')).toBeUndefined();
     // A shape is not dropped into a shape.
     expect(viewMove(rowOf(tree, 'x'), rowOf(tree, 'a'), 'make-child')).toBeUndefined();
+  });
+
+  test("a lattice that changes size keeps every shape on its cells, a hull's shapes included", ({ expect }) => {
+    // The board on a lattice of 100 by 50 cells, 100 and 50 apart: A, B, C and X stand at columns 0, 1, 3 and 5.
+    const from = { width: 100, height: 50, gutterX: 100, gutterY: 50 };
+    const stored: Scene.SceneDocument = {
+      ...DOCUMENT,
+      layouts: DOCUMENT.layouts.map((layout) =>
+        layout.id === 'board' && layout.dim === '2d' ? { ...layout, lattice: from } : layout,
+      ),
+    };
+    const current: DrawingValues = { grid: 50, lattice: true, ...latticeValues(from, 50) };
+    const saves = drawingSaves(stored, 'board', current, {
+      ...current,
+      cell: { width: 4, height: 2 },
+      gutter: { x: 2, y: 2 },
+    });
+    // The board's shapes travel with its lattice; each hull's are a write to its group.
+    expect(saves.map((save) => save.layout).sort()).toEqual(['board', 'g-parts', 'h-parts']);
+    const next = saves.reduce((document, save) => {
+      const record = findLayout(document, save.layout);
+      const intent = record && constrain2D(record, save.intent, { snap: true });
+      expect(intent).toBeDefined();
+      return intent ? written(document, [{ kind: 'layout', layout: save.layout, intent, created: false }]) : document;
+    }, stored);
+    const board = next.layouts.find((layout) => layout.id === 'board');
+    expect(board?.dim === '2d' && board.lattice).toEqual({ width: 200, height: 100, gutterX: 100, gutterY: 100 });
+    const drawn = drawnLists2D(next).lists.find((list) => list.id === 'board');
+    expect(['a', 'b', 'c', 'x'].map((id) => [drawn?.nodes[id].center.x, drawn?.nodes[id].parent])).toEqual([
+      [0, 'g'],
+      [300, 'g'],
+      [900, 'h'],
+      [1500, undefined],
+    ]);
+    expect(['a', 'b', 'c', 'x'].map((id) => drawn?.nodes[id].size)).toEqual(
+      Array.from({ length: 4 }, () => ({ width: 200, height: 100 })),
+    );
+    // The link from X still ends at A, inside its hull.
+    expect(drawn?.links.xa?.target).toEqual({ node: 'a' });
+  });
+
+  test('a lattice turned on, off or left the same size moves nothing', ({ expect }) => {
+    const off: DrawingValues = { grid: 50, lattice: false, ...latticeValues(DEFAULT_LATTICE, 50) };
+    expect(drawingSaves(DOCUMENT, 'board', off, { ...off, lattice: true }).map((save) => save.layout)).toEqual([
+      'board',
+    ]);
+    expect(drawingSaves(DOCUMENT, 'board', off, off)).toEqual([]);
   });
 });

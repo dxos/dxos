@@ -51,8 +51,8 @@ import {
 import {
   type DrawingValues,
   drawingOverrides,
+  drawingSaves,
   drawingSchema,
-  drawingWrites,
   latticeGutterType,
   latticeInForm,
 } from './drawing-form.ts';
@@ -466,6 +466,7 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
 export const DrawingSection = () => {
   const { atoms, commands } = useSceneDocument('SceneEditor.Drawing');
   const readonly = useAtomValue(atoms.readonly);
+  const document = useAtomValue(atoms.document);
   const layout = useAtomValue(atoms.layout);
   const record = useOpenLayout('SceneEditor.Drawing');
   const drawing = record?.dim === '2d' ? record : undefined;
@@ -483,10 +484,14 @@ export const DrawingSection = () => {
   }, [drawing, layout]);
   const overrides = useMemo(() => drawingOverrides({ lattice: values.lattice === true }), [values.lattice]);
   const onSave = (next: DrawingValues) => {
-    const intents = drawingWrites(values, next);
-    layout !== undefined &&
-      intents.length > 0 &&
-      commands.intent(layout, intents.length === 1 ? intents[0] : { kind: 'batch', intents });
+    const saves = layout === undefined ? [] : drawingSaves(document, layout, values, next);
+    // A lattice that changes size moves the shapes on it, a hull's in its own layout: one step to undo.
+    saves.length > 0 &&
+      commands.transaction(() => {
+        for (const save of saves) {
+          commands.intent(save.layout, save.intent);
+        }
+      });
   };
   // Only a 2D layout has a grid and a lattice; a 3D scene's drawing has nothing of its own to show.
   if (!drawing) {

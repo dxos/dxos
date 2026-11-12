@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Bounds, type LayoutIntent, Scene, applyIntent } from '@dxos/scene';
 
-import { type LatticeSpec, collides, coveredCells, quantize, toCell } from '../utils/index.ts';
+import { type LatticeSpec, collides, coveredCells, quantize, reseatBounds, toCell } from '../utils/index.ts';
 
 type Element = Scene.Element2D;
 type Point = { x: number; y: number };
@@ -188,12 +188,26 @@ const constrain = (layout: Scene.LayoutRecord2D, intent: LayoutIntent, spec: Lat
         : { kind: 'batch', intents: placeAt(intent.id, bounds) };
     }
 
+    case 'layout': {
+      // A new lattice keeps every shape on the cells it had, so the shapes are placed in the same step as it is
+      // written: all at once, since each has its own cells before and so after.
+      const next = intent.patch.lattice;
+      if (!next || JSON.stringify(next) === JSON.stringify(spec)) {
+        return intent;
+      }
+      const placed = Object.values(layout.elements)
+        .filter(onLattice)
+        .flatMap((element) => placeAt(element.id, reseatBounds(boundsOf(element), spec, next)));
+      return placed.length > 0 ? { kind: 'batch', intents: [intent, ...placed] } : intent;
+    }
+
     case 'batch': {
-      // Each step is checked against the layout the steps before it leave; one refused step refuses the batch.
+      // Each step is checked against the layout the steps before it leave, on the lattice they leave it with; one
+      // refused step refuses the batch.
       let working = layout;
       const intents: LayoutIntent[] = [];
       for (const step of intent.intents) {
-        const constrained = constrain(working, step, spec);
+        const constrained = working.lattice ? constrain(working, step, working.lattice) : step;
         if (!constrained) {
           return undefined;
         }
@@ -210,8 +224,9 @@ const constrain = (layout: Scene.LayoutRecord2D, intent: LayoutIntent, spec: Lat
 
 /**
  * `intent` rewritten onto `layout`'s lattice, or undefined when it would overlap occupied cells; the intent as given
- * when the layout has no lattice. Frames (create, move, scale, a centre or size `update`) are snapped; everything else
- * passes through. A batch is checked step by step and refused whole if any step is.
+ * when the layout has no lattice. Frames (create, move, scale, a centre or size `update`) are snapped, and a new
+ * lattice re-seats every shape on the cells it had; everything else passes through. A batch is checked step by step
+ * and refused whole if any step is.
  *
  * A composite's parts are left as given: they are placed about the composite's own centre and drawn by the Instance
  * that places it, so a cell of the lattice means nothing in their coordinates.

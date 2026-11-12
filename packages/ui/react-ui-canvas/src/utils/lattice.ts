@@ -10,7 +10,7 @@
 
 import { type Bounds, type ElementId, type Node, isHullNode } from '@dxos/scene';
 
-import { nodeBounds } from './shapes.ts';
+import { nodeBounds, resizeNode } from './shapes.ts';
 
 /** The size of a one-cell shape and the gutter between shapes, in scene units. */
 export type LatticeSpec = { width: number; height: number; gutterX: number; gutterY: number };
@@ -123,6 +123,13 @@ export const resizeCell = (cell: LatticeCell, from: Bounds, to: Bounds, spec: La
 /** A frame snapped onto the lattice: the nearest whole spans at the nearest cells. */
 export const quantize = (bounds: Bounds, spec: LatticeSpec): Bounds => cellBounds(toCell(bounds, spec), spec);
 
+/**
+ * A frame moved from its cells of one lattice to the same cells of another: it keeps its column, row and spans, so it
+ * moves and resizes with the cells and gutters rather than being left where the old ones were.
+ */
+export const reseatBounds = (bounds: Bounds, from: LatticeSpec, to: LatticeSpec): Bounds =>
+  cellBounds(toCell(bounds, from), to);
+
 const cellKey = (col: number, row: number) => `${col},${row}`;
 
 /** Every lattice position a cell covers, as `col,row` keys. */
@@ -187,3 +194,22 @@ export const nearestFree = (cell: LatticeCell, occupied: Occupancy, maxRadius = 
   }
   return undefined;
 };
+
+/**
+ * A scene whose lattice changed from `from` to `to`, with every shape on it re-seated on the cells it had
+ * ({@link reseatBounds}). What is off the lattice (a hull, a guide, a caption) and every link stays as it is: a hull is
+ * fitted round its shapes when it is drawn, and a link is routed between them.
+ */
+export const reseat = <S extends { readonly nodes: Readonly<Record<string, Node>> }>(
+  scene: S,
+  from: LatticeSpec,
+  to: LatticeSpec,
+): S => ({
+  ...scene,
+  nodes: Object.fromEntries(
+    Object.values(scene.nodes).map((node): [string, Node] => [
+      node.id,
+      onLattice(node) ? resizeNode(node, reseatBounds(nodeBounds(node), from, to)) : node,
+    ]),
+  ),
+});

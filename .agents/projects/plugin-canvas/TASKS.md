@@ -327,6 +327,10 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] A double-click off an Object being edited leaves it (2D and 3D).
 - [x] The Views tree nests a hull's shapes under it, selected where they stand; a row dragged onto a hull, or beside
       a row another hull (or none) holds, moves into that hull (`viewMove`, `moveToHull`, `moveWrites`).
+- [x] Drawing section: Cell and Gutter are whole counts of grid cells (the lattice stored is the counts times the
+      grid, written with it); the lattice survives off then on; a lattice that changes size re-seats every shape on
+      the cells it had (`reseat`: the lattice mode for a layout's own shapes, `reseatWrites` for a hull's).
+- [ ] A shape off its cell (snapping off) is re-seated on the nearest one, so two could land on the same cell.
 - [ ] Views tree: moving a row into a plain Group, another View or an Object's definition (a move between two
       drawings, which needs a place for the shape in the other's coordinates), and any of it in 3D.
 - [ ] Views tree: a hull with nothing inside it is a leaf row, which takes no drop.
