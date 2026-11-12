@@ -154,7 +154,9 @@ export const createNodeRegistry = (
   };
   return Object.fromEntries(
     Object.entries(types).map(([type, spec]) => {
-      const { extends: _, ...resolved } = inherit(spec, [type]);
+      // The chain holds prototype names only: a type and a prototype are different namespaces, so a `card` type built
+      // on the `card` prototype is ordinary inheritance, not a cycle.
+      const { extends: _, ...resolved } = inherit(spec, []);
       const { name, icon, schema, component, create, defaultSize } = resolved;
       if (!name || !icon || !schema || !component || !create || !defaultSize) {
         throw new Error(`Node type ${type} is missing a required field`);

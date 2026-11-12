@@ -28,7 +28,7 @@ import {
 
 import { type LinkRegistry, type NodeDefSpec, type NodeRegistry, createNodeRegistry } from '../../model/index.ts';
 import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
-import { CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
+import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
 import {
   BoxNodeView,
   CloudNodeView,
@@ -74,7 +74,7 @@ export const cardPrototype: NodeDefSpec = {
  * An icon alone, drawn from the node's `icon` field, with an optional caption under it. Any Phosphor name works: the
  * icon registry fetches a symbol the sprite does not hold, so a type is not limited to the glyphs the UI draws.
  */
-export const glyphPrototype: NodeDefSpec = {
+export const iconPrototype: NodeDefSpec = {
   component: IconNodeView,
   parts: [{ field: 'label' }],
   defaultSize: { width: 1, height: 1 },
@@ -88,9 +88,7 @@ export const glyphPrototype: NodeDefSpec = {
 export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
   box: boxPrototype,
   card: cardPrototype,
-  // Not `icon`: a type may not name a prototype it shares a name with (`inherit` reads that as a cycle), and the
-  // type a person places is the `icon` below.
-  glyph: glyphPrototype,
+  icon: iconPrototype,
 };
 
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
@@ -244,13 +242,30 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     palette: false,
     bare: true,
   },
+  card: {
+    extends: 'card',
+    name: 'Card',
+    icon: 'ph--cards--regular',
+    key: 'D',
+    schema: CardNode,
+    // Placeholder regions, so a new card reads as a card before it is edited (as a new UML class does): the frame
+    // draws a region only where the node carries its field.
+    create: (props) => ({
+      type: 'card',
+      ...props,
+      icon: { name: 'command' },
+      label: 'Card',
+      body: 'Body',
+      footer: 'Footer',
+    }),
+  },
   icon: {
-    extends: 'glyph',
+    extends: 'icon',
     name: 'Icon',
-    icon: 'ph--smiley--regular',
+    icon: 'ph--command--regular',
     key: 'G',
     schema: IconNode,
-    create: (props) => ({ type: 'icon', ...props, icon: { name: 'star' } }),
+    create: (props) => ({ type: 'icon', ...props, icon: { name: 'command' } }),
   },
   diagram: {
     name: 'Diagram shape',

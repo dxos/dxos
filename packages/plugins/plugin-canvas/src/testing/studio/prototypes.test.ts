@@ -15,7 +15,7 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  glyphPrototype,
+  iconPrototype,
   kindNodeDef,
 } from '@dxos/react-ui-canvas';
 
@@ -33,21 +33,21 @@ const registry = () =>
   );
 
 describe('core prototypes', () => {
-  test('the card and glyph prototypes are registered, and are not types of their own', ({ expect }) => {
-    expect(Object.keys(defaultNodePrototypes).sort()).toEqual(['box', 'card', 'glyph']);
-    expect(registry()['card']).toBeUndefined();
-    expect(registry()['glyph']).toBeUndefined();
+  test('the card and icon prototypes are registered', ({ expect }) => {
+    expect(Object.keys(defaultNodePrototypes).sort()).toEqual(['box', 'card', 'icon']);
     // A prototype carries a look and an editing model, not a schema: a type brings that.
     expect(cardPrototype.schema).toBeUndefined();
-    expect(glyphPrototype.schema).toBeUndefined();
+    expect(iconPrototype.schema).toBeUndefined();
   });
 
-  test('the icon type is in the palette, built on the glyph prototype', ({ expect }) => {
-    const icon = registry()['icon'];
-    expect(icon.name).toEqual('Icon');
-    expect(icon.component).toEqual(glyphPrototype.component);
-    expect(icon.bare).toBe(true);
-    expect(icon.defaultSize).toEqual({ width: 1, height: 1 });
+  test("a type may share its prototype's name", ({ expect }) => {
+    // Types and prototypes are different namespaces, so `card` on `card` is inheritance, not a cycle.
+    for (const type of ['card', 'icon']) {
+      expect(registry()[type].name).toEqual(type === 'card' ? 'Card' : 'Icon');
+    }
+    expect(registry()['icon'].component).toEqual(iconPrototype.component);
+    expect(registry()['icon'].bare).toBe(true);
+    expect(registry()['card'].parts?.map(({ field }) => field)).toEqual(['label', 'body', 'footer']);
   });
 
   test('every default size is in nominal units, not scene pixels', ({ expect }) => {

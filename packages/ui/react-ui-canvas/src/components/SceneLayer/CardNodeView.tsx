@@ -46,6 +46,23 @@ export const IconSpec = Schema.Struct({
 export type IconSpec = Schema.Schema.Type<typeof IconSpec>;
 
 /**
+ * The `card` type's schema: the three regions the prototype draws, and the glyph in its header. Declared here
+ * rather than in `@dxos/scene` because it is a type of the 2D editor, not of the scene model — the same place
+ * `image` is declared.
+ */
+export const CardNode = Schema.Struct({
+  type: Schema.Literal('card'),
+  ...nodeBase,
+  icon: Schema.optional(IconSpec),
+  label: Schema.optional(Schema.String.annotate({ title: 'Title' })),
+  body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
+  footer: Schema.optional(Schema.String.annotate({ title: 'Footer' })),
+});
+export type CardNode = Schema.Schema.Type<typeof CardNode>;
+
+export const isCardNode = (node: NodeBase): node is CardNode => node.type === 'card';
+
+/**
  * The `icon` type's schema: a glyph and an optional caption. Declared here rather than in `@dxos/scene` because it
  * is a type of the 2D editor, not of the scene model — the same place `image` is declared.
  */
