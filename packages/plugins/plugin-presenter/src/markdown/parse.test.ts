@@ -205,6 +205,26 @@ describe('parseSlide', () => {
     expect(stepped.map((element) => [textOf(element), element.properties.step])).toEqual([['a b', '1']]);
   });
 
+  test('<List variant> styles the list it wraps and adds no element', () => {
+    const slide = parseSlide('<List variant="steps">\n\n1. a\n2. b\n\n</List>');
+    const [list] = elements(slide.slots.default, 'ol');
+    expect(list.properties.variant).toBe('steps');
+    expect(elements(slide.slots.default, 'li')).toHaveLength(2);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<List> with an unknown variant falls back and reports it', () => {
+    const slide = parseSlide('<List variant="neon">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.variant).toBe('default');
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <List> variant') }]);
+  });
+
+  test('<List> wrapping no list is reported', () => {
+    const slide = parseSlide('<List variant="cards">\n\nJust text\n\n</List>');
+    expect(textOf(slide.slots.default)).toContain('Just text');
+    expect(slide.issues).toEqual([{ kind: 'html', message: '<List> has no list to style.' }]);
+  });
+
   test('<Surface> with an invalid ref keeps the element and reports it', () => {
     const slide = parseSlide('<Surface ref="javascript:alert(1)" />');
     expect(elements(slide.slots.default, 'slide-surface')).toHaveLength(1);

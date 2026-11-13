@@ -35,6 +35,27 @@ export const theme = {
     inlineCode: 'px-2 rounded-sm bg-(--slide-code) text-info-text font-(family-name:--slide-font-mono)',
   },
 
+  /**
+   * Named list styles selected with `<List variant="…">`; `item` replaces the plain `li` classes, so a variant
+   * owns the whole row. `steps` numbers its items from a counter, so the number sits inside the item's box.
+   */
+  list: {
+    cards: {
+      list: 'flex flex-col gap-6 my-[16px] list-none',
+      item: 'px-10 py-6 rounded-[20px] bg-(--slide-code) text-[48px]',
+    },
+    steps: {
+      list: 'flex flex-col gap-6 my-[16px] list-none [counter-reset:slide-step]',
+      item:
+        'flex items-baseline gap-8 px-10 py-6 rounded-[20px] bg-(--slide-code) text-[48px] ' +
+        '[counter-increment:slide-step] before:content-[counter(slide-step)] before:text-(color:--slide-accent)',
+    },
+    outline: {
+      list: 'flex flex-col gap-6 my-[16px] list-none',
+      item: 'px-10 py-8 rounded-[20px] border-4 border-(--slide-accent) text-[48px]',
+    },
+  } as Record<string, { list: string; item: string } | undefined>,
+
   /** Static `{2,4-5}` line highlights; other lines are dimmed as in Slidev. */
   line: {
     highlighted: 'block bg-hover-surface',

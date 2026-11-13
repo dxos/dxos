@@ -302,3 +302,86 @@ export const Clicks: Story = {
     await expect(canvasElement.querySelectorAll('li.invisible')).toHaveLength(2);
   },
 };
+
+/** `<List variant>` styles a markdown list without changing what it is: numbered cards beside outlined claims. */
+export const ListVariants: Story = {
+  args: {
+    content: slide(
+      { layout: 'two-cols-header' },
+      '# Three technologies, two claims',
+      '',
+      '::left::',
+      '',
+      "#### What we'll show you",
+      '',
+      '<List variant="steps">',
+      '',
+      '1. ECHO',
+      '2. Agents',
+      '3. Composer',
+      '',
+      '</List>',
+      '',
+      '::right::',
+      '',
+      '#### What we claim',
+      '',
+      '<List variant="outline">',
+      '',
+      '- Category-leading apps can replace the current generation of SaaS',
+      '- Composer can become the leading agent harness, beating Cowork, across models',
+      '',
+      '</List>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const steps = await query(canvasElement, '[data-slot="left"] ol[data-variant="steps"]');
+    await expect(steps.querySelectorAll('li')).toHaveLength(3);
+    const outline = await query(canvasElement, '[data-slot="right"] ul[data-variant="outline"]');
+    await expect(outline.textContent).toContain('agent harness');
+  },
+};
+
+/** Every list variant, on the plain list each one restyles. */
+export const ListVariantGallery: Story = {
+  args: {
+    content: slide(
+      { layout: 'three-cols' },
+      '#### Cards',
+      '',
+      '<List variant="cards">',
+      '',
+      '- ECHO',
+      '- Agents',
+      '',
+      '</List>',
+      '',
+      '::middle::',
+      '',
+      '#### Steps',
+      '',
+      '<List variant="steps">',
+      '',
+      '1. ECHO',
+      '2. Agents',
+      '',
+      '</List>',
+      '',
+      '::right::',
+      '',
+      '#### Outline',
+      '',
+      '<List variant="outline">',
+      '',
+      '- ECHO',
+      '- Agents',
+      '',
+      '</List>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, '[data-variant="cards"]');
+    await query(canvasElement, '[data-variant="steps"]');
+    await query(canvasElement, '[data-variant="outline"]');
+  },
+};

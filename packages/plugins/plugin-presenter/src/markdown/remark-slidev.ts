@@ -14,6 +14,11 @@ export const SLOTS = ['default', 'left', 'middle', 'right', 'bottom-left', 'bott
 
 export type SlotName = (typeof SLOTS)[number];
 
+/** Named list styles a `<List>` may request; the first is the plain markdown list. */
+export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline'] as const;
+
+export type ListVariant = (typeof LIST_VARIANTS)[number];
+
 /** Roles a `<Surface>` may request; the first is the default. */
 export const SURFACE_ROLES = ['slide', 'section', 'card'] as const;
 
@@ -54,6 +59,8 @@ const CONTAINER_TAGS = {
   'v-click': 'slide-click',
   'v-clicks': 'slide-clicks',
   'v-after': 'slide-after',
+  // `<List>` leaves no element of its own; it names a style for the list it wraps.
+  'list': '',
 } as const;
 
 type ContainerTag = keyof typeof CONTAINER_TAGS;
@@ -88,6 +95,8 @@ const isContainerTag = (name: string): name is ContainerTag => Object.hasOwn(CON
 export const isSlotName = (name: string): name is SlotName => SLOTS.some((slot) => slot === name);
 
 const isSurfaceRole = (role: string): role is SurfaceRole => SURFACE_ROLES.some((value) => value === role);
+
+const isListVariant = (variant: string): variant is ListVariant => LIST_VARIANTS.some((value) => value === variant);
 
 const isSlideElement = (node: RootContent): node is SlideElement => node.type === 'slideElement';
 
@@ -252,7 +261,7 @@ const transformChildren = (parent: Parent, issues: SlideIssue[]) => {
         const frame = top();
         if (frame.open?.tag === token.tag) {
           stack.pop();
-          top().children.push(containerElement(frame.open, frame.children, issues));
+          top().children.push(...containerNodes(frame.open, frame.children, issues));
         } else {
           issues.push({ kind: 'html', message: `Unmatched closing tag: ${token.raw}` });
           top().children.push(escaped(token.raw));
@@ -355,18 +364,41 @@ const positiveInteger = (value: string | undefined, name: string, issues: SlideI
   return 1;
 };
 
-const containerElement = (
+const listVariant = (value: string | undefined, issues: SlideIssue[]): ListVariant => {
+  if (value === undefined || isListVariant(value)) {
+    return value ?? LIST_VARIANTS[0];
+  }
+  issues.push({ kind: 'html', message: `Invalid <List> variant "${value}"; using "${LIST_VARIANTS[0]}".` });
+  return LIST_VARIANTS[0];
+};
+
+/** `<List variant>` styles the lists it wraps and contributes no element, so a plain list stays a plain `<ul>`. */
+const styleLists = (children: RootContent[], variant: ListVariant, issues: SlideIssue[]): RootContent[] => {
+  const lists = children.filter((child) => child.type === 'list');
+  if (lists.length === 0) {
+    issues.push({ kind: 'html', message: '<List> has no list to style.' });
+  }
+  for (const list of lists) {
+    list.data = { ...list.data, hProperties: { ...list.data?.hProperties, variant } };
+  }
+  return children;
+};
+
+const containerNodes = (
   open: Extract<Token, { kind: 'open' }>,
   children: RootContent[],
   issues: SlideIssue[],
-): SlideElement => {
+): RootContent[] => {
+  if (open.tag === 'list') {
+    return styleLists(children, listVariant(open.attributes.variant, issues), issues);
+  }
   const hName = CONTAINER_TAGS[open.tag];
   if (open.tag !== 'v-clicks') {
-    return slideElement(hName, {}, children);
+    return [slideElement(hName, {}, children)];
   }
   const depth = positiveInteger(open.attributes.depth, 'depth', issues);
   const every = positiveInteger(open.attributes.every, 'every', issues);
-  return slideElement(hName, { depth, every }, children);
+  return [slideElement(hName, { depth, every }, children)];
 };
 
 /** Nodes revealed one by one by `<v-clicks>`: list items down to `depth`, otherwise each child. */

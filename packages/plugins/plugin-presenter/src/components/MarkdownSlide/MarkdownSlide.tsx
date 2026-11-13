@@ -272,6 +272,8 @@ const BLOCK_TAGS = new Set([
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
 
+const LIST_TAGS = new Set(['ul', 'ol']);
+
 const classList = (value: Properties[string]): string[] =>
   Array.isArray(value) ? value.map(String) : typeof value === 'string' ? value.split(/\s+/) : [];
 
@@ -286,7 +288,8 @@ const prepareRoot = (root: Root, step: number): Root => ({
   children: root.children.map((child) => (child.type === 'element' ? prepareElement(child, step, false) : child)),
 });
 
-const prepareElement = (element: Element, step: number, inPre: boolean): Element => {
+/** `variant` is the style of the `<List>` this element's parent list carries, which only its items read. */
+const prepareElement = (element: Element, step: number, inPre: boolean, variant?: string): Element => {
   const properties: Properties = { ...element.properties };
   const ownStep = properties.step ?? undefined;
   delete properties.step;
@@ -323,7 +326,16 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
     }
   }
 
-  const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : NODE_CLASSES[tagName];
+  // `<List variant>` restyles the list and each of its items, so neither takes the plain markdown classes.
+  const ownVariant = LIST_TAGS.has(tagName) ? asVariant(properties.variant) : undefined;
+  delete properties.variant;
+  const listStyle = ownVariant ? theme.list[ownVariant] : undefined;
+  if (listStyle) {
+    properties.dataVariant = ownVariant;
+  }
+  const variantClass = listStyle?.list ?? (tagName === 'li' ? theme.list[variant ?? '']?.item : undefined);
+
+  const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
   if (themed) {
     properties.className = [themed, ...classList(properties.className)];
   }
@@ -333,10 +345,12 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
     tagName,
     properties: withStep(properties),
     children: element.children.map((child) =>
-      child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre') : child,
+      child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', ownVariant) : child,
     ),
   };
 };
+
+const asVariant = (value: Properties[string]): string | undefined => (typeof value === 'string' ? value : undefined);
 
 const stepProperties = (properties: Properties, ownStep: Properties[string], step: number): Properties => {
   const hidden = Number(ownStep) > step;
