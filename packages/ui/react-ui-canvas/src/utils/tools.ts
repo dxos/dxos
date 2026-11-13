@@ -39,6 +39,9 @@ export const EXTENSIONS_GROUP = 'Extensions';
 /** The fold the link types share, since a drawing mostly uses one of them. */
 export const LINK_FOLD = 'Link';
 
+/** The fold the tools that draw in one stroke share: the line as drawn, and the shape read from it. */
+export const DRAW_FOLD = 'Draw';
+
 /**
  * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
  * a `folded` group always does.
@@ -52,7 +55,13 @@ const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
     const name = def.group ?? '';
     groups.set(name, [
       ...(groups.get(name) ?? []),
-      { tool: { kind: 'node' as const, type: def.type }, icon: def.icon, label: def.name, key: def.key },
+      {
+        tool: { kind: 'node' as const, type: def.type },
+        icon: def.icon,
+        label: def.name,
+        key: def.key,
+        ...(def.fold !== undefined ? { fold: def.fold } : {}),
+      },
     ]);
   }
   return [...groups.entries()].map(([name, entries]) => ({ name, entries, collapsible: entries.length > 1 }));

@@ -375,6 +375,40 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **Draw tool** (S, after Polyline): a `freehand` drag samples the pointer, `simplifyPath` thins the stroke,
       and it lands as a polyline with `params.smooth` (a Catmull-Rom curve in `polylinePath`). The tool is a registry
       entry that makes polylines, not a node type of its own.
+- [x] **Draw shape tool** (W, folded with Draw): `utils/recognize.ts` reads a closed stroke as a rectangle, an
+      ellipse, a triangle (four ways up) or a diamond by how near it runs to each outline; the shape lands on the
+      grid, favouring major lines and the last or default size. An unread stroke lands as a line.
+- [x] **Draw shape reads segments**: `readStroke` in `utils/recognize.ts` takes the samples' times, finds the pauses
+      (`strokePauses`), fits each run as a line or a parabola, and lands a stroke that is no shape as a polyline with
+      `bends`. Straight sides are biased level or upright (`squared`), and corners nearly in line are put in line
+      (`aligned`). Covers a pentagon, a straight line and an arc; `Draw.stories.tsx` Shapes Test draws all three
+      of the user's examples.
+- [ ] Draw shape: no right-angled triangle or arrow, and a regular pentagon or hexagon lands as a polyline, not a
+      polygon.
+- [x] **Spline tool** (U, after Polyline): `NodeDef.curved` lands a line drawn vertex by vertex with a cubic bend
+      per segment (`smoothBends`, Catmull-Rom); a bend's `second` control makes it a cubic. Vertex edit mode shows
+      each bend's controls (`bend-handle`) and drags them (`Drag` `vertex` with `bend` and `handle`); a vertex put
+      in or taken out keeps the curve (`bendsAfterInsert`, `bendsAfterDelete`). `Draw.stories.tsx` Spline Test.
+- [x] **Views list front first** (user: "the operations work, but the view list is reversed"): `buildViewTree` and
+      `layoutTree` list a View's rows from the element drawn last to the one drawn first, and a drop above a row
+      puts the element in front of it (`dropPosition`). The Layers list was top first already (`LayersInspector`).
+- [x] **A line keeps its colour** (user, 2026-11-12): a type edited by its vertices (`editor: 'vertices'`) is not
+      drawn in the selection's colour while selected or edited (`SceneLayer`); a hover on one not selected still
+      tints it.
+- [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
+      (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
+- [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
+      carries no drag payload (`ToolDef.drawn`, `toolDragData2D`, `ToolsPanel`).
+- [ ] **Drawing DSL data binding** (user, 2026-11-12): a `.dx` drawing names a data file (a JSON object) or holds
+      a JSON object of its own, and a custom shape binds its fields to that data by JSONPath; e.g. the Graph shape
+      draws the graph the data describes. Not designed yet: where the data is declared, how a bind is written
+      beside the template's `bind=`, and what a shape does when the path resolves to nothing.
+- [ ] Polyline `bends`: hit testing, ports and the `.dx` / SVG export treat a bent segment as straight, and 3D does
+      not draw one. A straight segment has no gesture to bend it. A spline's vertex takes its two controls with
+      it (`bendsWithVertex`), but dragging one control does not turn the other (no smooth-vertex constraint).
+- [x] Text colour for notes: `style.textHue` / `style.textTone`, a 9 by 3 grid in Properties.
+- [ ] Text colour is offered for notes alone; a shape's label still takes its shape's colour.
+- [x] The icon picker offers the DXOS mark (`dx--dxos--regular`), first in its list.
 - [ ] Draw tool: hit testing, ports and the `.dx` / SVG export still treat a smooth polyline as its straight
       segments; its vertex edit mode shows the thinned points. No pressure or stroke width.
 - [x] Card: authored at 16 by 12 cells with half-cell gaps, text sizes 18 / 16 / 14, a 24 px glyph, title centred;

@@ -94,6 +94,11 @@ export type StyleHue = Schema.Schema.Type<typeof StyleHue>;
 export const NodeTone = Schema.Literals([0, 1, 2, 3]);
 export type NodeTone = Schema.Schema.Type<typeof NodeTone>;
 
+/** The levels a text colour's hue is drawn at, light to dark. */
+export const TEXT_TONES = [1, 2, 3] as const;
+export const TextTone = Schema.Literals(TEXT_TONES);
+export type TextTone = Schema.Schema.Type<typeof TextTone>;
+
 /** The typefaces a shape's text may use: the theme's body face, or its fixed-width one. */
 export const FONT_FAMILIES = ['default', 'monospace'] as const;
 export type FontFamily = (typeof FONT_FAMILIES)[number];
@@ -156,6 +161,10 @@ export const styleFields = {
   fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
   /** Unset is `DEFAULT_FONT_SIZE`; the same field as a link's, so a mixed selection edits it once. */
   fontSize: fontSizeField,
+  /** One of the style hues, for the text alone; unset, the text takes the colour the shape's hue and fill give it. */
+  textHue: Schema.optional(StyleHue.annotate({ title: 'Text' })),
+  /** How light or dark the text's hue is drawn: 1 light, 2 (the default) medium, 3 dark. */
+  textTone: Schema.optional(TextTone),
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
   alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
   /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */
@@ -387,14 +396,30 @@ export const PolylineParams = Schema.Struct({
 export type PolylineParams = Schema.Schema.Type<typeof PolylineParams>;
 
 /**
- * An irregular line of straight segments through `points`, in the frame's unit space (0..1 of its size, origin
- * top-left) so a resize scales it; closed, it is a filled outline like a polygon. Labelled like a box.
+ * A segment of a polyline that runs as a curve rather than straight: `segment` is the index of the point it leaves
+ * (a closed line's last runs back to the first). With `control` alone it is a parabola, the control being where its
+ * two end tangents meet; with `second` too it is a cubic, which leaves its first point toward `control` and arrives
+ * at its last from `second`, so it can bow one way and then the other. Both are in the frame's unit space as the
+ * points are, though they may lie outside the frame.
+ */
+export const PolylineBend = Schema.Struct({
+  segment: Schema.Number,
+  control: Point,
+  second: Schema.optional(Point),
+});
+export type PolylineBend = Schema.Schema.Type<typeof PolylineBend>;
+
+/**
+ * An irregular line of segments through `points`, in the frame's unit space (0..1 of its size, origin top-left) so a
+ * resize scales it; closed, it is a filled outline like a polygon. Each segment is straight unless `bends` names it.
+ * Labelled like a box.
  */
 export const PolylineNode = Schema.Struct({
   type: Schema.Literal('polyline'),
   ...nodeBase,
   ...boxFields,
   points: Schema.Array(Point),
+  bends: Schema.optional(Schema.Array(PolylineBend)),
   params: Schema.optional(PolylineParams),
 });
 export type PolylineNode = Schema.Schema.Type<typeof PolylineNode>;

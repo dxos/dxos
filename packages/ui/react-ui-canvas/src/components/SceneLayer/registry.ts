@@ -39,6 +39,7 @@ import {
 } from '../../model/index.ts';
 import {
   CONTAINERS_GROUP,
+  DRAW_FOLD,
   EXTENSIONS_GROUP,
   HULL_STYLE,
   NOMINAL_SIZES,
@@ -143,6 +144,19 @@ export const defaultNodePrototypes: Readonly<Record<string, NodeDefSpec>> = {
   object: objectPrototype,
 };
 
+/** What the tools that draw in one stroke share: the polyline a stroke lands as, run as a curve through its points. */
+const strokeTool: NodeDefSpec = {
+  schema: PolylineNode,
+  component: PolylineNodeView,
+  create: (props) => createNode({ type: 'polyline', ...props }),
+  createFromPoints: (props, points) => ({
+    ...createNode({ type: 'polyline', ...props }),
+    points: [...points],
+    params: { smooth: true },
+  }),
+  defaultSize: NOMINAL_SIZES.polyline,
+};
+
 export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   rect: {
     extends: 'box',
@@ -222,6 +236,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
             closed: node.params?.closed,
             smooth: node.params?.smooth,
             radius,
+            bends: node.bends,
           })
         : '',
     filled: (node) => isPolylineNode(node) && node.params?.closed === true,
@@ -232,21 +247,36 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: { width: 12, height: 12 },
   },
-  // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
-  freehand: {
-    name: 'Draw',
-    icon: 'ph--scribble--regular',
-    key: 'S',
-    schema: PolylineNode,
-    component: PolylineNodeView,
-    create: (props) => createNode({ type: 'polyline', ...props }),
-    createFromPoints: (props, points) => ({
+  // A tool rather than a type of its own: the line it draws is a polyline whose every segment is bent.
+  spline: {
+    ...strokeTool,
+    name: 'Spline',
+    icon: 'ph--bezier-curve--regular',
+    key: 'U',
+    createFromPoints: (props, points, closed) => ({
       ...createNode({ type: 'polyline', ...props }),
       points: [...points],
-      params: { smooth: true },
+      ...(closed ? { params: { closed } } : {}),
     }),
-    freehand: true,
-    defaultSize: NOMINAL_SIZES.polyline,
+    curved: true,
+  },
+  // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
+  freehand: {
+    ...strokeTool,
+    name: 'Freehand',
+    icon: 'ph--scribble--regular',
+    key: 'S',
+    freehand: 'stroke',
+    fold: DRAW_FOLD,
+  },
+  // The same stroke, read before it lands: one drawn round a shape becomes that shape, on the grid.
+  freehandShape: {
+    ...strokeTool,
+    name: 'Sketch',
+    icon: 'ph--shapes--regular',
+    key: 'W',
+    freehand: 'shape',
+    fold: DRAW_FOLD,
   },
   // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
   hull: {

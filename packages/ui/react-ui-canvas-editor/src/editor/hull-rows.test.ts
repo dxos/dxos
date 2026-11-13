@@ -153,12 +153,13 @@ describe('hull rows', () => {
   }) => {
     const tree = layoutTree(DOCUMENT);
     const across = viewMove(rowOf(tree, 'b'), rowOf(tree, 'c'), 'reorder-above');
-    expect(across).toEqual({ scene: 'board', element: 'b', group: 'h', target: 'c', position: 'before' });
+    // The rows list front first: above a row is in front of its element, which is drawn after it.
+    expect(across).toEqual({ scene: 'board', element: 'b', group: 'h', target: 'c', position: 'after' });
     const moved = across ? written(DOCUMENT, moveWrites(DOCUMENT, across)) : DOCUMENT;
     expect(nesting(moved)).toEqual({ root: ['x'], g: ['a'], h: ['b', 'c'] });
 
     const out = viewMove(rowOf(tree, 'a'), rowOf(tree, 'x'), 'reorder-below');
-    expect(out).toEqual({ scene: 'board', element: 'a', target: 'x', position: 'after' });
+    expect(out).toEqual({ scene: 'board', element: 'a', target: 'x', position: 'before' });
     const left = out ? written(DOCUMENT, moveWrites(DOCUMENT, out)) : DOCUMENT;
     expect(nesting(left)).toEqual({ root: ['a', 'x'], g: ['b'], h: ['c'] });
     // The link from X ends at the shape itself again, not at the group it left.

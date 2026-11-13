@@ -20,7 +20,7 @@ import {
   partText,
   partValues,
 } from './parts.ts';
-import { cornerRadius, frameClasses, hueClasses, resolveStyle } from './style.ts';
+import { cornerRadius, frameClasses, hueClasses, resolveStyle, textColor } from './style.ts';
 
 // These pin the canvas's original classes, so they draw in its classic look rather than the default theme's.
 const classicFrame = (node: Parameters<typeof frameClasses>[0], selected: boolean, hovered = false) =>
@@ -100,6 +100,17 @@ describe('parts', () => {
     expect(classicFrame(rect, false, true)[2]).toBe('border-focus/50');
     const styled = { ...rect, style: { hue: 'teal', rounded: true, fill: false, border: false } };
     expect(classicFrame(styled, false)).toEqual(['', 'text-teal-fg', 'border-transparent', '', 'rounded-2xl']);
+    // A text colour of its own wins over the hue's, and leaves the fill and the border the hue's.
+    const coloured = { ...rect, style: { hue: 'teal', textHue: 'red' as const } };
+    expect(classicFrame(coloured, false)[1]).toBe('text-red-500');
+    expect(classicFrame(coloured, false)[2]).toBe(classicFrame({ ...rect, style: { hue: 'teal' } }, false)[2]);
+    // Its tone runs light to dark; unset, it is the middle one.
+    const toned = (textTone: 1 | 2 | 3) =>
+      classicFrame({ ...rect, style: { textHue: 'blue' as const, textTone } }, false)[1];
+    expect([toned(1), toned(2), toned(3)]).toEqual(['text-blue-300', 'text-blue-500', 'text-blue-700']);
+    // A name that is no style hue colours nothing.
+    expect(textColor('nope')).toBeUndefined();
+    expect(textColor(undefined)).toBeUndefined();
     // A guide is dashed and unfilled whatever fill and border say.
     const guide = { ...rect, style: { guide: true, border: false } };
     expect(classicFrame(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm']);

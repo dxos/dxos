@@ -19,6 +19,17 @@ describe('2D tools', () => {
     expect(link && toolDragData2D(link)).toBeUndefined();
   });
 
+  test('a tool that draws its node, point by point or in a stroke, has no shape to drag', () => {
+    const tools = tools2D();
+    const drawn = ['node:polyline', 'node:spline', 'node:freehand', 'node:freehandShape'].map((id) =>
+      tools.find((tool) => tool.id === id),
+    );
+    expect(drawn.every((tool) => tool !== undefined)).toBe(true);
+    expect(drawn.map((tool) => tool && toolDragData2D(tool))).toEqual([undefined, undefined, undefined, undefined]);
+    // A shape still drags.
+    expect(tools.filter((tool) => toolDragData2D(tool) !== undefined).map((tool) => tool.id)).toContain('node:ellipse');
+  });
+
   test('the link tools share one flyout in the create group', () => {
     const links = tools2D().filter((tool) => tool.id.startsWith('link:'));
     expect(links.length).toBeGreaterThan(1);

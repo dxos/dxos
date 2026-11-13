@@ -148,7 +148,8 @@ export const useGesturePreview = ({
       // Refitted as the release will land it, so the frame and its outline follow the vertex.
       const node = scene.nodes[drag.id];
       // A locked node previews as it is, since the release will not move it.
-      const values = node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor) : undefined;
+      const values =
+        node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor, drag.bends) : undefined;
       return {
         displayScene: values ? updateElement(drag.id, values)(scene) : scene,
         blocked: false,
