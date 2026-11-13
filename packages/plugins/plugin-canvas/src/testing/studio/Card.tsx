@@ -4,8 +4,9 @@
 
 //
 // The deck's `card({ variant: 'simple' })` as a canvas element kind: a Phosphor icon, a title, a soft raised panel,
-// and an optional coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's
-// fill level. The look comes from the deck tokens in `theme.css`, so the card follows the canvas's mode.
+// and an optional coloured outline. `tone` is the card's own field, under its `data`, rather than `style.tone`,
+// which is the hue's fill level. The look comes from the deck tokens in `theme.css`, so the card follows the
+// canvas's mode.
 //
 
 import './theme.css';
@@ -13,7 +14,15 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, IconSpec, type NodeViewProps, TextPart, iconSymbol } from '@dxos/react-ui-canvas';
+import {
+  type ElementKindSpec,
+  IconSpec,
+  type NodeViewProps,
+  TextPart,
+  iconOf,
+  iconSymbol,
+  kindData,
+} from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
@@ -24,27 +33,30 @@ import { type Styled, toneValue } from './FeedCard.tsx';
 // coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's fill level.
 //
 
-export const cardFields = {
-  /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
-  label: Schema.String,
-  /** The glyph and its weight, as the core card prototype's frame draws them. */
-  icon: Schema.optional(IconSpec),
+/** What this kind adds to the core card, kept under `data`. */
+export const CardData = Schema.Struct({
   /** An accent, drawn as the card's outline (`#2d6fff`). */
   tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
-};
+});
 
-export const CardNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('card'), ...cardFields });
-
-const isCardNode = (
-  node: NodeViewProps['node'],
-): node is NodeViewProps['node'] & Schema.Struct.Type<typeof cardFields> => node.type === 'card';
+export const CardNode = Schema.Struct({
+  ...Scene.Element2D.fields,
+  type: Schema.Literal('card'),
+  /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
+  label: Schema.String,
+  /** The core card's glyph and its weight, at the element's top as the core card keeps it. */
+  icon: Schema.optional(IconSpec),
+  data: Schema.optional(CardData),
+});
 
 const CardNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isCardNode(node)) {
+  const data = kindData(CardData, node);
+  if (node.type !== 'card' || !data) {
     return null;
   }
-  const tone = toneValue(node.tone);
-  const symbol = iconSymbol(node.icon ?? {});
+  const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
+  const tone = toneValue(data.tone);
+  const symbol = iconSymbol(iconOf(node) ?? {});
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
   const style: Styled = tone ? { '--sd-tone': tone } : {};
   return (
@@ -55,14 +67,16 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
       style={style}
     >
       {symbol && <Icon.Icon icon={symbol} size='lg' classNames='studio-card-icon shrink-0' />}
-      <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate text-lg'>
-        {node.label}
+      <TextPart part='label' text={label} editing={editing} classNames='grow truncate text-lg'>
+        {label}
       </TextPart>
     </div>
   );
 };
 
 export const cardSpec: ElementKindSpec = {
+  // The core card with a look of its own: its title and glyph stay the core card's fields.
+  extends: 'card',
   name: 'Card',
   icon: 'ph--cards--regular',
   key: 'C',

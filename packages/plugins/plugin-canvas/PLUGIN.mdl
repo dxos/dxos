@@ -434,4 +434,12 @@ decision D-24: The `ExtensionNodeTypes` module contributes the plugin's extensio
   for: user:richburdon
   affects: [CanvasPlugin]
   why: One contribution path means the canvas treats the plugin's own tools and another plugin's alike, and the host names the group so a contributor does not have to know how the rail is laid out.
+
+decision D-25: A contributed kind keeps its own fields under its element's `data` (`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), not at the element's top. `kindNodeDef` refuses a kind that declares a field of its own at the top unless the kind extends a core prototype, whose fields its frame reads there (a card's `icon`, `body` and `footer`). The space graph's fields are its `data`, so its object radius is `size`, the name the element's frame also has.
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  why: Only core shapes keep properties at an element's top; an extension's own go in one common sub-object so they cannot collide with the base's or another extension's (COMMON-CORE.md decision 21).
+  rejected:
+    - Fields at the element's top (COMMON-CORE.md decision 13 as first built): the space graph had to call its radius `objectSize` because `size` was taken.
 ```

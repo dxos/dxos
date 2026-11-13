@@ -10,7 +10,16 @@ import { nodeBase } from '@dxos/scene';
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
 import { CLASSIC_LOOK, type NodeRegistry } from '../model/index.ts';
-import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
+import {
+  fieldName,
+  fieldValue,
+  fieldValues,
+  isMultiline,
+  nodeParts,
+  nodeTitle,
+  partText,
+  partValues,
+} from './parts.ts';
 import { cornerRadius, frameClasses, hueClasses, resolveStyle } from './style.ts';
 
 // These pin the canvas's original classes, so they draw in its classic look rather than the default theme's.
@@ -56,6 +65,26 @@ describe('parts', () => {
     // The first part is the node's main text.
     expect(nodeTitle(registry, list)).toBe('Todo');
     expect(nodeTitle(registry, note)).toBe('Note');
+  });
+
+  test("a kind's own field is named under data, and written beside the rest of the node's data", ({ expect }) => {
+    // A plugin kind as the engine draws one: its fields under `data`, its parts naming them there.
+    const kinds: NodeRegistry = {
+      ...registry,
+      list: { ...registry.list, parts: [{ field: 'data.title' }, { field: 'data.items', lines: true }] },
+    };
+    const node = { ...rect, type: 'list', data: { title: 'Todo', items: ['buy milk'], done: 1 } };
+    expect(partText(kinds, node, 'data.items')).toBe('buy milk');
+    expect(nodeTitle(kinds, node)).toBe('Todo');
+    expect(partValues(kinds, node, 'data.items', 'a\n b')).toEqual({
+      data: { title: 'Todo', items: ['a', 'b'], done: 1 },
+    });
+    expect(fieldValue(node, 'data.done')).toBe(1);
+    expect(fieldValue(node, 'data.missing')).toBeUndefined();
+    // A node with no data yet gets one.
+    expect(fieldValues(rect, 'data.title', 'New')).toEqual({ data: { title: 'New' } });
+    expect(fieldValues(rect, 'label', 'New')).toEqual({ label: 'New' });
+    expect([fieldName('data.items'), fieldName('label')]).toEqual(['items', 'label']);
   });
 
   test('lists and bodies are multi-line; labels are not', ({ expect }) => {

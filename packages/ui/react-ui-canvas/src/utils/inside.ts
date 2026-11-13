@@ -30,7 +30,7 @@ import {
 import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { compositeBounds, drawnParts, instanceView } from './compose.ts';
 import { containsPoint, unionBounds } from './hit.ts';
-import { nodeParts } from './parts.ts';
+import { fieldValue, fieldValues, nodeParts } from './parts.ts';
 import { nodeBounds, resizeNode } from './shapes.ts';
 
 /** The Object being edited in place: the Instance entered, and the definition its parts come from. */
@@ -83,7 +83,7 @@ export const insideScene = (
 export type InsideWrites = {
   composite?: RenderList2D;
   overrides?: InstanceNode['overrides'];
-  /** Fields of the Instance itself that a bound part wrote (a UML class's `attributes`). */
+  /** Fields of the Instance itself that a bound part wrote (a UML class's `data`, with its new `attributes`). */
   bound?: Record<string, unknown>;
 };
 
@@ -155,12 +155,14 @@ export const insideWrites = (
       }
       // A bound part shows the Instance's own field, so typing in it writes that field rather than an override.
       if (stored.bind !== undefined) {
-        bound[stored.bind] = Array.isArray(Reflect.get(instance, stored.bind))
+        const written = Array.isArray(fieldValue(instance, stored.bind))
           ? String(value ?? '')
               .split('\n')
               .map((line) => line.trim())
               .filter((line) => line.length > 0)
           : value;
+        // Over what this pass already wrote, so two parts bound into the Instance's `data` both land in it.
+        Object.assign(bound, fieldValues({ ...instance, ...bound }, stored.bind, written));
         continue;
       }
       changed(value, Reflect.get(stored, key)) ? (own[key] = value) : delete own[key];

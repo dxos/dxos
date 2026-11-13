@@ -149,4 +149,27 @@ describe('insideWrites', () => {
     const result = writes(instance(), (scene) => scene);
     expect(result).toEqual({});
   });
+
+  test("a part bound into the Instance's data shows that field, and typing in it writes it there", () => {
+    // A kind keeps its own fields under `data`: a title and a list, each shown by a part bound to it.
+    const bound: RenderList2D = {
+      ...CARD,
+      nodes: {
+        ...CARD.nodes,
+        title: { ...note('title', 0, -30, ''), bind: 'data.name' },
+        footer: { ...note('footer', 0, 30, ''), bind: 'data.items' },
+      },
+    };
+    const node = { ...instance(), data: { name: 'Person', items: ['id', 'age'], kept: 1 } };
+    const { scene, parts } = insideScene(OUTER(node), node, bound, defaultNodeRegistry);
+    expect([scene.nodes.title, scene.nodes.footer]).toMatchObject([{ text: 'Person' }, { text: 'id\nage' }]);
+
+    const edit = (id: string, text: string) => updateElement(id, { text });
+    const edited = edit('footer', 'id\n\n name ')(edit('title', 'Animal')(scene));
+    const result = insideWrites(defaultNodeRegistry, node, bound, edited, parts);
+    // Both parts land in the one `data`, beside the field neither of them shows; a list stays a list.
+    expect(result.bound).toEqual({ data: { name: 'Animal', items: ['id', 'name'], kept: 1 } });
+    expect(result.overrides).toBeUndefined();
+    expect(result.composite).toBeUndefined();
+  });
 });

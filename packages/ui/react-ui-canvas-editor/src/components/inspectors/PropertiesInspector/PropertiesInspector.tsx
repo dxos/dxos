@@ -323,6 +323,12 @@ export const PropertiesInspector = ({
         ]
       : undefined;
   }, [schema]);
+  const kindName = useMemo(() => {
+    const [first] = elements;
+    const single = first && !isLink(first) && elements.every((element) => element.type === first.type);
+    return single ? nodeDef(nodes, first)?.name : undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typesKey, nodes]);
   const { values, fieldOverrides } = useMemo(() => {
     const shown = elements.map((element) => formValues(nodes, element, styleMap, layers));
     const { values, mixed } = mergeValues(shown, Object.keys(shown[0] ?? {}));
@@ -332,6 +338,8 @@ export const PropertiesInspector = ({
       ...(viewOptions ? {} : { scene: { hidden: true } }),
       // The class is edited in the layer's row (`LayerClassField`).
       class: { hidden: true },
+      // An extension kind's own fields are its `data`: a group named after the kind, where the selection is of one.
+      ...(kindName ? { data: { label: kindName } } : {}),
       // A link has no font face, so its size is not drawn by `FontField` and needs its own row.
       ...(elements.some(isLink) ? { 'style.fontSize': {} } : {}),
       ...overrides?.(elements),
@@ -350,7 +358,7 @@ export const PropertiesInspector = ({
       }
     }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, groups, onGroupsChange]);
+  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, groups, onGroupsChange, kindName]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {

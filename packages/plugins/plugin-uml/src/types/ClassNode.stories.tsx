@@ -36,11 +36,12 @@ import { type NodeBase, type PlacedComposite, type Scene } from '@dxos/scene';
 
 import { ClassNode } from '#types';
 
+import { classNodeSpec } from '../capabilities/class-node-type.ts';
 import { SIZE, TEMPLATE } from './template.ts';
 
 /** The editor with the plugin's kind in it, as the host builds the registry from its contributions. */
 const NODES = createNodeRegistry(
-  { ...defaultNodeTypes, [ClassNode.TYPE]: kindNodeDef(ClassNode.TYPE, ClassNode.spec) },
+  { ...defaultNodeTypes, [ClassNode.TYPE]: kindNodeDef(ClassNode.TYPE, classNodeSpec) },
   defaultNodePrototypes,
 );
 
@@ -71,8 +72,7 @@ const classOf = (
   size,
   composite: COMPOSITE,
   label,
-  attributes,
-  methods,
+  data: { attributes, methods },
 });
 
 /**

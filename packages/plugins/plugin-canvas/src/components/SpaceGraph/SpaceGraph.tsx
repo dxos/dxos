@@ -16,7 +16,7 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, type NodeViewProps } from '@dxos/react-ui-canvas';
+import { type ElementKindSpec, type NodeViewProps, kindData } from '@dxos/react-ui-canvas';
 import { StepAnnotation } from '@dxos/react-ui-form';
 import { Scene } from '@dxos/scene';
 
@@ -79,8 +79,8 @@ export const spaceGraphFields = {
       .annotate({ title: 'Link density' })
       .pipe(StepAnnotation.set(0.05)),
   ),
-  /** Object radius as a percentage of pitch. Not `size`, which every element already has as its frame. */
-  objectSize: Schema.optional(
+  /** Object radius as a percentage of pitch. */
+  size: Schema.optional(
     Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 5, maximum: 50 })).annotate({
       title: 'Object size',
     }),
@@ -89,27 +89,24 @@ export const spaceGraphFields = {
   hue: Schema.optional(Schema.Literals(HUES).annotate({ title: 'Hue' })),
 };
 
+/** The kind's own fields, kept under `data`: they share names with the element (`size`) and its style (`fill`, `hue`). */
+export const SpaceGraphData = Schema.Struct(spaceGraphFields);
+
 export const SpaceGraphNode = Schema.Struct({
   ...Scene.Element2D.fields,
   type: Schema.Literal('space-graph'),
-  ...spaceGraphFields,
+  data: SpaceGraphData,
 });
 
-type SpaceGraphFields = Schema.Struct.Type<typeof spaceGraphFields>;
-
-const isSpaceGraph = (node: NodeViewProps['node']): node is NodeViewProps['node'] & SpaceGraphFields =>
-  node.type === 'space-graph';
-
-const DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, objectSize: 24, hue: 'neutral' } as const;
+const DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, size: 24, hue: 'neutral' } as const;
 
 export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
-  if (!isSpaceGraph(node)) {
+  const data = kindData(SpaceGraphData, node);
+  if (!data) {
     return null;
   }
 
-  const settings = { ...DEFAULTS, ...node };
-  // `layout` names the object radius `size`, which an element's own `size` (its frame) already takes.
-  const params = { ...settings, size: settings.objectSize };
+  const params = { ...DEFAULTS, ...data };
   const { width, height } = node.size;
   // Local coordinates: the circle is inscribed in the node's frame, so the graph moves and resizes with the node.
   const center = { x: width / 2, y: height / 2 };
@@ -163,7 +160,7 @@ export const spaceGraphSpec: ElementKindSpec = {
   key: 'G',
   schema: SpaceGraphNode,
   component: SpaceGraphNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'space-graph', id, z, center, size, seed: 7 }),
+  create: ({ id, z, center, size }) => ({ type: 'space-graph', id, z, center, size, data: { seed: 7 } }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 392-unit circle, give or take.
   defaultSize: { width: 8, height: 8 },
   resizable: true,

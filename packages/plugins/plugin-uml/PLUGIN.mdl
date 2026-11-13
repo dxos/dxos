@@ -27,9 +27,14 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ```mdl
 type ClassNode
-  desc: An element kind of type `class` over the 2D element base (`Element2D`), its own fields at the element's top.
+  desc: An element kind of type `class` over the 2D element base (`Element2D`): its name in the base's `label`, its own fields under the element's `data`.
   fields:
     label: string
+    data: ClassData
+
+type ClassData
+  desc: A class's own fields, kept apart from the element's so no name of theirs meets the base's or another kind's.
+  fields:
     attributes: string[]
     methods: string[]
 ```
@@ -140,6 +145,14 @@ decision D-1: A class is an element kind: `ClassNode` is the 2D element base plu
   rejected:
     - Members kept under the element's canvas fields: no kind registry could check them, and every class would need moving again when the View model goes.
   source: packages/ui/react-ui-canvas/docs/COMMON-CORE-PLAN.md (Task E.4, R-40 to R-44)
+
+decision D-2: A class keeps `attributes` and `methods` under its element's `data`, and its name in the base's `label`. Its template binds the two compartments to `data.attributes` and `data.methods`, its parts and its Properties editors name them the same way, and the panel shows them in a group named `Class`. A class stored with its members at the element's top, or under the element's canvas fields, draws as before and moves to `data` on its next edit. Supersedes the "at the element's top" of [D-1].
+  date: 2026-11-12
+  by: user:richburdon
+  affects: [F-1.1, F-1.2, F-1.3, F-1.4]
+  why: Only core shapes keep properties at an element's top; an extension's own go in one common sub-object so they cannot collide with the base's or another extension's (COMMON-CORE.md decision 21).
+  rejected:
+    - Members at the element's top: a kind could not name a field as the base names one, and two kinds contended for a name.
 ```
 
 ## Appendix: Extension Definitions

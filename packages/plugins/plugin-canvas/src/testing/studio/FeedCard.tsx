@@ -17,7 +17,14 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React, { type CSSProperties } from 'react';
 
-import { CardFrame, type ElementKindSpec, IconSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
+import {
+  CardFrame,
+  type ElementKindSpec,
+  IconSpec,
+  type NodeViewProps,
+  TextPart,
+  kindData,
+} from '@dxos/react-ui-canvas';
 import { Scene } from '@dxos/scene';
 
 /** A style that also sets custom properties, which `CSSProperties` alone does not allow. */
@@ -46,11 +53,8 @@ const TONE_TOKENS: Record<Tone, string> = {
 export const toneValue = (tone: string | undefined): string | undefined =>
   tone === undefined ? undefined : TONE_TOKENS[tone as Tone];
 
-export const feedCardFields = {
-  /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
-  label: Schema.String,
-  /** The glyph and its weight, as the core card prototype's frame draws them. */
-  icon: Schema.optional(IconSpec),
+/** What this kind adds to the core card, kept under `data`: its tone and its feed strip. */
+export const FeedCardData = Schema.Struct({
   /** An accent drawn as the card's outline and its icon; `ink` is the agents' dark edge. */
   tone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Tone' })),
   /** How many blocks the feed strip has. */
@@ -59,20 +63,21 @@ export const feedCardFields = {
   feedLabel: Schema.optional(Schema.String.annotate({ title: 'Feed label' })),
   /** Which blocks of the strip are filled, by 0-based index; a filled block takes the deck's accent. */
   marks: Schema.optional(Schema.Array(Schema.Number).annotate({ title: 'Marked blocks' })),
-  body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
-  footer: Schema.optional(Schema.String.annotate({ title: 'Footer' })),
-};
+});
 
+/**
+ * The core card's own fields stay at the element's top, where the card prototype's frame reads them: its title (the
+ * base's `label`), `icon`, `body` and `footer`.
+ */
 export const FeedCardNode = Schema.Struct({
   ...Scene.Element2D.fields,
   type: Schema.Literal('feed-card'),
-  ...feedCardFields,
+  label: Schema.String,
+  icon: Schema.optional(IconSpec),
+  body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
+  footer: Schema.optional(Schema.String.annotate({ title: 'Footer' })),
+  data: Schema.optional(FeedCardData),
 });
-
-type FeedCardFields = Schema.Struct.Type<typeof feedCardFields>;
-
-const isFeedCard = (node: NodeViewProps['node']): node is NodeViewProps['node'] & FeedCardFields =>
-  node.type === 'feed-card';
 
 type FeedStripProps = {
   n: number;
@@ -88,7 +93,7 @@ const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => {
     <div className='flex items-center shrink-0' style={{ gap: 5 }} data-testid='feed-strip'>
       {label !== undefined && (
         <TextPart
-          part='feedLabel'
+          part='data.feedLabel'
           text={label}
           editing={editing}
           classNames='studio-card-label font-mono shrink-0 text-[12px] me-[2px]'
@@ -111,10 +116,11 @@ const FeedStrip = ({ n, label, marks, editing }: FeedStripProps) => {
 };
 
 export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isFeedCard(node)) {
+  const data = kindData(FeedCardData, node);
+  if (node.type !== 'feed-card' || !data) {
     return null;
   }
-  const tone = toneValue(node.tone);
+  const tone = toneValue(data.tone);
   const style: Styled = { padding: '12px 18px', ...(tone ? { '--sd-tone': tone } : {}) };
   return (
     <div
@@ -126,7 +132,7 @@ export const FeedCardNodeView = ({ node, editing }: NodeViewProps) => {
       {/* The core card prototype's frame draws the header, body and footer and makes each a part; the feed strip is
           what this kind adds between the header and the body. */}
       <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
-        {node.feed ? <FeedStrip n={node.feed} label={node.feedLabel} marks={node.marks} editing={editing} /> : null}
+        {data.feed ? <FeedStrip n={data.feed} label={data.feedLabel} marks={data.marks} editing={editing} /> : null}
       </CardFrame>
     </div>
   );
@@ -148,12 +154,11 @@ export const feedCardSpec: ElementKindSpec = {
     size,
     label: 'Feed',
     icon: { name: 'queue' },
-    feed: 9,
-    marks: [],
+    data: { feed: 9, marks: [] },
   }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 300 x 138 card, give or take.
   defaultSize: { width: 6, height: 3 },
   // Composite: every text of the card is edited in place, in reading order. The first is the node's main text, so
   // Enter on a selected card edits its title; Tab moves on through the strip's caption, the body and the footer.
-  parts: [{ field: 'label' }, { field: 'feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],
+  parts: [{ field: 'label' }, { field: 'data.feedLabel' }, { field: 'body', multiline: true }, { field: 'footer' }],
 };

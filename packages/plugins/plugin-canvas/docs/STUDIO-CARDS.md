@@ -105,7 +105,13 @@ this reason.
 const cardSpec: ElementKindSpec = {
   name: 'Card',
   icon: 'ph--cards--regular',
-  schema: Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('card'), ...cardFields }),
+  schema: Schema.Struct({
+    ...Scene.Element2D.fields,
+    type: Schema.Literal('card'),
+    label: Schema.String,
+    icon: Schema.optional(IconSpec),
+    data: Schema.optional(CardData),
+  }),
   component: CardNodeView,
   create: ({ id, z, center, size }) => ({ type: 'card', id, z, center, size, label: 'Card' }),
   defaultSize: { width: 236, height: 66 },
@@ -113,14 +119,15 @@ const cardSpec: ElementKindSpec = {
 };
 ```
 
-The kind's own fields (`icon`, `tone`) sit at the element's top, over `Scene.Element2D`; `kindNodeDef` moves them
-down to `props.canvas` for the engine and lifts them back out of every intent the viewport writes, so a card can be
-moved and relabelled on the canvas and keep its icon. `label` is the shared slot, which is why the `WithoutPlugin`
-story still reads: with no contribution the card falls back to the core base, a box showing its title.
+The kind's own field (`tone`) sits under the element's `data`, and the core card's (`icon`) at its top, over
+`Scene.Element2D`; `kindNodeDef` moves both down to `props.canvas` for the engine and lifts them back out of every
+intent the viewport writes, so a card can be moved and relabelled on the canvas and keep its icon. `label` is the
+shared slot, which is why the `WithoutPlugin` story still reads: with no contribution the card falls back to the
+core base, a box showing its title.
 
-Naming note: the card's accent is `tone` at the element's top level, which is **not** `style.tone` (a hue's fill
-level, `NodeTone`). They do not collide — `style` is one slot and the kind's fields are another — but the two
-meanings of the word are a trap.
+Naming note: the card's accent is `data.tone`, which is **not** `style.tone` (a hue's fill level, `NodeTone`). They
+do not collide — `style` is one slot and the kind's `data` is another — but the two meanings of the word are a
+trap.
 
 ## 4. How close it looks
 

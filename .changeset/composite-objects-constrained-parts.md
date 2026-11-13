@@ -104,6 +104,17 @@ panel has two more groups after the shapes: `Containers` (the hull and the view)
 every kind a plugin contributes unless it names a group of its own, so plugin-uml's class is there too);
 react-ui-canvas exports `CONTAINERS_GROUP` and `EXTENSIONS_GROUP`.
 
+An extension kind keeps its own fields under its element's `data`, not at the element's top
+(`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), so a kind's field never meets the
+base's or another kind's; `Scene.BaseElement` gains the `data` slot. The engine's node carries the same `data`: a
+view reads it with `kindData(schema, node)`, a part or a bind names a field as `data.<field>`, and the Properties
+panel shows it as a group named after the kind. `kindNodeDef` refuses a kind that declares a field of its own at the
+top, unless it extends a core prototype whose frame reads fields there (a card's `icon`, `body`, `footer`).
+`KindRegistry` gains `dataFields(type)` and `normalize(element)`. **Migration:** move a kind's own fields into
+`data` in its schema, its `create`, its view, and its `parts` / `fields` / template `bind` names. A stored element
+with the fields at its top is read as before and written back under `data` on its next edit. plugin-uml's class
+keeps `attributes` and `methods` in `data`.
+
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
 
 A switch or checkbox keeps its visually hidden input inside itself (`position: relative` on `.dx-switch` and

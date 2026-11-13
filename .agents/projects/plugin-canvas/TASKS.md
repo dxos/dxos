@@ -361,6 +361,15 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [ ] Not checked: the `.dx` DSL round trip of `hull`, the SVG export, and what 3D draws of a hull's group.
 - [ ] `PLUGIN.mdl`: record the hull.
 - [ ] In-place editing: a scene node whose id is a part's id (the Cards story's `footer` card) is taken for a part.
+- [x] **Extension kinds keep their own fields under `data`** (the user, 2026-11-12; COMMON-CORE.md decision 21).
+      `Scene.BaseElement.data`; `KindRegistry.dataFields` / `normalize`; `kindNodeDef` refuses a top-level field of
+      the kind's own unless it extends a core prototype; `kindData` for views; parts and binds name `data.<field>`.
+      Moved: the space graph (its radius is now `size`), the studio card and feed card, the story's task kind, the
+      UML class. An element stored flat reads as before and is written back under `data`.
+- [ ] The Properties panel's generic list editor does not save a change to one row of a list under `data` (nor did
+      it at the top): `patchValues` splits a path on `.` and the form names a row `list[0]`. UML is unaffected, since
+      it edits its lists with `LinesField`.
+- [ ] 3D has no extension kinds yet; `data` is on the shared base, so a 3D kind takes the same form when one exists.
 
 ## Backlog
 

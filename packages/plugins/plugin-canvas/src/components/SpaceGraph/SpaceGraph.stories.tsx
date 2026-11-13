@@ -37,13 +37,14 @@ const NODES = createNodeRegistry(
   defaultNodePrototypes,
 );
 
-const graph = (id: string, x: number, fields: Record<string, unknown>): Node => ({
+/** A space graph as the engine draws one: the node base, and the kind's own fields under `data`. */
+const graph = (id: string, x: number, data: Record<string, unknown>): Node & { data: Record<string, unknown> } => ({
   type: 'space-graph',
   id,
   z: `a${id}`,
   center: { x, y: 0 },
   size: { width: 384, height: 384 },
-  ...fields,
+  data,
 });
 
 /** Two spaces of different seeds, the second denser and in a hue of its own. */

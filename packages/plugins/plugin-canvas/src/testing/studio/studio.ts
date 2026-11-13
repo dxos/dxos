@@ -197,16 +197,21 @@ const promoteCards = (content: ContentMap, model: StudioModel): void => {
     const record = content[nodeKey(boxOf(key))];
     invariant(isNodeRecord(record), `no node for card "${key}"`);
     const { style: _style, ...node } = record.node;
+    const icon = { type: card.icon };
+    const tone = card.tone ? { tone: TONES[card.tone] ?? card.tone } : {};
     content[nodeKey(boxOf(key))] = {
       ...record,
       node: {
         ...node,
         type: card.kind ?? 'card',
         label: labelOf(record.node) ?? card.title,
-        icon: { type: card.icon },
-        ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
-        ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
-        ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
+        // The glyph, body and footer are the core card's fields; the tone and the feed strip are the kind's own.
+        icon,
+        data: {
+          ...tone,
+          ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
+          ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
+        },
         ...(card.body ? { body: card.body } : {}),
         ...(card.footer ? { footer: card.footer } : {}),
       },
