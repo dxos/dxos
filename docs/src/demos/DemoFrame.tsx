@@ -64,7 +64,10 @@ export const DemoFrame = ({ demo, runtime }: { demo: Demo; runtime: DemoRuntime 
 
   return (
     <Theme.Provider tx={Theme.defaultTx} themeMode='dark'>
-      <div className='grid grid-rows-[auto_minmax(0,1fr)] h-full border border-separator rounded-md overflow-hidden bg-base-surface'>
+      <div
+        className='grid grid-rows-[auto_minmax(0,1fr)] h-full border border-separator rounded-md overflow-hidden bg-base-surface'
+        data-demo-frame
+      >
         <Toolbar.Root>
           <span className='px-2 font-medium'>{demo.title}</span>
           <Toolbar.Separator variant='gap' />

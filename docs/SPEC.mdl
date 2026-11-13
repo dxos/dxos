@@ -73,10 +73,10 @@ always knows where to look.
 template landing: The front door
   purpose: Answer what ECHO is and why it differs, in one screen, then route the reader.
   parts:
-    - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip, two actions, ECHO background art
-    - Sample: the smallest complete example
+    - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip with a copy button, two actions, the ECHO icon at a bounded size beside the copy, its rays fading out around it
+    - Sample: the smallest complete example, a card per step with one sentence each, over one code frame
     - Guarantees: four cards in one row, falling to two rows of two and then one column, each a behavior with its spec citation
-    - Live: the live demos [F-7.5]
+    - Live: the live demos in one frame, a tab each [F-7.5]
     - Architecture: one diagram of the packages
     - Routes: cards into the learning path, concepts and reference
 ```
@@ -1856,7 +1856,7 @@ feat F-7: Relationship to dxos.org
 
   req F-7.5:
     when: a reader is on `/echo`
-    then: it shows live demos, in order: a collaborative editor with a Mermaid diagram in its document, a table
+    then: it shows live demos in one frame with a tab each, in order: a collaborative editor with a Mermaid diagram in its document, a table
           and board over one data set, a graph explorer, and an infinite canvas of nested drawings; they share two peers, Alice and Bob, and one space in the page;
           each shows one or both peers, and has a switch per peer that takes it offline
 
@@ -1877,8 +1877,8 @@ feat F-7: Relationship to dxos.org
 
   req F-7.9:
     when: a reader is on `/echo`
-    then: each demo has a title and a short narrative about the data it shows: what objects are in the
-          space, and what ECHO does with them as the peers edit, go offline and come back
+    then: each demo has a card with its title and a sentence or two about the data it shows and what to try
+          in it
 
   req F-7.10:
     when: a reader is on the PLEX Overview
@@ -3989,6 +3989,46 @@ decision D-219: On `/echo` the four reason cards and the four guarantee cards ea
   by: user:wittjosiah
   affects: [landing]
   why: Josiah meant two rows of two as the fallback at a breakpoint, not the layout at every width.
+```
+
+```mdl
+decision D-220: On `/echo` the hero's ECHO icon sits in the column beside the copy, centred in it and at most 26rem wide, so its size and place do not depend on the window. Its rays are the brand art's own, the upper right one missing as in the art, and run out past the icon instead of stopping at a square panel, and fade out with distance from it, sooner to the left so they clear the copy, as the docs Overview heroes fade theirs. Where there is no room beside the copy, the icon sits centred behind it, dimmed, as a background, and its rays fade evenly on every side. The install chip has a copy button that puts `pnpm add @dxos/echo` on the clipboard; the command names ECHO alone.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing]
+  why: Josiah wanted the header art to continue and fade out like the docs headers, and a copy button on the install command, with nothing else in the hero changed. Art scaled to fill the hero hid the icon behind the copy on a narrow window and cropped it on a wide one, so the icon has bounds of its own. Behind the copy on a small screen, dimmed, was fine.
+```
+
+```mdl
+decision D-221: On `/echo` the sample is four tabs over one file, `task.ts`: Define, Connect, Query and Change. Define declares the type; Connect starts a client with the type, creates an identity and a space, and names its `db`; Query subscribes to a live query and adds a task; Change updates it. The steps are a row of four cards above the code, like the demo cards of D-222: each card has the step's name and one sentence on what it shows, in place of the code's comments, and the code frame below holds only the code. A heading above the cards says what the sample is. The panels share one height, the tallest step's, so switching does not move the page.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing]
+  why: Josiah chose tabs from three options, then asked for the same card pattern as the demos so the two sections read alike. The sample had no heading, and `db` came from nowhere.
+```
+
+```mdl
+decision D-222: On `/echo` the live demos sit in one full-width frame, chosen by a row of four cards above it, one per demo in the order of [F-7.5]. Each card has the demo's title and a sentence or two on what it shows and what to try; the longer narrative is gone from `/echo`. The cards sit in one row on a wide screen. Below 64rem the step cards of D-221 and these cards fold into plain tabs, a row of titles that scrolls sideways if it must, with the selected one's sentence under them, so a narrow screen shows one sentence at a time. The section is headed Running in this page, and its lead says each demo is ECHO running in the tab, that they share one space held by Alice and Bob, and that a peer switched offline merges its edits when it comes back. Every demo still starts as the page loads [F-7.6]; an unselected demo stays mounted, hidden in place at the frame's size, so switching to it is instant and its layout is already measured. Amends [F-7.9].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing, F-7.5, F-7.9]
+  why: Josiah chose tabs, then cards over side tabs and a centred layout. "Two peers, one space" did not fit the graph and the canvas, which open with one peer; the stacked demos, and then a 48rem narrative over a full-width tab line and frame, looked unbalanced, and cards span the same width as the frame. Two rows of two cards on a narrow screen ran tall, so there the cards fold back into tabs.
+```
+
+```mdl
+decision D-223: On `/echo` every box has square corners, as on the other marketing pages: the install chip and its copy button, the step and demo cards, the code frame and the demo frame. Only the loading spinner stays round. The docs keep their rounded code frames; the square code frame is local to `/echo`. Sections are set apart by space and their eyebrow and heading, with no rule between them, as on the other marketing pages.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing]
+  why: The home, Composer and plugins pages use no rounded corners and no full-width section rules; `/echo` mixed 0.5rem cards with square sections, and its rules between sections added nothing the headings did not already say.
+```
+
+```mdl
+decision D-224: The dxos.org Webflow nav keeps Try Composer inside the page's edge padding at every width. On a wide screen its outer columns are never narrower than what they hold, so the menu stays centred while there is room and moves aside when there is not. Below 600px the social links are hidden, and below 400px Try Composer has less padding and smaller text, so the menu button, logo and Try Composer fit on the smallest phones.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-7.4]
+  why: Between 992px and about 1300px the social links and Try Composer overflowed their column and Try Composer touched the window's edge, and on phones from about 480px to 600px it ran past it.
 ```
 
 ## Appendix: Extension Definitions
