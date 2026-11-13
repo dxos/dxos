@@ -6,7 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
 
@@ -26,7 +28,16 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Create> = DrawingOp
       // Persisted here, canvas first: an agent has only this operation to create a drawing, and a
       // drawing it has to add itself arrives without its hidden canvas.
       yield* Database.add(canvas);
-      return { object: yield* Database.add(Drawing.make({ name, canvas })) };
+      // The drawing is filed by plugin-space, so it shows in the navigator; on EDGE this plugin runs without
+      // plugin-space's default-parent rule.
+      const { db } = yield* Database.Service;
+      const { object } = yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        { object: Drawing.make({ name, canvas }) },
+        { spaceId: db.spaceId },
+      );
+      invariant(Obj.instanceOf(Drawing.Drawing, object), 'Expected a Drawing.');
+      return { object };
     }),
   ),
 );

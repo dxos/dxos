@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { InboxOperation } from '#types';
 
@@ -30,12 +30,18 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
         );
       }
 
-      yield* DefaultParent.add({ object, target });
+      // Filed by plugin-space, which owns where a new mailbox goes; on EDGE this plugin runs without its rule. The
+      // target crosses as a reference, the form that survives a hop to plugin-space's bundle.
+      const added = yield* Operation.invoke(
+        SpaceOperation.AddObject,
+        { object, target: target && Ref.make(target) },
+        { spaceId: db.spaceId },
+      );
 
       return {
-        id: Obj.getURI(object),
-        subject: [getMailboxPath(db.spaceId, object.id)],
-        object,
+        id: added.id,
+        subject: [getMailboxPath(db.spaceId, added.object.id)],
+        object: added.object,
       };
     }),
   ),

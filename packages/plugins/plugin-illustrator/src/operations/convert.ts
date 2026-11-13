@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
-import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { CreatedFrom } from '@dxos/types';
 
 import { convertByScene } from '#model';
@@ -61,10 +62,17 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
             createdAt: new Date().toISOString(),
           }),
         );
-        result = Drawing.make({ name: drawing.name, canvas: target });
-        // Filed beside the source, else where a new drawing goes by default, so it shows in the navigator.
+        // Filed beside the source, else where plugin-space files a new drawing by default, so it shows in the
+        // navigator; plugin-space files it because on EDGE this plugin runs without its default-parent rule.
         const [beside] = yield* Database.query(ContainerModel.containing(drawing)).run;
-        yield* ContainerModel.add({ object: result, target: beside ?? (yield* DefaultParent.resolve(result)) });
+        const { db } = yield* Database.Service;
+        const added = yield* Operation.invoke(
+          SpaceOperation.AddObject,
+          { object: Drawing.make({ name: drawing.name, canvas: target }), target: beside && Ref.make(beside) },
+          { spaceId: db.spaceId },
+        );
+        invariant(Obj.instanceOf(Drawing.Drawing, added.object), 'Expected a Drawing.');
+        result = added.object;
       }
 
       const { scene: converted, unmanaged } = to.builder.read(target);

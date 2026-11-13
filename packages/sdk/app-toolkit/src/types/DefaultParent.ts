@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type Database, Obj } from '@dxos/echo';
+import { Collection, type Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as Position from '@dxos/util/Position';
 
@@ -19,20 +19,31 @@ import * as ContainerModel from './ContainerModel.ts';
 /**
  * The parent contributed for the object's type tags: matching {@link AppCapabilities.DefaultParent} rules
  * are asked in `position` order and the first parent wins; a rule that fails is logged and skipped.
- * Undefined when no rule applies, including on a host that binds no capability manager (EDGE).
+ * Undefined when no rule applies, including on a host that binds no capability manager; a collection item with no
+ * rule at all is logged, since it would be saved but never filed.
  */
 export const resolve = (object: Obj.Unknown): Effect.Effect<Obj.Unknown | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     const manager = yield* Effect.serviceOption(Capability.Service);
     const type = Obj.getType(object);
-    if (Option.isNone(manager) || !type) {
+    if (!type) {
       return undefined;
     }
 
-    const rules = manager.value
-      .getAll(AppCapabilities.DefaultParent)
-      .filter((rule) => TypeOptions.hasUserTypeTag(type, rule.tag))
-      .toSorted(Position.compare);
+    const rules = Option.isNone(manager)
+      ? []
+      : manager.value
+          .getAll(AppCapabilities.DefaultParent)
+          .filter((rule) => TypeOptions.hasUserTypeTag(type, rule.tag))
+          .toSorted(Position.compare);
+    if (rules.length === 0) {
+      // A collection item with no rule to file it is saved but never shown in the navigator: on EDGE a plugin
+      // runs without plugin-space's rule, so its create paths file through `SpaceOperation.AddObject` instead.
+      if (TypeOptions.hasUserTypeTag(type, Collection.ItemTag)) {
+        log.warn('no default parent rule for a collection item', { typename: Obj.getTypename(object) });
+      }
+      return undefined;
+    }
     for (const rule of rules) {
       const parent = yield* rule.resolve(object).pipe(
         Effect.catch((error) =>
