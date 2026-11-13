@@ -4,9 +4,9 @@
 
 //
 // The UML class as a composite object, written in the scene DSL rather than painted by a React view. Its three
-// compartments are text parts bound to the class's own fields, so the data stays typed on the shape (`label`,
-// `attributes`, `methods`) while the composite says how the shape is laid out — and each compartment is edited in
-// place, selected, moved, restyled or resized like any other part.
+// compartments are text parts bound to the class's own fields, so the data stays typed on the shape (`label`, and
+// `attributes` and `methods` under its `data`) while the composite says how the shape is laid out — and each
+// compartment is edited in place, selected, moved, restyled or resized like any other part.
 //
 
 /** One minor grid cell, which every size and offset here is a whole number of. */
@@ -27,7 +27,7 @@ const TOP = -SIZE.height / 2;
  */
 export const TEMPLATE = `composite class size=${SIZE.width}x${SIZE.height} name="Class" {
   element name note @ 0,${TOP + ROW / 2} size=${SIZE.width}x${ROW} constrain=stretch,min bind=label border=true padding=4,2
-  element attributes note @ 0,0 size=${SIZE.width}x${MIDDLE} constrain=stretch bind=attributes border=true padding=4,2
-  element methods note @ 0,${-TOP - ROW / 2} size=${SIZE.width}x${ROW} constrain=stretch,max bind=methods border=true padding=4,2
+  element attributes note @ 0,0 size=${SIZE.width}x${MIDDLE} constrain=stretch bind="data.attributes" border=true padding=4,2
+  element methods note @ 0,${-TOP - ROW / 2} size=${SIZE.width}x${ROW} constrain=stretch,max bind="data.methods" border=true padding=4,2
 }
 `;

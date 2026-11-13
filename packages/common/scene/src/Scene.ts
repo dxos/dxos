@@ -165,7 +165,12 @@ export const BaseElement = Schema.Struct({
   composite: Schema.optional(Schema.String),
   /** The DSL statement that made the element, so compiling the source again updates it rather than adding a copy. */
   dsl: Schema.optional(DslIdentity),
-  /** Kind-specific fields, validated by the kind's registration. */
+  /**
+   * An extension kind's own fields, typed and validated by the kind's registration. They are kept apart from the
+   * element's own so a kind may name a field as the base names one (`size`), and two kinds never contend for a name.
+   */
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  /** Renderer-specific fields the base has no slot for (the 2D viewport's under `canvas`). */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type BaseElement = Schema.Schema.Type<typeof BaseElement>;

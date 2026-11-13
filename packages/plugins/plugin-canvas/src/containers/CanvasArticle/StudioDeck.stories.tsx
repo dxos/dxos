@@ -108,13 +108,14 @@ export const Default: Story = {
     const views = await canvas.findAllByTestId('scene-view', undefined, { timeout: 60_000 });
     await expect(views.length).toBe(STUDIO_SLIDES.length);
     const count = (testid: string) => canvasElement.querySelectorAll(`[data-testid="${testid}"]`).length;
-    await expect(count('space-graph-node')).toBe(STUDIO_SLIDES.filter(({ spaceGraph }) => spaceGraph).length);
-    // The Hyperspace slide's three planks and its one field of spaces, the Composer slide's window, and the five
-    // standalone chips of the Plugins slide. A kind the loader left as its placeholder draws none of these.
+    await expect(count('graph-node')).toBe(STUDIO_SLIDES.filter(({ spaceGraph }) => spaceGraph).length);
+    // The Hyperspace slide's three planks and its one field of spaces, and the Composer slide's window. A kind the
+    // loader left as its placeholder draws none of these. The Plugins slide draws its consumers as cards, not as the
+    // deck's pills, so the chip kind is registered and the deck uses none of it.
     await expect(count('plank-node')).toBe(3);
     await expect(count('substrate-node')).toBe(1);
     await expect(count('app-frame-node')).toBe(1);
-    await expect(count('chip-node')).toBe(5);
+    await expect(count('chip-node')).toBe(0);
     // The chips inside a card: the ECHO layers slide's Types grid and the Architecture slide's two service rows.
     await expect(count('studio-chips')).toBe(3);
   },

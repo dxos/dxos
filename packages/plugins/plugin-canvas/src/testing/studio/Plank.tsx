@@ -21,7 +21,7 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, type NodeViewProps, TextPart } from '@dxos/react-ui-canvas';
+import { type ElementKindSpec, type NodeViewProps, TextPart, kindData } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
@@ -38,19 +38,21 @@ const COMPONENTS: Record<string, { icon: string; package: string }> = {
 const DEFAULT_COMPONENT = { icon: 'ph--app-window--regular', package: '' };
 
 export const plankFields = {
-  /** The plank's heading, in the core base's `label`, so it still reads where the kind is unknown. */
-  label: Schema.String,
   /** Which wireframe component: `board`, `sheet`, `thread`. */
   comp: Schema.optional(Schema.String.annotate({ title: 'Component' })),
   /** The package it comes from (`react-ui-board`), at the right of the header. */
   package: Schema.optional(Schema.String.annotate({ title: 'Package' })),
 };
 
-export const PlankNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('plank'), ...plankFields });
+/** The kind's own fields, kept under `data` (decision 21); the heading is the core base's `label`. */
+export const PlankData = Schema.Struct(plankFields);
 
-type PlankFields = Schema.Struct.Type<typeof plankFields>;
-
-const isPlank = (node: NodeViewProps['node']): node is NodeViewProps['node'] & PlankFields => node.type === 'plank';
+export const PlankNode = Schema.Struct({
+  ...Scene.Element2D.fields,
+  type: Schema.Literal('plank'),
+  label: Schema.String,
+  data: Schema.optional(PlankData),
+});
 
 /** A line of the wireframe: a filled bar standing for a run of text. */
 const Line = ({ width, strong }: { width: string; strong?: boolean }) => (
@@ -179,11 +181,13 @@ const Generic = () => (
 const BODIES: Record<string, () => React.ReactElement> = { board: Board, sheet: Sheet, thread: Thread };
 
 export const PlankNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isPlank(node)) {
+  const data = kindData(PlankData, node);
+  if (node.type !== 'plank' || !data) {
     return null;
   }
-  const component = COMPONENTS[node.comp ?? ''] ?? DEFAULT_COMPONENT;
-  const Body = BODIES[node.comp ?? ''] ?? Generic;
+  const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
+  const component = COMPONENTS[data.comp ?? ''] ?? DEFAULT_COMPONENT;
+  const Body = BODIES[data.comp ?? ''] ?? Generic;
   const { width, height } = node.size;
   const scale = width / KIT_WIDTH;
   return (
@@ -195,10 +199,10 @@ export const PlankNodeView = ({ node, editing }: NodeViewProps) => {
       >
         <div className='studio-plank-header flex items-center gap-[10px] px-[16px]' style={{ height: 52 }}>
           <Icon.Icon icon={component.icon} classNames='studio-card-icon shrink-0' style={{ width: 24, height: 24 }} />
-          <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate'>
-            {node.label}
+          <TextPart part='label' text={label} editing={editing} classNames='grow truncate'>
+            {label}
           </TextPart>
-          <span className='studio-plank-package font-mono shrink-0'>{node.package ?? component.package}</span>
+          <span className='studio-plank-package font-mono shrink-0'>{data.package ?? component.package}</span>
         </div>
         <div className='dx-grow px-[16px] py-[14px]'>
           <Body />

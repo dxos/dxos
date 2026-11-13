@@ -31,7 +31,7 @@ export type ReducerShape = Schema.Schema.Type<typeof ReducerShape>;
 // Defs
 //
 
-export type CreateReduceProps = CreateShapeProps<ReducerShape> & { reduce?: string };
+export type CreateReduceProps = CreateShapeProps<ReducerShape>;
 
 export const createReducer = ({
   size = { width: 3 * MAJOR_GRID, height: getHeight(ReducerInput) },

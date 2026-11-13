@@ -13,12 +13,12 @@
 
 import { type ElementKindSpec } from '@dxos/react-ui-canvas';
 
+import { graphSpec } from '../../components/Graph/index.ts';
 import { appFrameSpec } from './AppFrame.tsx';
 import { cardSpec } from './Card.tsx';
 import { chipSpec } from './Chip.tsx';
 import { feedCardSpec } from './FeedCard.tsx';
 import { plankSpec } from './Plank.tsx';
-import { spaceGraphSpec } from './SpaceGraph.tsx';
 import { substrateSpec } from './Substrate.tsx';
 
 export const STUDIO_KINDS: Readonly<Record<string, ElementKindSpec>> = {
@@ -27,6 +27,6 @@ export const STUDIO_KINDS: Readonly<Record<string, ElementKindSpec>> = {
   'chip': chipSpec,
   'plank': plankSpec,
   'app-frame': appFrameSpec,
-  'space-graph': spaceGraphSpec,
+  'space-graph': graphSpec,
   'substrate': substrateSpec,
 };

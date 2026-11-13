@@ -6,7 +6,14 @@ import { describe, expect, test } from 'vitest';
 
 import { type PolylineNode } from '@dxos/scene';
 
-import { polylineFrame, polylineMidpoints, polylinePath, polylineVertices, refitPolyline } from './polyline.ts';
+import {
+  polylineFrame,
+  polylineMidpoints,
+  polylinePath,
+  polylineVertices,
+  refitPolyline,
+  simplifyPath,
+} from './polyline.ts';
 
 const polyline = (rotation?: number): PolylineNode => ({
   type: 'polyline',
@@ -64,6 +71,40 @@ describe('polylineFrame', () => {
   });
 });
 
+describe('simplifyPath', () => {
+  test('drops the samples a stroke does not need, and keeps its ends and its turns', () => {
+    // A stroke along a line, wobbling under a px, then turning a corner.
+    const stroke = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0.4 },
+      { x: 20, y: -0.3 },
+      { x: 30, y: 0.2 },
+      { x: 40, y: 0 },
+      { x: 40.3, y: 10 },
+      { x: 39.8, y: 20 },
+      { x: 40, y: 30 },
+    ];
+    expect(simplifyPath(stroke, 1)).toEqual([
+      { x: 0, y: 0 },
+      { x: 40, y: 0 },
+      { x: 40, y: 30 },
+    ]);
+    // A finer tolerance keeps more of it; none keeps it all.
+    expect(simplifyPath(stroke, 0.35).length).toBeGreaterThan(3);
+    expect(simplifyPath(stroke, 0)).toEqual(stroke);
+  });
+
+  test('one point or two are returned as they are', () => {
+    expect(simplifyPath([], 1)).toEqual([]);
+    expect(simplifyPath([{ x: 1, y: 1 }], 1)).toEqual([{ x: 1, y: 1 }]);
+    const pair = [
+      { x: 0, y: 0 },
+      { x: 5, y: 5 },
+    ];
+    expect(simplifyPath(pair, 100)).toEqual(pair);
+  });
+});
+
 describe('polylinePath', () => {
   const size = { width: 100, height: 50 };
   const zigzag = [
@@ -74,6 +115,38 @@ describe('polylinePath', () => {
 
   test('an open line runs through the points scaled to the frame', () => {
     expect(polylinePath(size, zigzag)).toBe('M 0 50 L 50 0 L 100 50');
+  });
+
+  test('a smooth line is one curve through every point, leaving each the way it came in', () => {
+    const path = polylinePath(size, zigzag, { smooth: true });
+    // A cubic per span, ending on each vertex in turn.
+    expect(path).toMatch(/^M 0 50 C [^C]+, 50 0 C [^C]+, 100 50$/);
+    // The handles either side of the middle vertex lie on one line through it: no corner there.
+    const numbers = path.match(/-?\d+(\.\d+)?/g)?.map(Number) ?? [];
+    const [inX, inY, , , outX, outY] = numbers.slice(4);
+    expect([inX, outX].every((x, index) => (index === 0 ? x < 50 : x > 50))).toBe(true);
+    expect(inY).toBeCloseTo(0);
+    expect(outY).toBeCloseTo(0);
+    // The frame is only as large as the points, so no part of the curve may leave it: a line that turns at an edge
+    // has its handles held on that edge, where a free curve would bulge past it and be cut off.
+    const box = [
+      { x: 0, y: 1 },
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+    ];
+    const coords = (polylinePath(size, box, { smooth: true }).match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+    const xs = coords.filter((_, index) => index % 2 === 0);
+    const ys = coords.filter((_, index) => index % 2 === 1);
+    expect([Math.min(...xs), Math.max(...xs)]).toEqual([0, size.width]);
+    expect([Math.min(...ys), Math.max(...ys)]).toEqual([0, size.height]);
+    // With an inset the curve keeps inside it too.
+    const inset = (polylinePath(size, box, { smooth: true, inset: 2 }).match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+    expect(Math.min(...inset)).toBe(2);
+    expect(Math.max(...inset.filter((_, index) => index % 2 === 0))).toBe(size.width - 2);
+    // Closed, it has a span back to the start; two points have no curve to draw.
+    expect(polylinePath(size, zigzag, { smooth: true, closed: true })).toMatch(/^M 0 50( C [^C]+){3} Z$/);
+    expect(polylinePath(size, zigzag.slice(0, 2), { smooth: true })).toBe('M 0 50 L 50 0');
   });
 
   test('a closed line returns to its start', () => {

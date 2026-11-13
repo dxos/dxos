@@ -17,7 +17,15 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, IconSpec, type NodeViewProps, TextPart, iconSymbol } from '@dxos/react-ui-canvas';
+import {
+  type ElementKindSpec,
+  IconSpec,
+  type NodeViewProps,
+  TextPart,
+  iconOf,
+  iconSymbol,
+  kindData,
+} from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
@@ -105,30 +113,32 @@ export const Chips = ({ items, cols, flat, columnGap }: ChipList) => (
 // The standalone chip: a node kind of its own, stretched to one shared width under the module it consumes.
 //
 
-export const chipFields = {
-  /** The chip's label, in the core base's `label`, so it still reads where the kind is unknown. */
-  label: Schema.String,
-  icon: Schema.optional(IconSpec),
+/** The kind's own fields, kept under `data` (decision 21); the title and glyph are the core card's. */
+export const ChipData = Schema.Struct({
   tone: Schema.optional(Schema.Literals(TONES).annotate({ title: 'Tone' })),
   note: Schema.optional(Schema.String.annotate({ title: 'Note' })),
   ghost: Schema.optional(Schema.Boolean.annotate({ title: 'Ghost' })),
-};
+});
 
-export const ChipNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('chip'), ...chipFields });
-
-type ChipFields = Schema.Struct.Type<typeof chipFields>;
-
-const isChipNode = (node: NodeViewProps['node']): node is NodeViewProps['node'] & ChipFields => node.type === 'chip';
+export const ChipNode = Schema.Struct({
+  ...Scene.Element2D.fields,
+  type: Schema.Literal('chip'),
+  label: Schema.String,
+  icon: Schema.optional(IconSpec),
+  data: Schema.optional(ChipData),
+});
 
 const ChipNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isChipNode(node)) {
+  const data = kindData(ChipData, node);
+  if (node.type !== 'chip' || !data) {
     return null;
   }
+  const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
   return (
     <div className='dx-cover flex items-center' data-testid='chip-node'>
-      <Chip icon={node.icon?.type} label={node.label} note={node.note} tone={node.tone} ghost={node.ghost} large>
-        <TextPart part='label' text={node.label} editing={editing} classNames='truncate'>
-          {node.label}
+      <Chip icon={iconOf(node)?.type} label={label} note={data.note} tone={data.tone} ghost={data.ghost} large>
+        <TextPart part='label' text={label} editing={editing} classNames='truncate'>
+          {label}
         </TextPart>
       </Chip>
     </div>
@@ -142,6 +152,8 @@ export const chipSpec: ElementKindSpec = {
   schema: ChipNode,
   component: ChipNodeView,
   create: ({ id, z, center, size }) => ({ type: 'chip', id, z, center, size, label: 'Chip' }),
+  // The core card's title and glyph are what a chip shows; its tone, note and ghost state are its own.
+  extends: 'card',
   // Nominal units (one unit is the major grid cell, 48px): the deck's 262 x 47 chip, give or take.
   defaultSize: { width: 5.5, height: 1 },
   resizable: true,

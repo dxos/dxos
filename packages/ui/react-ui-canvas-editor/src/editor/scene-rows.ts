@@ -75,8 +75,10 @@ const isHull = (element: Scene.Element): boolean => {
 export type SelectedElement = { element: ReturnType<typeof resolveLayout>[string]; layout: string };
 
 /**
- * The element `id` selected in `layout`, and the layout it is stored in: `layout` itself, or the group of a hull it
- * places, since a hull's shapes are drawn and selected in the scene but stored with the group.
+ * The element `id` selected in `layout`, and the layout it is stored in: `layout` itself, or the parts of something it
+ * places. A hull's shapes are drawn and selected in the scene but stored with its group, and so is a part of an Object
+ * edited in place, which is stored in the Object's definition. A hull is looked in first: its shapes' ids are the
+ * scene's own, where two Objects may each have a part of one name.
  */
 export const selectedElement = (
   doc: Scene.SceneDocument,
@@ -87,7 +89,8 @@ export const selectedElement = (
   if (layout.elements[id]) {
     return resolved[id] && { element: resolved[id], layout: layout.id };
   }
-  for (const holder of Object.values(layout.elements).filter(isHull)) {
+  const holders = Object.values(layout.elements);
+  for (const holder of [...holders.filter(isHull), ...holders.filter((element) => !isHull(element))]) {
     const parts = resolved[holder.id]?.parts;
     const group = parts === undefined ? undefined : findLayout(doc, parts);
     const element = group?.elements[id] && resolveLayout(doc, group)[id];

@@ -38,7 +38,7 @@ import { type SceneEdit, chainEdits, deleteElements, insertLink, insertNode, upd
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
 import { topZ } from './order.ts';
-import { type PartField } from './parts.ts';
+import { type PartField, fieldName, fieldValue, fieldValues } from './parts.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** Whether a scene is a composite's definition. */
@@ -198,7 +198,7 @@ export const boundNode = (instance: PlacedComposite, node: Node, fields: readonl
   if (node.bind === undefined) {
     return node;
   }
-  const value = Reflect.get(instance, node.bind);
+  const value = fieldValue(instance, node.bind);
   if (value === undefined) {
     return node;
   }
@@ -206,7 +206,9 @@ export const boundNode = (instance: PlacedComposite, node: Node, fields: readonl
   const [part] = fields;
   // Text reaches the part's own text field, whatever the Instance calls it, so a class's `attributes` fill a note's
   // `text`. Anything else — a glyph, a number — is written under the name it binds, which the part's type reads.
-  return text !== undefined && part ? { ...node, [part.field]: text } : { ...node, [node.bind]: value };
+  return text !== undefined && part
+    ? { ...node, ...fieldValues(node, part.field, text) }
+    : { ...node, [fieldName(node.bind)]: value };
 };
 
 /**

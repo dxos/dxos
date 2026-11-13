@@ -340,6 +340,14 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       names its own grid (the DSL has no cell size of its own), now `grid=384x256`, with `compiled.json` and the
       `.dx.svg` renders regenerated.
 - [x] Properties: a hull's border and inset side by side (`HullField`).
+- [x] Extension tools: plugin-canvas's `extension-node-types` module contributes the space graph
+      (`src/components/Graph`, its geometry in `generator/`, moved out of `src/testing/studio`); a contributed kind is offered in the
+      `Extensions` group of the rail, with the card. The hull and the view are a `Containers` group. The studio
+      branch imports the moved files from their old paths in four files.
+- [x] A switch's hidden input stays inside the switch (the Properties panel scrolled away when a toggle far down
+      it was pressed); Fill and Border read as a bare type draws them.
+- [ ] Extension tools: the studio kinds other than the space graph (card, feed card, chip, plank, app frame,
+      substrate) are still story-only, and contributed kinds are 2D only.
 - [ ] A shape off its cell (snapping off) is re-seated on the nearest one, so two could land on the same cell.
 - [ ] Views tree: moving a row into a plain Group, another View or an Object's definition (a move between two
       drawings, which needs a place for the shape in the other's coordinates), and any of it in 3D.
@@ -353,6 +361,35 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [ ] Not checked: the `.dx` DSL round trip of `hull`, the SVG export, and what 3D draws of a hull's group.
 - [ ] `PLUGIN.mdl`: record the hull.
 - [ ] In-place editing: a scene node whose id is a part's id (the Cards story's `footer` card) is taken for a part.
+- [x] **Extension kinds keep their own fields under `data`** (the user, 2026-11-12; COMMON-CORE.md decision 21).
+      `Scene.BaseElement.data`; `KindRegistry.dataFields` / `normalize`; `kindNodeDef` refuses a top-level field of
+      the kind's own unless it extends a core prototype; `kindData` for views; parts and binds name `data.<field>`.
+      Moved: the space graph (its radius is now `size`), the studio card and feed card, the story's task kind, the
+      UML class, and conductor's compute shapes (board shape, element and node; `computeData` in
+      react-ui-canvas-compute `shapes/defs.ts`). An element or board shape stored flat reads as before and is written
+      back under `data`. The Properties panel shows `data` last, as a group labelled `Custom`.
+- [x] Space graph: fields two to a row (`FormLayoutAnnotation`), Population renamed Node density, a Base dots toggle
+      (off by default).
+- [x] A link's elbows (corner radius, smart stub, lane spacing) are counts of the drawing's grid, not of the default
+      grid (`utils/route.ts`); the scene layer, the selection frame and the SVG export pass the layout's grid.
+- [x] **Draw tool** (S, after Polyline): a `freehand` drag samples the pointer, `simplifyPath` thins the stroke,
+      and it lands as a polyline with `params.smooth` (a Catmull-Rom curve in `polylinePath`). The tool is a registry
+      entry that makes polylines, not a node type of its own.
+- [ ] Draw tool: hit testing, ports and the `.dx` / SVG export still treat a smooth polyline as its straight
+      segments; its vertex edit mode shows the thinned points. No pressure or stroke width.
+- [x] Card: authored at 16 by 12 cells with half-cell gaps, text sizes 18 / 16 / 14, a 24 px glyph, title centred;
+      the scene DSL reads `fontSize`, `alignHorizontal` and `alignVertical`. A Card story beside Graph.
+- [ ] `toDiagramObjects` (`utils/diagram.ts`) and the generator runner still route on the default grid: neither is
+      given a layout to read the grid from.
+- [ ] Conductor: `data.node` (the compute node id) is an editable text field in the Properties panel, as `node` was.
+- [ ] Conductor: a board's legacy trigger keeps `spaceId` / `triggerKind` at the shape's top; nothing reads them.
+- [ ] Conductor: `createComputeGraph` / `useGraphMonitor` read `data` only, so a canvas graph model built with flat
+      fields (none in the repo) would lose them. Not exercised in a browser: a legacy flat board, a trigger, paste,
+      undo, and editing `data.value` in the Properties form.
+- [ ] The Properties panel's generic list editor does not save a change to one row of a list under `data` (nor did
+      it at the top): `patchValues` splits a path on `.` and the form names a row `list[0]`. UML is unaffected, since
+      it edits its lists with `LinesField`.
+- [ ] 3D has no extension kinds yet; `data` is on the shared base, so a 3D kind takes the same form when one exists.
 
 ## Backlog
 

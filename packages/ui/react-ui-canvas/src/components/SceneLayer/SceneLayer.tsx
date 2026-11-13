@@ -79,6 +79,7 @@ import {
   type PartEditing,
   type PartKey,
   alignClasses,
+  bareNode,
   canvasFillClass,
   classedLink,
   classedNode,
@@ -219,8 +220,8 @@ export const SceneLayer = memo(
       [sceneProp, lattice, cell],
     );
     const links = useMemo(
-      () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice),
-      [scene, registry, lattice],
+      () => viewLinkGeometry(scene, registry, sortByZ(Object.values(scene.links)), lattice, cell / MAJOR_GRID_RATIO),
+      [scene, registry, lattice, cell],
     );
     // Paint order is the layers', bottom first, so an upper layer covers a lower one whole. Within a layer it is one
     // order over the nodes and the links together, by `z`: a shape drawn over a link covers it and a link drawn over a
@@ -1061,7 +1062,7 @@ const NodeFrame = memo(
     const cell = useContext(CellContext);
     // A type the registry does not know is drawn as the core base: a box with its label.
     const def = nodeDef(registry, node);
-    const drawn = useMemo(() => bareNode(classedNode(node, styles), def?.bare), [node, styles, def?.bare]);
+    const drawn = useMemo(() => bareNode(classedNode(node, styles), def), [node, styles, def]);
     const bounds = nodeBounds(node);
     const padding = nodePadding(node);
     const interactive = handlers !== undefined && !ghost;
@@ -1119,9 +1120,12 @@ const NodeFrame = memo(
       ...fade,
       ...nodeOpacity(drawn, fade),
     };
+    // An outline's border is part of what the type draws, so selecting or hovering it leaves its colour alone: the
+    // selection frame marks it, and a ring turned off stays off.
+    const marked = def?.outline !== true;
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
-      : frameClasses(drawn, selected, hovered, def?.ellipse, look);
+      : frameClasses(drawn, marked && selected, marked && hovered, def?.ellipse, look);
     const silhouetteFilled = def?.filled?.(drawn) ?? true;
     const silhouetteRadius = RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))];
     const relief = silhouette && silhouetteFilled ? nodeRelief(drawn, look) : undefined;
@@ -1417,10 +1421,6 @@ const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties
   const faded = typeof fade?.opacity === 'number' ? fade.opacity : 1;
   return { opacity: Math.max(0, opacity) * faded };
 };
-
-/** A node of a `bare` type: no fill or border unless its style sets them. */
-const bareNode = (node: Node, bare: boolean | undefined): Node =>
-  bare ? { ...node, style: { fill: false, border: false, ...node.style } } : node;
 
 /**
  * A part's own size class, or nothing when the node overrides `fontSize`: a Tailwind size wins over the

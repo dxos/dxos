@@ -53,6 +53,38 @@ describe('the card template', () => {
     expect(Object.keys(composite().nodes).sort()).toEqual(['body', 'footer', 'frame', 'icon', 'rule', 'title']);
   });
 
+  test('at the size the tool draws it, each part stands on the grid where the card is authored', () => {
+    const drawn = drawnParts(card(), composite());
+    // In minor grid cells from the card's top left: [left, top, right, bottom].
+    const cells = (id: string) => {
+      const { x, y, width, height } = boxOf(drawn, id);
+      const [left, top] = [x + CARD_SIZE.width / 2, y + CARD_SIZE.height / 2];
+      return [left, top, left + width, top + height].map((length) => length / 12);
+    };
+    expect(CARD_SIZE).toEqual({ width: 192, height: 144 });
+    expect(cells('frame')).toEqual([0, 0, 16, 12]);
+    // A two-cell glyph a cell in from the corner, and the title half a cell beside it.
+    expect(cells('icon')).toEqual([1, 1, 3, 3]);
+    expect(cells('title')).toEqual([3.5, 1, 15, 3]);
+    // The body half a cell under the header; the footer half a cell under the body and half a cell off the floor.
+    expect(cells('body')).toEqual([1, 3.5, 15, 9]);
+    expect(cells('footer')).toEqual([1, 9.5, 15, 11.5]);
+    // The hairline halfway between the two.
+    const rule = boxOf(drawn, 'rule');
+    expect((rule.y + rule.height / 2 + CARD_SIZE.height / 2) / 12).toBe(9.25);
+  });
+
+  test('each text part has a size of its own, and the glyph fills its two cells', () => {
+    const { nodes } = composite();
+    const sizes = Object.fromEntries(['icon', 'title', 'body', 'footer'].map((id) => [id, nodes[id]?.style?.fontSize]));
+    expect(sizes).toEqual({ icon: 24, title: 18, body: 16, footer: 14 });
+    // The title is a line beside the glyph, so it sits at the glyph's middle rather than at its top.
+    expect(nodes.title?.style?.alignVertical).toBe('middle');
+    expect(nodes.body?.style?.alignVertical).toBeUndefined();
+    // The frame and the hairline have no text.
+    expect([nodes.frame?.style?.fontSize, nodes.rule?.style?.fontSize]).toEqual([undefined, undefined]);
+  });
+
   test('draws its hairline as a line, not a box', () => {
     const rule = composite().nodes.rule;
     expect(rule?.type).toEqual('polyline');

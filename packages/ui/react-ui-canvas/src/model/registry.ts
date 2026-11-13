@@ -101,6 +101,11 @@ export type NodeDef = {
    */
   createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
   /**
+   * The tool draws in one stroke rather than vertex by vertex: it samples the pointer while it is pressed, and
+   * `createFromPoints` makes the node from the samples when it is released.
+   */
+  freehand?: boolean;
+  /**
    * What the node's edit mode (a double-click on it, or Enter with it selected alone) edits: `'label'`, the default, its
    * text part in place; `'vertices'`, the unit-space `points` of a type drawn vertex by vertex, each shown as a point to
    * drag, with its move and resize handles hidden. Enter, Escape or a press outside the node leaves either.
@@ -126,6 +131,12 @@ export type NodeDef = {
   palette?: boolean;
   /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
   bare?: boolean;
+  /**
+   * The frame draws its border but no fill unless the node's style asks for one: the border is the type's own
+   * outline (a ring round what it draws), so it is the frame's, and turning it on or off moves nothing inside it.
+   * Being part of the drawing, it keeps its colour while the node is selected or hovered.
+   */
+  outline?: boolean;
   /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
   unclipped?: boolean;
   /**

@@ -38,7 +38,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
 
     // Running a node propagates to everything downstream of it, which is what the button means; a shape
     // with no compute node behind it has nothing to run, so it does not get one.
-    const nodeId = shape.node;
+    const nodeId = shape.data?.node;
     const handleRun = () => {
       controller.exec(nodeId).catch((err) => log.catch(err));
     };

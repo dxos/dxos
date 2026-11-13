@@ -6,12 +6,14 @@ import type { SyntaxNode } from '@lezer/common';
 
 import {
   type ElementEndpoint,
+  HORIZONTAL_ALIGNS,
   Scene as Model,
   type Part,
   PartConstraint,
   type PartLayout,
   type Style2D,
   type Style3D,
+  VERTICAL_ALIGNS,
   applyArrangement,
   flattenStyle,
   layoutTree,
@@ -38,6 +40,14 @@ const DEFAULT_CAMERA_3D: Model.Camera3D = {
 };
 
 const STYLE_KEYS = ['hue', 'tone', 'surface', 'border', 'rounded', 'opacity'] as const;
+/**
+ * How a 2D element's text is set, which no token of the shared style stands for: its size in scene px
+ * (`fontSize=18`) and where it sits in the frame (`alignVertical=middle`). 3D has no text to set.
+ */
+const FONT_SIZE = 'fontSize';
+const ALIGN_HORIZONTAL = 'alignHorizontal';
+const ALIGN_VERTICAL = 'alignVertical';
+const TEXT_KEYS = [FONT_SIZE, ALIGN_HORIZONTAL, ALIGN_VERTICAL] as const;
 const SURFACES = ['solid', 'tint', 'glass', 'none'] as const;
 const TONES = [0, 1, 2, 3] as const;
 const ARRANGE_PARAM = 'arrange-';
@@ -368,9 +378,25 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       report(position, 'A 2D element takes an x,y position.');
     }
     const { tokens, group, ...base } = readBase(statement, attrs, objects);
+    // A 2D element's text has a size, which no token of the shared style stands for.
+    const fontSize = asNumber(attrs.get(FONT_SIZE));
+    const align = <T extends string>(key: string, words: readonly T[]): T | undefined => {
+      const word = asString(attrs.get(key));
+      const found = words.find((candidate) => candidate === word);
+      word !== undefined && !found && report(statement, `${key} must be one of ${words.join(', ')}.`);
+      return found;
+    };
+    const alignHorizontal = align(ALIGN_HORIZONTAL, HORIZONTAL_ALIGNS);
+    const alignVertical = align(ALIGN_VERTICAL, VERTICAL_ALIGNS);
+    const overrides = {
+      ...(tokens ? flattenStyle(tokens) : {}),
+      ...(fontSize !== undefined ? { fontSize } : {}),
+      ...(alignHorizontal ? { alignHorizontal } : {}),
+      ...(alignVertical ? { alignVertical } : {}),
+    };
     const record: Model.Element2D = {
       ...base,
-      ...(tokens ? { overrides: flattenStyle(tokens) } : {}),
+      ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
       ...(at && isVec2(at) ? { center: at } : {}),
       ...(isSize2(size) ? { size } : {}),
       ...(rotation !== undefined ? { rotation } : {}),
@@ -690,6 +716,7 @@ const ELEMENT_KEYS: ReadonlySet<string> = new Set([
   'arrange',
   'constrain',
   'points',
+  ...TEXT_KEYS,
   ...STYLE_KEYS,
 ]);
 
@@ -827,6 +854,7 @@ const formatElement2D = (element: Model.Element2D, context: LayoutContext): stri
     ...(element.center ? ['@', formatVec2(element.center)] : []),
     ...attr('size', element.size),
     ...attr('rotation', element.rotation),
+    ...TEXT_KEYS.flatMap((key) => attr(key, element.overrides?.[key])),
     ...formatBase(element, tokensOf2D(element.overrides), context),
   ].join(' ');
 

@@ -3,14 +3,10 @@
 //
 
 //
-// The deck's `card()` as a canvas element kind: a Phosphor icon, a title, a soft raised panel, and an optional
-// coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's fill level. The look
-// comes from the deck tokens in `theme.css`, so the card follows the canvas's mode.
-//
-// Both of the deck's variants are this one kind, as they are one `card()` there: a card of nothing but an icon and a
-// title is the `simple` row, and one that carries chips, a body or a footer draws through the shared card frame —
-// which is what the `compact` variant is. Chips are a field rather than a kind of their own so the grid, the
-// wrapping and the ghost state are laid out once (`Chip.tsx`) instead of per slide.
+// The deck's `card({ variant: 'simple' })` as a canvas element kind: a Phosphor icon, a title, a soft raised panel,
+// and an optional coloured outline. `tone` is the card's own field, under its `data`, rather than `style.tone`,
+// which is the hue's fill level. The look comes from the deck tokens in `theme.css`, so the card follows the
+// canvas's mode.
 //
 
 import './theme.css';
@@ -24,7 +20,9 @@ import {
   IconSpec,
   type NodeViewProps,
   TextPart,
+  iconOf,
   iconSymbol,
+  kindData,
 } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
@@ -32,11 +30,13 @@ import { Scene } from '@dxos/scene';
 import { ChipList, Chips } from './Chip.tsx';
 import { type Styled, toneValue } from './FeedCard.tsx';
 
-export const cardFields = {
-  /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
-  label: Schema.String,
-  /** The glyph and its weight, as the core card prototype's frame draws them. */
-  icon: Schema.optional(IconSpec),
+//
+// The card kind: the deck's `.d-card.simple` — a Phosphor icon, a title, a soft raised shadow, and an optional
+// coloured outline. `tone` is the card's own field rather than `style.tone`, which is the hue's fill level.
+//
+
+/** What this kind adds to the core card, kept under `data`. */
+export const CardData = Schema.Struct({
   /** An accent, drawn as the card's outline (`#2d6fff`). */
   tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
   /**
@@ -46,25 +46,33 @@ export const cardFields = {
   variant: Schema.optional(Schema.Literals(['full', 'compact', 'simple']).annotate({ title: 'Variant' })),
   /** A row or grid of chips in the card's body: what the layer holds, or which services it runs. */
   chips: Schema.optional(ChipList.annotate({ title: 'Chips' })),
-  body: Schema.optional(Schema.String.annotate({ title: 'Body' })),
-  footer: Schema.optional(Schema.String.annotate({ title: 'Footer' })),
-};
+});
 
-export const CardNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal('card'), ...cardFields });
-
-type CardFields = Schema.Struct.Type<typeof cardFields>;
-
-const isCardNode = (node: NodeViewProps['node']): node is NodeViewProps['node'] & CardFields => node.type === 'card';
+export const CardNode = Schema.Struct({
+  ...Scene.Element2D.fields,
+  type: Schema.Literal('card'),
+  /** The card's title, in the core base's `label`, so it still reads where the kind is unknown. */
+  label: Schema.String,
+  /** The core card's glyph and its weight, at the element's top as the core card keeps it. */
+  icon: Schema.optional(IconSpec),
+  data: Schema.optional(CardData),
+});
 
 const CardNodeView = ({ node, editing }: NodeViewProps) => {
-  if (!isCardNode(node)) {
+  const data = kindData(CardData, node);
+  if (node.type !== 'card' || !data) {
     return null;
   }
-  const tone = toneValue(node.tone);
-  const symbol = iconSymbol(node.icon ?? {});
+  const label = 'label' in node && typeof node.label === 'string' ? node.label : '';
+  const footer = 'footer' in node && typeof node.footer === 'string' ? node.footer : undefined;
+  const body = 'body' in node && typeof node.body === 'string' ? node.body : undefined;
+  const tone = toneValue(data.tone);
+  const symbol = iconSymbol(iconOf(node) ?? {});
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
   const style: Styled = tone ? { '--sd-tone': tone } : {};
-  if (node.variant === 'simple') {
+
+  // The deck's `.d-card.simple`: one row of icon and title, with the footer under the title and no rule over it.
+  if (data.variant === 'simple') {
     return (
       <div
         className='studio-card studio-card-simple dx-cover flex flex-col justify-center rounded-xl overflow-hidden'
@@ -74,16 +82,18 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
       >
         <div className='flex items-center min-w-0'>
           {symbol && <Icon.Icon icon={symbol} classNames='studio-card-icon shrink-0' />}
-          <TextPart part='label' text={node.label} editing={editing} classNames='grow truncate'>
-            {node.label}
+          <TextPart part='label' text={label} editing={editing} classNames='grow truncate'>
+            {label}
           </TextPart>
         </div>
-        {node.footer && <div className='studio-card-note font-mono truncate'>{node.footer}</div>}
+        {footer && <div className='studio-card-note font-mono truncate'>{footer}</div>}
       </div>
     );
   }
-  const framed = node.chips !== undefined || node.body !== undefined || node.footer !== undefined;
-  if (framed) {
+
+  // Anything the card holds beyond its title draws through the core card's frame, which makes each region a part;
+  // the chips are what this kind adds between the header and the body.
+  if (data.chips !== undefined || body !== undefined || footer !== undefined) {
     return (
       <div
         className='studio-card dx-cover rounded-xl overflow-hidden'
@@ -91,14 +101,13 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
         data-tone={tone ? true : undefined}
         style={{ padding: '12px 18px', ...style }}
       >
-        {/* The core card prototype's frame draws the header, body and footer and makes each a part; the chips are
-            what this variant adds between the header and the body. */}
         <CardFrame node={node} editing={editing} classNames='studio-card-frame p-0 gap-[7px]'>
-          {node.chips ? <Chips {...node.chips} /> : null}
+          {data.chips ? <Chips {...data.chips} /> : null}
         </CardFrame>
       </div>
     );
   }
+
   return (
     <div
       className='studio-card dx-cover flex items-center gap-3 px-4 rounded-xl'
@@ -109,14 +118,16 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
       {/* The header reads as the framed card's does — the same glyph and title — so a row of plain cards under a row
           of framed ones is one scale. The glyph is sized inline: the icon recipe's own size class would win. */}
       {symbol && <Icon.Icon icon={symbol} classNames='studio-card-icon shrink-0' style={{ width: 26, height: 26 }} />}
-      <TextPart part='label' text={node.label} editing={editing} classNames='studio-card-title grow truncate'>
-        {node.label}
+      <TextPart part='label' text={label} editing={editing} classNames='studio-card-title grow truncate'>
+        {label}
       </TextPart>
     </div>
   );
 };
 
 export const cardSpec: ElementKindSpec = {
+  // The core card with a look of its own: its title and glyph stay the core card's fields.
+  extends: 'card',
   name: 'Card',
   icon: 'ph--cards--regular',
   key: 'C',

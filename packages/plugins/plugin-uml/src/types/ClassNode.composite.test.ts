@@ -30,8 +30,8 @@ describe('the UML class as a composite object', () => {
     const { nodes } = result.composite;
     expect(Object.keys(nodes).sort()).toEqual(['attributes', 'methods', 'name']);
     expect(nodes.name?.bind).toEqual('label');
-    expect(nodes.attributes?.bind).toEqual('attributes');
-    expect(nodes.methods?.bind).toEqual('methods');
+    expect(nodes.attributes?.bind).toEqual('data.attributes');
+    expect(nodes.methods?.bind).toEqual('data.methods');
   });
 
   test('the name keeps the top, the methods the bottom, and the attributes take what is left', () => {
@@ -76,7 +76,6 @@ describe('the UML class as a composite object', () => {
     expect(node.type).toEqual(ClassNode.TYPE);
     expect(isInstanceNode(node)).toBe(true);
     expect(Reflect.get(node, 'composite')).toEqual(COMPOSITE);
-    expect(Reflect.get(node, 'attributes')).toEqual(['id: string']);
-    expect(Reflect.get(node, 'methods')).toEqual(['save(): void']);
+    expect(Reflect.get(node, 'data')).toEqual({ attributes: ['id: string'], methods: ['save(): void'] });
   });
 });

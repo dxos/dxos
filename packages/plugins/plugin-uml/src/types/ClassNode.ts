@@ -15,18 +15,26 @@ import { SIZE, TEMPLATE } from './template.ts';
 /** The element type a UML class is stored as. */
 export const TYPE = 'class';
 
-/** A class's own fields: its name (in the base's `label`, so it still reads by name where the kind is unknown). */
-const classFields = {
-  label: Schema.String,
+/** A class's own fields, kept under its element's `data`. */
+export const ClassData = Schema.Struct({
   attributes: Schema.Array(Schema.String),
   methods: Schema.Array(Schema.String),
-};
+});
+export type ClassData = Schema.Schema.Type<typeof ClassData>;
 
-/** A class's own fields, which its element and the canvas engine's node both carry. */
-export type ClassFields = Schema.Struct.Type<typeof classFields>;
+/**
+ * What a class carries over the base, on its element and on the canvas engine's node alike: its name (in the base's
+ * `label`, so it still reads by name where the kind is unknown) and its `data`.
+ */
+export type ClassFields = { readonly label: string; readonly data: ClassData };
 
 /** UML class box, an element kind (decision 13): a name compartment over attribute and method compartments. */
-export const ClassNode = Schema.Struct({ ...Scene.Element2D.fields, type: Schema.Literal(TYPE), ...classFields });
+export const ClassNode = Schema.Struct({
+  ...Scene.Element2D.fields,
+  type: Schema.Literal(TYPE),
+  label: Schema.String,
+  data: ClassData,
+});
 export type ClassNode = Schema.Schema.Type<typeof ClassNode>;
 
 /** Narrows an element, or the canvas node drawing one, to a class. */
@@ -45,8 +53,7 @@ export const make = ({ id, z, center, size }: CreateProps): ClassNode => ({
   center,
   size,
   label: 'Class',
-  attributes: ['id: string'],
-  methods: ['save(): void'],
+  data: { attributes: ['id: string'], methods: ['save(): void'] },
 });
 
 /**
@@ -64,7 +71,7 @@ export const spec: ElementKindSpec = {
   defaultSize: { width: 2, height: 2 },
   resizable: true,
   minSize: { width: SIZE.width / 2, height: SIZE.height / 2 },
-  parts: [{ field: 'label' }, { field: 'attributes', lines: true }, { field: 'methods', lines: true }],
+  parts: [{ field: 'label' }, { field: 'data.attributes', lines: true }, { field: 'data.methods', lines: true }],
 };
 
 /** Validates a stored class element's own fields. */

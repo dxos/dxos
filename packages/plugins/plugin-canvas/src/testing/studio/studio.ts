@@ -336,22 +336,27 @@ const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<R
     const record = content[nodeKey(boxOf(key))];
     invariant(isNodeRecord(record), `no node for card "${key}"`);
     const { style: _style, ...node } = record.node;
+    const icon = { type: card.icon };
+    const tone = card.tone ? { tone: TONES[card.tone] ?? card.tone } : {};
     content[nodeKey(boxOf(key))] = {
       ...record,
       node: {
         ...node,
         type: remap[card.kind ?? 'card'] ?? card.kind ?? 'card',
         label: labelOf(record.node) ?? card.title,
-        icon: { type: card.icon },
-        ...(card.variant ? { variant: card.variant } : {}),
-        ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
-        ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
-        ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
+        // The glyph, body and footer are the core card's fields; everything else is the kind's own, under `data`.
+        icon,
+        data: {
+          ...tone,
+          ...(card.variant ? { variant: card.variant } : {}),
+          ...(card.feed ? { feed: card.feed.n, marks: marksOf(card.feed) } : {}),
+          ...(card.feed?.label ? { feedLabel: card.feed.label } : {}),
+          ...(card.chips ? { chips: chipsOf(card.chips) } : {}),
+          ...(card.note ? { note: card.note } : {}),
+          ...(card.ghost ? { ghost: card.ghost } : {}),
+        },
         ...(card.body ? { body: card.body } : {}),
         ...(card.footer ? { footer: card.footer } : {}),
-        ...(card.chips ? { chips: chipsOf(card.chips) } : {}),
-        ...(card.note ? { note: card.note } : {}),
-        ...(card.ghost ? { ghost: card.ghost } : {}),
       },
     };
   }
@@ -815,7 +820,8 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
         z: record.node.z,
         center: record.node.center,
         size: record.node.size,
-        ...(COMPONENT_FIELDS[component.kind] ?? latticeFields)(component),
+        // A kind's own fields go under `data` (decision 21); the frame above is the element's own.
+        data: (COMPONENT_FIELDS[component.kind] ?? latticeFields)(component),
       },
     };
     placed++;

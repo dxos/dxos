@@ -25,6 +25,7 @@ import {
   type NodeRegistry,
   SCENE_OVERLAY_ATTRIBUTE,
   type ViewOption,
+  bareNode,
   chainEdits,
   classedLink,
   classedNode,
@@ -203,6 +204,10 @@ const textAlign = (node: Node): Pick<NodeStyle, 'alignHorizontal' | 'alignVertic
 /** The size a type draws its text at unless styled otherwise, where that is not a shape label's: a hull's name is a caption. */
 const textSize = (node: Node): Pick<NodeStyle, 'fontSize'> => (isHullNode(node) ? { fontSize: HULL_FONT_SIZE } : {});
 
+/** A node as the view draws it: its class's look under its own, and its type's fill and border where it sets none. */
+const drawnNode = (nodes: NodeRegistry, node: Node, styles: StyleMap): Node =>
+  bareNode(classedNode(node, styles), nodeDef(nodes, node));
+
 /**
  * What the form shows for an element: what the view draws, so its class's look, an unset fill, border or Show
  * contents read as they look and an unset port count as the type's.
@@ -218,7 +223,11 @@ const formValues = (
     : {
         ...element,
         layer: elementLayer(element, layers),
-        style: { ...textAlign(element), ...textSize(element), ...resolveStyle(classedNode(element, styles).style) },
+        style: {
+          ...textAlign(element),
+          ...textSize(element),
+          ...resolveStyle(drawnNode(nodes, element, styles).style),
+        },
         portsPerSide: portsPerSideOf(nodes, element),
         ...(isViewNode(element) ? { link: { ...element.link, contents: showsContents(element) } } : {}),
       };
@@ -239,6 +248,8 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'inset': { hidden: true },
   'scene': { label: 'View' },
   'layer': { label: 'Layer' },
+  // An extension kind's own fields, whatever the kind.
+  'data': { label: 'Custom' },
 };
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -302,17 +313,21 @@ export const PropertiesInspector = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const schema = useMemo(() => commonSchema(elements.map((element) => schemaOf(nodes, element))), [typesKey, nodes]);
   // A shape's text names it, so its label leads, ahead of the shared fields (style) its type's own fields follow.
+  // An extension kind's own fields (`data`) come last, after everything the shape shares with the core's.
   const fieldOrder = useMemo(() => {
     const names =
       schema && SchemaAST.isObjects(schema.ast) ? schema.ast.propertySignatures.map(({ name }) => String(name)) : [];
     const style = names.indexOf('style');
-    return names.includes('label') && style >= 0
-      ? [
-          ...names.slice(0, style).filter((name) => name !== 'label'),
-          'label',
-          ...names.slice(style).filter((name) => name !== 'label'),
-        ]
-      : undefined;
+    const labelled =
+      names.includes('label') && style >= 0
+        ? [
+            ...names.slice(0, style).filter((name) => name !== 'label'),
+            'label',
+            ...names.slice(style).filter((name) => name !== 'label'),
+          ]
+        : names;
+    const ordered = [...labelled.filter((name) => name !== 'data'), ...labelled.filter((name) => name === 'data')];
+    return ordered.some((name, index) => name !== names[index]) ? ordered : undefined;
   }, [schema]);
   const { values, fieldOverrides } = useMemo(() => {
     const shown = elements.map((element) => formValues(nodes, element, styleMap, layers));
@@ -367,7 +382,7 @@ export const PropertiesInspector = ({
         // A link's look is the common base of its class's style; a node's, the whole of it.
         const look = isLink(element)
           ? classedLink(element, styleMap).style
-          : resolveStyle(classedNode(element, styleMap).style);
+          : resolveStyle(drawnNode(nodes, element, styleMap).style);
         const split = splitClassEdit(look, patch.style, styleClass.style ?? {}, element.style);
         classes[styleClass.id] = { ...styleClass, style: split.classLook };
         return write({ ...patch, style: split.own });

@@ -37,7 +37,16 @@ import {
   createNodeRegistry,
   templateCompositeId,
 } from '../../model/index.ts';
-import { HULL_STYLE, NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
+import {
+  CONTAINERS_GROUP,
+  EXTENSIONS_GROUP,
+  HULL_STYLE,
+  NOMINAL_SIZES,
+  cloudPath,
+  createNode,
+  polygonPath,
+  polylinePath,
+} from '../../utils/index.ts';
 import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
 import {
@@ -87,12 +96,12 @@ export const boxPrototype: NodeDefSpec = {
 export const cardPrototype: NodeDefSpec = {
   component: CardNodeView,
   parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
-  // Three units tall, not two: its frame and padding take 32, and the header, a line of body and the footer over its
-  // hairline another 66, so a two-unit card would draw a header over a footer with no body between them.
+  // The size the card's composite is authored at (`CARD_SIZE`), so a new card's parts sit on the grid as written.
   defaultSize: { width: 4, height: 3 },
   resizable: true,
-  // Two cells of padding, a three-cell header and a two-cell footer: what a card must keep to still read as one.
-  minSize: { width: 96, height: 72 },
+  // A cell of padding, a two-cell header, and a two-cell footer half a cell off the floor: what a card must keep to
+  // still read as one, with half a cell of body left between the gaps.
+  minSize: { width: 96, height: 84 },
 };
 
 /**
@@ -211,6 +220,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
         ? polylinePath(node.size, node.points, {
             inset,
             closed: node.params?.closed,
+            smooth: node.params?.smooth,
             radius,
           })
         : '',
@@ -222,11 +232,28 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: { width: 12, height: 12 },
   },
+  // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
+  freehand: {
+    name: 'Draw',
+    icon: 'ph--scribble--regular',
+    key: 'S',
+    schema: PolylineNode,
+    component: PolylineNodeView,
+    create: (props) => createNode({ type: 'polyline', ...props }),
+    createFromPoints: (props, points) => ({
+      ...createNode({ type: 'polyline', ...props }),
+      points: [...points],
+      params: { smooth: true },
+    }),
+    freehand: true,
+    defaultSize: NOMINAL_SIZES.polyline,
+  },
   // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
   hull: {
     name: 'Hull',
     icon: 'ph--bounding-box--regular',
     key: 'B',
+    group: CONTAINERS_GROUP,
     schema: HullNode,
     component: HullNodeView,
     create: (props) => ({ ...createNode({ type: 'hull', ...props }), style: HULL_STYLE }),
@@ -257,6 +284,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'View',
     icon: 'ph--frame-corners--regular',
     key: 'F',
+    group: CONTAINERS_GROUP,
     schema: ViewNode,
     component: ViewNodeView,
     create: (props) => createNode({ type: 'view', ...props }),
@@ -309,6 +337,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     name: 'Card',
     icon: 'ph--article--regular',
     key: 'D',
+    group: EXTENSIONS_GROUP,
     schema: CardNode,
     // A composite object (`card-template.ts`), not a shape a view paints: the canvas places an Instance of it and
     // binds each region to the card's own field, so the regions are edited in place and the data stays typed.

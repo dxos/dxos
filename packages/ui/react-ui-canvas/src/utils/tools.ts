@@ -27,6 +27,15 @@ export const TOOLS_GROUP = 'Tools';
 /** The group of the tools that make elements — the shapes, then the link — in both dimensions' rails. */
 export const CREATE_GROUP = 'Create';
 
+/** The group of the tools that hold other elements: a hull round shapes, a view onto a scene. */
+export const CONTAINERS_GROUP = 'Containers';
+
+/**
+ * The group of the tools beyond the plain shapes: the card, and the kinds a host's plugins contribute, which a host
+ * offers here unless a kind names a group of its own.
+ */
+export const EXTENSIONS_GROUP = 'Extensions';
+
 /** The fold the link types share, since a drawing mostly uses one of them. */
 export const LINK_FOLD = 'Link';
 

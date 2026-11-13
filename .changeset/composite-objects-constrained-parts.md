@@ -3,10 +3,12 @@
 '@dxos/diagram': minor
 '@dxos/react-ui-canvas': minor
 '@dxos/react-ui-canvas-editor': minor
+'@dxos/react-ui-canvas-compute': minor
 '@dxos/plugin-uml': minor
 '@dxos/plugin-canvas': minor
 '@dxos/plugin-markdown': patch
-'@dxos/react-ui-form': patch
+'@dxos/react-ui': patch
+'@dxos/react-ui-form': minor
 '@dxos/ui-types': minor
 ---
 
@@ -97,7 +99,71 @@ default lattice from now on takes the new one; a drawing already on a lattice ke
 reference diagrams are drawn on it: their `.dx` sources name `grid=384x256`, and their compiled commands and SVG
 renders are regenerated.
 
+plugin-canvas contributes its own extension tools through `CanvasCapabilities.NodeType`, the space graph first: one
+ECHO space as a circle of objects on a hexagonal lattice, with its seed, spacing and hue as Properties. The tools
+panel has two more groups after the shapes: `Containers` (the hull and the view) and `Extensions` (the card, and
+every kind a plugin contributes unless it names a group of its own, so plugin-uml's class is there too);
+react-ui-canvas exports `CONTAINERS_GROUP` and `EXTENSIONS_GROUP`.
+
+An extension kind keeps its own fields under its element's `data`, not at the element's top
+(`Schema.Struct({ ...Scene.Element2D.fields, type, data: Schema.Struct({ … }) })`), so a kind's field never meets the
+base's or another kind's; `Scene.BaseElement` gains the `data` slot. The engine's node carries the same `data`: a
+view reads it with `kindData(schema, node)`, a part or a bind names a field as `data.<field>`, and the Properties
+panel shows it last, as a group labelled `Custom`. `kindNodeDef` refuses a kind that declares a field of its own at the
+top, unless it extends a core prototype whose frame reads fields there (a card's `icon`, `body`, `footer`).
+`KindRegistry` gains `dataFields(type)` and `normalize(element)`. **Migration:** move a kind's own fields into
+`data` in its schema, its `create`, its view, and its `parts` / `fields` / template `bind` names. A stored element
+with the fields at its top is read as before and written back under `data` on its next edit. plugin-uml's class
+keeps `attributes` and `methods` in `data`.
+
+Conductor's compute shapes follow the same rule in a board's stored shape, its scene element and the engine's node:
+the compute `node` id and each shape's own fields (a constant's `value`, a template's `valueType`, a random number's
+`min` and `max`, a trigger's `functionTrigger`) are under `data`. **Migration:** pass a shape's own fields to its
+factory under `data` (`createConstant({ data: { value } })`) and read them from `shape.data`; a board stored with
+the fields beside the shape's own opens as before and is rewritten on its next edit.
+
+The space graph's Properties are two to a row; Population is Node density, and Base dots (off unless turned on) draws
+the lattice points that hold no object.
+
+A link's elbows are sized by the drawing's grid: a corner is cut one grid cell back, a smart link's stub leaves its
+port by half a major cell, and lanes sharing a gutter are a cell apart, where each was a fixed length of the default
+grid. `linkGeometry`, `viewLinkGeometry`, `linkPath`, `smartPoints` and `splinePath` take the grid as a last
+argument (the default grid when left out), and `ControlFrame` a `grid` prop.
+
+A port is the same size on screen at any zoom, as a resize handle is; it grew with the drawing, and covered a
+zoomed-in shape. A selected shape drawn too small for its resize handles (under 40 px on its shorter side) shows
+its outline alone, where the handles overlapped and hid it; `handlesFit(bounds, zoom)` is the rule. The Properties
+panel shows a part selected inside an Object that is being edited in place, where it
+showed nothing selected.
+
+The card is authored at the size the tool draws it (16 by 12 grid cells, `CARD_SIZE`): a two-cell glyph, the title
+half a cell beside it, the body half a cell under the header, and a two-cell footer half a cell under the body and
+half a cell off the floor. Its text has sizes of its own (title 18, body 16, footer 14) and its glyph is 24 px. The
+scene DSL reads and prints a 2D element's text size (`fontSize=18`), and an icon node with a `fontSize` in its style
+draws its glyph at that size, where it took 70% of its frame. plugin-canvas's space graph component is `Graph`
+(`graphSpec`, `GraphNode`, `GraphData`), its tool named Graph; the element type is still `space-graph`.
+
+A Draw tool (S), after Polyline in the tools panel, draws a line in one stroke: it samples the pointer while
+the button is down and lands the stroke as a polyline run as a curve through a few of the samples
+(`PolylineParams.smooth`, also a switch in Properties; `simplifyPath`; `NodeDef.freehand`). The tool stays in hand for
+the next stroke, and a stroke begun on a shape is drawn over it. The card's title is centred beside its glyph; the
+scene DSL also reads `alignHorizontal` and `alignVertical`.
+
+A form field with no value shows the default its schema declares (Effect's `default` annotation,
+`Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
+field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing
+agree on an unset field.
+
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
+
+A switch or checkbox keeps its visually hidden input inside itself (`position: relative` on `.dx-switch` and
+`.dx-checkbox`): in a scrolling form the input was left behind, and focusing it scrolled a clipped ancestor, which took
+the Properties panel out of view when a toggle far down it was pressed. The Properties panel shows Fill and Border as
+a shape draws them, so a type that draws all it shows (text, an icon) reads off until one is asked for. A node type
+may be an `outline` (`NodeDefSpec.outline`): its border is the frame's and is on, with no fill unless asked for one.
+Being part of the drawing, an outline keeps its colour while the node is selected or hovered; the selection frame
+alone marks it. The space graph is one, so its ring is its Border, and turning it off or on moves nothing inside it.
+A vector field's stack no longer asks a plain fieldset for a gutter, which logged a warning.
 
 `@dxos/ui-types/phosphor` exports `phosphorIcons`, the name of every regular Phosphor glyph. It is an entry of its
 own rather than part of the package's index, and `iconOptions()` imports it when a picker first asks, so the

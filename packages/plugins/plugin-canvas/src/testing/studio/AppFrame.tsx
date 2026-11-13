@@ -22,7 +22,7 @@ import './theme.css';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { type ElementKindSpec, type NodeViewProps } from '@dxos/react-ui-canvas';
+import { type ElementKindSpec, type NodeViewProps, kindData } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Scene } from '@dxos/scene';
 
@@ -51,16 +51,14 @@ export const appFrameFields = {
   colors: Schema.optional(Schema.Record(Schema.String, Schema.String).annotate({ title: 'Region colours' })),
 };
 
+/** The kind's own fields, kept under `data` (decision 21). */
+export const AppFrameData = Schema.Struct(appFrameFields);
+
 export const AppFrameNode = Schema.Struct({
   ...Scene.Element2D.fields,
   type: Schema.Literal('app-frame'),
-  ...appFrameFields,
+  data: Schema.optional(AppFrameData),
 });
-
-type AppFrameFields = Schema.Struct.Type<typeof appFrameFields>;
-
-const isAppFrame = (node: NodeViewProps['node']): node is NodeViewProps['node'] & AppFrameFields =>
-  node.type === 'app-frame';
 
 type RegionProps = {
   /** The region's name in `colors` (`nav`, `doc`, `canvas`, `sheet`, `comp`). */
@@ -191,10 +189,11 @@ const Assistant = () => (
 );
 
 export const AppFrameNodeView = ({ node }: NodeViewProps) => {
-  if (!isAppFrame(node)) {
+  const data = kindData(AppFrameData, node);
+  if (node.type !== 'app-frame' || !data) {
     return null;
   }
-  const { highlight, colors } = node;
+  const { highlight, colors } = data;
   const regions = { highlight, colors };
   const { width, height } = node.size;
   const scale = width / FRAME.width;
@@ -285,7 +284,7 @@ export const appFrameSpec: ElementKindSpec = {
   key: 'W',
   schema: AppFrameNode,
   component: AppFrameNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'app-frame', id, z, center, size, highlight: true }),
+  create: ({ id, z, center, size }) => ({ type: 'app-frame', id, z, center, size, data: { highlight: true } }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 660 x 650 window, give or take.
   defaultSize: { width: 14, height: 13.5 },
   resizable: true,

@@ -26,16 +26,15 @@ import { translations } from '#translations';
 import { CanvasCapabilities, Generator } from '#types';
 
 import types from '../../capabilities/schema.ts';
+import generatorParams from '../../components/Graph/generator/params.schema.json?raw';
+import generatorSource from '../../components/Graph/generator/space-graph.generator.ts?raw';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentsSource from '../../testing/studio/agents.diagram?raw';
 import agentsModel from '../../testing/studio/agents.json?raw';
 import { feedCardSpec } from '../../testing/studio/FeedCard.tsx';
-import generatorParams from '../../testing/studio/space-graph/params.schema.json?raw';
-import generatorSource from '../../testing/studio/space-graph/space-graph.generator.ts?raw';
-import { spaceGraphSpec } from '../../testing/studio/SpaceGraph.tsx';
 import { type ComponentMode, STUDIO_CANVAS, parseStudioModel, seedStudioSlide } from '../../testing/studio/studio.ts';
 
-/** A plugin contributing the slide's two kinds, the way a real one contributes its own. */
+/** A plugin contributing the slide's card, the way a real one contributes its own; the space graph is plugin-canvas's. */
 const StudioKindsPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.canvasStudioFeedCard'), name: 'Studio Kinds' }),
 ).pipe(
@@ -44,10 +43,7 @@ const StudioKindsPlugin = Plugin.define(
     activatesOn: IllustratorEvents.Start,
     provides: [CanvasCapabilities.NodeType],
     activate: () =>
-      Effect.succeed([
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec }),
-        Capability.contribute(CanvasCapabilities.NodeType, { type: 'space-graph', spec: spaceGraphSpec }),
-      ]),
+      Effect.succeed([Capability.contribute(CanvasCapabilities.NodeType, { type: 'feed-card', spec: feedCardSpec })]),
   }),
   Plugin.make,
 );
@@ -122,10 +118,12 @@ export const Default: Story = {
     await expect(marked.length).toBe(
       Object.values(model.nodes).reduce((total, card) => total + Object.keys(card.feed?.marks ?? {}).length, 0),
     );
-    // The deck's accent, from the theme tokens rather than a colour named in the view.
-    await expect(getComputedStyle(marked[0]).backgroundColor).toBe('rgb(45, 111, 255)');
+    // The deck's accent, from the theme tokens rather than a colour named in the view: the token is a light and a
+    // dark value, and the block takes the one for the mode it is drawn in.
+    const dark = getComputedStyle(marked[0]).colorScheme.includes('dark');
+    await expect(getComputedStyle(marked[0]).backgroundColor).toBe(dark ? 'rgb(6, 197, 253)' : 'rgb(45, 111, 255)');
     // The space is an element of its own kind, so it is selectable and its fields are its configuration.
-    const space = await canvas.findByTestId('space-graph-node');
+    const space = await canvas.findByTestId('graph-node');
     await expect(space.querySelectorAll('circle').length).toBeGreaterThan(100);
   },
 };
@@ -135,9 +133,10 @@ export const WithoutPlugin: Story = {
   decorators: decorators({ plugins: [] }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const scene = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
     await expect(canvas.queryAllByTestId('feed-card-node')).toHaveLength(0);
-    await expect(await canvas.findByText('Triage agent')).toBeInTheDocument();
+    // Looked for where it is drawn: the Views list names every element too.
+    await expect(await within(scene).findByText('Triage agent')).toBeInTheDocument();
   },
 };
 
@@ -152,7 +151,8 @@ export const WithGenerator: Story = {
     await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
     await expect((await canvas.findAllByTestId('feed-card-node')).length).toBe(Object.keys(model.nodes).length);
     // The generator draws onto its own layer; there is no element to select or configure.
-    await expect(canvas.queryAllByTestId('space-graph-node')).toHaveLength(0);
-    await expect(await canvas.findByTestId('generator-layer')).toBeInTheDocument();
+    await expect(canvas.queryAllByTestId('graph-node')).toHaveLength(0);
+    // The view compiles the generator before it draws, which a loaded runner takes longer over than the default wait.
+    await expect(await canvas.findByTestId('generator-layer', undefined, { timeout: 30_000 })).toBeInTheDocument();
   },
 };

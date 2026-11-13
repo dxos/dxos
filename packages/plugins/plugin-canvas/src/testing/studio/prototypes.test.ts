@@ -20,15 +20,15 @@ import {
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '@dxos/scene';
 
+import { graphSpec } from '../../components/index.ts';
 import { feedCardSpec } from './FeedCard.tsx';
-import { spaceGraphSpec } from './SpaceGraph.tsx';
 
 const registry = () =>
   createNodeRegistry(
     {
       ...defaultNodeTypes,
       'feed-card': kindNodeDef('feed-card', feedCardSpec),
-      'space-graph': kindNodeDef('space-graph', spaceGraphSpec),
+      'space-graph': kindNodeDef('space-graph', graphSpec),
     },
     defaultNodePrototypes,
   );
@@ -88,7 +88,7 @@ describe('core prototypes', () => {
     // Its own: the view (it adds the feed strip), the size, and a part for the strip's caption.
     expect(card.component).toEqual(feedCardSpec.component);
     expect(card.defaultSize).toEqual({ width: 6, height: 3 });
-    expect(card.parts?.map(({ field }) => field)).toEqual(['label', 'feedLabel', 'body', 'footer']);
+    expect(card.parts?.map(({ field }) => field)).toEqual(['label', 'data.feedLabel', 'body', 'footer']);
     // Inherited: what the kind no longer restates.
     expect(card.resizable).toEqual(cardPrototype.resizable);
     expect(card.minSize).toEqual(cardPrototype.minSize);
@@ -97,7 +97,10 @@ describe('core prototypes', () => {
   test('a kind naming no prototype is unaffected', ({ expect }) => {
     const space = registry()['space-graph'];
     expect(space.ellipse).toBe(true);
-    expect(space.bare).toBe(true);
+    expect([space.bare, space.outline]).toEqual([undefined, true]);
     expect(space.minSize).toEqual({ width: 120, height: 120 });
+    // A new graph stores its seed alone: the rest are the schema's defaults, which the Properties panel shows.
+    const made = space.create({ id: 's', z: 'a0', center: { x: 0, y: 0 }, size: { width: 384, height: 384 } });
+    expect(Reflect.get(made, 'data')).toEqual({ seed: 7 });
   });
 });
