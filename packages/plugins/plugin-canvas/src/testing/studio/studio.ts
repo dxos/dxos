@@ -831,7 +831,7 @@ const latticeFields = ({ params }: StudioComponent) => {
     ...(typeof pitch === 'number' ? { pitch } : {}),
     ...(typeof fill === 'number' ? { fill } : {}),
     ...(typeof extra === 'number' ? { extra } : {}),
-    ...(typeof size === 'number' ? { objectSize: size } : {}),
+    ...(typeof size === 'number' ? { size } : {}),
     hue: 'neutral',
   };
 };
