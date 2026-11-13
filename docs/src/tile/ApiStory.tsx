@@ -29,7 +29,7 @@ const STORIES: Record<string, ApiStoryEntry> = {
   },
   'react-ui-canvas-editor/canvas-editor': {
     load: () => import('../../../packages/ui/react-ui-canvas-editor/src/components/CanvasEditor/Canvas.stories.tsx'),
-    name: 'Model',
+    name: 'Docs',
   },
   'react-ui-editor/editor': {
     load: () => import('../../../packages/ui/react-ui-editor/src/components/Editor/Editor.stories.tsx'),
