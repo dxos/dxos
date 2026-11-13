@@ -22,6 +22,7 @@ Five properties define it:
   Automerge document, merge it and read objects out of it [F-3].
 - **The client is one process.** The app, the database, the indexer and the sync client run together.
   There are no client-services and no RPC boundary between the app and its data [F-6].
+- **Out of scope:** end-to-end encryption, and access control beyond a simple server ACL.
 - **Queries run on the indexer's tables.** The indexer reifies each changed document and writes its
   objects to SQLite; echo-sqlite's compiler runs every query against those rows [F-5].
 
@@ -307,7 +308,8 @@ feat F-2: Automerge in feeds
   req F-2.5:
     when: the server positions a snapshot block whose covers is C
     then: it trims the blocks of that feed at position ≤ C, through the feed store's trim log, so a block
-          positioned after C — another client's concurrent change — is kept
+          positioned after C — another client's concurrent change — is kept; the server trusts C and
+          does not check it against what that client has pulled
 
   req F-2.6:
     when: a client receives blocks of a feed whose older blocks it never had
@@ -403,8 +405,9 @@ feat F-6: No client-services
 
   req F-6.2:
     when: a second tab of the same origin opens the app
-    then: it cannot open the database, as in org.dxos.echo-sqlite-sync#F-5, because no shared
-          services process exists to serve both tabs
+    then: it waits on the database's Web Lock and does not open the database until the tab holding
+          the lock closes, so one tab per origin runs the app; no shared services process exists to
+          serve both
 
   req F-6.3:
     when: several processes of one device need the same spaces (CLI commands, Tauri windows, a
@@ -487,6 +490,10 @@ table change_log: One committed change, so that other processes can invalidate t
 
 ```mdl
 feat F-7: Access
+
+  desc: |
+    Access control is out of scope for this design. When it is needed, it starts as the simple
+    server-side ACL below.
 
   req F-7.1:
     when: a socket connects
@@ -728,4 +735,55 @@ question Q-4: Does the browser get several tabs back by sharing the SQL connecti
   options:
     - No: one tab per origin, as now.
     - Leader tab: Web Locks elect the tab that holds the OPFS file; other tabs send SQL statements to it over a BroadcastChannel and use the change log of [F-8.5] to invalidate. The boundary is the SqlClient, as with Tauri IPC.
+```
+
+```mdl
+decision D-14: Each tab takes a Web Lock on the database, and a second tab blocks until the lock is free, so the app runs in one tab only.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-4
+  affects: [F-6.2]
+```
+
+```mdl
+decision D-15: End-to-end encryption is out of scope for now.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-1
+  affects: [F-3]
+```
+
+```mdl
+decision D-16: Trust: the server trims on a snapshot's `covers` without checking it.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-2
+  affects: [F-2.5]
+```
+
+```mdl
+decision D-17: The server runs Automerge sync as another type of feed sync.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-18: Access control is out of scope. If it is needed, it starts as a simple ACL on the server.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-3
+  affects: [F-7]
+```
+
+```mdl
+question Q-5: What does "Automerge sync as another type of feed sync" in [D-17] change in the protocol?
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3, F-4]
+  options:
+    - Hash sync: the `automerge` namespace gets its own feed-sync type that exchanges heads and missing change hashes per document instead of positions; the server reads only change headers (hash, deps), never document state.
+    - Automerge protocol: the server runs Automerge's own sync protocol per document, which loads documents on the server and supersedes [D-5].
+    - Same as now: the position-based feed sync of [F-4] already is this, applied to a new namespace.
 ```
