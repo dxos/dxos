@@ -108,6 +108,18 @@ describe('SlideTheme.Settings', () => {
     expect(['rgb(1, 2 3)', 'rgb(1 2, 3)', 'oklch(0.5, 0.1, 240)', 'lab(1,2,3)'].some(SlideTheme.isColor)).toBe(false);
   });
 
+  test('the legacy syntax takes its own component types', () => {
+    expect(['rgb(10%, 20%, 30%)', 'rgba(10%,20%,30%,50%)', 'hsl(210, 10%, 20%)'].every(SlideTheme.isColor)).toBe(true);
+    // `rgb()` takes three numbers or three percentages, never a mix; `hsl()` takes a hue and two percentages.
+    expect(['rgb(1, 2%, 3)', 'hsl(210, 10, 20)', 'hsl(210, 10%, 20)'].some(SlideTheme.isColor)).toBe(false);
+    // The modern syntax is the permissive one, as CSS has it.
+    expect(SlideTheme.isColor('hsl(210 10 20)')).toBe(true);
+  });
+
+  test("a legacy color CSS rejects leaves the theme's own", () => {
+    expect(slideThemeStyle({ accent: 'rgb(1, 2%, 3)' })['--slide-accent']).toBe('var(--color-accent-text)');
+  });
+
   test('a malformed color is rejected without retrying every split of its digits', () => {
     const digits = '1'.repeat(128);
     const started = performance.now();

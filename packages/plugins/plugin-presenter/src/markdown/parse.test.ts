@@ -300,6 +300,12 @@ describe('parseSlide', () => {
     expect(commas.frontmatter.accent).toBeUndefined();
     expect(commas.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
 
+    // The legacy syntax fixes its component types: no mixing in `rgb()`, percentages in `hsl()`.
+    const mixedTypes = parseSlide('---\naccent: "rgb(1, 2%, 3)"\ncode: "hsl(210, 10, 20)"\n---\n\n# Title');
+    expect(mixedTypes.frontmatter.accent).toBeUndefined();
+    expect(mixedTypes.frontmatter.code).toBeUndefined();
+    expect(mixedTypes.issues).toHaveLength(2);
+
     // The colors CSS does know still pass.
     const valid = parseSlide('---\naccent: "rebeccapurple"\nseparator: "rgb(1 2 3)"\n---\n\n# Title');
     expect(valid.frontmatter.accent).toBe('rebeccapurple');

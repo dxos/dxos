@@ -202,20 +202,29 @@ const NAMED_COLORS = [
   'currentcolor',
 ] as const;
 
-// A number as a color function writes one: optionally signed, optionally a percentage. The decimal point is the
-// only way to split a digit run, so the alternatives cannot both match one — overlapping ones make a failing value
-// retry every split, and `parseSlide` runs on the editor's thread at every keystroke.
-const NUMBER = '[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)%?';
+// A number as a color function writes one: optionally signed. The decimal point is the only way to split a digit
+// run, so the alternatives cannot both match one — overlapping ones make a failing value retry every split, and
+// `parseSlide` runs on the editor's thread at every keystroke.
+const PLAIN = '[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)';
+const PERCENT = `${PLAIN}%`;
+const NUMBER = `${PLAIN}%?`;
 
-// The modern syntax every color function takes: three components separated by spaces, with an optional alpha.
+// The modern syntax every color function takes: three components separated by spaces, each a number or a
+// percentage, with an optional alpha.
 const modern = (functions: string) =>
   `(?:${functions})\\(\\s*${NUMBER}\\s+${NUMBER}\\s+${NUMBER}(?:\\s*/\\s*${NUMBER})?\\s*\\)`;
 
-// The legacy comma syntax, which only the sRGB and HSL functions take, and never mixed with spaces.
-const legacy = (functions: string) =>
-  `(?:${functions})\\(\\s*${NUMBER}\\s*,\\s*${NUMBER}\\s*,\\s*${NUMBER}(?:\\s*,\\s*${NUMBER})?\\s*\\)`;
+// The legacy comma syntax, which only the sRGB and HSL functions take, and never mixed with spaces. Its component
+// types are fixed: all three numbers or all three percentages for `rgb()`, and a hue with two percentages for
+// `hsl()`. The alpha is a number or a percentage either way.
+const commas = (first: string, second: string, third: string) =>
+  `\\(\\s*${first}\\s*,\\s*${second}\\s*,\\s*${third}(?:\\s*,\\s*${NUMBER})?\\s*\\)`;
 
-const COLOR_FUNCTION = [modern('rgb|rgba|hsl|hsla|oklch|oklab|lab|lch'), legacy('rgb|rgba|hsl|hsla')].join('|');
+const COLOR_FUNCTION = [
+  modern('rgb|rgba|hsl|hsla|oklch|oklab|lab|lch'),
+  `(?:rgb|rgba)(?:${commas(PLAIN, PLAIN, PLAIN)}|${commas(PERCENT, PERCENT, PERCENT)})`,
+  `(?:hsl|hsla)${commas(PLAIN, PERCENT, PERCENT)}`,
+].join('|');
 
 /**
  * Values reach inline styles, so only plain colors pass: a hex color, one of the named colors, or a color function
