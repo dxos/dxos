@@ -61,7 +61,7 @@ h1#_top {
 
 .sl-markdown-content :not(pre) > code:not(.dx-island *) {
   border: 0;
-  border-radius: 4px;
+  border-radius: 0;
   background: var(--c-surface);
   font-size: 0.875em;
   padding: 0.1em 0.35em;
@@ -113,7 +113,7 @@ site-search button[data-open-modal] {
 }
 
 .sidebar-content a {
-  border-radius: 6px;
+  border-radius: 0;
   color: var(--c-fg);
   transition: background var(--c-dur);
 }
@@ -536,4 +536,13 @@ a.card:hover {
   width: var(--dx-wide-width);
   max-width: none;
   margin-inline: calc((100% - var(--dx-wide-width)) / 2);
+}
+
+/* Square corners on Starlight's and Expressive Code's own chrome, as on the marketing pages; demos keep theirs. */
+site-search :is(dialog, kbd),
+starlight-toc a,
+mobile-starlight-toc .toggle,
+.sl-menu-button,
+.expressive-code .copy :is(button, .feedback) {
+  border-radius: 0;
 }

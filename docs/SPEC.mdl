@@ -6003,6 +6003,16 @@ decision D-301: Every demo embedded in a docs page (the PLEX plugin inspector, t
   why: A demo is an app with its own panes, and at the text column's width each pane gets little room.
 ```
 
+```mdl
+decision D-302: The docs have square corners everywhere outside a demo, as the marketing pages do: the demo and code frames, the topic switcher and its menu, the search button and its dialog, the Docs home cards, the sidebar and on-this-page links, buttons, cards, inline code and the agent prompt. A demo keeps its own corners. Amends [D-223].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [docs-home]
+  why: The home, Composer, plugins and `/echo` pages are square, and rounded framing made the docs read as a different site.
+  rejected:
+    - Square the demos too: a demo shows the components as they ship, corners included.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
