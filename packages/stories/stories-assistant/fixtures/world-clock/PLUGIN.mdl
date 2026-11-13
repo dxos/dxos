@@ -61,3 +61,13 @@ feat F-1: World Clock
     when: the reader clicks a clock
     then: its card and its pin on the map are selected
 ```
+
+## Changelog
+
+```mdl
+decision D-1: World Clock is the fixture a scripted agent writes in the PluginBuild story, kept byte for byte as the template produces it.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The story builds a real plugin on the reader's machine, so its source must typecheck and serve from the plugin's dev server exactly as written.
+```
