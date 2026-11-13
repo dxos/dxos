@@ -66,8 +66,10 @@ export type SpecPage = {
   section: string;
   route: string;
   group: string;
-  /** The component package a page documents; it nests the page in a group of its own inside `group`. */
+  /** The component package a page documents. */
   package?: string;
+  /** What the component does; it nests the page in a group of that name inside `group` [D-299]. */
+  family?: string;
   template: string;
   status: Status;
   covers: string[];
@@ -114,6 +116,7 @@ export const parsePages = (source: string): SpecPage[] =>
       route: field(body, 'route'),
       group: field(body, 'group'),
       package: optionalField(body, 'package'),
+      family: optionalField(body, 'family'),
       template: field(body, 'template'),
       status: parseStatus(field(body, 'status')),
       covers: listField(body, 'covers'),
@@ -161,25 +164,24 @@ const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
 
 /**
  * The Starlight sidebar for one section of the spec's site map; group order is first appearance. A top-level group
- * starts expanded; pages with a `package` follow the group's own pages in a nested group per package, alphabetically,
- * which starts collapsed and opens when the current page is in it [D-296].
+ * starts expanded; pages with a `family` follow the group's own pages in a nested group per family, in order of first
+ * appearance, which starts collapsed and opens when the current page is in it [D-296, D-299].
  */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
   const groups = [...new Set(pages.map((page) => page.group))];
   return groups.map((label) => {
     const inGroup = pages.filter((page) => page.group === label);
-    const packages = [...new Set(inGroup.flatMap((page) => (page.package ? [page.package] : [])))].sort();
+    const families = [...new Set(inGroup.flatMap((page) => (page.family ? [page.family] : [])))];
     return {
       label,
       items: [
-        ...inGroup.filter((page) => !page.package).map(sidebarLink),
-        ...packages.map((pkg) => ({
-          // Every package in a group shares the `react-ui-` prefix, so the label drops it.
-          label: pkg.replace(/^react-ui-/, ''),
+        ...inGroup.filter((page) => !page.family).map(sidebarLink),
+        ...families.map((family) => ({
+          label: family,
           collapsed: true,
           items: inGroup
-            .filter((page) => page.package === pkg)
+            .filter((page) => page.family === family)
             .sort(byLabel)
             .map(sidebarLink),
         })),
