@@ -5966,7 +5966,7 @@ decision D-297: Each card in the TILE Overview's grid runs a story from its pack
 ```
 
 ```mdl
-decision D-298: The TILE Overview's cards come in more sizes, each set by what its demo needs, in twelfths of the width and rows of 14rem. Kanban takes five columns and Calendar seven, both two rows tall. The spreadsheet takes eight columns and one row, beside a force graph four columns wide and two rows tall. The chart and the map take four columns and one row each, under the spreadsheet. The Markdown editor takes five columns and the diagram seven, both two rows tall, and the gallery takes the full width for two rows. On a phone a one-row card is 16rem tall and the others 22rem. Amends [D-295].
+decision D-298: The TILE Overview's cards come in more sizes, each set by what its demo needs, in twelfths of the width and rows of 14rem. Kanban takes five columns and Calendar seven, both two rows tall. The spreadsheet takes eight columns and one row, beside a force graph four columns wide and two rows tall. The chart and the map take four columns and one row each, under the spreadsheet. The diagram takes seven columns and the Markdown editor five after it, both two rows tall, and the gallery takes the full width for two rows. On a phone a one-row card is 16rem tall and the others 22rem. Amends [D-295].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-overview]
