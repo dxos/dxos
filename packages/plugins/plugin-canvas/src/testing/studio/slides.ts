@@ -32,6 +32,7 @@ import ontologyModel from './ontology.json?raw';
 import { ONTOLOGY } from './ontology.spec.ts';
 import pluginsSource from './plugins.diagram?raw';
 import pluginsModel from './plugins.json?raw';
+import { PLUGINS } from './plugins.spec.ts';
 import { type SlideSpec, seedSlideSpec } from './spec.ts';
 import { type StudioModel, parseStudioModel, seedStudioSlide } from './studio.ts';
 
@@ -111,16 +112,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // Declared rather than imported: three boxed groups, the entities in three columns about a Person. The deck's own
   // hand-placed graph and the passes that recovered columns from it are not used here.
   slide('ontology', ontologySource, ontologyModel, { spec: ONTOLOGY, title: ONTOLOGY.title }),
-  slide('plugins', pluginsSource, pluginsModel, {
-    labels: false,
-    remap: { chip: 'card' },
-    // The deck's header spanned the five columns under it; at a column and a half it reads as their parent.
-    sizes: { plugin: { width: 400, height: 176 } },
-    gap: 96,
-    links: 'ortho',
-    // One card over a row of them: every wire leaves its foot and lands on a head.
-    ports: 'vertical',
-  }),
+  slide('plugins', pluginsSource, pluginsModel, { spec: PLUGINS, title: PLUGINS.title }),
   // The deck placed each side column where its content ended; balanced, the window sits in the middle of the two.
   slide('composer', composerSource, composerModel, { balance: true, gap: 96, links: 'ortho' }),
   slide('architecture', architectureSource, architectureModel, {

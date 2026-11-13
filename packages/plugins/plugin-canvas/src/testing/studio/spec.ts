@@ -35,6 +35,12 @@ export type SlideGroup = {
   heading?: string;
   /** The group is drawn with a box around its columns. */
   box?: boolean;
+  /**
+   * A card above the columns that all of them hang from: one trunk leaves its bottom middle port and lands on the
+   * top middle of each column's first card. It is drawn larger than a card, since it is their parent rather than one
+   * of them.
+   */
+  header?: SlideCard;
   columns: readonly SlideColumn[];
 };
 
@@ -56,6 +62,10 @@ export type SlideMetrics = {
   /** Between a group's heading and the top of its box. */
   headingGap: number;
   headingSize: number;
+  /** A group header's own box, and the room left under it for the trunk. */
+  headerWidth: number;
+  headerHeight: number;
+  headerGap: number;
 };
 
 export const SLIDE_METRICS: SlideMetrics = {
@@ -69,6 +79,10 @@ export const SLIDE_METRICS: SlideMetrics = {
   boxPadding: 24,
   headingGap: 56,
   headingSize: 34,
+  // Half as wide again as a card, which is what reads as their parent rather than as one more of them.
+  headerWidth: 336,
+  headerHeight: 112,
+  headerGap: 96,
 };
 
 export type SlideSpec = {
@@ -84,6 +98,8 @@ type Box = { x: number; y: number; width: number; height: number };
 /** Where every card, box and heading of the spec goes. Pure geometry: the same spec always lays out the same way. */
 export type SlideLayout = {
   cards: ReadonlyMap<string, Box & { card: SlideCard }>;
+  /** The trunks a group's header makes: its card and the first card of each of that group's columns. */
+  trunks: readonly { from: string; to: string }[];
   boxes: readonly (Box & { group: SlideGroup })[];
   headings: readonly (Box & { text: string })[];
 };
@@ -102,7 +118,9 @@ const groupWidth = (group: SlideGroup, { cardWidth, columnGap }: SlideMetrics) =
 export const layoutSlide = (spec: SlideSpec): SlideLayout => {
   const metrics = { ...SLIDE_METRICS, ...spec.metrics };
   const { cardWidth, cardHeight, rowGap, columnGap, groupGap, boxPadding, headingGap, headingSize } = metrics;
+  const { headerWidth, headerHeight, headerGap } = metrics;
   const cards = new Map<string, Box & { card: SlideCard }>();
+  const trunks: { from: string; to: string }[] = [];
   const boxes: (Box & { group: SlideGroup })[] = [];
   const headings: (Box & { text: string })[] = [];
   // The axis every column is centred on, and the box every group's own box is drawn around.
@@ -124,6 +142,22 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
         y += cardHeight + rowGap;
       }
     });
+    if (group.header) {
+      // Above the columns, centred on the group, with the gap under it the trunk runs through.
+      cards.set(group.header.id, {
+        x: left + (width - headerWidth) / 2,
+        y: axis - tallest / 2 - headerGap - headerHeight,
+        width: headerWidth,
+        height: headerHeight,
+        card: group.header,
+      });
+      for (const column of group.columns) {
+        const first = column[0];
+        if (first) {
+          trunks.push({ from: group.header.id, to: first.id });
+        }
+      }
+    }
     if (group.box) {
       boxes.push({
         x: left - boxPadding,
@@ -142,7 +176,7 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
   // the slide as the columns change length, which is what put "Containers" above the other two.
   const ceiling = Math.min(...[...cards.values(), ...boxes].map(({ y }) => y));
   const line = ceiling - headingGap - headingSize;
-  return { cards, boxes, headings: headings.map((heading) => ({ ...heading, y: line })) };
+  return { cards, boxes, trunks, headings: headings.map((heading) => ({ ...heading, y: line })) };
 };
 
 /** How many ports a card's side has; the studio kinds declare the same number ({@link cardSpec}). */
@@ -183,7 +217,7 @@ export const seedSlideSpec =
   (spec: SlideSpec) =>
   (content: ContentMap, root: string): void => {
     const { headingSize } = { ...SLIDE_METRICS, ...spec.metrics };
-    const { cards, boxes, headings } = layoutSlide(spec);
+    const { cards, boxes, trunks, headings } = layoutSlide(spec);
     for (const { group, ...box } of boxes) {
       content[nodeKey(elementId(group.id, 'frame'))] = {
         kind: 'node',
@@ -238,22 +272,34 @@ export const seedSlideSpec =
     }
     // Two passes, because a port depends on every other edge meeting that side: first which sides each edge uses,
     // then the fan across each side, in the order the far ends stand along it.
-    const edges = (spec.edges ?? []).map((edge) => {
+    const declared: (SlideEdge & { trunk?: boolean })[] = [
+      ...trunks.map((trunk) => ({ ...trunk, trunk: true })),
+      ...(spec.edges ?? []),
+    ];
+    const edges = declared.map((edge) => {
       const source = cards.get(edge.from);
       const target = cards.get(edge.to);
       if (!source || !target) {
         throw new Error(`${spec.id}: edge ${edge.from} → ${edge.to} names a card the slide does not draw.`);
       }
-      return { ...edge, source, target, sides: sides(source, target) };
+      return { ...edge, source, target, sides: sides(source, target), trunk: edge.trunk === true };
     });
     const ports = new Map<string, string>();
     const bySide = new Map<string, { key: string; along: number }[]>();
+    const MIDDLE = Math.ceil(PORTS_PER_SIDE / 2);
     for (const edge of edges) {
+      // A trunk leaves its source's middle port whatever else meets that side, which is what makes one wire fan out
+      // rather than five wires leave five points.
+      if (edge.trunk) {
+        ports.set(`${edge.from}-${edge.to}/source`, `${edge.sides.source}${MIDDLE}`);
+      }
       const place = (node: string, side: Side, self: Box, other: Box, key: string) => {
         const along = side === 'n' || side === 's' ? other.x + other.width / 2 : other.y + other.height / 2;
         bySide.set(`${node}/${side}`, [...(bySide.get(`${node}/${side}`) ?? []), { key, along }]);
       };
-      place(edge.from, edge.sides.source, edge.source, edge.target, `${edge.from}-${edge.to}/source`);
+      if (!edge.trunk) {
+        place(edge.from, edge.sides.source, edge.source, edge.target, `${edge.from}-${edge.to}/source`);
+      }
       place(edge.to, edge.sides.target, edge.target, edge.source, `${edge.from}-${edge.to}/target`);
     }
     for (const [node, ends] of bySide) {
