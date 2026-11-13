@@ -21,6 +21,8 @@ const isView = (value: string): value is KnowledgeView => value === 'entities' |
 
 export type KnowledgePanelProps = Util.ThemedClassName<{
   facts: RDF.Fact[];
+  /** The entities (by slug) to show cards for; every entity the facts mention when undefined. */
+  entities?: ReadonlySet<string>;
   /** The store's predicates; undefined until read. */
   ontology?: RDF.Ontology.Ontology;
   /** The chosen entity's slug. */
@@ -39,6 +41,7 @@ export type KnowledgePanelProps = Util.ThemedClassName<{
 export const KnowledgePanel = ({
   classNames,
   facts,
+  entities,
   ontology,
   selected,
   onSelect,
@@ -48,7 +51,10 @@ export const KnowledgePanel = ({
 }: KnowledgePanelProps) => {
   const [view, setView] = useState<KnowledgeView>(defaultView);
   // Objects get cards too (an employer, a channel), so every chip opens one.
-  const cards = useMemo(() => toEntityCards(facts, { objects: true }), [facts]);
+  const cards = useMemo(
+    () => toEntityCards(facts, { objects: true }).filter((card) => !entities || entities.has(card.id)),
+    [facts, entities],
+  );
 
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>

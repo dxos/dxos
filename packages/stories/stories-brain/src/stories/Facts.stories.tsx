@@ -15,7 +15,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
 import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { FactsStoryContext, type PredicateFilter } from '../modules/index.ts';
+import { FactsStoryContext, type PredicateFilter, type QueryScope } from '../modules/index.ts';
 import { StoryRole } from '../modules/index.ts';
 import { CrawlerStoresPlugin } from '../testing/index.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
@@ -45,6 +45,7 @@ const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fac
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
   const [predicate, setPredicate] = useState<PredicateFilter | undefined>(undefined);
+  const [scope, setScope] = useState<QueryScope | undefined>(undefined);
 
   useEffect(() => {
     if (!seed || !space) {
@@ -54,7 +55,9 @@ const FactsStoryRoot = ({ layout, seed }: { layout: ModuleLayout; seed?: RDF.Fac
   }, [seed, space, registry]);
 
   return (
-    <FactsStoryContext.Provider value={{ facts, setFacts, selected, setSelected, predicate, setPredicate }}>
+    <FactsStoryContext.Provider
+      value={{ facts, setFacts, selected, setSelected, predicate, setPredicate, scope, setScope }}
+    >
       <ModuleContainer layout={layout} />
     </FactsStoryContext.Provider>
   );

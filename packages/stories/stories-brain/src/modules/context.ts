@@ -9,7 +9,7 @@ import { RDF } from '@dxos/pipeline-rdf';
 /**
  * The only state genuinely shared across the Facts-story modules: the currently-displayed facts (a
  * view — a crawl/file-load produces the full set, a SPARQL run a filtered subset) and the selected
- * entity and predicate. The `FactStore` itself (persistence) is Brain's per-space registry; this context is the
+ * entity and predicate. The last SPARQL result scopes the views too. The `FactStore` itself (persistence) is Brain's per-space registry; this context is the
  * cross-module display/selection the {@link ModuleContainer} surfaces read and write.
  */
 export type FactsStoryState = {
@@ -21,6 +21,19 @@ export type FactsStoryState = {
   /** The predicate scoping the viewer, or undefined for all. */
   predicate: PredicateFilter | undefined;
   setPredicate: (predicate: PredicateFilter | undefined) => void;
+  /** What the last SPARQL run bound, scoping the facts and entities views; undefined for everything. */
+  scope: QueryScope | undefined;
+  setScope: (scope: QueryScope | undefined) => void;
+};
+
+/** The terms a SPARQL result binds (IRIs and literal values), which the views keep only what they touch of. */
+export type QueryScope = {
+  terms: ReadonlySet<string>;
+  /**
+   * The result binds statement graphs, which then scope exactly: its other terms (a `?p` beside `?g`) would otherwise
+   * pull in every statement that shares them.
+   */
+  bindsGraphs: boolean;
 };
 
 /** A predicate the facts view is scoped to: its IRI, and every IRI a fact may state it with (its equivalents). */
@@ -42,4 +55,48 @@ export const useFactsStory = (): FactsStoryState => {
     throw new Error('useFactsStory must be used within a FactsStoryContext provider');
   }
   return context;
+};
+
+/** The IRI a fact's term is stored under in its graph; a literal subject is stored as the entity it names. */
+const termIri = (term: RDF.Term, graph: string, position: 'subject' | 'object'): string | undefined =>
+  term.kind === 'entity'
+    ? RDF.Vocab.entityNode(term.entity, graph).value
+    : position === 'subject'
+      ? RDF.Vocab.localEntityIri(graph, term.literal).value
+      : undefined;
+
+/** Whether a SPARQL result touches a fact: it binds the fact's graph, else its subject, object or predicate. */
+export const factInScope = (fact: RDF.Fact, scope: QueryScope): boolean => {
+  const graph = RDF.Mapping.graphOf(fact);
+  if (scope.bindsGraphs) {
+    return scope.terms.has(graph);
+  }
+  const subject = termIri(fact.assertion.subject, graph, 'subject');
+  const object = termIri(fact.assertion.object, graph, 'object');
+  return (
+    scope.terms.has(graph) ||
+    (subject !== undefined && scope.terms.has(subject)) ||
+    (object !== undefined && scope.terms.has(object)) ||
+    scope.terms.has(RDF.Mapping.predicateOf(fact))
+  );
+};
+
+/** The entities (by slug) a SPARQL result touches: those of every graph it binds, else those it binds directly. */
+export const entitiesInScope = (facts: readonly RDF.Fact[], scope: QueryScope): Set<string> => {
+  const entities = new Set<string>();
+  for (const fact of facts) {
+    const graph = RDF.Mapping.graphOf(fact);
+    const whole = scope.bindsGraphs && scope.terms.has(graph);
+    for (const [term, position] of [
+      [fact.assertion.subject, 'subject'],
+      [fact.assertion.object, 'object'],
+    ] as const) {
+      const iri = termIri(term, graph, position);
+      const bound = !scope.bindsGraphs && iri !== undefined && scope.terms.has(iri);
+      if (term.kind === 'entity' && (whole || bound)) {
+        entities.add(term.entity);
+      }
+    }
+  }
+  return entities;
 };

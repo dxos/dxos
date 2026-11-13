@@ -13,7 +13,7 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
 import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { FactsStoryContext, type PredicateFilter, StoryRole } from '../modules/index.ts';
+import { FactsStoryContext, type PredicateFilter, type QueryScope, StoryRole } from '../modules/index.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
 import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '../testing/remote-fact-store.ts';
 
@@ -30,6 +30,7 @@ const ExplorerRoot = () => {
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
   const [predicate, setPredicate] = useState<PredicateFilter | undefined>(undefined);
+  const [scope, setScope] = useState<QueryScope | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
 
   // The remote store ignores the space id; any key reaches the server.
@@ -40,7 +41,9 @@ const ExplorerRoot = () => {
   }, [registry]);
 
   return (
-    <FactsStoryContext.Provider value={{ facts, setFacts, selected, setSelected, predicate, setPredicate }}>
+    <FactsStoryContext.Provider
+      value={{ facts, setFacts, selected, setSelected, predicate, setPredicate, scope, setScope }}
+    >
       {error && (
         <div className='p-2 text-sm text-error-text'>
           {error} — start it with <code>moon run plugin-discord:fact-server</code>.

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -12,7 +12,7 @@ import { RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 
 import { KnowledgePanel } from '../components/index.ts';
-import { useFactsStory } from './context.ts';
+import { entitiesInScope, factInScope, useFactsStory } from './context.ts';
 
 /**
  * The store's predicate pool as an ontology. Minted entries name the brain's namespace; a pool whose entries clash
@@ -35,7 +35,9 @@ const toOntology = (entries: readonly RDF.Ontology.Entry[]): RDF.Ontology.Ontolo
 export const EntitiesModule = () => {
   const space = ToolkitHooks.useActiveSpace();
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const { facts, selected, setSelected, predicate, setPredicate } = useFactsStory();
+  const { facts, selected, setSelected, predicate, setPredicate, scope } = useFactsStory();
+  const scoped = useMemo(() => (scope ? facts.filter((fact) => factInScope(fact, scope)) : facts), [facts, scope]);
+  const entities = useMemo(() => (scope ? entitiesInScope(facts, scope) : undefined), [facts, scope]);
   const [ontology, setOntology] = useState<RDF.Ontology.Ontology | undefined>(undefined);
 
   // The pool grows as facts are written (an extractor mints predicates), so it is re-read whenever the facts change.
@@ -61,7 +63,8 @@ export const EntitiesModule = () => {
 
   return (
     <KnowledgePanel
-      facts={facts}
+      facts={scoped}
+      entities={entities}
       ontology={ontology}
       selected={selected}
       onSelect={setSelected}

@@ -10,14 +10,24 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
+import { RDF, generateSparql } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space } from '@dxos/react-client/echo';
+import { formatBindings } from '@dxos/react-ui-rdf';
 
-import { DEFAULT_SPARQL, QueryPanel, type QueryPanelPending, type QueryPanelProps } from '../components/index.ts';
+import {
+  DEFAULT_SPARQL,
+  QueryPanel,
+  type QueryPanelPending,
+  type QueryPanelProps,
+  type QueryPanelResult,
+} from '../components/index.ts';
 import { useFactsStory } from './context.ts';
 
-/** LEFT (middle): natural-language → SPARQL over Brain's per-space `FactStore`; results are the view. */
+/**
+ * LEFT: natural-language → SPARQL over Brain's per-space `FactStore`, run as written; the raw result shows under the
+ * query, and what it binds scopes the facts and entities views.
+ */
 export const QueryModule = () => {
   const space = ToolkitHooks.useActiveSpace();
   if (!space) {
@@ -28,12 +38,13 @@ export const QueryModule = () => {
 
 const QueryModuleContainer = ({ space }: { space: Space }) => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
-  const { setFacts } = useFactsStory();
+  const { setFacts, setScope } = useFactsStory();
 
   const [question, setQuestion] = useState('');
   const [query, setQuery] = useState(DEFAULT_SPARQL);
   const [pending, setPending] = useState<QueryPanelPending | undefined>(undefined);
   const [error, setError] = useState<QueryPanelProps['error']>(undefined);
+  const [result, setResult] = useState<QueryPanelResult | undefined>(undefined);
 
   // One action at a time; its failure is shown in the panel rather than lost in an unhandled rejection.
   const guard = useCallback((action: QueryPanelPending, task: () => Promise<void>) => {
@@ -46,32 +57,49 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
       .finally(() => setPending(undefined));
   }, []);
 
-  // Translate the question into SPARQL (LLM) and write it into the field; the user then runs it.
+  // Translate the question into SPARQL (LLM), grounded in the store's predicates; the user then runs it.
   const handleGenerate = useCallback(() => {
     guard('generate', async () => {
-      const structured = await EffectEx.runPromise(
-        generateQuery(question).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),
+      const store = registry.forSpace(space.id);
+      const predicates = await EffectEx.runPromise(store.predicates());
+      const sparql = await EffectEx.runPromise(
+        generateSparql(question, predicates).pipe(Effect.provide(Layer.fresh(AiServiceTestingPreset('edge-remote')))),
       );
-      setQuery(buildSparql(structured));
+      setQuery(sparql);
     });
-  }, [guard, question]);
+  }, [guard, registry, space.id, question]);
 
-  // Parse the SPARQL and run it over the store; the result set becomes the displayed view.
+  // Run the SPARQL as written: its solutions scope the views, and a query binding `?g` shows its graphs as TriG.
   const handleRun = useCallback(() => {
     guard('run', async () => {
-      const results = await EffectEx.runPromise(registry.forSpace(space.id).query(parseSparqlToQuery(query)));
-      setFacts(results);
+      const store = registry.forSpace(space.id);
+      const rows = await EffectEx.runPromise(store.rows(query));
+      const terms = new Set(rows.flatMap((row) => Object.values(row).map((term) => term.value)));
+      const bindsGraphs = rows.some((row) => row.g?.termType === 'NamedNode');
+      setScope({ terms, bindsGraphs });
+      if (bindsGraphs) {
+        const facts = await EffectEx.runPromise(store.select(query));
+        setResult({
+          kind: 'graphs',
+          count: new Set(facts.map(RDF.Mapping.graphOf)).size,
+          text: RDF.Graph.toTriG(facts),
+        });
+      } else {
+        setResult({ kind: 'rows', count: rows.length, text: formatBindings(rows) });
+      }
     });
-  }, [guard, registry, space.id, query, setFacts]);
+  }, [guard, registry, space.id, query, setScope]);
 
-  // Reset the field and re-read all facts.
+  // Reset the field, drop the result's scope and re-read all facts.
   const handleReset = useCallback(() => {
     guard('reset', async () => {
       setQuery(DEFAULT_SPARQL);
+      setScope(undefined);
+      setResult(undefined);
       const results = await EffectEx.runPromise(registry.forSpace(space.id).query({}));
       setFacts(results);
     });
-  }, [guard, registry, space.id, setFacts]);
+  }, [guard, registry, space.id, setFacts, setScope]);
 
   return (
     <QueryPanel
@@ -79,6 +107,7 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
       query={query}
       pending={pending}
       error={error}
+      result={result}
       onQuestionChange={setQuestion}
       onQueryChange={setQuery}
       onGenerate={handleGenerate}
