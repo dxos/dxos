@@ -1,0 +1,17 @@
+---
+title: ScrollArea
+description: "A scrolling region with a themed scrollbar."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/scroll-area" />
+
+```ts
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+```
+
+`ScrollArea.Root` holds a themed scrollbar, and `ScrollArea.Viewport` holds the content. The root takes `orientation`
+(`'vertical'` by default) and `width` (`'thin'` by default, or `'regular'`).
+
+`Panel.Body` takes `asChild` onto a `ScrollArea.Root`; see [Panel](/docs/tile/api/panel/).

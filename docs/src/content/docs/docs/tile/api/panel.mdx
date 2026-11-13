@@ -8,7 +8,6 @@ import TilePreview from '../../../../../components/TilePreview.astro';
 
 ```ts
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 ```
 
 A `Panel` is the shell of a pane: a header row, a body that takes the rest of the height, and a footer row.
@@ -24,7 +23,7 @@ A `Panel` is the shell of a pane: a header row, a body that takes the rest of th
 | -------------- | -------------------------------------------------------------- |
 | `Panel.Root`   | Fills its parent and sets the size and surface for everything in it |
 | `Panel.Header` | A row sized to its content, usually a toolbar                  |
-| `Panel.Body`   | Takes the remaining height. `asChild` onto a `ScrollArea.Root` |
+| `Panel.Body`   | Takes the remaining height. `asChild` onto a [`ScrollArea.Root`](/docs/tile/api/scroll-area/) |
 | `Panel.Footer` | A row sized to its content, such as a status line              |
 
 ## `Panel.Root`
@@ -37,8 +36,3 @@ A `Panel` is the shell of a pane: a header row, a body that takes the rest of th
 | `gutter` | `'rail' \| 'inset' \| 'sm' \| 'md' \| 'lg' \| 'none'`      | The gutter of the first container in the body. `sm` by default |
 
 The panel is a container query, so its header, body and footer can change layout together at a narrow width.
-
-## `ScrollArea`
-
-`ScrollArea.Root` holds a themed scrollbar, and `ScrollArea.Viewport` holds the content. The root takes `orientation`
-(`'vertical'` by default) and `width` (`'thin'` by default, or `'regular'`).

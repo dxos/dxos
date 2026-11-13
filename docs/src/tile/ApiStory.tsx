@@ -219,6 +219,22 @@ const STORIES: Record<string, ApiStoryEntry> = {
     load: () => import('../../../packages/ui/react-ui/src/components/Tour/Tour.stories.tsx'),
     name: 'Default',
   },
+  'react-ui/hover-card': {
+    load: () => import('../../../packages/ui/react-ui/src/components/HoverCard/HoverCard.stories.tsx'),
+    name: 'Default',
+  },
+  'react-ui/field': {
+    load: () => import('../../../packages/ui/react-ui/src/components/Field/Field.stories.tsx'),
+    name: 'Default',
+  },
+  'react-ui/select': {
+    load: () => import('../../../packages/ui/react-ui/src/components/Select/Select.stories.tsx'),
+    name: 'Default',
+  },
+  'react-ui/scroll-area': {
+    load: () => import('../../../packages/ui/react-ui/src/components/ScrollArea/ScrollArea.stories.tsx'),
+    name: 'Default',
+  },
   'react-ui/typography': {
     load: () => import('../../../packages/ui/react-ui/src/components/Typography/Typography.stories.tsx'),
     name: 'Default',

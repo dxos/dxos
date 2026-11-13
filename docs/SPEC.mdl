@@ -2449,7 +2449,7 @@ page tile-api-button: Button
 ```
 ```mdl
 page tile-api-input: Input
-  Text fields, checkboxes, switches, fields and selects.
+  Text fields, checkboxes, switches, sliders and the frame they sit in.
   section: TILE
   route: /docs/tile/api/input/
   group: API
@@ -2458,7 +2458,7 @@ page tile-api-input: Input
   template: namespace
   status: spike
   covers:
-    - The `Input` parts, `Field` and `Select`
+    - The `Input` parts [D-308]
 ```
 ```mdl
 page tile-api-status: Status
@@ -2484,7 +2484,7 @@ page tile-api-panel: Panel
   template: namespace
   status: spike
   covers:
-    - `Panel.Root`, `Panel.Header`, `Panel.Body` and `Panel.Footer`, with `ScrollArea`
+    - `Panel.Root`, `Panel.Header`, `Panel.Body` and `Panel.Footer` [D-308]
 ```
 ```mdl
 page tile-api-toolbar: Toolbar
@@ -2916,17 +2916,108 @@ page tile-api-virtual-anchor: VirtualAnchor
     - Every part of `VirtualAnchor` [D-306]
 ```
 ```mdl
-page tile-api-overlays: Overlays
-  Dialog, Popover, Tooltip, HoverCard and Toast.
+page tile-api-dialog: Dialog
+  A modal window for a task the user finishes or cancels before going on.
   section: TILE
-  route: /docs/tile/api/overlays/
+  route: /docs/tile/api/dialog/
   group: API
   package: react-ui
   family: Overlays
   template: namespace
   status: spike
   covers:
-    - The parts of each overlay, and which to use when
+    - Every part of `Dialog` [D-308]
+```
+```mdl
+page tile-api-popover: Popover
+  Short content beside the control that opens it, such as a share link.
+  section: TILE
+  route: /docs/tile/api/popover/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Popover` [D-308]
+```
+```mdl
+page tile-api-tooltip: Tooltip
+  A short name or hint for a control, on hover or focus.
+  section: TILE
+  route: /docs/tile/api/tooltip/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tooltip` [D-308]
+```
+```mdl
+page tile-api-hover-card: HoverCard
+  A preview of what a link or name points to, on hover.
+  section: TILE
+  route: /docs/tile/api/hover-card/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `HoverCard` [D-308]
+```
+```mdl
+page tile-api-toast: Toast
+  A notice that something happened, which goes away by itself.
+  section: TILE
+  route: /docs/tile/api/toast/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Toast` [D-308]
+```
+```mdl
+page tile-api-field: Field
+  A control's label, help text and error.
+  section: TILE
+  route: /docs/tile/api/field/
+  group: API
+  package: react-ui
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Field` [D-308]
+```
+```mdl
+page tile-api-select: Select
+  Picks one value from a list.
+  section: TILE
+  route: /docs/tile/api/select/
+  group: API
+  package: react-ui
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Select` [D-308]
+```
+```mdl
+page tile-api-scroll-area: ScrollArea
+  A scrolling region with a themed scrollbar.
+  section: TILE
+  route: /docs/tile/api/scroll-area/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ScrollArea` [D-308]
 ```
 ```mdl
 page tile-api-menu: Menu
@@ -6098,7 +6189,7 @@ decision D-263: The Overlays reference says Popover holds focus only with `modal
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [tile-api-overlays]
+  affects: [tile-api-dialog, tile-api-popover, tile-api-tooltip, tile-api-hover-card, tile-api-toast]
   why: Review checked the page against the code, which does not support the earlier statement.
 ```
 
@@ -6495,6 +6586,16 @@ decision D-307: An API page's story sits centred in its frame, as Storybook cent
   why: The core stories size themselves for Storybook's centred layout, so in the docs they sat in the frame's top left on a patch of Storybook's background; the full editor's panels crowded the demo.
   rejected:
     - Stretch each story to the frame's width: a 32rem accordion or tab bar reads worse at 77rem.
+```
+
+```mdl
+decision D-308: Every TILE API page documents exactly one namespace. The Overlays page splits into Dialog, Popover, Tooltip, HoverCard and Toast; Input keeps only `Input`, with Field and Select on pages of their own; Panel keeps only `Panel`, with ScrollArea on its own page. Amends [D-306].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference, tile-api-input, tile-api-panel, tile-api-dialog, tile-api-popover, tile-api-tooltip, tile-api-hover-card, tile-api-toast, tile-api-field, tile-api-select, tile-api-scroll-area]
+  why: A reader looks a component up by its namespace; a page that bundles several hides all but the first from the sidebar and from search.
+  rejected:
+    - Keep Overlays as a page that compares them: the learning path's Overlays step already says which to use when.
 ```
 
 ## Appendix: Extension Definitions
