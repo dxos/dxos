@@ -48,9 +48,7 @@ export const ONTOLOGY: SlideSpec = {
           card('account', 'Account', 'user-circle'),
         ],
         // The person every other entity is about, alone so it sits on the slide's axis.
-        // Taller than the rest: every entity on the right says something about a Person, and five arrivals need the
-        // height to land apart.
-        [{ ...card('person', 'Person', 'user'), size: { height: 256 } }],
+        [card('person', 'Person', 'user')],
         // What a person does.
         [
           card('task', 'Task', 'check-square'),

@@ -24,11 +24,6 @@ export type SlideCard = {
   icon: string;
   /** An object type's colour, by the deck's own name (`event`, `message`, `file`, `trip`, `sheet`). */
   tone?: string;
-  /**
-   * A size of its own. A card several edges converge on needs the height to fan them: five ports across a 64-unit
-   * card leave 11 units between arrivals, and their captions then sit on each other.
-   */
-  size?: { width?: number; height?: number };
 };
 
 /** A column of cards, stacked top to bottom. Every column is centred on the slide's axis, which is what makes the gaps equal. */
@@ -93,11 +88,8 @@ export type SlideLayout = {
   headings: readonly (Box & { text: string })[];
 };
 
-const heightOf = (card: SlideCard, { cardHeight }: SlideMetrics) => card.size?.height ?? cardHeight;
-const widthOf = (card: SlideCard, { cardWidth }: SlideMetrics) => card.size?.width ?? cardWidth;
-
-const columnHeight = (column: SlideColumn, metrics: SlideMetrics) =>
-  column.reduce((total, card) => total + heightOf(card, metrics), 0) + (column.length - 1) * metrics.rowGap;
+const columnHeight = (column: SlideColumn, { cardHeight, rowGap }: SlideMetrics) =>
+  column.length * cardHeight + (column.length - 1) * rowGap;
 
 const groupWidth = (group: SlideGroup, { cardWidth, columnGap }: SlideMetrics) =>
   group.columns.length * cardWidth + (group.columns.length - 1) * columnGap;
@@ -109,24 +101,27 @@ const groupWidth = (group: SlideGroup, { cardWidth, columnGap }: SlideMetrics) =
  */
 export const layoutSlide = (spec: SlideSpec): SlideLayout => {
   const metrics = { ...SLIDE_METRICS, ...spec.metrics };
-  const { cardWidth, rowGap, columnGap, groupGap, boxPadding, headingGap, headingSize } = metrics;
+  const { cardWidth, cardHeight, rowGap, columnGap, groupGap, boxPadding, headingGap, headingSize } = metrics;
   const cards = new Map<string, Box & { card: SlideCard }>();
   const boxes: (Box & { group: SlideGroup })[] = [];
   const headings: (Box & { text: string })[] = [];
   // The axis every column is centred on, and the box every group's own box is drawn around.
   const axis = 0;
+  // ONE height for every box, taken from the longest column on the slide: a box drawn around its own group would be
+  // a different height in each, while the cards inside keep the one gap between them.
+  const tallest = Math.max(
+    ...spec.groups.flatMap(({ columns }) => columns.map((column) => columnHeight(column, metrics))),
+  );
   let left = 0;
   for (const group of spec.groups) {
     const width = groupWidth(group, metrics);
-    const tallest = Math.max(...group.columns.map((column) => columnHeight(column, metrics)));
     group.columns.forEach((column, index) => {
       const lane = left + index * (cardWidth + columnGap);
+      // Centred on the axis, so a short column sits in the middle of the height every box shares.
       let y = axis - columnHeight(column, metrics) / 2;
       for (const card of column) {
-        const [width, height] = [widthOf(card, metrics), heightOf(card, metrics)];
-        // Centred in its lane, so a card of its own width still lines up with the column it stands in.
-        cards.set(card.id, { x: lane + (cardWidth - width) / 2, y, width, height, card });
-        y += height + rowGap;
+        cards.set(card.id, { x: lane, y, width: cardWidth, height: cardHeight, card });
+        y += cardHeight + rowGap;
       }
     });
     if (group.box) {
@@ -268,7 +263,7 @@ export const seedSlideSpec =
         kind: 'link',
         scene: root,
         link: {
-          type: 'ortho',
+          type: 'line',
           id,
           z: 'a2',
           source: { node: boxId(from), port: ports.get(`${id}/source`) },
