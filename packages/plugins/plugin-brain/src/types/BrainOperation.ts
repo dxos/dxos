@@ -89,11 +89,13 @@ export const QueryFacts = Operation.make({
   services: [FactStore],
   input: Schema.Struct({
     subjectEntity: Schema.optional(
-      Schema.String.annotate({ description: 'Entity slug the fact subject must match, e.g. "alice-smith".' }),
+      Schema.String.annotate({
+        description: 'Name, slug or IRI of the entity the fact subject must be, e.g. "Alice Smith" or "alice-smith".',
+      }),
     ),
     predicate: Schema.optional(Schema.String.annotate({ description: 'Exact predicate string, e.g. "works-at".' })),
     entity: Schema.optional(
-      Schema.String.annotate({ description: 'Entity slug appearing as either subject or object.' }),
+      Schema.String.annotate({ description: 'Name, slug or IRI of an entity appearing as either subject or object.' }),
     ),
     source: Schema.optional(Schema.String.annotate({ description: 'Source DXN the facts were extracted from.' })),
     minConfidence: Schema.optional(

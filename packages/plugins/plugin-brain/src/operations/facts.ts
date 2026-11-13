@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type RDF } from '@dxos/pipeline-rdf';
+import * as Effect from 'effect/Effect';
+
+import { FactStore, RDF, type SemanticIndexError, type SemanticQuery, normalizeEntityId } from '@dxos/pipeline-rdf';
 
 import { BrainOperation } from '#types';
 
@@ -27,3 +29,63 @@ export const factLine = (fact: BrainOperation.CompactFact): string =>
   `[${fact.id}] ${fact.subject} — ${fact.predicate} — ${fact.object} (${fact.factuality}${
     fact.confidence !== undefined ? ` ${fact.confidence}` : ''
   }, ${fact.date})`;
+
+/**
+ * The entities labelled one of `labels` (compared lowercased) that have an IRI of their own — a Discord user, a
+ * resolved ECHO object — leaving out IRIs local to one graph, which a slug already matches by suffix.
+ */
+const labelledEntitiesSparql = (labels: readonly string[]): string => `
+  SELECT DISTINCT ?entity WHERE {
+    GRAPH ?g { ?entity <${RDF.Vocab.RDFS_LABEL}> ?label }
+    FILTER(
+      isIRI(?entity) &&
+      LCASE(STR(?label)) IN (${labels.map((label) => JSON.stringify(label)).join(', ')}) &&
+      !STRSTARTS(STR(?entity), ${JSON.stringify(RDF.Vocab.GRAPH)}) &&
+      !STRSTARTS(STR(?entity), ${JSON.stringify(RDF.Vocab.FACT)})
+    )
+  }`;
+
+/**
+ * The entity keys a name the model gives can mean: its slug (which also matches graph-local entities by suffix), and
+ * every entity with an IRI of its own whose label is the name — a slug alone never finds `https://discord.com/users/…`.
+ */
+export const resolveEntityKeys = (name: string): Effect.Effect<string[], SemanticIndexError, FactStore> =>
+  Effect.gen(function* () {
+    const key = normalizeEntityId(name);
+    if (RDF.Vocab.isIri(key)) {
+      return [key];
+    }
+    const store = yield* FactStore;
+    const labels = [...new Set([name.trim(), key, key.replace(/-/g, ' ')].map((label) => label.toLowerCase()))];
+    const rows = yield* store.rows(labelledEntitiesSparql(labels));
+    const iris = rows.flatMap(({ entity }) => (entity?.termType === 'NamedNode' ? [entity.value] : []));
+    return [...new Set([key, ...iris])];
+  });
+
+/**
+ * Runs a structured query with its entity names resolved through {@link resolveEntityKeys}: one store query per
+ * combination of the keys they resolve to, merged by fact id in first-seen order.
+ */
+export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<RDF.Fact[], SemanticIndexError, FactStore> =>
+  Effect.gen(function* () {
+    const store = yield* FactStore;
+    const { entity, subjectEntity, ...rest } = query;
+    const entities = entity === undefined ? [undefined] : yield* resolveEntityKeys(entity);
+    const subjects = subjectEntity === undefined ? [undefined] : yield* resolveEntityKeys(subjectEntity);
+    const byId = new Map<string, RDF.Fact>();
+    for (const entityKey of entities) {
+      for (const subjectKey of subjects) {
+        const facts = yield* store.query({
+          ...rest,
+          ...(entityKey !== undefined ? { entity: entityKey } : {}),
+          ...(subjectKey !== undefined ? { subjectEntity: subjectKey } : {}),
+        });
+        for (const fact of facts) {
+          if (!byId.has(fact.id)) {
+            byId.set(fact.id, fact);
+          }
+        }
+      }
+    }
+    return [...byId.values()];
+  });

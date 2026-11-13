@@ -92,6 +92,57 @@ describe('QueryFacts', () => {
   });
 });
 
+/** A user with an IRI of its own (as the Discord pipeline names them), known by a display name, not a slug. */
+const DISCORD_USER = 'https://discord.com/users/1234';
+const DISCORD_FACTS: RDF.Fact[] = [
+  {
+    ...makeFact({ id: 'd-1', subject: 'x', predicate: 'works on', object: 'opfs' }),
+    assertion: {
+      subject: { kind: 'entity', entity: DISCORD_USER, label: 'dmaretskyi' },
+      predicate: 'works on',
+      object: { kind: 'entity', entity: 'opfs', label: 'OPFS' },
+    },
+  },
+  {
+    ...makeFact({ id: 'd-2', subject: 'x', predicate: 'reviews', object: 'x' }),
+    assertion: {
+      subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
+      predicate: 'reviews',
+      object: { kind: 'entity', entity: DISCORD_USER, label: 'dmaretskyi' },
+    },
+  },
+];
+
+describe('entity names', () => {
+  test('finds an entity with an IRI of its own by its label, in either position', async ({ expect }) => {
+    const { byLabel, bySubject, byIri } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([...FACTS, ...DISCORD_FACTS]);
+        return {
+          byLabel: yield* queryCompactFacts({ entity: 'dmaretskyi' }),
+          bySubject: yield* queryCompactFacts({ subjectEntity: 'DMaretskyi' }),
+          byIri: yield* queryCompactFacts({ entity: DISCORD_USER }),
+        };
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(byLabel.map((fact) => fact.id).sort()).toEqual(['d-1', 'd-2']);
+    expect(bySubject.map((fact) => fact.id)).toEqual(['d-1']);
+    expect(byIri.map((fact) => fact.id).sort()).toEqual(['d-1', 'd-2']);
+  });
+
+  test('summarizes a subject named by its label', async ({ expect }) => {
+    const result = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([...FACTS, ...DISCORD_FACTS]);
+        return yield* summarizeSubject({ subject: 'dmaretskyi' });
+      }).pipe(Effect.provide(Layer.provideMerge(FactStoreLive.layerMemory, textAiService('Works on OPFS [d-1].')))),
+    );
+    expect(result.factCount).toBe(2);
+  });
+});
+
 describe('SummarizeSubject', () => {
   test('grounds the summary on matched facts and reports factCount', async ({ expect }) => {
     const result = await EffectEx.runPromise(
