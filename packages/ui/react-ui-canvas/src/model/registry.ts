@@ -69,6 +69,8 @@ export type NodeDef = {
   key?: string;
   /** Tools panel group; types without one share the default group. */
   group?: string;
+  /** Adjacent tools of a group that name the same fold share one button in the tools panel, which opens to pick among them. */
+  fold?: string;
   /** The type's schema, which validates the node's own fields. */
   schema: Schema.Codec<NodeBase, unknown>;
   component: ComponentType<NodeViewProps>;
@@ -102,9 +104,11 @@ export type NodeDef = {
   createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
   /**
    * The tool draws in one stroke rather than vertex by vertex: it samples the pointer while it is pressed, and
-   * `createFromPoints` makes the node from the samples when it is released.
+   * `createFromPoints` makes the node from the samples when it is released. `'shape'` reads the stroke first: one
+   * drawn round a shape the canvas has (a rectangle, an ellipse, a triangle, a diamond) lands as that shape on the
+   * grid, and any other as the line it is.
    */
-  freehand?: boolean;
+  freehand?: 'stroke' | 'shape';
   /**
    * What the node's edit mode (a double-click on it, or Enter with it selected alone) edits: `'label'`, the default, its
    * text part in place; `'vertices'`, the unit-space `points` of a type drawn vertex by vertex, each shown as a point to

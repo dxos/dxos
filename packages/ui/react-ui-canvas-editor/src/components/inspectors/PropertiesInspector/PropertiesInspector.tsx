@@ -79,7 +79,7 @@ import {
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { OutlineStyleField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS } from '../../StyleGrid/index.ts';
+import { OutlineStyleField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS, TextColorField } from '../../StyleGrid/index.ts';
 import { type InspectorProps } from '../types.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
@@ -159,6 +159,7 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   ...STYLE_FIELDS,
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
+  'style.textHue': TextColorField,
   'style.lineStyle': LineStyleField,
   'ends.start': MarkerField,
   'ends.end': MarkerField,
@@ -241,6 +242,8 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   ...STYLE_FIELD_OVERRIDES,
   'style.alignVertical': { hidden: true },
   'style.fontSize': { hidden: true },
+  // Picked with the text's hue, in `TextColorField`'s grid.
+  'style.textTone': { hidden: true },
   // Drawn beside the rotation by `FrameField`, and beside the centre by `GeometryField`.
   'portsPerSide': { hidden: true },
   'size': { hidden: true },
@@ -340,6 +343,10 @@ export const PropertiesInspector = ({
       class: { hidden: true },
       // A link has no font face, so its size is not drawn by `FontField` and needs its own row.
       ...(elements.some(isLink) ? { 'style.fontSize': {} } : {}),
+      // Text is all a note draws, so its colour is a setting of its own there; a shape's label takes its shape's.
+      ...(elements.every((element) => !isLink(element) && isNoteNode(element))
+        ? {}
+        : { 'style.textHue': { hidden: true } }),
       ...overrides?.(elements),
     };
     for (const path of mixed) {

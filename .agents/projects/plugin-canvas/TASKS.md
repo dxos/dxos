@@ -375,6 +375,13 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **Draw tool** (S, after Polyline): a `freehand` drag samples the pointer, `simplifyPath` thins the stroke,
       and it lands as a polyline with `params.smooth` (a Catmull-Rom curve in `polylinePath`). The tool is a registry
       entry that makes polylines, not a node type of its own.
+- [x] **Draw shape tool** (W, folded with Draw): `utils/recognize.ts` reads a closed stroke as a rectangle, an
+      ellipse, a triangle (four ways up) or a diamond by how near it runs to each outline; the shape lands on the
+      grid, favouring major lines and the last or default size. An unread stroke lands as a line.
+- [ ] Draw shape: no right-angled triangle, pentagon or hexagon, and no straight line or arrow from an open stroke.
+- [x] Text colour for notes: `style.textHue` / `style.textTone`, a 9 by 3 grid in Properties.
+- [ ] Text colour is offered for notes alone; a shape's label still takes its shape's colour.
+- [x] The icon picker offers the DXOS mark (`dx--dxos--regular`), first in its list.
 - [ ] Draw tool: hit testing, ports and the `.dx` / SVG export still treat a smooth polyline as its straight
       segments; its vertex edit mode shows the thinned points. No pressure or stroke width.
 - [x] Card: authored at 16 by 12 cells with half-cell gaps, text sizes 18 / 16 / 14, a 24 px glyph, title centred;

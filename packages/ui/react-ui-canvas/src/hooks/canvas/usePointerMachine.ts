@@ -21,6 +21,7 @@ import {
   type NodeType,
   type Point,
   type Port,
+  type Size,
   type SplineLink,
   endpointNode,
   isInstanceNode,
@@ -55,6 +56,7 @@ import {
   FREEHAND_STEP_PX,
   FREEHAND_TOLERANCE_PX,
   NOMINAL_SIZES,
+  type RecognizedShape,
   type SceneEdit,
   VERTEX_SNAP_PX,
   activeLayer,
@@ -66,6 +68,7 @@ import {
   createId,
   createLink,
   createNode,
+  favorMajor,
   handlePoint,
   hasVertices,
   hitTest,
@@ -75,6 +78,7 @@ import {
   linkGeometry,
   minPolylineVertices,
   moveNodes,
+  nearestSize,
   nodeBounds,
   nodePorts,
   nodesIntersecting,
@@ -85,6 +89,7 @@ import {
   portAccepts,
   portPoint,
   pressSelects,
+  recognizeShape,
   refitPolyline,
   resizeBounds,
   resizeTo,
@@ -303,6 +308,58 @@ export const usePointerMachine = ({
       }
     },
     [nodeRegistry, minor, scene, draw, registry, atoms.layer, select, setTool],
+  );
+
+  /** The size of the last shape of each type a gesture made, which a shape drawn nearly that size takes. */
+  const lastSizeRef = useRef<Readonly<Record<NodeType, Size>>>({});
+
+  /**
+   * Lands a shape read from a stroke as the node that draws it, on the grid whatever the snap setting: a shape drawn
+   * by hand is rough, and squaring it up is the point of reading it. Its sides and its edges take a major line of the
+   * grid where one is near, and a minor one otherwise. False where the registry has no such type.
+   */
+  const landShape = useCallback(
+    ({ shape, bounds, rotation }: RecognizedShape): boolean => {
+      const type = shape === 'rect' || shape === 'ellipse' ? shape : 'polygon';
+      const def = nodeRegistry[type];
+      if (!def) {
+        return false;
+      }
+      const onGrid = (value: number) => favorMajor(value, minor, major);
+      const turned = ({ width, height }: Size): Size => ({ width: height, height: width });
+      // A triangle on its side is the upright one turned, so its frame is the box turned back.
+      const sideways = rotation === 90 || rotation === 270;
+      const drawn = {
+        width: Math.max(minor, onGrid(bounds.width)),
+        height: Math.max(minor, onGrid(bounds.height)),
+      };
+      // Nearly the size of the last such shape, or of the tool's own, it was meant to match, and takes that size.
+      const size = nearestSize(sideways ? turned(drawn) : drawn, [
+        lastSizeRef.current[type],
+        nominalSize(def.defaultSize, cell),
+      ]);
+      // The box the frame covers, about the middle of the stroke, with its edges on the grid.
+      const box = sideways ? turned(size) : size;
+      const middle = boundsCenter(bounds);
+      const [left, top] = [onGrid(middle.x - box.width / 2), onGrid(middle.y - box.height / 2)];
+      const node = def.create({
+        id: createId(type),
+        z: topOfView(scene),
+        center: { x: left + box.width / 2, y: top + box.height / 2 },
+        size,
+      });
+      lastSizeRef.current = { ...lastSizeRef.current, [type]: size };
+      draw.apply(
+        insertNode({
+          ...node,
+          ...(type === 'polygon' ? { params: { sides: shape === 'triangle' ? 3 : 4 } } : {}),
+          ...(rotation !== undefined ? { rotation } : {}),
+          layer: activeLayer(scene, registry.get(atoms.layer)),
+        }),
+      );
+      return true;
+    },
+    [nodeRegistry, minor, major, cell, scene, draw, registry, atoms.layer],
   );
 
   /** The type the tool in hand draws in one stroke (`NodeDef.freehand`), where it is such a tool and may draw. */
@@ -1083,6 +1140,7 @@ export const usePointerMachine = ({
   const commitCreated = useCallback(
     (node: Node) => {
       pendingRef.current = undefined;
+      lastSizeRef.current = { ...lastSizeRef.current, [node.type]: node.size };
       addNode(node);
       select([node.id]);
     },
@@ -1220,7 +1278,12 @@ export const usePointerMachine = ({
           // Thinned to the points the line needs, so it has few enough vertices to edit; a press with no travel
           // leaves one point, which makes nothing.
           const tolerance = FREEHAND_TOLERANCE_PX / registry.get(atoms.camera).zoom;
-          landPoints(current.type, simplifyPath(current.points, tolerance), false, true);
+          // Read from every sample, not the thinned ones: how near the stroke runs to a shape is in the samples.
+          const shape =
+            nodeRegistry[current.type]?.freehand === 'shape' ? recognizeShape(current.points, 2 * minor) : undefined;
+          if (!shape || !landShape(shape)) {
+            landPoints(current.type, simplifyPath(current.points, tolerance), false, true);
+          }
           break;
         }
         case 'point': {
@@ -1279,6 +1342,9 @@ export const usePointerMachine = ({
       snap,
       activate,
       rootRef,
+      landPoints,
+      landShape,
+      atoms.camera,
     ],
   );
 

@@ -8,6 +8,10 @@
 // a polyline run as a curve through them (`params.smooth`). The board starts with three such lines, so the look is
 // there before anything is drawn: an open wave, the wave's points as straight segments, and a loop closed on itself.
 //
+// Draw shape (W, the tool after it) reads the stroke before it lands: one drawn round a rectangle, an ellipse, a
+// triangle or a diamond becomes that shape, squared up on the grid, and any other stroke lands as the line it is.
+// The `Shapes` variant is an empty board to try it on.
+//
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
@@ -18,7 +22,7 @@ import { FullEditor, SceneEditorStory } from '@dxos/react-ui-canvas-editor/testi
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { type Point, type PolylineNode, type Scene } from '@dxos/scene';
+import { type NoteNode, type Point, type PolylineNode, type Scene } from '@dxos/scene';
 
 const SIZE = { width: 288, height: 144 };
 
@@ -65,17 +69,35 @@ const BOARD: RenderList2D = {
   ),
 };
 
-const DOCUMENT: Scene.SceneDocument = fromRenderLists2D([BOARD], { root: 'board' });
+/** An empty board for Draw shape, with what to try written on it. */
+const HINT: NoteNode = {
+  type: 'note',
+  id: 'hint',
+  z: 'a-hint',
+  center: { x: 0, y: -264 },
+  size: { width: 480, height: 180 },
+  text: 'Press W, then draw a box, a ring, a triangle or a diamond in one stroke.\n\nA stroke that is none of them stays a line.',
+};
 
-const DefaultStory = () => (
-  <SceneEditorStory document={DOCUMENT} docked>
+const SHAPES: RenderList2D = { id: 'board', name: 'Board', links: {}, nodes: { [HINT.id]: HINT } };
+
+const DOCUMENTS: Record<'lines' | 'shapes', Scene.SceneDocument> = {
+  lines: fromRenderLists2D([BOARD], { root: 'board' }),
+  shapes: fromRenderLists2D([SHAPES], { root: 'board' }),
+};
+
+type StoryArgs = { board: keyof typeof DOCUMENTS };
+
+const DefaultStory = ({ board }: StoryArgs) => (
+  <SceneEditorStory document={DOCUMENTS[board]} docked>
     <FullEditor dim='2d' />
   </SceneEditorStory>
 );
 
-const meta: Meta = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-canvas/components/Draw',
   render: DefaultStory,
+  args: { board: 'lines' },
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations: [...uiTranslations, ...formTranslations] },
 };
@@ -86,9 +108,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** The strokes the tool has drawn, as drawn. */
-const strokes = (root: HTMLElement) => [
-  ...root.querySelectorAll('[data-testid="scene-view"] [data-node-id^="freehand-"]'),
+/** An empty board to draw shapes on with Draw shape (W). */
+export const Shapes: Story = { args: { board: 'shapes' } };
+
+type Path = readonly (readonly [number, number])[];
+
+/** The nodes on the canvas whose id starts with `prefix`, as drawn. */
+const drawn = (root: HTMLElement, prefix: string) => [
+  ...root.querySelectorAll<HTMLElement>(`[data-testid="scene-view"] [data-node-id^="${prefix}-"]`),
 ];
 
 /** The path a line is painted through: its outline is a mask over its frame. */
@@ -97,70 +124,84 @@ const pathOf = (node: Element): string => {
   return decodeURIComponent(mask).match(/ d='([^']+)'/)?.[1] ?? '';
 };
 
+/** A line through `corners`, a sample every few px, as a pointer reports a stroke. */
+const through = (corners: Path): [number, number][] => [
+  [corners[0][0], corners[0][1]],
+  ...corners
+    .slice(1)
+    .flatMap((corner, index): [number, number][] =>
+      Array.from({ length: 20 }, (_, step) => [
+        corners[index][0] + ((corner[0] - corners[index][0]) * (step + 1)) / 20,
+        corners[index][1] + ((corner[1] - corners[index][1]) * (step + 1)) / 20,
+      ]),
+    ),
+];
+
+/** A box drawn round in one go, ending a little short of where it began, as a hand leaves it. */
+const box = (left: number, top: number): [number, number][] =>
+  through([
+    [left, top + 100],
+    [left, top],
+    [left + 160, top],
+    [left + 160, top + 100],
+    [left + 20, top + 100],
+  ]);
+
+/** Strokes on the canvas of `canvasElement`, in screen px from the middle of the view. */
+const pointer = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+  const frame = view.getBoundingClientRect();
+  const origin = { x: frame.left + frame.width / 2, y: frame.top + frame.height / 2 };
+  const at = ([dx, dy]: readonly [number, number]) => ({
+    clientX: origin.x + dx,
+    clientY: origin.y + dy,
+    button: 0,
+    pointerId: 1,
+  });
+  const stroke = async (path: Path) => {
+    await fireEvent.pointerDown(view, at(path[0]));
+    for (const point of path.slice(1)) {
+      await fireEvent.pointerMove(view, at(point));
+    }
+    await expect(await canvas.findByTestId('freehand-stroke')).toBeInTheDocument();
+    await fireEvent.pointerUp(view, at(path[path.length - 1]));
+  };
+  return { view, stroke };
+};
+
 /**
- * 1. The Draw tool is in the tools panel, straight after Polyline.
+ * 1. The Draw tools share one button in the tools panel, straight after Polyline.
  * 2. Press S, then press, drag and release on the canvas: the stroke is drawn as it goes and lands as one line.
  * 3. The line is a curve, with far fewer points than the pointer passed, and none of it is cut off by its frame.
  * 4. The tool is still in hand: a second stroke needs no key.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const { view, stroke } = await pointer(canvasElement);
 
-    const tools = [...canvasElement.querySelectorAll('[data-testid^="canvas.tool.node:"]')].map((tool) =>
-      tool.getAttribute('data-testid'),
-    );
-    await expect(tools[tools.indexOf('canvas.tool.node:polyline') + 1]).toBe('canvas.tool.node:freehand');
-
-    const frame = view.getBoundingClientRect();
-    const origin = { x: frame.left + frame.width / 2, y: frame.top + frame.height / 2 };
-    const at = ([dx, dy]: readonly [number, number]) => ({
-      clientX: origin.x + dx,
-      clientY: origin.y + dy,
-      button: 0,
-      pointerId: 1,
-    });
-    // A box drawn round in one go, a sample every few px: its corners turn on the frame's edges.
-    const box = (left: number, top: number): [number, number][] => {
-      const side = (from: [number, number], to: [number, number]): [number, number][] =>
-        Array.from({ length: 20 }, (_, index) => [
-          from[0] + ((to[0] - from[0]) * (index + 1)) / 20,
-          from[1] + ((to[1] - from[1]) * (index + 1)) / 20,
-        ]);
-      const corners: [number, number][] = [
-        [left, top + 100],
-        [left, top],
-        [left + 160, top],
-        [left + 160, top + 100],
-        [left + 20, top + 100],
-      ];
-      return [corners[0], ...corners.slice(1).flatMap((corner, index) => side(corners[index], corner))];
-    };
-    const stroke = async (path: readonly [number, number][]) => {
-      await fireEvent.pointerDown(view, at(path[0]));
-      for (const point of path.slice(1)) {
-        await fireEvent.pointerMove(view, at(point));
-      }
-      await expect(await canvas.findByTestId('freehand-stroke')).toBeInTheDocument();
-      await fireEvent.pointerUp(view, at(path[path.length - 1]));
-    };
+    // Draw and Draw shape share one button in the tools panel, which stands straight after Polyline.
+    const fold = await within(canvasElement).findByTestId('palette-group-Draw');
+    const polyline = canvasElement.querySelector('[data-testid="canvas.tool.node:polyline"]');
+    await expect(
+      (polyline?.compareDocumentPosition(fold) ?? 0) & globalThis.Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeGreaterThan(0);
+    await expect(within(fold).getByTestId('canvas.tool.node:freehand')).toBeInTheDocument();
 
     view.focus();
     await userEvent.keyboard('s');
     const first = box(-280, 110);
     await stroke(first);
-    await waitFor(() => expect(strokes(canvasElement)).toHaveLength(1));
+    await waitFor(() => expect(drawn(canvasElement, 'freehand')).toHaveLength(1));
 
-    const [drawn] = strokes(canvasElement);
-    const path = pathOf(drawn);
+    const [line] = drawn(canvasElement, 'freehand');
+    const path = pathOf(line);
     const spans = path.match(/C /g)?.length ?? 0;
     await expect(spans).toBeGreaterThan(2);
     await expect(spans).toBeLessThan(first.length / 2);
-    // Every coordinate of the curve, its handles included, is inside the line's own frame.
-    // The path is in the line's own px, as its frame's style is; on screen both are scaled by the zoom.
-    const frameStyle = drawn instanceof HTMLElement ? drawn.style : undefined;
-    const [width, height] = [Number.parseFloat(frameStyle?.width ?? ''), Number.parseFloat(frameStyle?.height ?? '')];
+    // Every coordinate of the curve, its handles included, is inside the line's own frame. The path is in the line's
+    // own px, as its frame's style is; on screen both are scaled by the zoom.
+    const [width, height] = [Number.parseFloat(line.style.width), Number.parseFloat(line.style.height)];
     const numbers = (path.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
     const xs = numbers.filter((_, index) => index % 2 === 0);
     const ys = numbers.filter((_, index) => index % 2 === 1);
@@ -169,6 +210,69 @@ export const Test: Story = {
     await expect(Math.max(...ys)).toBeLessThanOrEqual(height);
 
     await stroke(box(-60, 110));
-    await waitFor(() => expect(strokes(canvasElement)).toHaveLength(2));
+    await waitFor(() => expect(drawn(canvasElement, 'freehand')).toHaveLength(2));
+  },
+};
+
+/**
+ * 1. Press W: the Draw button in the tools panel shows Draw shape.
+ * 2. Draw a rough box in one stroke: a rectangle lands, its frame on the grid.
+ * 3. Draw a rough ring: an ellipse lands.
+ * 4. Draw a rough triangle: a polygon lands, with three sides.
+ * 5. Draw a wave: it is no shape, so it lands as the line it is.
+ */
+export const ShapesTest: Story = {
+  args: { board: 'shapes' },
+  play: async ({ canvasElement }) => {
+    const { view, stroke } = await pointer(canvasElement);
+
+    /** Whether every edge of a node's frame is a whole number of 12 px grid cells. */
+    const onGrid = (node: HTMLElement) =>
+      [node.style.left, node.style.top, node.style.width, node.style.height]
+        .map(Number.parseFloat)
+        .every((length) => Math.abs(length / 12 - Math.round(length / 12)) < 1e-6);
+
+    view.focus();
+    await userEvent.keyboard('w');
+    // The one Draw button in the tools panel now shows the tool in hand.
+    const fold = await within(canvasElement).findByTestId('palette-group-Draw');
+    await waitFor(() => expect(within(fold).getByTestId('canvas.tool.node:freehandShape')).toBeInTheDocument());
+    await stroke(box(-300, -60));
+    await waitFor(() => expect(drawn(canvasElement, 'rect')).toHaveLength(1));
+    await expect(onGrid(drawn(canvasElement, 'rect')[0])).toBe(true);
+    // Nothing of the stroke itself is left behind.
+    await expect(drawn(canvasElement, 'freehandShape')).toHaveLength(0);
+
+    const ring: [number, number][] = Array.from({ length: 48 }, (_, index) => {
+      const angle = (index / 48) * 2 * Math.PI;
+      return [10 + 70 * Math.cos(angle) + Math.sin(index) * 2, -10 + 70 * Math.sin(angle) + Math.cos(index) * 2];
+    });
+    await stroke(ring);
+    await waitFor(() => expect(drawn(canvasElement, 'ellipse')).toHaveLength(1));
+    await expect(onGrid(drawn(canvasElement, 'ellipse')[0])).toBe(true);
+
+    await stroke(
+      through([
+        [200, -70],
+        [280, 50],
+        [120, 50],
+        [196, -62],
+      ]),
+    );
+    await waitFor(() => expect(drawn(canvasElement, 'polygon')).toHaveLength(1));
+    await expect(onGrid(drawn(canvasElement, 'polygon')[0])).toBe(true);
+
+    const wave: [number, number][] = Array.from({ length: 60 }, (_, index) => [
+      -300 + index * 6,
+      160 + 40 * Math.sin(index / 5),
+    ]);
+    await stroke(wave);
+    await waitFor(() => expect(drawn(canvasElement, 'freehandShape')).toHaveLength(1));
+    await expect(pathOf(drawn(canvasElement, 'freehandShape')[0])).toContain('C ');
+    await expect([
+      drawn(canvasElement, 'rect').length,
+      drawn(canvasElement, 'ellipse').length,
+      drawn(canvasElement, 'polygon').length,
+    ]).toEqual([1, 1, 1]);
   },
 };

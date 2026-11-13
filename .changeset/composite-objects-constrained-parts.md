@@ -149,6 +149,16 @@ the button is down and lands the stroke as a polyline run as a curve through a f
 the next stroke, and a stroke begun on a shape is drawn over it. The card's title is centred beside its glyph; the
 scene DSL also reads `alignHorizontal` and `alignVertical`.
 
+Draw shape (W) is a second tool in the Draw button's flyout (`NodeDef.fold`, `DRAW_FOLD`): it reads the stroke
+before it lands (`recognizeShape`), and one drawn round a rectangle, an ellipse, a triangle or a diamond becomes that
+shape. The shape is squared up on the grid, taking a major line where one is near (`favorMajor`) and the size of the
+last such shape or of the tool's own where it was drawn close to it (`nearestSize`); any other stroke lands as the
+line it is. `NodeDef.freehand` is now `'stroke' | 'shape'`.
+
+A text node has a colour of its own in Properties: a grid of the nine style hues at three tones (`style.textHue`,
+`style.textTone`, `TextColorGrid`), which wins over the colour the shape's hue gives its text; pressing the selected
+swatch again clears it. The icon picker offers the DXOS mark (`dx--dxos--regular`) ahead of Phosphor's glyphs.
+
 A form field with no value shows the default its schema declares (Effect's `default` annotation,
 `Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
 field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing
