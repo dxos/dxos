@@ -28,7 +28,8 @@ once both sides have added it. A peer that does not know an extension never open
 
 ## Behavior
 
-- Each connection runs the auth extension, and a peer that fails it is disconnected. The other extensions open
+- Each connection runs the auth extension. A peer that fails it is disconnected only if the session's owner closes the
+  session when told of the failure, as the space manager does. The other extensions open
   alongside it rather than after it and do not wait for it, so replication can start before the peer has
   authenticated.
 - Replication over Teleport is the same replication as through EDGE. See

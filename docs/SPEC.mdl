@@ -5033,7 +5033,7 @@ decision D-248: On `/echo` the four reason cards and the four guarantee cards ea
 ```
 
 ```mdl
-decision D-249: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it and that `Space.setEdgeReplication` turns that off. Why MESH? says a direct link can pass through a TURN relay and no longer says its data never reaches a server.
+decision D-249: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it and that `Space.setEdgeReplication` turns that off. Why MESH? says a direct link can pass through a TURN relay and no longer says its data never reaches a server; its section on that is titled Data on a direct link.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5051,7 +5051,7 @@ decision D-250: EDGE's Indexing and queries page says EDGE indexes only the spac
 ```
 
 ```mdl
-decision D-251: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates.
+decision D-251: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates, and that a peer that fails authentication is disconnected only if the session's owner closes the session, as the space manager does.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah

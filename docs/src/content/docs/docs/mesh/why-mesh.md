@@ -41,10 +41,10 @@ both sides catch up with it.
 
 ### Devices that are rarely online together
 
-A phone and a laptop that are never awake at the same time can never form a direct link. EDGE is the transport that
-reaches them: each syncs with EDGE's copy when it is online. See [Replication and backup](/docs/edge/concepts/replication/).
+A phone and a laptop that are never awake at the same time can never form a direct link. When the space replicates
+through EDGE, EDGE is the transport that reaches them: each syncs with EDGE's copy when it is online. See [Replication and backup](/docs/edge/concepts/replication/).
 
-### Data that stays between devices
+### Data on a direct link
 
 A direct link carries data between the two devices on it, through a TURN relay only when they have no route to each
 other. The same data also goes to EDGE when the space replicates through it, which can read it only
