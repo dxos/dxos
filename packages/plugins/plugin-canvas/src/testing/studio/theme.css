@@ -20,8 +20,11 @@
   --sd-line: light-dark(hsl(220 14% 80%), hsl(220 10% 27%));
   --sd-accent: light-dark(#2d6fff, #06c5fd);
   --sd-lo: light-dark(hsl(220 22% 57% / 0.32), hsl(220 20% 3% / 0.7));
-  --sd-raised-sm: light-dark(2.8px 2.8px 8px, 2.5px 2.5px 7px) var(--sd-lo);
-  --sd-inset-sm: inset light-dark(2.8px 2.8px 8px, 2.5px 2.5px 7px) var(--sd-lo);
+  /* `light-dark()` takes two COLOURS; a list of lengths in it makes the whole `box-shadow` invalid, which left every
+     card flat and took the tone outline with it, since the two share one declaration. The offsets are therefore
+     fixed and only the colour switches — which is the part that has to. */
+  --sd-raised-sm: 2.8px 2.8px 8px var(--sd-lo);
+  --sd-inset-sm: inset 2.8px 2.8px 8px var(--sd-lo);
 
   /* Object types (Studio ROLES), which a card names through `tone`; the same in both modes. */
   --sd-t-event: #d83eff;
