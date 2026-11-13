@@ -3,16 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useLayoutEffect, useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import React from 'react';
+import { expect } from 'storybook/test';
 
-import * as Splitter from '@dxos/react-ui/Splitter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type LayoutName } from '#markdown';
 
+import { query, slide } from '../../testing/slideStory.tsx';
 import { Slide } from '../Slide/index.ts';
-import { SlideThemeProvider } from '../SlideTheme/index.ts';
 import { MarkdownSlide, type MarkdownSlideProps } from './MarkdownSlide.tsx';
 
 // A one-second 32×18 WebM, inlined so the story needs no network.
@@ -29,45 +28,6 @@ const DefaultStory = (props: MarkdownSlideProps) => (
   </Slide.Frame>
 );
 
-/**
- * The slide over the markdown that produced it, so a story shows the syntax beside its result. The seam starts at
- * half the height: the splitter sizes its panes in rem, and left to itself the machine gives the slide's canvas the
- * height its content asks for.
- */
-const SourceStory = ({ content, ...props }: MarkdownSlideProps) => {
-  const [root, setRoot] = useState<HTMLDivElement | null>(null);
-  const [size, setSize] = useState<number>();
-  useLayoutEffect(() => {
-    if (root && size === undefined) {
-      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      setSize(root.getBoundingClientRect().height / 2 / rem);
-    }
-  }, [root, size]);
-
-  return (
-    <Splitter.Root
-      ref={setRoot}
-      orientation='vertical'
-      resizable
-      size={size}
-      onSizeChange={setSize}
-      classNames='size-full'
-    >
-      <Splitter.Panel position='start'>
-        <Slide.Frame inset classNames='min-h-0'>
-          <MarkdownSlide content={content} {...props} />
-        </Slide.Frame>
-      </Splitter.Panel>
-      <Splitter.ResizeTrigger aria-label='Resize' />
-      <Splitter.Panel position='end'>
-        <pre className='size-full p-4 overflow-auto bg-modal-surface text-description text-sm whitespace-pre-wrap'>
-          {content}
-        </pre>
-      </Splitter.Panel>
-    </Splitter.Root>
-  );
-};
-
 const meta = {
   title: 'plugins/plugin-presenter/components/MarkdownSlide',
   component: MarkdownSlide,
@@ -81,29 +41,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-const slide = (frontmatter: Record<string, string | number>, ...body: string[]) =>
-  [
-    '---',
-    ...Object.entries(frontmatter).map(
-      ([key, value]) => `${key}: ${typeof value === 'string' ? JSON.stringify(value) : value}`,
-    ),
-    '---',
-    '',
-    ...body,
-  ].join('\n');
-
-const query = (canvasElement: HTMLElement, selector: string, timeout = 1_000) =>
-  waitFor(
-    () => {
-      const element = canvasElement.querySelector(selector);
-      if (!element) {
-        throw new Error(`Missing ${selector}`);
-      }
-      return element;
-    },
-    { timeout },
-  );
 
 /** A story asserting that `selector` (scoped to the layout root) contains `text`. */
 const layoutStory = (layout: LayoutName, content: string, selector: string, text: string): Story => ({
@@ -341,221 +278,5 @@ export const Clicks: Story = {
   play: async ({ canvasElement }) => {
     await query(canvasElement, 'li[data-step="1"]');
     await expect(canvasElement.querySelectorAll('li.invisible')).toHaveLength(2);
-  },
-};
-
-/** `<List variant>` styles a markdown list without changing what it is: numbered cards beside outlined claims. */
-export const ListVariants: Story = {
-  render: SourceStory,
-  args: {
-    content: slide(
-      { layout: 'two-cols-header' },
-      '# Three technologies, two claims',
-      '',
-      '::left::',
-      '',
-      "#### What we'll show you",
-      '',
-      '<List variant="steps">',
-      '',
-      '1. ECHO',
-      '2. Agents',
-      '3. Composer',
-      '',
-      '</List>',
-      '',
-      '::right::',
-      '',
-      '#### What we claim',
-      '',
-      '<List variant="outline">',
-      '',
-      '- Category-leading apps can replace the current generation of SaaS',
-      '- Composer can become the leading agent harness, beating Cowork, across models',
-      '',
-      '</List>',
-    ),
-  },
-  play: async ({ canvasElement }) => {
-    const steps = await query(canvasElement, '[data-slot="left"] ol[data-variant="steps"]');
-    await expect(steps.querySelectorAll('li')).toHaveLength(3);
-    const outline = await query(canvasElement, '[data-slot="right"] ul[data-variant="outline"]');
-    await expect(outline.textContent).toContain('agent harness');
-  },
-};
-
-/** Every list variant, on the plain list each one restyles. */
-export const ListVariantGallery: Story = {
-  render: SourceStory,
-  args: {
-    content: slide(
-      { layout: 'three-cols' },
-      '#### Cards',
-      '',
-      '<List variant="cards">',
-      '',
-      '- ECHO',
-      '- Agents',
-      '',
-      '</List>',
-      '',
-      '::middle::',
-      '',
-      '#### Steps',
-      '',
-      '<List variant="steps">',
-      '',
-      '1. ECHO',
-      '2. Agents',
-      '',
-      '</List>',
-      '',
-      '::right::',
-      '',
-      '#### Outline',
-      '',
-      '<List variant="outline">',
-      '',
-      '- ECHO',
-      '- Agents',
-      '',
-      '</List>',
-    ),
-  },
-  play: async ({ canvasElement }) => {
-    await query(canvasElement, '[data-variant="cards"]');
-    await query(canvasElement, '[data-variant="steps"]');
-    await query(canvasElement, '[data-variant="outline"]');
-  },
-};
-
-/** `<Table variant>` styles a GFM table the same way `<List>` styles a list. */
-export const TableVariants: Story = {
-  render: SourceStory,
-  args: {
-    content: slide(
-      { layout: 'two-cols-header' },
-      '# Where the work runs',
-      '',
-      '::left::',
-      '',
-      '#### Rows',
-      '',
-      '<Table variant="rows">',
-      '',
-      '| Layer | Runs on |',
-      '| --- | --- |',
-      '| ECHO | The device |',
-      '| Agents | The device or EDGE |',
-      '| Composer | The browser |',
-      '',
-      '</Table>',
-      '',
-      '::right::',
-      '',
-      '#### Cards',
-      '',
-      '<Table variant="cards">',
-      '',
-      '| Layer | Runs on |',
-      '| --- | --- |',
-      '| ECHO | The device |',
-      '| Agents | The device or EDGE |',
-      '| Composer | The browser |',
-      '',
-      '</Table>',
-    ),
-  },
-  play: async ({ canvasElement }) => {
-    const rows = await query(canvasElement, '[data-slot="left"] table[data-variant="rows"]');
-    await expect(rows.querySelectorAll('tbody tr')).toHaveLength(3);
-    await query(canvasElement, '[data-slot="right"] table[data-variant="cards"]');
-  },
-};
-
-/** `<Box variant>` is the generic container: it wraps whatever it holds, including a styled list. */
-export const BoxVariants: Story = {
-  render: SourceStory,
-  args: {
-    content: slide(
-      { layout: 'two-cols-header' },
-      '# Two claims',
-      '',
-      '::left::',
-      '',
-      '<Box variant="card">',
-      '',
-      '### Today',
-      '',
-      'Category-leading apps can replace the current generation of SaaS.',
-      '',
-      '</Box>',
-      '',
-      '::right::',
-      '',
-      '<Box variant="outline">',
-      '',
-      '### Next',
-      '',
-      '<List variant="steps">',
-      '',
-      '1. Beat Cowork',
-      '2. Across models',
-      '',
-      '</List>',
-      '',
-      '</Box>',
-    ),
-  },
-  play: async ({ canvasElement }) => {
-    const card = await query(canvasElement, '[data-slot="left"] div[data-variant="card"]');
-    await expect(card.textContent).toContain('Today');
-    const outline = await query(canvasElement, '[data-slot="right"] div[data-variant="outline"]');
-    await expect(outline.querySelector('ol[data-variant="steps"]')).not.toBeNull();
-  },
-};
-
-/**
- * The three ways a deck repaints a variant: the deck's theme (the `SlideThemeProvider` around the story), the slide's
- * own frontmatter, and a `tone` on one block.
- */
-export const ThemeOverrides: Story = {
-  render: (props: MarkdownSlideProps) => (
-    <SlideThemeProvider settings={{ code: '#15202b', separator: '#2b3a4a' }}>
-      <SourceStory {...props} />
-    </SlideThemeProvider>
-  ),
-  args: {
-    content: slide(
-      { layout: 'two-cols-header', accent: '#ff7a1a' },
-      '# Overrides',
-      '',
-      '::left::',
-      '',
-      "#### The slide's accent",
-      '',
-      '<List variant="steps">',
-      '',
-      '1. ECHO',
-      '2. Agents',
-      '',
-      '</List>',
-      '',
-      '::right::',
-      '',
-      '#### One block, another tone',
-      '',
-      '<Box variant="outline" tone="info">',
-      '',
-      'Replaces the accent for this box only.',
-      '',
-      '</Box>',
-    ),
-  },
-  play: async ({ canvasElement }) => {
-    const steps = await query(canvasElement, 'ol[data-variant="steps"]');
-    await expect(getComputedStyle(steps).getPropertyValue('--slide-accent').trim()).toBe('#ff7a1a');
-    const box = await query(canvasElement, 'div[data-tone="info"]');
-    await expect(getComputedStyle(box).getPropertyValue('--slide-accent').trim()).not.toBe('#ff7a1a');
   },
 };
