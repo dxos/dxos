@@ -16,6 +16,7 @@ import agentModel from './agent.json?raw';
 import { AGENT } from './agent.spec.ts';
 import agentsSource from './agents.diagram?raw';
 import agentsModel from './agents.json?raw';
+import { agentsSpec } from './agents.spec.ts';
 import architectureSource from './architecture.diagram?raw';
 import architectureModel from './architecture.json?raw';
 import chatSource from './chat.diagram?raw';
@@ -28,6 +29,7 @@ import echoLayersModel from './echo-layers.json?raw';
 import { ECHO_LAYERS } from './echo-layers.spec.ts';
 import hyperspaceSource from './hyperspace.diagram?raw';
 import hyperspaceModel from './hyperspace.json?raw';
+import { hyperspaceSpec } from './hyperspace.spec.ts';
 import ontologySource from './ontology.diagram?raw';
 import ontologyModel from './ontology.json?raw';
 import { ONTOLOGY } from './ontology.spec.ts';
@@ -42,7 +44,9 @@ export type StudioSlide = {
   id: string;
   /**
    * The slide said as groups of columns of cards ({@link SlideSpec}), which is drawn from the spec alone — the deck's
-   * geometry and every pass that recovers structure from it are skipped.
+   * geometry and every pass that recovers structure from it are skipped. A slide whose components are generated
+   * gives a function of its own sidecar instead ({@link slide} resolves it), so their geometry comes from where it
+   * was generated.
    */
   spec?: SlideSpec;
   source: string;
@@ -93,12 +97,19 @@ export type StudioSlide = {
   sizes?: Readonly<Record<string, { width?: number; height?: number }>>;
 };
 
-const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide, 'id' | 'source' | 'model'> = {}) => ({
-  id,
-  source,
-  model: parseStudioModel(model),
-  ...rest,
-});
+const slide = (
+  id: string,
+  source: string,
+  model: string,
+  rest: Omit<StudioSlide, 'id' | 'source' | 'model' | 'spec'> & {
+    spec?: SlideSpec | ((model: StudioModel) => SlideSpec);
+  } = {},
+): StudioSlide => {
+  const parsed = parseStudioModel(model);
+  const spec = typeof rest.spec === 'function' ? rest.spec(parsed) : rest.spec;
+  const { spec: _spec, ...options } = rest;
+  return { id, source, model: parsed, ...options, ...(spec ? { spec, title: rest.title ?? spec.title } : {}) };
+};
 
 /**
  * The nine slides in the order they are presented, which is the studio repo's (`../slides/index.mjs`) with the
@@ -108,7 +119,7 @@ const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better
   // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
-  slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'ortho' }),
+  slide('hyperspace', hyperspaceSource, hyperspaceModel, { spec: hyperspaceSpec }),
   slide('echo-layers', echoLayersSource, echoLayersModel, { spec: ECHO_LAYERS, title: ECHO_LAYERS.title }),
   // Declared rather than imported: three boxed groups, the entities in three columns about a Person. The deck's own
   // hand-placed graph and the passes that recovered columns from it are not used here.
@@ -135,13 +146,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     },
   }),
   // Four columns the deck fitted to a page: one gap between them, which is also what widens the drawing.
-  slide('agents', agentsSource, agentsModel, {
-    spaceGraph: true,
-    labels: false,
-    gap: 96,
-    frames: ['subagents'],
-    links: 'ortho',
-  }),
+  slide('agents', agentsSource, agentsModel, { spec: agentsSpec, spaceGraph: true }),
   slide('chat', chatSource, chatModel, { spec: CHAT, title: CHAT.title }),
   slide('agent', agentSource, agentModel, { spec: AGENT, title: AGENT.title }),
 ];

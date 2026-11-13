@@ -902,6 +902,27 @@ const COMPONENT_FIELDS: Record<string, (component: StudioComponent) => Record<st
 };
 
 /**
+ * A component's own fields as the kind reads them, taken from the sidecar it was generated into: the substrate's
+ * packed spaces, the space graph's seed, a plank's wireframe. A declared slide ({@link SlideSpec}) names the
+ * component and takes its geometry from here rather than transcribing a hundred generated circles.
+ */
+export const studioComponentData = (
+  model: StudioModel,
+  id: string,
+): { label?: string; data: Record<string, unknown>; width: number; height: number } => {
+  const component = (model.components ?? []).find((candidate) => candidate.id === id);
+  invariant(component, `${model.id}: no component "${id}"`);
+  const { label, ...data } = (COMPONENT_FIELDS[component.kind] ?? latticeFields)(component) as Record<string, unknown>;
+  const frame = componentFrame(component);
+  return {
+    ...(typeof label === 'string' ? { label } : {}),
+    data,
+    width: frame.w,
+    height: frame.h,
+  };
+};
+
+/**
  * Replaces a component's placeholder with an element of its own kind, whose fields are its configuration: the
  * Properties panel edits the seed, the density and the readers, and the view reads its readers out of the scene by
  * id. The alternative is {@link placeGenerators}, which puts the same geometry in a `Generator` instead.
@@ -942,7 +963,7 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
  * The seven-point arrow of `fatArrow()` (studio `lib/components.mjs`), in the frame's unit space. The slide's own
  * 72 x 44 viewBox: pointing up, mirrored vertically where it points down.
  */
-const FAT_ARROW: readonly { x: number; y: number }[] = [
+export const FAT_ARROW: readonly { x: number; y: number }[] = [
   { x: 36 / 72, y: 4 / 44 },
   { x: 68 / 72, y: 30 / 44 },
   { x: 50 / 72, y: 30 / 44 },
