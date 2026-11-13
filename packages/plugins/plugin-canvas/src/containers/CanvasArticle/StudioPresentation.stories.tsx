@@ -103,11 +103,11 @@ const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
     StudioKindsPlugin(),
   ],
   onInit: async ({ space }) => {
-    const seeded = STUDIO_SLIDES.map(({ id, source, model, labels, remap, spread, balance, uniform, sizes }) => {
+    const seeded = STUDIO_SLIDES.map(({ id, source, model, labels, remap, spread, balance, gap, uniform, sizes }) => {
       // Read-only: a slide is looked at, and the rail would take a corner of every one.
       const canvas = addTestCanvas(
         space.db,
-        seedStudioSlide(source, model, { labels, remap, spread, balance, uniform, sizes }),
+        seedStudioSlide(source, model, { labels, remap, spread, balance, gap, uniform, sizes }),
         {
           ...STUDIO_CANVAS,
           readonly: true,

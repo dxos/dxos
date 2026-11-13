@@ -52,6 +52,8 @@ export type StudioSlide = {
   spread?: number;
   /** The slide's columns are made symmetrical about its centre. */
   balance?: boolean;
+  /** One gap between every column of the slide, in scene units. */
+  gap?: number;
   /** Every card of the slide is drawn at one size. */
   uniform?: boolean;
   /** A card the slide draws at a size of its own, by its id. */
@@ -79,12 +81,13 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     labels: false,
     remap: { chip: 'card' },
     // The deck's header spanned the five columns under it; at a column and a half it reads as their parent.
-    sizes: { plugin: { width: 400, height: 240 } },
+    sizes: { plugin: { width: 400, height: 176 } },
   }),
   // The deck placed each side column where its content ended; balanced, the window sits in the middle of the two.
   slide('composer', composerSource, composerModel, { balance: true }),
   slide('architecture', architectureSource, architectureModel, { labels: false }),
-  slide('agents', agentsSource, agentsModel, { spaceGraph: true, labels: false }),
+  // Four columns the deck fitted to a page: one gap between them, which is also what widens the drawing.
+  slide('agents', agentsSource, agentsModel, { spaceGraph: true, labels: false, gap: 96 }),
   // Every card is a type, so every card is one box; the deck sized each to its own label.
   slide('ontology', ontologySource, ontologyModel, { uniform: true }),
   slide('chat', chatSource, chatModel),

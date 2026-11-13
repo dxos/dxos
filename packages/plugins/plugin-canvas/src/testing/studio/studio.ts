@@ -1001,8 +1001,23 @@ const alongLine = (members: { key: string; node: Node }[], extent: (node: Node) 
 };
 
 /**
- * Gives every card of a row one height and every card of a column one width, and spaces a column of equal cards on
- * one pitch. The deck sized each box to its own content and left whatever gap that produced, so a slide's grid came
+ * Whether a column of cards is a stack — a list laid out one under the other — rather than a graph that happens to
+ * share a centre. A stack's cards sit in order with gaps no larger than a card; the Ontology slide's entities are
+ * spread down the middle of the slide with the links between them, and re-spacing them on one gap would drop the
+ * last one off the bottom.
+ */
+const isStack = (ordered: { node: Node }[]): boolean => {
+  const gaps = ordered.slice(1).map(({ node }, index) => {
+    const previous = ordered[index].node;
+    return node.center.y - node.size.height / 2 - (previous.center.y + previous.size.height / 2);
+  });
+  const tallest = Math.max(...ordered.map(({ node }) => node.size.height));
+  return gaps.length > 0 && gaps.every((gap) => gap >= 0 && gap <= tallest);
+};
+
+/**
+ * Gives every card of a column one width, spaces the columns of a slide on one gap, and lays a column that is a
+ * stack out on one gap of its own. The deck sized each box to its own content and left whatever gap that produced, so a slide's grid came
  * out ragged — on the ECHO layers slide the bottom row of cards was 8 units taller than the two above it and sat 8
  * units lower than its own pitch. A line takes its SMALLEST card: it never grows into its neighbour, so the slide
  * gains the gutter it lacked.
@@ -1036,26 +1051,42 @@ const uniformGrid = (content: ContentMap, model: StudioModel, grid: number): num
     changed++;
   };
 
-  // Rows first: a row's height is what a column then spaces.
-  for (const { center, members } of linesOf(cardsOf(content, model), 'y')) {
-    const row = alongLine(members, (node) => onGrid(node.size.height, grid));
-    if (row.length < 2) {
-      continue;
+  // The columns a slide stands on: those of more than one card, at one width and one gap, so the space between any
+  // two of them is the same. A column far from the middle width is its own thing (ECHO layers' runtime column beside
+  // its three wide ones) and is laid out where it is.
+  const columns = linesOf(cardsOf(content, model), 'x')
+    .map(({ center, members }) => ({
+      center,
+      members: alongLine(members, (node) => onGrid(node.size.width, grid)).sort(
+        (first, second) => first.node.center.y - second.node.center.y,
+      ),
+    }))
+    .filter(({ members }) => members.length > 1);
+  const stacks = columns.filter(({ members }) => isStack(members));
+  const band = alongLine(
+    stacks.map(({ members }) => ({ key: '', node: members[0].node })),
+    (node) => onGrid(node.size.width, grid),
+  ).map(({ node }) => onGrid(node.size.width, grid));
+  const banded = stacks.filter(({ members }) => band.includes(onGrid(members[0].node.size.width, grid)));
+  const spacing = (() => {
+    if (banded.length < 2) {
+      return undefined;
     }
-    const height = Math.max(grid, Math.min(...row.map(({ node }) => onGrid(node.size.height, grid))));
-    const top = onGrid(center - height / 2, grid);
-    for (const { key, node } of row) {
-      write(key, node, { x: node.center.x, y: top + height / 2 }, { ...node.size, height });
-    }
-  }
+    const width = Math.max(grid, Math.min(...band));
+    const gaps = banded
+      .slice(1)
+      .map(({ center }, index) => center - banded[index].center)
+      .sort((first, second) => first - second);
+    const pitch = Math.max(width + grid, onGrid(gaps[Math.floor(gaps.length / 2)], grid));
+    const first = onGrid(banded[0].center - width / 2, grid);
+    return { width, pitch, first, lefts: new Map(banded.map(({ center }, index) => [center, first + index * pitch])) };
+  })();
 
-  for (const { center, members } of linesOf(cardsOf(content, model), 'x')) {
-    const column = alongLine(members, (node) => onGrid(node.size.width, grid));
-    if (column.length < 2) {
-      continue;
-    }
-    const width = Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
-    const left = onGrid(center - width / 2, grid);
+  for (const { center, members: column } of columns) {
+    const width = spacing?.lefts.has(center)
+      ? spacing.width
+      : Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
+    const left = spacing?.lefts.get(center) ?? onGrid(center - width / 2, grid);
     const ordered = [...column].sort((first, second) => first.node.center.y - second.node.center.y);
     // One gap down the column, from the gaps the deck left: the cards keep their own heights and their first top, and
     // what was 16, 16 and 24 between them becomes 16, 16 and 16.
@@ -1067,9 +1098,11 @@ const uniformGrid = (content: ContentMap, model: StudioModel, grid: number): num
       })
       .sort((first, second) => first - second);
     const gap = gaps.length > 0 ? Math.max(0, onGrid(gaps[Math.floor(gaps.length / 2)], grid)) : 0;
+    const stacked = isStack(ordered);
     let top = onGrid(ordered[0].node.center.y - ordered[0].node.size.height / 2, grid);
     for (const { key, node } of ordered) {
-      write(key, node, { x: left + width / 2, y: top + node.size.height / 2 }, { ...node.size, width });
+      const y = stacked ? top + node.size.height / 2 : node.center.y;
+      write(key, node, { x: left + width / 2, y }, { ...node.size, width });
       top += node.size.height + gap;
     }
   }
@@ -1131,6 +1164,50 @@ const uniformCards = (content: ContentMap, model: StudioModel, uniform: boolean,
     sized++;
   }
   return sized;
+};
+
+/**
+ * Puts one gap between every column of the slide. Where {@link uniformGrid} evens the columns a slide stands on, this
+ * takes every column — a component and a frame among them — and spaces the lot left to right, from the leftmost
+ * column's own edge. Given a gap it uses that, which is how a slide is widened; without one it takes the middle of
+ * the gaps the deck left.
+ */
+const evenColumns = (content: ContentMap, gap: number | undefined, grid: number): number => {
+  if (gap === undefined) {
+    return 0;
+  }
+  const boxes = Object.entries(content).flatMap(([key, record]) =>
+    isNodeRecord(record) ? [{ key, node: record.node }] : [],
+  );
+  const columns: { left: number; right: number; members: typeof boxes }[] = [];
+  for (const box of [...boxes].sort((first, second) => first.node.center.x - second.node.center.x)) {
+    const [left, right] = [box.node.center.x - box.node.size.width / 2, box.node.center.x + box.node.size.width / 2];
+    const last = columns.at(-1);
+    // A column holds what overlaps it: a frame around a column is part of it, and so is a shape beside its cards.
+    if (last && left < last.right) {
+      last.right = Math.max(last.right, right);
+      last.members.push(box);
+    } else {
+      columns.push({ left, right, members: [box] });
+    }
+  }
+  let moved = 0;
+  let edge = onGrid(columns[0]?.left ?? 0, grid);
+  for (const column of columns) {
+    const shift = onGrid(edge - column.left, grid);
+    if (shift !== 0) {
+      for (const { key, node } of column.members) {
+        const record = content[key];
+        if (!isNodeRecord(record)) {
+          continue;
+        }
+        content[key] = { ...record, node: { ...node, center: { ...node.center, x: node.center.x + shift } } };
+        moved++;
+      }
+    }
+    edge += column.right - column.left + onGrid(gap, grid);
+  }
+  return moved;
 };
 
 /**
@@ -1324,6 +1401,7 @@ export const seedStudioSlide =
       remap = {},
       spread = 1,
       balance = false,
+      gap,
       uniform = false,
       sizes = {},
       kinds = STUDIO_COMPONENT_KINDS,
@@ -1341,6 +1419,8 @@ export const seedStudioSlide =
       spread?: number;
       /** The slide's columns are made symmetrical about its centre ({@link balanceColumns}). */
       balance?: boolean;
+      /** One gap between every column of the slide, in scene units ({@link evenColumns}). */
+      gap?: number;
       /** Every card of the slide is drawn at one size ({@link uniformCards}). */
       uniform?: boolean;
       /** A card the slide draws at a size of its own, by its id: what the deck drew is not always what reads. */
@@ -1374,6 +1454,7 @@ export const seedStudioSlide =
       // After the grid: a size the slide asks for is the slide's, not its column's.
       resizeCards(content, sizes, grid) +
       balanceColumns(content, balance, grid) +
+      evenColumns(content, gap, grid) +
       spreadColumns(content, model, spread, grid);
     const routed = routeLinks(content, model, components);
     const placed =
