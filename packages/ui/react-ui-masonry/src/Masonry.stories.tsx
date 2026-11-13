@@ -213,6 +213,22 @@ const PHOTOS: Photo[] = [
   { id: '14', title: 'Reef', color: '#0d9488', height: 44 },
   { id: '15', title: 'Vineyard', color: '#9333ea', height: 112, caption: 'Rows down to the lake.' },
   { id: '16', title: 'Tundra', color: '#64748b', height: 58 },
+  { id: '17', title: 'Waterfall', color: '#0284c7', height: 100, caption: 'Spray on the ferns.' },
+  { id: '18', title: 'Prairie', color: '#a16207', height: 50 },
+  { id: '19', title: 'Island', color: '#0f766e', height: 76, caption: 'One palm, one hut.' },
+  { id: '20', title: 'Volcano', color: '#b91c1c', height: 92 },
+  { id: '21', title: 'Marsh', color: '#4d7c0f', height: 54, caption: 'Herons at low tide.' },
+  { id: '22', title: 'Summit', color: '#4338ca', height: 108 },
+  { id: '23', title: 'Harvest', color: '#c2410c', height: 62, caption: 'Bales in the field.' },
+  { id: '24', title: 'Cove', color: '#0369a1', height: 46 },
+  { id: '25', title: 'Aurora', color: '#7e22ce', height: 116, caption: 'Green light over the bay.' },
+  { id: '26', title: 'Garden', color: '#15803d', height: 66 },
+  { id: '27', title: 'Quarry', color: '#78716c', height: 82, caption: 'Swimmers on the ledge.' },
+  { id: '28', title: 'Lake', color: '#1d4ed8', height: 56 },
+  { id: '29', title: 'Mesa', color: '#b45309', height: 98, caption: 'Red rock at noon.' },
+  { id: '30', title: 'Fjord', color: '#155e75', height: 70 },
+  { id: '31', title: 'Pier', color: '#be123c', height: 86, caption: 'Gulls on every post.' },
+  { id: '32', title: 'Steppe', color: '#57534e', height: 48 },
 ];
 
 const PhotoTile = ({ data: photo }: { data: Photo }) => (
