@@ -15,9 +15,6 @@ export default defineConfig({
     skills: 'src/skills/index.ts',
     translations: 'src/translations.ts',
     testing: 'src/testing/index.ts',
-    // The export condition names `dist/lib/PresenterStoryPlugin.mjs`, which only an entry builds: a nested source
-    // is not derived from the export the way a top-level `src/<Name>.ts` is.
-    PresenterStoryPlugin: 'src/testing/presenterStoryPlugin.ts',
     Presentation: 'src/types/Presentation.ts',
     PresenterCapabilities: 'src/types/PresenterCapabilities.ts',
     PresenterEvents: 'src/types/PresenterEvents.ts',

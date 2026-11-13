@@ -22,7 +22,7 @@ import { translations } from '#translations';
 import { Presentation } from '#types';
 
 import { PresentationArticle } from '../containers/PresentationArticle/PresentationArticle.tsx';
-import { createPresenterStoryPlugin } from './presenterStoryPlugin.ts';
+import * as PresenterStoryPlugin from './PresenterStoryPlugin.ts';
 
 /** Attended from the start (see `withAttention` below), as a plank the user just opened. */
 export const ATTENDED_ID = 'story';
@@ -64,7 +64,9 @@ export const presentationStoryDecorators = ({
     createSpace: true,
     onCreateSpace,
   }),
-  withPluginManager({ plugins: [ProcessManagerPlugin.make(), createPresenterStoryPlugin({ slideSurface })()] }),
+  withPluginManager({
+    plugins: [ProcessManagerPlugin.make(), PresenterStoryPlugin.createPresenterStoryPlugin({ slideSurface })()],
+  }),
   // Outermost, so the plugin manager's atom registry is not replaced by the decorator's own.
   withAttention(ATTENDED_ID),
 ];

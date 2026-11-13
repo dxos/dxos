@@ -24,8 +24,8 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
-import { createPresenterStoryPlugin } from '@dxos/plugin-presenter/PresenterStoryPlugin';
 import type * as SlideTheme from '@dxos/plugin-presenter/SlideTheme';
+import { PresenterStoryPlugin } from '@dxos/plugin-presenter/testing';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import * as CanvasPlugin from '#meta';
@@ -106,7 +106,7 @@ const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
     PresenterPlugin.make(),
     // Present sets the deck's fullscreen plank, which only plugin-deck holds; this stands in for it, as the
     // presenter's own stories do.
-    createPresenterStoryPlugin()(),
+    PresenterStoryPlugin.createPresenterStoryPlugin()(),
     StudioKindsPlugin(),
   ],
   onInit: async ({ space }) => {
