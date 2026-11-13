@@ -75,7 +75,7 @@ template landing: The front door
   parts:
     - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip, two actions, ECHO background art
     - Sample: the smallest complete example
-    - Guarantees: four cards in two rows of two, each a behavior with its spec citation
+    - Guarantees: four cards in one row, falling to two rows of two and then one column, each a behavior with its spec citation
     - Live: the live demos [F-7.5]
     - Architecture: one diagram of the packages
     - Routes: cards into the learning path, concepts and reference
@@ -3981,6 +3981,14 @@ decision D-218: A demo's peers stay mounted while their client's status lapses. 
   rejected:
     - Keep the gate and rebuild the peer when its status returns: a destroyed client cannot come back, so the demo would have to make new peers and replay the invitation.
     - Lengthen the client's status timeout: it lives in the client SDK and changes every app, and a long enough background stay still trips it.
+```
+
+```mdl
+decision D-219: On `/echo` the four reason cards and the four guarantee cards each sit in one row on a wide screen, in two rows of two on a medium one, and in one column on a narrow one. They never wrap to three and one. Amends [D-211].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [landing]
+  why: Josiah meant two rows of two as the fallback at a breakpoint, not the layout at every width.
 ```
 
 ## Appendix: Extension Definitions
