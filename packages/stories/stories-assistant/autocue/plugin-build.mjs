@@ -73,15 +73,11 @@ export const steps = [
   },
   {
     name: 'Start the build',
-    narration: 'One click hands the agent the project: five tasks, from reading the guide to offering the plugin.',
+    narration: 'One click hands the agent the project: it reads its five tasks and splits the work.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Ask the agent to build', subtitle: 'Dev Shell PLUGIN.mdl QA-3' });
       await demo.click({ selector: `${CHIP}:has-text("Build.")`, label: 'Build.' });
       await page.getByText('Reading my checklist').first().waitFor({ state: 'visible', timeout: 30_000 });
-      await demo.click({ selector: TASKS_TOGGLE, label: 'Tasks' });
-      await page.getByText('Write the plugin in TypeScript', { exact: true }).first().waitFor({ timeout: 15_000 });
-      await demo.sleep({ ms: 2_000 });
-      await demo.click({ selector: TASKS_TOGGLE, label: 'Tasks' });
     },
   },
   {
@@ -106,10 +102,15 @@ export const steps = [
   },
   {
     name: 'Keep talking',
-    narration: 'The reader keeps talking while they work.',
+    narration: 'The reader keeps talking while they work, and the checklist shows where the build stands.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Keep talking', subtitle: 'the agent answers while they work' });
+      // The agent's composer, with its checklist and chips, shows while its column is the selected one.
       await demo.click({ selector: AGENT, label: 'Agent' });
+      await demo.click({ selector: TASKS_TOGGLE, label: 'Tasks' });
+      await page.getByText('Write the plugin in TypeScript', { exact: true }).first().waitFor({ timeout: 15_000 });
+      await demo.sleep({ ms: 2_500 });
+      await demo.click({ selector: TASKS_TOGGLE, label: 'Tasks' });
       await demo.click({ selector: `${CHIP}:has-text("local time")`, label: 'Suggestion' });
       await page
         .getByText(/until you add a clock/)
@@ -133,7 +134,9 @@ export const steps = [
         .getByText(/World Clock is ready/)
         .last()
         .scrollIntoViewIfNeeded();
-      await demo.sleep({ ms: 9_000 });
+      await demo.sleep({ ms: 6_000 });
+      await demo.click({ selector: TASKS_TOGGLE, label: 'Tasks' });
+      await demo.sleep({ ms: 4_000 });
     },
   },
 ];
