@@ -23289,12 +23289,21 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-assistant
       '@dxos/plugin-brain':
         specifier: workspace:*
         version: link:../../plugins/plugin-brain
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-client
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
+      '@dxos/plugin-routine':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-routine
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -23310,6 +23319,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-rdf':
         specifier: workspace:*
         version: link:../../ui/react-ui-rdf
