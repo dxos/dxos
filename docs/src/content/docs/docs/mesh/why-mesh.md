@@ -22,7 +22,7 @@ change also goes to EDGE over each device's WebSocket, so a third device that co
 | Latency between two nearby devices | A round trip to the nearest data centre | The local network, or the shortest route    |
 | Devices never online together      | Works: EDGE holds the copy              | Does not work on its own                    |
 | EDGE unreachable                   | Sync stops                              | Sync continues between the devices it links |
-| Who handles the data in transit    | EDGE                                    | Only the two devices                        |
+| Who handles the data in transit    | EDGE                                    | The two devices, and a TURN relay if needed |
 | Peers behind strict NAT            | Works                                   | Needs a TURN relay                          |
 
 Neither column is enough alone, so MESH uses both. EDGE is one more transport, not a separate path beside MESH.
@@ -46,7 +46,8 @@ reaches them: each syncs with EDGE's copy when it is online. See [Replication an
 
 ### Data that stays between devices
 
-A direct link carries data only between the two devices on it. The same data also goes to EDGE, which can read it only
+A direct link carries data between the two devices on it, through a TURN relay only when they have no route to each
+other. The same data also goes to EDGE when the space replicates through it, which can read it only
 if the space gives EDGE more than `pull` access; see HALO's [Spaces and membership](/docs/halo/concepts/spaces-membership/).
 
 ## Today: both at once

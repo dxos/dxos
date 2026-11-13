@@ -1160,7 +1160,7 @@ page mesh-swarms: Swarms and topology
   status: spike
   covers:
     - A swarm per topic, and the peers in it
-    - The MMST topology: connect enough peers that devices usually stay reachable, not every pair; it does not guarantee a connected swarm, and EDGE covers the gaps [D-249]
+    - The MMST topology: connect enough peers that devices usually stay reachable, not every pair; it does not guarantee a connected swarm, and EDGE covers the gaps [D-252]
     - The fully connected and star topologies, and when each is used
     - The connection limiter
 ```
@@ -5033,47 +5033,155 @@ decision D-248: On `/echo` the four reason cards and the four guarantee cards ea
 ```
 
 ```mdl
-decision D-249: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read. Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key.
+decision D-249: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it and that `Space.setEdgeReplication` turns that off. Why MESH? says a direct link can pass through a TURN relay and no longer says its data never reaches a server.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-16.8]
-  why: Review checked these pages against the client services and network manager code, which do not support the earlier claims.
+  affects: [why-mesh, why-edge, mesh-overview, mesh-transports, edge-replication]
+  why: A space can turn EDGE replication off, and WebRTC falls back to TURN when devices have no route; the pages promised a copy and a server-free path that need not exist.
 ```
 
 ```mdl
-decision D-250: The TILE learning path's ECHO app configures its client as ECHO's Installation page does: persistent storage, the OPFS worker, and EDGE signaling and replication. Connect to ECHO tells the reader to start the new entry point with the stylesheet imports.
+decision D-250: EDGE's Indexing and queries page says EDGE indexes only the spaces it can read; a space that grants EDGE only `pull` access has no index there.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-16.8]
+  affects: [edge-indexing]
+  why: With only `pull` access EDGE relays a space unread, so it cannot index it.
+```
+
+```mdl
+decision D-251: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-teleport, mesh-architecture]
+  why: `SpaceProtocolSession.open` registers the replicator beside the auth extension, and the replicator does not check authentication.
+```
+
+```mdl
+decision D-252: Swarms and topology says MMST usually connects a swarm but does not guarantee it, and that EDGE covers the gaps.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-swarms]
+  why: MMST stops originating connections at its minimum, so two groups that each reach it never connect.
+```
+
+```mdl
+decision D-253: A space's swarm topic is its space ID, the first 20 bytes of the SHA-256 of its space key, on Signaling and discovery and in the glossary.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [mesh-signaling, mesh-glossary]
+  why: The pages called the topic a 32-byte key; `SpaceProtocol` derives it from the space ID.
+```
+
+```mdl
+decision D-254: The TILE learning path's ECHO app configures its client as ECHO's Installation page does: persistent storage, the OPFS worker, and EDGE signaling and replication. Connect to ECHO tells the reader to start the new entry point with the stylesheet imports.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-learn-echo]
   why: Without a network config the client used in-memory transports, so the sharing exercise could not sync two browser profiles.
 ```
 
 ```mdl
-decision D-251: TILE's samples key list rows by id, keep editor text in state so it survives the editor being rebuilt on a theme change, and make tooltip triggers keyboard-focusable.
+decision D-255: The guide sample's contact list keys its rows by id.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-16.8]
-  why: Rows keyed by name collide on duplicate names, a rebuilt editor reset to its initial value, and a non-focusable trigger left the tooltip out of reach for keyboard users.
+  affects: [tile-guide-plex]
+  why: Rows keyed by name collide when two contacts share a name.
 ```
 
 ```mdl
-decision D-252: TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, and only `Flex`, `Grid` and `Container` take `asChild`. Interactive parts take no added roles or state attributes, but an icon-only part still needs an accessible name, and a layout primitive may take a role. The forms guide says `include` keeps schema order and Save is disabled only while a touched field has an error.
+decision D-256: The text editor guide keeps the editor's text in state and passes it as `value` with `onChange`.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-16.8]
-  why: Review checked these statements against `@dxos/react-ui` and `@dxos/react-ui-form`, which behave as described here.
+  affects: [tile-guide-editor]
+  why: Rebuilding the extensions on a theme change recreates the editor, which reset it to its initial value.
 ```
 
 ```mdl
-decision D-253: The topic picker's panel on a phone is capped at the viewport's height and scrolls.
+decision D-257: The learning path's role tooltips sit on a focusable element.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-16.8]
+  affects: [tile-learn-icons, tile-learn-overlays]
+  why: The trigger was not focusable, so keyboard users could not open the tooltip.
+```
+
+```mdl
+decision D-258: The Overlays reference says Popover holds focus only with `modal`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-overlays]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-259: The Hooks reference says `useTranslation` returns `{ t, … }`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-hooks]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-260: The Menu reference says `Menu.Root`'s `onSelect` receives `{ value }`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-api-menu]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-261: Theme and tokens puts `modal-surface` at the `raised` level and leaves `overlay` for explicit elevation.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-theme-tokens]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-262: The Layout concept says only `Flex`, `Grid` and `Container` take `asChild`.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-layout-concept]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-263: Composite components says interactive parts take no added roles or state attributes, that an icon-only part still needs an accessible name, and that a layout primitive may take a role.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-composite]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-264: The Forms guide says `include` keeps schema order, and that Save is disabled only while a touched field has an error.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [tile-guide-forms]
+  why: Review checked the page against the code, which does not support the earlier statement.
+```
+
+```mdl
+decision D-265: The topic picker's panel on a phone is capped at the viewport's height and scrolls.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.6]
   why: On a short landscape screen the fixed panel ran past the viewport, where it could not be scrolled to.
 ```
 
