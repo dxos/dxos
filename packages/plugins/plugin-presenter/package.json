@@ -137,6 +137,11 @@
       "source": "./src/types/SlideViewState.ts",
       "types": "./dist/types/src/types/SlideViewState.d.ts",
       "import": "./dist/lib/SlideViewState.mjs"
+    },
+    "./PresenterStoryPlugin": {
+      "source": "./src/testing/presenterStoryPlugin.ts",
+      "types": "./dist/types/src/testing/presenterStoryPlugin.d.ts",
+      "import": "./dist/lib/PresenterStoryPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

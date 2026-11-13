@@ -23,6 +23,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
+import { createPresenterStoryPlugin } from '@dxos/plugin-presenter/PresenterStoryPlugin';
 import type * as SlideTheme from '@dxos/plugin-presenter/SlideTheme';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
@@ -62,42 +63,44 @@ const StudioKindsPlugin = Plugin.define(
 );
 
 /**
- * A slide of the deck: the diagram's own title, then the drawing itself. The embed is the drawing's EID, which the
- * slide resolves to a `<Surface>` in whatever space the story seeded.
+ * A slide of the deck: the drawing alone, full bleed. The deck's own titles are the presenter's heading (the slide's
+ * label in the grid), and a heading on the slide would take a third of the height the diagram was drawn for.
  */
-const slide = (title: string, drawing: Drawing.Drawing): string =>
-  [
-    '---',
-    'layout: default',
-    '---',
-    '',
-    `# ${title}`,
-    '',
-    `<Surface ref="${EID.make({ entityId: drawing.id })}" />`,
-    '',
-  ].join('\n');
+const slide = (drawing: Drawing.Drawing): string =>
+  ['---', 'layout: full', '---', '', `<Surface ref="${EID.make({ entityId: drawing.id })}" />`, ''].join('\n');
 
-const decorators = createStoryDecorators({
+const decorators = createStoryDecorators(() => ({
   types: [Drawing.Drawing, Drawing.Canvas, Presentation.Presentation, Presentation.Slide, ...types],
   plugins: [
     IllustratorPlugin.make(),
     CanvasPlugin.make(),
     MarkdownPlugin.make(),
     PresenterPlugin.make(),
+    // Present sets the deck's fullscreen plank, which only plugin-deck holds; this stands in for it, as the
+    // presenter's own stories do.
+    createPresenterStoryPlugin()(),
     StudioKindsPlugin(),
   ],
   onInit: async ({ space }) => {
-    const slides = STUDIO_SLIDES.map(({ id, source, model }) => {
-      // Read-only, as the nine-up is: a slide is looked at, and the rail would take a corner of every one.
+    const seeded = STUDIO_SLIDES.map(({ id, source, model }) => {
+      // Read-only: a slide is looked at, and the rail would take a corner of every one. The drawing opens at its
+      // natural size — the canvas's fit stops at 100%, so it never magnifies the deck's 1600-unit page to the
+      // presenter's wider design surface.
       const canvas = addTestCanvas(space.db, seedStudioSlide(source, model), { ...STUDIO_CANVAS, readonly: true });
-      const drawing = space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas }));
-      return slide(model.title, drawing);
+      return { canvas, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
     });
-    const deck = space.db.add(Presentation.make({ name: 'Studio', description: DESCRIPTION, theme: THEME, slides }));
+    const deck = space.db.add(
+      Presentation.make({
+        name: 'Studio',
+        description: DESCRIPTION,
+        theme: THEME,
+        slides: seeded.map(({ drawing }) => slide(drawing)),
+      }),
+    );
     await space.db.flush();
     return [[Cell.article(deck)]];
   },
-});
+}));
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'plugins/plugin-canvas/containers/StudioPresentation',
