@@ -47,7 +47,7 @@ const views = SampleSpace.partial('echo-demo-views', {
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-echo/Views',
   render: ModuleContainer.Root,
-  args: { compact: true },
+  args: { tiling: 'flush' },
   parameters: { layout: 'fullscreen' },
   tags: ['docs-embed'],
 };

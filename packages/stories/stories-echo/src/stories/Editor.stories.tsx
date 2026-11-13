@@ -44,7 +44,7 @@ const editor = SampleSpace.partial('echo-demo-editor', {
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-echo/Editor',
   render: ModuleContainer.Root,
-  args: { compact: true },
+  args: { tiling: 'flush' },
   parameters: { layout: 'fullscreen' },
   tags: ['docs-embed'],
 };

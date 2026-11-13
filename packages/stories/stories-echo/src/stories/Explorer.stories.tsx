@@ -33,7 +33,7 @@ const explorer = SampleSpace.partial('echo-demo-explorer', {
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-echo/Explorer',
   render: ModuleContainer.Root,
-  args: { compact: true },
+  args: { tiling: 'flush' },
   parameters: { layout: 'fullscreen' },
   tags: ['docs-embed'],
 };

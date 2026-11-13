@@ -64,8 +64,14 @@ export type ModuleContainerProps = {
   columns?: string;
   /** Row track sizes per column, in the same form; a column without an entry has equal rows. */
   rows?: readonly (string | undefined)[];
-  compact?: boolean;
+  /**
+   * `separated` spaces bordered cells apart; `flush` abuts them with one divider between neighbours and none at
+   * the edge, for a frame that draws its own.
+   */
+  tiling?: Tiling;
 };
+
+export type Tiling = 'separated' | 'flush';
 
 /** Grid tracks from an underscore-separated size list, else `count` equal tracks. */
 const tracks = (sizes: string | undefined, count: number): string =>
@@ -229,7 +235,7 @@ const ObjectCell = ({ space, cell }: { space: Space; cell: NormalizedObjectCell 
  * drive its layout with this container. Provide `withAttention()` (from `@dxos/react-ui-attention/testing`)
  * in the story decorators to make attention actually track focus.
  */
-export const ModuleContainer = ({ layout, columns, rows, compact = false }: ModuleContainerProps) => {
+export const ModuleContainer = ({ layout, columns, rows, tiling = 'separated' }: ModuleContainerProps) => {
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
   const layoutState = Hooks.useCapability(StorybookCapabilities.LayoutState);
   const { graph } = ToolkitHooks.useAppGraph();
@@ -272,13 +278,13 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
 
   return (
     <div
-      className={mx('dx-fill dx-cover grid', !compact && 'gap-2 p-2')}
+      className={mx('dx-fill dx-cover grid', tiling === 'flush' ? 'gap-px bg-separator' : 'gap-2 p-2')}
       style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
     >
       {resolvedLayout.map((column, columnIndex) => (
         <div
           key={columnIndex}
-          className={mx('dx-expand grid', !compact && 'gap-2')}
+          className={mx('dx-expand grid', tiling === 'flush' ? 'gap-px' : 'gap-2')}
           style={{ gridTemplateRows: tracks(rows?.[columnIndex], column.length) }}
         >
           {column.map((spec, moduleIndex) => {
@@ -287,7 +293,10 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
               <AttendableContainer
                 key={moduleIndex}
                 id={cell.id}
-                classNames={mx('border border-separator overflow-hidden', !compact && 'rounded-sm')}
+                classNames={mx(
+                  'overflow-hidden',
+                  tiling === 'flush' ? 'bg-base-surface' : 'border border-separator rounded-sm',
+                )}
               >
                 {cell.kind === 'object' ? (
                   <ObjectCell space={space} cell={cell} />

@@ -33,7 +33,7 @@ const diagram = SampleSpace.partial('echo-demo-diagram', {
 const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-echo/Diagram',
   render: ModuleContainer.Root,
-  args: { compact: true },
+  args: { tiling: 'flush' },
   parameters: { layout: 'fullscreen' },
   tags: ['docs-embed'],
 };

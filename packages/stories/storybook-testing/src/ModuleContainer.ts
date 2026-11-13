@@ -11,4 +11,5 @@ export {
   type ResolvedCellProps,
   ModuleContainer as Root,
   type ModuleSpec as Spec,
+  type Tiling,
 } from './internal/module-container.tsx';
