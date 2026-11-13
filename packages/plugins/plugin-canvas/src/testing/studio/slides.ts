@@ -72,8 +72,8 @@ const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide
 });
 
 /**
- * The nine slides in deck order (`s1 hyperspace` … `s9 agent`), as the studio repo's `../slides/index.mjs` lists
- * them. Every sidecar records the same 1600 x 900 page, and a slide unit is a scene px, so the drawings are at one
+ * The nine slides in the order they are presented, which is the studio repo's (`../slides/index.mjs`) with the
+ * ontology moved up to follow the ECHO layers: the types it names are what those layers hold. Every sidecar records the same 1600 x 900 page, and a slide unit is a scene px, so the drawings are at one
  * scale: a card on one slide is the size of a card on another.
  */
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
@@ -81,6 +81,8 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
   slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'smart' }),
   slide('echo-layers', echoLayersSource, echoLayersModel),
+  // Every card is a type, so every card is one box; the deck sized each to its own label.
+  slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'smart' }),
   slide('plugins', pluginsSource, pluginsModel, {
     labels: false,
     remap: { chip: 'card' },
@@ -112,8 +114,6 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     frames: ['subagents'],
     links: 'smart',
   }),
-  // Every card is a type, so every card is one box; the deck sized each to its own label.
-  slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'smart' }),
   slide('chat', chatSource, chatModel),
   slide('agent', agentSource, agentModel),
 ];
