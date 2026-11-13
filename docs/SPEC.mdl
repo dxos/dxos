@@ -3091,9 +3091,9 @@ feat F-7: Relationship to dxos.org
   req F-7.1:
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
-          Plugins, Blog, Docs); the footer links the same pages, every docs section in the
-          topic switcher's order (ECHO, HALO, MESH, EDGE, SAGE, PLEX, TILE), GitHub and Discord [D-250],
-          [D-274]
+          Plugins, Blog, Docs); the footer links the same pages with Docs right after Home [D-303], every
+          docs section in the topic switcher's order (ECHO, HALO, MESH, EDGE, SAGE, PLEX, TILE), GitHub and
+          Discord [D-250], [D-274]
 
   req F-7.2:
     when: a reader looks for ECHO material on dxos.org
@@ -6011,6 +6011,14 @@ decision D-302: The docs have square corners everywhere outside a demo, as the m
   why: The home, Composer, plugins and `/echo` pages are square, and rounded framing made the docs read as a different site.
   rejected:
     - Square the demos too: a demo shows the components as they ship, corners included.
+```
+
+```mdl
+decision D-303: The docs footer and the marketing pages' footer list Docs right after Home: Home, Docs, ECHO, Composer, Plugins. Amends [F-7.1].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-7.1]
+  why: Docs is the site's second destination after Home, so it reads first among the rest.
 ```
 
 ## Appendix: Extension Definitions
