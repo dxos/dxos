@@ -2486,19 +2486,6 @@ page tile-api-toolbar: Toolbar
     - The `Toolbar` parts
 ```
 ```mdl
-page tile-api-menu-action-toolbar: ActionToolbar
-  A toolbar drawn from a list of actions.
-  section: TILE
-  route: /docs/tile/api/react-ui-menu/action-toolbar/
-  group: API
-  package: react-ui-menu
-  template: namespace
-  status: spike
-  covers:
-    - The package's own `ActionToolbar` story, live at the top [D-296]
-    - `useMenuBuilder` and `ActionToolbar`, placement, overflow, switches, attention, and `graphActions` in a plugin, linked to PLEX's App Graph [D-240] [D-296]
-```
-```mdl
 page tile-api-overlays: Overlays
   Dialog, Popover, Tooltip, HoverCard and Toast.
   section: TILE
@@ -2519,19 +2506,6 @@ page tile-api-menu: Menu
   status: spike
   covers:
     - The `Menu` parts, and where `@dxos/react-ui-menu` takes over for menus built from actions
-```
-```mdl
-page tile-api-menu-action-menu: ActionMenu
-  A dropdown menu drawn from a list of actions.
-  section: TILE
-  route: /docs/tile/api/react-ui-menu/action-menu/
-  group: API
-  package: react-ui-menu
-  template: namespace
-  status: spike
-  covers:
-    - The package's own `ActionMenu` story, live at the top [D-296]
-    - `ActionMenu` over `MenuBuilder` actions, its trigger, and deferring a menu until it opens [D-296]
 ```
 ```mdl
 page tile-api-icon: Icon
@@ -2695,6 +2669,34 @@ page tile-api-grid-grid: Grid
   covers:
     - The package's `Docs` story, the one its Overview card runs, live at the top [D-296] [D-297]
     - `Grid.Root` and `Grid.Content`, planes and `getCells`, `overscroll`, and `GridCellEditor`; the Overview grid's Spreadsheet card links here [D-296]
+```
+```mdl
+page tile-api-menu-action-menu: ActionMenu
+  A dropdown menu drawn from a list of actions.
+  section: TILE
+  route: /docs/tile/api/react-ui-menu/action-menu/
+  group: API
+  package: react-ui-menu
+  family: Actions
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `ActionMenu` story, live at the top [D-296]
+    - `ActionMenu` over `MenuBuilder` actions, its trigger, and deferring a menu until it opens [D-296]
+```
+```mdl
+page tile-api-menu-action-toolbar: ActionToolbar
+  A toolbar drawn from a list of actions.
+  section: TILE
+  route: /docs/tile/api/react-ui-menu/action-toolbar/
+  group: API
+  package: react-ui-menu
+  family: Actions
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `ActionToolbar` story, live at the top [D-296]
+    - `useMenuBuilder` and `ActionToolbar`, placement, overflow, switches, attention, and `graphActions` in a plugin, linked to PLEX's App Graph [D-240] [D-296]
 ```
 ```mdl
 page tile-api-calendar-calendar: Calendar
@@ -5972,7 +5974,7 @@ decision D-298: The TILE Overview's cards come in more sizes, each set by what i
 ```
 
 ```mdl
-decision D-299: TILE's API sidebar nests the component packages' pages by what the component does, not by package, in groups named with one word: Collections (Board, Listbox, Masonry, Mosaic, OrderedList, Picker, Tree), Editing (Editor, Form, Grid), Time (Calendar, Timeline) and Visualization (Diagram, Globe, Graph, Map, Plot, SVG). A page's `family` field places it. ActionMenu and ActionToolbar join the core list after Menu and Toolbar. Routes keep the package, and each page names its package in its import and install. Amends [D-296].
+decision D-299: TILE's API sidebar nests the component packages' pages by what the component does, not by package, in groups named with one word: Collections (Board, Listbox, Masonry, Mosaic, OrderedList, Picker, Tree), Editing (Editor, Form, Grid), Actions (ActionMenu, ActionToolbar), Time (Calendar, Timeline) and Visualization (Diagram, Globe, Graph, Map, Plot, SVG). A page's `family` field places it. The top level of API holds only `@dxos/react-ui`'s core; every package that builds on it nests in a group. Routes keep the package, and each page names its package in its import and install. Amends [D-296].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]
