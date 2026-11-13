@@ -86,7 +86,18 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
             {label}
           </TextPart>
         </div>
-        {footer && <div className='studio-card-note font-mono truncate'>{footer}</div>}
+        {/* Through `TextPart`, since the spec advertises `footer` as an editable part; mounted while that part is
+            edited even once it is empty, so the editor can put a note back. */}
+        {(footer !== undefined || editing?.part === 'footer') && (
+          <TextPart
+            part='footer'
+            text={footer ?? ''}
+            editing={editing}
+            classNames='studio-card-note font-mono truncate'
+          >
+            {footer}
+          </TextPart>
+        )}
       </div>
     );
   }
