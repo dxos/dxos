@@ -1,0 +1,26 @@
+---
+import { ApiStory } from '../tile/ApiStory.tsx';
+
+interface Props {
+  /** `<package>/<namespace>`, a key of `STORIES` in `tile/ApiStory.tsx`. */
+  id: string;
+  height?: string;
+}
+
+const { id, height = '28rem' } = Astro.props;
+---
+
+<!-- The namespace's own story from its package, at the top of its API page [D-286]. -->
+<div class="api-story dx-wide dx-island not-content" style={{ height }}>
+  <ApiStory id={id} client:only="react" />
+</div>
+
+<style>
+  .api-story {
+    position: relative;
+    margin-block: 0 1.5rem;
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+  }
+</style>

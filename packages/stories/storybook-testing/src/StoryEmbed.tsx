@@ -47,6 +47,8 @@ export const compose = async (
 
 export type RootProps = ThemedClassName<{
   story: Composed;
+  /** Args over the story's own, such as turning off a debug panel. */
+  args?: Record<string, unknown>;
   /** A runtime the page shares between its stories, instead of each starting clients of its own. */
   shared?: StoryPeers.Shared;
 }>;
@@ -55,10 +57,10 @@ export type RootProps = ThemedClassName<{
  * Renders a composed story in place. Story layouts are `fixed inset-0`; layout containment makes them fill this
  * element instead of the viewport, and it needs a height from its container.
  */
-export const Root = ({ story: Story, shared, classNames }: RootProps) => {
+export const Root = ({ story: Story, args, shared, classNames }: RootProps) => {
   const content = (
     <div className={mx('relative overflow-hidden contain-layout', classNames)}>
-      <Story />
+      <Story {...args} />
     </div>
   );
 

@@ -1,0 +1,52 @@
+---
+title: Diagram
+description: Boxes and links on a canvas the user can pan and zoom.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+
+<ApiStory id="react-ui-diagram/diagram" height="28rem" />
+
+```ts
+import { Diagram } from '@dxos/react-ui-diagram';
+```
+
+```sh
+npm install @dxos/react-ui-diagram
+```
+
+`Diagram` draws boxes and the links between them on a canvas the user can pan and zoom. You describe what is
+connected to what, and the diagram works out where each box goes.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Diagram.Root` | Lays out a `Projection` and provides it; renders no element of its own |
+| `Diagram.Canvas` | The surface that pans and zooms, drawing every box and link from the projection |
+| `Diagram.Background` | A grid at the snap pitch, as `lines` or `dots` |
+
+## `Diagram.Root`
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `diagram` | `Projection` | The nodes and edges to draw |
+| `overlay` | `Overlay` | Positions the user pinned, kept apart from the model |
+| `grid` | `number` | The snap pitch |
+| `onNodeMove` | `(id, origin) => void` | The user dragged a box |
+
+## Describe and draw
+
+A diagram is a `Projection`: a graph of nodes and edges. A node has an `id`, a `type` and a `label`, and `ports` where
+links attach, each on a side at a fraction along it. A node whose `type` is `GROUP` holds the nodes whose `parent` names
+it, and is sized to fit them. An edge joins a `source` and a `target`, port to port. Nodes need no positions: the
+diagram lays them out.
+
+Dragging a box calls `onNodeMove`. Keep the position in an `Overlay`, so the model can change without losing it:
+
+<Snippet file="tile-guide-diagram" region="diagram" lang="tsx" />
+
+The story at the top of this page runs this example.
+
+To lay the boxes out again, clear the overlay's positions.

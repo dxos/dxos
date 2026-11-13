@@ -163,19 +163,43 @@
       "path": "../packages/ui/react-ui-attention"
     },
     {
+      "path": "../packages/ui/react-ui-calendar"
+    },
+    {
+      "path": "../packages/ui/react-ui-diagram"
+    },
+    {
+      "path": "../packages/ui/react-ui-dnd"
+    },
+    {
       "path": "../packages/ui/react-ui-editor"
     },
     {
       "path": "../packages/ui/react-ui-form"
     },
     {
+      "path": "../packages/ui/react-ui-geo"
+    },
+    {
       "path": "../packages/ui/react-ui-graph"
+    },
+    {
+      "path": "../packages/ui/react-ui-grid"
     },
     {
       "path": "../packages/ui/react-ui-list"
     },
     {
+      "path": "../packages/ui/react-ui-masonry"
+    },
+    {
       "path": "../packages/ui/react-ui-menu"
+    },
+    {
+      "path": "../packages/ui/react-ui-mosaic"
+    },
+    {
+      "path": "../packages/ui/react-ui-plot"
     },
     {
       "path": "../packages/ui/react-ui-table"

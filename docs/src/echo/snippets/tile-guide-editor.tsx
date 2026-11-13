@@ -12,7 +12,6 @@ import {
 } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Typography from '@dxos/react-ui/Typography';
 import { Text } from '@dxos/schema';
 import {
   automerge,
@@ -20,7 +19,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  listener,
 } from '@dxos/ui-editor';
 
 // #region plain
@@ -51,31 +49,31 @@ export const NotesEditor = () => {
 // #region markdown
 const NOTES = '# Notes\n\nSome **bold** text and a [link](https://dxos.org).\n';
 
-const countWords = (text: string) => text.split(/\s+/).filter(Boolean).length;
-
 /**
- * A markdown editor with a formatting toolbar; `listener` reports each change. The toolbar is active while the
- * container it shares with the editor has the user's attention.
+ * A markdown editor with a formatting toolbar, filling its container. The toolbar is active while the container it
+ * shares with the editor has the user's attention.
  */
 export const MarkdownEditor = () => {
   const themeMode = Hooks.useThemeMode();
   // The text lives in state, so it survives the editor being rebuilt when the theme changes.
   const [text, setText] = useState(NOTES);
-  const [words, setWords] = useState(() => countWords(NOTES));
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineWrapping: true }),
-      createThemeExtensions({ themeMode }),
+      // Padding inside the scroller keeps the text off the container's edges.
+      createThemeExtensions({
+        themeMode,
+        slots: { scroller: { className: 'px-4 py-2' } },
+      }),
       createMarkdownExtensions(),
       decorateMarkdown(),
-      listener({ onChange: ({ text }) => setWords(countWords(text)) }),
     ],
     [themeMode],
   );
 
   return (
     <RootAttentionProvider>
-      <AttendableContainer id='notes'>
+      <AttendableContainer id='notes' classNames='h-full'>
         <Editor.Root extensions={extensions} viewMode='preview'>
           <Editor.Content>
             <Editor.Toolbar attendableId='notes' />
@@ -83,7 +81,6 @@ export const MarkdownEditor = () => {
           </Editor.Content>
         </Editor.Root>
       </AttendableContainer>
-      <Typography.Text tone='muted'>{words} words</Typography.Text>
     </RootAttentionProvider>
   );
 };

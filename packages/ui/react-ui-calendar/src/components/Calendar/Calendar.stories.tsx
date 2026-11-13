@@ -70,7 +70,7 @@ export const Column: Story = {
 };
 
 export const Week: StoryObj<typeof Calendar.Week> = {
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-auto' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-full' })],
   render: () => {
     const idRef = useRef(100);
     const initial = useMemo<CalendarEvent[]>(() => {

@@ -1,0 +1,56 @@
+---
+title: Globe
+description: A globe of countries drawn on a canvas, with points, lines and tours.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+
+<ApiStory id="react-ui-geo/globe" height="28rem" />
+
+```ts
+import { Globe, useDrag, useGlobeZoomHandler, useTour } from '@dxos/react-ui-geo';
+import { loadTopology } from '@dxos/react-ui-geo/data';
+```
+
+```sh
+npm install @dxos/react-ui-geo
+```
+
+`Globe` draws the countries itself on a canvas, so it needs no tile server, works offline and sends no requests to a
+third party. For a street map, use [`Map`](/docs/tile/api/react-ui-geo/map/). The package's strings come from
+`@dxos/react-ui-geo/translations`.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Globe.Root` | Holds the zoom, rotation and translation; its `ref` gives a `GlobeController` |
+| `Globe.Viewport` | Measures its space and sizes the canvas to it |
+| `Globe.Canvas` | Draws the `topology`, and `features`: `points` and the `lines` between them |
+| `Globe.Zoom` | Zoom in and out buttons |
+| `Globe.Action` | A start button, for a spin or a tour |
+| `Globe.Panel` | A panel at a corner of the viewport |
+| `Globe.Debug` | The globe's state, for development |
+
+The hooks act on the controller: `useDrag` turns the globe as the user drags, `useWheel` zooms with the wheel,
+`useSpinner` turns it on its own, `useTour` flies from point to point, and `useGlobeZoomHandler` connects the zoom
+buttons.
+
+## `Globe.Canvas`
+
+| Prop | Type | Effect |
+| --- | --- | --- |
+| `topology` | `Topology` | Country outlines from `loadTopology`; `110m` is the smallest |
+| `features` | `{ points, lines }` | Places as `lat` and `lng`, and lines from a `source` to a `target` |
+| `projection` | `'orthographic' | 'mercator' | ...` | A globe by default |
+| `styles` | `StyleSet` | Colors for each layer; the theme's by default |
+
+## A trip on a globe
+
+`useTour` flies from point to point and draws the arc it travels. It stops after a lap, or when the user drags, so this
+example starts the next lap after a pause:
+
+<Snippet file="tile-guide-map" region="globe" lang="tsx" />
+
+The story at the top of this page runs this example.

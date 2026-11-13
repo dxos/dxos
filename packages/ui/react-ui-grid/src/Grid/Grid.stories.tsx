@@ -8,6 +8,7 @@ import React, { type MouseEvent, type RefObject, useCallback, useMemo, useRef, u
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { type DxGridPlaneCells, defaultRowSize } from '@dxos/lit-grid';
+import { type DxGridPlane, parseCellIndex } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import * as Combobox from '@dxos/react-ui/Combobox';
@@ -919,4 +920,90 @@ export const SelectionStaysOnRow: Story = {
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(canvas.getByTestId('selection').textContent).toBe('a:r3'));
   },
+};
+
+//
+// Docs
+//
+
+const BUDGET_COLUMNS = ['Item', 'Q1', 'Q2', 'Q3', 'Total'];
+
+const BUDGET_TOTAL = BUDGET_COLUMNS.length - 1;
+
+const BUDGET_ROWS = [
+  ['Hosting', '1200', '1350', '1400'],
+  ['Design', '800', '650', '900'],
+  ['Support', '400', '420', '380'],
+  ['Travel', '300', '0', '550'],
+  // Blank rows and columns run past the frame, as in a spreadsheet.
+  ...Array.from({ length: 40 }, () => ['', '', '', '']),
+];
+
+const budgetTotal = (row: string[]) =>
+  row.every((value) => value === '')
+    ? ''
+    : String(row.slice(1, BUDGET_TOTAL).reduce((sum, value) => sum + (Number(value) || 0), 0));
+
+const budgetCells = (rows: string[][], plane: DxGridPlane): DxGridPlaneCells =>
+  plane === 'frozenRowsStart'
+    ? Object.fromEntries(BUDGET_COLUMNS.map((label, col) => [`${col},0`, { value: label, readonly: true }]))
+    : Object.fromEntries(
+        rows.flatMap((row, rowIndex) => [
+          ...row.map((value, col) => [`${col},${rowIndex}`, { value }]),
+          [`${BUDGET_TOTAL},${rowIndex}`, { value: budgetTotal(row), readonly: true }],
+        ]),
+      );
+
+const BudgetStory = () => {
+  const [rows, setRows] = useState(BUDGET_ROWS);
+  const [editing, setEditing] = useState<GridEditing>(null);
+  const [grid, setGrid] = useState<DxGridElement | null>(null);
+  const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
+    (_range, plane) => budgetCells(rows, plane),
+    [rows],
+  );
+  const extensions = useMemo(
+    () => [
+      editorKeys({
+        onClose: (_value, event) => event && grid?.refocus(event.key === 'Tab' ? 'col' : 'row', event.shift ? -1 : 1),
+      }),
+    ],
+    [grid],
+  );
+
+  return (
+    <div className='fixed inset-0 flex flex-col dx-base-surface'>
+      <Grid.Root id='budget' editing={editing} onEditingChange={setEditing}>
+        <GridCellEditor
+          getCellContent={(index) => rows[parseCellIndex(index).row]?.[parseCellIndex(index).col]}
+          extensions={extensions}
+          onBlur={(value) => {
+            if (value !== undefined && editing) {
+              const { col, row } = parseCellIndex(editing.index);
+              setRows((current) =>
+                current.map((cells, index) =>
+                  index === row ? cells.map((cell, column) => (column === col ? value : cell)) : cells,
+                ),
+              );
+            }
+          }}
+        />
+        <Grid.Content
+          ref={setGrid}
+          limitColumns={BUDGET_COLUMNS.length + 6}
+          limitRows={rows.length}
+          frozen={{ frozenRowsStart: 1 }}
+          columnDefault={{ frozenRowsStart: { size: 112, readonly: true }, grid: { size: 112 } }}
+          rowDefault={{ frozenRowsStart: { size: 32, readonly: true }, grid: { size: 32 } }}
+          getCells={getCells}
+          overscroll='trap'
+        />
+      </Grid.Root>
+    </div>
+  );
+};
+
+/** The docs' spreadsheet: a budget whose totals follow its cells, with blank rows and columns past the frame. */
+export const Docs: Story = {
+  render: () => <BudgetStory />,
 };

@@ -34,7 +34,7 @@ const withExtensions: Decorator<EditorViewProps> = (Story, { args }) => {
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, slots: { scroller: { className: 'px-4 py-2' } } }),
       createMarkdownExtensions(),
       decorateMarkdown(),
       automerge(Doc.createAccessor(createObject(Text.make({ content: args.initialValue })), ['content'])),

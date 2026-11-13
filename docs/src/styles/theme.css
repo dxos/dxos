@@ -522,3 +522,18 @@ a.card:hover {
     translate: calc(1vw - 14px) 2.6px;
   }
 }
+
+/*
+ * A wide block, such as a grid of live demos, breaks out of the text column into the whole content panel, centered on
+ * the column as the column is centered in the panel [F-21.5]. `cqi` is the panel's width, less its padding.
+ */
+.content-panel {
+  container-type: inline-size;
+}
+
+.sl-markdown-content .dx-wide {
+  --dx-wide-width: min(100cqi, 80rem);
+  width: var(--dx-wide-width);
+  max-width: none;
+  margin-inline: calc((100% - var(--dx-wide-width)) / 2);
+}

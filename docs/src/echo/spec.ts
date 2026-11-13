@@ -66,6 +66,8 @@ export type SpecPage = {
   section: string;
   route: string;
   group: string;
+  /** The component package a page documents; it nests the page in a group of its own inside `group`. */
+  package?: string;
   template: string;
   status: Status;
   covers: string[];
@@ -90,6 +92,9 @@ const field = (body: string, key: string): string => {
   return match[1];
 };
 
+const optionalField = (body: string, key: string): string | undefined =>
+  body.match(new RegExp(`^  ${key}: (.*)$`, 'm'))?.[1];
+
 /** The items of a block's list field, such as a page's `covers:`. */
 const listField = (body: string, key: string): string[] => {
   const match = body.match(new RegExp(`^  ${key}:\\n((?:    - .*\\n?)*)`, 'm'));
@@ -108,6 +113,7 @@ export const parsePages = (source: string): SpecPage[] =>
       section: field(body, 'section'),
       route: field(body, 'route'),
       group: field(body, 'group'),
+      package: optionalField(body, 'package'),
       template: field(body, 'template'),
       status: parseStatus(field(body, 'status')),
       covers: listField(body, 'covers'),
@@ -145,18 +151,39 @@ export const assertContentExists = (pages: SpecPage[]): void => {
   }
 };
 
-/** The Starlight sidebar for one section of the spec's site map; group order is first appearance. */
+const sidebarLink = (page: SpecPage) => ({
+  label: page.label,
+  link: page.route,
+  ...(page.status === 'planned' ? { badge: { text: 'planned', variant: 'default' as const } } : {}),
+});
+
+const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
+
+/**
+ * The Starlight sidebar for one section of the spec's site map; group order is first appearance. A top-level group
+ * starts expanded; pages with a `package` follow the group's own pages in a nested group per package, alphabetically,
+ * which starts collapsed and opens when the current page is in it [D-286].
+ */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
   const groups = [...new Set(pages.map((page) => page.group))];
-  return groups.map((label) => ({
-    label,
-    items: pages
-      .filter((page) => page.group === label)
-      .map((page) => ({
-        label: page.label,
-        link: page.route,
-        ...(page.status === 'planned' ? { badge: { text: 'planned', variant: 'default' as const } } : {}),
-      })),
-  }));
+  return groups.map((label) => {
+    const inGroup = pages.filter((page) => page.group === label);
+    const packages = [...new Set(inGroup.flatMap((page) => (page.package ? [page.package] : [])))].sort();
+    return {
+      label,
+      items: [
+        ...inGroup.filter((page) => !page.package).map(sidebarLink),
+        ...packages.map((pkg) => ({
+          // Every package in a group shares the `react-ui-` prefix, so the label drops it.
+          label: pkg.replace(/^react-ui-/, ''),
+          collapsed: true,
+          items: inGroup
+            .filter((page) => page.package === pkg)
+            .sort(byLabel)
+            .map(sidebarLink),
+        })),
+      ],
+    };
+  });
 };

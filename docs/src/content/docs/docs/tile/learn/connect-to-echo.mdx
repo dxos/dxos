@@ -51,7 +51,7 @@ Three things change from the last page:
 5. **Edit with a schema form.** `ObjectForm` builds its fields from `Person`'s schema: a text field for the name, an
    email field, and a picker of organizations for the employer. It writes each change to the object as it is made, so
    the dialog needs no Save button and the editor from [Inputs and actions](/docs/tile/learn/inputs-and-actions/) is
-   no longer needed. [Forms](/docs/tile/guides/forms/) covers the form in depth.
+   no longer needed. [Form](/docs/tile/api/react-ui-form/form/) covers the form in depth.
 
    <Snippet file="tile-tutorial/echo/ContactsScreen" region="edit" lang="tsx" />
 
@@ -85,6 +85,8 @@ join the space as [Sharing](/docs/echo/learn/sharing/) shows, and edits in one w
 
 You have a screen built with TILE whose data lives in ECHO. From here:
 
-- The [guides](/docs/tile/guides/lists/) cover lists, forms, menus and the text editor.
+- The API section covers each component package, such as [Listbox](/docs/tile/api/react-ui-list/listbox/),
+  [Form](/docs/tile/api/react-ui-form/form/), [ActionToolbar](/docs/tile/api/react-ui-menu/action-toolbar/) and
+  [Editor](/docs/tile/api/react-ui-editor/editor/).
 - [TILE in a PLEX plugin](/docs/tile/guides/tile-in-a-plex-plugin/) shows how this screen would become a Composer
   plugin.

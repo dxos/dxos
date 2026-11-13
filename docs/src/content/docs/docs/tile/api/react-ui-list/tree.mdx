@@ -1,0 +1,55 @@
+---
+title: Tree
+description: Nested rows from a tree model.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+import Snippet from '../../../../../../components/Snippet.astro';
+import TilePreview from '../../../../../../components/TilePreview.astro';
+
+<ApiStory id="react-ui-list/tree" height="22rem" />
+
+```ts
+import { Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+```
+
+```sh
+npm install @dxos/react-ui-list
+```
+
+`Tree` reads its rows from a model and reports what the user does to them. The model keeps each row's open and
+current state in an atom, so the tree needs a `RegistryProvider` from `@effect/atom-react` above it. Each part handles keyboard navigation and the current and selected states, and sets its own spacing, so put
+it in a panel's body with no padding around it.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Tree.Root` | Takes the `model` and an `id`; reports `onOpenChange` and `onSelect` |
+| `Tree.Label` | Names the tree |
+| `Tree.Content` | Scrolls the rows; its child can render each row |
+| `Tree.Item` | One row, or a group header |
+| `Tree.ItemIndicator` | The caret that opens a branch |
+| `Tree.ItemIcon` | The row's icon |
+| `Tree.ItemText` | The row's label |
+| `Tree.ItemCount` | A count badge |
+| `Tree.ItemActions` | Controls at the row's end, shown on the row in play |
+| `Tree.ItemGroup` | A section header |
+| `Tree.ItemGroupLabel` | A section header's label |
+| `Tree.Empty` | Stands in for the rows while there are none |
+
+## Show nested rows
+
+`createStaticTreeModel` makes a model over data you already hold, given how to find an item's children and what to show
+for it:
+
+<Snippet file="tile-guide-lists" region="data" lang="tsx" />
+
+Open a row or select it, and the tree calls `onOpenChange` or `onSelect`. Write the new state to the row's atom, and the
+tree draws it:
+
+<Snippet file="tile-guide-lists" region="tree" lang="tsx" />
+
+<TilePreview id="folder-tree" height="14rem" />
+
+A tree over the app graph, such as Composer's navigation, gets its model from the graph instead.

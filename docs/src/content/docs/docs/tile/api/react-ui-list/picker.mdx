@@ -1,0 +1,27 @@
+---
+title: Picker
+description: A filter input over a list of choices, like a command palette.
+---
+
+import ApiStory from '../../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui-list/picker" height="22rem" />
+
+```ts
+import { Picker } from '@dxos/react-ui-list';
+```
+
+```sh
+npm install @dxos/react-ui-list
+```
+
+`Picker` is an input and the items under it. The arrow keys move the highlight from the input, and Enter commits the
+highlighted item, so the user never leaves the keyboard. You filter the items from the input's value.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Picker.Root` | Tracks the highlight; `resetSelectionOnChange` moves it to the first item as the results change |
+| `Picker.Input` | The filter input; `value` and `onValueChange` hold the query |
+| `Picker.Item` | An item with a `value`; `onSelect` runs when the user commits it |

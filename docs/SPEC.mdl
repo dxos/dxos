@@ -2207,7 +2207,7 @@ page tile-overview: Overview
   status: spike
   covers:
     - What TILE is in one paragraph: `@dxos/react-ui` and the `@dxos/ui-theme` tokens and build plugin it needs
-    - A live preview of a few components that follows the page's light or dark theme
+    - A grid of live component demos that follows the page's light or dark theme; each card names its package and opens that package's guide [D-281]
     - The split between the core and the component packages, with a link to the catalog
     - Where to go next: Why TILE?, Build with a coding agent, then the learning path
 ```
@@ -2530,6 +2530,267 @@ page tile-api-hooks: Hooks
     - `useTranslation`, `useThemeContext` and the hooks re-exported from `@dxos/react-hooks`
 ```
 
+```mdl
+page tile-api-calendar-calendar: Calendar
+  A scrolling date picker and a week of events.
+  section: TILE
+  route: /docs/tile/api/react-ui-calendar/calendar/
+  group: API
+  package: react-ui-calendar
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Calendar` story, live at the top [D-286]
+    - `Calendar.Root`, `Toolbar`, `Grid` and `Week`, picking a day or a range, and creating, moving and resizing events; the Overview grid's Calendar card links here [D-286]
+```
+```mdl
+page tile-api-diagram-diagram: Diagram
+  Boxes and links on a canvas the user can pan and zoom.
+  section: TILE
+  route: /docs/tile/api/react-ui-diagram/diagram/
+  group: API
+  package: react-ui-diagram
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-286] [D-287]
+    - A `Projection` of nodes, ports and edges, laid out by the diagram, and an `Overlay` for what the user pins; the Overview grid's Diagram card links here [D-286]
+```
+```mdl
+page tile-api-editor-editor: Editor
+  A text editor and its toolbar, built on CodeMirror.
+  section: TILE
+  route: /docs/tile/api/react-ui-editor/editor/
+  group: API
+  package: react-ui-editor
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Editor` story, live at the top [D-286]
+    - The `Editor` parts, the `@dxos/ui-editor` extensions for plain text and markdown, the toolbar and attention, and the `automerge` binding to an ECHO `Text`; the Overview grid's Markdown editor card links here [D-286]
+```
+```mdl
+page tile-api-form-form: Form
+  A form built from an Effect schema.
+  section: TILE
+  route: /docs/tile/api/react-ui-form/form/
+  group: API
+  package: react-ui-form
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Form` story, live at the top [D-286]
+    - The `Form` parts over a schema, validation and Save, `include`, and `ObjectForm` over an ECHO object [D-286]
+```
+```mdl
+page tile-api-geo-globe: Globe
+  A globe of countries drawn on a canvas.
+  section: TILE
+  route: /docs/tile/api/react-ui-geo/globe/
+  group: API
+  package: react-ui-geo
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-286] [D-287]
+    - The `Globe` parts, `features` of points and lines, the controller hooks, and a tour along a trip; the Overview grid's Map card links here [D-286]
+```
+```mdl
+page tile-api-geo-map: Map
+  A tiled street map with markers and lines.
+  section: TILE
+  route: /docs/tile/api/react-ui-geo/map/
+  group: API
+  package: react-ui-geo
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Map` story, live at the top [D-286]
+    - The `Map` parts, its tiles, markers and lines [D-286]
+```
+```mdl
+page tile-api-graph-graph: Graph
+  Nodes and edges in SVG, placed by a projector.
+  section: TILE
+  route: /docs/tile/api/react-ui-graph/graph/
+  group: API
+  package: react-ui-graph
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-286] [D-287]
+    - `Graph` over a `GraphModel`, its props, and the force projector; the Overview grid's Force graph card links here [D-286]
+```
+```mdl
+page tile-api-graph-svg: SVG
+  The SVG surface a graph draws on.
+  section: TILE
+  route: /docs/tile/api/react-ui-graph/svg/
+  group: API
+  package: react-ui-graph
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `SVG` story, live at the top [D-286]
+    - The `SVG` parts: root, zoom, grid, markers and mesh [D-286]
+```
+```mdl
+page tile-api-grid-grid: Grid
+  A fast, editable grid of cells.
+  section: TILE
+  route: /docs/tile/api/react-ui-grid/grid/
+  group: API
+  package: react-ui-grid
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-286] [D-287]
+    - `Grid.Root` and `Grid.Content`, planes and `getCells`, `overscroll`, and `GridCellEditor`; the Overview grid's Spreadsheet card links here [D-286]
+```
+```mdl
+page tile-api-list-listbox: Listbox
+  A flat list the user picks from.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/listbox/
+  group: API
+  package: react-ui-list
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Listbox` story, live at the top [D-286]
+    - The `Listbox` parts and its selection [D-286]
+```
+```mdl
+page tile-api-list-ordered-list: OrderedList
+  Rows the user drags into order.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/ordered-list/
+  group: API
+  package: react-ui-list
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `OrderedList` story, live at the top [D-286]
+    - The `OrderedList` parts, `onMove`, and the drag handle's keyboard moves [D-286]
+```
+```mdl
+page tile-api-list-picker: Picker
+  A filter input over a list of choices.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/picker/
+  group: API
+  package: react-ui-list
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Picker` story, live at the top [D-286]
+    - The `Picker` parts and committing an item from the keyboard [D-286]
+```
+```mdl
+page tile-api-list-tree: Tree
+  Nested rows from a tree model.
+  section: TILE
+  route: /docs/tile/api/react-ui-list/tree/
+  group: API
+  package: react-ui-list
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Tree` story, live at the top [D-286]
+    - The `Tree` parts, `createStaticTreeModel`, and open and selected state in atoms [D-286]
+```
+```mdl
+page tile-api-masonry-masonry: Masonry
+  Tiles of different heights packed into columns.
+  section: TILE
+  route: /docs/tile/api/react-ui-masonry/masonry/
+  group: API
+  package: react-ui-masonry
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-286] [D-287]
+    - The `Masonry` parts, column sizes, and tiles built from `Card`; the Overview grid's Gallery card links here [D-286]
+```
+```mdl
+page tile-api-menu-action-menu: ActionMenu
+  A dropdown menu drawn from a list of actions.
+  section: TILE
+  route: /docs/tile/api/react-ui-menu/action-menu/
+  group: API
+  package: react-ui-menu
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `ActionMenu` story, live at the top [D-286]
+    - `ActionMenu` over `MenuBuilder` actions, its trigger, and deferring a menu until it opens [D-286]
+```
+```mdl
+page tile-api-menu-action-toolbar: ActionToolbar
+  A toolbar drawn from a list of actions.
+  section: TILE
+  route: /docs/tile/api/react-ui-menu/action-toolbar/
+  group: API
+  package: react-ui-menu
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `ActionToolbar` story, live at the top [D-286]
+    - `useMenuBuilder` and `ActionToolbar`, placement, overflow, switches, attention, and `graphActions` in a plugin, linked to PLEX's App Graph [D-234] [D-286]
+```
+```mdl
+page tile-api-mosaic-board: Board
+  Columns of cards the user drags.
+  section: TILE
+  route: /docs/tile/api/react-ui-mosaic/board/
+  group: API
+  package: react-ui-mosaic
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Board` story, live at the top [D-286]
+    - The `Board` parts over a `BoardModel`, dragging cards within and across columns and columns by their handle; the Overview grid's Kanban board card links here [D-286]
+```
+```mdl
+page tile-api-mosaic-mosaic: Mosaic
+  Tiles the user can drag, in stacks.
+  section: TILE
+  route: /docs/tile/api/react-ui-mosaic/mosaic/
+  group: API
+  package: react-ui-mosaic
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Mosaic` story, live at the top [D-286]
+    - The `Mosaic` parts: containers and their event handlers, stacks, tiles and handles [D-286]
+```
+```mdl
+page tile-api-plot-plot: Plot
+  A table of values as a chart.
+  section: TILE
+  route: /docs/tile/api/react-ui-plot/plot/
+  group: API
+  package: react-ui-plot
+  template: namespace
+  status: spike
+  covers:
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-286] [D-287]
+    - `Plot` over `toPlotData`, its chart types and options, and when it draws a legend; the Overview grid's Chart card links here [D-286]
+```
+```mdl
+page tile-api-plot-timeline: Timeline
+  Events from a table along a vertical time axis.
+  section: TILE
+  route: /docs/tile/api/react-ui-plot/timeline/
+  group: API
+  package: react-ui-plot
+  template: namespace
+  status: spike
+  covers:
+    - The package's own `Timeline` story, live at the top [D-286]
+    - `Timeline` over a table of events, zoom, filter and category tags [D-286]
+```
+
 ### Guides
 
 ```mdl
@@ -2568,51 +2829,6 @@ page tile-guide-testing: Testing and stories
     - A story with `withTheme` and the `translations` parameter
     - `@dxos/react-ui/testing` in tests
 ```
-```mdl
-page tile-guide-lists: Lists
-  Lists, list boxes and trees with `@dxos/react-ui-list`.
-  section: TILE
-  route: /docs/tile/guides/lists/
-  group: Guides
-  template: tutorial
-  status: spike
-  covers:
-    - `Listbox`, `OrderedList`, and `Tree` over `createStaticTreeModel` [D-240]
-```
-```mdl
-page tile-guide-forms: Forms
-  A form for an ECHO type, with `@dxos/react-ui-form`.
-  section: TILE
-  route: /docs/tile/guides/forms/
-  group: Guides
-  template: tutorial
-  status: spike
-  covers:
-    - `Form.Root` over a schema, `include`, and `ObjectForm` for an ECHO object, linked from ECHO's Defining types [D-240]
-```
-```mdl
-page tile-guide-menus: Menus and toolbars
-  Menus and toolbars built from actions, with `@dxos/react-ui-menu`.
-  section: TILE
-  route: /docs/tile/guides/menus-and-toolbars/
-  group: Guides
-  template: tutorial
-  status: spike
-  covers:
-    - `MenuBuilder`, `useMenuBuilder`, `ActionToolbar` and `ActionMenu`, and `graphActions` in a plugin, linked to PLEX's App Graph [D-240]
-```
-```mdl
-page tile-guide-editor: Text editor
-  A text editor with `@dxos/react-ui-editor`.
-  section: TILE
-  route: /docs/tile/guides/text-editor/
-  group: Guides
-  template: tutorial
-  status: spike
-  covers:
-    - `Editor.Root`, `Editor.View` and `Editor.Toolbar`, the `@dxos/ui-editor` extensions, and the `automerge` binding to an ECHO `Text` [D-240]
-```
-
 ### Resources
 
 ```mdl
@@ -2626,17 +2842,6 @@ page tile-api-reference: API reference
   covers:
     - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-249]
     - Typedoc for `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, the packages the guides cover [D-249]
-```
-```mdl
-page tile-packages: Component packages
-  The other `react-ui-*` packages, one line each.
-  section: TILE
-  route: /docs/tile/resources/component-packages/
-  group: Resources
-  template: reference
-  status: spike
-  covers:
-    - A catalog of the `react-ui-*` packages, grouped as general purpose and designed for ECHO [D-251]
 ```
 ```mdl
 page tile-glossary: Glossary
@@ -3219,6 +3424,34 @@ feat F-20: The tutorial plugin
     then: the page embeds the inspector, the reader loads their own plugin into it from its dev server, and no
           page before Run it in Composer needs Composer; The PLEX plugin alone loads the finished Stash
           plugin by itself
+```
+
+```mdl
+feat F-21: TILE demo grid
+
+  desc: |
+    The TILE Overview opens with a grid of live demos, one per component package, each one of the package's own
+    stories on sample data, with no ECHO. A card's size follows how much room its demo needs [D-287].
+
+  req F-21.1:
+    when: a reader looks at a card in the grid
+    then: the card names the package it shows
+
+  req F-21.2:
+    when: a reader clicks a card's header
+    then: the API page of the component the card shows opens [D-286]
+
+  req F-21.3:
+    when: a reader opens the TILE Overview
+    then: each card's code loads when the card scrolls into view, so the page is ready before every demo is
+
+  req F-21.4:
+    when: a reader opens the TILE Overview on a phone
+    then: the cards stack in one column in the order the wide layout reads
+
+  req F-21.5:
+    when: a reader opens the TILE Overview on a screen wider than the text column
+    then: the grid is wider than the text, up to the width of the content panel, and centered on the text column
 ```
 
 ## Acceptance
@@ -5621,7 +5854,7 @@ decision D-288: `/echo` draws its hero from the same ECHO art as the docs heroes
 ```
 
 ```mdl
-decision D-278: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
+decision D-279: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-7.5, F-7.10, F-7.12]
@@ -5632,7 +5865,7 @@ decision D-278: Each live demo is a Storybook story, built with the story harnes
 ```
 
 ```mdl
-decision D-279: The docs island composes a story with `StoryEmbed.compose`, which runs its meta, decorators and loaders outside Storybook, and renders it with `StoryEmbed.Root` under layout containment, so the story's fixed full-screen layout fills the island. On `/echo` every island joins one `StoryPeers` runtime, started when the first island mounts and before the story module arrives; each story seeds once, partials are seeded once per page, and the diagram seeds after both peers join. The PLEX Overview's iframe page gives its story peers of its own. Fills in [D-278].
+decision D-280: The docs island composes a story with `StoryEmbed.compose`, which runs its meta, decorators and loaders outside Storybook, and renders it with `StoryEmbed.Root` under layout containment, so the story's fixed full-screen layout fills the island. On `/echo` every island joins one `StoryPeers` runtime, started when the first island mounts and before the story module arrives; each story seeds once, partials are seeded once per page, and the diagram seeds after both peers join. The PLEX Overview's iframe page gives its story peers of its own. Fills in [D-279].
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5641,6 +5874,75 @@ decision D-279: The docs island composes a story with `StoryEmbed.compose`, whic
   rejected:
     - Seed the diagram with the others: its large write slows the second peer's join, and the page was ready about 1.2 s later.
     - Hold a second peer's app until its replica has the story's objects: it did not change the time to ready.
+```
+
+```mdl
+decision D-281: The TILE Overview opens with a grid of live demos in four columns. Kanban, Calendar, Markdown editor and Diagram get two columns and two rows; the spreadsheet grid gets three columns and one row; force graph, map and chart get one cell, and the masonry gallery two columns and one row. Each card names its package and links to the guide for it, one guide per package; the Markdown editor's is Text editor.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, F-21, tile-guide-mosaic, tile-guide-calendar, tile-guide-grid, tile-guide-graph, tile-guide-diagram, tile-guide-masonry, tile-guide-map, tile-guide-chart]
+  why: One preview of buttons does not show what can be built with TILE; a grid of the larger components does, and each card leads to how to build it.
+  rejected:
+    - Equal tiles: a kanban board or a week of events does not read in a single cell.
+    - Plugin stories through `StoryEmbed`: they start ECHO clients, and TILE needs none.
+```
+
+```mdl
+decision D-282: A page can mark a block wide, with the `dx-wide` class, and it breaks out of the text column into the whole content panel, up to 80rem, centered on the column. The TILE Overview's demo grid is wide. Fills in [D-281].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-21.5, tile-overview]
+  why: Live demos need more width than prose; in the 50rem text column four columns of demos were too narrow for a kanban board or a week of events.
+  rejected:
+    - Fewer columns in the text column: the large demos would still be cramped, and the small ones would take a whole row.
+```
+
+```mdl
+decision D-283: The TILE Overview's Calendar card shows the package's existing week view, `Calendar.Week`, with events to drag, move and resize. The Kanban card's cards reorder within a column and move across columns, and its columns reorder by the handle in their header. Fills in [D-281].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-guide-calendar, tile-guide-mosaic, tile-overview]
+  why: A board whose columns and cards do not move does not show what the board does, and a docs demo should show what a package already has rather than add to it.
+  rejected:
+    - A new `Calendar.Month` view in `@dxos/react-ui-calendar`: it changed the package's API to serve one demo.
+```
+
+```mdl
+decision D-284: A TILE guide is named after its package and covers the package, not one demo, in the plural like Lists and Forms: Mosaics, Calendars, Grids, Graphs, Diagrams, Masonry, Maps and Charts. A demo is one example on its package's guide; a card in the Overview's grid keeps the demo's name and opens the package's guide. Text editor keeps its name. Amends [D-281].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-guide-mosaic, tile-guide-calendar, tile-guide-grid, tile-guide-graph, tile-guide-diagram, tile-guide-masonry, tile-guide-map, tile-guide-chart]
+  why: A kanban board is one thing Mosaic does; a guide named after the demo hides the rest of the package.
+```
+
+```mdl
+decision D-285: A card's header is one compact line: the demo's title, its package and an arrow to the guide. The grid is in twelfths so every card has room for that line: Kanban, Calendar, Markdown editor and Diagram take half the width and two rows; the spreadsheet two thirds of a row beside the force graph; the gallery half the width and two rows, with the map and chart stacked beside it. The calendar is the week view; the markdown editor pads its text off the card's edges; the spreadsheet keeps wheel and trackpad scrolling inside the grid, so the page neither scrolls nor swipes back or forward; the chart has one series and no legend; the globe flies a looping trip between its points along the lines that join them. The masonry card is titled Gallery. Amends [D-281].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-21.1, tile-overview]
+  why: The package on its own line made the headers tall, and a quarter-width card had no room for it beside the title.
+```
+
+```mdl
+decision D-286: TILE's API section has one page per component namespace, as `@dxos/react-ui`'s pages do, grouped by package. The core pages sit directly under API; each other package is a group nested after them, alphabetically and labelled without its `react-ui-` prefix (Calendar's group is `calendar`), with its pages in alphabetical order, at `/docs/tile/api/<package>/<namespace>/`. A page's `package` field places it. In every section a top-level group starts expanded and a nested group starts collapsed, opening when the current page is in it. Each namespace page opens with one of the package's own stories, embedded with `StoryEmbed` and with debug args turned off, then the import, the install, the parts and their props, and the examples that were the package guides. The package guides and the Component packages page are retired; Guides keeps the three that span packages. The Overview grid's cards open the namespace pages. Amends [D-232], [D-245] and [D-281].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, F-21.2, tile-api-reference]
+  why: A reader looks for a component by the package they install and the namespace they import, and a package's stories already show it running, so the docs need no second copy of each demo.
+  rejected:
+    - One Overview page per package: the reader wants a page per component namespace, as for `@dxos/react-ui`.
+    - A catalog page of every package: a package worth documenting gets its own group in API instead.
+```
+
+```mdl
+decision D-287: Each card in the TILE Overview's grid runs a story from its package's own stories file, the same story that opens the card's API page. Kanban runs Board's `Default`, Calendar runs `Week`, and Markdown editor runs `WithToolbar`. Where no story fits a card, the package gains a `Docs` story with the demo the guide had: the spreadsheet, the force graph, the diagram, the gallery, the globe's trip and the chart. A `Docs` story fills its frame on the page's surface, whatever its meta's layout. The examples on those API pages keep their code, and the story at the top runs it. A story can change for the docs, as the editor stories pad their text, but a package's API does not. Amends [D-281], [D-285] and [D-286].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-21, tile-overview, tile-api-diagram-diagram, tile-api-geo-globe, tile-api-graph-graph, tile-api-grid-grid, tile-api-masonry-masonry, tile-api-plot-plot]
+  why: A demo written for the docs alone is a second copy that drifts from the package; a story is checked in Storybook and runs the same in the grid, on the API page and in Storybook.
+  rejected:
+    - Snippets for the cards, as before: each card's demo lived only in the docs.
+    - Existing stories for every card: the force graph's story is sized for a whole screen, and the others have no story for what the card shows.
 ```
 
 ## Appendix: Extension Definitions

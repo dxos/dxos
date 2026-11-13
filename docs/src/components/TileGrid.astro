@@ -1,0 +1,148 @@
+---
+import { ApiStory } from '../tile/ApiStory.tsx';
+
+/** One card: a component package's story, linked to its API page. */
+type Demo = {
+  title: string;
+  pkg: string;
+  /** The namespace page in the package's API group [D-286], whose story the card runs [D-287]. */
+  page: string;
+  /** How much of the twelve-column grid the card takes [D-281, D-285]. */
+  span: 'large' | 'wide' | 'half' | 'small';
+};
+
+const DEMOS: Demo[] = [
+  { title: 'Kanban board', pkg: 'react-ui-mosaic', page: 'board', span: 'large' },
+  { title: 'Calendar', pkg: 'react-ui-calendar', page: 'calendar', span: 'large' },
+  { title: 'Spreadsheet', pkg: 'react-ui-grid', page: 'grid', span: 'wide' },
+  { title: 'Force graph', pkg: 'react-ui-graph', page: 'graph', span: 'small' },
+  { title: 'Markdown editor', pkg: 'react-ui-editor', page: 'editor', span: 'large' },
+  { title: 'Diagram', pkg: 'react-ui-diagram', page: 'diagram', span: 'large' },
+  { title: 'Gallery', pkg: 'react-ui-masonry', page: 'masonry', span: 'large' },
+  { title: 'Map', pkg: 'react-ui-geo', page: 'globe', span: 'half' },
+  { title: 'Chart', pkg: 'react-ui-plot', page: 'plot', span: 'half' },
+];
+---
+
+<!-- Each card is an island that runs its package story as it nears the viewport [F-21.3], never an iframe [F-16.10]. -->
+<div class="tile-grid dx-wide not-content">
+  {
+    DEMOS.map(({ title, pkg, page, span }) => (
+      <article class="tile-card" data-span={span}>
+        <a class="tile-card-head" href={`/docs/tile/api/${pkg}/${page}/`} title={`${title} in @dxos/${pkg}`}>
+          <span class="tile-card-title">{title}</span>
+          <span class="tile-card-pkg">@dxos/{pkg}</span>
+          <span class="tile-card-arrow" aria-hidden="true">
+            →
+          </span>
+        </a>
+        <div class="tile-card-demo dx-island">
+          <ApiStory id={`${pkg}/${page}`} client:only="react" />
+        </div>
+      </article>
+    ))
+  }
+</div>
+
+<style>
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: 14rem;
+    gap: 0.75rem;
+    margin-block: 1.5rem;
+  }
+
+  .tile-card {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    border: 1px solid var(--c-hairline);
+    border-radius: var(--c-radius);
+    overflow: hidden;
+  }
+
+  /* Twelfths, so a small card gets a third of the row: room for its title, package and arrow on one line. */
+  .tile-card[data-span='large'] {
+    grid-column: span 6;
+    grid-row: span 2;
+  }
+
+  .tile-card[data-span='wide'] {
+    grid-column: span 8;
+  }
+
+  .tile-card[data-span='half'] {
+    grid-column: span 6;
+  }
+
+  .tile-card[data-span='small'] {
+    grid-column: span 4;
+  }
+
+  /* One line: title, package, then an arrow to the API page; the package gives way first when the card is narrow. */
+  .tile-card-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 0.5rem;
+    padding: 0.3rem 0.625rem;
+    border-bottom: 1px solid var(--c-hairline);
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    min-width: 0;
+  }
+
+  .tile-card-head:hover .tile-card-arrow,
+  .tile-card-head:focus-visible .tile-card-arrow {
+    color: var(--sl-color-text-accent);
+  }
+
+  .tile-card-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tile-card-pkg {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--sl-font-mono);
+    font-size: 0.75rem;
+    opacity: 0.6;
+  }
+
+  .tile-card-arrow {
+    white-space: nowrap;
+    opacity: 0.8;
+  }
+
+  .tile-card-demo {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Phones: one column, in the order the wide layout reads [F-21.4]. */
+  @media (max-width: 50rem) {
+    .tile-grid {
+      grid-template-columns: minmax(0, 1fr);
+      grid-auto-rows: auto;
+    }
+
+    .tile-card,
+    .tile-card[data-span] {
+      grid-column: auto;
+      grid-row: auto;
+      height: 22rem;
+    }
+
+    .tile-card[data-span='half'],
+    .tile-card[data-span='small'] {
+      height: 16rem;
+    }
+  }
+</style>
