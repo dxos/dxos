@@ -193,7 +193,7 @@ export const mintedPredicates = (
     }
     minted.set(iri, {
       iri,
-      name: Ontology.key(fact.assertion.predicate),
+      name: Ontology.nameFor(fact.assertion.predicate),
       label: fact.assertion.predicate,
       ...(fact.assertion.predicateDescription ? { description: fact.assertion.predicateDescription } : {}),
       ...(Vocab.brainNamespaceOf(iri) ? { definedBy: Vocab.brainNamespaceOf(iri) } : {}),

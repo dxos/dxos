@@ -8,7 +8,16 @@ import { type Point, isRectNode } from '@dxos/scene';
 
 import { type RenderList2D } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
-import { chainEdits, deleteElements, insertLink, insertNode, moveNodes, resizeTo, updateElement } from './edits.ts';
+import {
+  chainEdits,
+  deleteElements,
+  insertLink,
+  insertNode,
+  moveNodes,
+  resizeTo,
+  retypeLink,
+  updateElement,
+} from './edits.ts';
 
 const fixture = (): RenderList2D => {
   const { views, root } = createViewTree(1, 'r');
@@ -121,5 +130,32 @@ describe('scene edits', () => {
     const next = deleteElements(['scene:r/a', 'scene:r/bc'])(fixture());
     expect(Object.keys(next.nodes).sort()).toEqual(['scene:r/b', 'scene:r/c', 'scene:r/t']);
     expect(Object.keys(next.links)).toEqual([]);
+  });
+
+  test('a link is drawn another way by retyping it, which a field update never does', ({ expect }) => {
+    const scene: RenderList2D = {
+      id: 's',
+      nodes: {},
+      links: {
+        free: {
+          type: 'smart',
+          id: 'free',
+          z: 'a1',
+          source: { point: { x: 0, y: 0 } },
+          target: { point: { x: 100, y: 50 } },
+          text: 'calls',
+        },
+      },
+    };
+    // An update keeps the type whatever it is given, so the type cannot be changed by one.
+    expect(updateElement('free', { text: 'reads' })(scene).links.free.type).toBe('smart');
+    const line = retypeLink('free', 'line')(scene);
+    expect(line.links.free).toEqual({ ...scene.links.free, type: 'line' });
+    // A spline starts with no control points, and loses them when it is drawn another way again.
+    const spline = retypeLink('free', 'spline')(line);
+    expect(spline.links.free).toEqual({ ...scene.links.free, type: 'spline', points: [] });
+    expect('points' in retypeLink('free', 'ortho')(spline).links.free).toBe(false);
+    expect(retypeLink('free', 'smart')(scene)).toBe(scene);
+    expect(retypeLink('missing', 'line')(scene)).toBe(scene);
   });
 });

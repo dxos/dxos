@@ -8,16 +8,16 @@ import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 
-import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 
 import { GoogleCalendar } from '#apis';
 import { GoogleOperation } from '#types';
 
 import { AccessTokenNotPopulatedError } from '../../../errors.ts';
+import { databaseOf } from '../../database-of.ts';
 
 const CALENDAR_LIST_URL =
   'https://www.googleapis.com/calendar/v3/users/me/calendarList?fields=items(id,summary,description,primary)';
@@ -45,11 +45,7 @@ const handler: Operation.WithHandler<typeof GoogleOperation.GetGoogleCalendars> 
   GoogleOperation.GetGoogleCalendars.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ connection }) {
-        const target = connection.target;
-        const db = target ? Obj.getDatabase(target) : undefined;
-        if (!db) {
-          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
-        }
+        const db = yield* databaseOf(connection);
 
         return yield* Effect.gen(function* () {
           const connectionObj = yield* Database.load(connection);

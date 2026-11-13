@@ -14,6 +14,8 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { trim } from '@dxos/util';
 
 import { CanvasNamespace } from './src/namespace.ts';
@@ -56,6 +58,27 @@ const config: Plugin.PluginConfig = Plugin.config({
       content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
+    // Browser-only: an editor extension, contributed when the markdown editor starts.
+    Capability.lazyModule(
+      'markdown-extension',
+      {
+        provides: [MarkdownCapabilities.ExtensionProvider],
+        activatesOn: MarkdownEvents.Start,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
+    ),
+    // Browser-only: the plugin's own extension tools, which carry React views; they ride illustrator's start, as the
+    // canvas variant that offers them does.
+    Capability.lazyModule(
+      'extension-node-types',
+      {
+        provides: [CanvasCapabilities.NodeType],
+        activatesOn: IllustratorEvents.Start,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/extension-node-types.ts', { with: { type: 'module-url' } }),
+    ),
     // Browser-only: the variant supplies the React article that renders a drawing.
     Capability.lazyModule(
       'drawing-variant',

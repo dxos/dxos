@@ -1,0 +1,59 @@
+---
+title: Add a device
+description: Join Alice's phone to her identity, so it shows the same contacts.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import HaloEmbed from '../../../../../components/HaloEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page Alice's phone joins her identity, and shows her name, her spaces and her contacts.
+
+## Background
+
+Each device has its own key. Adding a device is the same handshake as inviting a person, with a device invitation
+instead of a space invitation: the device already in the identity is the host, and the new device the guest. At the end,
+the host writes a delegation that makes the new device a member of the identity's group.
+
+The new device then syncs the identity's personal space and every space the identity is in, from the other device or
+through EDGE. Nothing about the identity has to be typed in again.
+
+## Steps
+
+<Steps>
+
+1. **Share your identity.** `Identity.share` starts a device invitation on the device you have. **Add a device** on the
+   Devices tab calls this and shows the code.
+
+   <Snippet file="halo-tutorial/app/Devices" region="share" lang="tsx" />
+
+2. **Join from the new device.** On the new device, before it has an identity, `Identity.join` redeems the code. The
+   handshake and its authorization code are the same as for a space, so the welcome screen hands the flow to the same
+   guest panel as **Join**. **Join your other device** calls this.
+
+   <Snippet file="halo-tutorial/app/Welcome" region="join" lang="tsx" />
+
+3. **List your devices.** `useDevices` returns the identity's devices and re-renders when one joins or comes online. It
+   follows `Identity.devices`. Each device has a key, a kind, whether it is online, and whether it is the device the code
+   runs on. The Devices tab shows them.
+
+   <Snippet file="halo-tutorial/app/Devices" region="list" lang="tsx" />
+
+</Steps>
+
+## Try it
+
+Alice's laptop has her identity, her spaces and her contacts; her phone has nothing.
+
+1. On the laptop, open **Devices**, press **Add a device** and copy the code.
+2. On the phone, press **Join your other device**, paste it and press **Join**.
+3. Type the authorization code the laptop shows into the phone and press **Send**.
+
+The phone now shows Alice's name, both spaces and both contacts, and each device lists the other.
+
+<HaloEmbed stage="devices" scene="phone" />
+
+## What you can do now
+
+You can add a device to your identity and list your devices. Next,
+[Recover an identity](/docs/halo/learn/recover-identity/) covers losing all of them.

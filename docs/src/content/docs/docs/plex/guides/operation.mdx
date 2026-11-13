@@ -1,0 +1,58 @@
+---
+title: Operation
+description: Define operations, implement their handlers and invoke them.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+```
+
+An operation is a named action with a typed input and output. [Operations](/docs/plex/concepts/operations/)
+explains why the UI and agents share them.
+
+## Define an operation with input and output schema
+
+`Operation.make` takes a key, metadata and two schemas. Annotations such as `Operation.mutation` describe the
+operation's effect, which tools show before running it.
+
+<Snippet file="app-framework-guide-operation" region="define" />
+
+## Implement handlers and group them
+
+`Operation.withHandler` attaches an Effect to a definition.
+
+<Snippet file="app-framework-guide-operation" region="handler" />
+
+`OperationHandlerSet.make` groups handlers that are already loaded. `OperationHandlerSet.lazy` takes lazy handlers,
+whose modules load the first time each operation runs. Contribute the set through `Capabilities.OperationHandler`.
+
+<Snippet file="app-framework-guide-operation" region="set" />
+
+## Invoke an operation and handle its typed errors
+
+`Operation.invoke` returns an Effect that needs the operation service, which the framework provides to modules, handlers and
+graph actions. It fails with `NoHandlerError` when no plugin handles the operation.
+
+<Snippet file="app-framework-guide-operation" region="invoke" />
+
+From React, use `useOperation` or `useOperationInvoker`. See [React](/docs/plex/guides/react/).
+
+## The built-in layout operations
+
+`LayoutOperation` from `@dxos/app-toolkit` changes what is on screen. `Open` and `Close` take node paths; `Set`
+replaces the open items; `ScrollIntoView`, `UpdateSidebar`, `UpdateDialog` and `AddToast` do what their names say.
+
+<Snippet file="app-framework-guide-operation" region="layout" />
+
+## Related
+
+| Page | What it covers |
+| --- | --- |
+| [Add an operation](/docs/plex/learn/add-operation/) | An operation end to end, including the assistant. |
+| [App Graph](/docs/plex/guides/app-graph/) | Attaching an operation to nodes as an action. |

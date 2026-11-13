@@ -1,0 +1,17 @@
+---
+interface Props {
+  parts: { code: string; label?: string }[];
+}
+
+const { parts } = Astro.props;
+---
+<div class="anatomy not-content" role="group" aria-label="Annotated signature">
+  <div class="anatomy-row">
+    {parts.map(({ code, label }) => (
+      <div class:list={['anatomy-part', { labeled: label }]}>
+        <code>{code}</code>
+        {label && <span class="label">{label}</span>}
+      </div>
+    ))}
+  </div>
+</div>

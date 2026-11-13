@@ -256,6 +256,26 @@ describe('layoutChanges', () => {
     expect(layoutChanges(after.elements, after.elements)).toEqual({ kind: 'batch', intents: [] });
   });
 
+  test('a link re-attached off an element that goes is kept: it is updated before the element is deleted', () => {
+    // A and B grouped under G: the link from X that ended at A now ends at G, on the port named by A.
+    const before = layout2D('l', [
+      { id: 'a', type: 'rect', center: { x: 0, y: 0 } },
+      { id: 'b', type: 'rect', center: { x: 64, y: 0 } },
+      { id: 'x', type: 'rect', center: { x: 256, y: 0 } },
+      { id: 'xa', type: 'link', source: { node: 'x' }, target: { node: 'a' } },
+      { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
+    ]);
+    const after = layout2D('l', [
+      { id: 'g', type: 'rect', center: { x: 32, y: 0 } },
+      { id: 'x', type: 'rect', center: { x: 256, y: 0 } },
+      { id: 'xa', type: 'link', source: { node: 'x' }, target: { node: 'g', port: 'a' } },
+    ]);
+    const applied = applyIntent(before, layoutChanges(before.elements, after.elements)).elements;
+    expect(applied).toEqual(after.elements);
+    // The link wholly inside the group went with the shapes; the one across its edge did not.
+    expect([applied.xa?.target, applied.ab]).toEqual([{ node: 'g', port: 'a' }, undefined]);
+  });
+
   test('the same helper diffs 3D layouts, so both dimensions write through one intent vocabulary', () => {
     const before = layout3D('l', [cube('a'), cube('b', 1)]);
     const after = layout3D('l', [cube('a', 2)]);

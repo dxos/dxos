@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { DataFactory, type Quad as RdfQuad } from 'n3';
+import { Parser } from 'sparqljs';
 
-import { type Quad, SqlSparqlEngine, type SqlStorage } from '@dxos/sparql-sqlite';
+import { type Quad, type Row, SqlSparqlEngine, type SqlStorage } from '@dxos/sparql-sqlite';
 import * as SqliteStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
@@ -37,7 +38,7 @@ import { hashText } from '../internal/stages/reconcile.ts';
 import { type Fact, Graph, Ontology } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
 import * as Vocab from '../types/Vocab.ts';
-import { FactStore, type FactStoreApi } from './fact-store.ts';
+import { FactStore, type FactStoreApi, type SparqlRow } from './fact-store.ts';
 
 //
 // Live implementations of {@link FactStore}. Kept separate from the tag so operation definitions
@@ -97,6 +98,18 @@ const dropLegacyTables = (storage: SqlStorage): void => {
     }
   }
 };
+
+/** Fails unless `sparql` is a `SELECT`, since the engine would run an update as readily as a query. */
+const assertSelect = (sparql: string): void => {
+  const parsed = new Parser().parse(sparql);
+  if (parsed.type !== 'query' || parsed.queryType !== 'SELECT') {
+    throw new TypeError(`Expected a SPARQL SELECT, got ${parsed.type === 'query' ? parsed.queryType : 'an update'}`);
+  }
+};
+
+/** Drops the variables a solution leaves unbound, which the engine reports as `undefined`. */
+const toSparqlRow = (row: Row): SparqlRow =>
+  Object.fromEntries(Object.entries(row).flatMap(([name, term]) => (term ? [[name, term]] : [])));
 
 const attempt =
   (message: string) =>
@@ -243,7 +256,10 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
     });
 
   const select: FactStoreApi['select'] = (sparql) =>
-    attempt('SPARQL query failed')(() => boundGraphs(engine.query(sparql))).pipe(
+    attempt('SPARQL query failed')(() => {
+      assertSelect(sparql);
+      return boundGraphs(engine.query(sparql));
+    }).pipe(
       Effect.flatMap((graphs) =>
         attempt('Failed to reassemble facts')(() => {
           const quads: RdfQuad[] = [];
@@ -255,6 +271,12 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
         }),
       ),
     );
+
+  const rows: FactStoreApi['rows'] = (sparql) =>
+    attempt('SPARQL query failed')(() => {
+      assertSelect(sparql);
+      return engine.query(sparql).map(toSparqlRow);
+    });
 
   const cursor: FactStoreApi['cursor'] = (source) =>
     attempt('Failed to read cursor')(() => {
@@ -290,6 +312,7 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
     entityLabels,
     statuses,
     select,
+    rows,
     cursor,
     setCursor,
     clear,
@@ -360,11 +383,25 @@ export const makeMemory = (): FactStoreApi => {
     entityLabels: (keys) => get.pipe(Effect.flatMap((opened) => opened.entityLabels(keys))),
     statuses: () => get.pipe(Effect.flatMap((opened) => opened.statuses())),
     select: (sparql) => get.pipe(Effect.flatMap((opened) => opened.select(sparql))),
+    rows: (sparql) => get.pipe(Effect.flatMap((opened) => opened.rows(sparql))),
     cursor: (source) => get.pipe(Effect.flatMap((opened) => opened.cursor(source))),
     setCursor: (source, hash) => get.pipe(Effect.flatMap((opened) => opened.setCursor(source, hash))),
     clear: () => get.pipe(Effect.flatMap((opened) => opened.clear())),
   };
 };
+
+/**
+ * Layer of a FactStore over a SQLite file (created when absent), closed with the layer's scope; reopening the same
+ * path sees the facts and cursors written before.
+ */
+export const layerFile = (path: string): Layer.Layer<FactStore> =>
+  Layer.effect(
+    FactStore,
+    Effect.acquireRelease(SqliteStorage.makeFile(path), (database) => Effect.sync(() => database.close())).pipe(
+      Effect.orDie,
+      Effect.flatMap((database) => make(database)),
+    ),
+  );
 
 /** Layer of a FactStore over a private in-memory SQLite database, closed with the layer's scope. */
 export const layerMemory: Layer.Layer<FactStore> = Layer.effect(

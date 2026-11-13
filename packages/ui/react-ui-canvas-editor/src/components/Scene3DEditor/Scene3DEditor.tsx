@@ -534,8 +534,13 @@ export const Scene3DEditor = ({
         element,
         element === undefined ? undefined : resolved[element]?.parts,
         hit?.normal,
+        drilled,
       );
-      if (target && 'drill' in target) {
+      if (target && 'leave' in target) {
+        onSelect([]);
+        onFaceChange?.(undefined);
+        scene && onEdit(scene.layout);
+      } else if (target && 'drill' in target) {
         onSelect([]);
         onFaceChange?.(undefined);
         hit?.item && setFrameHint(hit.item);
@@ -545,7 +550,7 @@ export const Scene3DEditor = ({
         onFaceChange?.(target.face);
       }
     },
-    [elementAt, resolved, onEdit, onSelect, onFaceChange],
+    [elementAt, resolved, drilled, scene, onEdit, onSelect, onFaceChange],
   );
 
   // A face drag with the extrude tool: where it started, and the face it started on.

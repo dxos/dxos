@@ -322,16 +322,19 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
           }
 
           const virtualIndex = draggable ? itemIndex * 2 + 1 : itemIndex;
-          // Align to the item's start, but offset by the inter-item `gap` so the tile lands
-          // one gap below the viewport edge rather than flush against it (a plain
-          // `scrollToIndex({ align: 'start' })` scrolls the preceding gap out of view).
+          // Align to the item's start, but back off by the inter-item `gap` so the tile lands one gap below
+          // the viewport edge rather than flush against it (a plain `scrollToIndex({ align: 'start' })`
+          // scrolls the preceding gap out of view). When `inset` is false the viewport pads its own content:
+          // that padding lies outside the virtualizer's offsets, so it already holds the tile clear of the
+          // edge, and backing off as well would scroll the tail of the preceding row into view.
+          const leading = inset ? (gap ?? 0) : 0;
           const [offset] = virtualizer.getOffsetForIndex(virtualIndex, 'start') ?? [];
           if (offset != null) {
-            virtualizer.scrollToOffset(Math.max(0, offset - (gap ?? 0)), { behavior: 'smooth' });
+            virtualizer.scrollToOffset(Math.max(0, offset - leading), { behavior: 'smooth' });
           }
         }
       },
-      [visibleItems, getId, draggable, virtualizer, scrollIntoView, gap],
+      [visibleItems, getId, draggable, virtualizer, scrollIntoView, gap, inset],
     );
 
     useEffect(() => {

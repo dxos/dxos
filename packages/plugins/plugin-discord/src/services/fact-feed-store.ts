@@ -23,8 +23,8 @@ const unsupported = (method: string) =>
  * {@link CrawlState.CrawlState}, so a message read again unchanged is never sent to the model again.
  *
  * Indexing is the consumer's job (an agent's brain registers the feed), so every read — `query`, `count`,
- * `aggregate`, `entityLabels`, `statuses`, `select` — and `clear` fail, and `predicates` answers none: the extractor falls back
- * to its seed vocabulary rather than reusing predicates minted by earlier runs.
+ * `aggregate`, `entityLabels`, `statuses`, `select`, `rows` — and `clear` fail, and `predicates` answers none: the
+ * extractor falls back to its seed vocabulary rather than reusing predicates minted by earlier runs.
  */
 export const factFeedStoreLayer = ({
   feed,
@@ -49,6 +49,7 @@ export const factFeedStoreLayer = ({
         entityLabels: () => unsupported('entityLabels'),
         statuses: () => unsupported('statuses'),
         select: () => unsupported('select'),
+        rows: () => unsupported('rows'),
         cursor: (source) => Effect.sync(() => CrawlState.sourceHash(state, source)),
         setCursor: (source, hash) =>
           Effect.sync(() => {

@@ -4,6 +4,7 @@
 
 export * from './fact-graph.ts';
 export * from './fact-store.ts';
+export * as FactStoreHttp from './fact-store-http.ts';
 export * as FactStoreLive from './fact-store-live.ts';
 export * as FactAnalyticsLive from './analytics.ts';
 export { type FactAnalytics } from './analytics.ts';

@@ -12,14 +12,18 @@ export type UseAudioState = {
   audio?: HTMLAudioElement;
   stream?: MediaStream;
   track?: MediaStreamTrack;
+  /** Why the file could not be fetched or decoded; the other fields stay unset. */
+  error?: Error;
 };
 
 export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstraints): UseAudioState => {
-  const [{ audio, stream, track }, setStream] = useState<UseAudioState>({});
+  const [{ audio, stream, track, error }, setStream] = useState<UseAudioState>({});
   useEffect(() => {
     const ctx = new Context();
 
     scheduleTask(ctx, async () => {
+      // A new file replaces the previous one at once, so nothing can play the old element while the new one loads.
+      setStream({});
       // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
       try {
         const response = await fetch(audioUrl);
@@ -31,6 +35,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
 
         const audio = new Audio();
         audio.src = objectUrl;
+        ctx.onDispose(() => audio.pause());
 
         await new Promise<void>((resolve, reject) => {
           audio.addEventListener(
@@ -52,11 +57,9 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
         });
 
         const audioCtx = new AudioContext();
-
-        // Resume AudioContext if it's suspended.
-        if (audioCtx.state === 'suspended') {
-          await audioCtx.resume();
-        }
+        // Created before a user gesture, the context starts suspended and only a resume() made after the gesture takes;
+        // playback follows one, so the context resumes when the element plays instead of holding the stream back.
+        audio.addEventListener('play', () => void audioCtx.resume().catch((err) => log.catch(err)));
 
         const destination = audioCtx.createMediaStreamDestination();
         destination.channelCount = 1;
@@ -68,6 +71,11 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
           await track.applyConstraints(constraints).catch((err) => log.catch(err));
         }
 
+        // A superseded load (the URL changed or the caller unmounted) must not overwrite the current one.
+        if (ctx.disposed) {
+          return;
+        }
+
         // Also connect to speakers so audio is audible.
         setStream({
           audio,
@@ -76,6 +84,9 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
         });
       } catch (err) {
         log.catch(err);
+        if (!ctx.disposed) {
+          setStream({ error: err instanceof Error ? err : new Error(String(err)) });
+        }
       }
     });
 
@@ -84,5 +95,5 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
     };
   }, [audioUrl]);
 
-  return { audio, stream, track };
+  return { audio, stream, track, error };
 };

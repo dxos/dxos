@@ -10,16 +10,17 @@ import { join, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { Context } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient, formatPluginBundleLoad } from '@dxos/edge-client';
 import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
 import { invariant } from '@dxos/invariant';
 import { EdgeCallFailedError } from '@dxos/protocols';
 
 import { BUNDLE_DIR } from '../build-bundle.ts';
+import { type BundleFile, withBuild } from '../build-version.ts';
 
 /** Every file of the bundle, keyed by its `/`-separated path, as the registry's multipart upload takes it. */
-const readBundleFiles = async (bundleDir: string): Promise<{ path: string; content: Uint8Array<ArrayBuffer> }[]> => {
-  const files: { path: string; content: Uint8Array<ArrayBuffer> }[] = [];
+const readBundleFiles = async (bundleDir: string): Promise<BundleFile[]> => {
+  const files: BundleFile[] = [];
   for (const entry of (await readdir(bundleDir, { recursive: true })).sort()) {
     const full = join(bundleDir, entry);
     if ((await stat(full)).isFile()) {
@@ -44,8 +45,11 @@ const readManifest = async (bundleDir: string): Promise<{ key: string; version: 
  * A version is immutable on EDGE: re-uploading the same content succeeds, and a version that already holds other
  * content is reported as `stale` (a warning, not a failure) since only a version bump can publish it.
  *
- * Usage: `publish-release [--package <dir>] [--edge-url <url>] [--channel <name>] [--dry-run]`; `--edge-url`
- * defaults to `DX_EDGE_BASE_URL`.
+ * `--build <id>` (default `DX_PLUGIN_BUILD`) publishes the bundle as `<version>+<id>`, so a snapshot of `main` gets a
+ * version of its own and moves `latest` instead of colliding with the release it was built from.
+ *
+ * Usage: `publish-release [--package <dir>] [--edge-url <url>] [--channel <name>] [--build <id>] [--dry-run]`;
+ * `--edge-url` defaults to `DX_EDGE_BASE_URL`.
  */
 const main = async () => {
   const { values } = parseArgs({
@@ -53,12 +57,17 @@ const main = async () => {
       'package': { type: 'string' },
       'edge-url': { type: 'string' },
       'channel': { type: 'string' },
+      'build': { type: 'string' },
       'dry-run': { type: 'boolean' },
     },
   });
   const bundleDir = join(resolve(values.package ?? process.cwd()), BUNDLE_DIR);
-  const { key, version } = await readManifest(bundleDir);
-  const files = await readBundleFiles(bundleDir);
+  const manifest = await readManifest(bundleDir);
+  const { key } = manifest;
+  const build = values.build ?? process.env.DX_PLUGIN_BUILD;
+  const { version, files } = build
+    ? withBuild(await readBundleFiles(bundleDir), manifest.version, build)
+    : { version: manifest.version, files: await readBundleFiles(bundleDir) };
   const edgeUrl = values['edge-url'] ?? process.env.DX_EDGE_BASE_URL;
   const apiKey = process.env.DX_HUB_API_KEY;
 
@@ -72,12 +81,13 @@ const main = async () => {
   const http = new EdgeHttpClient(edgeUrl, { apiKey });
   try {
     // `auth: false` skips the identity presentation, leaving the admin key as the only credential.
-    const { moduleUrl } = await http.uploadPluginBundle(
+    const { moduleUrl, edge } = await http.uploadPluginBundle(
       Context.default(),
       { slug: key, version, files, channel: values.channel },
       { auth: false },
     );
-    console.log(`✓ ${key} ${version} published: ${moduleUrl}`);
+    const load = edge?.load ? ` (${formatPluginBundleLoad(edge.load)})` : '';
+    console.log(`✓ ${key} ${version} published: ${moduleUrl}${load}`);
   } catch (error) {
     if (error instanceof EdgeCallFailedError && error.data?.type === 'conflict') {
       const message = `${key} ${version} stale: EDGE holds other content for this version; bump it to publish`;

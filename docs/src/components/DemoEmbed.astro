@@ -1,0 +1,27 @@
+---
+import { NARRATIVES } from '../demos/narratives.ts';
+
+interface Props {
+  /** The demo's id in `DEMOS`. */
+  id: string;
+}
+
+const { id } = Astro.props;
+const narrative = NARRATIVES[id];
+---
+
+<h3>{narrative.title}</h3>
+<p set:html={narrative.plugins} />
+<!-- The demo runs on its own page so that its CSS stays off the docs pages; see `pages/embed/demo.astro`. -->
+<iframe class="demo-embed not-content" src={`/embed/demo/?id=${id}`} title={narrative.title} loading="lazy"></iframe>
+
+<style>
+  .demo-embed {
+    display: block;
+    width: 100%;
+    height: 32rem;
+    margin-block: 1rem 2rem;
+    border: 0;
+    border-radius: var(--c-radius);
+  }
+</style>

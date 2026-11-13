@@ -1,0 +1,430 @@
+---
+id: org.dxos.echo-sync-worker
+name: EchoSyncWorker
+version: 0.1.0
+---
+
+`@dxos/echo-sync-worker` is the server half of echo-sqlite sync: a Cloudflare Worker that routes
+each graph to one Durable Object, `SpaceObject`, which holds the authoritative copy of that graph's
+records and orders every write to it. The client half is `org.dxos.echo-sqlite-sync`.
+
+Three properties define it:
+
+- **Order comes from counters, never from clocks.** The object stamps each accepted write with the
+  graph's next `seq`, and each client numbers its own pushes with `clientSeq` [F-1]. No wall-clock
+  time decides which write wins.
+- **A write is applied only on top of what its writer saw.** Every pushed record names the `seq` it
+  was edited on; the object applies a push only if all of them are still current, and otherwise
+  answers with what the client missed [F-2].
+- **The directory deploys alone.** It imports nothing outside itself and pins its tools by version,
+  so the "Deploy to Cloudflare" button can copy it into a new repository and build it with npm [F-6].
+
+Tests: the object's behaviour runs in workerd in `@dxos/echo-sqlite-sync`'s
+`space-object.workerd.test.ts` (T-1 to T-6).
+
+## Dependencies
+
+None. This spec is the base of the sync pair.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `binding`  | `org.dxos.mdl.binding@1.0`  |
+| `actor`    | `org.dxos.mdl.actor@1.0`    |
+| `route`    | `org.dxos.mdl.route@1.0`    |
+| `keyspace` | `org.dxos.mdl.keyspace@1.0` |
+| `table`    | `org.dxos.mdl.table@1.0`    |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Diagrams
+
+Diagrams are plugin-illustrator renders. The `diagram` block is the source; regenerate the image with
+`moon run plugin-illustrator:render-diagrams -- <abs path>/diagrams/<name>.dx`.
+
+### A push, accepted
+
+![Client A pushes records based on seq 4 since seq 4; the object checks each base against its entries, stamps seq 5 and 6, records clientSeq 3 for A, answers A with an ack carrying the records with their seqs, and sends the same records to client B as a records message from 4 to 6.](diagrams/push-accepted.dx.svg)
+
+```diagram
+diagram kind=sequence
+node A "client A" ref="packages/core/echo/echo-sqlite-sync/src/sync.ts"
+node DO "SpaceObject" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+node Store "entries" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+node B "client B" ref="packages/core/echo/echo-sqlite-sync/src/sync.ts"
+edge A sends DO "push since=4"
+edge DO calls Store "seq of each key"
+edge Store returns DO "all equal base"
+edge DO calls Store "write seq 5, 6"
+edge Store returns DO "applied"
+note DO "client:A = 3"
+edge DO sends A "ack accepted"
+edge DO sends B "records 4..6"
+```
+
+### A push, rejected
+
+![Client A pushes record x based on seq 2, but client B already moved x to seq 5; the object applies nothing and answers A with a rejected ack listing x as a conflict and carrying x at seq 5; A merges three-way and pushes again based on seq 5, which is accepted at seq 6 and broadcast to B.](diagrams/push-rejected.dx.svg)
+
+```diagram
+diagram kind=sequence
+node A "client A" ref="packages/core/echo/echo-sqlite-sync/src/sync.ts"
+node DO "SpaceObject" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+node B "client B" ref="packages/core/echo/echo-sqlite-sync/src/sync.ts"
+edge B sends DO "push x base=2"
+edge DO sends B "ack accepted, x@5"
+edge DO sends A "records x@5"
+edge A sends DO "push x base=2"
+edge DO sends A "ack rejected [x]"
+note A "merge3(x@2, mine, x@5)"
+edge A sends DO "push x base=5"
+edge DO sends A "ack accepted, x@6"
+edge DO sends B "records x@6"
+```
+
+The second push from A is the race this guards: A sent it before the broadcast of x@5 reached it.
+
+### Storage
+
+![SpaceObject owns the entries table and the spaceState keyspace; the SPACE binding addresses one SpaceObject per slug; the sync and socket routes reach it through the binding.](diagrams/storage.dx.svg)
+
+```diagram
+diagram flow=down
+node Sync "route sync" ref="packages/core/echo/echo-sync-worker/src/index.ts"
+node Socket "route socket" ref="packages/core/echo/echo-sync-worker/src/index.ts"
+node Space "binding SPACE" ref="packages/core/echo/echo-sync-worker/wrangler.jsonc"
+node Object "SpaceObject" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+node Entries "table entries" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+node State "keyspace spaceState" ref="packages/core/echo/echo-sync-worker/src/space-object.ts"
+edge Sync -> Space
+edge Socket -> Space
+edge Space -> Object "idFromName(slug)"
+edge Object owns Entries
+edge Object owns State
+```
+
+## Types
+
+```mdl
+type SyncRecord
+  desc: |
+    One object of a graph as it travels and as the store holds it. Identified by `key`, a foreign key
+    the client keeps in `Obj.Meta.keys`, because the ECHO id is minted per instance and cannot be shared.
+  fields:
+    key: string                                       # stable across instances
+    typename: string                                  # fully-qualified type DXN
+    props: Record<string, unknown>                    # scalar properties
+    refs: Record<string, string | string[] | null>    # edges by property, to other records' keys; null = cleared
+    deleted?: boolean                                 # a tombstone
+    seq?: number                                      # the store's stamp; absent on a record a client sends
+```
+
+```mdl
+type PushRecord
+  desc: A record as a client pushes it, naming the version it was edited on [F-2].
+  extends: [SyncRecord]
+  fields:
+    base?: number    # the seq it was edited on; 0 = new; omitted = unconditional write
+```
+
+```mdl
+type PushRequest
+  desc: A push, as the socket's `push` message or the `sync` route's body.
+  fields:
+    client?: string             # names the client across reconnects
+    clientSeq?: number          # the client's own counter, one per push
+    since: number               # the highest seq the client has applied
+    records: PushRecord[]
+```
+
+```mdl
+type ClientMessage
+  desc: What a client sends over the socket.
+  literals: pull | push
+  fields:
+    pull: { since: number }
+    push: PushRequest
+```
+
+```mdl
+type StoreInfo
+  desc: What every answer says about the store itself.
+  fields:
+    seq: number             # the store's highest seq
+    incarnation: string     # minted with the store, dropped with it [F-5]
+    expiresAt: number       # epoch ms
+```
+
+```mdl
+type RecordsMessage
+  desc: |
+    Records in seq order covering everything above `from` up to `seq`: the answer to a `pull`, and
+    the broadcast of another client's push. A client that has applied up to `from` may advance to `seq`.
+  extends: [StoreInfo]
+  fields:
+    from: number
+    records: SyncRecord[]
+```
+
+```mdl
+type PushResult
+  desc: |
+    The answer to a push, to the pusher only. `records` is everything above the push's `since`: the
+    pushed records with their new seqs when accepted, what the client missed when rejected.
+  extends: [StoreInfo]
+  fields:
+    clientSeq?: number
+    accepted: boolean
+    conflicts: string[]     # keys whose base was not their current seq
+    from: number
+    records: SyncRecord[]
+```
+
+## Worker
+
+```mdl
+binding SPACE: The namespace of graph objects; the router addresses one per slug.
+  type: DurableObjectNamespace<SpaceObject>
+  target: SpaceObject in this worker
+  reads: SpaceEnv
+```
+
+```mdl
+actor SpaceObject: The authority for one graph: it holds the records and hands out seqs.
+  binding: SPACE
+  key: the graph's slug — `idFromName(slug)`
+  owns: the graph's records and their order
+  storage: sqlite
+  tables: [entries]
+  keyspaces: [spaceState]
+  alarm: Deletes all storage 24 hours after the first write; does not re-arm.
+  ops:
+    fetch(PushRequest) → PushResult
+    webSocketMessage(ClientMessage) → RecordsMessage | PushResult
+```
+
+```mdl
+table entries: The current version of one record of the graph.
+  store: SpaceObject storage (no migration history; graphs are scratch)
+  columns:
+    key: TEXT PRIMARY KEY      # SyncRecord.key
+    seq: INTEGER NOT NULL      # the stamp of the write that put this version here
+    typename: TEXT NOT NULL
+    props: TEXT NOT NULL       # json
+    refs: TEXT NOT NULL        # json
+    deleted: INTEGER NOT NULL  # 1 = tombstone
+  key: key
+  indexes:
+    - entries_seq(seq): a pull reads everything above a seq, in order
+```
+
+```mdl
+keyspace spaceState: The counters and dates of one graph.
+  store: SpaceObject storage
+  keys:
+    seq: number                    # the highest seq handed out
+    incarnation: string            # random, minted on first read after the store is empty
+    createdAt: number              # epoch ms of the first write; the alarm fires 24h later
+    client:<clientId>: number      # the highest clientSeq applied for that client
+  bound: one `client:` key per client that ever pushed; dropped with the graph after 24 hours
+```
+
+```mdl
+route sync: One push and its answer, for a peer that cannot hold a socket and for scripts.
+  method: POST
+  path: /api/space/:slug/sync
+  auth: none
+  input:
+    body: PushRequest
+  output: PushResult
+```
+
+```mdl
+route socket: The live connection: pulls, pushes, and other clients' writes as they land.
+  method: GET
+  path: /api/space/:slug/socket
+  auth: none
+  output: WebSocket of ClientMessage in, RecordsMessage | PushResult out
+```
+
+## Features
+
+```mdl
+feat F-1: Ordering
+
+  req F-1.1:
+    when: the object applies a push
+    then: it stamps each record, in the order sent, with the graph's next seq, in one transaction, and
+          stores that seq as the graph's highest
+
+  req F-1.2:
+    when: any write is ordered
+    then: the order is the seq alone; no wall-clock time takes part
+```
+
+```mdl
+feat F-2: Compare-and-set
+
+  req F-2.1:
+    when: a push carries records with a `base`
+    then: the object applies it only if every such record's `base` equals the seq it holds for that key
+          (0 for a key it has never held); otherwise it applies none of the push
+
+  req F-2.2:
+    when: a push is refused
+    then: the answer lists the refused keys in `conflicts` and carries every record above the push's
+          `since`, so the client can merge and push again
+
+  req F-2.3:
+    when: a record carries no `base`
+    then: it is written unconditionally
+```
+
+```mdl
+feat F-3: Delivery
+
+  req F-3.1:
+    when: a push is applied
+    then: the pusher gets a `PushResult`, and every other socket gets a `RecordsMessage` of the applied
+          records with `from` set to the seq before them
+
+  req F-3.2:
+    when: a push arrives with a `client` and a `clientSeq` no higher than the last one applied for it
+    then: it is answered as accepted and nothing is written again
+```
+
+```mdl
+feat F-4: Size
+
+  req F-4.1:
+    when: a push would leave more than 1000 live records
+    then: it is refused (413 on the route, an error message on the socket); a tombstone or an edit that
+          does not grow the live set is never refused
+```
+
+```mdl
+feat F-5: Expiry
+
+  req F-5.1:
+    when: 24 hours have passed since the first write
+    then: the alarm deletes all storage, and the next store has a new `incarnation`
+```
+
+```mdl
+feat F-6: Deployment
+
+  req F-6.1:
+    when: the "Deploy to Cloudflare" button is pressed on this directory's README
+    then: the directory, copied alone and installed with npm, builds and deploys with the `SPACE`
+          namespace provisioned from its wrangler config
+
+  req F-6.2:
+    when: the worker's entry module is loaded
+    then: it exports only the fetch handler and `SpaceObject`, since the runtime reads every export as one
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Seqs are stamped in order
+  given: an empty graph
+  when: a push of two new records with base 0
+  then: it is accepted with seqs 1 and 2, and the store's seq is 2
+  verifies: [F-1.1]
+```
+
+```mdl
+scenario T-2: A stale base refuses the whole push
+  given: records a and b; another client moved a past the base this push names
+  when: a push of a and b
+  then: it is refused with conflicts [a], the answer carries a's current version, and b is unchanged
+  verifies: [F-2.1, F-2.2]
+```
+
+```mdl
+scenario T-3: A retried push is applied once
+  given: a push from client c with clientSeq 1 was applied
+  when: the same push arrives again
+  then: it is answered as accepted and the store's seq does not move
+  verifies: [F-3.2]
+```
+
+```mdl
+scenario T-4: The pusher gets an ack and the others get records
+  given: two sockets on one graph
+  when: one pushes
+  then: it receives an `ack`, and the other receives `records` with `from` 0
+  verifies: [F-3.1]
+```
+
+```mdl
+scenario T-5: The cap counts live records
+  given: a graph at 1000 live records
+  when: a push deletes one and creates one, then a push creates one
+  then: the first is accepted and the second is refused
+  verifies: [F-4.1]
+```
+
+```mdl
+scenario T-6: An expired graph is a new incarnation
+  given: a graph with writes
+  when: its alarm runs and another client writes
+  then: the store's incarnation differs from before
+  verifies: [F-5.1]
+```
+
+## Changelog
+
+```mdl
+decision D-1: Sync orders writes with a sequence number the server keeps and a counter each client keeps, never with timestamps. A round is: the client pulls, merges, and pushes.
+  date: 2026-11-10
+  by: user:dmaretskyi
+  affects: [F-1, F-2, PushRequest]
+  source: https://claude.ai/code/session_01LepGAYKGht2b6Gyq1s1W6W
+```
+
+```mdl
+decision D-2: The sync server worker can be deployed with a "Deploy to Cloudflare" button.
+  date: 2026-11-10
+  by: user:dmaretskyi
+  affects: [F-6]
+  source: https://claude.ai/code/session_01LepGAYKGht2b6Gyq1s1W6W
+```
+
+```mdl
+decision D-3: A push is compare-and-set per record and all or nothing; a refused push is answered with what the client missed. Fills in [D-1].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2, PushResult]
+  why: |
+    Applying writes in arrival order let a client overwrite a version it never saw. Refusing the whole
+    push keeps a client's batch consistent with itself, and answering with the missed records saves the
+    client a separate pull before it merges.
+  rejected: |
+    Per-record accept and reject, which applies half a batch; a version vector per record, which needs
+    no central authority but this design has one in the Durable Object.
+```
+
+```mdl
+decision D-4: `clientSeq` numbers a client's pushes so the object applies a retried push once. Fills in [D-1].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.2, spaceState]
+  why: A push whose answer was lost on a dropped socket is sent again; without the counter its now-stale bases would read as a conflict.
+```
+
+```mdl
+decision D-5: The server is its own package whose directory imports nothing outside itself and pins its tools by version. Fills in [D-2].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6]
+  why: The button copies only the directory and installs it with npm, which resolves neither `workspace:` nor `catalog:` versions.
+```

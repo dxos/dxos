@@ -1,0 +1,65 @@
+---
+title: Add an operation
+description: Give the plugin an action that the UI, the command palette and agents can run, and create objects through one.
+---
+
+import InspectorEmbed from '../../../../../components/InspectorEmbed.astro';
+import Snippet from '../../../../../components/Snippet.astro';
+
+By the end of this page the **+** menu creates links through an operation, and a **Mark as read** operation marks
+a link as read.
+
+## Background
+
+An operation is a named action with a typed input and output. The plugin defines it once and contributes a handler.
+After that, a button, the command palette and the assistant all run it the same way, through the framework's
+operation invoker. [Operations](/docs/plex/concepts/operations/) explains why.
+
+Creating an object is an operation too. The Space plugin defines `SpaceOperation.AddObject`, and a plugin uses it to
+put a new object in a space.
+
+## Steps
+
+1. **Define an operation.** The key is a DXN. The input and output are schemas; an agent reads their
+   descriptions to learn what to pass. The input is a reference to a link rather than the link itself, so the
+   assistant can pass one by its id.
+
+   <Snippet file="plex-tutorial/src/types/StashedLinkOperation" region="operation" />
+
+2. **Implement the handler.** `Operation.withHandler` attaches an Effect to the definition. Operations are built on [Effect](https://effect.website/), and `Effect.gen` reads like an async function, with `yield*` in place of `await`. This one looks the reference up in the space's database with `Database.resolve` and sets the link's `read` field. The operation's `services` list what the handler uses from the context, here the space's database.
+
+   <Snippet file="plex-tutorial/src/operations/mark-read" region="handler" />
+
+3. **Contribute the handler.** A handler set lists the plugin's handlers. `Operation.lazyHandler` loads the handler's
+   file the first time the operation runs, not when the plugin starts.
+
+   <Snippet file="plex-tutorial/src/operations/index" region="handler-set" />
+
+   <Snippet file="plex-tutorial/src/capabilities/operation-handler" region="operation-handler" />
+
+4. **Create a link through an operation.** The create-object module adds the type to the **+** menu and says how to create one: it
+   invokes `SpaceOperation.AddObject` with a new link from `make`. Invoking the operation, rather than adding to
+   the database directly, puts the link wherever the person asked, such as inside a collection.
+
+   <Snippet file="plex-tutorial/src/capabilities/create-object" region="create-object" />
+
+5. **Add the modules to the manifest.**
+
+   <Snippet file="plex-tutorial/dx.config" region="operation" />
+
+6. **Run it.** Load or reload your plugin below. Click **New** in the header: the inspector runs the create-object
+   module, as Composer's **+** menu would, and a link named "New link" becomes the sample object that every
+   module is shown with. Select **Operations**. The form is built from the operation's input schema, and its
+   **link** field takes the sample. Click **Run**: the operation has no output, so the inspector shows the sample
+   after it ran, with `read` set to `true`.
+
+   <InspectorEmbed adds={['operations', 'create-object']} />
+
+   The links have no view yet. The next page lists them in the navigation tree and puts Mark as read on each
+   link's toolbar, and the page after that adds a view.
+
+## What you can do now
+
+- Define an operation with schemas for its input and output, taking an object by reference.
+- Implement a handler and load it lazily.
+- Create an object of the plugin's type through the Space plugin's operation.

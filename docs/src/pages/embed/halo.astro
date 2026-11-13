@@ -1,0 +1,47 @@
+---
+import { EmbedPage } from '../../halo-tutorial/app/EmbedPage.tsx';
+---
+
+<!--
+  The HALO contact book on a page of its own, which `HaloEmbed.astro` shows in an iframe, so its CSS stays off the docs
+  pages. Query: `?stage=<Stage>&scene=<Scene>`.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Contact book</title>
+    <!-- Follows the theme of the docs page around the iframe. -->
+    <script is:inline>
+      {
+        const root = document.documentElement;
+        const host = window.parent === window ? undefined : window.parent.document.documentElement;
+        const sync = () => {
+          const dark = host
+            ? host.dataset.theme === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          root.classList.toggle('dark', dark);
+          root.style.colorScheme = dark ? 'dark' : 'light';
+        };
+        sync();
+        host && new MutationObserver(sync).observe(host, { attributes: true, attributeFilter: ['data-theme'] });
+      }
+    </script>
+  </head>
+  <body>
+    <!-- `client:only`, since the query is known only in the browser. -->
+    <div id="root"><EmbedPage client:only="react" /></div>
+    <style is:global>
+      html,
+      body,
+      #root,
+      #root > astro-island {
+        display: block;
+        height: 100%;
+        margin: 0;
+      }
+    </style>
+  </body>
+</html>

@@ -103,18 +103,18 @@
     "@dxos/util": "workspace:*",
     "@effect/opentelemetry": "catalog:",
     "@opentelemetry/api": "catalog:",
+    "@opentelemetry/resources": "catalog:",
+    "@opentelemetry/semantic-conventions": "catalog:",
     "jsonpath-plus": "catalog:"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@effect/platform-browser": "catalog:",
     "@opentelemetry/api-logs": "catalog:",
-    "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-logs": "catalog:",
     "@opentelemetry/sdk-node": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "@opentelemetry/sdk-trace-node": "catalog:",
-    "@opentelemetry/semantic-conventions": "catalog:",
     "effect": "catalog:"
   },
   "peerDependencies": {

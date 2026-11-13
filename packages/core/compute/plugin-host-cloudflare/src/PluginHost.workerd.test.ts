@@ -2,14 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
+import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import { create } from '@bufbuild/protobuf';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Fibonacci, Reply } from '@dxos/compute/testing';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EntityId } from '@dxos/keys';
-import { ErrorCodec, PluginProtocol } from '@dxos/protocols';
+import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
+import { type EdgeFunctionEnv, ErrorCodec, PluginProtocol } from '@dxos/protocols';
+import { QueryResponseSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
 import * as PluginHost from './PluginHost.ts';
 import {
@@ -20,9 +31,11 @@ import {
   Greet,
   Greeter,
   GREETER_WIRE_KEY,
+  Hidden,
   Inspect,
   InspectEvent,
   Nest,
+  ResolveRegistry,
   TEST_PLUGIN_KEY,
   TestFailure,
   TestPlugin,
@@ -41,6 +54,9 @@ describe('PluginHost', () => {
     expect(catalog.types[0].jsonSchema).toMatchObject({ type: 'object' });
     expect(catalog.skills).toMatchObject([{ key: TestSkill.key, name: 'Host test', mcpPrompt: true }]);
     expect(catalog.skills[0].tools.length).toBe(1);
+    // The skill manager lets an agent enable only a skill that says it may; without the flag a bundled skill is unusable
+    // by an agent that starts with the skill manager alone.
+    expect(catalog.skills[0].agentCanEnable).toBe(true);
     const operations = JSON.stringify(catalog.operations);
     expect(operations).toContain(String(Reply.meta.key));
   });
@@ -191,6 +207,71 @@ describe('PluginHost', () => {
     });
   });
 
+  // A skill bound by registry URI resolves only through the invocation's registry, as on operation-service.
+  describe('registry', () => {
+    test(
+      "holds the primary's skills and operation records, and no other plugin's",
+      { timeout: 20_000 },
+      async ({ expect }) => {
+        const spaceId = SpaceId.random();
+        const result = await makeHost().invoke(
+          { operationKey: String(ResolveRegistry.meta.key), spaceId, input: {} },
+          makeSpaceEnv(spaceId),
+        );
+        expect(result).toMatchObject({ ok: true, output: { own: TestSkill.key, other: null } });
+        const operations = result.ok ? JSON.stringify(result.output) : '';
+        expect(operations).toContain(String(Reply.meta.key));
+        expect(operations).toContain(String(ResolveRegistry.meta.key));
+        expect(operations).not.toContain(String(Fibonacci.meta.key));
+        expect(operations).not.toContain(String(Hidden.meta.key));
+      },
+    );
+
+    // A pending `waitForCancel` pins the invocation until its stub is disposed.
+    test('a skill that fails to make leaves no cancellation wait pending', { timeout: 20_000 }, async ({ expect }) => {
+      let waiting = false;
+      let disposed = false;
+      const cancellation: PluginProtocol.CancellationSignal & Disposable = {
+        waitForCancel: () => {
+          waiting = true;
+          return new Promise<void>(() => {});
+        },
+        [Symbol.dispose]: () => {
+          disposed = true;
+        },
+      };
+      const spaceId = SpaceId.random();
+      const result = await PluginHost.make(() => ({ primary: BrokenSkillPlugin() })).invoke(
+        { operationKey: String(Reply.meta.key), spaceId, input: {} },
+        makeSpaceEnv(spaceId),
+        { cancellation },
+      );
+      expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining('No skill.') } });
+      expect(disposed).toBe(waiting);
+    });
+  });
+
+  test('an operation whose schema cannot be serialized leaves no cancellation wait pending', async ({ expect }) => {
+    let waiting = false;
+    let disposed = false;
+    const cancellation: PluginProtocol.CancellationSignal & Disposable = {
+      waitForCancel: () => {
+        waiting = true;
+        return new Promise<void>(() => {});
+      },
+      [Symbol.dispose]: () => {
+        disposed = true;
+      },
+    };
+    const result = await PluginHost.make(() => ({ primary: UnserializablePlugin() })).invoke(
+      { operationKey: String(Unserializable.meta.key), input: {} },
+      {},
+      { cancellation },
+    );
+    expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining('No JSON Schema.') } });
+    expect(disposed).toBe(waiting);
+  });
+
   // Services only EDGE holds, and other plugins' operations (EDGE-PLUGINS F-5.7).
   describe('host services', () => {
     test('a handler reaches a service EDGE serves, its methods and streams', async ({ expect }) => {
@@ -319,5 +400,128 @@ const collectingSink = () => {
     sink: { write: (message: object) => void messages.push(Schema.decodeUnknownSync(SinkMessage)(message)) },
   };
 };
+
+/** Adds the `Symbol.dispose` a Workers RPC result carries, which the host's data services release with `using`. */
+const disposable = <T extends object>(value: T): T & Disposable => Object.assign(value, { [Symbol.dispose]: () => {} });
+
+/** EDGE's document store for one space, in memory, whose root starts with no objects. */
+class MemoryDataService implements EdgeFunctionEnv.DataService {
+  readonly #documents = new Map<string, A.Doc<Record<string, unknown>>>();
+  readonly #spaceKey = PublicKey.random();
+  readonly #rootDocumentId: string;
+
+  constructor(spaceId: SpaceId) {
+    this.#rootDocumentId = this.#create(
+      A.from<Record<string, unknown>>({
+        version: 1,
+        access: { spaceId, spaceKey: this.#spaceKey.toHex() },
+        objects: {},
+        links: {},
+      }),
+    );
+  }
+
+  async getSpaceMeta() {
+    return disposable({ spaceKey: this.#spaceKey.toHex(), rootDocumentId: this.#rootDocumentId });
+  }
+
+  async getDocuments(_ctx: EdgeFunctionEnv.TraceContext, _spaceId: SpaceId, documentIds: string[]) {
+    return disposable(
+      documentIds.flatMap((documentId) => {
+        const document = this.#documents.get(documentId);
+        return document === undefined ? [] : [{ documentId, data: A.save(document) }];
+      }),
+    );
+  }
+
+  async execQuery() {
+    return disposable(create(QueryResponseSchema, { results: [] }));
+  }
+
+  async createDocument() {
+    return disposable({ documentId: this.#create(A.init()) });
+  }
+
+  async changeDocument(_ctx: EdgeFunctionEnv.TraceContext, _spaceId: SpaceId, documentId: string, changes: Uint8Array) {
+    const document = this.#documents.get(documentId);
+    if (document === undefined) {
+      throw new Error(`No document ${documentId}`);
+    }
+    this.#documents.set(documentId, A.loadIncremental(document, changes));
+  }
+
+  #create(document: A.Doc<Record<string, unknown>>): string {
+    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+    this.#documents.set(documentId, document);
+    return documentId;
+  }
+}
+
+/** Fails any call: the registry test reads no feed and calls no model. */
+const unserved = async (): Promise<never> => {
+  throw new Error('Not served by this test.');
+};
+
+/** The data bindings a space-scoped invocation needs, over one in-memory space. */
+const makeSpaceEnv = (spaceId: SpaceId): PluginProtocol.Env => ({
+  DATA_SERVICE: new MemoryDataService(spaceId),
+  QUEUE_SERVICE: { queryQueue: unserved, insertIntoQueue: unserved, deleteFromQueue: unserved },
+  FUNCTIONS_AI_SERVICE: { fetch: unserved },
+});
+
+/** An operation whose input schema throws when serialized to JSON Schema, as the host does before running it. */
+const Unserializable = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.unserializable'), name: 'Unserializable' },
+  input: Schema.Struct({
+    name: Schema.String.check(
+      Schema.makeFilter((name: string) => name.length > 0, {
+        toJsonSchema: () => {
+          throw new Error('No JSON Schema.');
+        },
+      }),
+    ),
+  }),
+  output: Schema.Struct({}),
+});
+
+const UnserializablePlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hostTestUnserializable'), name: 'Unserializable' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule('UnserializableOperations', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed(
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(Unserializable.pipe(Operation.withHandler(() => Effect.succeed({})))),
+        ),
+      ),
+    ),
+  ),
+  Plugin.make,
+);
+
+/** A plugin whose one skill throws when made, as a skill with a broken definition does. */
+const BrokenSkillPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hostTestBroken'), name: 'Broken skill' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule('BrokenOperations', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed(Capability.contribute(Capabilities.OperationHandler, OperationHandlerSet.make(ReplyHandler))),
+    ),
+  ),
+  Plugin.addModule(
+    Capability.inlineModule('BrokenSkill', { provides: [AppCapabilities.SkillDefinition] }, () =>
+      Effect.succeed(
+        Capability.contribute(AppCapabilities.SkillDefinition, {
+          key: 'org.dxos.skill.hostTestBroken',
+          make: () => {
+            throw new Error('No skill.');
+          },
+        }),
+      ),
+    ),
+  ),
+  Plugin.make,
+);
 
 const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin() }));

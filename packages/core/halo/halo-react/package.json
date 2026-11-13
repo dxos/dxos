@@ -24,13 +24,17 @@
     "dist",
     "src"
   ],
+  "scripts": {
+    "typedoc": "typedoc --out typedoc"
+  },
   "dependencies": {
     "@dxos/halo": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
-    "react": "catalog:"
+    "react": "catalog:",
+    "typedoc": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:",

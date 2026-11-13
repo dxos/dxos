@@ -10,6 +10,7 @@ import {
   formatSourceKey,
   isSpecKey,
   parseFields,
+  reviewItemId,
 } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
 
@@ -263,6 +264,7 @@ export const buildDefinitionGraph = (
   const isReference = index ? specReferenceFilter(index) : () => false;
   const blocks = definitionBlocks(text);
   const ids = new Set(blocks.map(({ id }) => id));
+  const byReviewId = new Map(blocks.map(({ type, id }) => [reviewItemId(type, id), id]));
   const externals = new Map<string, DefinitionModel>();
   const link = (key: SourceKey): string => {
     const external = externals.get(formatSourceKey(key)) ?? externalDefinition(key, specs);
@@ -272,7 +274,7 @@ export const buildDefinitionGraph = (
   // A requirement's annotation hangs off its feature, the box the graph draws.
   const annotated = new Map<string, SourceKey[]>();
   for (const { id, keys } of annotations) {
-    const owner = resolveToken(id, ids);
+    const owner = byReviewId.get(id) ?? resolveToken(id, ids);
     if (owner) {
       annotated.set(owner, [...(annotated.get(owner) ?? []), ...keys]);
     }

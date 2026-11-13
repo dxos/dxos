@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1920 1080">
+  <rect id="background" width="1920" height="1080" style="fill: var(--dx-bg-fill, rgb(29,31,32))"/>
+  <g id="lines" fill="none" stroke-width="14" style="stroke: var(--dx-bg-lines, rgb(30,99,139))">
+    <path d="M390.9,715.4 L1940.0,1050.7"/>
+    <path d="M345.5,374.4 L1940.0,29.4"/>
+    <path d="M-20.0,1008.8 L1077.4,-20.0"/>
+    <path d="M-20.0,774.7 L1940.0,321.9"/>
+    <path d="M-20.0,71.2 L1077.3,1100.0"/>
+    <path d="M1940.0,793.1 L-20.0,793.1"/>
+    <path d="M399.8,402.3 L1940.0,758.0"/>
+    <path d="M1940.0,286.9 L243.3,286.9"/>
+  </g>
+  <g id="icon" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--dx-bg-icon, rgb(230,241,247))">
+    <path d="M210.0,286.9 L311.3,381.8 L582.0,444.4 L750.0,286.9 Z"/>
+    <path d="M311.3,381.8 L750.0,286.9"/>
+    <path d="M582.0,444.4 L480.0,540.0 L311.2,381.8"/>
+    <path d="M210.0,793.1 L311.3,698.2 L582.0,635.6 L750.0,793.1 Z"/>
+    <path d="M311.3,698.2 L750.0,793.1"/>
+    <path d="M582.0,635.6 L480.0,540.0 L311.2,698.2"/>
+  </g>
+</svg>

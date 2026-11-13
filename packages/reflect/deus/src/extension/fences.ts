@@ -28,6 +28,10 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   plugin: 'var(--color-fuchsia-400)',
   uses: 'var(--color-rose-400)',
   table: 'var(--color-red-400)',
+  binding: 'var(--color-slate-300)',
+  actor: 'var(--color-yellow-300)',
+  route: 'var(--color-orange-300)',
+  keyspace: 'var(--color-red-300)',
 };
 
 const theme = EditorView.baseTheme({

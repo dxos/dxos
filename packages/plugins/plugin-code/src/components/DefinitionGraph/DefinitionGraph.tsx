@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
-import { type ReviewModel, type VerdictStatus, reviewAnnotations, statusOf } from '@dxos/deus/review';
+import { type ReviewModel, type VerdictStatus, reviewAnnotations, reviewItemId, statusOf } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
 import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
@@ -293,7 +293,7 @@ export const DefinitionGraph = ({
           <DefinitionCard
             definition={definition}
             dependents={model.dependents.get(id) ?? 0}
-            status={definition.external ? undefined : statusOf(review, id)}
+            status={definition.external ? undefined : statusOf(review, reviewItemId(definition.kind, id))}
             change={diff?.changes.get(id)}
           />
         )

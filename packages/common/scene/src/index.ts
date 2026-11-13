@@ -4,6 +4,7 @@
 
 export * as Scene from './Scene.ts';
 export * from './arrange.ts';
+export * from './constrain.ts';
 export * from './document.ts';
 export * from './echo.ts';
 export * from './element.ts';

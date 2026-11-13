@@ -19,6 +19,25 @@ describe('mdl lint', () => {
     ]);
   });
 
+  test('the worker dialect blocks are known', ({ expect }) => {
+    expect(
+      messages(
+        [
+          block('binding DATA_SERVICE: Reads and writes space data.\n  type: Service<DataService.Service>'),
+          block(
+            "actor Scheduler: One space's trigger dispatcher.\n  binding: TRIGGERS_DISPATCHER\n  key: the space id",
+          ),
+          block(
+            "route listProcesses: Lists a space's processes.\n  method: GET\n  path: /processes/:spaceId\n  auth: none",
+          ),
+          block(
+            "keyspace schedulerState: A space's trigger state.\n  store: Scheduler storage\n  keys:\n    spaceId: string",
+          ),
+        ].join('\n'),
+      ),
+    ).toEqual([]);
+  });
+
   describe('one block per fence', () => {
     const lint = (text: string) =>
       lintMdl(text)
@@ -200,6 +219,70 @@ describe('mdl lint', () => {
       expect(
         checkChangelogChange(spec('X', d1), spec('Y', d1, decision('D-2', 'Use Z.', '\n  supersedes: D-9'))),
       ).toEqual(['Decision D-2 supersedes D-9, which is not in the changelog.']);
+    });
+
+    describe('a duplicated id at the base', () => {
+      // The base as a bad merge leaves it: two branches each appended their own D-2.
+      const base = spec('X [D-2]', d1, decision('D-2', 'Use Y.'), decision('D-2', 'Use W.'), decision('D-3', 'Use V.'));
+
+      test('is repaired by moving a copy, unchanged, to the next free id', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-2]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-4', 'Use Y.')),
+          ),
+        ).toEqual([]);
+      });
+
+      // Pointing a reference at a moved copy changes the body, which still needs a decision or a waiver.
+      test('a moved copy is not a new decision', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-4]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-4', 'Use Y.')),
+          ),
+        ).toEqual([MISSING_DECISION]);
+        expect(
+          checkChangelogChange(
+            base,
+            spec(
+              'X [D-4]',
+              d1,
+              decision('D-2', 'Use W.'),
+              decision('D-3', 'Use V.'),
+              decision('D-4', 'Use Y.'),
+              decision('D-5', 'Use U.'),
+            ),
+          ),
+        ).toEqual([]);
+      });
+
+      test('a moved copy must keep its text', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-2]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-4', 'Use Y and Z.')),
+          ),
+        ).toEqual([
+          'Decision D-2 was edited — the changelog is append-only; supersede it instead.',
+          'Decisions must stay in order, with new ones appended last.',
+        ]);
+      });
+
+      test('a moved copy must take the next free id', ({ expect }) => {
+        expect(
+          checkChangelogChange(
+            base,
+            spec('X [D-2]', d1, decision('D-2', 'Use W.'), decision('D-3', 'Use V.'), decision('D-5', 'Use Y.')),
+          ),
+        ).toEqual(['Decision D-5 is out of sequence — the next id is D-4.']);
+      });
+
+      test('an id held once cannot be moved', ({ expect }) => {
+        expect(checkChangelogChange(spec('X', d1, d2), spec('X', d2, decision('D-3', 'Use X.')))).toEqual([
+          'Decision D-1 was removed — the changelog is append-only; supersede it instead.',
+        ]);
+      });
     });
 
     describe('questions', () => {

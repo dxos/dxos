@@ -29,12 +29,14 @@ export const mapEdge = (
 ): Omit<ComputeEdge, 'id'> => {
   const sourceNode = graph.findNode(source) as ComputeShape;
   const targetNode = graph.findNode(target) as ComputeShape;
-  invariant(sourceNode?.node);
-  invariant(targetNode?.node);
+  const sourceId = sourceNode?.data?.node;
+  const targetId = targetNode?.data?.node;
+  invariant(sourceId);
+  invariant(targetId);
 
   return {
-    source: sourceNode.node,
-    target: targetNode.node,
+    source: sourceId,
+    target: targetId,
     output,
     input,
   };
@@ -56,7 +58,7 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
         // Ignore shapes that don't have a corresponding node factory.
         const computeNode = syncCreate(model, node);
         if (computeNode) {
-          node.node = computeNode.id;
+          node.data = { ...node.data, node: computeNode.id };
         }
       },
 
@@ -69,10 +71,10 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
       onDelete: ({ graph, subgraph }) => {
         if (model) {
           const shapes = subgraph.nodes as ComputeShape[];
-          const nodeIds = shapes.map((shape) => shape.node).filter((id): id is string => id !== undefined);
+          const nodeIds = shapes.map((shape) => shape.data?.node).filter((id): id is string => id !== undefined);
           // An edge's far end may survive the deletion, so it is looked up in the whole graph.
           const computeId = (id: string) =>
-            ((subgraph.findNode(id) ?? graph.findNode(id)) as ComputeShape | undefined)?.node ?? '';
+            ((subgraph.findNode(id) ?? graph.findNode(id)) as ComputeShape | undefined)?.data?.node ?? '';
           const links = subgraph.edges.map(({ source, target, output, input }) => ({
             source: computeId(source),
             target: computeId(target),
@@ -94,7 +96,7 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
     for (const shape of graph.nodes) {
       const node = syncCreate(computeGraph, shape);
       if (node) {
-        shape.node = node.id;
+        shape.data = { ...shape.data, node: node.id };
       }
     }
 

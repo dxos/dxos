@@ -1,0 +1,35 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+import { twoslash } from '../../twoslash.mjs';
+import { appSample, snippetProjectPath, snippetSource, snippetWithContext } from '../echo/snippets.ts';
+
+interface Props {
+  file: string;
+  region?: string;
+  /** Regions inside `region` that later steps add, comma-separated, left out with the imports only they use. */
+  omit?: string;
+  /** Shows the region without the imports it uses, when an earlier step shows the file's imports. */
+  bare?: boolean;
+  title?: string;
+  lang?: string;
+  /** Numbers cost width that a side-by-side column cannot spare. */
+  numbered?: boolean;
+}
+
+const { file, region, omit, bare, lang = 'ts', numbered = true } = Astro.props;
+const title = Astro.props.title ?? snippetProjectPath(file);
+const app = appSample(file, region, omit, bare);
+const appMeta = app
+  ? [`showLineNumbers=${numbered}`, `startLineNumber=${app.startLine}`, app.collapse.length > 0 && `collapse={${app.collapse.map((range) => range.join('-')).join(', ')}}`]
+      .filter(Boolean)
+      .join(' ')
+  : '';
+---
+{app ? (
+  <Code code={twoslash ? app.context : app.code} lang={lang} title={title} meta={twoslash ? `twoslash ${appMeta}` : appMeta} />
+) : twoslash ? (
+  <Code code={snippetWithContext(file, region)} lang={lang} title={title} meta={`twoslash showLineNumbers=${numbered}`} />
+) : (
+  <Code code={snippetSource(file, region)} lang={lang} title={title} meta={`showLineNumbers=${numbered}`} />
+)}

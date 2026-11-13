@@ -20,12 +20,13 @@ import {
   type NodeId,
   type NodeType,
   type Point,
+  type PolylineBend,
   type Side,
   type ViewId,
 } from '@dxos/scene';
 
 import { type Camera, type Tool } from '../model/index.ts';
-import { type Clipboard, type PartKey } from '../utils/index.ts';
+import { type Clipboard, type Inside, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
@@ -51,9 +52,21 @@ export type Drag =
   | { kind: 'resize'; id: NodeId; handle: Handle; start: Bounds; bounds: Bounds }
   /**
    * Rubber band from a port, or from a free point under a link tool; `target` is set while hovering a
-   * valid drop, and the link is then previewed as created.
+   * valid drop, and the link is then previewed as created. `from` and `to` are where the link is drawn, which
+   * a free end snaps to the grid; `press` and `pointer` are where the gesture began and where the pointer is,
+   * unsnapped, which is how far it has gone.
    */
-  | { kind: 'link'; type: LinkType; source: Endpoint; from: Point; fromSide: Side; to: Point; target?: Endpoint }
+  | {
+      kind: 'link';
+      type: LinkType;
+      source: Endpoint;
+      from: Point;
+      fromSide: Side;
+      to: Point;
+      press: Point;
+      pointer: Point;
+      target?: Endpoint;
+    }
   /**
    * Drawing a new node with a tool. `dropped` marks one dragged in from the palette or a host's
    * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
@@ -64,8 +77,25 @@ export type Drag =
    * `to` the pointer, where the next segment runs. It outlasts each press, ending when the line is finished or dropped.
    */
   | { kind: 'vertices'; type: NodeType; points: Point[]; to: Point }
-  /** Moving one vertex of a node in vertex edit mode; `points` are all its vertices, in scene coordinates. */
-  | { kind: 'vertex'; id: NodeId; index: number; points: Point[] }
+  /**
+   * Drawing a node in one stroke (`NodeDef.freehand`): `points` are the pointer's path since the press, in scene
+   * coordinates. It ends with the press, when the stroke lands as a node.
+   */
+  | { kind: 'freehand'; type: NodeType; points: Point[]; times: number[] }
+  /**
+   * Moving one vertex of a node in vertex edit mode; `points` are all its vertices and `bends` its bent segments, in
+   * scene coordinates. With `bend`, it is a control of that segment that moves (`handle` says which), and the
+   * vertices stay.
+   */
+  | {
+      kind: 'vertex';
+      id: NodeId;
+      index: number;
+      points: Point[];
+      bends: PolylineBend[];
+      bend?: number;
+      handle?: BendHandle;
+    }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
@@ -92,6 +122,9 @@ export type ControlPointRef = { link: LinkId; index: number };
  * The node in edit mode, one at a time (`NodeDef.editor`): a text part edited in place (`parts.ts`), or its vertices
  * shown as points to drag, `vertex` the one last pressed. Enter, Escape or a press outside the node leaves it.
  */
+/** Which control of a bent segment: the one it leaves its first point toward, or the one a cubic arrives from. */
+export type BendHandle = 'control' | 'second';
+
 export type Editing = { id: NodeId; kind: 'label'; part: PartKey } | { id: NodeId; kind: 'vertices'; vertex?: number };
 
 export type CanvasAtoms = {
@@ -132,6 +165,11 @@ export type CanvasAtoms = {
   clock: Clock;
   /** The composite open in isolation, if any. */
   isolation: Atom.Writable<Isolation | undefined>;
+  /**
+   * The Object being edited in place, if any (ANIMATION.md §4.2): its parts are what the editor acts on and the rest
+   * of the scene is drawn faded behind them. Unlike isolation this moves no camera and opens no view.
+   */
+  inside: Atom.Writable<Inside | undefined>;
 };
 
 /**
@@ -160,4 +198,5 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
   clock: createClock(),
   isolation: Atom.keepAlive(Atom.make<Isolation | undefined>(undefined)),
+  inside: Atom.keepAlive(Atom.make<Inside | undefined>(undefined)),
 });

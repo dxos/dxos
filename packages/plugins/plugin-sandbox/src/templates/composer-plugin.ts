@@ -44,7 +44,7 @@ const PACKAGES = [
 /** The toolchain install takes five to ten minutes; the service allows fifteen. */
 const INSTALL_TIMEOUT_MS = 15 * 60 * 1_000;
 
-const GUIDE_PATH = 'docs/src/content/docs/docs/composer/publishing-plugins.md';
+const GUIDE_PATH = 'docs/src/content/docs/docs/plex/publishing-plugins.md';
 
 type TaskSeed = Pick<Task.Task, 'title' | 'description' | 'estimate'>;
 

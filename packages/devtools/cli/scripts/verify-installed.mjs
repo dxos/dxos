@@ -24,8 +24,18 @@ import { join } from 'node:path';
 //           covers instead.
 //
 
-/** `--help`-shaped so nothing touches the network or a real profile; these failures are all at import. */
-const COMMANDS = [['--version'], ['--help'], ['registry', '--help'], ['function', '--help'], ['space', '--help']];
+/**
+ * Nothing here touches the network or a real profile. The `--help` commands fail at import; `debug webrtc` loads
+ * the WebRTC native addon, which only fails once the client opens a channel.
+ */
+const COMMANDS = [
+  ['--version'],
+  ['--help'],
+  ['registry', '--help'],
+  ['function', '--help'],
+  ['space', '--help'],
+  ['debug', 'webrtc'],
+];
 
 const NAMESPACE_SCRIPT = 'mount --bind "$1" "$2" || exit 42; shift 2; exec "$@"';
 const DIAGNOSTIC = /error|ENOENT|No native build|loaded from|Cannot find|Invalid subcommand/i;

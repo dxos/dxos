@@ -13,12 +13,13 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
-import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId, findLayout } from '@dxos/scene';
+import { MAJOR_GRID_RATIO, type ViewId, findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { type DrawState, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
+  SCENE_OVERLAY_ATTRIBUTE,
   SceneLookContext,
   type UseDrawSceneOptions,
   useCanvasController,
@@ -44,8 +45,15 @@ import {
   useSceneWheel,
   useViewport,
 } from '../../hooks/index.ts';
-import { type ThemeChoice, chooseTheme, defaultThemeRegistry, keyAction, neuVars } from '../../model/index.ts';
-import { fitFrame, visibleView } from '../../utils/index.ts';
+import {
+  type ConstrainContext,
+  type ThemeChoice,
+  chooseTheme,
+  defaultThemeRegistry,
+  keyAction,
+  neuVars,
+} from '../../model/index.ts';
+import { fitFrame, gridPitch, leavesObject, visibleView } from '../../utils/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
@@ -86,8 +94,8 @@ export const CanvasRoot = ({
   ...props
 }: CanvasRootProps) => {
   const registry = useRegistry();
-  // Read when a write is checked, so the view's snap toggle reaches the mode without rebuilding the store.
-  const snapRef = useRef<() => boolean>(() => true);
+  // Read when a write is checked, so the view's snap and lattice toggles reach the mode without rebuilding the store.
+  const contextRef = useRef<() => ConstrainContext>(() => ({ snap: true }));
   const {
     store,
     root,
@@ -96,7 +104,7 @@ export const CanvasRoot = ({
     document,
     scene,
     constrain,
-    snap: () => snapRef.current(),
+    context: () => contextRef.current(),
     onIntent,
     onModelIntent,
     onTransaction,
@@ -111,7 +119,7 @@ export const CanvasRoot = ({
       {...props}
       store={store}
       root={root}
-      snapRef={snapRef}
+      contextRef={contextRef}
       preview={preview}
       lattice={lattice}
     />
@@ -126,14 +134,14 @@ type CanvasEngineProps = Omit<
 > & {
   store: DrawState;
   root: ViewId;
-  snapRef: { current: () => boolean };
+  contextRef: { current: () => ConstrainContext };
 } & Pick<UseDrawSceneOptions, 'lattice'> & { preview: UseDrawSceneOptions['constrain'] };
 
 const CanvasEngine = ({
   classNames,
   store,
   root,
-  snapRef,
+  contextRef,
   preview,
   lattice,
   capabilities: capabilitiesProp,
@@ -144,7 +152,7 @@ const CanvasEngine = ({
   onCameraChange,
   initialDisplay,
   onDisplayChange,
-  grid = DEFAULT_GRID,
+  grid: gridProp,
   margin = DEFAULT_MARGIN,
   fitZoom,
   readonly = false,
@@ -194,7 +202,8 @@ const CanvasEngine = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  snapRef.current = () => registry.get(atoms.snap);
+  // A lattice scene snaps to its cells while they are drawn (its guides), otherwise to the grid.
+  contextRef.current = () => ({ snap: registry.get(atoms.snap), lattice: registry.get(atoms.guides) });
   const history = useCanvasHistory({ registry, atoms, store });
   const draw = useDrawScene({
     store,
@@ -203,8 +212,11 @@ const CanvasEngine = ({
     constrain: preview,
     lattice,
     history,
+    nodeRegistry,
   });
   const scene = useAtomValue(draw.scene);
+  // A lattice scene's grid runs along its cell edges unless the layout sets its own pitch.
+  const grid = gridPitch({ grid: gridProp, lattice: draw.lattice });
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
     scene,
@@ -255,7 +267,7 @@ const CanvasEngine = ({
 
   // Set once the user takes the camera over; a restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
-  const { minor, major, detent, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  const { minor, major, detent, snap, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
   const { fitting, enterFit, exitFit } = useSceneView({
     registry,
@@ -375,6 +387,7 @@ const CanvasEngine = ({
     onPointContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
     deleteVertex,
     setDrag,
     toScene,
@@ -408,7 +421,6 @@ const CanvasEngine = ({
     minor,
     major,
     snap,
-    snapMinor,
     isClick,
     moveDelta,
     exitEdit,
@@ -437,7 +449,7 @@ const CanvasEngine = ({
     capabilities,
     cell,
     viewport,
-    snapMinor,
+    snap,
     createdNode,
     commitCreated,
   });
@@ -537,14 +549,24 @@ const CanvasEngine = ({
     (event: MouseEvent) => {
       if (registry.get(atoms.drag)?.kind === 'vertices') {
         finishVertices(false);
-      } else {
-        onElementDoubleClick(event);
+        return;
       }
+      // Inside an Object, a double-click off it leaves the Object, as one on it entered it. A panel floating over the
+      // canvas takes its own double-clicks, wherever on the canvas it happens to float.
+      const inside = registry.get(atoms.inside);
+      const composite = inside && registry.get(store.views)[inside.composite];
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const onPanel = target instanceof Element && target.closest(`[${SCENE_OVERLAY_ATTRIBUTE}]`) !== null;
+      if (composite && !onPanel && leavesObject(scene, composite, toScene(event))) {
+        navigation.exitInside();
+        return;
+      }
+      onElementDoubleClick(event);
     },
-    [registry, atoms.drag, finishVertices, onElementDoubleClick],
+    [registry, atoms.drag, atoms.inside, store, scene, toScene, navigation, finishVertices, onElementDoubleClick],
   );
 
-  useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
+  useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snap, setDrag, cancelDrag, onPointerUp });
 
   // Once per atoms, so the providers' values hold still while the root re-renders.
   const timeAtoms = useMemo(() => ({ time: atoms.clock.time, playing: atoms.clock.playing }), [atoms]);
@@ -602,6 +624,7 @@ const CanvasEngine = ({
               onPointContextMenu={onPointContextMenu}
               onVertexPointerDown={onVertexPointerDown}
               onVertexMidpointPointerDown={onVertexMidpointPointerDown}
+              onBendPointerDown={onBendPointerDown}
               removePoint={removePoint}
               menu={menu}
               closeMenu={closeMenu}
@@ -614,7 +637,8 @@ const CanvasEngine = ({
                     tabIndex={0}
                     className={mx(
                       '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
-                      !transparent && 'bg-base-surface',
+                      // A dark theme's `dark` class paints its own surface, which a transparent canvas must not show.
+                      transparent ? 'bg-transparent' : 'bg-base-surface',
                       // A theme with a mode takes it over the app's, for everything over the canvas.
                       look.tone === 'dark' && 'dark',
                       (tool.kind === 'hand' || commandHeld) && 'cursor-grab',

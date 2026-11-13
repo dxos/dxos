@@ -40,7 +40,6 @@ type Meeting
 type MeetingState
   fields:
     activeMeeting?: Meeting
-    transcriptionManager?: TranscriptionManager
 ```
 
 ## Components
@@ -59,6 +58,7 @@ component MeetingArticle
   actions:
     generateSummary() → void          # invokes op:Summarize
     regenerateSummary() → void        # same as generateSummary; label differs
+    toggleTranscription() → void      # invokes op:SetTranscription; offered while in this meeting's own call
   layout: |
     ┌─────────────────────────┐
     │  Notes section          │
@@ -116,7 +116,7 @@ op Create
 ```mdl
 op SetActive
   key: org.dxos.operation.meeting.setActive
-  desc: Sets the currently active meeting in plugin state and broadcasts the meeting DXN to the call layer as an activity payload.
+  desc: Sets the currently active meeting in plugin state and shares its DXN with the call as the meeting activity (`MeetingPayload`).
   input:
     object?: Meeting
   output:
@@ -128,15 +128,25 @@ op SetActive
 ```mdl
 op HandlePayload
   key: org.dxos.operation.meeting.handlePayload
-  desc: Processes an incoming call-layer meeting payload; resolves the Meeting and Transcript feed objects from ECHO and updates transcription state.
+  desc: Processes an incoming meeting activity from the call; resolves the Meeting from ECHO and makes it the active meeting.
   input:
     meetingId?: string
-    transcriptDXN?: string
-    transcriptionEnabled?: boolean
   output: void
   effects: [echo:read]
   requires: [ClientCapabilities.Client, MeetingCapabilities.State]
-  note: Called whenever the remote call state is updated with a new meeting activity.
+  note: Called whenever the call's state carries a meeting activity. A meeting not yet replicated here leaves none active.
+```
+
+```mdl
+op SetTranscription
+  key: org.dxos.operation.meeting.setTranscription
+  desc: Turns transcription on or off for everyone in the call, as its own call activity (`TranscriptionPayload`), apart from the meeting activity.
+  input:
+    enabled: boolean
+  output: void
+  effects: [calls:activity]
+  requires: [CallsCapabilities.Manager]
+  note: Both toggles invoke it, the channel call's and the one on MeetingArticle's toolbar.
 ```
 
 ```mdl
@@ -184,20 +194,35 @@ feat F-2: Active Meeting
 feat F-3: Real-Time Transcription
 
   req F-3.1:
-    when: user joins a call
-    then: TranscriptionManager is opened and stored in plugin state
+    when: a transcript segment is written
+    then: the transcript sink enriches it with entity extraction before it is appended
 
   req F-3.2:
-    when: HandlePayload is received with transcriptionEnabled: true
-    then: transcription starts writing to the linked Transcript feed
+    when: the call's transcription activity is on
+    then: each participant writes its own final segments, from `CallManager.transcript`, to the active meeting's
+      Transcript feed
 
   req F-3.3:
-    when: user's speaking state changes
-    then: TranscriptionManager.setRecording is called with the current value
+    when: the transcription activity is off or absent
+    then: no live segment is written
 
   req F-3.4:
     when: user leaves the call
-    then: TranscriptionManager is closed and plugin state is reset
+    then: plugin state is reset
+
+  req F-3.5:
+    when: a segment is written
+    then: the sink resolves the active meeting's feed at that moment and appends in arrival order, so a slow enrichment
+      never reorders the feed and a meeting selected mid-call still receives the segments that follow
+
+  req F-3.6:
+    when: the user is in a Meeting's own call (started from its Call tab)
+    then: MeetingArticle's toolbar offers Start transcription (Stop once on), which invokes op:SetTranscription, as the
+      channel call's toggle does
+
+  req F-3.7:
+    when: a transcript source other than a call writes (a simulated call)
+    then: it goes through the same sink into the meeting's feed, so the Transcript tab renders it with no live call
 ```
 
 ```mdl
@@ -274,11 +299,9 @@ scenario T-3: Clear active meeting
 ```mdl
 scenario T-4: Handle incoming payload
   given: a Meeting and Transcript feed exist in the space
-  when: op:HandlePayload is invoked with meetingId, transcriptDXN, and transcriptionEnabled: true
+  when: op:HandlePayload is invoked with meetingId
   then:
     - state.activeMeeting resolves to the correct Meeting
-    - TranscriptionManager.setFeed is called with the resolved Feed
-    - TranscriptionManager.setEnabled is called with true
 ```
 
 ```mdl
@@ -305,11 +328,10 @@ scenario T-6: Regenerate summary
 scenario T-7: Transcription lifecycle
   given: user is in a call
   when: user joins the call
-  then: TranscriptionManager is opened and stored in state
+  then: the meeting's transcript sink follows the call's transcript
 
   when: user leaves the call
   then:
-    - TranscriptionManager is closed
     - plugin state is reset to empty
 ```
 
@@ -443,6 +465,58 @@ test QA-2: A four-person meeting call, with notes taken during it
       expect: the call manager has no simulated participants
 ```
 
+```mdl
+test QA-4: A live call's transcript fills the meeting
+  desc: |
+    The call path end to end against the preview EDGE: the Meeting story's `CallTranscription` variant joins the stories'
+    shared call room, turns transcription on, and RealtimeKit's transcript of the local speaker lands in the meeting's
+    Transcript tab. The story binds its identity to a test account itself. Needs a network and a microphone.
+  actors: human
+  covers: [F-3.5]
+  status: unverified
+  given:
+    - storybook serves `plugins/plugin-meeting/stories/Meeting` `CallTranscription` in isolation mode
+  steps:
+    - name: Join the call
+      do: Point at the call, and click Join in its toolbar.
+      expect: the lobby gives way to the participant grid, with the local participant's tile
+    - name: Unmute
+      do: Click Unmute in the call's toolbar.
+      expect: the tile no longer shows the muted marker
+    - name: Start transcription
+      do: Click Start transcription in the story's toolbar.
+      expect: the button turns to Stop transcription
+    - name: Read the transcript
+      do: Speak, and watch the meeting's Transcript tab.
+      expect: the spoken words appear under the speaker's name, one RealtimeKit segment per row, in spoken order
+```
+
+```mdl
+test QA-5: Two tabs share one meeting through an invitation
+  desc: |
+    The Meeting story as Composer shows a meeting, against the preview EDGE: a fresh load makes a new space and
+    meeting, and its invite link opens the story as a guest that joins that space, so both tabs render the same meeting
+    and its Call tab puts them in one call. Needs a network; each tab binds its identity to a test account itself.
+  actors: human
+  covers: [F-5.2, F-3.6]
+  status: unverified
+  given:
+    - storybook serves `plugins/plugin-meeting/stories/Meeting` `Meeting` in isolation mode
+  steps:
+    - name: Write notes as the host
+      do: Type "Agenda" in the meeting's Notes.
+      expect: the notes read "Agenda"
+    - name: Open the invite as a guest
+      do: Click Open as guest in the story's toolbar.
+      expect: a new tab opens the same story, and its Notes read "Agenda" once the space has joined
+    - name: Join the meeting's call from both tabs
+      do: In each tab, open the Call tab and click Join.
+      expect: each tab's grid shows two participants
+    - name: Start transcription
+      do: In the host tab, click Start transcription in the meeting's toolbar.
+      expect: both tabs' toolbars turn to Stop transcription
+```
+
 ---
 
 ## Changelog
@@ -481,6 +555,97 @@ decision D-4: QA-2 makes the meeting active before adding the colleagues, and bi
   affects: [QA-2]
   why: An agent runs QA-2's invoke literally, so it must match the operation's input and the active meeting.
   source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-5: A call's transcript comes from RealtimeKit's native transcription: CallManager emits only the local speaker's final segments, and this plugin owns the transcription flag (its own call activity), the feed and enrichment, writing through one queued TranscriptSink that resolves the active meeting's feed per segment. The meeting payload carries only the meeting id, and QA-3 checks the sink offline.
+  date: 2026-11-10
+  by: user:mykola-vrmchk
+  affects: [F-2.2, F-3, HandlePayload, SetTranscription, MeetingState, T-4, T-7, QA-3]
+  why: plugin-calls is meeting-agnostic, per-segment appends could land out of order, and a feed DXN beside the meeting id duplicated what `meeting.transcript.feed` already names.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-6: A Meeting's own call offers the Start/Stop transcription toggle in MeetingArticle's toolbar, and both toggles (channel call and meeting) share op:SetTranscription. Fills in [D-5].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-3.6, MeetingArticle, SetTranscription]
+  why: The toggle existed only on channel calls, so a call started from a Meeting's Call tab could not turn transcription on.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-7: The meeting payload names the meeting by its absolute URI, which HandlePayload parses as an EID, and CallExtension activates only once the client is initialized, since it subscribes to the call manager. QA-4 checks the live path. Fills in [D-5].
+  date: 2026-11-10
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [HandlePayload, SetActive, QA-4]
+  why: HandlePayload read the URI as a `space:object` id, so every call-state update cleared the active meeting and the sink dropped each segment; and CallExtension could start before the manager existed, which disabled the whole plugin.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-8: The live meeting stories share one story file that loads the meeting plugin with all its dependencies and one hardcoded meeting id, so every live story connects to the same meeting; it includes a plain call story.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-4]
+```
+
+```mdl
+decision D-9: The hardcoded meeting is the call room `storybook:plugin-meeting:standup` on the preview EDGE, which names both the call's swarm and its RealtimeKit meeting, so every tab running the stories joins one call; each tab keeps its own identity, bound to a test account, and its own meeting hub, and the story's toolbar makes that hub the call's active meeting when it starts transcription. Fills in [D-8].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-4]
+  why: Stories boot a fresh identity and space per tab, so only the call can be shared without an invitation; MeetingArticle offers its transcription toggle only in the meeting's own room, which a fixed room is not.
+  rejected:
+    - Share one meeting object across tabs: needs a space invitation between story tabs.
+```
+
+```mdl
+decision D-10: The Meeting story shows the meeting as Composer does, one article; a fresh load makes a new space, and an invitation lets another tab join that space so both render the same meeting. The Call and CallTranscription stories stay as they are, with a shared call and transcript but separate spaces.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-5]
+```
+
+```mdl
+decision D-11: The Meeting story's meeting lives in its own open space, since an identity's default space is created locked to its owner; the invite is a standing multi-use invitation with no auth step, carried to the guest as the story's `invitation` arg, and the guest joins instead of seeding a meeting. Every story uses Composer's EDGE features (signaling and the subduction and feed replicators), so a guest receives the space's objects and the transcript feed. Fills in [D-10].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-5]
+  why: The default space refuses invitations, and without the replicators an invited tab sees the space but none of its objects.
+  rejected:
+    - Invite through the space plugin's members dialog: loads the space plugin and its navigation only to share.
+```
+
+```mdl
+decision D-12: The MeetingTranscript story is deleted.
+  date: 2026-11-11
+  by: user:mykola-vrmchk
+  affects: [QA-3, F-3.7]
+```
+
+```mdl
+decision D-13: QA-3 is removed with the story it ran, and F-3.7 names only the simulated call as a source other than a call; the sink's ordering stays covered by its unit test. Fills in [D-12].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-3, F-3.7]
+  why: No other story writes a scripted transcript into a meeting, so QA-3 had nothing left to run.
+```
+
+```mdl
+decision D-14: QA-4 covers only F-3.5: it starts transcription from the CallTranscription story's own toggle in the stories' shared room, so it exercises neither MeetingArticle's own-call toggle (F-3.6) nor a source other than a call (F-3.7). QA-4 and QA-5 are `actors: human`, since none of their steps names an operation. Fills in [D-9] and [D-11].
+  date: 2026-11-11
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-4, QA-5]
+  why: A flow's coverage claim must match what its steps exercise, and the QA dialect allows `actors: agent` only when every step names an operation.
+  source: https://github.com/dxos/dxos/pull/14495
 ```
 
 ## Appendix: Extension Definitions

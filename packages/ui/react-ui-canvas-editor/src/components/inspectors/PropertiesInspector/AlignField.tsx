@@ -57,13 +57,13 @@ export const IconToggle = <T extends string>({
 
 const HORIZONTAL: readonly IconToggleOption<HorizontalAlign>[] = [
   { value: 'left', icon: 'ph--align-left-simple--regular', label: 'Align left' },
-  { value: 'center', icon: 'ph--align-center-vertical-simple--regular', label: 'Align centre' },
+  { value: 'center', icon: 'ph--align-center-horizontal-simple--regular', label: 'Align centre' },
   { value: 'right', icon: 'ph--align-right-simple--regular', label: 'Align right' },
 ];
 
 const VERTICAL: readonly IconToggleOption<VerticalAlign>[] = [
   { value: 'top', icon: 'ph--align-top-simple--regular', label: 'Align top' },
-  { value: 'middle', icon: 'ph--align-center-horizontal-simple--regular', label: 'Align middle' },
+  { value: 'middle', icon: 'ph--align-center-vertical-simple--regular', label: 'Align middle' },
   { value: 'bottom', icon: 'ph--align-bottom-simple--regular', label: 'Align bottom' },
 ];
 

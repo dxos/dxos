@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -19,7 +20,8 @@ import { bindChatDefaults, contributesPluginManager } from '../util/default-skil
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, instructions, feed: feedProp }) {
-      const registry = yield* Capability.get(Capabilities.AtomRegistry);
+      // Optional: EDGE hosts contribute no atom registry, and the binder then makes its own.
+      const registry = Option.getOrUndefined(yield* Capability.getOption(Capabilities.AtomRegistry));
       const { db } = yield* Database.Service;
 
       // The chat is left for the caller to add (`SpaceOperation.AddObject`); the feed is added here only

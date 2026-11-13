@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
+import { type FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 
 import { BrainOperation } from '#types';
 
-import { toCompactFact } from './facts.ts';
+import { queryResolvedFacts, toCompactFact } from './facts.ts';
 
 export default BrainOperation.QueryFacts.pipe(
   Operation.withHandler(
@@ -34,7 +34,6 @@ export const queryCompactFacts = ({
   FactStore
 > =>
   Effect.gen(function* () {
-    const store = yield* FactStore;
-    const facts = yield* store.query(query);
+    const facts = yield* queryResolvedFacts(query);
     return facts.slice(0, limit ?? BrainOperation.DEFAULT_QUERY_FACTS_LIMIT).map(toCompactFact);
   });
