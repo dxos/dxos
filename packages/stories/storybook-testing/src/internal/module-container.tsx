@@ -212,7 +212,7 @@ const ObjectCell = ({ space, cell }: { space: Space; cell: NormalizedObjectCell 
   const [replica] = useQuery(space.db, foreign ? Filter.id(cell.object.id) : Filter.nothing());
   const object = foreign ? replica : cell.object;
   if (!object) {
-    return <div className='grid place-items-center text-description'>Syncing…</div>;
+    return <div className='absolute inset-0 grid place-items-center text-description'>Syncing…</div>;
   }
 
   return cell.component ? (
@@ -294,7 +294,7 @@ export const ModuleContainer = ({ layout, columns, rows, tiling = 'separated' }:
                 key={moduleIndex}
                 id={cell.id}
                 classNames={mx(
-                  'overflow-hidden',
+                  'relative overflow-hidden',
                   tiling === 'flush' ? 'bg-base-surface' : 'border border-separator rounded-sm',
                 )}
               >

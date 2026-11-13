@@ -555,7 +555,7 @@ const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, ready, Wra
       <StorySpaceProvider value={spaceId}>
         <PublishLayout atom={layoutAtom} layout={layout} />
         {!ready ? (
-          <div className='grid h-full place-items-center text-description'>Connecting…</div>
+          <div className='absolute inset-0 grid place-items-center text-description'>Connecting…</div>
         ) : Wrapper ? (
           <Wrapper>
             <Story />
