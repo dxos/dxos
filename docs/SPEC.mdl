@@ -2207,7 +2207,7 @@ page tile-overview: Overview
   status: spike
   covers:
     - What TILE is in one paragraph: `@dxos/react-ui` and the `@dxos/ui-theme` tokens and build plugin it needs
-    - A grid of live component demos that follows the page's light or dark theme; each card names its package and opens that package's guide [D-292]
+    - A grid of live component demos that follows the page's light or dark theme; each card names its package and opens that package's guide [D-293]
     - The split between the core and the component packages, with a link to the catalog
     - Where to go next: Why TILE?, Build with a coding agent, then the learning path
 ```
@@ -2445,7 +2445,7 @@ page tile-api-input: Input
   template: namespace
   status: spike
   covers:
-    - The `Input` parts [D-309]
+    - The `Input` parts [D-310]
 ```
 ```mdl
 page tile-api-status: Status
@@ -2471,7 +2471,7 @@ page tile-api-panel: Panel
   template: namespace
   status: spike
   covers:
-    - `Panel.Root`, `Panel.Header`, `Panel.Body` and `Panel.Footer` [D-309]
+    - `Panel.Root`, `Panel.Header`, `Panel.Body` and `Panel.Footer` [D-310]
 ```
 ```mdl
 page tile-api-toolbar: Toolbar
@@ -2497,7 +2497,7 @@ page tile-api-accordion: Accordion
   template: namespace
   status: spike
   covers:
-    - Every part of `Accordion` under its own story [D-307]
+    - Every part of `Accordion` under its own story [D-308]
 ```
 ```mdl
 page tile-api-alert-dialog: AlertDialog
@@ -2510,7 +2510,7 @@ page tile-api-alert-dialog: AlertDialog
   template: namespace
   status: spike
   covers:
-    - Every part of `AlertDialog` under its own story [D-307]
+    - Every part of `AlertDialog` under its own story [D-308]
 ```
 ```mdl
 page tile-api-avatar: Avatar
@@ -2523,7 +2523,7 @@ page tile-api-avatar: Avatar
   template: namespace
   status: spike
   covers:
-    - Every part of `Avatar` under its own story [D-307]
+    - Every part of `Avatar` under its own story [D-308]
 ```
 ```mdl
 page tile-api-badge: Badge
@@ -2536,7 +2536,7 @@ page tile-api-badge: Badge
   template: namespace
   status: spike
   covers:
-    - Every part of `Badge` under its own story [D-307]
+    - Every part of `Badge` under its own story [D-308]
 ```
 ```mdl
 page tile-api-banner: Banner
@@ -2549,7 +2549,7 @@ page tile-api-banner: Banner
   template: namespace
   status: spike
   covers:
-    - Every part of `Banner` under its own story [D-307]
+    - Every part of `Banner` under its own story [D-308]
 ```
 ```mdl
 page tile-api-breadcrumb: Breadcrumb
@@ -2562,7 +2562,7 @@ page tile-api-breadcrumb: Breadcrumb
   template: namespace
   status: spike
   covers:
-    - Every part of `Breadcrumb` under its own story [D-307]
+    - Every part of `Breadcrumb` under its own story [D-308]
 ```
 ```mdl
 page tile-api-card: Card
@@ -2575,7 +2575,7 @@ page tile-api-card: Card
   template: namespace
   status: spike
   covers:
-    - Every part of `Card` under its own story [D-307]
+    - Every part of `Card` under its own story [D-308]
 ```
 ```mdl
 page tile-api-carousel: Carousel
@@ -2588,7 +2588,7 @@ page tile-api-carousel: Carousel
   template: namespace
   status: spike
   covers:
-    - Every part of `Carousel` under its own story [D-307]
+    - Every part of `Carousel` under its own story [D-308]
 ```
 ```mdl
 page tile-api-collapsible: Collapsible
@@ -2601,7 +2601,7 @@ page tile-api-collapsible: Collapsible
   template: namespace
   status: spike
   covers:
-    - Every part of `Collapsible` under its own story [D-307]
+    - Every part of `Collapsible` under its own story [D-308]
 ```
 ```mdl
 page tile-api-color-picker: ColorPicker
@@ -2614,7 +2614,7 @@ page tile-api-color-picker: ColorPicker
   template: namespace
   status: spike
   covers:
-    - Every part of `ColorPicker` under its own story [D-307]
+    - Every part of `ColorPicker` under its own story [D-308]
 ```
 ```mdl
 page tile-api-combobox: Combobox
@@ -2627,7 +2627,7 @@ page tile-api-combobox: Combobox
   template: namespace
   status: spike
   covers:
-    - Every part of `Combobox` under its own story [D-307]
+    - Every part of `Combobox` under its own story [D-308]
 ```
 ```mdl
 page tile-api-drag-handle: DragHandle
@@ -2640,7 +2640,7 @@ page tile-api-drag-handle: DragHandle
   template: namespace
   status: spike
   covers:
-    - Every part of `DragHandle` under its own story [D-307]
+    - Every part of `DragHandle` under its own story [D-308]
 ```
 ```mdl
 page tile-api-editable: Editable
@@ -2653,7 +2653,7 @@ page tile-api-editable: Editable
   template: namespace
   status: spike
   covers:
-    - Every part of `Editable` under its own story [D-307]
+    - Every part of `Editable` under its own story [D-308]
 ```
 ```mdl
 page tile-api-fieldset: Fieldset
@@ -2666,7 +2666,7 @@ page tile-api-fieldset: Fieldset
   template: namespace
   status: spike
   covers:
-    - Every part of `Fieldset` under its own story [D-307]
+    - Every part of `Fieldset` under its own story [D-308]
 ```
 ```mdl
 page tile-api-floating-panel: FloatingPanel
@@ -2679,7 +2679,7 @@ page tile-api-floating-panel: FloatingPanel
   template: namespace
   status: spike
   covers:
-    - Every part of `FloatingPanel` under its own story [D-307]
+    - Every part of `FloatingPanel` under its own story [D-308]
 ```
 ```mdl
 page tile-api-focus: Focus
@@ -2692,7 +2692,7 @@ page tile-api-focus: Focus
   template: namespace
   status: spike
   covers:
-    - Every part of `Focus` under its own story [D-307]
+    - Every part of `Focus` under its own story [D-308]
 ```
 ```mdl
 page tile-api-listbox: Listbox
@@ -2705,7 +2705,7 @@ page tile-api-listbox: Listbox
   template: namespace
   status: spike
   covers:
-    - Every part of `Listbox` under its own story [D-307]
+    - Every part of `Listbox` under its own story [D-308]
 ```
 ```mdl
 page tile-api-main: Main
@@ -2718,7 +2718,7 @@ page tile-api-main: Main
   template: namespace
   status: spike
   covers:
-    - Every part of `Main` under its own story [D-307]
+    - Every part of `Main` under its own story [D-308]
 ```
 ```mdl
 page tile-api-media: Media
@@ -2731,7 +2731,7 @@ page tile-api-media: Media
   template: namespace
   status: spike
   covers:
-    - Every part of `Media` under its own story [D-307]
+    - Every part of `Media` under its own story [D-308]
 ```
 ```mdl
 page tile-api-qr-code: QrCode
@@ -2744,7 +2744,7 @@ page tile-api-qr-code: QrCode
   template: namespace
   status: spike
   covers:
-    - Every part of `QrCode` under its own story [D-307]
+    - Every part of `QrCode` under its own story [D-308]
 ```
 ```mdl
 page tile-api-scroll-container: ScrollContainer
@@ -2757,7 +2757,7 @@ page tile-api-scroll-container: ScrollContainer
   template: namespace
   status: spike
   covers:
-    - Every part of `ScrollContainer` under its own story [D-307]
+    - Every part of `ScrollContainer` under its own story [D-308]
 ```
 ```mdl
 page tile-api-splitter: Splitter
@@ -2770,7 +2770,7 @@ page tile-api-splitter: Splitter
   template: namespace
   status: spike
   covers:
-    - Every part of `Splitter` under its own story [D-307]
+    - Every part of `Splitter` under its own story [D-308]
 ```
 ```mdl
 page tile-api-system-button: SystemButton
@@ -2783,7 +2783,7 @@ page tile-api-system-button: SystemButton
   template: namespace
   status: spike
   covers:
-    - Every part of `SystemButton` under its own story [D-307]
+    - Every part of `SystemButton` under its own story [D-308]
 ```
 ```mdl
 page tile-api-tabs: Tabs
@@ -2796,7 +2796,7 @@ page tile-api-tabs: Tabs
   template: namespace
   status: spike
   covers:
-    - Every part of `Tabs` under its own story [D-307]
+    - Every part of `Tabs` under its own story [D-308]
 ```
 ```mdl
 page tile-api-tag: Tag
@@ -2809,7 +2809,7 @@ page tile-api-tag: Tag
   template: namespace
   status: spike
   covers:
-    - Every part of `Tag` under its own story [D-307]
+    - Every part of `Tag` under its own story [D-308]
 ```
 ```mdl
 page tile-api-toggle-group: ToggleGroup
@@ -2822,7 +2822,7 @@ page tile-api-toggle-group: ToggleGroup
   template: namespace
   status: spike
   covers:
-    - Every part of `ToggleGroup` under its own story [D-307]
+    - Every part of `ToggleGroup` under its own story [D-308]
 ```
 ```mdl
 page tile-api-tour: Tour
@@ -2835,7 +2835,7 @@ page tile-api-tour: Tour
   template: namespace
   status: spike
   covers:
-    - Every part of `Tour` under its own story [D-307]
+    - Every part of `Tour` under its own story [D-308]
 ```
 ```mdl
 page tile-api-typography: Typography
@@ -2848,7 +2848,7 @@ page tile-api-typography: Typography
   template: namespace
   status: spike
   covers:
-    - Every part of `Typography` under its own story [D-307]
+    - Every part of `Typography` under its own story [D-308]
 ```
 ```mdl
 page tile-api-dialog: Dialog
@@ -2861,7 +2861,7 @@ page tile-api-dialog: Dialog
   template: namespace
   status: spike
   covers:
-    - Every part of `Dialog` [D-309]
+    - Every part of `Dialog` [D-310]
 ```
 ```mdl
 page tile-api-popover: Popover
@@ -2874,7 +2874,7 @@ page tile-api-popover: Popover
   template: namespace
   status: spike
   covers:
-    - Every part of `Popover` [D-309]
+    - Every part of `Popover` [D-310]
 ```
 ```mdl
 page tile-api-tooltip: Tooltip
@@ -2887,7 +2887,7 @@ page tile-api-tooltip: Tooltip
   template: namespace
   status: spike
   covers:
-    - Every part of `Tooltip` [D-309]
+    - Every part of `Tooltip` [D-310]
 ```
 ```mdl
 page tile-api-hover-card: HoverCard
@@ -2900,7 +2900,7 @@ page tile-api-hover-card: HoverCard
   template: namespace
   status: spike
   covers:
-    - Every part of `HoverCard` [D-309]
+    - Every part of `HoverCard` [D-310]
 ```
 ```mdl
 page tile-api-toast: Toast
@@ -2913,7 +2913,7 @@ page tile-api-toast: Toast
   template: namespace
   status: spike
   covers:
-    - Every part of `Toast` [D-309]
+    - Every part of `Toast` [D-310]
 ```
 ```mdl
 page tile-api-field: Field
@@ -2926,7 +2926,7 @@ page tile-api-field: Field
   template: namespace
   status: spike
   covers:
-    - Every part of `Field` [D-309]
+    - Every part of `Field` [D-310]
 ```
 ```mdl
 page tile-api-select: Select
@@ -2939,7 +2939,7 @@ page tile-api-select: Select
   template: namespace
   status: spike
   covers:
-    - Every part of `Select` [D-309]
+    - Every part of `Select` [D-310]
 ```
 ```mdl
 page tile-api-scroll-area: ScrollArea
@@ -2952,7 +2952,7 @@ page tile-api-scroll-area: ScrollArea
   template: namespace
   status: spike
   covers:
-    - Every part of `ScrollArea` [D-309]
+    - Every part of `ScrollArea` [D-310]
 ```
 ```mdl
 page tile-api-menu: Menu
@@ -2992,8 +2992,8 @@ page tile-api-mosaic-board: Board
   template: namespace
   status: spike
   covers:
-    - The package's `Docs` story, the one its Overview card runs, live at the top [D-297] [D-298]
-    - The `Board` parts over a `BoardModel`, dragging cards within and across columns and columns by their handle; the Overview grid's Kanban board card links here [D-297]
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - The `Board` parts over a `BoardModel`, dragging cards within and across columns and columns by their handle; the Overview grid's Kanban board card links here [D-298]
 ```
 ```mdl
 page tile-api-list-listbox: Listbox (react-ui-list)
@@ -3006,8 +3006,8 @@ page tile-api-list-listbox: Listbox (react-ui-list)
   template: namespace
   status: spike
   covers:
-    - The package's own `Listbox` story, live at the top [D-297]
-    - The `Listbox` parts and its selection [D-297]
+    - The package's own `Listbox` story, live at the top [D-298]
+    - The `Listbox` parts and its selection [D-298]
 ```
 ```mdl
 page tile-api-masonry-masonry: Masonry
@@ -3020,8 +3020,8 @@ page tile-api-masonry-masonry: Masonry
   template: namespace
   status: spike
   covers:
-    - The package's `Docs` story, the one its Overview card runs, live at the top [D-297] [D-298]
-    - The `Masonry` parts, column sizes, and tiles built from `Card`; the Overview grid's Gallery card links here [D-297]
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - The `Masonry` parts, column sizes, and tiles built from `Card`; the Overview grid's Gallery card links here [D-298]
 ```
 ```mdl
 page tile-api-mosaic-mosaic: Mosaic
@@ -3034,8 +3034,8 @@ page tile-api-mosaic-mosaic: Mosaic
   template: namespace
   status: spike
   covers:
-    - The package's own `Mosaic` story, live at the top [D-297]
-    - The `Mosaic` parts: containers and their event handlers, stacks, tiles and handles [D-297]
+    - The package's own `Mosaic` story, live at the top [D-298]
+    - The `Mosaic` parts: containers and their event handlers, stacks, tiles and handles [D-298]
 ```
 ```mdl
 page tile-api-list-ordered-list: OrderedList
@@ -3048,8 +3048,8 @@ page tile-api-list-ordered-list: OrderedList
   template: namespace
   status: spike
   covers:
-    - The package's own `OrderedList` story, live at the top [D-297]
-    - The `OrderedList` parts, `onMove`, and the drag handle's keyboard moves [D-297]
+    - The package's own `OrderedList` story, live at the top [D-298]
+    - The `OrderedList` parts, `onMove`, and the drag handle's keyboard moves [D-298]
 ```
 ```mdl
 page tile-api-list-picker: Picker
@@ -3062,8 +3062,8 @@ page tile-api-list-picker: Picker
   template: namespace
   status: spike
   covers:
-    - The package's own `Picker` story, live at the top [D-297]
-    - The `Picker` parts and committing an item from the keyboard [D-297]
+    - The package's own `Picker` story, live at the top [D-298]
+    - The `Picker` parts and committing an item from the keyboard [D-298]
 ```
 ```mdl
 page tile-api-list-tree: Tree
@@ -3076,8 +3076,8 @@ page tile-api-list-tree: Tree
   template: namespace
   status: spike
   covers:
-    - The package's own `Tree` story, live at the top [D-297]
-    - The `Tree` parts, `createStaticTreeModel`, and open and selected state in atoms [D-297]
+    - The package's own `Tree` story, live at the top [D-298]
+    - The `Tree` parts, `createStaticTreeModel`, and open and selected state in atoms [D-298]
 ```
 ```mdl
 page tile-api-editor-editor: Editor
@@ -3090,8 +3090,8 @@ page tile-api-editor-editor: Editor
   template: namespace
   status: spike
   covers:
-    - The package's own `Editor` story, live at the top [D-297]
-    - The `Editor` parts, the `@dxos/ui-editor` extensions for plain text and markdown, the toolbar and attention, and the `automerge` binding to an ECHO `Text`; the Overview grid's Markdown editor card links here [D-297]
+    - The package's own `Editor` story, live at the top [D-298]
+    - The `Editor` parts, the `@dxos/ui-editor` extensions for plain text and markdown, the toolbar and attention, and the `automerge` binding to an ECHO `Text`; the Overview grid's Markdown editor card links here [D-298]
 ```
 ```mdl
 page tile-api-form-form: Form
@@ -3104,8 +3104,8 @@ page tile-api-form-form: Form
   template: namespace
   status: spike
   covers:
-    - The package's own `Form` story, live at the top [D-297]
-    - The `Form` parts over a schema, validation and Save, `include`, and `ObjectForm` over an ECHO object [D-297]
+    - The package's own `Form` story, live at the top [D-298]
+    - The `Form` parts over a schema, validation and Save, `include`, and `ObjectForm` over an ECHO object [D-298]
 ```
 ```mdl
 page tile-api-grid-grid: Grid
@@ -3118,8 +3118,8 @@ page tile-api-grid-grid: Grid
   template: namespace
   status: spike
   covers:
-    - The package's `Docs` story, the one its Overview card runs, live at the top [D-297] [D-298]
-    - `Grid.Root` and `Grid.Content`, planes and `getCells`, `overscroll`, and `GridCellEditor`; the Overview grid's Spreadsheet card links here [D-297]
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - `Grid.Root` and `Grid.Content`, planes and `getCells`, `overscroll`, and `GridCellEditor`; the Overview grid's Spreadsheet card links here [D-298]
 ```
 ```mdl
 page tile-api-menu-action-menu: ActionMenu
@@ -3132,8 +3132,8 @@ page tile-api-menu-action-menu: ActionMenu
   template: namespace
   status: spike
   covers:
-    - The package's own `ActionMenu` story, live at the top [D-297]
-    - `ActionMenu` over `MenuBuilder` actions, its trigger, and deferring a menu until it opens [D-297]
+    - The package's own `ActionMenu` story, live at the top [D-298]
+    - `ActionMenu` over `MenuBuilder` actions, its trigger, and deferring a menu until it opens [D-298]
 ```
 ```mdl
 page tile-api-menu-action-toolbar: ActionToolbar
@@ -3146,8 +3146,8 @@ page tile-api-menu-action-toolbar: ActionToolbar
   template: namespace
   status: spike
   covers:
-    - The package's own `ActionToolbar` story, live at the top [D-297]
-    - `useMenuBuilder` and `ActionToolbar`, placement, overflow, switches, attention, and `graphActions` in a plugin, linked to PLEX's App Graph [D-240] [D-297]
+    - The package's own `ActionToolbar` story, live at the top [D-298]
+    - `useMenuBuilder` and `ActionToolbar`, placement, overflow, switches, attention, and `graphActions` in a plugin, linked to PLEX's App Graph [D-240] [D-298]
 ```
 ```mdl
 page tile-api-calendar-calendar: Calendar
@@ -3160,8 +3160,8 @@ page tile-api-calendar-calendar: Calendar
   template: namespace
   status: spike
   covers:
-    - The package's own `Calendar` story, live at the top [D-297]
-    - `Calendar.Root`, `Toolbar`, `Grid` and `Week`, picking a day or a range, and creating, moving and resizing events; the Overview grid's Calendar card links here [D-297]
+    - The package's own `Calendar` story, live at the top [D-298]
+    - `Calendar.Root`, `Toolbar`, `Grid` and `Week`, picking a day or a range, and creating, moving and resizing events; the Overview grid's Calendar card links here [D-298]
 ```
 ```mdl
 page tile-api-plot-timeline: Timeline
@@ -3174,8 +3174,8 @@ page tile-api-plot-timeline: Timeline
   template: namespace
   status: spike
   covers:
-    - The package's own `Timeline` story, live at the top [D-297]
-    - `Timeline` over a table of events, zoom, filter and category tags [D-297]
+    - The package's own `Timeline` story, live at the top [D-298]
+    - `Timeline` over a table of events, zoom, filter and category tags [D-298]
 ```
 ```mdl
 page tile-api-plot-plot: Plot
@@ -3188,8 +3188,8 @@ page tile-api-plot-plot: Plot
   template: namespace
   status: spike
   covers:
-    - The package's `Docs` story, the one its Overview card runs, live at the top [D-297] [D-298]
-    - `Plot` over `toPlotData`, its chart types and options, and when it draws a legend; the Overview grid's Chart card links here [D-297]
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - `Plot` over `toPlotData`, its chart types and options, and when it draws a legend; the Overview grid's Chart card links here [D-298]
 ```
 ```mdl
 page tile-api-canvas-editor-canvas-editor: CanvasEditor
@@ -3202,8 +3202,8 @@ page tile-api-canvas-editor-canvas-editor: CanvasEditor
   template: namespace
   status: spike
   covers:
-    - The package's `Model` story, the one the Overview's Canvas card runs, live at the top [D-306]
-    - Every part of `CanvasEditor` and the props of `CanvasEditor.Root` [D-306]
+    - The package's `Model` story, the one the Overview's Canvas card runs, live at the top [D-307]
+    - Every part of `CanvasEditor` and the props of `CanvasEditor.Root` [D-307]
 ```
 ```mdl
 page tile-api-geo-globe: Globe
@@ -3216,8 +3216,8 @@ page tile-api-geo-globe: Globe
   template: namespace
   status: spike
   covers:
-    - The package's `Docs` story, the one its Overview card runs, live at the top [D-297] [D-298]
-    - The `Globe` parts, `features` of points and lines, the controller hooks, and a tour along a trip; the Overview grid's Map card links here [D-297]
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - The `Globe` parts, `features` of points and lines, the controller hooks, and a tour along a trip; the Overview grid's Map card links here [D-298]
 ```
 ```mdl
 page tile-api-graph-graph: Graph
@@ -3230,8 +3230,8 @@ page tile-api-graph-graph: Graph
   template: namespace
   status: spike
   covers:
-    - The package's `Docs` story, the one its Overview card runs, live at the top [D-297] [D-298]
-    - `Graph` over a `GraphModel`, its props, and the force projector; the Overview grid's Force graph card links here [D-297]
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-298] [D-299]
+    - `Graph` over a `GraphModel`, its props, and the force projector; the Overview grid's Force graph card links here [D-298]
 ```
 ```mdl
 page tile-api-geo-map: Map
@@ -3244,8 +3244,8 @@ page tile-api-geo-map: Map
   template: namespace
   status: spike
   covers:
-    - The package's own `Map` story, live at the top [D-297]
-    - The `Map` parts, its tiles, markers and lines [D-297]
+    - The package's own `Map` story, live at the top [D-298]
+    - The `Map` parts, its tiles, markers and lines [D-298]
 ```
 ```mdl
 page tile-api-graph-svg: SVG
@@ -3258,8 +3258,8 @@ page tile-api-graph-svg: SVG
   template: namespace
   status: spike
   covers:
-    - The package's own `SVG` story, live at the top [D-297]
-    - The `SVG` parts: root, zoom, grid, markers and mesh [D-297]
+    - The package's own `SVG` story, live at the top [D-298]
+    - The `SVG` parts: root, zoom, grid, markers and mesh [D-298]
 ```
 
 ### Guides
@@ -3542,7 +3542,7 @@ feat F-7: Relationship to dxos.org
   req F-7.1:
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
-          Plugins, Blog, Docs); the footer links the same pages with Docs right after Home [D-304], every
+          Plugins, Blog, Docs); the footer links the same pages with Docs right after Home [D-305], every
           docs section in the topic switcher's order (ECHO, HALO, MESH, EDGE, SAGE, PLEX, TILE), GitHub and
           Discord [D-250], [D-274]
 
@@ -3902,7 +3902,7 @@ feat F-21: TILE demo grid
 
   desc: |
     The TILE Overview opens with a grid of live demos, one per component package, each one of the package's own
-    stories on sample data, with no ECHO. A card's size follows how much room its demo needs [D-298].
+    stories on sample data, with no ECHO. A card's size follows how much room its demo needs [D-299].
 
   req F-21.1:
     when: a reader looks at a card in the grid
@@ -3910,7 +3910,7 @@ feat F-21: TILE demo grid
 
   req F-21.2:
     when: a reader clicks a card's header
-    then: the API page of the component the card shows opens [D-297]
+    then: the API page of the component the card shows opens [D-298]
 
   req F-21.3:
     when: a reader opens the TILE Overview
@@ -6333,7 +6333,7 @@ decision D-289: PLEX's Overview calls PLEX a framework for building apps out of 
 ```
 
 ```mdl
-decision D-290: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
+decision D-291: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-7.5, F-7.10, F-7.12]
@@ -6344,7 +6344,7 @@ decision D-290: Each live demo is a Storybook story, built with the story harnes
 ```
 
 ```mdl
-decision D-291: The docs island composes a story with `StoryEmbed.compose`, which runs its meta, decorators and loaders outside Storybook, and renders it with `StoryEmbed.Root` under layout containment, so the story's fixed full-screen layout fills the island. On `/echo` every island joins one `StoryPeers` runtime, started when the first island mounts and before the story module arrives; each story seeds once, partials are seeded once per page, and the diagram seeds after both peers join. The PLEX Overview's iframe page gives its story peers of its own. Fills in [D-290].
+decision D-292: The docs island composes a story with `StoryEmbed.compose`, which runs its meta, decorators and loaders outside Storybook, and renders it with `StoryEmbed.Root` under layout containment, so the story's fixed full-screen layout fills the island. On `/echo` every island joins one `StoryPeers` runtime, started when the first island mounts and before the story module arrives; each story seeds once, partials are seeded once per page, and the diagram seeds after both peers join. The PLEX Overview's iframe page gives its story peers of its own. Fills in [D-291].
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -6356,7 +6356,7 @@ decision D-291: The docs island composes a story with `StoryEmbed.compose`, whic
 ```
 
 ```mdl
-decision D-292: The TILE Overview opens with a grid of live demos in four columns. Kanban, Calendar, Markdown editor and Diagram get two columns and two rows; the spreadsheet grid gets three columns and one row; force graph, map and chart get one cell, and the masonry gallery two columns and one row. Each card names its package and links to the guide for it, one guide per package; the Markdown editor's is Text editor.
+decision D-293: The TILE Overview opens with a grid of live demos in four columns. Kanban, Calendar, Markdown editor and Diagram get two columns and two rows; the spreadsheet grid gets three columns and one row; force graph, map and chart get one cell, and the masonry gallery two columns and one row. Each card names its package and links to the guide for it, one guide per package; the Markdown editor's is Text editor.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-overview, F-21, tile-guide-mosaic, tile-guide-calendar, tile-guide-grid, tile-guide-graph, tile-guide-diagram, tile-guide-masonry, tile-guide-map, tile-guide-chart]
@@ -6367,7 +6367,7 @@ decision D-292: The TILE Overview opens with a grid of live demos in four column
 ```
 
 ```mdl
-decision D-293: A page can mark a block wide, with the `dx-wide` class, and it breaks out of the text column into the whole content panel, up to 80rem, centered on the column. The TILE Overview's demo grid is wide. Fills in [D-292].
+decision D-294: A page can mark a block wide, with the `dx-wide` class, and it breaks out of the text column into the whole content panel, up to 80rem, centered on the column. The TILE Overview's demo grid is wide. Fills in [D-293].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-21.5, tile-overview]
@@ -6377,7 +6377,7 @@ decision D-293: A page can mark a block wide, with the `dx-wide` class, and it b
 ```
 
 ```mdl
-decision D-294: The TILE Overview's Calendar card shows the package's existing week view, `Calendar.Week`, with events to drag, move and resize. The Kanban card's cards reorder within a column and move across columns, and its columns reorder by the handle in their header. Fills in [D-292].
+decision D-295: The TILE Overview's Calendar card shows the package's existing week view, `Calendar.Week`, with events to drag, move and resize. The Kanban card's cards reorder within a column and move across columns, and its columns reorder by the handle in their header. Fills in [D-293].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-guide-calendar, tile-guide-mosaic, tile-overview]
@@ -6387,7 +6387,7 @@ decision D-294: The TILE Overview's Calendar card shows the package's existing w
 ```
 
 ```mdl
-decision D-295: A TILE guide is named after its package and covers the package, not one demo, in the plural like Lists and Forms: Mosaics, Calendars, Grids, Graphs, Diagrams, Masonry, Maps and Charts. A demo is one example on its package's guide; a card in the Overview's grid keeps the demo's name and opens the package's guide. Text editor keeps its name. Amends [D-292].
+decision D-296: A TILE guide is named after its package and covers the package, not one demo, in the plural like Lists and Forms: Mosaics, Calendars, Grids, Graphs, Diagrams, Masonry, Maps and Charts. A demo is one example on its package's guide; a card in the Overview's grid keeps the demo's name and opens the package's guide. Text editor keeps its name. Amends [D-293].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-guide-mosaic, tile-guide-calendar, tile-guide-grid, tile-guide-graph, tile-guide-diagram, tile-guide-masonry, tile-guide-map, tile-guide-chart]
@@ -6395,7 +6395,7 @@ decision D-295: A TILE guide is named after its package and covers the package, 
 ```
 
 ```mdl
-decision D-296: A card's header is one compact line: the demo's title, its package and an arrow to the guide. The grid is in twelfths so every card has room for that line: Kanban, Calendar, Markdown editor and Diagram take half the width and two rows; the spreadsheet two thirds of a row beside the force graph; the gallery half the width and two rows, with the map and chart stacked beside it. The calendar is the week view; the markdown editor pads its text off the card's edges; the spreadsheet keeps wheel and trackpad scrolling inside the grid, so the page neither scrolls nor swipes back or forward; the chart has one series and no legend; the globe flies a looping trip between its points along the lines that join them. The masonry card is titled Gallery. Amends [D-292].
+decision D-297: A card's header is one compact line: the demo's title, its package and an arrow to the guide. The grid is in twelfths so every card has room for that line: Kanban, Calendar, Markdown editor and Diagram take half the width and two rows; the spreadsheet two thirds of a row beside the force graph; the gallery half the width and two rows, with the map and chart stacked beside it. The calendar is the week view; the markdown editor pads its text off the card's edges; the spreadsheet keeps wheel and trackpad scrolling inside the grid, so the page neither scrolls nor swipes back or forward; the chart has one series and no legend; the globe flies a looping trip between its points along the lines that join them. The masonry card is titled Gallery. Amends [D-293].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-21.1, tile-overview]
@@ -6403,7 +6403,7 @@ decision D-296: A card's header is one compact line: the demo's title, its packa
 ```
 
 ```mdl
-decision D-297: TILE's API section has one page per component namespace, as `@dxos/react-ui`'s pages do, grouped by package. The core pages sit directly under API; each other package's pages live at `/docs/tile/api/<package>/<namespace>/` and nest in a group after them [D-300]. In every section a top-level group starts expanded and a nested group starts collapsed, opening when the current page is in it. Each namespace page opens with one of the package's own stories, embedded with `StoryEmbed` and with debug args turned off, then the import, the install, the parts and their props, and the examples that were the package guides. The package guides and the Component packages page are retired; Guides keeps the three that span packages. The Overview grid's cards open the namespace pages. Amends [D-238], [D-251] and [D-292].
+decision D-298: TILE's API section has one page per component namespace, as `@dxos/react-ui`'s pages do, grouped by package. The core pages sit directly under API; each other package's pages live at `/docs/tile/api/<package>/<namespace>/` and nest in a group after them [D-301]. In every section a top-level group starts expanded and a nested group starts collapsed, opening when the current page is in it. Each namespace page opens with one of the package's own stories, embedded with `StoryEmbed` and with debug args turned off, then the import, the install, the parts and their props, and the examples that were the package guides. The package guides and the Component packages page are retired; Guides keeps the three that span packages. The Overview grid's cards open the namespace pages. Amends [D-238], [D-251] and [D-293].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-overview, F-21.2, tile-api-reference]
@@ -6414,7 +6414,7 @@ decision D-297: TILE's API section has one page per component namespace, as `@dx
 ```
 
 ```mdl
-decision D-298: Each card in the TILE Overview's grid runs a story from its package's own stories file, the same story that opens the card's API page. Calendar runs `Week` and Markdown editor runs `WithToolbar`. Where no story fits a card, the package gains a `Docs` story with the demo the guide had: the task board, the spreadsheet, the force graph, the diagram, the gallery, the globe's trip and the chart. A `Docs` story fills its frame on the page's surface, whatever its meta's layout. The examples on those API pages keep their code, and the story at the top runs it. A story can change for the docs, as the editor stories pad their text, but a package's API does not. Amends [D-292], [D-296] and [D-297].
+decision D-299: Each card in the TILE Overview's grid runs a story from its package's own stories file, the same story that opens the card's API page. Calendar runs `Week` and Markdown editor runs `WithToolbar`. Where no story fits a card, the package gains a `Docs` story with the demo the guide had: the task board, the spreadsheet, the force graph, the diagram, the gallery, the globe's trip and the chart. A `Docs` story fills its frame on the page's surface, whatever its meta's layout. The examples on those API pages keep their code, and the story at the top runs it. A story can change for the docs, as the editor stories pad their text, but a package's API does not. Amends [D-293], [D-297] and [D-298].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-21, tile-overview, tile-api-mosaic-board, tile-api-diagram-diagram, tile-api-geo-globe, tile-api-graph-graph, tile-api-grid-grid, tile-api-masonry-masonry, tile-api-plot-plot]
@@ -6425,7 +6425,7 @@ decision D-298: Each card in the TILE Overview's grid runs a story from its pack
 ```
 
 ```mdl
-decision D-299: The TILE Overview's cards come in more sizes, each set by what its demo needs, in twelfths of the width and rows of 14rem. Kanban takes five columns and Calendar seven, both two rows tall. The spreadsheet takes eight columns and one row, beside a force graph four columns wide and two rows tall. The chart and the map take four columns and one row each, under the spreadsheet. The diagram takes seven columns and the Markdown editor five after it, both two rows tall, and the gallery takes the full width for two rows. On a phone a one-row card is 16rem tall and the others 22rem. Amends [D-296].
+decision D-300: The TILE Overview's cards come in more sizes, each set by what its demo needs, in twelfths of the width and rows of 14rem. Kanban takes five columns and Calendar seven, both two rows tall. The spreadsheet takes eight columns and one row, beside a force graph four columns wide and two rows tall. The chart and the map take four columns and one row each, under the spreadsheet. The diagram takes seven columns and the Markdown editor five after it, both two rows tall, and the gallery takes the full width for two rows. On a phone a one-row card is 16rem tall and the others 22rem. Amends [D-297].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-overview]
@@ -6433,7 +6433,7 @@ decision D-299: The TILE Overview's cards come in more sizes, each set by what i
 ```
 
 ```mdl
-decision D-300: TILE's API sidebar nests the component packages' pages by what the component does, not by package, in groups named with one word: Collections (Board, Listbox, Masonry, Mosaic, OrderedList, Picker, Tree), Editing (Editor, Form, Grid), Actions (ActionMenu, ActionToolbar), Time (Calendar, Timeline) and Visualization (Diagram, Globe, Graph, Map, Plot, SVG). A page's `family` field places it. The top level of API holds only `@dxos/react-ui`'s core; every package that builds on it nests in a group. Routes keep the package, and each page names its package in its import and install. Amends [D-297].
+decision D-301: TILE's API sidebar nests the component packages' pages by what the component does, not by package, in groups named with one word: Collections (Board, Listbox, Masonry, Mosaic, OrderedList, Picker, Tree), Editing (Editor, Form, Grid), Actions (ActionMenu, ActionToolbar), Time (Calendar, Timeline) and Visualization (Diagram, Globe, Graph, Map, Plot, SVG). A page's `family` field places it. The top level of API holds only `@dxos/react-ui`'s core; every package that builds on it nests in a group. Routes keep the package, and each page names its package in its import and install. Amends [D-298].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]
@@ -6445,7 +6445,7 @@ decision D-300: TILE's API sidebar nests the component packages' pages by what t
 ```
 
 ```mdl
-decision D-301: Every section's API group lists its pages alphabetically, and TILE's family groups (Actions, Collections, Editing, Time, Visualization) follow in alphabetical order. Amends [D-300].
+decision D-302: Every section's API group lists its pages alphabetically, and TILE's family groups (Actions, Collections, Editing, Time, Visualization) follow in alphabetical order. Amends [D-301].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]
@@ -6455,7 +6455,7 @@ decision D-301: Every section's API group lists its pages alphabetically, and TI
 ```
 
 ```mdl
-decision D-302: Every demo embedded in a docs page (the PLEX plugin inspector, the HALO and ECHO tutorial embeds, the demo embeds and the TILE previews) is wider than the text column, up to the width of the content panel and centered on it, as the TILE Overview grid and the TILE API stories are.
+decision D-303: Every demo embedded in a docs page (the PLEX plugin inspector, the HALO and ECHO tutorial embeds, the demo embeds and the TILE previews) is wider than the text column, up to the width of the content panel and centered on it, as the TILE Overview grid and the TILE API stories are.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [plex-the-plex-plugin, app-framework-create-plugin, app-framework-define-type, app-framework-add-operation, app-framework-add-surface, app-framework-extend-app-graph]
@@ -6463,7 +6463,7 @@ decision D-302: Every demo embedded in a docs page (the PLEX plugin inspector, t
 ```
 
 ```mdl
-decision D-303: The docs have square corners everywhere outside a demo, as the marketing pages do: the demo and code frames, the topic switcher and its menu, the search button and its dialog, the Docs home cards, the sidebar and on-this-page links, buttons, cards, inline code and the agent prompt. A demo keeps its own corners. Amends [D-223].
+decision D-304: The docs have square corners everywhere outside a demo, as the marketing pages do: the demo and code frames, the topic switcher and its menu, the search button and its dialog, the Docs home cards, the sidebar and on-this-page links, buttons, cards, inline code and the agent prompt. A demo keeps its own corners. Amends [D-223].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [docs-home]
@@ -6473,7 +6473,7 @@ decision D-303: The docs have square corners everywhere outside a demo, as the m
 ```
 
 ```mdl
-decision D-304: The docs footer and the marketing pages' footer list Docs right after Home: Home, Docs, ECHO, Composer, Plugins. Amends [F-7.1].
+decision D-305: The docs footer and the marketing pages' footer list Docs right after Home: Home, Docs, ECHO, Composer, Plugins. Amends [F-7.1].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-7.1]
@@ -6481,7 +6481,7 @@ decision D-304: The docs footer and the marketing pages' footer list Docs right 
 ```
 
 ```mdl
-decision D-305: Every section's sidebar lists its groups in one order: Start here, Learning path, Core concepts, Guides, API, Resources. A section without a group skips it. TILE's API moves after its Guides.
+decision D-306: Every section's sidebar lists its groups in one order: Start here, Learning path, Core concepts, Guides, API, Resources. A section without a group skips it. TILE's API moves after its Guides.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]
@@ -6491,7 +6491,7 @@ decision D-305: Every section's sidebar lists its groups in one order: Start her
 ```
 
 ```mdl
-decision D-306: TILE documents and demos `@dxos/react-ui-canvas-editor`'s `CanvasEditor`, the canvas Composer's drawing plugins use, in place of `@dxos/react-ui-diagram`. The Overview's Diagram card becomes a Canvas card that runs `CanvasEditor`'s `Model` story, and the Diagram API page becomes a CanvasEditor page in the Visualization group. `react-ui-diagram` keeps no `Docs` story. Amends [D-298], [D-300].
+decision D-307: TILE documents and demos `@dxos/react-ui-canvas-editor`'s `CanvasEditor`, the canvas Composer's drawing plugins use, in place of `@dxos/react-ui-diagram`. The Overview's Diagram card becomes a Canvas card that runs `CanvasEditor`'s `Model` story, and the Diagram API page becomes a CanvasEditor page in the Visualization group. `react-ui-diagram` keeps no `Docs` story. Amends [D-299], [D-301].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-overview, tile-api-canvas-editor-canvas-editor]
@@ -6499,7 +6499,7 @@ decision D-306: TILE documents and demos `@dxos/react-ui-canvas-editor`'s `Canva
 ```
 
 ```mdl
-decision D-307: TILE's API documents every namespace of `@dxos/react-ui`, one page each, and nests every page, core or not, in a family group: Actions, Collections, Display, Editing, Foundations, Layout, Overlays, Time and Visualization. The API group has no top-level pages, so the sidebar no longer tells core components from the packages built on them. A family lists its pages alphabetically, and the two Listbox pages are labelled by package. Amends [D-300], [D-301].
+decision D-308: TILE's API documents every namespace of `@dxos/react-ui`, one page each, and nests every page, core or not, in a family group: Actions, Collections, Display, Editing, Foundations, Layout, Overlays, Time and Visualization. The API group has no top-level pages, so the sidebar no longer tells core components from the packages built on them. A family lists its pages alphabetically, and the two Listbox pages are labelled by package. Amends [D-301], [D-302].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]
@@ -6509,7 +6509,7 @@ decision D-307: TILE's API documents every namespace of `@dxos/react-ui`, one pa
 ```
 
 ```mdl
-decision D-308: An API page's story sits centred in its frame, as Storybook centres a story whose layout is not fullscreen, and Storybook's own frames (the size rows, the centred and column layouts) are transparent, so the page shows through around the components. A story taller or wider than the frame starts at its top left and scrolls. The `CanvasEditor` demo is its `Docs` story: the canvas, navigation, palette and zoom, without the inspectors, actions or display menu. Amends [D-297], [D-306].
+decision D-309: An API page's story sits centred in its frame, as Storybook centres a story whose layout is not fullscreen, and Storybook's own frames (the size rows, the centred and column layouts) are transparent, so the page shows through around the components. A story taller or wider than the frame starts at its top left and scrolls. The `CanvasEditor` demo is its `Docs` story: the canvas, navigation, palette and zoom, without the inspectors, actions or display menu. Amends [D-298], [D-307].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-overview, tile-api-reference]
@@ -6519,7 +6519,7 @@ decision D-308: An API page's story sits centred in its frame, as Storybook cent
 ```
 
 ```mdl
-decision D-309: Every TILE API page documents exactly one namespace. The Overlays page splits into Dialog, Popover, Tooltip, HoverCard and Toast; Input keeps only `Input`, with Field and Select on pages of their own; Panel keeps only `Panel`, with ScrollArea on its own page. Amends [D-307].
+decision D-310: Every TILE API page documents exactly one namespace. The Overlays page splits into Dialog, Popover, Tooltip, HoverCard and Toast; Input keeps only `Input`, with Field and Select on pages of their own; Panel keeps only `Panel`, with ScrollArea on its own page. Amends [D-308].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference, tile-api-input, tile-api-panel, tile-api-dialog, tile-api-popover, tile-api-tooltip, tile-api-hover-card, tile-api-toast, tile-api-field, tile-api-select, tile-api-scroll-area]
@@ -6529,7 +6529,7 @@ decision D-309: Every TILE API page documents exactly one namespace. The Overlay
 ```
 
 ```mdl
-decision D-310: A core `@dxos/react-ui` story's frame fits the story: as tall as the story plus a margin, up to the height the page gives, and as wide as the text column unless the story is wider. Under Storybook's fixed centred or column layout the frame fits the panel that layout holds; a fullscreen story keeps the page's frame. The other packages' frames keep the sizes their pages give, since their stories fill whatever frame they get. Amends [D-302], [D-308].
+decision D-311: A core `@dxos/react-ui` story's frame fits the story: as tall as the story plus a margin, up to the height the page gives, and as wide as the text column unless the story is wider. Under Storybook's fixed centred or column layout the frame fits the panel that layout holds; a fullscreen story keeps the page's frame. The other packages' frames keep the sizes their pages give, since their stories fill whatever frame they get. Amends [D-303], [D-309].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]
@@ -6539,7 +6539,7 @@ decision D-310: A core `@dxos/react-ui` story's frame fits the story: as tall as
 ```
 
 ```mdl
-decision D-311: TILE's API puts the 44 core `@dxos/react-ui` component pages in one Core group, listed alphabetically; the families hold only the other packages' pages. Hooks, Theme and Util, which are not components, and VirtualAnchor, Show and Match, which have no story or draw nothing of their own, have no API page. Amends [D-307].
+decision D-312: TILE's API puts the 44 core `@dxos/react-ui` component pages in one Core group, listed alphabetically; the families hold only the other packages' pages. Hooks, Theme and Util, which are not components, and VirtualAnchor, Show and Match, which have no story or draw nothing of their own, have no API page. Amends [D-308].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]
@@ -6549,7 +6549,7 @@ decision D-311: TILE's API puts the 44 core `@dxos/react-ui` component pages in 
 ```
 
 ```mdl
-decision D-312: A core API page sets its story's frame size in the page, `height` and `narrow`, from the story's measured size, so the frame does not change size as the story loads. Amends [D-310].
+decision D-313: A core API page sets its story's frame size in the page, `height` and `narrow`, from the story's measured size, so the frame does not change size as the story loads. Amends [D-311].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [tile-api-reference]

@@ -12,7 +12,7 @@ interface Props {
 const { id, height = '28rem', narrow = false } = Astro.props;
 ---
 
-<!-- The namespace's own story from its package, at the top of its API page [D-297]. -->
+<!-- The namespace's own story from its package, at the top of its API page [D-298]. -->
 <div class:list={['api-story dx-island not-content', { 'dx-wide': !narrow }]} style={{ height }}>
   <ApiStory id={id} client:only="react" />
 </div>
