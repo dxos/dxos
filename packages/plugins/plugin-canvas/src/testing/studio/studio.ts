@@ -1357,36 +1357,47 @@ export type ComponentMode = 'kind' | 'generator';
 export const STUDIO_COMPONENT_KINDS: ReadonlySet<string> = new Set(['space-graph', 'substrate', 'app-frame', 'plank']);
 
 /**
- * The box a view frames to draw this slide: the deck's own page, moved onto what the slide actually draws. Every
- * slide takes the same 1600 x 900, so the nine open at ONE scale; centring it on the slide's own content is what
- * stops a slide with a wide top margin (the deck left room there for a title this import does not draw) from sitting
- * low in the box a presentation gives it.
+ * The box a view frames to draw a slide: one size for the whole deck, so the nine open at ONE scale, centred on what
+ * this slide covers, so none of them sits off to a side of the box a presentation gives it. The size comes from the
+ * deck ({@link studioDeckSize}) rather than the deck's own page, because a slide laid out here may be wider than the
+ * page the deck fitted it to.
  */
-export const studioPageFrame = ({ page, nodes, frames, texts }: StudioModel) => {
-  const size = { width: page?.w ?? 1600, height: page?.h ?? 900 };
-  const xs: number[] = [];
-  const ys: number[] = [];
-  for (const card of Object.values(nodes)) {
-    const [width, height] = [card.w ?? 0, card.h ?? 0];
-    xs.push(card.cx - width / 2, card.cx + width / 2);
-    ys.push(card.cy - height / 2, card.cy + height / 2);
+/** The margin a drawing keeps around what it draws, which is also the gap a slide leaves between its columns. */
+export const STUDIO_MARGIN = 96;
+
+/**
+ * One frame size for the whole deck: the widest and tallest slide, with a margin around it. Every slide frames this
+ * same box, so the nine open at one scale, and none of them is clipped by a page the deck happened to fit it to.
+ */
+export const studioDeckSize = (
+  bounds: readonly { width: number; height: number }[],
+  margin = STUDIO_MARGIN,
+): { width: number; height: number } => ({
+  width: Math.max(0, ...bounds.map(({ width }) => width)) + 2 * margin,
+  height: Math.max(0, ...bounds.map(({ height }) => height)) + 2 * margin,
+});
+
+export const studioPageFrame = (
+  bounds: { x: number; y: number; width: number; height: number },
+  size: { width: number; height: number },
+) => ({
+  x: bounds.x + bounds.width / 2 - size.width / 2,
+  y: bounds.y + bounds.height / 2 - size.height / 2,
+  ...size,
+});
+
+/** The box every shape of the drawing fits in. */
+const contentBounds = (content: ContentMap) => {
+  const boxes = Object.values(content).flatMap((record) => (isNodeRecord(record) ? [record.node] : []));
+  if (boxes.length === 0) {
+    return { x: 0, y: 0, width: 0, height: 0 };
   }
-  for (const frame of frames) {
-    xs.push(frame.x, frame.x + frame.w);
-    ys.push(frame.y, frame.y + frame.h);
-  }
-  for (const text of texts ?? []) {
-    xs.push(text.x, text.x + (text.w ?? 0));
-    ys.push(text.y);
-  }
-  if (xs.length === 0) {
-    return { x: 0, y: 0, ...size };
-  }
-  const center = {
-    x: (Math.min(...xs) + Math.max(...xs)) / 2,
-    y: (Math.min(...ys) + Math.max(...ys)) / 2,
-  };
-  return { x: center.x - size.width / 2, y: center.y - size.height / 2, ...size };
+  const lefts = boxes.map((node) => node.center.x - node.size.width / 2);
+  const rights = boxes.map((node) => node.center.x + node.size.width / 2);
+  const tops = boxes.map((node) => node.center.y - node.size.height / 2);
+  const bottoms = boxes.map((node) => node.center.y + node.size.height / 2);
+  const [x, y] = [Math.min(...lefts), Math.min(...tops)];
+  return { x, y, width: Math.max(...rights) - x, height: Math.max(...bottoms) - y };
 };
 
 /** What the loader had to take from the sidecar, which is the spike's finding in numbers. */
@@ -1399,6 +1410,8 @@ export type StudioReport = {
   laid: number;
   routed: number;
   components: number;
+  /** What the slide covers once every pass has run, which is what a view has to frame. */
+  bounds: { x: number; y: number; width: number; height: number };
 };
 
 /** Whether a command names the slide's title block, which the presenter's heading carries ({@link TITLE_OBJECT}). */
@@ -1494,6 +1507,7 @@ export const seedStudioSlide =
     }
     const shapes = placeShapes(content, model);
     report?.({
+      bounds: contentBounds(content),
       problems: problems.length,
       cards: Object.keys(model.nodes).length,
       snapped,

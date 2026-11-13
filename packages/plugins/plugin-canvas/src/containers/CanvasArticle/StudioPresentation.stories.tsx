@@ -36,7 +36,13 @@ import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
 import { STUDIO_SLIDES } from '../../testing/studio/slides.ts';
-import { STUDIO_CANVAS, seedStudioSlide, studioPageFrame } from '../../testing/studio/studio.ts';
+import {
+  STUDIO_CANVAS,
+  type StudioReport,
+  seedStudioSlide,
+  studioDeckSize,
+  studioPageFrame,
+} from '../../testing/studio/studio.ts';
 
 /** The deck's look: the studio's own accent, and its fonts. */
 const THEME: SlideTheme.Settings = { accent: '#2d6fff', font: 'space-grotesk', monoFont: 'fira' };
@@ -103,24 +109,24 @@ const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
     StudioKindsPlugin(),
   ],
   onInit: async ({ space }) => {
-    const seeded = STUDIO_SLIDES.map(
-      ({ id, source, model, labels, remap, spread, balance, gap, frames, uniform, sizes }) => {
-        // Read-only: a slide is looked at, and the rail would take a corner of every one.
-        const canvas = addTestCanvas(
-          space.db,
-          seedStudioSlide(source, model, { labels, remap, spread, balance, gap, frames, uniform, sizes }),
-          {
-            ...STUDIO_CANVAS,
-            readonly: true,
-            // The deck's page, over what this slide draws: one size for all nine, so they open at one scale, and centred
-            // on the slide's own content, so none of them sits off to a side of the box ({@link studioPageFrame}).
-            fitFrame: studioPageFrame(model),
-            fitZoom: FIT_ZOOM,
-          },
-        );
-        return { model, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
-      },
-    );
+    // What each slide covers once the loader has laid it out, which only a run can say: a slide may be spread or
+    // given a gap, so the deck's own page is not what the view has to frame.
+    const measured = STUDIO_SLIDES.map((slide) => {
+      let report: StudioReport | undefined;
+      seedStudioSlide(slide.source, slide.model, { ...slide, report: (value) => (report = value) })({});
+      return { slide, bounds: report!.bounds };
+    });
+    const size = studioDeckSize(measured.map(({ bounds }) => bounds));
+    const seeded = measured.map(({ slide: { id, source, model, ...options }, bounds }) => {
+      // Read-only: a slide is looked at, and the rail would take a corner of every one.
+      const canvas = addTestCanvas(space.db, seedStudioSlide(source, model, options), {
+        ...STUDIO_CANVAS,
+        readonly: true,
+        fitFrame: studioPageFrame(bounds, size),
+        fitZoom: FIT_ZOOM,
+      });
+      return { model, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
+    });
     const deck = space.db.add(
       Presentation.make({
         name: 'Studio',
