@@ -7,7 +7,7 @@
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Annotation, Obj, Ref } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
 
 export const Base = Schema.Struct({
@@ -113,6 +113,13 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
   operationIcon: Schema.optional(Schema.String),
 
   /**
+   * Annotations of the Operation that backs this tool call, as its definition carries them.
+   * Recorded so a reader of the history (an end-request hook) can classify the call without the definition, which
+   * a process that loads only its own plugin does not have.
+   */
+  operationAnnotations: Schema.optional(Annotation.Dictionary),
+
+  /**
    * Human-readable label for the call where the tool name says nothing about what it does — a code-mode
    * `eval`, named after the operations its code invokes. Presentational only: unlike `operationName`,
    * it does not claim an operation backs the call.
@@ -127,9 +134,14 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
 
 export type ToolCall = Schema.Schema.Type<typeof ToolCall>;
 
-/** One operation a code-mode `eval` ran: the operation's key, and whether it failed. What it returned is not kept. */
+/**
+ * One operation a code-mode `eval` ran: the operation's key and annotations, and whether it failed. What it returned is
+ * not kept.
+ */
 export const Invocation = Schema.Struct({
   operationKey: Schema.String,
+  /** The operation's annotations; see {@link ToolCall} `operationAnnotations`. */
+  annotations: Schema.optional(Annotation.Dictionary),
   /** The first line of the failure. */
   error: Schema.optional(Schema.String),
 });

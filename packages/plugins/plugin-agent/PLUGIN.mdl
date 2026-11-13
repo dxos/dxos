@@ -398,7 +398,12 @@ op updateProfile
 ```mdl
 skill ConversationSkill
   key: org.dxos.skill.agentConversation
-  desc: Bound to every autonomous agent's first chat; the conversational role.
+  desc: >
+    Bound to every autonomous agent's first chat; the conversational role. Its end-request hook
+    `ensureReplySent` asks once for the reply to be sent when the agent wrote text in a channel
+    conversation and no channel send posted there in the request. A channel send is a call whose
+    recorded operation annotations carry `ChannelSendAnnotation`; the hook reads them from the
+    conversation's history, never from other plugins' operation handlers.
   contributes:
     - op:createAgent
     - op:ensureChannelChat
@@ -1288,6 +1293,37 @@ decision D-11: `ensureSessionChat` moves into this plugin from EDGE's operation-
   by: user:dmaretskyi
   affects: [ensureSessionChat]
   why: It reaches EDGE through this plugin's bundle like the agent's other operations (org.dxos.app-framework.edge-plugins#D-81, org.dxos.app-framework.edge-plugins#D-82). The source keeps its value `org.dxos.agent/session`, since existing session chats are keyed by it.
+```
+
+```mdl
+decision D-12: `ensureReplySent` must work when the agent runs in its own bundle, without other plugins' capabilities.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [ConversationSkill]
+  why: In plugin-agent's EDGE bundle the hook found no handler for plugin-discord's `sendMessage`, so it reminded the agent after a reply it had sent and the turn made an extra model call (org.dxos.app-framework.edge-plugins#D-88).
+```
+
+```mdl
+decision D-13: The harness records the backing operation's annotations on each tool call (`ContentBlock.ToolCall.operationAnnotations`) and on each operation a code-mode `eval` ran (`ContentBlock.Invocation.annotations`), where the operation's definition is known. `ensureReplySent` reads `ChannelSendAnnotation` from those recorded annotations and no longer reads `Capabilities.OperationHandler`, so it decides alike where every plugin is loaded and in plugin-agent's bundle alone. Fills in [D-12].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ConversationSkill]
+  why: The turn that ran a send holds its definition; the hook runs later, possibly in a process that holds only plugin-agent's. The annotations are already encoded and are what `Operation.serialize` persists, and the history already records `operationKey`, `operationName` and `operationIcon` the same way. The annotation stays plugin-agent's: the harness copies every annotation and interprets none.
+  rejected:
+    - Recognize a send by its output naming the conversation's thread — a read that takes the thread (a channel history) would count as a reply.
+    - Have each send operation record a reply marker on the chat — every channel plugin would have to write it, and an `eval`'s sends would need it too.
+    - List the channel send operations' keys in plugin-agent — plugin-agent would name every channel plugin's operations, and miss new ones.
+    - Record only the channel-send field on the tool call — the harness would carry one plugin's concept.
+```
+
+```mdl
+decision D-14: A tool call recorded before [D-13] has no recorded annotations, so the hook does not see a send in it as a reply. Fills in [D-13].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ConversationSkill]
+  why: The hook reads only the current request, which the running turn recorded, so only a request in flight across the upgrade can be reminded once more.
 ```
 
 ---

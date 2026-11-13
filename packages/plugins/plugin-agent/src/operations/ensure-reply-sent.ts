@@ -4,12 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
-import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { type Annotation } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
@@ -23,7 +21,9 @@ export const REMINDER =
 
 /**
  * Deterministic, with no model call: since the request's prompt the agent wrote text, and no
- * {@link AgentChannels.ChannelSendAnnotation channel send} reported posting in this conversation.
+ * {@link AgentChannels.ChannelSendAnnotation channel send} reported posting in this conversation. Which calls were
+ * channel sends is read from the annotations the history recorded with each call, not from the operations' handlers,
+ * so the hook decides alike where every plugin is loaded and in plugin-agent's own EDGE bundle.
  */
 const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> = ConversationSkill.EnsureReplySent.pipe(
   Operation.withHandler(
@@ -42,19 +42,12 @@ const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> =
         return {};
       }
 
-      // Every plugin's operations: on EDGE the hook runs in operation-service, which has no handler provider.
-      const handlers = OperationHandlerSet.merge(...(yield* Capability.getAll(Capabilities.OperationHandler)));
-      const replies = yield* Effect.forEach(succeededCalls(request), ({ operationKey, output, evaluated }) =>
-        OperationHandlerSet.getHandlerByKey(handlers, operationKey).pipe(
-          Effect.map((op) => {
-            const field = AgentChannels.channelSendField(op);
-            // Code mode does not record where a send from an `eval` went, so any such send counts as the reply.
-            return field !== undefined && (evaluated || isConversation(output?.[field], chat, conversation.thread));
-          }),
-          Effect.orElseSucceed(() => false),
-        ),
-      );
-      return replies.some(Boolean) ? {} : { followUp: REMINDER };
+      const replied = succeededCalls(request).some(({ annotations, output, evaluated }) => {
+        const field = AgentChannels.channelSendField(annotations);
+        // Code mode does not record where a send from an `eval` went, so any such send counts as the reply.
+        return field !== undefined && (evaluated || isConversation(output?.[field], chat, conversation.thread));
+      });
+      return replied ? {} : { followUp: REMINDER };
     }),
   ),
 );
@@ -65,12 +58,17 @@ export default handler;
 const isPrompt = (message: Message.Message): boolean => message.sender.role === 'user' && textOf(message).length > 0;
 
 /**
- * The request's operation calls that returned a result rather than an error, with their operation and decoded output:
- * each tool call, and each operation a code-mode `eval` ran, which is recorded without its output.
+ * The request's operation calls that returned a result rather than an error, with their operation's recorded
+ * annotations and decoded output: each tool call, and each operation a code-mode `eval` ran, which is recorded without
+ * its output.
  */
 const succeededCalls = (
   request: readonly Message.Message[],
-): { operationKey: string; output: Record<string, unknown> | undefined; evaluated: boolean }[] => {
+): {
+  annotations: Annotation.Dictionary | undefined;
+  output: Record<string, unknown> | undefined;
+  evaluated: boolean;
+}[] => {
   const blocks = request.flatMap((message) => message.blocks);
   const outputs = new Map(
     blocks.flatMap((block) =>
@@ -86,14 +84,14 @@ const succeededCalls = (
   );
   const calls = blocks.flatMap((block) =>
     block._tag === 'toolCall' && block.operationKey && outputs.has(block.toolCallId)
-      ? [{ operationKey: block.operationKey, output: outputs.get(block.toolCallId), evaluated: false }]
+      ? [{ annotations: block.operationAnnotations, output: outputs.get(block.toolCallId), evaluated: false }]
       : [],
   );
   // A code-mode `eval` is one call that may run several operations; its result records which.
   const evaluated = blocks.flatMap((block) =>
     block._tag === 'toolResult'
-      ? (block.invocations ?? []).flatMap(({ operationKey, error }) =>
-          error === undefined ? [{ operationKey, output: undefined, evaluated: true }] : [],
+      ? (block.invocations ?? []).flatMap(({ annotations, error }) =>
+          error === undefined ? [{ annotations, output: undefined, evaluated: true }] : [],
         )
       : [],
   );

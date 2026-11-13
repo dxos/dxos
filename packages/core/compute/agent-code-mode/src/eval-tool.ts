@@ -166,26 +166,35 @@ export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.Opaq
     }),
   );
 
-/** Records each operation call into one evaluation's list: its key, and the first line of its failure if it failed. */
+/**
+ * Records each operation call into one evaluation's list: its key and annotations, and the first line of its failure if
+ * it failed.
+ */
 type Recorder = {
   /** Records the call `effect` makes once it settles. */
-  readonly effect: (operationKey: string) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  readonly effect: (
+    operation: Operation.Definition.Any,
+  ) => <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
   /** Records a call that reported its outcome as `invokePromise` does. */
-  readonly outcome: (operationKey: string, outcome: { readonly error?: Error }) => void;
+  readonly outcome: (operation: Operation.Definition.Any, outcome: { readonly error?: Error }) => void;
 };
 
 /** Which operations ran, not what they returned: serializing every output (a query's) would cost each call. */
 const makeRecorder = (invocations: ContentBlock.Invocation[]): Recorder => {
   // The first line names the failure; the rest is a trace no reader of the history needs.
-  const record = (operationKey: string, error?: string) =>
-    invocations.push(error === undefined ? { operationKey } : { operationKey, error: error.split('\n')[0] });
+  const record = ({ meta }: Operation.Definition.Any, error?: string) =>
+    invocations.push({
+      operationKey: String(meta.key),
+      ...(meta.annotations && Object.keys(meta.annotations).length > 0 && { annotations: meta.annotations }),
+      ...(error !== undefined && { error: error.split('\n')[0] }),
+    });
   return {
-    effect: (operationKey) => (effect) =>
+    effect: (operation) => (effect) =>
       effect.pipe(
-        Effect.tap(() => Effect.sync(() => record(operationKey))),
-        Effect.tapCause((cause) => Effect.sync(() => record(operationKey, Cause.pretty(cause)))),
+        Effect.tap(() => Effect.sync(() => record(operation))),
+        Effect.tapCause((cause) => Effect.sync(() => record(operation, Cause.pretty(cause)))),
       ),
-    outcome: (operationKey, { error }) => record(operationKey, error?.message),
+    outcome: (operation, { error }) => record(operation, error?.message),
   };
 };
 
@@ -195,10 +204,10 @@ const makeRecorder = (invocations: ContentBlock.Invocation[]): Recorder => {
  */
 const recordInvocations = (operations: readonly SandboxOperation[], recorder: Recorder): SandboxOperation[] =>
   operations.map((operation) => {
-    const operationKey = operation.definition && String(operation.definition.meta.key);
-    return operationKey === undefined
+    const { definition } = operation;
+    return definition === undefined
       ? operation
-      : { ...operation, invoke: (input: unknown) => operation.invoke(input).pipe(recorder.effect(operationKey)) };
+      : { ...operation, invoke: (input: unknown) => operation.invoke(input).pipe(recorder.effect(definition)) };
   });
 
 /**
@@ -208,10 +217,10 @@ const recordInvocations = (operations: readonly SandboxOperation[], recorder: Re
 const recordingService = (service: Operation.OperationService, recorder: Recorder): Operation.OperationService => ({
   // Delegated by name rather than spread, which would miss a method a class-based service holds on its prototype.
   schedule: (op, ...args) => service.schedule(op, ...args),
-  invoke: (op, ...args) => service.invoke(op, ...args).pipe(recorder.effect(String(op.meta.key))),
+  invoke: (op, ...args) => service.invoke(op, ...args).pipe(recorder.effect(op)),
   invokePromise: (op, ...args) =>
     service.invokePromise(op, ...args).then((outcome) => {
-      recorder.outcome(String(op.meta.key), outcome);
+      recorder.outcome(op, outcome);
       return outcome;
     }),
 });

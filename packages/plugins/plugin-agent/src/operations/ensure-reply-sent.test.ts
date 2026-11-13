@@ -4,13 +4,8 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -26,17 +21,9 @@ import { REMINDER } from './ensure-reply-sent.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
-const manager = CapabilityManager.make({ registry: AtomRegistry.make() });
-manager.contribute({
-  module: 'test',
-  interface: Capabilities.OperationHandler,
-  implementation: AgentOperationHandlerSet,
-});
-
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
   types: [Chat.Chat, Feed.Feed, Message.Message],
-  extraServices: Layer.succeed(Capability.Service, manager),
   disableLlmMemoization: true,
 });
 
@@ -249,7 +236,7 @@ const followUp = (text: string) =>
 
 const reply = (text: string) => Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text }] });
 
-/** A tool call the agent made to `operation`, and its successful result carrying `output`. */
+/** A tool call the agent made to `operation`, recorded as the harness records it, and its result carrying `output`. */
 const call = (operation: Operation.Definition.Any, toolCallId: string, output: object = {}) => {
   const name = Operation.toolName(operation);
   return [
@@ -263,6 +250,7 @@ const call = (operation: Operation.Definition.Any, toolCallId: string, output: o
           input: '{}',
           providerExecuted: false,
           operationKey: operation.meta.key,
+          operationAnnotations: operation.meta.annotations,
         },
       ],
     }),
@@ -291,9 +279,11 @@ const evalCall = (
         name: 'eval',
         result: 'done',
         providerExecuted: false,
-        invocations: invoked.map(({ operation, error }) =>
-          error === undefined ? { operationKey: operation.meta.key } : { operationKey: operation.meta.key, error },
-        ),
+        invocations: invoked.map(({ operation, error }) => ({
+          operationKey: operation.meta.key,
+          annotations: operation.meta.annotations,
+          ...(error !== undefined && { error }),
+        })),
       },
     ],
   }),
