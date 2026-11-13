@@ -1082,9 +1082,15 @@ const LINE_TOLERANCE = 24;
 const LINE_SPREAD = 1.5;
 
 /** The slide's cards, which are the only shapes these passes move. */
+/**
+ * The cards a slide added beyond the deck's own, by the content they were added to: the sidecar does not know about
+ * them, so {@link cardsOf} is told here rather than by every pass that calls it.
+ */
+const ADDED = new WeakMap<ContentMap, readonly string[]>();
+
 const cardsOf = (content: ContentMap, model: StudioModel): { key: string; node: Node }[] => {
   const cards: { key: string; node: Node }[] = [];
-  for (const id of Object.keys(model.nodes)) {
+  for (const id of [...Object.keys(model.nodes), ...(ADDED.get(content) ?? [])]) {
     const key = nodeKey(boxOf(id));
     const record = content[key];
     if (isNodeRecord(record)) {
@@ -1346,6 +1352,50 @@ const fitFrames = (content: ContentMap, model: StudioModel, grid: number): numbe
     fitted++;
   }
   return fitted;
+};
+
+/** A card a slide adds that the deck did not draw. */
+export type StudioAddition = { id: string; title: string; icon: string };
+
+/**
+ * Adds the cards a slide names beyond the deck's own. The sidecar is what the deck drew; a slide read here sometimes
+ * wants a type the deck left out, and a card is cheap — it takes the size the slide's cards already have and the
+ * column the slide puts it in ({@link placeColumns}).
+ */
+const addCards = (content: ContentMap, model: StudioModel, additions: readonly StudioAddition[]): number => {
+  const cards = cardsOf(content, model);
+  const first = cards[0];
+  if (additions.length === 0 || !first) {
+    return 0;
+  }
+  let added = 0;
+  for (const { id, title, icon } of additions) {
+    const key = nodeKey(boxOf(id));
+    if (content[key]) {
+      continue;
+    }
+    const record = content[first.key];
+    if (!isNodeRecord(record)) {
+      continue;
+    }
+    content[key] = {
+      kind: 'node',
+      scene: record.scene,
+      node: {
+        type: first.node.type,
+        id: boxOf(id),
+        z: first.node.z,
+        center: first.node.center,
+        size: first.node.size,
+        label: title,
+        icon: { type: icon },
+        data: {},
+      },
+    };
+    added++;
+  }
+  ADDED.set(content, [...(ADDED.get(content) ?? []), ...additions.map(({ id }) => id)]);
+  return added;
 };
 
 /**
@@ -1711,6 +1761,7 @@ export const seedStudioSlide =
       balance = false,
       gap,
       columns = [],
+      add = [],
       unlink = [],
       relink = [],
       links = 'deck',
@@ -1743,6 +1794,8 @@ export const seedStudioSlide =
       frames?: readonly string[];
       /** The slide's own columns, each a list of card ids ({@link placeColumns}). */
       columns?: readonly (readonly string[])[];
+      /** Cards the slide draws that the deck did not ({@link addCards}). */
+      add?: readonly StudioAddition[];
       /** Links the slide does not draw, as the pair of cards they join ({@link rewireLinks}). */
       unlink?: readonly (readonly [string, string])[];
       /** Links the slide aims at another card: the pair they join, then the card they end on instead. */
@@ -1766,6 +1819,7 @@ export const seedStudioSlide =
       SceneHandler,
     );
     promoteCards(content, model, remap);
+    addCards(content, model, add);
     rewireLinks(content, unlink, relink);
     styleText(content, model);
     styleFrames(content, model);

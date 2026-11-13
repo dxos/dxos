@@ -58,6 +58,8 @@ export type StudioSlide = {
   frames?: readonly string[];
   /** The slide's own columns, each a list of card ids. */
   columns?: readonly (readonly string[])[];
+  /** Cards the slide draws that the deck did not. */
+  add?: readonly { id: string; title: string; icon: string }[];
   /** Links the slide does not draw, as the pair of cards they join. */
   unlink?: readonly (readonly [string, string])[];
   /** Links the slide aims at another card: the pair they join, then the card they end on instead. */
@@ -96,7 +98,17 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     uniform: true,
     links: 'ortho',
     gap: 96,
-    columns: [['group', 'organization', 'transaction'], ['person'], ['project', 'task', 'event', 'message']],
+    // Two more a person is party to, and the trip a travel booking makes.
+    add: [
+      { id: 'space', title: 'Space', icon: 'cube-focus' },
+      { id: 'role', title: 'Role', icon: 'identification-badge' },
+      { id: 'trip', title: 'Trip', icon: 'airplane-tilt' },
+    ],
+    columns: [
+      ['group', 'organization', 'space', 'role', 'transaction'],
+      ['person'],
+      ['project', 'task', 'event', 'trip', 'message'],
+    ],
     // What a person attends and what a person is assigned already say how an event and a task meet.
     unlink: [['event', 'task']],
     // A project belongs to the group that runs it, not to the organization above it.
