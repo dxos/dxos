@@ -431,6 +431,11 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
       carries no drag payload (`ToolDef.drawn`, `toolDragData2D`, `ToolsPanel`).
+- [ ] **A context menu that knows what was pressed** (user, 2026-11-13): the right-click menu offers what fits the
+      shape, and the part of it, under the pointer, ahead of the commands every element has. First case: a right
+      click on the end of a line offers that end's marker (arrow, circle, triangle, none). Others to decide as it is
+      designed: a vertex (delete, corner or smooth), a segment (add a vertex, bend or straighten), a hull (Perimeter
+      or Box), a solid (its operands back).
 - [ ] **Drawing DSL data binding** (user, 2026-11-12): a `.dx` drawing names a data file (a JSON object) or holds
       a JSON object of its own, and a custom shape binds its fields to that data by JSONPath; e.g. the Graph shape
       draws the graph the data describes. Not designed yet: where the data is declared, how a bind is written
