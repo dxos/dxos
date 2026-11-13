@@ -6,6 +6,12 @@ version: 0.1.0
 
 Spreadsheet plugin for `DXOS` Composer — a full-featured grid backed by ECHO for local-first, real-time collaborative data entry, formula evaluation, and structured data display.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.space: Following a peer reveals their place in a sheet without moving the focused cell.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -20,6 +26,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `decision`  | `org.dxos.mdl.decision@1.0`    |
+| `uses`      | `dxos.spec.core/uses`         |
 
 ## Types
 
@@ -608,7 +615,7 @@ decision D-7: The sheet publishes the anchor of its cell selection to the `ViewL
 ```
 
 ```mdl
-decision D-8: With `follow`, the reveal scrolls the anchor's first cell to the top left and leaves the focused cell and the comment highlight alone, for following a peer (plugin-space F-8.20). Fills in [D-7].
+decision D-8: With `follow`, the reveal scrolls the anchor's first cell to the top left and leaves the focused cell and the comment highlight alone, for following a peer (org.dxos.plugin.space#F-8.20). Fills in [D-7].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah

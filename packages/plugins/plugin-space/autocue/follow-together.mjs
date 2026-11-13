@@ -213,6 +213,7 @@ export const steps = [
     setup: true,
     run: async ({ peers: { alice, bob, carol } }) => {
       const { page } = alice;
+      const initialWorkspace = workspaceOf(page);
       await page.getByTestId('spacePlugin.addSpace').click();
       await page.getByTestId('spacePlugin.createSpace').click();
       const save = page.getByTestId('create-space-dialog').getByTestId('save-button');
@@ -221,6 +222,8 @@ export const steps = [
       await save.click();
       await page.getByTestId('create-space-form').waitFor({ state: 'detached', timeout: TIMEOUT });
       await page.getByText(SPACE).first().waitFor({ timeout: TIMEOUT });
+      // The space's name can show in the rail before Alice's page moves to it.
+      await waitFor(() => workspaceOf(page) !== initialWorkspace, { what: 'Alice to open the new space' });
 
       await createDocument(page, PLAN, `# Launch plan\n\n${PLAN_TEXT}`);
       await createDocument(page, NOTES, '# Notes\n\nQuestions to settle before launch.\n');

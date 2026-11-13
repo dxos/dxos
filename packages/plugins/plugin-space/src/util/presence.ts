@@ -524,23 +524,33 @@ export const getFollowGroup = ({
         .map(([session]) => ({ identityKey: peer, sessionId: session })),
     );
 
+  // A follow of the person tracks whichever of their sessions moved last, as `getPeerFocus` resolves it.
+  const trackedSession = (target: FollowingTarget) =>
+    target.sessionId ?? getPeerFocus(viewersByObject, spaceId, target.identityKey, now)?.sessionId;
+
   if (following?.spaceId === spaceId) {
-    const leaderSessionId =
-      following.sessionId ?? getPeerFocus(viewersByObject, spaceId, following.identityKey, now)?.sessionId;
+    const leaderSessionId = trackedSession(following);
     return {
       spaceId,
       leader: following.identityKey,
       ...(leaderSessionId && { leaderSessionId }),
       leading: false,
-      followers: followersOf(
-        (target) =>
+      followers: followersOf((target) => {
+        const tracked = trackedSession(target);
+        return (
           target.identityKey === following.identityKey &&
-          (target.sessionId === undefined || leaderSessionId === undefined || target.sessionId === leaderSessionId),
-      ),
+          (tracked === undefined || leaderSessionId === undefined || tracked === leaderSessionId)
+        );
+      }),
     };
   }
 
-  const followers = followersOf((target) => isFollowTargetOf(target, identityKey, sessionId));
+  const followers = followersOf((target) => {
+    const tracked = trackedSession(target);
+    return tracked === undefined
+      ? isFollowTargetOf(target, identityKey, sessionId)
+      : target.identityKey === identityKey && tracked === sessionId;
+  });
   return followers.length > 0
     ? { spaceId, leader: identityKey, leaderSessionId: sessionId, leading: true, followers }
     : undefined;

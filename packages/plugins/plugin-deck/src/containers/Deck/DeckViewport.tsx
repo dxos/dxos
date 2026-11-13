@@ -55,6 +55,7 @@ import { DeckNamespace } from '../../namespace.ts';
 import { Navigation } from '../../url/index.ts';
 import {
   findAttendedPlank,
+  getFrontPlankIndex,
   getRenderedPlanks,
   isCompanionOpen,
   isCompanionShown,
@@ -875,14 +876,7 @@ const useFoldedPlanks = ({
       });
 
       const offscreen = (rect: DOMRect) => rect.right <= vpRect.left || rect.left >= vpRect.right;
-      // The front plank is the first with at least half its width in view; a plank that slid off the left edge
-      // without folding only leaves a sliver.
-      const frontIndex = tiles.findIndex((_, index) => {
-        const rect = rects[index];
-        return (
-          !folded[index] && Math.min(rect.right, vpRect.right) - Math.max(rect.left, vpRect.left) >= rect.width / 2
-        );
-      });
+      const frontIndex = getFrontPlankIndex(rects, vpRect, folded);
       onFront(tiles[frontIndex]?.getAttribute('data-object-id') ?? undefined, plankIds);
 
       // A plank the user asked to see (a spine click, or a navigation) is focused as soon as the scroll

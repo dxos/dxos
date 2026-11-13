@@ -95,6 +95,8 @@ export default Capability.makeModule(
     let shown: Shown | undefined;
     let lostSince: number | undefined;
     let navigating: Fiber.Fiber<void> | undefined;
+    // Reveals still running when a follow stops would otherwise scroll the follower's view afterwards.
+    const revealing = new Set<Fiber.Fiber<void>>();
 
     const isFollowing = () => registry.get(ephemeralAtom).following !== undefined;
 
@@ -126,11 +128,13 @@ export default Capability.makeModule(
         return false;
       }
 
-      Effect.runFork(
+      const fiber = Effect.runFork(
         invoke(locator.reveal, { subject: path, anchor, follow: true }).pipe(
           Effect.catch((err) => Effect.sync(() => log.warn('follow reveal failed', { err }))),
         ),
       );
+      revealing.add(fiber);
+      fiber.addObserver(() => revealing.delete(fiber));
       return true;
     };
 
@@ -206,6 +210,10 @@ export default Capability.makeModule(
           Effect.runFork(Fiber.interrupt(navigating));
           navigating = undefined;
         }
+        for (const fiber of revealing) {
+          Effect.runFork(Fiber.interrupt(fiber));
+        }
+        revealing.clear();
         shown = undefined;
         lostSince = undefined;
         return;
@@ -383,6 +391,7 @@ export default Capability.makeModule(
         if (navigating) {
           yield* Fiber.interrupt(navigating);
         }
+        yield* Fiber.interruptAll(revealing);
       }),
     );
     return [];

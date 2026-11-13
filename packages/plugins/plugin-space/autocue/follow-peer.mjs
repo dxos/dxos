@@ -198,15 +198,11 @@ const createDocument = async (page, name, text) => {
     await dialog.getByTestId('save-button').click();
     await form.waitFor({ state: 'detached', timeout: TIMEOUT });
   }
-  // A document is created at once as "New document"; wait for its plank to replace the last one before typing,
-  // then rename it through its navtree actions.
+  // A document is created at once as "New document"; wait for its plank to replace the last one, then rename it
+  // through its navtree actions before typing, since its first heading would replace that label.
   const untitled = objectLink(page, 'New document');
   await untitled.waitFor({ timeout: TIMEOUT });
   await plank(page).getByText('New document').first().waitFor({ timeout: TIMEOUT });
-  await textbox(page).waitFor({ timeout: TIMEOUT });
-  await textbox(page).fill(text);
-  // `fill` leaves the whole text selected, which the other peer would see as Alice's selection.
-  await page.keyboard.press('ControlOrMeta+Home');
   {
     await untitled.hover();
     await untitled
@@ -225,6 +221,10 @@ const createDocument = async (page, name, text) => {
     }
   }
   await objectLink(page, name).waitFor({ timeout: TIMEOUT });
+  await textbox(page).waitFor({ timeout: TIMEOUT });
+  await textbox(page).fill(text);
+  // `fill` leaves the whole text selected, which the other peer would see as Alice's selection.
+  await page.keyboard.press('ControlOrMeta+Home');
   await clearChrome({ page });
 };
 
@@ -254,6 +254,7 @@ export const steps = [
     setup: true,
     run: async ({ peers: { alice, bob } }) => {
       const { page } = alice;
+      const initialWorkspace = workspaceOf(page);
       await page.getByTestId('spacePlugin.addSpace').click();
       await page.getByTestId('spacePlugin.createSpace').click();
       const save = page.getByTestId('create-space-dialog').getByTestId('save-button');
@@ -262,6 +263,8 @@ export const steps = [
       await save.click();
       await page.getByTestId('create-space-form').waitFor({ state: 'detached', timeout: TIMEOUT });
       await page.getByText(SPACE).first().waitFor({ timeout: TIMEOUT });
+      // The space's name can show in the rail before Alice's page moves to it.
+      await waitFor(() => workspaceOf(page) !== initialWorkspace, { what: 'Alice to open the new space' });
 
       await createDocument(page, AGENDA, '# Agenda\n\nWalk through the launch plan together.\n');
       await createDocument(page, PLAN, `# Launch plan\n\n${PLAN_TEXT}`);

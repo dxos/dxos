@@ -373,6 +373,33 @@ describe('getFollowGroup', () => {
     expect(group && [...getFollowGroupMembers(group, 'leader')]).toEqual(['bob', 'carol']);
   });
 
+  test('a follower of the person counts only in the group of the session they track', ({ expect }) => {
+    // The leader's l1 moved last, so Bob, who follows the leader as a person, tracks l1; Carol follows l2 itself.
+    const twoSessions = view(view(viewersByObject, 'leader', 'l2', now - 1_000), 'leader', 'l1', now);
+    const following = {
+      [spaceId]: { bob: { b1: { identityKey: 'leader' } }, carol: { c1: { identityKey: 'leader', sessionId: 'l2' } } },
+    };
+    const carolGroup = getFollowGroup({
+      spaceId,
+      identityKey: 'carol',
+      sessionId: 'c1',
+      following: { spaceId, identityKey: 'leader', sessionId: 'l2' },
+      peerFollowing: following,
+      viewersByObject: twoSessions,
+      now,
+    });
+    expect(carolGroup?.followers).toEqual([]);
+    const l2Group = getFollowGroup({
+      spaceId,
+      identityKey: 'leader',
+      sessionId: 'l2',
+      peerFollowing: following,
+      viewersByObject: twoSessions,
+      now,
+    });
+    expect(l2Group?.followers).toEqual([{ identityKey: 'carol', sessionId: 'c1' }]);
+  });
+
   test('a follower sees its leader and the other followers', ({ expect }) => {
     const group = getFollowGroup({
       spaceId,

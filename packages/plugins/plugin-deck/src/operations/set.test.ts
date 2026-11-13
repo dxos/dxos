@@ -39,6 +39,17 @@ describe('LayoutOperation.Set', () => {
     expect(await setDeck(harness, false)).toEqual({ active: PLANKS, scrollIntoView: undefined });
   });
 
+  test('`focus: false` clears a scroll intent left pending by an earlier navigation', async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(), DeckPlugin.make()] });
+    await harness.runPromise(Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: WORKSPACE }));
+    const registry = harness.get(Capabilities.AtomRegistry);
+    const ephemeralAtom = harness.get(DeckCapabilities.EphemeralState);
+    registry.update(ephemeralAtom, (ephemeral) => ({ ...ephemeral, scrollIntoView: { id: PLANKS[1] } }));
+
+    await harness.runPromise(Operation.invoke(LayoutOperation.Set, { subject: PLANKS, focus: false }));
+    expect(registry.get(ephemeralAtom).scrollIntoView).toBeUndefined();
+  });
+
   test('a sliding deck reports a front only while it was measured against the planks it shows', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DocsPlugin(), DeckPlugin.make()] });
     const registry = harness.get(Capabilities.AtomRegistry);
