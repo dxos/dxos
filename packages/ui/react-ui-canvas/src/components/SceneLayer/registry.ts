@@ -247,6 +247,19 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: { width: 12, height: 12 },
   },
+  // A tool rather than a type of its own: the line it draws is a polyline whose every segment is bent.
+  spline: {
+    ...strokeTool,
+    name: 'Spline',
+    icon: 'ph--bezier-curve--regular',
+    key: 'U',
+    createFromPoints: (props, points, closed) => ({
+      ...createNode({ type: 'polyline', ...props }),
+      points: [...points],
+      ...(closed ? { params: { closed } } : {}),
+    }),
+    curved: true,
+  },
   // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
   freehand: {
     ...strokeTool,

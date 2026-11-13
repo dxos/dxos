@@ -387,6 +387,7 @@ const CanvasEngine = ({
     onPointContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
     deleteVertex,
     setDrag,
     toScene,
@@ -623,6 +624,7 @@ const CanvasEngine = ({
               onPointContextMenu={onPointContextMenu}
               onVertexPointerDown={onVertexPointerDown}
               onVertexMidpointPointerDown={onVertexMidpointPointerDown}
+              onBendPointerDown={onBendPointerDown}
               removePoint={removePoint}
               menu={menu}
               closeMenu={closeMenu}

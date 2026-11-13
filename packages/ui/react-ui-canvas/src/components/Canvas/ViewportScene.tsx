@@ -56,6 +56,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
     onPointContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
   } = useCanvasGesture('Canvas.Viewport');
   const registry = useRegistry();
   const tools = useCanvasTools('Canvas.Viewport');
@@ -160,6 +161,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           vertexEditing={editing?.kind === 'vertices' ? editing : undefined}
           onVertexPointerDown={onVertexPointerDown}
           onVertexMidpointPointerDown={onVertexMidpointPointerDown}
+          onBendPointerDown={onBendPointerDown}
         />
       )}
       {overlay}

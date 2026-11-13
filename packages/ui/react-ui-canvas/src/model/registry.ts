@@ -103,6 +103,11 @@ export type NodeDef = {
    */
   createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
   /**
+   * The line a type drawn vertex by vertex makes is a curve through the points placed: every segment lands bent, with
+   * a control to drag in its edit mode.
+   */
+  curved?: boolean;
+  /**
    * The tool draws in one stroke rather than vertex by vertex: it samples the pointer while it is pressed, and
    * `createFromPoints` makes the node from the samples when it is released. `'shape'` reads the stroke first: one
    * drawn round a shape the canvas has (a rectangle, an ellipse, a triangle, a diamond) lands as that shape on the

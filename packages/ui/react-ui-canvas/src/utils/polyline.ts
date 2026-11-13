@@ -47,17 +47,47 @@ export const parabolaPoint = (from: Point, control: Point, to: Point, share: num
   };
 };
 
+/** The point `share` of the way along the cubic from `from` to `to`, leaving toward `control` and arriving from `second`. */
+export const cubicPoint = (from: Point, control: Point, second: Point, to: Point, share: number): Point => {
+  const rest = 1 - share;
+  const [head, out, back, tail] = [rest ** 3, 3 * rest ** 2 * share, 3 * rest * share ** 2, share ** 3];
+  return {
+    x: head * from.x + out * control.x + back * second.x + tail * to.x,
+    y: head * from.y + out * control.y + back * second.y + tail * to.y,
+  };
+};
+
+/** The point `share` of the way along a bent segment from `from` to `to`. */
+export const bendPoint = (from: Point, { control, second }: PolylineBend, to: Point, share: number): Point =>
+  second ? cubicPoint(from, control, second, to, share) : parabolaPoint(from, control, to, share);
+
+/** How finely a cubic is walked to find how far out it reaches. */
+const CUBIC_STEPS = 24;
+
 /** The points a bent segment reaches furthest out on each axis, which its ends alone do not bound. */
-const bendReach = (points: readonly Point[], { segment, control }: PolylineBend): Point[] => {
-  const from = points[segment];
-  const to = points[(segment + 1) % points.length];
+const bendReach = (points: readonly Point[], bend: PolylineBend): Point[] => {
+  const from = points[bend.segment];
+  const to = points[(bend.segment + 1) % points.length];
   if (!from || !to) {
     return [];
+  }
+  const { control, second } = bend;
+  if (second) {
+    return Array.from({ length: CUBIC_STEPS - 1 }, (_, step) =>
+      cubicPoint(from, control, second, to, (step + 1) / CUBIC_STEPS),
+    );
   }
   return [...turning(from.x, control.x, to.x), ...turning(from.y, control.y, to.y)].map((share) =>
     parabolaPoint(from, control, to, share),
   );
 };
+
+/** A bend with each of its controls put through `place`. */
+const placeBend = ({ segment, control, second }: PolylineBend, place: (point: Point) => Point): PolylineBend => ({
+  segment,
+  control: place(control),
+  ...(second ? { second: place(second) } : {}),
+});
 
 /**
  * The frame of a polyline drawn through scene `points` and those points in its unit space (0..1 of the frame, origin
@@ -86,7 +116,7 @@ export const polylineFrame = (
   return {
     bounds: { x, y, width, height },
     points: points.map(place),
-    bends: bends.map(({ segment, control }) => ({ segment, control: place(control) })),
+    bends: bends.map((bend) => placeBend(bend, place)),
   };
 };
 
@@ -129,52 +159,142 @@ const inScene = ({ center, size, rotation }: VertexShape, { x, y }: Point): Poin
 
 /** A polyline's bends with their controls in scene coordinates, as `polylineVertices` gives its vertices. */
 export const polylineBends = (node: VertexShape): PolylineBend[] =>
-  (node.bends ?? []).map(({ segment, control }) => ({ segment, control: inScene(node, control) }));
+  (node.bends ?? []).map((bend) => placeBend(bend, (point) => inScene(node, point)));
+
+const between = (from: Point, to: Point): Point => ({ x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 });
 
 /**
- * `bends` once a vertex is put in at `index`: the segment it splits is two straight ones, and those after it are one
+ * Where the line from `from` along `along` meets the line from `to` along `into`, with how far along each it is (in
+ * lengths of that direction); none where the two run side by side.
+ */
+const meet = (
+  from: Point,
+  along: Point,
+  to: Point,
+  into: Point,
+): { point: Point; out: number; back: number } | undefined => {
+  const cross = along.x * into.y - along.y * into.x;
+  if (Math.abs(cross) < 1e-9) {
+    return undefined;
+  }
+  const [dx, dy] = [to.x - from.x, to.y - from.y];
+  const out = (dx * into.y - dy * into.x) / cross;
+  const back = (dx * along.y - dy * along.x) / cross;
+  return { point: { x: from.x + out * along.x, y: from.y + out * along.y }, out, back };
+};
+
+/**
+ * `bends` once a vertex is put in at `index` of scene `vertices`, on the curve: a bent segment it splits is two bent
+ * ones that draw the same curve (a curve cut at its middle is two of its kind), and the bends after it are one
  * further on.
  */
-export const bendsAfterInsert = (bends: readonly PolylineBend[], index: number): PolylineBend[] =>
-  bends
-    .filter(({ segment }) => segment !== index - 1)
-    .map((bend) => (bend.segment >= index ? { ...bend, segment: bend.segment + 1 } : bend));
+export const bendsAfterInsert = (
+  bends: readonly PolylineBend[],
+  index: number,
+  vertices: readonly Point[],
+): PolylineBend[] =>
+  bends.flatMap((bend): PolylineBend[] => {
+    if (bend.segment !== index - 1) {
+      return [bend.segment >= index ? { ...bend, segment: bend.segment + 1 } : bend];
+    }
+    const from = vertices[bend.segment];
+    const to = vertices[(bend.segment + 1) % vertices.length];
+    const { control, second } = bend;
+    if (!second) {
+      return [
+        { segment: bend.segment, control: between(from, control) },
+        { segment: bend.segment + 1, control: between(control, to) },
+      ];
+    }
+    // A cubic cut at its middle: each half's controls are midway along the frame of the whole, and midway again.
+    const [out, across, back] = [between(from, control), between(control, second), between(second, to)];
+    return [
+      { segment: bend.segment, control: out, second: between(out, across) },
+      { segment: bend.segment + 1, control: between(across, back), second: back },
+    ];
+  });
 
 /**
- * `bends` once the vertex at `index` of `count` is taken out: the two segments that met there are one straight one,
- * and those after it are one nearer.
+ * `bends` once the vertex at `index` of scene `vertices` is taken out: the two segments that met there are one, bent
+ * where either was, which leaves its first point as the one did and arrives at its last as the other did; the bends
+ * after it are one nearer.
  */
-export const bendsAfterDelete = (bends: readonly PolylineBend[], index: number, count: number): PolylineBend[] =>
-  bends
-    .filter(({ segment }) => segment !== index && segment !== (index - 1 + count) % count)
+export const bendsAfterDelete = (
+  bends: readonly PolylineBend[],
+  index: number,
+  vertices: readonly Point[],
+): PolylineBend[] => {
+  const count = vertices.length;
+  const before = (index - 1 + count) % count;
+  const [arriving, leaving] = [
+    bends.find(({ segment }) => segment === before),
+    bends.find(({ segment }) => segment === index),
+  ];
+  const [from, to] = [vertices[before], vertices[(index + 1) % count]];
+  // Where the joined segment arrives from: a cubic's second control, or a parabola's one.
+  const last = leaving?.second ?? leaving?.control;
+  const cubic = arriving?.second !== undefined || leaving?.second !== undefined;
+  const lone = (arriving ?? leaving)?.control;
+  const joined: Pick<PolylineBend, 'control' | 'second'> | undefined = cubic
+    ? { control: arriving?.control ?? from, second: last ?? to }
+    : arriving && last
+      ? {
+          // Two parabolas are one whose control is where the ways out of the two far ends meet.
+          control:
+            meet(from, { x: arriving.control.x - from.x, y: arriving.control.y - from.y }, to, {
+              x: last.x - to.x,
+              y: last.y - to.y,
+            })?.point ?? between(arriving.control, last),
+        }
+      : lone
+        ? { control: lone }
+        : undefined;
+  const rest = bends
+    .filter(({ segment }) => segment !== index && segment !== before)
     .map((bend) => (bend.segment > index ? { ...bend, segment: bend.segment - 1 } : bend));
+  // The joined segment leaves the vertex before the one taken out; the first of a closed line gone, that is the last.
+  const segment = index === 0 ? count - 2 : before;
+  return joined ? [...rest, { segment, ...joined }].sort((left, right) => left.segment - right.segment) : rest;
+};
+
+/**
+ * A bend for every segment of a line through scene `points`, so the line runs through them as one curve: each
+ * segment is a cubic that leaves its first point along the way from the point before it to the one after, and
+ * arrives at its last along that point's way (a Catmull-Rom spline). The end of an open line has one neighbour,
+ * which stands in for both.
+ */
+export const smoothBends = (points: readonly Point[], closed = false): PolylineBend[] => {
+  const count = points.length;
+  const loop = closed && count > 2;
+  const at = (index: number) => points[loop ? (index + count) % count : Math.min(Math.max(index, 0), count - 1)];
+  return Array.from({ length: Math.max(0, loop ? count : count - 1) }, (_, segment) => {
+    const [before, from, to, after] = [at(segment - 1), at(segment), at(segment + 1), at(segment + 2)];
+    return {
+      segment,
+      control: { x: from.x + (to.x - before.x) / 6, y: from.y + (to.y - before.y) / 6 },
+      second: { x: to.x - (after.x - from.x) / 6, y: to.y - (after.y - from.y) / 6 },
+    };
+  });
+};
 
 /**
  * The `update` values that put a polyline's vertices at scene `vertices`: its frame refitted to them in its own axes
  * (each side at least `minimum`) and turned as before, and its points renormalised to that frame. Its bends stay
- * where they are in the scene; one vertex more or fewer than it has is the one put in or taken out `at` that index.
+ * where they are in the scene unless `bends` gives them, as it must where the line has a vertex more or fewer.
  */
 export const refitPolyline = (
   node: VertexShape,
   vertices: readonly Point[],
   minimum = 0,
-  at?: number,
+  bends: readonly PolylineBend[] = polylineBends(node),
 ): Pick<PolylineNode, 'center' | 'size' | 'points' | 'bends'> | undefined => {
   const rotation = node.rotation ?? 0;
   const unturned = (point: Point) => turn(point, node.center, -rotation);
-  const count = node.points.length;
-  const kept = polylineBends(node);
-  const bends =
-    at === undefined || vertices.length === count
-      ? kept
-      : vertices.length > count
-        ? bendsAfterInsert(kept, at)
-        : bendsAfterDelete(kept, at, count);
   // Fitted unturned about the old centre, so a rotated line keeps its rotation rather than growing a tilted frame.
   const frame = polylineFrame(
     vertices.map(unturned),
     minimum,
-    bends.map(({ segment, control }) => ({ segment, control: unturned(control) })),
+    bends.map((bend) => placeBend(bend, unturned)),
   );
   if (!frame) {
     return undefined;
@@ -185,17 +305,25 @@ export const refitPolyline = (
     size: { width, height },
     points: frame.points,
     // Written only where the line has any, so a line of straight segments stays as it was stored.
-    ...(node.bends !== undefined ? { bends: frame.bends } : {}),
+    ...(node.bends !== undefined || frame.bends.length > 0 ? { bends: frame.bends } : {}),
   };
 };
 
-/** Each segment's midpoint with the index a vertex inserted there takes; a closed line's closing segment too. */
-export const polylineMidpoints = (vertices: readonly Point[], closed: boolean): { index: number; point: Point }[] => {
+/**
+ * Each segment's midpoint with the index a vertex inserted there takes; a closed line's closing segment too. A
+ * segment of `bends` has its midpoint on its curve, where a vertex put in leaves the curve as it was.
+ */
+export const polylineMidpoints = (
+  vertices: readonly Point[],
+  closed: boolean,
+  bends: readonly PolylineBend[] = [],
+): { index: number; point: Point }[] => {
   const segments = closed && vertices.length >= 3 ? vertices.length : vertices.length - 1;
   return Array.from({ length: Math.max(0, segments) }, (_, index) => {
     const from = vertices[index];
     const to = vertices[(index + 1) % vertices.length];
-    return { index: index + 1, point: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 } };
+    const bend = bends.find(({ segment }) => segment === index);
+    return { index: index + 1, point: bend ? bendPoint(from, bend, to, 0.5) : between(from, to) };
   });
 };
 
@@ -289,15 +417,19 @@ export const polylinePath = (
   const place = ({ x, y }: Point): Point => ({ x: inset + x * width, y: inset + y * height });
   if (bends.length > 0 && points.length > 1) {
     // Every vertex is kept, a repeated one too: a bend names its segment by the index of the point it leaves.
-    const controls = new Map(bends.map(({ segment, control }) => [segment, place(control)]));
+    const curves = new Map(bends.map((bend) => [bend.segment, placeBend(bend, place)]));
     const vertices = points.map(place);
     // Two vertices close into a shape where a bend holds the two runs apart: a lens, or a crescent.
     const loop = closed && vertices.length > 1;
     const to = ({ x, y }: Point) => `${round(x)} ${round(y)}`;
     const segments = Array.from({ length: loop ? vertices.length : vertices.length - 1 }, (_, index) => {
-      const control = controls.get(index);
+      const curve = curves.get(index);
       const end = vertices[(index + 1) % vertices.length];
-      return control ? `Q ${to(control)}, ${to(end)}` : `L ${to(end)}`;
+      return curve?.second
+        ? `C ${to(curve.control)}, ${to(curve.second)}, ${to(end)}`
+        : curve
+          ? `Q ${to(curve.control)}, ${to(end)}`
+          : `L ${to(end)}`;
     });
     return [`M ${to(vertices[0])}`, ...segments, ...(loop ? ['Z'] : [])].join(' ');
   }

@@ -396,11 +396,17 @@ export const PolylineParams = Schema.Struct({
 export type PolylineParams = Schema.Schema.Type<typeof PolylineParams>;
 
 /**
- * A segment of a polyline that runs as a parabola rather than straight: `segment` is the index of the point it leaves
- * (a closed line's last runs back to the first), and `control` is where its two end tangents meet, in the frame's unit
- * space as the points are, though it may lie outside the frame.
+ * A segment of a polyline that runs as a curve rather than straight: `segment` is the index of the point it leaves
+ * (a closed line's last runs back to the first). With `control` alone it is a parabola, the control being where its
+ * two end tangents meet; with `second` too it is a cubic, which leaves its first point toward `control` and arrives
+ * at its last from `second`, so it can bow one way and then the other. Both are in the frame's unit space as the
+ * points are, though they may lie outside the frame.
  */
-export const PolylineBend = Schema.Struct({ segment: Schema.Number, control: Point });
+export const PolylineBend = Schema.Struct({
+  segment: Schema.Number,
+  control: Point,
+  second: Schema.optional(Point),
+});
 export type PolylineBend = Schema.Schema.Type<typeof PolylineBend>;
 
 /**

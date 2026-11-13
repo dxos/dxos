@@ -46,13 +46,14 @@ describe('toolGroups', () => {
     expect(groups.map((group) => group.name)).toEqual([TOOLS_GROUP, CREATE_GROUP, CONTAINERS_GROUP, EXTENSIONS_GROUP]);
     expect(types(CONTAINERS_GROUP)).toEqual(['hull', 'view']);
     expect(types(EXTENSIONS_GROUP)).toEqual(['card']);
-    // Draw is a tool beside the polyline, which is the shape it makes.
+    // Spline and Draw are tools beside the polyline, which is the shape they make.
     expect(types(CREATE_GROUP)).toEqual([
       'rect',
       'ellipse',
       'polygon',
       'cloud',
       'polyline',
+      'spline',
       'freehand',
       'freehandShape',
       'note',
@@ -60,16 +61,19 @@ describe('toolGroups', () => {
     ]);
   });
 
-  test('the two tools that draw in one stroke share one flyout, after the polyline', () => {
+  test('the two tools that draw in one stroke share one flyout, after the polyline and the spline', () => {
     const capabilities = { create: true, link: true, update: true, delete: true };
     const create = toolGroups(defaultNodeRegistry, defaultLinkRegistry, capabilities).find(
       (group) => group.name === CREATE_GROUP,
     );
     const runs = foldRuns(create?.entries ?? []);
-    const polyline = runs.findIndex(
-      (run) => 'entry' in run && run.entry.tool.kind === 'node' && run.entry.tool.type === 'polyline',
-    );
-    const draw = runs[polyline + 1];
+    const typeAt = (index: number) => {
+      const run = runs[index];
+      return run && 'entry' in run && run.entry.tool.kind === 'node' ? run.entry.tool.type : undefined;
+    };
+    const polyline = runs.findIndex((_, index) => typeAt(index) === 'polyline');
+    expect(typeAt(polyline + 1)).toBe('spline');
+    const draw = runs[polyline + 2];
     expect(draw && 'fold' in draw && draw.fold.name).toBe(DRAW_FOLD);
     expect(
       draw && 'fold' in draw && draw.fold.entries.map((entry) => entry.tool.kind === 'node' && entry.tool.type),

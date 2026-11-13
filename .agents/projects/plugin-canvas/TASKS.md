@@ -385,8 +385,17 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       of the user's examples.
 - [ ] Draw shape: no right-angled triangle or arrow, and a regular pentagon or hexagon lands as a polyline, not a
       polygon.
-- [ ] Polyline `bends`: hit testing, ports and the `.dx` / SVG export treat a bent segment as straight; the vertex
-      editor has no handle for a bend's control, and 3D does not draw one.
+- [x] **Spline tool** (U, after Polyline): `NodeDef.curved` lands a line drawn vertex by vertex with a cubic bend
+      per segment (`smoothBends`, Catmull-Rom); a bend's `second` control makes it a cubic. Vertex edit mode shows
+      each bend's controls (`bend-handle`) and drags them (`Drag` `vertex` with `bend` and `handle`); a vertex put
+      in or taken out keeps the curve (`bendsAfterInsert`, `bendsAfterDelete`). `Draw.stories.tsx` Spline Test.
+- [ ] **Drawing DSL data binding** (user, 2026-11-12): a `.dx` drawing names a data file (a JSON object) or holds
+      a JSON object of its own, and a custom shape binds its fields to that data by JSONPath; e.g. the Graph shape
+      draws the graph the data describes. Not designed yet: where the data is declared, how a bind is written
+      beside the template's `bind=`, and what a shape does when the path resolves to nothing.
+- [ ] Polyline `bends`: hit testing, ports and the `.dx` / SVG export treat a bent segment as straight, and 3D does
+      not draw one. A straight segment has no gesture to bend it, and a spline's two controls at a vertex move
+      apart (no smooth-vertex constraint).
 - [x] Text colour for notes: `style.textHue` / `style.textTone`, a 9 by 3 grid in Properties.
 - [ ] Text colour is offered for notes alone; a shape's label still takes its shape's colour.
 - [x] The icon picker offers the DXOS mark (`dx--dxos--regular`), first in its list.

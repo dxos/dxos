@@ -31,6 +31,7 @@ import {
 } from '@dxos/scene';
 
 import {
+  type BendHandle,
   type CanvasAtoms,
   type ControlPointRef,
   type DocumentEditCommands,
@@ -61,6 +62,8 @@ import {
   type SceneEdit,
   VERTEX_SNAP_PX,
   activeLayer,
+  bendsAfterDelete,
+  bendsAfterInsert,
   between,
   boundsCenter,
   boundsFromPoints,
@@ -85,6 +88,7 @@ import {
   nodesIntersecting,
   nominalSize,
   panBy,
+  polylineBends,
   polylineFrame,
   polylineVertices,
   portAccepts,
@@ -97,6 +101,7 @@ import {
   screenToScene,
   sideToward,
   simplifyPath,
+  smoothBends,
   topOfView,
   updateElement,
 } from '../../utils/index.ts';
@@ -198,6 +203,8 @@ export type PointerMachine = {
   onVertexPointerDown: (node: Node, index: number, event: PointerEvent) => void;
   /** A segment's midpoint in vertex edit mode: pressing it adds a vertex there, `index`, and moves it. */
   onVertexMidpointPointerDown: (node: Node, index: number, point: Point, event: PointerEvent) => void;
+  /** The control of a bent segment in vertex edit mode: dragging it changes how the segment bows. */
+  onBendPointerDown: (node: Node, segment: number, handle: BendHandle, event: PointerEvent) => void;
   /** Removes a vertex of the node in vertex edit mode, unless the node would be left with too few to draw. */
   deleteVertex: (id: NodeId, index: number) => void;
 
@@ -287,7 +294,10 @@ export const usePointerMachine = ({
     (type: NodeType, points: readonly Point[], closed: boolean, stroke = false) => {
       const def = nodeRegistry[type];
       // The frame needs some extent on each axis to scale the line by, so a straight run gets a minor cell.
-      const frame = points.length >= 2 ? polylineFrame(points, minor) : undefined;
+      const shut = closed && points.length >= 3;
+      // A tool that draws a curve bends every segment, so the line runs through its points as one.
+      const frame =
+        points.length >= 2 ? polylineFrame(points, minor, def?.curved ? smoothBends(points, shut) : []) : undefined;
       if (!def?.createFromPoints || !frame) {
         return;
       }
@@ -300,9 +310,15 @@ export const usePointerMachine = ({
           size: { width: bounds.width, height: bounds.height },
         },
         frame.points,
-        closed && points.length >= 3,
+        shut,
       );
-      draw.apply(insertNode({ ...node, layer: activeLayer(scene, registry.get(atoms.layer)) }));
+      draw.apply(
+        insertNode({
+          ...node,
+          ...(frame.bends.length > 0 ? { bends: frame.bends } : {}),
+          layer: activeLayer(scene, registry.get(atoms.layer)),
+        }),
+      );
       if (!stroke) {
         select([node.id]);
         setTool({ kind: 'select' });
@@ -756,7 +772,7 @@ export const usePointerMachine = ({
         node,
         vertices.filter((_, i) => i !== index),
         minor,
-        index,
+        bendsAfterDelete(polylineBends(node), index, vertices),
       );
       if (values) {
         draw.apply(updateElement(id, values));
@@ -776,7 +792,10 @@ export const usePointerMachine = ({
         return;
       }
       registry.set(atoms.editing, { id: node.id, kind: 'vertices', vertex: index });
-      startDrag({ kind: 'vertex', id: node.id, index, points: polylineVertices(node) }, event);
+      startDrag(
+        { kind: 'vertex', id: node.id, index, points: polylineVertices(node), bends: polylineBends(node) },
+        event,
+      );
     },
     [capabilities.update, deleteVertex, registry, atoms.editing, startDrag],
   );
@@ -790,7 +809,37 @@ export const usePointerMachine = ({
       const vertices = polylineVertices(node);
       registry.set(atoms.editing, { id: node.id, kind: 'vertices', vertex: index });
       startDrag(
-        { kind: 'vertex', id: node.id, index, points: [...vertices.slice(0, index), point, ...vertices.slice(index)] },
+        {
+          kind: 'vertex',
+          id: node.id,
+          index,
+          points: [...vertices.slice(0, index), point, ...vertices.slice(index)],
+          bends: bendsAfterInsert(polylineBends(node), index, vertices),
+        },
+        event,
+      );
+    },
+    [capabilities.update, registry, atoms.editing, startDrag],
+  );
+
+  const onBendPointerDown = useCallback(
+    (node: Node, segment: number, handle: BendHandle, event: PointerEvent) => {
+      if (event.button !== 0 || !capabilities.update || !hasVertices(node)) {
+        return;
+      }
+      event.stopPropagation();
+      // No vertex is marked: Delete then takes the node, not a vertex beside the control.
+      registry.set(atoms.editing, { id: node.id, kind: 'vertices' });
+      startDrag(
+        {
+          kind: 'vertex',
+          id: node.id,
+          index: segment,
+          bend: segment,
+          handle,
+          points: polylineVertices(node),
+          bends: polylineBends(node),
+        },
         event,
       );
     },
@@ -1018,10 +1067,18 @@ export const usePointerMachine = ({
           break;
         }
         case 'vertex': {
-          // A vertex lands on the minor grid, as the polyline tool places one.
+          // A vertex lands on the minor grid, as the polyline tool places one; a bend's control too.
           const point = toScene(event);
+          const landed = { x: snap(point.x), y: snap(point.y) };
+          if (current.bend !== undefined) {
+            const bends = current.bends.map((bend) =>
+              bend.segment === current.bend ? { ...bend, [current.handle ?? 'control']: landed } : bend,
+            );
+            setDrag({ ...current, bends });
+            break;
+          }
           const points = [...current.points];
-          points[current.index] = { x: snap(point.x), y: snap(point.y) };
+          points[current.index] = landed;
           setDrag({ ...current, points });
           break;
         }
@@ -1339,9 +1396,10 @@ export const usePointerMachine = ({
           }
           const before = polylineVertices(node);
           const moved =
+            current.bend !== undefined ||
             before.length !== current.points.length ||
             current.points.some((point, index) => point.x !== before[index].x || point.y !== before[index].y);
-          const values = moved ? refitPolyline(node, current.points, minor, current.index) : undefined;
+          const values = moved ? refitPolyline(node, current.points, minor, current.bends) : undefined;
           if (values) {
             draw.apply(updateElement(current.id, values));
           }
@@ -1409,6 +1467,7 @@ export const usePointerMachine = ({
     onPointContextMenu,
     onVertexPointerDown,
     onVertexMidpointPointerDown,
+    onBendPointerDown,
     deleteVertex,
 
     setDrag,

@@ -358,3 +358,66 @@ export const ShapesTest: Story = {
     ]).toEqual([1, 1, 1]);
   },
 };
+
+/**
+ * 1. Press U, then click four points on the canvas and double-click the last: one smooth curve lands through them.
+ * 2. Every segment is a cubic, so the line bows one way and then the other without a corner.
+ * 3. Double-click the curve: each vertex shows a square, and each segment two control points to drag.
+ * 4. Drag a control point: its segment changes, and stays a curve.
+ */
+export const SplineTest: Story = {
+  args: { board: 'shapes' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const frame = view.getBoundingClientRect();
+    const at = ([dx, dy]: readonly [number, number]) => ({
+      clientX: frame.left + frame.width / 2 + dx,
+      clientY: frame.top + frame.height / 2 + dy,
+      button: 0,
+      pointerId: 1,
+    });
+    const press = async (point: readonly [number, number]) => {
+      await fireEvent.pointerMove(view, at(point));
+      await fireEvent.pointerDown(view, at(point));
+      await fireEvent.pointerUp(view, at(point));
+    };
+
+    view.focus();
+    await userEvent.keyboard('u');
+    const points: [number, number][] = [
+      [-240, 240],
+      [-120, 120],
+      [0, 240],
+      [120, 120],
+    ];
+    for (const point of points) {
+      await press(point);
+    }
+    // The band is the curve as it would land.
+    await expect(await canvas.findByTestId('vertex-band-curve')).toBeInTheDocument();
+    await fireEvent.dblClick(view, at(points[3]));
+    await waitFor(() => expect(drawn(canvasElement, 'spline')).toHaveLength(1));
+    const [spline] = drawn(canvasElement, 'spline');
+    await expect(pathOf(spline).match(/C /g)).toHaveLength(3);
+    await expect(pathOf(spline)).not.toContain('L ');
+
+    await fireEvent.dblClick(spline, at([-120, 130]));
+    await waitFor(() => expect(canvas.getAllByTestId('vertex-handle')).toHaveLength(4));
+    await expect(canvas.getAllByTestId('bend-handle')).toHaveLength(6);
+
+    const before = pathOf(spline);
+    const control = canvasElement.querySelector('[data-testid="bend-handle"][data-segment="1"][data-handle="control"]');
+    await expect(control).not.toBeNull();
+    if (control) {
+      const box = control.getBoundingClientRect();
+      const from = { clientX: box.left + box.width / 2, clientY: box.top + box.height / 2, button: 0, pointerId: 1 };
+      await fireEvent.pointerDown(control, from);
+      await fireEvent.pointerMove(view, { ...from, clientX: from.clientX + 36, clientY: from.clientY - 72 });
+      await fireEvent.pointerUp(view, { ...from, clientX: from.clientX + 36, clientY: from.clientY - 72 });
+    }
+    await waitFor(() => expect(pathOf(drawn(canvasElement, 'spline')[0])).not.toBe(before));
+    await expect(pathOf(drawn(canvasElement, 'spline')[0]).match(/C /g)).toHaveLength(3);
+    await expect(canvas.getAllByTestId('bend-handle')).toHaveLength(6);
+  },
+};
