@@ -89,6 +89,15 @@ describe('SlideTheme.Settings', () => {
     expect(['notacolor', 'rgb()', 'oklch( )'].some(SlideTheme.isColor)).toBe(false);
   });
 
+  test('a color function needs its three components, in either syntax', () => {
+    expect(
+      ['rgb(1 2 3)', 'rgb(1,2,3)', 'rgba(1,2,3,0.5)', 'rgb(1 2 3 / 50%)', 'oklch(44.3% 0.11 240.79)'].every(
+        SlideTheme.isColor,
+      ),
+    ).toBe(true);
+    expect(['rgb(1)', 'rgb(+)', 'rgb(1 2)', 'rgb(1 2 3 4 5)'].some(SlideTheme.isColor)).toBe(false);
+  });
+
   test('the theme accent is published separately, for a tone to return to', () => {
     expect(slideThemeStyle({ accent: '#f80' })['--slide-theme-accent']).toBe('#f80');
   });

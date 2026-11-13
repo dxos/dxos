@@ -202,15 +202,26 @@ const NAMED_COLORS = [
   'currentcolor',
 ] as const;
 
+// A number as a color function writes one: optionally signed, optionally a percentage.
+const NUMBER = '[+-]?(?:\\d+\\.?\\d*|\\.\\d+)%?';
+
+// Components separated by commas or spaces, as both syntaxes are current, with an optional alpha after the third.
+const SEPARATOR = '(?:\\s*,\\s*|\\s+)';
+const COLOR_FUNCTION =
+  `(?:rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\(\\s*${NUMBER}${SEPARATOR}${NUMBER}${SEPARATOR}${NUMBER}` +
+  `(?:\\s*[,/]\\s*${NUMBER})?\\s*\\)`;
+
 /**
  * Values reach inline styles, so only plain colors pass: a hex color, one of the named colors, or a color function
- * whose arguments begin with a number. `url(...)`, other functions and empty arguments are rejected.
+ * carrying its three components and an optional alpha. `url(...)`, other functions, and a function whose arguments
+ * are missing or malformed are rejected — a value CSS cannot parse would leave the variable invalid, and the
+ * element would inherit a color rather than fall back to the theme's.
  */
 export const COLOR_PATTERN = new RegExp(
   [
     '^(?:',
     '#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})',
-    '|(?:rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\(\\s*[\\d.+-][\\d\\s.,%/+-]*\\)',
+    `|${COLOR_FUNCTION}`,
     `|(?:${NAMED_COLORS.join('|')})`,
     ')$',
   ].join(''),

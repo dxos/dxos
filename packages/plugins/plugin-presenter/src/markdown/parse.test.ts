@@ -287,6 +287,10 @@ describe('parseSlide', () => {
     expect(empty.frontmatter.code).toBeUndefined();
     expect(empty.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('code') }]);
 
+    const short = parseSlide('---\ncode: "rgb(1)"\n---\n\n# Title');
+    expect(short.frontmatter.code).toBeUndefined();
+    expect(short.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('code') }]);
+
     // The colors CSS does know still pass.
     const valid = parseSlide('---\naccent: "rebeccapurple"\nseparator: "rgb(1 2 3)"\n---\n\n# Title');
     expect(valid.frontmatter.accent).toBe('rebeccapurple');
