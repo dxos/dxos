@@ -5,12 +5,13 @@ version: 0.1.0
 ---
 
 The DXOS docs teach a developer to build on ECHO, then to build apps from plugins with PLEX, using
-Composer as the app those plugins run in. They have six sections: ECHO; HALO, which holds identity, devices and
-space membership; MESH, the peer networking; EDGE, the services DXOS runs; PLEX, which holds the plugin docs and the
-tool chain; and TILE, the design system. ECHO comes first, and `/docs/` opens its Overview page; there is no separate
-docs home [F-16]. Every section has the same shape: Start here, a learning path that builds one thing step by step,
-core concepts, an API group with one page per core namespace, guides, and resources [F-17], [F-18]. MESH and EDGE,
-which apps reach only through ECHO and HALO, keep only Start here, core concepts and resources.
+Composer as the app those plugins run in. They have seven sections: ECHO; HALO, which holds identity, devices and
+space membership; MESH, the peer networking; EDGE, the services DXOS runs, with the compute that runs operations and
+triggers over ECHO; SAGE, the AI layer of models, skills and agents; PLEX, which holds the plugin docs and the tool
+chain; and TILE, the design system. ECHO comes first. `/docs/` is a home page with one card per section, each showing
+the section's hero art and name [F-16]. Every section has the same shape: Start here, a learning path
+that builds one thing step by step, core concepts, an API group with one page per core namespace, guides, and
+resources [F-17], [F-18]. MESH, EDGE and SAGE keep only Start here, core concepts and resources.
 
 This document is the source of truth for what the docs cover and how. Each `page` block gives the page's section,
 place in the sidebar, template and status, a one-line summary, and under `covers:` the points the page must cover.
@@ -87,9 +88,9 @@ template landing: The front door
 template narrative: An argument
   purpose: Explain why, in the order of the Effect page "Why Effect?".
   parts:
-    - Title and one-paragraph answer
+    - Title and one-paragraph answer that pitches the section on its own [D-275]
     - The pattern: the smallest complete example and an anatomy strip of its key signature
-    - Comparison: the same task written without and with ECHO, side by side
+    - Comparison: the same task against the strongest alternative, side by side [D-275]
     - Practical problems: one H3 per problem, each with its mechanism and spec citation
     - Closing: where to go next
 ```
@@ -142,11 +143,33 @@ template stub: A planned page
     - The page's `covers:` list
 ```
 
+```mdl
+template home: The docs home
+  purpose: Show every section at once and route the reader into one.
+  parts:
+    - Title and a short, neutral paragraph on DXOS as a whole, not a list of its sections, with ECHO named as the usual start
+    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-267]
+```
+
 ## Site map
 
 The order of these blocks is the order of the sidebar: section, then group, by first appearance. Routes are
-absolute. A page with status `later` is in scope but not yet in the sidebar. There is no docs home page:
-`/docs/` redirects to ECHO's Overview, the first page of the first section [F-16.5].
+absolute. A page with status `later` is in scope but not yet in the sidebar. The docs home at `/docs/` belongs to
+no section and has no sidebar [F-16.5].
+
+```mdl
+page docs-home: DXOS Docs
+  What DXOS is, and where to start in each of its sections.
+  section: none
+  route: /docs/
+  group: none
+  template: home
+  status: spike
+  covers:
+    - A neutral paragraph under the title on DXOS as a whole: independent pieces, each usable on its own, that build on each other and are stronger together, with ECHO as the usual start [D-267]
+    - The cards in the order ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; where there are four columns, ECHO spans two, so the seven cards fill two rows [D-267]
+    - Each card's art follows the page's theme, as the Overview heroes do [D-247]
+```
 
 ## ECHO
 
@@ -162,7 +185,7 @@ page welcome: Overview
   status: spike
   covers:
     - What ECHO is in one paragraph: a typed, local-first, peer-to-peer object graph for TypeScript
-    - The model in four points: CRDT replication, peers over WebRTC, concurrent writers, offline writes that merge
+    - The model in four points: CRDT replication, peers that sync directly or through a server, concurrent writers, offline writes that merge [D-275]
     - What DXOS is, in two sentences, with ECHO as the lead
     - Spaces hold data and objects are its unit, with links to both concept pages
     - How these docs are organized: the ECHO, HALO and PLEX sections, and in each the learning path, core
@@ -178,8 +201,9 @@ page why-echo: Why ECHO?
   template: narrative
   status: spike
   covers:
+    - Opening: a typed object graph on the user's devices that apps and agents read alike [D-275]
     - Agents need memory they can query, and a schema they can inspect
-    - External data needs one graph to meet in, and plugins code against that graph
+    - External data needs one graph to meet in, and in an app built from plugins every plugin codes against that graph
     - The ECHO pattern: the smallest complete example, then the same task without and with ECHO
     - The practical problems ECHO solves, each with its mechanism and a spec citation
     - How DXOS apps differ from SaaS apps, in the comparison table moved from the old docs home
@@ -1095,29 +1119,29 @@ EDGE's pages cover EDGE as a server and link here [D-222].
 
 ```mdl
 page mesh-overview: Overview
-  What MESH is, and where ECHO and HALO use it.
+  What MESH is, and what ECHO and HALO run over it.
   section: MESH
   route: /docs/mesh/overview/
   group: Start here
   template: concept
   status: spike
   covers:
-    - What MESH is in one paragraph: the networking under ECHO and HALO, which multiplexes transports [D-221]
+    - What MESH is in one paragraph, on its own: devices that share a topic find each other and run protocols over direct links, with several transports at once [D-221], [D-275]
     - A diagram of devices, direct WebRTC links between peers, and EDGE as both the signaling server and a transport
     - A table of where ECHO and HALO use MESH: space swarms for replication, presence, device sync and invitations
     - How these pages are organized, and where to go next: Why MESH?, then Architecture
 ```
 ```mdl
 page why-mesh: Why MESH?
-  Why devices connect to each other directly, and why the same data also goes through EDGE.
+  Why devices connect to each other directly, and why a server stays one of the routes.
   section: MESH
   route: /docs/mesh/why-mesh/
   group: Start here
   template: narrative
   status: spike
   covers:
-    - Direct links give lower latency between nearby devices and keep sync going if EDGE drops; with EDGE replication on, the same changes also go to EDGE, and WebRTC can fall back to a TURN relay [D-249]
-    - EDGE is a transport too: it reaches devices that are rarely online together and peers no direct link reaches
+    - Direct links give lower latency between nearby devices, keep working when the internet or a server is out of reach, and carry data that reaches no server unless WebRTC has to fall back to a TURN relay [D-249], [D-275]
+    - A server is a transport too: it reaches devices that are rarely online together and peers no direct link reaches; in DXOS that server is EDGE, for the spaces that replicate through it
     - Today ECHO replicates each space over both at once, peer links and EDGE (`subductionReplicator`, `feedReplicator`), and the pages say so plainly [D-221]
 ```
 
@@ -1249,7 +1273,7 @@ page edge-overview: Overview
   template: concept
   status: spike
   covers:
-    - EDGE is DXOS's services on Cloudflare Workers, with a Durable Object per identity and per space
+    - EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers, with a Durable Object per identity and per space [D-275]
     - One diagram of devices, EDGE and peers, and what goes over each link
     - A table of where ECHO, HALO, MESH and PLEX use EDGE, each linking its concept page
     - DXOS runs EDGE, and an app points at it with `runtime.services.edge.url`
@@ -1344,16 +1368,71 @@ page edge-identity-services: Identity services
 ```
 ```mdl
 page edge-compute: Compute
-  Functions, triggers, agents and the plugin registry.
+  How EDGE runs work over ECHO objects, with operations, processes and triggers, and where agents and plugins run.
   section: EDGE
   route: /docs/edge/concepts/compute/
   group: Core concepts
   template: concept
   status: spike
   covers:
-    - Functions and triggers: schedule, event and email
-    - Agent processes and their memory, and the AI service
+    - What compute is: typed operations started by people, agents and triggers, that run in the app, in a worker or on EDGE and read and write the space's objects [D-266], [D-275]
+    - The workers and Durable Objects that run operations and fire triggers while no device is online, linking Operations, Processes and Triggers
+    - Where agent processes run on EDGE, and the AI service, linking SAGE's Agents and Models [D-270]
     - Sandbox builds and the plugin registry that PLEX publishing uses
+```
+```mdl
+page edge-operations: Operations
+  A typed action with an input and output schema, invoked by key.
+  section: EDGE
+  route: /docs/edge/concepts/operations/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - `Operation.make` with input and output schemas and a key, and `Operation.withHandler`
+    - The registry and the invoker: how a caller finds an operation by key and runs it
+    - Handler sets, and how a PLEX plugin contributes operations, linking PLEX's page on them
+    - Errors and cancellation
+```
+```mdl
+page edge-processes: Processes
+  One running invocation, with its own services, lifetime and trace.
+  section: EDGE
+  route: /docs/edge/concepts/processes/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The process manager, and one process per running operation
+    - The layer stack: the services a process gets, such as the database, storage and credentials
+    - Local and remote processes: the same operation runs in the app, in a worker or on EDGE, and the app invokes one on EDGE by key [D-271]
+    - Operation code kept as an ECHO object and deployed to EDGE, and the credentials it uses, kept in the space [D-271]
+    - One paragraph on pipelines: an operation that streams a long source, such as a mailbox, uses `@dxos/pipeline` and a saved cursor inside its process [D-272]
+```
+```mdl
+page edge-triggers: Triggers
+  What starts an operation without a person asking.
+  section: EDGE
+  route: /docs/edge/concepts/triggers/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Trigger kinds: schedule, ECHO subscription, email and webhook
+    - A trigger is an ECHO object in the space, so it syncs and is edited like any other object
+    - Where triggers fire: in the app while it is open, and on EDGE while it is not
+```
+```mdl
+page edge-traces: Traces
+  What ran, when and why, kept so people and agents can see it.
+  section: EDGE
+  route: /docs/edge/concepts/traces/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Trace events for each operation's start, end and failure
+    - Where traces are kept, and how an app or an agent reads them
 ```
 
 ### Resources
@@ -1379,7 +1458,7 @@ page edge-glossary: Glossary
   template: reference
   status: spike
   covers:
-    - Durable Object, environment, hub, index, replicator, router, service access and worker
+    - Durable Object, environment, hub, index, replicator, router, service access, worker, operation, handler, invoker, process, layer stack, trigger, pipeline and trace
 ```
 ```mdl
 page edge-llms-txt: llms.txt
@@ -1392,6 +1471,170 @@ page edge-llms-txt: llms.txt
   covers:
     - Links to `/edge/llms.txt`, each EDGE page with its summary and a link to its Markdown
     - Links to `/edge/llms-full.txt`, every EDGE page in one file
+```
+
+## SAGE
+
+SAGE is DXOS's AI layer: models, the skills that tell them how to work, and the agents that act in a space. An agent
+works through the same operations a person invokes, reads and writes the same ECHO objects, and keeps its memory as
+ECHO objects too, so what an agent did is data the user owns. Every page starts from ECHO: the objects an agent can
+see and the operations it can call on them. The section has only Start here, Core concepts and Resources, like MESH,
+[D-266], [D-274].
+
+### Start here
+
+```mdl
+page sage-overview: Overview
+  What SAGE is, and how an agent runs.
+  section: SAGE
+  route: /docs/sage/overview/
+  group: Start here
+  template: concept
+  status: spike
+  covers:
+    - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-275]
+    - One diagram of a chat, the agent's turn, the operations it calls, and the objects they change
+    - A table of where SAGE runs, in Composer's assistant, in agents on EDGE and behind the MCP server, each linking its concept page
+    - After the table, one sentence each on operations as the agent's actions and on memory as objects in the user's spaces [D-275]
+    - Where to go next: Why SAGE?, then Agents
+```
+```mdl
+page why-sage: Why SAGE?
+  What sets SAGE's agents apart from other agent frameworks.
+  section: SAGE
+  route: /docs/sage/why-sage/
+  group: Start here
+  template: narrative
+  status: spike
+  covers:
+    - The pattern: an agent handed a long task that hibernates, delegates, and resumes when its sub-agents report
+    - Comparison: an agent framework with tools and a memory store, against SAGE, row by row, without claiming the others lack tools or memory [D-275]
+    - Practical problems: work that outlives a session, knowing which agent changed what, waking on events without polling a model, one set of actions for people and agents, a spec that people and agents both work from and check against [D-276], choosing any model
+    - Memory the user owns, as one of the practical problems
+    - What SAGE does not do: it does not run the work, which EDGE's compute does, and it does not train models
+```
+
+### Core concepts
+
+```mdl
+page sage-models: Models
+  The model an agent uses, and how DXOS picks and calls it.
+  section: SAGE
+  route: /docs/sage/concepts/models/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The AI service, providers and model resolution
+    - Local and hosted models, and EDGE's AI service
+    - What is sent to a model, and what telemetry records
+```
+```mdl
+page sage-agents: Agents
+  A model in a loop, acting in a space with its own identity.
+  section: SAGE
+  route: /docs/sage/concepts/agents/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An agent as a process: a turn, the operations it calls, then the next turn, linking EDGE's Processes
+    - An agent's identity, linking HALO
+    - Agents in Composer's assistant and on EDGE, and one agent delegating to another
+    - Hosting an outside agent loop, such as the Claude Agent SDK, with its output kept as ECHO objects
+```
+```mdl
+page sage-tools: Operations as tools
+  How an agent sees and calls the operations a person would.
+  section: SAGE
+  route: /docs/sage/concepts/tools/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - An operation's schema and description become the tool the model sees, linking EDGE's Operations
+    - Searching the operations rather than listing all of them
+    - Code mode: the model writes one program against the workspace instead of one tool call per action
+```
+```mdl
+page sage-skills: Skills
+  Instructions an agent loads when a task needs them.
+  section: SAGE
+  route: /docs/sage/concepts/skills/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A skill as instructions plus the operations it brings
+    - How a PLEX plugin contributes skills, linking PLEX
+    - How an agent finds and loads a skill during a turn
+```
+```mdl
+page sage-specs: Specs
+  The contract people and agents both work from, with what to build, who decided it, and how far the code meets it.
+  section: SAGE
+  route: /docs/sage/concepts/specs/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - A spec as `.mdl` text: prose with typed blocks for requirements, operations, features and tests, in the DEUS language [D-276]
+    - Decisions and open questions in the spec's changelog, each attributed to the person or the agent that made it
+    - Reviews: per-item verdicts on how far the code meets the spec, with the commit read and the code as evidence
+    - QA tests whose steps a person can follow and an agent can run, one operation per step
+    - Specs as objects in a project, synced with `.mdl` files in a repository, and the skills that read and review them
+```
+```mdl
+page sage-memory: Memory
+  What an agent keeps between turns, as ECHO objects the user can read.
+  section: SAGE
+  route: /docs/sage/concepts/memory/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - Chats and their messages as ECHO objects
+    - Facts extracted from text, and the goal rules that decide when an agent wakes
+    - Memory syncs and is shared like any other object in the space
+```
+```mdl
+page sage-mcp: MCP
+  Reaching a space's operations and skills from any MCP client.
+  section: SAGE
+  route: /docs/sage/concepts/mcp/
+  group: Core concepts
+  template: concept
+  status: spike
+  covers:
+    - The DXOS MCP server: the tools and prompts it serves from the operation registry
+    - Running it with `dx mcp serve`, and on EDGE
+    - Connecting outside MCP servers, so an agent can call their tools
+```
+
+### Resources
+
+```mdl
+page sage-glossary: Glossary
+  Every SAGE term, defined once.
+  section: SAGE
+  route: /docs/sage/resources/glossary/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Agent, turn, model, provider, tool, skill, instructions, code mode, memory, fact, goal, MCP, spec, decision and review
+```
+```mdl
+page sage-llms-txt: llms.txt
+  The SAGE site map and full text for agents, in the llms.txt format.
+  section: SAGE
+  route: /docs/sage/resources/llms-txt/
+  group: Resources
+  template: reference
+  status: spike
+  covers:
+    - Links to `/sage/llms.txt`, each SAGE page with its summary and a link to its Markdown
+    - Links to `/sage/llms-full.txt`, every SAGE page in one file
 ```
 
 ## PLEX
@@ -1413,7 +1656,7 @@ page app-framework-welcome: Overview
   covers:
     - What PLEX is, in one screen: plugins made of modules that contribute capabilities, and an app that is the plugins it loads
     - Composer as the app built on it: a local-first workspace where everything, including the core UI, is a plugin, so a third-party plugin has the same powers as a built-in one
-    - What ECHO does under it: spaces, typed objects, sync between devices and people, and agents that query the same graph
+    - What a plugin gets for free: its data syncs as ECHO objects, its operations and skills are tools for agents, and TILE gives it the same look as every other plugin [D-275]
     - What a reader can build: anything a built-in plugin can, shown by the demos rather than listed
     - What PLEX apps look like: the four live demos from `/echo`, each with a narrative about the plugins that render it [F-7.10]
     - Where to go next: Why PLEX?, Build with a coding agent, or the learning path
@@ -1972,13 +2215,14 @@ page tile-overview: Overview
 ```
 ```mdl
 page why-tile: Why TILE?
-  Why plugins written by different people look like one app.
+  Why UI written by many hands still looks and behaves like one app.
   section: TILE
   route: /docs/tile/why-tile/
   group: Start here
   template: narrative
   status: spike
   covers:
+    - Opening: an app whose screens are written by many people, with Composer's plugins as the example [D-275]
     - Themed primitives and semantic tokens, so a plugin never picks a raw color and every plugin follows light and dark
     - Composite components built on zag machines, so focus, keyboard and ARIA roles come with the component
     - One size scale, so a toolbar, a menu and a dialog line up without per-component padding
@@ -2625,7 +2869,8 @@ feat F-7: Relationship to dxos.org
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
           Plugins, Blog, Docs); the footer links the same pages, every docs section in the
-          topic switcher's order (ECHO, HALO, MESH, EDGE, PLEX, TILE), GitHub and Discord [D-244]
+          topic switcher's order (ECHO, HALO, MESH, EDGE, SAGE, PLEX, TILE), GitHub and Discord [D-244],
+          [D-269]
 
   req F-7.2:
     when: a reader looks for ECHO material on dxos.org
@@ -2822,7 +3067,8 @@ feat F-16: Docs sections
 
   req F-16.1:
     when: a reader opens the docs
-    then: there are six sections, ECHO, HALO, MESH, EDGE, PLEX and TILE, in that order in the topic switcher
+    then: there are seven sections, ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, in that order in the topic
+          switcher [D-269]
 
   req F-16.2:
     when: a reader looks for HALO
@@ -2840,25 +3086,26 @@ feat F-16: Docs sections
 
   req F-16.5:
     when: a reader opens `/docs/`
-    then: they land on ECHO's Overview page; there is no separate docs home page
+    then: they land on the docs home: the title DXOS Docs, a short neutral paragraph on what DXOS is, and a grid of
+          every section's hero art with its mark and name, in which ECHO spans two columns where there are four; each
+          card links to its section's Overview [D-267]
 
   req F-16.7:
-    when: a reader follows a redirected docs URL, such as `/docs` or an old `/docs/composer/` page
+    when: a reader follows a redirected docs URL, such as an old `/docs/composer/` page
     then: the server answers with a 301 to the new page, so no "Redirecting from" page shows in between; links in the
           site's own navigation point at the destination directly
 
   req F-16.6:
     when: a reader looks at the topic switcher
-    then: each section shows its DXOS brand logotype, the same ones the brand package and the studio site use, with
-          KUBE's for PLEX and a TILE logotype drawn to the same frame; each has no box and takes its label's color, the
-          accent color for the current section
+    then: each section shows its logotype from the brand suite, drawn to one frame and one stroke weight [D-268]; each
+          has no box and takes its label's color, the accent color for the current section
 
   req F-16.9:
     when: a reader moves between dxos.org and the docs
     then: the docs header is one row: the DXOS logo and a Docs link at the same spots as in the site's nav, then the
-          sections as tabs, then search (icon and shortcut only), the social links in the text color and the theme
-          picker; where the sidebar folds into a menu, the tabs fold into a picker, and on phones the header keeps
-          only the logo and the picker; the sidebar itself lists no sections
+          section picker, then search (icon and shortcut only), the social links in the text color and the theme
+          picker; the sections are always in the picker, never tabs, and the docs home has no picker [D-273]; on
+          phones the header keeps only the logo and the picker; the sidebar itself lists no sections
 
   req F-16.8:
     when: a reader opens a section's root page
@@ -2879,8 +3126,8 @@ feat F-17: Same shape in both sections
   req F-17.1:
     when: a section is built
     then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides, any groups of its own and
-          Resources, in that order; MESH and EDGE, which apps reach only through ECHO and HALO, have only Start here,
-          Core concepts and Resources
+          Resources, in that order; MESH, EDGE and SAGE have only Start here, Core concepts and Resources
+          [D-266]
 
   req F-17.2:
     when: a page is written
@@ -5183,6 +5430,102 @@ decision D-265: The topic picker's panel on a phone is capped at the viewport's 
   for: user:wittjosiah
   affects: [F-16.6]
   why: On a short landscape screen the fixed panel ran past the viewport, where it could not be scrolled to.
+```
+
+```mdl
+decision D-266: The docs gain SAGE, a section on AI: models, agents, operations as tools, skills, memory and MCP. It has only Start here, Core concepts and Resources, like MESH, and no learning path, API or guides. Compute is not a section of its own for now: EDGE's Compute page introduces it, and Operations, Processes, Triggers and Traces follow it in EDGE's Core concepts. Every page starts from the ECHO objects the work or the agent reads and writes. Until SAGE's pages are written, its sidebar has only its Overview, which shows only the hero; the new pages are `later`.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.1, F-17.1, sage-overview, edge-compute, edge-operations, edge-processes, edge-triggers, edge-traces]
+  why: Josiah named the AI packages SAGE and wanted it beside the other products with ECHO kept in front. A RUNE section for compute was drafted and dropped for now; Josiah asked to merge compute into EDGE.
+```
+
+```mdl
+decision D-267: `/docs/` is a docs home titled DXOS Docs, with a short neutral paragraph on what DXOS is and a grid of all seven sections, each card the section's hero art with its mark and name, linking to its Overview. The cards run ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; in four columns ECHO spans two, so the cards fill two rows. They follow the page's theme like the heroes. The `/docs` redirect to ECHO's Overview is removed. Supersedes [F-16.5]'s "no separate docs home".
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.5, F-16.7, docs-home]
+  why: Landing on ECHO's Overview hid the other sections; Josiah asked for a home that shows every topic with its rayed logo, and for ECHO's card to grow so seven cards balance.
+```
+
+```mdl
+decision D-268: Every section's mark, color and hero art come from the alt 4 brand suite: ECHO green, HALO amber, MESH blue, PLEX light violet with the crossed mark, TILE red, EDGE orange with the cube and SAGE sage green with the hourglass. The section picker's logotypes, the Overview heroes and the docs home use it, drawn to one frame and stroke weight. The SVGs go into `@dxos/brand` [F-2.3]. Supersedes the marks and art chosen in [D-106], [D-241] and [D-246]; [D-247]'s light and dark treatment still applies.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.6, F-16.8, docs-home]
+  why: Josiah picked the alt 4 suite as the logo set; using it only for SAGE would show EDGE and PLEX with two different marks.
+```
+
+```mdl
+decision D-269: The section picker and the footer list the sections as ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, down the stack from data to interface. Amends [D-244].
+  date: 2026-11-13
+  by: agent:claude-code
+  affects: [F-16.1, F-7.1]
+  why: SAGE runs on EDGE and under PLEX, so it sits between them.
+```
+
+```mdl
+decision D-270: EDGE's Compute page introduces compute and covers what EDGE hosts: where operations run and triggers fire while no device is online, where agent processes run, the AI service and the plugin registry. It links Operations, Processes and Triggers for the details, and SAGE for agents and models.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-compute, sage-agents]
+  why: Josiah asked to merge compute into EDGE rather than give it a section.
+```
+
+```mdl
+decision D-271: There is no Functions page. Operations replaced functions: the function runtime now runs operations, so an operation deployed to EDGE is a remote process, covered on Processes. The EDGE and SAGE pages never call an operation a function, even where a package or API name still does.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-processes, edge-compute]
+  why: Josiah said operations replace functions, and any doc or code still saying functions is old wording not yet updated.
+```
+
+```mdl
+decision D-272: Pipelines are not a concept page. Processes mentions them in one paragraph, as a tool an operation uses to stream a long source, with a cursor to resume. A Pipelines guide may come later.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-processes]
+  why: A pipeline runs inside an operation, as in the Discord back-index, so it is not on the same level as operations and triggers.
+```
+
+```mdl
+decision D-273: The docs header always shows the sections as a picker, never as a row of tabs, and the docs home has no picker. Amends [F-16.9].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.9]
+  why: Seven logotype tabs crowd the header well before the sidebar folds, and the home page's grid already lists every section.
+```
+
+```mdl
+decision D-274: EDGE's compute pages and every SAGE page are written from the compute and AI packages as they are today: operations, processes, triggers and traces in EDGE, and models, agents, operations as tools, skills, memory and MCP in SAGE. The Overview shows the hero above its text. SAGE's pages are exported to agents through `/sage/llms.txt` like the other sections'.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-compute, edge-operations, edge-processes, edge-triggers, edge-traces, sage-overview, why-sage, sage-models, sage-agents, sage-tools, sage-skills, sage-memory, sage-mcp, sage-glossary, sage-llms-txt]
+  why: Josiah found EDGE's compute pages too thin and asked for them to draw on the RUNE plan, and for SAGE's pages to be written from its plan.
+```
+
+```mdl
+decision D-275: Every section is pitched on its own. An Overview's or a Why page's opening says what the section does and why it is worth using alone, and names no other section as a requirement. How the sections work together, and what each gains next to the others, is woven into the page where it fits, never set apart under a heading of its own; the emphasis is on what the section does, not on what it needs. A comparison is against the strongest alternative, such as an agent framework with tools and memory, not a weak one.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [welcome, why-echo, mesh-overview, why-mesh, edge-overview, edge-compute, edge-operations, sage-overview, why-sage, app-framework-welcome, why-plex, tile-overview, why-tile]
+  why: Josiah wants each section usable and sold independently, with integration explained as a benefit; several pages sold a section only through the others, and Why SAGE? compared against assistants that see only pasted text, which the best agents are not.
+```
+
+```mdl
+decision D-276: SAGE has a Specs page, and Why SAGE? counts specs among what sets SAGE apart. A spec is `.mdl` text that people and agents both work from: its changelog attributes each decision to a person or an agent, a review records how far the code meets each item, and its QA tests are steps a person can follow and an agent can run.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [sage-specs, why-sage, sage-overview, sage-glossary]
+  why: Josiah named the MDL specs as something unique to SAGE.
+```
+
+```mdl
+decision D-277: The section picker and the docs home cards give each section one line, short enough that none wraps in the picker: ECHO "Local-first database: objects, queries, sync.", HALO "Identity, devices and access control.", MESH "Peer-to-peer networking and replication.", EDGE "Always-online backup, indexing and compute.", SAGE "Durable agents, tools, skills and models.", PLEX "An app framework where everything is a plugin." and TILE "Design system and UI components." [D-240]. SAGE's Overview tagline is "Durable agents with their own identity, tools and skills.".
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-16.5, F-16.9, docs-home, sage-overview]
+  why: Josiah asked for better PLEX, EDGE and SAGE lines, an EDGE line short enough not to wrap, access control named in HALO's, and each section pitched on its own [D-275].
 ```
 
 ## Appendix: Extension Definitions

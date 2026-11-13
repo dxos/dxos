@@ -70,7 +70,6 @@ const plexRedirects = Object.fromEntries(
 );
 
 const redirects: Record<string, string> = {
-  '/docs': '/docs/echo/overview/',
   '/docs/halo/introduction': '/docs/halo/overview/',
   '/docs/halo/typescript': '/docs/halo/api/identity/',
   // Section roots were `welcome` pages before they were titled Overview.
@@ -310,6 +309,12 @@ export default defineConfig({
               items: sidebarFromSpec(specPages, 'EDGE'),
             },
             {
+              id: 'sage',
+              label: 'SAGE',
+              link: '/docs/sage/overview/',
+              items: sidebarFromSpec(specPages, 'SAGE'),
+            },
+            {
               id: 'plex',
               label: 'PLEX',
               link: '/docs/plex/overview/',
@@ -330,6 +335,7 @@ export default defineConfig({
               halo: ['/docs/halo/**'],
               mesh: ['/docs/mesh/**'],
               plex: ['/docs/plex/**'],
+              sage: ['/docs/sage/**'],
               tile: ['/docs/tile/**'],
             },
           },

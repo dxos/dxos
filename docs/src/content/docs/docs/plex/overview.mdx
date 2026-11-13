@@ -4,7 +4,7 @@ description: What PLEX is, how an app is made of plugins, and Composer as the ap
 welcome:
   section: PLEX
   tagline: Build apps out of plugins that extend each other through typed contributions.
-  background: kube
+  background: plex
 ---
 
 import DemoEmbed from '../../../../components/DemoEmbed.astro';
@@ -31,13 +31,12 @@ of open items, the settings page and the assistant are all plugins, written agai
 uses. A plugin from outside DXOS has the same powers as a built-in one, which is why these pages use Composer as the
 place your plugin runs.
 
-## What ECHO does underneath
+## What a plugin gets for free
 
-ECHO is the database under every PLEX app. A plugin's data is ECHO objects in spaces, so it syncs between a
-user's devices and the people they share with, merges concurrent edits, and works offline, without the plugin doing
-anything for it. Agents read and write the same objects through the same queries.
-[Spaces](/docs/echo/concepts/spaces/) and [Objects and relations](/docs/echo/concepts/objects-relations/) explain the
-model.
+A plugin's data is [ECHO](/docs/echo/overview/) objects in spaces, so it syncs between a user's devices and the people
+they share with, merges concurrent edits, and works offline, without the plugin doing anything for it. Its operations and
+skills are tools an agent can use as soon as the plugin is installed. Its views use the same
+[TILE](/docs/tile/overview/) components as every other plugin, so plugins written by different people look like one app.
 
 ## What you can build
 

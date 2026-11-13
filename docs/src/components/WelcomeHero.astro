@@ -1,16 +1,9 @@
 ---
 import dxos from '../../../packages/ui/brand/assets/backgrounds/bg-dxos.svg?raw';
-// Each hero puts its mark on the right, clear of the title. EDGE uses the brand's DXNS art; the docs-local files are
-// the brand's ECHO and Kube art moved right, and TILE's, which the brand doesn't have yet.
-import edge from '../../../packages/ui/brand/assets/backgrounds/bg-dxns-right.svg?raw';
-import halo from '../../../packages/ui/brand/assets/backgrounds/bg-halo-right.svg?raw';
-import mesh from '../../../packages/ui/brand/assets/backgrounds/bg-mesh-right.svg?raw';
-import echo from '../assets/topic-nav/backgrounds/bg-echo-right.svg?raw';
-import kube from '../assets/topic-nav/backgrounds/bg-plex-right.svg?raw';
-import tile from '../assets/topic-nav/backgrounds/bg-tile-right.svg?raw';
+import { SUITE_BACKGROUNDS } from './topic-nav/suite.ts';
 
-/** Keyed by the `welcome.background` values that `content.config.ts` allows. */
-const BACKGROUNDS = { dxos, echo, edge, halo, kube, mesh, tile } as const;
+/** Keyed by the `welcome.background` values that `content.config.ts` allows; each suite hero has its mark on the right. */
+const BACKGROUNDS = { dxos, ...SUITE_BACKGROUNDS } as const;
 
 type Props = {
   /** Product name shown as the page's heading, e.g. `ECHO`; the frontmatter title only labels the sidebar and tab. */

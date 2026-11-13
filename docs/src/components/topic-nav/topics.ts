@@ -3,11 +3,12 @@
 //
 
 import echo from '../../../../packages/ui/brand/assets/logotypes/echo-horizontal-black.svg?raw';
-import edge from '../../../../packages/ui/brand/assets/logotypes/edge-horizontal-black.svg?raw';
 import halo from '../../../../packages/ui/brand/assets/logotypes/halo-horizontal-black.svg?raw';
 import mesh from '../../../../packages/ui/brand/assets/logotypes/mesh-horizontal-black.svg?raw';
-import plex from '../../../../packages/ui/brand/assets/logotypes/plex-horizontal-black.svg?raw';
-// The brand has no TILE logotype yet; this one is drawn to the other logotypes' frame.
+// The brand has no logotypes in the alt 4 suite's marks yet [D-251]; these are drawn to the brand logotypes' frame.
+import edge from '../../assets/topic-nav/logotypes/edge-horizontal-black.svg?raw';
+import plex from '../../assets/topic-nav/logotypes/plex-horizontal-black.svg?raw';
+import sage from '../../assets/topic-nav/logotypes/sage-horizontal-black.svg?raw';
 import tile from '../../assets/topic-nav/logotypes/tile-horizontal-black.svg?raw';
 
 /** The logotype's mark is outlined in black; the label's color replaces it, as it does the unset fill. */
@@ -35,7 +36,7 @@ export const TOPICS: Topic[] = [
     id: 'halo',
     label: 'HALO',
     href: '/docs/halo/overview/',
-    description: 'Identity, devices and access.',
+    description: 'Identity, devices and access control.',
     logotype: inherit(halo),
   },
   {
@@ -49,14 +50,21 @@ export const TOPICS: Topic[] = [
     id: 'edge',
     label: 'EDGE',
     href: '/docs/edge/overview/',
-    description: 'Hosted services: sync, functions, agents.',
+    description: 'Always-online backup, indexing and compute.',
     logotype: inherit(edge),
+  },
+  {
+    id: 'sage',
+    label: 'SAGE',
+    href: '/docs/sage/overview/',
+    description: 'Durable agents, tools, skills and models.',
+    logotype: inherit(sage),
   },
   {
     id: 'plex',
     label: 'PLEX',
     href: '/docs/plex/overview/',
-    description: 'Plugin framework for Composer-style apps.',
+    description: 'An app framework where everything is a plugin.',
     logotype: inherit(plex),
   },
   {

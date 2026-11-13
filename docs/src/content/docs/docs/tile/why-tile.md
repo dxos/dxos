@@ -1,17 +1,19 @@
 ---
 title: Why TILE?
-description: Why plugins written by different people look like one app.
+description: Why UI written by many hands still looks and behaves like one app.
 ---
 
-Composer is made of plugins, and most of them are written by people who never talk to each other. Each plugin draws its
-own UI. Without a shared system, every plugin would pick its own grays, paddings and focus styles, and the app would look
-like a collage. TILE is the shared system.
+An app grows screens written by different people, at different times. Without a shared system, each screen picks its own
+grays, paddings and focus styles, keyboard behavior drifts from one menu to the next, and the app looks like a collage.
+TILE is the shared system: tokens that name roles instead of colors, components that bring their keyboard and ARIA
+behavior with them, and one size scale. Composer, whose plugins come from many authors who never talk to each other,
+draws every one of them with it.
 
 ## Tokens instead of colors
 
 A plugin never names a raw color. It names a role: `bg-card-surface` for a card, `text-fg-muted` for secondary text,
-`border-separator` for a rule. Each role has a light value and a dark value, so a plugin that uses roles follows the
-user's theme without any code of its own. When the theme changes, every plugin changes with it. See
+`border-separator` for a rule. Each role has a light value and a dark value, so a screen that uses roles follows the
+user's theme without any code of its own. When the theme changes, every screen changes with it. See
 [Theme and tokens](/docs/tile/concepts/theme-and-tokens/).
 
 ## Components that bring their behavior

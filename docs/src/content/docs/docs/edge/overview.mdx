@@ -9,8 +9,9 @@ welcome:
 
 import Diagram from '../../../../components/Diagram.astro';
 
-EDGE is the set of services DXOS runs on Cloudflare Workers. To a space it is one more peer, the one that is always
-online: it keeps a copy of the space, indexes it, and runs work for it while every device is asleep. Each space and each
+EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers. It is not where the data lives;
+the devices are. It keeps a copy of each space, indexes it, recovers identities when every device is lost, and runs
+operations and agents while every device is asleep. Each space and each
 identity gets its own Durable Objects, small stateful servers that hold that space's or identity's state.
 
 ## What goes over each link
@@ -29,7 +30,8 @@ services. Devices that are online together also link directly through [MESH](/do
 | ECHO    | Queries over objects this device has not loaded                                | [Indexing and queries](/docs/edge/concepts/indexing/)        |
 | HALO    | Recovering an identity, accounts, invitations, service access                  | [Identity services](/docs/edge/concepts/identity-services/)  |
 | MESH    | The WebSocket each device keeps, and signaling between peers                   | [Connecting](/docs/edge/concepts/connecting/)                |
-| PLEX    | Functions, triggers, agents, sandbox builds and the plugin registry            | [Compute](/docs/edge/concepts/compute/)                      |
+| SAGE    | Agent processes, and models through the AI service                             | [Compute](/docs/edge/concepts/compute/)                      |
+| PLEX    | Operations, triggers, sandbox builds and the plugin registry                   | [Compute](/docs/edge/concepts/compute/)                      |
 
 ## Running it
 
@@ -38,7 +40,7 @@ production. There is no self-hosted EDGE. See [Configuration](/docs/edge/resourc
 
 ## How these pages are organized
 
-EDGE is a service apps use through ECHO and HALO, not an API they call. These pages explain how it works, so there is no
+Apps reach EDGE through the DXOS client, not an API they call. These pages explain how it works, so there is no
 learning path, API group or guides.
 
 - [Why EDGE?](/docs/edge/why-edge/) argues for servers in a local-first system.
