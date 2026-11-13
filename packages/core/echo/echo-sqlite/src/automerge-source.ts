@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
@@ -67,10 +68,16 @@ export class AutomergeFeedSource implements IndexDataSource {
       });
 
       const updatedAt = new Map<string, number>();
+      const chunks = new Map<string, Uint8Array[]>();
       for (const block of result.blocks) {
         if (block.feedId !== undefined) {
           updatedAt.set(block.feedId, Math.max(updatedAt.get(block.feedId) ?? 0, block.timestamp));
+          chunks.set(block.feedId, [...(chunks.get(block.feedId) ?? []), block.data]);
         }
+      }
+      // Blocks pulled from the authority or written by another process are not in a cached copy yet.
+      for (const [documentId, list] of chunks) {
+        this.#docs.absorb(documentId, list);
       }
       const docs = yield* this.#docs.load([...updatedAt.keys()]);
       const objects: IndexerObject[] = [];
@@ -85,6 +92,8 @@ export class AutomergeFeedSource implements IndexDataSource {
             recordId: null,
             data: objectStructureToJson(objectId, structure),
             createdAt: structure.system?.createdAt ?? null,
+            // The heads the snapshot was read at: a writer edits from there, merging later changes.
+            version: A.getHeads(doc),
             updatedAt: updatedAt.get(documentId) ?? Date.now(),
           });
         }

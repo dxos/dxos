@@ -38,7 +38,7 @@ export const compileQuery = (query: QueryAST.Query, options: { spaceId: SpaceId 
   const compiler = new Compiler(options.spaceId);
   const root = compiler.node(query, 'exclude');
   const statement = sql`WITH RECURSIVE ${join(compiler.ctes, ',\n')}
-SELECT e.objectId AS id, ${body('e')} AS body FROM ${raw(root)} w
+SELECT e.objectId AS id, ${body('e')} AS body, ${versionOf('e')} AS version FROM ${raw(root)} w
 CROSS JOIN objectMeta e ON ${row('e', options.spaceId, raw('w.id'))}
 ORDER BY w.ord, w.id`;
   return { sql: statement.sql, params: statement.params };
@@ -504,6 +504,10 @@ const snapshotOf = (alias: string): Fragment =>
   raw(`(SELECT snapshot FROM objectSnapshot WHERE objectSnapshot.recordId = ${alias}.recordId)`);
 
 const body = snapshotOf;
+
+/** The document heads (JSON) the snapshot of the row aliased `alias` was read at. */
+const versionOf = (alias: string): Fragment =>
+  raw(`(SELECT version FROM objectSnapshot WHERE objectSnapshot.recordId = ${alias}.recordId)`);
 
 /** A dotted property path as the reverse-reference index stores it: escaped, without array indexes. */
 const propPath = (property: string): string =>

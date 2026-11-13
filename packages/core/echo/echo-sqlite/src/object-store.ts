@@ -15,7 +15,7 @@ import { IndexEngine } from '@dxos/index-core';
 import { type SpaceId } from '@dxos/keys';
 
 import { AutomergeFeedSource } from './automerge-source.ts';
-import { AUTOMERGE_NAMESPACE, DocStore } from './doc-store.ts';
+import { AUTOMERGE_NAMESPACE, DocStore, type WriteResult } from './doc-store.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import { type EntityRecord } from './record.ts';
 import { type CompiledQuery } from './sql/compile.ts';
@@ -23,9 +23,14 @@ import { type CompiledQuery } from './sql/compile.ts';
 /**
  * A stored entity as the store returns it: its id and its ECHO JSON.
  */
-export type StoredEntity = { readonly id: string; readonly body: Record<string, unknown> };
+export type StoredEntity = {
+  readonly id: string;
+  readonly body: Record<string, unknown>;
+  /** Heads of the document the body was read at. */
+  readonly heads?: readonly string[];
+};
 
-type BodyRow = { id: string; body: string };
+type BodyRow = { id: string; body: string; version: string | null };
 
 type Store<A> = Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>;
 
@@ -81,7 +86,7 @@ export class ObjectStore {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql.unsafe<BodyRow>(
-        `SELECT m.objectId AS id, s.snapshot AS body FROM objectMeta m
+        `SELECT m.objectId AS id, s.snapshot AS body, s.version AS version FROM objectMeta m
 CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
 WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
         [spaceId, TypeMetaSchemaDXN.toString()],
@@ -98,7 +103,7 @@ WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql.unsafe<BodyRow>(
-        `SELECT m.objectId AS id, s.snapshot AS body FROM objectMeta m
+        `SELECT m.objectId AS id, s.snapshot AS body, s.version AS version FROM objectMeta m
 CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
 WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
         [spaceId, id],
@@ -133,17 +138,26 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
    * Writes each entity into its Automerge document (one chunk per changed document), permanently
    * removes `purged` ids, and indexes what changed, so the next read sees it.
    */
-  write(records: readonly EntityRecord[], purged: readonly string[] = []): Store<void> {
+  write(
+    records: readonly (EntityRecord & { readonly heads?: readonly string[] })[],
+    purged: readonly string[] = [],
+  ): Store<{ results: Map<string, WriteResult>; indexed: Set<string> }> {
     return Effect.gen({ self: this }, function* () {
-      if (records.length > 0) {
-        yield* this.#docs.write(
-          records.map((record) => ({ id: record.id, structure: objectStructureFromJson(record.body as Obj.JSON) })),
-        );
-      }
+      const results =
+        records.length > 0
+          ? yield* this.#docs.write(
+              records.map((record) => ({
+                id: record.id,
+                structure: objectStructureFromJson(record.body as Obj.JSON),
+                heads: record.heads,
+              })),
+            )
+          : new Map<string, WriteResult>();
       if (purged.length > 0) {
         yield* this.#purge(purged);
       }
-      yield* this.index();
+      const indexed = yield* this.index();
+      return { results, indexed };
     }).pipe(
       Effect.catchIf(isCypherError, (error) => Effect.die(error)),
       Effect.withSpan('ObjectStore.write'),
@@ -153,12 +167,27 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   /**
    * Indexes every block the indexer has not seen yet, then the text index.
    */
-  index(): Store<void> {
+  index(): Store<Set<string>> {
     return Effect.gen({ self: this }, function* () {
       const ctx = Context.default();
-      while (!(yield* this.#engine.update(ctx, this.#source, { spaceId: this.#spaceId })).done) {}
+      const documents = new Set<string>();
+      while (true) {
+        const result = yield* this.#engine.update(ctx, this.#source, { spaceId: this.#spaceId });
+        result.documents.forEach((id) => documents.add(id));
+        if (result.done) {
+          break;
+        }
+      }
       while (!(yield* this.#engine.updateSecondaryIndexes(ctx)).done) {}
+      return documents;
     });
+  }
+
+  /**
+   * Forgets cached documents that another writer appended to, so the next write reads them again.
+   */
+  invalidate(ids: Iterable<string>): void {
+    this.#docs.invalidate(ids);
   }
 
   #purge(ids: readonly string[]): Effect.Effect<void, SqlError.SqlError | CypherError, SqlClient.SqlClient> {
@@ -247,4 +276,8 @@ const deviceActorId = (): Store<string> =>
 
 const isCypherError = (error: unknown): error is CypherError => error instanceof CypherError;
 
-const parseRow = (row: BodyRow): StoredEntity => ({ id: row.id, body: JSON.parse(row.body) });
+const parseRow = (row: BodyRow): StoredEntity => ({
+  id: row.id,
+  body: JSON.parse(row.body),
+  heads: row.version ? JSON.parse(row.version) : undefined,
+});

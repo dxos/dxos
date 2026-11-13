@@ -19,6 +19,12 @@ export const AUTOMERGE_NAMESPACE = FeedProtocol.WellKnownNamespaces.automerge;
 
 export type Doc = A.Doc<DatabaseDirectory>;
 
+/** One object to write: its structure, and the heads of the document it was read at, if any. */
+export type DocWrite = { id: string; structure: EntityStructure; heads?: readonly string[] };
+
+/** The document's heads after a write, and whether it holds changes the written structure lacked. */
+export type WriteResult = { heads: string[]; merged: boolean };
+
 type Store<T> = Effect.Effect<T, SqlError.SqlError | CypherError, SqlClient.SqlClient>;
 
 /** Upper bound on resident documents; a document is only needed to write its object, so the cache is small. */
@@ -82,27 +88,36 @@ export class DocStore {
   /**
    * Writes each object's structure into its document and appends one chunk per changed document, in
    * one feed-store batch. Unchanged objects append nothing.
+   *
+   * An object with `heads` was read at those heads, so its structure is applied as an edit made there:
+   * changes another writer made since merge with it instead of being overwritten. The result names
+   * each object's new heads, and whether the document holds changes the written structure lacks.
    */
-  write(objects: readonly { id: string; structure: EntityStructure }[]): Store<void> {
+  write(objects: readonly DocWrite[]): Store<Map<string, WriteResult>> {
     return Effect.gen({ self: this }, function* () {
       const docs = yield* this.load(objects.map((object) => object.id));
       const messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[] = [];
       const written = new Map<string, Doc>();
-      for (const { id, structure } of objects) {
-        const before = docs.get(id) ?? this.#create();
-        const after = A.change(before, (doc) => {
+      const results = new Map<string, WriteResult>();
+      for (const { id, structure, heads } of objects) {
+        const before = written.get(id) ?? docs.get(id) ?? this.#create();
+        const edit = (doc: DatabaseDirectory) => {
           doc.objects ??= {};
           const existing = doc.objects[id];
           // `createdAt` is set once, by the first writer, and survives every later write.
           const createdAt = existing?.system?.createdAt ?? structure.system?.createdAt ?? Date.now();
           const next = { ...structure, system: { ...structure.system, createdAt } };
           applyValue(doc, ['objects'], doc.objects, id, next);
-        });
+        };
+        const current = A.getHeads(before);
+        const behind = heads !== undefined && heads.length > 0 && !sameHeads(heads, current);
+        const after = behind ? A.changeAt(before, [...heads], edit).newDoc : A.change(before, edit);
         const chunk = A.saveIncremental(after);
         if (chunk.byteLength > 0) {
           messages.push({ spaceId: this.#spaceId, feedId: id, feedNamespace: AUTOMERGE_NAMESPACE, data: chunk });
         }
         written.set(id, after);
+        results.set(id, { heads: A.getHeads(after), merged: behind });
       }
       if (messages.length > 0) {
         yield* this.#feedStore.appendLocal(messages);
@@ -112,7 +127,25 @@ export class DocStore {
       for (const [id, doc] of written) {
         this.#remember(id, doc);
       }
+      return results;
     });
+  }
+
+  /**
+   * Applies blocks of a document, from any writer, to its cached copy; a chunk the copy already holds
+   * changes nothing. A document not cached reads every block on its next load instead.
+   */
+  absorb(id: string, chunks: readonly Uint8Array[]): void {
+    let doc = this.#cache.get(id);
+    if (!doc) {
+      return;
+    }
+    for (const chunk of chunks) {
+      doc = A.loadIncremental(doc, chunk);
+    }
+    // Marks the absorbed changes saved, so the next local chunk carries only the local edit.
+    A.saveIncremental(doc);
+    this.#remember(id, doc);
   }
 
   /**
@@ -152,6 +185,9 @@ export class DocStore {
     }
   }
 }
+
+const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((head) => right.includes(head));
 
 const concat = (chunks: readonly Uint8Array[]): Uint8Array => {
   const out = new Uint8Array(chunks.reduce((size, chunk) => size + chunk.byteLength, 0));

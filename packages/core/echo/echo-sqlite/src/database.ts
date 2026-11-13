@@ -28,6 +28,7 @@ import {
 } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import {
+  ATTR_DELETED,
   ObjectDatabaseId,
   ObjectDeletedId,
   SelfURIId,
@@ -38,6 +39,7 @@ import {
   setRefResolver,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
+import { type FeedStore } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -79,7 +81,7 @@ export type Diagnostics = {
   readonly tracked: number;
 };
 
-type Run = <A>(effect: Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>) => Promise<A>;
+type Run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>) => Promise<A>;
 
 /**
  * ECHO {@link Database.Database} backed by SQLite, which is the source of truth: the space is never
@@ -108,6 +110,8 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   /** Keyed by the entity so a subscription never keeps its entity alive. */
   readonly #subscriptions = new WeakMap<Entity.Unknown, CleanupFn>();
   readonly #hydrating = new Map<string, Promise<Entity.Unknown | undefined>>();
+  /** Document heads each live entity's state was read at; its next write is an edit made there. */
+  readonly #heads = new WeakMap<Entity.Unknown, readonly string[]>();
   /** Persisted type entities; few, and needed to hydrate anything, so held for the database's life. */
   readonly #types = new Map<string, Entity.Unknown>();
 
@@ -175,6 +179,27 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   get registry(): SimpleRegistry {
     return this.#registry;
+  }
+
+  /**
+   * The feed store holding this space's blocks, which sync pulls into and pushes from.
+   */
+  get feedStore(): FeedStore {
+    return this.#store.feedStore;
+  }
+
+  /**
+   * Calls `listener` after every committed write batch, local or applied from sync.
+   */
+  onCommit(listener: () => void): CleanupFn {
+    return this.#committed.on(() => listener());
+  }
+
+  /**
+   * Runs an effect against this database's SQL client.
+   */
+  runSql<A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>): Promise<A> {
+    return this.#run(effect);
   }
 
   toJSON(): object {
@@ -624,6 +649,9 @@ export class SqliteDatabase implements Database.Database, EntitySource {
             return raced;
           }
           this.#register(entity);
+          if (stored.heads) {
+            this.#heads.set(entity, stored.heads);
+          }
           this.#counters.hydrated++;
           return entity;
         } catch (err) {
@@ -636,6 +664,70 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       this.#hydrating.set(stored.id, hydrating);
     }
     return hydrating;
+  }
+
+  /**
+   * Makes changes another writer appended to these objects' documents visible: indexes the new
+   * blocks, and brings resident objects to their documents' state. Called by sync after it inserts
+   * pulled blocks.
+   */
+  async applyRemote(): Promise<void> {
+    const done = this.#writes.then(async () => {
+      const indexed = await this.#run(this.#store.index());
+      await this.#refreshStale(indexed);
+      if (indexed.size > 0) {
+        this.#committed.emit(new Set([ANY_TYPE]));
+      }
+    });
+    this.#writes = done.catch((err) => {
+      this.#writeError = err;
+    });
+    await done;
+  }
+
+  /** Refreshes the resident objects among `ids` whose documents moved past the heads they show. */
+  async #refreshStale(ids: Iterable<string>): Promise<void> {
+    for (const id of ids) {
+      const entity = this.#live.get(id)?.deref();
+      if (!entity) {
+        continue;
+      }
+      const stored = await this.#run(this.#store.load(id));
+      if (stored?.heads && !sameHeads(stored.heads, this.#heads.get(entity) ?? [])) {
+        await this.#refresh(entity, stored);
+      }
+    }
+  }
+
+  /**
+   * Sets a live entity's state to a stored body, as the change of another writer. The change is
+   * observed like a local edit, and its write finds nothing to change in the document.
+   */
+  async #refresh(entity: Entity.Unknown, stored: StoredEntity): Promise<void> {
+    const snapshot = await objectFromJSON(stored.body, {
+      refResolver: this.#resolver,
+      uri: EID.make({ spaceId: this.#spaceId, entityId: stored.id }),
+      database: this,
+    });
+    if (Obj.isObject(entity) && Obj.isObject(snapshot)) {
+      Obj.update(entity, (entity) => {
+        const target: Record<string, unknown> = entity;
+        for (const key of Object.keys(target)) {
+          if (key !== 'id' && !Object.hasOwn(snapshot, key)) {
+            delete target[key];
+          }
+        }
+        Obj.updateFrom(entity, snapshot);
+        replaceMeta(Obj.getMeta(entity), Obj.getMeta(snapshot));
+      });
+    }
+    const deleted = stored.body[ATTR_DELETED] === true;
+    if (deleted !== Entity.isDeleted(entity)) {
+      defineHiddenProperty(entity, ObjectDeletedId, deleted);
+    }
+    if (stored.heads) {
+      this.#heads.set(entity, stored.heads);
+    }
   }
 
   /**
@@ -746,10 +838,22 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       if (batch.size === 0 && purged.length === 0) {
         return;
       }
-      const records = [...batch.values()].map((entity) => toRecord(entity, this.#spaceId));
+      const records = [...batch.values()].map((entity) => ({
+        ...toRecord(entity, this.#spaceId),
+        heads: this.#heads.get(entity),
+      }));
       this.#writes = this.#writes.then(async () => {
         try {
-          await this.#run(this.#store.write(records, purged));
+          const { results, indexed } = await this.#run(this.#store.write(records, purged));
+          for (const [id, result] of results) {
+            const entity = batch.get(id);
+            if (entity) {
+              this.#heads.set(entity, result.heads);
+            }
+          }
+          // A merged write, or blocks another writer appended meanwhile, leave documents ahead of
+          // their live objects.
+          await this.#refreshStale(indexed);
           // Deletion cascades and purges reach rows of any type, so they invalidate every query.
           const everything = deletionChanged || purged.length > 0;
           this.#committed.emit(new Set(everything ? [ANY_TYPE] : records.map((record) => record.typeDxn)));
@@ -769,6 +873,21 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     });
   }
 }
+
+const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((head) => right.includes(head));
+
+/** Replaces every field of a live object's meta with another meta's. */
+const replaceMeta = (target: Record<string, unknown>, source: Record<string, unknown>): void => {
+  for (const key of Object.keys(target)) {
+    if (!Object.hasOwn(source, key)) {
+      delete target[key];
+    }
+  }
+  for (const [key, value] of Object.entries(source)) {
+    target[key] = structuredClone(value);
+  }
+};
 
 /** Marks a write batch that must invalidate every query. */
 const ANY_TYPE = '*';
