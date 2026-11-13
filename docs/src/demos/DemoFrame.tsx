@@ -118,8 +118,8 @@ const PeerPane = ({ demo, runtime, state, index, peer, view, onViewChange, hidde
       inert={hidden}
     >
       {/*
-        `suspend` drops the provider's status gate. A throttled background tab misses the status heartbeat, and the
-        gate would unmount the plugin app, whose ClientPlugin then destroys the client for good.
+        Throttled background tabs miss the status heartbeat; `suspend` skips the status gate so ClientPlugin
+        never unmounts and destroys the runtime-owned client.
       */}
       <ClientProvider client={runtime.clients[index]} suspend>
         <PeerBar
