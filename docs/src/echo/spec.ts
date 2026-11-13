@@ -162,7 +162,7 @@ const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
 /**
  * The Starlight sidebar for one section of the spec's site map; group order is first appearance. A top-level group
  * starts expanded; pages with a `package` follow the group's own pages in a nested group per package, alphabetically,
- * which starts collapsed and opens when the current page is in it [D-294].
+ * which starts collapsed and opens when the current page is in it [D-296].
  */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
