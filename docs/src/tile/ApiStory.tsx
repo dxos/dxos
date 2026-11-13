@@ -268,10 +268,6 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
     };
   }, [entry, near, themeMode]);
 
-  // Core stories keep their own size; the other packages' stories fill frames their pages size by hand.
-  const fit = id.startsWith('react-ui/') && story !== undefined && story.parameters?.layout !== 'fullscreen';
-  useFitFrame(element, fit);
-
   return (
     <div ref={setElement} className='h-full'>
       {error ? (
@@ -293,59 +289,4 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
       )}
     </div>
   );
-};
-
-/** Space between a fitted story and its frame. */
-const FIT_PADDING = 32;
-
-/** Sizes an API page's frame to its story: as tall, up to the page's height, and wider than the text column only if it must be. */
-const useFitFrame = (element: HTMLElement | null, enabled: boolean) => {
-  useEffect(() => {
-    const frame = element?.closest<HTMLElement>('.api-story');
-    const root = element?.firstElementChild;
-    if (!enabled || !frame || !root) {
-      return;
-    }
-    const maxHeight = frame.getBoundingClientRect().height;
-    let content: Element | null = null;
-    const resize = new ResizeObserver(() => fit());
-    const fit = () => {
-      const next = storyContent(root.firstElementChild);
-      if (next !== content) {
-        content && resize.unobserve(content);
-        content = next;
-        if (content) {
-          // Width is read once in the text column, so a story that fills its frame does not keep itself wide.
-          frame.classList.remove('dx-wide');
-          const column = frame.parentElement?.clientWidth ?? 0;
-          frame.classList.toggle('dx-wide', content.scrollWidth + 2 * FIT_PADDING > column);
-          resize.observe(content);
-        }
-      }
-      if (!content) {
-        return;
-      }
-      frame.style.height = `${Math.min(maxHeight, content.scrollHeight + 2 * FIT_PADDING)}px`;
-    };
-    const mutations = new MutationObserver(fit);
-    mutations.observe(root, { childList: true });
-    fit();
-    return () => {
-      mutations.disconnect();
-      resize.disconnect();
-    };
-  }, [element, enabled]);
-};
-
-/**
- * The element a story's size is read from: its outermost element, or, under a `fixed` centred or column layout that
- * fills any frame, the panel that layout holds.
- */
-const storyContent = (element: Element | null, depth = 4): Element | null => {
-  for (let current = element; current && depth > 0; current = current.firstElementChild, depth--) {
-    if (getComputedStyle(current).position === 'fixed') {
-      return current.firstElementChild;
-    }
-  }
-  return element;
 };

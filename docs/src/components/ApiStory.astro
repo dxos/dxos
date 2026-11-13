@@ -5,13 +5,15 @@ interface Props {
   /** `<package>/<namespace>`, a key of `STORIES` in `tile/ApiStory.tsx`. */
   id: string;
   height?: string;
+  /** Keep the frame in the text column, for a story narrower than it. */
+  narrow?: boolean;
 }
 
-const { id, height = '28rem' } = Astro.props;
+const { id, height = '28rem', narrow = false } = Astro.props;
 ---
 
 <!-- The namespace's own story from its package, at the top of its API page [D-296]. -->
-<div class="api-story dx-wide dx-island not-content" style={{ height }}>
+<div class:list={['api-story dx-island not-content', { 'dx-wide': !narrow }]} style={{ height }}>
   <ApiStory id={id} client:only="react" />
 </div>
 

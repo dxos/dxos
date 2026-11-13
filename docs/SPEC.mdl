@@ -6540,6 +6540,14 @@ decision D-310: TILE's API puts the 44 core `@dxos/react-ui` component pages in 
     - Keep the core in the families with the other packages: it hid which components come with `@dxos/react-ui` itself.
 ```
 
+```mdl
+decision D-311: A core API page sets its story's frame size in the page, `height` and `narrow`, from the story's measured size, so the frame does not change size as the story loads. Amends [D-309].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: Measured on load, the frame showed at the full width and height until the story arrived, then jumped.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
