@@ -9,23 +9,64 @@
 
 import { type SlideSpec } from './spec.ts';
 
-const card = (id: string, label: string, icon: string) => ({ id, label, icon });
+const part = (id: string, label: string, icon: string, body: string, footer: string) => ({
+  id,
+  label,
+  icon,
+  body,
+  footer,
+});
+
+const consumer = (id: string, label: string, icon: string) => ({ id, label, icon });
 
 export const PLUGINS: SlideSpec = {
   id: 'plugins',
   title: 'Plugins',
-  // Wide enough for "UI · agents · MCP", which a 224-unit card truncates; the header keeps its half-again width.
-  metrics: { cardWidth: 272, headerWidth: 408, columnGap: 96 },
+  // Wide enough for "UI · agents · MCP" and for two lines of body; the header carries its own body too.
+  metrics: { cardWidth: 288, bodyCardHeight: 200, columnGap: 64, headerWidth: 720, headerHeight: 176 },
   groups: [
     {
       id: 'contributions',
-      header: card('plugin', 'Plugin', 'puzzle-piece'),
+      header: {
+        id: 'plugin',
+        label: 'Plugin',
+        icon: 'puzzle-piece',
+        body: 'modules load lazily on activation events, in the browser, Node, desktop (Tauri) or at the EDGE (workerd).',
+        footer: '106 plugins in dxos/dxos',
+      },
       columns: [
-        [card('types', 'Types', 'brackets-curly'), card('use-types', 'ECHO', 'database')],
-        [card('skills', 'Skills', 'robot'), card('use-skills', 'Agents', 'sparkle')],
-        [card('components', 'Components', 'squares-four'), card('use-components', 'Surface', 'app-window')],
-        [card('operations', 'Operations', 'function'), card('use-operations', 'UI · agents · MCP', 'plugs-connected')],
-        [card('services', 'Services', 'cloud'), card('use-services', 'EDGE', 'cloud')],
+        [
+          part('types', 'Types', 'brackets-curly', 'Effect Schema types, registered with ECHO.', 'schema · 66'),
+          consumer('use-types', 'ECHO', 'database'),
+        ],
+        [
+          part('skills', 'Skills', 'robot', 'Operations offered to agents as tools.', 'skillDefinition · 41'),
+          consumer('use-skills', 'Agents', 'sparkle'),
+        ],
+        [
+          part(
+            'components',
+            'Components',
+            'squares-four',
+            'React surfaces bound to roles: article, card, section.',
+            'surface · 88',
+          ),
+          consumer('use-components', 'Surface', 'app-window'),
+        ],
+        [
+          part(
+            'operations',
+            'Operations',
+            'function',
+            'Typed operations with input and output schemas.',
+            'operationHandler · 81',
+          ),
+          consumer('use-operations', 'UI · agents · MCP', 'plugs-connected'),
+        ],
+        [
+          part('services', 'Services', 'cloud', 'Effect services that run at the EDGE (workerd).', 'layerSpec · 11'),
+          consumer('use-services', 'EDGE', 'cloud'),
+        ],
       ],
     },
   ],
@@ -37,4 +78,5 @@ export const PLUGINS: SlideSpec = {
     { from: 'use-operations', to: 'operations' },
     { from: 'use-services', to: 'services' },
   ],
+  note: 'Counts: plugins in dxos/dxos whose config contributes each module (main, 11 Nov 2026). Every module is optional; a plugin ships only what it needs.',
 };

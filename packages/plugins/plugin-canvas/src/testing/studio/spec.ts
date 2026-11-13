@@ -24,6 +24,16 @@ export type SlideCard = {
   icon: string;
   /** An object type's colour, by the deck's own name (`event`, `message`, `file`, `trip`, `sheet`). */
   tone?: string;
+  /** What the card says under its title. A card that has one is drawn at the slide's `bodyCardHeight`. */
+  body?: string;
+  /** The mono line under the body: where the thing lives, what it costs, how many there are. */
+  footer?: string;
+  /** A row of pills in place of a body, as the ECHO slide's types banner holds. */
+  chips?: {
+    items: readonly { icon: string; label: string; note?: string }[];
+    cols?: number;
+    flat?: boolean;
+  };
 };
 
 /** A column of cards, stacked top to bottom. Every column is centred on the slide's axis, which is what makes the gaps equal. */
@@ -41,6 +51,8 @@ export type SlideGroup = {
    * of them.
    */
   header?: SlideCard;
+  /** A card the width of the group above its columns, with no trunks: what the columns under it are all about. */
+  banner?: SlideCard;
   columns: readonly SlideColumn[];
 };
 
@@ -70,6 +82,13 @@ export type SlideMetrics = {
   bandGap: number;
   bandLabelWidth: number;
   bandLabelGap: number;
+  /** A card that carries a body is this tall rather than `cardHeight`; a banner takes `bannerHeight`. */
+  bodyCardHeight: number;
+  bannerHeight: number;
+  bannerGap: number;
+  /** The slide's own footnote: how far under the content it sits, and how large. */
+  noteGap: number;
+  noteSize: number;
 };
 
 export const SLIDE_METRICS: SlideMetrics = {
@@ -90,6 +109,11 @@ export const SLIDE_METRICS: SlideMetrics = {
   bandGap: 96,
   bandLabelWidth: 288,
   bandLabelGap: 48,
+  bodyCardHeight: 200,
+  bannerHeight: 176,
+  bannerGap: 64,
+  noteGap: 64,
+  noteSize: 18,
 };
 
 /**
@@ -111,6 +135,8 @@ export type SlideSpec = {
   groups?: readonly SlideGroup[];
   /** Rows stacked down the slide, their columns aligned. */
   bands?: readonly SlideBand[];
+  /** A line under the whole slide: what the numbers on it are counted from, what it leaves out. */
+  note?: string;
   edges?: readonly SlideEdge[];
   metrics?: Partial<SlideMetrics>;
 };
@@ -123,11 +149,14 @@ export type SlideLayout = {
   /** The trunks a group's header makes: its card and the first card of each of that group's columns. */
   trunks: readonly { from: string; to: string }[];
   boxes: readonly (Box & { id: string })[];
-  headings: readonly (Box & { text: string; align?: 'center' | 'right' })[];
+  headings: readonly (Box & { text: string; align?: 'center' | 'right' | 'left'; size?: number })[];
 };
 
-const columnHeight = (column: SlideColumn, { cardHeight, rowGap }: SlideMetrics) =>
-  column.length * cardHeight + (column.length - 1) * rowGap;
+const heightOf = (card: SlideCard, { cardHeight, bodyCardHeight }: SlideMetrics) =>
+  card.body !== undefined || card.footer !== undefined || card.chips !== undefined ? bodyCardHeight : cardHeight;
+
+const columnHeight = (column: SlideColumn, metrics: SlideMetrics) =>
+  column.reduce((total, card) => total + heightOf(card, metrics), 0) + (column.length - 1) * metrics.rowGap;
 
 const groupWidth = (group: SlideGroup, { cardWidth, columnGap }: SlideMetrics) =>
   group.columns.length * cardWidth + (group.columns.length - 1) * columnGap;
@@ -146,7 +175,7 @@ const layoutBands = (bands: readonly SlideBand[], metrics: SlideMetrics): SlideL
   const { headingSize } = metrics;
   const cards = new Map<string, Box & { card: SlideCard }>();
   const boxes: (Box & { id: string })[] = [];
-  const headings: (Box & { text: string; align?: 'center' | 'right' })[] = [];
+  const headings: (Box & { text: string; align?: 'center' | 'right' | 'left'; size?: number })[] = [];
   const lanes = Math.max(...bands.map(({ columns }) => columns.length));
   const width = lanes * cardWidth + (lanes - 1) * columnGap;
   let top = 0;
@@ -157,8 +186,9 @@ const layoutBands = (bands: readonly SlideBand[], metrics: SlideMetrics): SlideL
       // Centred in the band, so a cell of one card sits level with the middle of a cell of two.
       let y = top + (tallest - columnHeight(column, metrics)) / 2;
       for (const card of column) {
-        cards.set(card.id, { x: lane, y, width: cardWidth, height: cardHeight, card });
-        y += cardHeight + rowGap;
+        const height = heightOf(card, metrics);
+        cards.set(card.id, { x: lane, y, width: cardWidth, height, card });
+        y += height + rowGap;
       }
     });
     if (band.box) {
@@ -193,11 +223,11 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
   }
   const groups = spec.groups ?? [];
   const { cardWidth, cardHeight, rowGap, columnGap, groupGap, boxPadding, headingGap, headingSize } = metrics;
-  const { headerWidth, headerHeight, headerGap } = metrics;
+  const { headerWidth, headerHeight, headerGap, bannerHeight, bannerGap, noteGap, noteSize } = metrics;
   const cards = new Map<string, Box & { card: SlideCard }>();
   const trunks: { from: string; to: string }[] = [];
   const boxes: (Box & { id: string })[] = [];
-  const headings: (Box & { text: string; align?: 'center' | 'right' })[] = [];
+  const headings: (Box & { text: string; align?: 'center' | 'right' | 'left'; size?: number })[] = [];
   // The axis every column is centred on, and the box every group's own box is drawn around.
   const axis = 0;
   // ONE height for every box, taken from the longest column on the slide: a box drawn around its own group would be
@@ -211,10 +241,20 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
       // Centred on the axis, so a short column sits in the middle of the height every box shares.
       let y = axis - columnHeight(column, metrics) / 2;
       for (const card of column) {
-        cards.set(card.id, { x: lane, y, width: cardWidth, height: cardHeight, card });
-        y += cardHeight + rowGap;
+        const height = heightOf(card, metrics);
+        cards.set(card.id, { x: lane, y, width: cardWidth, height, card });
+        y += height + rowGap;
       }
     });
+    if (group.banner) {
+      cards.set(group.banner.id, {
+        x: left,
+        y: axis - tallest / 2 - bannerGap - bannerHeight,
+        width,
+        height: bannerHeight,
+        card: group.banner,
+      });
+    }
     if (group.header) {
       // Above the columns, centred on the group, with the gap under it the trunk runs through.
       cards.set(group.header.id, {
@@ -241,15 +281,34 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
       });
     }
     if (group.heading) {
-      headings.push({ x: left, y: 0, width, height: headingSize, text: group.heading });
+      // Above the group's own top. Every box on a slide is one height, so headings still land on one line wherever
+      // the groups are alike — and a group that stands lower, like a boxed runtime under a banner, keeps its name
+      // with it rather than stranded at the slide's ceiling.
+      const top = axis - tallest / 2 - (group.box ? boxPadding : 0);
+      headings.push({ x: left, y: top - headingGap - headingSize, width, height: headingSize, text: group.heading });
     }
     left += width + groupGap;
   }
   // Every heading on ONE line, above the tallest group: a heading placed over its own group would step up and down
   // the slide as the columns change length, which is what put "Containers" above the other two.
-  const ceiling = Math.min(...[...cards.values(), ...boxes].map(({ y }) => y));
-  const line = ceiling - headingGap - headingSize;
-  return { cards, boxes, trunks, headings: headings.map((heading) => ({ ...heading, y: line })) };
+  const placed = [...headings];
+  if (spec.note) {
+    // Under everything the slide draws, on its own left edge, as the deck's footnotes sit.
+    const all = [...cards.values(), ...boxes];
+    const left = Math.min(...all.map(({ x }) => x));
+    const right = Math.max(...all.map(({ x, width }) => x + width));
+    const bottom = Math.max(...all.map(({ y, height }) => y + height));
+    placed.push({
+      x: left,
+      y: bottom + noteGap,
+      width: right - left,
+      height: noteSize * 1.6,
+      text: spec.note,
+      align: 'left',
+      size: noteSize,
+    });
+  }
+  return { cards, boxes, trunks, headings: placed };
 };
 
 /** How many ports a card's side has; the studio kinds declare the same number ({@link cardSpec}). */
@@ -305,7 +364,7 @@ export const seedSlideSpec =
         },
       };
     }
-    headings.forEach(({ text, align, ...box }, index) => {
+    headings.forEach(({ text, align, size, ...box }, index) => {
       const id = elementId(`heading-${index}`, 'label');
       content[nodeKey(id)] = {
         kind: 'node',
@@ -322,7 +381,7 @@ export const seedSlideSpec =
             border: false,
             alignHorizontal: align ?? 'center',
             alignVertical: 'middle',
-            fontSize: headingSize,
+            fontSize: size ?? headingSize,
           },
         },
       };
@@ -339,7 +398,25 @@ export const seedSlideSpec =
           size: { width: box.width, height: box.height },
           label: card.label,
           icon: { type: card.icon },
-          data: card.tone ? { tone: TONES[card.tone] ?? card.tone } : {},
+          // The core card's own fields stay at the top; the kind's go under `data` (decision 21).
+          ...(card.body !== undefined ? { body: card.body } : {}),
+          ...(card.footer !== undefined ? { footer: card.footer } : {}),
+          data: {
+            ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
+            ...(card.chips
+              ? {
+                  chips: {
+                    items: card.chips.items.map(({ icon, label, note }) => ({
+                      icon,
+                      label,
+                      ...(note ? { note } : {}),
+                    })),
+                    ...(card.chips.cols !== undefined ? { cols: card.chips.cols } : {}),
+                    ...(card.chips.flat !== undefined ? { flat: card.chips.flat } : {}),
+                  },
+                }
+              : {}),
+          },
         },
       };
     }
@@ -355,7 +432,16 @@ export const seedSlideSpec =
       if (!source || !target) {
         throw new Error(`${spec.id}: edge ${edge.from} → ${edge.to} names a card the slide does not draw.`);
       }
-      return { ...edge, source, target, sides: sides(source, target), trunk: edge.trunk === true };
+      const trunk = edge.trunk === true;
+      // A trunk always leaves the foot and lands on the head, whatever the two cards' separation says: the header
+      // hangs its columns below it, so an outer column taking the east or west port would leave the fan lopsided.
+      return {
+        ...edge,
+        source,
+        target,
+        sides: trunk ? ({ source: 's', target: 'n' } as const) : sides(source, target),
+        trunk,
+      };
     });
     const ports = new Map<string, string>();
     const bySide = new Map<string, { key: string; along: number }[]>();
