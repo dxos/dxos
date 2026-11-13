@@ -608,7 +608,7 @@ decision D-7: The sheet publishes the anchor of its cell selection to the `ViewL
 ```
 
 ```mdl
-decision D-5: With `follow`, the reveal scrolls the anchor's first cell to the top left and leaves the focused cell and the comment highlight alone, for following a peer (plugin-space F-8.20). Fills in [D-4].
+decision D-8: With `follow`, the reveal scrolls the anchor's first cell to the top left and leaves the focused cell and the comment highlight alone, for following a peer (plugin-space F-8.20). Fills in [D-7].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
