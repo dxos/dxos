@@ -4913,7 +4913,7 @@ decision D-233: TILE's learning path builds a contacts screen with plain React s
 ```mdl
 decision D-234: Four component packages get guides, picked by how many plugins use them: Lists (`react-ui-list`), Forms from a schema (`react-ui-form`), Menus and toolbars (`react-ui-menu`) and Text editor (`react-ui-editor`). They are planned until Josiah confirms the picks.
   date: 2026-11-11
-  by: agent:claude
+  by: agent:claude-code
   for: user:wittjosiah
   affects: [tile-guide-lists, tile-guide-forms, tile-guide-menus, tile-guide-editor]
   why: Josiah asked for guides for the common packages and a proposal of which. Attention and mosaic are left out because they belong to the plugin shell.
@@ -5033,12 +5033,48 @@ decision D-248: On `/echo` the four reason cards and the four guarantee cards ea
 ```
 
 ```mdl
-decision D-249: Corrections from review. EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read; Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key. The TILE learning path's ECHO app configures its client as ECHO's Installation page does, so the sharing exercise works across browser profiles, and its new entry point keeps the stylesheet imports. TILE's samples key rows by id, keep editor text in state across theme changes, and make tooltip triggers focusable. TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, only `Flex`, `Grid` and `Container` take `asChild`, a layout primitive may take a role, an icon-only part still needs an accessible name, `include` keeps schema order, and Save is disabled only while a touched field has an error. The topic picker scrolls on a short screen.
+decision D-249: EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read. Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key.
   date: 2026-11-13
-  by: agent:claude
+  by: agent:claude-code
   for: user:wittjosiah
   affects: [F-16.8]
-  why: Review on the PR checked these pages against the source and found statements the code does not support.
+  why: Review checked these pages against the client services and network manager code, which do not support the earlier claims.
+```
+
+```mdl
+decision D-250: The TILE learning path's ECHO app configures its client as ECHO's Installation page does: persistent storage, the OPFS worker, and EDGE signaling and replication. Connect to ECHO tells the reader to start the new entry point with the stylesheet imports.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.8]
+  why: Without a network config the client used in-memory transports, so the sharing exercise could not sync two browser profiles.
+```
+
+```mdl
+decision D-251: TILE's samples key list rows by id, keep editor text in state so it survives the editor being rebuilt on a theme change, and make tooltip triggers keyboard-focusable.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.8]
+  why: Rows keyed by name collide on duplicate names, a rebuilt editor reset to its initial value, and a non-focusable trigger left the tooltip out of reach for keyboard users.
+```
+
+```mdl
+decision D-252: TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, and only `Flex`, `Grid` and `Container` take `asChild`. Interactive parts take no added roles or state attributes, but an icon-only part still needs an accessible name, and a layout primitive may take a role. The forms guide says `include` keeps schema order and Save is disabled only while a touched field has an error.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.8]
+  why: Review checked these statements against `@dxos/react-ui` and `@dxos/react-ui-form`, which behave as described here.
+```
+
+```mdl
+decision D-253: The topic picker's panel on a phone is capped at the viewport's height and scrolls.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.8]
+  why: On a short landscape screen the fixed panel ran past the viewport, where it could not be scrolled to.
 ```
 
 ## Appendix: Extension Definitions
