@@ -1886,6 +1886,10 @@ feat F-7: Relationship to dxos.org
           plugins that render it: which plugins load, what each contributes, and how they share the objects
           without importing each other; each demo runs on its own page in an iframe, so its styles stay off
           the docs page
+
+  req F-7.11:
+    when: a reader comes back to a page with demos after its tab has been in the background
+    then: every demo still shows its peers and their content, as it did before the tab was hidden
 ```
 
 ```mdl
@@ -3965,6 +3969,18 @@ decision D-217: Each learning path's app lives in a folder named for its section
   by: user:wittjosiah
   affects: [installation, defining-types, mutating-objects, querying, sharing, guide-react, app-framework-create-plugin, app-framework-define-type, app-framework-add-operation, app-framework-extend-app-graph, app-framework-add-surface, plex-run-in-composer]
   why: The ECHO app's folder was plain `tutorial` and the plugin's was `app-framework-tutorial`, after a section that is now PLEX; naming both by section matches `halo-tutorial`.
+```
+
+```mdl
+decision D-248: A demo's peers stay mounted while their client's status lapses. Each peer's `ClientProvider` skips its status gate, since the demo runtime owns the client and its initialization.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.11]
+  why: A background tab's timers are throttled to about one a minute, so the client misses its status heartbeat and marks itself inactive. The gate then unmounted the peer's plugin app, whose ClientPlugin destroyed the client, and the panes stayed blank after the reader came back.
+  rejected:
+    - Keep the gate and rebuild the peer when its status returns: a destroyed client cannot come back, so the demo would have to make new peers and replay the invitation.
+    - Lengthen the client's status timeout: it lives in the client SDK and changes every app, and a long enough background stay still trips it.
 ```
 
 ## Appendix: Extension Definitions
