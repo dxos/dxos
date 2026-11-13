@@ -91,7 +91,7 @@ export const ListVariantGallery: Story = {
       '',
       '<List variant="steps">',
       '',
-      '1. ECHO',
+      '1. **ECHO** holds the data',
       '2. Agents',
       '',
       '</List>',
@@ -110,8 +110,14 @@ export const ListVariantGallery: Story = {
   },
   play: async ({ canvasElement }) => {
     await query(canvasElement, '[data-variant="cards"]');
-    await query(canvasElement, '[data-variant="steps"]');
+    const steps = await query(canvasElement, '[data-variant="steps"]');
     await query(canvasElement, '[data-variant="outline"]');
+
+    // The counter is drawn beside the content, so a step's own markdown stays in one flow: a flex item would
+    // have made `**ECHO**` a box of its own, separated from the rest of the sentence by the row's gap.
+    const [item] = steps.querySelectorAll('li');
+    await expect(getComputedStyle(item).display).toBe('list-item');
+    await expect(getComputedStyle(item, '::before').position).toBe('absolute');
   },
 };
 
@@ -233,6 +239,12 @@ export const ThemeOverrides: Story = {
       '',
       'Replaces the accent for this box only.',
       '',
+      '<List variant="outline" tone="accent">',
+      '',
+      "- Back to the slide's accent",
+      '',
+      '</List>',
+      '',
       '</Box>',
     ),
   },
@@ -241,5 +253,9 @@ export const ThemeOverrides: Story = {
     await expect(getComputedStyle(steps).getPropertyValue('--slide-accent').trim()).toBe('#ff7a1a');
     const box = await query(canvasElement, 'div[data-tone="info"]');
     await expect(getComputedStyle(box).getPropertyValue('--slide-accent').trim()).not.toBe('#ff7a1a');
+
+    // `tone="accent"` inside a toned box returns to the slide's accent instead of inheriting the box's.
+    const nested = await query(canvasElement, 'ul[data-tone="accent"]');
+    await expect(getComputedStyle(nested).getPropertyValue('--slide-accent').trim()).toBe('#ff7a1a');
   },
 };

@@ -90,10 +90,13 @@ type StyleTag = keyof typeof STYLE_TAGS;
 
 const isStyleTag = (tag: ContainerTag): tag is StyleTag => Object.hasOwn(STYLE_TAGS, tag);
 
-/** The tone a style tag asks for; an unknown name falls back to the theme's own accent. */
-const toneName = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): SlideTheme.Tone => {
+/**
+ * The tone a style tag asks for, or none when it asks for no tone: an untoned block inherits the tone of the block
+ * around it, while `tone="accent"` is a request to return to the slide's own accent. An unknown name falls back.
+ */
+const toneName = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): SlideTheme.Tone | undefined => {
   if (value === undefined || SlideTheme.isTone(value)) {
-    return value ?? SlideTheme.TONES[0];
+    return value;
   }
   issues.push({
     kind: 'html',
@@ -438,7 +441,7 @@ const styleBlocks = (
     issues.push({ kind: 'html', message: `${tagLabel(tag)} has no ${node} to style.` });
   }
   for (const block of blocks) {
-    block.data = { ...block.data, hProperties: { ...block.data?.hProperties, variant, tone } };
+    block.data = { ...block.data, hProperties: { ...block.data?.hProperties, variant, ...(tone && { tone }) } };
   }
   return children;
 };
@@ -451,7 +454,7 @@ const containerNodes = (
   if (open.tag === 'box') {
     const variant = variantName(open.tag, open.attributes.variant, BOX_VARIANTS, issues);
     const tone = toneName(open.tag, open.attributes.tone, issues);
-    return [slideElement(CONTAINER_TAGS.box, { variant, tone }, children)];
+    return [slideElement(CONTAINER_TAGS.box, { variant, ...(tone && { tone }) }, children)];
   }
   if (isStyleTag(open.tag)) {
     return styleBlocks(open.tag, children, open.attributes, issues);

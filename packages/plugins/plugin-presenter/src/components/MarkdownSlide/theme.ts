@@ -48,9 +48,11 @@ export const theme = {
       },
       steps: {
         list: 'flex flex-col gap-6 my-[16px] list-none [counter-reset:slide-step]',
+        // The counter is positioned, not a flex item: a flex `li` would break `**bold**`, a nested list or a second
+        // paragraph out of the text's flow and space them with the row's gap.
         li:
-          'flex items-baseline gap-8 px-10 py-6 rounded-[20px] bg-(--slide-code) text-[48px] ' +
-          '[counter-increment:slide-step] before:content-[counter(slide-step)] before:text-(color:--slide-accent)',
+          'relative ps-28 pe-10 py-6 rounded-[20px] bg-(--slide-code) text-[48px] [counter-increment:slide-step] ' +
+          'before:absolute before:start-10 before:content-[counter(slide-step)] before:text-(color:--slide-accent)',
       },
       outline: {
         list: 'flex flex-col gap-6 my-[16px] list-none',

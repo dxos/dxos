@@ -245,6 +245,20 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([]);
   });
 
+  test('a block with no tone carries none, so it inherits the one around it', () => {
+    const slide = parseSlide('<List variant="outline">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBeUndefined();
+  });
+
+  test('tone="accent" is kept, so a nested block can return to the slide accent', () => {
+    const slide = parseSlide(
+      '<Box tone="warning">\n\n<List variant="outline" tone="accent">\n\n- a\n\n</List>\n\n</Box>',
+    );
+    expect(elements(slide.slots.default, 'slide-box')[0].properties.tone).toBe('warning');
+    expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBe('accent');
+    expect(slide.issues).toEqual([]);
+  });
+
   test('an unknown tone falls back to the accent and is reported', () => {
     const slide = parseSlide('<Box tone="neon">\n\nBoxed\n\n</Box>');
     expect(elements(slide.slots.default, 'slide-box')[0].properties.tone).toBe('accent');
@@ -262,6 +276,21 @@ describe('parseSlide', () => {
     const slide = parseSlide('---\naccent: "url(https://example.com/x.png)"\n---\n\n# Title');
     expect(slide.frontmatter.accent).toBeUndefined();
     expect(slide.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+  });
+
+  test('a word CSS does not know, or an empty color function, is rejected', () => {
+    const named = parseSlide('---\naccent: "notacolor"\n---\n\n# Title');
+    expect(named.frontmatter.accent).toBeUndefined();
+    expect(named.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
+    const empty = parseSlide('---\ncode: "rgb()"\n---\n\n# Title');
+    expect(empty.frontmatter.code).toBeUndefined();
+    expect(empty.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('code') }]);
+
+    // The colors CSS does know still pass.
+    const valid = parseSlide('---\naccent: "rebeccapurple"\nseparator: "rgb(1 2 3)"\n---\n\n# Title');
+    expect(valid.frontmatter.accent).toBe('rebeccapurple');
+    expect(valid.issues).toEqual([]);
   });
 
   test('<Surface> with an invalid ref keeps the element and reports it', () => {

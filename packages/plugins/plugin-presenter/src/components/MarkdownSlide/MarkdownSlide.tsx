@@ -146,10 +146,12 @@ const slideStyle = (style: SlideThemeStyle, frontmatter: SlideFrontmatter): Slid
   if (overrides.length === 0) {
     return style;
   }
-  return overrides.reduce<SlideThemeStyle>(
+  const overridden = overrides.reduce<SlideThemeStyle>(
     (style, color) => ({ ...style, [`--slide-${VARIABLES[color]}`]: frontmatter[color]! }),
     style,
   );
+  // The slide's accent is its own, so a `tone="accent"` under it returns here rather than to the deck's.
+  return frontmatter.accent ? { ...overridden, '--slide-theme-accent': frontmatter.accent } : overridden;
 };
 
 /** The `--slide-*` variable each overridable color writes to. */
@@ -162,7 +164,7 @@ const VARIABLES: Record<(typeof SLIDE_COLORS)[number], string> = {
 
 /** A tone repaints the accent the variant's classes already read, so one attribute recolors the whole block. */
 const TONE_COLORS: Record<SlideTheme.Tone, string> = {
-  accent: 'var(--color-accent-text)',
+  accent: 'var(--slide-theme-accent)',
   info: 'var(--color-info-text)',
   success: 'var(--color-success-text)',
   warning: 'var(--color-warning-text)',
@@ -404,7 +406,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   // A tone rebinds `--slide-accent` for this element and everything under it, so the variant's own classes follow it.
   const tone = block ? asVariant(properties.tone) : undefined;
   delete properties.tone;
-  if (SlideTheme.isTone(tone) && tone !== 'accent') {
+  if (SlideTheme.isTone(tone)) {
     properties.dataTone = tone;
     properties.style = `--slide-accent: ${TONE_COLORS[tone]}`;
   }

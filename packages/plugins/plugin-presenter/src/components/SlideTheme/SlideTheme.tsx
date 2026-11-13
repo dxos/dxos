@@ -133,11 +133,15 @@ export const slideThemeStyle = (settings: SlideTheme.Settings = {}): SlideThemeS
     valid(value) ? value : fallback;
   // Stored settings are not re-validated on read, so an unknown name falls back to the theme's own font.
   const { font, monoFont } = fontsOf(settings);
+  const accent = pick(settings.accent, SlideTheme.isColor, vars.accent);
   return {
     colorScheme,
     '--slide-bg': pick(settings.background, SlideTheme.isColor, vars.background),
     '--slide-fg': pick(settings.foreground, SlideTheme.isColor, vars.foreground),
-    '--slide-accent': pick(settings.accent, SlideTheme.isColor, vars.accent),
+    '--slide-accent': accent,
+    // The theme's own accent, kept apart from `--slide-accent` so a `tone="accent"` inside a toned block returns
+    // to it instead of inheriting the tone around it.
+    '--slide-theme-accent': accent,
     '--slide-code': pick(settings.code, SlideTheme.isColor, vars.code),
     '--slide-separator': pick(settings.separator, SlideTheme.isColor, vars.separator),
     '--slide-font-body': font?.family ?? vars.fontBody,

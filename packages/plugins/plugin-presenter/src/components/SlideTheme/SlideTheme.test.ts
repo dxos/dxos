@@ -83,4 +83,13 @@ describe('SlideTheme.Settings', () => {
     expect(Result.isSuccess(decode({ base: 'neon' }))).toBe(false);
     expect(Result.isSuccess(decode({ background: 'url(x)' }))).toBe(false);
   });
+
+  test('a bare word is a color only where CSS knows it', () => {
+    expect(['rebeccapurple', 'transparent', 'currentColor'].every(SlideTheme.isColor)).toBe(true);
+    expect(['notacolor', 'rgb()', 'oklch( )'].some(SlideTheme.isColor)).toBe(false);
+  });
+
+  test('the theme accent is published separately, for a tone to return to', () => {
+    expect(slideThemeStyle({ accent: '#f80' })['--slide-theme-accent']).toBe('#f80');
+  });
 });
