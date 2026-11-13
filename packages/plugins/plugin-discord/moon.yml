@@ -41,6 +41,14 @@ tasks:
       runInCI: false
       cache: false
 
+  # Export channels (and their threads) as DiscordChatExporter JSON with DISCORD_EXPORT_TOKEN, e.g.
+  # `moon run plugin-discord:export -- --guild <id> --days 30`. See the script header for flags.
+  export:
+    command: 'pnpm exec tsx src/testing/discord-export.ts'
+    options:
+      runInCI: false
+      cache: false
+
   # Serve the RDF facts crawl-demo persisted (DISCORD_FACTS_DB) over HTTP on DISCORD_FACT_SERVER_PORT (7700) for the
   # stories-brain `FactExplorer` story. Runs until interrupted.
   fact-server:
