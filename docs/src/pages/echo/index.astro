@@ -2,9 +2,9 @@
 import { Code } from 'astro-expressive-code/components';
 
 import Diagram from '../../components/Diagram.astro';
-import { EchoDemo } from '../../demos/EchoDemo.tsx';
 import SpecCite from '../../components/SpecCite.astro';
 import { SUITE_BACKGROUNDS } from '../../components/topic-nav/suite.ts';
+import { StoryDemo } from '../../demos/StoryDemo.tsx';
 import WebflowFooter from '../../components/WebflowFooter.astro';
 import WebflowNav from '../../components/WebflowNav.astro';
 import { INSTALL, guarantees, reasons, routes, steps } from '../../echo/home.ts';
@@ -37,7 +37,7 @@ const CENTER = { x: ICON.x + ICON.width / 2, y: ICON.y + ICON.height / 2 };
 const rays = pathsOf('lines').map(shift);
 const FADE = 1.05 * ICON.height;
 
-/** The live demos shown, in order, by id in `DEMOS`. */
+/** The live demos shown, in order, by id in `STORIES`. */
 const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 ---
 <WebflowLayout
@@ -233,12 +233,12 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
               data-panel={id}
               data-active={index === 0 ? '' : undefined}
             >
-              <EchoDemo id={id} client:only="react">
+              <StoryDemo id={id} client:only="react">
                 <div slot="fallback" class="echo-demo-loading" role="status">
                   <span class="echo-demo-spinner" aria-hidden="true" />
                   Loading live demo…
                 </div>
-              </EchoDemo>
+              </StoryDemo>
             </div>
           ))}
         </div>
@@ -656,10 +656,6 @@ const DEMO_ORDER = ['editor', 'views', 'explorer', 'diagram'];
 
   .echo-demo {
     height: 32rem;
-  }
-
-  .echo-demo :global([data-demo-frame]) {
-    border-radius: 0;
   }
 
   /* Until its island hydrates, a demo holds its frame's size, so the page does not shift when it arrives. */

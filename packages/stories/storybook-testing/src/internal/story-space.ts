@@ -3,11 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import { createContext, useContext } from 'react';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
+import { type SpaceId } from '@dxos/keys';
 
 /**
  * The space a story seeds and shows: the profile's designated default space, else its first visible one.
@@ -25,3 +27,10 @@ export const resolveStorySpace = (client: Client): Effect.Effect<Space> =>
     yield* Effect.promise(() => space.waitUntilReady());
     return space;
   });
+
+const StorySpaceContext = createContext<SpaceId | undefined>(undefined);
+
+/** Names the space several peers share, which each peer's layout shows instead of its own first space. */
+export const StorySpaceProvider = StorySpaceContext.Provider;
+
+export const useStorySpaceId = () => useContext(StorySpaceContext);

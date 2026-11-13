@@ -16,7 +16,8 @@ import { Feed, Tag } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { Text } from '@dxos/schema';
-import { ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 import { Message, Organization } from '@dxos/types';
 
 import { PermissionProvider, StoryRole } from '../modules/index.ts';
@@ -74,9 +75,9 @@ const edgeConfig = new Config({
  * holding grants for exactly the checked permissions, and its tools are database and sandbox
  * operations that declare what they require. A tool call the grants do not cover is refused.
  */
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-compute/Permissions',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
@@ -94,7 +95,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [surfacesPlugin()],
     Wrapper: LocalProvider,
     types,
@@ -103,7 +104,7 @@ export const Default: Story = {
 };
 
 export const Edge: Story = {
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     plugins: [surfacesPlugin()],
     Wrapper: EdgeProvider,
     config: edgeConfig,

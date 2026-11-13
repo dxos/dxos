@@ -2921,6 +2921,11 @@ feat F-7: Relationship to dxos.org
   req F-7.11:
     when: a reader comes back to a page with demos after its tab has been in the background
     then: every demo still shows its peers and their content, as it did before the tab was hidden
+
+  req F-7.12:
+    when: a reader opens `/echo`
+    then: every demo shows its content on every peer no later than the shared-runtime demos did (a median of
+          7.8 s on a local production build), measured over the whole page rather than per demo
 ```
 
 ```mdl
@@ -5613,6 +5618,29 @@ decision D-288: `/echo` draws its hero from the same ECHO art as the docs heroes
   by: user:wittjosiah
   affects: [D-220, D-287]
   why: Josiah asked for `/echo` to share assets and inherit colors so it does not diverge from the suite again.
+```
+
+```mdl
+decision D-278: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-7.5, F-7.10, F-7.12]
+  why: Any story built with the layout harness can then go onto the site as a demo, with no second frame to keep in step with Storybook.
+  rejected:
+    - Keep the docs demo frame and runtime beside the story harness: two ways to frame a demo drift apart, and a story could not be dropped onto a page.
+    - Always run two peers: a story that needs one peer should not pay for a second.
+```
+
+```mdl
+decision D-279: The docs island composes a story with `StoryEmbed.compose`, which runs its meta, decorators and loaders outside Storybook, and renders it with `StoryEmbed.Root` under layout containment, so the story's fixed full-screen layout fills the island. On `/echo` every island joins one `StoryPeers` runtime, started when the first island mounts and before the story module arrives; each story seeds once, partials are seeded once per page, and the diagram seeds after both peers join. The PLEX Overview's iframe page gives its story peers of its own. Fills in [D-278].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.5, F-7.10, F-7.12]
+  why: A runtime per demo starts eight clients on the page, which [D-61] found too slow; one shared runtime starts two.
+  rejected:
+    - Seed the diagram with the others: its large write slows the second peer's join, and the page was ready about 1.2 s later.
+    - Hold a second peer's app until its replica has the story's objects: it did not change the time to ready.
 ```
 
 ## Appendix: Extension Definitions

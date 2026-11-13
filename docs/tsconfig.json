@@ -103,37 +103,13 @@
       "path": "../packages/core/protocols"
     },
     {
-      "path": "../packages/plugins/plugin-canvas"
-    },
-    {
       "path": "../packages/plugins/plugin-client"
-    },
-    {
-      "path": "../packages/plugins/plugin-explorer"
-    },
-    {
-      "path": "../packages/plugins/plugin-illustrator"
     },
     {
       "path": "../packages/plugins/plugin-inspector"
     },
     {
-      "path": "../packages/plugins/plugin-kanban"
-    },
-    {
-      "path": "../packages/plugins/plugin-markdown"
-    },
-    {
-      "path": "../packages/plugins/plugin-mermaid"
-    },
-    {
-      "path": "../packages/plugins/plugin-preview"
-    },
-    {
       "path": "../packages/plugins/plugin-space"
-    },
-    {
-      "path": "../packages/plugins/plugin-table"
     },
     {
       "path": "../packages/plugins/plugin-testing"
@@ -167,6 +143,12 @@
     },
     {
       "path": "../packages/sdk/types"
+    },
+    {
+      "path": "../packages/stories/stories-echo"
+    },
+    {
+      "path": "../packages/stories/storybook-testing"
     },
     {
       "path": "../packages/ui/brand"

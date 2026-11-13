@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as Role from '@dxos/app-framework/Role';
 
-import { normalizeCell } from './ModuleContainer.tsx';
+import { normalizeCell } from './module-container.tsx';
 
 describe('normalizeCell', () => {
   const Token = Role.make<Record<string, any>>('org.dxos.test.token');

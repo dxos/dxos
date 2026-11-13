@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
@@ -12,12 +13,14 @@ import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
+import * as Cell from '@dxos/storybook-testing/Cell';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 import { Organization } from '@dxos/types';
 
-import { companySchemas } from '../companies.ts';
-import * as Demo from '../Demo.ts';
+import { companies, companySchemas } from '../content/companies.ts';
+import { decorators } from '../testing.ts';
 
-const partial = SampleSpace.partial('echo-demo-views', {
+const views = SampleSpace.partial('echo-demo-views', {
   schemas: [...companySchemas, View.View, Table.Table, Kanban.Kanban],
   run: () =>
     Effect.gen(function* () {
@@ -41,12 +44,31 @@ const partial = SampleSpace.partial('echo-demo-views', {
     }),
 });
 
+const meta: Meta<typeof ModuleContainer.Root> = {
+  title: 'stories/stories-echo/Views',
+  render: ModuleContainer.Root,
+  args: { compact: true },
+  parameters: { layout: 'fullscreen' },
+  tags: ['docs-embed'],
+};
+
+export default meta;
+
 /** One set of companies as a table on one peer and a board on the other: move a card and its row changes. */
-export const ViewsDemo = Demo.make({
-  id: 'views',
-  title: 'Table and board',
-  partial,
-  plugins: () => [TablePlugin.make(), KanbanPlugin.make()],
-  views: { table: 'Table', board: 'Board' },
-  layout: ['table', 'board'],
-});
+export const Views: StoryObj = {
+  decorators: decorators({
+    title: 'Table and board',
+    plugins: [TablePlugin.make(), KanbanPlugin.make()],
+    onInit: async ({ run }) => {
+      await run(companies);
+      const { table, board } = await run(views);
+      return {
+        views: {
+          table: { label: 'Table', layout: [[Cell.article(table)]] },
+          board: { label: 'Board', layout: [[Cell.article(board)]] },
+        },
+        open: ['table', 'board'],
+      };
+    },
+  }),
+};

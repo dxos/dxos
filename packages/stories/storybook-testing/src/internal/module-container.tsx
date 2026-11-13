@@ -15,14 +15,15 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
-import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { StoryLayout } from './layout.ts';
+import * as StoryLayout from '../StoryLayout.ts';
+import { useStorySpaceId } from './story-space.ts';
 
 /** Props a resolved object cell's override component receives. */
 export type ResolvedCellProps = {
@@ -197,6 +198,25 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
 };
 
 /**
+ * An object cell, bound to this space's replica of its object: a harness running several peers seeds on one of them,
+ * so the others wait for the object to sync.
+ */
+const ObjectCell = ({ space, cell }: { space: Space; cell: NormalizedObjectCell }) => {
+  const foreign = Obj.getDatabase(cell.object) !== space.db;
+  const [replica] = useQuery(space.db, foreign ? Filter.id(cell.object.id) : Filter.nothing());
+  const object = foreign ? replica : cell.object;
+  if (!object) {
+    return <div className='grid place-items-center text-description'>Syncing…</div>;
+  }
+
+  return cell.component ? (
+    <cell.component space={space} object={object} attendableId={cell.attendableId} />
+  ) : (
+    <SurfaceCell type={cell.type} data={{ subject: object, ...cell.data, attendableId: cell.attendableId }} />
+  );
+};
+
+/**
  * Renders a columns×rows grid of app-framework surfaces from a {@link ModuleLayout}.
  *
  * Each cell resolves via `<Surface.Surface type={token} limit={1} />` and is wrapped in an
@@ -214,7 +234,9 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
   const layoutState = Hooks.useCapability(StorybookCapabilities.LayoutState);
   const { graph } = ToolkitHooks.useAppGraph();
   const spaces = useSpaces();
-  const [space] = spaces;
+  // A harness running several peers names the space they share; otherwise the story shows its first space.
+  const storySpaceId = useStorySpaceId();
+  const space = storySpaceId ? spaces.find((space) => space.id === storySpaceId) : spaces[0];
 
   // A harness may contribute a runtime layout (built by `onInit`); prefer it over the static prop.
   const [layoutAtom] = Hooks.useCapabilities(StoryLayout.Atom);
@@ -225,10 +247,10 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
   useEffect(() => {
     const activeId = AppSpace.getActiveSpaceId(atomRegistry.get(layoutState).workspace);
     const active = activeId && spaces.find((space) => space.id === activeId);
-    if (!active && space) {
+    if (space && (storySpaceId ? activeId !== space.id : !active)) {
       atomRegistry.set(layoutState, { ...atomRegistry.get(layoutState), workspace: GraphPath.getSpacePath(space.id) });
     }
-  }, [spaces, space, layoutState, atomRegistry]);
+  }, [spaces, space, storySpaceId, layoutState, atomRegistry]);
 
   // Materialize object-cell app-graph nodes so object-scoped toolbar/graph actions resolve —
   // the work the deck's navtree normally does on navigation.
@@ -267,17 +289,10 @@ export const ModuleContainer = ({ layout, columns, rows, compact = false }: Modu
                 id={cell.id}
                 classNames={mx('border border-separator overflow-hidden', !compact && 'rounded-sm')}
               >
-                {cell.kind === 'object' && cell.component ? (
-                  <cell.component space={space} object={cell.object} attendableId={cell.attendableId} />
+                {cell.kind === 'object' ? (
+                  <ObjectCell space={space} cell={cell} />
                 ) : (
-                  <SurfaceCell
-                    type={cell.type}
-                    data={
-                      cell.kind === 'object'
-                        ? { subject: cell.object, ...cell.data, attendableId: cell.attendableId }
-                        : { ...cell.data, attendableId: cell.id }
-                    }
-                  />
+                  <SurfaceCell type={cell.type} data={{ ...cell.data, attendableId: cell.id }} />
                 )}
               </AttendableContainer>
             );

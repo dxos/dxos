@@ -25,16 +25,17 @@ import * as StudioOperation from '@dxos/plugin-studio/StudioOperation';
 import * as StudioSkill from '@dxos/plugin-studio/StudioSkill';
 import * as Templates from '@dxos/plugin-studio/Templates';
 import { type Space } from '@dxos/react-client/echo';
-import { accessTokensFromEnv } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
+import { createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Studio',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 
@@ -155,7 +156,7 @@ const makeStoryOptions = (provider: 'higgsfield' | 'mock') => ({
   // `VITE_HIGGSFIELD_CREDENTIALS=<keyId>:<keySecret>` when starting storybook.
   accessTokens:
     provider === 'higgsfield'
-      ? accessTokensFromEnv({ 'higgsfield.ai': import.meta.env.VITE_HIGGSFIELD_CREDENTIALS })
+      ? StoryHarness.accessTokensFromEnv({ 'higgsfield.ai': import.meta.env.VITE_HIGGSFIELD_CREDENTIALS })
       : [],
   onInit: seedStudioProject,
   onChatCreated: bindProject,

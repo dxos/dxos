@@ -11,7 +11,7 @@ import { Organization, Person } from '@dxos/types';
 /** The schemas `companies` writes. */
 export const companySchemas = [Organization.Organization, Person.Person];
 
-type Company = { name: string; status: string; description: string; people: string[] };
+type Company = { name: string; status: Organization.Organization['status']; description: string; people: string[] };
 
 const COMPANIES: Company[] = [
   {
@@ -47,15 +47,13 @@ const COMPANIES: Company[] = [
   },
 ];
 
-/** Six companies across the pipeline's stages, each with the people who work there; several demos show them. */
+/** Six companies across the pipeline's stages, each with the people who work there; several stories show them. */
 export const companies = SampleSpace.partial('echo-demo-companies', {
   schemas: companySchemas,
   run: Effect.fnUntraced(function* () {
     for (const { name, status, description, people } of COMPANIES) {
       const website = `https://${name.split(' ')[0].toLowerCase()}.example`;
-      const organization = yield* Database.add(
-        Organization.make({ name, description, website, status: status as Organization.Organization['status'] }),
-      );
+      const organization = yield* Database.add(Organization.make({ name, description, website, status }));
       for (const fullName of people) {
         yield* Database.add(Person.make({ fullName, organization: Ref.make(organization) }));
       }

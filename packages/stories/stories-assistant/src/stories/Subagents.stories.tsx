@@ -8,16 +8,10 @@ import { expect, waitFor, within } from 'storybook/test';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
 
 import { StoryRole } from '../modules/index.ts';
-import {
-  Calculate,
-  CalculatorSkill,
-  ModuleContainer,
-  createDecorators,
-  storyParameters,
-  submitPrompt,
-} from '../testing/index.ts';
+import { Calculate, CalculatorSkill, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
@@ -27,9 +21,9 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * the conversation. The agent waits for the subagents with `thread_wait` while the reader keeps chatting. See
  * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8).
  */
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<typeof ModuleContainer.Root> = {
   title: 'stories/stories-assistant/Subagents',
-  render: ModuleContainer,
+  render: ModuleContainer.Root,
   parameters: storyParameters,
 };
 

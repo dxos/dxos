@@ -34,7 +34,8 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer, UpdateCompanionStubPlugin } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryStagePlugin from '@dxos/storybook-testing/StoryStagePlugin';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -112,7 +113,7 @@ const DECORATORS = [
       PreviewPlugin.make(),
       ProgressPlugin.make(),
       RoutinePlugin.make(),
-      UpdateCompanionStubPlugin(),
+      StoryStagePlugin.make(),
       StoryModulesPlugin(),
       StorybookPlugin.make({}),
     ],
@@ -120,7 +121,7 @@ const DECORATORS = [
 ];
 
 const DefaultStory = () => (
-  <ModuleContainer
+  <ModuleContainer.Root
     layout={[
       [StoryRole.Mailbox, StoryRole.Message],
       [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
