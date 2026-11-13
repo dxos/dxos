@@ -13,6 +13,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
@@ -250,6 +251,27 @@ describe('PluginHost', () => {
     });
   });
 
+  test('an operation whose schema cannot be serialized leaves no cancellation wait pending', async ({ expect }) => {
+    let waiting = false;
+    let disposed = false;
+    const cancellation: PluginProtocol.CancellationSignal & Disposable = {
+      waitForCancel: () => {
+        waiting = true;
+        return new Promise<void>(() => {});
+      },
+      [Symbol.dispose]: () => {
+        disposed = true;
+      },
+    };
+    const result = await PluginHost.make(() => ({ primary: UnserializablePlugin() })).invoke(
+      { operationKey: String(Unserializable.meta.key), input: {} },
+      {},
+      { cancellation },
+    );
+    expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining('No JSON Schema.') } });
+    expect(disposed).toBe(waiting);
+  });
+
   // Services only EDGE holds, and other plugins' operations (EDGE-PLUGINS F-5.7).
   describe('host services', () => {
     test('a handler reaches a service EDGE serves, its methods and streams', async ({ expect }) => {
@@ -446,6 +468,37 @@ const makeSpaceEnv = (spaceId: SpaceId): PluginProtocol.Env => ({
   QUEUE_SERVICE: { queryQueue: unserved, insertIntoQueue: unserved, deleteFromQueue: unserved },
   FUNCTIONS_AI_SERVICE: { fetch: unserved },
 });
+
+/** An operation whose input schema throws when serialized to JSON Schema, as the host does before running it. */
+const Unserializable = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.unserializable'), name: 'Unserializable' },
+  input: Schema.Struct({
+    name: Schema.String.check(
+      Schema.makeFilter((name: string) => name.length > 0, {
+        toJsonSchema: () => {
+          throw new Error('No JSON Schema.');
+        },
+      }),
+    ),
+  }),
+  output: Schema.Struct({}),
+});
+
+const UnserializablePlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hostTestUnserializable'), name: 'Unserializable' }),
+).pipe(
+  Plugin.addModule(
+    Capability.inlineModule('UnserializableOperations', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed(
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(Unserializable.pipe(Operation.withHandler(() => Effect.succeed({})))),
+        ),
+      ),
+    ),
+  ),
+  Plugin.make,
+);
 
 /** A plugin whose one skill throws when made, as a skill with a broken definition does. */
 const BrokenSkillPlugin = Plugin.define(

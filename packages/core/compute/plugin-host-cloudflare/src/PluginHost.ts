@@ -134,50 +134,50 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     });
     const cancellation = RequestContext.listenForCancel(scope.cancellation);
 
-    // Set once the invocation's context exists; a nested call can only return after that.
-    let serviceContainer: ServiceContainer | undefined;
-    // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
-    const withOperations = HostServices.withOperations(handler, {
-      refreshWorkingSet: async () => serviceContainer?.refreshWorkingSet(),
-      handlers: activation.operationHandlers,
-      host: scope.operations,
-      spaceId,
-      conversation: scope.conversation,
-      pid,
-      idSeed: scope.idSeed,
-    });
-    const contextual = RequestContext.withConversation(
-      RequestContext.withCancellation(
-        withCapabilities(
-          HostServices.withHostServices(
-            withOperations,
-            scope.services,
-            activation.capabilities.getAll(Capabilities.HostServiceAdapter),
-          ),
-          activation.capabilities,
-        ),
-        cancellation.signal,
-      ),
-      scope.conversation,
-    );
-    const func = wrapFunctionHandler(contextual, {
-      // Registering types needs a database, which exists only for a space-scoped invocation.
-      types: spaceId === undefined ? undefined : [...activation.registeredTypes],
-      registry,
-      toolkits: [...activation.toolkits],
-      typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
-      // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
-      blobBackends: FileStorage.blobBackends(env),
-      // Another bundle's nested call passes the objects it holds by reference.
-      resolveObjectReferences: true,
-    });
-
     if (!callerOwnsEnvelopes) {
       trace.start(info);
     }
     // The in-process rpc clients bridged onto the bindings live for one invocation.
     const serviceScope = Effect.runSync(Scope.make());
     try {
+      // Set once the invocation's context exists; a nested call can only return after that.
+      let serviceContainer: ServiceContainer | undefined;
+      // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
+      const withOperations = HostServices.withOperations(handler, {
+        refreshWorkingSet: async () => serviceContainer?.refreshWorkingSet(),
+        handlers: activation.operationHandlers,
+        host: scope.operations,
+        spaceId,
+        conversation: scope.conversation,
+        pid,
+        idSeed: scope.idSeed,
+      });
+      const contextual = RequestContext.withConversation(
+        RequestContext.withCancellation(
+          withCapabilities(
+            HostServices.withHostServices(
+              withOperations,
+              scope.services,
+              activation.capabilities.getAll(Capabilities.HostServiceAdapter),
+            ),
+            activation.capabilities,
+          ),
+          cancellation.signal,
+        ),
+        scope.conversation,
+      );
+      // Inside the try: it serializes the operation's schema, and a throw must still dispose the cancel listener.
+      const func = wrapFunctionHandler(contextual, {
+        // Registering types needs a database, which exists only for a space-scoped invocation.
+        types: spaceId === undefined ? undefined : [...activation.registeredTypes],
+        registry,
+        toolkits: [...activation.toolkits],
+        typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
+        // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
+        blobBackends: FileStorage.blobBackends(env),
+        // Another bundle's nested call passes the objects it holds by reference.
+        resolveObjectReferences: true,
+      });
       const made = await makeContext(env, scope, spaceId, serviceScope);
       serviceContainer = made.serviceContainer;
       const context = made.context;
