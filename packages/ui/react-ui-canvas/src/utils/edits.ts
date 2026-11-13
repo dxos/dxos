@@ -22,9 +22,9 @@ import {
 } from '@dxos/scene';
 
 import { type LinkValues, type NodeValues, type RenderList2D } from '../model/index.ts';
-import { encloseIn, hullDescendants } from './hull.ts';
+import { encloseIn, hullDescendants, insertInStack } from './hull.ts';
 import { layoutView } from './layout.ts';
-import { keyBetween, sortByZ } from './order.ts';
+import { sortByZ } from './order.ts';
 import { nodeBounds, resizeNode } from './shapes.ts';
 
 /** A change to the open scene; the same scene back when there is nothing to change. */
@@ -106,16 +106,19 @@ export const insertNode =
       );
     };
     const taken = Object.values(scene.nodes).filter((other) => !other.locked && !isViewNode(other) && holds(other));
-    // Under everything, so a press on a node inside it reaches the node.
-    const [lowest] = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
-    const below = lowest === undefined || node.z < lowest.z ? node.z : (keyBetween(undefined, lowest.z) ?? node.z);
-    return (
-      encloseIn(
-        scene,
-        node,
-        taken.map(({ id }) => id),
-      ) ?? { ...scene, nodes: { ...scene.nodes, [node.id]: { ...node, z: below } } }
+    const held = encloseIn(
+      scene,
+      node,
+      taken.map(({ id }) => id),
     );
+    if (held) {
+      return held;
+    }
+    // Round nothing, it still goes under everything, so a press on a shape it overlaps reaches the shape.
+    const [lowest] = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
+    return lowest === undefined || node.z < lowest.z
+      ? { ...scene, nodes: { ...scene.nodes, [node.id]: node } }
+      : insertInStack(scene, node, 0);
   };
 
 /** Removes the nodes and links of `ids`, and every link that loses an end with them. */

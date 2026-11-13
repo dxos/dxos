@@ -545,6 +545,32 @@ export const hullDescendants = (nodes: readonly Node[], id: string): Node[] => {
 };
 
 /**
+ * The scene with `node` put in at place `at` of the order it is painted in (0 is under everything): keyed between its
+ * neighbours where a key fits, else with the whole stack renumbered as it is painted, since a stored key may be one
+ * no key fits beside and a key made up there could land on the wrong side of the other neighbour.
+ */
+export const insertInStack = (scene: RenderList2D, node: Node, at: number): RenderList2D => {
+  const stack = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]).filter(
+    (entry) => entry.id !== node.id,
+  );
+  const key = keyBetween(stack[at - 1]?.z, stack[at]?.z);
+  if (key !== undefined) {
+    return { ...scene, nodes: { ...scene.nodes, [node.id]: { ...node, z: key } } };
+  }
+  const order = [...stack.slice(0, at).map(({ id }) => id), node.id, ...stack.slice(at).map(({ id }) => id)];
+  const keys = initialKeys(order.length);
+  const zOf = new Map(order.map((id, index) => [id, keys[index]]));
+  const rekeyed = <T extends { id: string; z: string }>(entry: T): T => ({ ...entry, z: zOf.get(entry.id) ?? entry.z });
+  return {
+    ...scene,
+    nodes: Object.fromEntries(
+      Object.values({ ...scene.nodes, [node.id]: node }).map((entry): [string, Node] => [entry.id, rekeyed(entry)]),
+    ),
+    links: Object.fromEntries(Object.values(scene.links).map((link) => [link.id, rekeyed(link)])),
+  };
+};
+
+/**
  * The nodes of `ids` a hull made round them holds itself: a node inside a hull that is going in too stays inside
  * that hull, which carries it.
  */
@@ -581,27 +607,10 @@ export const encloseIn = (scene: RenderList2D, hull: HullNode, ids: readonly str
   const stack = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
   // Inside a hull it is drawn just over that hull, and so under everything else the hull holds; in none, at the bottom.
   const at = holder ? stack.findIndex((entry) => entry.id === holder.id) + 1 : 0;
-  const key = keyBetween(stack[at - 1]?.z, stack[at]?.z);
   const { parent: _parent, ...rest } = hull;
-  const placed = (z: string): HullNode => ({ ...rest, z, ...(holder ? { parent: holder.id } : {}) });
+  const placed: HullNode = { ...rest, ...(holder ? { parent: holder.id } : {}) };
   const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: hull.id }]));
-  const nodes = { ...scene.nodes, ...inside };
-  if (key !== undefined) {
-    return { ...scene, nodes: { ...nodes, [hull.id]: placed(key) } };
-  }
-  // No key fits there (a stored key that cannot be split): the stack is renumbered as it is painted, the hull in its
-  // place, so it is under what it holds whatever the keys were.
-  const order = [...stack.slice(0, at).map(({ id }) => id), hull.id, ...stack.slice(at).map(({ id }) => id)];
-  const keys = initialKeys(order.length);
-  const zOf = new Map(order.map((id, index) => [id, keys[index]]));
-  const rekeyed = <T extends { id: string; z: string }>(entry: T): T => ({ ...entry, z: zOf.get(entry.id) ?? entry.z });
-  return {
-    ...scene,
-    nodes: Object.fromEntries(
-      Object.values({ ...nodes, [hull.id]: placed(hull.z) }).map((node): [string, Node] => [node.id, rekeyed(node)]),
-    ),
-    links: Object.fromEntries(Object.values(scene.links).map((link) => [link.id, rekeyed(link)])),
-  };
+  return insertInStack({ ...scene, nodes: { ...scene.nodes, ...inside } }, placed, at);
 };
 
 /**
@@ -637,8 +646,8 @@ export const enclose = (
 
 /**
  * The scene with the node `id` inside the hull `hull`, or inside none: beside `beside.target` in the drawing order
- * where one is given, else over everything. Undefined when `id` is no node, `hull` is no hull of the scene, or the
- * move would put a hull inside itself.
+ * where one is given, else over everything (a hull, under its own shapes). Undefined when `id` is no node, `hull`
+ * is no hull of the scene, or the move would put a hull inside itself.
  */
 export const moveToHull = (
   scene: RenderList2D,
@@ -655,7 +664,16 @@ export const moveToHull = (
   if (!node || within || (hull !== undefined && !(holder && isHullNode(holder)))) {
     return undefined;
   }
-  const z = beside ? (restackZ(scene, id, beside.target, beside.position) ?? node.z) : topZ(Object.values(scene.nodes));
+  const all = Object.values(scene.nodes);
+  // A hull stays under what it holds: over the hull it goes into where a key fits between that one and its own
+  // shapes, else where it was, which is already under them.
+  const [lowest] = sortByZ(hullDescendants(all, id));
+  const under = holder ? (keyBetween(holder.z, lowest?.z) ?? node.z) : node.z;
+  const z = beside
+    ? (restackZ(scene, id, beside.target, beside.position) ?? node.z)
+    : isHullNode(node)
+      ? under
+      : topZ(all);
   const { parent: _parent, ...rest } = node;
   const moved: Node = { ...rest, z, ...(hull !== undefined ? { parent: hull } : {}) };
   return { ...scene, nodes: { ...scene.nodes, [id]: moved } };

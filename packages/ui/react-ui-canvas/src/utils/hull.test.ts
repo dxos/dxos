@@ -358,6 +358,26 @@ describe('a hull drawn with its tool', () => {
     expect(made.nodes.h2.z < made.nodes.h1.z).toBe(true);
   });
 
+  test('drawn round nothing over a shape whose key no key fits under, it is still painted under the shape', ({
+    expect,
+  }) => {
+    // The frame covers half of A, so it holds nothing; A's key ends in a zero, or A has none.
+    for (const z of ['a0', '']) {
+      const scene = sceneOf([
+        { ...cell('a', 0, 0), z },
+        { ...cell('b', 3, 0), z: 'b' },
+      ]);
+      const frame = drawn('h', [0, 0], [0, 0]);
+      const half: HullNode = { ...frame, size: { width: frame.size.width / 2, height: frame.size.height } };
+      const made = insertNode(half)(scene);
+      expect(made.nodes.a.parent).toBeUndefined();
+      const painted = Object.values(made.nodes)
+        .sort((left, right) => (left.z < right.z ? -1 : left.z > right.z ? 1 : left.id < right.id ? -1 : 1))
+        .map((node) => node.id);
+      expect(painted).toEqual(['h', 'a', 'b']);
+    }
+  });
+
   test('drawn round nothing, or round a locked shape alone, it stands empty where it was drawn', ({ expect }) => {
     const locked = { ...cell('a', 0, 0), locked: true };
     const scene = sceneOf([locked, cell('x', 3, 0)]);
