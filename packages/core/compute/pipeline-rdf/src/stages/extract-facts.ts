@@ -19,6 +19,12 @@ import {
 } from '../internal/stages/extract.ts';
 import { hashText } from '../internal/stages/reconcile.ts';
 import {
+  DEFAULT_DECISION_MODEL,
+  DEFAULT_EXTRACTION_MODEL,
+  type Report as SystemOneReport,
+  extractSystemOne,
+} from '../internal/stages/system-one.ts';
+import {
   type EntityTerm,
   type ExtractDocument,
   type ExtractOptions,
@@ -116,8 +122,15 @@ const factContext = (options: ExtractOptions | undefined) =>
     } satisfies FactContext;
   });
 
+const LLM_EXTRACTOR: Fact['extractor'] = { id: 'default', model: DEFAULT_MODEL, version: '1' };
+
 /** A candidate the model emitted, as a {@link Fact} attributed to `doc`; `undefined` when it is ungrounded. */
-const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactContext): Fact | undefined => {
+const toFact = (
+  candidate: ExtractedFact,
+  doc: ExtractDocument,
+  context: FactContext,
+  extractor: Fact['extractor'] = LLM_EXTRACTOR,
+): Fact | undefined => {
   // Drop ungrounded propositions before they become facts.
   if (!isGrounded(candidate.subject) || !isGrounded(candidate.object)) {
     return undefined;
@@ -167,7 +180,7 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
       generatedAtTime: doc.date ?? context.recordedAt,
     },
     recordedAt: context.recordedAt,
-    extractor: { id: 'default', model: DEFAULT_MODEL, version: '1' },
+    extractor,
     sourceHash: hashText(doc.text),
   };
 };
@@ -195,6 +208,14 @@ export const extractDocFacts = (
   doc: ExtractDocument,
   options?: ExtractOptions,
 ): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
+  options?.extractor === 'system-one'
+    ? extractSystemOneDocFacts(doc, options).pipe(Effect.map(({ facts }) => facts))
+    : extractLlmDocFacts(doc, options);
+
+const extractLlmDocFacts = (
+  doc: ExtractDocument,
+  options?: ExtractOptions,
+): Effect.Effect<Fact[], SemanticIndexError, AiService.AiService> =>
   Effect.gen(function* () {
     const context = yield* factContext(options);
     // The graph label the model gave each statement.
@@ -209,6 +230,39 @@ export const extractDocFacts = (
       }
     }
     return placeFacts(doc, labelled, context.ontology);
+  });
+
+/** What System One extraction of one document produced, with how each claim was routed. */
+export type SystemOneDocFacts = { readonly facts: Fact[]; readonly report: SystemOneReport };
+
+export type { SystemOneReport };
+
+/**
+ * {@link extractDocFacts} through System One: its facts record `extractor.id` `system-one`, and those of the claims it
+ * handed to the LLM `system-one-fallback`, so the two paths can be compared in one store.
+ */
+export const extractSystemOneDocFacts = (
+  doc: ExtractDocument,
+  options?: ExtractOptions,
+): Effect.Effect<SystemOneDocFacts, SemanticIndexError, AiService.AiService> =>
+  Effect.gen(function* () {
+    const context = yield* factContext(options);
+    const { candidates, report } = yield* extractSystemOne(doc, options);
+    const systemOne: Fact['extractor'] = {
+      id: 'system-one',
+      model: `${options?.systemOne?.extractionModel ?? DEFAULT_EXTRACTION_MODEL}+${options?.systemOne?.decisionModel ?? DEFAULT_DECISION_MODEL}`,
+      version: '1',
+    };
+    const fallback: Fact['extractor'] = {
+      id: 'system-one-fallback',
+      model: options?.model ?? DEFAULT_MODEL,
+      version: '1',
+    };
+    const labelled = candidates.flatMap(({ fact: candidate, via }) => {
+      const fact = toFact(candidate, doc, context, via === 'system-one' ? systemOne : fallback);
+      return fact ? [[fact, `${via}:${candidate.graph ?? ''}`] as const] : [];
+    });
+    return { facts: placeFacts(doc, labelled, context.ontology), report };
   });
 
 /**
@@ -297,6 +351,15 @@ const attribute = (candidate: TranscriptFact, docs: readonly TaggedDoc[]): Tagge
  * order, including documents that yielded no facts.
  */
 export const extractTranscriptFacts = (
+  docs: readonly ExtractDocument[],
+  options?: ExtractOptions & { readonly maxTranscriptChars?: number },
+): Effect.Effect<DocumentFacts[], SemanticIndexError, AiService.AiService> =>
+  options?.extractor === 'system-one'
+    ? // System One reads one message at a time, so a transcript gains it nothing.
+      Effect.forEach(docs, (doc) => extractDocFacts(doc, options).pipe(Effect.map((facts) => ({ doc, facts }))))
+    : extractLlmTranscriptFacts(docs, options);
+
+const extractLlmTranscriptFacts = (
   docs: readonly ExtractDocument[],
   options?: ExtractOptions & { readonly maxTranscriptChars?: number },
 ): Effect.Effect<DocumentFacts[], SemanticIndexError, AiService.AiService> =>

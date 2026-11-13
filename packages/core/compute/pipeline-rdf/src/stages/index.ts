@@ -17,3 +17,5 @@ export {
   parseExtractPayload,
   parseTranscriptPayload,
 } from '../internal/stages/extract.ts';
+
+export { DEFAULT_THRESHOLDS as DEFAULT_SYSTEM_ONE_THRESHOLDS } from '../internal/stages/system-one.ts';

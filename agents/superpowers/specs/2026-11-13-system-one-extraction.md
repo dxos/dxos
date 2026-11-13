@@ -1,6 +1,7 @@
 # System One models for RDF fact extraction
 
-Date: 2026-11-13. Branch: `dm/discord-extraction`. Status: probe written, **not run live** (no credentials).
+Date: 2026-11-13. Branch: `dm/discord-extraction`. Status: extractor implemented behind `extractor: 'system-one'`;
+**not run live** (no Cloudflare credentials, see "Implementation").
 
 Probe: `packages/core/compute/pipeline-rdf/scripts/system-one-extract.ts`.
 
@@ -139,3 +140,90 @@ message ──► Clairic: claims (list, spans)
    `.secrets/cloudflare.env`, or `CLAIRIC_ENDPOINT` pointing at an EDGE dev proxy) and run the full path.
 3. Score against `facts.db` over all 236 extracted messages: predicate agreement, entity agreement, and fallback
    rate.
+
+## Implementation
+
+The recommended pipeline is built into pipeline-rdf as a second extractor. `ExtractOptions.extractor: 'system-one'`
+selects it in `extractDocFacts`, `extractTranscriptFacts`, `indexFactsStage` and `indexFactsBatch`; the crawler's
+`extractFactsStage` passes `extractor` and `systemOne` through. The default stays `'llm'`.
+
+| File                                               | What it holds                                                                                        |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `pipeline-rdf/src/internal/stages/system-one.ts`   | Clairic requests, the decision request, the pure routing (`route`, `toClaimDecision`, `toCandidate`) |
+| `pipeline-rdf/src/stages/extract-facts.ts`         | `extractSystemOneDocFacts` (facts plus a per-document report) and the dispatch on `extractor`        |
+| `pipeline-rdf/src/types/Extract.ts`                | `Extractor`, `SystemOneOptions`, `SystemOneThresholds`                                               |
+| `pipeline-rdf/src/testing/system-one.ts`           | `systemOneAiService`: scripted Clairic and decision answers, `queuedAiService` for the fallback      |
+| `pipeline-rdf/src/testing/workers-ai.ts`           | `workersAiSystemOneService`: Clairic, Clef and Clef Flash over the Workers AI REST API               |
+| `pipeline-rdf/src/testing/system-one.live.test.ts` | Live smoke test and the `facts.db` comparison, both skipped without credentials                      |
+| `crawler/src/stages/extract-facts.ts`              | `extractor` and `systemOne` options                                                                  |
+
+Per document chunk:
+
+1. Clairic `claims` (list). No claims, or a System One call that fails, sends the whole chunk to the LLM.
+2. Clairic `subject` / `object` per claim. A missing span sends the claim to the LLM.
+3. One decision call per claim (Clef by default): `is_fact`, `needs_fallback`, `predicate` (the given ontology's
+   live entries, at most 254, plus `other`), `speech_act`, `certainty`, `negated`, and `subject_entity` /
+   `object_entity` over `ExtractOptions.entities` plus `new`.
+4. `route`: `is_fact < minIsFact` drops the claim. `other` drops it in closed mode and sends it to the LLM otherwise.
+   `needs_fallback > maxNeedsFallback` or predicate confidence `< minPredicateConfidence` sends it to the LLM. Every
+   other claim is kept.
+5. The kept claims become facts through the LLM path's own `toFact`: a linked entity is written as its label, so it
+   resolves to its IRI; a first-person span resolves to the author; the speech act sets the illocution, and certainty
+   and negation set the factuality. `quote` is the claim.
+6. The fallback is one `extractChunk` request per chunk that holds the uncertain claims as its text and the full
+   message as context (`claimsRule`). `systemOne.fallback: false` drops those claims instead.
+
+Facts record `extractor.id = 'system-one'` (model `<clairic>+<clef>` DXNs) or `'system-one-fallback'` (the fallback
+LLM, `ExtractOptions.model`, Claude Haiku 4.5 by default). The default thresholds are `minIsFact 0.5`,
+`minPredicateConfidence 0.6`, `minEntityConfidence 0.5` and `maxNeedsFallback 0.5`
+(`DEFAULT_SYSTEM_ONE_THRESHOLDS`).
+
+### Routes and credentials
+
+- **In the app:** the models resolve through `AiService` (`plugin-typesafe` routes Clairic and Clef through EDGE
+  `workers-ai/clairic` and `workers-ai/typesafe`). This needs a HALO identity, so a CLI run cannot use it.
+- **From the CLI and the live test:** `workersAiSystemOneService` calls
+  `api.cloudflare.com/client/v4/accounts/<id>/ai/run/@cf/cloudflare/{clairic,clef,clef-flash}` with
+  `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`, the same route as plugin-illustrator's `--judge clef`.
+- **Fallback:** Claude Haiku 4.5 through `DirectAiServiceLayer` (`DX_ANTHROPIC_API_KEY`). The repo has a DeepSeek
+  resolver (`deepseekV4Flash`), but no DeepSeek key was available, so Haiku stays the default. Pass
+  `model`/`provider` to change it.
+
+On 2026-11-13 neither Cloudflare variable was set in the environment or in `.secrets/`; the empty file
+`.secrets/cloudflare.env` (`CLOUDFLARE_ACCOUNT_ID=`, `CLOUDFLARE_API_TOKEN=`) is waiting for values.
+`DX_ANTHROPIC_API_KEY` is present in `.secrets/discord.env`. Unauthenticated calls to EDGE's AI routes are refused.
+
+### Tests
+
+- `src/internal/stages/system-one.test.ts` (12 tests): routing, thresholds, closed mode, the choice limits, entity
+  linking, factuality and the candidate shape.
+- `src/stages/system-one.test.ts` (5 tests): the routes end to end with scripted models. They cover the kept claim
+  linked to the author's IRI, the unlisted claim sent to the LLM, closed mode with no LLM call, a message with no
+  claims sent whole, a raised threshold, and the fallback switched off.
+- `src/testing/system-one.live.test.ts`: skipped until the credentials exist. To run it:
+
+  ```
+  moon run pipeline-rdf:test -- src/testing/system-one.live.test.ts
+  SYSTEM_ONE_COMPARE=1 SYSTEM_ONE_LIMIT=10 SYSTEM_ONE_MAX_COST=0.5 \
+    moon run pipeline-rdf:test -- src/testing/system-one.live.test.ts
+  ```
+
+  The comparison takes the most recent crawled messages of 60–700 characters that already have LLM facts in
+  `facts.db`. Both databases are read with `sqlite3 -readonly`. It logs each message's System One and fallback facts
+  beside the LLM's, then a summary: claims kept, dropped and sent to the LLM, messages with no fallback, p50 and max
+  latency, and cost. The cost uses Clairic's $0.10/M for Clairic and for Clef (the repo has no Clef price) plus about
+  $0.006 for each Haiku fallback request.
+
+### Live comparison
+
+Not run: no Cloudflare credentials. Put the values in `.secrets/cloudflare.env`, then run the comparison above. The
+dry-run estimate is still about $0.0001 per claim for System One. The summary table to fill in:
+
+| Metric                              | Value |
+| ----------------------------------- | ----- |
+| Messages / claims                   |       |
+| Claims kept without the LLM         |       |
+| Messages with no fallback call      |       |
+| Latency p50 / max (ms)              |       |
+| Cost (System One + fallback)        |       |
+| Predicate agreement with `facts.db` |       |

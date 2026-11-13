@@ -27,6 +27,9 @@ export type ExtractFactsOptions = {
   readonly ontology?: RDF.ExtractOptions['ontology'];
   /** Drop relations no listed predicate fits instead of minting one. */
   readonly closed?: boolean;
+  /** `system-one` extracts each message with Cloudflare's System One models, falling back to the LLM per claim. */
+  readonly extractor?: RDF.Extractor;
+  readonly systemOne?: RDF.SystemOneOptions;
 };
 
 type MessageEvent = Extract<Type.Event, { readonly _tag: 'Message' }>;
@@ -125,6 +128,8 @@ export const extractFactsStage = (
     ...(options?.rules ? { rules: options.rules } : {}),
     ...(options?.ontology ? { ontology: options.ontology } : {}),
     ...(options?.closed ? { closed: true } : {}),
+    ...(options?.extractor ? { extractor: options.extractor } : {}),
+    ...(options?.systemOne ? { systemOne: options.systemOne } : {}),
   };
   const extract = Effect.fnUntraced(function* (events: readonly MessageEvent[]) {
     const authors = new Map<string, AgentRegistry.Profile>();
