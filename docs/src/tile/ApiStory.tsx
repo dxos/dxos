@@ -21,7 +21,7 @@ type ApiStoryEntry = {
   args?: Record<string, unknown>;
 };
 
-/** The story at the top of each component namespace page, and on its TILE Overview card, by `<package>/<namespace>` [D-296, D-297]. */
+/** The story at the top of each component namespace page, and on its TILE Overview card, by `<package>/<namespace>` [D-297, D-298]. */
 const STORIES: Record<string, ApiStoryEntry> = {
   'react-ui-calendar/calendar': {
     load: () => import('../../../packages/ui/react-ui-calendar/src/components/Calendar/Calendar.stories.tsx'),

@@ -68,7 +68,7 @@ export type SpecPage = {
   group: string;
   /** The component package a page documents. */
   package?: string;
-  /** What the component does; it nests the page in a group of that name inside `group` [D-299]. */
+  /** What the component does; it nests the page in a group of that name inside `group` [D-300]. */
   family?: string;
   template: string;
   status: Status;
@@ -162,7 +162,7 @@ const sidebarLink = (page: SpecPage) => ({
 
 const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
 
-/** Every section's sidebar groups in one order; a group not named here follows them [D-304]. */
+/** Every section's sidebar groups in one order; a group not named here follows them [D-305]. */
 const GROUP_ORDER = ['Start here', 'Learning path', 'Core concepts', 'Guides', 'API', 'Resources'];
 
 const groupRank = (group: string) => {
@@ -173,7 +173,7 @@ const groupRank = (group: string) => {
 /**
  * The Starlight sidebar for one section of the spec's site map, its groups in `GROUP_ORDER`. A top-level group
  * starts expanded; pages with a `family` follow the group's own pages in a nested group per family. Family groups,
- * and every page in an API group, sort by label [D-296, D-299, D-300].
+ * and every page in an API group, sort by label [D-297, D-300, D-301].
  */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
