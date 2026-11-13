@@ -107,7 +107,11 @@ export const SpaceGraphNode = Schema.Struct({
   data: SpaceGraphData,
 });
 
-const DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, size: 24, hue: 'neutral' } as const;
+/**
+ * What a graph draws with where a field is unset. A new graph is made with these written out, so the Properties panel
+ * shows each as a value to change rather than as an empty field.
+ */
+export const SPACE_GRAPH_DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, size: 24, hue: 'neutral' } as const;
 
 export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
   const data = kindData(SpaceGraphData, node);
@@ -115,7 +119,7 @@ export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
     return null;
   }
 
-  const params = { ...DEFAULTS, ...data };
+  const params = { ...SPACE_GRAPH_DEFAULTS, ...data };
   const { width, height } = node.size;
   // Local coordinates: the circle is inscribed in the node's frame, so the graph moves and resizes with the node.
   const center = { x: width / 2, y: height / 2 };
@@ -169,7 +173,14 @@ export const spaceGraphSpec: ElementKindSpec = {
   key: 'G',
   schema: SpaceGraphNode,
   component: SpaceGraphNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'space-graph', id, z, center, size, data: { seed: 7 } }),
+  create: ({ id, z, center, size }) => ({
+    type: 'space-graph',
+    id,
+    z,
+    center,
+    size,
+    data: { seed: 7, ...SPACE_GRAPH_DEFAULTS },
+  }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 392-unit circle, give or take.
   defaultSize: { width: 8, height: 8 },
   resizable: true,

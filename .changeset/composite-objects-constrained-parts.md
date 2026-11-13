@@ -123,7 +123,8 @@ factory under `data` (`createConstant({ data: { value } })`) and read them from 
 the fields beside the shape's own opens as before and is rewritten on its next edit.
 
 The space graph's Properties are two to a row; Population is Node density, and Base dots (off unless turned on) draws
-the lattice points that hold no object.
+the lattice points that hold no object. A new space graph has its defaults written out (`SPACE_GRAPH_DEFAULTS`), so
+the panel shows each as a value.
 
 The Properties panel shows a shape selected inside a hull, where it showed nothing selected.
 
