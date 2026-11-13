@@ -3,7 +3,7 @@
 //
 
 //
-// Assistant-domain story harness, layered on `createStoryDecorators` from `@dxos/storybook-testing`
+// Assistant-domain story harness, layered on `StoryHarness.decorators` from `@dxos/storybook-testing`
 // (which owns the generic substrate: theme/layout, the plugin manager, client init/seeding/snapshot
 // import, and the runtime-layout atom). This wrapper adds what is assistant-specific: the assistant
 // plugin stack, chat/agent creation, skill binding, and the scripted (offline) model.
