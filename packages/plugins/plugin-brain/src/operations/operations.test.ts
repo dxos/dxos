@@ -131,6 +131,27 @@ describe('entity names', () => {
     expect(byIri.map((fact) => fact.id).sort()).toEqual(['d-1', 'd-2']);
   });
 
+  test('finds an entity by an absolute IRI of any scheme, with no label to match', async ({ expect }) => {
+    const did = 'did:key:z6MkAlice';
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([
+          {
+            ...makeFact({ id: 'k-1', subject: 'x', predicate: 'works on', object: 'x' }),
+            assertion: {
+              subject: { kind: 'entity', entity: did },
+              predicate: 'works on',
+              object: { kind: 'entity', entity: 'opfs', label: 'OPFS' },
+            },
+          },
+        ]);
+        return yield* queryCompactFacts({ entity: did });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(facts.map((fact) => fact.id)).toEqual(['k-1']);
+  });
+
   test('summarizes a subject named by its label', async ({ expect }) => {
     const result = await EffectEx.runPromise(
       Effect.gen(function* () {

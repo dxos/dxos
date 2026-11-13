@@ -45,12 +45,20 @@ const labelledEntitiesSparql = (labels: readonly string[]): string => `
     )
   }`;
 
+const ABSOLUTE_IRI = /^[a-z][a-z0-9+.-]*:[^\s]+$/i;
+
 /**
  * The entity keys a name the model gives can mean: its slug (which also matches graph-local entities by suffix), and
  * every entity with an IRI of its own whose label is the name — a slug alone never finds `https://discord.com/users/…`.
  */
 export const resolveEntityKeys = (name: string): Effect.Effect<string[], SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
+    // An absolute IRI of any scheme (`did:…`, `echo://…`) is its own key; normalizing would slug it. A space rules out
+    // labels such as `Meeting: standup`, which also start with a word and a colon.
+    const raw = name.trim();
+    if (ABSOLUTE_IRI.test(raw)) {
+      return [raw];
+    }
     const key = normalizeEntityId(name);
     if (RDF.Vocab.isIri(key)) {
       return [key];
