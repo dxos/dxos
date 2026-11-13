@@ -99,7 +99,8 @@ import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 // `exposed` is Group's to set (each inner node a crossing link reaches), so its ports keep those links attached.
 // `composite`, `bind`, `optional`, `hidden`, `grow` and `follows` say how a tool's Object is put together: they are
 // written in the template, not set on a shape. `overrides` is where a part's switch writes (`PartsField`), and is
-// shown only for an Instance whose Object has an optional part.
+// shown only for an Instance whose Object has an optional part. A solid's `op` and `operands` are Join's and
+// Subtract's to write, and its `rings` are worked out from them.
 const HIDDEN = [
   'id',
   'type',
@@ -107,6 +108,9 @@ const HIDDEN = [
   'ports',
   'points',
   'bends',
+  'op',
+  'operands',
+  'rings',
   'source',
   'target',
   'element',

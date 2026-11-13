@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { endpointNode } from './element.ts';
+import { type Bounds, endpointNode } from './element.ts';
 import {
   Constraint,
   type Dimension,
@@ -132,8 +132,6 @@ const fitsDimension = (intent: LayoutIntent, dim: Dimension): boolean => {
     case 'scale':
       return isVec3(intent.factor) === (dim === '3d');
     case 'extrude':
-    case 'join':
-    case 'subtract':
       return dim === '3d';
     case 'layout':
       return dim === '2d';
@@ -178,17 +176,51 @@ const solidIntentInputs = (intent: SolidIntent): string[] => {
   }
 };
 
+/** The ids a solid's `operands` names, in operation order; none for anything but a list of them. */
+export const solidOperands = (operands: unknown): string[] =>
+  typeof operands === 'string' ? operands.split(/\s+/).filter(Boolean) : [];
+
 /** The elements a stored solid builds from, as the `solid` element's props name them. */
 const solidInputs = (element: Element | undefined): string[] => {
   if (element?.type !== 'solid') {
     return [];
   }
-  const operands = element.props?.operands;
   const target = element.props?.target;
-  return [
-    ...(typeof operands === 'string' ? operands.split(/\s+/).filter(Boolean) : []),
-    ...(typeof target === 'string' ? [target] : []),
-  ];
+  return [...solidOperands(element.props?.operands), ...(typeof target === 'string' ? [target] : [])];
+};
+
+/** A box as a 2D element places one: what a 2D solid measures its operands by. */
+export type Placed2D = { readonly center?: Vec2; readonly size?: Size2; readonly rotation?: number };
+
+/**
+ * The box a 2D solid's outline is drawn from: the bounds of the operands it is built from, each turned as it stands.
+ * A union's is every operand's; a difference's is its base's alone, which what is left of it lies inside. The model
+ * frames a new solid by it and the viewport maps the outline from it into the solid's frame, so the two agree
+ * without the model knowing any shape's outline. Undefined where an operand it needs has no box.
+ */
+export const solidBounds2D = (op: unknown, operands: readonly (Placed2D | undefined)[]): Bounds | undefined => {
+  const measured = op === 'difference' ? operands.slice(0, 1) : operands;
+  const corners = measured.flatMap((operand) => {
+    if (!operand?.center || !operand.size) {
+      return [undefined];
+    }
+    const { center, size } = operand;
+    const angle = ((operand.rotation ?? 0) * Math.PI) / 180;
+    const [cos, sin] = [Math.cos(angle), Math.sin(angle)];
+    return [-1, 1].flatMap((across) =>
+      [-1, 1].map((down) => {
+        const [dx, dy] = [(across * size.width) / 2, (down * size.height) / 2];
+        return { x: center.x + dx * cos - dy * sin, y: center.y + dx * sin + dy * cos };
+      }),
+    );
+  });
+  const placed = corners.flatMap((corner) => (corner ? [corner] : []));
+  if (placed.length === 0 || placed.length < corners.length) {
+    return undefined;
+  }
+  const [xs, ys] = [placed.map(({ x }) => x), placed.map(({ y }) => y)];
+  const [left, top] = [Math.min(...xs), Math.min(...ys)];
+  return { x: round(left), y: round(top), width: round(Math.max(...xs) - left), height: round(Math.max(...ys) - top) };
 };
 
 /** The structure of intents shared by both dimensions; geometry goes to `geometry`. Undefined when nothing changed. */
@@ -197,7 +229,7 @@ const reduce = <E extends Element>(
   intent: LayoutIntent,
   isElement: (value: unknown) => value is E,
   geometry: (element: E, intent: LayoutIntent) => E | undefined,
-  solid: (intent: SolidIntent) => E | undefined,
+  solid: (intent: SolidIntent, elements: Elements<E>) => E | undefined,
   arranged = false,
 ): Elements<E> | undefined => {
   switch (intent.kind) {
@@ -242,7 +274,7 @@ const reduce = <E extends Element>(
         elements[intent.id] === undefined &&
         inputs.length > 0 &&
         inputs.every((id) => id !== intent.id && elements[id] !== undefined);
-      const made = valid ? solid(intent) : undefined;
+      const made = valid ? solid(intent, elements) : undefined;
       if (!made) {
         return undefined;
       }
@@ -337,6 +369,38 @@ const solid3D = (intent: SolidIntent): Element3D => {
   }
 };
 
+/**
+ * A `solid` element over 2D operands, as 3D's is over its own: the operation in `props`, and the box the operands
+ * stand in, since a 2D element is placed by its frame. It lies where its base does in the stack, or on top of all it
+ * joins.
+ */
+const solid2D = (intent: SolidIntent, elements: Elements<Element2D>): Element2D | undefined => {
+  if (intent.kind === 'extrude') {
+    return undefined;
+  }
+  const inputs = solidIntentInputs(intent);
+  const op = intent.kind === 'join' ? 'union' : 'difference';
+  const bounds = solidBounds2D(
+    op,
+    inputs.map((id) => elements[id]),
+  );
+  if (!bounds || bounds.width <= 0 || bounds.height <= 0) {
+    return undefined;
+  }
+  const base = elements[inputs[0]];
+  const orders = (intent.kind === 'join' ? inputs : inputs.slice(0, 1)).flatMap((id) => elements[id]?.z ?? []).sort();
+  const z = orders[orders.length - 1];
+  return {
+    id: intent.id,
+    type: 'solid',
+    ...(z !== undefined ? { z } : {}),
+    ...(base?.layer !== undefined ? { layer: base.layer } : {}),
+    center: { x: round(bounds.x + bounds.width / 2), y: round(bounds.y + bounds.height / 2) },
+    size: { width: bounds.width, height: bounds.height },
+    props: { op, operands: inputs.join(' ') },
+  };
+};
+
 const add3 = (left: Vec3, right: Vec3): Vec3 => ({
   x: round(left.x + right.x),
   y: round(left.y + right.y),
@@ -395,7 +459,7 @@ export function applyIntent(layout: LayoutRecord3D, intent: LayoutIntent): Layou
 export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutRecord;
 export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutRecord {
   if (layout.dim === '2d') {
-    const elements = reduce(layout.elements, intent, isElement2D, geometry2D, () => undefined, !!layout.arrange);
+    const elements = reduce(layout.elements, intent, isElement2D, geometry2D, solid2D, !!layout.arrange);
     return patchLayout(elements ? { ...layout, elements } : layout, patchOf(intent));
   }
   const elements = reduce(layout.elements, intent, isElement3D, geometry3D, solid3D, !!layout.arrange);

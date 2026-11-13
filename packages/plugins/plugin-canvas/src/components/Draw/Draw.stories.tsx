@@ -12,6 +12,9 @@
 // triangle or a diamond becomes that shape, squared up on the grid, and any other stroke lands as the line it is.
 // The `Shapes` variant is an empty board to try it on.
 //
+// The `Solids` variant has shapes that overlap, to Join into one or Subtract one from another: the commands 3D has,
+// which here make an outline rather than a mesh.
+//
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
@@ -22,7 +25,7 @@ import { FullEditor, SceneEditorStory } from '@dxos/react-ui-canvas-editor/testi
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
-import { type NoteNode, type Point, type PolylineNode, type Scene } from '@dxos/scene';
+import { type Node, type NoteNode, type Point, type PolylineNode, type Scene } from '@dxos/scene';
 
 const SIZE = { width: 288, height: 144 };
 
@@ -81,9 +84,45 @@ const HINT: NoteNode = {
 
 const SHAPES: RenderList2D = { id: 'board', name: 'Board', links: {}, nodes: { [HINT.id]: HINT } };
 
-const DOCUMENTS: Record<'lines' | 'shapes', Scene.SceneDocument> = {
+const shape = (
+  id: string,
+  type: 'rect' | 'ellipse',
+  z: string,
+  [x, y]: [number, number],
+  [width, height]: [number, number],
+  label?: string,
+): Node & { label?: string } => ({
+  type,
+  id,
+  z,
+  center: { x, y },
+  size: { width, height },
+  ...(label ? { label } : {}),
+});
+
+/** Two pairs that overlap: one to join, and one whose smaller shape lies inside the larger, to cut from it. */
+const SOLIDS: RenderList2D = {
+  id: 'board',
+  name: 'Board',
+  links: {},
+  nodes: Object.fromEntries(
+    [
+      {
+        ...HINT,
+        text: 'Select the box and the disc, then Join.\n\nSelect the plate, then the hole with Shift, then Subtract: the first selected is cut from.\n\nDelete either to get its shapes back.',
+      },
+      shape('box', 'rect', 'b0', [-264, 36], [192, 144]),
+      shape('disc', 'ellipse', 'b1', [-168, 108], [144, 144]),
+      shape('plate', 'rect', 'b2', [192, 72], [240, 192]),
+      shape('hole', 'ellipse', 'b3', [192, 72], [96, 96]),
+    ].map((node) => [node.id, node]),
+  ),
+};
+
+const DOCUMENTS: Record<'lines' | 'shapes' | 'solids', Scene.SceneDocument> = {
   lines: fromRenderLists2D([BOARD], { root: 'board' }),
   shapes: fromRenderLists2D([SHAPES], { root: 'board' }),
+  solids: fromRenderLists2D([SOLIDS], { root: 'board' }),
 };
 
 type StoryArgs = { board: keyof typeof DOCUMENTS };
@@ -110,6 +149,9 @@ export const Default: Story = {};
 
 /** An empty board to draw shapes on with Sketch (W). */
 export const Shapes: Story = { args: { board: 'shapes' } };
+
+/** Shapes that overlap, to Join and Subtract. */
+export const Solids: Story = { args: { board: 'solids' } };
 
 type Path = readonly (readonly [number, number])[];
 
@@ -436,5 +478,68 @@ export const SplineTest: Story = {
     await waitFor(() => expect(pathOf(drawn(canvasElement, 'spline')[0])).not.toBe(before));
     await expect(pathOf(drawn(canvasElement, 'spline')[0]).match(/C /g)).toHaveLength(3);
     await expect(canvas.getAllByTestId('bend-handle')).toHaveLength(6);
+  },
+};
+
+/** A node of the canvas by its id, as drawn. */
+const nodeOf = (root: HTMLElement, id: string) =>
+  root.querySelector<HTMLElement>(`[data-testid="scene-view"] [data-node-id="${id}"]`);
+
+/** A press and release on the middle of a node, as a click selects it; with `shift`, it adds to the selection. */
+const pick = async (root: HTMLElement, id: string, shift = false) => {
+  const node = nodeOf(root, id);
+  await expect(node).not.toBeNull();
+  const frame = node?.getBoundingClientRect();
+  const at = {
+    clientX: (frame?.left ?? 0) + (frame?.width ?? 0) / 2,
+    clientY: (frame?.top ?? 0) + (frame?.height ?? 0) / 2,
+    button: 0,
+    pointerId: 1,
+    shiftKey: shift,
+  };
+  node && (await fireEvent.pointerDown(node, at));
+  node && (await fireEvent.pointerUp(node, at));
+};
+
+/**
+ * 1. Select the box, then the disc with Shift. Join: one shape stands where the two did, with one outline.
+ * 2. Select the plate, then the hole with Shift. Subtract: the plate has the hole cut from it.
+ * 3. With the cut plate selected, Delete: the plate and the hole are back.
+ */
+export const SolidsTest: Story = {
+  args: { board: 'solids' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(nodeOf(canvasElement, 'box')).not.toBeNull());
+
+    await pick(canvasElement, 'box');
+    await pick(canvasElement, 'disc', true);
+    const join = await canvas.findByTestId('scene-action-join');
+    await waitFor(() => expect(join).toBeEnabled());
+    await userEvent.click(join);
+    await waitFor(() => expect(drawn(canvasElement, 'union')).toHaveLength(1));
+    await expect(nodeOf(canvasElement, 'box')).toBeNull();
+    await expect(nodeOf(canvasElement, 'disc')).toBeNull();
+    // One outline, of the box's corners and the disc's curve.
+    const joined = pathOf(drawn(canvasElement, 'union')[0]);
+    await expect(joined.match(/M /g)).toHaveLength(1);
+    await expect(joined.match(/L /g)?.length ?? 0).toBeGreaterThan(40);
+
+    await pick(canvasElement, 'plate');
+    await pick(canvasElement, 'hole', true);
+    const subtract = await canvas.findByTestId('scene-action-subtract');
+    await waitFor(() => expect(subtract).toBeEnabled());
+    await userEvent.click(subtract);
+    await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(1));
+    // Two outlines: the plate's edge, and the hole's.
+    await expect(pathOf(drawn(canvasElement, 'difference')[0]).match(/M /g)).toHaveLength(2);
+    await expect(nodeOf(canvasElement, 'hole')).toBeNull();
+
+    await userEvent.click(await canvas.findByTestId('scene-action-delete'));
+    await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(0));
+    await expect(nodeOf(canvasElement, 'plate')).not.toBeNull();
+    await expect(nodeOf(canvasElement, 'hole')).not.toBeNull();
+    await expect(drawn(canvasElement, 'union')).toHaveLength(1);
   },
 };

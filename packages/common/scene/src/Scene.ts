@@ -47,6 +47,8 @@ export const KINDS_2D: readonly string[] = [
   'card',
   'icon',
   'view',
+  // A shape made of others, joined or cut: the kind 3D builds its solids with, drawn here as an outline.
+  'solid',
 ];
 export const KINDS_3D: readonly string[] = ['cube', 'sphere', 'cylinder', 'cone', 'pyramid', 'mesh', 'solid'];
 

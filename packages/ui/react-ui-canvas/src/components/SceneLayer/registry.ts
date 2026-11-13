@@ -43,10 +43,13 @@ import {
   EXTENSIONS_GROUP,
   HULL_STYLE,
   NOMINAL_SIZES,
+  SolidNode,
   cloudPath,
   createNode,
+  isSolidNode,
   polygonPath,
   polylinePath,
+  solidPath,
 } from '../../utils/index.ts';
 import { CARD_TEMPLATE } from './card-template.ts';
 import { CardNode, CardNodeView, IconNode, IconNodeView } from './CardNodeView.tsx';
@@ -361,6 +364,23 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     minSize: { width: 3, height: 3 },
     palette: false,
     bare: true,
+  },
+  // Shapes joined into one, or one cut from another: made from a selection (Join, Subtract), never drawn, and it
+  // stands for the shapes it is made of, which are hidden while it does.
+  solid: {
+    name: 'Solid',
+    icon: 'ph--unite--regular',
+    schema: SolidNode,
+    component: PolygonNodeView,
+    create: (props) => ({ type: 'solid', ...props }),
+    defaultSize: NOMINAL_SIZES.rect,
+    silhouette: (node, inset) => solidPath(node.size, isSolidNode(node) ? node.rings : undefined, inset),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    // What is left of a cut may be a sliver.
+    minSize: { width: 3, height: 3 },
+    palette: false,
   },
   card: {
     extends: 'object',

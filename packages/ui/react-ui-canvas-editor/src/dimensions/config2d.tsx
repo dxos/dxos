@@ -25,6 +25,7 @@ import {
   type PropertyFormProps,
 } from '../editor/index.ts';
 import { type Dimension2DOptions, createDimension2D } from './dimension2d.tsx';
+import { SOLID_COMMANDS } from './solid-commands.ts';
 import { toolDragData2D, tools2D, typeIcons2D } from './tools2d.ts';
 
 /** What the host adds to the 2D Properties form (its database, reference options, per-selection overrides). */
@@ -41,7 +42,7 @@ const createPropertyForm2D = (useProperties?: UseProperties2D): ComponentType<Pr
   return Properties2D;
 };
 
-/** The commands only the 2D editor offers on a selection. */
+/** The 2D editor's commands on a selection: its own, and the solid booleans it shares with 3D. */
 const COMMANDS_2D: readonly ExtraCommandDef[] = [
   {
     id: 'enclose',
@@ -82,6 +83,7 @@ const COMMANDS_2D: readonly ExtraCommandDef[] = [
       select([id]);
     },
   },
+  ...SOLID_COMMANDS,
 ];
 
 /**

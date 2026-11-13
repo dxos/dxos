@@ -25,6 +25,7 @@ import {
   elementFormIntents,
   elementFormValues,
 } from './element-form.ts';
+import { SOLID_COMMANDS, freeId } from './solid-commands.ts';
 import { TOOLS_3D } from './tools3d.ts';
 import { Viewport3D } from './Viewport3D.tsx';
 
@@ -81,15 +82,6 @@ const PropertyForm3D = createPropertyForm({
   intents: elementFormIntents,
 });
 
-/** The first id of the form `base-n` a layout does not use. */
-const freeId = (elements: Readonly<Record<string, unknown>>, base: string): string => {
-  let index = 1;
-  while (elements[`${base}-${index}`] !== undefined) {
-    index++;
-  }
-  return `${base}-${index}`;
-};
-
 /** Opens the browser's file picker for one mesh file; resolves undefined when nothing was picked. */
 const pickMeshFile = (): Promise<File | undefined> =>
   new Promise((resolve) => {
@@ -111,34 +103,9 @@ const download = (blob: Blob, name: string): void => {
   URL.revokeObjectURL(url);
 };
 
-/** The commands only 3D offers: solid booleans, STL export, and mesh import (offered by the Objects section). */
+/** 3D's commands: the solid booleans it shares with 2D, STL export, and mesh import (offered by the Objects section). */
 const COMMANDS_3D: readonly ExtraCommandDef[] = [
-  {
-    id: 'join',
-    label: 'Join',
-    icon: 'ph--unite--regular',
-    enabled: ({ selection }) => selection.length > 1,
-    run: ({ document, layout, selection, onIntent, select }) => {
-      const id = freeId(findLayout(document, layout)?.elements ?? {}, 'union');
-      onIntent(layout, { kind: 'join', id, operands: selection });
-      select([id]);
-    },
-  },
-  {
-    id: 'subtract',
-    label: 'Subtract',
-    icon: 'ph--subtract--regular',
-    // The first selected is the base, the second the tool cut from it.
-    enabled: ({ selection }) => selection.length === 2,
-    run: ({ document, layout, selection, onIntent, select }) => {
-      const [base, tool] = selection;
-      if (base && tool) {
-        const id = freeId(findLayout(document, layout)?.elements ?? {}, 'difference');
-        onIntent(layout, { kind: 'subtract', id, base, tool });
-        select([id]);
-      }
-    },
-  },
+  ...SOLID_COMMANDS,
   {
     id: 'export-stl',
     label: 'Export STL',

@@ -46,6 +46,72 @@ const moved = (view: RenderList2D, dx: number): RenderList2D => ({
 const flat = (intent: LayoutIntent): LayoutIntent[] =>
   intent.kind === 'batch' ? intent.intents.flatMap(flat) : [intent];
 
+describe('a 2D solid', () => {
+  const overlapping = (): Record<string, Scene.Element2D> => ({
+    a: { id: 'a', type: 'rect', z: 'a0', center: { x: 50, y: 50 }, size: { width: 100, height: 100 } },
+    b: { id: 'b', type: 'ellipse', z: 'a1', center: { x: 100, y: 100 }, size: { width: 100, height: 100 } },
+  });
+
+  const joined = (kind: 'join' | 'subtract') => {
+    const doc = document(overlapping());
+    const intent: LayoutIntent =
+      kind === 'join'
+        ? { kind: 'join', id: 's', operands: ['a', 'b'] }
+        : { kind: 'subtract', id: 's', base: 'a', tool: 'b' };
+    return { ...doc, layouts: [applyIntent(layoutOf(doc), intent)] };
+  };
+
+  test('is drawn in place of its operands, with the outline they make', () => {
+    const doc = joined('join');
+    const view = toRenderList2D(doc, layoutOf(doc));
+    expect(Object.keys(view.nodes)).toEqual(['s']);
+    expect(view.nodes.s).toMatchObject({
+      type: 'solid',
+      op: 'union',
+      operands: 'a b',
+      center: { x: 75, y: 75 },
+      size: { width: 150, height: 150 },
+    });
+    const rings = Reflect.get(view.nodes.s, 'rings');
+    expect(rings).toHaveLength(1);
+    // The box's corners and the ellipse's curve: far more points than either a box or a blank frame has.
+    expect(rings[0].length).toBeGreaterThan(40);
+  });
+
+  test('a subtraction leaves the base with the tool cut out of it', () => {
+    const doc = joined('subtract');
+    const view = toRenderList2D(doc, layoutOf(doc));
+    expect(view.nodes.s).toMatchObject({
+      op: 'difference',
+      center: { x: 50, y: 50 },
+      size: { width: 100, height: 100 },
+    });
+    const [ring] = Reflect.get(view.nodes.s, 'rings');
+    expect(ring.some(({ x, y }: { x: number; y: number }) => x > 0.5 && x < 1 && y > 0.5 && y < 1)).toBe(true);
+  });
+
+  test('moved, it writes its place and not its outline, and reads back the same shape there', () => {
+    const doc = joined('join');
+    const view = toRenderList2D(doc, layoutOf(doc));
+    const [write] = layoutWrites(doc, { main: view }, { main: moved(view, 30) });
+    const layout = write.kind === 'layout' ? applyIntent(layoutOf(doc), write.intent) : layoutOf(doc);
+    expect(layout.elements.s.center).toEqual({ x: 105, y: 75 });
+    expect(layout.elements.s.props).toMatchObject({ op: 'union', operands: 'a b' });
+    expect(JSON.stringify(layout.elements.s)).not.toContain('rings');
+    expect([layout.elements.a.hidden, layout.elements.b.hidden]).toEqual([true, true]);
+    const again = toRenderList2D({ ...doc, layouts: [layout] }, layout);
+    expect(Reflect.get(again.nodes.s, 'rings')).toEqual(Reflect.get(view.nodes.s, 'rings'));
+    // Read again with nothing changed, it writes nothing.
+    expect(layoutWrites({ ...doc, layouts: [layout] }, { main: again }, { main: again })).toEqual([]);
+  });
+
+  test('deleted, its operands are drawn again', () => {
+    const doc = joined('join');
+    const layout = applyIntent(layoutOf(doc), { kind: 'delete', ids: ['s'] });
+    expect(Object.keys(toRenderList2D({ ...doc, layouts: [layout] }, layout).nodes).sort()).toEqual(['a', 'b']);
+  });
+});
+
 describe('layoutWrites', () => {
   test('a drag of 200 elements writes once, to the layout that owns them', () => {
     const doc = document(rects(200));

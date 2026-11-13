@@ -398,6 +398,16 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **A stroke kept as drawn closes** (user, 2026-11-13): a freehand line, and a Sketch stroke read as nothing,
       lands closed where its ends are within 12% of its bounds' diagonal (`strokeCloses`, `LINE_CLOSURE`); before,
       only a stroke read as a shape or as segments could close (25%, `CLOSURE`). `Draw.stories.tsx` Test.
+- [x] **Join and Subtract in 2D** (user, 2026-11-13): the commands 3D has (`SOLID_COMMANDS`, one definition for
+      both editors) write the same `join` / `subtract` intents, and a 2D layout now takes them: a `solid` element
+      over its operands, which are hidden while it stands and drawn again when it is deleted. The model frames it by
+      its operands' boxes (`solidBounds2D`); the 2D viewport works out its outline as it reads the layout
+      (`withSolidOutlines`, `solidRings`, js-clipper) and never stores it (`DERIVED_NODE_FIELDS`). A solid may be an
+      operand of another. `flattenPath` reads arcs. `Draw.stories.tsx` Solids, Solids Test.
+- [ ] **2D solids, open**: an operand's rounded corners are cut square; an open line joined adds nothing and is
+      hidden with the rest; Subtract takes exactly two shapes, as 3D's does; a solid's operands cannot be edited
+      without deleting it; hit testing and ports use the solid's frame, not its outline; no `.dx` statement writes
+      a 2D solid; a solid copied to another layout has no operands there and draws as its frame.
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
