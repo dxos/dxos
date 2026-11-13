@@ -12,8 +12,8 @@ server unless WebRTC has to fall back to a TURN relay.
 ## The pattern
 
 Open the same space on two devices. Each device joins the space's swarm. EDGE introduces them, they open a direct link,
-and a change made on one device arrives on the other over that link. The same change also goes to EDGE over each
-device's WebSocket, so a third device that comes online later gets it from EDGE.
+and a change made on one device arrives on the other over that link. When the space replicates through EDGE, the same
+change also goes to EDGE over each device's WebSocket, so a third device that comes online later gets it from EDGE.
 
 ## A server path against a direct link
 
@@ -51,8 +51,9 @@ if the space gives EDGE more than `pull` access; see HALO's [Spaces and membersh
 
 ## Today: both at once
 
-ECHO replicates each space over its swarm's direct links and through EDGE at the same time. The EDGE side is controlled by
-the `subductionReplicator` and `feedReplicator` flags in `runtime.client.edgeFeatures`. Composer, the `dx` CLI and the
+ECHO replicates each space over its swarm's direct links and, unless the space has turned it off with
+`Space.setEdgeReplication`, through EDGE at the same time. The EDGE side is controlled by the `subductionReplicator` and
+`feedReplicator` flags in `runtime.client.edgeFeatures`. Composer, the `dx` CLI and the
 configuration in [Installation](/docs/echo/learn/installation/) turn both on. CRDT merging makes the duplicate delivery
 harmless: a change that arrives twice is applied once.
 

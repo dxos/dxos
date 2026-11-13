@@ -5033,7 +5033,7 @@ decision D-248: On `/echo` the four reason cards and the four guarantee cards ea
 ```
 
 ```mdl
-decision D-249: EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read. Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key.
+decision D-249: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read. Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
