@@ -15,10 +15,11 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
-import { AgentNamespace } from '../../namespace.ts';
+import { translationKey } from '#translations';
+
+import { type BrowseSelection, type EntityCardModel, related, statements } from '../../model/index.ts';
 import { EntityCard, type EntityCardProps } from './EntityCard.tsx';
-import { KnowledgeCard } from './KnowledgeStack.tsx';
-import { type BrowseSelection, type EntityCardModel, related, statements } from './subgraph.ts';
+import { KnowledgeCard } from './KnowledgeCard.tsx';
 
 export type EntityBrowserProps = {
   cards: readonly EntityCardModel[];
@@ -26,6 +27,16 @@ export type EntityBrowserProps = {
   icons?: Readonly<Record<string, string>>;
   /** Chip hues by entity type, passed to each card. */
   hues?: EntityCardProps['hues'];
+  /** The chosen entity; a change from outside reopens the browser on that entity's card (or closes every column). */
+  selected?: string;
+  /** Called with the entity the latest choice names (a chip's entity, else its card), or undefined once none is. */
+  onSelect?: (id: string | undefined) => void;
+};
+
+/** The entity a path of choices ends on. */
+const chosenEntity = (path: readonly BrowseSelection[]): string | undefined => {
+  const last = path.at(-1);
+  return last?.entity ?? last?.cardId;
 };
 
 /** Whether a card matches a column's filter, by its name or its type. */
@@ -55,7 +66,7 @@ const CARD_SELECTOR = '[data-testid="entity-card"]';
  */
 const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
   ({ column, selection, icons, hues, onChoose, onClose, onNavigate }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(AgentNamespace.key);
+    const { t } = Hooks.useTranslation(translationKey);
     const [filter, setFilter] = useState('');
     const [stackElement, setStackElement] = useState<HTMLDivElement | null>(null);
     const stackRef = useComposedRefs<HTMLDivElement>(forwardedRef, setStackElement);
@@ -76,8 +87,8 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
       return () => stackElement.removeEventListener('focusin', handleFocusIn);
     }, [stackElement, selection?.cardId, onChoose]);
     const menuActions = useMenuBuilder(() => {
-      const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: AgentNamespace.key }] });
-      builder.custom('filter', { label: ['entity-browser-filter.placeholder', { ns: AgentNamespace.key }] }, () => (
+      const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: translationKey }] });
+      builder.custom('filter', { label: ['entity-browser-filter.placeholder', { ns: translationKey }] }, () => (
         <Field.Root>
           <Input.Root
             placeholder={t('entity-browser-filter.placeholder')}
@@ -90,7 +101,7 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
         builder.action(
           'close',
           {
-            label: ['entity-browser-close.label', { ns: AgentNamespace.key }],
+            label: ['entity-browser-close.label', { ns: translationKey }],
             icon: 'ph--x--regular',
             iconOnly: true,
             testId: 'entity-browser-close',
@@ -169,63 +180,93 @@ EntityBrowserColumn.displayName = 'EntityBrowser.Column';
  * or one chip in a column opens the next column on what that choice relates to. Each column filters its own stack.
  */
 // Composable, so a host's `Panel.Body asChild` makes the scroll frame its growing row.
-export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>(
-  ({ cards, icons, hues, ...props }, forwardedRef) => {
-    const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
-    // One entry per column that has chosen something; choosing in a column drops every choice after it.
-    const [path, setPath] = useState<BrowseSelection[]>([]);
-    const stackRefs = useRef<(HTMLDivElement | null)[]>([]);
+export const EntityBrowser = Util.composable<HTMLDivElement, EntityBrowserProps>((allProps, forwardedRef) => {
+  const { cards, icons, hues, selected, onSelect, ...props } = allProps;
+  // An uncontrolled caller omits `selected`, so its absence must not close the columns the user opened.
+  const controlled = 'selected' in allProps;
+  const byId = useMemo(() => new Map(cards.map((card) => [card.id, card])), [cards]);
+  // One entry per column that has chosen something; choosing in a column drops every choice after it.
+  const [path, setPath] = useState<BrowseSelection[]>([]);
+  const stackRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // The entity last reported, so a `selected` that echoes it does not reset the columns it came from.
+  const reportedRef = useRef<string | undefined>(undefined);
+  // An external selection whose card has not arrived yet, opened once it does.
+  const pendingRef = useRef<string | undefined>(undefined);
 
-    // Into the next column at its first card, or back to the card chosen in the previous one.
-    const navigate = (column: number, direction: 'left' | 'right') => {
-      const target = stackRefs.current[direction === 'left' ? column - 1 : column + 1];
-      const card =
-        (direction === 'left' && target?.querySelector<HTMLElement>(`${CARD_SELECTOR}[aria-current="true"]`)) ||
-        target?.querySelector<HTMLElement>(CARD_SELECTOR);
-      card?.focus();
-    };
+  const update = (next: BrowseSelection[]) => {
+    pendingRef.current = undefined;
+    setPath(next);
+    const entity = chosenEntity(next);
+    if (entity !== reportedRef.current) {
+      reportedRef.current = entity;
+      onSelect?.(entity);
+    }
+  };
 
-    const columns = useMemo(() => {
-      const result: Column[] = [{ cards, texts: [] }];
-      for (const selection of path) {
-        const card = byId.get(selection.cardId);
-        const next = card ? related(card, selection).flatMap((id) => byId.get(id) ?? []) : [];
-        // A property can hold entities and text alike, so its column shows both.
-        const texts = card ? statements(card, selection) : [];
-        if (next.length === 0 && texts.length === 0) {
-          break;
-        }
-        result.push({ cards: next, texts });
-        // A statement links to nothing further, so a column of only statements ends the chain.
-        if (next.length === 0) {
-          break;
-        }
+  useEffect(() => {
+    if (!controlled) {
+      return;
+    }
+    const changed = selected !== reportedRef.current;
+    const arrived = selected !== undefined && selected === pendingRef.current && byId.has(selected);
+    if (!changed && !arrived) {
+      return;
+    }
+    reportedRef.current = selected;
+    const found = selected !== undefined && byId.has(selected);
+    pendingRef.current = found ? undefined : selected;
+    setPath(found ? [{ cardId: selected }] : []);
+  }, [controlled, selected, byId]);
+
+  // Into the next column at its first card, or back to the card chosen in the previous one.
+  const navigate = (column: number, direction: 'left' | 'right') => {
+    const target = stackRefs.current[direction === 'left' ? column - 1 : column + 1];
+    const card =
+      (direction === 'left' && target?.querySelector<HTMLElement>(`${CARD_SELECTOR}[aria-current="true"]`)) ||
+      target?.querySelector<HTMLElement>(CARD_SELECTOR);
+    card?.focus();
+  };
+
+  const columns = useMemo(() => {
+    const result: Column[] = [{ cards, texts: [] }];
+    for (const selection of path) {
+      const card = byId.get(selection.cardId);
+      const next = card ? related(card, selection).flatMap((id) => byId.get(id) ?? []) : [];
+      // A property can hold entities and text alike, so its column shows both.
+      const texts = card ? statements(card, selection) : [];
+      if (next.length === 0 && texts.length === 0) {
+        break;
       }
-      return result;
-    }, [cards, byId, path]);
+      result.push({ cards: next, texts });
+      // A statement links to nothing further, so a column of only statements ends the chain.
+      if (next.length === 0) {
+        break;
+      }
+    }
+    return result;
+  }, [cards, byId, path]);
 
-    return (
-      // Columns sizes them to whole shares of the width and, like Finder, scrolls the one a choice opens into view.
-      <Layout.Columns {...props} minColumnWidth={24} ref={forwardedRef}>
-        {columns.map((stack, column) => (
-          <EntityBrowserColumn
-            ref={(element) => {
-              stackRefs.current[column] = element;
-            }}
-            onNavigate={(direction) => navigate(column, direction)}
-            // Keyed by what opened the column, so its filter resets when a new choice replaces it.
-            key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
-            column={stack}
-            selection={path[column]}
-            icons={icons}
-            hues={hues}
-            onChoose={(selection) => setPath((current) => [...current.slice(0, column), selection])}
-            onClose={column === 0 ? undefined : () => setPath((current) => current.slice(0, column - 1))}
-          />
-        ))}
-      </Layout.Columns>
-    );
-  },
-);
+  return (
+    // Columns sizes them to whole shares of the width and, like Finder, scrolls the one a choice opens into view.
+    <Layout.Columns {...props} minColumnWidth={24} ref={forwardedRef}>
+      {columns.map((stack, column) => (
+        <EntityBrowserColumn
+          ref={(element) => {
+            stackRefs.current[column] = element;
+          }}
+          onNavigate={(direction) => navigate(column, direction)}
+          // Keyed by what opened the column, so its filter resets when a new choice replaces it.
+          key={column === 0 ? 'root' : JSON.stringify(path[column - 1])}
+          column={stack}
+          selection={path[column]}
+          icons={icons}
+          hues={hues}
+          onChoose={(selection) => update([...path.slice(0, column), selection])}
+          onClose={column === 0 ? undefined : () => update(path.slice(0, column - 1))}
+        />
+      ))}
+    </Layout.Columns>
+  );
+});
 
 EntityBrowser.displayName = 'EntityBrowser';

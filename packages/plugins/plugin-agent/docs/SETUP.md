@@ -9,17 +9,20 @@ everything on this page.
 
 ## What runs where
 
-| Piece                                                                            | Repo                                                   | Runs in                                          |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------ |
-| Agent UI, agent objects, `ensureChannelChat` and the other agent operations      | dxos `plugin-agent`, `plugin-discord`, `plugin-thread` | Composer (UI) and edge operation-service (tools) |
-| Agent process and brain (`ProcessObject`, `BrainObject`)                         | edge `compute-service`                                 | EDGE                                             |
-| Discord bot (`DiscordBot` Durable Object, one per app, holds the Gateway socket) | edge `discord-service`                                 | EDGE                                             |
-| Agent mailbox (`AgentMailbox` Durable Object, one per handle)                    | edge `compute-service` (`src/email/`)                  | EDGE                                             |
-| Model calls                                                                      | edge `ai-service` (holds `ANTHROPIC_API_KEY`)          | EDGE                                             |
-| Discord sign-in, Google OAuth (`/oauth/*`)                                       | edge `kms-service`                                     | EDGE                                             |
+| Piece                                                                            | Repo                                                   | Runs in                                   |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------- |
+| Agent UI, agent objects, `ensureChannelChat` and the other agent operations      | dxos `plugin-agent`, `plugin-discord`, `plugin-thread` | Composer (UI) and EDGE (tools; see below) |
+| Agent process and brain (`ProcessObject`, `BrainObject`)                         | edge `compute-service`                                 | EDGE                                      |
+| Discord bot (`DiscordBot` Durable Object, one per app, holds the Gateway socket) | edge `discord-service`                                 | EDGE                                      |
+| Agent mailbox (`AgentMailbox` Durable Object, one per handle)                    | edge `compute-service` (`src/email/`)                  | EDGE                                      |
+| Model calls                                                                      | edge `ai-service` (holds `ANTHROPIC_API_KEY`)          | EDGE                                      |
+| Discord sign-in, Google OAuth (`/oauth/*`)                                       | edge `kms-service`                                     | EDGE                                      |
 
-EDGE runs the `@dxos/*` build its catalog pins, so Composer-only changes need nothing on the EDGE side. To run local
-changes to dxos code that runs on EDGE, see [Link local dxos into edge](#link-local-dxos-into-edge).
+Composer-only changes need nothing on the EDGE side. EDGE, local and deployed alike, runs each plugin's operations from
+the plugin bundle in that environment's registry. Only plugin-agent and plugin-assistant stay on operation-service, at
+the `@dxos/*` build edge's catalog pins. Locally the registry holds the bundles `pnpm dev:setup` builds.
+
+To run local changes to dxos code that runs on EDGE, see [Link local dxos into edge](#link-local-dxos-into-edge).
 
 ## Environments
 
@@ -58,8 +61,19 @@ From `<edge>`:
    pnpm dev:setup
    ```
 
-   It installs, builds, wipes the local state dir, runs the D1 migrations and seeds plans and invitation codes.
-   Running it again wipes every local identity, space and agent, for every worktree.
+   It installs, builds, wipes the local state dir, runs the D1 migrations (the plugin registry's among them) and seeds
+   plans and invitation codes. It also builds the first-party plugin bundles at the dxos commit edge's catalog pins, in
+   a dxos clone beside the local state, then starts the stack once to upload them to the local registry and stops it.
+   The first build takes a while; a commit already built is reused. To build an existing checkout instead, set
+   `DX_DXOS_CHECKOUT=<dxos>`. Running it again wipes every local identity, space and agent, for every worktree.
+
+   On a machine set up before, don't re-run it. Bring the local state up to date and build the bundles instead; the
+   next `pnpm stack:start` uploads them:
+
+   ```bash
+   node scripts/stack.mjs migrate
+   node scripts/plugin-bundles.mjs build
+   ```
 
 2. Write each worker's `.env` from its `secrets.jsonc`:
 
@@ -79,7 +93,9 @@ From `<edge>`:
    ```
 
    `node scripts/stack.mjs start` is the same command. `pnpm stack status`, `pnpm stack:stop` and
-   `pnpm stack:doctor` manage it. Logs are in `packages/services/edge/edge-dev-stack.log`.
+   `pnpm stack:doctor` manage it. Logs are in `packages/services/edge/edge-dev-stack.log`. Each start uploads the
+   newest plugin bundle build to the local registry (`http://localhost:8787/registry/edge/plugins` lists them);
+   `DX_PLUGIN_BUNDLE_SOURCE=<dir>` uploads another build instead.
 
 Agent work touches these workers:
 
@@ -93,13 +109,24 @@ Agent work touches these workers:
 | compute-service   | 8798 | agent processes, brain, mailboxes                           |
 | discord-service   | 8801 | Discord bot                                                 |
 
-operation-service should list the `org.dxos.operation.agent.*` keys, `ensureChannelChat` among them.
+operation-service should list the `org.dxos.operation.agent.*` keys, `ensureChannelChat` among them. The other plugins'
+operations run from their bundles, so a stack seeded with none fails them with `MissingPluginBundleError`.
 
 ### Link local dxos into edge
 
-Only needed to run local changes to dxos code that runs on EDGE: plugin-agent operations and skills,
-`agent-runtime`, `assistant`. Link the **whole** workspace; linking a few packages mixes the pinned version with
-newer local builds and fails to bundle.
+Only needed to run local changes to dxos code that runs on EDGE. Two paths reach it:
+
+- **Plugin bundles:** every plugin's operations but plugin-agent's and plugin-assistant's. Rebuild them from `<dxos>`
+  and upload them to the running stack (the registry replaces a local bundle whose content changed):
+
+  ```bash
+  node scripts/plugin-bundles.mjs build --dxos <dxos>
+  node scripts/stack.mjs seed
+  ```
+
+- **The link:** plugin-agent's and plugin-assistant's operations and skills, `agent-runtime`, `assistant`, and
+  everything else edge imports. Link the **whole** workspace; linking a few packages mixes the pinned version with
+  newer local builds and fails to bundle.
 
 1. Build everything in `<dxos>` (the link packs each package's `dist/`):
 

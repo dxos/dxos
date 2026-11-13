@@ -8,6 +8,7 @@ export * from './EchoObjectsList/index.ts';
 export * from './EntityList/index.ts';
 export * from './FactPanel/index.ts';
 export * from './GoalPanel/index.ts';
+export * from './KnowledgePanel/index.ts';
 export * from './InputPanel/index.ts';
 export * from './OntologyPanel/index.ts';
 export * from './OutputPanel/index.ts';

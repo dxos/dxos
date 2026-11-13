@@ -89,7 +89,8 @@ const entityTerm = (surface: string, type: EntityTerm['type'], known: ReadonlyMa
   return {
     kind: 'entity',
     entity: entity?.iri ?? normalizeEntityId(surface),
-    label: surface.trim(),
+    // A known entity keeps its own name, so every mention of it reads the same whichever form the text used.
+    label: entity?.label ?? surface.trim(),
     ...(kind ? { type: kind } : {}),
   };
 };
@@ -154,7 +155,8 @@ const toFact = (candidate: ExtractedFact, doc: ExtractDocument, context: FactCon
     },
     ...(illocution ? { illocution } : {}),
     attribution: {
-      ...(doc.author ? { agent: normalizeEntityId(doc.author) } : {}),
+      ...(doc.agent ? { agent: doc.agent } : doc.author ? { agent: normalizeEntityId(doc.author) } : {}),
+      ...(doc.agent && doc.author ? { agentLabel: doc.author } : {}),
       source: doc.source,
       generatedAtTime: doc.date ?? context.recordedAt,
     },
