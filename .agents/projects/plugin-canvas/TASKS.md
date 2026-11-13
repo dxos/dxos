@@ -372,10 +372,10 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       (off by default).
 - [x] A link's elbows (corner radius, smart stub, lane spacing) are counts of the drawing's grid, not of the default
       grid (`utils/route.ts`); the scene layer, the selection frame and the SVG export pass the layout's grid.
-- [x] **Free draw tool** (S, after Polyline): a `freehand` drag samples the pointer, `simplifyPath` thins the stroke,
+- [x] **Draw tool** (S, after Polyline): a `freehand` drag samples the pointer, `simplifyPath` thins the stroke,
       and it lands as a polyline with `params.smooth` (a Catmull-Rom curve in `polylinePath`). The tool is a registry
       entry that makes polylines, not a node type of its own.
-- [ ] Free draw: hit testing, ports and the `.dx` / SVG export still treat a smooth polyline as its straight
+- [ ] Draw tool: hit testing, ports and the `.dx` / SVG export still treat a smooth polyline as its straight
       segments; its vertex edit mode shows the thinned points. No pressure or stroke width.
 - [x] Card: authored at 16 by 12 cells with half-cell gaps, text sizes 18 / 16 / 14, a 24 px glyph, title centred;
       the scene DSL reads `fontSize`, `alignHorizontal` and `alignVertical`. A Card story beside Graph.

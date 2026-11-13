@@ -45,7 +45,7 @@ describe('toolGroups', () => {
     expect(groups.map((group) => group.name)).toEqual([TOOLS_GROUP, CREATE_GROUP, CONTAINERS_GROUP, EXTENSIONS_GROUP]);
     expect(types(CONTAINERS_GROUP)).toEqual(['hull', 'view']);
     expect(types(EXTENSIONS_GROUP)).toEqual(['card']);
-    // Free draw is a tool beside the polyline, which is the shape it makes.
+    // Draw is a tool beside the polyline, which is the shape it makes.
     expect(types(CREATE_GROUP)).toEqual([
       'rect',
       'ellipse',

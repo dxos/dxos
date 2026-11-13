@@ -496,10 +496,10 @@ const strokes = (root: HTMLElement) => [
 ];
 
 /**
- * The free draw tool (S) draws a line in one stroke: press, drag, release. The stroke lands as a polyline run as a
+ * The Draw tool (S) draws a line in one stroke: press, drag, release. The stroke lands as a polyline run as a
  * curve through a few of the points the pointer passed, and the tool stays in hand for the next stroke.
  */
-export const FreeDraw: Story = {
+export const Draw: Story = {
   args: { depth: 0, liveDepth: 1 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

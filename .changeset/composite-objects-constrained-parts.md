@@ -143,7 +143,7 @@ scene DSL reads and prints a 2D element's text size (`fontSize=18`), and an icon
 draws its glyph at that size, where it took 70% of its frame. plugin-canvas's space graph component is `Graph`
 (`graphSpec`, `GraphNode`, `GraphData`), its tool named Graph; the element type is still `space-graph`.
 
-A Free draw tool (S), after Polyline in the tools panel, draws a line in one stroke: it samples the pointer while
+A Draw tool (S), after Polyline in the tools panel, draws a line in one stroke: it samples the pointer while
 the button is down and lands the stroke as a polyline run as a curve through a few of the samples
 (`PolylineParams.smooth`, also a switch in Properties; `simplifyPath`; `NodeDef.freehand`). The tool stays in hand for
 the next stroke, and a stroke begun on a shape is drawn over it. The card's title is centred beside its glyph; the

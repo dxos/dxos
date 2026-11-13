@@ -234,7 +234,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   },
   // A tool rather than a type of its own: the stroke it draws is a polyline, run as a curve through its points.
   freehand: {
-    name: 'Free draw',
+    name: 'Draw',
     icon: 'ph--scribble--regular',
     key: 'S',
     schema: PolylineNode,

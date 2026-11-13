@@ -3,7 +3,7 @@
 //
 
 //
-// The canvas's Free draw tool (S, after Polyline in the tools panel) in the shared editor. A stroke is drawn in one
+// The canvas's Draw tool (S, after Polyline in the tools panel) in the shared editor. A stroke is drawn in one
 // press: the pointer's path is sampled while the button is down, thinned to the points the line needs, and landed as
 // a polyline run as a curve through them (`params.smooth`). The board starts with three such lines, so the look is
 // there before anything is drawn: an open wave, the wave's points as straight segments, and a loop closed on itself.
@@ -74,7 +74,7 @@ const DefaultStory = () => (
 );
 
 const meta: Meta = {
-  title: 'plugins/plugin-canvas/components/FreeDraw',
+  title: 'plugins/plugin-canvas/components/Draw',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations: [...uiTranslations, ...formTranslations] },
@@ -98,7 +98,7 @@ const pathOf = (node: Element): string => {
 };
 
 /**
- * 1. The Free draw tool is in the tools panel, straight after Polyline.
+ * 1. The Draw tool is in the tools panel, straight after Polyline.
  * 2. Press S, then press, drag and release on the canvas: the stroke is drawn as it goes and lands as one line.
  * 3. The line is a curve, with far fewer points than the pointer passed, and none of it is cut off by its frame.
  * 4. The tool is still in hand: a second stroke needs no key.
