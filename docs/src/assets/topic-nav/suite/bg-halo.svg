@@ -1,15 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1920 1080">
   <rect id="background" width="1920" height="1080" style="fill: var(--dx-bg-fill, rgb(29,31,32))"/>
   <g id="lines" fill="none" stroke-width="14" style="stroke: var(--dx-bg-lines, rgb(201,138,30))">
-    <path d="M1058.7,1100.0 L1355.6,506.2 L1524.4,506.2"/>
-    <path d="M1821.3,1100.0 L1524.4,506.2"/>
-    <path d="M1524.4,506.2 L1153.3,1100.0"/>
-    <path d="M1524.4,506.2 L1637.1,-20.0"/>
-    <path d="M1520.6,-20.0 L1676.3,810.0"/>
-    <path d="M1940.0,998.4 L1440.0,641.3 L797.7,1100.0"/>
-    <path d="M1203.7,810.0 L1359.4,-20.0"/>
-    <path d="M1242.9,-20.0 L1355.6,506.2"/>
-    <path d="M1355.6,506.2 L1726.7,1100.0"/>
+    <path d="M-1177.4,5572.1 L1355.6,506.2 L1524.4,506.2"/>
+    <path d="M4057.4,5572.1 L1524.4,506.2"/>
+    <path d="M1524.4,506.2 L-1496.6,5340.1"/>
+    <path d="M1524.4,506.2 L2684.2,-4909.1"/>
+    <path d="M598.7,-4934.3 L1676.3,810.0"/>
+    <path d="M6008.8,3904.4 L1440.0,641.3 L797.7,1100.0"/>
+    <path d="M1203.7,810.0 L2281.3,-4934.3"/>
+    <path d="M195.8,-4909.1 L1355.6,506.2"/>
+    <path d="M1355.6,506.2 L4376.6,5340.1"/>
   </g>
   <g id="icon" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--dx-bg-icon, rgb(249,233,230))">
     <path d="M1203.7,810.0 L1355.6,506.2 L1524.4,506.2"/>
