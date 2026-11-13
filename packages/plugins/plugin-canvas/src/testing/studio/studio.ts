@@ -558,11 +558,24 @@ const waypointsOf = (route: StudioRoute, source: Frame, target: Frame): Vec[] =>
 };
 
 /**
+ * The ports a smart link leaves and arrives on: the middle of the sides that face each other. The canvas spreads
+ * `portsPerSide` ports along each side and names the middle one `1`, so a card under another is joined bottom
+ * centre to top centre rather than corner to corner.
+ */
+const facingPorts = (source: Frame, target: Frame): { source: string; target: string } => {
+  const [dx, dy] = [target.center.x - source.center.x, target.center.y - source.center.y];
+  if (Math.abs(dy) >= Math.abs(dx)) {
+    return dy >= 0 ? { source: 's1', target: 'n1' } : { source: 'n1', target: 's1' };
+  }
+  return dx >= 0 ? { source: 'e1', target: 'w1' } : { source: 'w1', target: 'e1' };
+};
+
+/**
  * Puts the sidecar's routes back on the links. The DSL arrow has two ends and nothing in between, so the deck's
  * routes survive the export only as `# route=` comments, which the parser drops. The scene model does carry them —
  * `connector.route` on a link whose ends stay bound to their nodes — so this is a DSL gap, not a canvas one.
  */
-const routeLinks = (content: ContentMap, model: StudioModel, components: ComponentMode): number => {
+const routeLinks = (content: ContentMap, model: StudioModel, components: ComponentMode, links: LinkMode): number => {
   let routed = 0;
   for (const edge of model.edges) {
     const route = edge.length === 4 ? edge[3] : undefined;
@@ -583,8 +596,11 @@ const routeLinks = (content: ContentMap, model: StudioModel, components: Compone
         continue;
       }
     }
-    const waypoints = waypointsOf(route, source, target);
-    if (waypoints.length === 0) {
+    // The deck's own waypoints are its own coordinates. A slide this import re-laid out has moved its cards away
+    // from them, which is how a wire ends up crossing the slide diagonally; `smart` drops them and lets the canvas
+    // route the link between the two shapes it still binds.
+    const waypoints = links === 'smart' ? [] : waypointsOf(route, source, target);
+    if (waypoints.length === 0 && links !== 'smart') {
       continue;
     }
     const key = findLink(content, edge[0], edge[1]);
@@ -596,6 +612,25 @@ const routeLinks = (content: ContentMap, model: StudioModel, components: Compone
     // space, a plugin's wire into a region), which the sidecar says and the DSL cannot.
     const { end, ...start } = record.link.ends ?? {};
     const ends = route.arrow === 'none' ? start : record.link.ends;
+    // Smart: the canvas routes the link itself, so the diagram connector that carried the deck's geometry goes with
+    // the route. What stays is the link's own style, which is what the canvas's link renderer reads.
+    if (links === 'smart') {
+      const { connector: _connector, ...link } = record.link;
+      const ports = facingPorts(source, target);
+      content[key] = {
+        ...record,
+        link: {
+          ...link,
+          type: 'smart',
+          source: { ...link.source, port: ports.source },
+          target: { ...link.target, port: ports.target },
+          ...(route.arrow === 'none' ? { ends } : {}),
+          ...(route.color ? { style: { ...link.style, hue: LINK_HUES[route.color] ?? 'blue' } } : {}),
+        },
+      };
+      routed++;
+      continue;
+    }
     content[key] = {
       ...record,
       link: {
@@ -1348,6 +1383,9 @@ const dropLabels = (content: ContentMap, model: StudioModel): number => {
 /** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
 export type ComponentMode = 'kind' | 'generator';
 
+/** How a link is drawn: along the route the deck recorded, or routed by the canvas between the shapes it binds. */
+export type LinkMode = 'deck' | 'smart';
+
 /**
  * The component kinds the studio stories register (`testing/studio/*.tsx`). A host that has registered fewer passes
  * its own set to {@link seedStudioSlide}; a kind the host does not have is left as the DSL's placeholder, which is
@@ -1433,6 +1471,7 @@ export const seedStudioSlide =
       spread = 1,
       balance = false,
       gap,
+      links = 'deck',
       frames = [],
       uniform = false,
       sizes = {},
@@ -1453,6 +1492,8 @@ export const seedStudioSlide =
       balance?: boolean;
       /** One gap between every column of the slide, in scene units ({@link evenColumns}). */
       gap?: number;
+      /** How the slide's links are drawn; a slide this import moves takes `smart`, since the deck's routes are stale. */
+      links?: LinkMode;
       /** Frames the slide does not draw, by id ({@link dropFrames}). */
       frames?: readonly string[];
       /** Every card of the slide is drawn at one size ({@link uniformCards}). */
@@ -1496,7 +1537,7 @@ export const seedStudioSlide =
       balanceColumns(content, balance, grid) +
       evenColumns(content, gap, grid) +
       spreadColumns(content, model, spread, grid);
-    const routed = routeLinks(content, model, components);
+    const routed = routeLinks(content, model, components, links);
     const placed =
       components === 'generator'
         ? placeGenerators(content, model, generators)

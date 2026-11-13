@@ -131,6 +131,9 @@
   gap: 8.8px;
   row-gap: 16px;
   align-content: center;
+  /* The deck's `.d-chips.flat` (`margin-block: auto`): the rows take the space the header and footer leave, so what
+     is above the first row is what is below the last. */
+  margin-block: auto;
 }
 
 .studio-chips[data-grid] {
