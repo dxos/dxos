@@ -92,6 +92,8 @@ export const ListVariantGallery: Story = {
       '<List variant="steps">',
       '',
       '1. **ECHO** holds the data',
+      '   - replicated',
+      '   - local-first',
       '2. Agents',
       '',
       '</List>',
@@ -118,6 +120,13 @@ export const ListVariantGallery: Story = {
     const [item] = steps.querySelectorAll('li');
     await expect(getComputedStyle(item).display).toBe('list-item');
     await expect(getComputedStyle(item, '::before').position).toBe('absolute');
+
+    // A nested list is block content under the step's text, not a column beside it, and takes the plain list
+    // classes rather than the step's: only the list the tag wrapped carries the variant.
+    const nested = item.querySelector('ul')!;
+    await expect(nested.dataset.variant).toBeUndefined();
+    await expect(nested.getBoundingClientRect().top).toBeGreaterThan(item.getBoundingClientRect().top);
+    await expect(nested.getBoundingClientRect().width).toBeGreaterThan(item.getBoundingClientRect().width / 2);
   },
 };
 
