@@ -1,0 +1,20 @@
+diagram flow=down
+node Person "Person"
+node Agent "Agent" right-of Person ref="packages/core/compute/assistant/src/types/Agent.ts"
+node Trigger "Trigger" right-of Agent ref="packages/core/compute/compute/src/types/Trigger.ts"
+node Manager "Process manager" below Agent ref="packages/core/compute/compute-runtime/src/UnifiedProcessManager.ts"
+group local "App" {
+  node Local "Local process" ref="packages/core/compute/compute-runtime/src/ProcessManager.ts"
+}
+group cloud "EDGE" same-row local {
+  node Remote "Remote process" ref="packages/core/compute/compute-runtime/src/RemoteProcessManager.ts"
+}
+node Objects "ECHO objects" below Local
+node Trace "Trace feed" right-of Objects ref="packages/core/compute/compute-runtime/src/FeedTraceSink.ts"
+edge Person, Agent, Trigger -> Manager bus
+edge Manager -> Local
+edge Manager -> Remote
+edge Local -> Objects
+edge Remote -> Objects
+edge Local -> Trace
+edge Remote -> Trace

@@ -12,7 +12,7 @@ ECHO, the **E**ventually **C**onsistent **H**ierarchical **O**bject store, is a 
 ## Model
 
 - Peers replicate data with [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). There is no central authority: the data lives with the clients.
-- Peers connect to each other over [WebRTC](https://en.wikipedia.org/wiki/WebRTC).
+- Peers sync directly with each other, and through a server when they are not online together.
 - Several writers can change the same data at once, including structured objects and collaborative text.
 - A peer can write while offline. Its changes merge when it rejoins the network.
 

@@ -1,0 +1,40 @@
+---
+title: Overview
+description: What SAGE is, and how an agent runs.
+welcome:
+  section: SAGE
+  tagline: Durable agents with their own identity, tools and skills.
+  background: sage
+---
+
+import Diagram from '../../../../components/Diagram.astro';
+
+SAGE runs AI agents as durable processes. An agent has an identity of its own, uses any model, local or hosted, and
+calls typed operations as its tools. It loads skills when a task needs them, sleeps between turns, hands work to
+sub-agents, and wakes on messages, triggers or rules over what it knows, without polling a model. People and agents
+plan work in shared specs that record who decided what and can be checked against the code.
+
+## How a turn works
+
+A person writes in a chat. The agent's process takes the message, calls the model with the chat so far, the agent's
+instructions and the skills it has enabled, and the model answers or asks for operations. The process runs those
+operations against the space, hands their results back to the model, and repeats until the model answers.
+
+<Diagram name="sage-turn" alt="A person writes in a chat; the agent process calls the model, the model asks for an operation, the process invokes it on the space's ECHO objects, returns the result, and the model answers in the chat." />
+
+## Where SAGE runs
+
+| Where                    | What runs                                                                   | Page                                       |
+| ------------------------ | --------------------------------------------------------------------------- | ------------------------------------------ |
+| Composer's assistant     | Chats in a space, with the skills and objects a person adds to them        | [Agents](/docs/sage/concepts/agents/)      |
+| Agents on EDGE           | An agent's chats and triggers, while every device is offline               | [Agents](/docs/sage/concepts/agents/)      |
+| The MCP server           | A space's operations and skills, for any MCP client such as a coding agent | [MCP](/docs/sage/concepts/mcp/)            |
+
+Each action an agent takes is an [operation](/docs/edge/concepts/operations/), run as a
+[process](/docs/edge/concepts/processes/). An agent's chats and memory are objects in the user's spaces, so they sync and
+can be read and edited like anything else the user owns.
+
+## Where to go next
+
+Read [Why SAGE?](/docs/sage/why-sage/) for what sets its agents apart, then [Agents](/docs/sage/concepts/agents/)
+for how one runs.

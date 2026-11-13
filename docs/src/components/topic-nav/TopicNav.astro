@@ -1,42 +1,36 @@
 ---
-// The docs header's left side: the logo and Docs where the marketing nav has them, a separator, then the topics, as
-// logotype tabs while the sidebar shows and as a picker once it folds into a menu.
+// The docs header's left side: the logo and Docs where the marketing nav has them, a separator, then the topic picker.
+// The docs home lists every topic itself, so it has no picker [D-256].
 import DxosLogo from '../svg/DxosLogo.astro';
 import TopicList from './TopicList.astro';
 import TopicMark from './TopicMark.astro';
-import { TOPICS, currentTopic } from './topics.ts';
+import { currentTopic } from './topics.ts';
 
 const topic = currentTopic(Astro.url.pathname);
+const isHome = Astro.url.pathname.replace(/\/$/, '') === '/docs';
 ---
 
 <div class="topic-nav">
   <a class="logo" href="/" aria-label="DXOS home"><DxosLogo /></a>
-  <a class="docs" href="/docs/echo/overview/" aria-current="page">Docs</a>
-  <span class="sep" aria-hidden="true"></span>
-  <nav class="tabs" aria-label="Docs topics">
-    {
-      TOPICS.map((item) =>
-        item.href ? (
-          <a href={item.href} class:list={{ current: item.id === topic?.id }} aria-current={item.id === topic?.id ? 'page' : undefined}>
-            <TopicMark topic={item} size={20} />
-          </a>
-        ) : (
-          <span class="soon" aria-disabled="true" title="Coming soon">
-            <TopicMark topic={item} size={20} />
-          </span>
-        ),
-      )
-    }
-  </nav>
-  <details class="picker">
-    <summary>
-      {topic ? <TopicMark topic={topic} size={20} /> : <span>Topics</span>}
-      <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.5l3-3 3 3M5 9.5l3 3 3-3" /></svg>
-    </summary>
-    <div class="panel">
-      <TopicList current={topic?.id} />
-    </div>
-  </details>
+  <a class="docs" href="/docs/" aria-current="page">Docs</a>
+  {
+    !isHome && (
+      <>
+        <span class="sep" aria-hidden="true" />
+        <details class="picker">
+          <summary>
+            {topic ? <TopicMark topic={topic} size={20} /> : <span>Topics</span>}
+            <svg class="chevron" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M5 6.5l3-3 3 3M5 9.5l3 3 3-3" />
+            </svg>
+          </summary>
+          <div class="panel">
+            <TopicList current={topic?.id} />
+          </div>
+        </details>
+      </>
+    )
+  }
 </div>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400&display=swap" />
@@ -57,18 +51,6 @@ const topic = currentTopic(Astro.url.pathname);
 </script>
 
 <style>
-  /* The tabs give way to the picker where the sidebar folds into a menu (PageFrame's 72rem). */
-  @media (min-width: 72rem) {
-    .topic-nav .picker {
-      display: none;
-    }
-  }
-  @media (max-width: 71.99rem) {
-    .topic-nav .tabs {
-      display: none;
-    }
-  }
-
   .topic-nav {
     align-items: center;
     display: flex;
@@ -102,29 +84,9 @@ const topic = currentTopic(Astro.url.pathname);
     height: 1.5rem;
     width: 1px;
   }
-  .tabs {
-    align-items: center;
-    display: flex;
-    gap: 1.25rem;
-  }
-  .tabs a,
-  .tabs span {
-    align-items: center;
-    color: var(--sl-color-gray-3);
-    display: flex;
-    text-decoration: none;
-  }
-  .tabs a:hover {
-    color: var(--sl-color-white);
-  }
   /* The topic you are reading is the one thing in the bar in the accent. */
-  .tabs a.current,
   summary > :global(:first-child) {
     color: var(--sl-color-text-accent);
-  }
-  .tabs .soon {
-    color: var(--sl-color-gray-5);
-    cursor: default;
   }
   .picker {
     position: relative;

@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** The sections whose pages are exported to agents, by the path segment their routes and llms.txt files use. */
-export const AGENT_SECTION_IDS = ['echo', 'halo', 'mesh', 'edge', 'plex', 'tile'] as const;
+export const AGENT_SECTION_IDS = ['echo', 'halo', 'mesh', 'edge', 'sage', 'plex', 'tile'] as const;
 
 export type AgentSection = (typeof AGENT_SECTION_IDS)[number];
 
@@ -30,6 +30,11 @@ export const AGENT_SECTIONS: Record<AgentSection, { label: string; summary: stri
     label: 'EDGE',
     summary:
       "DXOS's services on Cloudflare Workers: an always-online peer for every space and identity, with replication, indexing, identity services and compute.",
+  },
+  sage: {
+    label: 'SAGE',
+    summary:
+      'Durable AI agents with their own identity: typed operations as tools, skills loaded per task, and any model, local or hosted.',
   },
   plex: {
     label: 'PLEX',

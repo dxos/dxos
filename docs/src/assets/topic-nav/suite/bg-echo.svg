@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1920 1080">
+  <rect id="background" width="1920" height="1080" style="fill: var(--dx-bg-fill, rgb(29,31,32))"/><g transform="translate(960,0)">
+  <g id="lines" fill="none" stroke-width="14" style="stroke: var(--dx-bg-lines, rgb(20,117,79))">
+    <path d="M3739.3,4019.0 L-2754.8,-2912.5"/>
+    <path d="M-2754.9,3992.8 L3739.7,-2939.0"/>
+    <path d="M-3809.2,-907.2 L5729.2,2318.4"/>
+    <path d="M676.0,477.7 L-3809.1,1994.7"/>
+  </g>
+  <g id="icon" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--dx-bg-icon, rgb(255,255,255))">
+    <path d="M733.1,458.4 L226.9,629.6"/>
+    <path d="M226.9,457.8 L733.1,629.0"/>
+    <path d="M227.0,810.0 L733.0,270.0 L733.0,810.0 L227.0,270.0 Z"/>
+  </g>
+</g></svg>

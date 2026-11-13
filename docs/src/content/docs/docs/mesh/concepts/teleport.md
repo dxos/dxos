@@ -4,7 +4,8 @@ description: One multiplexed stream per connection, and the extensions that run 
 ---
 
 Teleport is the session two devices run over one connection. It multiplexes named streams over that connection, and
-runs extensions on them: the protocols ECHO and HALO use to replicate, announce presence and admit members.
+runs extensions on them, each a protocol of its own. ECHO and HALO use extensions to replicate, announce presence and
+admit members.
 
 ## Model
 
