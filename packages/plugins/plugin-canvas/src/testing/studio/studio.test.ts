@@ -77,8 +77,8 @@ describe('studio deck slides on a canvas', () => {
 
   test.for(SLIDES)('%s lands every shape on the grid the drawing carries', (name, { expect }) => {
     // The deck was laid out by eye, so the import rounds its geometry to the pitch the drawing carries. Edges are
-    // rounded, not centres and sizes, so a shape that was flush with another still is; and the shift is bounded by
-    // half a cell, which is what keeps a slide looking like the slide. A member of a layout run is the exception: the
+    // rounded, not centres and sizes, so a shape that was flush with another still is; and each corner moves by at
+    // most half a cell, which is what keeps a slide looking like the slide. A member of a layout run is the exception: the
     // run takes one size and one pitch for all of it, which redistributes its members, so what holds for them is that
     // they stay inside the run's own box.
     const { source, model } = slide(name);
@@ -115,8 +115,12 @@ describe('studio deck slides on a canvas', () => {
         expect({ key, inside: node.center.y > run.y && node.center.y < run.y + run.h }).toEqual({ key, inside: true });
         continue;
       }
+      // The top-left corner, not the centre: a card widened to its column's width keeps its left edge and moves its
+      // centre by half of what it gained.
+      const corner = (shape: typeof node | undefined, axis: 'x' | 'y') =>
+        shape ? shape.center[axis] - (axis === 'x' ? shape.size.width : shape.size.height) / 2 : 0;
       for (const axis of ['x', 'y'] as const) {
-        expect({ key, axis, far: Math.abs(node.center[axis] - (original?.center[axis] ?? 0)) > STUDIO_GRID }).toEqual({
+        expect({ key, axis, far: Math.abs(corner(node, axis) - corner(original, axis)) > STUDIO_GRID }).toEqual({
           key,
           axis,
           far: false,

@@ -38,6 +38,16 @@ export type StudioSlide = {
   model: StudioModel;
   /** The drawing places a space graph, which a `Generator` draws when the story runs it as one. */
   spaceGraph?: boolean;
+  /**
+   * The slide's free-floating text is drawn. Off where the boxes already say it: the deck set these by eye, so a
+   * column heading, a link's caption or a frame's title is placed where nothing in the drawing holds it.
+   */
+  labels?: boolean;
+  /**
+   * Remaps the element kinds the sidecar names, by kind: the Plugins slide records its module consumers as the deck's
+   * pills, and they read as cards of the module above (one column, one width).
+   */
+  remap?: Readonly<Record<string, string>>;
 };
 
 const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide, 'id' | 'source' | 'model'> = {}) => ({
@@ -55,10 +65,10 @@ const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
   slide('hyperspace', hyperspaceSource, hyperspaceModel),
   slide('echo-layers', echoLayersSource, echoLayersModel),
-  slide('plugins', pluginsSource, pluginsModel),
+  slide('plugins', pluginsSource, pluginsModel, { labels: false, remap: { chip: 'card' } }),
   slide('composer', composerSource, composerModel),
-  slide('architecture', architectureSource, architectureModel),
-  slide('agents', agentsSource, agentsModel, { spaceGraph: true }),
+  slide('architecture', architectureSource, architectureModel, { labels: false }),
+  slide('agents', agentsSource, agentsModel, { spaceGraph: true, labels: false }),
   slide('ontology', ontologySource, ontologyModel),
   slide('chat', chatSource, chatModel),
   slide('agent', agentSource, agentModel),

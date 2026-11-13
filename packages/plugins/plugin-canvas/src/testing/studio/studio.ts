@@ -331,7 +331,7 @@ const textOf = (node: NodeBase): string | undefined =>
  * Replaces the plain boxes the DSL produced with the card kind the sidecar names, taking everything the DSL could
  * not say with it: the icon and tone of a `card`, and the feed strip, body and footer of a `feed-card` as well.
  */
-const promoteCards = (content: ContentMap, model: StudioModel): void => {
+const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<Record<string, string>>): void => {
   for (const [key, card] of Object.entries(model.nodes)) {
     const record = content[nodeKey(boxOf(key))];
     invariant(isNodeRecord(record), `no node for card "${key}"`);
@@ -340,7 +340,7 @@ const promoteCards = (content: ContentMap, model: StudioModel): void => {
       ...record,
       node: {
         ...node,
-        type: card.kind ?? 'card',
+        type: remap[card.kind ?? 'card'] ?? card.kind ?? 'card',
         label: labelOf(record.node) ?? card.title,
         icon: { type: card.icon },
         ...(card.variant ? { variant: card.variant } : {}),
@@ -960,6 +960,95 @@ const layoutRuns = (content: ContentMap, model: StudioModel, grid: number): numb
   return laid;
 };
 
+/** How near two cards' centres must be to count as one column. */
+const COLUMN_TOLERANCE = 24;
+
+/** How far from its column's middle width a card may be and still take the column's width: a header is not a column. */
+const COLUMN_SPREAD = 1.5;
+
+/**
+ * Gives every card of a column one width. The deck sized each box to its own content, so a column came out ragged —
+ * on the Plugins slide a module's card was 283 wide and the consumer under it 262 — and the space between columns was
+ * whatever that left. Cards are grouped by their centres, which is what the deck aligned them on, and each column
+ * takes its NARROWEST card: a column never grows into its neighbour, so the slide gains the gutter it lacked.
+ *
+ * A card far from its column's middle width is left alone ({@link COLUMN_SPREAD}): the Plugins slide's header spans
+ * five columns from the middle one's centre, and is not a member of it.
+ *
+ * Only the cards move, and only across: a frame, a component or a label keeps the box it was given, and a card's
+ * height still says how much it holds.
+ */
+const uniformColumns = (content: ContentMap, model: StudioModel, grid: number): number => {
+  const cards: { key: string; node: Node }[] = [];
+  for (const id of Object.keys(model.nodes)) {
+    const key = nodeKey(boxOf(id));
+    const record = content[key];
+    if (isNodeRecord(record)) {
+      cards.push({ key, node: record.node });
+    }
+  }
+  // Columns by centre, in order across the slide.
+  const columns: { center: number; members: typeof cards }[] = [];
+  for (const card of [...cards].sort((left, right) => left.node.center.x - right.node.center.x)) {
+    const last = columns.at(-1);
+    if (last && Math.abs(card.node.center.x - last.center) <= COLUMN_TOLERANCE) {
+      last.members.push(card);
+    } else {
+      columns.push({ center: card.node.center.x, members: [card] });
+    }
+  }
+  let changed = 0;
+  for (const { center, members } of columns) {
+    const widths = members.map(({ node }) => onGrid(node.size.width, grid)).sort((left, right) => left - right);
+    const middle = widths[Math.floor(widths.length / 2)];
+    const column = members.filter(
+      ({ node }) =>
+        onGrid(node.size.width, grid) <= middle * COLUMN_SPREAD &&
+        onGrid(node.size.width, grid) * COLUMN_SPREAD >= middle,
+    );
+    if (column.length < 2) {
+      continue;
+    }
+    const width = Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
+    for (const { key, node } of column) {
+      const left = onGrid(center - width / 2, grid);
+      if (node.size.width === width && node.center.x === left + width / 2) {
+        continue;
+      }
+      const record = content[key];
+      if (!isNodeRecord(record)) {
+        continue;
+      }
+      content[key] = {
+        ...record,
+        node: { ...node, center: { x: left + width / 2, y: node.center.y }, size: { ...node.size, width } },
+      };
+      changed++;
+    }
+  }
+  return changed;
+};
+
+/**
+ * Drops the slide's free-floating text: its notes, headings, column and link labels, and the labels the frames carry.
+ * A slide whose story is told by its boxes reads better without them, and the deck's own labels are placed by eye —
+ * a frame's is set beside its frame, which on the Architecture slide put a 412-unit title 376 units off the page.
+ */
+const dropLabels = (content: ContentMap, model: StudioModel): number => {
+  let dropped = 0;
+  const keys = [
+    ...(model.texts ?? []).map((text) => nodeKey(elementId(text.id, 'label'))),
+    ...model.frames.map((frame) => nodeKey(elementId(frame.id, 'title'))),
+  ];
+  for (const key of keys) {
+    if (content[key]) {
+      delete content[key];
+      dropped++;
+    }
+  }
+  return dropped;
+};
+
 /** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
 export type ComponentMode = 'kind' | 'generator';
 
@@ -997,6 +1086,8 @@ export const seedStudioSlide =
     {
       components = 'kind',
       grid = STUDIO_GRID,
+      labels = true,
+      remap = {},
       kinds = STUDIO_COMPONENT_KINDS,
       generators = {},
       report,
@@ -1004,6 +1095,10 @@ export const seedStudioSlide =
       components?: ComponentMode;
       /** The pitch the slide's geometry is rounded to, which is the drawing's own grid. */
       grid?: number;
+      /** The slide's free-floating text is drawn; off, the drawing is its boxes alone ({@link dropLabels}). */
+      labels?: boolean;
+      /** Element kinds the slide draws as another kind, by the kind the sidecar names. */
+      remap?: Readonly<Record<string, string>>;
       /** The component kinds the host has registered; one it has not is left as the DSL's ring. */
       kinds?: ReadonlySet<string>;
       generators?: Generators;
@@ -1018,13 +1113,13 @@ export const seedStudioSlide =
       commands.filter((command) => !isTitle(command)),
       SceneHandler,
     );
-    promoteCards(content, model);
+    promoteCards(content, model, remap);
     styleText(content, model);
     styleFrames(content, model);
     const snapped = snapToGrid(content, grid);
     // After the snap and before the routes: a route is taken from the outlines it meets, so the run has to be laid
     // out while they are still what the links will be measured against.
-    const laid = layoutRuns(content, model, grid);
+    const laid = layoutRuns(content, model, grid) + uniformColumns(content, model, grid);
     const routed = routeLinks(content, model, components);
     const placed =
       components === 'generator'
@@ -1032,6 +1127,9 @@ export const seedStudioSlide =
         : placeComponentKinds(content, model, kinds);
     if (components === 'kind') {
       hideParts(content, model, kinds);
+    }
+    if (!labels) {
+      dropLabels(content, model);
     }
     const shapes = placeShapes(content, model);
     report?.({

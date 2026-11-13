@@ -12,6 +12,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import React, { type PropsWithChildren } from 'react';
 import { expect, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -84,7 +85,18 @@ const slide = (title: string, drawing: Drawing.Drawing): string =>
     '',
   ].join('\n');
 
-const decorators = createStoryDecorators(() => ({
+type StoryArgs = {
+  /** Outlines each slide's own box and the box its drawing is given, to see where the embed sits in the slide. */
+  borders?: boolean;
+};
+
+/** The outlines `borders` draws: the box the slide gives the embed (red), and the canvas viewport inside it (cyan). */
+const BORDERS = `
+  dx-surface > * { outline: 2px solid color-mix(in oklch, red 60%, transparent); }
+  [data-testid="scene-view"] { outline: 2px solid color-mix(in oklch, cyan 60%, transparent); }
+`;
+
+const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
   types: [Drawing.Drawing, Drawing.Canvas, Presentation.Presentation, Presentation.Slide, ...types],
   plugins: [
     IllustratorPlugin.make(),
@@ -97,9 +109,9 @@ const decorators = createStoryDecorators(() => ({
     StudioKindsPlugin(),
   ],
   onInit: async ({ space }) => {
-    const seeded = STUDIO_SLIDES.map(({ id, source, model }) => {
+    const seeded = STUDIO_SLIDES.map(({ id, source, model, labels, remap }) => {
       // Read-only: a slide is looked at, and the rail would take a corner of every one.
-      const canvas = addTestCanvas(space.db, seedStudioSlide(source, model), {
+      const canvas = addTestCanvas(space.db, seedStudioSlide(source, model, { labels, remap }), {
         ...STUDIO_CANVAS,
         readonly: true,
         fitFrame: PAGE,
@@ -118,12 +130,19 @@ const decorators = createStoryDecorators(() => ({
     await space.db.flush();
     return [[Cell.article(deck)]];
   },
+  Wrapper: ({ children }: PropsWithChildren) => (
+    <>
+      {args.borders && <style>{BORDERS}</style>}
+      {children}
+    </>
+  ),
 }));
 
-const meta: Meta<typeof ModuleContainer> = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-canvas/containers/StudioPresentation',
-  render: ModuleContainer,
+  render: () => <ModuleContainer />,
   decorators,
+  argTypes: { borders: { control: 'boolean' } },
   parameters: { layout: 'fullscreen', translations },
 };
 

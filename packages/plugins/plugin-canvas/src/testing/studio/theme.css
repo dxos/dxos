@@ -47,8 +47,10 @@
     inset 0 0 0 2px var(--sd-tone);
 }
 
+/* The glyph is the card's colour: its own tone where it has one, the deck's accent otherwise — a muted glyph read
+   as disabled beside a titled card. */
 .studio-card-icon {
-  color: var(--sd-tone, var(--sd-muted));
+  color: var(--sd-tone, var(--sd-accent));
 }
 
 .studio-card-body {
@@ -158,7 +160,7 @@
 }
 
 .studio-chip-icon {
-  color: var(--sd-tone, var(--sd-muted));
+  color: var(--sd-tone, var(--sd-accent));
 }
 
 .studio-chip[data-ghost] .studio-chip-icon {
