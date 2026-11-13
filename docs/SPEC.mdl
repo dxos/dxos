@@ -6021,6 +6021,16 @@ decision D-303: The docs footer and the marketing pages' footer list Docs right 
   why: Docs is the site's second destination after Home, so it reads first among the rest.
 ```
 
+```mdl
+decision D-304: Every section's sidebar lists its groups in one order: Start here, Learning path, Core concepts, Guides, API, Resources. A section without a group skips it. TILE's API moves after its Guides.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: A reader who knows one section's sidebar finds the same group in the same place in every other.
+  rejected:
+    - API before Guides everywhere: guides teach a task and the API is what a reader looks up after, so Guides lead in four of the five sections already.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

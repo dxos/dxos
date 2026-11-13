@@ -162,14 +162,22 @@ const sidebarLink = (page: SpecPage) => ({
 
 const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
 
+/** Every section's sidebar groups in one order; a group not named here follows them [D-304]. */
+const GROUP_ORDER = ['Start here', 'Learning path', 'Core concepts', 'Guides', 'API', 'Resources'];
+
+const groupRank = (group: string) => {
+  const index = GROUP_ORDER.indexOf(group);
+  return index === -1 ? GROUP_ORDER.length : index;
+};
+
 /**
- * The Starlight sidebar for one section of the spec's site map; group order is first appearance. A top-level group
+ * The Starlight sidebar for one section of the spec's site map, its groups in `GROUP_ORDER`. A top-level group
  * starts expanded; pages with a `family` follow the group's own pages in a nested group per family. Family groups,
  * and every page in an API group, sort by label [D-296, D-299, D-300].
  */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
-  const groups = [...new Set(pages.map((page) => page.group))];
+  const groups = [...new Set(pages.map((page) => page.group))].sort((a, b) => groupRank(a) - groupRank(b));
   return groups.map((label) => {
     const inGroup = pages.filter((page) => page.group === label);
     const families = [...new Set(inGroup.flatMap((page) => (page.family ? [page.family] : [])))].sort();
