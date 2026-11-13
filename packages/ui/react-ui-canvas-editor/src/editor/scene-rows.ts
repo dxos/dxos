@@ -77,13 +77,14 @@ export type SelectedElement = { element: ReturnType<typeof resolveLayout>[string
 /**
  * The element `id` selected in `layout`, and the layout it is stored in: `layout` itself, or the parts of something it
  * places. A hull's shapes are drawn and selected in the scene but stored with its group, and so is a part of an Object
- * edited in place, which is stored in the Object's definition. A hull is looked in first: its shapes' ids are the
- * scene's own, where two Objects may each have a part of one name.
+ * edited in place, which is stored in the Object's definition. A hull is looked in first, and through the hulls inside
+ * it: its shapes' ids are the scene's own, where two Objects may each have a part of one name.
  */
 export const selectedElement = (
   doc: Scene.SceneDocument,
   layout: Scene.LayoutRecord,
   id: string,
+  seen: ReadonlySet<string> = new Set([layout.id]),
 ): SelectedElement | undefined => {
   const resolved = resolveLayout(doc, layout);
   if (layout.elements[id]) {
@@ -92,10 +93,18 @@ export const selectedElement = (
   const holders = Object.values(layout.elements);
   for (const holder of [...holders.filter(isHull), ...holders.filter((element) => !isHull(element))]) {
     const parts = resolved[holder.id]?.parts;
-    const group = parts === undefined ? undefined : findLayout(doc, parts);
-    const element = group?.elements[id] && resolveLayout(doc, group)[id];
-    if (group && element) {
+    const group = parts === undefined || seen.has(parts) ? undefined : findLayout(doc, parts);
+    if (!group) {
+      continue;
+    }
+    const element = group.elements[id] && resolveLayout(doc, group)[id];
+    if (element) {
       return { element, layout: group.id };
+    }
+    // A hull inside a hull is drawn in the same scene, so its shapes are selected there too.
+    const deeper = isHull(holder) ? selectedElement(doc, group, id, new Set([...seen, group.id])) : undefined;
+    if (deeper) {
+      return deeper;
     }
   }
   return undefined;

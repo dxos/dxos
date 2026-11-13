@@ -8,6 +8,7 @@ import { type HullNode, type HullShape, type Link, type Node, type Point, isHull
 
 import { defaultNodeRegistry } from '../components/index.ts';
 import { type RenderList2D } from '../model/index.ts';
+import { insertNode } from './edits.ts';
 import { wallCrossings } from './gutter-route.ts';
 import {
   HULL_MARGIN,
@@ -188,34 +189,131 @@ describe('hull', () => {
 });
 
 describe('enclose', () => {
-  test('a new hull holds the nodes named, under everything; a node inside another hull leaves it', ({ expect }) => {
-    const scene = sceneOf(corner());
-    const inner = enclose(scene, ['a', 'b', 'h'], 'inner', { lattice: spec });
-    const made = inner?.nodes.inner;
-    // A hull is not put inside a hull, whether it was named or the nodes named were inside one.
-    expect(made && isHullNode(made) && [made.parent, made.style]).toEqual([undefined, HULL_STYLE]);
-    expect([inner?.nodes.a.parent, inner?.nodes.b.parent, inner?.nodes.c.parent, inner?.nodes.h.parent]).toEqual([
-      'inner',
-      'inner',
-      'h',
-      undefined,
-    ]);
-    expect(Object.values(inner?.nodes ?? {}).every((node) => node.id === 'inner' || node.z > (made?.z ?? ''))).toBe(
-      true,
-    );
-    // Fitted as it is made: the two tiles of row 0.
-    expect([made?.center, made?.size]).toEqual([
+  test('a new hull holds the nodes named, under everything, fitted as it is made', ({ expect }) => {
+    const scene = sceneOf([cell('a', 0, 0), cell('b', 1, 0), cell('x', 3, 0)]);
+    const made = enclose(scene, ['a', 'b'], 'h', { lattice: spec });
+    const hull = made?.nodes.h;
+    expect(hull && isHullNode(hull) && [hull.parent, hull.style]).toEqual([undefined, HULL_STYLE]);
+    expect([made?.nodes.a.parent, made?.nodes.b.parent, made?.nodes.x.parent]).toEqual(['h', 'h', undefined]);
+    expect(Object.values(made?.nodes ?? {}).every((node) => node.id === 'h' || node.z > (hull?.z ?? ''))).toBe(true);
+    // The two tiles of row 0.
+    expect([hull?.center, hull?.size]).toEqual([
       { x: 192, y: 0 },
       { width: 768, height: 192 },
     ]);
-    // The hull they left holds what is left.
-    expect(hullMembers(Object.values(inner?.nodes ?? {}), 'h').map((node) => node.id)).toEqual(['c']);
+  });
+
+  test('a hull named goes in whole: it stands inside the new one, and keeps what is inside it', ({ expect }) => {
+    // A and B in the hull H1, and C beside it: all four selected, as Select all leaves them.
+    const scene = sceneOf([hull('h1'), cell('a', 0, 0, 'h1'), cell('b', 1, 0, 'h1'), cell('c', 0, 1)]);
+    const made = enclose(scene, ['a', 'b', 'h1', 'c'], 'h2', { lattice: spec });
+    expect(['a', 'b', 'c', 'h1', 'h2'].map((id) => made?.nodes[id].parent)).toEqual([
+      'h1',
+      'h1',
+      'h2',
+      'h2',
+      undefined,
+    ]);
+    const nodes = Object.values(made?.nodes ?? {});
+    expect(hullMembers(nodes, 'h1').map((node) => node.id)).toEqual(['a', 'b']);
+    expect(
+      hullMembers(nodes, 'h2')
+        .map((node) => node.id)
+        .sort(),
+    ).toEqual(['a', 'b', 'c']);
+    // The outer hull is drawn under the inner, so the inner's border is not covered.
+    expect((made?.nodes.h2.z ?? '') < (made?.nodes.h1.z ?? '')).toBe(true);
+    // Each is fitted round what it holds: the inner the two tiles of row 0, the outer those and C's.
+    expect(made?.nodes.h1.size).toEqual({ width: 768, height: 192 });
+    expect(made?.nodes.h2.size).toEqual({ width: 768, height: 384 });
+  });
+
+  test('nodes of one hull are enclosed inside it; nodes of different hulls leave theirs', ({ expect }) => {
+    const scene = sceneOf(corner());
+    const inside = enclose(scene, ['a', 'b'], 'inner', { lattice: spec });
+    expect(['a', 'b', 'c', 'inner', 'h'].map((id) => inside?.nodes[id].parent)).toEqual([
+      'inner',
+      'inner',
+      'h',
+      'h',
+      undefined,
+    ]);
+    // Over the hull it stands in, and under everything else.
+    const [outer, inner] = [inside?.nodes.h.z ?? '', inside?.nodes.inner.z ?? ''];
+    expect(
+      outer < inner && Object.values(inside?.nodes ?? {}).every((node) => isHullNode(node) || node.z > inner),
+    ).toBe(true);
+    expect(
+      hullMembers(Object.values(inside?.nodes ?? {}), 'h')
+        .map((node) => node.id)
+        .sort(),
+    ).toEqual(['a', 'b', 'c']);
+
+    const across = enclose(scene, ['a', 'x'], 'new', { lattice: spec });
+    expect(['a', 'x', 'new'].map((id) => across?.nodes[id].parent)).toEqual(['new', 'new', undefined]);
+    expect(
+      hullMembers(Object.values(across?.nodes ?? {}), 'h')
+        .map((node) => node.id)
+        .sort(),
+    ).toEqual(['b', 'c']);
   });
 
   test('nothing is made of ids that are not nodes, or under an id that is taken', ({ expect }) => {
     const scene = sceneOf(corner());
     expect(enclose(scene, ['missing'], 'new')).toBeUndefined();
     expect(enclose(scene, ['a'], 'b')).toBeUndefined();
+  });
+});
+
+describe('a hull drawn with its tool', () => {
+  /** A hull as the tool lands it: its frame as it was drawn, from the top-left of one cell to the bottom-right of another. */
+  const drawn = (id: string, from: readonly [number, number], to: readonly [number, number]): HullNode => {
+    const [first, last] = [
+      cellBounds({ col: from[0], row: from[1], spanX: 1, spanY: 1 }, spec),
+      cellBounds({ col: to[0], row: to[1], spanX: 1, spanY: 1 }, spec),
+    ];
+    const [right, bottom] = [last.x + last.width, last.y + last.height];
+    return {
+      ...createNode({
+        type: 'hull',
+        id,
+        z: 'zz',
+        center: { x: (first.x + right) / 2, y: (first.y + bottom) / 2 },
+        size: { width: right - first.x, height: bottom - first.y },
+      }),
+      type: 'hull',
+    };
+  };
+
+  test('takes the shapes wholly inside its frame, as the command takes a selection', ({ expect }) => {
+    const scene = sceneOf([cell('a', 0, 0), cell('b', 1, 0), cell('x', 3, 0)]);
+    const made = insertNode(drawn('h', [0, 0], [1, 0]))(scene);
+    expect(['a', 'b', 'x', 'h'].map((id) => made.nodes[id].parent)).toEqual(['h', 'h', undefined, undefined]);
+    // The same hull the command makes of the same two shapes, before either is fitted.
+    const commanded = enclose(scene, ['a', 'b'], 'h');
+    expect(['a', 'b', 'x', 'h'].map((id) => commanded?.nodes[id].parent)).toEqual(['h', 'h', undefined, undefined]);
+    expect(Object.values(made.nodes).every((node) => node.id === 'h' || node.z > made.nodes.h.z)).toBe(true);
+  });
+
+  test('drawn round a hull and a shape, it holds both and the hull keeps its own', ({ expect }) => {
+    const scene = fitHulls(sceneOf([hull('h1'), cell('a', 0, 0, 'h1'), cell('b', 1, 0, 'h1'), cell('c', 0, 1)]));
+    // The frame is drawn generously round the inner hull, whose border stands a margin off its shapes.
+    const outer = drawn('h2', [-1, -1], [2, 2]);
+    const made = insertNode(outer)(scene);
+    expect(['a', 'b', 'c', 'h1', 'h2'].map((id) => made.nodes[id].parent)).toEqual(['h1', 'h1', 'h2', 'h2', undefined]);
+    expect(made.nodes.h2.z < made.nodes.h1.z).toBe(true);
+  });
+
+  test('drawn round nothing, or round a locked shape alone, it stands empty where it was drawn', ({ expect }) => {
+    const locked = { ...cell('a', 0, 0), locked: true };
+    const scene = sceneOf([locked, cell('x', 3, 0)]);
+    const frame = drawn('h', [0, 0], [1, 0]);
+    const made = insertNode(frame)(scene);
+    expect([made.nodes.a.parent, made.nodes.h.center, made.nodes.h.size]).toEqual([
+      undefined,
+      frame.center,
+      frame.size,
+    ]);
   });
 });
 

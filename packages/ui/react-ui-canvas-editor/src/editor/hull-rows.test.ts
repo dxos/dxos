@@ -191,9 +191,43 @@ describe('hull rows', () => {
     expect([shown?.links.xa?.target, shown?.links.ab?.source]).toEqual([{ node: 'a' }, { node: 'a' }]);
   });
 
-  test('a hull, a link and a row already in the hull are not moved into one', ({ expect }) => {
+  test('a hull dropped on a hull stands inside it, with its own shapes; no hull goes inside itself', ({ expect }) => {
     const tree = layoutTree(DOCUMENT);
-    expect(viewMove(rowOf(tree, 'h'), rowOf(tree, 'g'), 'make-child')).toBeUndefined();
+    const move = viewMove(rowOf(tree, 'h'), rowOf(tree, 'g'), 'make-child');
+    expect(move).toEqual({ scene: 'board', element: 'h', group: 'g' });
+    const next = move ? written(DOCUMENT, moveWrites(DOCUMENT, move)) : DOCUMENT;
+    // Stored, H's group is a part of G's.
+    expect(Object.keys(next.layouts.find((layout) => layout.id === 'board')?.elements ?? {}).sort()).toEqual([
+      'g',
+      'x',
+      'xa',
+    ]);
+    expect(Object.keys(next.layouts.find((layout) => layout.id === 'g-parts')?.elements ?? {}).sort()).toEqual([
+      'a',
+      'b',
+      'h',
+    ]);
+    // Drawn, every shape stands in the scene where it was, each inside the hull it was in.
+    const drawn = drawnLists2D(next).lists.find((list) => list.id === 'board');
+    expect(['a', 'c', 'h', 'g'].map((id) => drawn?.nodes[id]?.parent)).toEqual(['g', 'h', 'g', undefined]);
+    expect(drawn?.nodes.c.center).toEqual({ x: 600, y: 0 });
+    // The tree nests the same way, and a shape in the inner hull is found in that hull's group.
+    const nested = layoutTree(next);
+    expect(
+      rowOf(nested, 'g')
+        .children.map((row) => row.element)
+        .sort(),
+    ).toEqual(['a', 'b', 'h']);
+    expect(rowOf(nested, 'h').children.map((row) => row.element)).toEqual(['c']);
+    const board = findLayout(next, 'board');
+    expect(board && selectedElement(next, board, 'c')?.layout).toBe('h-parts');
+    // The outer hull is not dropped into the hull inside it, nor onto a shape of that hull.
+    expect(viewMove(rowOf(nested, 'g'), rowOf(nested, 'h'), 'make-child')).toBeUndefined();
+    expect(viewMove(rowOf(nested, 'g'), rowOf(nested, 'c'), 'reorder-above')).toBeUndefined();
+  });
+
+  test('a link and a row already in the hull are not moved into one', ({ expect }) => {
+    const tree = layoutTree(DOCUMENT);
     expect(viewMove(rowOf(tree, 'xa'), rowOf(tree, 'g'), 'make-child')).toBeUndefined();
     expect(viewMove(rowOf(tree, 'a'), rowOf(tree, 'g'), 'make-child')).toBeUndefined();
     // A shape is not dropped into a shape.

@@ -281,7 +281,8 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     freehand: 'shape',
     fold: DRAW_FOLD,
   },
-  // Dragged out round the shapes it is to hold, which it takes as it lands; Enclose makes one round a selection.
+  // Dragged out round the shapes it is to hold, which it takes as it lands; the Hull command makes one of a
+  // selection, by the same operation (`encloseIn`).
   hull: {
     name: 'Hull',
     icon: 'ph--bounding-box--regular',

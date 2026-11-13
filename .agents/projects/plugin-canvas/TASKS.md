@@ -411,6 +411,17 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **No create button in the actions bar** (user, 2026-11-13): the bar's `+` menu ("Create in the middle of the
       view") and `EditorTools.commands.create` are gone, in both dimensions; a shape is made with its tool or dragged
       from the tools panel. The e2e specs draw their nodes (`scene.spec.ts`, `create.spec.ts`).
+- [x] **Hull: one name, one operation** (user, 2026-11-13: "we should not have two ways to do the same thing"): the
+      actions bar's Enclose is `Hull` (`scene-action-hull`), the Hull tool's name and icon, and the tool's landing
+      (`insertNode`) and the command (`enclose`) both make the hull with `encloseIn`.
+- [x] **Hulls nest** (user, 2026-11-13, bug: enclosing H1 and C emptied H1): a hull among the nodes enclosed goes
+      in whole, with what it holds (`encloseUnits`); nodes of one hull are enclosed inside it, and nodes of different
+      hulls leave theirs. Stored, the inner hull's group is a part of the outer's (`collapseHulls` innermost first,
+      `expandHulls` until none is left), a link into the inner hull keeps its way in (`PORT_PATH`), a hull moves with
+      everything inside it (`hullDescendants`), a hull row may be dropped into a hull in Views (`viewMove`,
+      `moveToHull`), a shape in an inner hull is found in that hull's group (`selectedElement`), and deleting an
+      inner hull leaves its shapes in the outer (`deleteElements`).
+      `Hull.stories.tsx` Nested Test. The story host now makes a new layout on the document's model, as the app's does.
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)

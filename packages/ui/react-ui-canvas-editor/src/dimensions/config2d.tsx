@@ -45,11 +45,13 @@ const createPropertyForm2D = (useProperties?: UseProperties2D): ComponentType<Pr
 /** The 2D editor's commands on a selection: its own, and the solid booleans it shares with 3D. */
 const COMMANDS_2D: readonly ExtraCommandDef[] = [
   {
-    id: 'enclose',
-    label: 'Enclose',
+    // The Hull tool's own name and icon: the tool draws a hull round shapes and this makes one of the selection, and
+    // both are the one operation (`encloseIn`), so they hold the same shapes the same way.
+    id: 'hull',
+    label: 'Hull',
     icon: 'ph--bounding-box--regular',
     enabled: ({ selection }) => selection.length > 0,
-    // Draws a hull round the selected shapes, stored as a group of them as the Group command would store it.
+    // Stored as a group of the shapes, as the Group command would store it.
     run: ({ document, layout, selection, onIntent, onModelIntent, select }) => {
       const { lists } = drawnLists2D(document);
       const view = lists.find((list) => list.id === layout);
