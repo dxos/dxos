@@ -19,7 +19,8 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { Config } from '@dxos/react-client';
 import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
-import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
+import * as ModuleContainer from '@dxos/storybook-testing/ModuleContainer';
+import * as StoryHarness from '@dxos/storybook-testing/StoryHarness';
 
 import { FactsStoryContext, type PredicateFilter, type QueryScope, StoryRole } from '../modules/index.ts';
 import { BrainChatPlugin } from '../testing/brain-chat.ts';
@@ -33,7 +34,7 @@ import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '../testing/remot
  */
 const FACT_SERVER_URL = String(import.meta.env.VITE_FACT_SERVER_URL ?? DEFAULT_FACT_SERVER_URL);
 
-const LAYOUT: ModuleLayout = [[StoryRole.Chat, StoryRole.Query], [StoryRole.Facts], [StoryRole.Entities]];
+const LAYOUT: ModuleContainer.Layout = [[StoryRole.Chat, StoryRole.Query], [StoryRole.Facts], [StoryRole.Entities]];
 
 /** Reads an agent's tool makes within this long of each other belong to one lookup, so their facts are shown together. */
 const LOOKUP_WINDOW_MS = 3_000;
@@ -86,7 +87,7 @@ const ExplorerRoot = () => {
           {error} — start it with <code>moon run plugin-discord:fact-server</code>.
         </div>
       )}
-      <ModuleContainer layout={LAYOUT} />
+      <ModuleContainer.Root layout={LAYOUT} />
     </FactsStoryContext.Provider>
   );
 };
@@ -94,7 +95,7 @@ const ExplorerRoot = () => {
 const meta = {
   title: 'stories/stories-brain/FactExplorer',
   render: ExplorerRoot,
-  decorators: createStoryDecorators({
+  decorators: StoryHarness.decorators({
     config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
     types: [Chat.Chat, Skill.Skill],
     // Skill definitions ride the assistant's start event.

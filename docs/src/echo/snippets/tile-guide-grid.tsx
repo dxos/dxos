@@ -63,10 +63,7 @@ const toCells = (rows: string[][], plane: DxGridPlane): DxGridPlaneCells => {
 };
 
 const frozen = { frozenRowsStart: 1 };
-const columnDefault = {
-  frozenRowsStart: { size: 112, readonly: true },
-  grid: { size: 112 },
-};
+const columnDefault = { grid: { size: 112 } };
 const rowDefault = {
   frozenRowsStart: { size: 32, readonly: true },
   grid: { size: 32 },

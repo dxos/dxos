@@ -993,7 +993,7 @@ const BudgetStory = () => {
           limitColumns={BUDGET_COLUMNS.length + 6}
           limitRows={rows.length}
           frozen={{ frozenRowsStart: 1 }}
-          columnDefault={{ frozenRowsStart: { size: 112, readonly: true }, grid: { size: 112 } }}
+          columnDefault={{ grid: { size: 112 } }}
           rowDefault={{ frozenRowsStart: { size: 32, readonly: true }, grid: { size: 32 } }}
           getCells={getCells}
           overscroll='trap'
