@@ -1274,7 +1274,7 @@ page edge-overview: Overview
   status: spike
   covers:
     - EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers, with a Durable Object per identity and per space [D-275]
-    - One diagram of devices, EDGE and peers, and what goes over each link
+    - One diagram of devices, EDGE and peers, and what goes over each link: each device's WebSocket ends at the Router, which reaches the DB, compute and identity services [D-280]
     - A table of where ECHO, HALO, MESH and PLEX use EDGE, each linking its concept page
     - DXOS runs EDGE, and an app points at it with `runtime.services.edge.url`
 ```
@@ -1304,7 +1304,8 @@ page edge-architecture: Architecture
   template: concept
   status: spike
   covers:
-    - The services, one line each: router, db, identity, compute, KMS, hub, AI, blob and registry
+    - The entry points: each device's WebSocket ends at the Router, and HTTP requests go to the `edge` worker, which forwards each to the service that owns its path [D-280]
+    - The services, one line each: Router, DB, identity, compute, KMS, hub, AI, blob and registry
     - The Durable Objects per identity and per space, in a diagram
     - The development, preview and production environments, and how an app's config selects one
     - DXOS operates every environment; there is no self-hosted EDGE [D-231]
@@ -5540,6 +5541,14 @@ decision D-279: SAGE's Overview no longer walks through a turn; the turn and its
   by: user:wittjosiah
   affects: [sage-overview, sage-agents, app-framework-welcome]
   why: Josiah said a turn loop is detail, not overview content, and that PLEX's Overview was a run of small sections a reader would stop before reaching the demos.
+```
+
+```mdl
+decision D-280: EDGE's diagrams and pages name services as the edge repo does and show the Router as where each device's WebSocket ends. The Overview diagram drops the "front door" box and draws devices to the Router, the Router to the DB, compute and identity services, DB triggers to compute and compute prompts to the AI service. Architecture describes the `edge` worker as the HTTP entry point rather than a front door for every request.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [edge-overview, edge-architecture, edge-glossary]
+  why: Josiah asked where the "front door" and lowercase "db" came from and pointed out that the Router terminates the WebSockets.
 ```
 
 ## Appendix: Extension Definitions

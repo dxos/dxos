@@ -2,13 +2,15 @@ diagram flow=down
 node A "Device A" ref="packages/core/mesh/edge-client/src/edge-client.ts"
 node B "Device B" right-of A ref="packages/core/mesh/edge-client/src/edge-client.ts"
 group cloud "EDGE" max-width=3 {
-  node Door "Front door"
-  node Router "Router"
-  node Db "db"
-  node Identity "Identity and Hub"
-  node Compute "Compute"
+  node Router "Router" ref="https://github.com/dxos/edge/tree/main/packages/services/router/src/worker/router/router.ts"
+  node Db "DB service" ref="https://github.com/dxos/edge/tree/main/packages/services/db-service/src/worker/automerge/automerge-replicator.ts"
+  node Identity "Identity service" ref="https://github.com/dxos/edge/tree/main/packages/services/identity-service/src/agent/agent.ts"
+  node Compute "Compute service" ref="https://github.com/dxos/edge/tree/main/packages/services/compute-service/src/runtime/workers-for-platforms-runtime.ts"
+  node Ai "AI service" ref="https://github.com/dxos/edge/tree/main/packages/services/ai-service/src/entrypoint/ai-service.ts"
 }
 edge A -> B "direct link"
-edge A:bottom -> Door:left "WebSocket, HTTP"
-edge B:bottom -> Door:right "WebSocket, HTTP"
-edge Door -> Router, Db, Identity, Compute bus
+edge A:bottom -> Router:left "WebSocket"
+edge B:bottom -> Router:right "WebSocket"
+edge Router -> Identity, Db, Compute bus
+edge Db -> Compute "triggers"
+edge Compute -> Ai "prompts"

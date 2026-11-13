@@ -71,4 +71,4 @@ An ECHO object that starts an operation on a schedule, on a change, or on a mess
 
 ### Worker
 
-A Cloudflare Worker: one EDGE service, deployed on its own and reached through the front door at its path.
+A Cloudflare Worker: one EDGE service, deployed on its own and reached through the `edge` worker at its path.

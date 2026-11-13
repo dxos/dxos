@@ -5,20 +5,20 @@ description: EDGE's services, the objects it keeps per space and per identity, a
 
 import Diagram from '../../../../../components/Diagram.astro';
 
-EDGE is a set of Cloudflare Workers behind one front door. Each worker is a service, and each service keeps its state in
-Durable Objects, one per space, identity or other key.
+EDGE is a set of Cloudflare Workers. Each worker is a service, and each service keeps its state in Durable Objects, one
+per space, identity or other key.
 
 ## Model
 
-**The front door.** One worker, `edge`, takes every request and WebSocket. It authenticates the caller and forwards the
-request to the service that owns its path.
+**Entry points.** Each device's WebSocket ends at the Router, a Durable Object per identity. HTTP requests go to the
+`edge` worker, which authenticates the caller and forwards each request to the service that owns its path.
 
 **Services.**
 
 | Service   | Path         | Does                                                                                         |
 | --------- | ------------ | -------------------------------------------------------------------------------------------- |
 | Router    | (WebSocket)  | Holds each device's WebSocket, routes messages between an identity's devices, and runs signaling |
-| db        | `/db`        | Replicates spaces, indexes them, and keeps each space's state                               |
+| DB        | `/db`        | Replicates spaces, indexes them, and keeps each space's state                               |
 | Identity  | `/identity`  | Identity recovery and agent identities                                                       |
 | Compute   | `/compute`   | Operations, triggers, the scheduler and agent processes                                      |
 | KMS       | `/kms`       | Keeps secrets for a space, such as OAuth tokens for the services it connects to              |
