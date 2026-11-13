@@ -6333,6 +6333,14 @@ decision D-289: PLEX's Overview calls PLEX a framework for building apps out of 
 ```
 
 ```mdl
+decision D-290: The HALO, MESH and SAGE suite art run their rays well past the art's edges, as ECHO, EDGE, PLEX and TILE already do, so any crop wider than the art, such as the docs home cards, shows them running to the edge rather than stopping short. Amends [D-272] and [D-273].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [docs-home, D-272, D-273]
+  why: Josiah saw the SAGE card's rays stop before the card's right edge; its art's rays ended at x 1940, inside the card's 720 to 2160 window.
+```
+
+```mdl
 decision D-291: Each live demo is a Storybook story, built with the story harness in `@dxos/storybook-testing`, and the docs site embeds the story itself rather than a copy of it. The ECHO demos live in `@dxos/stories-echo`. `@dxos/storybook-testing` is a namespace package with one entry point per namespace, each plugin its own namespace. A story asks for peers; it is not always two. A page of stories can hand them one shared set of peers and one space so the page starts two clients, not two per demo.
   date: 2026-11-13
   by: user:wittjosiah
