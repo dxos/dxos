@@ -14,9 +14,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManifest from '@dxos/app-framework/PluginManifest';
-import { wrapFunctionHandler } from '@dxos/compute-runtime';
-import type * as Operation from '@dxos/compute/Operation';
+import { wrapFunctionHandler } from '@dxos/compute-runtime/protocol';
+import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
+import { type Entity } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
@@ -110,6 +111,9 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       throw new InvalidRequestError({ message: 'A conversation is read from a space, and the request names none.' });
     }
 
+    // Built before the seed and the cancel listener: these ids are not the handler's, and a throw here holds nothing.
+    const registry = spaceId === undefined ? undefined : registryEntities(activation);
+
     // TEST-ONLY: the seed is a static of the shared `EntityId`, so concurrent invocations on one isolate race; only
     // trusted test harnesses set it.
     if (scope.idSeed !== undefined) {
@@ -130,49 +134,50 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     });
     const cancellation = RequestContext.listenForCancel(scope.cancellation);
 
-    // Set once the invocation's context exists; a nested call can only return after that.
-    let serviceContainer: ServiceContainer | undefined;
-    // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
-    const withOperations = HostServices.withOperations(handler, {
-      refreshWorkingSet: async () => serviceContainer?.refreshWorkingSet(),
-      handlers: activation.operationHandlers,
-      host: scope.operations,
-      spaceId,
-      conversation: scope.conversation,
-      pid,
-      idSeed: scope.idSeed,
-    });
-    const contextual = RequestContext.withConversation(
-      RequestContext.withCancellation(
-        withCapabilities(
-          HostServices.withHostServices(
-            withOperations,
-            scope.services,
-            activation.capabilities.getAll(Capabilities.HostServiceAdapter),
-          ),
-          activation.capabilities,
-        ),
-        cancellation.signal,
-      ),
-      scope.conversation,
-    );
-    const func = wrapFunctionHandler(contextual, {
-      // Registering types needs a database, which exists only for a space-scoped invocation.
-      types: spaceId === undefined ? undefined : [...activation.registeredTypes],
-      toolkits: [...activation.toolkits],
-      typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
-      // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
-      blobBackends: FileStorage.blobBackends(env),
-      // Another bundle's nested call passes the objects it holds by reference.
-      resolveObjectReferences: true,
-    });
-
     if (!callerOwnsEnvelopes) {
       trace.start(info);
     }
     // The in-process rpc clients bridged onto the bindings live for one invocation.
     const serviceScope = Effect.runSync(Scope.make());
     try {
+      // Set once the invocation's context exists; a nested call can only return after that.
+      let serviceContainer: ServiceContainer | undefined;
+      // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
+      const withOperations = HostServices.withOperations(handler, {
+        refreshWorkingSet: async () => serviceContainer?.refreshWorkingSet(),
+        handlers: activation.operationHandlers,
+        host: scope.operations,
+        spaceId,
+        conversation: scope.conversation,
+        pid,
+        idSeed: scope.idSeed,
+      });
+      const contextual = RequestContext.withConversation(
+        RequestContext.withCancellation(
+          withCapabilities(
+            HostServices.withHostServices(
+              withOperations,
+              scope.services,
+              activation.capabilities.getAll(Capabilities.HostServiceAdapter),
+            ),
+            activation.capabilities,
+          ),
+          cancellation.signal,
+        ),
+        scope.conversation,
+      );
+      // Inside the try: it serializes the operation's schema, and a throw must still dispose the cancel listener.
+      const func = wrapFunctionHandler(contextual, {
+        // Registering types needs a database, which exists only for a space-scoped invocation.
+        types: spaceId === undefined ? undefined : [...activation.registeredTypes],
+        registry,
+        toolkits: [...activation.toolkits],
+        typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
+        // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
+        blobBackends: FileStorage.blobBackends(env),
+        // Another bundle's nested call passes the objects it holds by reference.
+        resolveObjectReferences: true,
+      });
       const made = await makeContext(env, scope, spaceId, serviceScope);
       serviceContainer = made.serviceContainer;
       const context = made.context;
@@ -281,6 +286,33 @@ const makeContext = async (
     accessTokenService: scope.accessTokenService,
   });
   return { context, serviceContainer };
+};
+
+/**
+ * The primary's skills, which a skill bound by registry URI resolves only through, and its operation records, which
+ * the tool resolver projects a skill's tools from; no other plugin's, since a bundle reads none of theirs (D-88).
+ */
+const registryEntities = (activation: PluginActivation.Activation): Entity.Unknown[] => [
+  // Made per invocation: `make()` mints ids, which workerd allows only inside a request.
+  ...activation.skills.map((definition) => definition.make()),
+  ...activation.operationHandlers.flatMap(operationRecord),
+];
+
+/**
+ * An operation's registry record, as `registry-sync` publishes it: none for a `skipRegistry` operation, which is hidden
+ * from agents, or for one whose schema cannot be serialized, which would otherwise fail every invocation.
+ */
+const operationRecord = (handler: Operation.WithHandler<Operation.Definition.Any>): Operation.PersistentOperation[] => {
+  if (handler.meta.skipRegistry) {
+    return [];
+  }
+  try {
+    // Built from typed definitions, so schema validation would only re-check the compiler.
+    return [Operation.serialize(handler, { skipValidation: true })];
+  } catch (error) {
+    log.warn('operation not registered: its schema cannot be serialized', { key: handler.meta.key, error });
+    return [];
+  }
 };
 
 /** Gives the handler the plugins' capability manager, which operations that read contributed capabilities require. */

@@ -25,6 +25,8 @@ export type RecoveryOAuthParams = {
   readonly scopes: readonly string[];
   /** atproto handle or DID — required so Edge can resolve the user's PDS / auth server. */
   readonly loginHint: string;
+  /** Opens the provider's page in the default browser; its link is printed either way. Defaults to true. */
+  readonly open?: boolean;
 };
 
 type InitiateEnvelope = { success: boolean; data?: { authUrl?: string }; error?: { message?: string } };
@@ -40,7 +42,7 @@ type InitiateEnvelope = { success: boolean; data?: { authUrl?: string }; error?:
  * (random values satisfy request validation).
  */
 const performOAuthRoundTrip = Effect.fn(function* (params: RecoveryOAuthParams, purpose: 'recovery' | 'register') {
-  const server = yield* startLocalCallbackServer(RECOVERY_CALLBACK_PATH).pipe(
+  const server = yield* startLocalCallbackServer(RECOVERY_CALLBACK_PATH, { open: params.open }).pipe(
     Effect.mapError(OAuthFlowError.wrap({ ifTypeDiffers: true })),
   );
   return yield* Effect.gen(function* () {

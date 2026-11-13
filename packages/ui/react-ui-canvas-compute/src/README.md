@@ -28,7 +28,7 @@
     - functional inputs represent values
 
 - persisting compute graph and canvas in ECHO
-  - (Canvas)-[.nodes]->(CanvasNode)-[.node]->(ComputeNode)<-[.nodes]-(ComputeGraph), (Canvas)-[.computeGraph]->(ComputeGraph)
+  - (Canvas)-[.nodes]->(CanvasNode)-[.data.node]->(ComputeNode)<-[.nodes]-(ComputeGraph), (Canvas)-[.computeGraph]->(ComputeGraph)
 
   - Computations can operate purely on the ComputeGraph
   - Computations return an ExecutionTrace that is streamable

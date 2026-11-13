@@ -11,6 +11,7 @@ import { type Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { RDF } from '@dxos/pipeline-rdf';
+import { type EntityCardModel, curie, toEntityCards } from '@dxos/react-ui-rdf';
 import { Organization, Person } from '@dxos/types';
 
 import {
@@ -20,9 +21,6 @@ import {
   type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
   type AgentKnowledgePredicate,
-  type EntityCardModel,
-  curie,
-  toEntityCards,
 } from '#components';
 import { AgentPresence, BrainService, Goal, Profile } from '#types';
 

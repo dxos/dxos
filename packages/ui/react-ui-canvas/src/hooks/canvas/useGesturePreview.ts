@@ -81,13 +81,10 @@ export const movePreview = (
   const constrained = draw.constrain ? draw.constrain(edit) : edit;
   const landed = (constrained ?? edit)(scene);
   const moved = copy ? Object.keys(followed.nodes).filter((id) => !scene.nodes[id]) : ids;
+  /** Where each moved node lands: the bounding box the drag draws, whether or not the drop is allowed. */
+  const landing = moved.flatMap((id) => (landed.nodes[id] ? [nodeBounds(landed.nodes[id])] : []));
   if (constrained === undefined) {
-    return {
-      displayScene: followed,
-      blocked: true,
-      // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
-      landing: moved.flatMap((id) => (landed.nodes[id] ? [nodeBounds(landed.nodes[id])] : [])),
-    };
+    return { displayScene: followed, blocked: true, landing };
   }
   const nodes = { ...followed.nodes };
   for (const id of moved) {
@@ -101,7 +98,9 @@ export const movePreview = (
       nodes[id] = center.x === land.center.x && center.y === land.center.y ? land : { ...follow, center };
     }
   }
-  return { displayScene: { ...followed, nodes }, blocked: false };
+  // The box is drawn under the shape as well as away from it: a shape under the pointer hides its own extent, and the
+  // frame is what says how much room it will take once it lands.
+  return { displayScene: { ...followed, nodes }, blocked: false, landing };
 };
 
 /** What the gesture in flight draws: the scene as it would be once the gesture lands. */
@@ -149,7 +148,8 @@ export const useGesturePreview = ({
       // Refitted as the release will land it, so the frame and its outline follow the vertex.
       const node = scene.nodes[drag.id];
       // A locked node previews as it is, since the release will not move it.
-      const values = node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor) : undefined;
+      const values =
+        node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor, drag.bends) : undefined;
       return {
         displayScene: values ? updateElement(drag.id, values)(scene) : scene,
         blocked: false,

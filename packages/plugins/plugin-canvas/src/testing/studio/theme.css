@@ -1,0 +1,111 @@
+/*
+ * Copyright 2026 DXOS.org
+ *
+ * The deck's theme as canvas tokens (studio `assets/deck/lib/deck.css`): the soft surfaces, the hairlines and the
+ * accent its slides are drawn in. The card kinds read these rather than naming colours of their own, so a drawing
+ * made from a deck slide looks like the slide in either mode.
+ *
+ * Every value is a `light-dark()` pair, which is resolved where it is *used* — against the `color-scheme` of the
+ * element drawing it, not of `:root`. A canvas whose theme pins a mode sets `color-scheme` on its own container, so
+ * a card inside a `neu-dark` canvas draws dark even while the app around it is light. That is what makes a light
+ * and a dark copy of the same drawing able to sit side by side on one page.
+ */
+
+:root {
+  --sd-bg: light-dark(hsl(220 14% 91%), hsl(220 10% 15%));
+  --sd-panel: light-dark(hsl(220 14% 93.5%), hsl(220 10% 17.5%));
+  --sd-deep: light-dark(hsl(220 14% 88%), hsl(220 10% 12.5%));
+  --sd-fg: light-dark(hsl(220 14% 10%), hsl(220 10% 96%));
+  --sd-muted: light-dark(hsl(220 14% 36%), hsl(220 10% 68%));
+  --sd-line: light-dark(hsl(220 14% 80%), hsl(220 10% 27%));
+  --sd-accent: light-dark(#2d6fff, #06c5fd);
+  --sd-lo: light-dark(hsl(220 22% 57% / 0.32), hsl(220 20% 3% / 0.7));
+  --sd-raised-sm: light-dark(2.8px 2.8px 8px, 2.5px 2.5px 7px) var(--sd-lo);
+  --sd-inset-sm: inset light-dark(2.8px 2.8px 8px, 2.5px 2.5px 7px) var(--sd-lo);
+
+  /* Object types (Studio ROLES), which a card names through `tone`; the same in both modes. */
+  --sd-t-event: #d83eff;
+  --sd-t-message: #1fd58a;
+  --sd-t-file: #f2c14e;
+  --sd-t-trip: #2d6fff;
+  --sd-t-sheet: #ff7a45;
+}
+
+/*
+ * A card of the deck: a soft raised panel. `--sd-tone` is set per card when it has one, and is both the outline and
+ * the icon's colour; without one the icon takes the muted ink.
+ */
+.studio-card {
+  color: var(--sd-fg);
+  background: var(--sd-panel);
+  box-shadow: var(--sd-raised-sm);
+}
+
+.studio-card[data-tone] {
+  box-shadow:
+    var(--sd-raised-sm),
+    inset 0 0 0 2px var(--sd-tone);
+}
+
+.studio-card-icon {
+  color: var(--sd-tone, var(--sd-muted));
+}
+
+.studio-card-body {
+  color: var(--sd-fg);
+}
+
+.studio-card-footer {
+  color: var(--sd-muted);
+  border-block-start: 1px solid var(--sd-line);
+}
+
+.studio-card-label {
+  color: var(--sd-muted);
+}
+
+/* The deck's type scale inside the shared card frame: its own glyph, drawn beside a 23px title rather than on the
+   canvas's three-cell header, which would push a 120px card's footer out of its frame. */
+.studio-card-frame {
+  --dx-card-glyph: 26px;
+}
+
+.studio-card-frame [data-part='card-header'] {
+  gap: 9px;
+}
+
+.studio-card-frame [data-part='label'] {
+  font-size: 23px;
+  line-height: 1;
+}
+
+.studio-card-frame .studio-card-body,
+.studio-card-frame [data-part='body'] {
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--sd-fg);
+}
+
+.studio-card-frame [data-part='footer'] {
+  font-family: var(--dx-fontFamily-mono, ui-monospace, monospace);
+  font-size: 13px;
+  color: var(--sd-muted);
+  border-block-start: 1px solid var(--sd-line);
+  padding-block-start: 8px;
+}
+
+.studio-card-frame [data-part='card-header'] .dx-icon,
+.studio-card-frame [data-scope='icon'] {
+  color: var(--sd-tone, var(--sd-muted));
+}
+
+/* A feed block: an inset well, or filled in its mark's tone. */
+.studio-feed-block {
+  background: var(--sd-deep);
+  box-shadow: var(--sd-inset-sm);
+}
+
+.studio-feed-block[data-marked] {
+  background: var(--sd-mark, var(--sd-accent));
+  box-shadow: none;
+}

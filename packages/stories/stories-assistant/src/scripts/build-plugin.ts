@@ -37,7 +37,7 @@ const DIR = `temp/plugins/${ComposerPluginTemplate.FOLDER}`;
 const ENTRY_URL = ComposerPluginTemplate.MANIFEST_URL.replace('manifest.json', 'src/plugin.tsx');
 
 /** The guide the template's first task names, from the Composer app directory. */
-const GUIDE = '../../../docs/src/content/docs/docs/composer/publishing-plugins.md';
+const GUIDE = '../../../docs/src/content/docs/docs/plex/publishing-plugins.md';
 
 /** Writes a file with a quoted heredoc, so nothing in it is expanded: the template asks for exactly this. */
 const write = (path: string, content: string) => `cat > ${DIR}/${path} <<'DXEOF'\n${content.trimEnd()}\nDXEOF`;

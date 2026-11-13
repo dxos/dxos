@@ -10,7 +10,7 @@ import { join, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { Context } from '@dxos/context';
-import { EdgeHttpClient } from '@dxos/edge-client';
+import { EdgeHttpClient, formatPluginBundleLoad } from '@dxos/edge-client';
 import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
 import { invariant } from '@dxos/invariant';
 import { EdgeCallFailedError } from '@dxos/protocols';
@@ -81,12 +81,13 @@ const main = async () => {
   const http = new EdgeHttpClient(edgeUrl, { apiKey });
   try {
     // `auth: false` skips the identity presentation, leaving the admin key as the only credential.
-    const { moduleUrl } = await http.uploadPluginBundle(
+    const { moduleUrl, edge } = await http.uploadPluginBundle(
       Context.default(),
       { slug: key, version, files, channel: values.channel },
       { auth: false },
     );
-    console.log(`✓ ${key} ${version} published: ${moduleUrl}`);
+    const load = edge?.load ? ` (${formatPluginBundleLoad(edge.load)})` : '';
+    console.log(`✓ ${key} ${version} published: ${moduleUrl}${load}`);
   } catch (error) {
     if (error instanceof EdgeCallFailedError && error.data?.type === 'conflict') {
       const message = `${key} ${version} stale: EDGE holds other content for this version; bump it to publish`;

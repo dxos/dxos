@@ -11,7 +11,7 @@ import { EDGE_CLIENT_TOO_OLD, EdgeClientTooOldError, EdgeResponse } from '@dxos/
 import { type Presentation, PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { createEphemeralEdgeIdentity } from './auth.ts';
-import { EdgeHttpClient } from './edge-http-client.ts';
+import { EdgeHttpClient, formatPluginBundleLoad } from './edge-http-client.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 
 // TODO(burdon): Factor out config.
@@ -834,5 +834,13 @@ describe('EdgeHttpClient brain fact feeds', () => {
     );
     const client = new EdgeHttpClient('https://edge.example.com');
     await expect(client.listBrainFactFeeds(Context.default(), SPACE_ID, 'agent-1')).rejects.toThrow();
+  });
+});
+
+describe('formatPluginBundleLoad', () => {
+  test('reports describe time and the JavaScript and WebAssembly bytes apart, in MB', ({ expect }) => {
+    expect(formatPluginBundleLoad({ describeMs: 3200, jsBytes: 11.5 * 1024 * 1024, wasmBytes: 2 * 1024 * 1024 })).toBe(
+      'describe 3200 ms, js 11.5 MB, wasm 2.0 MB',
+    );
   });
 });

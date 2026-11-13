@@ -7,8 +7,8 @@
 import solidPlugin from '@opentui/solid/bun-plugin';
 import type { BunPlugin } from 'bun';
 import { existsSync } from 'fs';
-import { chmod, copyFile, mkdir, rm, writeFile } from 'fs/promises';
-import { dirname, extname, join } from 'path';
+import { chmod, copyFile, mkdir, rename, rm, writeFile } from 'fs/promises';
+import { dirname, extname, join, resolve } from 'path';
 
 /**
  * Bun plugin that handles Vite-style `?raw` suffix imports — `import code from 'pkg?raw'`
@@ -130,6 +130,83 @@ const automergeWasmPlugin: BunPlugin = {
   },
 };
 
+/** Where downloaded `node-datachannel` prebuilds are kept between builds. */
+const DATACHANNEL_CACHE = 'node_modules/.cache/node-datachannel';
+
+const dataChannelAddons = new Map<string, Promise<string>>();
+
+/**
+ * Downloads the `node-datachannel` prebuild for one target and returns the path of its addon. pnpm installs the
+ * prebuild for the host alone, and the addon is per platform, so every other target needs its own.
+ */
+const fetchDataChannelAddon = (version: string, platform: string, arch: string): Promise<string> => {
+  const key = `${version}-${platform}-${arch}`;
+  let addon = dataChannelAddons.get(key);
+  if (!addon) {
+    addon = (async () => {
+      const dir = join(DATACHANNEL_CACHE, key);
+      const path = join(dir, 'build', 'Release', 'node_datachannel.node');
+      if (existsSync(path)) {
+        return path;
+      }
+
+      const asset = `node-datachannel-v${version}-napi-v8-${platform}-${arch}.tar.gz`;
+      const url = `https://github.com/murat-dogan/node-datachannel/releases/download/v${version}/${asset}`;
+      console.log(`[Build] Downloading ${asset}...`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
+      }
+
+      // Extracted beside the cache entry and renamed into place, so a failed run never leaves a partial addon there.
+      const staging = `${dir}.${process.pid}.tmp`;
+      await rm(staging, { recursive: true, force: true });
+      await mkdir(staging, { recursive: true });
+      try {
+        await Bun.write(join(staging, asset), response);
+        const tar = Bun.spawnSync(['tar', '-xzf', asset], { cwd: staging, stderr: 'pipe' });
+        await rm(join(staging, asset));
+        if (tar.exitCode !== 0 || !existsSync(join(staging, 'build', 'Release', 'node_datachannel.node'))) {
+          throw new Error(`Failed to extract ${asset}: ${tar.stderr.toString()}`);
+        }
+        await rm(dir, { recursive: true, force: true });
+        await rename(staging, dir);
+      } finally {
+        await rm(staging, { recursive: true, force: true });
+      }
+      return path;
+    })();
+    dataChannelAddons.set(key, addon);
+  }
+  return addon;
+};
+
+/**
+ * Bun plugin that embeds the target's `node-datachannel` addon. The package loads it with
+ * `createRequire(import.meta.url)('../../../build/Release/node_datachannel.node')`, which a compiled binary
+ * resolves against `/$bunfs/root/` and cannot find, so every WebRTC channel fails to open. Letting Bun embed it
+ * as a napi module does not work either: the ESM bundle calls an undefined `__require`. Embedding it as a file
+ * asset and requiring that asset's path does, and the asset comes from the target's prebuild, not the host's.
+ */
+const dataChannelAddonPlugin = (platform: string, arch: string): BunPlugin => ({
+  name: 'node-datachannel-addon',
+  setup(build) {
+    build.onLoad({ filter: /node-datachannel\/dist\/(esm|cjs)\/lib\/node-datachannel\.(mjs|cjs)$/ }, async (args) => {
+      const packageDir = join(dirname(args.path), '..', '..', '..');
+      const { version } = await Bun.file(join(packageDir, 'package.json')).json();
+      const addon = resolve(await fetchDataChannelAddon(version, platform, arch));
+      return {
+        contents: [
+          `import addonPath from ${JSON.stringify(addon)} with { type: 'file' };`,
+          "import { createRequire } from 'node:module';",
+          'export default createRequire(import.meta.url)(addonPath);',
+        ].join('\n'),
+        loader: 'js',
+      };
+    });
+  },
+});
+
 // Platform configurations. Every target needs its `@opentui/core-<platform>-<arch>` installed here —
 // `@opentui/core` reaches its native library through a dynamic import interpolating
 // `process.platform`/`process.arch`, which bun folds into a constant per target and resolves at
@@ -189,7 +266,15 @@ const buildPromises = platforms.map(async ({ target, platform, arch, ext }) => {
   const result = await Bun.build({
     entrypoints: ['./src/bin.ts'],
     target: 'bun',
-    plugins: [solidPlugin, rawImportPlugin, urlImportPlugin, nodeStdPlugin, subductionWasmPlugin, automergeWasmPlugin],
+    plugins: [
+      solidPlugin,
+      rawImportPlugin,
+      urlImportPlugin,
+      nodeStdPlugin,
+      subductionWasmPlugin,
+      automergeWasmPlugin,
+      dataChannelAddonPlugin(platform, arch),
+    ],
     // Marks the binary so `--watch` selects the binary strategy: a binary has no sources for
     // `bun --watch` to track, so its supervisor re-runs the executable and watches dev-installed
     // plugins instead. Substituted while bundling rather than read from the environment at startup,

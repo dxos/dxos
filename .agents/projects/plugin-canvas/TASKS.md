@@ -1,6 +1,6 @@
 # plugin-canvas — Tasks
 
-_Resume: PR #13249 (branch `claude/infinite-canvas-depth-7e0949-ojem5i`, mirrored to `claude/infinite-canvas-depth-7e0949`) carries PR 0 (`@dxos/diagram`, published) and the phase 1 engine (`src/scene/`, typed nodes and links, four stories smoke-tested headlessly); CI green except Depot runner drop-outs documented on the PR. Next: the user's answers to the mobile-mode questions (§6b), the migration decisions in `docs/MIGRATION.md` §3, then M1 or phase 2. Once PR 0 lands, write the phase 1 plan and build `react-ui-canvas/src/scene/` (delete `src/experimental/` in that PR). Uncommitted: none. Last: `packages/common/diagram` created, illustrator model moved, consumers rewired, DSL gaps (ports, portal, index) added with tests._
+_Resume: PR #14501 (draft, `claude/plugin-canvas-composite-objects-cb1372`) carries phase 7 — composite objects with constrained parts, DSL templates, in-place editing, the ortho link variant, and the Card and UML class tools converted to composites. CI has not been chased. Next: the deviations listed in phase 7, the first being a part that hugs its content. Uncommitted: none._
 
 ## Phase 0: audit + design
 
@@ -211,6 +211,219 @@ before), not reasoned about from the source.
       frames the floor rather than the circuit. Only `template` (taller than the floor) and
       `artifact` fit to their own bounds. That is the open framing question below, not a separate
       fault.
+
+## Phase 7: composite objects with constrained parts (started 2026-11-11)
+
+Branch `claude/plugin-canvas-composite-objects-cb1372`, fast-forwarded onto `claude/studio-diagrams-canvas-500640`
+(`fece1e4986e`). A tool today draws one shape whose regions are painted by its React view (`CardNodeView`,
+`ClassNodeView`); the `Composite` story draws the same card as an Object of primitives whose parts are separately
+editable. This phase makes the second form the one tools use, and gives a part a say in how it follows its frame.
+
+### Decisions (agreed with the user, 2026-11-11)
+
+| #   | Decision                                                                                                                                                                                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | **Part layout is per-axis constraints**, as Figma's: `constrain?: { x, y }` over `min \| max \| stretch \| center \| scale`, on `nodeBase` and `linkBase`. `scale` is the default and is today's uniform behaviour. |
+| D2  | **A tool declares its composite in the DSL, not in code.** `NodeDefSpec.template` is DSL source; one shared definition per tool per document, instances holding their own content as `overrides`.                   |
+| D2b | The DSL gains a top-level **`composite <id> { element … }`** statement, which reads back as a `kind: 'composite'` layout plus the model object that places it.                                                      |
+| D2c | A part's constraint is one attribute carrying the pair: **`constrain=stretch,max`**; a single value applies to both axes.                                                                                           |
+| D3  | **Text edits are local, style and part geometry are shared.** Typing into a part writes the instance's `overrides`; style or a part's own geometry writes the definition, so every instance changes.                |
+| D4  | **Double-click edits a composite in place** — the rest of the scene fades, Escape leaves — matching what `Scene3DEditor` already does in 3D. Isolation stays reachable from the Objects panel.                      |
+| D5  | **Make object keeps the content's own bounds**: the instance's frame is the selection's bounds with a 1:1 transform, so handles sit on the shape's edges and no group box is drawn.                                 |
+| D6  | **The link `type` is presented as a Variant selector** — straight, orthogonal, elbow, curve, spline — with one new `ortho` type. Nothing stored changes meaning.                                                    |
+| D7  | `smart` is labelled **elbow** (it leaves each port along its normal and joins with one corner).                                                                                                                     |
+| D8  | `orthogonal` routes with **midpoint bends and no obstacle avoidance**: straight when the ports align, else one or two bends at the midpoint. Deterministic, so an unrelated shape moving never re-routes it.        |
+| D9  | **plugin-uml keeps `ClassNode`'s typed schema** and gains a DSL template; `ClassNodeView.tsx` goes away.                                                                                                            |
+| D10 | One branch, **one PR**, seven commits.                                                                                                                                                                              |
+
+### Tasks
+
+- [x] **`@dxos/scene`: part constraints.** `PartConstraint` / `PartLayout` schemas, `constrain` on `nodeBase` and
+      `linkBase`, and the solver that maps a definition's bounds into an instance's frame per axis. Unit tests over
+      each constraint and over a link's free point ends.
+- [x] **`@dxos/diagram`: the `composite` statement.** Grammar, reader, printer, linter and completion for
+      `composite <id> … { element … }` and the `constrain` attribute; round-trip tests.
+- [x] **`react-ui-canvas`: templates and re-solve.** `NodeDefSpec.template` (DSL source) compiled once per document;
+      an instance's resize re-solves its parts by their constraints instead of scaling uniformly.
+- [x] **`react-ui-canvas`: in-place composite editing** (D4), with 2D/3D parity against `Scene3DEditor`.
+- [x] **`react-ui-canvas`: Make object framing and shared style edits** (D3, D5).
+- [x] **`react-ui-canvas`: the `ortho` variant and the Variant selector** (D6, D7, D8).
+- [x] **`plugin-uml`: the class as a composite template** (D9).
+- [x] **Verify**: full repo build green; scene 86, diagram 297, react-ui-canvas 541, react-ui-canvas-editor 179 and
+      plugin-uml 9 tests pass; `pnpm format` and lint clean across the five packages. The Composite story was read
+      back from the DOM on a storybook served from this worktree on port 9010: at 288x192 and 384x288 the glyph is
+      30x30 at (10,10) in both, the footer 15px tall and 10px from the bottom in both, and the body grows 84px to
+      163px — the constraints, measured rather than eyeballed. The Variant selector shows for a link alone.
+- [x] **`react-ui-canvas`: the `card` tool as a composite template** (D10, D11, D12). The built-in Card no longer
+      paints a view: it declares `CARD_TEMPLATE` and places an Instance of it, with each region bound to the card's
+      own field. `bind` reaches any field, not only text, so the glyph is the card's typed `icon`. Optional parts
+      (`optional`) are switched off per Instance from the Properties panel (`PartsField` writes `overrides`), the
+      part naming a hidden one in `grow` takes its room, and a part that `follows` another goes with it (the
+      hairline with the footer). `cardPrototype`/`CardFrame` stay, for a kind that paints a view of its own
+      (studio's feed card).
+- [x] **The composite round trip for a typed tool.** `nodeElement` keyed on `type === 'instance'`, so a `card`
+      node's composite was not written as the element's `parts` and the Views tree showed a leaf. It now keys on
+      `isInstanceNode` and keeps the node's own type; `canvasNode` reads an Object back by whether it names a
+      composite, not by what it is called.
+- [x] **Visually verified: the UML class.** `SceneEditorStory` now takes a `nodes` registry (the editor exposes
+      `@dxos/react-ui-canvas-editor/testing`), so a plugin kind renders through the shared editor:
+      `plugins-plugin-uml-classnode--default` draws three classes, each expanding into its three compartments.
+
+### Deviations and follow-ups
+
+- **A composite's id may not be a kind's.** `card`, `icon` and `view` became kinds a 2D layout may hold (they are
+  built-in editor types a template is made of), and an object id may not also be a kind, so a template names its
+  composite something else; `compileTemplate` renames it to `template:<type>` anyway.
+- **The scene DSL carries no text alignment, font or padding**, so the UML class's compartments are left-aligned
+  where `ClassNodeView` centred and emboldened its name. The compartments draw their own borders, which is what
+  reads as the class's two rules. Extending `readStyle` with alignment is the follow-up.
+- **A part with no stack has no hug.** `constrain` says how a part's fixed size follows the frame; none of its values
+  reads the part's content. "Hug" (`fit-content`) needs a measure pass the solver has no access to, and it makes the
+  parts on an axis depend on each other, which is a stack with hug/fill sizing rather than one more constraint value.
+- **A compartment does not grow to its content.** A class with more methods than its methods compartment holds
+  clips them (`Ledger` in the class story), because a part is a fixed size the constraints place rather than one
+  that hugs its text. A `content` constraint (Figma's "hug") is the fix, and it is what a card's body wants too.
+- **Free point endpoints are not expressible in the DSL** (`from=`/`to=` name nodes), so a template cannot author a
+  _link_ between two points. A rule is not a link, though: the card's hairline is a `polyline` part, whose vertices
+  the DSL now authors as fractions of its own frame (`points="0,0.5 1,0.5"`), so it stretches with the card.
+
+## Phase 8: hulls and themed diagram fences (started 2026-11-12)
+
+A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-editor/components/Hull`.
+
+### Decisions
+
+- **A hull is stored as a group** (the user, 2026-11-12: "Rebuild on composites"; the first cut kept every shape in
+  one layout with a `parent` pointer, which was a second hierarchy beside composites). The stored form is what the
+  Group command makes: an Instance (`fit: 'none'`, now with `hull: 'perimeter' | 'box'`) of an anonymous composite
+  whose parts are the shapes, the links among them inside it, and a link across the border ending at the Instance on
+  the port named by the part.
+- **The 2D editor draws the group opened out** (the agent, 2026-11-12). `expandHulls` puts the parts back in the
+  scene, each naming the hull as `parent`, with a `hull` node for the Instance; `collapseHulls` closes it before a
+  change is written (`utils/hull-group.ts`, bound in `useDocumentStore`). So a shape inside a hull is selected, moved
+  and linked like any other, a link from outside reaches the shape, and the lattice places it. `parent` is therefore
+  a field of the drawn scene only, never of the stored document.
+- **The frame is derived.** `fitHulls` sets a hull's `center`, `size` and `points` from what is inside it.
+- **On a lattice the border is on gutter centre lines**, round the tiles (a cell and half of each gutter beside it)
+  its shapes stand on. Each gutter the border runs along has a track a quarter of the gutter either side of it.
+- **A route answers to borders by where its ends are.** A hull holding both ends or neither is closed to it; a hull
+  holding one it crosses once (a crossing costs more than any number of bends). Containment is by tile.
+- **A composite's parts are off the lattice**: they are placed about the composite's centre, so `latticeConstrain`
+  leaves a `kind: 'composite'` layout as given. Before this a Group's parts were snapped as if they were cells.
+- **A hull is an ordinary styled shape** (dashed outline by default), not a guide, so its border, fill and line style
+  are its style's.
+
+### Tasks
+
+- [x] `HullNode`, `parent`, `InstanceNode.hull` in `@dxos/scene`; `hull` a 2D kind.
+- [x] `utils/hull.ts`: members, tiles (box, perimeter with bridging), outline, `fitHulls`, `hullRegions`,
+      `routeWalls`, `enclose`.
+- [x] `utils/hull-group.ts`: `expandHulls`, `collapseHulls`; `drawnLists2D`, `drawnWrites`, `drawnDocument`.
+- [x] `gutter-route.ts`: walls, tracks, crossing cost; `route.ts`: `latticeRoute` carries each link's walls.
+- [x] The Hull tool (B) drags a frame that takes the shapes inside it; Enclose makes one round the selection.
+- [x] Moving a hull moves what is inside it; deleting one leaves its shapes where they are.
+- [x] Story `Hull` (Perimeter, Box, Lattice, LatticeBox), each with the same eight elbow links.
+- [x] `diagram` fences in a markdown document draw in the editor's colour mode, contributed by plugin-canvas.
+- [x] A double-click off an Object being edited leaves it (2D and 3D).
+- [x] The Views tree nests a hull's shapes under it, selected where they stand; a row dragged onto a hull, or beside
+      a row another hull (or none) holds, moves into that hull (`viewMove`, `moveToHull`, `moveWrites`).
+- [x] Drawing section: Cell and Gutter are whole counts of grid cells (the lattice stored is the counts times the
+      grid, written with it); the lattice survives off then on; a lattice that changes size re-seats every shape on
+      the cells it had (`reseat`: the lattice mode for a layout's own shapes, `reseatWrites` for a hull's).
+- [x] A hull's `inset` (grid cells): the border is drawn inside its gutter line, at most to the last cell before its
+      shapes; the walls stay on the line and carry the inset, so the inside track runs between border and shapes.
+      Stored on the group's Instance as `hullInset`.
+- [x] Properties shows a shape selected inside a hull (`selectedElement` finds it in the hull's group).
+- [x] Hull inset: a wall is where the border is drawn, so the gutter's centre line is the track outside an inset
+      hull (`wallLines`, `gutterExit`).
+- [x] `DEFAULT_LATTICE` gutter 8 by 8 grid cells (128 by 128). The reference diagrams follow it: each `.dx` source
+      names its own grid (the DSL has no cell size of its own), now `grid=384x256`, with `compiled.json` and the
+      `.dx.svg` renders regenerated.
+- [x] Properties: a hull's border and inset side by side (`HullField`).
+- [x] Extension tools: plugin-canvas's `extension-node-types` module contributes the space graph
+      (`src/components/Graph`, its geometry in `generator/`, moved out of `src/testing/studio`); a contributed kind is offered in the
+      `Extensions` group of the rail, with the card. The hull and the view are a `Containers` group. The studio
+      branch imports the moved files from their old paths in four files.
+- [x] A switch's hidden input stays inside the switch (the Properties panel scrolled away when a toggle far down
+      it was pressed); Fill and Border read as a bare type draws them.
+- [ ] Extension tools: the studio kinds other than the space graph (card, feed card, chip, plank, app frame,
+      substrate) are still story-only, and contributed kinds are 2D only.
+- [ ] A shape off its cell (snapping off) is re-seated on the nearest one, so two could land on the same cell.
+- [ ] Views tree: moving a row into a plain Group, another View or an Object's definition (a move between two
+      drawings, which needs a place for the shape in the other's coordinates), and any of it in 3D.
+- [ ] Views tree: a hull with nothing inside it is a leaf row, which takes no drop.
+- [ ] Dragging a shape across a border changes which hull holds it (today the hull stretches to follow it).
+- [ ] A hull inside a hull: `enclose` and `collapseHulls` keep hulls flat.
+- [ ] A group placed twice, or inside another Object, is drawn closed, without its border.
+- [ ] Deleting a hull leaves its composite layout in the document, unplaced.
+- [ ] Off a lattice an elbow link has no obstacle avoidance, so it does not yet keep to its side of a border.
+- [ ] Lanes: more than three links on one quarter-gutter track are nudged past the border (`Nudge` knows no walls).
+- [ ] Not checked: the `.dx` DSL round trip of `hull`, the SVG export, and what 3D draws of a hull's group.
+- [ ] `PLUGIN.mdl`: record the hull.
+- [ ] In-place editing: a scene node whose id is a part's id (the Cards story's `footer` card) is taken for a part.
+- [x] **Extension kinds keep their own fields under `data`** (the user, 2026-11-12; COMMON-CORE.md decision 21).
+      `Scene.BaseElement.data`; `KindRegistry.dataFields` / `normalize`; `kindNodeDef` refuses a top-level field of
+      the kind's own unless it extends a core prototype; `kindData` for views; parts and binds name `data.<field>`.
+      Moved: the space graph (its radius is now `size`), the studio card and feed card, the story's task kind, the
+      UML class, and conductor's compute shapes (board shape, element and node; `computeData` in
+      react-ui-canvas-compute `shapes/defs.ts`). An element or board shape stored flat reads as before and is written
+      back under `data`. The Properties panel shows `data` last, as a group labelled `Custom`.
+- [x] Space graph: fields two to a row (`FormLayoutAnnotation`), Population renamed Node density, a Base dots toggle
+      (off by default).
+- [x] A link's elbows (corner radius, smart stub, lane spacing) are counts of the drawing's grid, not of the default
+      grid (`utils/route.ts`); the scene layer, the selection frame and the SVG export pass the layout's grid.
+- [x] **Draw tool** (S, after Polyline): a `freehand` drag samples the pointer, `simplifyPath` thins the stroke,
+      and it lands as a polyline with `params.smooth` (a Catmull-Rom curve in `polylinePath`). The tool is a registry
+      entry that makes polylines, not a node type of its own.
+- [x] **Draw shape tool** (W, folded with Draw): `utils/recognize.ts` reads a closed stroke as a rectangle, an
+      ellipse, a triangle (four ways up) or a diamond by how near it runs to each outline; the shape lands on the
+      grid, favouring major lines and the last or default size. An unread stroke lands as a line.
+- [x] **Draw shape reads segments**: `readStroke` in `utils/recognize.ts` takes the samples' times, finds the pauses
+      (`strokePauses`), fits each run as a line or a parabola, and lands a stroke that is no shape as a polyline with
+      `bends`. Straight sides are biased level or upright (`squared`), and corners nearly in line are put in line
+      (`aligned`). Covers a pentagon, a straight line and an arc; `Draw.stories.tsx` Shapes Test draws all three
+      of the user's examples.
+- [ ] Draw shape: no right-angled triangle or arrow, and a regular pentagon or hexagon lands as a polyline, not a
+      polygon.
+- [x] **Spline tool** (U, after Polyline): `NodeDef.curved` lands a line drawn vertex by vertex with a cubic bend
+      per segment (`smoothBends`, Catmull-Rom); a bend's `second` control makes it a cubic. Vertex edit mode shows
+      each bend's controls (`bend-handle`) and drags them (`Drag` `vertex` with `bend` and `handle`); a vertex put
+      in or taken out keeps the curve (`bendsAfterInsert`, `bendsAfterDelete`). `Draw.stories.tsx` Spline Test.
+- [x] **Views list front first** (user: "the operations work, but the view list is reversed"): `buildViewTree` and
+      `layoutTree` list a View's rows from the element drawn last to the one drawn first, and a drop above a row
+      puts the element in front of it (`dropPosition`). The Layers list was top first already (`LayersInspector`).
+- [x] **A line keeps its colour** (user, 2026-11-12): a type edited by its vertices (`editor: 'vertices'`) is not
+      drawn in the selection's colour while selected or edited (`SceneLayer`); a hover on one not selected still
+      tints it.
+- [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
+      (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
+- [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
+      carries no drag payload (`ToolDef.drawn`, `toolDragData2D`, `ToolsPanel`).
+- [ ] **Drawing DSL data binding** (user, 2026-11-12): a `.dx` drawing names a data file (a JSON object) or holds
+      a JSON object of its own, and a custom shape binds its fields to that data by JSONPath; e.g. the Graph shape
+      draws the graph the data describes. Not designed yet: where the data is declared, how a bind is written
+      beside the template's `bind=`, and what a shape does when the path resolves to nothing.
+- [ ] Polyline `bends`: hit testing, ports and the `.dx` / SVG export treat a bent segment as straight, and 3D does
+      not draw one. A straight segment has no gesture to bend it. A spline's vertex takes its two controls with
+      it (`bendsWithVertex`), but dragging one control does not turn the other (no smooth-vertex constraint).
+- [x] Text colour for notes: `style.textHue` / `style.textTone`, a 9 by 3 grid in Properties.
+- [ ] Text colour is offered for notes alone; a shape's label still takes its shape's colour.
+- [x] The icon picker offers the DXOS mark (`dx--dxos--regular`), first in its list.
+- [ ] Draw tool: hit testing, ports and the `.dx` / SVG export still treat a smooth polyline as its straight
+      segments; its vertex edit mode shows the thinned points. No pressure or stroke width.
+- [x] Card: authored at 16 by 12 cells with half-cell gaps, text sizes 18 / 16 / 14, a 24 px glyph, title centred;
+      the scene DSL reads `fontSize`, `alignHorizontal` and `alignVertical`. A Card story beside Graph.
+- [ ] `toDiagramObjects` (`utils/diagram.ts`) and the generator runner still route on the default grid: neither is
+      given a layout to read the grid from.
+- [ ] Conductor: `data.node` (the compute node id) is an editable text field in the Properties panel, as `node` was.
+- [ ] Conductor: a board's legacy trigger keeps `spaceId` / `triggerKind` at the shape's top; nothing reads them.
+- [ ] Conductor: `createComputeGraph` / `useGraphMonitor` read `data` only, so a canvas graph model built with flat
+      fields (none in the repo) would lose them. Not exercised in a browser: a legacy flat board, a trigger, paste,
+      undo, and editing `data.value` in the Properties form.
+- [ ] The Properties panel's generic list editor does not save a change to one row of a list under `data` (nor did
+      it at the top): `patchValues` splits a path on `.` and the form names a row `list[0]`. UML is unaffected, since
+      it edits its lists with `LinesField`.
+- [ ] 3D has no extension kinds yet; `data` is on the shared base, so a 3D kind takes the same form when one exists.
 
 ## Backlog
 

@@ -5,15 +5,30 @@
 //
 // Text parts of a node: the properties a node type renders as text and lets the user edit in place. Each
 // type declares its parts in its registry definition, so a type a host adds edits the same way as a built-in
-// one. A part is named by the property it edits; a `lines` part reads and writes a list one entry per line.
+// one. A part is named by the property it edits; a `lines` part reads and writes a list one entry per line. A
+// plugin kind keeps its own fields under the node's `data`, so a part or a bind names one as `data.<field>`.
 //
 
 import { type Node } from '@dxos/scene';
 
-import { type NodeRegistry, type NodeValues, nodeDef } from '../model/index.ts';
+import { type NodeRegistry, type NodeValues, nodeDef, readPath, writePath } from '../model/index.ts';
 
-/** A part's name: the node property it edits. */
+/** A part's name: the node property it edits, a kind's own as `data.<field>`. */
 export type PartKey = string;
+
+const pathOf = (field: PartKey): string[] => field.split('.');
+
+/** The value of a node's field by name. */
+export const fieldValue = (node: object, field: PartKey): unknown => readPath(node, pathOf(field));
+
+/** The `update` values that set a node's field: one under `data` is written beside the rest of the node's `data`. */
+export const fieldValues = (node: object, field: PartKey, value: unknown): NodeValues => {
+  const [head, ...rest] = pathOf(field);
+  return { [head]: writePath(Reflect.get(node, head), rest, value) };
+};
+
+/** The field's own name, without where the node keeps it. */
+export const fieldName = (field: PartKey): string => pathOf(field).at(-1) ?? field;
 
 /** A text property of a node type, as its definition declares it. */
 export type PartField = {
@@ -60,7 +75,7 @@ export const partText = (registry: NodeRegistry, node: Node, part: PartKey): str
   if (!field) {
     return undefined;
   }
-  const value: unknown = Reflect.get(node, field.field);
+  const value = fieldValue(node, field.field);
   if (field.lines) {
     return Array.isArray(value) ? value.filter((line) => typeof line === 'string').join('\n') : '';
   }
@@ -73,7 +88,7 @@ export const partValues = (registry: NodeRegistry, node: Node, part: PartKey, te
   if (!field) {
     return undefined;
   }
-  return { [field.field]: field.lines ? toLines(text) : text };
+  return fieldValues(node, field.field, field.lines ? toLines(text) : text);
 };
 
 /** A node's main text: its first part's, which a diagram or a DSL export shows as the node's name. */

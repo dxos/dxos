@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { beforeEach, describe, expect, it } from '@effect/vitest';
+import { beforeEach, describe, expect, it, vi } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
@@ -37,23 +37,29 @@ const TestLayer = AssistantTestLayer({
 });
 
 let manager: ReturnType<typeof CapabilityManager.make>;
+let atomRegistry: AtomRegistry.AtomRegistry;
+
+/** A manager with both marker providers; `contributeRegistry: false` mirrors an EDGE host. */
+const setupMarkers = ({ contributeRegistry }: { contributeRegistry: boolean }) => {
+  atomRegistry = AtomRegistry.make();
+  manager = CapabilityManager.make({ registry: atomRegistry });
+  if (contributeRegistry) {
+    manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: atomRegistry });
+  }
+  manager.contribute({
+    module: 'test',
+    interface: AssistantCapabilities.SubjectContext,
+    implementation: marker(UNCONDITIONAL),
+  });
+  manager.contribute({
+    module: 'test',
+    interface: AssistantCapabilities.SubjectContext,
+    implementation: marker(GATED, Obj.instanceOf(Text.Text)),
+  });
+};
 
 describe('BindChatContext', () => {
-  beforeEach(() => {
-    const atomRegistry = AtomRegistry.make();
-    manager = CapabilityManager.make({ registry: atomRegistry });
-    manager.contribute({ module: 'test', interface: Capabilities.AtomRegistry, implementation: atomRegistry });
-    manager.contribute({
-      module: 'test',
-      interface: AssistantCapabilities.SubjectContext,
-      implementation: marker(UNCONDITIONAL),
-    });
-    manager.contribute({
-      module: 'test',
-      interface: AssistantCapabilities.SubjectContext,
-      implementation: marker(GATED, Obj.instanceOf(Text.Text)),
-    });
-  });
+  beforeEach(() => setupMarkers({ contributeRegistry: true }));
 
   it.effect(
     'merges the bindings of every provider that applies',
@@ -83,6 +89,43 @@ describe('BindChatContext', () => {
         const bound = yield* boundText(chat);
         expect(bound).toContain(UNCONDITIONAL);
         expect(bound).not.toContain(GATED);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'binds through the contributed atom registry',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat();
+        const subject = yield* makeText('subject');
+        const set = vi.spyOn(atomRegistry, 'set');
+
+        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject });
+
+        expect(set).toHaveBeenCalled();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
+describe('BindChatContext without an atom registry', () => {
+  beforeEach(() => setupMarkers({ contributeRegistry: false }));
+
+  it.effect(
+    'merges the bindings of every provider that applies',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat();
+        const subject = yield* makeText('subject');
+
+        yield* Operation.invoke(AssistantOperation.BindChatContext, { chat, subject });
+
+        expect(yield* boundText(chat)).toEqual(expect.arrayContaining([UNCONDITIONAL, GATED]));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

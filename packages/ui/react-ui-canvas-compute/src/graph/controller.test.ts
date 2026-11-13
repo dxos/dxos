@@ -15,7 +15,7 @@ describe('ComputeGraphController', () => {
     const { controller, graph } = createComputeGraphController(createBasicCircuit(), createStoryRuntime());
     await controller.open();
     const computeIdOf = (type: string): string => {
-      const node = graph.nodes.find((node) => node.type === type)?.node;
+      const node = graph.nodes.find((node) => node.type === type)?.data?.node;
       if (!node) {
         throw new Error(`no ${type} node`);
       }

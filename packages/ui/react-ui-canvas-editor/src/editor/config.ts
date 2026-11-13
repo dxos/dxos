@@ -40,6 +40,8 @@ export type ToolDef = {
   group?: string;
   /** Adjacent tools of a group naming the same fold share one flyout button (e.g. the link types). */
   fold?: string;
+  /** The tool draws its element point by point or in a stroke, so it has no shape to drag onto the canvas. */
+  drawn?: boolean;
 };
 
 /** Moving, measuring and snapping elements, in the dimension's units. */
@@ -230,6 +232,8 @@ export type DimensionConfig<C = unknown> = {
   /** Builds the dimension's aspects for one editor, once. */
   create: (context: DimensionContext<C>) => Dimension;
   tools: readonly ToolDef[];
+  /** Each element type's icon by type name, which the Views tree draws a row with; the rail's tools are the same icons. */
+  icons?: Readonly<Record<string, string>>;
   /** The host's library, offered as a tool at the end of the rail's create group while it holds any. */
   library?: readonly LibraryItem[];
   /** What dragging a rail tool onto the viewport drops (2D: a node of the tool's type); undefined, the tool does not drag. */

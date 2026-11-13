@@ -18,7 +18,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
-import { Obj } from '@dxos/echo';
+import { Database, Filter, Obj, Registry } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId } from '@dxos/keys';
@@ -37,6 +37,52 @@ export const TestSkill: Skill.Definition = {
       tools: Skill.toolDefinitions({ operations: [Reply] }),
     }),
 };
+
+/** A skill another plugin contributes, which a bundle that imports its definition must still not resolve. */
+export const OtherSkill: Skill.Definition = {
+  key: 'org.dxos.skill.hostTestOther',
+  make: () => Skill.make({ key: 'org.dxos.skill.hostTestOther', name: 'Other plugin' }),
+};
+
+/** Resolves {@link TestSkill} and {@link OtherSkill} by registry URI, and lists the operation records the registry holds. */
+export const ResolveRegistry = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.resolveRegistry'), name: 'Resolve registry' },
+  services: [Database.Service, Registry.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    own: Schema.NullOr(Schema.String),
+    other: Schema.NullOr(Schema.String),
+    operations: Schema.Array(Schema.String),
+  }),
+});
+
+const ResolveRegistryHandler = ResolveRegistry.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const { db } = yield* Database.Service;
+      const registry = yield* Registry.Service;
+      const resolve = (definition: Skill.Definition) =>
+        Effect.promise(() => db.makeRef<Skill.Skill>(Skill.registryURI(definition.key)).tryLoad()).pipe(
+          Effect.map((skill) => (skill === undefined ? null : Skill.getKey(skill))),
+        );
+      const records = yield* Effect.promise(() => registry.query(Filter.type(Operation.PersistentOperation)).run());
+      return {
+        own: yield* resolve(TestSkill),
+        other: yield* resolve(OtherSkill),
+        operations: records.flatMap((record) => Operation.getKey(record) ?? []),
+      };
+    }),
+  ),
+);
+
+/** An operation hidden from agents, so the registry an invocation is given must not hold its record. */
+export const Hidden = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.hidden'), name: 'Hidden', skipRegistry: true },
+  input: Schema.Struct({}),
+  output: Schema.Struct({}),
+});
+
+const HiddenHandler = Hidden.pipe(Operation.withHandler(() => Effect.succeed({})));
 
 /** A trace event {@link Inspect} writes. */
 export const InspectEvent = Trace.EventType('hostTest.inspect', {
@@ -237,6 +283,8 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             MakePersonHandler,
             AdoptHandler,
             FailsHandler,
+            ResolveRegistryHandler,
+            HiddenHandler,
           ),
         ),
       ),

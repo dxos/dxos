@@ -7,6 +7,7 @@ import {
   defaultNodeRegistry,
   diagramLinkElements,
   flattenPath,
+  gridPitch,
   sortByZ,
   viewLinkGeometry,
   visibleView,
@@ -50,6 +51,7 @@ const openViewWorld = (canvas: Canvas.Canvas): Scene.WorldObject[] => {
     defaultNodeRegistry,
     sortByZ(Object.values(visible.links)),
     layout?.dim === '2d' ? layout.lattice : undefined,
+    layout?.dim === '2d' ? gridPitch(layout) : undefined,
   ).map(({ link, path, diagram }) => ({
     id: linkKey(link.id),
     elements: diagramLinkElements(

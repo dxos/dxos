@@ -21,6 +21,9 @@ catalogs:
     '@ark-ui/react':
       specifier: ^5.39.1
       version: 5.39.1
+    '@astrojs/react':
+      specifier: 7.1.1
+      version: 7.1.1
     '@astrojs/rss':
       specifier: ^4.0.19
       version: 4.0.19
@@ -213,6 +216,12 @@ catalogs:
     '@excalidraw/excalidraw':
       specifier: ^0.18.0
       version: 0.18.1
+    '@expressive-code/plugin-collapsible-sections':
+      specifier: 0.44.2
+      version: 0.44.2
+    '@expressive-code/plugin-line-numbers':
+      specifier: 0.44.2
+      version: 0.44.2
     '@fontsource-variable/fira-code':
       specifier: 5.3.0
       version: 5.3.0
@@ -801,6 +810,9 @@ catalogs:
     astro:
       specifier: ^7.4.0
       version: 7.4.0
+    astro-expressive-code:
+      specifier: 0.44.2
+      version: 0.44.2
     autoprefixer:
       specifier: ^10.5.0
       version: 10.5.0
@@ -996,6 +1008,9 @@ catalogs:
     execa:
       specifier: ^5.1.1
       version: 5.1.1
+    expressive-code-twoslash:
+      specifier: ^0.6.1
+      version: 0.6.1
     extensionless:
       specifier: ^1.9.9
       version: 1.9.9
@@ -1263,6 +1278,9 @@ catalogs:
     once:
       specifier: ^1.4.0
       version: 1.4.0
+    opentype.js:
+      specifier: ^2.0.0
+      version: 2.0.0
     oxc-parser:
       specifier: ^0.148.0
       version: 0.148.0
@@ -1476,6 +1494,9 @@ catalogs:
     starlight-links-validator:
       specifier: ^0.27.0
       version: 0.27.0
+    starlight-sidebar-topics:
+      specifier: ^0.9.0
+      version: 0.9.0
     storybook:
       specifier: ^10.6.0
       version: 10.6.1
@@ -1542,6 +1563,9 @@ catalogs:
     turndown:
       specifier: ^7.2.1
       version: 7.2.1
+    twoslash:
+      specifier: ^0.3.9
+      version: 0.3.9
     typedoc:
       specifier: 0.28.1
       version: 0.28.1
@@ -1706,6 +1730,7 @@ catalogs:
       version: 8.8.5
 
 overrides:
+  '@astrojs/react>@vitejs/plugin-react': 6.1.1
   '@automerge/automerge': 3.5.0
   '@automerge/automerge-subduction': 0.21.0
   '@grpc/grpc-js': '>=1.10.9'
@@ -2215,61 +2240,295 @@ importers:
 
   docs:
     dependencies:
+      '@astrojs/react':
+        specifier: 'catalog:'
+        version: 7.1.1(@types/node@22.10.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(esbuild@0.28.2)(jiti@2.7.0)(oxc-transform-react@0.145.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
       '@astrojs/rss':
         specifier: 'catalog:'
         version: 4.0.19
       '@astrojs/starlight':
         specifier: 'catalog:'
         version: 0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
       '@bryanguffey/astro-standard-site':
         specifier: 'catalog:'
         version: 1.0.3(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../packages/sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../packages/sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../packages/sdk/app-toolkit
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../packages/common/async
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../packages/ui/brand
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../packages/sdk/client
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../packages/sdk/client-protocol
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../packages/core/compute/compute
       '@dxos/config':
         specifier: workspace:*
         version: link:../packages/sdk/config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../packages/common/context
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../packages/common/crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../packages/common/debug
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../packages/common/display-name
       '@dxos/echo':
         specifier: workspace:*
         version: link:../packages/core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../packages/core/echo/echo-client
+      '@dxos/echo-host':
+        specifier: workspace:*
+        version: link:../packages/core/echo/echo-host
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../packages/core/echo/echo-protocol
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../packages/core/echo/echo-query
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../packages/core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../packages/common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../packages/common/errors
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../packages/common/graph
+      '@dxos/halo':
+        specifier: workspace:*
+        version: link:../packages/core/halo/halo
+      '@dxos/halo-adapter-client':
+        specifier: workspace:*
+        version: link:../packages/core/halo/halo-adapter-client
+      '@dxos/halo-react':
+        specifier: workspace:*
+        version: link:../packages/core/halo/halo-react
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../packages/common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../packages/common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../packages/common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../packages/common/node-std
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../packages/core/compute/operation
+      '@dxos/plugin-canvas':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-canvas
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-client
+      '@dxos/plugin-explorer':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-explorer
+      '@dxos/plugin-illustrator':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-illustrator
+      '@dxos/plugin-inspector':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-inspector
+      '@dxos/plugin-kanban':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-kanban
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-markdown
+      '@dxos/plugin-mermaid':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-mermaid
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-preview
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-space
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-table
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-testing
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../packages/plugins/plugin-theme
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../packages/core/protocols
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../packages/common/random
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../packages/sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../packages/ui/react-primitives/react-hooks
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-attention
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-form
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-graph
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-menu
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../packages/ui/react-ui-table
       '@dxos/schema':
         specifier: workspace:*
         version: link:../packages/sdk/schema
+      '@dxos/timeframe':
+        specifier: workspace:*
+        version: link:../packages/common/timeframe
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../packages/common/tracing
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../packages/sdk/types
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../packages/ui/ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../packages/ui/ui-theme
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../packages/ui/ui-types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../packages/common/util
+      '@dxos/web-context':
+        specifier: workspace:*
+        version: link:../packages/common/web-context
+      '@dxos/web-context-react':
+        specifier: workspace:*
+        version: link:../packages/common/web-context-react
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
       astro:
         specifier: 'catalog:'
         version: 7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+      astro-expressive-code:
+        specifier: 'catalog:'
+        version: 0.44.2(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      decode-named-character-reference:
+        specifier: 'catalog:'
+        version: 1.0.2
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+      react:
+        specifier: ~19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: ~19.3.1
+        version: 19.3.1(react@19.3.1)
       sharp:
         specifier: 'catalog:'
         version: 0.34.5
       starlight-links-validator:
         specifier: 'catalog:'
         version: 0.27.0(@astrojs/starlight@0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)))(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      starlight-sidebar-topics:
+        specifier: 'catalog:'
+        version: 0.9.0(@astrojs/starlight@0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)))(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
     devDependencies:
       '@atproto/api':
         specifier: 'catalog:'
         version: 0.19.11
-      '@dxos/app-framework':
+      '@dxos/vite-plugin-icons':
         specifier: workspace:*
-        version: link:../packages/sdk/app-framework
-      '@dxos/client':
+        version: link:../tools/vite-plugin-icons
+      '@dxos/vite-plugin-import-source':
         specifier: workspace:*
-        version: link:../packages/sdk/client
+        version: link:../tools/vite-plugin-import-source
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../tools/vite-plugin-log
+      '@dxos/vite-plugin-module-url':
+        specifier: workspace:*
+        version: link:../tools/vite-plugin-module-url
+      '@expressive-code/plugin-collapsible-sections':
+        specifier: 'catalog:'
+        version: 0.44.2
+      '@expressive-code/plugin-line-numbers':
+        specifier: 'catalog:'
+        version: 0.44.2
+      '@types/react':
+        specifier: ~19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ~19.3.0
+        version: 19.3.0(@types/react@19.3.0)
       '@types/turndown':
         specifier: 'catalog:'
         version: 5.0.5
+      expressive-code-twoslash:
+        specifier: 'catalog:'
+        version: 0.6.1(@expressive-code/core@0.44.2)(eslint@10.11.0(jiti@2.7.0))(expressive-code@0.44.2)
       turndown:
         specifier: 'catalog:'
         version: 7.2.1
+      twoslash:
+        specifier: 'catalog:'
+        version: 0.3.9
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: '>=8.3.4'
+        version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+      vite-plugin-wasm:
+        specifier: 'catalog:'
+        version: 3.6.0(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
 
   packages/apps/composer-app:
     dependencies:
@@ -3762,6 +4021,12 @@ importers:
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.9.1
+      '@opentelemetry/resources':
+        specifier: 'catalog:'
+        version: 2.11.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/semantic-conventions':
+        specifier: 'catalog:'
+        version: 1.43.0
       jsonpath-plus:
         specifier: 'catalog:'
         version: 10.4.0
@@ -3775,9 +4040,6 @@ importers:
       '@opentelemetry/api-logs':
         specifier: 'catalog:'
         version: 0.222.0
-      '@opentelemetry/resources':
-        specifier: 'catalog:'
-        version: 2.11.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs':
         specifier: 'catalog:'
         version: 0.222.0(@opentelemetry/api@1.9.1)
@@ -3790,9 +4052,6 @@ importers:
       '@opentelemetry/sdk-trace-node':
         specifier: 'catalog:'
         version: 2.11.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/semantic-conventions':
-        specifier: 'catalog:'
-        version: 1.43.0
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -5041,6 +5300,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: '>=1.26.0'
         version: 1.27.1(@cfworker/json-schema@4.1.1)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       autoevals:
         specifier: ^0.0.132
         version: 0.0.132(ws@8.18.3)
@@ -5218,6 +5480,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -6150,6 +6415,15 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
       '@cloudflare/vitest-pool-workers':
         specifier: 'catalog:'
         version: 0.18.6(@cloudflare/workers-types@5.20260719.1)(@vitest/runner@4.1.10)(@vitest/snapshot@4.1.10)(vitest@4.1.10)
@@ -6285,6 +6559,9 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.7.1
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/core/echo/echo-client:
     dependencies:
@@ -6342,6 +6619,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      bs58check:
+        specifier: 'catalog:'
+        version: 4.0.0
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -6705,6 +6985,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/core/echo/echo-solid:
     dependencies:
@@ -6727,6 +7010,9 @@ importers:
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite-plugin-solid:
         specifier: 'catalog:'
         version: 2.11.14(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -6953,6 +7239,10 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+    devDependencies:
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/core/halo/halo-adapter-client:
     dependencies:
@@ -7033,6 +7323,9 @@ importers:
       react:
         specifier: ~19.3.1
         version: 19.3.1
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/core/halo/keyring:
     dependencies:
@@ -7629,6 +7922,9 @@ importers:
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../../core/compute/mcp-server
+      '@dxos/network-manager':
+        specifier: workspace:*
+        version: link:../../core/mesh/network-manager
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
@@ -8684,15 +8980,15 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-rdf':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-rdf
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/ui-editor
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -8736,6 +9032,9 @@ importers:
       '@dxos/react-ui-masonry':
         specifier: workspace:*
         version: link:../../ui/react-ui-masonry
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -8745,18 +9044,12 @@ importers:
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.6.2)(react@19.3.1))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
-      '@types/n3':
-        specifier: 'catalog:'
-        version: 1.26.1
       '@types/react':
         specifier: ~19.3.0
         version: 19.3.0
       '@types/react-dom':
         specifier: ~19.3.0
         version: 19.3.0(@types/react@19.3.0)
-      n3:
-        specifier: 'catalog:'
-        version: 2.1.0
       react:
         specifier: ~19.3.1
         version: 19.3.1
@@ -10031,9 +10324,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../../stories/storybook-testing
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -13908,6 +14207,73 @@ importers:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
 
+  packages/plugins/plugin-inspector:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../sdk/app-graph
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-error-boundary':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-error-boundary
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@types/react':
+        specifier: ~19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ~19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+      react:
+        specifier: ~19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: ~19.3.1
+        version: 19.3.1(react@19.3.1)
+      vite:
+        specifier: '>=8.3.4'
+        version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+
   packages/plugins/plugin-iroh-beacon:
     dependencies:
       '@dxos/app-framework':
@@ -15002,6 +15368,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/plugin-builder':
+        specifier: workspace:*
+        version: link:../../core/compute/plugin-builder
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../plugin-illustrator
@@ -15014,6 +15383,9 @@ importers:
       '@dxos/plugin-tldraw':
         specifier: workspace:*
         version: link:../plugin-tldraw
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -15132,6 +15504,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -15905,6 +16280,33 @@ importers:
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+
+  packages/plugins/plugin-ontology:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
 
   packages/plugins/plugin-osrm:
     dependencies:
@@ -16916,6 +17318,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -19981,21 +20386,12 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.7.6
-      '@dxos/echo-doc':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-doc
       '@dxos/fixtures':
         specifier: workspace:*
         version: link:../../../tools/fixtures
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../plugin-space
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -20005,15 +20401,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-attention
-      '@dxos/react-ui-list':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-list
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
@@ -21173,6 +21560,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -21352,6 +21742,9 @@ importers:
       react-dom:
         specifier: ~19.3.1
         version: 19.3.1(react@19.3.1)
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.1
 
   packages/sdk/client:
     dependencies:
@@ -22911,6 +23304,9 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-assistant
       '@dxos/plugin-brain':
         specifier: workspace:*
         version: link:../../plugins/plugin-brain
@@ -22932,6 +23328,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-rdf':
         specifier: workspace:*
         version: link:../../ui/react-ui-rdf
@@ -22981,6 +23380,9 @@ importers:
       '@dxos/pipeline-transcription':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-transcription
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-client
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
@@ -22990,6 +23392,9 @@ importers:
       '@dxos/plugin-progress':
         specifier: workspace:*
         version: link:../../plugins/plugin-progress
+      '@dxos/plugin-routine':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-routine
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
@@ -23637,6 +24042,9 @@ importers:
       d3:
         specifier: 'catalog:'
         version: 7.9.0
+      opentype.js:
+        specifier: 'catalog:'
+        version: 2.0.0
       react:
         specifier: ~19.3.1
         version: 19.3.1
@@ -25411,9 +25819,6 @@ importers:
       d3:
         specifier: 'catalog:'
         version: 7.9.0
-      js-clipper:
-        specifier: 'catalog:'
-        version: 1.0.1(patch_hash=6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f)
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -25454,6 +25859,9 @@ importers:
       immutability-helper:
         specifier: 'catalog:'
         version: 3.1.1
+      js-clipper:
+        specifier: 'catalog:'
+        version: 1.0.1(patch_hash=6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f)
       react:
         specifier: ~19.3.1
         version: 19.3.1
@@ -26211,12 +26619,21 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../react-primitives/react-hooks
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../react-ui-graph
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../react-ui-menu
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../ui-editor
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../ui-types
@@ -26230,12 +26647,18 @@ importers:
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.6.2)(react@19.3.1))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      '@types/n3':
+        specifier: 'catalog:'
+        version: 1.26.1
       '@types/react':
         specifier: ~19.3.0
         version: 19.3.0
       '@types/react-dom':
         specifier: ~19.3.0
         version: 19.3.0(@types/react@19.3.0)
+      n3:
+        specifier: 'catalog:'
+        version: 2.1.0
       react:
         specifier: ~19.3.1
         version: 19.3.1
@@ -27249,6 +27672,10 @@ importers:
       i18next:
         specifier: 'catalog:'
         version: 21.10.0
+    devDependencies:
+      '@phosphor-icons/core':
+        specifier: 'catalog:'
+        version: 2.1.1
 
   tools/autocue:
     dependencies:
@@ -28228,6 +28655,19 @@ packages:
   '@astrojs/prism@4.1.0':
     resolution: {integrity: sha512-zvRaL3MKTAXWfVQrHAlYtocRZWXBM6ruF3Bl7Lc7QgFHLRTfwMKo33KczlkvkXDY+qcytKhAWOT9dwUUYLUxAw==}
     engines: {node: '>=22.22.0'}
+
+  '@astrojs/react@7.1.1':
+    resolution: {integrity: sha512-jHan8UuXzFEbzcmsjCRrepm9Xc5XRz+Jt57MjfE568tbOEoDKVzeMuHf9YO0Y4hHwROX8iJmLzaiT3Yr5W0UbQ==}
+    engines: {node: '>=22.23.4'}
+    peerDependencies:
+      '@types/react': ~19.3.0
+      '@types/react-dom': ~19.3.0
+      oxc-transform-react: ^0.145.0
+      react: ~19.3.1
+      react-dom: ~19.3.1
+    peerDependenciesMeta:
+      oxc-transform-react:
+        optional: true
 
   '@astrojs/rss@4.0.19':
     resolution: {integrity: sha512-e+z5wYeYtffQdHQO8c2tkSd2JEBdAuRXJV4ZEU5IxkYeE6e39woDd7nw1PH1Kk2tEYNCYuKdylnnbhGmt61awA==}
@@ -30565,6 +31005,15 @@ packages:
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
 
+  '@ec-ts/twoslash-vue@1.0.0':
+    resolution: {integrity: sha512-3bB0/1DPPLHjS0eok2Cne7xQjCQVU5AWScEBGYTqsKuTCTukDUMxUiYI54rDPQME3OLnpysiORi0FQKLA96pAg==}
+
+  '@ec-ts/twoslash@1.0.0':
+    resolution: {integrity: sha512-Bp4MCmeDWVRkTkuytPTszan+QGUqeftiasOBadvxSfQpbXYiWsle/N0lMrG+S14bfS9iBzI8mEqdGgd3Fvr3jQ==}
+
+  '@ec-ts/vfs@1.0.0':
+    resolution: {integrity: sha512-GQYRPMp58p9ak+TOwSLB/HZ+iknFyTRjqMTdXDkitNN3h5yjHuO+yeeO+/cuXiv7dyXGLYs4HaYrFgRKImp8yg==}
+
   '@effect/ai-anthropic@4.0.4':
     resolution: {integrity: sha512-2ci0a75i2LKDlPKqs42hnD34L6BQ3WA/rV0ghjMnzRxTPp97dS8E/Zqlf+ZEzkz5prpOp3SpmsKvbDEwM9r1RA==}
     peerDependencies:
@@ -31023,8 +31472,14 @@ packages:
   '@expressive-code/core@0.44.2':
     resolution: {integrity: sha512-Yw5KonQCD1HoOO2P89y4wifqS9qrJcGVY0LkVMUsVZjhi++bhz4WwQ37inenKFNOEVo50P7cjoVsCdaVnUbq8w==}
 
+  '@expressive-code/plugin-collapsible-sections@0.44.2':
+    resolution: {integrity: sha512-iT8PPitb32Te5tGd1LiIlVeZve/HDZUtygwLjqg3f47aHR3AeUreDXDZUis5qMHr+/Vrt8tKfQSWtT7qm8Fkng==}
+
   '@expressive-code/plugin-frames@0.44.2':
     resolution: {integrity: sha512-gVLm6TQMNIRWIaM7o+mCtxkGNjLZY5/2faSTLoXeo9wv/Pkj/0QAtZyXPVPrRsPARqiipATNFmfvQFLJudxPHQ==}
+
+  '@expressive-code/plugin-line-numbers@0.44.2':
+    resolution: {integrity: sha512-WvJV+Wv+dazle+IQoKH8rL5GpzwvRTSJ2IMrtufvnJy+aT+GGm73PoM19CN5HauCIc0tl/fGDtrm3iI9SjZNGQ==}
 
   '@expressive-code/plugin-shiki@0.44.2':
     resolution: {integrity: sha512-ebWIvCDzXvjyD8rH6T6DfytYJw1GoArLR4nusIAE4VxXrCQf3d+owytiv010KU/dUg+SRLZskDn0N+HaFXeuSg==}
@@ -36856,6 +37311,9 @@ packages:
   '@typescript/vfs@1.6.2':
     resolution: {integrity: sha512-hoBwJwcbKHmvd2QVebiytN1aELvpk9B74B4L1mFm/XT1Q/VOYAWl2vQ9AWRFtQq8zmz6enTpfTV8WRc4ATjW/g==}
 
+  '@typescript/vfs@1.6.6':
+    resolution: {integrity: sha512-gXw0+tpchiQUjTcbnNIPnyLFIhbwJ7M1VaxLQ1vXhjQxtTBK3sdDLY1ih0jxCu1I5K3V0dDxq8CkVZtIMspC3A==}
+
   '@typespec/ts-http-runtime@0.3.9':
     resolution: {integrity: sha512-edSdeAqkdxBVzA1yL1LrLCml1YjyCVvPMtMqJpbF+6K609tHe8V6sQUzFQSGcYNhcuhOceZtjvN32+mpIth30A==}
     engines: {node: '>=22.0.0'}
@@ -37119,8 +37577,14 @@ packages:
   '@volar/language-core@2.4.28':
     resolution: {integrity: sha512-w4qhIJ8ZSitgLAkVay6AbcnC7gP3glYM3fYwKV3srj8m494E3xtrCv6E+bWviiK/8hs6e6t1ij1s2Endql7vzQ==}
 
+  '@volar/language-core@2.4.30':
+    resolution: {integrity: sha512-73fjwEV8wat6aOZ6U/y/hqtE30ocrIWECg67b0txGczOMNw+MffLmvJ5fnFfN9drVUEYZzLdaNo6VAy6G6avMw==}
+
   '@volar/source-map@2.4.28':
     resolution: {integrity: sha512-yX2BDBqJkRXfKw8my8VarTyjv48QwxdJtvRgUpNE5erCsgEUdI2DsLbpa+rOQVAJYshY99szEcRDmyHbF10ggQ==}
+
+  '@volar/source-map@2.4.30':
+    resolution: {integrity: sha512-zym1ob/KwDDyN+0jGVtxwbxJSRRnUvv5HspCtz3yEfVVdCG4/dzxJktMGPAgemqRuVs81O0o/y0q3qOUErR8kg==}
 
   '@volar/typescript@2.4.28':
     resolution: {integrity: sha512-Ja6yvWrbis2QtN4ClAKreeUZPVYMARDYZl9LMEv1iQ1QdepB6wn0jTRxA9MftYmYa4DQ4k/DaSZpFPUfxl8giw==}
@@ -37189,6 +37653,9 @@ packages:
 
   '@vue/compiler-ssr@3.5.13':
     resolution: {integrity: sha512-wMH6vrYHxQl/IybKJagqbquvxpWCuVYpoUJfCqFZwa/JY1GdATAQ+TgVtgrwwMZ0D07QhA99rs/EAAWfvG6KpA==}
+
+  '@vue/language-core@3.3.14':
+    resolution: {integrity: sha512-kRB+3hHg0c+BdD1XLAvwjVMQd5pC05zijSlPDRI3ERvC/s04JlRs5upy2KjeMg/9m9oD5zuMVh9yVvkKfZqoJg==}
 
   '@vue/shared@3.5.13':
     resolution: {integrity: sha512-/hnE/qP5ZoGpol0a5mDi45bOd7t3tjYJBjsgCsivow7D48cJeV5l05RD82lPqi7gRiphZM37rnhW1l6ZoCNNnQ==}
@@ -37879,6 +38346,9 @@ packages:
 
   alea@1.0.1:
     resolution: {integrity: sha512-QU+wv+ziDXaMxRdsQg/aH7sVfWdhKps5YP97IIwFkHCsbDZA3k87JXoZ5/iuemf4ntytzIWeScrRpae8+lDrXA==}
+
+  alien-signals@3.2.1:
+    resolution: {integrity: sha512-I8FjmltrfnDFoZedi5CG8DghVYNhzb/Ijluz7tCSJH0xpd0484Kowhbb1XDYOxfJpU1p5wnM2X54dA+IfGyD1g==}
 
   am-i-vibing@0.5.0:
     resolution: {integrity: sha512-KLcsDhqf1XRrJmJr+9I/C0EX2K+sGrAGZFgkmd84c8TJO9zJBu+/kFInjazu1KfJWFhWDKdRWkpBzEs7s35DVA==}
@@ -39196,6 +39666,9 @@ packages:
     resolution: {integrity: sha512-FyyrDHZKEjXDpNJYvVsV960FiqQyXc/LlYmsxl2BcdMb2WPx0OGRVgTg55rPSyLSNMqP52R9r8geSp7apN3Ofg==}
     engines: {node: '>=4'}
 
+  css-js-gen@1.1.0:
+    resolution: {integrity: sha512-CuPSTe6EwlrDHcMFOfcO3SwVqclVKLnqSbTGGYzfFt8z2NenGeupp47Z3wx+yhQ2pdozb3R8hc+nyECBTykooQ==}
+
   css-loader@7.1.4:
     resolution: {integrity: sha512-vv3J9tlOl04WjiMvHQI/9tmIrCxVrj6PFbHemBB1iihpeRbi/I4h033eoFIhwxBBqLhI0KYFS7yvynBFhIZfTw==}
     engines: {node: '>= 18.12.0'}
@@ -40320,6 +40793,12 @@ packages:
   express@5.2.1:
     resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
     engines: {node: '>= 18'}
+
+  expressive-code-twoslash@0.6.1:
+    resolution: {integrity: sha512-aEeKBgqg6cF4rQPxT5BHNbRffwsA66zWkNT/Y7CcUIE8eHW6KJHPCnZrGCLxvQ5xRd+qWj7ZXq84gT2zd2ECbg==}
+    peerDependencies:
+      '@expressive-code/core': ^0.41.7
+      expressive-code: ^0.41.7
 
   expressive-code@0.44.2:
     resolution: {integrity: sha512-MLNghkvhyFgVW4oCD5DxBuYnnTXIf0PygzGmfT6OZeOOYWh/D4sH1j931biElkA5RG/J9wY/iuSMGAPF5vzHOg==}
@@ -42857,6 +43336,9 @@ packages:
   mdast-util-from-markdown@2.0.0:
     resolution: {integrity: sha512-n7MTOr/z+8NAX/wmhhDji8O3bRvPTV/U0oTCaZJkjhPSKTPhS3xufVhKGF8s1pJ7Ox4QgoIU7KHseh09S+9rTA==}
 
+  mdast-util-from-markdown@2.1.0:
+    resolution: {integrity: sha512-KRLgmPaP2H1ul2bpoJkOS+9pAcDAAj9Nu1mqLnh8NLeJG5tlvj42TH80PIGBpROWlRXLk0lDrWNuZCFy/tsB4A==}
+
   mdast-util-frontmatter@2.0.1:
     resolution: {integrity: sha512-LRqI9+wdgC25P0URIJY9vwocIzCcksduHQ9OF2joxQoyTNVduwLAFUzjoopuRJbJAReaKrNQKAZKL3uCMugWJA==}
 
@@ -43334,6 +43816,9 @@ packages:
     resolution: {integrity: sha512-kh8ARjh8rMN7Du2igDRO9QJnqCb2xYTJxyQYK7vJJS4TvLLmsbyhiKpSW+t+y26gyOyMd0riphX0GeWKU3ky5g==}
     engines: {node: '>=12.13'}
 
+  muggle-string@0.4.1:
+    resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
+
   multiformats@13.3.0:
     resolution: {integrity: sha512-CBiqvsufgmpo01VT5ze94O+uc+Pbf6f/sThlvWss0sBZmAOu6GQn5usrYV2sf2mr17FWYc0rO8c/CNe2T90QAA==}
 
@@ -43732,6 +44217,10 @@ packages:
         optional: true
       zod:
         optional: true
+
+  opentype.js@2.0.0:
+    resolution: {integrity: sha512-kCyjv6xdDY1W/jLWZ/L3QhhTlKUqDZMQ5+Jdlw12b3dXkKNpYBqqlMMj0YDQPShWFTMwgZI1hG14kN3XUDSg/A==}
+    hasBin: true
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -45816,6 +46305,13 @@ packages:
       '@astrojs/starlight': '>=0.42.0'
       astro: '>=7.2.10'
 
+  starlight-sidebar-topics@0.9.0:
+    resolution: {integrity: sha512-xFwMAAtTVyqsO5DZ8Ldk0vN+2QoPdtjtDi8fbrzvQATIJvIvfaBLL9JzfXAjNHI9vMkj35VMWMd8tTICeO6RIA==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      '@astrojs/starlight': '>=0.42.0'
+      astro: ^7.2.10
+
   static-eval@2.1.1:
     resolution: {integrity: sha512-MgWpQ/ZjGieSVB3eOJVs4OA2LT/q1vx98KPCTTQPzq/aLr0YUXTsgryTXr4SLfR0ZfUUCiedM9n/ABeDIyy4mA==}
 
@@ -46598,6 +47094,17 @@ packages:
 
   turndown@7.2.1:
     resolution: {integrity: sha512-7YiPJw6rLClQL3oUKN3KgMaXeJJ2lAyZItclgKDurqnH61so4k4IH/qwmMva0zpuJc/FhRExBBnk7EbeFANlgQ==}
+
+  twoslash-eslint@0.3.9:
+    resolution: {integrity: sha512-KxXHj3iCSIR3blHk7OUI0WqXpR9brhOW8/DYQ54ghijmKmH0BBZFETJetWERAD823tTnXbugvRx89XHQNDNkww==}
+    peerDependencies:
+      eslint: '>=8.50.0'
+
+  twoslash-protocol@0.3.9:
+    resolution: {integrity: sha512-9/iwp+CXOnjFMPQuPL5PkuRbZnDoNpBvtJCLs9t8kDYkL3YHujbvnHfZA1i5fApDftVEdBw+T/4F+dH5kIzpYQ==}
+
+  twoslash@0.3.9:
+    resolution: {integrity: sha512-rDclk+OtzuTX+tnea7DYLCkqGQ3eP0IyfD+kzUJ7t46X/NzlaxwrhecmEBNuSCuEn3V+n1PhcjUUQQ7gUJzX5Q==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -48248,6 +48755,35 @@ snapshots:
   '@astrojs/prism@4.1.0':
     dependencies:
       prismjs: 1.30.0
+
+  '@astrojs/react@7.1.1(@types/node@22.10.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(esbuild@0.28.2)(jiti@2.7.0)(oxc-transform-react@0.145.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)':
+    dependencies:
+      '@astrojs/internal-helpers': 0.13.0
+      '@types/react': 19.3.0
+      '@types/react-dom': 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-react': 6.1.1(oxc-transform-react@0.145.0)(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      devalue: 5.6.3
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+      ultrahtml: 1.7.0
+      vite: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+    optionalDependencies:
+      oxc-transform-react: 0.145.0
+    transitivePeerDependencies:
+      - '@rolldown/plugin-babel'
+      - '@types/node'
+      - '@vitejs/devtools'
+      - babel-plugin-react-compiler
+      - esbuild
+      - jiti
+      - less
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - terser
+      - tsx
+      - yaml
 
   '@astrojs/rss@4.0.19':
     dependencies:
@@ -53123,6 +53659,23 @@ snapshots:
 
   '@dxos/wa-sqlite@0.2.1': {}
 
+  '@ec-ts/twoslash-vue@1.0.0':
+    dependencies:
+      '@ec-ts/twoslash': 1.0.0
+      '@vue/language-core': 3.3.14
+      twoslash-protocol: 0.3.9
+      typescript: 6.0.3
+
+  '@ec-ts/twoslash@1.0.0':
+    dependencies:
+      '@ec-ts/vfs': 1.0.0
+      twoslash-protocol: 0.3.9
+      typescript: 6.0.3
+
+  '@ec-ts/vfs@1.0.0':
+    dependencies:
+      typescript: 6.0.3
+
   '@effect/ai-anthropic@4.0.4(effect@4.0.4)':
     dependencies:
       effect: 4.0.4
@@ -53557,7 +54110,15 @@ snapshots:
       unist-util-visit: 5.1.0
       unist-util-visit-parents: 6.0.2
 
+  '@expressive-code/plugin-collapsible-sections@0.44.2':
+    dependencies:
+      '@expressive-code/core': 0.44.2
+
   '@expressive-code/plugin-frames@0.44.2':
+    dependencies:
+      '@expressive-code/core': 0.44.2
+
+  '@expressive-code/plugin-line-numbers@0.44.2':
     dependencies:
       '@expressive-code/core': 0.44.2
 
@@ -59298,6 +59859,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript/vfs@1.6.6':
+    dependencies:
+      debug: 4.4.3(supports-color@5.5.0)
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
   '@typespec/ts-http-runtime@0.3.9':
     dependencies:
       http-proxy-agent: 7.0.2
@@ -59623,7 +60191,13 @@ snapshots:
     dependencies:
       '@volar/source-map': 2.4.28
 
+  '@volar/language-core@2.4.30':
+    dependencies:
+      '@volar/source-map': 2.4.30
+
   '@volar/source-map@2.4.28': {}
+
+  '@volar/source-map@2.4.30': {}
 
   '@volar/typescript@2.4.28':
     dependencies:
@@ -59737,6 +60311,16 @@ snapshots:
     dependencies:
       '@vue/compiler-dom': 3.5.13
       '@vue/shared': 3.5.13
+
+  '@vue/language-core@3.3.14':
+    dependencies:
+      '@volar/language-core': 2.4.30
+      '@vue/compiler-dom': 3.5.13
+      '@vue/shared': 3.5.13
+      alien-signals: 3.2.1
+      muggle-string: 0.4.1
+      path-browserify: 1.0.1
+      picomatch: 4.0.7
 
   '@vue/shared@3.5.13': {}
 
@@ -60787,6 +61371,8 @@ snapshots:
 
   alea@1.0.1: {}
 
+  alien-signals@3.2.1: {}
+
   am-i-vibing@0.5.0:
     dependencies:
       process-ancestry: 0.1.0
@@ -61029,7 +61615,7 @@ snapshots:
       unstorage: 1.17.5(@azure/identity@4.14.0)(idb-keyval@6.2.1)(ioredis@5.11.1)
       verkit: 0.5.0
       vite: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
-      vitefu: 1.1.3(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      vitefu: 1.1.3(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
       xxhash-wasm: 1.1.0
       yargs-parser: 22.0.0
       zod: 4.6.7
@@ -62324,6 +62910,8 @@ snapshots:
   crypto-random-string@2.0.0: {}
 
   css-color-keywords@1.0.0: {}
+
+  css-js-gen@1.1.0: {}
 
   css-loader@7.1.4(@rspack/core@1.7.11(@swc/helpers@0.5.17))(webpack@5.105.0(@swc/core@1.16.13(@swc/helpers@0.5.17))(esbuild@0.28.2)):
     dependencies:
@@ -63669,6 +64257,23 @@ snapshots:
       type-is: 2.0.1
       vary: 1.1.2
     transitivePeerDependencies:
+      - supports-color
+
+  expressive-code-twoslash@0.6.1(@expressive-code/core@0.44.2)(eslint@10.11.0(jiti@2.7.0))(expressive-code@0.44.2):
+    dependencies:
+      '@ec-ts/twoslash': 1.0.0
+      '@ec-ts/twoslash-vue': 1.0.0
+      '@expressive-code/core': 0.44.2
+      '@typescript-eslint/parser': 8.71.0(eslint@10.11.0(jiti@2.7.0))
+      css-js-gen: 1.1.0
+      expressive-code: 0.44.2
+      mdast-util-from-markdown: 2.1.0
+      mdast-util-gfm: 3.1.0
+      mdast-util-to-hast: 13.2.1
+      twoslash-eslint: 0.3.9(eslint@10.11.0(jiti@2.7.0))
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - eslint
       - supports-color
 
   expressive-code@0.44.2:
@@ -66600,6 +67205,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  mdast-util-from-markdown@2.1.0:
+    dependencies:
+      '@types/mdast': 4.0.4
+      '@types/unist': 3.0.3
+      decode-named-character-reference: 1.0.2
+      devlop: 1.1.0
+      mdast-util-to-string: 4.0.0
+      micromark: 4.0.2
+      micromark-util-decode-numeric-character-reference: 2.0.1
+      micromark-util-decode-string: 2.0.0
+      micromark-util-normalize-identifier: 2.0.0
+      micromark-util-symbol: 2.0.0
+      micromark-util-types: 2.0.0
+      unist-util-stringify-position: 4.0.0
+    transitivePeerDependencies:
+      - supports-color
+
   mdast-util-frontmatter@2.0.1:
     dependencies:
       '@types/mdast': 4.0.4
@@ -66623,7 +67245,7 @@ snapshots:
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.0
+      mdast-util-from-markdown: 2.1.0
       mdast-util-to-markdown: 2.1.2
       micromark-util-normalize-identifier: 2.0.0
     transitivePeerDependencies:
@@ -66632,7 +67254,7 @@ snapshots:
   mdast-util-gfm-strikethrough@2.0.0:
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-from-markdown: 2.0.0
+      mdast-util-from-markdown: 2.1.0
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -66642,7 +67264,7 @@ snapshots:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
       markdown-table: 3.0.2
-      mdast-util-from-markdown: 2.0.0
+      mdast-util-from-markdown: 2.1.0
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
@@ -66651,14 +67273,14 @@ snapshots:
     dependencies:
       '@types/mdast': 4.0.4
       devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.0
+      mdast-util-from-markdown: 2.1.0
       mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
 
   mdast-util-gfm@3.1.0:
     dependencies:
-      mdast-util-from-markdown: 2.0.0
+      mdast-util-from-markdown: 2.1.0
       mdast-util-gfm-autolink-literal: 2.0.1
       mdast-util-gfm-footnote: 2.1.0
       mdast-util-gfm-strikethrough: 2.0.0
@@ -67398,6 +68020,8 @@ snapshots:
 
   ms@3.0.0-canary.1: {}
 
+  muggle-string@0.4.1: {}
+
   multiformats@13.3.0: {}
 
   multiformats@13.4.2: {}
@@ -67821,6 +68445,8 @@ snapshots:
     optionalDependencies:
       ws: 8.18.3
       zod: 3.25.76
+
+  opentype.js@2.0.0: {}
 
   optionator@0.9.4:
     dependencies:
@@ -70579,6 +71205,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  starlight-sidebar-topics@0.9.0(@astrojs/starlight@0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)))(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)):
+    dependencies:
+      '@astrojs/starlight': 0.42.6(astro@7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      astro: 7.4.0(@azure/identity@4.14.0)(@types/node@22.10.2)(esbuild@0.28.2)(idb-keyval@6.2.1)(ioredis@5.11.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+      picomatch: 4.0.7
+
   static-eval@2.1.1:
     dependencies:
       escodegen: 2.1.0
@@ -71405,6 +72037,21 @@ snapshots:
   turndown@7.2.1:
     dependencies:
       '@mixmark-io/domino': 2.2.0
+
+  twoslash-eslint@0.3.9(eslint@10.11.0(jiti@2.7.0)):
+    dependencies:
+      eslint: 10.11.0(jiti@2.7.0)
+      twoslash-protocol: 0.3.9
+
+  twoslash-protocol@0.3.9: {}
+
+  twoslash@0.3.9:
+    dependencies:
+      '@typescript/vfs': 1.6.6
+      twoslash-protocol: 0.3.9
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
 
   type-check@0.4.0:
     dependencies:

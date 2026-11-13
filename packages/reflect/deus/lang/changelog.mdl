@@ -62,7 +62,9 @@ that served it: models change mid-session and the name must stay stable across t
 7. **Append-only.** Never edit or delete an entry. To reverse or refine one, append a new entry
    with `supersedes: D-n`. The superseded entry stays — it is the trace.
 8. **Identifiers are monotonic, newest last.** `D-1`, `D-2`, … in the order appended. Never reuse
-   or renumber.
+   or renumber. The one exception repairs a merge that left an id on two entries: move all but one
+   copy, text unchanged, to the next free ids at the end of the log, and point the references that
+   meant a moved copy at its new id.
 9. **Only spec decisions.** An entry records a choice about the specified system: its behavior,
    requirements, structure, interfaces, data, tests, or the reason for one of those. How the authors
    worked is not a decision: which tool or skill they used, how the spec is shared or reviewed, which

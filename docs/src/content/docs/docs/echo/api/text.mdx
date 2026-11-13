@@ -1,0 +1,51 @@
+---
+title: Text
+description: Edit string fields so concurrent edits merge character by character.
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import Snippet from '../../../../../components/Snippet.astro';
+
+```ts
+import { Text } from '@dxos/echo';
+```
+
+`Text` edits a string field as a sequence of characters. Assigning a string replaces it, so of two concurrent assignments
+one wins. An edit with `Text` inserts and deletes characters, so two people typing in the same field both keep their
+work. [Changes and branches](/docs/echo/concepts/changes/) shows what merges and how.
+
+## Edit text
+
+Any string field can be edited this way; it needs no special declaration. Call the functions inside `Obj.update`.
+
+- `splice` removes and inserts characters at an index, like `Array.prototype.splice`.
+- `update` replaces the whole value, but writes only the characters that differ.
+- `apply` runs find-and-replace edits, and throws `TextEditNotFoundError` when a text to replace is missing.
+
+<Snippet file="guide-text" region="edit" />
+
+Read the field as usual: it is a string.
+
+## Text in an input
+
+A text field bound to an ECHO string, such as a `<textarea>` whose `value` is the field, loses its caret when a peer's
+edit arrives, because React sets the whole value again. Save the selection before the remote change renders, and move it
+by the number of characters the change inserted or removed before it. Write each local keystroke with `Text.update`, so
+it merges with what the peer typed.
+
+## Members at a glance
+
+| Member | Summary |
+| --- | --- |
+| `splice` | Remove and insert characters at an index |
+| `update` | Replace the value with a minimal diff |
+| `apply` | Find and replace |
+
+The full list is in the [API reference](/docs/additional-resources/api-reference/).
+
+## Related
+
+- [Changes and branches](/docs/echo/concepts/changes/)
+- [Obj](/docs/echo/api/obj/) for `Obj.update`.
