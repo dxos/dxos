@@ -9,14 +9,14 @@ everything on this page.
 
 ## What runs where
 
-| Piece                                                                            | Repo                                                   | Runs in                                          |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------ |
-| Agent UI, agent objects, `ensureChannelChat` and the other agent operations      | dxos `plugin-agent`, `plugin-discord`, `plugin-thread` | Composer (UI) and EDGE (tools; see below)        |
-| Agent process and brain (`ProcessObject`, `BrainObject`)                         | edge `compute-service`                                 | EDGE                                             |
-| Discord bot (`DiscordBot` Durable Object, one per app, holds the Gateway socket) | edge `discord-service`                                 | EDGE                                             |
-| Agent mailbox (`AgentMailbox` Durable Object, one per handle)                    | edge `compute-service` (`src/email/`)                  | EDGE                                             |
-| Model calls                                                                      | edge `ai-service` (holds `ANTHROPIC_API_KEY`)          | EDGE                                             |
-| Discord sign-in, Google OAuth (`/oauth/*`)                                       | edge `kms-service`                                     | EDGE                                             |
+| Piece                                                                            | Repo                                                   | Runs in                                   |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------- |
+| Agent UI, agent objects, `ensureChannelChat` and the other agent operations      | dxos `plugin-agent`, `plugin-discord`, `plugin-thread` | Composer (UI) and EDGE (tools; see below) |
+| Agent process and brain (`ProcessObject`, `BrainObject`)                         | edge `compute-service`                                 | EDGE                                      |
+| Discord bot (`DiscordBot` Durable Object, one per app, holds the Gateway socket) | edge `discord-service`                                 | EDGE                                      |
+| Agent mailbox (`AgentMailbox` Durable Object, one per handle)                    | edge `compute-service` (`src/email/`)                  | EDGE                                      |
+| Model calls                                                                      | edge `ai-service` (holds `ANTHROPIC_API_KEY`)          | EDGE                                      |
+| Discord sign-in, Google OAuth (`/oauth/*`)                                       | edge `kms-service`                                     | EDGE                                      |
 
 Composer-only changes need nothing on the EDGE side. EDGE, local and deployed alike, runs each plugin's operations from
 the plugin bundle in that environment's registry. Only plugin-agent and plugin-assistant stay on operation-service, at
