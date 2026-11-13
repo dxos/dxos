@@ -16,7 +16,7 @@ import { join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { DirectAiServiceLayer } from '@dxos/ai/testing';
-import { extractFactsStage } from '@dxos/crawler';
+import { StateStore, extractFactsStage } from '@dxos/crawler';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import { MessageStore, extractQuestionsStage, replayStream } from '@dxos/pipeline-discord';
@@ -37,14 +37,23 @@ describe('re-extract', () => {
       );
       const result = await EffectEx.runPromise(
         Effect.gen(function* () {
+          const errorsBefore = new Map(
+            (yield* StateStore.listTargets()).map((target) => [target.id, target.lastError]),
+          );
           // Agent profiles are left alone: the crawl already counted each message once.
           yield* replayStream().pipe(
             extractQuestionsStage(),
             extractFactsStage(),
             Pipeline.run({ sink: () => Effect.void }),
           );
+          // A failed batch is only recorded on its targets, so compare against the errors the crawl already had.
+          const failures = (yield* StateStore.listTargets()).filter(
+            (target) =>
+              target.lastError?.startsWith('extract-facts:') && target.lastError !== errorsBefore.get(target.id),
+          );
           const store = yield* FactStore;
           return {
+            failures,
             messages: yield* MessageStore.count(),
             facts: yield* store.query({}),
             predicates: yield* store.predicates(),
@@ -63,6 +72,10 @@ describe('re-extract', () => {
         console.log(`  ${predicate.label}  <${predicate.iri}>`);
       }
 
+      for (const target of result.failures) {
+        console.error(`  ${target.id}: ${target.lastError}`);
+      }
+      expect(result.failures, 'fact extraction failed on these targets').toEqual([]);
       expect(result.facts.length).toBeGreaterThan(0);
     },
     900_000,

@@ -31,7 +31,8 @@ if (!existsSync(factsPath)) {
 }
 
 /** The file's inode: a replaced file (moved aside, recreated) has a new one, while writes in place keep it. */
-const inodeOf = (path: string): number | undefined => (existsSync(path) ? statSync(path).ino : undefined);
+// The file can vanish mid-swap, so a missing one reads as no inode rather than throwing.
+const inodeOf = (path: string): number | undefined => statSync(path, { throwIfNoEntry: false })?.ino;
 
 type Open = { readonly store: FactStoreApi; readonly scope: Scope.Closeable; readonly inode: number | undefined };
 
@@ -91,7 +92,17 @@ const program = Effect.gen(function* () {
   return yield* Effect.never;
 }).pipe(Effect.scoped);
 
-const fiber = Effect.runFork(program);
+const fiber = Effect.runFork(
+  program.pipe(
+    // A port already in use is reported, not thrown, so say so and exit rather than hang.
+    Effect.catch((error) =>
+      Effect.sync(() => {
+        console.error(`${error.message}${error.cause instanceof Error ? `: ${error.cause.message}` : ''}`);
+        process.exit(1);
+      }),
+    ),
+  ),
+);
 // Interrupting closes the server, the watcher and the open SQLite file through their scopes.
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => void EffectEx.runPromise(Fiber.interrupt(fiber)).then(() => process.exit(0)));
