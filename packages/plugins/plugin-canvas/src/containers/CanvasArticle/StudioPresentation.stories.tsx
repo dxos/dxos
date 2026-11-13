@@ -63,11 +63,26 @@ const StudioKindsPlugin = Plugin.define(
 );
 
 /**
- * A slide of the deck: the drawing alone, full bleed. The deck's own titles are the presenter's heading (the slide's
- * label in the grid), and a heading on the slide would take a third of the height the diagram was drawn for.
+ * The deck's own page, which every slide was drawn on. Framing THIS rather than each slide's own content is what puts
+ * the nine diagrams at one scale: a slide that fills less of the page draws smaller, as it does in the deck.
  */
-const slide = (drawing: Drawing.Drawing): string =>
-  ['---', 'layout: full', '---', '', `<Surface ref="${EID.make({ entityId: drawing.id })}" />`, ''].join('\n');
+const PAGE = { x: 0, y: 0, width: 1600, height: 900 };
+
+/** How far a slide may magnify the page. A fit stops at 1:1 by default, and a slide is wider than the deck's page. */
+const FIT_ZOOM = 4;
+
+/** A slide of the deck: its title, then the drawing. */
+const slide = (title: string, drawing: Drawing.Drawing): string =>
+  [
+    '---',
+    'layout: default',
+    '---',
+    '',
+    `# ${title}`,
+    '',
+    `<Surface ref="${EID.make({ entityId: drawing.id })}" />`,
+    '',
+  ].join('\n');
 
 const decorators = createStoryDecorators(() => ({
   types: [Drawing.Drawing, Drawing.Canvas, Presentation.Presentation, Presentation.Slide, ...types],
@@ -83,18 +98,21 @@ const decorators = createStoryDecorators(() => ({
   ],
   onInit: async ({ space }) => {
     const seeded = STUDIO_SLIDES.map(({ id, source, model }) => {
-      // Read-only: a slide is looked at, and the rail would take a corner of every one. The drawing opens at its
-      // natural size — the canvas's fit stops at 100%, so it never magnifies the deck's 1600-unit page to the
-      // presenter's wider design surface.
-      const canvas = addTestCanvas(space.db, seedStudioSlide(source, model), { ...STUDIO_CANVAS, readonly: true });
-      return { canvas, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
+      // Read-only: a slide is looked at, and the rail would take a corner of every one.
+      const canvas = addTestCanvas(space.db, seedStudioSlide(source, model), {
+        ...STUDIO_CANVAS,
+        readonly: true,
+        fitFrame: PAGE,
+        fitZoom: FIT_ZOOM,
+      });
+      return { model, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
     });
     const deck = space.db.add(
       Presentation.make({
         name: 'Studio',
         description: DESCRIPTION,
         theme: THEME,
-        slides: seeded.map(({ drawing }) => slide(drawing)),
+        slides: seeded.map(({ model, drawing }) => slide(model.title, drawing)),
       }),
     );
     await space.db.flush();
