@@ -22,9 +22,9 @@ const unsupported = (method: string) =>
  * `FactFeed.FactItem`, and the per-source content hashes that make re-ingest idempotent live in the crawl's
  * {@link CrawlState.CrawlState}, so a message read again unchanged is never sent to the model again.
  *
- * Indexing is the consumer's job (an agent's brain registers the feed), so `query`, `select`, `rows` and `clear` fail, and
- * `predicates` answers none: the extractor falls back to its seed vocabulary rather than reusing predicates minted by
- * earlier runs.
+ * Indexing is the consumer's job (an agent's brain registers the feed), so every read — `query`, `count`,
+ * `aggregate`, `entityLabels`, `statuses`, `select`, `rows` — and `clear` fail, and `predicates` answers none: the
+ * extractor falls back to its seed vocabulary rather than reusing predicates minted by earlier runs.
  */
 export const factFeedStoreLayer = ({
   feed,
@@ -44,6 +44,10 @@ export const factFeedStoreLayer = ({
             : Feed.append(feed, facts.map(FactFeed.makeItem)).pipe(Effect.provideService(Database.Service, database)),
         predicates: () => Effect.succeed([]),
         query: () => unsupported('query'),
+        count: () => unsupported('count'),
+        aggregate: () => unsupported('aggregate'),
+        entityLabels: () => unsupported('entityLabels'),
+        statuses: () => unsupported('statuses'),
         select: () => unsupported('select'),
         rows: () => unsupported('rows'),
         cursor: (source) => Effect.sync(() => CrawlState.sourceHash(state, source)),

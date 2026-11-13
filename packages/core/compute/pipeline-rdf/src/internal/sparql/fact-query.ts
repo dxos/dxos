@@ -10,23 +10,49 @@ import * as Vocab from '../../types/Vocab.ts';
 import { type SemanticQuery } from './query-builder.ts';
 
 /** SPARQL IRIREF excludes these characters; a UCHAR escape keeps an arbitrary IRI or key from breaking the query. */
-const iriRef = (iri: string): string =>
+export const iriRef = (iri: string): string =>
   `<${[...iri]
     .map((char) =>
       char <= ' ' || '<>"{}|^`\\'.includes(char) ? `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}` : char,
     )
     .join('')}>`;
 
-const ONTOLOGY = iriRef(Vocab.ONTOLOGY_GRAPH);
+export const ONTOLOGY = iriRef(Vocab.ONTOLOGY_GRAPH);
+
+export const PROV_DERIVED_FROM = iriRef(`${Vocab.PROV}wasDerivedFrom`);
+const SX_CONFIDENCE = iriRef(`${Vocab.SX}confidence`);
+const SX_SUPERSEDES = iriRef(`${Vocab.SX}supersedes`);
+const SX_RETRACTS = iriRef(`${Vocab.SX}retracts`);
+/** Spelled in full rather than via a prefix, so a pattern carries no declaration requirement to its caller. */
+const XSD_DECIMAL = '<http://www.w3.org/2001/XMLSchema#decimal>';
+
+/** Every graph that still stands: nothing supersedes or retracts it. */
+export const STANDING_FILTER = [
+  `FILTER NOT EXISTS { ?replacement ${SX_SUPERSEDES} ?g }`,
+  `FILTER NOT EXISTS { ?withdrawal ${SX_RETRACTS} ?g }`,
+];
+
+/**
+ * `?g`'s confidence against a floor, reading an unstated confidence as zero — as the in-memory backend does
+ * (`confidence ?? 0`). A floor of zero or less is therefore no constraint at all, and above zero no unscored
+ * graph can clear it, so requiring the triple is exact. (Stated as two cases rather than one `COALESCE`, whose
+ * arms the compiler would reject as mixed-type.)
+ */
+export const confidenceFilter = (minConfidence: number): string[] => {
+  if (!Number.isFinite(minConfidence)) {
+    throw new TypeError('minConfidence must be a finite number.');
+  }
+  return minConfidence <= 0 ? [] : [`?g ${SX_CONFIDENCE} ?conf .`, `FILTER(${XSD_DECIMAL}(?conf) >= ${minConfidence})`];
+};
 
 const KINDS = Mapping.KIND_CLASSES.map(iriRef).join(', ');
 
 /** Excludes rows that are not statements: the ontology graph, and an entity's label or kind. */
-const statementFilter = (graph: string, predicate: string, object: string) =>
+export const statementFilter = (graph: string, predicate: string, object: string) =>
   `FILTER(${graph} != ${ONTOLOGY} && ${predicate} != ${iriRef(Vocab.RDFS_LABEL)} && !(${predicate} = ${iriRef(Vocab.RDF_TYPE)} && ${object} IN (${KINDS})))`;
 
 /** An entity key names its IRI exactly, and a slug also names the graph-local entity of that slug in every graph. */
-const isEntity = (variable: string, key: string): string => {
+export const isEntity = (variable: string, key: string): string => {
   const node = iriRef(Vocab.entityNode(key).value);
   return Vocab.isIri(key)
     ? `${variable} = ${node}`
@@ -68,40 +94,72 @@ export const predicateLabels = (
   );
 };
 
+/** The statement variables a pattern set binds. The aggregate needs `?s ?p ?o`, since it groups on them. */
+export type StatementVars = { readonly subject: string; readonly predicate: string; readonly object: string };
+
+const DEFAULT_VARS: StatementVars = { subject: '?s', predicate: '?p', object: '?o' };
+
 /**
- * Group pattern binding `?g` to every named graph holding a statement that matches each of the query's
- * constraints, with `predicates` the IRIs its predicate names. Confidence is not a constraint here: the caller
- * re-checks every statement (`statementMatches`).
+ * Patterns matching a query against ONE statement — every constraint applies to the same `?s ?p ?o` in the same
+ * `?g`, so a graph qualifies only if a single statement in it satisfies all of them. Binding the constraints
+ * separately would admit a graph that has the subject on one statement and the predicate on another, which no
+ * fact in it matches; whether that costs anything depends on who is asking (see {@link candidateGraphs}).
+ *
+ * `source`, `minConfidence` and `current` describe the graph rather than the statement, which is where the
+ * provenance lives.
  */
-export const candidateGraphs = (query: SemanticQuery, predicates?: ReadonlySet<string>): string => {
-  const patterns: string[] = [];
+export const statementPatterns = (
+  query: SemanticQuery,
+  predicates?: ReadonlySet<string>,
+  vars: StatementVars = DEFAULT_VARS,
+): string[] => {
+  const { subject, predicate, object } = vars;
+  const patterns = [`GRAPH ?g { ${subject} ${predicate} ${object} }`, statementFilter('?g', predicate, object)];
   if (query.subjectEntity) {
-    patterns.push(
-      `{ GRAPH ?g { ?ss ?sp ?so } ${statementFilter('?g', '?sp', '?so')} FILTER(${isEntity('?ss', query.subjectEntity)}) }`,
-    );
+    patterns.push(`FILTER(${isEntity(subject, query.subjectEntity)})`);
   }
   if (predicates) {
-    patterns.push(
-      `{ GRAPH ?g { ?ps ?pp ?po } FILTER(?g != ${ONTOLOGY} && ?pp IN (${[...predicates].map(iriRef).join(', ')})) }`,
-    );
-  }
-  if (query.source) {
-    patterns.push(`?g ${iriRef(`${Vocab.PROV}wasDerivedFrom`)} ${JSON.stringify(query.source)} .`);
+    patterns.push(`FILTER(${predicate} IN (${[...predicates].map(iriRef).join(', ')}))`);
   }
   if (query.entity) {
-    patterns.push(
-      `{ GRAPH ?g { ?es ?ep ?eo } ${statementFilter('?g', '?ep', '?eo')} FILTER(${isEntity('?es', query.entity)} || ${isEntity('?eo', query.entity)}) }`,
-    );
+    patterns.push(`FILTER(${isEntity(subject, query.entity)} || ${isEntity(object, query.entity)})`);
   }
-  return patterns.length === 0 ? `?g ${iriRef(Vocab.RDF_TYPE)} ${iriRef(Vocab.SX_GRAPH)} .` : patterns.join('\n');
+  if (query.source) {
+    patterns.push(`?g ${PROV_DERIVED_FROM} ${JSON.stringify(query.source)} .`);
+  }
+  if (query.minConfidence !== undefined) {
+    patterns.push(...confidenceFilter(query.minConfidence));
+  }
+  if (query.current) {
+    patterns.push(...STANDING_FILTER);
+  }
+  return patterns;
 };
+
+/** Its own variables, so nothing it binds can be confused with the statement {@link graphQuadsSparql} selects. */
+const CANDIDATE_VARS: StatementVars = { subject: '?cs', predicate: '?cp', object: '?co' };
+
+/**
+ * Group pattern binding `?g` to every named graph holding a statement that matches the query. The constraints
+ * all apply to one statement ({@link statementPatterns}), which is what makes this the right basis for
+ * {@link graphQuadsSparql}'s `limit`: every graph the cap admits holds a matching fact, so a capped read is a
+ * window on the facts that match rather than on the graphs scanned to find them.
+ *
+ * The caller still re-checks each reassembled statement (`statementMatches`), because whole graphs are loaded to
+ * reassemble facts and a qualifying graph may hold other statements that do not match.
+ */
+export const candidateGraphs = (query: SemanticQuery, predicates?: ReadonlySet<string>): string =>
+  statementPatterns(query, predicates, CANDIDATE_VARS).join('\n');
 
 /** Group pattern binding `?g` to exactly the given graph IRIs. */
 export const graphValues = (graphs: readonly string[]): string => `VALUES ?g { ${graphs.map(iriRef).join(' ')} }`;
 
 /**
  * SPARQL loading every quad of the graphs `candidates` binds, as `?g ?s ?p ?o`, and each graph's provenance from
- * the default graph, as `?g ?p ?o` with `?s` unbound.
+ * the default graph, as `?g ?p ?o` with `?s` unbound. A `limit` caps the graphs loaded, ordered by IRI so the
+ * capped set is the same for the same store rather than whichever rows the planner reached first.
  */
-export const graphQuadsSparql = (candidates: string): string =>
-  `SELECT ?g ?s ?p ?o WHERE { { SELECT DISTINCT ?g WHERE { ${candidates} } } { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }`;
+export const graphQuadsSparql = (candidates: string, limit?: number): string => {
+  const cap = limit === undefined ? '' : ` ORDER BY ?g LIMIT ${Math.max(0, Math.trunc(limit))}`;
+  return `SELECT ?g ?s ?p ?o WHERE { { SELECT DISTINCT ?g WHERE { ${candidates} }${cap} } { GRAPH ?g { ?s ?p ?o } } UNION { ?g ?p ?o } }`;
+};

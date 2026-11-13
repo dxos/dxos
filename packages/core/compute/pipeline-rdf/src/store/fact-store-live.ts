@@ -12,6 +12,16 @@ import * as SqliteStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SemanticIndexError } from '../errors.ts';
 import {
+  type FactAggregate,
+  type FactGroup,
+  RETRACTED_SPARQL,
+  SUPERSEDED_SPARQL,
+  aggregateSparql,
+  countSparql,
+  decodeKey,
+  entityLabelsSparql,
+} from '../internal/sparql/aggregate.ts';
+import {
   DESCRIBED_PREDICATES_SPARQL,
   ONTOLOGY_SPARQL,
   SEED_MARKER_SPARQL,
@@ -150,25 +160,99 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
   const predicates: FactStoreApi['predicates'] = () =>
     attempt('Failed to read predicates')(() => Ontology.fromQuads(ontologyQuads()));
 
+  /**
+   * The predicate IRIs a query's predicate names, resolved through the ontology and the stored predicates'
+   * labels. `undefined` when the query names no predicate, which is not the same as naming an unknown one.
+   */
+  const resolvePredicates = (predicate: string | undefined, ontology: readonly RdfQuad[]) =>
+    predicate === undefined
+      ? undefined
+      : matchingPredicates(
+          predicate,
+          predicateLabels(
+            engine.query(STORED_PREDICATES_SPARQL).flatMap(({ p }) => (p ? [p.value] : [])),
+            ontology,
+          ),
+        );
+
+  /**
+   * The graphs a later fact has replaced or withdrawn. Read separately rather than derived from a query's own
+   * results: the fact that corrects a claim may be outside the scope that found it (another source, another
+   * predicate), and a correction the scope misses would leave the stale claim standing.
+   */
+  const withdrawnGraphs = (): Map<string, Graph.Status> => {
+    const targets = new Map<string, Graph.Status>();
+    for (const [sparql, status] of [
+      [SUPERSEDED_SPARQL, 'superseded'],
+      // Second, so a claim both replaced and withdrawn reads as withdrawn — as `Graph.status` resolves it too.
+      [RETRACTED_SPARQL, 'retracted'],
+    ] as const) {
+      for (const row of engine.query(sparql)) {
+        if (row.target?.value !== undefined) {
+          targets.set(row.target.value, status);
+        }
+      }
+    }
+    return targets;
+  };
+
+  const statuses: FactStoreApi['statuses'] = () => attempt('Failed to read fact statuses')(() => withdrawnGraphs());
+
   // A graph found by one statement may hold others, so each reassembled statement is checked against the query
-  // again; `triplesToFacts` validates via Schema, so malformed stored data fails here too.
+  // again; `triplesToFacts` validates via Schema, so malformed stored data fails here too. The graph-level
+  // constraints (`minConfidence`, `current`) are in `candidateGraphs`, ahead of the cap — re-checking them here
+  // would not recover the facts a cap applied before them had already excluded.
   const query: FactStoreApi['query'] = (semanticQuery) =>
     attempt('Failed to query facts')(() => {
       const ontology = ontologyQuads();
-      const predicates =
-        semanticQuery.predicate === undefined
-          ? undefined
-          : matchingPredicates(
-              semanticQuery.predicate,
-              predicateLabels(
-                engine.query(STORED_PREDICATES_SPARQL).flatMap(({ p }) => (p ? [p.value] : [])),
-                ontology,
-              ),
-            );
-      const quads = rowsToQuads(engine.query(graphQuadsSparql(candidateGraphs(semanticQuery, predicates))));
-      return Mapping.triplesToFacts([...quads, ...ontology]).filter((fact) =>
+      const predicates = resolvePredicates(semanticQuery.predicate, ontology);
+      const quads = rowsToQuads(
+        engine.query(graphQuadsSparql(candidateGraphs(semanticQuery, predicates), semanticQuery.limit)),
+      );
+      const facts = Mapping.triplesToFacts([...quads, ...ontology]).filter((fact) =>
         statementMatches(fact, semanticQuery, predicates),
       );
+      return semanticQuery.limit === undefined ? facts : facts.slice(0, Math.max(0, Math.trunc(semanticQuery.limit)));
+    });
+
+  const count: FactStoreApi['count'] = (semanticQuery) =>
+    attempt('Failed to count facts')(() => {
+      const predicates = resolvePredicates(semanticQuery.predicate, ontologyQuads());
+      const [row] = engine.query(countSparql(semanticQuery, predicates));
+      return Number(row?.n?.value ?? 0);
+    });
+
+  const aggregate: FactStoreApi['aggregate'] = (spec: FactAggregate) =>
+    attempt('Failed to aggregate facts')(() => {
+      const predicates = resolvePredicates(spec.scope?.predicate, ontologyQuads());
+      return engine.query(aggregateSparql(spec, predicates)).flatMap((row): FactGroup[] => {
+        const keys: string[] = [];
+        for (let index = 0; index < spec.by.length; index++) {
+          const value = row[`k${index}`]?.value;
+          // A row with an unbound dimension is dropped: its group would stand for "no value", not a value.
+          if (value === undefined) {
+            return [];
+          }
+          keys.push(decodeKey(value));
+        }
+        return [{ keys, count: Number(row.n?.value ?? 0) }];
+      });
+    });
+
+  const entityLabels: FactStoreApi['entityLabels'] = (keys) =>
+    attempt('Failed to read entity labels')(() => {
+      if (keys.length === 0) {
+        return new Map<string, string>();
+      }
+      const labels = new Map<string, string>();
+      for (const row of engine.query(entityLabelsSparql(keys))) {
+        const key = row.k?.value;
+        const label = row.label?.value;
+        if (key !== undefined && label !== undefined) {
+          labels.set(decodeKey(key), label);
+        }
+      }
+      return labels;
     });
 
   const select: FactStoreApi['select'] = (sparql) =>
@@ -219,7 +303,20 @@ const open = (storage: SqlStorage, transactionSync: NonNullable<Options['transac
       }),
     );
 
-  return { putFacts, predicates, query, select, rows, cursor, setCursor, clear };
+  return {
+    putFacts,
+    predicates,
+    query,
+    count,
+    aggregate,
+    entityLabels,
+    statuses,
+    select,
+    rows,
+    cursor,
+    setCursor,
+    clear,
+  };
 };
 
 /** Storage that runs its own transactions, as every `@dxos/sql-sqlite/SqlStorage` database does. */
@@ -281,6 +378,10 @@ export const makeMemory = (): FactStoreApi => {
     putFacts: (facts) => get.pipe(Effect.flatMap((opened) => opened.putFacts(facts))),
     predicates: () => get.pipe(Effect.flatMap((opened) => opened.predicates())),
     query: (semanticQuery) => get.pipe(Effect.flatMap((opened) => opened.query(semanticQuery))),
+    count: (semanticQuery) => get.pipe(Effect.flatMap((opened) => opened.count(semanticQuery))),
+    aggregate: (spec) => get.pipe(Effect.flatMap((opened) => opened.aggregate(spec))),
+    entityLabels: (keys) => get.pipe(Effect.flatMap((opened) => opened.entityLabels(keys))),
+    statuses: () => get.pipe(Effect.flatMap((opened) => opened.statuses())),
     select: (sparql) => get.pipe(Effect.flatMap((opened) => opened.select(sparql))),
     rows: (sparql) => get.pipe(Effect.flatMap((opened) => opened.rows(sparql))),
     cursor: (source) => get.pipe(Effect.flatMap((opened) => opened.cursor(source))),

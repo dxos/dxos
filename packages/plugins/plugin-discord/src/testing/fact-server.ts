@@ -20,7 +20,7 @@ import { basename, dirname, join } from 'node:path';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
-import { serveFactStore } from '@dxos/pipeline-rdf/testing';
+import { serveFactStore } from '@dxos/pipeline-rdf/testing/server';
 
 const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
 const port = Number(process.env.DISCORD_FACT_SERVER_PORT ?? 7700);
@@ -49,6 +49,10 @@ const program = Effect.gen(function* () {
     putFacts: (facts) => Effect.suspend(() => current.store.putFacts(facts)),
     predicates: () => Effect.suspend(() => current.store.predicates()),
     query: (query) => Effect.suspend(() => current.store.query(query)),
+    count: (query) => Effect.suspend(() => current.store.count(query)),
+    aggregate: (aggregate) => Effect.suspend(() => current.store.aggregate(aggregate)),
+    entityLabels: (keys) => Effect.suspend(() => current.store.entityLabels(keys)),
+    statuses: () => Effect.suspend(() => current.store.statuses()),
     select: (sparql) => Effect.suspend(() => current.store.select(sparql)),
     rows: (sparql) => Effect.suspend(() => current.store.rows(sparql)),
     cursor: (source) => Effect.suspend(() => current.store.cursor(source)),

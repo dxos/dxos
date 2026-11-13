@@ -22,7 +22,33 @@ const SemanticQuery = Schema.Struct({
   entity: Schema.optional(Schema.String),
   source: Schema.optional(Schema.String),
   minConfidence: Schema.optional(Schema.Number),
+  current: Schema.optional(Schema.Boolean),
+  limit: Schema.optional(Schema.Number),
 });
+
+const FactDimension = Schema.Literals([
+  'predicate',
+  'subject',
+  'object',
+  'entity',
+  'source',
+  'agent',
+  'factuality',
+  'force',
+]);
+
+/** One or two dimensions, as {@link FactGrouping} allows. */
+const FactAggregate = Schema.Struct({
+  by: Schema.Union([Schema.Tuple([FactDimension]), Schema.Tuple([FactDimension, FactDimension])]),
+  scope: Schema.optional(SemanticQuery),
+  limit: Schema.optional(Schema.Number),
+});
+
+const FactGroups = Schema.Array(Schema.Struct({ keys: Schema.Array(Schema.String), count: Schema.Number }));
+
+/** A Map travels as a record: the keys are entity keys and graph IRIs, both strings. */
+const Labels = Schema.Record(Schema.String, Schema.String);
+const Statuses = Schema.Record(Schema.String, Schema.Literals(['active', 'superseded', 'retracted']));
 
 /** Wire form of `Ontology.Entry`, which is a plain type with no schema of its own. */
 const OntologyEntry = Schema.Struct({
@@ -64,8 +90,23 @@ const QueryArgs = Schema.Struct({ query: SemanticQuery });
 const SelectArgs = Schema.Struct({ sparql: Schema.String });
 const CursorArgs = Schema.Struct({ source: Schema.String });
 const SetCursorArgs = Schema.Struct({ source: Schema.String, hash: Schema.String });
+const AggregateArgs = Schema.Struct({ aggregate: FactAggregate });
+const EntityLabelsArgs = Schema.Struct({ keys: Schema.Array(Schema.String) });
 
-const METHODS = ['putFacts', 'predicates', 'query', 'select', 'rows', 'cursor', 'setCursor', 'clear'] as const;
+const METHODS = [
+  'putFacts',
+  'predicates',
+  'query',
+  'count',
+  'aggregate',
+  'entityLabels',
+  'statuses',
+  'select',
+  'rows',
+  'cursor',
+  'setCursor',
+  'clear',
+] as const;
 
 type Method = (typeof METHODS)[number];
 
@@ -118,6 +159,14 @@ export const make = (baseUrl: string): FactStoreApi => {
     putFacts: (facts) => call('putFacts', { facts }, Done).pipe(Effect.asVoid),
     predicates: () => call('predicates', {}, Predicates).pipe(Effect.map((entries) => [...entries])),
     query: (query) => call('query', { query }, Facts).pipe(Effect.map((facts) => [...facts])),
+    count: (query) => call('count', { query }, Schema.Number),
+    aggregate: (aggregate) =>
+      call('aggregate', { aggregate }, FactGroups).pipe(
+        Effect.map((groups) => groups.map((group) => ({ keys: [...group.keys], count: group.count }))),
+      ),
+    entityLabels: (keys) =>
+      call('entityLabels', { keys }, Labels).pipe(Effect.map((labels) => new Map(Object.entries(labels)))),
+    statuses: () => call('statuses', {}, Statuses).pipe(Effect.map((statuses) => new Map(Object.entries(statuses)))),
     select: (sparql) => call('select', { sparql }, Facts).pipe(Effect.map((facts) => [...facts])),
     rows: (sparql) => call('rows', { sparql }, Rows).pipe(Effect.map((rows) => [...rows])),
     cursor: (source) => call('cursor', { source }, Hash).pipe(Effect.map((hash) => hash ?? undefined)),
@@ -172,6 +221,20 @@ const dispatch = (
       return store.predicates();
     case 'query':
       return Schema.decodeUnknownEffect(QueryArgs)(body).pipe(Effect.flatMap(({ query }) => store.query(query)));
+    case 'count':
+      return Schema.decodeUnknownEffect(QueryArgs)(body).pipe(Effect.flatMap(({ query }) => store.count(query)));
+    case 'aggregate':
+      return Schema.decodeUnknownEffect(AggregateArgs)(body).pipe(
+        Effect.flatMap(({ aggregate }) => store.aggregate(aggregate)),
+      );
+    // A Map is not JSON, so both map-valued reads answer with a plain object.
+    case 'entityLabels':
+      return Schema.decodeUnknownEffect(EntityLabelsArgs)(body).pipe(
+        Effect.flatMap(({ keys }) => store.entityLabels(keys)),
+        Effect.map((labels) => Object.fromEntries(labels)),
+      );
+    case 'statuses':
+      return store.statuses().pipe(Effect.map((statuses) => Object.fromEntries(statuses)));
     case 'select':
       return Schema.decodeUnknownEffect(SelectArgs)(body).pipe(Effect.flatMap(({ sparql }) => store.select(sparql)));
     case 'rows':

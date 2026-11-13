@@ -11,6 +11,7 @@ import { AiService } from '@dxos/ai';
 
 import { SemanticIndexError } from '../errors.ts';
 
+export * from './corpus.ts';
 export * from './harness/serialize.ts';
 export * from './harness/generate-facts.ts';
 
@@ -88,4 +89,3 @@ export const countingAiService = (
   );
   return { layer, calls: () => calls };
 };
-export * from './fact-server.ts';
