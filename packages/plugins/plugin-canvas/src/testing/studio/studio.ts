@@ -608,8 +608,8 @@ const routeLinks = (content: ContentMap, model: StudioModel, components: Compone
     // The deck's own waypoints are its own coordinates. A slide this import re-laid out has moved its cards away
     // from them, which is how a wire ends up crossing the slide diagonally; `smart` drops them and lets the canvas
     // route the link between the two shapes it still binds.
-    const waypoints = links === 'smart' ? [] : waypointsOf(route, source, target);
-    if (waypoints.length === 0 && links !== 'smart') {
+    const waypoints = links === 'ortho' ? [] : waypointsOf(route, source, target);
+    if (waypoints.length === 0 && links !== 'ortho') {
       continue;
     }
     const key = findLink(content, edge[0], edge[1]);
@@ -623,14 +623,14 @@ const routeLinks = (content: ContentMap, model: StudioModel, components: Compone
     const ends = route.arrow === 'none' ? start : record.link.ends;
     // Smart: the canvas routes the link itself, so the diagram connector that carried the deck's geometry goes with
     // the route. What stays is the link's own style, which is what the canvas's link renderer reads.
-    if (links === 'smart') {
+    if (links === 'ortho') {
       const { connector: _connector, ...link } = record.link;
       const ports = facingPorts(source, target);
       content[key] = {
         ...record,
         link: {
           ...link,
-          type: 'smart',
+          type: 'ortho',
           source: { ...link.source, port: ports.source },
           target: { ...link.target, port: ports.target },
           ...(route.arrow === 'none' ? { ends } : {}),
@@ -1213,9 +1213,15 @@ const evenColumns = (content: ContentMap, gap: number | undefined, grid: number)
   if (gap === undefined) {
     return 0;
   }
-  const boxes = Object.entries(content).flatMap(([key, record]) =>
+  const all = Object.entries(content).flatMap(([key, record]) =>
     isNodeRecord(record) ? [{ key, node: record.node }] : [],
   );
+  // A label is not a column: a link's caption is a box as wide as its text, laid across the gap it captions, and
+  // taking it for a column of its own is what pushed the Composer window onto its cards. It rides with the column
+  // its centre falls in.
+  const isLabel = ({ node }: (typeof all)[number]) => node.style?.fill === false && node.style?.border === false;
+  const boxes = all.filter((box) => !isLabel(box));
+  const labels = all.filter(isLabel);
   // Columns by centre, within half a card: a frame drawn around a column joins it, where clustering by overlap would
   // weld a column to the frame of the one beside it.
   const widths = boxes.map(({ node }) => node.size.width).sort((first, second) => first - second);
@@ -1245,6 +1251,11 @@ const evenColumns = (content: ContentMap, gap: number | undefined, grid: number)
     columns.filter((other) => other !== column && other.left < column.right && column.left < other.right).length > 1;
   const standing = columns.filter((column) => !overlapping(column));
   const spanning = columns.filter((column) => overlapping(column));
+  // Each label with the column it sits in, so a caption moves with what it captions.
+  for (const label of labels) {
+    const column = columns.find(({ left, right }) => label.node.center.x >= left && label.node.center.x <= right);
+    column?.members.push(label);
+  }
   let moved = 0;
   const shift = (members: typeof boxes, by: number) => {
     if (by === 0) {
@@ -1261,8 +1272,10 @@ const evenColumns = (content: ContentMap, gap: number | undefined, grid: number)
   };
   let edge = onGrid(standing[0]?.left ?? 0, grid);
   for (const column of [...standing].sort((first, second) => first.left - second.left)) {
-    shift(column.members, onGrid(edge - column.left, grid));
-    edge += column.right - column.left + onGrid(gap, grid);
+    // The destination is rounded, not the move: rounding the move leaves a column that started off the grid off it,
+    // and the gap beside it short by what it was out.
+    shift(column.members, onGrid(edge, grid) - column.left);
+    edge = onGrid(edge, grid) + column.right - column.left + onGrid(gap, grid);
   }
   // The columns as they now stand, which is what a spanning shape is centred on.
   const middle = (onGrid(standing[0]?.left ?? 0, grid) + (edge - onGrid(gap, grid))) / 2;
@@ -1392,8 +1405,11 @@ const dropLabels = (content: ContentMap, model: StudioModel): number => {
 /** How a component is drawn: an element of its own kind, or a `Generator` the canvas runs. */
 export type ComponentMode = 'kind' | 'generator';
 
-/** How a link is drawn: along the route the deck recorded, or routed by the canvas between the shapes it binds. */
-export type LinkMode = 'deck' | 'smart';
+/**
+ * How a link is drawn: along the route the deck recorded, or routed by the canvas between the shapes it binds —
+ * `ortho`, so the segments are right angles rather than the curves `smart` draws.
+ */
+export type LinkMode = 'deck' | 'ortho';
 
 /**
  * The component kinds the studio stories register (`testing/studio/*.tsx`). A host that has registered fewer passes
@@ -1501,7 +1517,7 @@ export const seedStudioSlide =
       balance?: boolean;
       /** One gap between every column of the slide, in scene units ({@link evenColumns}). */
       gap?: number;
-      /** How the slide's links are drawn; a slide this import moves takes `smart`, since the deck's routes are stale. */
+      /** How the slide's links are drawn; a slide this import moves takes `ortho`, since the deck's routes are stale. */
       links?: LinkMode;
       /** Frames the slide does not draw, by id ({@link dropFrames}). */
       frames?: readonly string[];
@@ -1532,6 +1548,11 @@ export const seedStudioSlide =
     if (!labels) {
       dropLabels(content, model);
     }
+    // Before the geometry too: a component's regions are kept as the links' targets but drawn by the kind, and a
+    // region left looking like a shape would stand in the way of the columns ({@link evenColumns}).
+    if (components === 'kind') {
+      hideParts(content, model, kinds);
+    }
     const snapped = snapToGrid(content, grid);
     // After the snap and before the routes: a route is taken from the outlines it meets, so the run has to be laid
     // out while they are still what the links will be measured against.
@@ -1551,9 +1572,7 @@ export const seedStudioSlide =
       components === 'generator'
         ? placeGenerators(content, model, generators)
         : placeComponentKinds(content, model, kinds);
-    if (components === 'kind') {
-      hideParts(content, model, kinds);
-    }
+
     const shapes = placeShapes(content, model);
     report?.({
       bounds: contentBounds(content),

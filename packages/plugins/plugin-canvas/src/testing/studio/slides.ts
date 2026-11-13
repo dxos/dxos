@@ -56,8 +56,8 @@ export type StudioSlide = {
   gap?: number;
   /** Frames the slide does not draw, by id. */
   frames?: readonly string[];
-  /** How the slide's links are drawn; a slide this import re-lays out takes `smart`. */
-  links?: 'deck' | 'smart';
+  /** How the slide's links are drawn; a slide this import re-lays out takes `ortho`. */
+  links?: 'deck' | 'ortho';
   /** Every card of the slide is drawn at one size. */
   uniform?: boolean;
   /** A card the slide draws at a size of its own, by its id. */
@@ -79,24 +79,24 @@ const slide = (id: string, source: string, model: string, rest: Omit<StudioSlide
 export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better
   // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
-  slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'smart' }),
+  slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'ortho' }),
   slide('echo-layers', echoLayersSource, echoLayersModel),
   // Every card is a type, so every card is one box; the deck sized each to its own label.
-  slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'smart' }),
+  slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'ortho' }),
   slide('plugins', pluginsSource, pluginsModel, {
     labels: false,
     remap: { chip: 'card' },
     // The deck's header spanned the five columns under it; at a column and a half it reads as their parent.
     sizes: { plugin: { width: 400, height: 176 } },
     gap: 96,
-    links: 'smart',
+    links: 'ortho',
   }),
   // The deck placed each side column where its content ended; balanced, the window sits in the middle of the two.
-  slide('composer', composerSource, composerModel, { balance: true, links: 'smart' }),
+  slide('composer', composerSource, composerModel, { balance: true, gap: 96, links: 'ortho' }),
   slide('architecture', architectureSource, architectureModel, {
     labels: false,
     gap: 96,
-    links: 'smart',
+    links: 'ortho',
     // The deck sized each card to its own text at a smaller body; at the deck's reading size they need the room,
     // and the slide has it.
     sizes: Object.fromEntries(
@@ -112,7 +112,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     labels: false,
     gap: 96,
     frames: ['subagents'],
-    links: 'smart',
+    links: 'ortho',
   }),
   slide('chat', chatSource, chatModel),
   slide('agent', agentSource, agentModel),
