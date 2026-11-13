@@ -58,7 +58,10 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/compute": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:"

@@ -9,3 +9,4 @@ export * from './query-result.ts';
 export * from './registry.ts';
 export * from './sql/compile.ts';
 export { SqliteGraph } from './graph.ts';
+export * from './serializer.ts';

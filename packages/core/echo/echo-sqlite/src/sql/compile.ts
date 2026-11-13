@@ -175,11 +175,24 @@ WHERE r.targetDXN LIKE ${`${LOCAL_REF}%`} AND ${this.#visible('t', deleted)} GRO
         const property =
           query.property === null ? raw('') : sql` AND r.propPathNormalized = ${propPath(query.property)}`;
         const typename = query.typename === null ? raw('') : sql` AND ${this.#typename('s', query.typename)}`;
+        const referrer = sql`${this.#spaceIn('s')} AND ${this.#reachable('s')} AND ${this.#visible('s', deleted)}${typename}`;
         // `reverseRef` keys targets by their space-less form, so the referrer's space is checked on its row.
-        return this.#cte(sql`SELECT s.recordId AS rid, s.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+        const branches = [
+          sql`SELECT s.recordId AS rid, s.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
 CROSS JOIN reverseRef r INDEXED BY idx_reverse_ref_target ON r.targetDXN = ${LOCAL_REF} || a.id${property}
 CROSS JOIN objectMeta s ON s.recordId = r.recordId
-WHERE ${this.#spaceIn('s')} AND ${this.#reachable('s')} AND ${this.#visible('s', deleted)}${typename} GROUP BY s.recordId`);
+WHERE ${referrer}`,
+        ];
+        // A meta key names an entity by DXN, which a ref can point at with no object in the graph.
+        const named = namedKey(query.anchor);
+        if (named) {
+          branches.push(sql`SELECT s.recordId AS rid, s.objectId AS id, 1 AS rank, 0 AS ord FROM reverseRef r INDEXED BY idx_reverse_ref_target
+CROSS JOIN objectMeta s ON s.recordId = r.recordId
+WHERE r.targetDXN = ${named}${property} AND ${referrer}`);
+        }
+        return this.#cte(
+          sql`SELECT rid, MIN(id) AS id, MAX(rank) AS rank, MIN(ord) AS ord FROM (${join(branches, '\nUNION ALL\n')}) GROUP BY rid`,
+        );
       }
 
       case 'relation': {
@@ -844,6 +857,22 @@ const searchTerms = (filter: QueryAST.Filter): string[] => {
     default:
       return [];
   }
+};
+
+/**
+ * The reference key of the entity a `Filter.key` select names: its unversioned DXN, as the reverse
+ * reference index stores a ref to it. Undefined for any other anchor.
+ */
+const namedKey = (anchor: QueryAST.Query): string | undefined => {
+  if (anchor.type !== 'select' || anchor.filter.type !== 'object') {
+    return undefined;
+  }
+  const filter = anchor.filter;
+  if (filter.metaKey === undefined || filter.metaVersion !== undefined || filter.typename !== null) {
+    return undefined;
+  }
+  const dxn = DXN.tryMake(DXN.isDXN(filter.metaKey) ? filter.metaKey : `dxn:${filter.metaKey}`);
+  return dxn ? DXN.make<string>(DXN.getName(dxn)) : undefined;
 };
 
 /** Whether a filter selects by parent, which a feed's items answer through their feed. */

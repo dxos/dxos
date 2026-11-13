@@ -82,7 +82,15 @@ export class AutomergeFeedSource implements IndexDataSource {
       }
       const docs = yield* this.#docs.load([...updatedAt.keys()]);
       const objects: IndexerObject[] = [];
+      const sql = yield* SqlClient.SqlClient;
       for (const [documentId, doc] of docs) {
+        // Every change the document holds; ones recorded before are ignored.
+        for (const meta of A.getChangesMetaSince(doc, [])) {
+          if (meta.time > 0) {
+            yield* sql`INSERT OR IGNORE INTO echo_sqlite_changes (spaceId, objectId, hash, actor, seq, time, ops)
+              VALUES (${spaceId}, ${documentId}, ${meta.hash}, ${meta.actor}, ${meta.seq}, ${meta.time * 1000}, ${meta.maxOp - meta.startOp + 1})`;
+          }
+        }
         for (const [objectId, structure] of Object.entries(doc.objects ?? {})) {
           objects.push({
             spaceId,

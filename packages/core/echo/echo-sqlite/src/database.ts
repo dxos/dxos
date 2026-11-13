@@ -51,8 +51,9 @@ import { UnsupportedOperationError } from './errors.ts';
 import { DatabaseRefResolver, type EntitySource, SqliteGraph } from './graph.ts';
 import { ObjectStore, type StoredEntity } from './object-store.ts';
 import { LiveQueryResult, type ResultItem, asItem } from './query-result.ts';
-import { localEntityId, toRecord } from './record.ts';
+import { type EntityRecord, localEntityId, toRecord } from './record.ts';
 import { SimpleRegistry, matchRegistry } from './registry.ts';
+import { compileChanges, isChangesQuery } from './sql/changes.ts';
 import { type CompiledQuery, type GroupedShape, compileQuery, versionRangeKey, versionRanges } from './sql/compile.ts';
 
 export type OpenOptions = {
@@ -72,6 +73,12 @@ export type OpenOptions = {
    * registry, and a query may read their spaces. Without it the database has a graph of its own.
    */
   graph?: SqliteGraph;
+
+  /**
+   * Whether this file positions feed blocks itself, as the authority of a space no server syncs; by
+   * default the space's authority positions them.
+   */
+  assignPositions?: boolean;
 };
 
 /**
@@ -108,7 +115,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   readonly #registry: SimpleRegistry;
   readonly #resolver: DatabaseRefResolver;
   readonly #graph: SqliteGraph;
-  readonly #unregister: CleanupFn;
+  #unregister: CleanupFn;
 
   /** The working set: one live instance per id while anything outside holds it. */
   readonly #live = new Map<string, WeakRef<Entity.Unknown>>();
@@ -120,6 +127,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   /** Keyed by the entity so a subscription never keeps its entity alive. */
   readonly #subscriptions = new WeakMap<Entity.Unknown, CleanupFn>();
   readonly #hydrating = new Map<string, Promise<Entity.Unknown | undefined>>();
+  /** The states an object passed through since its last write, one per edit. */
+  readonly #versions = new Map<string, EntityRecord[]>();
   /** The feed each live feed item is appended to. */
   readonly #items = new WeakMap<Entity.Unknown, FeedTarget>();
   /** Items removed from their feed: their edits are not written anywhere. */
@@ -170,7 +179,18 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     this.#registry = this.#graph.registry;
     this.#registry.add([Type.Type, ...types].filter((type) => !this.#registry.list().includes(type)));
     this.#resolver = new DatabaseRefResolver(this);
-    this.#unregister = this.#graph.register(this, this.#resolver);
+    this.#unregister = this.#join();
+  }
+
+  /** Joins the graph and follows its registry; the cleanup leaves both. */
+  #join(): CleanupFn {
+    const unregister = this.#graph.register(this, this.#resolver);
+    // A registry-scoped query answers from the shared registry, so a change there re-runs queries.
+    const unsubscribe = this.#registry.changed.on(() => this.#committed.emit(new Set([ANY_TYPE])));
+    return () => {
+      unregister();
+      unsubscribe();
+    };
   }
 
   /**
@@ -184,7 +204,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       Effect.gen(function* () {
         const context = yield* Effect.context<SqlClient.SqlClient>();
         const spaceId = options.spaceId ?? SpaceId.random();
-        const store = yield* ObjectStore.open(spaceId);
+        const store = yield* ObjectStore.open(spaceId, { assignPositions: options.assignPositions });
         // Blocks a previous session appended but did not index (it stopped between the two) are indexed now.
         yield* store.index();
         const db = new SqliteDatabase(
@@ -271,6 +291,18 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
    */
   explain(query: Query.Any | Filter.Any): Promise<string[]> {
     return this.#run(this.#store.explain(this.compile(query)));
+  }
+
+  /**
+   * Reopens a closed database: it rejoins its graph and resumes writing. Objects held from before
+   * stay live.
+   */
+  async open(): Promise<void> {
+    if (!this.#closed) {
+      return;
+    }
+    this.#closed = false;
+    this.#unregister = this.#join();
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
@@ -382,6 +414,12 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     if (cached) {
       return cached;
     }
+    if (isChangesQuery(ast)) {
+      const changes = this.#changesQuery(ast);
+      this.#queries.set(key, new WeakRef(changes));
+      this.#queryFinalizer.register(changes, key);
+      return changes;
+    }
     const scopes = ast.type === 'from' && ast.from._tag === 'scope' ? ast.from.scopes : undefined;
     const fromRegistry = scopes?.some((scope) => scope._tag === 'registry' && scope.location === 'local') ?? false;
     // No scope is every accessible space (`'all-accessible-spaces'`).
@@ -439,7 +477,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   async #flushWrites(): Promise<void> {
     // A failed batch is requeued without rescheduling, so flushing is what retries it.
     this.#writeError = undefined;
-    if (this.#dirty.size > 0 || this.#purged.size > 0) {
+    if (this.#dirty.size > 0 || this.#purged.size > 0 || this.#tombstones.size > 0) {
       this.#schedule();
     }
     // Let the microtask that batches the current turn's writes enqueue them first.
@@ -690,6 +728,12 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     if (Entity.getDatabase(feed) === undefined) {
       this.#attach(feed);
     }
+    const resident = this.#live.get(item.id)?.deref();
+    if (resident && resident !== item && this.#items.get(resident)?.feedId === feed.id) {
+      // Appending an id the feed holds updates the live item in place, so holders of it see the state.
+      this.#replaceState(resident, Entity.toJSON(item));
+      return;
+    }
     this.#detached.delete(item);
     this.#tombstones.delete(item.id);
     if (Entity.isDeleted(item)) {
@@ -754,10 +798,33 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         const owner =
           row.spaceId === undefined || row.spaceId === this.#spaceId ? this : this.#graph.getSource(row.spaceId);
         const entity = owner === this ? await this.#hydrate(row) : await owner?.hydrateStored(row);
+        if (entity && owner === this && row.queueId) {
+          this.#catchUpItem(entity, row);
+        }
         return entity ? asItem(entity, row.rank) : undefined;
       }),
     );
     return items.filter((item): item is ResultItem => item !== undefined);
+  }
+
+  /**
+   * A query over the change history of the space's documents: frozen change records, or the records an
+   * aggregate built over them. Re-executes after every write, which adds changes.
+   */
+  #changesQuery(ast: QueryAST.Query): LiveQueryResult<unknown> {
+    return new LiveQueryResult<unknown>({
+      source: 'local',
+      invalidated: this.#committed,
+      execute: async () => {
+        const compiled = compileChanges(ast, { spaceId: this.#spaceId });
+        await this.flush();
+        const records = await this.#run(this.#store.queryChanges(compiled));
+        return records.map((record, index) => ({
+          key: compiled.grouped ? `${index}:${JSON.stringify(record)}` : String(record.key),
+          value: Object.freeze(record),
+        }));
+      },
+    });
   }
 
   /**
@@ -926,6 +993,72 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     }
   }
 
+  /** Takes a stored item's position, which the store stamps on its row once positioned; not an edit. */
+  #stampKeys(entity: Entity.Unknown, stored: StoredEntity): void {
+    const meta = stored.body['@meta'];
+    const keys = meta !== null && typeof meta === 'object' && 'keys' in meta ? meta.keys : undefined;
+    const position = Array.isArray(keys)
+      ? keys.find((key) => key?.source === FeedProtocol.KEY_QUEUE_POSITION)
+      : undefined;
+    const current = Obj.isObject(entity) ? Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION) : [];
+    if (!position || !Obj.isObject(entity) || (current.length === 1 && current[0].id === String(position.id))) {
+      return;
+    }
+    this.#stamping = true;
+    try {
+      Obj.update(entity, (entity) => {
+        const keys = Obj.getMeta(entity).keys;
+        const others = keys.filter((key) => key.source !== FeedProtocol.KEY_QUEUE_POSITION);
+        keys.splice(0, keys.length, ...others, { source: FeedProtocol.KEY_QUEUE_POSITION, id: String(position.id) });
+      });
+    } finally {
+      this.#stamping = false;
+    }
+  }
+
+  /**
+   * Brings a resident item to the row a query read when another writer appended to it since: the
+   * feed's last block wins, as in echo-client. An item with unwritten local edits keeps them.
+   */
+  #catchUpItem(entity: Entity.Unknown, stored: StoredEntity): void {
+    if (this.#dirty.has(entity.id) || !Obj.isObject(entity)) {
+      return;
+    }
+    const current: Record<string, unknown> = { ...Entity.toJSON(entity) };
+    const differs = Object.entries(stored.body).some(
+      ([key, value]) => !key.startsWith('@') && JSON.stringify(current[key]) !== JSON.stringify(value),
+    );
+    if (differs) {
+      this.#stamping = true;
+      try {
+        this.#replaceState(entity, stored.body);
+      } finally {
+        this.#stamping = false;
+      }
+    }
+    this.#stampKeys(entity, stored);
+  }
+
+  /** Replaces a live object's data and meta with an item's JSON, as an edit that is written back. */
+  #replaceState(entity: Entity.Unknown, json: Record<string, unknown>): void {
+    if (!Obj.isObject(entity)) {
+      return;
+    }
+    Obj.update(entity, (entity) => {
+      const target: Record<string, unknown> = entity;
+      for (const key of Object.keys(target)) {
+        if (key !== 'id' && !Object.hasOwn(json, key)) {
+          delete target[key];
+        }
+      }
+      for (const [key, value] of Object.entries(json)) {
+        if (key !== 'id' && !key.startsWith('@')) {
+          target[key] = structuredClone(value);
+        }
+      }
+    });
+  }
+
   /**
    * Sets a live entity's state to a stored body, as the change of another writer. The change is
    * observed like a local edit, and its write finds nothing to change in the document.
@@ -1021,6 +1154,12 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     const entity = this.#live.get(id)?.deref();
     if (entity) {
       this.#adoptReferences(entity);
+      if (!this.#items.has(entity) && !this.#closed) {
+        // Each edit becomes its own document change, as echo-client writes them, so history keeps it.
+        const versions = this.#versions.get(id) ?? [];
+        versions.push(toRecord(entity, this.#spaceId));
+        this.#versions.set(id, versions);
+      }
       this.#markDirty(entity);
     }
   }
@@ -1079,7 +1218,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       this.#dirty = new Map();
       this.#purged.clear();
       this.#deletionChanged = false;
-      if (batch.size === 0 && purged.length === 0) {
+      if (batch.size === 0 && purged.length === 0 && this.#tombstones.size === 0) {
         return;
       }
       const tombstones = [...this.#tombstones];
@@ -1102,10 +1241,20 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         entry.json.push({ id, '@deleted': true });
         items.set(target.feedId, entry);
       }
-      const records = documents.map((entity) => ({
-        ...toRecord(entity, this.#spaceId),
-        heads: this.#heads.get(entity),
-      }));
+      const records = documents.flatMap((entity) => {
+        const current = toRecord(entity, this.#spaceId);
+        const versions = this.#versions.get(entity.id) ?? [];
+        this.#versions.delete(entity.id);
+        const last = versions.at(-1);
+        if (!last || JSON.stringify(last.body) !== JSON.stringify(current.body)) {
+          versions.push(current);
+        }
+        // Only the first edit is made at the heads the object was read at; the rest follow it.
+        return versions.map((version, index) => ({
+          ...version,
+          heads: index === 0 ? this.#heads.get(entity) : undefined,
+        }));
+      });
       const itemTypes = [...batch.values()]
         .filter((entity) => this.#items.has(entity))
         .map((entity) => Entity.getTypeURI(entity) ?? '');
@@ -1137,6 +1286,16 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
           // their live objects; an object this batch wrote unmerged already shows its document.
           const current = new Set([...results].filter(([, result]) => !result.merged).map(([id]) => id));
           await this.#refreshStale([...indexed].filter((id) => !current.has(id)));
+          // An appended item learns its block id and position from the row its block indexed into.
+          for (const entity of batch.values()) {
+            const target = this.#items.get(entity);
+            if (target) {
+              const stored = await this.#run(this.#store.loadItem(target.feedId, entity.id));
+              if (stored) {
+                this.#stampKeys(entity, stored);
+              }
+            }
+          }
           // Deletion cascades and purges reach rows of any type, so they invalidate every query.
           const everything = deletionChanged || purged.length > 0;
           this.#committed.emit(

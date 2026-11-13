@@ -161,7 +161,11 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
   }
 
   subscribe(callback?: (query: QueryResult.QueryResult<T>) => void, opts?: QueryResult.SubscriptionOptions): CleanupFn {
-    const listener = callback ?? (() => {});
+    let called = false;
+    const listener = (query: QueryResult.QueryResult<T>) => {
+      called = true;
+      callback?.(query);
+    };
     this.#listeners.add(listener);
     if (this.#listeners.size === 1) {
       this.#unsubscribe = this.#invalidated.on((typenames) => {
@@ -172,7 +176,18 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
       void this.#refresh().catch((error) => log.catch(error));
     }
     if (opts?.fire) {
-      listener(this);
+      if (this.#results !== undefined) {
+        listener(this);
+      } else {
+        // Fired with the first results, as echo-client fires, unless they already notified it.
+        void this.#refresh()
+          .then(() => {
+            if (!called && this.#listeners.has(listener)) {
+              listener(this);
+            }
+          })
+          .catch((error) => log.catch(error));
+      }
     }
     return () => {
       this.#listeners.delete(listener);

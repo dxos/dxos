@@ -129,7 +129,9 @@ export class DocStore {
         };
         const current = A.getHeads(before);
         const behind = heads !== undefined && heads.length > 0 && !sameHeads(heads, current);
-        const after = behind ? A.changeAt(before, [...heads], edit).newDoc : A.change(before, edit);
+        // Stamped with the time, which change history reports; a change without one reads as clockless.
+        const options = { time: Math.floor(Date.now() / 1000) };
+        const after = behind ? A.changeAt(before, [...heads], options, edit).newDoc : A.change(before, options, edit);
         const chunk = A.saveIncremental(after);
         if (chunk.byteLength > 0) {
           messages.push({
@@ -140,7 +142,8 @@ export class DocStore {
           });
         }
         written.set(id, after);
-        results.set(id, { heads: A.getHeads(after), merged: behind });
+        // An object written in several edits merged if any of them did.
+        results.set(id, { heads: A.getHeads(after), merged: behind || (results.get(id)?.merged ?? false) });
       }
       if (messages.length > 0) {
         const blocks = yield* this.#feedStore.appendLocal(messages);

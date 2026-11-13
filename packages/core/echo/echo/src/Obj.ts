@@ -961,7 +961,16 @@ export const setParent = (entity: Unknown, parent: Any | undefined) => {
   }
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
-  entity[internal.ParentId] = parent;
+  // The parent is part of the object's state, so setting it notifies subscribers like any edit: in a
+  // change context of its own unless the caller's `Obj.update` already holds one (which notifies on exit).
+  if (internal.isInChangeContext(getProxyTarget(entity))) {
+    entity[internal.ParentId] = parent;
+  } else {
+    internal.change(entity, (mutable) => {
+      assumeType<internal.InternalObjectProps>(mutable);
+      mutable[internal.ParentId] = parent;
+    });
+  }
   return entity;
 };
 

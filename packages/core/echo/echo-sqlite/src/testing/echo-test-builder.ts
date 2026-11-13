@@ -42,7 +42,13 @@ export class EchoTestBuilder implements AsyncDisposable {
   }
 
   async createPeer(options: EchoTestPeerOptions = {}): Promise<EchoTestPeer> {
-    return new EchoTestPeer(this.#builder.createPeer({ types: options.types, path: options.storagePath }));
+    return new EchoTestPeer(
+      this.#builder.createPeer({
+        types: options.types,
+        path: options.storagePath,
+        assignPositions: options.assignQueuePositions,
+      }),
+    );
   }
 
   /**
@@ -80,7 +86,8 @@ export class EchoTestPeer implements AsyncDisposable {
     return this.#peer;
   }
 
-  async createDatabase(spaceKey: PublicKey = PublicKey.random()): Promise<SqliteDatabase> {
+  /** `_options` are echo-client's schema-loading switches, which echo-sqlite has no counterpart for. */
+  async createDatabase(spaceKey: PublicKey = PublicKey.random(), _options?: object): Promise<SqliteDatabase> {
     return this.openDatabase(spaceKey);
   }
 

@@ -14,6 +14,7 @@ import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import init from './migrations/0001_init.sql?raw';
 import feedStorage from './migrations/0002_feed_storage.sql?raw';
+import changes from './migrations/0003_changes.sql?raw';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import { ObjectStore } from './object-store.ts';
 
@@ -33,7 +34,7 @@ const applied = Effect.gen(function* () {
 describe('echo-sqlite migrations', () => {
   // A migration may run against a database that already holds its tables; the clause is what makes it a no-op.
   test('every CREATE in a migration is idempotent', () => {
-    const bare = [init, feedStorage]
+    const bare = [init, feedStorage, changes]
       .flatMap((migration) => SqlMigrations.splitStatements(migration))
       .filter((statement) => /^CREATE\s/i.test(statement))
       .filter(

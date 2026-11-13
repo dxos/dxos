@@ -30,7 +30,16 @@
       "path": "../../../common/sql-sqlite"
     },
     {
+      "path": "../../../common/test-utils"
+    },
+    {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/types"
+    },
+    {
+      "path": "../../compute/compute"
     },
     {
       "path": "../../protocols"

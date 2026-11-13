@@ -20,6 +20,7 @@ import { AUTOMERGE_NAMESPACE, DocStore, type WriteResult, documentFeedId } from 
 import { ItemFeedSource } from './feed-source.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import { type EntityRecord } from './record.ts';
+import { type CompiledChanges } from './sql/changes.ts';
 import { type CompiledQuery } from './sql/compile.ts';
 
 /**
@@ -78,10 +79,10 @@ export class ObjectStore {
   readonly #source: AutomergeFeedSource;
   readonly #items: ItemFeedSource;
 
-  private constructor(spaceId: SpaceId, sql: SqlClient.SqlClient, actorId: string) {
+  private constructor(spaceId: SpaceId, sql: SqlClient.SqlClient, actorId: string, assignPositions: boolean) {
     this.#spaceId = spaceId;
-    // A replica: positions come from the space's authority, never from this file.
-    this.#feedStore = new FeedStore({ localActorId: actorId, assignPositions: false });
+    // A replica, whose positions come from the space's authority, unless this file is the authority.
+    this.#feedStore = new FeedStore({ localActorId: actorId, assignPositions });
     this.#docs = new DocStore(this.#feedStore, spaceId);
     this.#engine = new IndexEngine(sql);
     this.#source = new AutomergeFeedSource({ feedStore: this.#feedStore, docs: this.#docs, spaceId, sql });
@@ -91,7 +92,7 @@ export class ObjectStore {
   /**
    * Applies pending migrations (feed store, indexer, then this store's) and opens the store.
    */
-  static open(spaceId: SpaceId): Store<ObjectStore> {
+  static open(spaceId: SpaceId, options: { assignPositions?: boolean } = {}): Store<ObjectStore> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // The feed store and the indexer share the file; their migrations come first, ours build on them.
@@ -99,7 +100,7 @@ export class ObjectStore {
       yield* new IndexEngine(sql).migrate();
       yield* migrate();
       const actorId = yield* deviceActorId();
-      return new ObjectStore(spaceId, sql, actorId);
+      return new ObjectStore(spaceId, sql, actorId, options.assignPositions ?? false);
     }).pipe(Effect.withSpan('ObjectStore.open'));
   }
 
@@ -122,6 +123,23 @@ WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
       );
       return rows.map(parseRow);
     }).pipe(Effect.withSpan('ObjectStore.loadTypes'));
+  }
+
+  /**
+   * Reads one feed item by its feed and id.
+   */
+  loadItem(feedId: string, id: string): Store<StoredEntity | undefined> {
+    const spaceId = this.#spaceId;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql.unsafe<BodyRow>(
+        `SELECT m.objectId AS id, s.snapshot AS body, s.version AS version, m.createdAt, m.updatedAt, m.queueId, m.queueNamespace
+FROM objectMeta m CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND m.queueId = ? AND m.objectId = ?`,
+        [spaceId, feedId, id],
+      );
+      return rows.length > 0 ? parseRow(rows[0]) : undefined;
+    });
   }
 
   /**
@@ -150,6 +168,26 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
       const rows = yield* sql.unsafe<BodyRow>(compiled.sql, compiled.params);
       return rows.map(parseRow);
     }).pipe(Effect.withSpan('ObjectStore.query'));
+  }
+
+  /**
+   * Runs a compiled change query: change rows, or, for an aggregate, each group's record as JSON.
+   */
+  queryChanges(compiled: CompiledChanges): Store<Record<string, unknown>[]> {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql.unsafe<Record<string, unknown>>(compiled.sql, compiled.params);
+      return compiled.grouped
+        ? rows.map((row) => JSON.parse(String(row.record)))
+        : rows.map((row) => ({
+            key: row.hash,
+            source: 'document',
+            time: row.time,
+            actor: row.actor,
+            seq: row.seq,
+            ops: row.ops,
+          }));
+    }).pipe(Effect.withSpan('ObjectStore.queryChanges'));
   }
 
   /**

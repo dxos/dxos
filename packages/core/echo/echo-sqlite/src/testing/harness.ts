@@ -39,8 +39,12 @@ export class TestBuilder implements AsyncDisposable {
   /**
    * A peer with its own database file; `types` are registered on every database it opens.
    */
-  createPeer(options: { types?: readonly Type.AnyEntity[]; path?: string } = {}): TestPeer {
-    const peer = new TestPeer(options.path ?? join(this.#dir, `peer-${this.#peers.length}.db`), options.types ?? []);
+  createPeer(options: { types?: readonly Type.AnyEntity[]; path?: string; assignPositions?: boolean } = {}): TestPeer {
+    const peer = new TestPeer(
+      options.path ?? join(this.#dir, `peer-${this.#peers.length}.db`),
+      options.types ?? [],
+      options.assignPositions ?? false,
+    );
     this.#peers.push(peer);
     return peer;
   }
@@ -72,6 +76,8 @@ export class TestBuilder implements AsyncDisposable {
 export class TestPeer {
   readonly #path: string;
   readonly #types: readonly Type.AnyEntity[];
+  /** Whether the peer's file positions feed blocks itself, with no authority to sync with. */
+  readonly #assignPositions: boolean;
   #runtime: Runtime | undefined;
   #scope: Scope.Closeable | undefined;
   /** The graph of the databases open on this peer's file, as echo-client's client graph spans them. */
@@ -79,9 +85,10 @@ export class TestPeer {
   readonly #syncs: SpaceSync[] = [];
   #lastSpaceId: SpaceId | undefined;
 
-  constructor(path: string, types: readonly Type.AnyEntity[]) {
+  constructor(path: string, types: readonly Type.AnyEntity[], assignPositions: boolean) {
     this.#path = path;
     this.#types = types;
+    this.#assignPositions = assignPositions;
   }
 
   get path(): string {
@@ -105,9 +112,12 @@ export class TestPeer {
     const scope = this.#scope;
     this.#lastSpaceId = spaceId;
     return this.#runtime.runPromise(
-      SqliteDatabase.open({ spaceId, types: [...this.#types, ...(options.types ?? [])], graph: this.graph }).pipe(
-        Effect.provideService(Scope.Scope, scope),
-      ),
+      SqliteDatabase.open({
+        spaceId,
+        types: [...this.#types, ...(options.types ?? [])],
+        graph: this.graph,
+        assignPositions: this.#assignPositions,
+      }).pipe(Effect.provideService(Scope.Scope, scope)),
     );
   }
 
