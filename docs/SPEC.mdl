@@ -76,10 +76,10 @@ always knows where to look.
 template landing: The front door
   purpose: Answer what ECHO is and why it differs, in one screen, then route the reader.
   parts:
-    - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip, two actions, ECHO background art
-    - Sample: the smallest complete example
+    - Hero: eyebrow, one-line claim, one-paragraph mechanism, install chip with a copy button, two actions, the ECHO icon at a bounded size beside the copy, its rays fading out around it
+    - Sample: the smallest complete example, a card per step with one sentence each, over one code frame
     - Guarantees: four cards in one row, falling to two rows of two and then one column, each a behavior with its spec citation
-    - Live: the live demos [F-7.5]
+    - Live: the live demos in one frame, a tab each [F-7.5]
     - Architecture: one diagram of the packages
     - Routes: cards into the learning path, concepts and reference
 ```
@@ -88,9 +88,9 @@ template landing: The front door
 template narrative: An argument
   purpose: Explain why, in the order of the Effect page "Why Effect?".
   parts:
-    - Title and one-paragraph answer that pitches the section on its own [D-275]
+    - Title and one-paragraph answer that pitches the section on its own [D-280]
     - The pattern: the smallest complete example and an anatomy strip of its key signature
-    - Comparison: the same task against the strongest alternative, side by side [D-275]
+    - Comparison: the same task against the strongest alternative, side by side [D-280]
     - Practical problems: one H3 per problem, each with its mechanism and spec citation
     - Closing: where to go next
 ```
@@ -148,7 +148,7 @@ template home: The docs home
   purpose: Show every section at once and route the reader into one.
   parts:
     - Title and a short, neutral paragraph on DXOS as a whole, not a list of its sections, with ECHO named as the usual start
-    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-267]
+    - Grid: one card per section, four columns with ECHO two wide, falling to two columns and then one; each card is the section's hero art with its mark and name, and links to the section's Overview [D-272]
 ```
 
 ## Site map
@@ -166,9 +166,9 @@ page docs-home: DXOS Docs
   template: home
   status: spike
   covers:
-    - A neutral paragraph under the title on DXOS as a whole: independent pieces, each usable on its own, that build on each other and are stronger together, with ECHO as the usual start [D-267]
-    - The cards in the order ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; where there are four columns, ECHO spans two, so the seven cards fill two rows [D-267]
-    - Each card's art follows the page's theme, as the Overview heroes do [D-247]
+    - A neutral paragraph under the title on DXOS as a whole: independent pieces, each usable on its own, that build on each other and are stronger together, with ECHO as the usual start [D-272]
+    - The cards in the order ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; where there are four columns, ECHO spans two, so the seven cards fill two rows [D-272]
+    - Each card's art follows the page's theme, as the Overview heroes do [D-253]
 ```
 
 ## ECHO
@@ -185,7 +185,7 @@ page welcome: Overview
   status: spike
   covers:
     - What ECHO is in one paragraph: a typed, local-first, peer-to-peer object graph for TypeScript
-    - The model in four points: CRDT replication, peers that sync directly or through a server, concurrent writers, offline writes that merge [D-275]
+    - The model in four points: CRDT replication, peers that sync directly or through a server, concurrent writers, offline writes that merge [D-280]
     - What DXOS is, in two sentences, with ECHO as the lead
     - Spaces hold data and objects are its unit, with links to both concept pages
     - How these docs are organized: the ECHO, HALO and PLEX sections, and in each the learning path, core
@@ -201,7 +201,7 @@ page why-echo: Why ECHO?
   template: narrative
   status: spike
   covers:
-    - Opening: a typed object graph on the user's devices that apps and agents read alike [D-275]
+    - Opening: a typed object graph on the user's devices that apps and agents read alike [D-280]
     - Agents need memory they can query, and a schema they can inspect
     - External data needs one graph to meet in, and in an app built from plugins every plugin codes against that graph
     - The ECHO pattern: the smallest complete example, then the same task without and with ECHO
@@ -946,7 +946,7 @@ page halo-spaces-membership: Spaces and membership
     - The membership policy: invite or locked
     - Membership is signed delegations and revocations that converge with no server; a member revokes only those it has causal seniority over, an admin anyone
     - The group key, which changes with membership and which pull members relay without reading
-    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-239]
+    - EDGE as a pull member; more than pull makes the space readable on EDGE, with data and keys stored apart, as the trade-off for EDGE's services [D-245]
     - Links to ECHO's Spaces and databases for data and replication
 ```
 ```mdl
@@ -1111,9 +1111,9 @@ page halo-llms-txt: llms.txt
 
 MESH is DXOS's peer networking: how a device finds the other devices in a space and carries replication, presence
 and invitations to them. MESH multiplexes transports. A direct WebRTC link to a peer and the WebSocket to EDGE are
-both transports it carries the same protocols over [D-221]. The section has no learning path, API or guides; it
-explains the architecture and how ECHO and HALO use it [D-220]. Swarms, signaling and ICE/TURN are MESH's pages;
-EDGE's pages cover EDGE as a server and link here [D-222].
+both transports it carries the same protocols over [D-227]. The section has no learning path, API or guides; it
+explains the architecture and how ECHO and HALO use it [D-226]. Swarms, signaling and ICE/TURN are MESH's pages;
+EDGE's pages cover EDGE as a server and link here [D-228].
 
 ### Start here
 
@@ -1126,7 +1126,7 @@ page mesh-overview: Overview
   template: concept
   status: spike
   covers:
-    - What MESH is in one paragraph, on its own: devices that share a topic find each other and run protocols over direct links, with several transports at once [D-221], [D-275]
+    - What MESH is in one paragraph, on its own: devices that share a topic find each other and run protocols over direct links, with several transports at once [D-227], [D-280]
     - A diagram of devices, direct WebRTC links between peers, and EDGE as both the signaling server and a transport
     - A table of where ECHO and HALO use MESH: space swarms for replication, presence, device sync and invitations
     - How these pages are organized, and where to go next: Why MESH?, then Architecture
@@ -1140,9 +1140,9 @@ page why-mesh: Why MESH?
   template: narrative
   status: spike
   covers:
-    - Direct links give lower latency between nearby devices, keep working when the internet or a server is out of reach, and carry data that reaches no server unless WebRTC has to fall back to a TURN relay [D-249], [D-275]
+    - Direct links give lower latency between nearby devices, keep working when the internet or a server is out of reach, and carry data that reaches no server unless WebRTC has to fall back to a TURN relay [D-254], [D-280]
     - A server is a transport too: it reaches devices that are rarely online together and peers no direct link reaches; in DXOS that server is EDGE, for the spaces that replicate through it
-    - Today ECHO replicates each space over both at once, peer links and EDGE (`subductionReplicator`, `feedReplicator`), and the pages say so plainly [D-221]
+    - Today ECHO replicates each space over both at once, peer links and EDGE (`subductionReplicator`, `feedReplicator`), and the pages say so plainly [D-227]
 ```
 
 ### Core concepts
@@ -1158,7 +1158,7 @@ page mesh-architecture: Architecture
   covers:
     - The layers, bottom to top: transport, Teleport, signaling, swarm, extensions, in one diagram
     - Which package holds each layer in `packages/core/mesh`: `network-manager`, `teleport`, `messaging`, the `teleport-extension-*` packages and `edge-client`
-    - The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of these pages [D-224]
+    - The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of these pages [D-230]
 ```
 ```mdl
 page mesh-signaling: Signaling and discovery
@@ -1172,7 +1172,7 @@ page mesh-signaling: Signaling and discovery
     - The signal manager, and EDGE as the signaling server over the device's WebSocket; the in-memory signal manager in tests
     - Swarm topics, keyed by space; joining and leaving a swarm; the offers and answers peers exchange
     - ICE servers and TURN providers for peers behind NAT
-    - Configuration: `runtime.services.ice`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures.signaling` [D-225]
+    - Configuration: `runtime.services.ice`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures.signaling` [D-231]
 ```
 ```mdl
 page mesh-swarms: Swarms and topology
@@ -1184,7 +1184,7 @@ page mesh-swarms: Swarms and topology
   status: spike
   covers:
     - A swarm per topic, and the peers in it
-    - The MMST topology: connect enough peers that devices usually stay reachable, not every pair; it does not guarantee a connected swarm, and EDGE covers the gaps [D-252]
+    - The MMST topology: connect enough peers that devices usually stay reachable, not every pair; it does not guarantee a connected swarm, and EDGE covers the gaps [D-257]
     - The fully connected and star topologies, and when each is used
     - The connection limiter
 ```
@@ -1197,9 +1197,9 @@ page mesh-transports: Transports
   template: concept
   status: spike
   covers:
-    - MESH multiplexes transports: the same replication runs over a direct link and over EDGE, and a device uses whichever reaches the peer [D-221]
+    - MESH multiplexes transports: the same replication runs over a direct link and over EDGE, and a device uses whichever reaches the peer [D-227]
     - WebRTC in the browser, TCP in Node, memory in tests, and the EDGE WebSocket
-    - Iroh, a QUIC transport for presence and gossip, in one paragraph marked planned [D-223]
+    - Iroh, a QUIC transport for presence and gossip, in one paragraph marked planned [D-229]
 ```
 ```mdl
 page mesh-teleport: Teleport
@@ -1258,9 +1258,9 @@ page mesh-llms-txt: llms.txt
 
 EDGE is the set of services DXOS runs on Cloudflare Workers: an always-online peer for every space and identity. The
 section explains EDGE's architecture and how ECHO, HALO, MESH and PLEX use it; it has only Start here, Core concepts and
-Resources [D-226]. EDGE can read a space only when the space gives it more than `pull` access; HALO's Spaces and
-membership says so, and EDGE has no page of its own on it [D-239]. DXOS operates EDGE; the pages cover no self-hosting and never link its source [D-231].
-Swarms, signaling and ICE/TURN are MESH's; Connecting covers only the link between a device and EDGE [D-228].
+Resources [D-232]. EDGE can read a space only when the space gives it more than `pull` access; HALO's Spaces and
+membership says so, and EDGE has no page of its own on it [D-245]. DXOS operates EDGE; the pages cover no self-hosting and never link its source [D-237].
+Swarms, signaling and ICE/TURN are MESH's; Connecting covers only the link between a device and EDGE [D-234].
 
 ### Start here
 
@@ -1273,8 +1273,8 @@ page edge-overview: Overview
   template: concept
   status: spike
   covers:
-    - EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers, with a Durable Object per identity and per space [D-275]
-    - One diagram of devices, EDGE and peers, and what goes over each link: each device's WebSocket ends at the Router, which reaches the DB, compute and identity services [D-280]
+    - EDGE is an always-online peer for local-first apps, run by DXOS on Cloudflare Workers, with a Durable Object per identity and per space [D-280]
+    - One diagram of devices, EDGE and peers, and what goes over each link: each device's WebSocket ends at the Router, which reaches the DB, compute and identity services [D-285]
     - A table of where ECHO, HALO, MESH and PLEX use EDGE, each linking its concept page
     - DXOS runs EDGE, and an app points at it with `runtime.services.edge.url`
 ```
@@ -1290,7 +1290,7 @@ page why-edge: Why EDGE?
     - The pattern: a space that syncs between two devices that are never online at the same time
     - Comparison: an app server that owns the data, against an always-online peer that holds a copy
     - Practical problems: devices rarely online together, queries over objects this device has not loaded, recovery when every device is lost, work that runs while you are offline
-    - One line that EDGE reads a space only with more than `pull` access, linking HALO's Spaces and membership [D-239]
+    - One line that EDGE reads a space only with more than `pull` access, linking HALO's Spaces and membership [D-245]
 ```
 
 ### Core concepts
@@ -1304,11 +1304,11 @@ page edge-architecture: Architecture
   template: concept
   status: spike
   covers:
-    - The entry points: each device's WebSocket ends at the Router, and HTTP requests go to the `edge` worker, which forwards each to the service that owns its path [D-280]
+    - The entry points: each device's WebSocket ends at the Router, and HTTP requests go to the `edge` worker, which forwards each to the service that owns its path [D-285]
     - The services, one line each: Router, DB, identity, compute, KMS, hub, AI, blob and registry
     - The Durable Objects per identity and per space, in a diagram
     - The development, preview and production environments, and how an app's config selects one
-    - DXOS operates every environment; there is no self-hosted EDGE [D-231]
+    - DXOS operates every environment; there is no self-hosted EDGE [D-237]
 ```
 ```mdl
 page edge-connecting: Connecting
@@ -1323,7 +1323,7 @@ page edge-connecting: Connecting
     - Authentication: a challenge signed by the device key, with the HALO credential chain that admits the device
     - The router per identity, which delivers messages to the identity's devices
     - The `edgeFeatures` flags; reconnecting, and what works while offline
-    - Swarms, signaling and ICE/TURN link to MESH [D-228]
+    - Swarms, signaling and ICE/TURN link to MESH [D-234]
 ```
 ```mdl
 page edge-replication: Replication and backup
@@ -1376,9 +1376,9 @@ page edge-compute: Compute
   template: concept
   status: spike
   covers:
-    - What compute is: typed operations started by people, agents and triggers, that run in the app, in a worker or on EDGE and read and write the space's objects [D-266], [D-275]
+    - What compute is: typed operations started by people, agents and triggers, that run in the app, in a worker or on EDGE and read and write the space's objects [D-271], [D-280]
     - The workers and Durable Objects that run operations and fire triggers while no device is online, linking Operations, Processes and Triggers
-    - Where agent processes run on EDGE, and the AI service, linking SAGE's Agents and Models [D-270]
+    - Where agent processes run on EDGE, and the AI service, linking SAGE's Agents and Models [D-275]
     - Sandbox builds and the plugin registry that PLEX publishing uses
 ```
 ```mdl
@@ -1406,9 +1406,9 @@ page edge-processes: Processes
   covers:
     - The process manager, and one process per running operation
     - The layer stack: the services a process gets, such as the database, storage and credentials
-    - Local and remote processes: the same operation runs in the app, in a worker or on EDGE, and the app invokes one on EDGE by key [D-271]
-    - Operation code kept as an ECHO object and deployed to EDGE, and the credentials it uses, kept in the space [D-271]
-    - One paragraph on pipelines: an operation that streams a long source, such as a mailbox, uses `@dxos/pipeline` and a saved cursor inside its process [D-272]
+    - Local and remote processes: the same operation runs in the app, in a worker or on EDGE, and the app invokes one on EDGE by key [D-276]
+    - Operation code kept as an ECHO object and deployed to EDGE, and the credentials it uses, kept in the space [D-276]
+    - One paragraph on pipelines: an operation that streams a long source, such as a mailbox, uses `@dxos/pipeline` and a saved cursor inside its process [D-277]
 ```
 ```mdl
 page edge-triggers: Triggers
@@ -1447,7 +1447,7 @@ page edge-configuration: Configuration
   template: reference
   status: spike
   covers:
-    - `runtime.services.edge.url`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures`, with defaults [D-230]
+    - `runtime.services.edge.url`, `runtime.services.iceProviders` and `runtime.client.edgeFeatures`, with defaults [D-236]
     - Links to ECHO's Installation, which uses them
 ```
 ```mdl
@@ -1480,7 +1480,7 @@ SAGE is DXOS's AI layer: models, the skills that tell them how to work, and the 
 works through the same operations a person invokes, reads and writes the same ECHO objects, and keeps its memory as
 ECHO objects too, so what an agent did is data the user owns. Every page starts from ECHO: the objects an agent can
 see and the operations it can call on them. The section has only Start here, Core concepts and Resources, like MESH,
-[D-266], [D-274].
+[D-271], [D-279].
 
 ### Start here
 
@@ -1493,9 +1493,9 @@ page sage-overview: Overview
   template: concept
   status: spike
   covers:
-    - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-275]
+    - What SAGE is in one paragraph, on its own: durable agent processes with an identity of their own, typed tools, skills and any model [D-280]
     - A table of where SAGE runs, in Composer's assistant, in agents on EDGE and behind the MCP server, each linking its concept page
-    - After the table, one sentence each on operations as the agent's actions and on memory as objects in the user's spaces [D-275]
+    - After the table, one sentence each on operations as the agent's actions and on memory as objects in the user's spaces [D-280]
     - Where to go next: Why SAGE?, then Agents
 ```
 ```mdl
@@ -1508,8 +1508,8 @@ page why-sage: Why SAGE?
   status: spike
   covers:
     - The pattern: an agent handed a long task that hibernates, delegates, and resumes when its sub-agents report
-    - Comparison: an agent framework with tools and a memory store, against SAGE, row by row, without claiming the others lack tools or memory [D-275]
-    - Practical problems: work that outlives a session, knowing which agent changed what, waking on events without polling a model, one set of actions for people and agents, a spec that people and agents both work from and check against [D-276], choosing any model
+    - Comparison: an agent framework with tools and a memory store, against SAGE, row by row, without claiming the others lack tools or memory [D-280]
+    - Practical problems: work that outlives a session, knowing which agent changed what, waking on events without polling a model, one set of actions for people and agents, a spec that people and agents both work from and check against [D-281], choosing any model
     - Memory the user owns, as one of the practical problems
     - What SAGE does not do: it does not run the work, which EDGE's compute does, and it does not train models
 ```
@@ -1538,7 +1538,7 @@ page sage-agents: Agents
   template: concept
   status: spike
   covers:
-    - An agent as a process: a turn, the operations it calls, then the next turn, linking EDGE's Processes, with one diagram of a chat, the turn, the operations it calls and the objects they change [D-279]
+    - An agent as a process: a turn, the operations it calls, then the next turn, linking EDGE's Processes, with one diagram of a chat, the turn, the operations it calls and the objects they change [D-284]
     - An agent's identity, linking HALO
     - Agents in Composer's assistant and on EDGE, and one agent delegating to another
     - Hosting an outside agent loop, such as the Claude Agent SDK, with its output kept as ECHO objects
@@ -1578,7 +1578,7 @@ page sage-specs: Specs
   template: concept
   status: spike
   covers:
-    - A spec as `.mdl` text: prose with typed blocks for requirements, operations, features and tests, in the DEUS language [D-276]
+    - A spec as `.mdl` text: prose with typed blocks for requirements, operations, features and tests, in the DEUS language [D-281]
     - Decisions and open questions in the spec's changelog, each attributed to the person or the agent that made it
     - Reviews: per-item verdicts on how far the code meets the spec, with the commit read and the code as evidence
     - QA tests whose steps a person can follow and an agent can run, one operation per step
@@ -1654,9 +1654,9 @@ page app-framework-welcome: Overview
   template: narrative
   status: spike
   covers:
-    - What PLEX is, in one short intro: an app is the plugins it loads, and Composer is the app built on it, where a third-party plugin has the same powers as a built-in one [D-279]
-    - What a reader can build, right after the intro: the four live demos from `/echo`, each with a narrative about the plugins that render it, then anything a built-in plugin can [F-7.10] [D-279]
-    - How it works, in one section: plugins made of modules that contribute capabilities, the two packages, and what a plugin gets for free (ECHO sync, operations and skills as agent tools, TILE's look) [D-275] [D-279]
+    - What PLEX is, in one short intro: an app is the plugins it loads, and Composer is the app built on it, where a third-party plugin has the same powers as a built-in one [D-284]
+    - What a reader can build, right after the intro: the four live demos from `/echo`, each with a narrative about the plugins that render it, then anything a built-in plugin can [F-7.10] [D-284]
+    - How it works, in one section: plugins made of modules that contribute capabilities, the two packages, and what a plugin gets for free (ECHO sync, operations and skills as agent tools, TILE's look) [D-280] [D-284]
     - Where to go next: Why PLEX?, Build with a coding agent, or the learning path
 ```
 
@@ -2188,12 +2188,12 @@ page app-framework-cli: The dx CLI
 
 ## TILE
 
-TILE is DXOS's design system: themed UI components and the tokens behind them [D-240]. Its core is `@dxos/react-ui`,
-and `@dxos/ui-theme` is documented as part of its setup, since nothing renders styled without it [D-232]. The other
-`react-ui-*` packages get one line each in a catalog, and four of them get a guide [D-234]. The learning path builds a
-contacts screen with plain React state and connects it to ECHO only on its last page [D-233]. Live previews on these
-pages are islands rendered in the page, never iframes [D-235]. It has six concept pages and eleven API family
-pages [D-236]. The routes are under `/docs/tile/`.
+TILE is DXOS's design system: themed UI components and the tokens behind them [D-246]. Its core is `@dxos/react-ui`,
+and `@dxos/ui-theme` is documented as part of its setup, since nothing renders styled without it [D-238]. The other
+`react-ui-*` packages get one line each in a catalog, and four of them get a guide [D-240]. The learning path builds a
+contacts screen with plain React state and connects it to ECHO only on its last page [D-239]. Live previews on these
+pages are islands rendered in the page, never iframes [D-241]. It has six concept pages and eleven API family
+pages [D-242]. The routes are under `/docs/tile/`.
 
 ### Start here
 
@@ -2220,7 +2220,7 @@ page why-tile: Why TILE?
   template: narrative
   status: spike
   covers:
-    - Opening: an app whose screens are written by many people, with Composer's plugins as the example [D-275]
+    - Opening: an app whose screens are written by many people, with Composer's plugins as the example [D-280]
     - Themed primitives and semantic tokens, so a plugin never picks a raw color and every plugin follows light and dark
     - Composite components built on zag machines, so focus, keyboard and ARIA roles come with the component
     - One size scale, so a toolbar, a menu and a dialog line up without per-component padding
@@ -2235,8 +2235,8 @@ page tile-build-with-agent: Build with a coding agent
   template: tutorial
   status: spike
   covers:
-    - Links to the `composer-ui` and `composite-components` skills, and where each agent loads skills from [D-242]
-    - No prompt builder for now [D-242]
+    - Links to the `composer-ui` and `composite-components` skills, and where each agent loads skills from [D-248]
+    - No prompt builder for now [D-248]
     - The `/tile/llms-full.txt` file for an agent that reads docs
 ```
 
@@ -2251,7 +2251,7 @@ page tile-the-tile-component: The TILE component
   template: tutorial
   status: spike
   covers:
-    - What a TILE component is: a namespace of parts, themed by the provider, styled with `classNames` [D-242]
+    - What a TILE component is: a namespace of parts, themed by the provider, styled with `classNames` [D-248]
     - The finished contacts screen, running, so the reader sees where the path ends
     - What each page of the path adds, and the folder it goes in
 ```
@@ -2264,11 +2264,11 @@ page tile-learn-installation: Installation
   template: tutorial
   status: spike
   covers:
-    - The packages: `@dxos/react-ui` and its peer `@dxos/ui-theme` [D-242]
+    - The packages: `@dxos/react-ui` and its peer `@dxos/ui-theme` [D-248]
     - The Vite plugins: `ThemePlugin` from `@dxos/ui-theme/plugin` and `IconsPlugin` from `@dxos/vite-plugin-icons`
     - The stylesheets, `Theme.Provider` with `Theme.defaultTx`, and the `translations` resources
     - Dark mode: the `dark` class on the root element, following the system
-    - The first buttons, which follow light and dark [D-233]
+    - The first buttons, which follow light and dark [D-239]
 ```
 ```mdl
 page tile-learn-layout: Lay out a screen
@@ -2323,7 +2323,7 @@ page tile-learn-echo: Connect to ECHO
   template: tutorial
   status: spike
   covers:
-    - `useQuery` for the list and `useObject` for the detail, with the ECHO tutorial's schema [D-233]
+    - `useQuery` for the list and `useObject` for the detail, with the ECHO tutorial's schema [D-239]
     - The edit dialog becomes a schema form, with a link to the Forms guide
 ```
 
@@ -2577,7 +2577,7 @@ page tile-guide-lists: Lists
   template: tutorial
   status: spike
   covers:
-    - `Listbox`, `OrderedList`, and `Tree` over `createStaticTreeModel` [D-234]
+    - `Listbox`, `OrderedList`, and `Tree` over `createStaticTreeModel` [D-240]
 ```
 ```mdl
 page tile-guide-forms: Forms
@@ -2588,7 +2588,7 @@ page tile-guide-forms: Forms
   template: tutorial
   status: spike
   covers:
-    - `Form.Root` over a schema, `include`, and `ObjectForm` for an ECHO object, linked from ECHO's Defining types [D-234]
+    - `Form.Root` over a schema, `include`, and `ObjectForm` for an ECHO object, linked from ECHO's Defining types [D-240]
 ```
 ```mdl
 page tile-guide-menus: Menus and toolbars
@@ -2599,7 +2599,7 @@ page tile-guide-menus: Menus and toolbars
   template: tutorial
   status: spike
   covers:
-    - `MenuBuilder`, `useMenuBuilder`, `ActionToolbar` and `ActionMenu`, and `graphActions` in a plugin, linked to PLEX's App Graph [D-234]
+    - `MenuBuilder`, `useMenuBuilder`, `ActionToolbar` and `ActionMenu`, and `graphActions` in a plugin, linked to PLEX's App Graph [D-240]
 ```
 ```mdl
 page tile-guide-editor: Text editor
@@ -2610,7 +2610,7 @@ page tile-guide-editor: Text editor
   template: tutorial
   status: spike
   covers:
-    - `Editor.Root`, `Editor.View` and `Editor.Toolbar`, the `@dxos/ui-editor` extensions, and the `automerge` binding to an ECHO `Text` [D-234]
+    - `Editor.Root`, `Editor.View` and `Editor.Toolbar`, the `@dxos/ui-editor` extensions, and the `automerge` binding to an ECHO `Text` [D-240]
 ```
 
 ### Resources
@@ -2624,8 +2624,8 @@ page tile-api-reference: API reference
   template: reference
   status: spike
   covers:
-    - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-243]
-    - Typedoc for `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, the packages the guides cover [D-243]
+    - Typedoc for `@dxos/react-ui` and `@dxos/ui-theme` [D-249]
+    - Typedoc for `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, the packages the guides cover [D-249]
 ```
 ```mdl
 page tile-packages: Component packages
@@ -2636,7 +2636,7 @@ page tile-packages: Component packages
   template: reference
   status: spike
   covers:
-    - A catalog of the `react-ui-*` packages, grouped as general purpose and designed for ECHO [D-245]
+    - A catalog of the `react-ui-*` packages, grouped as general purpose and designed for ECHO [D-251]
 ```
 ```mdl
 page tile-glossary: Glossary
@@ -2867,8 +2867,8 @@ feat F-7: Relationship to dxos.org
     when: a reader is on any dxos.org docs page
     then: the header shows the DXOS logo, linking home, and the dxos.org nav (Home, ECHO, Composer,
           Plugins, Blog, Docs); the footer links the same pages, every docs section in the
-          topic switcher's order (ECHO, HALO, MESH, EDGE, SAGE, PLEX, TILE), GitHub and Discord [D-244],
-          [D-269]
+          topic switcher's order (ECHO, HALO, MESH, EDGE, SAGE, PLEX, TILE), GitHub and Discord [D-250],
+          [D-274]
 
   req F-7.2:
     when: a reader looks for ECHO material on dxos.org
@@ -2887,7 +2887,7 @@ feat F-7: Relationship to dxos.org
 
   req F-7.5:
     when: a reader is on `/echo`
-    then: it shows live demos, in order: a collaborative editor with a Mermaid diagram in its document, a table
+    then: it shows live demos in one frame with a tab each, in order: a collaborative editor with a Mermaid diagram in its document, a table
           and board over one data set, a graph explorer, and an infinite canvas of nested drawings; they share two peers, Alice and Bob, and one space in the page;
           each shows one or both peers, and has a switch per peer that takes it offline
 
@@ -2908,8 +2908,8 @@ feat F-7: Relationship to dxos.org
 
   req F-7.9:
     when: a reader is on `/echo`
-    then: each demo has a title and a short narrative about the data it shows: what objects are in the
-          space, and what ECHO does with them as the peers edit, go offline and come back
+    then: each demo has a card with its title and a sentence or two about the data it shows and what to try
+          in it
 
   req F-7.10:
     when: a reader is on the PLEX Overview
@@ -2947,7 +2947,7 @@ feat F-9: Diagrams as canvas applications
   req F-9.2:
     when: a docs page shows a static diagram
     then: it is a plugin-illustrator render (`.dx` source and `.dx.svg` in `src/assets/diagrams/`) shown with
-      `Diagram`, never ASCII art in a code block [D-237]
+      `Diagram`, never ASCII art in a code block [D-243]
 
 feat F-10: Live schema forms
 
@@ -3066,7 +3066,7 @@ feat F-16: Docs sections
   req F-16.1:
     when: a reader opens the docs
     then: there are seven sections, ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, in that order in the topic
-          switcher [D-269]
+          switcher [D-274]
 
   req F-16.2:
     when: a reader looks for HALO
@@ -3086,7 +3086,7 @@ feat F-16: Docs sections
     when: a reader opens `/docs/`
     then: they land on the docs home: the title DXOS Docs, a short neutral paragraph on what DXOS is, and a grid of
           every section's hero art with its mark and name, in which ECHO spans two columns where there are four; each
-          card links to its section's Overview [D-267]
+          card links to its section's Overview [D-272]
 
   req F-16.7:
     when: a reader follows a redirected docs URL, such as an old `/docs/composer/` page
@@ -3095,14 +3095,14 @@ feat F-16: Docs sections
 
   req F-16.6:
     when: a reader looks at the topic switcher
-    then: each section shows its logotype from the brand suite, drawn to one frame and one stroke weight [D-268]; each
+    then: each section shows its logotype from the brand suite, drawn to one frame and one stroke weight [D-273]; each
           has no box and takes its label's color, the accent color for the current section
 
   req F-16.9:
     when: a reader moves between dxos.org and the docs
     then: the docs header is one row: the DXOS logo and a Docs link at the same spots as in the site's nav, then the
           section picker, then search (icon and shortcut only), the social links in the text color and the theme
-          picker; the sections are always in the picker, never tabs, and the docs home has no picker [D-273]; on
+          picker; the sections are always in the picker, never tabs, and the docs home has no picker [D-278]; on
           phones the header keeps only the logo and the picker; the sidebar itself lists no sections
 
   req F-16.8:
@@ -3125,7 +3125,7 @@ feat F-17: Same shape in both sections
     when: a section is built
     then: its sidebar groups are Start here, Learning path, Core concepts, API, Guides, any groups of its own and
           Resources, in that order; MESH, EDGE and SAGE have only Start here, Core concepts and Resources
-          [D-266]
+          [D-271]
 
   req F-17.2:
     when: a page is written
@@ -4092,7 +4092,6 @@ decision D-92: Each section is a sidebar topic, made with `starlight-sidebar-top
     - `starlight-sidebar-topics-dropdown`, which hides the sections until opened and pays off only with more sections than two.
 ```
 
-
 ```mdl
 decision D-93: The docs have no separate home page. `/docs/` goes to ECHO's Welcome, which takes over the home page's description of DXOS, and the SaaS comparison table moves into Why ECHO?.
   date: 2026-11-10
@@ -5036,7 +5035,55 @@ decision D-218: A demo's peers stay mounted while their client's status lapses. 
 ```
 
 ```mdl
-decision D-219: The topic switcher moves from the top of the sidebar to the docs header, as logotype tabs beside the logo and Docs, folding into a picker below 72rem, where the sidebar folds into a menu. The sections become ECHO, HALO, MESH, PLEX, EDGE and TILE, and MESH, EDGE and TILE get an Overview with only the hero. Replaces the list in [D-92] and [D-105].
+decision D-219: On `/echo` the four reason cards and the four guarantee cards each sit in one row on a wide screen, in two rows of two on a medium one, and in one column on a narrow one. They never wrap to three and one. Amends [D-211].
+  date: 2026-11-12
+  by: user:wittjosiah
+  affects: [landing]
+  why: Josiah meant two rows of two as the fallback at a breakpoint, not the layout at every width.
+```
+
+```mdl
+decision D-220: On `/echo` the hero's ECHO icon sits in the column beside the copy, centred in it and at most 26rem wide, so its size and place do not depend on the window. Its rays are the brand art's own, the upper right one missing as in the art, and run out past the icon instead of stopping at a square panel, and fade out with distance from it, sooner to the left so they clear the copy, as the docs Overview heroes fade theirs. Where there is no room beside the copy, the icon sits centred behind it, dimmed, as a background, and its rays fade evenly on every side. The install chip has a copy button that puts `pnpm add @dxos/echo` on the clipboard; the command names ECHO alone.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing]
+  why: Josiah wanted the header art to continue and fade out like the docs headers, and a copy button on the install command, with nothing else in the hero changed. Art scaled to fill the hero hid the icon behind the copy on a narrow window and cropped it on a wide one, so the icon has bounds of its own. Behind the copy on a small screen, dimmed, was fine.
+```
+
+```mdl
+decision D-221: On `/echo` the sample is four tabs over one file, `task.ts`: Define, Connect, Query and Change. Define declares the type; Connect starts a client with the type, creates an identity and a space, and names its `db`; Query subscribes to a live query and adds a task; Change updates it. The steps are a row of four cards above the code, like the demo cards of D-222: each card has the step's name and one sentence on what it shows, in place of the code's comments, and the code frame below holds only the code. A heading above the cards says what the sample is. The panels share one height, the tallest step's, so switching does not move the page.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing]
+  why: Josiah chose tabs from three options, then asked for the same card pattern as the demos so the two sections read alike. The sample had no heading, and `db` came from nowhere.
+```
+
+```mdl
+decision D-222: On `/echo` the live demos sit in one full-width frame, chosen by a row of four cards above it, one per demo in the order of [F-7.5]. Each card has the demo's title and a sentence or two on what it shows and what to try; the longer narrative is gone from `/echo`. The cards sit in one row on a wide screen. Below 64rem the step cards of D-221 and these cards fold into plain tabs, a row of titles that scrolls sideways if it must, with the selected one's sentence under them, so a narrow screen shows one sentence at a time. The section is headed Running in this page, and its lead says each demo is ECHO running in the tab, that they share one space held by Alice and Bob, and that a peer switched offline merges its edits when it comes back. Every demo still starts as the page loads [F-7.6]; an unselected demo stays mounted, hidden in place at the frame's size, so switching to it is instant and its layout is already measured. Amends [F-7.9].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing, F-7.5, F-7.9]
+  why: Josiah chose tabs, then cards over side tabs and a centred layout. "Two peers, one space" did not fit the graph and the canvas, which open with one peer; the stacked demos, and then a 48rem narrative over a full-width tab line and frame, looked unbalanced, and cards span the same width as the frame. Two rows of two cards on a narrow screen ran tall, so there the cards fold back into tabs.
+```
+
+```mdl
+decision D-223: On `/echo` every box has square corners, as on the other marketing pages: the install chip and its copy button, the step and demo cards, the code frame and the demo frame. Only the loading spinner stays round. The docs keep their rounded code frames; the square code frame is local to `/echo`. Sections are set apart by space and their eyebrow and heading, with no rule between them, as on the other marketing pages.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [landing]
+  why: The home, Composer and plugins pages use no rounded corners and no full-width section rules; `/echo` mixed 0.5rem cards with square sections, and its rules between sections added nothing the headings did not already say.
+```
+
+```mdl
+decision D-224: The dxos.org Webflow nav keeps Try Composer inside the page's edge padding at every width. On a wide screen its outer columns are never narrower than what they hold, so the menu stays centred while there is room and moves aside when there is not. Below 600px the social links are hidden, and below 400px Try Composer has less padding and smaller text, so the menu button, logo and Try Composer fit on the smallest phones.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [F-7.4]
+  why: Between 992px and about 1300px the social links and Try Composer overflowed their column and Try Composer touched the window's edge, and on phones from about 480px to 600px it ran past it.
+```
+
+```mdl
+decision D-225: The topic switcher moves from the top of the sidebar to the docs header, as logotype tabs beside the logo and Docs, folding into a picker below 72rem, where the sidebar folds into a menu. The sections become ECHO, HALO, MESH, PLEX, EDGE and TILE, and MESH, EDGE and TILE get an Overview with only the hero. Replaces the list in [D-92] and [D-105].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.1, F-16.4, F-16.6, F-16.9]
@@ -5044,7 +5091,7 @@ decision D-219: The topic switcher moves from the top of the sidebar to the docs
 ```
 
 ```mdl
-decision D-220: MESH has Start here, Core concepts and Resources, with no learning path, API or guides. It explains the architecture and where ECHO and HALO use it. Amends [F-17.1] for MESH.
+decision D-226: MESH has Start here, Core concepts and Resources, with no learning path, API or guides. It explains the architecture and where ECHO and HALO use it. Amends [F-17.1] for MESH.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-17.1, mesh-overview, why-mesh, mesh-architecture]
@@ -5052,7 +5099,7 @@ decision D-220: MESH has Start here, Core concepts and Resources, with no learni
 ```
 
 ```mdl
-decision D-221: The MESH pages describe MESH as multiplexing transports: a direct WebRTC link and the WebSocket to EDGE both carry the same protocols, and ECHO replicates each space over both today.
+decision D-227: The MESH pages describe MESH as multiplexing transports: a direct WebRTC link and the WebSocket to EDGE both carry the same protocols, and ECHO replicates each space over both today.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-overview, why-mesh, mesh-transports]
@@ -5060,7 +5107,7 @@ decision D-221: The MESH pages describe MESH as multiplexing transports: a direc
 ```
 
 ```mdl
-decision D-222: Swarms, signaling and ICE/TURN are MESH pages. EDGE's pages describe EDGE as a server and link to MESH for these.
+decision D-228: Swarms, signaling and ICE/TURN are MESH pages. EDGE's pages describe EDGE as a server and link to MESH for these.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-signaling, mesh-swarms, edge-connecting]
@@ -5068,7 +5115,7 @@ decision D-222: Swarms, signaling and ICE/TURN are MESH pages. EDGE's pages desc
 ```
 
 ```mdl
-decision D-223: Iroh, the planned QUIC transport for presence and gossip, gets one paragraph on Transports, marked planned.
+decision D-229: Iroh, the planned QUIC transport for presence and gossip, gets one paragraph on Transports, marked planned.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-transports]
@@ -5076,7 +5123,7 @@ decision D-223: Iroh, the planned QUIC transport for presence and gossip, gets o
 ```
 
 ```mdl
-decision D-224: The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of the MESH pages.
+decision D-230: The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-rpc`) are not part of the MESH pages.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-architecture]
@@ -5084,7 +5131,7 @@ decision D-224: The worker-to-tab RPC packages (`rpc`, `rpc-tunnel`, `websocket-
 ```
 
 ```mdl
-decision D-225: MESH's client settings (`runtime.services.ice`, `runtime.services.iceProviders`, `runtime.client.edgeFeatures.signaling`) are documented on Signaling and discovery, not on a page of their own.
+decision D-231: MESH's client settings (`runtime.services.ice`, `runtime.services.iceProviders`, `runtime.client.edgeFeatures.signaling`) are documented on Signaling and discovery, not on a page of their own.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [mesh-signaling]
@@ -5092,7 +5139,7 @@ decision D-225: MESH's client settings (`runtime.services.ice`, `runtime.service
 ```
 
 ```mdl
-decision D-226: EDGE has Start here, Core concepts and Resources, with no learning path, API or guides. Amends [F-17.1] for EDGE.
+decision D-232: EDGE has Start here, Core concepts and Resources, with no learning path, API or guides. Amends [F-17.1] for EDGE.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-17.1, edge-overview, why-edge, edge-architecture]
@@ -5100,7 +5147,7 @@ decision D-226: EDGE has Start here, Core concepts and Resources, with no learni
 ```
 
 ```mdl
-decision D-227: The sections are ordered ECHO, HALO, MESH, EDGE, PLEX, TILE. EDGE moves before PLEX. Amends [D-219].
+decision D-233: The sections are ordered ECHO, HALO, MESH, EDGE, PLEX, TILE. EDGE moves before PLEX. Amends [D-225].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.1]
@@ -5108,15 +5155,15 @@ decision D-227: The sections are ordered ECHO, HALO, MESH, EDGE, PLEX, TILE. EDG
 ```
 
 ```mdl
-decision D-228: EDGE's Connecting page covers only the link between a device and EDGE: the WebSocket, its authentication and reconnecting. Peer links are MESH's.
+decision D-234: EDGE's Connecting page covers only the link between a device and EDGE: the WebSocket, its authentication and reconnecting. Peer links are MESH's.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [edge-connecting]
-  why: Follows [D-222].
+  why: Follows [D-228].
 ```
 
 ```mdl
-decision D-229: The EDGE pages say plainly that EDGE stores space content in plaintext and can read it today, and describe Keyhive's encrypted relay only as the target. Replaces the part of [F-16.4] that kept EDGE undocumented.
+decision D-235: The EDGE pages say plainly that EDGE stores space content in plaintext and can read it today, and describe Keyhive's encrypted relay only as the target. Replaces the part of [F-16.4] that kept EDGE undocumented.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.4, edge-what-it-can-see, edge-replication]
@@ -5124,7 +5171,7 @@ decision D-229: The EDGE pages say plainly that EDGE stores space content in pla
 ```
 
 ```mdl
-decision D-230: EDGE has a Configuration page in Resources listing every client setting that points at or turns on EDGE.
+decision D-236: EDGE has a Configuration page in Resources listing every client setting that points at or turns on EDGE.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [edge-configuration]
@@ -5132,7 +5179,7 @@ decision D-230: EDGE has a Configuration page in Resources listing every client 
 ```
 
 ```mdl
-decision D-231: DXOS operates EDGE. The pages cover no self-hosting, and never link EDGE's source, which is private.
+decision D-237: DXOS operates EDGE. The pages cover no self-hosting, and never link EDGE's source, which is private.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [edge-overview, edge-architecture]
@@ -5140,7 +5187,7 @@ decision D-231: DXOS operates EDGE. The pages cover no self-hosting, and never l
 ```
 
 ```mdl
-decision D-232: TILE's core is `@dxos/react-ui`, with `@dxos/ui-theme` documented as part of its setup. The other `react-ui-*` packages get one line each in the Component packages catalog.
+decision D-238: TILE's core is `@dxos/react-ui`, with `@dxos/ui-theme` documented as part of its setup. The other `react-ui-*` packages get one line each in the Component packages catalog.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [tile-overview, tile-installation, tile-packages]
@@ -5148,7 +5195,7 @@ decision D-232: TILE's core is `@dxos/react-ui`, with `@dxos/ui-theme` documente
 ```
 
 ```mdl
-decision D-233: TILE's learning path builds a contacts screen with plain React state on pages 1 to 5 and connects it to ECHO, with the ECHO tutorial's schema, on page 6. Amends [F-17.3].
+decision D-239: TILE's learning path builds a contacts screen with plain React state on pages 1 to 5 and connects it to ECHO, with the ECHO tutorial's schema, on page 6. Amends [F-17.3].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-17.3, tile-learn-theme, tile-learn-echo]
@@ -5156,7 +5203,7 @@ decision D-233: TILE's learning path builds a contacts screen with plain React s
 ```
 
 ```mdl
-decision D-234: Four component packages get guides, picked by how many plugins use them: Lists (`react-ui-list`), Forms from a schema (`react-ui-form`), Menus and toolbars (`react-ui-menu`) and Text editor (`react-ui-editor`). They are planned until Josiah confirms the picks.
+decision D-240: Four component packages get guides, picked by how many plugins use them: Lists (`react-ui-list`), Forms from a schema (`react-ui-form`), Menus and toolbars (`react-ui-menu`) and Text editor (`react-ui-editor`). They are planned until Josiah confirms the picks.
   date: 2026-11-11
   by: agent:claude-code
   for: user:wittjosiah
@@ -5165,7 +5212,7 @@ decision D-234: Four component packages get guides, picked by how many plugins u
 ```
 
 ```mdl
-decision D-235: TILE's live previews are `client:only` React islands rendered in the docs page, inside a `.dx-island` root, never iframes. The layer order of [D-68] keeps Starlight and the react-ui preflight apart.
+decision D-241: TILE's live previews are `client:only` React islands rendered in the docs page, inside a `.dx-island` root, never iframes. The layer order of [D-68] keeps Starlight and the react-ui preflight apart.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-16.10, tile-overview]
@@ -5173,7 +5220,7 @@ decision D-235: TILE's live previews are `client:only` React islands rendered in
 ```
 
 ```mdl
-decision D-236: TILE has six concept pages and eleven API family pages (Theme, Layout, Button, Input, Status, Panel, Toolbar, Overlays, Menu, Icon, Hooks), not one page per exported subpath. Its API reference stays planned until react-ui and ui-theme build typedoc.
+decision D-242: TILE has six concept pages and eleven API family pages (Theme, Layout, Button, Input, Status, Panel, Toolbar, Overlays, Menu, Icon, Hooks), not one page per exported subpath. Its API reference stays planned until react-ui and ui-theme build typedoc.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-18.1, tile-api-reference]
@@ -5181,7 +5228,7 @@ decision D-236: TILE has six concept pages and eleven API family pages (Theme, L
 ```
 
 ```mdl
-decision D-237: Docs pages draw diagrams with plugin-illustrator and never use ASCII art. The MESH and EDGE pages' six ASCII diagrams are redrawn this way.
+decision D-243: Docs pages draw diagrams with plugin-illustrator and never use ASCII art. The MESH and EDGE pages' six ASCII diagrams are redrawn this way.
   date: 2026-11-11
   by: user:wittjosiah
   affects: [F-9.2]
@@ -5189,7 +5236,7 @@ decision D-237: Docs pages draw diagrams with plugin-illustrator and never use A
 ```
 
 ```mdl
-decision D-238: TILE's guides cover the four packages [D-234] picked: Lists, Forms, Menus and toolbars, and Text editor. They and the learning path show their components in live previews. The API reference stays planned until react-ui and ui-theme build typedoc [D-236].
+decision D-244: TILE's guides cover the four packages [D-240] picked: Lists, Forms, Menus and toolbars, and Text editor. They and the learning path show their components in live previews. The API reference stays planned until react-ui and ui-theme build typedoc [D-242].
   date: 2026-11-11
   by: user:wittjosiah
   affects: [tile-learn-installation, tile-learn-layout, tile-learn-inputs, tile-learn-overlays, tile-learn-icons, tile-learn-echo, tile-guide-lists, tile-guide-forms, tile-guide-menus, tile-guide-editor]
@@ -5197,16 +5244,16 @@ decision D-238: TILE's guides cover the four packages [D-234] picked: Lists, For
 ```
 
 ```mdl
-decision D-239: EDGE has no page on what it can see. HALO's Spaces and membership says it: a space that gives EDGE more than `pull` access is readable on EDGE. The data is stored encrypted and the keys apart from it, both are needed to read it, and they come together while an operation works on the data. Supersedes [D-229].
+decision D-245: EDGE has no page on what it can see. HALO's Spaces and membership says it: a space that gives EDGE more than `pull` access is readable on EDGE. The data is stored encrypted and the keys apart from it, both are needed to read it, and they come together while an operation works on the data. Supersedes [D-235].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [why-edge, halo-spaces-membership, edge-replication, edge-compute]
-  supersedes: D-229
+  supersedes: D-235
   why: It follows from the ECHO and HALO pages, and access to the data during operations is the trade-off for EDGE's compute, indexing and other services.
 ```
 
 ```mdl
-decision D-240: TILE's tagline is "Design system and UI components.", and its overview calls its parts UI components, not React components. Pages about using them from React still say React.
+decision D-246: TILE's tagline is "Design system and UI components.", and its overview calls its parts UI components, not React components. Pages about using them from React still say React.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [tile-overview]
@@ -5214,7 +5261,7 @@ decision D-240: TILE's tagline is "Design system and UI components.", and its ov
 ```
 
 ```mdl
-decision D-241: TILE's mark is the seven tangram pieces cut into a diamond, in the arrangement Josiah picked as variant 7, in the topic switcher's logotype and the Overview hero. The hero's rays start at the diamond's border and continue only its edges and the cut lines that reach it.
+decision D-247: TILE's mark is the seven tangram pieces cut into a diamond, in the arrangement Josiah picked as variant 7, in the topic switcher's logotype and the Overview hero. The hero's rays start at the diamond's border and continue only its edges and the cut lines that reach it.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-16.6, tile-overview]
@@ -5222,23 +5269,23 @@ decision D-241: TILE's mark is the seven tangram pieces cut into a diamond, in t
 ```
 
 ```mdl
-decision D-242: TILE's Start here has Overview, Why TILE? and Build with a coding agent, like ECHO and PLEX. Its learning path starts with The TILE component, which shows the finished contacts screen, then Installation, which also builds the first buttons. The coding-agent page links DXOS's TILE skills and has no prompt builder for now.
+decision D-248: TILE's Start here has Overview, Why TILE? and Build with a coding agent, like ECHO and PLEX. Its learning path starts with The TILE component, which shows the finished contacts screen, then Installation, which also builds the first buttons. The coding-agent page links DXOS's TILE skills and has no prompt builder for now.
   date: 2026-11-12
   by: user:wittjosiah
-  affects: [tile-build-with-agent, tile-the-tile-component, tile-learn-installation, tile-overview, D-233]
+  affects: [tile-build-with-agent, tile-the-tile-component, tile-learn-installation, tile-overview, D-239]
   why: Josiah asked for TILE to start like ECHO, HALO and PLEX, with a first learning-path page about its core idea, and for the coding-agent page to stay simple.
 ```
 
 ```mdl
-decision D-243: TILE's API reference links generated typedoc for `@dxos/react-ui`, `@dxos/ui-theme`, `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, which now build it like the ECHO and HALO packages. Supersedes the part of [D-236] that kept it planned.
+decision D-249: TILE's API reference links generated typedoc for `@dxos/react-ui`, `@dxos/ui-theme`, `@dxos/react-ui-list`, `@dxos/react-ui-form`, `@dxos/react-ui-menu` and `@dxos/react-ui-editor`, which now build it like the ECHO and HALO packages. Supersedes the part of [D-242] that kept it planned.
   date: 2026-11-12
   by: user:wittjosiah
-  affects: [tile-api-reference, D-236]
+  affects: [tile-api-reference, D-242]
   why: Josiah asked for an API reference for the core and the four packages with guides.
 ```
 
 ```mdl
-decision D-244: The footer's Docs column lists every section the topic switcher has, in its order: ECHO, HALO, MESH, EDGE, PLEX and TILE. Amends [F-7.1].
+decision D-250: The footer's Docs column lists every section the topic switcher has, in its order: ECHO, HALO, MESH, EDGE, PLEX and TILE. Amends [F-7.1].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-7.1]
@@ -5246,7 +5293,7 @@ decision D-244: The footer's Docs column lists every section the topic switcher 
 ```
 
 ```mdl
-decision D-245: The Component packages catalog has two groups: general purpose, and designed for ECHO. No package is described as built on ECHO or as specific to the plugin shell; `react-ui-menu` and `react-ui-editor` are general purpose. Amends [D-232].
+decision D-251: The Component packages catalog has two groups: general purpose, and designed for ECHO. No package is described as built on ECHO or as specific to the plugin shell; `react-ui-menu` and `react-ui-editor` are general purpose. Amends [D-238].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [tile-packages, tile-overview]
@@ -5254,7 +5301,7 @@ decision D-245: The Component packages catalog has two groups: general purpose, 
 ```
 
 ```mdl
-decision D-246: Each section's Overview hero uses the background from the final product suite, with the mark on the right. HALO and MESH keep the brand's right-hand art. EDGE uses the brand's DXNS art. ECHO and PLEX use the brand's ECHO and Kube art moved right, with the rays extended to the edges; PLEX drops the rays from the cube's upper-left edge and through its top-left vertex. TILE keeps its tangram art from [D-241] but drops the horizontal ray left of the diamond. Replaces EDGE's earlier hand-drawn background.
+decision D-252: Each section's Overview hero uses the background from the final product suite, with the mark on the right. HALO and MESH keep the brand's right-hand art. EDGE uses the brand's DXNS art. ECHO and PLEX use the brand's ECHO and Kube art moved right, with the rays extended to the edges; PLEX drops the rays from the cube's upper-left edge and through its top-left vertex. TILE keeps its tangram art from [D-247] but drops the horizontal ray left of the diamond. Replaces EDGE's earlier hand-drawn background.
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-16.8]
@@ -5262,7 +5309,7 @@ decision D-246: Each section's Overview hero uses the background from the final 
 ```
 
 ```mdl
-decision D-247: Each Overview hero follows the page's theme. In dark mode it is unchanged. In light mode its ground is the page background, so the hero blends into the page as it does in dark mode, its mark and title are the page's text color, and its tagline is the muted text color. The rays keep the section's color in both themes. Amends [D-246].
+decision D-253: Each Overview hero follows the page's theme. In dark mode it is unchanged. In light mode its ground is the page background, so the hero blends into the page as it does in dark mode, its mark and title are the page's text color, and its tagline is the muted text color. The rays keep the section's color in both themes. Amends [D-252].
   date: 2026-11-12
   by: user:wittjosiah
   affects: [F-16.8]
@@ -5270,15 +5317,7 @@ decision D-247: Each Overview hero follows the page's theme. In dark mode it is 
 ```
 
 ```mdl
-decision D-248: On `/echo` the four reason cards and the four guarantee cards each sit in one row on a wide screen, in two rows of two on a medium one, and in one column on a narrow one. They never wrap to three and one. Amends [D-211].
-  date: 2026-11-12
-  by: user:wittjosiah
-  affects: [landing]
-  why: Josiah meant two rows of two as the fallback at a breakpoint, not the layout at every width.
-```
-
-```mdl
-decision D-249: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it and that `Space.setEdgeReplication` turns that off. Why MESH? says a direct link can pass through a TURN relay and no longer says its data never reaches a server; its section on that is titled Data on a direct link.
+decision D-254: EDGE and MESH pages, including every section of Why MESH?, say EDGE holds a copy of each space that replicates through it and that `Space.setEdgeReplication` turns that off. Why MESH? says a direct link can pass through a TURN relay and no longer says its data never reaches a server; its section on that is titled Data on a direct link.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5287,7 +5326,7 @@ decision D-249: EDGE and MESH pages, including every section of Why MESH?, say E
 ```
 
 ```mdl
-decision D-250: EDGE's Indexing and queries page and Why EDGE? say EDGE indexes and answers queries only for the spaces it can read; a space that grants EDGE only `pull` access has no index there.
+decision D-255: EDGE's Indexing and queries page and Why EDGE? say EDGE indexes and answers queries only for the spaces it can read; a space that grants EDGE only `pull` access has no index there.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5296,7 +5335,7 @@ decision D-250: EDGE's Indexing and queries page and Why EDGE? say EDGE indexes 
 ```
 
 ```mdl
-decision D-251: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates, and that a peer that fails authentication is disconnected only if the session's owner closes the session, as the space manager does. The auth extension runs on space connections; an invitation connection adds only the invitations extension beside the control extension, and checks the guest by the invitation's auth method, which for `none` checks nothing.
+decision D-256: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates, and that a peer that fails authentication is disconnected only if the session's owner closes the session, as the space manager does. The auth extension runs on space connections; an invitation connection adds only the invitations extension beside the control extension, and checks the guest by the invitation's auth method, which for `none` checks nothing.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5305,7 +5344,7 @@ decision D-251: Teleport's page and MESH's Architecture page say the other exten
 ```
 
 ```mdl
-decision D-252: Swarms and topology says MMST usually connects a swarm but does not guarantee it, and that EDGE covers the gaps.
+decision D-257: Swarms and topology says MMST usually connects a swarm but does not guarantee it, and that EDGE covers the gaps.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5314,7 +5353,7 @@ decision D-252: Swarms and topology says MMST usually connects a swarm but does 
 ```
 
 ```mdl
-decision D-253: A space's swarm topic is its space ID, the first 20 bytes of the SHA-256 of its space key, on Signaling and discovery and in the glossary.
+decision D-258: A space's swarm topic is its space ID, the first 20 bytes of the SHA-256 of its space key, on Signaling and discovery and in the glossary.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5323,7 +5362,7 @@ decision D-253: A space's swarm topic is its space ID, the first 20 bytes of the
 ```
 
 ```mdl
-decision D-254: The TILE learning path's ECHO app configures its client as ECHO's Installation page does: persistent storage, the OPFS worker, and EDGE signaling and replication. Connect to ECHO tells the reader to start the new entry point with the stylesheet imports.
+decision D-259: The TILE learning path's ECHO app configures its client as ECHO's Installation page does: persistent storage, the OPFS worker, and EDGE signaling and replication. Connect to ECHO tells the reader to start the new entry point with the stylesheet imports.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5332,7 +5371,7 @@ decision D-254: The TILE learning path's ECHO app configures its client as ECHO'
 ```
 
 ```mdl
-decision D-255: The guide sample's contact list keys its rows by id.
+decision D-260: The guide sample's contact list keys its rows by id.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5341,7 +5380,7 @@ decision D-255: The guide sample's contact list keys its rows by id.
 ```
 
 ```mdl
-decision D-256: The text editor guide keeps the editor's text in state and passes it as `value` with `onChange`.
+decision D-261: The text editor guide keeps the editor's text in state and passes it as `value` with `onChange`.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5350,7 +5389,7 @@ decision D-256: The text editor guide keeps the editor's text in state and passe
 ```
 
 ```mdl
-decision D-257: The learning path's role tooltips sit on a focusable element.
+decision D-262: The learning path's role tooltips sit on a focusable element.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5359,7 +5398,7 @@ decision D-257: The learning path's role tooltips sit on a focusable element.
 ```
 
 ```mdl
-decision D-258: The Overlays reference says Popover holds focus only with `modal`.
+decision D-263: The Overlays reference says Popover holds focus only with `modal`.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5368,7 +5407,7 @@ decision D-258: The Overlays reference says Popover holds focus only with `modal
 ```
 
 ```mdl
-decision D-259: The Hooks reference says `useTranslation` returns `{ t, … }`.
+decision D-264: The Hooks reference says `useTranslation` returns `{ t, … }`.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5377,7 +5416,7 @@ decision D-259: The Hooks reference says `useTranslation` returns `{ t, … }`.
 ```
 
 ```mdl
-decision D-260: The Menu reference says `Menu.Root`'s `onSelect` receives `{ value }`.
+decision D-265: The Menu reference says `Menu.Root`'s `onSelect` receives `{ value }`.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5386,7 +5425,7 @@ decision D-260: The Menu reference says `Menu.Root`'s `onSelect` receives `{ val
 ```
 
 ```mdl
-decision D-261: Theme and tokens puts `modal-surface` at the `raised` level and leaves `overlay` for explicit elevation.
+decision D-266: Theme and tokens puts `modal-surface` at the `raised` level and leaves `overlay` for explicit elevation.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5395,7 +5434,7 @@ decision D-261: Theme and tokens puts `modal-surface` at the `raised` level and 
 ```
 
 ```mdl
-decision D-262: The Layout concept says only `Flex`, `Grid` and `Container` take `asChild`.
+decision D-267: The Layout concept says only `Flex`, `Grid` and `Container` take `asChild`.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5404,7 +5443,7 @@ decision D-262: The Layout concept says only `Flex`, `Grid` and `Container` take
 ```
 
 ```mdl
-decision D-263: Composite components says interactive parts take no added roles or state attributes, that an icon-only part still needs an accessible name, and that a layout primitive may take a role.
+decision D-268: Composite components says interactive parts take no added roles or state attributes, that an icon-only part still needs an accessible name, and that a layout primitive may take a role.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5413,7 +5452,7 @@ decision D-263: Composite components says interactive parts take no added roles 
 ```
 
 ```mdl
-decision D-264: The Forms guide says `include` keeps schema order, and that Save is disabled only while a touched field has an error.
+decision D-269: The Forms guide says `include` keeps schema order, and that Save is disabled only while a touched field has an error.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5422,7 +5461,7 @@ decision D-264: The Forms guide says `include` keeps schema order, and that Save
 ```
 
 ```mdl
-decision D-265: The topic picker's panel on a phone is capped at the viewport's height and scrolls.
+decision D-270: The topic picker's panel on a phone is capped at the viewport's height and scrolls.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5431,7 +5470,7 @@ decision D-265: The topic picker's panel on a phone is capped at the viewport's 
 ```
 
 ```mdl
-decision D-266: The docs gain SAGE, a section on AI: models, agents, operations as tools, skills, memory and MCP. It has only Start here, Core concepts and Resources, like MESH, and no learning path, API or guides. Compute is not a section of its own for now: EDGE's Compute page introduces it, and Operations, Processes, Triggers and Traces follow it in EDGE's Core concepts. Every page starts from the ECHO objects the work or the agent reads and writes. Until SAGE's pages are written, its sidebar has only its Overview, which shows only the hero; the new pages are `later`.
+decision D-271: The docs gain SAGE, a section on AI: models, agents, operations as tools, skills, memory and MCP. It has only Start here, Core concepts and Resources, like MESH, and no learning path, API or guides. Compute is not a section of its own for now: EDGE's Compute page introduces it, and Operations, Processes, Triggers and Traces follow it in EDGE's Core concepts. Every page starts from the ECHO objects the work or the agent reads and writes. Until SAGE's pages are written, its sidebar has only its Overview, which shows only the hero; the new pages are `later`.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-16.1, F-17.1, sage-overview, edge-compute, edge-operations, edge-processes, edge-triggers, edge-traces]
@@ -5439,7 +5478,7 @@ decision D-266: The docs gain SAGE, a section on AI: models, agents, operations 
 ```
 
 ```mdl
-decision D-267: `/docs/` is a docs home titled DXOS Docs, with a short neutral paragraph on what DXOS is and a grid of all seven sections, each card the section's hero art with its mark and name, linking to its Overview. The cards run ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; in four columns ECHO spans two, so the cards fill two rows. They follow the page's theme like the heroes. The `/docs` redirect to ECHO's Overview is removed. Supersedes [F-16.5]'s "no separate docs home".
+decision D-272: `/docs/` is a docs home titled DXOS Docs, with a short neutral paragraph on what DXOS is and a grid of all seven sections, each card the section's hero art with its mark and name, linking to its Overview. The cards run ECHO, HALO, MESH, then PLEX, TILE, EDGE and SAGE; in four columns ECHO spans two, so the cards fill two rows. They follow the page's theme like the heroes. The `/docs` redirect to ECHO's Overview is removed. Supersedes [F-16.5]'s "no separate docs home".
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-16.5, F-16.7, docs-home]
@@ -5447,7 +5486,7 @@ decision D-267: `/docs/` is a docs home titled DXOS Docs, with a short neutral p
 ```
 
 ```mdl
-decision D-268: Every section's mark, color and hero art come from the alt 4 brand suite: ECHO green, HALO amber, MESH blue, PLEX light violet with the crossed mark, TILE red, EDGE orange with the cube and SAGE sage green with the hourglass. The section picker's logotypes, the Overview heroes and the docs home use it, drawn to one frame and stroke weight. The SVGs go into `@dxos/brand` [F-2.3]. Supersedes the marks and art chosen in [D-106], [D-241] and [D-246]; [D-247]'s light and dark treatment still applies.
+decision D-273: Every section's mark, color and hero art come from the alt 4 brand suite: ECHO green, HALO amber, MESH blue, PLEX light violet with the crossed mark, TILE red, EDGE orange with the cube and SAGE sage green with the hourglass. The section picker's logotypes, the Overview heroes and the docs home use it, drawn to one frame and stroke weight. The SVGs go into `@dxos/brand` [F-2.3]. Supersedes the marks and art chosen in [D-106], [D-247] and [D-252]; [D-253]'s light and dark treatment still applies.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-16.6, F-16.8, docs-home]
@@ -5455,7 +5494,7 @@ decision D-268: Every section's mark, color and hero art come from the alt 4 bra
 ```
 
 ```mdl
-decision D-269: The section picker and the footer list the sections as ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, down the stack from data to interface. Amends [D-244].
+decision D-274: The section picker and the footer list the sections as ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, down the stack from data to interface. Amends [D-250].
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
@@ -5464,7 +5503,7 @@ decision D-269: The section picker and the footer list the sections as ECHO, HAL
 ```
 
 ```mdl
-decision D-270: EDGE's Compute page introduces compute and covers what EDGE hosts: where operations run and triggers fire while no device is online, where agent processes run, the AI service and the plugin registry. It links Operations, Processes and Triggers for the details, and SAGE for agents and models.
+decision D-275: EDGE's Compute page introduces compute and covers what EDGE hosts: where operations run and triggers fire while no device is online, where agent processes run, the AI service and the plugin registry. It links Operations, Processes and Triggers for the details, and SAGE for agents and models.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [edge-compute, sage-agents]
@@ -5472,7 +5511,7 @@ decision D-270: EDGE's Compute page introduces compute and covers what EDGE host
 ```
 
 ```mdl
-decision D-271: There is no Functions page. Operations replaced functions: the function runtime now runs operations, so an operation deployed to EDGE is a remote process, covered on Processes. The EDGE and SAGE pages never call an operation a function, even where a package or API name still does.
+decision D-276: There is no Functions page. Operations replaced functions: the function runtime now runs operations, so an operation deployed to EDGE is a remote process, covered on Processes. The EDGE and SAGE pages never call an operation a function, even where a package or API name still does.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [edge-processes, edge-compute]
@@ -5480,7 +5519,7 @@ decision D-271: There is no Functions page. Operations replaced functions: the f
 ```
 
 ```mdl
-decision D-272: Pipelines are not a concept page. Processes mentions them in one paragraph, as a tool an operation uses to stream a long source, with a cursor to resume. A Pipelines guide may come later.
+decision D-277: Pipelines are not a concept page. Processes mentions them in one paragraph, as a tool an operation uses to stream a long source, with a cursor to resume. A Pipelines guide may come later.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [edge-processes]
@@ -5488,7 +5527,7 @@ decision D-272: Pipelines are not a concept page. Processes mentions them in one
 ```
 
 ```mdl
-decision D-273: The docs header always shows the sections as a picker, never as a row of tabs, and the docs home has no picker. Amends [F-16.9].
+decision D-278: The docs header always shows the sections as a picker, never as a row of tabs, and the docs home has no picker. Amends [F-16.9].
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-16.9]
@@ -5496,7 +5535,7 @@ decision D-273: The docs header always shows the sections as a picker, never as 
 ```
 
 ```mdl
-decision D-274: EDGE's compute pages and every SAGE page are written from the compute and AI packages as they are today: operations, processes, triggers and traces in EDGE, and models, agents, operations as tools, skills, memory and MCP in SAGE. The Overview shows the hero above its text. SAGE's pages are exported to agents through `/sage/llms.txt` like the other sections'.
+decision D-279: EDGE's compute pages and every SAGE page are written from the compute and AI packages as they are today: operations, processes, triggers and traces in EDGE, and models, agents, operations as tools, skills, memory and MCP in SAGE. The Overview shows the hero above its text. SAGE's pages are exported to agents through `/sage/llms.txt` like the other sections'.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [edge-compute, edge-operations, edge-processes, edge-triggers, edge-traces, sage-overview, why-sage, sage-models, sage-agents, sage-tools, sage-skills, sage-memory, sage-mcp, sage-glossary, sage-llms-txt]
@@ -5504,7 +5543,7 @@ decision D-274: EDGE's compute pages and every SAGE page are written from the co
 ```
 
 ```mdl
-decision D-275: Every section is pitched on its own. An Overview's or a Why page's opening says what the section does and why it is worth using alone, and names no other section as a requirement. How the sections work together, and what each gains next to the others, is woven into the page where it fits, never set apart under a heading of its own; the emphasis is on what the section does, not on what it needs. A comparison is against the strongest alternative, such as an agent framework with tools and memory, not a weak one.
+decision D-280: Every section is pitched on its own. An Overview's or a Why page's opening says what the section does and why it is worth using alone, and names no other section as a requirement. How the sections work together, and what each gains next to the others, is woven into the page where it fits, never set apart under a heading of its own; the emphasis is on what the section does, not on what it needs. A comparison is against the strongest alternative, such as an agent framework with tools and memory, not a weak one.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [welcome, why-echo, mesh-overview, why-mesh, edge-overview, edge-compute, edge-operations, sage-overview, why-sage, app-framework-welcome, why-plex, tile-overview, why-tile]
@@ -5512,7 +5551,7 @@ decision D-275: Every section is pitched on its own. An Overview's or a Why page
 ```
 
 ```mdl
-decision D-276: SAGE has a Specs page, and Why SAGE? counts specs among what sets SAGE apart. A spec is `.mdl` text that people and agents both work from: its changelog attributes each decision to a person or an agent, a review records how far the code meets each item, and its QA tests are steps a person can follow and an agent can run.
+decision D-281: SAGE has a Specs page, and Why SAGE? counts specs among what sets SAGE apart. A spec is `.mdl` text that people and agents both work from: its changelog attributes each decision to a person or an agent, a review records how far the code meets each item, and its QA tests are steps a person can follow and an agent can run.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [sage-specs, why-sage, sage-overview, sage-glossary]
@@ -5520,15 +5559,15 @@ decision D-276: SAGE has a Specs page, and Why SAGE? counts specs among what set
 ```
 
 ```mdl
-decision D-277: The section picker and the docs home cards give each section one line, short enough that none wraps in the picker: ECHO "Local-first database: objects, queries, sync.", HALO "Identity, devices and access control.", MESH "Peer-to-peer networking and replication.", EDGE "Always-online backup, indexing and compute.", SAGE "Durable agents, tools, skills and models.", PLEX "An app framework where everything is a plugin." and TILE "Design system and UI components." [D-240]. SAGE's Overview tagline is "Durable agents with their own identity, tools and skills.".
+decision D-282: The section picker and the docs home cards give each section one line, short enough that none wraps in the picker: ECHO "Local-first database: objects, queries, sync.", HALO "Identity, devices and access control.", MESH "Peer-to-peer networking and replication.", EDGE "Always-online backup, indexing and compute.", SAGE "Durable agents, tools, skills and models.", PLEX "An app framework where everything is a plugin." and TILE "Design system and UI components." [D-246]. SAGE's Overview tagline is "Durable agents with their own identity, tools and skills.".
   date: 2026-11-13
   by: user:wittjosiah
   affects: [F-16.5, F-16.9, docs-home, sage-overview]
-  why: Josiah asked for better PLEX, EDGE and SAGE lines, an EDGE line short enough not to wrap, access control named in HALO's, and each section pitched on its own [D-275].
+  why: Josiah asked for better PLEX, EDGE and SAGE lines, an EDGE line short enough not to wrap, access control named in HALO's, and each section pitched on its own [D-280].
 ```
 
 ```mdl
-decision D-278: SAGE Models says only that telemetry records each model call with its model, timings and token counts. It does not say when the record includes the prompt and the response.
+decision D-283: SAGE Models says only that telemetry records each model call with its model, timings and token counts. It does not say when the record includes the prompt and the response.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [sage-models]
@@ -5536,7 +5575,7 @@ decision D-278: SAGE Models says only that telemetry records each model call wit
 ```
 
 ```mdl
-decision D-279: SAGE's Overview no longer walks through a turn; the turn and its diagram move to Agents. PLEX's Overview puts the demos right after a short intro that names Composer, and merges how an app is put together, the packages and what a plugin gets for free into one section.
+decision D-284: SAGE's Overview no longer walks through a turn; the turn and its diagram move to Agents. PLEX's Overview puts the demos right after a short intro that names Composer, and merges how an app is put together, the packages and what a plugin gets for free into one section.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [sage-overview, sage-agents, app-framework-welcome]
@@ -5544,11 +5583,20 @@ decision D-279: SAGE's Overview no longer walks through a turn; the turn and its
 ```
 
 ```mdl
-decision D-280: EDGE's diagrams and pages name services as the edge repo does and show the Router as where each device's WebSocket ends. The Overview diagram drops the "front door" box and draws devices to the Router, the Router to the DB, compute and identity services, DB triggers to compute and compute prompts to the AI service. Architecture describes the `edge` worker as the HTTP entry point rather than a front door for every request.
+decision D-285: EDGE's diagrams and pages name services as the edge repo does and show the Router as where each device's WebSocket ends. The Overview diagram drops the "front door" box and draws devices to the Router, the Router to the DB, compute and identity services, DB triggers to compute and compute prompts to the AI service. Architecture describes the `edge` worker as the HTTP entry point rather than a front door for every request.
   date: 2026-11-13
   by: user:wittjosiah
   affects: [edge-overview, edge-architecture, edge-glossary]
   why: Josiah asked where the "front door" and lowercase "db" came from and pointed out that the Router terminates the WebSockets.
+```
+
+```mdl
+decision D-286: On a wide screen the dxos.org Webflow nav puts its links beside the logo, as the docs header does, with Try Composer and the social links pushed to the right edge. Its narrow-screen rules from [D-224] stay. Amends [D-224].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.4]
+  why: This branch had already moved the links beside the logo to match the docs header when main centred the menu; merging keeps the docs layout and main's overflow fixes.
 ```
 
 ## Appendix: Extension Definitions

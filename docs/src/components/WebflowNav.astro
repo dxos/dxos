@@ -89,4 +89,27 @@ const accent = currentPage !== 'home' ? ' c' : '';
       margin-left: auto;
     }
   }
+
+  .nav_button-wrap {
+    flex-shrink: 0;
+  }
+
+  /* Below this the social links do not fit beside the menu button, logo and Try Composer. */
+  @media (max-width: 600px) {
+    .nav_button-wrap .hide-mobile {
+      display: none;
+    }
+  }
+
+  /* On the smallest phones Try Composer tightens up rather than run off the edge. */
+  @media (max-width: 400px) {
+    .nav_button-wrap {
+      margin-left: 0;
+    }
+    .nav_button-wrap .button {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
 </style>

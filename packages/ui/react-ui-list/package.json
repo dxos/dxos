@@ -1,7 +1,7 @@
 {
   "name": "@dxos/react-ui-list",
   "version": "0.16.0",
-  "description": "A list component.",
+  "description": "List, listbox, picker and tree components with drag-and-drop ordering.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {

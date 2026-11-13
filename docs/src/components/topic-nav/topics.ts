@@ -5,7 +5,7 @@
 import echo from '../../../../packages/ui/brand/assets/logotypes/echo-horizontal-black.svg?raw';
 import halo from '../../../../packages/ui/brand/assets/logotypes/halo-horizontal-black.svg?raw';
 import mesh from '../../../../packages/ui/brand/assets/logotypes/mesh-horizontal-black.svg?raw';
-// The brand has no logotypes in the alt 4 suite's marks yet [D-251]; these are drawn to the brand logotypes' frame.
+// The brand has no logotypes in the alt 4 suite's marks yet [D-273]; these are drawn to the brand logotypes' frame.
 import edge from '../../assets/topic-nav/logotypes/edge-horizontal-black.svg?raw';
 import plex from '../../assets/topic-nav/logotypes/plex-horizontal-black.svg?raw';
 import sage from '../../assets/topic-nav/logotypes/sage-horizontal-black.svg?raw';
