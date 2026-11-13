@@ -20,7 +20,7 @@ import { basename, dirname, join } from 'node:path';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
-import { serveFactStore } from '@dxos/pipeline-rdf/testing';
+import { serveFactStore } from '@dxos/pipeline-rdf/testing/server';
 
 const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
 const port = Number(process.env.DISCORD_FACT_SERVER_PORT ?? 7700);
