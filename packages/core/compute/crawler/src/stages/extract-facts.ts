@@ -130,8 +130,15 @@ export const extractFactsStage = (
       };
     });
     yield* indexFactsBatch(docs, { ...extractOptions, entities: [...users.values()] });
+    // A profile is rewritten only when it changed: an append-only store (an ECHO fact feed) would grow on every batch.
     const store = yield* FactStore;
-    yield* store.putFacts([...new Set(authors.values())].flatMap((profile) => profileFacts(profile)));
+    for (const profile of new Set(authors.values())) {
+      const [first, ...rest] = profileFacts(profile);
+      if (first && (yield* store.cursor(first.attribution.source)) !== first.sourceHash) {
+        yield* store.putFacts([first, ...rest]);
+        yield* store.setCursor(first.attribution.source, first.sourceHash);
+      }
+    }
   });
 
   return Stage.batch(
