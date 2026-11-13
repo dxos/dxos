@@ -1324,7 +1324,7 @@ page edge-indexing: Indexing and queries
   template: concept
   status: spike
   covers:
-    - The index EDGE keeps of each space
+    - The index EDGE keeps of each space it can read; a space that grants EDGE only `pull` access has none
     - A query merges local results with EDGE's, which ECHO treats as evidence, not authority
     - The index trails the latest changes; queries are live and never complete
 ```
@@ -5051,7 +5051,7 @@ decision D-250: EDGE's Indexing and queries page and Why EDGE? say EDGE indexes 
 ```
 
 ```mdl
-decision D-251: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates, and that a peer that fails authentication is disconnected only if the session's owner closes the session, as the space manager does.
+decision D-251: Teleport's page and MESH's Architecture page say the other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates, and that a peer that fails authentication is disconnected only if the session's owner closes the session, as the space manager does. The auth extension runs on space connections; an invitation connection carries only the invitations extension.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
