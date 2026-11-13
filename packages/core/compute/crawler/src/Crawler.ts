@@ -67,6 +67,21 @@ const seedFrontier = (config: Type.Config): Effect.Effect<void, StateError, Stat
   });
 
 /**
+ * Re-arms the targets an earlier run marked `error`, so a re-run retries them from their committed cursor; a cause
+ * outside the crawl (a bot not yet in the server, a network blip) must not strand a target for good. They resume as
+ * `active` because the failed run already opened them.
+ */
+const retryErrored = (): Effect.Effect<void, StateError, StateStore.StateStore> =>
+  Effect.gen(function* () {
+    const targets = yield* StateStore.listTargets();
+    yield* Effect.forEach(
+      targets.filter((target) => target.status === 'error'),
+      (target) => StateStore.setStatus(target.id, 'active'),
+      { discard: true },
+    );
+  });
+
+/**
  * One bounded crawl step: fetch the next page for the top frontier target and return the events it
  * produces. `Option.none` when the frontier is exhausted for this run. Durable writes here are
  * limited to lifecycle bookkeeping that is safe at fetch time (pending→active, fetch-error, thread
@@ -163,6 +178,7 @@ export const stream = (
   Stream.unwrap(
     Effect.gen(function* () {
       yield* seedFrontier(config);
+      yield* retryErrored();
       const volatile: Volatile = { cursors: new Map(), done: new Set() };
       const maxSteps = options.maxSteps ?? Number.POSITIVE_INFINITY;
       let taken = 0;

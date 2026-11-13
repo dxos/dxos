@@ -20,7 +20,7 @@ import { agentProfileStage } from './stages/agent-profile.ts';
 import { extractFactsStage } from './stages/extract-facts.ts';
 import { extractTopics } from './stages/topics.ts';
 import * as StateStore from './StateStore.ts';
-import { TestLayer, THREADED_FIXTURE, servicesLayer } from './testing/index.ts';
+import { TestLayer, THREADED_FIXTURE, fixtureSourceLayer, servicesLayer } from './testing/index.ts';
 import type * as Type from './types.ts';
 
 const CONFIG: Type.Config = { channels: ['chan-1'], descendThreads: true };
@@ -170,6 +170,22 @@ describe('Crawler', () => {
       },
       Effect.provide(Layer.merge(FAILING_SOURCE, servicesLayer)),
     ),
+  );
+
+  it.effect(
+    'retries a target an earlier run marked errored',
+    Effect.fnUntraced(function* () {
+      const config: Type.Config = { channels: ['chan-1'], descendThreads: false };
+      const failed = yield* runCrawl(config).pipe(Effect.provide(FAILING_SOURCE));
+      expect(failed.errored).toBe(1);
+
+      const retried = yield* runCrawl(config).pipe(Effect.provide(fixtureSourceLayer(THREADED_FIXTURE)));
+      const targets = yield* StateStore.listTargets();
+      expect(retried.errored).toBe(0);
+      expect(retried.done).toBe(true);
+      expect(targets.find((target) => target.id === 'chan-1')?.status).toBe('done');
+      expect(targets.find((target) => target.id === 'chan-1')?.cursor).toBe('1001');
+    }, Effect.provide(servicesLayer)),
   );
 
   it.effect(
