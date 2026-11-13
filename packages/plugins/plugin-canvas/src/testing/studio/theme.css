@@ -124,11 +124,13 @@
  * own `cqw` resolved at 1cqw = 16 slide units, which is what a drawing's scene units are, so a chip imported from a
  * slide is the size the slide drew it.
  */
+/* The deck's `.d-chips`, with more air down the grid: a row of chips reads as a row, not as a block of them. */
 .studio-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8.8px;
-  align-content: flex-start;
+  row-gap: 16px;
+  align-content: center;
 }
 
 .studio-chips[data-grid] {

@@ -84,10 +84,11 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     remap: { chip: 'card' },
     // The deck's header spanned the five columns under it; at a column and a half it reads as their parent.
     sizes: { plugin: { width: 400, height: 176 } },
+    gap: 96,
   }),
   // The deck placed each side column where its content ended; balanced, the window sits in the middle of the two.
   slide('composer', composerSource, composerModel, { balance: true }),
-  slide('architecture', architectureSource, architectureModel, { labels: false }),
+  slide('architecture', architectureSource, architectureModel, { labels: false, gap: 96 }),
   // Four columns the deck fitted to a page: one gap between them, which is also what widens the drawing.
   slide('agents', agentsSource, agentsModel, { spaceGraph: true, labels: false, gap: 96, frames: ['subagents'] }),
   // Every card is a type, so every card is one box; the deck sized each to its own label.

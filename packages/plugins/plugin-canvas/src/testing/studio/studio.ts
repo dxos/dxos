@@ -1016,8 +1016,8 @@ const isStack = (ordered: { node: Node }[]): boolean => {
 };
 
 /**
- * Gives every card of a column one width, spaces the columns of a slide on one gap, and lays a column that is a
- * stack out on one gap of its own. The deck sized each box to its own content and left whatever gap that produced, so a slide's grid came
+ * Gives every card of a column one width, and lays a column that is a stack out on one gap of its own. Where the
+ * columns themselves sit is {@link evenColumns}: two passes placing them would each undo the other's work. The deck sized each box to its own content and left whatever gap that produced, so a slide's grid came
  * out ragged — on the ECHO layers slide the bottom row of cards was 8 units taller than the two above it and sat 8
  * units lower than its own pitch. A line takes its SMALLEST card: it never grows into its neighbour, so the slide
  * gains the gutter it lacked.
@@ -1062,31 +1062,9 @@ const uniformGrid = (content: ContentMap, model: StudioModel, grid: number): num
       ),
     }))
     .filter(({ members }) => members.length > 1);
-  const stacks = columns.filter(({ members }) => isStack(members));
-  const band = alongLine(
-    stacks.map(({ members }) => ({ key: '', node: members[0].node })),
-    (node) => onGrid(node.size.width, grid),
-  ).map(({ node }) => onGrid(node.size.width, grid));
-  const banded = stacks.filter(({ members }) => band.includes(onGrid(members[0].node.size.width, grid)));
-  const spacing = (() => {
-    if (banded.length < 2) {
-      return undefined;
-    }
-    const width = Math.max(grid, Math.min(...band));
-    const gaps = banded
-      .slice(1)
-      .map(({ center }, index) => center - banded[index].center)
-      .sort((first, second) => first - second);
-    const pitch = Math.max(width + grid, onGrid(gaps[Math.floor(gaps.length / 2)], grid));
-    const first = onGrid(banded[0].center - width / 2, grid);
-    return { width, pitch, first, lefts: new Map(banded.map(({ center }, index) => [center, first + index * pitch])) };
-  })();
-
   for (const { center, members: column } of columns) {
-    const width = spacing?.lefts.has(center)
-      ? spacing.width
-      : Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
-    const left = spacing?.lefts.get(center) ?? onGrid(center - width / 2, grid);
+    const width = Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
+    const left = onGrid(center - width / 2, grid);
     const ordered = [...column].sort((first, second) => first.node.center.y - second.node.center.y);
     // One gap down the column, from the gaps the deck left: the cards keep their own heights and their first top, and
     // what was 16, 16 and 24 between them becomes 16, 16 and 16.
@@ -1202,7 +1180,12 @@ const evenColumns = (content: ContentMap, gap: number | undefined, grid: number)
   for (const box of [...boxes].sort((first, second) => first.node.center.x - second.node.center.x)) {
     const [left, right] = [box.node.center.x - box.node.size.width / 2, box.node.center.x + box.node.size.width / 2];
     const last = columns.at(-1);
-    if (last && box.node.center.x - last.center <= tolerance) {
+    // Near in centre AND near in width: the Plugins header shares the middle column's centre and is three times its
+    // width, and taking it into that column would hide the one shape the spacing has to set aside.
+    const first = last?.members[0].node.size.width ?? 0;
+    const alike =
+      last !== undefined && box.node.size.width <= first * LINE_SPREAD && box.node.size.width * LINE_SPREAD >= first;
+    if (last && alike && box.node.center.x - last.center <= tolerance) {
       last.left = Math.min(last.left, left);
       last.right = Math.max(last.right, right);
       last.members.push(box);
@@ -1210,21 +1193,37 @@ const evenColumns = (content: ContentMap, gap: number | undefined, grid: number)
       columns.push({ center: box.node.center.x, left, right, members: [box] });
     }
   }
+  // A shape that spans the columns rather than standing in one of them — the Plugins header over its five modules —
+  // is set aside, spaced with nothing, and re-centred on the slide once the columns have moved. It is the one whose
+  // box reaches across another column's: columns are grouped by centre, so a wide shape overlaps the ones it covers.
+  // More than one: a column under a header overlaps the header alone, while the header reaches across them all.
+  const overlapping = (column: (typeof columns)[number]) =>
+    columns.filter((other) => other !== column && other.left < column.right && column.left < other.right).length > 1;
+  const standing = columns.filter((column) => !overlapping(column));
+  const spanning = columns.filter((column) => overlapping(column));
   let moved = 0;
-  let edge = onGrid(columns[0]?.left ?? 0, grid);
-  for (const column of columns) {
-    const shift = onGrid(edge - column.left, grid);
-    if (shift !== 0) {
-      for (const { key, node } of column.members) {
-        const record = content[key];
-        if (!isNodeRecord(record)) {
-          continue;
-        }
-        content[key] = { ...record, node: { ...node, center: { ...node.center, x: node.center.x + shift } } };
-        moved++;
-      }
+  const shift = (members: typeof boxes, by: number) => {
+    if (by === 0) {
+      return;
     }
+    for (const { key, node } of members) {
+      const record = content[key];
+      if (!isNodeRecord(record)) {
+        continue;
+      }
+      content[key] = { ...record, node: { ...node, center: { ...node.center, x: node.center.x + by } } };
+      moved++;
+    }
+  };
+  let edge = onGrid(standing[0]?.left ?? 0, grid);
+  for (const column of [...standing].sort((first, second) => first.left - second.left)) {
+    shift(column.members, onGrid(edge - column.left, grid));
     edge += column.right - column.left + onGrid(gap, grid);
+  }
+  // The columns as they now stand, which is what a spanning shape is centred on.
+  const middle = (onGrid(standing[0]?.left ?? 0, grid) + (edge - onGrid(gap, grid))) / 2;
+  for (const column of spanning) {
+    shift(column.members, onGrid(middle - (column.left + column.right) / 2, grid));
   }
   return moved;
 };
