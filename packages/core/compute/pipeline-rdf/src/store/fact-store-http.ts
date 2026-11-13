@@ -42,9 +42,21 @@ const OntologyEntry = Schema.Struct({
   replacedBy: Schema.optional(Schema.String),
 });
 
+/** Wire form of `SparqlTerm`. */
+const SparqlTermSchema = Schema.Union([
+  Schema.Struct({ termType: Schema.Literals(['NamedNode', 'BlankNode']), value: Schema.String }),
+  Schema.Struct({
+    termType: Schema.Literal('Literal'),
+    value: Schema.String,
+    datatype: Schema.optional(Schema.String),
+    language: Schema.optional(Schema.String),
+  }),
+]);
+
 // The argument and result schemas both sides share: the protocol, method by method.
 const Facts = Schema.Array(Fact);
 const Predicates = Schema.Array(OntologyEntry);
+const Rows = Schema.Array(Schema.Record(Schema.String, SparqlTermSchema));
 const Hash = Schema.NullOr(Schema.String);
 const Done = Schema.Null;
 const PutFactsArgs = Schema.Struct({ facts: Facts });
@@ -53,7 +65,7 @@ const SelectArgs = Schema.Struct({ sparql: Schema.String });
 const CursorArgs = Schema.Struct({ source: Schema.String });
 const SetCursorArgs = Schema.Struct({ source: Schema.String, hash: Schema.String });
 
-const METHODS = ['putFacts', 'predicates', 'query', 'select', 'cursor', 'setCursor', 'clear'] as const;
+const METHODS = ['putFacts', 'predicates', 'query', 'select', 'rows', 'cursor', 'setCursor', 'clear'] as const;
 
 type Method = (typeof METHODS)[number];
 
@@ -107,6 +119,7 @@ export const make = (baseUrl: string): FactStoreApi => {
     predicates: () => call('predicates', {}, Predicates).pipe(Effect.map((entries) => [...entries])),
     query: (query) => call('query', { query }, Facts).pipe(Effect.map((facts) => [...facts])),
     select: (sparql) => call('select', { sparql }, Facts).pipe(Effect.map((facts) => [...facts])),
+    rows: (sparql) => call('rows', { sparql }, Rows).pipe(Effect.map((rows) => [...rows])),
     cursor: (source) => call('cursor', { source }, Hash).pipe(Effect.map((hash) => hash ?? undefined)),
     setCursor: (source, hash) => call('setCursor', { source, hash }, Done).pipe(Effect.asVoid),
     clear: () => call('clear', {}, Done).pipe(Effect.asVoid),
@@ -143,6 +156,8 @@ const dispatch = (
       return Schema.decodeUnknownEffect(QueryArgs)(body).pipe(Effect.flatMap(({ query }) => store.query(query)));
     case 'select':
       return Schema.decodeUnknownEffect(SelectArgs)(body).pipe(Effect.flatMap(({ sparql }) => store.select(sparql)));
+    case 'rows':
+      return Schema.decodeUnknownEffect(SelectArgs)(body).pipe(Effect.flatMap(({ sparql }) => store.rows(sparql)));
     case 'cursor':
       return Schema.decodeUnknownEffect(CursorArgs)(body).pipe(
         Effect.flatMap(({ source }) => store.cursor(source)),

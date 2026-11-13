@@ -187,6 +187,43 @@ describe('FactStoreLive', () => {
   );
 
   it.effect(
+    'answers any SELECT with its solutions, and refuses anything but a SELECT',
+    Effect.fnUntraced(function* () {
+      const store = FactStoreLive.makeMemory();
+      yield* store.putFacts([
+        fact('f1', {
+          assertion: {
+            subject: { kind: 'entity', entity: 'alice', label: 'Alice', type: 'person' },
+            predicate: 'works for',
+            object: { kind: 'entity', entity: 'acme', label: 'Acme', type: 'org' },
+          },
+        }),
+      ]);
+      const people = yield* store.rows(`
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT DISTINCT ?person ?label ?nickname WHERE {
+          GRAPH ?g { ?person a <https://schema.org/Person> . OPTIONAL { ?person rdfs:label ?label } }
+          OPTIONAL { ?person <urn:none> ?nickname }
+        }`);
+      expect(people).toHaveLength(1);
+      const [row] = people;
+      expect(row.person.termType).toBe('NamedNode');
+      expect(row.person.value).toContain('alice');
+      expect(row.label).toEqual({ termType: 'Literal', value: 'Alice' });
+      // An unbound variable is absent, so a row serializes without `undefined`s.
+      expect('nickname' in row).toBe(false);
+
+      const counted = yield* store.rows('SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?g { ?s ?p ?o } }');
+      expect(counted[0]?.n?.termType).toBe('Literal');
+
+      const update = yield* store.rows('DELETE WHERE { GRAPH ?g { ?s ?p ?o } }').pipe(Effect.flip);
+      expect(update).toBeInstanceOf(SemanticIndexError);
+      expect(yield* store.query({})).toHaveLength(1);
+      expect(yield* store.rows('this is not sparql').pipe(Effect.flip)).toBeInstanceOf(SemanticIndexError);
+    }),
+  );
+
+  it.effect(
     'drops the earlier text-triples tables on open',
     Effect.fnUntraced(function* () {
       const database = yield* openFile(':memory:');

@@ -43,6 +43,13 @@ describe('FactStoreHttp', () => {
 
           expect((yield* client.predicates()).length).toBeGreaterThan(0);
 
+          const rows = yield* client.rows('SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }');
+          expect(rows).toEqual(yield* backing.rows('SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o } }'));
+          // The two statements' graphs, and the ontology graph describing the predicate they mint.
+          expect(rows).toHaveLength(3);
+          expect(rows.every((row) => row.g?.termType === 'NamedNode')).toBe(true);
+          expect((yield* client.select('SELECT ?g WHERE { GRAPH ?g { ?s ?p ?o } }')).length).toBe(2);
+
           expect(yield* client.cursor('dxn:q:src')).toBeUndefined();
           yield* client.setCursor('dxn:q:src', 'hash-1');
           expect(yield* client.cursor('dxn:q:src')).toBe('hash-1');

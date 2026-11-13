@@ -11,4 +11,4 @@ export * from './store/index.ts';
 
 export { DEFAULT_MODEL, predicateSection } from './internal/stages/extract.ts';
 export { hashText } from './internal/stages/reconcile.ts';
-export { buildSparql, generateQuery, parseSparqlToQuery } from './internal/sparql/index.ts';
+export { buildSparql, generateQuery, generateSparql, parseSparqlToQuery } from './internal/sparql/index.ts';
