@@ -265,7 +265,19 @@ export const ApiStory = ({ id }: ApiStoryProps) => {
       {error ? (
         <p role='alert'>{error}</p>
       ) : (
-        story && <StoryEmbed.Root key={themeMode} story={story} args={entry.args} classNames='h-full' />
+        story && (
+          <StoryEmbed.Root
+            key={themeMode}
+            story={story}
+            args={entry.args}
+            // Storybook centres a story whose layout is not fullscreen; a fixed-position story layout ignores this.
+            classNames={
+              story.parameters?.layout === 'fullscreen'
+                ? 'h-full'
+                : 'h-full grid [place-items:safe_center] overflow-auto dx-base-surface'
+            }
+          />
+        )
       )}
     </div>
   );

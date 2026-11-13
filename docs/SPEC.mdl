@@ -6487,6 +6487,16 @@ decision D-306: TILE's API documents every namespace of `@dxos/react-ui`, one pa
     - Keep the core pages at the top level: with forty-three pages the list is too long to scan.
 ```
 
+```mdl
+decision D-307: An API page's story fills its frame with the story's surface and sits centred in it, as Storybook centres a story whose layout is not fullscreen. A story taller or wider than the frame starts at its top left and scrolls. The `CanvasEditor` demo is its `Docs` story: the canvas, navigation, palette and zoom, without the inspectors, actions or display menu. Amends [D-296], [D-305].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview, tile-api-reference]
+  why: The core stories size themselves for Storybook's centred layout, so in the docs they sat in the frame's top left on a patch of their own background; the full editor's panels crowded the demo.
+  rejected:
+    - Stretch each story to the frame's width: a 32rem accordion or tab bar reads worse at 77rem.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
