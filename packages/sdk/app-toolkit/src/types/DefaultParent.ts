@@ -37,8 +37,7 @@ export const resolve = (object: Obj.Unknown): Effect.Effect<Obj.Unknown | undefi
           .filter((rule) => TypeOptions.hasUserTypeTag(type, rule.tag))
           .toSorted(Position.compare);
     if (rules.length === 0) {
-      // A collection item with no rule to file it is saved but never shown in the navigator: on EDGE a plugin
-      // runs without plugin-space's rule, so its create paths file through `SpaceOperation.AddObject` instead.
+      // Saved but never shown in the navigator; a host without the filing plugin's rules files through that plugin.
       if (TypeOptions.hasUserTypeTag(type, Collection.ItemTag)) {
         log.warn('no default parent rule for a collection item', { typename: Obj.getTypename(object) });
       }

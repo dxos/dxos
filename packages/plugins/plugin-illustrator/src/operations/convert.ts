@@ -62,8 +62,8 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
             createdAt: new Date().toISOString(),
           }),
         );
-        // Filed beside the source, else where plugin-space files a new drawing by default, so it shows in the
-        // navigator; plugin-space files it because on EDGE this plugin runs without its default-parent rule.
+        // Filed beside the source, else by default, so it shows in the navigator; plugin-space files it, since on EDGE
+        // this plugin's bundle has no default-parent rule.
         const [beside] = yield* Database.query(ContainerModel.containing(drawing)).run;
         const { db } = yield* Database.Service;
         const added = yield* Operation.invoke(

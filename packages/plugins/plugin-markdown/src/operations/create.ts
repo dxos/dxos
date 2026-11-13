@@ -14,8 +14,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = Markdown
   Operation.withHandler(
     Effect.fn(function* ({ name, content }) {
       const { db } = yield* Database.Service;
-      // Filed by plugin-space, which owns where a new document goes: on EDGE this plugin runs alone, without
-      // plugin-space's default-parent rule, so filing it here would only add it to the space.
+      // plugin-space files it: on EDGE this plugin's bundle has no default-parent rule.
       const { id } = yield* Operation.invoke(
         SpaceOperation.AddObject,
         { object: Markdown.make({ name, content }) },

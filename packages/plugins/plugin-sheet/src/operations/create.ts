@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.Create> = SheetOperat
   Operation.withHandler(
     Effect.fn(function* ({ name, rows, columns }) {
       const { db } = yield* Database.Service;
-      // Filed by plugin-space, which owns where a new sheet goes; on EDGE this plugin runs without its rule.
+      // plugin-space files it: on EDGE this plugin's bundle has no default-parent rule.
       const { id } = yield* Operation.invoke(
         SpaceOperation.AddObject,
         { object: Sheet.make({ name, rows, columns }) },

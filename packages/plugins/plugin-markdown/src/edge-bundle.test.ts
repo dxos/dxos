@@ -19,6 +19,7 @@ const SPACE_PACKAGE_DIR = fileURLToPath(new URL('../../plugin-space', import.met
 
 const CREATE = 'org.dxos.operation.markdown.create';
 const ADD_OBJECT = 'org.dxos.operation.space.addObject';
+const GET_OBJECTS = 'org.dxos.operation.space.getObjects';
 
 describe('markdown plugin bundle on EDGE', { timeout: 300_000 }, () => {
   const bundleDirs: string[] = [];
@@ -26,6 +27,7 @@ describe('markdown plugin bundle on EDGE', { timeout: 300_000 }, () => {
   /** The operation keys the markdown bundle invoked in the space plugin's bundle, in order. */
   const nested: string[] = [];
   let markdown: LoadedBundle;
+  let space: LoadedBundle;
   let spaceId: string;
 
   beforeAll(async () => {
@@ -47,7 +49,7 @@ describe('markdown plugin bundle on EDGE', { timeout: 300_000 }, () => {
       return bundle;
     };
 
-    const space = await load(SPACE_PACKAGE_DIR);
+    space = await load(SPACE_PACKAGE_DIR);
     markdown = await load(MARKDOWN_PACKAGE_DIR, {
       invoke: (operationKey, input, options) => {
         nested.push(operationKey);
@@ -65,16 +67,36 @@ describe('markdown plugin bundle on EDGE', { timeout: 300_000 }, () => {
     }
   });
 
-  // The bundle runs without plugin-space's default-parent rule, so the document is filed by `space.addObject` in the
-  // space plugin's bundle, which has it; filing it in place would only add it to the space.
-  test('creates a document through the space plugin in another bundle', async ({ expect }) => {
+  /** Reads one object back through the space plugin's bundle, in its JSON form. */
+  const read = async (uri: string): Promise<Record<string, unknown> | undefined> => {
+    const result = await space.invoke({ operationKey: GET_OBJECTS, spaceId, input: { objects: [{ '/': uri }] } });
+    const output: unknown = result.ok ? result.output : undefined;
+    const objects =
+      output !== null && typeof output === 'object' && 'objects' in output && Array.isArray(output.objects)
+        ? output.objects
+        : [];
+    return objects[0];
+  };
+
+  // The bundle runs without plugin-space's default-parent rule, so `space.addObject` in the space plugin's bundle adds
+  // the document, with its text, and files it where documents go. This space has no root collection (a memory space
+  // has no `SpaceProperties`), so filing into the root is asserted by EDGE's tests on a Composer space.
+  test('creates a document, with its text, through the space plugin in another bundle', async ({ expect }) => {
     const result = await markdown.invoke({
       operationKey: CREATE,
       spaceId,
       input: { name: 'Forecast', content: 'Patchy rain.' },
     });
-    expect(result.ok ? result.output : result.error.message).toMatchObject({ id: expect.stringMatching(/^echo:/) });
     expect(nested).toEqual([ADD_OBJECT]);
+    const output = result.ok ? result.output : result.error.message;
+    expect(output).toMatchObject({ id: expect.stringMatching(/^echo:/) });
+
+    const id = typeof output === 'object' && output !== null && 'id' in output ? String(output.id) : '';
+    const document = await read(id);
+    expect(document).toMatchObject({ name: 'Forecast', content: { '/': expect.stringMatching(/^echo:/) } });
+    const content = document?.content;
+    const textUri = content !== null && typeof content === 'object' && '/' in content ? String(content['/']) : '';
+    expect(await read(textUri)).toMatchObject({ content: 'Patchy rain.' });
   });
 });
 
