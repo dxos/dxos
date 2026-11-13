@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 
 import { type AiService } from '@dxos/ai';
 import { Pipeline } from '@dxos/pipeline';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, RDF } from '@dxos/pipeline-rdf';
 import { failingAiService } from '@dxos/pipeline-rdf/testing';
 
 import * as Crawler from '../Crawler.ts';
@@ -110,6 +110,27 @@ describe('extractFactsStage', () => {
       const account = profile.find((fact) => fact.assertion.predicate === 'has account');
       expect(account?.assertion.object).toEqual({ kind: 'literal', literal: 'alice_w' });
       expect(account?.assertion.subject).toMatchObject({ label: 'Alice', type: 'person' });
+
+      // A changed profile writes a new graph that supersedes the old one, so one profile graph stays current; the
+      // registry keeps every username it has seen as an alias, so the current graph lists both.
+      const renamed: Type.User = { ...alice, username: 'alice_v' };
+      yield* Stream.fromIterable([message('3', renamed, 'Alice reviews Automerge.')]).pipe(
+        agentProfileStage(),
+        extractFactsStage(),
+        Stream.runDrain,
+      );
+      const profiles = (yield* store.query({ subjectEntity: 'https://discord.com/users/111' })).filter(
+        (fact) => fact.extractor.id === 'agent-registry',
+      );
+      const statuses = RDF.Graph.status(profiles);
+      const graphs = [...new Set(profiles.map((fact) => RDF.Mapping.graphOf(fact)))];
+      expect(graphs.map((graph) => statuses.get(graph)).sort()).toEqual(['active', 'superseded']);
+      const current = profiles.filter((fact) => statuses.get(RDF.Mapping.graphOf(fact)) === 'active');
+      expect(
+        current
+          .flatMap((fact) => (fact.assertion.object.kind === 'literal' ? [fact.assertion.object.literal] : []))
+          .sort(),
+      ).toEqual(['alice_v', 'alice_w']);
     }).pipe(Effect.provide(layer(prompts)));
   });
 

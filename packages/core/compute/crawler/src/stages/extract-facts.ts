@@ -57,10 +57,11 @@ const resolveMentions = (text: string, users: ReadonlyMap<string, RDF.KnownEntit
 const PROFILE_TIME = new Date(0).toISOString();
 
 /**
- * The facts naming a user from the source's own metadata, in one graph per user: `user —is a→ schema:Person` and
+ * The facts naming a user from the source's own metadata, in one graph per version of the profile, superseding the
+ * user's earlier profile graphs: `user —is a→ schema:Person` and
  * `user —has account→ "username"`, the subject carrying the display name, so the user's label comes from the source, never from a mention.
  */
-const profileFacts = (profile: AgentRegistry.Profile): RDF.Fact[] => {
+const profileFacts = (profile: AgentRegistry.Profile, supersedes: readonly string[] = []): RDF.Fact[] => {
   const user = AgentRegistry.userOf(profile);
   if (!user) {
     return [];
@@ -68,6 +69,7 @@ const profileFacts = (profile: AgentRegistry.Profile): RDF.Fact[] => {
   const iri = AgentRegistry.iriForUser(user);
   const usernames = AgentRegistry.usernamesOf(profile);
   const label = profile.label ?? usernames[0] ?? user.id;
+  const hash = hashText(`${label}\n${usernames.join('\n')}`);
   const subject: RDF.EntityTerm = { kind: 'entity', entity: iri, label, type: 'person' };
   const statement = (predicate: string, object: RDF.Term): RDF.Fact => ({
     id: '',
@@ -76,14 +78,16 @@ const profileFacts = (profile: AgentRegistry.Profile): RDF.Fact[] => {
     attribution: { agent: iri, agentLabel: label, source: iri, generatedAtTime: PROFILE_TIME },
     recordedAt: PROFILE_TIME,
     extractor: { id: 'agent-registry', model: `${user.source}-profile`, version: '1' },
-    sourceHash: hashText(`${label}\n${usernames.join('\n')}`),
+    sourceHash: hash,
+    ...(supersedes.length > 0 ? { supersedes: [...supersedes] } : {}),
   });
   return RDF.Graph.assign(
     [
       statement('is a', { kind: 'entity', entity: 'https://schema.org/Person', label: 'Person' }),
       ...usernames.map((username) => statement('has account', { kind: 'literal', literal: username })),
     ],
-    { name: () => `${iri}#profile` },
+    // One graph per version of the profile, so a changed one supersedes the last instead of adding to it.
+    { name: () => `${iri}#profile-${hash}` },
   );
 };
 
@@ -133,9 +137,15 @@ export const extractFactsStage = (
     // A profile is rewritten only when it changed: an append-only store (an ECHO fact feed) would grow on every batch.
     const store = yield* FactStore;
     for (const profile of new Set(authors.values())) {
-      const [first, ...rest] = profileFacts(profile);
+      const [first] = profileFacts(profile);
       if (first && (yield* store.cursor(first.attribution.source)) !== first.sourceHash) {
-        yield* store.putFacts([first, ...rest]);
+        // A write-only store (an ECHO fact feed) cannot be read back, so its profile graphs supersede nothing.
+        const earlier = (yield* store
+          .query({ source: first.attribution.source })
+          .pipe(Effect.orElseSucceed((): RDF.Fact[] => [])))
+          .filter((fact) => fact.extractor.id === first.extractor.id)
+          .map((fact) => RDF.Mapping.graphOf(fact));
+        yield* store.putFacts(profileFacts(profile, [...new Set(earlier)]));
         yield* store.setCursor(first.attribution.source, first.sourceHash);
       }
     }
