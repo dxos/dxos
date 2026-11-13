@@ -12,7 +12,7 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { CONTACTS, type Contact } from '../contacts.ts';
+import { type Contact, CONTACTS } from '../contacts.ts';
 
 // #region list
 type ContactListProps = {

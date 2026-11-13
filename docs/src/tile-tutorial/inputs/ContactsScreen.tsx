@@ -9,7 +9,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { CONTACTS, type Contact } from '../contacts.ts';
+import { type Contact, CONTACTS } from '../contacts.ts';
 import { ContactList } from '../layout/ContactsScreen.tsx';
 import { ContactEditor } from './ContactEditor.tsx';
 

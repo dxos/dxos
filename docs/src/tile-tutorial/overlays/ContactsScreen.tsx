@@ -14,7 +14,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { CONTACTS, type Contact } from '../contacts.ts';
+import { type Contact, CONTACTS } from '../contacts.ts';
 import { ContactEditor } from '../inputs/ContactEditor.tsx';
 import { ContactList } from '../layout/ContactsScreen.tsx';
 
