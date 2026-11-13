@@ -272,7 +272,7 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
   // The same stroke, read before it lands: one drawn round a shape becomes that shape, on the grid.
   freehandShape: {
     ...strokeTool,
-    name: 'Magic',
+    name: 'Sketch',
     icon: 'ph--shapes--regular',
     key: 'W',
     freehand: 'shape',
