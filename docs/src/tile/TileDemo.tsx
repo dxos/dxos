@@ -63,7 +63,6 @@ const PREVIEWS: Record<string, ComponentType> = {
   'format-toolbar': FormatToolbar,
   'icons': Icons,
   'inputs': Inputs,
-  'kanban': lazyPreview(() => import('../echo/snippets/tile-guide-mosaic.tsx'), 'TaskBoard'),
   'learn-icons': IconsScreen,
   'learn-inputs': InputsScreen,
   'learn-layout': LayoutScreen,

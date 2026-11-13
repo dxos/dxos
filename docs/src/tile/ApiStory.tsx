@@ -89,7 +89,7 @@ const STORIES: Record<string, ApiStoryEntry> = {
   },
   'react-ui-mosaic/board': {
     load: () => import('../../../packages/ui/react-ui-mosaic/src/components/Board/Board.stories.tsx'),
-    name: 'Default',
+    name: 'Docs',
   },
   'react-ui-mosaic/mosaic': {
     load: () => import('../../../packages/ui/react-ui-mosaic/src/components/Mosaic/Stack.stories.tsx'),

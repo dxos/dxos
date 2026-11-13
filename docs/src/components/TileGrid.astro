@@ -7,28 +7,29 @@ type Demo = {
   pkg: string;
   /** The namespace page in the package's API group [D-296], whose story the card runs [D-297]. */
   page: string;
-  /** How much of the twelve-column grid the card takes [D-291, D-295]. */
-  span: 'large' | 'wide' | 'half' | 'small';
+  /** Columns of the twelve, and rows of the grid, the card takes, sized to what its demo needs [D-298]. */
+  cols: number;
+  rows: number;
 };
 
 const DEMOS: Demo[] = [
-  { title: 'Kanban board', pkg: 'react-ui-mosaic', page: 'board', span: 'large' },
-  { title: 'Calendar', pkg: 'react-ui-calendar', page: 'calendar', span: 'large' },
-  { title: 'Spreadsheet', pkg: 'react-ui-grid', page: 'grid', span: 'wide' },
-  { title: 'Force graph', pkg: 'react-ui-graph', page: 'graph', span: 'small' },
-  { title: 'Markdown editor', pkg: 'react-ui-editor', page: 'editor', span: 'large' },
-  { title: 'Diagram', pkg: 'react-ui-diagram', page: 'diagram', span: 'large' },
-  { title: 'Gallery', pkg: 'react-ui-masonry', page: 'masonry', span: 'large' },
-  { title: 'Map', pkg: 'react-ui-geo', page: 'globe', span: 'half' },
-  { title: 'Chart', pkg: 'react-ui-plot', page: 'plot', span: 'half' },
+  { title: 'Kanban board', pkg: 'react-ui-mosaic', page: 'board', cols: 7, rows: 2 },
+  { title: 'Calendar', pkg: 'react-ui-calendar', page: 'calendar', cols: 5, rows: 2 },
+  { title: 'Spreadsheet', pkg: 'react-ui-grid', page: 'grid', cols: 8, rows: 1 },
+  { title: 'Force graph', pkg: 'react-ui-graph', page: 'graph', cols: 4, rows: 2 },
+  { title: 'Chart', pkg: 'react-ui-plot', page: 'plot', cols: 4, rows: 1 },
+  { title: 'Map', pkg: 'react-ui-geo', page: 'globe', cols: 4, rows: 1 },
+  { title: 'Markdown editor', pkg: 'react-ui-editor', page: 'editor', cols: 5, rows: 2 },
+  { title: 'Diagram', pkg: 'react-ui-diagram', page: 'diagram', cols: 7, rows: 2 },
+  { title: 'Gallery', pkg: 'react-ui-masonry', page: 'masonry', cols: 12, rows: 2 },
 ];
 ---
 
 <!-- Each card is an island that runs its package story as it nears the viewport [F-21.3], never an iframe [F-16.10]. -->
 <div class="tile-grid dx-wide not-content">
   {
-    DEMOS.map(({ title, pkg, page, span }) => (
-      <article class="tile-card" data-span={span}>
+    DEMOS.map(({ title, pkg, page, cols, rows }) => (
+      <article class="tile-card" data-rows={rows} style={`--tile-cols: ${cols}; --tile-rows: ${rows}`}>
         <a class="tile-card-head" href={`/docs/tile/api/${pkg}/${page}/`} title={`${title} in @dxos/${pkg}`}>
           <span class="tile-card-title">{title}</span>
           <span class="tile-card-pkg">@dxos/{pkg}</span>
@@ -61,22 +62,9 @@ const DEMOS: Demo[] = [
     overflow: hidden;
   }
 
-  /* Twelfths, so a small card gets a third of the row: room for its title, package and arrow on one line. */
-  .tile-card[data-span='large'] {
-    grid-column: span 6;
-    grid-row: span 2;
-  }
-
-  .tile-card[data-span='wide'] {
-    grid-column: span 8;
-  }
-
-  .tile-card[data-span='half'] {
-    grid-column: span 6;
-  }
-
-  .tile-card[data-span='small'] {
-    grid-column: span 4;
+  .tile-card {
+    grid-column: span var(--tile-cols);
+    grid-row: span var(--tile-rows);
   }
 
   /* One line: title, package, then an arrow to the API page; the package gives way first when the card is narrow. */
@@ -133,15 +121,13 @@ const DEMOS: Demo[] = [
       grid-auto-rows: auto;
     }
 
-    .tile-card,
-    .tile-card[data-span] {
+    .tile-card {
       grid-column: auto;
       grid-row: auto;
       height: 22rem;
     }
 
-    .tile-card[data-span='half'],
-    .tile-card[data-span='small'] {
+    .tile-card[data-rows='1'] {
       height: 16rem;
     }
   }

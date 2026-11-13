@@ -5,7 +5,6 @@ description: Columns of cards the user drags, like a kanban board.
 
 import ApiStory from '../../../../../../components/ApiStory.astro';
 import Snippet from '../../../../../../components/Snippet.astro';
-import TilePreview from '../../../../../../components/TilePreview.astro';
 
 <ApiStory id="react-ui-mosaic/board" height="28rem" />
 
@@ -49,7 +48,7 @@ dropped in its own column only gets `onDrop`, which reorders it. `Dnd.Root` trac
 
 <Snippet file="tile-guide-mosaic" region="board" lang="tsx" />
 
-<TilePreview id="kanban" height="24rem" />
+The story at the top of this page runs this example.
 
 Composer's Kanban plugin uses `Board` over ECHO objects, where each column is a value of a field and a drop writes the
 field.

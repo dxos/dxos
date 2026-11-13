@@ -2748,7 +2748,7 @@ page tile-api-mosaic-board: Board
   template: namespace
   status: spike
   covers:
-    - The package's own `Board` story, live at the top [D-296]
+    - The package's `Docs` story, the one its Overview card runs, live at the top [D-296] [D-297]
     - The `Board` parts over a `BoardModel`, dragging cards within and across columns and columns by their handle; the Overview grid's Kanban board card links here [D-296]
 ```
 ```mdl
@@ -5935,14 +5935,22 @@ decision D-296: TILE's API section has one page per component namespace, as `@dx
 ```
 
 ```mdl
-decision D-297: Each card in the TILE Overview's grid runs a story from its package's own stories file, the same story that opens the card's API page. Kanban runs Board's `Default`, Calendar runs `Week`, and Markdown editor runs `WithToolbar`. Where no story fits a card, the package gains a `Docs` story with the demo the guide had: the spreadsheet, the force graph, the diagram, the gallery, the globe's trip and the chart. A `Docs` story fills its frame on the page's surface, whatever its meta's layout. The examples on those API pages keep their code, and the story at the top runs it. A story can change for the docs, as the editor stories pad their text, but a package's API does not. Amends [D-291], [D-295] and [D-296].
+decision D-297: Each card in the TILE Overview's grid runs a story from its package's own stories file, the same story that opens the card's API page. Calendar runs `Week` and Markdown editor runs `WithToolbar`. Where no story fits a card, the package gains a `Docs` story with the demo the guide had: the task board, the spreadsheet, the force graph, the diagram, the gallery, the globe's trip and the chart. A `Docs` story fills its frame on the page's surface, whatever its meta's layout. The examples on those API pages keep their code, and the story at the top runs it. A story can change for the docs, as the editor stories pad their text, but a package's API does not. Amends [D-291], [D-295] and [D-296].
   date: 2026-11-13
   by: user:wittjosiah
-  affects: [F-21, tile-overview, tile-api-diagram-diagram, tile-api-geo-globe, tile-api-graph-graph, tile-api-grid-grid, tile-api-masonry-masonry, tile-api-plot-plot]
+  affects: [F-21, tile-overview, tile-api-mosaic-board, tile-api-diagram-diagram, tile-api-geo-globe, tile-api-graph-graph, tile-api-grid-grid, tile-api-masonry-masonry, tile-api-plot-plot]
   why: A demo written for the docs alone is a second copy that drifts from the package; a story is checked in Storybook and runs the same in the grid, on the API page and in Storybook.
   rejected:
     - Snippets for the cards, as before: each card's demo lived only in the docs.
-    - Existing stories for every card: the force graph's story is sized for a whole screen, and the others have no story for what the card shows.
+    - Existing stories for every card: Board's and the force graph's are sized for a whole screen, and Board's eight ECHO-backed columns clip in a card; the others have no story for what the card shows.
+```
+
+```mdl
+decision D-298: The TILE Overview's cards come in more sizes, each set by what its demo needs, in twelfths of the width and rows of 14rem. Kanban takes seven columns and Calendar five, both two rows tall. The spreadsheet takes eight columns and one row, beside a force graph four columns wide and two rows tall. The chart and the map take four columns and one row each, under the spreadsheet. The Markdown editor takes five columns and the diagram seven, both two rows tall, and the gallery takes the full width for two rows. On a phone a one-row card is 16rem tall and the others 22rem. Amends [D-295].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-overview]
+  why: Josiah found the cards too alike in size, and the force graph too cramped in a third of a row.
 ```
 
 ## Appendix: Extension Definitions
