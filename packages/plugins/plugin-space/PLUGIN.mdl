@@ -93,10 +93,9 @@ type PluginState
     enabledEdgeReplication: boolean
     showSessions?: boolean      # presence lists show a row per session; kept per device
     following?: FollowTarget & { paused?: boolean }  # ephemeral; paused while the leader views something this session cannot open
-    sessionId: SessionId        # ephemeral; this session's id in its presence messages and pointer
+    sessionId: SessionId        # ephemeral; this session's id in its presence messages
     followedSpaces: SpaceId[]   # ephemeral; the spaces in which some session follows this one
     peerFollowing: Record<SpaceId, Record<IdentityKeyHex, Record<SessionId, { identityKey, sessionId? }>>>  # ephemeral; whom each peer session follows
-    pointerStyle: cursor | laser  # ephemeral; how this session's pointer draws for its follow
 ```
 
 ## Components
@@ -1443,151 +1442,99 @@ decision D-61: A follower shows what of the leader's view its own deck can repre
 ```
 
 ```mdl
-decision D-62: While following, the follower sees the leader's pointer over the whole window, and a frame around its viewport, in the leader's colour, labelled with whom it follows and carrying Stop.
+decision D-62: Whatever indicates a follow applies to the leader as well as the follower.
   date: 2026-11-07
   by: user:wittjosiah
-  affects: [F-8.24, F-8.25]
+  affects: [F-8.24]
 ```
 
 ```mdl
-decision D-63: A pointer's position is relative to the plank under it, as the plank's attendable id plus fractions of the plank's box, rather than normalized to the viewport.
+decision D-63: The follow indication marks the space, not the whole screen, and uses surfaces Composer already has. The baseline is the dot on the Members tab in the complementary sidebar, with the follow's controls inside the Members companion; anything more builds on it.
   date: 2026-11-07
   by: user:wittjosiah
-  affects: [F-8.25, FollowPointer]
-  why: The follower already mirrors the leader's planks and their scroll, so a position within a plank survives different window sizes and deck widths, where one normalized to the viewport drifts.
+  affects: [F-8.23, F-8.24]
   rejected:
-    - Normalize the position to the viewport; it drifts when the two decks lay planks out differently.
+    - A chip in the navtree's space header, which has no room.
+    - A frame around the space's deck, which covers content.
+    - A band across the space above the navtree and deck, as drawn.
 ```
 
 ```mdl
-decision D-64: Pointers travel on the awareness channel every surface's cursors share, with a pointer kind per space, posted only while there is a follow; the viewing message does not change.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.14, F-8.25, FollowPointer]
-  rejected:
-    - Add the pointer to the viewing message, which changes its wire format.
-```
-
-```mdl
-decision D-65: The pointers over the whole window are visible only to the sessions in a follow, the followers and the leader they follow. Cursors drawn inside objects still show to every peer.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.25]
-```
-
-```mdl
-decision D-66: The follower moving its own mouse does not end the follow. The leader sees its followers' pointers as well, so a follower can point things out to the leader.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.22, F-8.25]
-```
-
-```mdl
-decision D-67: Sessions that follow the same leader see each other's pointers as well as the leader's, so a follow and its followers form one group that sees every member's pointer. Fills in [D-65], [D-66].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.25]
-  why: A follower pointing something out to the leader is pointing at a view every other follower mirrors too, so hiding it from them hides the point from the people it is about.
-  rejected:
-    - Show a follower's pointer to the leader only; two followers of one leader then point past each other.
-```
-
-```mdl
-decision D-68: A pointer names the sender's presence session and whom it follows, so each receiver decides on its own whether it shares the follow: no list of followers travels. A follower posts from the moment it follows; a leader posts while some session's viewing message names it, which it already tracks to send faster. Of a leader followed by identity, only the session the follow currently tracks is drawn. A pointer over no plank is posted without a position, so the receiver hides it, and leaving the window withdraws it. Fills in [D-63], [D-64].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.25, FollowPointer, PluginState]
-  why: The presence session id is what viewing messages and follow targets already use, so a pointer joins the follow state without a second identity. A leader with two tabs would otherwise draw two pointers on its follower's screen.
-  rejected:
-    - Send pointers to everyone and filter only at the receiver; peers outside any follow then post at 10 Hz for nothing.
-```
-
-```mdl
-decision D-69: The frame and pointers draw above the app and take no input, except Stop in the frame's label, which ends the follow as the Members companion's Stop does. The label sits at the top centre of the window. A pointer is an arrow in the member's colour with their name beside it. Fills in [D-62].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.24, F-8.25]
-  why: A frame that took clicks would block the follower's own input, which is how a follow ends.
-```
-
-```mdl
-decision D-70: Whatever indicates a follow applies to the leader as well as the follower.
+decision D-64: Spike a treatment of the plank heading on top of the baseline. The follow indicator is the presence indicator in a different state, not a separate element.
   date: 2026-11-07
   by: user:wittjosiah
   affects: [F-8.24]
 ```
 
 ```mdl
-decision D-71: The follow indication does not cover the whole screen; it shows that the follow is at the level of the space only.
+decision D-65: A leader can have several followers at once, as in a call with many people following one of them, and the follow indication supports that.
   date: 2026-11-07
   by: user:wittjosiah
   affects: [F-8.24]
 ```
 
 ```mdl
-decision D-72: A session can switch its pointer between a cursor and a laser pointer.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.24, F-8.25, FollowPointer]
-```
-
-```mdl
-decision D-73: The follow indication uses surfaces Composer already has. The baseline is the dot on the Members tab in the complementary sidebar, with the follow's controls inside the Members companion; anything more builds on it. A chip in the space header has no room, a frame around the deck covers content, and a band across the top does not fit as drawn.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.24]
-  supersedes: D-62
-  rejected:
-    - A chip in the navtree's space header.
-    - A frame around the space's deck.
-    - A band across the space above the navtree and deck.
-```
-
-```mdl
-decision D-74: Spike a treatment of the plank heading on top of the baseline.
+decision D-66: The follow's colour is consistent, not based on who is following you: every follow is marked in purple or indigo, and the Members tab's dot in the rail uses the same colour.
   date: 2026-11-07
   by: user:wittjosiah
   affects: [F-8.24]
 ```
 
 ```mdl
-decision D-75: A leader can have several followers at once, as in a call with many people following one of them, and the follow indication supports that.
+decision D-67: The followed person's row and the follow's controls are one thing. Following someone in the list slides their row to the top, transitions it into the follow's colour and swaps its controls.
   date: 2026-11-07
   by: user:wittjosiah
-  affects: [F-8.24, F-8.25]
+  affects: [F-8.23, F-8.24]
 ```
 
 ```mdl
-decision D-76: The follow's colour is consistent, not based on who is following you.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.24]
-```
-
-```mdl
-decision D-77: The follow indicator is the presence indicator in a different state, not a separate element.
+decision D-68: The plank heading's underline is in the follow's colour but one pixel thick; a thicker one crowds the sigil.
   date: 2026-11-07
   by: user:wittjosiah
   affects: [F-8.24]
 ```
 
 ```mdl
-decision D-78: The follow's colour is the leader's member hue, the same on the leader's screen and every follower's. Fills in [D-76].
+decision D-69: While following, every plank heading takes the follow's colour, companions included and in a sliding deck as well as a flat one; a companion's heading matches its primary plank's.
+  date: 2026-11-08
+  by: user:wittjosiah
+  affects: [F-8.24]
+```
+
+```mdl
+decision D-70: A follower's own interaction keeps ending the follow; pausing it instead would come to the same thing.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.22]
+```
+
+```mdl
+decision D-71: Companions are content, so the follow mirrors the leader's companion state: which companion is open and which tab is selected.
+  date: 2026-11-07
+  by: user:wittjosiah
+  affects: [F-8.14, F-8.21, PeerDeck]
+```
+
+```mdl
+decision D-72: Pointers shared across the window during a follow, the leader's and its followers', were tried and are a dead end, so they are not part of the follow; the rest of its interface stays.
+  date: 2026-11-08
+  by: user:wittjosiah
+  affects: [F-8.24]
+```
+
+```mdl
+decision D-73: The follow's colour is the palette's indigo. Each heading takes an 18% indigo wash over its one-pixel indigo underline, and the rail dot takes the hue through a `badgeHue` on deck companions, which the deck paints in place of the accent. Fills in [D-66], [D-68].
   date: 2026-11-07
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-8.24]
-  why: A follow has exactly one leader, so the leader's hue is one colour every screen in the follow agrees on, and it already names that person elsewhere.
+  why: Indigo is distinct from the accent blue of Composer's own selection, and a companion's badge had no colour of its own.
   rejected:
-    - A fixed accent for every follow; two follows in one space would look alike.
-    - The other person's hue on each screen; the leader would see a different colour from its followers.
+    - The leader's member hue, which an earlier draft used; it differs from follow to follow.
 ```
 
 ```mdl
-decision D-79: Each session keeps whom every peer session follows, from the `following` in their viewing messages, kept and pruned like peer decks. From it a session derives its follow: the leader, and every fresh session following them, so a leader lists all its followers and a follower knows the others. Pointers remain shared within that whole group ([D-67]). Fills in [D-75].
+decision D-74: Each session keeps whom every peer session follows, from the `following` in their viewing messages, kept and pruned like peer decks. From it a session derives its follow: the leader and every fresh session following them, so a leader lists all its followers and a follower knows the others. Fills in [D-65].
   date: 2026-11-07
   by: agent:claude-code
   for: user:wittjosiah
@@ -1596,84 +1543,7 @@ decision D-79: Each session keeps whom every peer session follows, from the `fol
 ```
 
 ```mdl
-decision D-80: The Members companion opens its list under a follow block: who leads or follows, in the leader's hue, and the session's pointer style as a Cursor / Laser toggle; Stop stays on the leader's row for a follower ([F-8.23]). The pointer style is per session and in memory, starts as Cursor, and travels as `style` on the follow pointer, omitted for a cursor. Fills in [D-72], [D-73].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.24, F-8.25, FollowPointer, PluginState]
-  why: The companion is the baseline's home for controls, and a leader with no row of its own needs somewhere to see its followers and set its pointer.
-```
-
-```mdl
-decision D-81: The heading spike marks a plank whose viewers include someone in the session's follow: their avatars take the presence indicator's current ring, repainted in the leader's hue, and the heading a tint and underline in it, painted by the presence surface behind the heading's content. The deck's plank toolbar is positioned and isolated so a surface in it can paint that layer. The whole-window frame and its label go. Fills in [D-74], [D-77].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.24]
-  supersedes: D-69
-  why: The presence avatars are already on every plank heading, so the follow reads where people are without new chrome, and only on planks the follow shares.
-  rejected:
-    - A new heading API in plugin-deck for an accent colour; worth it if the spike is kept.
-```
-
-```mdl
-decision D-82: The plank heading's underline stays a different colour but is one pixel thick; a thicker one crowds the sigil.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.24]
-```
-
-```mdl
-decision D-83: Every follow is marked in purple or indigo rather than the leader's colour, and the Members tab's dot in the rail uses the same colour.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.24]
-  supersedes: D-78
-```
-
-```mdl
-decision D-84: The laser's icon must not be the crosshair Jump uses.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.24]
-```
-
-```mdl
-decision D-85: The followed person's row and the follow's controls are one thing. Following someone in the list slides their row to the top, transitions it into the follow's colour and swaps its controls.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.23, F-8.24]
-  supersedes: D-80
-```
-
-```mdl
-decision D-86: The laser's tail traces the path the pointer took, not a tail at a fixed angle.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.25]
-```
-
-```mdl
-decision D-87: The follow's colour is the palette's indigo. The heading keeps an 18% indigo wash over the one-pixel underline. The rail dot takes it through a new `badgeHue` on deck companions, which the deck paints in place of the accent. Fills in [D-82], [D-83].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.24]
-  why: Indigo is distinct from the accent blue of Composer's own selection, and the companion badge had no colour of its own.
-```
-
-```mdl
-decision D-88: The laser's icon is Phosphor's flashlight. Fills in [D-84].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.24]
-  rejected:
-    - Target or crosshair icons, which read as Jump.
-```
-
-```mdl
-decision D-89: A follower's merged row is the leader's row at the top, carrying the pointer style and Stop. A leader, who has no row of its own, gets a "Following you" group at the top holding its followers' rows, with the pointer style on the group's label; those rows carry no actions. A row that changes place slides from where it was over 320 ms and the indigo fades in, except under reduced motion. Fills in [D-85].
+decision D-75: A follower's merged row is the leader's own row at the top of Members, carrying Stop. A leader, who has no row of its own, gets a "Following you" group at the top holding its followers' rows, which carry no actions. A row that changes place slides from where it was over 320 ms and the indigo fades in, except under reduced motion; rows are measured without a running slide, so a re-render mid-slide starts no second one. Fills in [D-67].
   date: 2026-11-07
   by: agent:claude-code
   for: user:wittjosiah
@@ -1682,130 +1552,30 @@ decision D-89: A follower's merged row is the leader's row at the top, carrying 
 ```
 
 ```mdl
-decision D-90: A drawn pointer eases 35% of the way to its latest position every frame, and a laser's tail is the path it eased along over the last 450 ms, thinning and fading with age. Fills in [D-86].
-  date: 2026-11-07
+decision D-76: The deck takes a heading accent from a new `HeadingAccent` capability and washes every primary and companion heading in it; plugin-space holds indigo there while the session follows or is followed in the space the deck shows. In the presence indicator, the avatars of those in the session's follow take the current ring, repainted indigo. Fills in [D-64], [D-69].
+  date: 2026-11-08
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.25]
-  why: Positions arrive at most every 100 ms, so a tail drawn through the raw points would be a few straight jumps; easing gives it the curve the pointer took.
-```
-
-```mdl
-decision D-91: Pointers show over the whole window, the navtree included, not only over planks.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.25, FollowPointer]
-```
-
-```mdl
-decision D-92: A pointer is placed against the plank under it, else the navtree row under it (by the row's graph path), else the window, as fractions of that box. A receiver that does not show the plank or row draws nothing; the window is always shown. Fills in [D-91].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.25, FollowPointer]
-  why: Planks and rows are found by the same graph path on every screen, so a pointer on them lands on the same thing; the rest of the window differs between layouts and only lines up roughly.
+  affects: [F-8.24]
+  why: A companion's heading is the deck's own toolbar with no surface in it, so only the deck can colour it, and one accent for every heading keeps them alike.
   rejected:
-    - Window fractions everywhere; a pointer on a navtree row would land on another row when the two sidebars differ in width or scroll.
+    - A tint painted by the presence surface behind the plank heading, as the first spike did; it cannot reach companion headings.
 ```
 
 ```mdl
-decision D-93: A follower's own interaction keeps ending the follow; pausing it instead would come to the same thing.
+decision D-77: The deck publishes on its layout the planks it shows with their companion open and the selected companion tab. The leader's viewing message carries both for each space, and the follower opens each mirrored plank's companion in that tab, or closes it, through `UpdateCompanion` when the report changes or while planks mount; a flat follower applies the leader's plank to its own plank for the same object. Fills in [D-71].
   date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.22]
-```
-
-```mdl
-decision D-94: Pointers show over the content area only, not over the navtree or other chrome. Showing them over the navtree would mean the follow mirroring the navtree's state as well, which is invasive.
-  date: 2026-11-07
-  by: user:wittjosiah
-  affects: [F-8.25, FollowPointer]
-  supersedes: D-91
-```
-
-```mdl
-decision D-95: Companions are content, so the follow mirrors the leader's companion state: which companion is open and which tab is selected.
-  date: 2026-11-07
-  by: user:wittjosiah
+  by: agent:claude-code
+  for: user:wittjosiah
   affects: [F-8.14, F-8.21, PeerDeck]
 ```
 
 ```mdl
-decision D-96: The pointer style stays in the Members companion for now.
-  date: 2026-11-07
-  by: user:wittjosiah
+decision D-78: The shared pointers were dropped on evidence. Placed by fractions of the plank's box, none of six pointers aimed at words landed on them with planks 1202 and 702 px wide; placed by position in the content, they landed but needed every content type to take part and jump where two windows wrap text differently. Canvas tools (Figma, tldraw) share one world space because nothing reflows; Liveblocks places cursors by fractions of a container; Ably's experiment reports cursors jumping between element and coordinate placement; Cord leaves the encoding to each app. Removing them removed the pointer channel and overlay, a Cursor / Laser style, the content-position protocol and its QA flow. Fills in [D-72].
+  date: 2026-11-08
+  by: agent:claude-code
+  for: user:wittjosiah
   affects: [F-8.24]
-```
-
-```mdl
-decision D-97: The deck publishes on its layout the planks it shows with their companion open and the selected companion tab. The leader's viewing message carries both for each space, and the follower opens each mirrored plank's companion in that tab, or closes it, through `UpdateCompanion` when the report changes or while planks mount; a flat follower applies the leader's plank to its own plank for the same object. A pointer is placed only against the plank or companion under it, found by graph path; over chrome it posts no position. Fills in [D-94], [D-95].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.14, F-8.21, F-8.25, FollowPointer, PeerDeck]
-  supersedes: D-92
-  why: A companion's pane is an attendable keyed by its plank's object, so once both decks show the same companion a pointer in it lands in the same place, as one in a plank does.
-```
-
-```mdl
-decision D-98: A companion's pane has no attention of its own, so the deck marks it with the plank it accompanies, and a pointer over it names that plank with `companion` set; a receiver places it in the same plank's companion. Fills in [D-97].
-  date: 2026-11-07
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.25, FollowPointer]
-  why: The companion shares its plank's attention, so no attendable id tells it apart; the plank it accompanies does, and both decks show it beside the same plank once the follow mirrors companions.
-```
-
-```mdl
-decision D-99: While following, every plank heading takes the follow's colour, companions included and in a sliding deck as well as a flat one; a companion's heading matches its primary plank's.
-  date: 2026-11-08
-  by: user:wittjosiah
-  affects: [F-8.24]
-```
-
-```mdl
-decision D-100: A pointer lands on what it points at across devices, even when their windows differ in size.
-  date: 2026-11-08
-  by: user:wittjosiah
-  affects: [F-8.25, QA-8]
-```
-
-```mdl
-decision D-101: The deck takes a heading accent from a new `HeadingAccent` capability and washes every primary and companion heading in it; plugin-space holds indigo there while the session follows or is followed in the space the deck shows. The presence surface no longer paints the heading, so the plank toolbar drops its stacking context. QA-8 checks D-100 with two windows of different widths. Fills in [D-99], [D-100].
-  date: 2026-11-08
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.24, QA-8]
-  supersedes: D-81
-  why: The companion heading is the deck's own toolbar with no surface in it, so only the deck can colour it; one accent for every heading keeps them alike.
-```
-
-```mdl
-decision D-102: A pointer carries, besides its fractions of the plank's box, an anchor in the content's own terms: content that can name a point (the text editor, by its document cursor, an automerge cursor when synced) marks itself and answers two synchronous DOM events from `@dxos/ui-types`, one naming the anchor and offset at a client point and one drawing an anchor back. The receiver draws the pointer where its own content draws that anchor, hides it when that spot is scrolled out of its view, and falls back to the fractions only where no content in the plank resolves the anchor. With plank widths of 1202 and 702 px, none of six pointers aimed at words landed on them by fractions alone, and all six did by anchor. Fills in [D-100].
-  date: 2026-11-08
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.25, FollowPointer, QA-8]
-  why: Fractions of a box only match where both views lay the content out alike; text wraps at other words in a window of another width, so only a position in the content itself names the same word.
-  rejected:
-    - Fractions of the plank's box alone; they miss as soon as the two windows differ in width.
-    - A new capability per object type; content already renders the spot, so the view that renders it can answer for it through the DOM.
-```
-
-```mdl
-decision D-103: Pointers shared across the window during a follow are a dead end, so they go; the rest of the follow's interface stays.
-  date: 2026-11-08
-  by: user:wittjosiah
-  affects: [F-8.23, F-8.24, QA-7]
-  why: No product places pointers over reflowing content in one continuous space; box fractions miss words in windows of other widths, and positions in the content are per type and jump at wrap boundaries.
-```
-
-```mdl
-decision D-104: Removing pointers removes the pointer channel and overlay, the pointer style and its toggle in Members, the content-position protocol in `@dxos/ui-types` and the editor, the deck's marker on companion panes, F-8.25, `FollowPointer` and QA-8. Following someone's row, the "Following you" group, the indigo rail dot and headings, avatar rings and mirrored companions remain; QA-7 now checks the follow shows on both sides. Fills in [D-103].
-  date: 2026-11-08
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.23, F-8.24, QA-7]
 ```
 
 ## Appendix: Extension Definitions
