@@ -13,7 +13,7 @@ const narrative = NARRATIVES[id];
 <h3>{narrative.title}</h3>
 <p set:html={narrative.plugins} />
 <!-- The demo runs on its own page so that its CSS stays off the docs pages; see `pages/embed/demo.astro`. -->
-<iframe class="demo-embed not-content" src={`/embed/demo/?id=${id}`} title={narrative.title} loading="lazy"></iframe>
+<iframe class="demo-embed dx-wide not-content" src={`/embed/demo/?id=${id}`} title={narrative.title} loading="lazy"></iframe>
 
 <style>
   .demo-embed {

@@ -12,7 +12,7 @@ const { id, height } = Astro.props;
 ---
 
 <!-- An island in the page, never an iframe [F-16.10]; `.dx-island` is where the page's styles stop. -->
-<div class="tile-preview dx-island not-content" data-fill={height ? '' : undefined} style={height ? { height } : undefined}>
+<div class="tile-preview dx-wide dx-island not-content" data-fill={height ? '' : undefined} style={height ? { height } : undefined}>
   <TileDemo id={id} client:only="react" />
 </div>
 
