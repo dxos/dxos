@@ -6598,6 +6598,16 @@ decision D-308: Every TILE API page documents exactly one namespace. The Overlay
     - Keep Overlays as a page that compares them: the learning path's Overlays step already says which to use when.
 ```
 
+```mdl
+decision D-309: A core `@dxos/react-ui` story's frame fits the story: as tall as the story plus a margin, up to the height the page gives, and as wide as the text column unless the story is wider. Under Storybook's fixed centred or column layout the frame fits the panel that layout holds; a fullscreen story keeps the page's frame. The other packages' frames keep the sizes their pages give, since their stories fill whatever frame they get. Amends [D-301], [D-307].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: A badge or a breadcrumb sat in a frame as tall and wide as the Board's, mostly empty.
+  rejected:
+    - Fit every API story: a chart or map with no size of its own collapses to nothing.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
