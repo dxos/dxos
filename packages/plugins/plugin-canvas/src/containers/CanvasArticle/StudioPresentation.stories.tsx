@@ -35,7 +35,8 @@ import { CanvasCapabilities } from '#types';
 import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
-import { STUDIO_SLIDES } from '../../testing/studio/slides.ts';
+import { STUDIO_SLIDES, seedSlide } from '../../testing/studio/slides.ts';
+import { slideBounds } from '../../testing/studio/spec.ts';
 import {
   STUDIO_CANVAS,
   type StudioReport,
@@ -112,27 +113,34 @@ const decorators = createStoryDecorators<StoryArgs>(({ args }) => ({
     // What each slide covers once the loader has laid it out, which only a run can say: a slide may be spread or
     // given a gap, so the deck's own page is not what the view has to frame.
     const measured = STUDIO_SLIDES.map((slide) => {
+      // A declared slide's extent is a function of its spec; an imported one's is only known once every pass has run.
+      if (slide.spec) {
+        return { slide, bounds: slideBounds(slide.spec) };
+      }
       let report: StudioReport | undefined;
       seedStudioSlide(slide.source, slide.model, { ...slide, report: (value) => (report = value) })({});
       return { slide, bounds: report!.bounds };
     });
     const size = studioDeckSize(measured.map(({ bounds }) => bounds));
-    const seeded = measured.map(({ slide: { id, source, model, ...options }, bounds }) => {
+    const seeded = measured.map(({ slide, bounds }) => {
+      const { id, model } = slide;
+      // The slide's own title where it gives one: the deck's is what it called the page.
+      const title = slide.title ?? model.title;
       // Read-only: a slide is looked at, and the rail would take a corner of every one.
-      const canvas = addTestCanvas(space.db, seedStudioSlide(source, model, options), {
+      const canvas = addTestCanvas(space.db, seedSlide(slide), {
         ...STUDIO_CANVAS,
         readonly: true,
         fitFrame: studioPageFrame(bounds, size),
         fitZoom: FIT_ZOOM,
       });
-      return { model, drawing: space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas })) };
+      return { title, drawing: space.db.add(Drawing.make({ name: `${id} · ${title}`, canvas })) };
     });
     const deck = space.db.add(
       Presentation.make({
         name: 'Studio',
         description: DESCRIPTION,
         theme: THEME,
-        slides: seeded.map(({ model, drawing }) => slide(model.title, drawing)),
+        slides: seeded.map(({ title, drawing }) => slide(title, drawing)),
       }),
     );
     await space.db.flush();

@@ -29,8 +29,8 @@ import { CanvasCapabilities } from '#types';
 import types from '../../capabilities/schema.ts';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import { STUDIO_KINDS } from '../../testing/studio/kinds.ts';
-import { STUDIO_SLIDES, type StudioSlide, studioSlide } from '../../testing/studio/slides.ts';
-import { STUDIO_CANVAS, seedStudioSlide } from '../../testing/studio/studio.ts';
+import { STUDIO_SLIDES, seedSlide, type StudioSlide, studioSlide } from '../../testing/studio/slides.ts';
+import { STUDIO_CANVAS } from '../../testing/studio/studio.ts';
 
 /** Every kind the deck's slides use, contributed once for all of them. */
 const StudioKindsPlugin = Plugin.define(
@@ -65,56 +65,17 @@ const decorators = (slides: readonly StudioSlide[] = STUDIO_SLIDES) =>
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), StudioKindsPlugin()],
     onInit: async ({ space }) => {
-      const drawings = slides.map(
-        ({
-          id,
-          source,
-          model,
-          labels,
-          remap,
-          spread,
-          balance,
-          gap,
-          frames,
-          links,
-          ports,
-          columns,
-          add,
-          unlink,
-          relink,
-          uniform,
-          sizes,
-        }) => {
-          // Every component is drawn as a kind: the space graph's Generator is exercised by `StudioAgents`, and nine
-          // compiled generators on one page would say nothing the one story does not.
-          // Read-only, so each cell is the slide rather than nine editors: the rail, the actions and the inspectors
-          // take a third of a cell this size, and this view is for comparing the drawings.
-          const canvas = addTestCanvas(
-            space.db,
-            seedStudioSlide(source, model, {
-              labels,
-              remap,
-              spread,
-              balance,
-              gap,
-              frames,
-              links,
-              ports,
-              columns,
-              add,
-              unlink,
-              relink,
-              uniform,
-              sizes,
-            }),
-            {
-              ...STUDIO_CANVAS,
-              readonly: true,
-            },
-          );
-          return space.db.add(Drawing.make({ name: `${id} · ${model.title}`, canvas }));
-        },
-      );
+      const drawings = slides.map((slide) => {
+        // Every component is drawn as a kind: the space graph's Generator is exercised by `StudioAgents`, and nine
+        // compiled generators on one page would say nothing the one story does not.
+        // Read-only, so each cell is the slide rather than nine editors: the rail, the actions and the inspectors
+        // take a third of a cell this size, and this view is for comparing the drawings.
+        const canvas = addTestCanvas(space.db, seedSlide(slide), {
+          ...STUDIO_CANVAS,
+          readonly: true,
+        });
+        return space.db.add(Drawing.make({ name: `${slide.id} · ${slide.title ?? slide.model.title}`, canvas }));
+      });
       await space.db.flush();
       return square(drawings.map((drawing) => Cell.article(drawing)));
     },

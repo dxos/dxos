@@ -146,6 +146,9 @@ const ChipNodeView = ({ node, editing }: NodeViewProps) => {
 };
 
 export const chipSpec: ElementKindSpec = {
+  // Five ports a side: a true middle to tie a trunk to, and room either side of it for a fan of edges
+  // that converge on one card.
+  portsPerSide: 5,
   name: 'Chip',
   icon: 'ph--tag--regular',
   key: 'H',

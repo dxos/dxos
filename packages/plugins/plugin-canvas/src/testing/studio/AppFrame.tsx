@@ -279,6 +279,9 @@ export const AppFrameNodeView = ({ node }: NodeViewProps) => {
 };
 
 export const appFrameSpec: ElementKindSpec = {
+  // Five ports a side: a true middle to tie a trunk to, and room either side of it for a fan of edges
+  // that converge on one card.
+  portsPerSide: 5,
   name: 'App frame',
   icon: 'ph--app-window--regular',
   key: 'W',

@@ -27,13 +27,20 @@ import hyperspaceSource from './hyperspace.diagram?raw';
 import hyperspaceModel from './hyperspace.json?raw';
 import ontologySource from './ontology.diagram?raw';
 import ontologyModel from './ontology.json?raw';
+import { ONTOLOGY } from './ontology.spec.ts';
 import pluginsSource from './plugins.diagram?raw';
 import pluginsModel from './plugins.json?raw';
-import { type StudioModel, parseStudioModel } from './studio.ts';
+import { type SlideSpec, seedSlideSpec } from './spec.ts';
+import { type StudioModel, parseStudioModel, seedStudioSlide } from './studio.ts';
 
 export type StudioSlide = {
   /** The slide's own name, which its files are named after. */
   id: string;
+  /**
+   * The slide said as groups of columns of cards ({@link SlideSpec}), which is drawn from the spec alone — the deck's
+   * geometry and every pass that recovers structure from it are skipped.
+   */
+  spec?: SlideSpec;
   source: string;
   model: StudioModel;
   /** The drawing places a space graph, which a `Generator` draws when the story runs it as one. */
@@ -58,6 +65,14 @@ export type StudioSlide = {
   frames?: readonly string[];
   /** The slide's own columns, each a list of card ids. */
   columns?: readonly (readonly string[])[];
+  /** The slide's own title, where the deck's does not read as this drawing does. */
+  title?: string;
+  /** Links the slide draws that the deck did not: the two cards and what the link says. */
+  connect?: readonly (readonly [string, string, string])[];
+  /** Texts the slide does not draw, by id. */
+  hide?: readonly string[];
+  /** How far above the deck's own place the slide's text sits, in scene units. */
+  lift?: number;
   /** Cards the slide draws that the deck did not. */
   add?: readonly { id: string; title: string; icon: string }[];
   /** Links the slide does not draw, as the pair of cards they join. */
@@ -91,29 +106,9 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
   slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'ortho' }),
   slide('echo-layers', echoLayersSource, echoLayersModel, { links: 'ortho' }),
-  // Every card is a type, so every card is one box; the deck sized each to its own label.
-  // The deck drew its entities as a hand-placed graph; said as five columns — the types, what a person belongs to,
-  // the person, what a person does, and the containers — it reads in one pass.
-  slide('ontology', ontologySource, ontologyModel, {
-    uniform: true,
-    links: 'ortho',
-    gap: 96,
-    // Two more a person is party to, and the trip a travel booking makes.
-    add: [
-      { id: 'space', title: 'Space', icon: 'cube-focus' },
-      { id: 'role', title: 'Role', icon: 'identification-badge' },
-      { id: 'trip', title: 'Trip', icon: 'airplane-tilt' },
-    ],
-    columns: [
-      ['group', 'organization', 'space', 'role', 'transaction'],
-      ['person'],
-      ['project', 'task', 'event', 'trip', 'message'],
-    ],
-    // What a person attends and what a person is assigned already say how an event and a task meet.
-    unlink: [['event', 'task']],
-    // A project belongs to the group that runs it, not to the organization above it.
-    relink: [['project', 'organization', 'group']],
-  }),
+  // Declared rather than imported: three boxed groups, the entities in three columns about a Person. The deck's own
+  // hand-placed graph and the passes that recovered columns from it are not used here.
+  slide('ontology', ontologySource, ontologyModel, { spec: ONTOLOGY, title: ONTOLOGY.title }),
   slide('plugins', pluginsSource, pluginsModel, {
     labels: false,
     remap: { chip: 'card' },
@@ -162,4 +157,16 @@ export const studioSlide = (id: string): StudioSlide => {
     throw new Error(`No studio slide "${id}"; the deck has ${STUDIO_SLIDES.map(({ id }) => id).join(', ')}.`);
   }
   return found;
+};
+
+/**
+ * The seeder for a slide: the spec where it declares one, the deck import otherwise. One place picks, so a story that
+ * shows one slide and a story that shows nine do not each learn which slides are declared.
+ */
+export const seedSlide = (slide: StudioSlide) => {
+  if (slide.spec) {
+    return seedSlideSpec(slide.spec);
+  }
+  const { id: _id, source, model, spec: _spec, ...options } = slide;
+  return seedStudioSlide(source, model, options);
 };

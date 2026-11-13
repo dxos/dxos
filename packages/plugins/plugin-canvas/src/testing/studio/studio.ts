@@ -15,7 +15,7 @@ import { type ContentMap, Dsl, type Scene, applyCommands } from '@dxos/diagram';
 import { invariant } from '@dxos/invariant';
 import { type Node, type NodeBase, endpointNode } from '@dxos/scene';
 
-import { isLinkRecord, isNodeRecord, nodeKey } from '../../model/content.ts';
+import { isLinkRecord, isNodeRecord, linkKey, nodeKey } from '../../model/content.ts';
 import { SceneHandler, elementId } from '../../model/handler.ts';
 
 const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
@@ -395,6 +395,40 @@ const rewireLinks = (
   return rewired;
 };
 
+/** A link a slide draws that the deck did not: the two cards it joins and what it says. */
+export type StudioConnection = readonly [string, string, string];
+
+/** Draws the links the slide names beyond the deck's own, in the style the slide's own links are drawn in. */
+const connectCards = (content: ContentMap, connect: readonly StudioConnection[]): number => {
+  const scene = Object.values(content).find(isLinkRecord)?.scene;
+  if (connect.length === 0 || scene === undefined) {
+    return 0;
+  }
+  let drawn = 0;
+  for (const [from, to, text] of connect) {
+    const id = `${from}-${to}`;
+    const key = linkKey(id);
+    if (content[key]) {
+      continue;
+    }
+    content[key] = {
+      kind: 'link',
+      scene,
+      link: {
+        type: 'ortho',
+        id,
+        z: 'a0',
+        source: { node: boxOf(from) },
+        target: { node: boxOf(to) },
+        ends: { end: 'arrow' },
+        text,
+      },
+    };
+    drawn++;
+  }
+  return drawn;
+};
+
 /** The text width a label of this size needs, which the canvas does not measure for an unframed box. */
 const textWidth = (label: string, fontSize: number) => label.length * fontSize * 0.62 + 16;
 
@@ -402,7 +436,7 @@ const textWidth = (label: string, fontSize: number) => label.length * fontSize *
  * Sizes the slide's text. The bridge turns a DSL `text` into a note (or, at `weight=s`, a small left-aligned label),
  * because the scene language has no notion of a heading: every size here comes from the sidecar's `role`.
  */
-const styleText = (content: ContentMap, model: StudioModel): void => {
+const styleText = (content: ContentMap, model: StudioModel, lift = 0): void => {
   // A column's lines as one block, laid out UPWARDS from the last one's own place: the deck set its text against its
   // own type sizes, so a heading drawn larger here would run over the line under it — and pushing that line down
   // instead would run it into the frame the deck left room above.
@@ -436,7 +470,7 @@ const styleText = (content: ContentMap, model: StudioModel): void => {
     const width = text.w ?? (label ? textWidth(label, fontSize) : node.size.width);
     const align = text.align ?? 'left';
     const height = fontSize * 1.9;
-    const top = tops.get(text.id) ?? text.y;
+    const top = (tops.get(text.id) ?? text.y) - lift;
     content[nodeKey(id)] = {
       ...record,
       node: {
@@ -620,6 +654,9 @@ const waypointsOf = (route: StudioRoute, source: Frame, target: Frame): Vec[] =>
  * centre to top centre rather than corner to corner.
  */
 const facingPorts = (source: Frame, target: Frame, ports: PortMode): { source: string; target: string } => {
+  // `portId` counts from 1 at the side's START, so the middle of five ports is 3 — `s1` is a sixth of the way along,
+  // which is where every trunk was leaving from.
+  const [n, s, e, w] = ['n3', 's3', 'e3', 'w3'];
   const span = (frame: Frame) => ({
     left: frame.center.x - frame.size.width / 2,
     right: frame.center.x + frame.size.width / 2,
@@ -633,14 +670,14 @@ const facingPorts = (source: Frame, target: Frame, ports: PortMode): { source: s
   // across; otherwise the sides that face each other are the ones the shapes are furthest apart on, so two cards
   // side by side with a little vertical offset are joined across rather than over the top of one of them.
   if (ports === 'vertical' && (below || above)) {
-    return below ? { source: 's1', target: 'n1' } : { source: 'n1', target: 's1' };
+    return below ? { source: s, target: n } : { source: n, target: s };
   }
   const across = Math.max(to.left - from.right, from.left - to.right);
   const down = Math.max(to.top - from.bottom, from.top - to.bottom);
   if (down > across) {
-    return below ? { source: 's1', target: 'n1' } : { source: 'n1', target: 's1' };
+    return below ? { source: s, target: n } : { source: n, target: s };
   }
-  return target.center.x >= source.center.x ? { source: 'e1', target: 'w1' } : { source: 'w1', target: 'e1' };
+  return target.center.x >= source.center.x ? { source: e, target: w } : { source: w, target: e };
 };
 
 /**
@@ -1300,6 +1337,64 @@ const dropFrames = (content: ContentMap, frames: readonly string[]): number => {
   return dropped;
 };
 
+/**
+ * Puts each of the slide's headings over the column it names. The deck set them against its own columns; a slide that
+ * lays its columns out here has moved them, so the heading goes where its column ended up — centred on it, and `lift`
+ * above whatever that column's topmost shape is.
+ */
+const placeHeadings = (
+  content: ContentMap,
+  model: StudioModel,
+  columns: number,
+  lift: number,
+  grid: number,
+): number => {
+  const headings = (model.texts ?? [])
+    .filter(({ role }) => role === 'heading')
+    .map((text) => ({ text, key: nodeKey(elementId(text.id, 'label')) }))
+    .filter(({ key }) => isNodeRecord(content[key]))
+    .sort((first, second) => first.text.x - second.text.x);
+  if (columns === 0 || headings.length === 0) {
+    return 0;
+  }
+  // Every shape of the drawing, grouped into the columns it stands on, as {@link evenColumns} groups them.
+  const boxes = Object.values(content).flatMap((record) =>
+    isNodeRecord(record) && !(record.node.style?.fill === false && record.node.style?.border === false)
+      ? [record.node]
+      : [],
+  );
+  const groups: { left: number; right: number; top: number }[] = [];
+  for (const node of [...boxes].sort((first, second) => first.center.x - second.center.x)) {
+    const [left, right] = [node.center.x - node.size.width / 2, node.center.x + node.size.width / 2];
+    const last = groups.at(-1);
+    if (last && left < last.right) {
+      last.right = Math.max(last.right, right);
+      last.top = Math.min(last.top, node.center.y - node.size.height / 2);
+    } else {
+      groups.push({ left, right, top: node.center.y - node.size.height / 2 });
+    }
+  }
+  if (groups.length !== headings.length) {
+    return 0;
+  }
+  let placed = 0;
+  headings.forEach(({ key }, index) => {
+    const record = content[key];
+    const group = groups[index];
+    if (!isNodeRecord(record)) {
+      return;
+    }
+    const { node } = record;
+    const center = {
+      x: (group.left + group.right) / 2,
+      y: onGrid(group.top - lift - node.size.height, grid) + node.size.height / 2,
+    };
+    content[key] = { ...record, node: { ...node, center } };
+    placed++;
+  });
+  return placed;
+};
+
 /** The space a frame keeps around what it holds, in scene units: the deck's own inset. */
 const FRAME_PADDING = 24;
 
@@ -1408,6 +1503,7 @@ const placeColumns = (
   model: StudioModel,
   columns: readonly (readonly string[])[],
   gap: number,
+  pitchGap: number,
   grid: number,
 ): number => {
   if (columns.length === 0) {
@@ -1433,7 +1529,7 @@ const placeColumns = (
     middle: (Math.min(...edges.map(({ y }) => y)) + Math.max(...edges.map(({ y }) => y))) / 2,
   };
   const widest = Math.max(...taken.map(({ node }) => node.size.width));
-  const pitch = onGrid(widest + gap, grid);
+  const pitch = onGrid(widest + pitchGap, grid);
   // Centred on the box they covered, so the set does not drift off to one side of the slide.
   const first = onGrid(box.left + (box.right - box.left - (pitch * (columns.length - 1) + widest)) / 2, grid);
   let moved = 0;
@@ -1648,12 +1744,15 @@ const spreadColumns = (content: ContentMap, model: StudioModel, spread: number, 
  * A slide whose story is told by its boxes reads better without them, and the deck's own labels are placed by eye —
  * a frame's is set beside its frame, which on the Architecture slide put a 412-unit title 376 units off the page.
  */
-const dropLabels = (content: ContentMap, model: StudioModel): number => {
+const dropLabels = (content: ContentMap, model: StudioModel, only?: readonly string[]): number => {
   let dropped = 0;
-  const keys = [
-    ...(model.texts ?? []).map((text) => nodeKey(elementId(text.id, 'label'))),
-    ...model.frames.map((frame) => nodeKey(elementId(frame.id, 'title'))),
-  ];
+  const keys =
+    only !== undefined
+      ? only.map((id) => nodeKey(elementId(id, 'label')))
+      : [
+          ...(model.texts ?? []).map((text) => nodeKey(elementId(text.id, 'label'))),
+          ...model.frames.map((frame) => nodeKey(elementId(frame.id, 'title'))),
+        ];
   for (const key of keys) {
     if (content[key]) {
       delete content[key];
@@ -1762,6 +1861,9 @@ export const seedStudioSlide =
       gap,
       columns = [],
       add = [],
+      connect = [],
+      hide = [],
+      lift = 0,
       unlink = [],
       relink = [],
       links = 'deck',
@@ -1796,6 +1898,12 @@ export const seedStudioSlide =
       columns?: readonly (readonly string[])[];
       /** Cards the slide draws that the deck did not ({@link addCards}). */
       add?: readonly StudioAddition[];
+      /** Links the slide draws that the deck did not ({@link connectCards}). */
+      connect?: readonly StudioConnection[];
+      /** Texts the slide does not draw, by id; `labels: false` drops them all. */
+      hide?: readonly string[];
+      /** How far above the deck's own place the slide's text sits, in scene units. */
+      lift?: number;
       /** Links the slide does not draw, as the pair of cards they join ({@link rewireLinks}). */
       unlink?: readonly (readonly [string, string])[];
       /** Links the slide aims at another card: the pair they join, then the card they end on instead. */
@@ -1820,14 +1928,17 @@ export const seedStudioSlide =
     );
     promoteCards(content, model, remap);
     addCards(content, model, add);
+    connectCards(content, connect);
     rewireLinks(content, unlink, relink);
-    styleText(content, model);
+    styleText(content, model, lift);
     styleFrames(content, model);
     // Before anything is measured: what the slide does not draw is not a column either, and a slide-wide footnote
     // left in would make every column one.
     dropFrames(content, frames);
     if (!labels) {
       dropLabels(content, model);
+    } else if (hide.length > 0) {
+      dropLabels(content, model, hide);
     }
     // Before the geometry too: a component's regions are kept as the links' targets but drawn by the kind, and a
     // region left looking like a shape would stand in the way of the columns ({@link evenColumns}).
@@ -1847,9 +1958,10 @@ export const seedStudioSlide =
       resizeCards(content, sizes, grid) +
       uniformGrid(content, model, grid, new Set(Object.keys(sizes).map((id) => nodeKey(boxOf(id))))) +
       balanceColumns(content, balance, grid) +
-      placeColumns(content, model, columns, gap ?? 2 * grid, grid) +
+      placeColumns(content, model, columns, 2 * grid, gap ?? 2 * grid, grid) +
       evenColumns(content, gap, grid) +
       fitFrames(content, model, grid) +
+      placeHeadings(content, model, columns.length, lift, grid) +
       spreadColumns(content, model, spread, grid);
     const routed = routeLinks(content, model, components, links, ports);
     const placed =
