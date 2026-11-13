@@ -5460,6 +5460,7 @@ decision D-268: Every section's mark, color and hero art come from the alt 4 bra
 decision D-269: The section picker and the footer list the sections as ECHO, HALO, MESH, EDGE, SAGE, PLEX and TILE, down the stack from data to interface. Amends [D-244].
   date: 2026-11-13
   by: agent:claude-code
+  for: user:wittjosiah
   affects: [F-16.1, F-7.1]
   why: SAGE runs on EDGE and under PLEX, so it sits between them.
 ```
