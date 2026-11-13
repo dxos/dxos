@@ -2409,26 +2409,13 @@ page tile-translations-icons: Translations and icons
 ### API
 
 ```mdl
-page tile-api-theme: Theme
-  `Theme.Provider` and the theme function.
-  section: TILE
-  route: /docs/tile/api/theme/
-  group: API
-  package: react-ui
-  family: Foundations
-  template: namespace
-  status: spike
-  covers:
-    - `Theme.Provider` props and `Theme.defaultTx`
-```
-```mdl
 page tile-api-layout: Layout
   `Flex`, `Grid`, `Columns`, `Block`, `Container` and `Separator`.
   section: TILE
   route: /docs/tile/api/layout/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2441,7 +2428,7 @@ page tile-api-button: Button
   route: /docs/tile/api/button/
   group: API
   package: react-ui
-  family: Actions
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2454,7 +2441,7 @@ page tile-api-input: Input
   route: /docs/tile/api/input/
   group: API
   package: react-ui
-  family: Editing
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2467,7 +2454,7 @@ page tile-api-status: Status
   route: /docs/tile/api/status/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2480,7 +2467,7 @@ page tile-api-panel: Panel
   route: /docs/tile/api/panel/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2493,7 +2480,7 @@ page tile-api-toolbar: Toolbar
   route: /docs/tile/api/toolbar/
   group: API
   package: react-ui
-  family: Actions
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2506,7 +2493,7 @@ page tile-api-accordion: Accordion
   route: /docs/tile/api/accordion/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2519,7 +2506,7 @@ page tile-api-alert-dialog: AlertDialog
   route: /docs/tile/api/alert-dialog/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2532,7 +2519,7 @@ page tile-api-avatar: Avatar
   route: /docs/tile/api/avatar/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2545,7 +2532,7 @@ page tile-api-badge: Badge
   route: /docs/tile/api/badge/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2558,7 +2545,7 @@ page tile-api-banner: Banner
   route: /docs/tile/api/banner/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2571,7 +2558,7 @@ page tile-api-breadcrumb: Breadcrumb
   route: /docs/tile/api/breadcrumb/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2584,7 +2571,7 @@ page tile-api-card: Card
   route: /docs/tile/api/card/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2597,7 +2584,7 @@ page tile-api-carousel: Carousel
   route: /docs/tile/api/carousel/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2610,7 +2597,7 @@ page tile-api-collapsible: Collapsible
   route: /docs/tile/api/collapsible/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2623,7 +2610,7 @@ page tile-api-color-picker: ColorPicker
   route: /docs/tile/api/color-picker/
   group: API
   package: react-ui
-  family: Editing
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2636,7 +2623,7 @@ page tile-api-combobox: Combobox
   route: /docs/tile/api/combobox/
   group: API
   package: react-ui
-  family: Editing
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2649,7 +2636,7 @@ page tile-api-drag-handle: DragHandle
   route: /docs/tile/api/drag-handle/
   group: API
   package: react-ui
-  family: Foundations
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2662,7 +2649,7 @@ page tile-api-editable: Editable
   route: /docs/tile/api/editable/
   group: API
   package: react-ui
-  family: Editing
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2675,7 +2662,7 @@ page tile-api-fieldset: Fieldset
   route: /docs/tile/api/fieldset/
   group: API
   package: react-ui
-  family: Editing
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2688,7 +2675,7 @@ page tile-api-floating-panel: FloatingPanel
   route: /docs/tile/api/floating-panel/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2701,7 +2688,7 @@ page tile-api-focus: Focus
   route: /docs/tile/api/focus/
   group: API
   package: react-ui
-  family: Foundations
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2714,7 +2701,7 @@ page tile-api-listbox: Listbox
   route: /docs/tile/api/listbox/
   group: API
   package: react-ui
-  family: Collections
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2727,24 +2714,11 @@ page tile-api-main: Main
   route: /docs/tile/api/main/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
     - Every part of `Main` under its own story [D-306]
-```
-```mdl
-page tile-api-match: Match
-  Renders the first case that matches a value.
-  section: TILE
-  route: /docs/tile/api/match/
-  group: API
-  package: react-ui
-  family: Foundations
-  template: namespace
-  status: spike
-  covers:
-    - Every part of `Match` under its own story [D-306]
 ```
 ```mdl
 page tile-api-media: Media
@@ -2753,7 +2727,7 @@ page tile-api-media: Media
   route: /docs/tile/api/media/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2766,7 +2740,7 @@ page tile-api-qr-code: QrCode
   route: /docs/tile/api/qr-code/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2779,24 +2753,11 @@ page tile-api-scroll-container: ScrollContainer
   route: /docs/tile/api/scroll-container/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
     - Every part of `ScrollContainer` under its own story [D-306]
-```
-```mdl
-page tile-api-show: Show
-  Renders its children only when a value is present.
-  section: TILE
-  route: /docs/tile/api/show/
-  group: API
-  package: react-ui
-  family: Foundations
-  template: namespace
-  status: spike
-  covers:
-    - Every part of `Show` under its own story [D-306]
 ```
 ```mdl
 page tile-api-splitter: Splitter
@@ -2805,7 +2766,7 @@ page tile-api-splitter: Splitter
   route: /docs/tile/api/splitter/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2818,7 +2779,7 @@ page tile-api-system-button: SystemButton
   route: /docs/tile/api/system-button/
   group: API
   package: react-ui
-  family: Actions
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2831,7 +2792,7 @@ page tile-api-tabs: Tabs
   route: /docs/tile/api/tabs/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2844,7 +2805,7 @@ page tile-api-tag: Tag
   route: /docs/tile/api/tag/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2857,7 +2818,7 @@ page tile-api-toggle-group: ToggleGroup
   route: /docs/tile/api/toggle-group/
   group: API
   package: react-ui
-  family: Actions
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2870,7 +2831,7 @@ page tile-api-tour: Tour
   route: /docs/tile/api/tour/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2883,37 +2844,11 @@ page tile-api-typography: Typography
   route: /docs/tile/api/typography/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
     - Every part of `Typography` under its own story [D-306]
-```
-```mdl
-page tile-api-util: Util
-  Helpers for building components that compose with the others.
-  section: TILE
-  route: /docs/tile/api/util/
-  group: API
-  package: react-ui
-  family: Foundations
-  template: namespace
-  status: spike
-  covers:
-    - Every part of `Util` [D-306]
-```
-```mdl
-page tile-api-virtual-anchor: VirtualAnchor
-  Places a menu, popover or combobox popup against any element.
-  section: TILE
-  route: /docs/tile/api/virtual-anchor/
-  group: API
-  package: react-ui
-  family: Overlays
-  template: namespace
-  status: spike
-  covers:
-    - Every part of `VirtualAnchor` [D-306]
 ```
 ```mdl
 page tile-api-dialog: Dialog
@@ -2922,7 +2857,7 @@ page tile-api-dialog: Dialog
   route: /docs/tile/api/dialog/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2935,7 +2870,7 @@ page tile-api-popover: Popover
   route: /docs/tile/api/popover/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2948,7 +2883,7 @@ page tile-api-tooltip: Tooltip
   route: /docs/tile/api/tooltip/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2961,7 +2896,7 @@ page tile-api-hover-card: HoverCard
   route: /docs/tile/api/hover-card/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2974,7 +2909,7 @@ page tile-api-toast: Toast
   route: /docs/tile/api/toast/
   group: API
   package: react-ui
-  family: Overlays
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -2987,7 +2922,7 @@ page tile-api-field: Field
   route: /docs/tile/api/field/
   group: API
   package: react-ui
-  family: Editing
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -3000,7 +2935,7 @@ page tile-api-select: Select
   route: /docs/tile/api/select/
   group: API
   package: react-ui
-  family: Editing
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -3013,7 +2948,7 @@ page tile-api-scroll-area: ScrollArea
   route: /docs/tile/api/scroll-area/
   group: API
   package: react-ui
-  family: Layout
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -3026,7 +2961,7 @@ page tile-api-menu: Menu
   route: /docs/tile/api/menu/
   group: API
   package: react-ui
-  family: Actions
+  family: Core
   template: namespace
   status: spike
   covers:
@@ -3039,24 +2974,11 @@ page tile-api-icon: Icon
   route: /docs/tile/api/icon/
   group: API
   package: react-ui
-  family: Display
+  family: Core
   template: namespace
   status: spike
   covers:
     - `Icon.Icon` props
-```
-```mdl
-page tile-api-hooks: Hooks
-  The hooks react-ui exports.
-  section: TILE
-  route: /docs/tile/api/hooks/
-  group: API
-  package: react-ui
-  family: Foundations
-  template: namespace
-  status: spike
-  covers:
-    - `useTranslation`, `useThemeContext` and the hooks re-exported from `@dxos/react-hooks`
 ```
 
 ```mdl
@@ -6606,6 +6528,16 @@ decision D-309: A core `@dxos/react-ui` story's frame fits the story: as tall as
   why: A badge or a breadcrumb sat in a frame as tall and wide as the Board's, mostly empty.
   rejected:
     - Fit every API story: a chart or map with no size of its own collapses to nothing.
+```
+
+```mdl
+decision D-310: TILE's API puts the 44 core `@dxos/react-ui` component pages in one Core group, listed alphabetically; the families hold only the other packages' pages. Hooks, Theme and Util, which are not components, and VirtualAnchor, Show and Match, which have no story or draw nothing of their own, have no API page. Amends [D-306].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: The core is what every TILE app starts from, so it reads as one set; a page per helper namespace padded the list without anything to show.
+  rejected:
+    - Keep the core in the families with the other packages: it hid which components come with `@dxos/react-ui` itself.
 ```
 
 ## Appendix: Extension Definitions

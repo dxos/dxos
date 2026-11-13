@@ -175,10 +175,6 @@ const STORIES: Record<string, ApiStoryEntry> = {
     load: () => import('../../../packages/ui/react-ui/src/components/Main/Main.stories.tsx'),
     name: 'Default',
   },
-  'react-ui/match': {
-    load: () => import('../../../packages/ui/react-ui/src/flow/Show.stories.tsx'),
-    name: 'MatchCase',
-  },
   'react-ui/media': {
     load: () => import('../../../packages/ui/react-ui/src/components/MediaPlayer/MediaPlayer.stories.tsx'),
     name: 'Default',
@@ -189,10 +185,6 @@ const STORIES: Record<string, ApiStoryEntry> = {
   },
   'react-ui/scroll-container': {
     load: () => import('../../../packages/ui/react-ui/src/components/ScrollContainer/ScrollContainer.stories.tsx'),
-    name: 'Default',
-  },
-  'react-ui/show': {
-    load: () => import('../../../packages/ui/react-ui/src/flow/Show.stories.tsx'),
     name: 'Default',
   },
   'react-ui/splitter': {

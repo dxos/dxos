@@ -21,4 +21,4 @@ Component packages:
 - <a href='/typedoc/react-ui-editor/index.html' target='_blank'>`@dxos/react-ui-editor`</a>: `Editor` and its
   toolbar. See [Editor](/docs/tile/api/react-ui-editor/editor/).
 
-The [API](/docs/tile/api/theme/) pages explain the core by family of components, with live previews.
+The [API](/docs/tile/api/accordion/) pages explain each core component on a page of its own, with a live preview.
