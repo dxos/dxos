@@ -2,12 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
-import { Context } from '@dxos/context';
 import {
   Aggregate,
   Annotation,
@@ -28,10 +26,9 @@ import {
   Type,
   View,
 } from '@dxos/echo';
-import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
+import { DXN, EID, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
