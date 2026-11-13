@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { OnboardingManager } from '../onboarding-manager.ts';
 import { OnboardingCapabilities } from './capabilities.ts';
@@ -21,6 +22,13 @@ export default Capability.makeModule(
     const hubUrl = Account.getHubUrl(client.config);
 
     const token = searchProps.get('token') ?? undefined;
+    const sharePayload = searchProps.get(SpaceOperation.SHARE_PARAM) ?? readStashedShare();
+    // Only a link that carries an invitation admits a browser with no identity; a restricted one is for members.
+    const shareLink = sharePayload
+      ? yield* Effect.promise(() =>
+          import('@dxos/plugin-space/ShareCache').then((ShareCache) => ShareCache.admitsGuest(sharePayload)),
+        )
+      : false;
     const manager = new OnboardingManager({
       invokePromise,
       client,
@@ -29,6 +37,7 @@ export default Capability.makeModule(
       recoverIdentity: searchProps.get('recoverIdentity') === 'true',
       deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,
       spaceInvitationCode: searchProps.get('spaceInvitationCode') ?? undefined,
+      shareLink,
       accountInvitationCode: searchProps.get('accountInvitationCode') ?? undefined,
       email: searchProps.get('email') ?? undefined,
     });
@@ -51,3 +60,12 @@ export default Capability.makeModule(
     ];
   }),
 );
+
+/** The share payload boot moved from the link's fragment into this tab's session storage; storage may be unavailable. */
+const readStashedShare = (): string | null => {
+  try {
+    return sessionStorage.getItem(SpaceOperation.SHARE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};

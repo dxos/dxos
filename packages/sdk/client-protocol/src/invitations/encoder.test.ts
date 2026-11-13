@@ -58,6 +58,27 @@ describe('Invitation utils', () => {
     expect(decoded).to.deep.eq(invitation);
   });
 
+  test('round-trips an invitation through JSON with the same fields as the code', () => {
+    const invitation = makeInvitation({
+      authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
+      guestKeypair: {
+        publicKey: fromPublicKey(PublicKey.random()),
+        privateKey: buf.create(PrivateKeySchema, { data: PublicKey.random().asUint8Array() }),
+      },
+    });
+    const json = InvitationEncoder.toJson(
+      buf.create(InvitationSchema, {
+        ...invitation,
+        authCode: 'example',
+        identityKey: fromPublicKey(PublicKey.random()),
+      }),
+    );
+    const decoded = InvitationEncoder.fromJson(JSON.parse(JSON.stringify(json)));
+    expect(decoded.authCode).to.not.exist;
+    expect(decoded.identityKey).to.not.exist;
+    expect(decoded).to.deep.eq(InvitationEncoder.decode(InvitationEncoder.encode(invitation)));
+  });
+
   test('encodes and decodes a device invitation', () => {
     const invitation = makeInvitation({ kind: Invitation_Kind.DEVICE, spaceKey: undefined, spaceId: undefined });
     const encoded = InvitationEncoder.encode(invitation);

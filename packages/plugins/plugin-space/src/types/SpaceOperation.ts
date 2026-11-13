@@ -494,6 +494,60 @@ export const RenameObject = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * Opens the share dialog for one object.
+ */
+export const OpenShareObject = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.openShareObject'),
+    name: 'Open Share Object',
+    description: 'Open the share dialog for an object.',
+    icon: 'ph--share-network--regular',
+  },
+  input: Schema.Struct({
+    object: Obj.Unknown,
+  }),
+  output: Schema.Void,
+});
+
+/** Fragment (or, from a desktop deep link, query) parameter carrying an object share link's payload. */
+export const SHARE_PARAM = 'share';
+
+/**
+ * This tab's session-storage key for a share link's payload once boot takes it out of the URL, so no request or
+ * `Referer` carries the invitation it may hold, while a reload still finds it.
+ */
+export const SHARE_STORAGE_KEY = 'dxos.share';
+
+/** Who a share link admits: only the space's members, or anyone who has the link. */
+export const ShareAccess = Schema.Literals(['restricted', 'anyone']);
+export type ShareAccess = Schema.Schema.Type<typeof ShareAccess>;
+
+/**
+ * Makes a link to one object, carrying the objects to replicate before the rest of the space and the plugins that render
+ * them. With `anyone` access it also carries a delegated, multi-use invitation, so a non-member joins in the background.
+ */
+export const ShareObject = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.shareObject'),
+    name: 'Share Object',
+    description: 'Make a link that opens an object, joining its space if needed.',
+    icon: 'ph--link--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    object: Obj.Unknown,
+    access: ShareAccess,
+  }),
+  output: Schema.Struct({
+    url: Schema.String,
+    objects: Schema.Array(Schema.String).annotate({
+      description: 'Objects the link replicates before the rest of the space.',
+    }),
+    plugins: Schema.Array(Schema.String).annotate({ description: 'Plugins the link turns on.' }),
+  }),
+});
+
 export const OpenMembers = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.openMembers'),

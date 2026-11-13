@@ -104,6 +104,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       () => import('./src/capabilities/navigation-handler/navigation-handler.ts', { with: { type: 'module-url' } }),
       {
         requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
+        provides: [AppCapabilities.NavigationTargetLoader],
       },
     ),
     AppCapability.navigationResolver(

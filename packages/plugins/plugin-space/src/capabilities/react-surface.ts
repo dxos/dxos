@@ -30,6 +30,8 @@ import {
   RelatedArticle,
   RenamePopover,
   type RenameSubject,
+  ShareObjectDialog,
+  type ShareObjectDialogProps,
   SmallPresenceLive,
   SpaceHomeArticle,
   SyncStatus,
@@ -43,6 +45,7 @@ import {
   JOIN_DIALOG,
   OBJECT_FORM_DIALOG,
   RENAME_POPOVER,
+  SHARE_OBJECT_DIALOG,
 } from '../constants.ts';
 import { SpaceNamespace } from '../namespace.ts';
 import { getTypeInputOptions } from '../types/SpaceForm.ts';
@@ -52,6 +55,7 @@ import { makeCreateInvitationUrl } from './helpers.ts';
 import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
+  NavbarShareSurface,
   NavtreePresenceSurface,
   SelectedObjectsSurface,
   SpaceHomeDashboardSurface,
@@ -188,6 +192,12 @@ export default Capability.makeModule(
         component: ImportSpaceDialog,
       }),
       Surface.create({
+        id: SHARE_OBJECT_DIALOG,
+        filter: AppSurface.component<ShareObjectDialogProps>(AppSurface.Dialog, SHARE_OBJECT_DIALOG),
+        component: ShareObjectDialog,
+        props: ({ data: { props } }) => ({ ...props }),
+      }),
+      Surface.create({
         id: ADD_TO_COLLECTION_DIALOG,
         filter: AppSurface.component<AddToCollectionDialogProps>(AppSurface.Dialog, ADD_TO_COLLECTION_DIALOG),
         component: AddToCollectionDialog,
@@ -256,6 +266,16 @@ export default Capability.makeModule(
           (value): value is Space | Obj.Unknown => isSpace(value) || Obj.isObject(value),
         ),
         component: NavbarPresenceSurface,
+        props: ({ data: { subject } }) => ({ subject }),
+      }),
+      Surface.create({
+        id: 'navbarShare',
+        position: Position.last,
+        filter: AppSurface.subject(
+          AppSurface.NavbarEnd,
+          (value): value is Obj.Unknown => Obj.isObject(value) && Obj.getDatabase(value) !== undefined,
+        ),
+        component: NavbarShareSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
       // Role-only: one generic stack serves every host, since the host supplies the objects rather

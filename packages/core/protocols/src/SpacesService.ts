@@ -95,6 +95,13 @@ export const WriteCredentialsRequest = Schema.Struct({
 });
 export interface WriteCredentialsRequest extends Schema.Schema.Type<typeof WriteCredentialsRequest> {}
 
+export const SyncFirstRequest = Schema.Struct({
+  spaceId: Schema.String,
+  /** Objects whose documents replicate before the rest of the space. */
+  objectIds: mutableArray(Schema.String),
+});
+export interface SyncFirstRequest extends Schema.Schema.Type<typeof SyncFirstRequest> {}
+
 export const QueryCredentialsRequest = Schema.Struct({
   spaceKey: publicKey,
   noTail: Schema.optional(Schema.Boolean),
@@ -290,6 +297,13 @@ export class Rpcs extends RpcGroup.make(
     success: bufMessage(CredentialSchema),
     error: serviceError,
     stream: true,
+  }),
+  /**
+   * Replicate the documents of some objects before the rest of a space, which may not be joined yet.
+   */
+  Rpc.make('syncFirst', {
+    payload: SyncFirstRequest,
+    error: serviceError,
   }),
   Rpc.make('createEpoch', {
     payload: CreateEpochRequest,

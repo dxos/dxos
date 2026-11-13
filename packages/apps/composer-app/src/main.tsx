@@ -51,6 +51,7 @@ import {
   PARAM_MODEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
+  PARAM_SHARE,
   type PrespawnedWorker,
   type Profiler,
   WorkerLogProcessor,
@@ -61,6 +62,7 @@ import {
   isTrue,
   prespawnWorker,
   readBootAssetFailure,
+  readStashedShare,
   registerPreloadErrorHandler,
   reportBootAssetFailure,
   reportWebProcessTerminations,
@@ -73,6 +75,7 @@ import {
   startupMark,
   startupMeasure,
   startupProfiler,
+  stashShareFragment,
   translations,
 } from './util/index.ts';
 import { watchWindowCorners } from './util/window-corners.ts';
@@ -259,6 +262,12 @@ const main = async () => {
     // to dodge CORS. Tree-shakes out of prod via the `import.meta.env.DEV`
     // gate above.
     void showDevRssBanner();
+  }
+
+  // Before anything reads the address bar or a request leaves: a share link's payload moves into session storage.
+  const shareUrl = stashShareFragment(window.location.href);
+  if (shareUrl) {
+    history.replaceState(history.state, '', shareUrl);
   }
 
   const url = new URL(window.location.href);
@@ -624,12 +633,23 @@ const main = async () => {
   // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
+  // A share link's space opens from what EDGE serves for the link's invitation, before the guest has joined it.
+  const sharePayload = url.searchParams.get(PARAM_SHARE) ?? readStashedShare();
+  const shareEdgeUrl = config.values.runtime?.services?.edge?.url;
+  const pendingSpaces =
+    sharePayload && shareEdgeUrl
+      ? async (cachedSpaceIds: ReadonlySet<string>) => {
+          const ShareCache = await import('@dxos/plugin-space/ShareCache');
+          return ShareCache.load({ payload: sharePayload, edgeUrl: shareEdgeUrl, cachedSpaceIds });
+        }
+      : undefined;
   const client = new Client({
     config,
     services,
-    bootCache: BOOT_CACHE
-      ? { servicesGate: DEFER_WORKER ? () => whenIdle(WORKER_DEFER_CAP_MS) : undefined }
-      : undefined,
+    bootCache:
+      BOOT_CACHE || pendingSpaces
+        ? { servicesGate: DEFER_WORKER ? () => whenIdle(WORKER_DEFER_CAP_MS) : undefined, pendingSpaces }
+        : undefined,
   });
   void client
     .initialize()
@@ -682,6 +702,15 @@ const main = async () => {
     scriptedModel:
       url.searchParams.get(PARAM_MODEL) === 'scripted' &&
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+    // A browser that has never booted Composer, opening a link that admits it: the link handler enables the plugins
+    // the link names.
+    shareBoot:
+      !!sharePayload &&
+      !Hooks.hasSavedPlugins() &&
+      // A chunk that fails to load leaves the app to boot as usual rather than not at all.
+      (await import('@dxos/plugin-space/ShareCache')
+        .then((ShareCache) => ShareCache.admitsGuest(sharePayload))
+        .catch(() => false)),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only
@@ -718,7 +747,7 @@ const main = async () => {
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
-  const defaults = getDefaults(conf);
+  const defaults = conf.shareBoot ? [] : getDefaults(conf);
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl ? new Registry.EdgePluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
@@ -809,7 +838,8 @@ const main = async () => {
       pluginRegistryProvider,
       plugins,
       defaults,
-      cacheEnabled: true,
+      // Not saved for a share boot, so the guest's next visit starts with the full default set.
+      cacheEnabled: !conf.shareBoot,
       safeMode,
       // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
