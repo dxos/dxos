@@ -56,8 +56,8 @@ export type StudioSlide = {
   gap?: number;
   /** Frames the slide does not draw, by id. */
   frames?: readonly string[];
-  /** The card the slide's free cards are arranged around, by id. */
-  ring?: string;
+  /** The slide's own columns, each a list of card ids. */
+  columns?: readonly (readonly string[])[];
   /** How the slide's links are drawn; a slide this import re-lays out takes `ortho`. */
   links?: 'deck' | 'ortho';
   /** Which sides a routed link uses; a slide that fans out downwards takes `vertical`. */
@@ -86,7 +86,14 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'ortho' }),
   slide('echo-layers', echoLayersSource, echoLayersModel, { links: 'ortho' }),
   // Every card is a type, so every card is one box; the deck sized each to its own label.
-  slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'ortho', ring: 'person' }),
+  // The deck drew its entities as a hand-placed graph; said as five columns — the types, what a person belongs to,
+  // the person, what a person does, and the containers — it reads in one pass.
+  slide('ontology', ontologySource, ontologyModel, {
+    uniform: true,
+    links: 'ortho',
+    gap: 96,
+    columns: [['organization', 'group', 'transaction'], ['person'], ['project', 'task', 'event', 'message']],
+  }),
   slide('plugins', pluginsSource, pluginsModel, {
     labels: false,
     remap: { chip: 'card' },
