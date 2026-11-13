@@ -428,7 +428,7 @@ decision D-23: The space graph is an extension tool that plugin-canvas itself pr
 ```
 
 ```mdl
-decision D-24: The `ExtensionNodeTypes` module contributes the plugin's extension kinds through `CanvasCapabilities.NodeType`, as another plugin contributes its own; the space graph (`components/SpaceGraph`) is the first. The host offers a contributed kind in the `Extensions` group, beside the canvas's own card (react-ui-canvas's `EXTENSIONS_GROUP`), unless its spec names a group, and a kind that replaces a built-in stays where the built-in was. Fills in [D-23].
+decision D-24: The `ExtensionNodeTypes` module contributes the plugin's extension kinds through `CanvasCapabilities.NodeType`, as another plugin contributes its own; the space graph (`components/Graph`) is the first. The host offers a contributed kind in the `Extensions` group, beside the canvas's own card (react-ui-canvas's `EXTENSIONS_GROUP`), unless its spec names a group, and a kind that replaces a built-in stays where the built-in was. Fills in [D-23].
   date: 2026-11-12
   by: agent:claude-code
   for: user:richburdon

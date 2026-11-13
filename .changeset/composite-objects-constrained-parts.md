@@ -136,6 +136,13 @@ its outline alone, where the handles overlapped and hid it; `handlesFit(bounds, 
 panel shows a part selected inside an Object that is being edited in place, where it
 showed nothing selected.
 
+The card is authored at the size the tool draws it (16 by 12 grid cells, `CARD_SIZE`): a two-cell glyph, the title
+half a cell beside it, the body half a cell under the header, and a two-cell footer half a cell under the body and
+half a cell off the floor. Its text has sizes of its own (title 18, body 16, footer 14) and its glyph is 24 px. The
+scene DSL reads and prints a 2D element's text size (`fontSize=18`), and an icon node with a `fontSize` in its style
+draws its glyph at that size, where it took 70% of its frame. plugin-canvas's space graph component is `Graph`
+(`graphSpec`, `GraphNode`, `GraphData`), its tool named Graph; the element type is still `space-graph`.
+
 A form field with no value shows the default its schema declares (Effect's `default` annotation,
 `Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
 field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing

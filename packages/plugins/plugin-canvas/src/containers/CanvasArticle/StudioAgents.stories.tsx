@@ -26,8 +26,8 @@ import { translations } from '#translations';
 import { CanvasCapabilities, Generator } from '#types';
 
 import types from '../../capabilities/schema.ts';
-import generatorParams from '../../components/SpaceGraph/generator/params.schema.json?raw';
-import generatorSource from '../../components/SpaceGraph/generator/space-graph.generator.ts?raw';
+import generatorParams from '../../components/Graph/generator/params.schema.json?raw';
+import generatorSource from '../../components/Graph/generator/space-graph.generator.ts?raw';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentsSource from '../../testing/studio/agents.diagram?raw';
 import agentsModel from '../../testing/studio/agents.json?raw';
@@ -123,7 +123,7 @@ export const Default: Story = {
     const dark = getComputedStyle(marked[0]).colorScheme.includes('dark');
     await expect(getComputedStyle(marked[0]).backgroundColor).toBe(dark ? 'rgb(6, 197, 253)' : 'rgb(45, 111, 255)');
     // The space is an element of its own kind, so it is selectable and its fields are its configuration.
-    const space = await canvas.findByTestId('space-graph-node');
+    const space = await canvas.findByTestId('graph-node');
     await expect(space.querySelectorAll('circle').length).toBeGreaterThan(100);
   },
 };
@@ -151,7 +151,7 @@ export const WithGenerator: Story = {
     await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
     await expect((await canvas.findAllByTestId('feed-card-node')).length).toBe(Object.keys(model.nodes).length);
     // The generator draws onto its own layer; there is no element to select or configure.
-    await expect(canvas.queryAllByTestId('space-graph-node')).toHaveLength(0);
+    await expect(canvas.queryAllByTestId('graph-node')).toHaveLength(0);
     // The view compiles the generator before it draws, which a loaded runner takes longer over than the default wait.
     await expect(await canvas.findByTestId('generator-layer', undefined, { timeout: 30_000 })).toBeInTheDocument();
   },

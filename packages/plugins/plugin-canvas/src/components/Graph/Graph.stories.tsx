@@ -27,12 +27,12 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Node, type Scene } from '@dxos/scene';
 
-import { spaceGraphSpec } from './SpaceGraph.tsx';
+import { graphSpec } from './Graph.tsx';
 
 const NODES = createNodeRegistry(
   {
     ...defaultNodeTypes,
-    'space-graph': kindNodeDef('space-graph', { group: EXTENSIONS_GROUP, ...spaceGraphSpec }),
+    'space-graph': kindNodeDef('space-graph', { group: EXTENSIONS_GROUP, ...graphSpec }),
   },
   defaultNodePrototypes,
 );
@@ -69,7 +69,7 @@ const DefaultStory = () => (
 );
 
 const meta: Meta = {
-  title: 'plugins/plugin-canvas/components/SpaceGraph',
+  title: 'plugins/plugin-canvas/components/Graph',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations: [...uiTranslations, ...formTranslations] },
@@ -83,7 +83,7 @@ export const Default: Story = {};
 
 /**
  * 1. Two space graphs are drawn, each a circle holding its objects.
- * 2. The Space graph tool is in the rail, in a group of its own: not among the shapes and links.
+ * 2. The Graph tool is in the rail, in a group of its own: not among the shapes and links.
  * 3. Select a graph: Border reads on and Fill off. Turn Border off: the ring goes, nothing inside it moves, and the
  *    inspector stays in place.
  * 4. Its own fields are the last group, Custom, two to a row. Base dots is off: turn it on and the empty lattice
@@ -92,7 +92,7 @@ export const Default: Story = {};
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const graphs = await canvas.findAllByTestId('space-graph-node', undefined, { timeout: 30_000 });
+    const graphs = await canvas.findAllByTestId('graph-node', undefined, { timeout: 30_000 });
     await expect(graphs.length).toBe(2);
     await expect(graphs[0].querySelectorAll('circle').length).toBeGreaterThan(20);
 
@@ -121,12 +121,12 @@ export const Test: Story = {
     );
     await expect(border).toBeChecked();
     // Selected, the ring keeps its own colour: the selection frame marks the graph.
-    await expect(canvas.getAllByTestId('space-graph-node')[0].closest('[data-node-id]')?.className).not.toContain(
+    await expect(canvas.getAllByTestId('graph-node')[0].closest('[data-node-id]')?.className).not.toContain(
       'border-focus',
     );
     await expect(await within(dock).findByRole('switch', { name: 'Fill' })).not.toBeChecked();
     const placed = () => {
-      const { x, y, width, height } = canvas.getAllByTestId('space-graph-node')[0].getBoundingClientRect();
+      const { x, y, width, height } = canvas.getAllByTestId('graph-node')[0].getBoundingClientRect();
       return [x, y, width, height];
     };
     const before = placed();
@@ -146,7 +146,7 @@ export const Test: Story = {
     const top = (name: string) => within(custom).getByText(name).getBoundingClientRect().top;
     await expect(top('Node density')).toBe(top('Link density'));
     // The lattice points that hold no object are drawn only once Base dots is on.
-    const dots = () => canvas.getAllByTestId('space-graph-node')[0].querySelectorAll('circle[opacity]').length;
+    const dots = () => canvas.getAllByTestId('graph-node')[0].querySelectorAll('circle[opacity]').length;
     await expect(dots()).toBe(0);
     await userEvent.click(within(custom).getByRole('switch', { name: 'Base dots' }));
     await waitFor(() => expect(dots()).toBeGreaterThan(0));

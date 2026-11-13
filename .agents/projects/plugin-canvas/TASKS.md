@@ -341,7 +341,7 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       `.dx.svg` renders regenerated.
 - [x] Properties: a hull's border and inset side by side (`HullField`).
 - [x] Extension tools: plugin-canvas's `extension-node-types` module contributes the space graph
-      (`src/components/SpaceGraph`, its geometry in `generator/`, moved out of `src/testing/studio`); a contributed kind is offered in the
+      (`src/components/Graph`, its geometry in `generator/`, moved out of `src/testing/studio`); a contributed kind is offered in the
       `Extensions` group of the rail, with the card. The hull and the view are a `Containers` group. The studio
       branch imports the moved files from their old paths in four files.
 - [x] A switch's hidden input stays inside the switch (the Properties panel scrolled away when a toggle far down

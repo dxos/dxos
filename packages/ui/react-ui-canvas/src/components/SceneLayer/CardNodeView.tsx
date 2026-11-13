@@ -197,7 +197,8 @@ export const CardNodeView = ({ node, editing }: NodeViewProps) => (
 );
 
 /**
- * An icon alone, filling the frame: the glyph a type names in its `icon` field. Any Phosphor name works — the icon
+ * An icon alone, filling the frame, or at its style's `fontSize` where it sets one (a card's glyph is the size of its
+ * two cells): the glyph a type names in its `icon` field. Any Phosphor name works — the icon
  * registry fetches a symbol it does not have (`providers/ThemeProvider/icon-registry.ts`), so the set is not limited
  * to the ones the UI already draws.
  */
@@ -205,9 +206,17 @@ export const IconNodeView = ({ node, editing }: NodeViewProps) => {
   const icon = iconOf(node);
   const symbol = icon && iconSymbol(icon);
   const label = textOf(node, 'label');
+  const size = node.style?.fontSize;
   return (
     <div className='dx-cover flex flex-col items-center justify-center gap-1 overflow-hidden' data-part='icon'>
-      {symbol && <Icon.Icon icon={symbol} hue={hueOf(node)} classNames='w-[70%] h-[70%] min-w-0' />}
+      {symbol && (
+        <Icon.Icon
+          icon={symbol}
+          hue={hueOf(node)}
+          classNames={mx('min-w-0', size === undefined && 'w-[70%] h-[70%]')}
+          style={size === undefined ? undefined : { width: size, height: size }}
+        />
+      )}
       {label !== undefined && label.length > 0 && (
         <TextPart part='label' text={label} editing={editing} classNames='shrink-0 text-xs truncate max-w-full'>
           {label}

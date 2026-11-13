@@ -26,8 +26,8 @@ import { translations } from '#translations';
 import { CanvasCapabilities, Generator } from '#types';
 
 import types from '../../capabilities/schema.ts';
-import generatorParams from '../../components/SpaceGraph/generator/params.schema.json?raw';
-import generatorSource from '../../components/SpaceGraph/generator/space-graph.generator.ts?raw';
+import generatorParams from '../../components/Graph/generator/params.schema.json?raw';
+import generatorSource from '../../components/Graph/generator/space-graph.generator.ts?raw';
 import { addTestCanvas } from '../../testing/canvas.ts';
 import agentsSource from '../../testing/studio/agents.diagram?raw';
 import agentsModel from '../../testing/studio/agents.json?raw';

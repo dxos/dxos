@@ -96,12 +96,12 @@ export const boxPrototype: NodeDefSpec = {
 export const cardPrototype: NodeDefSpec = {
   component: CardNodeView,
   parts: [{ field: 'label' }, { field: 'body', multiline: true }, { field: 'footer' }],
-  // Three units tall, not two: its frame and padding take 32, and the header, a line of body and the footer over its
-  // hairline another 66, so a two-unit card would draw a header over a footer with no body between them.
+  // The size the card's composite is authored at (`CARD_SIZE`), so a new card's parts sit on the grid as written.
   defaultSize: { width: 4, height: 3 },
   resizable: true,
-  // Two cells of padding, a three-cell header and a two-cell footer: what a card must keep to still read as one.
-  minSize: { width: 96, height: 72 },
+  // A cell of padding, a two-cell header, and a two-cell footer half a cell off the floor: what a card must keep to
+  // still read as one, with half a cell of body left between the gaps.
+  minSize: { width: 96, height: 84 },
 };
 
 /**

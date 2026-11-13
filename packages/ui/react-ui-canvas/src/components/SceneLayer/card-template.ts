@@ -16,24 +16,33 @@
 /** One minor grid cell, which every size and offset here is a whole number of. */
 const CELL = 12;
 
-/** The card at the size it is authored: twenty-four cells wide by sixteen tall. */
-export const CARD_SIZE = { width: CELL * 24, height: CELL * 16 };
+/**
+ * The card at the size it is authored, sixteen cells wide by twelve tall: the size the tool draws one at, so a new
+ * card's parts sit where they are written here, on the grid.
+ */
+export const CARD_SIZE = { width: CELL * 16, height: CELL * 12 };
 
 const PAD = CELL;
-const GLYPH = CELL * 3;
-const FOOTER = CELL * 1.5;
+/** Between the glyph and the title, and between the header and the body: half a cell, as round the hairline. */
+const GAP = CELL / 2;
+const GLYPH = CELL * 2;
 const TITLE = CELL * 2;
+const FOOTER = CELL * 2;
 /** The hairline over the footer: a polyline across its own frame, which is the shape a rule actually is. */
 const RULE = 1;
+
+/** The size of each part's text in scene px, and of the glyph, which fills its two cells. */
+const FONT = { icon: GLYPH, title: 18, body: 16, footer: 14 };
 
 const LEFT = -CARD_SIZE.width / 2 + PAD;
 const TOP = -CARD_SIZE.height / 2 + PAD;
 const RIGHT = CARD_SIZE.width / 2 - PAD;
-const BOTTOM = CARD_SIZE.height / 2 - PAD;
+/** The footer stands half a cell off the floor, and half a cell under the body, with the hairline between them. */
+const BOTTOM = CARD_SIZE.height / 2 - CELL / 2;
 const WIDTH = RIGHT - LEFT;
 
-/** The header is the three cells its glyph sets; the body takes what the header and the footer leave. */
-const BODY_TOP = TOP + GLYPH + CELL / 2;
+/** The header is the two cells its glyph sets; the body takes what the header and the footer leave. */
+const BODY_TOP = TOP + GLYPH + GAP;
 const BODY_BOTTOM = BOTTOM - FOOTER - CELL / 2;
 
 const round = (value: number) => Math.round(value * 100) / 100;
@@ -49,10 +58,10 @@ const round = (value: number) => Math.round(value * 100) / 100;
  */
 export const CARD_TEMPLATE = `composite cardObject size=${CARD_SIZE.width}x${CARD_SIZE.height} name="Card" {
   element frame rect @ 0,0 size=${CARD_SIZE.width}x${CARD_SIZE.height} constrain=stretch rounded=true
-  element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} constrain=min bind=icon optional=true
-  element title note "" @ ${round((LEFT + GLYPH + CELL / 2 + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(WIDTH - GLYPH - CELL / 2)}x${TITLE} constrain=stretch,min bind=label padding=0,0 grow=icon
-  element body note "" @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${WIDTH}x${round(BODY_BOTTOM - BODY_TOP)} constrain=stretch bind=body padding=0,0 optional=true grow="footer rule"
+  element icon icon @ ${round(LEFT + GLYPH / 2)},${round(TOP + GLYPH / 2)} size=${GLYPH}x${GLYPH} fontSize=${FONT.icon} constrain=min bind=icon optional=true
+  element title note "" @ ${round((LEFT + GLYPH + GAP + RIGHT) / 2)},${round(TOP + GLYPH / 2)} size=${round(WIDTH - GLYPH - GAP)}x${TITLE} fontSize=${FONT.title} constrain=stretch,min bind=label padding=0,0 grow=icon
+  element body note "" @ 0,${round((BODY_TOP + BODY_BOTTOM) / 2)} size=${WIDTH}x${round(BODY_BOTTOM - BODY_TOP)} fontSize=${FONT.body} constrain=stretch bind=body padding=0,0 optional=true grow="footer rule"
   element rule polyline @ 0,${round(BOTTOM - FOOTER - CELL / 4)} size=${WIDTH}x${RULE} constrain=stretch,max points="0,0.5 1,0.5" follows=footer
-  element footer note "" @ 0,${round(BOTTOM - FOOTER / 2)} size=${WIDTH}x${FOOTER} constrain=stretch,max bind=footer padding=0,0 optional=true
+  element footer note "" @ 0,${round(BOTTOM - FOOTER / 2)} size=${WIDTH}x${FOOTER} fontSize=${FONT.footer} constrain=stretch,max bind=footer padding=0,0 optional=true
 }
 `;

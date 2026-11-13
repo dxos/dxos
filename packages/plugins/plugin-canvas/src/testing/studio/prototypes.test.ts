@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '@dxos/scene';
 
-import { spaceGraphSpec } from '../../components/index.ts';
+import { graphSpec } from '../../components/index.ts';
 import { feedCardSpec } from './FeedCard.tsx';
 
 const registry = () =>
@@ -28,7 +28,7 @@ const registry = () =>
     {
       ...defaultNodeTypes,
       'feed-card': kindNodeDef('feed-card', feedCardSpec),
-      'space-graph': kindNodeDef('space-graph', spaceGraphSpec),
+      'space-graph': kindNodeDef('space-graph', graphSpec),
     },
     defaultNodePrototypes,
   );

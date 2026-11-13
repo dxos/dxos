@@ -66,7 +66,7 @@ const STROKE: Record<Hue, string> = {
  */
 const DEFAULTS = { pitch: 26, fill: 0.6, extra: 0.45, size: 24, hue: 'neutral' } as const;
 
-export const spaceGraphFields = {
+export const graphFields = {
   /** Same seed, same graph. */
   seed: Schema.Number.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)).annotate({ title: 'Seed' }),
   /** Distance between neighbouring lattice points, in scene units: how far apart the objects sit. */
@@ -102,7 +102,7 @@ export const spaceGraphFields = {
 };
 
 /** The kind's own fields, kept under `data`: they share names with the element (`size`) and its style (`fill`, `hue`). */
-export const SpaceGraphData = Schema.Struct(spaceGraphFields).pipe(
+export const GraphData = Schema.Struct(graphFields).pipe(
   // Two to a row, each pair of a kind: what is drawn, how far apart, and how full.
   FormLayoutAnnotation.set({
     [DEFAULT_LAYOUT_NAME]: `<grid cols="2" fixed="true">${['seed', 'hue', 'pitch', 'size', 'fill', 'extra', 'dots']
@@ -111,14 +111,14 @@ export const SpaceGraphData = Schema.Struct(spaceGraphFields).pipe(
   }),
 );
 
-export const SpaceGraphNode = Schema.Struct({
+export const GraphNode = Schema.Struct({
   ...Scene.Element2D.fields,
   type: Schema.Literal('space-graph'),
-  data: SpaceGraphData,
+  data: GraphData,
 });
 
-export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
-  const data = kindData(SpaceGraphData, node);
+export const GraphNodeView = ({ node }: NodeViewProps) => {
+  const data = kindData(GraphData, node);
   if (!data) {
     return null;
   }
@@ -138,7 +138,7 @@ export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
       viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}
-      data-testid='space-graph-node'
+      data-testid='graph-node'
     >
       {(data.dots ? cells : [])
         .filter((cell) => !on.has(`${cell.x},${cell.y}`))
@@ -171,12 +171,12 @@ export const SpaceGraphNodeView = ({ node }: NodeViewProps) => {
   );
 };
 
-export const spaceGraphSpec: ElementKindSpec = {
-  name: 'Space graph',
+export const graphSpec: ElementKindSpec = {
+  name: 'Graph',
   icon: 'ph--graph--regular',
   key: 'G',
-  schema: SpaceGraphNode,
-  component: SpaceGraphNodeView,
+  schema: GraphNode,
+  component: GraphNodeView,
   create: ({ id, z, center, size }) => ({ type: 'space-graph', id, z, center, size, data: { seed: 7 } }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 392-unit circle, give or take.
   defaultSize: { width: 8, height: 8 },
