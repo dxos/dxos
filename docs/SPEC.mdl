@@ -3972,7 +3972,7 @@ decision D-217: Each learning path's app lives in a folder named for its section
 ```
 
 ```mdl
-decision D-248: A demo's peers stay mounted while their client's status lapses. Each peer's `ClientProvider` skips its status gate, since the demo runtime owns the client and its initialization.
+decision D-218: A demo's peers stay mounted while their client's status lapses. Each peer's `ClientProvider` skips its status gate, since the demo runtime owns the client and its initialization.
   date: 2026-11-13
   by: agent:claude-code
   for: user:wittjosiah
