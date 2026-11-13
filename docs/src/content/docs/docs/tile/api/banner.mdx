@@ -1,0 +1,22 @@
+---
+title: Banner
+description: "A note or alert across the top of a view."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/banner" />
+
+```ts
+import * as Banner from '@dxos/react-ui/Banner';
+```
+
+A neutral banner is a note; any other valence is an alert. The title can hold an icon and a close button.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Banner.Root` | The banner, on its valence's surface |
+| `Banner.Title` | The title row, with the icon at its start and an optional close button at its end |
+| `Banner.Body` | The message, aligned with the title text |

@@ -1,0 +1,24 @@
+---
+title: Avatar
+description: "A person or object shown as an image, initials, an emoji or an icon."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/avatar" />
+
+```ts
+import * as Avatar from '@dxos/react-ui/Avatar';
+```
+
+The avatar is a circle or a square one block across, or as wide as its host with `fill`. The fallback shows until the image loads.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Avatar.Root` | The avatar; its label, ring and hue apply here |
+| `Avatar.Image` | The picture |
+| `Avatar.Fallback` | Initials, an emoji or an icon, shown until the image loads |
+| `Avatar.toAvatarHue` | Turns a stored hue name into an avatar hue |
+| `Avatar.getAvatarGlyph` | The glyph to show for a name |

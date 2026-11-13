@@ -1,0 +1,23 @@
+---
+title: Splitter
+description: "Panes side by side with a divider between them."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/splitter" />
+
+```ts
+import * as Splitter from '@dxos/react-ui/Splitter';
+```
+
+A resizable divider can be dragged. In a narrow host the splitter shows one pane at a time.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Splitter.Root` | Holds the panes |
+| `Splitter.Panel` | One pane |
+| `Splitter.ResizeTrigger` | The divider |
+| `Splitter.useContext` | Which pane shows, for a Back button or a list that opens a detail |

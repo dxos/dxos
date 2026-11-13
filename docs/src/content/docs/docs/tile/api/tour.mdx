@@ -1,0 +1,30 @@
+---
+title: Tour
+description: "A guided tour that points at parts of the app, one step at a time."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/tour" />
+
+```ts
+import * as Tour from '@dxos/react-ui/Tour';
+```
+
+`useTour` holds the steps. Each step can highlight its target, centre as a dialog, and offer next, back and skip.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Tour.useTour` | Creates the tour from its steps |
+| `Tour.Root` | Provides the tour to the parts |
+| `Tour.Content` | The card for the current step |
+| `Tour.Header` | The row that holds the Title |
+| `Tour.Title` | The step's title |
+| `Tour.Description` | The step's description |
+| `Tour.Control` | The row for progress and actions |
+| `Tour.ProgressText` | Which step this is, as "1 of 4" |
+| `Tour.Actions` | Renders the step's actions |
+| `Tour.ActionTrigger` | A button for one action: next, back, dismiss or skip |
+| `Tour.CloseTrigger` | Ends the tour |

@@ -1,0 +1,21 @@
+---
+title: Util
+description: "Helpers for building components that compose with the others."
+---
+
+```ts
+import * as Util from '@dxos/react-ui/Util';
+```
+
+Helpers for building components that compose with the others.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Util.composable` | Makes a component that merges its props into a child with `asChild` |
+| `Util.slottable` | Makes a component that renders its own element or its child's |
+| `Util.composableProps` | Merges `classNames` with the class a parent passes down |
+| `Util.clickableProps` | Props that make an element act as a button |
+| `Util.useReducedMotion` | True when the user asked for less motion |
+| `Util.SIZES` | The size scale: `xs` to `xl` |

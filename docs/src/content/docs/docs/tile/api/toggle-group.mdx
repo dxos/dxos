@@ -1,0 +1,21 @@
+---
+title: ToggleGroup
+description: "Buttons that toggle, alone or as a set where one is on."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/toggle-group" />
+
+```ts
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+```
+
+`single` lets one item be on at a time; `multiple` lets any number be on. Arrow keys move between the items.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `ToggleGroup.Root` | Holds which items are on |
+| `ToggleGroup.Item` | One toggle |

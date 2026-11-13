@@ -1,0 +1,32 @@
+---
+title: Listbox
+description: "A list the user selects one, several or no items from."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/listbox" />
+
+```ts
+import * as Listbox from '@dxos/react-ui/Listbox';
+```
+
+It handles the keyboard, typeahead and selection. `@dxos/react-ui-list` builds its [Listbox](/docs/tile/api/react-ui-list/listbox/) on this one.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Listbox.Root` | Holds the items and the selection |
+| `Listbox.Label` | Names the list |
+| `Listbox.Viewport` | A scroll area, for a list that scrolls by itself |
+| `Listbox.Content` | The list element |
+| `Listbox.Item` | One row |
+| `Listbox.ItemIcon` | The row's icon |
+| `Listbox.ItemText` | The row's label |
+| `Listbox.ItemDescription` | A second line under the label |
+| `Listbox.ItemIndicator` | The check shown while the row is selected |
+| `Listbox.ItemGroup` | A group of rows |
+| `Listbox.ItemGroupLabel` | Names a group |
+| `Listbox.Empty` | Shown while there are no items |
+| `Listbox.useContext` | The selection and its setters, for parts inside the Root |

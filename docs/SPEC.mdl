@@ -2414,6 +2414,8 @@ page tile-api-theme: Theme
   section: TILE
   route: /docs/tile/api/theme/
   group: API
+  package: react-ui
+  family: Foundations
   template: namespace
   status: spike
   covers:
@@ -2425,6 +2427,8 @@ page tile-api-layout: Layout
   section: TILE
   route: /docs/tile/api/layout/
   group: API
+  package: react-ui
+  family: Layout
   template: namespace
   status: spike
   covers:
@@ -2436,6 +2440,8 @@ page tile-api-button: Button
   section: TILE
   route: /docs/tile/api/button/
   group: API
+  package: react-ui
+  family: Actions
   template: namespace
   status: spike
   covers:
@@ -2447,6 +2453,8 @@ page tile-api-input: Input
   section: TILE
   route: /docs/tile/api/input/
   group: API
+  package: react-ui
+  family: Editing
   template: namespace
   status: spike
   covers:
@@ -2458,6 +2466,8 @@ page tile-api-status: Status
   section: TILE
   route: /docs/tile/api/status/
   group: API
+  package: react-ui
+  family: Display
   template: namespace
   status: spike
   covers:
@@ -2469,6 +2479,8 @@ page tile-api-panel: Panel
   section: TILE
   route: /docs/tile/api/panel/
   group: API
+  package: react-ui
+  family: Layout
   template: namespace
   status: spike
   covers:
@@ -2480,10 +2492,428 @@ page tile-api-toolbar: Toolbar
   section: TILE
   route: /docs/tile/api/toolbar/
   group: API
+  package: react-ui
+  family: Actions
   template: namespace
   status: spike
   covers:
     - The `Toolbar` parts
+```
+```mdl
+page tile-api-accordion: Accordion
+  A stack of sections that open and close.
+  section: TILE
+  route: /docs/tile/api/accordion/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Accordion` under its own story [D-306]
+```
+```mdl
+page tile-api-alert-dialog: AlertDialog
+  A dialog that asks the user to confirm or cancel.
+  section: TILE
+  route: /docs/tile/api/alert-dialog/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `AlertDialog` under its own story [D-306]
+```
+```mdl
+page tile-api-avatar: Avatar
+  A person or object shown as an image, initials, an emoji or an icon.
+  section: TILE
+  route: /docs/tile/api/avatar/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Avatar` under its own story [D-306]
+```
+```mdl
+page tile-api-badge: Badge
+  A small mark on the corner of an avatar or icon.
+  section: TILE
+  route: /docs/tile/api/badge/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Badge` under its own story [D-306]
+```
+```mdl
+page tile-api-banner: Banner
+  A note or alert across the top of a view.
+  section: TILE
+  route: /docs/tile/api/banner/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Banner` under its own story [D-306]
+```
+```mdl
+page tile-api-breadcrumb: Breadcrumb
+  The trail of pages from the top down to the current one.
+  section: TILE
+  route: /docs/tile/api/breadcrumb/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Breadcrumb` under its own story [D-306]
+```
+```mdl
+page tile-api-card: Card
+  A block of related content and actions, one surface above its host.
+  section: TILE
+  route: /docs/tile/api/card/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Card` under its own story [D-306]
+```
+```mdl
+page tile-api-carousel: Carousel
+  Slides of images or video, one page at a time.
+  section: TILE
+  route: /docs/tile/api/carousel/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Carousel` under its own story [D-306]
+```
+```mdl
+page tile-api-collapsible: Collapsible
+  One region that opens and closes.
+  section: TILE
+  route: /docs/tile/api/collapsible/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Collapsible` under its own story [D-306]
+```
+```mdl
+page tile-api-color-picker: ColorPicker
+  A colour typed as text or picked from a swatch.
+  section: TILE
+  route: /docs/tile/api/color-picker/
+  group: API
+  package: react-ui
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ColorPicker` under its own story [D-306]
+```
+```mdl
+page tile-api-combobox: Combobox
+  A text field that filters a list of options as the user types.
+  section: TILE
+  route: /docs/tile/api/combobox/
+  group: API
+  package: react-ui
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Combobox` under its own story [D-306]
+```
+```mdl
+page tile-api-drag-handle: DragHandle
+  The grip, drop line and drag preview for drag and drop.
+  section: TILE
+  route: /docs/tile/api/drag-handle/
+  group: API
+  package: react-ui
+  family: Foundations
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `DragHandle` under its own story [D-306]
+```
+```mdl
+page tile-api-editable: Editable
+  Text that turns into a field when the user edits it.
+  section: TILE
+  route: /docs/tile/api/editable/
+  group: API
+  package: react-ui
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Editable` under its own story [D-306]
+```
+```mdl
+page tile-api-fieldset: Fieldset
+  A named group of fields.
+  section: TILE
+  route: /docs/tile/api/fieldset/
+  group: API
+  package: react-ui
+  family: Editing
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Fieldset` under its own story [D-306]
+```
+```mdl
+page tile-api-floating-panel: FloatingPanel
+  A window the user can drag, resize, minimize and maximize.
+  section: TILE
+  route: /docs/tile/api/floating-panel/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `FloatingPanel` under its own story [D-306]
+```
+```mdl
+page tile-api-focus: Focus
+  Keyboard focus groups: one Tab stop, arrow keys inside.
+  section: TILE
+  route: /docs/tile/api/focus/
+  group: API
+  package: react-ui
+  family: Foundations
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Focus` under its own story [D-306]
+```
+```mdl
+page tile-api-listbox: Listbox
+  A list the user selects one, several or no items from.
+  section: TILE
+  route: /docs/tile/api/listbox/
+  group: API
+  package: react-ui
+  family: Collections
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Listbox` under its own story [D-306]
+```
+```mdl
+page tile-api-main: Main
+  The app shell: content between a navigation sidebar and a complementary sidebar.
+  section: TILE
+  route: /docs/tile/api/main/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Main` under its own story [D-306]
+```
+```mdl
+page tile-api-match: Match
+  Renders the first case that matches a value.
+  section: TILE
+  route: /docs/tile/api/match/
+  group: API
+  package: react-ui
+  family: Foundations
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Match` under its own story [D-306]
+```
+```mdl
+page tile-api-media: Media
+  Images and audio or video players.
+  section: TILE
+  route: /docs/tile/api/media/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Media` under its own story [D-306]
+```
+```mdl
+page tile-api-qr-code: QrCode
+  A QR code that fills its host's width.
+  section: TILE
+  route: /docs/tile/api/qr-code/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `QrCode` under its own story [D-306]
+```
+```mdl
+page tile-api-scroll-container: ScrollContainer
+  A scroll area that follows new content, as a chat log does.
+  section: TILE
+  route: /docs/tile/api/scroll-container/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ScrollContainer` under its own story [D-306]
+```
+```mdl
+page tile-api-show: Show
+  Renders its children only when a value is present.
+  section: TILE
+  route: /docs/tile/api/show/
+  group: API
+  package: react-ui
+  family: Foundations
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Show` under its own story [D-306]
+```
+```mdl
+page tile-api-splitter: Splitter
+  Panes side by side with a divider between them.
+  section: TILE
+  route: /docs/tile/api/splitter/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Splitter` under its own story [D-306]
+```
+```mdl
+page tile-api-system-button: SystemButton
+  Buttons for common actions, each with its icon and translated label.
+  section: TILE
+  route: /docs/tile/api/system-button/
+  group: API
+  package: react-ui
+  family: Actions
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `SystemButton` under its own story [D-306]
+```
+```mdl
+page tile-api-tabs: Tabs
+  Views the user switches between with a row of tabs.
+  section: TILE
+  route: /docs/tile/api/tabs/
+  group: API
+  package: react-ui
+  family: Layout
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tabs` under its own story [D-306]
+```
+```mdl
+page tile-api-tag: Tag
+  A small label, which can be clicked or removed.
+  section: TILE
+  route: /docs/tile/api/tag/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tag` under its own story [D-306]
+```
+```mdl
+page tile-api-toggle-group: ToggleGroup
+  Buttons that toggle, alone or as a set where one is on.
+  section: TILE
+  route: /docs/tile/api/toggle-group/
+  group: API
+  package: react-ui
+  family: Actions
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `ToggleGroup` under its own story [D-306]
+```
+```mdl
+page tile-api-tour: Tour
+  A guided tour that points at parts of the app, one step at a time.
+  section: TILE
+  route: /docs/tile/api/tour/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Tour` under its own story [D-306]
+```
+```mdl
+page tile-api-typography: Typography
+  Text that lines up with the controls beside it.
+  section: TILE
+  route: /docs/tile/api/typography/
+  group: API
+  package: react-ui
+  family: Display
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Typography` under its own story [D-306]
+```
+```mdl
+page tile-api-util: Util
+  Helpers for building components that compose with the others.
+  section: TILE
+  route: /docs/tile/api/util/
+  group: API
+  package: react-ui
+  family: Foundations
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `Util` [D-306]
+```
+```mdl
+page tile-api-virtual-anchor: VirtualAnchor
+  Places a menu, popover or combobox popup against any element.
+  section: TILE
+  route: /docs/tile/api/virtual-anchor/
+  group: API
+  package: react-ui
+  family: Overlays
+  template: namespace
+  status: spike
+  covers:
+    - Every part of `VirtualAnchor` [D-306]
 ```
 ```mdl
 page tile-api-overlays: Overlays
@@ -2491,6 +2921,8 @@ page tile-api-overlays: Overlays
   section: TILE
   route: /docs/tile/api/overlays/
   group: API
+  package: react-ui
+  family: Overlays
   template: namespace
   status: spike
   covers:
@@ -2502,6 +2934,8 @@ page tile-api-menu: Menu
   section: TILE
   route: /docs/tile/api/menu/
   group: API
+  package: react-ui
+  family: Actions
   template: namespace
   status: spike
   covers:
@@ -2513,6 +2947,8 @@ page tile-api-icon: Icon
   section: TILE
   route: /docs/tile/api/icon/
   group: API
+  package: react-ui
+  family: Display
   template: namespace
   status: spike
   covers:
@@ -2524,6 +2960,8 @@ page tile-api-hooks: Hooks
   section: TILE
   route: /docs/tile/api/hooks/
   group: API
+  package: react-ui
+  family: Foundations
   template: namespace
   status: spike
   covers:
@@ -2545,7 +2983,7 @@ page tile-api-mosaic-board: Board
     - The `Board` parts over a `BoardModel`, dragging cards within and across columns and columns by their handle; the Overview grid's Kanban board card links here [D-296]
 ```
 ```mdl
-page tile-api-list-listbox: Listbox
+page tile-api-list-listbox: Listbox (react-ui-list)
   A flat list the user picks from.
   section: TILE
   route: /docs/tile/api/react-ui-list/listbox/
@@ -6037,6 +6475,16 @@ decision D-305: TILE documents and demos `@dxos/react-ui-canvas-editor`'s `Canva
   by: user:wittjosiah
   affects: [tile-overview, tile-api-canvas-editor-canvas-editor]
   why: The canvas editor is the one the platform draws with, in the canvas, code graph, code and UML plugins; no plugin uses the React Flow diagram.
+```
+
+```mdl
+decision D-306: TILE's API documents every namespace of `@dxos/react-ui`, one page each, and nests every page, core or not, in a family group: Actions, Collections, Display, Editing, Foundations, Layout, Overlays, Time and Visualization. The API group has no top-level pages, so the sidebar no longer tells core components from the packages built on them. A family lists its pages alphabetically, and the two Listbox pages are labelled by package. Amends [D-299], [D-300].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: Thirty-two of the core namespaces had no page, and a reader looks for a component by what it does, not by which package holds it.
+  rejected:
+    - Keep the core pages at the top level: with forty-three pages the list is too long to scan.
 ```
 
 ## Appendix: Extension Definitions

@@ -1,0 +1,29 @@
+---
+title: AlertDialog
+description: "A dialog that asks the user to confirm or cancel."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/alert-dialog" />
+
+```ts
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+```
+
+Only its own buttons close it, and it opens with focus on `Cancel`, the least destructive choice.
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `AlertDialog.Root` | Holds the open state |
+| `AlertDialog.Trigger` | Opens the dialog |
+| `AlertDialog.Content` | The dialog itself |
+| `AlertDialog.Header` | The row that holds the Title |
+| `AlertDialog.Title` | Names the dialog |
+| `AlertDialog.Description` | What confirming will do |
+| `AlertDialog.Body` | Any further content |
+| `AlertDialog.Footer` | The row of buttons |
+| `AlertDialog.Cancel` | Closes the dialog without acting |
+| `AlertDialog.Action` | Confirms: runs `onClick`, then closes unless the handler prevents it |

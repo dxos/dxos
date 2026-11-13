@@ -1,0 +1,23 @@
+---
+title: Focus
+description: "Keyboard focus groups: one Tab stop, arrow keys inside."
+---
+
+import ApiStory from '../../../../../components/ApiStory.astro';
+
+<ApiStory id="react-ui/focus" />
+
+```ts
+import * as Focus from '@dxos/react-ui/Focus';
+```
+
+Enter moves into a group and Escape leaves it. See [Focus and keyboard](/docs/tile/concepts/focus-and-keyboard/).
+
+## Parts
+
+| Part | What it is |
+| --- | --- |
+| `Focus.Group` | One Tab stop over its children; arrow keys move between them |
+| `Focus.Item` | A member the group moves between as one unit |
+| `Focus.bindItem` | The props that make an element an item |
+| `Focus.useFocus` | The group's state, for a member to report into |
