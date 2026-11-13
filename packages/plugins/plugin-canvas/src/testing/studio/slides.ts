@@ -19,10 +19,12 @@ import architectureSource from './architecture.diagram?raw';
 import architectureModel from './architecture.json?raw';
 import chatSource from './chat.diagram?raw';
 import chatModel from './chat.json?raw';
+import { CHAT } from './chat.spec.ts';
 import composerSource from './composer.diagram?raw';
 import composerModel from './composer.json?raw';
 import echoLayersSource from './echo-layers.diagram?raw';
 import echoLayersModel from './echo-layers.json?raw';
+import { ECHO_LAYERS } from './echo-layers.spec.ts';
 import hyperspaceSource from './hyperspace.diagram?raw';
 import hyperspaceModel from './hyperspace.json?raw';
 import ontologySource from './ontology.diagram?raw';
@@ -105,7 +107,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   // The deck fitted three columns to one page; a drawing is not a page, so its columns take the air they read better
   // with, and the field sits in the middle of the two rather than where the deck's own margins left it.
   slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'ortho' }),
-  slide('echo-layers', echoLayersSource, echoLayersModel, { links: 'ortho' }),
+  slide('echo-layers', echoLayersSource, echoLayersModel, { spec: ECHO_LAYERS, title: ECHO_LAYERS.title }),
   // Declared rather than imported: three boxed groups, the entities in three columns about a Person. The deck's own
   // hand-placed graph and the passes that recovered columns from it are not used here.
   slide('ontology', ontologySource, ontologyModel, { spec: ONTOLOGY, title: ONTOLOGY.title }),
@@ -147,7 +149,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     frames: ['subagents'],
     links: 'ortho',
   }),
-  slide('chat', chatSource, chatModel, { links: 'ortho' }),
+  slide('chat', chatSource, chatModel, { spec: CHAT, title: CHAT.title }),
   slide('agent', agentSource, agentModel, { links: 'ortho' }),
 ];
 
