@@ -3,8 +3,9 @@ title: Indexing and queries
 description: EDGE's index of each space, and how a query uses it.
 ---
 
-EDGE keeps an index of every space it replicates. A query on a device reads its local index and EDGE's together, so it
-can match objects the device has not loaded.
+EDGE keeps an index of every space it replicates and can read. A query on a device reads its local index and EDGE's
+together, so it can match objects the device has not loaded. A space that grants EDGE only `pull` access is relayed
+unread and has no index there.
 
 ## Model
 

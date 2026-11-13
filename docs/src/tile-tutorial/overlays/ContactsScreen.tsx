@@ -93,7 +93,10 @@ const ROLE_HELP: Record<string, string> = {
 export const Role = ({ role }: { role: string }) => (
   <Tooltip.Root>
     <Tooltip.Trigger asChild>
-      <Typography.Text tone='muted'>Role: {role}</Typography.Text>
+      {/* Focusable, so a keyboard user can open the tooltip too. */}
+      <span tabIndex={0}>
+        <Typography.Text tone='muted'>Role: {role}</Typography.Text>
+      </span>
     </Tooltip.Trigger>
     <Tooltip.Content>{ROLE_HELP[role]}</Tooltip.Content>
   </Tooltip.Root>

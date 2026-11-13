@@ -38,10 +38,13 @@ const ContactDetail = ({ contact }: { contact?: Contact }) => {
       </Layout.Flex>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <Layout.Flex gap='sm' align='center'>
-            <Icon.Icon icon='ph--identification-badge--regular' />
-            <Typography.Text tone='muted'>{contact.role}</Typography.Text>
-          </Layout.Flex>
+          {/* Focusable, so a keyboard user can open the tooltip too. */}
+          <div tabIndex={0}>
+            <Layout.Flex gap='sm' align='center'>
+              <Icon.Icon icon='ph--identification-badge--regular' />
+              <Typography.Text tone='muted'>{contact.role}</Typography.Text>
+            </Layout.Flex>
+          </div>
         </Tooltip.Trigger>
         <Tooltip.Content>{t(`role.${contact.role}`)}</Tooltip.Content>
       </Tooltip.Root>

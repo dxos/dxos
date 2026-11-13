@@ -26,8 +26,9 @@ topology picks which candidates to connect to and when to drop a connection, and
 
 **MMST** keeps the swarm reachable without connecting every pair. Each device opens connections until it has a minimum
 number, choosing from a random sample of candidates the ones nearest its own key by XOR distance. It refuses offers once
-it has its maximum. Because every device picks by the same distance, the connections together link the whole swarm,
-and a change reaches every device through intermediaries. A space swarm opens up to 4 connections itself and accepts
+it has its maximum. Because every device picks by the same distance, the connections usually link the whole swarm,
+and a change reaches every device through intermediaries. It is not guaranteed: two groups whose devices already
+have their minimum open no connection between them, and then only EDGE joins them. A space swarm opens up to 4 connections itself and accepts
 up to 10 in all, from a sample of 20. The topology makes at most one change every 10 seconds, so connections do not
 flap.
 
@@ -43,5 +44,6 @@ together, so a limiter lets at most 50 be in the connecting state at a time. The
 
 ## Limits
 
-- MMST does not guarantee the shortest route between two devices, only that one exists while enough peers are online.
+- MMST guarantees neither the shortest route between two devices nor that a direct route exists. EDGE replication
+  covers the gaps.
 - A swarm with one device online has no connections; that device syncs only with EDGE.

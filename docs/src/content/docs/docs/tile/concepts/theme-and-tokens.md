@@ -31,8 +31,8 @@ Higher surfaces are lighter in dark mode, so a menu reads as sitting above a car
 | `sunken`  | `deck-surface`                               |
 | `chrome`  | `sidebar-surface`, `header-surface`          |
 | `base`    | `base-surface`                               |
-| `raised`  | `card-surface`                               |
-| `overlay` | `modal-surface`: dialogs, sheets, drawers    |
+| `raised`  | `card-surface`, `modal-surface` (dialogs)    |
+| `overlay` | none; set it on an element to lift it higher |
 | `popup`   | `popover-surface`: menus, popovers, tooltips |
 
 **Light and dark in one value.** A semantic token holds both values with CSS `light-dark()`. The theme sets

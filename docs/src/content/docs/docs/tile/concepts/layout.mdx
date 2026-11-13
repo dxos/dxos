@@ -23,8 +23,9 @@ the content the viewport, so no extra element breaks the chain.
 
 <TilePreview id="panel" height="20rem" />
 
-**Layout primitives.** All of these are in the `Layout` namespace, and each takes `asChild` to lay out a semantic element
-such as a `<header>` or `<ul>` without an extra wrapper:
+**Layout primitives.** All of these are in the `Layout` namespace. `Flex`, `Grid` and `Container` take `asChild` to lay
+out a semantic element such as a `<header>` or `<ul>` without an extra wrapper; `Block`, `Columns` and `Separator` do
+not:
 
 | Primitive   | Arranges                                                                                       |
 | ----------- | ---------------------------------------------------------------------------------------------- |

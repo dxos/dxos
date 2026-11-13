@@ -3,9 +3,11 @@ title: Why MESH?
 description: Why devices connect to each other directly, and why the same data also goes through EDGE.
 ---
 
-EDGE already holds a copy of every space, so a device could sync with EDGE alone. MESH also links devices to each
-other directly, because a direct link is faster between nearby devices, keeps working when EDGE is out of reach, and
-carries data that never passes through a server. Today a space replicates over both at once.
+EDGE holds a copy of every space that replicates through it, so a device could sync with EDGE alone. MESH also links
+devices to each other directly, because a direct link is faster between nearby devices and keeps working when EDGE is
+out of reach. Today a space replicates over both at once, so a change takes the direct link and also goes to EDGE. A
+space that turns EDGE off with `Space.setEdgeReplication` syncs only over direct links, and its data then reaches no
+server unless WebRTC has to fall back to a TURN relay.
 
 ## The pattern
 

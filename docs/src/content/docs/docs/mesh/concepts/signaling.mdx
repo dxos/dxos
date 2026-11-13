@@ -15,8 +15,8 @@ the EDGE signal manager, which sends everything over the device's [WebSocket to 
 Without it, the client uses an in-memory signal manager that only reaches peers in the same process, which is what tests
 use.
 
-**Topics.** A swarm is named by a topic, a 32-byte key. A space's topic is derived from its space key, so every member
-of the space, and EDGE, computes the same one. An invitation has a topic of its own, carried in the invitation code.
+**Topics.** A swarm is named by a topic, a key. A space's topic is its space ID, the first 20 bytes of the SHA-256
+of its space key, so every member of the space, and EDGE, computes the same one. An invitation has a topic of its own, carried in the invitation code.
 
 **Join, query and leave.** A device joins a topic to say it is there, queries the topic to list the peers on it, and
 leaves when it closes the space. EDGE tells each peer on the topic when another joins or leaves.

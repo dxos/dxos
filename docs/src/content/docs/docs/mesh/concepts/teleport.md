@@ -28,7 +28,8 @@ once both sides have added it. A peer that does not know an extension never open
 
 ## Behavior
 
-- Every extension but control waits for authentication. A peer that fails it is disconnected before any data moves.
+- Each connection runs the auth extension, and a peer that fails it is disconnected. The other extensions open
+  alongside it rather than after it, so each one gates on authentication itself.
 - Replication over Teleport is the same replication as through EDGE. See
   [Spaces and databases](/docs/echo/concepts/spaces/) for what it replicates.
 - When a connection drops, the session and its extensions close. The swarm opens a new connection, which runs them again

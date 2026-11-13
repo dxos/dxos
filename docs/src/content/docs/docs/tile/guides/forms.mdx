@@ -32,14 +32,14 @@ asks for a text area:
 ## Render the form
 
 `Form.Root` takes the schema and the starting values. `Form.Fields` renders a field for each property, and
-`Form.Actions` adds Save and Cancel. Save stays disabled until the values pass the schema's checks, then calls `onSave`
-with them:
+`Form.Actions` adds Save and Cancel. A field shows its error once the user leaves it, and Save is disabled while a
+field the user touched has one. Save checks every value against the schema, then calls `onSave` with them:
 
 <Snippet file="tile-guide-forms" region="form" lang="tsx" />
 
 <TilePreview id="form-new-contact" height="26rem" />
 
-To show some of the fields, list them in `include`, in the order you want:
+To show some of the fields, list them in `include`. They keep the schema's order; pass `sort` to reorder them:
 
 <Snippet file="tile-guide-forms" region="include" lang="tsx" />
 

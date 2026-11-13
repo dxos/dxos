@@ -27,6 +27,8 @@ import {
 /** A plain-text editor: the basic extensions give it editing, and the theme extensions match the app's theme. */
 export const NotesEditor = () => {
   const themeMode = Hooks.useThemeMode();
+  // The text lives in state, so it survives the editor being rebuilt when the theme changes.
+  const [text, setText] = useState('');
   const extensions = useMemo(
     () => [
       createBasicExtensions({
@@ -40,7 +42,7 @@ export const NotesEditor = () => {
 
   return (
     <Editor.Root extensions={extensions}>
-      <Editor.View initialValue='' />
+      <Editor.View value={text} onChange={setText} />
     </Editor.Root>
   );
 };
@@ -57,6 +59,8 @@ const countWords = (text: string) => text.split(/\s+/).filter(Boolean).length;
  */
 export const MarkdownEditor = () => {
   const themeMode = Hooks.useThemeMode();
+  // The text lives in state, so it survives the editor being rebuilt when the theme changes.
+  const [text, setText] = useState(NOTES);
   const [words, setWords] = useState(() => countWords(NOTES));
   const extensions = useMemo(
     () => [
@@ -75,7 +79,7 @@ export const MarkdownEditor = () => {
         <Editor.Root extensions={extensions} viewMode='preview'>
           <Editor.Content>
             <Editor.Toolbar attendableId='notes' />
-            <Editor.View initialValue={NOTES} />
+            <Editor.View value={text} onChange={setText} />
           </Editor.Content>
         </Editor.Root>
       </AttendableContainer>

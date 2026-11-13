@@ -39,8 +39,9 @@ and each part spreads the props the machine gives it.
 
 ## Behavior
 
-- ARIA roles and attributes come from the machine. TILE components add no roles of their own, so don't add one to a
-  part either.
+- ARIA roles and attributes on interactive parts come from the machine, so don't add one to such a part. Layout
+  primitives are different: `Layout.Grid` defaults to `role='none'`, so give it a role such as `list` when you use it
+  with `asChild` around a list.
 - A component that can be controlled takes `open` and `onOpenChange`, or `value` and `onValueChange`, and works
   uncontrolled when you leave them out.
 - Every part takes `classNames` for overrides. See [Theme and tokens](/docs/tile/concepts/theme-and-tokens/).

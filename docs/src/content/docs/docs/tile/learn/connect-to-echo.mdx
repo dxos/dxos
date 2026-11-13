@@ -62,12 +62,14 @@ Three things change from the last page:
 
 7. **Open a space.** A space is a database that its members share, and an identity owns the spaces it creates. The
    first time the app runs, `setUp` creates an identity and then a space. `Contacts` shows the screen once the space
-   is there. Add `src/echo/main.tsx`:
+   is there. Add `src/echo/main.tsx`, starting with the same stylesheet imports as the first entry point,
+   `import '@dxos-theme';` and `import '@dxos/react-ui/theme.css';`:
 
    <Snippet file="tile-tutorial/echo/main" region="space" lang="tsx" />
 
 8. **Render it inside the client.** `ClientProvider` starts ECHO with the types the app uses, and runs `setUp`
-   once the client is ready. The theme provider goes inside it, and now also registers
+   once the client is ready. Its config is the one from ECHO's [Installation](/docs/echo/learn/installation/) page: it
+   keeps the data across reloads and reaches other devices through EDGE, which the next section needs. The theme provider goes inside it, and now also registers
    `@dxos/react-ui-form`'s strings. Point `index.html` at `src/echo/main.tsx`:
 
    <Snippet file="tile-tutorial/echo/main" region="provider" lang="tsx" />

@@ -8,6 +8,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { type Client } from '@dxos/client';
+import { Config } from '@dxos/config';
 import { ClientProvider } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import '@dxos/react-ui/theme.css';
@@ -38,8 +39,30 @@ const Contacts = () => {
 // #endregion
 
 // #region provider
+/** Keeps the data across reloads and reaches other devices through EDGE, as the ECHO learning path's app does. */
+const config = new Config({
+  runtime: {
+    client: {
+      storage: { persistent: true },
+      edgeFeatures: { signaling: true, subductionReplicator: true, feedReplicator: true },
+    },
+    services: {
+      edge: { url: 'https://dxos.network/' },
+      iceProviders: [{ urls: 'https://dxos.network/ice' }],
+    },
+  },
+});
+
+/** Runs the database in a worker, in the browser's private file system. */
+const createOpfsWorker = () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' });
+
 createRoot(document.getElementById('root')!).render(
-  <ClientProvider types={[Organization, Person]} onInitialized={setUp}>
+  <ClientProvider
+    config={config}
+    createOpfsWorker={createOpfsWorker}
+    types={[Organization, Person]}
+    onInitialized={setUp}
+  >
     <Theme.Provider tx={Theme.defaultTx} resourceExtensions={[...uiTranslations, ...formTranslations, ...translations]}>
       <Contacts />
     </Theme.Provider>

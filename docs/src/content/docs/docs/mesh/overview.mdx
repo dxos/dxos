@@ -16,9 +16,10 @@ for it to reach another device, and a space uses both at once.
 ## How devices reach each other
 
 Every device keeps one WebSocket to [EDGE](/docs/edge/overview/). EDGE plays two parts there. It is the signaling
-server that introduces peers to each other, and it is a peer of its own that holds a copy of each space. After the
+server that introduces peers to each other, and it is a peer of its own that holds a copy of each space that
+replicates through it. After the
 introduction, two devices open a direct WebRTC link and replicate over it. When no direct link can be made, or the
-other device is offline, the data still reaches it through EDGE.
+other device is offline, the data still reaches it through EDGE, as long as the space replicates through EDGE.
 
 <Diagram name="mesh-links" alt="Device A and Device B share a direct WebRTC link through Teleport, and each also holds a WebSocket to EDGE." />
 
@@ -37,7 +38,7 @@ other device is offline, the data still reaches it through EDGE.
 MESH is plumbing that apps rarely call. These pages explain how it works, so there is no learning path, API group or
 guides.
 
-- [Why MESH?](/docs/mesh/why-mesh/) argues for direct links when EDGE already holds a copy of every space.
+- [Why MESH?](/docs/mesh/why-mesh/) argues for direct links when EDGE already holds a copy of each space.
 - [Architecture](/docs/mesh/concepts/architecture/) shows the layers, from the transport up to the extensions ECHO and
   HALO run. The other concept pages take one layer each.
 - The [glossary](/docs/mesh/resources/glossary/) defines every MESH term.

@@ -28,8 +28,8 @@ replication to EDGE's copy of each space. See [Connecting](/docs/edge/concepts/c
   its swarm.
 - In the browser the client's services run in a worker. A worker cannot open a WebRTC connection, so the tab opens it on
   the worker's behalf and forwards the bytes.
-- Every connection is authenticated before any extension other than control runs on it: each side proves it holds a key
-  the space or identity admitted.
+- Every connection is authenticated: each side proves it holds a key the space or identity admitted, and a peer that
+  fails is disconnected. Extensions open alongside the auth extension, not after it.
 
 ## Limits
 

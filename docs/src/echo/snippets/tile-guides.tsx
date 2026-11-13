@@ -57,12 +57,12 @@ export const App = () => (
 
 // #region component
 export type ContactListProps = {
-  names: string[];
+  contacts: { id: string; name: string }[];
   onAdd?: () => void;
 };
 
 /** Takes its data and callbacks as props; a container reads them from the app and passes them in. */
-export const ContactList = ({ names, onAdd }: ContactListProps) => (
+export const ContactList = ({ contacts, onAdd }: ContactListProps) => (
   <Panel.Root>
     <Panel.Header>
       <Toolbar.Root>
@@ -78,13 +78,13 @@ export const ContactList = ({ names, onAdd }: ContactListProps) => (
     <Panel.Body asChild>
       <ScrollArea.Root>
         <ScrollArea.Viewport>
-          {names.length === 0 ? (
+          {contacts.length === 0 ? (
             <Status.Empty icon='ph--address-book--regular'>
               No contacts yet
             </Status.Empty>
           ) : (
-            names.map((name) => (
-              <Typography.Text key={name}>{name}</Typography.Text>
+            contacts.map(({ id, name }) => (
+              <Typography.Text key={id}>{name}</Typography.Text>
             ))
           )}
         </ScrollArea.Viewport>
@@ -102,7 +102,14 @@ export default {
   parameters: { translations: uiTranslations },
 };
 
-export const Default = { args: { names: ['Ada Lovelace', 'Grace Hopper'] } };
+export const Default = {
+  args: {
+    contacts: [
+      { id: 'ada', name: 'Ada Lovelace' },
+      { id: 'grace', name: 'Grace Hopper' },
+    ],
+  },
+};
 
-export const NoContacts = { args: { names: [] } };
+export const NoContacts = { args: { contacts: [] } };
 // #endregion

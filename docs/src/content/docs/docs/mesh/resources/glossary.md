@@ -44,8 +44,8 @@ The session two devices run over one connection. It multiplexes named streams an
 
 ### Topic
 
-The 32-byte key that names a [swarm](#swarm). A space's topic is derived from its space key; an invitation carries its
-own.
+The key that names a [swarm](#swarm). A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space
+key; an invitation carries its own.
 
 ### Topology
 

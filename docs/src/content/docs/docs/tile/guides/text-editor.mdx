@@ -18,7 +18,8 @@ npm install @dxos/react-ui-editor @dxos/ui-editor
 
 `Editor.Root` holds the extensions, and `Editor.View` draws the text. `createBasicExtensions` gives the editor its
 editing behavior, with options such as a placeholder and line wrapping. `createThemeExtensions` matches the app's light
-or dark theme; read the mode with `useThemeMode` and rebuild the extensions when it changes:
+or dark theme; read the mode with `useThemeMode` and rebuild the extensions when it changes. Rebuilding recreates the
+editor, so keep its text in state and pass it as `value` with `onChange`:
 
 <Snippet file="tile-guide-editor" region="plain" lang="tsx" />
 
@@ -43,7 +44,7 @@ container's id to the toolbar. `listener` calls you back on each change:
 An ECHO `Text` object from `@dxos/schema` holds a document's text. The `automerge` extension binds the editor to one
 of its properties: each edit goes into the object, and each change to the object, from another window or another
 device, shows in the editor. With the binding, the editor takes its text from the object, so `Editor.View` needs no
-`initialValue`:
+`value`:
 
 <Snippet file="tile-guide-editor" region="echo" lang="tsx" />
 

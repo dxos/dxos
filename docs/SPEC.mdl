@@ -5016,6 +5016,15 @@ decision D-247: On `/echo` the four reason cards and the four guarantee cards ea
   why: Josiah meant two rows of two as the fallback at a breakpoint, not the layout at every width.
 ```
 
+```mdl
+decision D-248: Corrections from review. EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read; Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension, not after it. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key. The TILE learning path's ECHO app configures its client as ECHO's Installation page does, so the sharing exercise works across browser profiles, and its new entry point keeps the stylesheet imports. TILE's samples key rows by id, keep editor text in state across theme changes, and make tooltip triggers focusable. TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, only `Flex`, `Grid` and `Container` take `asChild`, a layout primitive may take a role, `include` keeps schema order, and Save is disabled only while a touched field has an error. The topic picker scrolls on a short screen.
+  date: 2026-11-13
+  by: agent:claude
+  for: user:wittjosiah
+  affects: [F-16.8]
+  why: Review on the PR checked these pages against the source and found statements the code does not support.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

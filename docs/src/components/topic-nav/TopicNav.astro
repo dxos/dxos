@@ -181,6 +181,9 @@ const topic = currentTopic(Astro.url.pathname);
       position: fixed;
       top: calc(var(--sl-nav-height) - 0.25rem);
       width: auto;
+      /* Fixed content past the viewport can't be scrolled to, so a short landscape screen scrolls the panel instead. */
+      max-height: calc(100dvh - var(--sl-nav-height) - 1rem);
+      overflow-y: auto;
     }
   }
 </style>

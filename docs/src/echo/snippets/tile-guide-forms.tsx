@@ -25,7 +25,7 @@ type Contact = Schema.Schema.Type<typeof ContactSchema>;
 // #endregion
 
 // #region form
-/** A form for a new contact: its fields come from the schema, and Save is enabled once the values are valid. */
+/** A form for a new contact: its fields come from the schema, and Save validates the values before `onSave`. */
 export const NewContact = () => {
   const [saved, setSaved] = useState<Contact>();
   return (
@@ -49,7 +49,7 @@ export const NewContact = () => {
 // #endregion
 
 // #region include
-/** Only the fields a quick-add needs, in this order. */
+/** Only the fields a quick-add needs. */
 export const QuickAdd = ({
   onSave,
 }: {

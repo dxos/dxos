@@ -32,7 +32,9 @@ A peer that is offline, or behind a network no direct link crosses, gets them th
 
 - In the browser, the client's services run in a worker, which cannot open WebRTC connections. The tab opens them and
   passes the bytes to the worker.
-- A dropped direct link does not lose data: EDGE still has the changes, and the next link catches up.
+- A dropped direct link does not lose data when the space replicates through EDGE: EDGE has every change that
+  reached it, and the next link catches up. With EDGE replication off, the changes wait on the device for the next
+  direct link.
 
 ## Planned: Iroh
 

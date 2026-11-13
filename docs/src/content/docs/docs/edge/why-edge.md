@@ -4,8 +4,9 @@ description: Why a local-first system runs servers at all.
 ---
 
 A local-first app keeps its data on the user's devices and works offline. It still needs a peer that is always online,
-because the user's devices are rarely online together. EDGE is that peer: it holds a copy of each space, not the
-original, and every device can sync, query and recover through it.
+because the user's devices are rarely online together. EDGE is that peer: it holds a copy of each space that
+replicates through it, not the original, and every device can sync, query and recover through that copy. A space can
+turn this off with `Space.setEdgeReplication`; it then syncs only between devices online at the same time.
 
 ## The pattern
 
