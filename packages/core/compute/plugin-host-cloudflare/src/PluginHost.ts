@@ -111,6 +111,9 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       throw new InvalidRequestError({ message: 'A conversation is read from a space, and the request names none.' });
     }
 
+    // Built before the seed and the cancel listener: these ids are not the handler's, and a throw here holds nothing.
+    const registry = spaceId === undefined ? undefined : registryEntities(activation);
+
     // TEST-ONLY: the seed is a static of the shared `EntityId`, so concurrent invocations on one isolate race; only
     // trusted test harnesses set it.
     if (scope.idSeed !== undefined) {
@@ -160,7 +163,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     const func = wrapFunctionHandler(contextual, {
       // Registering types needs a database, which exists only for a space-scoped invocation.
       types: spaceId === undefined ? undefined : [...activation.registeredTypes],
-      registry: spaceId === undefined ? undefined : registryEntities(activation),
+      registry,
       toolkits: [...activation.toolkits],
       typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
       // EDGE's hosted blob store, the default storage of the file backend every bundle is offered.
@@ -292,8 +295,25 @@ const makeContext = async (
 const registryEntities = (activation: PluginActivation.Activation): Entity.Unknown[] => [
   // Made per invocation: `make()` mints ids, which workerd allows only inside a request.
   ...activation.skills.map((definition) => definition.make()),
-  ...activation.operationHandlers.map((handler) => Operation.serialize(handler)),
+  ...activation.operationHandlers.flatMap(operationRecord),
 ];
+
+/**
+ * An operation's registry record, as `registry-sync` publishes it: none for a `skipRegistry` operation, which is hidden
+ * from agents, or for one whose schema cannot be serialized, which would otherwise fail every invocation.
+ */
+const operationRecord = (handler: Operation.WithHandler<Operation.Definition.Any>): Operation.PersistentOperation[] => {
+  if (handler.meta.skipRegistry) {
+    return [];
+  }
+  try {
+    // Built from typed definitions, so schema validation would only re-check the compiler.
+    return [Operation.serialize(handler, { skipValidation: true })];
+  } catch (error) {
+    log.warn('operation not registered: its schema cannot be serialized', { key: handler.meta.key, error });
+    return [];
+  }
+};
 
 /** Gives the handler the plugins' capability manager, which operations that read contributed capabilities require. */
 const withCapabilities = (
