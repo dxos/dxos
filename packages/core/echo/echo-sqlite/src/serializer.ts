@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -34,7 +34,7 @@ export class Serializer {
     return {
       version: Serializer.version,
       timestamp: new Date().toISOString(),
-      objects: objects.filter(Obj.isObject).map((object) => this.exportObject(object)),
+      objects: objects.filter(Entity.isEntity).map((entity) => this.exportObject(entity)),
     };
   }
 
@@ -61,8 +61,19 @@ export class Serializer {
     await database.flush();
   }
 
-  exportObject(object: Obj.Any): Obj.JSON {
-    return Obj.toJSON(object);
+  /** An object, relation or type entity as JSON. */
+  exportObject(object: Entity.Unknown): Obj.JSON {
+    const json = Entity.toJSON(object);
+    const meta = json['@meta'];
+    if (meta === undefined) {
+      return json;
+    }
+    // Timestamps are read from document history, so an export carries the stored meta only.
+    const stored: Obj.JSON['@meta'] = { ...meta };
+    for (const field of ['createdAt', 'updatedAt']) {
+      Reflect.deleteProperty(stored, field);
+    }
+    return { ...json, '@meta': stored };
   }
 
   async #importObject(database: Database.Database, data: Obj.JSON): Promise<void> {

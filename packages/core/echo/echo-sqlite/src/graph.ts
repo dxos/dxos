@@ -23,6 +23,8 @@ export interface EntitySource extends Database.Database {
   load(uri: string): Promise<Entity.Unknown | undefined>;
   /** The live instance for a row a query of another database in the graph read. */
   hydrateStored(stored: StoredEntity): Promise<Entity.Unknown | undefined>;
+  /** Another database of the same space on this file committed writes to these documents. */
+  applyCommitted(ids: ReadonlySet<string>): void;
 }
 
 /**
@@ -111,6 +113,8 @@ class LoadRequest implements RefResolverRequest {
 export class SqliteGraph implements Hypergraph.Hypergraph {
   readonly #registry: SimpleRegistry;
   readonly #databases = new Map<SpaceId, { db: EntitySource; resolver: Ref.Resolver }>();
+  /** Every open database, including several of one space, which see each other's commits. */
+  readonly #members = new Map<EntitySource, Ref.Resolver>();
 
   constructor(registry: SimpleRegistry) {
     this.#registry = registry;
@@ -134,11 +138,32 @@ export class SqliteGraph implements Hypergraph.Hypergraph {
    */
   register(db: EntitySource, resolver: Ref.Resolver): CleanupFn {
     this.#databases.set(db.spaceId, { db, resolver });
+    this.#members.set(db, resolver);
     return () => {
+      this.#members.delete(db);
       if (this.#databases.get(db.spaceId)?.db === db) {
         this.#databases.delete(db.spaceId);
+        const other = [...this.#members].find(([member]) => member.spaceId === db.spaceId);
+        if (other) {
+          this.#databases.set(db.spaceId, { db: other[0], resolver: other[1] });
+        }
       }
     };
+  }
+
+  /**
+   * Tells the other databases of a space that `from` committed writes to these documents, since they
+   * read the same file but cache documents and objects of their own.
+   */
+  notifyCommitted(from: EntitySource, ids: ReadonlySet<string>): void {
+    if (ids.size === 0) {
+      return;
+    }
+    for (const member of this.#members.keys()) {
+      if (member !== from && member.spaceId === from.spaceId) {
+        member.applyCommitted(ids);
+      }
+    }
   }
 
   get query(): Database.QueryFn {

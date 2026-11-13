@@ -30,7 +30,9 @@ export const applyValue = (
     return;
   }
 
-  if (typeof value === 'string' && typeof current === 'string') {
+  // Automerge resolves a text path joined by '/', so a key containing one (a reference's `/`) is
+  // assigned whole rather than edited as text.
+  if (typeof value === 'string' && typeof current === 'string' && ![...path, key].some(isSlashed)) {
     if (current !== value) {
       // The doc proxy is typed by its caller; Automerge's path API takes it as a plain doc.
       A.updateText(doc as A.Doc<unknown>, [...path, key], value);
@@ -70,6 +72,8 @@ export const applyValue = (
     parent[key] = toStorable(value);
   }
 };
+
+const isSlashed = (segment: string | number): boolean => typeof segment === 'string' && segment.includes('/');
 
 /** Automerge stores no `undefined`: drop such members before inserting a new subtree. */
 const toStorable = (value: unknown): unknown => {

@@ -145,6 +145,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   #purged = new Set<string>();
   /** A delete or restore in the pending batch: the cascade can hide rows of any type. */
   #deletionChanged = false;
+  /** Entities removed themselves; the rest of {@link ObjectDeletedId} is derived from their dependencies. */
+  readonly #ownDeleted = new WeakSet<Entity.Unknown>();
   #scheduled = false;
   /** Set while the database writes a derived meta field, whose change notification is not an edit. */
   #stamping = false;
@@ -390,14 +392,15 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
 
   remove(obj: Entity.Unknown): void {
     invariant(Entity.getDatabase(obj) === this, 'Object is not in this database.');
-    if (Entity.isDeleted(obj)) {
+    if (this.#ownDeleted.has(obj)) {
       return;
     }
-    defineHiddenProperty(obj, ObjectDeletedId, true);
+    this.#ownDeleted.add(obj);
     if (Type.isType(obj)) {
       this.#registry.remove(obj.id);
     }
     this.#deletionChanged = true;
+    this.#refreshDeletion();
     this.#markDirty(obj);
   }
 
@@ -971,12 +974,27 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       await this.#refreshStale(indexed);
       if (indexed.size > 0) {
         this.#committed.emit(new Set([ANY_TYPE]));
+        this.#graph.notifyCommitted(this, indexed);
       }
     });
     this.#writes = done.catch((err) => {
       this.#writeError = err;
     });
     await done;
+  }
+
+  applyCommitted(ids: ReadonlySet<string>): void {
+    if (this.#closed) {
+      return;
+    }
+    const done = this.#writes.then(async () => {
+      this.#store.invalidate(ids);
+      await this.#refreshStale(ids);
+      this.#committed.emit(new Set([ANY_TYPE]));
+    });
+    this.#writes = done.catch((err) => {
+      this.#writeError = err;
+    });
   }
 
   /** Refreshes the resident objects among `ids` whose documents moved past the heads they show. */
@@ -1070,20 +1088,31 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       database: this,
     });
     if (Obj.isObject(entity) && Obj.isObject(snapshot)) {
-      Obj.update(entity, (entity) => {
-        const target: Record<string, unknown> = entity;
-        for (const key of Object.keys(target)) {
-          if (key !== 'id' && !Object.hasOwn(snapshot, key)) {
-            delete target[key];
+      // Showing the stored state is not an edit: it must not be written back.
+      this.#stamping = true;
+      try {
+        Obj.update(entity, (entity) => {
+          const target: Record<string, unknown> = entity;
+          for (const key of Object.keys(target)) {
+            if (key !== 'id' && !Object.hasOwn(snapshot, key)) {
+              delete target[key];
+            }
           }
-        }
-        Obj.updateFrom(entity, snapshot);
-        replaceMeta(Obj.getMeta(entity), Obj.getMeta(snapshot));
-      });
+          Obj.updateFrom(entity, snapshot);
+          replaceMeta(Obj.getMeta(entity), Obj.getMeta(snapshot));
+        });
+      } finally {
+        this.#stamping = false;
+      }
     }
     const deleted = stored.body[ATTR_DELETED] === true;
-    if (deleted !== Entity.isDeleted(entity)) {
-      defineHiddenProperty(entity, ObjectDeletedId, deleted);
+    if (deleted !== this.#ownDeleted.has(entity)) {
+      if (deleted) {
+        this.#ownDeleted.add(entity);
+      } else {
+        this.#ownDeleted.delete(entity);
+      }
+      this.#refreshDeletion();
     }
     if (stored.heads) {
       this.#heads.set(entity, stored.heads);
@@ -1099,13 +1128,14 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     }
     const owner = Entity.getDatabase(obj);
     if (owner === this) {
-      if (Entity.isDeleted(obj)) {
+      if (this.#ownDeleted.has(obj)) {
         // Re-adding a removed object restores it.
-        defineHiddenProperty(obj, ObjectDeletedId, false);
+        this.#ownDeleted.delete(obj);
         if (Type.isType(obj)) {
           this.#registry.add([obj]);
         }
         this.#deletionChanged = true;
+        this.#refreshDeletion();
         this.#markDirty(obj);
       }
       return;
@@ -1145,6 +1175,67 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     // The callback captures only the id: the entity must stay collectable.
     const unsubscribe = Entity.subscribe(entity, () => this.#onChanged(id));
     this.#subscriptions.set(entity, unsubscribe);
+    if (!this.#items.has(entity)) {
+      if (Entity.isDeleted(entity)) {
+        // Hydrated from a stored tombstone.
+        this.#ownDeleted.add(entity);
+      } else if (this.#isDeleted(entity, new Map())) {
+        defineHiddenProperty(entity, ObjectDeletedId, true);
+      }
+    }
+  }
+
+  /**
+   * Whether an entity is deleted, itself or through a strong dependency (its parent, or a relation's
+   * endpoint) a bounded number of hops away, as echo-client judges it.
+   */
+  #isDeleted(entity: Entity.Unknown, memo: Map<Entity.Unknown, boolean>, depth = 10): boolean {
+    if (this.#ownDeleted.has(entity)) {
+      return true;
+    }
+    const cached = memo.get(entity);
+    if (cached !== undefined || depth <= 0) {
+      return cached ?? false;
+    }
+    memo.set(entity, false);
+    const deleted = this.#dependencies(entity).some(
+      (dependency) => Entity.getDatabase(dependency) === this && this.#isDeleted(dependency, memo, depth - 1),
+    );
+    memo.set(entity, deleted);
+    return deleted;
+  }
+
+  #dependencies(entity: Entity.Unknown): Entity.Unknown[] {
+    const dependencies: Entity.Unknown[] = [];
+    const parent = Obj.isObject(entity) ? Obj.getParent(entity) : undefined;
+    if (parent && Entity.isEntity(parent)) {
+      dependencies.push(parent);
+    }
+    if (Relation.isRelation(entity)) {
+      for (const endpoint of [Relation.getSource(entity), Relation.getTarget(entity)]) {
+        if (Entity.isEntity(endpoint)) {
+          dependencies.push(endpoint);
+        }
+      }
+    }
+    return dependencies;
+  }
+
+  /**
+   * Re-derives every resident entity's deletion marker after an own deletion changed.
+   */
+  #refreshDeletion(): void {
+    const memo = new Map<Entity.Unknown, boolean>();
+    for (const ref of this.#live.values()) {
+      const entity = ref.deref();
+      if (!entity || this.#items.has(entity) || this.#detached.has(entity)) {
+        continue;
+      }
+      const deleted = this.#isDeleted(entity, memo);
+      if (deleted !== Entity.isDeleted(entity)) {
+        defineHiddenProperty(entity, ObjectDeletedId, deleted);
+      }
+    }
   }
 
   #onChanged(id: string): void {
@@ -1157,7 +1248,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       if (!this.#items.has(entity) && !this.#closed) {
         // Each edit becomes its own document change, as echo-client writes them, so history keeps it.
         const versions = this.#versions.get(id) ?? [];
-        versions.push(toRecord(entity, this.#spaceId));
+        versions.push(toRecord(entity, this.#spaceId, this.#ownDeleted.has(entity)));
         this.#versions.set(id, versions);
       }
       this.#markDirty(entity);
@@ -1242,7 +1333,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         items.set(target.feedId, entry);
       }
       const records = documents.flatMap((entity) => {
-        const current = toRecord(entity, this.#spaceId);
+        const current = toRecord(entity, this.#spaceId, this.#ownDeleted.has(entity));
         const versions = this.#versions.get(entity.id) ?? [];
         this.#versions.delete(entity.id);
         const last = versions.at(-1);
@@ -1286,6 +1377,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
           // their live objects; an object this batch wrote unmerged already shows its document.
           const current = new Set([...results].filter(([, result]) => !result.merged).map(([id]) => id));
           await this.#refreshStale([...indexed].filter((id) => !current.has(id)));
+          this.#graph.notifyCommitted(this, new Set([...indexed, ...results.keys()]));
           // An appended item learns its block id and position from the row its block indexed into.
           for (const entity of batch.values()) {
             const target = this.#items.get(entity);
