@@ -119,12 +119,13 @@ describe('SqliteDatabase', () => {
     }),
   );
 
-  it.effect('runSync returns the last execution and never blocks (F-5.2)', () =>
+  it.effect('runSync answers from resident objects first, then the last execution, never blocking (F-5.2)', () =>
     session(async (db) => {
-      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       const query = db.query(Filter.type(TestSchema.Person));
-      expect(query.runSync()).toEqual([]);
-      await until(() => query.runSync().length === 1);
+      expect(query.runSync()).toEqual([alice]);
+      expect(await query.run()).toEqual([alice]);
+      expect(db.diagnostics().queries).toBe(1);
     }),
   );
 
@@ -740,9 +741,7 @@ describe('SqliteDatabase', () => {
       await expect(db.createBranch()).rejects.toBeInstanceOf(UnsupportedOperationError);
       expect(() => db.retainObjects([])).toThrow(UnsupportedOperationError);
       expect(() => db.getChanges(Obj.make(TestSchema.Person, {}))).toThrow(UnsupportedOperationError);
-      await expect(db.query(Filter.key('com.example.key', { version: '^1.0.0' })).run()).rejects.toThrow(
-        UnsupportedQueryError,
-      );
+      expect(await db.query(Filter.key('com.example.key', { version: '^1.0.0' })).run()).toEqual([]);
       expect(() => db.query(Filter.key('com.example.key', { version: '1.0.0' }))).not.toThrow();
       await expect(db.query(Filter.text('alice', { type: 'vector' })).run()).rejects.toThrow(UnsupportedQueryError);
     }),

@@ -34,6 +34,7 @@ import {
   ParentId,
   SelfURIId,
   defineHiddenProperty,
+  matchMetaKey,
   getRefSavedTarget,
   makeDecodedEntityLive,
   objectFromJSON,
@@ -52,7 +53,7 @@ import { ObjectStore, type StoredEntity } from './object-store.ts';
 import { LiveQueryResult, type ResultItem, asItem } from './query-result.ts';
 import { localEntityId, toRecord } from './record.ts';
 import { SimpleRegistry, matchRegistry } from './registry.ts';
-import { type CompiledQuery, type GroupedShape, compileQuery } from './sql/compile.ts';
+import { type CompiledQuery, type GroupedShape, compileQuery, versionRangeKey, versionRanges } from './sql/compile.ts';
 
 export type OpenOptions = {
   /**
@@ -362,16 +363,21 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     const scopes = ast.type === 'from' && ast.from._tag === 'scope' ? ast.from.scopes : undefined;
     const fromRegistry = scopes?.some((scope) => scope._tag === 'registry' && scope.location === 'local') ?? false;
     const fromSpace = scopes === undefined || scopes.some((scope) => scope._tag !== 'registry');
-    // Compiled once, up front; an unsupported clause rejects every execution, as echo-client's does.
+    // Compiled once, up front, unless a version range must first read which versions exist; an
+    // unsupported clause rejects every execution, as echo-client's does.
+    const ranges = fromSpace ? versionRanges(ast) : [];
     let compiled: CompiledQuery | undefined;
     let compileError: unknown;
-    try {
-      compiled = fromSpace ? compileQuery(ast, { spaceId: this.#spaceId }) : undefined;
-    } catch (err) {
-      compileError = err;
+    if (ranges.length === 0) {
+      try {
+        compiled = fromSpace ? compileQuery(ast, { spaceId: this.#spaceId }) : undefined;
+      } catch (err) {
+        compileError = err;
+      }
     }
     const typenames = queryTypenames(ast);
     const result = new LiveQueryResult<unknown>({
+      resident: ast.type === 'aggregate' || ast.type === 'from' ? undefined : () => this.#matchResident(ast),
       source: 'local',
       invalidated: this.#committed,
       affectedBy: (written) =>
@@ -380,10 +386,14 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         if (compileError !== undefined) {
           throw compileError;
         }
-        const stored = compiled ? await this.#execute(compiled) : [];
+        const statement =
+          ranges.length > 0
+            ? compileQuery(ast, { spaceId: this.#spaceId, versions: await this.#satisfying(ranges) })
+            : compiled;
+        const stored = statement ? await this.#execute(statement) : [];
         const registered = fromRegistry && ast.type === 'from' ? matchRegistry(ast.query, this.#registry.list()) : [];
         const keys = new Set(stored.map((item) => item.key));
-        return [...stored, ...registered.filter((entity) => !keys.has(entity.id)).map(asItem)];
+        return [...stored, ...registered.filter((entity) => !keys.has(entity.id)).map((entity) => asItem(entity))];
       },
     });
     this.#queries.set(key, new WeakRef(result));
@@ -724,8 +734,42 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     if (compiled.grouped) {
       return this.#records(rows, compiled.grouped);
     }
-    const entities = await Promise.all(rows.map((row) => this.#hydrate(row)));
-    return entities.filter((entity): entity is Entity.Unknown => entity !== undefined).map(asItem);
+    const items = await Promise.all(
+      rows.map(async (row) => {
+        const entity = await this.#hydrate(row);
+        return entity ? asItem(entity, row.rank) : undefined;
+      }),
+    );
+    return items.filter((item): item is ResultItem => item !== undefined);
+  }
+
+  /** A query matched against the live objects in memory, for `runSync` before its first execution. */
+  #matchResident(ast: QueryAST.Query): ResultItem[] {
+    const resident = [...this.#live.values()]
+      .map((ref) => ref.deref())
+      .filter((entity): entity is Entity.Unknown => entity !== undefined && !Entity.isDeleted(entity));
+    try {
+      return matchRegistry(ast, resident).map((entity) => asItem(entity));
+    } catch {
+      // A clause the in-memory matcher cannot answer leaves the first answer to the execution.
+      return [];
+    }
+  }
+
+  /**
+   * The pre-pass of version ranges: each range's satisfying versions among those stored for its key.
+   */
+  async #satisfying(ranges: readonly { key: string; range: string }[]): Promise<Map<string, string[]>> {
+    await this.flush();
+    const versions = new Map<string, string[]>();
+    for (const { key, range } of ranges) {
+      const stored = await this.#run(this.#store.versionsOf(key));
+      versions.set(
+        versionRangeKey(key, range),
+        stored.filter((version) => matchMetaKey(key, range, key, version)),
+      );
+    }
+    return versions;
   }
 
   /**
@@ -974,6 +1018,14 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       }
     };
     visit(Object.values(entity));
+    // Tagging an object adds its tags (held in its meta as entities or refs) to the database with it.
+    for (const tag of Entity.getMeta(entity).tags ?? []) {
+      if (Entity.isEntity(tag) && Entity.getDatabase(tag) === undefined) {
+        this.#attach(tag);
+      } else {
+        visit(tag);
+      }
+    }
   }
 
   #markDirty(entity: Entity.Unknown): void {

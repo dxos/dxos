@@ -36,6 +36,8 @@ export type StoredEntity = {
   /** When the entity was created and last changed, in unix ms, as the index holds them. */
   readonly createdAt?: number;
   readonly updatedAt?: number;
+  /** The row's relevance to the query that read it. */
+  readonly rank?: number;
   /** The aggregate group of the row, for a grouped query. */
   readonly group?: { readonly key: string; readonly ord: number; readonly aggregates: Record<string, unknown> };
 };
@@ -48,6 +50,7 @@ type BodyRow = {
   updatedAt?: number | null;
   queueId?: string | null;
   queueNamespace?: string | null;
+  rank?: number | null;
   groupKey?: string;
   groupOrd?: number;
   aggregates?: string;
@@ -261,6 +264,23 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   }
 
   /**
+   * The distinct versions the space's objects with meta `key` carry, for a version range's pre-pass.
+   */
+  versionsOf(key: string): Store<string[]> {
+    const spaceId = this.#spaceId;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql.unsafe<{ version: string | null }>(
+        `SELECT DISTINCT json_extract(s.snapshot, '$."@meta".version') AS version FROM objectMeta m
+CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND json_extract(s.snapshot, '$."@meta".key') = ?`,
+        [spaceId, key],
+      );
+      return rows.flatMap((row) => (typeof row.version === 'string' ? [row.version] : []));
+    });
+  }
+
+  /**
    * Ids of deleted rows and of everything their deletion hides: descendants through `parentId` and
    * relations with a purged endpoint. Purging only the flagged rows would make those visible again.
    */
@@ -333,6 +353,7 @@ const parseRow = (row: BodyRow): StoredEntity => ({
   heads: row.version ? JSON.parse(row.version) : undefined,
   queueId: row.queueId ?? undefined,
   queueNamespace: row.queueNamespace ?? undefined,
+  rank: row.rank ?? undefined,
   createdAt: row.createdAt ?? undefined,
   updatedAt: row.updatedAt ?? undefined,
   group:

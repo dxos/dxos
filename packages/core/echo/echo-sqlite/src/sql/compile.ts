@@ -64,8 +64,11 @@ const MAX_DEPTH = 10;
  * Joins are `CROSS JOIN` throughout: SQLite keeps their written order, so each step walks its input
  * working set and seeks the metadata/reference indexes instead of the unanalyzed planner scanning a space.
  */
-export const compileQuery = (query: QueryAST.Query, options: { spaceId: SpaceId }): CompiledQuery => {
-  const compiler = new Compiler(options.spaceId);
+export const compileQuery = (
+  query: QueryAST.Query,
+  options: { spaceId: SpaceId; versions?: ReadonlyMap<string, readonly string[]> },
+): CompiledQuery => {
+  const compiler = new Compiler(options.spaceId, options.versions ?? new Map());
   const root = compiler.node(query, 'exclude');
   const grouped = compiler.grouped.get(root);
   const aggregates =
@@ -100,7 +103,11 @@ class Compiler {
   readonly #unordered = new Set<string>();
   #counter = 0;
 
-  constructor(private readonly _spaceId: SpaceId) {}
+  constructor(
+    private readonly _spaceId: SpaceId,
+    /** The stored versions satisfying each meta version range, by {@link versionRangeKey}. */
+    private readonly _versions: ReadonlyMap<string, readonly string[]>,
+  ) {}
 
   node(query: QueryAST.Query, deleted: DeletedMode): string {
     switch (query.type) {
@@ -112,7 +119,7 @@ class Compiler {
             ? raw(' INDEXED BY echo_sqlite_object_type')
             : raw('');
         const name =
-          this.#cte(sql`SELECT e.recordId AS rid, e.objectId AS id, 0 AS rank, 0 AS ord FROM objectMeta e${index}
+          this.#cte(sql`SELECT e.recordId AS rid, e.objectId AS id, ${rankOf(query.filter, 'e')} AS rank, 0 AS ord FROM objectMeta e${index}
 WHERE ${this.#source('e')} AND ${this.#visible('e', deleted)} AND ${this.#filter(query.filter, 'e')}`);
         this.#unordered.add(name);
         return name;
@@ -506,11 +513,14 @@ FROM ${raw(inner)} w`);
         if (filter.metaKey !== undefined) {
           conditions.push(sql`json_extract(${body(alias)}, '$."@meta".key') = ${filter.metaKey}`);
           if (filter.metaVersion !== undefined) {
-            // Only an exact version is expressible without reading which versions exist.
-            if (!/^\d+\.\d+\.\d+$/.test(filter.metaVersion)) {
-              throw new UnsupportedQueryError(`metaVersion range ${filter.metaVersion}`);
+            // A range becomes the stored versions satisfying it, which the database reads first.
+            const versions = this._versions.get(versionRangeKey(filter.metaKey, filter.metaVersion));
+            if (!versions) {
+              throw new UnsupportedQueryError(`metaVersion range ${filter.metaVersion} without its versions`);
             }
-            conditions.push(sql`json_extract(${body(alias)}, '$."@meta".version') = ${filter.metaVersion}`);
+            conditions.push(
+              sql`json_extract(${body(alias)}, '$."@meta".version') IN (SELECT value FROM json_each(${JSON.stringify(versions)}))`,
+            );
           }
         }
         return conditions.length === 0 ? raw('1') : sql`(${join(conditions, ' AND ')})`;
@@ -742,7 +752,7 @@ const checkTimestamps = (filter: QueryAST.Filter, inverted = false, alternative 
       }
       if (alternative) {
         throw new UnsupportedQueryError(
-          'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
+          'Query too complex: timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
         );
       }
       return;
@@ -755,6 +765,74 @@ const checkTimestamps = (filter: QueryAST.Filter, inverted = false, alternative 
     default:
       return;
   }
+};
+
+/**
+ * A row's relevance: `-bm25` of its text over the terms the filter searches for (higher is better),
+ * and 1 for a row no text search ranks, as the host executors report it.
+ */
+const rankOf = (filter: QueryAST.Filter, alias: string): Fragment => {
+  const terms = searchTerms(filter).filter((term) => term.length >= 3);
+  if (terms.length === 0) {
+    return raw('1');
+  }
+  const match = terms.map((term) => `"${term.replaceAll('"', '""')}"`).join(' AND ');
+  return sql`COALESCE((SELECT -bm25(ftsIndex) FROM ftsIndex WHERE ftsIndex MATCH ${match} AND ftsIndex.rowid = ${raw(alias)}.recordId), 1)`;
+};
+
+/** The full-text terms a filter requires: those under its conjunctions, not under `not` or `or`. */
+const searchTerms = (filter: QueryAST.Filter): string[] => {
+  switch (filter.type) {
+    case 'text-search':
+      return filter.searchKind === 'vector'
+        ? []
+        : filter.text
+            .toLowerCase()
+            .split(/\s+/)
+            .filter((term) => term.length > 0);
+    case 'and':
+      return filter.filters.flatMap(searchTerms);
+    default:
+      return [];
+  }
+};
+
+/** Names a meta key's version range in the map of satisfying versions a compilation takes. */
+export const versionRangeKey = (key: string, range: string): string => `${key}\n${range}`;
+
+/** Every meta key and version range the query's filters name. */
+export const versionRanges = (query: QueryAST.Query): { key: string; range: string }[] => {
+  const ranges: { key: string; range: string }[] = [];
+  const visitFilter = (filter: QueryAST.Filter): void => {
+    switch (filter.type) {
+      case 'object':
+        if (filter.metaKey !== undefined && filter.metaVersion !== undefined) {
+          ranges.push({ key: filter.metaKey, range: filter.metaVersion });
+        }
+        Object.values(filter.props).forEach(visitFilter);
+        return;
+      case 'not':
+        return visitFilter(filter.filter);
+      case 'and':
+      case 'or':
+        return filter.filters.forEach(visitFilter);
+      case 'in-query':
+        return visitQuery(filter.subquery);
+      default:
+        return;
+    }
+  };
+  const visitQuery = (node: QueryAST.Query): void => {
+    QueryAST.visit(node, (child) => {
+      if (child.type === 'select' || child.type === 'filter') {
+        visitFilter(child.filter);
+      } else if (child.type === 'relation' && child.filter) {
+        visitFilter(child.filter);
+      }
+    });
+  };
+  visitQuery(query);
+  return ranges;
 };
 
 /** One `ORDER BY` term over the row aliased `alias` (and the working-set row `w`). */

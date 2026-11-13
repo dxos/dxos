@@ -230,9 +230,9 @@ feat F-5: Query results and reactivity
 
   req F-5.2:
     when: QueryResult.runSync() / .results / .entries is read
-    then: it returns the results of the most recent execution of that query (empty before the first
-          one) and schedules an execution if none is current; it never executes SQL synchronously and
-          never scans the working set
+    then: it returns the results of the most recent execution of that query and schedules an execution
+          if none is current; before the first execution it answers from the live objects already in
+          memory, as echo-client does; it never executes SQL synchronously
 
   req F-5.3:
     when: a query has a subscriber (subscribe or atom)
@@ -466,6 +466,18 @@ decision D-3: Each database file has its own actor id for the blocks it writes. 
   for: user:dmaretskyi
   affects: [F-2.1]
   why: The authority treats a repeated (feed, actor, sequence) as the same block, so two files sharing an actor would drop each other's writes.
+```
+
+```mdl
+decision D-4: Before a query's first execution, runSync answers from the live objects already in memory. Fills in [D-1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.2]
+  why: |
+    echo-client answers runSync that way, and code written against it (and its end-to-end tests) reads
+    a query's results synchronously right after adding the objects.
+  rejected: An empty first answer, which is what this spec required before.
 ```
 
 ---

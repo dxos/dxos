@@ -11,10 +11,15 @@ import { log } from '@dxos/log';
 /**
  * One result of a query: an entity, keyed by its id, or a record an aggregate built, keyed by its group.
  */
-export type ResultItem = { readonly key: string; readonly value: Entity.Unknown | Record<string, unknown> };
+export type ResultItem = {
+  readonly key: string;
+  readonly value: Entity.Unknown | Record<string, unknown>;
+  /** Relevance, higher is better; 1 for a result no text search ranked. */
+  readonly rank?: number;
+};
 
 /** An entity as a result item. */
-export const asItem = (entity: Entity.Unknown): ResultItem => ({ key: entity.id, value: entity });
+export const asItem = (entity: Entity.Unknown, rank?: number): ResultItem => ({ key: entity.id, value: entity, rank });
 
 /**
  * A query result backed by an asynchronous executor (a compiled SQL statement).
@@ -26,6 +31,7 @@ export const asItem = (entity: Entity.Unknown): ResultItem => ({ key: entity.id,
  */
 export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
   readonly #execute: () => Promise<readonly ResultItem[]>;
+  readonly #resident: (() => readonly ResultItem[]) | undefined;
   readonly #invalidated: ReadOnlyEvent<ReadonlySet<string>>;
   readonly #affectedBy: (typenames: ReadonlySet<string>) => boolean;
   readonly #source: QueryResult.Source;
@@ -51,6 +57,11 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
 
   constructor(options: {
     execute: () => Promise<readonly ResultItem[]>;
+    /**
+     * The synchronous answer before the first execution: the query matched against the objects
+     * already in memory, as echo-client answers `runSync`. The execution then replaces it.
+     */
+    resident?: () => readonly ResultItem[];
     /** Fires with the type DXNs of each committed write batch. */
     invalidated: ReadOnlyEvent<ReadonlySet<string>>;
     /** Whether a batch touching these types could change the result; defaults to always. */
@@ -58,6 +69,7 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
     source: QueryResult.Source;
   }) {
     this.#execute = options.execute;
+    this.#resident = options.resident;
     this.#invalidated = options.invalidated;
     this.#affectedBy = options.affectedBy ?? (() => true);
     this.#source = options.source;
@@ -109,13 +121,18 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
   runSyncEntries(): QueryResult.Entry<T>[] {
     if (this.#results === undefined) {
       void this.#refresh().catch((error) => log.catch(error));
-      // Stable, so a subscriber reading before the first execution does not re-render on every call.
-      return this.#empty;
+      const resident = this.#resident?.();
+      if (!resident || resident.length === 0) {
+        // Stable, so a subscriber reading before the first execution does not re-render on every call.
+        return this.#empty;
+      }
+      this.#results = resident;
     }
     this.#entries ??= this.#results.map((item) => ({
       id: item.key,
       // The query AST constrains the result type; the executor only knows the item's value.
       result: item.value as T,
+      match: { rank: item.rank ?? 1 },
       resolution: { source: this.#source, time: 0 },
     }));
     return this.#entries;

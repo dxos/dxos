@@ -80,7 +80,7 @@ export class SimpleRegistry implements Registry.Registry {
   query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) => {
     const ast = (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).ast;
     return new LiveQueryResult({
-      execute: async () => matchRegistry(ast, this.list()).map(asItem),
+      execute: async () => matchRegistry(ast, this.list()).map((entity) => asItem(entity)),
       invalidated: this.#invalidated,
       source: 'registry',
     });
