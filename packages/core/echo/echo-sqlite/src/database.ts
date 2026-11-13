@@ -48,7 +48,7 @@ import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { UnsupportedOperationError } from './errors.ts';
-import { DatabaseRefResolver, type EntitySource, SqliteHypergraph } from './graph.ts';
+import { DatabaseRefResolver, type EntitySource, SqliteGraph } from './graph.ts';
 import { ObjectStore, type StoredEntity } from './object-store.ts';
 import { LiveQueryResult, type ResultItem, asItem } from './query-result.ts';
 import { localEntityId, toRecord } from './record.ts';
@@ -66,6 +66,12 @@ export type OpenOptions = {
    * Static types to register, so stored objects of these types hydrate as typed live objects.
    */
   types?: readonly Type.AnyEntity[];
+
+  /**
+   * The graph of the other databases opened over the same file, which this one joins: they share a
+   * registry, and a query may read their spaces. Without it the database has a graph of its own.
+   */
+  graph?: SqliteGraph;
 };
 
 /**
@@ -101,7 +107,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   readonly #run: Run;
   readonly #registry: SimpleRegistry;
   readonly #resolver: DatabaseRefResolver;
-  readonly #graph: SqliteHypergraph;
+  readonly #graph: SqliteGraph;
+  readonly #unregister: CleanupFn;
 
   /** The working set: one live instance per id while anything outside holds it. */
   readonly #live = new Map<string, WeakRef<Entity.Unknown>>();
@@ -148,14 +155,22 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   readonly #committed = new Event<ReadonlySet<string>>();
   readonly #counters = { hydrated: 0, queries: 0, loads: 0 };
 
-  private constructor(spaceId: SpaceId, store: ObjectStore, run: Run, types: readonly Type.AnyEntity[]) {
+  private constructor(
+    spaceId: SpaceId,
+    store: ObjectStore,
+    run: Run,
+    types: readonly Type.AnyEntity[],
+    graph: SqliteGraph | undefined,
+  ) {
     this.#spaceId = spaceId;
     this.#store = store;
     this.#run = run;
     // The meta-type is registered so persisted `Type.Type` rows decode.
-    this.#registry = new SimpleRegistry([Type.Type, ...types]);
+    this.#graph = graph ?? new SqliteGraph(new SimpleRegistry([Type.Type]));
+    this.#registry = this.#graph.registry;
+    this.#registry.add([Type.Type, ...types].filter((type) => !this.#registry.list().includes(type)));
     this.#resolver = new DatabaseRefResolver(this);
-    this.#graph = new SqliteHypergraph(this, this.#resolver);
+    this.#unregister = this.#graph.register(this, this.#resolver);
   }
 
   /**
@@ -172,7 +187,13 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         const store = yield* ObjectStore.open(spaceId);
         // Blocks a previous session appended but did not index (it stopped between the two) are indexed now.
         yield* store.index();
-        const db = new SqliteDatabase(spaceId, store, Effect.runPromiseWith(context), options.types ?? []);
+        const db = new SqliteDatabase(
+          spaceId,
+          store,
+          Effect.runPromiseWith(context),
+          options.types ?? [],
+          options.graph,
+        );
         const types = yield* store.loadTypes();
         yield* Effect.promise(() => db.#registerTypes(types));
         return db;
@@ -267,6 +288,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       await this.flush();
     } finally {
       this.#closed = true;
+      this.#unregister();
       for (const ref of this.#live.values()) {
         const entity = ref.deref();
         if (entity) {
@@ -362,19 +384,11 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     }
     const scopes = ast.type === 'from' && ast.from._tag === 'scope' ? ast.from.scopes : undefined;
     const fromRegistry = scopes?.some((scope) => scope._tag === 'registry' && scope.location === 'local') ?? false;
-    const fromSpace = scopes === undefined || scopes.some((scope) => scope._tag !== 'registry');
-    // Compiled once, up front, unless a version range must first read which versions exist; an
-    // unsupported clause rejects every execution, as echo-client's does.
+    // No scope is every accessible space (`'all-accessible-spaces'`).
+    const fromSpace = scopes === undefined || scopes.length === 0 || scopes.some((scope) => scope._tag !== 'registry');
+    // Compiled per execution: version ranges read which versions exist, and a scope reads the spaces
+    // open in the graph then. An unsupported clause rejects every execution, as echo-client's does.
     const ranges = fromSpace ? versionRanges(ast) : [];
-    let compiled: CompiledQuery | undefined;
-    let compileError: unknown;
-    if (ranges.length === 0) {
-      try {
-        compiled = fromSpace ? compileQuery(ast, { spaceId: this.#spaceId }) : undefined;
-      } catch (err) {
-        compileError = err;
-      }
-    }
     const typenames = queryTypenames(ast);
     const result = new LiveQueryResult<unknown>({
       resident: ast.type === 'aggregate' || ast.type === 'from' ? undefined : () => this.#matchResident(ast),
@@ -383,13 +397,13 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       affectedBy: (written) =>
         typenames === undefined || written.has(ANY_TYPE) || [...written].some((dxn) => typenames.has(typenameOf(dxn))),
       execute: async () => {
-        if (compileError !== undefined) {
-          throw compileError;
-        }
-        const statement =
-          ranges.length > 0
-            ? compileQuery(ast, { spaceId: this.#spaceId, versions: await this.#satisfying(ranges) })
-            : compiled;
+        const statement = fromSpace
+          ? compileQuery(ast, {
+              spaceId: this.#spaceId,
+              versions: ranges.length > 0 ? await this.#satisfying(ranges) : undefined,
+              accessible: this.#graph.spaceIds,
+            })
+          : undefined;
         const stored = statement ? await this.#execute(statement) : [];
         const registered = fromRegistry && ast.type === 'from' ? matchRegistry(ast.query, this.#registry.list()) : [];
         const keys = new Set(stored.map((item) => item.key));
@@ -736,11 +750,23 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     }
     const items = await Promise.all(
       rows.map(async (row) => {
-        const entity = await this.#hydrate(row);
+        // A row of another space opened in the graph hydrates in that space's database.
+        const owner =
+          row.spaceId === undefined || row.spaceId === this.#spaceId ? this : this.#graph.getSource(row.spaceId);
+        const entity = owner === this ? await this.#hydrate(row) : await owner?.hydrateStored(row);
         return entity ? asItem(entity, row.rank) : undefined;
       }),
     );
     return items.filter((item): item is ResultItem => item !== undefined);
+  }
+
+  /**
+   * The live instance for a row another database of the graph read.
+   *
+   * @internal
+   */
+  hydrateStored(stored: StoredEntity): Promise<Entity.Unknown | undefined> {
+    return this.#hydrate(stored);
   }
 
   /** A query matched against the live objects in memory, for `runSync` before its first execution. */

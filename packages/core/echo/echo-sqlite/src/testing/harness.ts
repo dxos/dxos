@@ -12,12 +12,14 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { type Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { SqliteDatabase } from '../database.ts';
+import { SqliteGraph } from '../graph.ts';
+import { SimpleRegistry } from '../registry.ts';
 import { SpaceAuthority } from '../sync/authority.ts';
 import { type SyncTransport } from '../sync/protocol.ts';
 import { SpaceSync } from '../sync/space-sync.ts';
@@ -72,6 +74,8 @@ export class TestPeer {
   readonly #types: readonly Type.AnyEntity[];
   #runtime: Runtime | undefined;
   #scope: Scope.Closeable | undefined;
+  /** The graph of the databases open on this peer's file, as echo-client's client graph spans them. */
+  #graph: SqliteGraph | undefined;
   readonly #syncs: SpaceSync[] = [];
   #lastSpaceId: SpaceId | undefined;
 
@@ -82,6 +86,11 @@ export class TestPeer {
 
   get path(): string {
     return this.#path;
+  }
+
+  get graph(): SqliteGraph {
+    this.#graph ??= new SqliteGraph(new SimpleRegistry([Type.Type]));
+    return this.#graph;
   }
 
   /**
@@ -96,7 +105,7 @@ export class TestPeer {
     const scope = this.#scope;
     this.#lastSpaceId = spaceId;
     return this.#runtime.runPromise(
-      SqliteDatabase.open({ spaceId, types: [...this.#types, ...(options.types ?? [])] }).pipe(
+      SqliteDatabase.open({ spaceId, types: [...this.#types, ...(options.types ?? [])], graph: this.graph }).pipe(
         Effect.provideService(Scope.Scope, scope),
       ),
     );
@@ -148,6 +157,7 @@ export class TestPeer {
       await this.#runtime.dispose();
       this.#runtime = undefined;
     }
+    this.#graph = undefined;
   }
 
   async reload(): Promise<void> {

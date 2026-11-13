@@ -72,10 +72,7 @@ export class EchoTestPeer implements AsyncDisposable {
    * echo-client's per-peer client, whose `graph` spans every database the peer opened.
    */
   get client(): { graph: Hypergraph.Hypergraph } {
-    if (!this.#lastDb) {
-      throw new Error('No database was opened on this peer.');
-    }
-    return { graph: this.#lastDb.graph };
+    return { graph: this.#peer.graph };
   }
 
   /** The underlying peer, for syncing it through an authority. */
@@ -97,11 +94,13 @@ export class EchoTestPeer implements AsyncDisposable {
     _options?: { client?: TestClient },
   ): Promise<SqliteDatabase> {
     this.#lastKey = spaceKey;
+    lastKeys.set(this.#peer.path, spaceKey);
     this.#lastDb = await this.#peer.openDatabase(await createIdFromSpaceKey(spaceKey));
     return this.#lastDb;
   }
 
   async openLastDatabase(): Promise<SqliteDatabase> {
+    this.#lastKey ??= lastKeys.get(this.#peer.path);
     if (!this.#lastKey) {
       throw new Error('No database was opened on this peer.');
     }
@@ -130,6 +129,12 @@ export class EchoTestPeer implements AsyncDisposable {
     await this.close();
   }
 }
+
+/**
+ * The space a peer's file last opened, by file, as echo-client keeps it in the file's own metadata, so
+ * a new peer over the same `storagePath` reopens it.
+ */
+const lastKeys = new Map<string, PublicKey>();
 
 /** echo-client's second client of a peer; here only a token a test disposes. */
 export type TestClient = AsyncDisposable;

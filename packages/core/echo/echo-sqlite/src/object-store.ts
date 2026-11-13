@@ -27,6 +27,8 @@ import { type CompiledQuery } from './sql/compile.ts';
  */
 export type StoredEntity = {
   readonly id: string;
+  /** The space of the row, when a query read several. */
+  readonly spaceId?: string;
   readonly body: Record<string, unknown>;
   /** Heads of the document the body was read at. */
   readonly heads?: readonly string[];
@@ -44,6 +46,7 @@ export type StoredEntity = {
 
 type BodyRow = {
   id: string;
+  spaceId?: string;
   body: string;
   version: string | null;
   createdAt?: number | null;
@@ -349,6 +352,7 @@ const isCypherError = (error: unknown): error is CypherError => error instanceof
 
 const parseRow = (row: BodyRow): StoredEntity => ({
   id: row.id,
+  spaceId: row.spaceId,
   body: JSON.parse(row.body),
   heads: row.version ? JSON.parse(row.version) : undefined,
   queueId: row.queueId ?? undefined,

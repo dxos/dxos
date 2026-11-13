@@ -9,6 +9,7 @@ import { type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { UnsupportedOperationError } from './errors.ts';
+import { type StoredEntity } from './object-store.ts';
 import { type SimpleRegistry } from './registry.ts';
 
 /**
@@ -20,6 +21,8 @@ export interface EntitySource extends Database.Database {
   peek(uri: string): Entity.Unknown | undefined;
   /** The instance for a URI, reading its single row when it is not resident. */
   load(uri: string): Promise<Entity.Unknown | undefined>;
+  /** The live instance for a row a query of another database in the graph read. */
+  hydrateStored(stored: StoredEntity): Promise<Entity.Unknown | undefined>;
 }
 
 /**
@@ -101,36 +104,81 @@ class LoadRequest implements RefResolverRequest {
 }
 
 /**
- * The single-database graph a database belongs to.
+ * The graph of the databases opened over one SQLite file: they share a type registry, a query can
+ * read any of their spaces in one statement, and each result row hydrates in its own space's
+ * database. A database opened alone has a graph of its own.
  */
-export class SqliteHypergraph implements Hypergraph.Hypergraph {
-  constructor(
-    private readonly _db: EntitySource,
-    private readonly _resolver: Ref.Resolver,
-  ) {}
+export class SqliteGraph implements Hypergraph.Hypergraph {
+  readonly #registry: SimpleRegistry;
+  readonly #databases = new Map<SpaceId, { db: EntitySource; resolver: Ref.Resolver }>();
+
+  constructor(registry: SimpleRegistry) {
+    this.#registry = registry;
+  }
 
   get registry(): SimpleRegistry {
-    return this._db.registry;
+    return this.#registry;
   }
 
   get defaultBlobStorage(): string {
     return Blob.Storage.inline;
   }
 
+  /** Every space with an open database in the graph. */
+  get spaceIds(): SpaceId[] {
+    return [...this.#databases.keys()];
+  }
+
+  /**
+   * Adds a database to the graph until the returned cleanup runs.
+   */
+  register(db: EntitySource, resolver: Ref.Resolver): CleanupFn {
+    this.#databases.set(db.spaceId, { db, resolver });
+    return () => {
+      if (this.#databases.get(db.spaceId)?.db === db) {
+        this.#databases.delete(db.spaceId);
+      }
+    };
+  }
+
   get query(): Database.QueryFn {
-    return this._db.query;
+    const first = this.#databases.values().next().value;
+    if (!first) {
+      throw new Error('The graph holds no database to query.');
+    }
+    return first.db.query;
   }
 
   makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T> {
-    return this._db.makeRef<T>(uri);
+    const first = this.#databases.values().next().value;
+    if (!first) {
+      throw new Error('The graph holds no database to make a ref in.');
+    }
+    return first.db.makeRef<T>(uri);
   }
 
-  createRefResolver(_options: Hypergraph.RefResolverOptions): Ref.Resolver {
-    return this._resolver;
+  createRefResolver(options: Hypergraph.RefResolverOptions): Ref.Resolver {
+    const spaceId = options.context?.space;
+    const entry =
+      (spaceId !== undefined ? this.#databases.get(spaceId) : undefined) ?? this.#databases.values().next().value;
+    if (!entry) {
+      throw new Error('The graph holds no database to resolve refs in.');
+    }
+    return entry.resolver;
   }
 
   getDatabase(spaceId: SpaceId): Database.Database | undefined {
-    return spaceId === this._db.spaceId ? this._db : undefined;
+    return this.#databases.get(spaceId)?.db;
+  }
+
+  /** The database of a space, as the graph's members see it. */
+  getSource(spaceId: string): EntitySource | undefined {
+    for (const [id, entry] of this.#databases) {
+      if (id === spaceId) {
+        return entry.db;
+      }
+    }
+    return undefined;
   }
 
   registerBlobBackend(): CleanupFn {

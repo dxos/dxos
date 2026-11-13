@@ -34,6 +34,7 @@ export type GroupedShape = {
  * and, under `from(query)`, only the rows of that query's CTE.
  */
 type QueryScope = {
+  readonly spaces: readonly SpaceId[];
   readonly documents: boolean;
   readonly allFeeds: boolean;
   readonly feeds: readonly string[];
@@ -66,9 +67,18 @@ const MAX_DEPTH = 10;
  */
 export const compileQuery = (
   query: QueryAST.Query,
-  options: { spaceId: SpaceId; versions?: ReadonlyMap<string, readonly string[]> },
+  options: {
+    spaceId: SpaceId;
+    versions?: ReadonlyMap<string, readonly string[]>;
+    /** Every space a scope may name (the databases sharing the file); defaults to the own space. */
+    accessible?: readonly SpaceId[];
+  },
 ): CompiledQuery => {
-  const compiler = new Compiler(options.spaceId, options.versions ?? new Map());
+  const compiler = new Compiler(
+    options.spaceId,
+    options.versions ?? new Map(),
+    options.accessible ?? [options.spaceId],
+  );
   const root = compiler.node(query, 'exclude');
   const grouped = compiler.grouped.get(root);
   const aggregates =
@@ -82,7 +92,7 @@ export const compileQuery = (
     ? sql`, w.groupKey AS groupKey, w.groupOrd AS groupOrd, ${aggregates} AS aggregates`
     : raw('');
   const statement = sql`WITH RECURSIVE ${join(compiler.ctes, ',\n')}
-SELECT e.objectId AS id, ${body('e')} AS body, ${versionOf('e')} AS version, e.createdAt AS createdAt, e.updatedAt AS updatedAt,
+SELECT e.objectId AS id, e.spaceId AS spaceId, ${body('e')} AS body, ${versionOf('e')} AS version, e.createdAt AS createdAt, e.updatedAt AS updatedAt,
 NULLIF(e.queueId, '') AS queueId, NULLIF(e.queueNamespace, '') AS queueNamespace, e.queuePosition AS queuePosition, w.rank AS rank${groupColumns} FROM ${raw(root)} w
 CROSS JOIN objectMeta e ON e.recordId = w.rid
 ORDER BY ${raw(grouped ? 'w.groupOrd, w.ord, w.id' : 'w.ord, w.id, w.rid')}`;
@@ -98,7 +108,7 @@ class Compiler {
   /** CTEs an aggregate produced; only `order`, `options` and `from` may wrap one. */
   readonly grouped = new Map<string, Grouped>();
   /** The rows the query being compiled may read; `from` narrows or widens it for its inner query. */
-  #scope: QueryScope = { documents: true, allFeeds: false, feeds: [] };
+  #scope: QueryScope;
   /** CTEs whose `ord` is constant, so id alone orders them and an index can supply that order. */
   readonly #unordered = new Set<string>();
   #counter = 0;
@@ -107,7 +117,10 @@ class Compiler {
     private readonly _spaceId: SpaceId,
     /** The stored versions satisfying each meta version range, by {@link versionRangeKey}. */
     private readonly _versions: ReadonlyMap<string, readonly string[]>,
-  ) {}
+    private readonly _accessible: readonly SpaceId[],
+  ) {
+    this.#scope = { spaces: [_spaceId], documents: true, allFeeds: false, feeds: [] };
+  }
 
   node(query: QueryAST.Query, deleted: DeletedMode): string {
     switch (query.type) {
@@ -118,9 +131,19 @@ class Compiler {
           query.filter.type === 'object' && query.filter.typename !== null
             ? raw(' INDEXED BY echo_sqlite_object_type')
             : raw('');
-        const name =
-          this.#cte(sql`SELECT e.recordId AS rid, e.objectId AS id, ${rankOf(query.filter, 'e')} AS rank, 0 AS ord FROM objectMeta e${index}
+        // A feed's items are its children, so a child-of select also reads main-branch feed items.
+        const outer = this.#scope;
+        if (hasChildOf(query.filter) && outer.documents) {
+          this.#scope = { ...outer, allFeeds: true };
+        }
+        let name: string;
+        try {
+          name =
+            this.#cte(sql`SELECT e.recordId AS rid, e.objectId AS id, ${rankOf(query.filter, 'e')} AS rank, 0 AS ord FROM objectMeta e${index}
 WHERE ${this.#source('e')} AND ${this.#visible('e', deleted)} AND ${this.#filter(query.filter, 'e')}`);
+        } finally {
+          this.#scope = outer;
+        }
         this.#unordered.add(name);
         return name;
       }
@@ -156,7 +179,7 @@ WHERE r.targetDXN LIKE ${`${LOCAL_REF}%`} AND ${this.#visible('t', deleted)} GRO
         return this.#cte(sql`SELECT s.recordId AS rid, s.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
 CROSS JOIN reverseRef r INDEXED BY idx_reverse_ref_target ON r.targetDXN = ${LOCAL_REF} || a.id${property}
 CROSS JOIN objectMeta s ON s.recordId = r.recordId
-WHERE s.spaceId = ${this._spaceId} AND ${this.#reachable('s')} AND ${this.#visible('s', deleted)}${typename} GROUP BY s.recordId`);
+WHERE ${this.#spaceIn('s')} AND ${this.#reachable('s')} AND ${this.#visible('s', deleted)}${typename} GROUP BY s.recordId`);
       }
 
       case 'relation': {
@@ -173,7 +196,7 @@ WHERE s.spaceId = ${this._spaceId} AND ${this.#reachable('s')} AND ${this.#visib
           (
             column,
           ) => sql`SELECT rel.recordId AS rid, rel.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta rel ON rel.spaceId = ${this._spaceId} AND rel.${raw(column)} = a.id AND rel.entityKind = 'relation' AND ${this.#reachable('rel')}
+CROSS JOIN objectMeta rel ON ${this.#spaceIn('rel')} AND rel.${raw(column)} = a.id AND rel.entityKind = 'relation' AND ${this.#reachable('rel')}
 WHERE ${this.#visible('rel', deleted)}${filter}`,
         );
         return this.#cte(
@@ -206,17 +229,17 @@ WHERE ${this.#visible('t', deleted)}`,
           // A feed item's parent is its feed: the item names it only by the feed it was appended to.
           return this.#cte(sql`SELECT p.recordId AS rid, p.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
 CROSS JOIN objectMeta c ON c.recordId = a.rid
-CROSS JOIN objectMeta p ON ${row('p', this._spaceId, raw(`COALESCE(c.parentId, NULLIF(c.queueId, ''))`))}
+CROSS JOIN objectMeta p ON ${this.#spaceIn('p')} AND p.objectId = COALESCE(c.parentId, NULLIF(c.queueId, '')) AND p.queueId = ''
 WHERE ${this.#visible('p', deleted)} GROUP BY p.recordId`);
         }
         // A feed's children are its items, beside any object parented to it.
         return this.#cte(sql`SELECT rid, MIN(id) AS id, MAX(rank) AS rank, MIN(ord) AS ord FROM (
 SELECT c.recordId AS rid, c.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta c ON c.spaceId = ${this._spaceId} AND c.parentId = a.id AND ${this.#reachable('c')}
+CROSS JOIN objectMeta c ON ${this.#spaceIn('c')} AND c.parentId = a.id AND ${this.#reachable('c')}
 WHERE ${this.#visible('c', deleted)}
 UNION ALL
 SELECT c.recordId AS rid, c.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta c ON c.spaceId = ${this._spaceId} AND c.queueId = a.id AND c.queueBranch IS NULL
+CROSS JOIN objectMeta c ON ${this.#spaceIn('c')} AND c.queueId = a.id AND c.queueBranch IS NULL
 WHERE ${this.#visible('c', deleted)}) GROUP BY rid`);
       }
 
@@ -280,14 +303,14 @@ FROM ${raw(inner)} w CROSS JOIN objectMeta e ON e.recordId = w.rid`);
     const { feeds, allFeeds, documents, within } = this.#scope;
     const narrowed = within ? raw(` AND ${alias}.recordId IN (SELECT rid FROM ${within})`) : raw('');
     if (allFeeds) {
-      return sql`${a}.spaceId = ${this._spaceId} AND ${a}.queueBranch IS NULL${narrowed}`;
+      return sql`${this.#spaceIn(alias)} AND ${a}.queueBranch IS NULL${narrowed}`;
     }
     const items =
       feeds.length > 0
         ? sql`(${a}.queueId IN (SELECT value FROM json_each(${JSON.stringify(feeds)})) AND ${a}.queueBranch IS NULL)`
         : undefined;
     const rows = [documents ? sql`${a}.queueId = ''` : undefined, items].filter((fragment) => fragment !== undefined);
-    return rows.length === 0 ? raw('0') : sql`${a}.spaceId = ${this._spaceId} AND (${join(rows, ' OR ')})${narrowed}`;
+    return rows.length === 0 ? raw('0') : sql`${this.#spaceIn(alias)} AND (${join(rows, ' OR ')})${narrowed}`;
   }
 
   /** Rows a traversal may reach: documents, and main-branch feed items when the scope includes feeds. */
@@ -299,7 +322,15 @@ FROM ${raw(inner)} w CROSS JOIN objectMeta e ON e.recordId = w.rid`);
 
   /** The reachable row of the space whose object id is `id`. */
   #target(alias: string, id: Fragment): Fragment {
-    return sql`${raw(alias)}.spaceId = ${this._spaceId} AND ${raw(alias)}.objectId = ${id} AND ${this.#reachable(alias)}`;
+    return sql`${this.#spaceIn(alias)} AND ${raw(alias)}.objectId = ${id} AND ${this.#reachable(alias)}`;
+  }
+
+  /** The row's space is one the scope reads: an index seek on one space, a list for several. */
+  #spaceIn(alias: string): Fragment {
+    const { spaces } = this.#scope;
+    return spaces.length === 1
+      ? sql`${raw(alias)}.spaceId = ${spaces[0]}`
+      : sql`${raw(alias)}.spaceId IN (SELECT value FROM json_each(${JSON.stringify(spaces)}))`;
   }
 
   /**
@@ -426,22 +457,34 @@ FROM ${raw(inner)} w`);
         this.#scope = { ...outer, within };
         return this.node(query.query, deleted);
       }
+      // No scope names every accessible space (`'all-accessible-spaces'`).
+      const scopes =
+        query.from.scopes.length === 0
+          ? this._accessible.map((spaceId) => ({ _tag: 'space' as const, spaceId, includeAllFeeds: false }))
+          : query.from.scopes;
       let documents = false;
       let allFeeds = false;
+      const spaces = new Set<SpaceId>();
       const feeds: string[] = [];
-      for (const scope of query.from.scopes) {
+      for (const scope of scopes) {
         switch (scope._tag) {
-          case 'space':
-            if (scope.spaceId === undefined || scope.spaceId === this._spaceId) {
+          case 'space': {
+            const named = scope.spaceId ?? this._spaceId;
+            const spaceId = this._accessible.find((candidate) => candidate === named);
+            if (spaceId) {
+              spaces.add(spaceId);
               documents = true;
               allFeeds ||= scope.includeAllFeeds === true;
             }
             break;
+          }
           case 'feed': {
             const eid = EID.tryParse(scope.feedUri);
-            const feedSpace = eid && EID.getSpaceId(eid);
+            const named = (eid && EID.getSpaceId(eid)) ?? this._spaceId;
+            const feedSpace = this._accessible.find((candidate) => candidate === named);
             const feedId = eid && EID.getEntityId(eid);
-            if (feedId && (feedSpace === undefined || feedSpace === this._spaceId)) {
+            if (feedId && feedSpace) {
+              spaces.add(feedSpace);
               feeds.push(feedId);
             }
             break;
@@ -451,7 +494,13 @@ FROM ${raw(inner)} w`);
             break;
         }
       }
-      this.#scope = { documents, allFeeds, feeds, within: outer.within };
+      this.#scope = {
+        spaces: spaces.size > 0 ? [...spaces] : [this._spaceId],
+        documents,
+        allFeeds,
+        feeds,
+        within: outer.within,
+      };
       return this.node(query.query, deleted);
     } finally {
       this.#scope = outer;
@@ -575,7 +624,7 @@ WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(
         const depth = filter.transitive ? MAX_DEPTH : 1;
         return sql`EXISTS (
   WITH RECURSIVE up(id, depth) AS (
-    SELECT ${a}.parentId, 1 WHERE ${a}.parentId IS NOT NULL
+    SELECT COALESCE(${a}.parentId, NULLIF(${a}.queueId, '')), 1 WHERE COALESCE(${a}.parentId, NULLIF(${a}.queueId, '')) IS NOT NULL
     UNION ALL
     SELECT p.parentId, up.depth + 1 FROM up CROSS JOIN objectMeta p ON p.spaceId = ${a}.spaceId AND p.objectId = up.id AND p.queueId = ''
     WHERE p.parentId IS NOT NULL AND up.depth < ${depth})
@@ -794,6 +843,21 @@ const searchTerms = (filter: QueryAST.Filter): string[] => {
       return filter.filters.flatMap(searchTerms);
     default:
       return [];
+  }
+};
+
+/** Whether a filter selects by parent, which a feed's items answer through their feed. */
+const hasChildOf = (filter: QueryAST.Filter): boolean => {
+  switch (filter.type) {
+    case 'child-of':
+      return true;
+    case 'and':
+    case 'or':
+      return filter.filters.some(hasChildOf);
+    case 'not':
+      return hasChildOf(filter.filter);
+    default:
+      return false;
   }
 };
 
