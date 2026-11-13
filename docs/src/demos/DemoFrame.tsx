@@ -117,7 +117,11 @@ const PeerPane = ({ demo, runtime, state, index, peer, view, onViewChange, hidde
       className={`grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] bg-base-surface ${hidden ? 'hidden' : ''}`}
       inert={hidden}
     >
-      <ClientProvider client={runtime.clients[index]}>
+      {/*
+        Throttled background tabs miss the status heartbeat; `suspend` skips the status gate so ClientPlugin
+        never unmounts and destroys the runtime-owned client.
+      */}
+      <ClientProvider client={runtime.clients[index]} suspend>
         <PeerBar
           peer={peer}
           demo={demo}
