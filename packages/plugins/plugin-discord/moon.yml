@@ -51,7 +51,8 @@ tasks:
       cache: false
       persistent: true
 
-  # Replay the stored SQLite messages (no token) through question extraction and print the tuples.
+  # Replay the stored SQLite messages (no token) through question extraction, print the tuples and write each
+  # question to DISCORD_FACTS_DB as an `asked` fact graph (backfills earlier crawls).
   questions-demo:
     command: 'pnpm exec vitest run src/testing/questions-demo.test.ts'
     options:

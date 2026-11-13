@@ -4,8 +4,9 @@
 
 // Replay demo (node): iterates the messages stored by crawl-demo (no token needed) through the
 // question-extraction pipeline and prints the (user × channel × message × question) tuples, then
-// the detected topic segments per target.
-//   [DISCORD_CRAWL_DB=path]  moon run plugin-discord:questions-demo
+// the detected topic segments per target. Each question is also written to the fact store in DISCORD_FACTS_DB (an
+// `asked` graph around an anonymous question node), which backfills questions from crawls made before that existed.
+//   [DISCORD_CRAWL_DB=path] [DISCORD_FACTS_DB=path]  moon run plugin-discord:questions-demo
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as Effect from 'effect/Effect';
@@ -27,15 +28,17 @@ import {
   replayStream,
 } from '@dxos/pipeline-discord';
 import { storesLayer } from '@dxos/pipeline-discord/testing';
+import { FactStoreLive } from '@dxos/pipeline-rdf';
 
 const dbPath = process.env.DISCORD_CRAWL_DB ?? join(tmpdir(), 'dxos-discord-crawl.db');
+const factsPath = process.env.DISCORD_FACTS_DB ?? join(tmpdir(), 'dxos-discord-facts.db');
 
 describe('questions demo', () => {
   test.skipIf(!existsSync(dbPath))(
     'replays stored messages through question extraction and topic detection',
     async ({ expect }) => {
       const layer = Layer.mergeAll(
-        storesLayer(SqliteClient.layer({ filename: dbPath }).pipe(Layer.orDie)),
+        storesLayer(SqliteClient.layer({ filename: dbPath }).pipe(Layer.orDie), FactStoreLive.layerFile(factsPath)),
         deterministicAiService(),
       );
       const { questions, topics } = await EffectEx.runPromise(

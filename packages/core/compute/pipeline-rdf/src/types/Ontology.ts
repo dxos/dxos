@@ -476,6 +476,13 @@ export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
     description: 'An entity a document or message mentions without being about it.',
     definedBy: Vocab.SCHEMA,
   }),
+  entry('text', {
+    iri: schema('text'),
+    label: 'has text',
+    synonyms: ['wording'],
+    description: 'The wording of a message, question or document.',
+    definedBy: Vocab.SCHEMA,
+  }),
 
   // FOAF: social relations and accounts.
   entry('knows', {
@@ -533,6 +540,10 @@ export const DEFAULT_ENTRIES: ReadonlyArray<Entry> = [
   entry('completed', { synonyms: ['finished', 'done'], description: 'A task the subject finished.' }),
   entry('shipped', { synonyms: ['ships', 'released'], description: 'Something the subject released.' }),
   entry('proposes', { synonyms: ['suggests'], description: 'An idea or change the subject put forward.' }),
+  entry('asked', {
+    synonyms: ['asks', 'asked question'],
+    description: 'A question the subject asked: a node typed schema:Question whose `has text` is its wording.',
+  }),
   entry('received', { description: 'Something the subject was sent.' }),
   entry('archived', { description: 'Something the subject archived.' }),
   entry('deleted', { description: 'Something the subject deleted.' }),
