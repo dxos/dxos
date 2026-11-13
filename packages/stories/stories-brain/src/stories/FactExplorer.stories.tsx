@@ -58,7 +58,7 @@ const ExplorerRoot = () => {
       const graphs = now - lookup.current.at > LOOKUP_WINDOW_MS ? new Set<string>() : lookup.current.graphs;
       read.forEach((fact) => graphs.add(RDF.Mapping.graphOf(fact)));
       lookup.current = { at: now, graphs };
-      setScope({ terms: new Set(graphs), bindsGraphs: true });
+      setScope({ graphs: new Set(graphs), iris: new Set(), literals: new Set() });
     };
     operationFactListeners.add(listener);
     return () => void operationFactListeners.delete(listener);

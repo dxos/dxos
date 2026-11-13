@@ -10,6 +10,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
@@ -18,8 +19,8 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { resolveStorySpace } from '@dxos/storybook-testing';
 
-/** Marks the chat this plugin creates, so a reload reopens it rather than adding another. */
-const BRAIN_CHAT_KEY = { source: 'org.dxos.plugin.stories.brain', id: 'chat' };
+/** Marks the chat this plugin creates, once its Brain skill is bound, so a reload reopens it rather than adding another. */
+export const BRAIN_CHAT_KEY = { source: 'org.dxos.plugin.stories.brain', id: 'chat' };
 
 /**
  * Creates the story's chat once the space is available — through the assistant's `CreateChat`, which binds its default
@@ -43,25 +44,35 @@ export const BrainChatPlugin = Plugin.define(
       const [existing] = yield* Effect.promise(() =>
         space.db.query(Filter.foreignKeys(Chat.Chat, [BRAIN_CHAT_KEY])).run(),
       );
-      if (existing) {
-        return [];
+      const chat =
+        existing ??
+        (yield* invoke(AssistantOperation.CreateChat, { name: 'Fact explorer' }, { spaceId: space.db.spaceId })).object;
+      if (!existing) {
+        space.db.add(chat);
       }
 
-      const { object: chat } = yield* invoke(
-        AssistantOperation.CreateChat,
-        { name: 'Fact explorer' },
-        { spaceId: space.db.spaceId },
-      );
-      Obj.update(chat, (chat) => {
-        Obj.getMeta(chat).keys.push(BRAIN_CHAT_KEY);
-      });
-      space.db.add(chat);
-
-      const skill = space.db.add(BrainSkill.make());
+      // Binding is idempotent, so an existing chat whose earlier binding failed gets the skill now.
       const feed = yield* Effect.promise(() => chat.feed.load());
       const runtime = yield* Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db)));
       const binder = new AiContext.Binder({ feed, runtime, registry });
-      yield* Effect.promise(() => binder.use((binder) => binder.bind({ skills: [Ref.make(skill)] })));
+      yield* Effect.promise(() =>
+        binder.use(async (binder) => {
+          if (binder.getSkills().some((skill) => Obj.getMeta(skill).key === BrainSkill.key)) {
+            return;
+          }
+          const skills = await space.db.query(Filter.type(Skill.Skill)).run();
+          const skill =
+            skills.find((skill) => Obj.getMeta(skill).key === BrainSkill.key) ?? space.db.add(BrainSkill.make());
+          await binder.bind({ skills: [Ref.make(skill)] });
+        }),
+      );
+
+      // Keyed only once bound, so a failed binding leaves no keyed chat without the skill.
+      if (!existing) {
+        Obj.update(chat, (chat) => {
+          Obj.getMeta(chat).keys.push(BRAIN_CHAT_KEY);
+        });
+      }
       return [];
     }),
   }),

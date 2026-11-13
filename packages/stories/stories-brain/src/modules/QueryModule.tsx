@@ -74,19 +74,28 @@ const QueryModuleContainer = ({ space }: { space: Space }) => {
     guard('run', async () => {
       const store = registry.forSpace(space.id);
       const rows = await EffectEx.runPromise(store.rows(query));
-      const terms = new Set(rows.flatMap((row) => Object.values(row).map((term) => term.value)));
-      const bindsGraphs = rows.some((row) => row.g?.termType === 'NamedNode');
-      setScope({ terms, bindsGraphs });
-      if (bindsGraphs) {
-        const facts = await EffectEx.runPromise(store.select(query));
-        setResult({
-          kind: 'graphs',
-          count: new Set(facts.map(RDF.Mapping.graphOf)).size,
-          text: RDF.Graph.toTriG(facts),
-        });
-      } else {
-        setResult({ kind: 'rows', count: rows.length, text: formatBindings(rows) });
+      const graphs = new Set<string>();
+      const iris = new Set<string>();
+      const literals = new Set<string>();
+      for (const row of rows) {
+        for (const [name, term] of Object.entries(row)) {
+          if (term.termType === 'NamedNode') {
+            (name === 'g' ? graphs : iris).add(term.value);
+          } else if (term.termType === 'Literal') {
+            literals.add(term.value);
+          }
+        }
       }
+      // The whole result is built before the scope is set, so a failing `select` leaves scope and result in step.
+      let next: QueryPanelResult;
+      if (graphs.size > 0) {
+        const facts = await EffectEx.runPromise(store.select(query));
+        next = { kind: 'graphs', count: new Set(facts.map(RDF.Mapping.graphOf)).size, text: RDF.Graph.toTriG(facts) };
+      } else {
+        next = { kind: 'rows', count: rows.length, text: formatBindings(rows) };
+      }
+      setScope({ graphs, iris, literals });
+      setResult(next);
     });
   }, [guard, registry, space.id, query, setScope]);
 

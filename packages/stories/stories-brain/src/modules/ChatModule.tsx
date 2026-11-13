@@ -17,6 +17,7 @@ import { MenuBuilder } from '@dxos/react-ui-menu';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
+import { BRAIN_CHAT_KEY } from '../testing/brain-chat.ts';
 import { useFactsStory } from './context.ts';
 
 /** Starter prompts over the Discord crawl the fact server exposes. */
@@ -35,8 +36,8 @@ export const ChatModule = () => {
 };
 
 const ChatModuleContainer = ({ space }: { space: Space }) => {
-  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
-  const chat = chats.at(-1);
+  // The chat `BrainChatPlugin` keyed, since another chat in the space would lack the Brain skill.
+  const [chat] = useQuery(space.db, Filter.foreignKeys(AssistantChat.Chat, [BRAIN_CHAT_KEY]));
   const { setScope, setPredicate, setSelected } = useFactsStory();
 
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);

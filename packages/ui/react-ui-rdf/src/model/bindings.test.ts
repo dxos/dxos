@@ -39,6 +39,30 @@ describe('formatBindings', () => {
     );
   });
 
+  test('writes solutions binding a blank node as TSV, keeping blank-node identity', () => {
+    const text = formatBindings(
+      [
+        {
+          node: { termType: 'BlankNode', value: 'b1' },
+          kind: { termType: 'NamedNode', value: 'https://schema.org/Person' },
+          label: { termType: 'Literal', value: 'tab\there', language: 'en' },
+        },
+        {
+          node: { termType: 'BlankNode', value: 'b1' },
+          label: { termType: 'Literal', value: '3', datatype: 'http://www.w3.org/2001/XMLSchema#integer' },
+        },
+      ],
+      { variables: ['node', 'kind', 'label'] },
+    );
+    expect(text).toBe(
+      [
+        '?node\t?kind\t?label',
+        '_:b1\t<https://schema.org/Person>\t"tab\\there"@en',
+        '_:b1\t\t"3"^^<http://www.w3.org/2001/XMLSchema#integer>',
+      ].join('\n'),
+    );
+  });
+
   test('takes its columns from the rows when none are given', () => {
     expect(formatBindings([{ n: { termType: 'Literal', value: '2' } }])).toBe('VALUES (?n) {\n  ("2")\n}');
   });

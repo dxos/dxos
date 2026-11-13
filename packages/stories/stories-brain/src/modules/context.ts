@@ -26,14 +26,17 @@ export type FactsStoryState = {
   setScope: (scope: QueryScope | undefined) => void;
 };
 
-/** The terms a SPARQL result binds (IRIs and literal values), which the views keep only what they touch of. */
+/** The terms a SPARQL result binds, which the views keep only what they touch of. */
 export type QueryScope = {
-  terms: ReadonlySet<string>;
   /**
-   * The result binds statement graphs, which then scope exactly: its other terms (a `?p` beside `?g`) would otherwise
-   * pull in every statement that shares them.
+   * The statement graphs it binds (`?g`); when any, they scope exactly, since its other terms (a `?p` beside `?g`)
+   * would otherwise pull in every statement that shares them.
    */
-  bindsGraphs: boolean;
+  graphs: ReadonlySet<string>;
+  /** The IRIs it binds outside `?g`. */
+  iris: ReadonlySet<string>;
+  /** The literal values it binds. */
+  literals: ReadonlySet<string>;
 };
 
 /** A predicate the facts view is scoped to: its IRI, and every IRI a fact may state it with (its equivalents). */
@@ -65,34 +68,45 @@ const termIri = (term: RDF.Term, graph: string, position: 'subject' | 'object'):
       ? RDF.Vocab.localEntityIri(graph, term.literal).value
       : undefined;
 
+/** Whether a fact's object is a literal the result binds. */
+const bindsObjectLiteral = (fact: RDF.Fact, scope: QueryScope): boolean =>
+  fact.assertion.object.kind === 'literal' && scope.literals.has(fact.assertion.object.literal);
+
 /** Whether a SPARQL result touches a fact: it binds the fact's graph, else its subject, object or predicate. */
 export const factInScope = (fact: RDF.Fact, scope: QueryScope): boolean => {
   const graph = RDF.Mapping.graphOf(fact);
-  if (scope.bindsGraphs) {
-    return scope.terms.has(graph);
+  if (scope.graphs.size > 0) {
+    return scope.graphs.has(graph);
   }
   const subject = termIri(fact.assertion.subject, graph, 'subject');
   const object = termIri(fact.assertion.object, graph, 'object');
   return (
-    scope.terms.has(graph) ||
-    (subject !== undefined && scope.terms.has(subject)) ||
-    (object !== undefined && scope.terms.has(object)) ||
-    scope.terms.has(RDF.Mapping.predicateOf(fact))
+    scope.iris.has(graph) ||
+    (subject !== undefined && scope.iris.has(subject)) ||
+    (object !== undefined && scope.iris.has(object)) ||
+    bindsObjectLiteral(fact, scope) ||
+    scope.iris.has(RDF.Mapping.predicateOf(fact))
   );
 };
 
-/** The entities (by slug) a SPARQL result touches: those of every graph it binds, else those it binds directly. */
+/**
+ * The entities (by slug) a SPARQL result touches: those of every graph it binds, else those it binds directly and the
+ * subjects of the facts whose literal object it binds.
+ */
 export const entitiesInScope = (facts: readonly RDF.Fact[], scope: QueryScope): Set<string> => {
+  const bindsGraphs = scope.graphs.size > 0;
   const entities = new Set<string>();
   for (const fact of facts) {
     const graph = RDF.Mapping.graphOf(fact);
-    const whole = scope.bindsGraphs && scope.terms.has(graph);
+    const whole = bindsGraphs && scope.graphs.has(graph);
+    const literalObject = !bindsGraphs && bindsObjectLiteral(fact, scope);
     for (const [term, position] of [
       [fact.assertion.subject, 'subject'],
       [fact.assertion.object, 'object'],
     ] as const) {
       const iri = termIri(term, graph, position);
-      const bound = !scope.bindsGraphs && iri !== undefined && scope.terms.has(iri);
+      const bound =
+        !bindsGraphs && ((iri !== undefined && scope.iris.has(iri)) || (literalObject && position === 'subject'));
       if (term.kind === 'entity' && (whole || bound)) {
         entities.add(term.entity);
       }
