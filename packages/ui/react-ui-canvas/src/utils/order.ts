@@ -74,6 +74,28 @@ export const topZ = (elements: readonly MaybeOrdered[]): string => {
   return max.endsWith('0') ? `${max}1` : between(max === '' ? undefined : max, undefined);
 };
 
+/** Whether `between` can take `key` as an end: a stored key may be empty or end in a zero, which it cannot split. */
+const splits = (key: string): boolean => key !== '' && !key.endsWith('0');
+
+/**
+ * A key above `below` and, where one fits, under `above`. A stored key may be empty, end in a zero, or tie with its
+ * neighbour, none of which `between` can split; a digit appended to `below` is still above it, so the new element
+ * lands over it either way.
+ */
+export const keyAfter = (below: string, above?: string): string =>
+  splits(below) && (above === undefined || (splits(above) && below < above)) ? between(below, above) : `${below}1`;
+
+/**
+ * A key under `above`, or the open bottom where there is nothing to go under. One that ends in zeros is undercut by
+ * the key without them; an element written with no key is already at the bottom, and is tied with.
+ */
+export const keyBefore = (above?: string): string => {
+  if (above === undefined) {
+    return between();
+  }
+  return splits(above) ? between(undefined, above) : above.replace(/0+$/, '');
+};
+
 /**
  * A key above every element of a view, nodes and links alike: one order paints them, so a new element of either kind
  * goes above both.

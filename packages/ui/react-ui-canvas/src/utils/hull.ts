@@ -23,7 +23,7 @@ import {
 
 import { type RenderList2D } from '../model/index.ts';
 import { type LatticeSpec, onLattice, toCell } from './lattice.ts';
-import { between, sortByZ, topZ } from './order.ts';
+import { keyAfter, keyBefore, sortByZ, topZ } from './order.ts';
 import { createNode, nodeBounds } from './shapes.ts';
 import { restackZ } from './view-tree.ts';
 
@@ -577,7 +577,7 @@ export const encloseIn = (scene: RenderList2D, hull: HullNode, ids: readonly str
   const stack = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
   // Inside a hull it is drawn just over that hull, and so under everything else the hull holds.
   const above = holder && stack[stack.findIndex((entry) => entry.id === holder.id) + 1];
-  const z = holder ? between(holder.z, above?.z) : between(undefined, stack[0]?.z);
+  const z = holder ? keyAfter(holder.z, above?.z) : keyBefore(stack[0]?.z);
   const { parent: _parent, ...rest } = hull;
   const placed: HullNode = { ...rest, z, ...(holder ? { parent: holder.id } : {}) };
   const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: hull.id }]));

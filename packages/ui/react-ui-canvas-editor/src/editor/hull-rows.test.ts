@@ -20,7 +20,7 @@ import {
   moveWrites,
   viewMove,
 } from '@dxos/react-ui-canvas';
-import { type HullNode, type Link, type RectNode, type Scene, applyIntent, findLayout } from '@dxos/scene';
+import { type HullNode, type Link, type Node, type RectNode, type Scene, applyIntent, findLayout } from '@dxos/scene';
 
 import { DEFAULT_LATTICE, type DrawingValues, drawingSaves, latticeValues } from './drawing-form.ts';
 import { layoutTree, selectedElement } from './scene-rows.ts';
@@ -279,6 +279,39 @@ describe('hull rows', () => {
       'board',
     ]);
     expect(drawingSaves(DOCUMENT, 'board', off, off)).toEqual([]);
+  });
+
+  test('a shape in any hull is found before a part of an Object that has its name', ({ expect }) => {
+    // G holds an Object whose definition has a part named C; H, read after G, holds the scene's own shape C.
+    const placed: Node = {
+      type: 'instance',
+      id: 'obj',
+      z: 'bobj',
+      center: { x: 300, y: 0 },
+      size: { width: 100, height: 50 },
+      parent: 'g',
+    };
+    const board: RenderList2D = {
+      ...BOARD,
+      nodes: { ...BOARD.nodes, obj: { ...placed, composite: 'def' } },
+    };
+    const definition: RenderList2D = { id: 'def', kind: 'composite', nodes: { c: box('c', 0) }, links: {} };
+    const document = fromRenderLists2D(Object.values(collapseHulls({ board, def: definition })), { root: 'board' });
+    const stored = findLayout(document, 'board');
+    expect(Object.keys(findLayout(document, 'g-parts')?.elements ?? {})).toContain('obj');
+    expect(stored && selectedElement(document, stored, 'c')?.layout).toBe('h-parts');
+    // The Object's own part is still found where no hull has a shape of that name.
+    const alone = fromRenderLists2D(
+      Object.values(
+        collapseHulls({
+          board: { ...board, nodes: Object.fromEntries(Object.entries(board.nodes).filter(([id]) => id !== 'c')) },
+          def: definition,
+        }),
+      ),
+      { root: 'board' },
+    );
+    const again = findLayout(alone, 'board');
+    expect(again && selectedElement(alone, again, 'c')?.layout).toBe('def');
   });
 
   test("a shape selected inside a hull is found in the hull's group, which is where its edits are written", ({

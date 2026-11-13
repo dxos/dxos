@@ -388,8 +388,10 @@ const solid3D = (intent: SolidIntent): Element3D => {
 
 /**
  * A `solid` element over 2D operands, as 3D's is over its own: the operation in `props`, and the box the operands
- * stand in, since a 2D element is placed by its frame. It lies where its base does in the stack, or on top of all it
- * joins.
+ * stand in, since a 2D element is placed by its frame. An operand may take its size from the object it places, which
+ * a layout alone cannot read: the solid is then made with no frame, and the viewport frames it by the same box as
+ * it resolves the operands, so the command never does nothing. It lies where its base does in the stack, or on top
+ * of all it joins.
  */
 const solid2D = (intent: SolidIntent, elements: Elements<Element2D>): Element2D | undefined => {
   if (intent.kind === 'extrude') {
@@ -401,9 +403,7 @@ const solid2D = (intent: SolidIntent, elements: Elements<Element2D>): Element2D 
     op,
     inputs.map((id) => elements[id]),
   );
-  if (!bounds || bounds.width <= 0 || bounds.height <= 0) {
-    return undefined;
-  }
+  const framed = bounds !== undefined && bounds.width > 0 && bounds.height > 0 ? bounds : undefined;
   const base = elements[inputs[0]];
   const orders = (intent.kind === 'join' ? inputs : inputs.slice(0, 1)).flatMap((id) => elements[id]?.z ?? []).sort();
   const z = orders[orders.length - 1];
@@ -412,8 +412,12 @@ const solid2D = (intent: SolidIntent, elements: Elements<Element2D>): Element2D 
     type: 'solid',
     ...(z !== undefined ? { z } : {}),
     ...(base?.layer !== undefined ? { layer: base.layer } : {}),
-    center: { x: round(bounds.x + bounds.width / 2), y: round(bounds.y + bounds.height / 2) },
-    size: { width: bounds.width, height: bounds.height },
+    ...(framed
+      ? {
+          center: { x: round(framed.x + framed.width / 2), y: round(framed.y + framed.height / 2) },
+          size: { width: framed.width, height: framed.height },
+        }
+      : {}),
     props: { op, operands: inputs.join(' ') },
   };
 };

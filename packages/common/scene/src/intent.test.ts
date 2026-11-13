@@ -275,9 +275,15 @@ describe('solid intents', () => {
     expect(solidBounds2D('union', [flat().elements.a, { center: { x: 0, y: 0 } }])).toBeUndefined();
   });
 
-  test('a 2D solid needs operands with a box, and nothing is extruded in 2D', () => {
-    const layout = layout2D('f', [{ id: 'r', type: 'rect' }]);
-    expect(applyIntent(layout, { kind: 'join', id: 'u', operands: ['r'] })).toBe(layout);
+  test('operands the layout cannot measure still make a solid, with no frame; nothing is extruded in 2D', () => {
+    // Placed objects take their size from the model, which a layout alone does not hold.
+    const layout = layout2D('f', [
+      { id: 'r', object: 'box', center: { x: 0, y: 0 } },
+      { id: 's', object: 'box', center: { x: 50, y: 0 } },
+    ]);
+    const joined = applyIntent(layout, { kind: 'join', id: 'u', operands: ['r', 's'] });
+    expect(joined.elements.u).toEqual({ id: 'u', type: 'solid', props: { op: 'union', operands: 'r s' } });
+    expect([joined.elements.r.hidden, joined.elements.s.hidden]).toEqual([true, true]);
     expect(
       isLayoutIntent({ kind: 'extrude', id: 'e', target: 'r', face: { x: 0, y: 1, z: 0 }, distance: 1 }, '2d'),
     ).toBe(false);

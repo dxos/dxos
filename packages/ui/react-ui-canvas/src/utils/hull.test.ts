@@ -272,6 +272,25 @@ describe('enclose', () => {
     ).toEqual(['b', 'c']);
   });
 
+  test('a stored key that cannot be split, in the hull enclosed in or under it, still gives the new hull its place', ({
+    expect,
+  }) => {
+    // A hull whose key ends in a zero, as a stored element's may, and a shape tied with it.
+    const outer: Node = { ...hull('h'), z: 'a0' };
+    const scene = sceneOf([outer, { ...cell('a', 0, 0, 'h'), z: 'a0' }, { ...cell('b', 1, 0, 'h'), z: 'b' }]);
+    const inside = enclose(scene, ['a', 'b'], 'inner', { lattice: spec });
+    expect(inside?.nodes.inner.parent).toBe('h');
+    expect((inside?.nodes.inner.z ?? '') > 'a0').toBe(true);
+    // The lowest key of the scene ends in a zero, and one has no key at all.
+    const flat = sceneOf([
+      { ...cell('a', 0, 0), z: 'a0' },
+      { ...cell('b', 1, 0), z: 'b' },
+    ]);
+    expect((enclose(flat, ['a', 'b'], 'new', { lattice: spec })?.nodes.new.z ?? 'z') < 'a0').toBe(true);
+    const unkeyed = sceneOf([{ ...cell('a', 0, 0), z: '' }, cell('b', 1, 0)]);
+    expect(enclose(unkeyed, ['a', 'b'], 'new', { lattice: spec })?.nodes.new).toBeDefined();
+  });
+
   test('nothing is made of ids that are not nodes, or under an id that is taken', ({ expect }) => {
     const scene = sceneOf(corner());
     expect(enclose(scene, ['missing'], 'new')).toBeUndefined();

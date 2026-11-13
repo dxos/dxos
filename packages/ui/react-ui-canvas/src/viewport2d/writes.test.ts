@@ -105,6 +105,42 @@ describe('a 2D solid', () => {
     expect(layoutWrites({ ...doc, layouts: [layout] }, { main: again }, { main: again })).toEqual([]);
   });
 
+  test('made of placed objects, which take their size from the model, it is framed as it is read', () => {
+    // The layout holds each operand's place and not its size, so the model makes the solid with no frame.
+    const doc: Scene.SceneDocument = {
+      scenes: [{ id: 's', dim: '2d', layout: 'main', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+      layouts: [
+        {
+          id: 'main',
+          dim: '2d',
+          model: 'm',
+          elements: {
+            a: { id: 'a', object: 'box', center: { x: 50, y: 50 } },
+            b: { id: 'b', object: 'box', center: { x: 100, y: 100 } },
+          },
+        },
+      ],
+      models: [
+        { id: 'm', dim: '2d', objects: { box: { id: 'box', type: 'rect', size: { width: 100, height: 100 } } } },
+      ],
+    };
+    const layout = applyIntent(layoutOf(doc), { kind: 'join', id: 's', operands: ['a', 'b'] });
+    expect(layout.elements.s.center).toBeUndefined();
+    const view = toRenderList2D({ ...doc, layouts: [layout] }, layout);
+    expect(Object.keys(view.nodes)).toEqual(['s']);
+    expect(view.nodes.s).toMatchObject({ type: 'solid', center: { x: 75, y: 75 }, size: { width: 150, height: 150 } });
+    // Two boxes that overlap corner to corner: eight corners in one ring.
+    expect(Reflect.get(view.nodes.s, 'rings')).toHaveLength(1);
+    expect(Reflect.get(view.nodes.s, 'rings')[0]).toHaveLength(8);
+    // Moved on the canvas, it keeps the frame it was drawn in.
+    const [write] = layoutWrites({ ...doc, layouts: [layout] }, { main: view }, { main: moved(view, 30) });
+    const next = write.kind === 'layout' ? applyIntent(layout, write.intent) : layout;
+    expect([next.elements.s.center, next.elements.s.size]).toEqual([
+      { x: 105, y: 75 },
+      { width: 150, height: 150 },
+    ]);
+  });
+
   test('deleted, its operands are drawn again', () => {
     const doc = joined('join');
     const layout = applyIntent(layoutOf(doc), { kind: 'delete', ids: ['s'] });
