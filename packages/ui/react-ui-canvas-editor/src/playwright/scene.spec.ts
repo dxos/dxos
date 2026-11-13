@@ -280,14 +280,22 @@ test.describe('Canvas', () => {
     expect(await scene.nodeCount()).toBe(4);
   });
 
-  test('the toolbar zooms, creates at the centre and deletes the selection', async () => {
+  /** Draws a node with the tool `key` on the blank scene below the fixture, as a person does. */
+  const draw = async (key: string) => {
+    const view = await scene.box(scene.root);
+    await scene.focus();
+    await page.keyboard.press(key);
+    const from = { x: view.x + view.width * 0.5, y: view.y + view.height * 0.6 };
+    await scene.drag(from, { x: from.x + 150, y: from.y + 80 });
+  };
+
+  test('the toolbar zooms and deletes the selection, and a drawn node is selected', async () => {
     // The fit zoom follows the fixture's bounds, so the step is read against it rather than named.
     const fitted = await scene.zoom();
     await scene.zoomIn();
     // One step is ×1.25; both readouts round, so they can disagree by a point.
     await expect.poll(async () => Math.abs((await scene.zoom()) - fitted * 1.25)).toBeLessThanOrEqual(1);
-    await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-note').click();
+    await draw('t');
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
     await page.getByTestId('scene-action-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
@@ -302,17 +310,14 @@ test.describe('Canvas', () => {
         return rows[0] < rows[1] && rows[1] < rows[2];
       })
       .toBe(true);
-    // A frame made from the toolbar gets its child scene, so Enter opens it.
-    await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-view').click();
-    await scene.focus();
+    // A frame gets its child scene as it is drawn, so Enter opens it.
+    await draw('f');
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
 
   test('a frame opens from its zoom-in control', async () => {
-    await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-view').click();
+    await draw('f');
     await page.getByTestId('portal-open').first().click();
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });

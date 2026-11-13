@@ -408,6 +408,9 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       hidden with the rest; Subtract takes exactly two shapes, as 3D's does; a solid's operands cannot be edited
       without deleting it; hit testing and ports use the solid's frame, not its outline; no `.dx` statement writes
       a 2D solid; a solid copied to another layout has no operands there and draws as its frame.
+- [x] **No create button in the actions bar** (user, 2026-11-13): the bar's `+` menu ("Create in the middle of the
+      view") and `EditorTools.commands.create` are gone, in both dimensions; a shape is made with its tool or dragged
+      from the tools panel. The e2e specs draw their nodes (`scene.spec.ts`, `create.spec.ts`).
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)

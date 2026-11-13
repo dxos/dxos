@@ -129,8 +129,6 @@ export type EditorTools = SceneAspect<
   { tool: Atom.Atom<ActiveTool> },
   {
     setTool: (tool: ActiveTool) => void;
-    /** Makes an element of `kind` in the middle of the view; without it, the create menu picks the kind's tool. */
-    create?: (kind: string) => void;
   }
 >;
 

@@ -546,7 +546,6 @@ export const createDimension2D =
         atoms: { tool },
         commands: {
           setTool: (next) => registry.set(tool, next),
-          create: (kind) => registry.get(services)?.document.create(kind),
         },
       },
       Root,

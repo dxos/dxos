@@ -69,7 +69,7 @@ describe('CanvasEditor on the shared parts', () => {
   });
   afterEach(() => cleanup());
 
-  test('the shared actions bar runs the engine’s own undo and delete, and offers its create menu, layout and debug', async () => {
+  test('the shared actions bar runs the engine’s own undo and delete, and offers its layout and debug', async () => {
     render(
       <Host>
         <Select ids={['b']} />
@@ -79,7 +79,8 @@ describe('CanvasEditor on the shared parts', () => {
     );
     await waitFor(() => expect(document.querySelector('[data-node-id="b"]')).not.toBeNull());
     const bar = await screen.findByTestId('scene-actions');
-    expect(bar.querySelector('[data-testid="toolbar-create"]')).not.toBeNull();
+    // A shape is made with its tool, so the bar has no button that makes one.
+    expect(bar.querySelector('[data-testid="toolbar-create"]')).toBeNull();
     expect(bar.querySelector('[data-testid="scene-action-layout"]')).not.toBeNull();
     const undo = screen.getByTestId<HTMLButtonElement>('scene-action-undo');
     expect(undo.disabled).toBe(true);

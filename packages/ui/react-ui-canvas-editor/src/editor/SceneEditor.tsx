@@ -28,7 +28,6 @@ import {
   TOOLS_GROUP,
 } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
-import * as Menu from '@dxos/react-ui/Menu';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { findLayout } from '@dxos/scene';
@@ -392,11 +391,11 @@ const LibraryTool = ({ items, prefix }: { items: readonly LibraryItem[]; prefix:
 };
 
 /**
- * The actions bar: the command table's commands, with the create menu and the dimension's own commands before undo;
- * locked, it hides, as every one edits the scene but Copy.
+ * The actions bar: the command table's commands, with the dimension's own commands before undo; locked, it hides, as
+ * every one edits the scene but Copy.
  */
 const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
-  const { config, atoms } = useSceneDocument('SceneEditor.Actions');
+  const { atoms } = useSceneDocument('SceneEditor.Actions');
   const readonly = useAtomValue(atoms.readonly);
   const table = useAtomValue(useSceneCommands('SceneEditor.Actions').atoms.table);
   if (readonly) {
@@ -404,9 +403,6 @@ const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' 
   }
   const shared = new Set<string>(SHARED_COMMANDS);
   const history = (command: Command) => command.id === 'undo' || command.id === 'redo';
-  const creates = config.tools.flatMap((tool) =>
-    tool.category === 'create' && tool.kind !== undefined ? [{ id: tool.id, kind: tool.kind, label: tool.label }] : [],
-  );
   const own = table.commands.filter((command) => !shared.has(command.id) && command.id !== 'import');
   const groups = [
     <Fragment key='shared'>
@@ -416,9 +412,8 @@ const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' 
           <CommandButton key={command.id} command={command} />
         ))}
     </Fragment>,
-    creates.length > 0 || own.length > 0 ? (
+    own.length > 0 ? (
       <Fragment key='own'>
-        {creates.length > 0 && <CreateMenu kinds={creates} />}
         {own.map((command) => (
           <CommandButton key={command.id} command={command} />
         ))}
@@ -503,35 +498,6 @@ const useSelectionActions = (): ReactNode => {
           onClick={command.run}
         />
       ));
-};
-
-/** The config's create tools: one makes its element in the middle of the view, or picks its tool where it cannot. */
-const CreateMenu = ({ kinds }: { kinds: readonly { id: string; kind: string; label: string }[] }) => {
-  const { commands } = useSceneTools('SceneEditor.CreateMenu');
-  return (
-    <Menu.Root positioning={{ placement: 'top', gutter: 4 }}>
-      <Menu.Trigger asChild>
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--plus--regular'
-          label={commands.create ? 'Create in the middle of the view' : 'Create'}
-          data-testid='toolbar-create'
-        />
-      </Menu.Trigger>
-      {/* Portalled: inside the bar's flex flow the items would sit under the canvas. */}
-      <Menu.Content>
-        {kinds.map((tool) => (
-          <Menu.Item
-            key={tool.id}
-            data-testid={`create-${tool.kind}`}
-            item={{ value: tool.id, label: tool.label }}
-            onSelect={() => (commands.create ? commands.create(tool.kind) : commands.setTool({ id: tool.id }))}
-          />
-        ))}
-      </Menu.Content>
-    </Menu.Root>
-  );
 };
 
 SceneEditorActions.displayName = 'SceneEditor.Actions';
