@@ -391,7 +391,7 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       in or taken out keeps the curve (`bendsAfterInsert`, `bendsAfterDelete`). `Draw.stories.tsx` Spline Test.
 - [x] **Views list front first** (user: "the operations work, but the view list is reversed"): `buildViewTree` and
       `layoutTree` list a View's rows from the element drawn last to the one drawn first, and a drop above a row
-      puts the element in front of it (`dropPosition`). The Layers list is still bottom first.
+      puts the element in front of it (`dropPosition`). The Layers list was top first already (`LayersInspector`).
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Magic`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)
