@@ -145,6 +145,16 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps
   );
 };
 
+/** Narrows the columns as more open, so all of them fit across the plane (static classes, which Tailwind can see). */
+const columnWidth = (count: number) =>
+  count <= 2
+    ? undefined
+    : count === 3
+      ? '[--chat-plane-width:30vw]'
+      : count === 4
+        ? '[--chat-plane-width:23vw]'
+        : '[--chat-plane-width:19vw]';
+
 /** How long a finished subagent's column stays open, so its result can be read before it closes. */
 const CLOSE_DELAY = 6_000;
 
@@ -173,14 +183,16 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
   );
   const events = useQuery(db, query);
 
-  // Follows the newest thread as it opens, so the reader watches each column arrive.
+  // Centres the middle column as threads open: the plane centres its selection, so that is what keeps every column,
+  // the agent's included, on screen at once.
   const countRef = useRef(0);
   useEffect(() => {
     if (lanes.length > countRef.current) {
-      setCurrent(lanes[lanes.length - 1].id);
+      const ids = [chat.id, ...lanes.filter(({ id }) => !closed.has(id)).map(({ id }) => id)];
+      setCurrent(ids[Math.floor(ids.length / 2)]);
     }
     countRef.current = lanes.length;
-  }, [lanes]);
+  }, [lanes, chat.id, closed]);
 
   // A finished thread's column closes once the reader has had a moment with its result.
   const done = useMemo(
@@ -206,7 +218,7 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
 
   return (
     <Dnd.Root>
-      <ChatPlane.Root value={selected} onValueChange={setCurrent}>
+      <ChatPlane.Root value={selected} onValueChange={setCurrent} classNames={columnWidth(items.length)}>
         <ChatPlane.Viewport>
           <ChatPlane.Columns items={items}>
             {(id) => {

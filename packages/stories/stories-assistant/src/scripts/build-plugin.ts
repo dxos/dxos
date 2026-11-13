@@ -87,6 +87,7 @@ export const PLUGIN_SIDE_QUESTION = 'While they work: will it show my local time
 
 const PLAN_DOCUMENT = 'World Clock plan';
 const DIAGRAM = 'World Clock architecture';
+const CODE_DOCUMENT = 'world-clock/src/plugin.tsx';
 
 const PLAN = [
   '# World Clock plan',
@@ -189,6 +190,7 @@ const agent = ScriptedScene.conversation('agent', [
   ScriptedScene.turn('assistant', [ScriptedScene.text('The diagram is done. Waiting for the code.'), wait('code')], {
     delay: '800 millis',
   }),
+  ScriptedScene.turn('tool', `${ScriptedScene.objectId('code')}`),
 
   ScriptedScene.turn(
     'assistant',
@@ -225,6 +227,8 @@ const agent = ScriptedScene.conversation('agent', [
           `![${PLAN_DOCUMENT}](${ScriptedScene.objectId('plan')})`,
           '',
           `![${DIAGRAM}](${ScriptedScene.objectId('diagram')})`,
+          '',
+          `![${CODE_DOCUMENT}](${ScriptedScene.objectId('code')})`,
         ].join('\n'),
       ),
     ],
@@ -327,8 +331,27 @@ const coder = ScriptedScene.conversation('code', [
   ),
   ScriptedScene.turn(
     'assistant',
-    [ScriptedScene.text(`Wrote the plugin to \`${DIR}\`: config, spec and \`src/plugin.tsx\`.`)],
+    [
+      ScriptedScene.reasoning(
+        'The files are on disk; a copy of the plugin in the space lets the reader review it here.',
+      ),
+      ScriptedScene.text('Publishing the plugin source for review.'),
+      ScriptedScene.toolCall(CREATE_DOCUMENT, {
+        name: CODE_DOCUMENT,
+        content: `\`\`\`tsx\n${PLUGIN.trimEnd()}\n\`\`\``,
+      }),
+    ],
     { delay: '2 seconds' },
+  ),
+  ScriptedScene.turn('tool', `"id":"${ScriptedScene.objectId('code')}"`),
+  ScriptedScene.turn(
+    'assistant',
+    [
+      ScriptedScene.text(
+        `Wrote the plugin to \`${DIR}\`: config, spec and \`src/plugin.tsx\`.\n\n![${CODE_DOCUMENT}](${ScriptedScene.objectId('code')})`,
+      ),
+    ],
+    { delay: '1 second' },
   ),
 ]);
 
