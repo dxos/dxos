@@ -38,7 +38,7 @@ const services = (id: string, label: string, footer: string, ghosts: boolean): S
   footer,
   variant: 'compact',
   chips: {
-    cols: 2,
+    cols: 4,
     flat: true,
     items: SERVICES.map((chip) => ({ ...chip, ...(ghosts && !chip.tone ? { ghost: true } : {}) })),
   },
