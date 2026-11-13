@@ -740,9 +740,11 @@ describe('SqliteDatabase', () => {
       await expect(db.createBranch()).rejects.toBeInstanceOf(UnsupportedOperationError);
       expect(() => db.retainObjects([])).toThrow(UnsupportedOperationError);
       expect(() => db.getChanges(Obj.make(TestSchema.Person, {}))).toThrow(UnsupportedOperationError);
-      expect(() => db.query(Filter.key('com.example.key', { version: '^1.0.0' }))).toThrow(UnsupportedQueryError);
+      await expect(db.query(Filter.key('com.example.key', { version: '^1.0.0' })).run()).rejects.toThrow(
+        UnsupportedQueryError,
+      );
       expect(() => db.query(Filter.key('com.example.key', { version: '1.0.0' }))).not.toThrow();
-      expect(() => db.query(Filter.text('alice', { type: 'vector' }))).toThrow(UnsupportedQueryError);
+      await expect(db.query(Filter.text('alice', { type: 'vector' })).run()).rejects.toThrow(UnsupportedQueryError);
     }),
   );
 });

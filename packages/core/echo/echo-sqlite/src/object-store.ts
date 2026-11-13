@@ -28,6 +28,9 @@ export type StoredEntity = {
   readonly body: Record<string, unknown>;
   /** Heads of the document the body was read at. */
   readonly heads?: readonly string[];
+  /** When the entity was created and last changed, in unix ms, as the index holds them. */
+  readonly createdAt?: number;
+  readonly updatedAt?: number;
   /** The aggregate group of the row, for a grouped query. */
   readonly group?: { readonly key: string; readonly ord: number; readonly aggregates: Record<string, unknown> };
 };
@@ -36,6 +39,8 @@ type BodyRow = {
   id: string;
   body: string;
   version: string | null;
+  createdAt?: number | null;
+  updatedAt?: number | null;
   groupKey?: string;
   groupOrd?: number;
   aggregates?: string;
@@ -95,7 +100,7 @@ export class ObjectStore {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql.unsafe<BodyRow>(
-        `SELECT m.objectId AS id, s.snapshot AS body, s.version AS version FROM objectMeta m
+        `SELECT m.objectId AS id, s.snapshot AS body, s.version AS version, m.createdAt, m.updatedAt FROM objectMeta m
 CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
 WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
         [spaceId, TypeMetaSchemaDXN.toString()],
@@ -112,7 +117,7 @@ WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       const rows = yield* sql.unsafe<BodyRow>(
-        `SELECT m.objectId AS id, s.snapshot AS body, s.version AS version FROM objectMeta m
+        `SELECT m.objectId AS id, s.snapshot AS body, s.version AS version, m.createdAt, m.updatedAt FROM objectMeta m
 CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
 WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
         [spaceId, id],
@@ -157,7 +162,7 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
           ? yield* this.#docs.write(
               records.map((record) => ({
                 id: record.id,
-                structure: objectStructureFromJson(record.body as Obj.JSON),
+                structure: objectStructureFromJson(record.body as Obj.JSON, { createdAt: record.createdAt }),
                 heads: record.heads,
               })),
             )
@@ -289,6 +294,8 @@ const parseRow = (row: BodyRow): StoredEntity => ({
   id: row.id,
   body: JSON.parse(row.body),
   heads: row.version ? JSON.parse(row.version) : undefined,
+  createdAt: row.createdAt ?? undefined,
+  updatedAt: row.updatedAt ?? undefined,
   group:
     row.groupKey !== undefined && row.groupOrd !== undefined
       ? { key: row.groupKey, ord: Number(row.groupOrd), aggregates: JSON.parse(row.aggregates ?? '{}') }

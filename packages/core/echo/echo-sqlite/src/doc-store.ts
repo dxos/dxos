@@ -23,7 +23,7 @@ export type Doc = A.Doc<DatabaseDirectory>;
 export type DocWrite = { id: string; structure: EntityStructure; heads?: readonly string[] };
 
 /** The document's heads after a write, and whether it holds changes the written structure lacked. */
-export type WriteResult = { heads: string[]; merged: boolean };
+export type WriteResult = { heads: string[]; merged: boolean; updatedAt?: number };
 
 type Store<T> = Effect.Effect<T, SqlError.SqlError | CypherError, SqlClient.SqlClient>;
 
@@ -120,7 +120,13 @@ export class DocStore {
         results.set(id, { heads: A.getHeads(after), merged: behind });
       }
       if (messages.length > 0) {
-        yield* this.#feedStore.appendLocal(messages);
+        const blocks = yield* this.#feedStore.appendLocal(messages);
+        for (const block of blocks) {
+          const result = block.feedId === undefined ? undefined : results.get(block.feedId);
+          if (result) {
+            result.updatedAt = block.timestamp;
+          }
+        }
       }
       // Cached only once durable: a failed append leaves the cache at the stored state, so a retry
       // computes the same change again instead of finding nothing new to write.

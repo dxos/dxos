@@ -29,6 +29,17 @@ export type GroupedShape = {
   readonly items: readonly string[];
 };
 
+/**
+ * What a select reads: the space's documents, every main-branch feed item, the items of named feeds,
+ * and, under `from(query)`, only the rows of that query's CTE.
+ */
+type QueryScope = {
+  readonly documents: boolean;
+  readonly allFeeds: boolean;
+  readonly feeds: readonly string[];
+  readonly within?: string;
+};
+
 /** A grouped CTE: its shape, and the column of each scalar aggregate, by name. */
 type Grouped = GroupedShape & { readonly columns: ReadonlyMap<string, string> };
 
@@ -68,9 +79,10 @@ export const compileQuery = (query: QueryAST.Query, options: { spaceId: SpaceId 
     ? sql`, w.groupKey AS groupKey, w.groupOrd AS groupOrd, ${aggregates} AS aggregates`
     : raw('');
   const statement = sql`WITH RECURSIVE ${join(compiler.ctes, ',\n')}
-SELECT e.objectId AS id, ${body('e')} AS body, ${versionOf('e')} AS version${groupColumns} FROM ${raw(root)} w
-CROSS JOIN objectMeta e ON ${row('e', options.spaceId, raw('w.id'))}
-ORDER BY ${raw(grouped ? 'w.groupOrd, w.ord, w.id' : 'w.ord, w.id')}`;
+SELECT e.objectId AS id, ${body('e')} AS body, ${versionOf('e')} AS version, e.createdAt AS createdAt, e.updatedAt AS updatedAt,
+NULLIF(e.queueId, '') AS queueId, e.queuePosition AS queuePosition, w.rank AS rank${groupColumns} FROM ${raw(root)} w
+CROSS JOIN objectMeta e ON e.recordId = w.rid
+ORDER BY ${raw(grouped ? 'w.groupOrd, w.ord, w.id' : 'w.ord, w.id, w.rid')}`;
   return {
     sql: statement.sql,
     params: statement.params,
@@ -82,6 +94,8 @@ class Compiler {
   readonly ctes: Fragment[] = [];
   /** CTEs an aggregate produced; only `order`, `options` and `from` may wrap one. */
   readonly grouped = new Map<string, Grouped>();
+  /** The rows the query being compiled may read; `from` narrows or widens it for its inner query. */
+  #scope: QueryScope = { documents: true, allFeeds: false, feeds: [] };
   /** CTEs whose `ord` is constant, so id alone orders them and an index can supply that order. */
   readonly #unordered = new Set<string>();
   #counter = 0;
@@ -91,21 +105,24 @@ class Compiler {
   node(query: QueryAST.Query, deleted: DeletedMode): string {
     switch (query.type) {
       case 'select': {
+        checkTimestamps(query.filter);
         // A typed select walks the type index, which also yields id order for paging.
         const index =
           query.filter.type === 'object' && query.filter.typename !== null
             ? raw(' INDEXED BY echo_sqlite_object_type')
             : raw('');
-        const name = this.#cte(sql`SELECT e.objectId AS id, 0 AS rank, 0 AS ord FROM objectMeta e${index}
-WHERE e.spaceId = ${this._spaceId} AND e.queueId = '' AND ${this.#visible('e', deleted)} AND ${this.#filter(query.filter, 'e')}`);
+        const name =
+          this.#cte(sql`SELECT e.recordId AS rid, e.objectId AS id, 0 AS rank, 0 AS ord FROM objectMeta e${index}
+WHERE ${this.#source('e')} AND ${this.#visible('e', deleted)} AND ${this.#filter(query.filter, 'e')}`);
         this.#unordered.add(name);
         return name;
       }
 
       case 'filter': {
+        checkTimestamps(query.filter);
         const selection = this.node(query.selection, deleted);
-        return this.#cte(sql`SELECT w.id, w.rank, w.ord FROM ${raw(selection)} w
-CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w.id'))}
+        return this.#cte(sql`SELECT w.rid, w.id, w.rank, w.ord FROM ${raw(selection)} w
+CROSS JOIN objectMeta e ON e.recordId = w.rid
 WHERE ${this.#filter(query.filter, 'e')}`);
       }
 
@@ -117,11 +134,10 @@ WHERE ${this.#filter(query.filter, 'e')}`);
 
       case 'reference-traversal': {
         const anchor = this.node(query.anchor, deleted);
-        return this.#cte(sql`SELECT t.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta s ON ${row('s', this._spaceId, raw('a.id'))}
-CROSS JOIN reverseRef r ON r.recordId = s.recordId AND r.propPathNormalized = ${propPath(query.property)}
-CROSS JOIN objectMeta t ON ${row('t', this._spaceId, raw(`substr(r.targetDXN, ${LOCAL_REF.length + 1})`))}
-WHERE r.targetDXN LIKE ${`${LOCAL_REF}%`} AND ${this.#visible('t', deleted)} GROUP BY t.objectId`);
+        return this.#cte(sql`SELECT t.recordId AS rid, t.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+CROSS JOIN reverseRef r ON r.recordId = a.rid AND r.propPathNormalized = ${propPath(query.property)}
+CROSS JOIN objectMeta t ON ${this.#target('t', raw(`substr(r.targetDXN, ${LOCAL_REF.length + 1})`))}
+WHERE r.targetDXN LIKE ${`${LOCAL_REF}%`} AND ${this.#visible('t', deleted)} GROUP BY t.recordId`);
       }
 
       case 'incoming-references': {
@@ -130,10 +146,10 @@ WHERE r.targetDXN LIKE ${`${LOCAL_REF}%`} AND ${this.#visible('t', deleted)} GRO
           query.property === null ? raw('') : sql` AND r.propPathNormalized = ${propPath(query.property)}`;
         const typename = query.typename === null ? raw('') : sql` AND ${this.#typename('s', query.typename)}`;
         // `reverseRef` keys targets by their space-less form, so the referrer's space is checked on its row.
-        return this.#cte(sql`SELECT s.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+        return this.#cte(sql`SELECT s.recordId AS rid, s.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
 CROSS JOIN reverseRef r INDEXED BY idx_reverse_ref_target ON r.targetDXN = ${LOCAL_REF} || a.id${property}
 CROSS JOIN objectMeta s ON s.recordId = r.recordId
-WHERE s.spaceId = ${this._spaceId} AND s.queueId = '' AND ${this.#visible('s', deleted)}${typename} GROUP BY s.objectId`);
+WHERE s.spaceId = ${this._spaceId} AND ${this.#reachable('s')} AND ${this.#visible('s', deleted)}${typename} GROUP BY s.recordId`);
       }
 
       case 'relation': {
@@ -147,53 +163,69 @@ WHERE s.spaceId = ${this._spaceId} AND s.queueId = '' AND ${this.#visible('s', d
               ? ['targetId']
               : ['sourceId', 'targetId'];
         const branches = columns.map(
-          (column) => sql`SELECT rel.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta rel ON rel.spaceId = ${this._spaceId} AND rel.${raw(column)} = a.id AND rel.entityKind = 'relation' AND rel.queueId = ''
+          (
+            column,
+          ) => sql`SELECT rel.recordId AS rid, rel.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta rel ON rel.spaceId = ${this._spaceId} AND rel.${raw(column)} = a.id AND rel.entityKind = 'relation' AND ${this.#reachable('rel')}
 WHERE ${this.#visible('rel', deleted)}${filter}`,
         );
         return this.#cte(
-          sql`SELECT id, MAX(rank) AS rank, MIN(ord) AS ord FROM (${join(branches, '\nUNION ALL\n')}) GROUP BY id`,
+          sql`SELECT rid, MIN(id) AS id, MAX(rank) AS rank, MIN(ord) AS ord FROM (${join(branches, '\nUNION ALL\n')}) GROUP BY rid`,
         );
       }
 
       case 'relation-traversal': {
         const anchor = this.node(query.anchor, deleted);
-        const endpoint =
+        const endpoints =
           query.direction === 'source'
-            ? raw('t.objectId = rel.sourceId')
+            ? ['sourceId']
             : query.direction === 'target'
-              ? raw('t.objectId = rel.targetId')
-              : raw('t.objectId IN (rel.sourceId, rel.targetId)');
-        return this.#cte(sql`SELECT t.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta rel ON ${row('rel', this._spaceId, raw('a.id'))} AND rel.entityKind = 'relation'
-CROSS JOIN objectMeta t ON t.spaceId = ${this._spaceId} AND t.queueId = '' AND ${endpoint}
-WHERE ${this.#visible('t', deleted)} GROUP BY t.objectId`);
+              ? ['targetId']
+              : ['sourceId', 'targetId'];
+        const branches = endpoints.map(
+          (column) => sql`SELECT t.recordId AS rid, t.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta rel ON rel.recordId = a.rid AND rel.entityKind = 'relation'
+CROSS JOIN objectMeta t ON ${this.#target('t', raw(`rel.${column}`))}
+WHERE ${this.#visible('t', deleted)}`,
+        );
+        return this.#cte(
+          sql`SELECT rid, MIN(id) AS id, MAX(rank) AS rank, MIN(ord) AS ord FROM (${join(branches, '\nUNION ALL\n')}) GROUP BY rid`,
+        );
       }
 
       case 'hierarchy-traversal': {
         const anchor = this.node(query.anchor, deleted);
         if (query.direction === 'to-parent') {
-          return this.#cte(sql`SELECT p.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta c ON ${row('c', this._spaceId, raw('a.id'))}
-CROSS JOIN objectMeta p ON ${row('p', this._spaceId, raw('c.parentId'))}
-WHERE ${this.#visible('p', deleted)} GROUP BY p.objectId`);
+          // A feed item's parent is its feed: the item names it only by the feed it was appended to.
+          return this.#cte(sql`SELECT p.recordId AS rid, p.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta c ON c.recordId = a.rid
+CROSS JOIN objectMeta p ON ${row('p', this._spaceId, raw(`COALESCE(c.parentId, NULLIF(c.queueId, ''))`))}
+WHERE ${this.#visible('p', deleted)} GROUP BY p.recordId`);
         }
-        return this.#cte(sql`SELECT c.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN objectMeta c ON c.spaceId = ${this._spaceId} AND c.parentId = a.id AND c.queueId = ''
-WHERE ${this.#visible('c', deleted)} GROUP BY c.objectId`);
+        // A feed's children are its items, beside any object parented to it.
+        return this.#cte(sql`SELECT rid, MIN(id) AS id, MAX(rank) AS rank, MIN(ord) AS ord FROM (
+SELECT c.recordId AS rid, c.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta c ON c.spaceId = ${this._spaceId} AND c.parentId = a.id AND ${this.#reachable('c')}
+WHERE ${this.#visible('c', deleted)}
+UNION ALL
+SELECT c.recordId AS rid, c.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta c ON c.spaceId = ${this._spaceId} AND c.queueId = a.id AND c.queueBranch IS NULL
+WHERE ${this.#visible('c', deleted)}) GROUP BY rid`);
       }
 
       case 'union': {
-        const branches = query.queries.map((branch) => raw(`SELECT id, rank, ord FROM ${this.node(branch, deleted)}`));
+        const branches = query.queries.map((branch) =>
+          raw(`SELECT rid, id, rank, ord FROM ${this.node(branch, deleted)}`),
+        );
         return this.#cte(
-          sql`SELECT id, MAX(rank) AS rank, MIN(ord) AS ord FROM (${join(branches, '\nUNION ALL\n')}) GROUP BY id`,
+          sql`SELECT rid, MIN(id) AS id, MAX(rank) AS rank, MIN(ord) AS ord FROM (${join(branches, '\nUNION ALL\n')}) GROUP BY rid`,
         );
       }
 
       case 'set-difference': {
         const source = this.node(query.source, deleted);
         const exclude = this.node(query.exclude, deleted);
-        return this.#cte(raw(`SELECT id, rank, ord FROM ${source} WHERE id NOT IN (SELECT id FROM ${exclude})`));
+        return this.#cte(raw(`SELECT rid, id, rank, ord FROM ${source} WHERE rid NOT IN (SELECT rid FROM ${exclude})`));
       }
 
       case 'order': {
@@ -203,8 +235,8 @@ WHERE ${this.#visible('c', deleted)} GROUP BY c.objectId`);
           return this.#orderGroups(inner, grouped, query.order);
         }
         const terms = query.order.map((order) => orderTerm(order, 'e'));
-        return this.#cte(sql`SELECT w.id, w.rank, ROW_NUMBER() OVER (ORDER BY ${join([...terms, raw('w.id')], ', ')}) AS ord
-FROM ${raw(inner)} w CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w.id'))}`);
+        return this.#cte(sql`SELECT w.rid, w.id, w.rank, ROW_NUMBER() OVER (ORDER BY ${join([...terms, raw('w.id'), raw('w.rid')], ', ')}) AS ord
+FROM ${raw(inner)} w CROSS JOIN objectMeta e ON e.recordId = w.rid`);
       }
 
       case 'limit': {
@@ -213,8 +245,8 @@ FROM ${raw(inner)} w CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w
         if (grouped) {
           return this.#pageGroups(inner, grouped, sql`groupOrd <= ${query.limit}`);
         }
-        return this.#cte(sql`SELECT id, rank, ROW_NUMBER() OVER (ORDER BY ord, id) AS ord FROM
-(SELECT id, rank, ord FROM ${raw(inner)} ORDER BY ${this.#orderOf(inner)} LIMIT ${query.limit})`);
+        return this.#cte(sql`SELECT rid, id, rank, ROW_NUMBER() OVER (ORDER BY ord, id, rid) AS ord FROM
+(SELECT rid, id, rank, ord FROM ${raw(inner)} ORDER BY ${this.#orderOf(inner)} LIMIT ${query.limit})`);
       }
 
       case 'skip': {
@@ -223,13 +255,44 @@ FROM ${raw(inner)} w CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w
         if (grouped) {
           return this.#pageGroups(inner, grouped, sql`groupOrd > ${query.skip}`);
         }
-        return this.#cte(sql`SELECT id, rank, ROW_NUMBER() OVER (ORDER BY ord, id) AS ord FROM
-(SELECT id, rank, ord FROM ${raw(inner)} ORDER BY ${this.#orderOf(inner)} LIMIT -1 OFFSET ${query.skip})`);
+        return this.#cte(sql`SELECT rid, id, rank, ROW_NUMBER() OVER (ORDER BY ord, id, rid) AS ord FROM
+(SELECT rid, id, rank, ord FROM ${raw(inner)} ORDER BY ${this.#orderOf(inner)} LIMIT -1 OFFSET ${query.skip})`);
       }
 
       case 'aggregate':
         return this.#aggregate(query, deleted);
     }
+  }
+
+  /**
+   * The rows a select reads: the space's documents, and the feed items the current scope names —
+   * every main-branch item for `includeAllFeeds`, the items of named feeds for a feed scope.
+   */
+  #source(alias: string): Fragment {
+    const a = raw(alias);
+    const { feeds, allFeeds, documents, within } = this.#scope;
+    const narrowed = within ? raw(` AND ${alias}.recordId IN (SELECT rid FROM ${within})`) : raw('');
+    if (allFeeds) {
+      return sql`${a}.spaceId = ${this._spaceId} AND ${a}.queueBranch IS NULL${narrowed}`;
+    }
+    const items =
+      feeds.length > 0
+        ? sql`(${a}.queueId IN (SELECT value FROM json_each(${JSON.stringify(feeds)})) AND ${a}.queueBranch IS NULL)`
+        : undefined;
+    const rows = [documents ? sql`${a}.queueId = ''` : undefined, items].filter((fragment) => fragment !== undefined);
+    return rows.length === 0 ? raw('0') : sql`${a}.spaceId = ${this._spaceId} AND (${join(rows, ' OR ')})${narrowed}`;
+  }
+
+  /** Rows a traversal may reach: documents, and main-branch feed items when the scope includes feeds. */
+  #reachable(alias: string): Fragment {
+    return this.#scope.allFeeds || this.#scope.feeds.length > 0
+      ? raw(`${alias}.queueBranch IS NULL`)
+      : raw(`${alias}.queueId = ''`);
+  }
+
+  /** The reachable row of the space whose object id is `id`. */
+  #target(alias: string, id: Fragment): Fragment {
+    return sql`${raw(alias)}.spaceId = ${this._spaceId} AND ${raw(alias)}.objectId = ${id} AND ${this.#reachable(alias)}`;
   }
 
   /**
@@ -258,8 +321,8 @@ FROM ${raw(inner)} w CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w
           )})`;
     // `seq` is the input order with id breaking ties, since an unordered select has one `ord` for all.
     const keyed =
-      this.#cte(sql`SELECT w.id, w.rank, ROW_NUMBER() OVER (ORDER BY w.ord, w.id) AS seq, ${keyJson} AS groupKey
-FROM ${raw(inner)} w CROSS JOIN objectMeta m ON ${row('m', this._spaceId, raw('w.id'))}`);
+      this.#cte(sql`SELECT w.rid, w.id, w.rank, ROW_NUMBER() OVER (ORDER BY w.ord, w.id, w.rid) AS seq, ${keyJson} AS groupKey
+FROM ${raw(inner)} w CROSS JOIN objectMeta m ON m.recordId = w.rid`);
 
     const columns = new Map<string, string>();
     const windows = scalars.map((aggregate, index) => {
@@ -285,10 +348,10 @@ FROM ${raw(inner)} w CROSS JOIN objectMeta m ON ${row('m', this._spaceId, raw('w
     const memberOrder = itemsOrder
       ? join([...itemsOrder.map((order) => orderTerm(order, 'm')), raw('k.seq')], ', ')
       : raw('k.seq');
-    const stamped = this.#cte(sql`SELECT k.id, k.rank, k.seq, k.groupKey,
+    const stamped = this.#cte(sql`SELECT k.rid, k.id, k.rank, k.seq, k.groupKey,
 MIN(k.seq) OVER (PARTITION BY k.groupKey) AS firstOrd,
 ROW_NUMBER() OVER (PARTITION BY k.groupKey ORDER BY ${memberOrder}) AS memberRank${windows.length > 0 ? sql`, ${join(windows, ', ')}` : raw('')}
-FROM ${raw(keyed)} k CROSS JOIN objectMeta m ON ${row('m', this._spaceId, raw('k.id'))}`);
+FROM ${raw(keyed)} k CROSS JOIN objectMeta m ON m.recordId = k.rid`);
 
     const collapsed = items.length === 0;
     const members = collapsed
@@ -297,7 +360,7 @@ FROM ${raw(keyed)} k CROSS JOIN objectMeta m ON ${row('m', this._spaceId, raw('k
         ? sql`WHERE memberRank <= ${limit}`
         : raw('');
     const aggregateColumns = [...columns.values()].map((column) => raw(column));
-    const name = this.#cte(sql`SELECT id, rank, groupKey,
+    const name = this.#cte(sql`SELECT rid, id, rank, groupKey,
 DENSE_RANK() OVER (ORDER BY firstOrd) AS groupOrd, memberRank AS ord${aggregateColumns.length > 0 ? sql`, ${join(aggregateColumns, ', ')}` : raw('')}
 FROM ${raw(stamped)} ${members}`);
     this.grouped.set(name, { collapsed, items: items.map((item) => item.name), columns });
@@ -307,7 +370,7 @@ FROM ${raw(stamped)} ${members}`);
   /** Keeps the groups `condition` selects, numbered again from one so a following page counts from them. */
   #pageGroups(inner: string, grouped: Grouped, condition: Fragment): string {
     const aggregateColumns = [...grouped.columns.values()].map((column) => raw(column));
-    const name = this.#cte(sql`SELECT id, rank, groupKey, ord,
+    const name = this.#cte(sql`SELECT rid, id, rank, groupKey, ord,
 DENSE_RANK() OVER (ORDER BY groupOrd) AS groupOrd${aggregateColumns.length > 0 ? sql`, ${join(aggregateColumns, ', ')}` : raw('')}
 FROM ${raw(inner)} WHERE ${condition}`);
     this.grouped.set(name, grouped);
@@ -326,7 +389,7 @@ FROM ${raw(inner)} WHERE ${condition}`);
       return sql`w.${raw(column)} ${raw(order.direction === 'desc' ? 'DESC' : 'ASC')} NULLS LAST`;
     });
     const aggregateColumns = [...grouped.columns.values()].map((column) => raw(`w.${column}`));
-    const name = this.#cte(sql`SELECT w.id, w.rank, w.groupKey, w.ord,
+    const name = this.#cte(sql`SELECT w.rid, w.id, w.rank, w.groupKey, w.ord,
 DENSE_RANK() OVER (ORDER BY ${join([...terms, raw('w.groupOrd')], ', ')}) AS groupOrd${aggregateColumns.length > 0 ? sql`, ${join(aggregateColumns, ', ')}` : raw('')}
 FROM ${raw(inner)} w`);
     this.grouped.set(name, grouped);
@@ -344,24 +407,48 @@ FROM ${raw(inner)} w`);
     return name;
   }
 
+  /**
+   * Compiles the query under the rows `from` names: the space's documents (with every feed's items
+   * for `includeAllFeeds`), the items of named feeds, or the results of another query.
+   */
   #from(query: QueryAST.QueryFromClause, deleted: DeletedMode): string {
-    if (query.from._tag === 'query') {
-      throw new UnsupportedQueryError('from(query)');
-    }
-    const ownSpace = query.from.scopes.some((scope) => {
-      switch (scope._tag) {
-        case 'space':
-          return scope.spaceId === undefined || scope.spaceId === this._spaceId;
-        case 'feed':
-          throw new UnsupportedQueryError('feed scope');
-        case 'registry':
-          // Registry scopes are answered by the database from its in-process registry, not compiled.
-          return false;
+    const outer = this.#scope;
+    try {
+      if (query.from._tag === 'query') {
+        const within = this.node(query.from.query, deleted);
+        this.#scope = { ...outer, within };
+        return this.node(query.query, deleted);
       }
-    });
-    return ownSpace
-      ? this.node(query.query, deleted)
-      : this.#cte(raw('SELECT NULL AS id, 0 AS rank, 0 AS ord WHERE 0'));
+      let documents = false;
+      let allFeeds = false;
+      const feeds: string[] = [];
+      for (const scope of query.from.scopes) {
+        switch (scope._tag) {
+          case 'space':
+            if (scope.spaceId === undefined || scope.spaceId === this._spaceId) {
+              documents = true;
+              allFeeds ||= scope.includeAllFeeds === true;
+            }
+            break;
+          case 'feed': {
+            const eid = EID.tryParse(scope.feedUri);
+            const feedSpace = eid && EID.getSpaceId(eid);
+            const feedId = eid && EID.getEntityId(eid);
+            if (feedId && (feedSpace === undefined || feedSpace === this._spaceId)) {
+              feeds.push(feedId);
+            }
+            break;
+          }
+          case 'registry':
+            // Registry scopes are answered by the database from its in-process registry, not compiled.
+            break;
+        }
+      }
+      this.#scope = { documents, allFeeds, feeds, within: outer.within };
+      return this.node(query.query, deleted);
+    } finally {
+      this.#scope = outer;
+    }
   }
 
   /**
@@ -591,7 +678,7 @@ WHERE ${normalizedType(raw('j.type'))} = ${storedType(body, keys)} AND j.value I
         const subquery = this.node(filter.subquery, 'exclude');
         const projected = normalizedValue(snapshotOf('s'), filter.property.split('.'));
         return sql`COALESCE(${normalizedValue(body, keys)} IN (SELECT ${projected} FROM ${raw(subquery)} q
-CROSS JOIN objectMeta s ON ${row('s', this._spaceId, raw('q.id'))}), 0)`;
+CROSS JOIN objectMeta s ON s.recordId = q.rid), 0)`;
       }
 
       case 'not':
@@ -640,6 +727,35 @@ const versionOf = (alias: string): Fragment =>
 /** A dotted property path as the reverse-reference index stores it: escaped, without array indexes. */
 const propPath = (property: string): string =>
   EscapedPropPath.escape(property.split('.').filter((segment) => !/^[0-9]+$/.test(segment)));
+
+/**
+ * Rejects timestamp filters the host executors reject too: negated ones, and ones combined other than
+ * by AND, whose meaning the timestamp index cannot answer.
+ */
+const checkTimestamps = (filter: QueryAST.Filter, inverted = false, alternative = false): void => {
+  switch (filter.type) {
+    case 'timestamp':
+      if (inverted) {
+        throw new UnsupportedQueryError(
+          'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+        );
+      }
+      if (alternative) {
+        throw new UnsupportedQueryError(
+          'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
+        );
+      }
+      return;
+    case 'not':
+      return checkTimestamps(filter.filter, !inverted, alternative);
+    case 'and':
+      return filter.filters.forEach((inner) => checkTimestamps(inner, inverted, alternative));
+    case 'or':
+      return filter.filters.forEach((inner) => checkTimestamps(inner, inverted, true));
+    default:
+      return;
+  }
+};
 
 /** One `ORDER BY` term over the row aliased `alias` (and the working-set row `w`). */
 const orderTerm = (order: QueryAST.Order, alias: string): Fragment => {

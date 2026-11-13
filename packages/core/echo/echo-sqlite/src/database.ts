@@ -347,8 +347,14 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     const scopes = ast.type === 'from' && ast.from._tag === 'scope' ? ast.from.scopes : undefined;
     const fromRegistry = scopes?.some((scope) => scope._tag === 'registry' && scope.location === 'local') ?? false;
     const fromSpace = scopes === undefined || scopes.some((scope) => scope._tag !== 'registry');
-    // Compiled up front: compilation is pure, and an unsupported clause should fail at the call site.
-    const compiled = fromSpace ? compileQuery(ast, { spaceId: this.#spaceId }) : undefined;
+    // Compiled once, up front; an unsupported clause rejects every execution, as echo-client's does.
+    let compiled: CompiledQuery | undefined;
+    let compileError: unknown;
+    try {
+      compiled = fromSpace ? compileQuery(ast, { spaceId: this.#spaceId }) : undefined;
+    } catch (err) {
+      compileError = err;
+    }
     const typenames = queryTypenames(ast);
     const result = new LiveQueryResult<unknown>({
       source: 'local',
@@ -356,6 +362,9 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       affectedBy: (written) =>
         typenames === undefined || written.has(ANY_TYPE) || [...written].some((dxn) => typenames.has(typenameOf(dxn))),
       execute: async () => {
+        if (compileError !== undefined) {
+          throw compileError;
+        }
         const stored = compiled ? await this.#execute(compiled) : [];
         const registered = fromRegistry && ast.type === 'from' ? matchRegistry(ast.query, this.#registry.list()) : [];
         const keys = new Set(stored.map((item) => item.key));
@@ -708,7 +717,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     if (!hydrating) {
       hydrating = (async () => {
         try {
-          const snapshot = await objectFromJSON(stored.body, {
+          const snapshot = await objectFromJSON(withTimestamps(stored), {
             refResolver: this.#resolver,
             uri: EID.make({ spaceId: this.#spaceId, entityId: stored.id }),
             database: this,
@@ -776,7 +785,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
    * observed like a local edit, and its write finds nothing to change in the document.
    */
   async #refresh(entity: Entity.Unknown, stored: StoredEntity): Promise<void> {
-    const snapshot = await objectFromJSON(stored.body, {
+    const snapshot = await objectFromJSON(withTimestamps(stored), {
       refResolver: this.#resolver,
       uri: EID.make({ spaceId: this.#spaceId, entityId: stored.id }),
       database: this,
@@ -834,6 +843,12 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       }
     }
 
+    if (Obj.isObject(obj) && Obj.getMeta(obj).createdAt === undefined) {
+      const createdAt = Date.now();
+      Obj.update(obj, (obj) => {
+        Obj.getMeta(obj).createdAt = createdAt;
+      });
+    }
     defineHiddenProperty(obj, SelfURIId, EID.make({ spaceId: this.#spaceId, entityId: obj.id }));
     defineHiddenProperty(obj, ObjectDatabaseId, this);
     this.#register(obj);
@@ -921,6 +936,12 @@ export class SqliteDatabase implements Database.Database, EntitySource {
             const entity = batch.get(id);
             if (entity) {
               this.#heads.set(entity, result.heads);
+              if (result.updatedAt !== undefined && Obj.isObject(entity)) {
+                const updatedAt = result.updatedAt;
+                Obj.update(entity, (entity) => {
+                  Obj.getMeta(entity).updatedAt = updatedAt;
+                });
+              }
             }
           }
           // A merged write, or blocks another writer appended meanwhile, leave documents ahead of
@@ -948,6 +969,19 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
 const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
   left.length === right.length && left.every((head) => right.includes(head));
+
+/** A stored body with the creation and last-change times the index holds, as the meta reads them. */
+const withTimestamps = (stored: StoredEntity): Record<string, unknown> => {
+  const meta = stored.body['@meta'];
+  return {
+    ...stored.body,
+    '@meta': {
+      ...(meta !== null && typeof meta === 'object' ? meta : {}),
+      ...(stored.createdAt !== undefined && { createdAt: stored.createdAt }),
+      ...(stored.updatedAt !== undefined && { updatedAt: stored.updatedAt }),
+    },
+  };
+};
 
 /** Replaces every field of a live object's meta with another meta's. */
 const replaceMeta = (target: Record<string, unknown>, source: Record<string, unknown>): void => {
