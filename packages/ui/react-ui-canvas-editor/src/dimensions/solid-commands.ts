@@ -36,13 +36,13 @@ export const SOLID_COMMANDS: readonly ExtraCommandDef[] = [
     id: 'subtract',
     label: 'Subtract',
     icon: 'ph--subtract--regular',
-    // The first selected is the base, the second the tool cut from it.
-    enabled: ({ selection }) => selection.length === 2,
+    // The first selected is the base, and every other is cut from it: (A - B) - C.
+    enabled: ({ selection }) => selection.length > 1,
     run: ({ document, layout, selection, onIntent, select }) => {
-      const [base, tool] = selection;
+      const [base, tool, ...tools] = selection;
       if (base && tool) {
         const id = freeId(findLayout(document, layout)?.elements ?? {}, 'difference');
-        onIntent(layout, { kind: 'subtract', id, base, tool });
+        onIntent(layout, { kind: 'subtract', id, base, tool, ...(tools.length > 0 ? { tools } : {}) });
         select([id]);
       }
     },

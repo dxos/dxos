@@ -179,6 +179,11 @@ describe('config2d', () => {
     const subtract = commands?.find((command) => command.id === 'subtract');
     expect(subtract?.enabled({ selection: ['a'], readonly: false })).toBe(false);
     expect(subtract?.enabled({ selection: ['a', 'b'], readonly: false })).toBe(true);
+    // With more selected, the first is still the base and each of the rest is cut from it.
+    expect(subtract?.enabled({ selection: ['a', 'b', 'c'], readonly: false })).toBe(true);
+    expect(run('subtract', ['a', 'b', 'c']).intents).toEqual([
+      { kind: 'subtract', id: 'difference-1', base: 'a', tool: 'b', tools: ['c'] },
+    ]);
     expect(commands?.find((command) => command.id === 'join')?.icon).toBe('ph--unite--regular');
   });
 });

@@ -100,7 +100,7 @@ const shape = (
   ...(label ? { label } : {}),
 });
 
-/** Two pairs that overlap: one to join, and one whose smaller shape lies inside the larger, to cut from it. */
+/** Shapes that overlap: a pair to join, and a plate with two shapes over it, one inside and one on its edge, to cut from it. */
 const SOLIDS: RenderList2D = {
   id: 'board',
   name: 'Board',
@@ -109,12 +109,13 @@ const SOLIDS: RenderList2D = {
     [
       {
         ...HINT,
-        text: 'Select the box and the disc, then Join.\n\nSelect the plate, then the hole with Shift, then Subtract: the first selected is cut from.\n\nDelete either to get its shapes back.',
+        text: 'Select the box and the disc, then Join.\n\nSelect the plate, then the hole and the notch with Shift, then Subtract: every other shape is cut from the first selected.\n\nDelete either to get its shapes back.',
       },
       shape('box', 'rect', 'b0', [-264, 36], [192, 144]),
       shape('disc', 'ellipse', 'b1', [-168, 108], [144, 144]),
       shape('plate', 'rect', 'b2', [192, 72], [240, 192]),
       shape('hole', 'ellipse', 'b3', [192, 72], [96, 96]),
+      shape('notch', 'rect', 'b4', [312, 72], [96, 48]),
     ].map((node) => [node.id, node]),
   ),
 };
@@ -503,8 +504,8 @@ const pick = async (root: HTMLElement, id: string, shift = false) => {
 
 /**
  * 1. Select the box, then the disc with Shift. Join: one shape stands where the two did, with one outline.
- * 2. Select the plate, then the hole with Shift. Subtract: the plate has the hole cut from it.
- * 3. With the cut plate selected, Delete: the plate and the hole are back.
+ * 2. Select the plate, then the hole and the notch with Shift. Subtract: both are cut from the plate.
+ * 3. With the cut plate selected, Delete: the plate, the hole and the notch are back.
  */
 export const SolidsTest: Story = {
   args: { board: 'solids' },
@@ -528,18 +529,23 @@ export const SolidsTest: Story = {
 
     await pick(canvasElement, 'plate');
     await pick(canvasElement, 'hole', true);
+    await pick(canvasElement, 'notch', true);
     const subtract = await canvas.findByTestId('scene-action-subtract');
     await waitFor(() => expect(subtract).toBeEnabled());
     await userEvent.click(subtract);
     await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(1));
-    // Two outlines: the plate's edge, and the hole's.
+    // Two outlines: the hole's, and the plate's edge, which the notch bites eight corners into where it had four.
     await expect(pathOf(drawn(canvasElement, 'difference')[0]).match(/M /g)).toHaveLength(2);
+    const cut = pathOf(drawn(canvasElement, 'difference')[0]).split('M ').filter(Boolean);
+    await expect(cut.map((ring) => ring.match(/L /g)?.length ?? 0).sort((left, right) => left - right)[0]).toBe(7);
     await expect(nodeOf(canvasElement, 'hole')).toBeNull();
+    await expect(nodeOf(canvasElement, 'notch')).toBeNull();
 
     await userEvent.click(await canvas.findByTestId('scene-action-delete'));
     await waitFor(() => expect(drawn(canvasElement, 'difference')).toHaveLength(0));
     await expect(nodeOf(canvasElement, 'plate')).not.toBeNull();
     await expect(nodeOf(canvasElement, 'hole')).not.toBeNull();
+    await expect(nodeOf(canvasElement, 'notch')).not.toBeNull();
     await expect(drawn(canvasElement, 'union')).toHaveLength(1);
   },
 };

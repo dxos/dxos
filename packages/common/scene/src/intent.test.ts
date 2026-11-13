@@ -135,6 +135,24 @@ describe('solid intents', () => {
     ]);
   });
 
+  test('a subtraction of several tools is one solid: the base less each of them, in order', () => {
+    const intent = { kind: 'subtract', id: 'd', base: 'box', tool: 'hole', tools: ['other'] } as const;
+    expect(isLayoutIntent(intent, '3d')).toBe(true);
+    const cut = applyIntent(parts(), intent);
+    expect(cut.elements.d).toEqual({ id: 'd', type: 'solid', props: { op: 'difference', operands: 'box hole other' } });
+    expect([cut.elements.box.hidden, cut.elements.hole.hidden, cut.elements.other.hidden]).toEqual([true, true, true]);
+    // Deleted, every one of them is drawn again.
+    const restored = applyIntent(cut, { kind: 'delete', ids: ['d'] });
+    expect([restored.elements.box.hidden, restored.elements.hole.hidden, restored.elements.other.hidden]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    // A tool that is missing refuses the whole subtraction, as a missing operand does a join.
+    const layout = parts();
+    expect(applyIntent(layout, { ...intent, tools: ['missing'] })).toBe(layout);
+  });
+
   test("a solid takes its base operand's style, so a subtraction keeps the colour it was cut from", () => {
     const styled = applyIntent(parts(), {
       kind: 'update',
@@ -232,6 +250,16 @@ describe('solid intents', () => {
       overrides: { hue: 'red' },
       props: { op: 'difference', operands: 'a b' },
     });
+  });
+
+  test('a 2D subtraction of several tools is still framed by its base', () => {
+    const cut = applyIntent(flat(), { kind: 'subtract', id: 'd', base: 'a', tool: 'b', tools: ['c'] });
+    expect(cut.elements.d).toMatchObject({
+      center: { x: 0, y: 0 },
+      size: { width: 100, height: 60 },
+      props: { op: 'difference', operands: 'a b c' },
+    });
+    expect([cut.elements.a.hidden, cut.elements.b.hidden, cut.elements.c.hidden]).toEqual([true, true, true]);
   });
 
   test('a turned operand is measured as it stands', () => {

@@ -77,7 +77,14 @@ export type LayoutIntent =
       readonly distance: number;
     }
   | { readonly kind: 'join'; readonly id: string; readonly operands: readonly string[] }
-  | { readonly kind: 'subtract'; readonly id: string; readonly base: string; readonly tool: string }
+  | {
+      readonly kind: 'subtract';
+      readonly id: string;
+      readonly base: string;
+      readonly tool: string;
+      /** Further shapes cut from the base after `tool`, in order: the base less every one of them. */
+      readonly tools?: readonly string[];
+    }
   | { readonly kind: 'layout'; readonly patch: LayoutPatch }
   | { readonly kind: 'batch'; readonly intents: readonly LayoutIntent[] };
 
@@ -106,7 +113,13 @@ export const LayoutIntent: Schema.Codec<LayoutIntent> = Schema.Union([
     distance: Schema.Number,
   }),
   Schema.Struct({ kind: Schema.Literal('join'), id: Schema.String, operands: ids }),
-  Schema.Struct({ kind: Schema.Literal('subtract'), id: Schema.String, base: Schema.String, tool: Schema.String }),
+  Schema.Struct({
+    kind: Schema.Literal('subtract'),
+    id: Schema.String,
+    base: Schema.String,
+    tool: Schema.String,
+    tools: Schema.optional(ids),
+  }),
   Schema.Struct({ kind: Schema.Literal('layout'), patch: LayoutPatch }),
   Schema.Struct({
     kind: Schema.Literal('batch'),
@@ -172,7 +185,7 @@ const solidIntentInputs = (intent: SolidIntent): string[] => {
     case 'join':
       return [...intent.operands];
     case 'subtract':
-      return [intent.base, intent.tool];
+      return [intent.base, intent.tool, ...(intent.tools ?? [])];
   }
 };
 
@@ -359,7 +372,11 @@ const solid3D = (intent: SolidIntent): Element3D => {
     case 'join':
       return { id: intent.id, type: 'solid', props: { op: 'union', operands: intent.operands.join(' ') } };
     case 'subtract':
-      return { id: intent.id, type: 'solid', props: { op: 'difference', operands: `${intent.base} ${intent.tool}` } };
+      return {
+        id: intent.id,
+        type: 'solid',
+        props: { op: 'difference', operands: solidIntentInputs(intent).join(' ') },
+      };
     case 'extrude':
       return {
         id: intent.id,

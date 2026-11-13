@@ -405,7 +405,7 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       (`withSolidOutlines`, `solidRings`, js-clipper) and never stores it (`DERIVED_NODE_FIELDS`). A solid may be an
       operand of another. `flattenPath` reads arcs. `Draw.stories.tsx` Solids, Solids Test.
 - [ ] **2D solids, open**: an operand's rounded corners are cut square; an open line joined adds nothing and is
-      hidden with the rest; Subtract takes exactly two shapes, as 3D's does; a solid's operands cannot be edited
+      hidden with the rest; a solid's operands cannot be edited
       without deleting it; hit testing and ports use the solid's frame, not its outline; no `.dx` statement writes
       a 2D solid; a solid copied to another layout has no operands there and draws as its frame.
 - [x] **No create button in the actions bar** (user, 2026-11-13): the bar's `+` menu ("Create in the middle of the
@@ -424,6 +424,9 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
       `Hull.stories.tsx` Nested Test. The story host now makes a new layout on the document's model, as the app's does.
 - [x] **A hull is a Box by default** (user, 2026-11-13): a hull that names no border is a box
       (`DEFAULT_HULL_SHAPE`), so the Hull tool and command make one; a hull stored as `perimeter` stays one.
+- [x] **Subtract takes several** (user, 2026-11-13: "(A-B)-C"): with more than two selected the first is the base
+      and every other is cut from it, in 2D and 3D: the `subtract` intent's optional `tools` are further operands of
+      the one `difference` solid. `Draw.stories.tsx` Solids Test cuts a hole and a notch from the plate.
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)

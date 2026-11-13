@@ -9,3 +9,5 @@ Join and Subtract work on 2D shapes as they do on 3D ones. The `join` and `subtr
 The actions bar no longer has a create menu, and `EditorTools.commands.create` is removed: a shape is made with its tool or dragged from the tools panel.
 
 Hulls nest. Enclosing a selection that holds a hull puts that hull inside the new one with its own shapes (`encloseIn`, `hullDescendants`), where before its shapes were taken from it; shapes of one hull are enclosed inside it. The Hull tool and the actions bar's command (now `Hull`, `scene-action-hull`, where it was Enclose) make a hull by the same operation. Stored, an inner hull's group is a part of the outer hull's group, and `moveToHull` and `viewMove` accept a hull. A hull that names no border is now a box (`DEFAULT_HULL_SHAPE`), where it was a perimeter, so a new hull is a box; a hull stored as `perimeter` is unchanged.
+
+Subtract cuts every other selected shape from the first, in both dimensions: the `subtract` intent takes optional `tools` after `tool`, which are further operands of the one `difference` solid.

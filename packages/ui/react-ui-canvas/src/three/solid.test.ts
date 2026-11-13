@@ -44,6 +44,18 @@ describe('evaluateSolid', () => {
     expect(volume).toBeCloseTo(8 - Math.PI * 0.25 * 2, 1);
   });
 
+  test('a difference of several tools is the first operand less each of them', () => {
+    // A unit cube on the box's corner, clear of the hole: an eighth of it is inside the box.
+    const chip: Resolved3D = { id: 'chip', type: 'cube', center: { x: 1, y: 1, z: 1 }, hidden: true };
+    const record = scene([
+      box,
+      hole,
+      chip,
+      { id: 'diff', type: 'solid', props: { op: 'difference', operands: 'box hole chip' } },
+    ]);
+    expect(solidVolume(record, 'diff', wasm)).toBeCloseTo(8 - Math.PI * 0.25 * 2 - 0.125, 1);
+  });
+
   test('extruding +y by 0.5 adds width × depth × 0.5 of volume', () => {
     const record = scene([
       box,
