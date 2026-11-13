@@ -14,7 +14,7 @@ import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { Plank } from '#components';
-import { planksBefore, useAncestorBreadcrumbs, useDeckSettings } from '#hooks';
+import { planksBefore, useAncestorBreadcrumbs, useDeckSettings, useHeadingAccent } from '#hooks';
 import { DeckSchema } from '#types';
 
 import { focusPane } from '../../util/index.ts';
@@ -71,6 +71,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   } = useDeckPlank({ id, part, active });
 
   const { flatten } = useDeckSettings();
+  const accent = useHeadingAccent();
   const history = useMemo(() => planksBefore(active, id), [active, id]);
   const breadcrumbs = useAncestorBreadcrumbs(flatten && part === 'main' ? id : undefined, history);
   const onSelectBreadcrumb = useCallback(
@@ -155,6 +156,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       <Plank
         ref={rootRef}
         node={loadingNode}
+        accent={accent}
         attendableId={id}
         related={part === 'complementary'}
         pending
@@ -179,6 +181,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     <Plank
       ref={rootRef}
       node={shellNode}
+      accent={accent}
       attendableId={id}
       related={part === 'complementary'}
       actions={sigilActions}

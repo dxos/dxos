@@ -33,15 +33,21 @@ import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
+  FOLLOW_BROADCAST_INTERVAL,
+  LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
+  PRESENCE_EXPIRY,
   applyPeerDeck,
+  applyPeerFollowing,
   applyViewingMessage,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  isFollowTargetOf,
+  isSameFollowTarget,
   makeLocationScheduler,
   parseViewingMessage,
-  prunePeerDecks,
+  prunePeerSessions,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
@@ -229,8 +235,7 @@ export default Capability.makeModule(
         }),
       );
 
-    // One session per running app, so peers tell this tab apart from the same identity's others.
-    const sessionId = PublicKey.random().toHex();
+    const { sessionId } = registry.get(ephemeralAtom);
     const getDevice = (): SpaceSchema.SessionDevice | undefined => {
       const profile = client.halo.device?.profile;
       if (!profile) {
@@ -244,6 +249,22 @@ export default Capability.makeModule(
         ...(profile.os && { os: profile.os }),
         ...(kind && { kind }),
       };
+    };
+
+    // Sessions that follow this one, by space, identity and session, with when they last said so.
+    const followers = new Map<string, number>();
+    const isFollowed = (now: number) => [...followers.values()].some((lastSeen) => now - lastSeen < PRESENCE_EXPIRY);
+    // The follow pointer posts in the spaces where this session is followed; a lapsed follower drops out here.
+    const syncFollowedSpaces = (now: number) => {
+      for (const [follower, lastSeen] of followers) {
+        if (now - lastSeen >= PRESENCE_EXPIRY) {
+          followers.delete(follower);
+        }
+      }
+      const followedSpaces = [...new Set([...followers.keys()].map((follower) => follower.split('/')[0]))].sort();
+      registry.update(ephemeralAtom, (state) =>
+        state.followedSpaces.join() === followedSpaces.join() ? state : { ...state, followedSpaces },
+      );
     };
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
@@ -264,6 +285,7 @@ export default Capability.makeModule(
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           const device = getDevice();
+          const following = registry.get(ephemeralAtom).following;
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
@@ -278,8 +300,26 @@ export default Capability.makeModule(
                 attended,
                 added,
                 removed,
-                locations: getLocations(attended),
-                deck: { planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id) },
+                // Every plank's, so a follower mirroring this deck scrolls each of them, not only the attended one.
+                locations: getLocations([...new Set([...attended, ...added])]),
+                ...(following?.spaceId === space.id && {
+                  following: {
+                    identityKey: following.identityKey,
+                    ...(following.sessionId && { sessionId: following.sessionId }),
+                  },
+                }),
+                deck: {
+                  planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id),
+                  ...(layout.front &&
+                    GraphPath.getSpaceIdFromPath(layout.front) === space.id && { front: layout.front }),
+                  // Companions are content, so a follower opens the same ones.
+                  ...(layout.companions && {
+                    companions: layout.companions.items.filter(
+                      (path) => GraphPath.getSpaceIdFromPath(path) === space.id,
+                    ),
+                    ...(layout.companions.variant && { companionVariant: layout.companions.variant }),
+                  }),
+                },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -293,12 +333,18 @@ export default Capability.makeModule(
 
       send();
       // Send at interval to allow peers to expire entries if they become disconnected.
-      const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
+      const interval = setInterval(() => {
+        syncFollowedSpaces(Date.now());
+        send();
+      }, PRESENCE_BROADCAST_INTERVAL);
 
-      // Moving or scrolling in an attended object re-sends to its space, at most once per interval.
-      const attendedKeys = [...current].flatMap((path) => getPresenceKeyFromPath(path) ?? []);
-      const locationScheduler = makeLocationScheduler(attendedKeys, getLocation, send);
-      const locationSubscriptions = attendedKeys.map((key) =>
+      // Moving or scrolling in an open object re-sends to its space, at most once per interval, which is shorter while
+      // followed; every plank's location goes out, so a follower mirroring this deck scrolls each of them.
+      const locationKeys = [...new Set([...current, ...active].flatMap((path) => getPresenceKeyFromPath(path) ?? []))];
+      const locationScheduler = makeLocationScheduler(locationKeys, getLocation, send, () =>
+        isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
+      );
+      const locationSubscriptions = locationKeys.map((key) =>
         viewState.subscribe(ViewLocation.aspect, key, () => locationScheduler.schedule(key)),
       );
 
@@ -313,6 +359,16 @@ export default Capability.makeModule(
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
+    // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.
+    let previousFollowing = registry.get(ephemeralAtom).following;
+    subscriptions.add(
+      registry.subscribe(ephemeralAtom, ({ following }) => {
+        if (!isSameFollowTarget(following, previousFollowing)) {
+          previousFollowing = following;
+          setupBroadcast();
+        }
+      }),
+    );
     // Initial setup.
     setupBroadcast();
     // Cleanup.
@@ -332,13 +388,29 @@ export default Capability.makeModule(
             if (viewing && identityKey && currentIdentity?.identityKey !== identityKey.toHex()) {
               const peer = identityKey.toHex();
               const lastSeen = Date.now();
+              const follower = `${space.id}/${peer}/${viewing.sessionId ?? peer}`;
+              if (isFollowTargetOf(viewing.following, currentIdentity?.identityKey ?? '', sessionId)) {
+                // A new follower needs the location now, not at the next move or heartbeat.
+                const isNew = !followers.has(follower);
+                followers.set(follower, lastSeen);
+                if (isNew) {
+                  setupBroadcast();
+                }
+              } else {
+                followers.delete(follower);
+              }
+              syncFollowedSpaces(lastSeen);
               registry.update(ephemeralAtom, (ephemeral) => {
                 const viewersByObject = applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen);
                 return {
                   ...ephemeral,
                   viewersByObject,
-                  peerDecks: prunePeerDecks(
+                  peerDecks: prunePeerSessions(
                     applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
+                    viewersByObject,
+                  ),
+                  peerFollowing: prunePeerSessions(
+                    applyPeerFollowing(ephemeral.peerFollowing, space.id, peer, viewing),
                     viewersByObject,
                   ),
                 };

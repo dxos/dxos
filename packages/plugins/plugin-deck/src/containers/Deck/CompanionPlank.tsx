@@ -12,7 +12,7 @@ import { Attention } from '@dxos/react-ui-attention';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { Companion } from '#components';
-import { useCompanions } from '#hooks';
+import { useCompanions, useHeadingAccent } from '#hooks';
 
 import { PlankCompanionControls } from './PlankControls.tsx';
 
@@ -42,6 +42,7 @@ export const CompanionPlank = ({ id, fullscreen, classNames }: CompanionPlankPro
   const contextId = (companion ? Attention.getParentId(id) : undefined) ?? id;
   const contextNode = GraphHooks.useNode(graph, contextId);
   const companions = useCompanions(contextId);
+  const accent = useHeadingAccent();
 
   const onValueChange = useCallback(
     (companion: string) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
@@ -60,6 +61,7 @@ export const CompanionPlank = ({ id, fullscreen, classNames }: CompanionPlankPro
       companionTo={contextNode?.data}
       controls={controls}
       headless={fullscreen}
+      accent={accent}
     />
   );
 };

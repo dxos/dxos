@@ -9,6 +9,12 @@ Collaborative markdown editor plugin for `DXOS` Composer. Beyond editing, it hos
 UI, and the ambient Google-Docs-style review surface (Editing / Suggesting / Viewing) that overlays
 every author's suggestions and comments on the live editor.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.space: Following a peer reveals their place in a document without moving the caret or focus.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -25,6 +31,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `decision`  | `org.dxos.mdl.decision@1.0`    |
 | `step`      | `org.dxos.mdl.step@1.0`        |
+| `uses`      | `dxos.spec.core/uses`         |
 
 ## External types & capabilities
 
@@ -241,7 +248,7 @@ op SuggestEdit
 ```mdl
 op scrollToAnchor
   desc: Reveals an anchor in the editor for the attendable surface; it is the document type's `Locator` reveal, used for comments and peers alike.
-  input: { subject: string, anchor: string, thread?: Ref<Thread> }
+  input: { subject: string, anchor: string, follow?: boolean, thread?: Ref<Thread> }
 ```
 
 ## Features
@@ -658,6 +665,16 @@ decision D-5: The editor publishes its selection and the top of its viewport, as
   affects: [op:scrollToAnchor]
   why: Peers need a location to reveal; an aspect keeps the editor ignorant of presence.
   rejected: Have plugin-space read editor state directly; it would couple presence to CodeMirror.
+```
+
+```mdl
+decision D-6: With `follow`, the reveal scrolls the anchor to the top of the view and leaves the selection and focus alone, for following a peer (org.dxos.plugin.space#F-8.20). The editor reports its location every 100 ms rather than 250 ms, so a followed peer's moves go out at the follow rate. Fills in [D-5].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [op:scrollToAnchor]
+  why: The person who follows did not ask to move their caret, and their keys stay where they left them.
+  rejected: A separate follow reveal operation.
 ```
 
 ## Appendix: Extension Definitions

@@ -10,10 +10,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { invariant } from '@dxos/invariant';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
-import { DeckCapabilities, DeckSchema } from '#types';
+import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';
 
 import { DeckNamespace } from '../namespace.ts';
+import { getRenderedPlanks, isCompanionOpen } from '../util/companion-anchor.ts';
 
 const STATE_KEY = `${DeckNamespace.key}.state`;
 
@@ -66,6 +68,11 @@ export default Capability.makeModule(
       Atom.keepAlive,
     );
 
+    // Settings land after this module, so hoist the capability atom and let the derivation heal when they arrive.
+    const settingsCapabilityAtom = yield* Capability.atom(DeckCapabilities.Settings);
+    // So is view state, which holds the selected companion tab.
+    const viewStateCapabilityAtom = yield* Capability.atom(AttentionCapabilities.ViewState);
+
     // Create derived layout atom (read-only) from both state atoms.
     const layoutAtom = Atom.make((get) => {
       const state = get(stateAtom);
@@ -73,6 +80,20 @@ export default Capability.makeModule(
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       const open = ephemeral.open[state.activeDeck] ?? DeckSchema.defaultOpenDeck;
+      const [settingsAtom] = get(settingsCapabilityAtom);
+      const flat = platform === 'mobile' || (settingsAtom ? !!get(settingsAtom).flatten : false);
+      // A sliding deck's front holds only for the planks it was measured among: until the deck measures the planks it
+      // now shows, it has none, rather than one it may be nowhere near. A deck that is not sliding measures none and
+      // shows its planks from the first.
+      const measured = ephemeral.front?.planks === open.active.join('\n') ? ephemeral.front : undefined;
+      const front = flat ? open.active.at(-1) : measured && (measured.id ?? open.active[0]);
+      const [viewState] = get(viewStateCapabilityAtom);
+      const variant = viewState
+        ? get(viewState.atom(CompanionViewState.aspect, CompanionViewState.CONTEXT)).variant
+        : undefined;
+      const companionItems = getRenderedPlanks(open.active, flat).filter((plank) =>
+        isCompanionOpen(deck.companionPlanks, flat, plank),
+      );
       return {
         mode: platform === 'mobile' ? 'mobile' : DeckSchema.getMode(open, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
@@ -82,6 +103,9 @@ export default Capability.makeModule(
         active: open.active,
         inactive: open.inactive,
         scrollIntoView: ephemeral.scrollIntoView?.id,
+        flat,
+        front,
+        companions: { items: companionItems, ...(variant !== undefined && { variant }) },
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 

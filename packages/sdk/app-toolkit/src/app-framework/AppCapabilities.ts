@@ -80,6 +80,21 @@ export type Layout = Readonly<{
    * Identifier of the item which should be scrolled into view.
    */
   scrollIntoView: string | undefined;
+  /**
+   * Whether the layout shows only its current item (a flattened deck, or mobile) rather than items side by side.
+   */
+  flat?: boolean;
+  /**
+   * The first item of the layout with at least half its width in view; the current item when {@link flat}, and the
+   * first item when the layout lays items side by side but is not scrolled. Where the layout is scrolled to,
+   * independent of its width. Unset while the layout has not yet measured the items it now shows.
+   */
+  front?: string;
+  /**
+   * The items the layout shows whose companion is open, and the companion tab it shows them in (a linked variant such
+   * as `comments`), so another view of the layout can open the same ones.
+   */
+  companions?: Readonly<{ items: readonly string[]; variant?: string }>;
 }>;
 
 /**
@@ -87,6 +102,15 @@ export type Layout = Readonly<{
  * @category Capability
  */
 export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
+
+/**
+ * A palette hue (e.g. `indigo`) every plank heading takes while it is set, such as while the session takes part in a
+ * follow; the layout uses the first contribution that holds one.
+ * @category Capability
+ */
+export const HeadingAccent = Capability$.make<Atom.Atom<string | undefined>>()(
+  'org.dxos.app-framework.capability.headingAccent',
+);
 
 /**
  * @category Capability
@@ -426,13 +450,16 @@ export type RevealInput = {
   subject: string;
   /** Position in the type's own anchor format (the format comments and presence locations use). */
   anchor: string;
+  /** Scroll the anchor to the top of the view and leave the caret and focus alone; presence follow reveals each move this way. */
+  follow?: boolean;
   /** Comment thread to mark current, when revealing a comment. */
   thread?: Ref.Ref<Thread.Thread>;
 };
 
 /**
  * Reveals a position in an object, contributed per typename by plugins whose objects have anchors.
- * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view.
+ * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view,
+ * or with `follow` only scrolls.
  */
 export type Locator = Readonly<{
   id: string;

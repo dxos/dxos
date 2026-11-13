@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -13,16 +13,18 @@ import { EID } from '@dxos/keys';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
+import { useFollowGroup } from '#hooks';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { getFreshSessions } from '../../util/index.ts';
+import { FOLLOW_HUE, getFreshSessions } from '../../util/index.ts';
 import { PeerActions } from '../SpacePresence/PeerActions.tsx';
 import {
   type Member,
@@ -37,11 +39,53 @@ export const MembersCompanion = () => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const space = ToolkitHooks.useActiveSpace();
-  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
+  const [ephemeral, updateEphemeral] = Hooks.useAtomCapabilityState(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const members = useMembers(space?.id);
   const now = useNow();
+  const follow = useFollowGroup(space?.id, now);
   const [showSessions, setShowSessions] = useShowSessions();
+  const following = space && ephemeral?.following?.spaceId === space.id ? ephemeral.following : undefined;
+  const stopFollowing = useCallback(
+    () => updateEphemeral((state) => ({ ...state, following: undefined })),
+    [updateEphemeral],
+  );
+
+  // The person this session follows: one row at the top of the list, out of the object groups.
+  const leader = useMemo((): Member | undefined => {
+    const member = following && members.find((member) => member.identityKey === following.identityKey);
+    if (!member || !ephemeral) {
+      return undefined;
+    }
+    const sessions = Object.values(ephemeral.viewersByObject).flatMap((viewers) =>
+      getFreshSessions(viewers[following.identityKey], now).filter((session) => session.currentlyAttended),
+    );
+    return { ...member, rowId: `following/${following.identityKey}`, sessions, now };
+  }, [following, members, ephemeral, now]);
+
+  // The sessions following this one: their own group at the top of the list, out of the object groups.
+  const followers = useMemo((): Member[] => {
+    if (!follow?.group.leading || !ephemeral) {
+      return [];
+    }
+    const keys = new Set(follow.group.followers.map((follower) => follower.identityKey));
+    return members.flatMap((member) => {
+      const identityKey = member.identityKey;
+      if (!identityKey || !keys.has(identityKey)) {
+        return [];
+      }
+      const sessions = Object.values(ephemeral.viewersByObject).flatMap((viewers) =>
+        getFreshSessions(viewers[identityKey], now).filter((session) => session.currentlyAttended),
+      );
+      return [{ ...member, rowId: `followers/${identityKey}`, sessions, now }];
+    });
+  }, [follow, members, ephemeral, now]);
+  const listRef = useRef<HTMLDivElement>(null);
+  useRowMotion(listRef);
+
+  // Highlighted while followed; the keys can still move the highlight.
+  const [highlighted, setHighlighted] = useState<string>();
+  useEffect(() => setHighlighted(leader?.rowId), [leader?.rowId]);
 
   // A member is listed under each object one of their sessions attends, with the sessions attending it.
   const groups = useMemo(() => {
@@ -55,7 +99,13 @@ export const MembersCompanion = () => {
         continue;
       }
       for (const member of members) {
-        if (!member.online || !member.identityKey || member.identityKey === identity?.identityKey) {
+        if (
+          !member.online ||
+          !member.identityKey ||
+          member.identityKey === identity?.identityKey ||
+          member.identityKey === leader?.identityKey ||
+          followers.some((follower) => follower.identityKey === member.identityKey)
+        ) {
           continue;
         }
         const sessions = getFreshSessions(viewers[member.identityKey], now).filter(
@@ -69,17 +119,20 @@ export const MembersCompanion = () => {
               rowId: `${eid}/${member.identityKey}`,
               sessions,
               now,
-              defaultSessionId: sessions[0].sessionId,
             },
           ]);
         }
       }
     }
     return byObject;
-  }, [space, ephemeral, members, identity?.identityKey, now]);
+  }, [space, ephemeral, members, identity?.identityKey, leader?.identityKey, followers, now]);
 
   const listed = useMemo(() => [...groups.values()].flat(), [groups]);
-  const online = useMemo(() => new Set(listed.map((member) => member.identityKey)).size, [listed]);
+  const online = useMemo(
+    () =>
+      new Set([...listed, ...followers, ...(leader?.online ? [leader] : [])].map((member) => member.identityKey)).size,
+    [listed, followers, leader],
+  );
 
   // A private space is locked at genesis, so it never has other members and has no members settings.
   const locked = space?.membershipPolicy === MembershipPolicy.LOCKED;
@@ -139,24 +192,60 @@ export const MembersCompanion = () => {
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               <Layout.Container padBlock>
-                <Listbox.Root
-                  items={getPresenceOptions(listed, showSessions, t)}
-                  data-testid='spacePlugin.membersCompanion'
-                >
-                  <Listbox.Content aria-label={t('members-companion.label')}>
-                    {space &&
-                      [...groups.entries()].map(([key, group]) => (
-                        <ObjectGroup
-                          key={key}
-                          space={space}
-                          objectKey={key}
-                          members={group}
-                          showSessions={showSessions}
+                <div ref={listRef}>
+                  <Listbox.Root
+                    items={[
+                      ...getPresenceOptions(leader ? [leader] : [], false, t),
+                      ...getPresenceOptions(followers, false, t),
+                      ...getPresenceOptions(listed, showSessions, t),
+                    ]}
+                    value={highlighted ?? ''}
+                    onValueChange={setHighlighted}
+                    data-testid='spacePlugin.membersCompanion'
+                  >
+                    <Listbox.Content aria-label={t('members-companion.label')}>
+                      {leader && (
+                        <PresenceItems
+                          member={leader}
+                          followHue={follow?.hue ?? FOLLOW_HUE}
+                          renderActions={() => (
+                            <>
+                              {following?.paused && (
+                                <span className='text-sm text-fg-subtle'>{t('presence-follow-paused.label')}</span>
+                              )}
+                              <Button.Root
+                                variant='outline'
+                                icon='ph--stop--regular'
+                                label={t('presence-stop-following.label')}
+                                data-testid='spacePlugin.presence.stopFollowing'
+                                onClick={stopFollowing}
+                              />
+                            </>
+                          )}
                         />
-                      ))}
-                  </Listbox.Content>
-                  <Listbox.Empty icon='ph--users--regular'>{t('members-empty.message')}</Listbox.Empty>
-                </Listbox.Root>
+                      )}
+                      {followers.length > 0 && (
+                        <Listbox.ItemGroup data-testid='spacePlugin.presence.followers'>
+                          <Listbox.ItemGroupLabel>{t('presence-following-you.heading')}</Listbox.ItemGroupLabel>
+                          {followers.map((member) => (
+                            <PresenceItems key={member.rowId} member={member} followHue={follow?.hue ?? FOLLOW_HUE} />
+                          ))}
+                        </Listbox.ItemGroup>
+                      )}
+                      {space &&
+                        [...groups.entries()].map(([key, group]) => (
+                          <ObjectGroup
+                            key={key}
+                            space={space}
+                            objectKey={key}
+                            members={group}
+                            showSessions={showSessions}
+                          />
+                        ))}
+                    </Listbox.Content>
+                    <Listbox.Empty icon='ph--users--regular'>{t('members-empty.message')}</Listbox.Empty>
+                  </Listbox.Root>
+                </div>
               </Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -164,6 +253,77 @@ export const MembersCompanion = () => {
       </Panel.Body>
     </Panel.Root>
   );
+};
+
+const ROW_MOTION = { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' };
+
+type RowPlace = { top: number; follow: boolean };
+
+const getTranslateY = (element: HTMLElement) => {
+  const { transform } = getComputedStyle(element);
+  return transform && transform !== 'none' ? new DOMMatrixReadOnly(transform).m42 : 0;
+};
+
+/** Where each person's first row sits in the list, and whether it is in the follow. */
+const measureRows = (root: HTMLElement): Map<string, RowPlace & { element: HTMLElement }> => {
+  const rootTop = root.getBoundingClientRect().top;
+  const rows = new Map<string, RowPlace & { element: HTMLElement }>();
+  for (const element of root.querySelectorAll<HTMLElement>('[data-member]')) {
+    const key = element.dataset.member;
+    if (key && !rows.has(key)) {
+      rows.set(key, {
+        // Its place in the layout, without a slide already running, so a render mid-slide does not start another.
+        top: element.getBoundingClientRect().top - rootTop - getTranslateY(element),
+        follow: element.hasAttribute('data-follow'),
+        element,
+      });
+    }
+  }
+  return rows;
+};
+
+/**
+ * Slides a person's rows from where they were to where they are, and fades in the follow's wash on rows that just
+ * joined it, so following someone reads as their row rising to the top and changing state.
+ */
+const useRowMotion = (ref: RefObject<HTMLElement | null>) => {
+  const previous = useRef(new Map<string, RowPlace>());
+
+  // A resize (the companion opening, rows rewrapping) moves rows without a render, so their places are taken again.
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      previous.current = new Map([...measureRows(root)].map(([key, { top, follow }]) => [key, { top, follow }]));
+    });
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  useLayoutEffect(() => {
+    const root = ref.current;
+    if (!root) {
+      return;
+    }
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const rows = measureRows(root);
+    for (const [key, { top, follow, element }] of rows) {
+      const before = previous.current.get(key);
+      if (still || !before) {
+        continue;
+      }
+      if (before.top !== top) {
+        element.animate([{ transform: `translateY(${before.top - top}px)` }, { transform: 'none' }], ROW_MOTION);
+      }
+      if (follow && !before.follow) {
+        const backgroundColor = getComputedStyle(element).backgroundColor;
+        element.animate([{ backgroundColor: 'transparent' }, { backgroundColor }], ROW_MOTION);
+      }
+    }
+    previous.current = new Map([...rows].map(([key, { top, follow }]) => [key, { top, follow }]));
+  });
 };
 
 type ObjectGroupProps = {

@@ -9,6 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
+import { PublicKey } from '@dxos/keys';
 
 import { SpaceCapabilities } from '#types';
 
@@ -38,6 +39,10 @@ export default Capability.makeModule(
       viewersByObject: {},
       peerDecks: {},
       mergePreview: undefined,
+      following: undefined,
+      sessionId: PublicKey.random().toHex(),
+      followedSpaces: [],
+      peerFollowing: {},
       lastMergeAt: undefined,
     }).pipe(Atom.keepAlive);
 

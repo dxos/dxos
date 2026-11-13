@@ -100,7 +100,7 @@ export type ObjectViewerProps = {
   movedAt: number;
   currentlyAttended: boolean;
   device?: SessionDevice;
-  /** Where the peer is in the object, while they attend it; see `ViewLocation` in react-ui-attention. */
+  /** Where the peer is in the object, for each object open in their deck; see `ViewLocation` in react-ui-attention. */
   location?: PeerLocation;
 };
 
@@ -114,6 +114,13 @@ export type SessionDevice = {
   kind?: 'browser' | 'native' | 'mobile' | 'agent' | 'unknown';
 };
 
+/** Whom a session follows: a peer's most recently moved session, or one session of theirs. */
+export type FollowTarget = {
+  spaceId: string;
+  identityKey: string;
+  sessionId?: string;
+};
+
 /** A peer's caret and top of view in an object, as anchors in the object type's own format. */
 export type PeerLocation = {
   selection?: string;
@@ -123,6 +130,12 @@ export type PeerLocation = {
 /** A session's deck in one space: the graph paths of its planks there, in order. */
 export type PeerDeck = {
   planks: string[];
+  /** The plank its deck is scrolled to; see `front` on `AppCapabilities.Layout`. */
+  front?: string;
+  /** Its planks in the space whose companion is open; see `companions` on `AppCapabilities.Layout`. */
+  companions?: string[];
+  /** The companion tab its deck shows them in. */
+  companionVariant?: string;
 };
 
 export type ObjectId = string;
