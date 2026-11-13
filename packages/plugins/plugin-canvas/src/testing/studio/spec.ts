@@ -168,8 +168,12 @@ const fan = (count: number): number[] => {
   if (count <= 1) {
     return [Math.ceil(PORTS_PER_SIDE / 2)];
   }
+  // Clamped, because more edges can meet a side than it has ports: past five they double up on the outer ones
+  // rather than naming an `e6` the card does not have.
   const span = Math.min(count, PORTS_PER_SIDE);
-  return Array.from({ length: count }, (_, index) => Math.round(1 + (index * (PORTS_PER_SIDE - 1)) / (span - 1)));
+  return Array.from({ length: count }, (_, index) =>
+    Math.min(PORTS_PER_SIDE, Math.round(1 + (Math.min(index, span - 1) * (PORTS_PER_SIDE - 1)) / (span - 1))),
+  );
 };
 
 const boxId = (id: string) => elementId(id, 'box');

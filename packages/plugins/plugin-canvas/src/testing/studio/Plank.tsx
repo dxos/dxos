@@ -221,7 +221,15 @@ export const plankSpec: ElementKindSpec = {
   key: 'K',
   schema: PlankNode,
   component: PlankNodeView,
-  create: ({ id, z, center, size }) => ({ type: 'plank', id, z, center, size, label: 'Plank', comp: 'board' }),
+  create: ({ id, z, center, size }) => ({
+    type: 'plank',
+    id,
+    z,
+    center,
+    size,
+    label: 'Plank',
+    data: { comp: 'board' },
+  }),
   // Nominal units (one unit is the major grid cell, 48px): the deck's 300 x 231 plank, give or take.
   defaultSize: { width: 6, height: 5 },
   resizable: true,

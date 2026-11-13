@@ -732,14 +732,14 @@ const routeLinks = (
     // the route. What stays is the link's own style, which is what the canvas's link renderer reads.
     if (links === 'ortho') {
       const { connector: _connector, ...link } = record.link;
-      const ends = facingPorts(source, target, ports);
+      const bound = facingPorts(source, target, ports);
       content[key] = {
         ...record,
         link: {
           ...link,
           type: 'ortho',
-          source: { ...link.source, port: ends.source },
-          target: { ...link.target, port: ends.target },
+          source: { ...link.source, port: bound.source },
+          target: { ...link.target, port: bound.target },
           ...(route.arrow === 'none' ? { ends } : {}),
           ...(route.color ? { style: { ...link.style, hue: LINK_HUES[route.color] ?? 'blue' } } : {}),
         },
@@ -922,8 +922,15 @@ const placeComponentKinds = (content: ContentMap, model: StudioModel, kinds: Rea
         z: record.node.z,
         center: record.node.center,
         size: record.node.size,
-        // A kind's own fields go under `data` (decision 21); the frame above is the element's own.
-        data: (COMPONENT_FIELDS[component.kind] ?? latticeFields)(component),
+        // A kind's own fields go under `data` (decision 21); the frame above is the element's own, and `label` is the
+        // core base's — a plank's title drawn from `data.label` would render empty.
+        ...(() => {
+          const { label, ...data } = (COMPONENT_FIELDS[component.kind] ?? latticeFields)(component) as Record<
+            string,
+            unknown
+          >;
+          return { ...(typeof label === 'string' ? { label } : {}), data };
+        })(),
       },
     };
     placed++;

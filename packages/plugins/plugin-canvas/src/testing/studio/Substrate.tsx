@@ -62,7 +62,7 @@ export const SubstrateNode = Schema.Struct({
   data: SubstrateData,
 });
 
-const DEFAULTS = { pitch: 24, fill: 0.55, extra: 0.4, objectSize: 24, bridges: 0 } as const;
+const DEFAULTS = { pitch: 24, fill: 0.55, extra: 0.4, size: 24, bridges: 0 } as const;
 
 type Circle = { x: number; y: number; r: number };
 
@@ -109,7 +109,7 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
     layout({ x: space.x, y: space.y }, space.r, {
       ...settings,
       seed: settings.seed + index,
-      size: settings.objectSize,
+      size: settings.size,
     }),
   );
   return (
@@ -184,7 +184,7 @@ export const SubstrateNodeView = ({ node }: NodeViewProps) => {
           key={`lit-${index}`}
           cx={x * width}
           cy={y * height}
-          r={(settings.pitch * settings.objectSize) / 100 + 1.4}
+          r={(settings.pitch * settings.size) / 100 + 1.4}
           data-testid='substrate-lit'
           fill={toneValue(tone) ?? 'var(--sd-fg)'}
         />
