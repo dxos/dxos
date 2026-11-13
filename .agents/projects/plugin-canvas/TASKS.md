@@ -395,6 +395,9 @@ A hull is a border round a set of shapes. Evaluate it in `ui/react-ui-canvas-edi
 - [x] **A line keeps its colour** (user, 2026-11-12): a type edited by its vertices (`editor: 'vertices'`) is not
       drawn in the selection's colour while selected or edited (`SceneLayer`); a hover on one not selected still
       tints it.
+- [x] **A stroke kept as drawn closes** (user, 2026-11-13): a freehand line, and a Sketch stroke read as nothing,
+      lands closed where its ends are within 12% of its bounds' diagonal (`strokeCloses`, `LINE_CLOSURE`); before,
+      only a stroke read as a shape or as segments could close (25%, `CLOSURE`). `Draw.stories.tsx` Test.
 - [x] **Tool names** (user, 2026-11-12): Draw is `Freehand` and Draw shape is `Sketch`; the registry keys
       (`freehand`, `freehandShape`) and the button they share (`DRAW_FOLD`, "Draw") are unchanged.
 - [x] **No toolbar drag for drawn tools**: a type with `createFromPoints` (Polyline, Spline, Draw, Draw shape)

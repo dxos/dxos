@@ -103,6 +103,7 @@ import {
   sideToward,
   simplifyPath,
   smoothBends,
+  strokeCloses,
   topOfView,
   updateElement,
 } from '../../utils/index.ts';
@@ -1386,7 +1387,7 @@ export const usePointerMachine = ({
               : undefined;
           const landed = read?.kind === 'shape' ? landShape(read.shape) : read?.kind === 'path' && landPath(read.path);
           if (!landed) {
-            landPoints(current.type, simplifyPath(current.points, tolerance), false, true);
+            landPoints(current.type, simplifyPath(current.points, tolerance), strokeCloses(current.points), true);
           }
           break;
         }

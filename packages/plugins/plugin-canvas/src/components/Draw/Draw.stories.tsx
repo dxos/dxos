@@ -220,7 +220,9 @@ const commands = (path: string) => ({
  * 1. The Draw tools share one button in the tools panel, straight after Polyline.
  * 2. Press S, then press, drag and release on the canvas: the stroke is drawn as it goes and lands as one line.
  * 3. The line is a curve, with far fewer points than the pointer passed, and none of it is cut off by its frame.
- * 4. The tool is still in hand: a second stroke needs no key.
+ * 4. The stroke ended near where it began, for its size, so the line is closed.
+ * 5. The tool is still in hand: a second stroke needs no key.
+ * 6. Draw three sides of a box: it ends far from where it began, so the line is left open.
  */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
@@ -245,6 +247,7 @@ export const Test: Story = {
     const spans = path.match(/C /g)?.length ?? 0;
     await expect(spans).toBeGreaterThan(2);
     await expect(spans).toBeLessThan(first.length / 2);
+    await expect(path.endsWith('Z')).toBe(true);
     // Every coordinate of the curve, its handles included, is inside the line's own frame. The path is in the line's
     // own px, as its frame's style is; on screen both are scaled by the zoom.
     const [width, height] = [Number.parseFloat(line.style.width), Number.parseFloat(line.style.height)];
@@ -257,6 +260,17 @@ export const Test: Story = {
 
     await stroke(box(-60, 110));
     await waitFor(() => expect(drawn(canvasElement, 'freehand')).toHaveLength(2));
+
+    await stroke(
+      through([
+        [140, 210],
+        [140, 110],
+        [300, 110],
+        [300, 210],
+      ]),
+    );
+    await waitFor(() => expect(drawn(canvasElement, 'freehand')).toHaveLength(3));
+    await expect(pathOf(drawn(canvasElement, 'freehand')[2]).endsWith('Z')).toBe(false);
   },
 };
 

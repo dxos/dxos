@@ -149,10 +149,10 @@ const strokeTool: NodeDefSpec = {
   schema: PolylineNode,
   component: PolylineNodeView,
   create: (props) => createNode({ type: 'polyline', ...props }),
-  createFromPoints: (props, points) => ({
+  createFromPoints: (props, points, closed) => ({
     ...createNode({ type: 'polyline', ...props }),
     points: [...points],
-    params: { smooth: true },
+    params: { smooth: true, ...(closed ? { closed } : {}) },
   }),
   defaultSize: NOMINAL_SIZES.polyline,
 };
