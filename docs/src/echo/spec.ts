@@ -164,19 +164,20 @@ const byLabel = (a: SpecPage, b: SpecPage) => a.label.localeCompare(b.label);
 
 /**
  * The Starlight sidebar for one section of the spec's site map; group order is first appearance. A top-level group
- * starts expanded; pages with a `family` follow the group's own pages in a nested group per family, in order of first
- * appearance, which starts collapsed and opens when the current page is in it [D-296, D-299].
+ * starts expanded; pages with a `family` follow the group's own pages in a nested group per family. Family groups,
+ * and every page in an API group, sort by label [D-296, D-299, D-300].
  */
 export const sidebarFromSpec = (allPages: SpecPage[], section: string) => {
   const pages = allPages.filter((page) => page.section === section && page.status !== 'later');
   const groups = [...new Set(pages.map((page) => page.group))];
   return groups.map((label) => {
     const inGroup = pages.filter((page) => page.group === label);
-    const families = [...new Set(inGroup.flatMap((page) => (page.family ? [page.family] : [])))];
+    const families = [...new Set(inGroup.flatMap((page) => (page.family ? [page.family] : [])))].sort();
+    const own = inGroup.filter((page) => !page.family);
     return {
       label,
       items: [
-        ...inGroup.filter((page) => !page.family).map(sidebarLink),
+        ...(label === 'API' ? own.sort(byLabel) : own).map(sidebarLink),
         ...families.map((family) => ({
           label: family,
           collapsed: true,

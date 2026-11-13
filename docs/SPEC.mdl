@@ -5985,6 +5985,16 @@ decision D-299: TILE's API sidebar nests the component packages' pages by what t
     - Groups only for packages with two or more pages: the sidebar mixes groups and pages with no rule a reader can see.
 ```
 
+```mdl
+decision D-300: Every section's API group lists its pages alphabetically, and TILE's family groups (Actions, Collections, Editing, Time, Visualization) follow in alphabetical order. Amends [D-299].
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [tile-api-reference]
+  why: A reader scans an API list for a name, and an alphabetical list is the one order they can predict.
+  rejected:
+    - Spec order: it tracks when a page was written, which a reader cannot see.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
