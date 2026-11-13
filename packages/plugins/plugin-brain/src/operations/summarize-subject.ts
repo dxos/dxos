@@ -8,12 +8,12 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
-import { FactStore, type SemanticIndexError, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { type FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
 
-import { factLine, toCompactFact } from './facts.ts';
+import { factLine, queryResolvedFacts, toCompactFact } from './facts.ts';
 
 export default BrainOperation.SummarizeSubject.pipe(
   Operation.withHandler(
@@ -39,7 +39,7 @@ const summarizePrompt = (subject: string, focus: string | undefined, lines: stri
 `;
 
 /**
- * Queries all facts mentioning the subject (as subject or object entity) and prompts the LLM for a
+ * Queries all facts mentioning the subject (as subject or object entity, by slug or by label) and prompts the LLM for a
  * grounded, id-citing summary. Returns an empty summary when no facts match — the LLM is never
  * invoked without grounding. Named export so the flow is unit-testable without the operation runtime.
  */
@@ -52,8 +52,7 @@ export const summarizeSubject = ({
   FactStore | AiService.AiService
 > =>
   Effect.gen(function* () {
-    const store = yield* FactStore;
-    const facts = yield* store.query({ entity: normalizeEntityId(subject) });
+    const facts = yield* queryResolvedFacts({ entity: subject });
     if (facts.length === 0) {
       return { summary: '', factCount: 0, sources: [] };
     }

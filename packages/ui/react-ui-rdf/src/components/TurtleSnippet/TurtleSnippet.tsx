@@ -5,7 +5,7 @@
 import React, { type ComponentPropsWithoutRef, memo, useInsertionEffect, useMemo } from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { diffHighlightStyles, highlightTurtle } from '@dxos/ui-editor';
+import { diffHighlightStyles, highlightSparql, highlightTurtle } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 /** Theme modes whose highlight rules are in the document; a style's rules are only mounted by an editor otherwise. */
@@ -28,14 +28,19 @@ const useHighlightStyle = () => {
 };
 
 export type TurtleSnippetProps = Omit<ComponentPropsWithoutRef<'pre'>, 'children'> & {
-  /** Turtle or TriG source. */
+  /** Turtle or TriG source (or SPARQL, with `language='sparql'`). */
   source: string;
+  /** The grammar that colours `source`; Turtle (which covers TriG) by default. */
+  language?: 'turtle' | 'sparql';
 };
 
-/** Read-only Turtle or TriG, coloured as the editor colours it, without mounting an editor. */
-export const TurtleSnippet = memo(({ source, className, ...props }: TurtleSnippetProps) => {
+/** Read-only Turtle, TriG or SPARQL, coloured as the editor colours it, without mounting an editor. */
+export const TurtleSnippet = memo(({ source, language = 'turtle', className, ...props }: TurtleSnippetProps) => {
   const style = useHighlightStyle();
-  const lines = useMemo(() => highlightTurtle(source, style), [source, style]);
+  const lines = useMemo(
+    () => (language === 'sparql' ? highlightSparql : highlightTurtle)(source, style),
+    [source, language, style],
+  );
   return (
     <pre {...props} className={mx('m-0 whitespace-pre font-mono', className)}>
       {lines.map((spans, line) => (

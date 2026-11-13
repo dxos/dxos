@@ -127,7 +127,7 @@ export const factToTriples = (fact: Fact, ontology: Ontology.Ontology = Ontology
   if (!ontology.get(predicate)) {
     const definition: Ontology.Entry = {
       iri: predicate,
-      name: Ontology.key(fact.assertion.predicate),
+      name: Ontology.nameFor(fact.assertion.predicate),
       label: fact.assertion.predicate,
       ...(fact.assertion.predicateDescription ? { description: fact.assertion.predicateDescription } : {}),
       ...(Vocab.brainNamespaceOf(predicate) ? { definedBy: Vocab.brainNamespaceOf(predicate) } : {}),

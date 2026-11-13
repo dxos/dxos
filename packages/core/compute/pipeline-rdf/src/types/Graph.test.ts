@@ -86,19 +86,19 @@ describe('Graph', () => {
       ],
       { ontology },
     );
-    expect(placed.assertion.predicateIri).toBe('https://dxos.org/semantic/brain/agent-1/mentor');
+    expect(placed.assertion.predicateIri).toBe('https://dxos.org/semantic/brain/agent-1/mentors');
     const quads = Mapping.factToTriples(placed, ontology);
     const definition = quads.filter((quad) => quad.subject.value === placed.assertion.predicateIri);
     expect(definition.every((quad) => quad.graph.value === Vocab.ONTOLOGY_GRAPH)).toBe(true);
     expect(Ontology.fromQuads(definition)).toEqual([
       {
-        iri: 'https://dxos.org/semantic/brain/agent-1/mentor',
-        name: 'mentor',
+        iri: 'https://dxos.org/semantic/brain/agent-1/mentors',
+        name: 'mentors',
         label: 'mentors',
         description: 'A person the subject guides in their work.',
         definedBy: 'https://dxos.org/semantic/brain/agent-1/',
       },
     ]);
-    expect(Graph.toTriG([placed], ontology)).toContain('brain:mentor');
+    expect(Graph.toTriG([placed], ontology)).toContain('brain:mentors');
   });
 });

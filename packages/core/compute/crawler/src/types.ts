@@ -67,6 +67,14 @@ export type Event =
 
 export type EventTag = Event['_tag'];
 
+/** How one top-level channel is crawled; its threads inherit it. Unset fields fall back to the crawl-wide setting. */
+export type ChannelSettings = {
+  /** Initial lookback in days when the channel has no cursor yet. */
+  readonly maxDays?: number;
+  /** Whether to descend into the channel's threads. */
+  readonly descendThreads?: boolean;
+};
+
 /** Crawl configuration: what to crawl and how. */
 export type Config = {
   /** Top-level channel ids to crawl. */
@@ -77,4 +85,6 @@ export type Config = {
   readonly maxDepth?: number;
   /** Initial lookback when a target has no cursor yet. */
   readonly seed?: { readonly maxDays?: number };
+  /** Per-channel overrides, keyed by top-level channel id. */
+  readonly channelSettings?: Readonly<Record<string, ChannelSettings>>;
 };
