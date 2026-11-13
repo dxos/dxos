@@ -367,6 +367,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
   }, []);
 
   const [init, setInit] = useState<Init>();
+  const [seeded, setSeeded] = useState(false);
   const [error, setError] = useState<string>();
   useEffect(() => {
     if (!lazy) {
@@ -384,7 +385,13 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
         },
         { late: shared?.late },
       )
-      .then(setInit, (error) => setError(String(error)));
+      .then(
+        (init) => {
+          setInit(init);
+          setSeeded(true);
+        },
+        (error) => setError(String(error)),
+      );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runtime, contextId, lazy]);
 
@@ -458,6 +465,7 @@ const PeersHost = ({ props, shared, contextId, themeMode, Story }: PeersHostProp
                       setupEvents={props.setupEvents}
                       spaceId={state.spaceId}
                       layout={layoutOf(index)}
+                      ready={seeded && state.joined[index]}
                       Wrapper={props.Wrapper}
                       Story={Story}
                     />
@@ -518,11 +526,13 @@ type PeerAppProps = {
   setupEvents?: WithPluginManagerOptions['setupEvents'];
   spaceId?: SpaceId;
   layout?: ModuleLayout;
+  /** Whether the peer has the space and the story its layout; until then the app boots behind a placeholder. */
+  ready: boolean;
   Wrapper?: FC<PropsWithChildren>;
   Story: FC;
 };
 
-const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, Wrapper, Story }: PeerAppProps) => {
+const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, ready, Wrapper, Story }: PeerAppProps) => {
   const [layoutAtom] = useState(() => Atom.make<ModuleLayout | undefined>(undefined));
   const options = useMemo<WithPluginManagerOptions>(
     () => ({
@@ -544,7 +554,9 @@ const PeerApp = ({ id, client, plugins, setupEvents, spaceId, layout, Wrapper, S
     <AppPluginManagerHost id={id} options={options}>
       <StorySpaceProvider value={spaceId}>
         <PublishLayout atom={layoutAtom} layout={layout} />
-        {Wrapper ? (
+        {!ready ? (
+          <div className='grid h-full place-items-center text-description'>Connecting…</div>
+        ) : Wrapper ? (
           <Wrapper>
             <Story />
           </Wrapper>
