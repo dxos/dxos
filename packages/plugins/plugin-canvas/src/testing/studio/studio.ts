@@ -563,11 +563,20 @@ const waypointsOf = (route: StudioRoute, source: Frame, target: Frame): Vec[] =>
  * centre to top centre rather than corner to corner.
  */
 const facingPorts = (source: Frame, target: Frame): { source: string; target: string } => {
-  const [dx, dy] = [target.center.x - source.center.x, target.center.y - source.center.y];
-  if (Math.abs(dy) >= Math.abs(dx)) {
-    return dy >= 0 ? { source: 's1', target: 'n1' } : { source: 'n1', target: 's1' };
+  const [top, bottom] = [source.center.y - source.size.height / 2, source.center.y + source.size.height / 2];
+  const [targetTop, targetBottom] = [
+    target.center.y - target.size.height / 2,
+    target.center.y + target.size.height / 2,
+  ];
+  // Clear of each other vertically: bottom centre to top centre, however far apart they are across. A parent fanning
+  // out to a row of children below it leaves by its foot, not by whichever side each child happens to sit on.
+  if (targetTop >= bottom) {
+    return { source: 's1', target: 'n1' };
   }
-  return dx >= 0 ? { source: 'e1', target: 'w1' } : { source: 'w1', target: 'e1' };
+  if (targetBottom <= top) {
+    return { source: 'n1', target: 's1' };
+  }
+  return target.center.x >= source.center.x ? { source: 'e1', target: 'w1' } : { source: 'w1', target: 'e1' };
 };
 
 /**
