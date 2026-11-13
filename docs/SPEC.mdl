@@ -5995,6 +5995,14 @@ decision D-300: Every section's API group lists its pages alphabetically, and TI
     - Spec order: it tracks when a page was written, which a reader cannot see.
 ```
 
+```mdl
+decision D-301: The plugin inspector embedded on PLEX pages is wider than the text column, up to the width of the content panel and centered on it, as the TILE Overview grid and the TILE API stories are.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [plex-the-plex-plugin, app-framework-create-plugin, app-framework-define-type, app-framework-add-operation, app-framework-add-surface, app-framework-extend-app-graph]
+  why: The inspector is a workbench with a module list beside its content, and at the text column's width the content gets little room.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
