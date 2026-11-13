@@ -132,6 +132,6 @@ describe('several processes on one file', { timeout: 60_000 }, () => {
         { timeout: 10_000 },
       )
       .toEqual(['from the other process']);
-    sync.close();
+    await sync.close();
   });
 });

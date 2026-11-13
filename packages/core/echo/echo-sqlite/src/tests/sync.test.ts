@@ -61,7 +61,7 @@ describe('sync through an authority', () => {
     await settle([dbA, syncA], [dbB, syncB]);
     const [copy] = await dbB.query(Filter.type(TestSchema.Person)).run();
 
-    syncA.close();
+    await syncA.close();
     Obj.update(person, (person) => {
       person.name = 'Alice Smith';
     });
@@ -100,7 +100,7 @@ describe('sync through an authority', () => {
     await settle([dbA, syncA], [dbB, syncB]);
     const [copy] = await dbB.query(Filter.type(TestSchema.Organization)).run();
 
-    syncA.close();
+    await syncA.close();
     Obj.update(org, (org) => {
       org.name = 'the quick fox';
     });

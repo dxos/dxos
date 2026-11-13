@@ -158,7 +158,7 @@ export class TestPeer {
    * Closes every database (flushing pending writes) and the file, as a process exit would.
    */
   async close(): Promise<void> {
-    this.#syncs.splice(0).forEach((sync) => sync.close());
+    await Promise.all(this.#syncs.splice(0).map((sync) => sync.close()));
     if (this.#scope) {
       await EffectEx.runPromise(Scope.close(this.#scope, Exit.void));
       this.#scope = undefined;

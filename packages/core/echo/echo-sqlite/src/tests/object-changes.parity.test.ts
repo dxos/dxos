@@ -165,7 +165,7 @@ describe('Obj.getChanges', () => {
     const [copy] = await dbB.query(Filter.type(TestSchema.Task)).run();
 
     // Edits made while neither peer has the other's, so both branch from the base version.
-    syncA.close();
+    await syncA.close();
     setTitle(task, 'live');
     Obj.update(copy, (copy) => {
       copy.description = 'base fork';

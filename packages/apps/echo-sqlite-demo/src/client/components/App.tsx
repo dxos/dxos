@@ -88,7 +88,7 @@ export const App = ({ db }: { db: SqliteDatabase }) => {
     );
     return () => {
       unsubscribe();
-      sync.close();
+      void sync.close();
       transport.close();
     };
   }, [db]);

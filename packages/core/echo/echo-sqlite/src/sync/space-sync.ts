@@ -98,13 +98,18 @@ export class SpaceSync {
     }
   }
 
-  close(): void {
+  /**
+   * Stops syncing; resolves once the round in flight, if any, has ended and the lease is released, so
+   * the database can close behind it.
+   */
+  async close(): Promise<void> {
     this.#closed = true;
     this.#cleanup.forEach((cleanup) => cleanup());
+    await this.#running;
     if (this.#leading) {
       this.#leading = false;
       // Released so another connection syncs at once rather than after the lease lapses.
-      void this.#db.releaseSyncLease(this.#holder).catch((err) => log.warn('sync lease not released', { error: err }));
+      await this.#db.releaseSyncLease(this.#holder).catch((err) => log.warn('sync lease not released', { error: err }));
     }
   }
 
