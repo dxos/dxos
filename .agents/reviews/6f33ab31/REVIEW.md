@@ -35,17 +35,6 @@ _2 error(s), 16 warning(s)._
 - 6f33ab31-17 - ignored - no-trivial-wrappers-over-official-apis - packages/stories/stories-assistant/src/scripts/build-plugin.ts:66
 - 6f33ab31-18 - ignored - inline-obj-parent - packages/stories/stories-assistant/src/testing/decorators.tsx:461
 
-## Triage
-
-- 1, 2, 3: fixed — one changeset naming one package per fixed group; `nextTurn` is `Effect.fnUntraced`; `UnboundPlaceholder` extends `BaseError.extend`.
-- 4: the `try` is in the scene's synchronous turn generator, not Effect code; it turns an unbound placeholder into the scripted model's failure report.
-- 5, 6, 7, 9, 10: lines this PR does not change.
-- 8, 12, 13, 14, 15: each namespace module has the directive, a capital-case filename and an `export * as Name` re-export, the shape the rule asks for; `export * from '#types'` predates this PR.
-- 11: `ChatPlane.Cell` frames a column of the plane, not a leaf object in a container.
-- 16: `onSelect` / `onDelete` follow the established convention.
-- 17: `bash` adds a conditional default (`timeout`), which the rule exempts.
-- 18: `Obj.setParent` there predates this PR.
-
 ## Issues
 
 # WARN 6f33ab31-1 one-changeset-per-pr `.changeset/scripted-scene.md:1`
@@ -136,3 +125,14 @@ estimated input tokens: 4513035
 billed input tokens: 4270560 (cost $0.1794)
 measured chars per token: 3.17
 ```
+
+### Triage
+
+- 1, 2, 3: fixed — one changeset naming one package per fixed group; `nextTurn` is `Effect.fnUntraced`; `UnboundPlaceholder` extends `BaseError.extend`.
+- 4: the `try` is in the scene's synchronous turn generator, not Effect code; it turns an unbound placeholder into the scripted model's failure report.
+- 5, 6, 7, 9, 10: lines this PR does not change.
+- 8, 12, 13, 14, 15: each namespace module has the directive, a capital-case filename and an `export * as Name` re-export, the shape the rule asks for; `export * from '#types'` predates this PR.
+- 11: `ChatPlane.Cell` frames a column of the plane, not a leaf object in a container.
+- 16: `onSelect` / `onDelete` follow the established convention.
+- 17: `bash` adds a conditional default (`timeout`), which the rule exempts.
+- 18: `Obj.setParent` there predates this PR.
