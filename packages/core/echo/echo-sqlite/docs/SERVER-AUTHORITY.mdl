@@ -29,6 +29,12 @@ Five properties define it:
 The sync protocol is new: Subduction does not run, and neither does the mesh replicator or the
 record protocol of `org.dxos.echo-sync-worker`, which this design replaces.
 
+## Packages
+
+- `@dxos/echo-sqlite` holds the database, the indexer wiring and the client sync, the last under its
+  `sync` subpath export (`@dxos/echo-sqlite/sync`).
+- `@dxos/echo-sync-worker` is the Cloudflare part: the worker and the SpaceAuthority Durable Object.
+
 ## Dependencies
 
 ```mdl
@@ -36,7 +42,7 @@ uses org.dxos.echo-sqlite: The database API, its bounded-memory rules and its SQ
 ```
 
 ```mdl
-uses org.dxos.feed: The feed store that holds every block on both sides, and its retention, which compaction uses.
+uses org.dxos.feed: The feed store that holds every block on both sides, and the atomic replace that compaction will use.
 ```
 
 ```mdl
@@ -128,7 +134,6 @@ service SpaceAuthority
     connect(token: AuthToken) → WebSocket                        # [F-4.1, F-7]
     pull(request: PullRequest) → BlocksMessage                   # [F-4.2]
     push(request: PushRequest) → PushAck                         # [F-4.3]
-    compact(feedId: string, covers: number) → TrimResult         # after a snapshot block lands [F-2.5]
 ```
 
 ```mdl
@@ -146,8 +151,8 @@ service SpaceSyncClient
 service DocumentCache
   desc: |
     The client's resident Automerge documents, one per object, loaded on demand and released when
-    unheld, like echo-sqlite's working set. Loading a document reads its feed: the newest snapshot
-    block and every change block after it.
+    unheld, like echo-sqlite's working set. Loading a document reads every block of its feed,
+    concatenates their chunks and loads the result [F-2.4].
   ops:
     load(objectId: ObjectId) → Doc                               # [F-3.2]
     change(objectId: ObjectId, fn: (doc) → void) → Block         # the change as a block to append [F-5.1]
@@ -161,10 +166,8 @@ type AutomergeBlockData
   desc: |
     The payload of a block in the `automerge` namespace. Its feed is the object's document: feedId is
     the object id. The server stores it as bytes and never decodes it.
-  literals: change | snapshot
   fields:
-    change: { bytes: Uint8Array }                   # one or more Automerge change chunks, in causal order
-    snapshot: { bytes: Uint8Array; covers: number } # Automerge save() of the document with every block of the feed at position ≤ covers
+    chunk: Uint8Array    # Automerge saveIncremental() of one write, or save() of the whole document after a compaction
 ```
 
 ```mdl
@@ -291,8 +294,9 @@ feat F-2: Automerge in feeds
 
   req F-2.2:
     when: an object changes
-    then: the client appends one block of kind change holding the Automerge change chunks of that
-          edit; the block's actorId is the device and its sequence the device's next for that feed
+    then: the client appends one block holding the Automerge chunk of that write
+          (saveIncremental()); the block's actorId is the device and its sequence the device's next for
+          that feed
 
   req F-2.3:
     when: blocks are delivered in position order
@@ -300,21 +304,20 @@ feat F-2: Automerge in feeds
           client pushes its blocks in append order and appends a change only on top of blocks it holds
 
   req F-2.4:
-    when: a document's feed holds more than COMPACT_AFTER change blocks (default 256) since its newest
-          snapshot, and the client has pulled the `automerge` namespace to position P
-    then: the client may append a block of kind snapshot with covers = P, holding save() of the document
-          as it has it
+    when: a document is loaded
+    then: the chunks of every block of its feed, in position order with unpositioned blocks last, are
+          concatenated and loaded with Automerge.load; chunks that repeat changes are harmless
 
   req F-2.5:
-    when: the server positions a snapshot block whose covers is C
-    then: it trims the blocks of that feed at position ≤ C, through the feed store's trim log, so a block
-          positioned after C — another client's concurrent change — is kept; the server trusts C and
-          does not check it against what that client has pulled
+    when: Automerge blocks sync
+    then: they sync as ordinary feed blocks with the protocol of [F-4]; there is no separate Automerge
+          sync protocol
 
   req F-2.6:
-    when: a client receives blocks of a feed whose older blocks it never had
-    then: it loads the document from the newest snapshot and applies the later changes; a change also
-          contained in the snapshot is applied twice, which Automerge ignores
+    when: a feed is compacted
+    then: the feed store replaces some of the feed's blocks with one new block in one transaction
+          (FeedStore.appendReplacing); when and where compaction runs, and how it reaches other
+          stores, is not decided yet
 ```
 
 ```mdl
@@ -322,8 +325,8 @@ feat F-3: The server never reifies Automerge
 
   req F-3.1:
     when: the server handles a block of the `automerge` namespace
-    then: it reads only the block's metadata (feedId, actorId, sequence, position, timestamp) and the
-          snapshot kind and covers, never the change bytes; the server bundle imports no Automerge code
+    then: it reads only the block's metadata (feedId, actorId, sequence, position, timestamp), never
+          its chunk; the server bundle imports no Automerge code
 
   req F-3.2:
     when: an object is read on the client
@@ -414,6 +417,21 @@ feat F-6: No client-services
           background agent)
     then: each opens the same SQLite file directly, and F-8 makes that safe; the database file is the
           only thing they share
+```
+
+```mdl
+feat F-9: Parity with echo-client
+
+  req F-9.1:
+    when: an app uses the Database API
+    then: echo-sqlite behaves as echo-client does for queries, refs, relations, parent and child,
+          deletion, types and the registry, reactivity, the text CRDT, feeds and queues, the
+          serializer, and convergence keys; each is shown by the same end-to-end test passing against
+          both backends
+
+  req F-9.2:
+    when: an app uses branches, lenses (panproto), inline root objects or storage metrics
+    then: echo-sqlite fails with UnsupportedOperationError, as org.dxos.echo-sqlite#F-1.4 does
 ```
 
 ```mdl
@@ -523,13 +541,11 @@ scenario T-1: Concurrent edits converge through the server
 ```
 
 ```mdl
-scenario T-2: Compaction keeps a concurrent change
-  given: A has pulled to position 10 and appends a snapshot of x with covers = 10
-  when: B's change to x is positioned at 11, then A's snapshot at 12
-  then:
-    - the server trims the blocks of x at position ≤ 10 only
-    - a new client C that pulls from 0 receives the snapshot and B's change and holds both edits
-  tags: [F-2.5, F-2.6]
+scenario T-2: A document loads from concatenated chunks
+  given: A wrote x three times and B wrote x once, each write one block
+  when: a new client C pulls from 0 and loads x
+  then: C concatenates the four chunks, loads them, and holds every write
+  tags: [F-2.4, F-2.5]
 ```
 
 ```mdl
@@ -562,7 +578,7 @@ scenario T-5: Read-your-writes without the network
 rule server-authority-no-automerge-on-server: The server never reifies Automerge
   Flag any import of `@automerge/*`, or of a package that loads Automerge documents, in code that runs
   in the SpaceAuthority Durable Object or its worker, and any server code that decodes the bytes of a
-  block in the `automerge` namespace beyond its kind and `covers`.
+  block in the `automerge` namespace.
   scope: dir
   files:
     - src/**/*.ts
@@ -786,4 +802,43 @@ question Q-5: What does "Automerge sync as another type of feed sync" in [D-17] 
     - Hash sync: the `automerge` namespace gets its own feed-sync type that exchanges heads and missing change hashes per document instead of positions; the server reads only change headers (hash, deps), never document state.
     - Automerge protocol: the server runs Automerge's own sync protocol per document, which loads documents on the server and supersedes [D-5].
     - Same as now: the position-based feed sync of [F-4] already is this, applied to a new namespace.
+```
+
+```mdl
+decision D-19: Automerge does not get its own sync protocol. Each write is stored as a new Automerge chunk in a block of the object's feed, and the blocks sync as normal feed blocks. To load a document, the client loads all of its chunks, concatenates them and reifies the result.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  answers: Q-5
+  supersedes: D-9
+  affects: [F-2, F-4]
+```
+
+```mdl
+decision D-20: How compaction works on disk is not decided yet. The feed store gets an atomic operation that writes a block and deletes some earlier blocks.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-2.6]
+```
+
+```mdl
+decision D-21: Parity with echo-client covers queries, refs, relations, parent and child, deletion, types and the registry, reactivity, the text CRDT, feeds and queues, the serializer, and convergence keys, which come with the shared indexer. Branches, lenses, inline root objects and storage metrics are out.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-9]
+```
+
+```mdl
+decision D-22: The new sync replaces the record sync. Client sync moves into echo-sqlite under a `sync` subpath, and echo-sync-worker remains the Cloudflare part.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-23: Parity is shown by running the same end-to-end tests against echo-client and echo-sqlite. Fills in [D-21].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1]
+  why: A test run against only the new backend shows that it works, not that it behaves like echo-client.
 ```
