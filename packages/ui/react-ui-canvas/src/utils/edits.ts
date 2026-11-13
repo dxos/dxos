@@ -24,7 +24,7 @@ import {
 import { type LinkValues, type NodeValues, type RenderList2D } from '../model/index.ts';
 import { encloseIn, hullDescendants } from './hull.ts';
 import { layoutView } from './layout.ts';
-import { keyBefore, sortByZ } from './order.ts';
+import { keyBetween, sortByZ } from './order.ts';
 import { nodeBounds, resizeNode } from './shapes.ts';
 
 /** A change to the open scene; the same scene back when there is nothing to change. */
@@ -108,7 +108,7 @@ export const insertNode =
     const taken = Object.values(scene.nodes).filter((other) => !other.locked && !isViewNode(other) && holds(other));
     // Under everything, so a press on a node inside it reaches the node.
     const [lowest] = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
-    const below = lowest === undefined || node.z < lowest.z ? node.z : keyBefore(lowest.z);
+    const below = lowest === undefined || node.z < lowest.z ? node.z : (keyBetween(undefined, lowest.z) ?? node.z);
     return (
       encloseIn(
         scene,

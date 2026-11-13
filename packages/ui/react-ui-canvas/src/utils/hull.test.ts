@@ -272,23 +272,44 @@ describe('enclose', () => {
     ).toEqual(['b', 'c']);
   });
 
-  test('a stored key that cannot be split, in the hull enclosed in or under it, still gives the new hull its place', ({
-    expect,
-  }) => {
-    // A hull whose key ends in a zero, as a stored element's may, and a shape tied with it.
-    const outer: Node = { ...hull('h'), z: 'a0' };
-    const scene = sceneOf([outer, { ...cell('a', 0, 0, 'h'), z: 'a0' }, { ...cell('b', 1, 0, 'h'), z: 'b' }]);
-    const inside = enclose(scene, ['a', 'b'], 'inner', { lattice: spec });
+  test('where no key fits its place, the stack is renumbered with the hull under what it holds', ({ expect }) => {
+    /** The ids of a scene's nodes as they are painted, bottom first. */
+    const painted = (scene: RenderList2D | undefined) =>
+      Object.values(scene?.nodes ?? {})
+        .sort((left, right) => (left.z < right.z ? -1 : left.z > right.z ? 1 : left.id < right.id ? -1 : 1))
+        .map((node) => node.id);
+    // The holder's key is `a` and its first shape's `a0`: no key lies between them.
+    const outer: Node = { ...hull('h'), z: 'a' };
+    const tight = sceneOf([outer, { ...cell('a', 0, 0, 'h'), z: 'a0' }, { ...cell('b', 1, 0, 'h'), z: 'b' }]);
+    const inside = enclose(tight, ['a', 'b'], 'inner', { lattice: spec });
     expect(inside?.nodes.inner.parent).toBe('h');
-    expect((inside?.nodes.inner.z ?? '') > 'a0').toBe(true);
-    // The lowest key of the scene ends in a zero, and one has no key at all.
-    const flat = sceneOf([
+    expect(painted(inside)).toEqual(['h', 'inner', 'a', 'b']);
+    // The lowest key of the scene ends in a zero.
+    const zero = sceneOf([
       { ...cell('a', 0, 0), z: 'a0' },
       { ...cell('b', 1, 0), z: 'b' },
     ]);
-    expect((enclose(flat, ['a', 'b'], 'new', { lattice: spec })?.nodes.new.z ?? 'z') < 'a0').toBe(true);
+    expect(painted(enclose(zero, ['a', 'b'], 'new', { lattice: spec }))).toEqual(['new', 'a', 'b']);
+    // A shape with no key at all, and an id that sorts before the hull's: a tie would paint the hull over it.
     const unkeyed = sceneOf([{ ...cell('a', 0, 0), z: '' }, cell('b', 1, 0)]);
-    expect(enclose(unkeyed, ['a', 'b'], 'new', { lattice: spec })?.nodes.new).toBeDefined();
+    expect(painted(enclose(unkeyed, ['a', 'b'], 'new', { lattice: spec }))).toEqual(['new', 'a', 'b']);
+    // Where a key does fit, nothing else is rekeyed.
+    const plain = sceneOf([cell('a', 0, 0), cell('b', 1, 0)]);
+    const made = enclose(plain, ['a', 'b'], 'new', { lattice: spec });
+    expect([made?.nodes.a.z, made?.nodes.b.z]).toEqual([plain.nodes.a.z, plain.nodes.b.z]);
+  });
+
+  test('an empty hull inside a hull is inside its border on a lattice', ({ expect }) => {
+    // The inner hull holds nothing and stands on the tile two along from the outer hull's one shape.
+    const frame = cellBounds({ col: 2, row: 0, spanX: 1, spanY: 1 }, spec);
+    const inner: HullNode = {
+      ...hull('inner', 'box', 'outer'),
+      center: { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 },
+      size: { width: frame.width, height: frame.height },
+    };
+    const nodes = [hull('outer', 'box'), inner, cell('a', 0, 0, 'outer')];
+    const [outer] = nodes;
+    expect(isHullNode(outer) && [...hullTiles(nodes, outer, spec)].sort()).toEqual(['0,0', '1,0', '2,0']);
   });
 
   test('nothing is made of ids that are not nodes, or under an id that is taken', ({ expect }) => {

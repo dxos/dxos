@@ -23,7 +23,7 @@ import {
 
 import { type RenderList2D } from '../model/index.ts';
 import { type LatticeSpec, onLattice, toCell } from './lattice.ts';
-import { keyAfter, keyBefore, sortByZ, topZ } from './order.ts';
+import { initialKeys, keyBetween, sortByZ, topZ } from './order.ts';
 import { createNode, nodeBounds } from './shapes.ts';
 import { restackZ } from './view-tree.ts';
 
@@ -214,7 +214,11 @@ const bridge = (
  * through tiles no other node stands on where there is such a run.
  */
 export const hullTiles = (nodes: readonly Node[], hull: HullNode, spec: LatticeSpec): Set<string> => {
-  const members = hullMembers(nodes, hull.id).filter(onLattice);
+  // A hull inside it that holds nothing has no shapes to stand for it, so it counts by the tiles its own frame is on.
+  const empty = hullDescendants(nodes, hull.id).filter(
+    (node) => isHullNode(node) && hullMembers(nodes, node.id).length === 0,
+  );
+  const members = [...hullMembers(nodes, hull.id).filter(onLattice), ...empty];
   const inside = new Set(members.map((member) => member.id));
   const tiles = new Set(members.flatMap((member) => nodeTiles(member, spec)).map(tileKey));
   if (tiles.size === 0) {
@@ -575,13 +579,29 @@ export const encloseIn = (scene: RenderList2D, hull: HullNode, ids: readonly str
   const [parent] = parents.size === 1 ? [...parents] : [undefined];
   const holder = parent === undefined ? undefined : scene.nodes[parent];
   const stack = sortByZ([...Object.values(scene.nodes), ...Object.values(scene.links)]);
-  // Inside a hull it is drawn just over that hull, and so under everything else the hull holds.
-  const above = holder && stack[stack.findIndex((entry) => entry.id === holder.id) + 1];
-  const z = holder ? keyAfter(holder.z, above?.z) : keyBefore(stack[0]?.z);
+  // Inside a hull it is drawn just over that hull, and so under everything else the hull holds; in none, at the bottom.
+  const at = holder ? stack.findIndex((entry) => entry.id === holder.id) + 1 : 0;
+  const key = keyBetween(stack[at - 1]?.z, stack[at]?.z);
   const { parent: _parent, ...rest } = hull;
-  const placed: HullNode = { ...rest, z, ...(holder ? { parent: holder.id } : {}) };
+  const placed = (z: string): HullNode => ({ ...rest, z, ...(holder ? { parent: holder.id } : {}) });
   const inside = Object.fromEntries(members.map((member) => [member.id, { ...member, parent: hull.id }]));
-  return { ...scene, nodes: { ...scene.nodes, ...inside, [hull.id]: placed } };
+  const nodes = { ...scene.nodes, ...inside };
+  if (key !== undefined) {
+    return { ...scene, nodes: { ...nodes, [hull.id]: placed(key) } };
+  }
+  // No key fits there (a stored key that cannot be split): the stack is renumbered as it is painted, the hull in its
+  // place, so it is under what it holds whatever the keys were.
+  const order = [...stack.slice(0, at).map(({ id }) => id), hull.id, ...stack.slice(at).map(({ id }) => id)];
+  const keys = initialKeys(order.length);
+  const zOf = new Map(order.map((id, index) => [id, keys[index]]));
+  const rekeyed = <T extends { id: string; z: string }>(entry: T): T => ({ ...entry, z: zOf.get(entry.id) ?? entry.z });
+  return {
+    ...scene,
+    nodes: Object.fromEntries(
+      Object.values({ ...nodes, [hull.id]: placed(hull.z) }).map((node): [string, Node] => [node.id, rekeyed(node)]),
+    ),
+    links: Object.fromEntries(Object.values(scene.links).map((link) => [link.id, rekeyed(link)])),
+  };
 };
 
 /**
