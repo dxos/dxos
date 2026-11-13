@@ -1527,7 +1527,7 @@ page sage-models: Models
   covers:
     - The AI service, providers and model resolution
     - Local and hosted models, and EDGE's AI service
-    - What is sent to a model, and what telemetry records
+    - What is sent to a model, and that telemetry records each call
 ```
 ```mdl
 page sage-agents: Agents
@@ -5527,6 +5527,14 @@ decision D-277: The section picker and the docs home cards give each section one
   by: user:wittjosiah
   affects: [F-16.5, F-16.9, docs-home, sage-overview]
   why: Josiah asked for better PLEX, EDGE and SAGE lines, an EDGE line short enough not to wrap, access control named in HALO's, and each section pitched on its own [D-275].
+```
+
+```mdl
+decision D-278: SAGE Models says only that telemetry records each model call with its model, timings and token counts. It does not say when the record includes the prompt and the response.
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [sage-models]
+  why: Josiah said the page does not need that much detail.
 ```
 
 ## Appendix: Extension Definitions

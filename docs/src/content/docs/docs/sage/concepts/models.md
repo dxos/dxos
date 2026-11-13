@@ -40,6 +40,5 @@ from a fixed set of answers, and extraction models, which pull structured facts 
 
 - A call sends the model the chat, the agent's instructions and skills, and the content of every object the agent reads
   in that turn. A hosted model's provider receives all of it.
-- When telemetry is on, each model call is recorded with its model, timings and token counts. For spaces whose content
-  EDGE can already read, the record includes the prompt and the response.
+- When telemetry is on, each model call is recorded with its model, timings and token counts.
 - A model that a provider does not serve fails to resolve; the caller gets an error, not a different model.
