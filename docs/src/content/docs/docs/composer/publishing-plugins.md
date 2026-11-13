@@ -550,8 +550,8 @@ Things to know:
 - Create the object on the first change, not in an effect on first view: the query is empty until it has loaded,
   so an effect that creates when it finds nothing creates a duplicate on every visit.
 - A form is a schema; a `Schema.Literals` field renders as a select.
-- Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role draws
-  the world with `markers` on it, flat (`view: 'map'`) or as a globe the reader can toggle to. Give it the object
+- Render another plugin's surface by its role; the data is the surface's input. plugin-map's `World` role
+  (`MapSurface.World`, from `@dxos/plugin-map/MapSurface`) draws the world with `markers` on it, flat (`view: 'map'`) or as a globe the reader can toggle to. Give it the object
   as `subject`: the marker whose id is selected under that object's URI is highlighted, and the globe turns to it.
 - Select with `LayoutOperation.Select` (context id: the object's URI), and read the selection with
   `useSelection`, so the map and your own view agree on what is selected.
@@ -571,7 +571,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -587,7 +587,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { timezones } from '@dxos/react-ui-geo/data';
-import * as MapRole from '@dxos/plugin-map/MapRole';
+import * as MapSurface from '@dxos/plugin-map/MapSurface';
 
 // The type: one Clock per space, holding its clocks, each a timezone and where it is on the map.
 const Location = Schema.Struct({ lat: Schema.Number, lng: Schema.Number });
@@ -747,7 +747,8 @@ const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
           variant='ghost'
           icon='ph--plus--regular'
           iconOnly
-          size={8}
+          size='xl'
+          iconSize='xl'
           label='Add clock'
           onClick={() => setAdding(true)}
         />
@@ -758,7 +759,7 @@ const AddClock = ({ onAdd }: { onAdd: (timeZone: string) => void }) => {
 
 const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
   const now = useNow();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [clock] = useQuery(db, Filter.type(Clock));
   // `useQuery` re-renders when the set of objects changes; `useObject` is what re-renders on a field change.
   const [stored] = useObject(clock, 'clocks');
@@ -812,12 +813,12 @@ const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
     >
       <div style={{ minHeight: 0 }}>
         <Surface.Surface
-          type={MapRole.World}
+          type={MapSurface.World}
           data={{ markers, subject: clock, view: 'map' }}
           limit={1}
         />
       </div>
-      <ScrollArea.Root orientation='horizontal' thin>
+      <ScrollArea.Root orientation='horizontal' width='thin'>
         <ScrollArea.Viewport>
           <div style={{ display: 'flex', gap: 16, padding: 16 }}>
             {sorted.map(({ timezone }) => (
