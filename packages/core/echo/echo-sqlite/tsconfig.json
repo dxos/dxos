@@ -24,7 +24,13 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/sql-sqlite"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../protocols"

@@ -37,8 +37,8 @@ export class TestBuilder implements AsyncDisposable {
   /**
    * A peer with its own database file; `types` are registered on every database it opens.
    */
-  createPeer(options: { types?: readonly Type.AnyEntity[] } = {}): TestPeer {
-    const peer = new TestPeer(join(this.#dir, `peer-${this.#peers.length}.db`), options.types ?? []);
+  createPeer(options: { types?: readonly Type.AnyEntity[]; path?: string } = {}): TestPeer {
+    const peer = new TestPeer(options.path ?? join(this.#dir, `peer-${this.#peers.length}.db`), options.types ?? []);
     this.#peers.push(peer);
     return peer;
   }

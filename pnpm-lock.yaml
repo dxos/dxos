@@ -7071,6 +7071,12 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)

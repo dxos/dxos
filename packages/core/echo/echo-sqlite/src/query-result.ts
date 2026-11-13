@@ -9,6 +9,14 @@ import { type Entity, type QueryResult } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 /**
+ * One result of a query: an entity, keyed by its id, or a record an aggregate built, keyed by its group.
+ */
+export type ResultItem = { readonly key: string; readonly value: Entity.Unknown | Record<string, unknown> };
+
+/** An entity as a result item. */
+export const asItem = (entity: Entity.Unknown): ResultItem => ({ key: entity.id, value: entity });
+
+/**
  * A query result backed by an asynchronous executor (a compiled SQL statement).
  *
  * `run()` executes; the synchronous accessors return the most recent execution and schedule one when
@@ -17,12 +25,12 @@ import { log } from '@dxos/log';
  * changes.
  */
 export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
-  readonly #execute: () => Promise<Entity.Unknown[]>;
+  readonly #execute: () => Promise<readonly ResultItem[]>;
   readonly #invalidated: ReadOnlyEvent<ReadonlySet<string>>;
   readonly #affectedBy: (typenames: ReadonlySet<string>) => boolean;
   readonly #source: QueryResult.Source;
   readonly #listeners = new Set<(query: QueryResult.QueryResult<T>) => void>();
-  #results: Entity.Unknown[] | undefined;
+  #results: readonly ResultItem[] | undefined;
   /**
    * The derived arrays, held until the next execution replaces `#results`.
    *
@@ -42,7 +50,7 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
   #answers = 0;
 
   constructor(options: {
-    execute: () => Promise<Entity.Unknown[]>;
+    execute: () => Promise<readonly ResultItem[]>;
     /** Fires with the type DXNs of each committed write batch. */
     invalidated: ReadOnlyEvent<ReadonlySet<string>>;
     /** Whether a batch touching these types could change the result; defaults to always. */
@@ -104,13 +112,23 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
       // Stable, so a subscriber reading before the first execution does not re-render on every call.
       return this.#empty;
     }
-    this.#entries ??= this.#results.map((entity) => ({
-      id: entity.id,
-      // The query AST constrains the result type; the executor only knows `Entity.Unknown`.
-      result: entity as T,
+    this.#entries ??= this.#results.map((item) => ({
+      id: item.key,
+      // The query AST constrains the result type; the executor only knows the item's value.
+      result: item.value as T,
       resolution: { source: this.#source, time: 0 },
     }));
     return this.#entries;
+  }
+
+  /**
+   * Resolves once no execution is running or scheduled, so a subscriber has seen every commit made
+   * before the call.
+   */
+  async settled(): Promise<void> {
+    while (this.#pending) {
+      await this.#pending;
+    }
   }
 
   async first(): Promise<T> {
@@ -168,7 +186,7 @@ export class LiveQueryResult<T> implements QueryResult.QueryResult<T> {
         this.#entries = undefined;
         this.#flat = undefined;
         this.#answers++;
-        if (previous.length !== next.length || next.some((item, index) => item !== previous[index])) {
+        if (previous.length !== next.length || next.some((item, index) => item.value !== previous[index].value)) {
           this.#listeners.forEach((listener) => listener(this));
         }
       } while (this.#stale);

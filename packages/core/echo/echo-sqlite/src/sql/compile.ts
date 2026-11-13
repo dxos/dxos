@@ -2,19 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EscapedPropPath, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import { EscapedPropPath, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
 
 import { UnsupportedQueryError } from '../errors.ts';
 import { type Fragment, join, jsonPath, raw, sql } from './fragment.ts';
 
 /**
- * A compiled query: one read-only statement returning `(id, body)` rows in result order.
+ * A compiled query: one read-only statement returning `(id, body, version)` rows in result order, and
+ * for an aggregate also each row's group (`groupKey`, `groupOrd`, `aggregates`).
  */
 export type CompiledQuery = {
   readonly sql: string;
   readonly params: readonly unknown[];
+  /** Present when the query aggregates: how to shape its rows into records. */
+  readonly grouped?: GroupedShape;
 };
+
+/**
+ * How an aggregate's rows become records: one record per `groupOrd`, holding the `aggregates` JSON,
+ * the group key fields, and under each `items` name the group's member rows in order. A `collapsed`
+ * aggregate has no `items`, so its one row per group carries no member to hydrate.
+ */
+export type GroupedShape = {
+  readonly collapsed: boolean;
+  readonly items: readonly string[];
+};
+
+/** A grouped CTE: its shape, and the column of each scalar aggregate, by name. */
+type Grouped = GroupedShape & { readonly columns: ReadonlyMap<string, string> };
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 type DeletedMode = NonNullable<QueryAST.QueryOptions['deleted']>;
 
@@ -37,15 +56,32 @@ const MAX_DEPTH = 10;
 export const compileQuery = (query: QueryAST.Query, options: { spaceId: SpaceId }): CompiledQuery => {
   const compiler = new Compiler(options.spaceId);
   const root = compiler.node(query, 'exclude');
+  const grouped = compiler.grouped.get(root);
+  const aggregates =
+    grouped && grouped.columns.size > 0
+      ? sql`json_object(${join(
+          [...grouped.columns].map(([name, column]) => sql`${name}, w.${raw(column)}`),
+          ', ',
+        )})`
+      : raw(`'{}'`);
+  const groupColumns = grouped
+    ? sql`, w.groupKey AS groupKey, w.groupOrd AS groupOrd, ${aggregates} AS aggregates`
+    : raw('');
   const statement = sql`WITH RECURSIVE ${join(compiler.ctes, ',\n')}
-SELECT e.objectId AS id, ${body('e')} AS body, ${versionOf('e')} AS version FROM ${raw(root)} w
+SELECT e.objectId AS id, ${body('e')} AS body, ${versionOf('e')} AS version${groupColumns} FROM ${raw(root)} w
 CROSS JOIN objectMeta e ON ${row('e', options.spaceId, raw('w.id'))}
-ORDER BY w.ord, w.id`;
-  return { sql: statement.sql, params: statement.params };
+ORDER BY ${raw(grouped ? 'w.groupOrd, w.ord, w.id' : 'w.ord, w.id')}`;
+  return {
+    sql: statement.sql,
+    params: statement.params,
+    grouped: grouped && { collapsed: grouped.collapsed, items: grouped.items },
+  };
 };
 
 class Compiler {
   readonly ctes: Fragment[] = [];
+  /** CTEs an aggregate produced; only `order`, `options` and `from` may wrap one. */
+  readonly grouped = new Map<string, Grouped>();
   /** CTEs whose `ord` is constant, so id alone orders them and an index can supply that order. */
   readonly #unordered = new Set<string>();
   #counter = 0;
@@ -162,47 +198,139 @@ WHERE ${this.#visible('c', deleted)} GROUP BY c.objectId`);
 
       case 'order': {
         const inner = this.node(query.query, deleted);
-        const terms = query.order.map((order) => {
-          const direction = raw(order.direction === 'desc' ? 'DESC' : 'ASC');
-          switch (order.kind) {
-            case 'natural':
-              return sql`w.id ${direction}`;
-            case 'rank':
-              return sql`w.rank ${direction}`;
-            case 'timestamp':
-              return sql`e.${raw(order.field === 'createdAt' ? 'createdAt' : 'updatedAt')} ${direction}`;
-            case 'property': {
-              const path = jsonPath(order.property.split('.'));
-              return sql`CASE WHEN json_type(${body('e')}, ${path}) IN ('integer', 'real', 'text')
-  THEN json_extract(${body('e')}, ${path}) END ${direction} NULLS LAST`;
-            }
-            case 'annotation': {
-              const path = jsonPath(['@meta', 'annotations', order.key, ...(order.path ?? [])]);
-              // Booleans order as the 0/1 `json_extract` returns, as the host executors sort them.
-              return sql`CASE WHEN json_type(${body('e')}, ${path}) IN ('integer', 'real', 'text', 'true', 'false')
-  THEN json_extract(${body('e')}, ${path}) END ${direction} NULLS LAST`;
-            }
-          }
-        });
+        const grouped = this.grouped.get(inner);
+        if (grouped) {
+          return this.#orderGroups(inner, grouped, query.order);
+        }
+        const terms = query.order.map((order) => orderTerm(order, 'e'));
         return this.#cte(sql`SELECT w.id, w.rank, ROW_NUMBER() OVER (ORDER BY ${join([...terms, raw('w.id')], ', ')}) AS ord
 FROM ${raw(inner)} w CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w.id'))}`);
       }
 
       case 'limit': {
         const inner = this.node(query.query, deleted);
+        const grouped = this.grouped.get(inner);
+        if (grouped) {
+          return this.#pageGroups(inner, grouped, sql`groupOrd <= ${query.limit}`);
+        }
         return this.#cte(sql`SELECT id, rank, ROW_NUMBER() OVER (ORDER BY ord, id) AS ord FROM
 (SELECT id, rank, ord FROM ${raw(inner)} ORDER BY ${this.#orderOf(inner)} LIMIT ${query.limit})`);
       }
 
       case 'skip': {
         const inner = this.node(query.query, deleted);
+        const grouped = this.grouped.get(inner);
+        if (grouped) {
+          return this.#pageGroups(inner, grouped, sql`groupOrd > ${query.skip}`);
+        }
         return this.#cte(sql`SELECT id, rank, ROW_NUMBER() OVER (ORDER BY ord, id) AS ord FROM
 (SELECT id, rank, ord FROM ${raw(inner)} ORDER BY ${this.#orderOf(inner)} LIMIT -1 OFFSET ${query.skip})`);
       }
 
       case 'aggregate':
-        throw new UnsupportedQueryError('aggregate');
+        return this.#aggregate(query, deleted);
     }
+  }
+
+  /**
+   * Groups the input in SQL: each member gets its group key and every scalar aggregate as a window
+   * over its group; groups take the order of their first member. With no `items` aggregate, one row
+   * stands for each group.
+   */
+  #aggregate(query: QueryAST.QueryAggregateClause, deleted: DeletedMode): string {
+    const inner = this.node(query.query, deleted);
+    const keys = query.aggregates.filter(QueryAST.isGroupKeyAggregate);
+    const scalars = query.aggregates.filter((aggregate) => aggregate.kind !== 'items');
+    const items = query.aggregates.flatMap((aggregate) => (aggregate.kind === 'items' ? [aggregate] : []));
+    const orders = new Set(items.flatMap((item) => (item.order?.length ? [JSON.stringify(item.order)] : [])));
+    if (orders.size > 1) {
+      throw new UnsupportedQueryError('several `items` aggregates with different orders');
+    }
+    const itemsOrder = items.find((item) => item.order?.length)?.order;
+    const limit = items.find((item) => item.limit !== undefined)?.limit;
+
+    const keyJson =
+      keys.length === 0
+        ? raw(`'{}'`)
+        : sql`json_object(${join(
+            keys.map((key) => sql`${key.name}, ${jsonKey(key, 'm')}`),
+            ', ',
+          )})`;
+    // `seq` is the input order with id breaking ties, since an unordered select has one `ord` for all.
+    const keyed =
+      this.#cte(sql`SELECT w.id, w.rank, ROW_NUMBER() OVER (ORDER BY w.ord, w.id) AS seq, ${keyJson} AS groupKey
+FROM ${raw(inner)} w CROSS JOIN objectMeta m ON ${row('m', this._spaceId, raw('w.id'))}`);
+
+    const columns = new Map<string, string>();
+    const windows = scalars.map((aggregate, index) => {
+      const column = `agg${index}`;
+      columns.set(aggregate.name, column);
+      const over = raw('OVER (PARTITION BY k.groupKey)');
+      switch (aggregate.kind) {
+        case 'group':
+        case 'type':
+        case 'timestamp':
+        case 'time':
+          return sql`${scalarKey(aggregate, 'm')} AS ${raw(column)}`;
+        case 'count':
+          return sql`COUNT(*) ${over} AS ${raw(column)}`;
+        case 'sum':
+          return sql`TOTAL(${numeric(aggregate.property, 'm')}) ${over} AS ${raw(column)}`;
+        case 'max':
+          return sql`MAX(${coerced(aggregate.property, 'm')}) ${over} AS ${raw(column)}`;
+        case 'min':
+          return sql`MIN(${coerced(aggregate.property, 'm')}) ${over} AS ${raw(column)}`;
+      }
+    });
+    const memberOrder = itemsOrder
+      ? join([...itemsOrder.map((order) => orderTerm(order, 'm')), raw('k.seq')], ', ')
+      : raw('k.seq');
+    const stamped = this.#cte(sql`SELECT k.id, k.rank, k.seq, k.groupKey,
+MIN(k.seq) OVER (PARTITION BY k.groupKey) AS firstOrd,
+ROW_NUMBER() OVER (PARTITION BY k.groupKey ORDER BY ${memberOrder}) AS memberRank${windows.length > 0 ? sql`, ${join(windows, ', ')}` : raw('')}
+FROM ${raw(keyed)} k CROSS JOIN objectMeta m ON ${row('m', this._spaceId, raw('k.id'))}`);
+
+    const collapsed = items.length === 0;
+    const members = collapsed
+      ? raw('WHERE memberRank = 1')
+      : limit !== undefined
+        ? sql`WHERE memberRank <= ${limit}`
+        : raw('');
+    const aggregateColumns = [...columns.values()].map((column) => raw(column));
+    const name = this.#cte(sql`SELECT id, rank, groupKey,
+DENSE_RANK() OVER (ORDER BY firstOrd) AS groupOrd, memberRank AS ord${aggregateColumns.length > 0 ? sql`, ${join(aggregateColumns, ', ')}` : raw('')}
+FROM ${raw(stamped)} ${members}`);
+    this.grouped.set(name, { collapsed, items: items.map((item) => item.name), columns });
+    return name;
+  }
+
+  /** Keeps the groups `condition` selects, numbered again from one so a following page counts from them. */
+  #pageGroups(inner: string, grouped: Grouped, condition: Fragment): string {
+    const aggregateColumns = [...grouped.columns.values()].map((column) => raw(column));
+    const name = this.#cte(sql`SELECT id, rank, groupKey, ord,
+DENSE_RANK() OVER (ORDER BY groupOrd) AS groupOrd${aggregateColumns.length > 0 ? sql`, ${join(aggregateColumns, ', ')}` : raw('')}
+FROM ${raw(inner)} WHERE ${condition}`);
+    this.grouped.set(name, grouped);
+    return name;
+  }
+
+  /** Reorders whole groups by their aggregate fields; members keep their order inside a group. */
+  #orderGroups(inner: string, grouped: Grouped, orders: readonly QueryAST.Order[]): string {
+    const terms = orders.map((order) => {
+      const column = order.kind === 'property' ? grouped.columns.get(order.property) : undefined;
+      if (!column) {
+        throw new UnsupportedQueryError(
+          `ordering groups by ${order.kind === 'property' ? order.property : order.kind}`,
+        );
+      }
+      return sql`w.${raw(column)} ${raw(order.direction === 'desc' ? 'DESC' : 'ASC')} NULLS LAST`;
+    });
+    const aggregateColumns = [...grouped.columns.values()].map((column) => raw(`w.${column}`));
+    const name = this.#cte(sql`SELECT w.id, w.rank, w.groupKey, w.ord,
+DENSE_RANK() OVER (ORDER BY ${join([...terms, raw('w.groupOrd')], ', ')}) AS groupOrd${aggregateColumns.length > 0 ? sql`, ${join(aggregateColumns, ', ')}` : raw('')}
+FROM ${raw(inner)} w`);
+    this.grouped.set(name, grouped);
+    return name;
   }
 
   /** Sort key for paging over a CTE: id alone when `ord` is constant, so no sort step is needed. */
@@ -512,6 +640,92 @@ const versionOf = (alias: string): Fragment =>
 /** A dotted property path as the reverse-reference index stores it: escaped, without array indexes. */
 const propPath = (property: string): string =>
   EscapedPropPath.escape(property.split('.').filter((segment) => !/^[0-9]+$/.test(segment)));
+
+/** One `ORDER BY` term over the row aliased `alias` (and the working-set row `w`). */
+const orderTerm = (order: QueryAST.Order, alias: string): Fragment => {
+  const direction = raw(order.direction === 'desc' ? 'DESC' : 'ASC');
+  switch (order.kind) {
+    case 'natural':
+      return sql`${raw(alias)}.objectId ${direction}`;
+    case 'rank':
+      return sql`w.rank ${direction}`;
+    case 'timestamp':
+      return sql`${raw(alias)}.${raw(order.field === 'createdAt' ? 'createdAt' : 'updatedAt')} ${direction}`;
+    case 'property': {
+      const path = jsonPath(order.property.split('.'));
+      return sql`CASE WHEN json_type(${body(alias)}, ${path}) IN ('integer', 'real', 'text')
+  THEN json_extract(${body(alias)}, ${path}) END ${direction} NULLS LAST`;
+    }
+    case 'annotation': {
+      const path = jsonPath(['@meta', 'annotations', order.key, ...(order.path ?? [])]);
+      // Booleans order as the 0/1 `json_extract` returns, as the host executors sort them.
+      return sql`CASE WHEN json_type(${body(alias)}, ${path}) IN ('integer', 'real', 'text', 'true', 'false')
+  THEN json_extract(${body(alias)}, ${path}) END ${direction} NULLS LAST`;
+    }
+  }
+};
+
+/** A property of the row aliased `alias` in the scalar domain, NULL for anything else; `id` is the entity id. */
+const coerced = (property: string, alias: string): Fragment => {
+  if (property === 'id') {
+    return raw(`${alias}.objectId`);
+  }
+  const path = jsonPath([property]);
+  return sql`CASE WHEN json_type(${body(alias)}, ${path}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(${body(alias)}, ${path}) END`;
+};
+
+/** A numeric property of the row aliased `alias`, NULL for anything else. */
+const numeric = (property: string, alias: string): Fragment => {
+  const path = jsonPath([property]);
+  return sql`CASE WHEN json_type(${body(alias)}, ${path}) IN ('integer', 'real') THEN json_extract(${body(alias)}, ${path}) END`;
+};
+
+/** Floors a millisecond value to a multiple of `size`, below zero too. */
+const floorTo = (value: Fragment, size: number): Fragment => {
+  // `CAST` truncates toward zero; stepping back one below a negative fraction makes it a floor.
+  const floored = sql`(CAST(${value} AS INTEGER) - (${value} < CAST(${value} AS INTEGER)))`;
+  return sql`(${floored} - ((${floored} % ${size}) + ${size}) % ${size})`;
+};
+
+/** A group key component as a scalar, from the row aliased `alias`. */
+const scalarKey = (
+  aggregate: Extract<QueryAST.GroupAggregate, { kind: 'group' | 'type' | 'timestamp' | 'time' }>,
+  alias: string,
+): Fragment => {
+  switch (aggregate.kind) {
+    case 'group': {
+      const chain = aggregate.properties.map((property) => coerced(property, alias));
+      return chain.length === 1 ? chain[0] : sql`COALESCE(${join(chain, ', ')})`;
+    }
+    case 'type':
+      return sql`CASE WHEN ${raw(alias)}.typeDXN = 'type' THEN NULL ELSE ${raw(alias)}.typeDXN END`;
+    case 'timestamp':
+      return floorTo(
+        raw(`${alias}.${aggregate.field === 'updatedAt' ? 'updatedAt' : 'createdAt'}`),
+        aggregate.unit === 'hour' ? HOUR_MS : DAY_MS,
+      );
+    case 'time':
+      return floorTo(numeric(aggregate.property, alias), aggregate.unit === 'hour' ? HOUR_MS : DAY_MS);
+  }
+};
+
+/** A group key component as JSON, so a boolean key reads back as a boolean rather than 0/1. */
+const jsonKey = (
+  aggregate: Extract<QueryAST.GroupAggregate, { kind: 'group' | 'type' | 'timestamp' | 'time' }>,
+  alias: string,
+): Fragment => {
+  if (aggregate.kind !== 'group') {
+    return scalarKey(aggregate, alias);
+  }
+  const branches = aggregate.properties.map((property) => {
+    if (property === 'id') {
+      return raw(`WHEN ${alias}.objectId IS NOT NULL THEN ${alias}.objectId`);
+    }
+    const path = jsonPath([property]);
+    return sql`WHEN json_type(${body(alias)}, ${path}) IN ('true', 'false') THEN json(json_type(${body(alias)}, ${path})) WHEN json_type(${body(alias)}, ${path}) IN ('text', 'integer', 'real') THEN json_extract(${body(alias)}, ${path})`;
+  });
+  return sql`CASE ${join(branches, ' ')} ELSE NULL END`;
+};
 
 /** `===` against a JS operand, with an encoded ref compared by URI. */
 const strictEquals = (body: Fragment, keys: readonly string[], operand: unknown): Fragment => {

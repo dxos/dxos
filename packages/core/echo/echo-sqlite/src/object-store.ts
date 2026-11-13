@@ -28,9 +28,18 @@ export type StoredEntity = {
   readonly body: Record<string, unknown>;
   /** Heads of the document the body was read at. */
   readonly heads?: readonly string[];
+  /** The aggregate group of the row, for a grouped query. */
+  readonly group?: { readonly key: string; readonly ord: number; readonly aggregates: Record<string, unknown> };
 };
 
-type BodyRow = { id: string; body: string; version: string | null };
+type BodyRow = {
+  id: string;
+  body: string;
+  version: string | null;
+  groupKey?: string;
+  groupOrd?: number;
+  aggregates?: string;
+};
 
 type Store<A> = Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>;
 
@@ -280,4 +289,8 @@ const parseRow = (row: BodyRow): StoredEntity => ({
   id: row.id,
   body: JSON.parse(row.body),
   heads: row.version ? JSON.parse(row.version) : undefined,
+  group:
+    row.groupKey !== undefined && row.groupOrd !== undefined
+      ? { key: row.groupKey, ord: Number(row.groupOrd), aggregates: JSON.parse(row.aggregates ?? '{}') }
+      : undefined,
 });

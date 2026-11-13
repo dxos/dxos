@@ -47,10 +47,10 @@ import { log } from '@dxos/log';
 import { UnsupportedOperationError } from './errors.ts';
 import { DatabaseRefResolver, type EntitySource, SqliteHypergraph } from './graph.ts';
 import { ObjectStore, type StoredEntity } from './object-store.ts';
-import { LiveQueryResult } from './query-result.ts';
+import { LiveQueryResult, type ResultItem, asItem } from './query-result.ts';
 import { localEntityId, toRecord } from './record.ts';
 import { SimpleRegistry, matchRegistry } from './registry.ts';
-import { type CompiledQuery, compileQuery } from './sql/compile.ts';
+import { type CompiledQuery, type GroupedShape, compileQuery } from './sql/compile.ts';
 
 export type OpenOptions = {
   /**
@@ -124,6 +124,14 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   #writes: Promise<void> = Promise.resolve();
   #writeError: unknown = undefined;
   #closed = false;
+
+  /** One live result per distinct query, while anything holds it, so its atom and subscription are shared. */
+  readonly #queries = new Map<string, WeakRef<LiveQueryResult<unknown>>>();
+  readonly #queryFinalizer = new FinalizationRegistry<string>((key) => {
+    if (this.#queries.get(key)?.deref() === undefined) {
+      this.#queries.delete(key);
+    }
+  });
 
   /** Fires with the type DXNs of each committed write batch; subscribed queries re-execute on it. */
   readonly #committed = new Event<ReadonlySet<string>>();
@@ -331,13 +339,18 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   query: Database.QueryFn = ((queryOrFilter: Query.Any | Filter.Any) => {
     const ast = toAst(queryOrFilter);
+    const key = JSON.stringify(ast);
+    const cached = this.#queries.get(key)?.deref();
+    if (cached) {
+      return cached;
+    }
     const scopes = ast.type === 'from' && ast.from._tag === 'scope' ? ast.from.scopes : undefined;
     const fromRegistry = scopes?.some((scope) => scope._tag === 'registry' && scope.location === 'local') ?? false;
     const fromSpace = scopes === undefined || scopes.some((scope) => scope._tag !== 'registry');
     // Compiled up front: compilation is pure, and an unsupported clause should fail at the call site.
     const compiled = fromSpace ? compileQuery(ast, { spaceId: this.#spaceId }) : undefined;
     const typenames = queryTypenames(ast);
-    return new LiveQueryResult({
+    const result = new LiveQueryResult<unknown>({
       source: 'local',
       invalidated: this.#committed,
       affectedBy: (written) =>
@@ -345,13 +358,37 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       execute: async () => {
         const stored = compiled ? await this.#execute(compiled) : [];
         const registered = fromRegistry && ast.type === 'from' ? matchRegistry(ast.query, this.#registry.list()) : [];
-        return [...stored, ...registered.filter((entity) => !stored.includes(entity))];
+        const keys = new Set(stored.map((item) => item.key));
+        return [...stored, ...registered.filter((entity) => !keys.has(entity.id)).map(asItem)];
       },
     });
+    this.#queries.set(key, new WeakRef(result));
+    this.#queryFinalizer.register(result, key);
+    return result;
     // The overloaded `QueryFn` cannot be satisfied by one generic implementation without a cast.
   }) as Database.QueryFn;
 
-  async flush(_opts?: Database.FlushOptions): Promise<void> {
+  /**
+   * Indexes every block not indexed yet, including blocks sync pulled, and makes the results visible
+   * to queries. A flush already indexes local writes.
+   */
+  async updateIndexes(): Promise<void> {
+    await this.flush();
+    await this.applyRemote();
+  }
+
+  async flush(opts?: Database.FlushOptions): Promise<void> {
+    await this.#flushWrites();
+    if (opts?.updates) {
+      // A commit re-executes subscribed queries asynchronously; `updates` waits until they answered.
+      await Promise.resolve();
+      for (const ref of this.#queries.values()) {
+        await ref.deref()?.settled();
+      }
+    }
+  }
+
+  async #flushWrites(): Promise<void> {
     // A failed batch is requeued without rescheduling, so flushing is what retries it.
     this.#writeError = undefined;
     if (this.#dirty.size > 0 || this.#purged.size > 0) {
@@ -606,12 +643,47 @@ export class SqliteDatabase implements Database.Database, EntitySource {
    * Runs a compiled statement after committing pending writes (read-your-writes), and hydrates only
    * the rows it returns.
    */
-  async #execute(compiled: CompiledQuery): Promise<Entity.Unknown[]> {
+  async #execute(compiled: CompiledQuery): Promise<ResultItem[]> {
     await this.flush();
     this.#counters.queries++;
     const rows = await this.#run(this.#store.query(compiled));
+    if (compiled.grouped) {
+      return this.#records(rows, compiled.grouped);
+    }
     const entities = await Promise.all(rows.map((row) => this.#hydrate(row)));
-    return entities.filter((entity): entity is Entity.Unknown => entity !== undefined);
+    return entities.filter((entity): entity is Entity.Unknown => entity !== undefined).map(asItem);
+  }
+
+  /**
+   * Shapes an aggregate's rows, already grouped and ordered in SQL, into one record per group: its
+   * aggregate values, its key fields, and its members under each `items` name.
+   */
+  async #records(rows: readonly StoredEntity[], shape: GroupedShape): Promise<ResultItem[]> {
+    const records = new Map<number, { key: string; record: Record<string, unknown>; members: Entity.Unknown[] }>();
+    for (const row of rows) {
+      const group = row.group;
+      if (!group) {
+        continue;
+      }
+      let entry = records.get(group.ord);
+      if (!entry) {
+        // Key fields come from the JSON key, where a boolean key stays a boolean.
+        entry = { key: group.key, record: { ...group.aggregates, ...JSON.parse(group.key) }, members: [] };
+        records.set(group.ord, entry);
+      }
+      if (!shape.collapsed) {
+        const member = await this.#hydrate(row);
+        if (member) {
+          entry.members.push(member);
+        }
+      }
+    }
+    return [...records.values()].map(({ key, record, members }) => {
+      for (const name of shape.items) {
+        record[name] = members;
+      }
+      return { key, value: record };
+    });
   }
 
   async #registerTypes(rows: readonly StoredEntity[]): Promise<void> {
