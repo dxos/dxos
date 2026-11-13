@@ -284,6 +284,11 @@ feat F-2: Local writes are synchronous
   req F-2.4:
     when: a query has no order of its own
     then: entries appear in natural order (by id), wherever each object is held
+
+  req F-2.5:
+    when: a database is told that another client wrote objects the index may not hold yet (`noteUnindexedWrites`)
+    then: they count among its unindexed writes until it closes; a flush, which waits for the index to take this
+          client's writes, does not clear them
 ```
 
 ```mdl
@@ -421,6 +426,11 @@ feat F-9: Local ordering and windows
   req F-9.3:
     when: any other window is merged
     then: local evidence can only drop entries from it, never re-page it
+
+  req F-9.4:
+    when: a window with a limit, no skip and no order of its own gets a remote answer shorter than the limit
+    then: loaded local matches with an unindexed write are admitted and the result is cut to the limit; a full
+          answer admits none
 ```
 
 ```mdl
@@ -730,4 +740,28 @@ decision D-17: Every revalidation field on the wire is optional. An old host or 
   for: user:dmaretskyi
   affects: [QueryService]
   why: The host, EDGE and clients deploy separately; optional fields keep every pairing working without a protocol version.
+```
+
+```mdl
+decision D-18: A database takes the unindexed writes of another client, and keeps them through a flush. Fills in [D-4].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.5]
+  why: |
+    EDGE runs consecutive operations of one caller as separate clients, and edge's working set hands each one the
+    objects the ones before it wrote (edge `org.dxos.edge.working-set`). A flush that waits for indexing clears only
+    this client's writes: it cannot tell when the index takes another client's.
+```
+
+```mdl
+decision D-19: A window with no order of its own admits local unindexed matches when the remote answer is short of its limit, and none when it is full. Fills in [D-4].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-9.4]
+  why: |
+    A short answer is every match the index holds, so adding the matches it has not seen yet re-pages nothing. A
+    full answer has no boundary to admit against without an order. plugin-space's `queryObjects` asks for one past
+    its limit with no order, so without this a write made by the operation before it never entered its result.
 ```

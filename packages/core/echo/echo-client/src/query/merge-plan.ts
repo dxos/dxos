@@ -32,7 +32,10 @@ export type MergePlan = {
     filter: QueryAST.Filter;
     deleted: 'exclude' | 'include' | 'only';
   };
-  /** Present when local matches may enter a remote window: a property order with a limit and no skip. */
+  /**
+   * Present when local matches may enter a remote window: a limit and no skip, with a property order or none. With no
+   * order they enter only a short window, which holds every match, since there is no place to page them into.
+   */
   window?: {
     orders: readonly QueryAST.Order[];
     limit: number;
@@ -82,7 +85,6 @@ export const createMergePlan = (query: QueryAST.Query): MergePlan => {
     revalidate &&
     flat?.limit !== undefined &&
     flat.skip === undefined &&
-    flat.orders.length > 0 &&
     flat.orders.every((order) => order.kind === 'property')
       ? { orders: flat.orders, limit: flat.limit }
       : undefined;

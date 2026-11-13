@@ -6,13 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 import { describe, onTestFinished, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FunctionProtocol, makeInProcessClient } from '@dxos/protocols';
@@ -455,7 +456,105 @@ describe('object references in the input', () => {
   });
 });
 
-const openPeer = async () => {
+describe('working set', () => {
+  const Note = Type.makeObject(DXN.make('com.example.type.note', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+
+  const CreatesNote = Operation.make({
+    meta: { key: DXN.make('com.example.operation.createsNote'), name: 'Creates Note' },
+    services: [Database.Service],
+    input: Schema.Struct({ id: Schema.String, title: Schema.String }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ id, title }) {
+        yield* Database.add(Obj.make(Note, { id, title }));
+      }),
+    ),
+  );
+
+  const ListsNotes = Operation.make({
+    meta: { key: DXN.make('com.example.operation.listsNotes'), name: 'Lists Notes' },
+    services: [Database.Service],
+    input: Schema.Struct({}),
+    output: Schema.Struct({ titles: Schema.Array(Schema.String) }),
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* () {
+        // The shape plugin-space's `queryObjects` uses: a flush, a type filter as a union, and a window.
+        yield* Database.flush();
+        const notes = yield* Database.query(Query.select(Filter.or(Filter.type(Note))).limit(11)).run;
+        return { titles: notes.map((note) => note.title).sort() };
+      }),
+    ),
+  );
+
+  /** A caller's working set kept in memory, as an EDGE owner keeps it in its storage. */
+  const makeWorkingSet = () => {
+    let held: EdgeFunctionEnv.WorkingSet = { rows: [], unindexed: [] };
+    const service: EdgeFunctionEnv.WorkingSetService = {
+      get: async () => held,
+      put: async ({ rows, unindexed }) => {
+        held = { rows, unindexed: [...new Set([...held.unindexed, ...unindexed])] };
+      },
+    };
+    return { service, held: () => held };
+  };
+
+  test('an invocation queries what the invocation before it created, while the index does not hold it', async ({
+    expect,
+  }) => {
+    const { peer, services } = await openPeer({ hideFromIndex: (id) => id !== undefined });
+    const db = await peer.createDatabase();
+    const workingSet = makeWorkingSet();
+    const context = (workingSetService?: EdgeFunctionEnv.WorkingSetService) => ({
+      services: { ...services, workingSetService },
+      spaceId: db.spaceId,
+      spaceKey: db.spaceKey.toHex(),
+      spaceRootUrl: db.rootUrl,
+    });
+    const id = EntityId.random();
+
+    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
+      data: { id, title: 'fresh' },
+      context: context(workingSet.service),
+    });
+    expect(workingSet.held().unindexed).toContain(id);
+
+    const listed = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({
+      data: {},
+      context: context(workingSet.service),
+    });
+    expect(listed).toEqual({ titles: ['fresh'] });
+
+    // Without the working set the same query reads only the index, which hides every object here.
+    const unseeded = await wrapFunctionHandler(ListsNotes, { types: [Note] }).handler({ data: {}, context: context() });
+    expect(unseeded).toEqual({ titles: [] });
+  });
+
+  test('a failing working set leaves the invocation as it is without one', async ({ expect }) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    const failing: EdgeFunctionEnv.WorkingSetService = {
+      get: () => Promise.reject(new Error('unavailable')),
+      put: () => Promise.reject(new Error('unavailable')),
+    };
+    const id = EntityId.random();
+    await wrapFunctionHandler(CreatesNote, { types: [Note] }).handler({
+      data: { id, title: 'kept' },
+      context: {
+        services: { ...services, workingSetService: failing },
+        spaceId: db.spaceId,
+        spaceKey: db.spaceKey.toHex(),
+        spaceRootUrl: db.rootUrl,
+      },
+    });
+    const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
+    expect((await reopened.query(Filter.id(id)).run()).map((note) => note.id)).toEqual([id]);
+  });
+});
+
+/** `hideFromIndex` drops matching objects from every index answer, standing in for an index that has not caught up. */
+const openPeer = async ({ hideFromIndex }: { hideFromIndex?: (id: string | undefined) => boolean } = {}) => {
   const builder = new EchoTestBuilder();
   await builder.open();
   onTestFinished(async () => {
@@ -467,9 +566,24 @@ const openPeer = async () => {
   const services: FunctionProtocol.Context['services'] = await EffectEx.runPromise(
     Effect.all({
       dataService: makeInProcessClient(DataService.Rpcs, peer.host.dataService),
-      queryService: makeInProcessClient(QueryService.Rpcs, peer.host.queryService),
+      queryService: makeInProcessClient(
+        QueryService.Rpcs,
+        hideFromIndex ? hidingQueryService(peer.host.queryService, hideFromIndex) : peer.host.queryService,
+      ),
       queueService: makeInProcessClient(FeedService.Rpcs, peer.host.feedService),
     }).pipe(Effect.provideService(Scope.Scope, scope)),
   );
   return { peer, services };
 };
+
+const hidingQueryService = (
+  host: EchoTestPeer['host']['queryService'],
+  hide: (id: string | undefined) => boolean,
+): QueryService.Handlers => ({
+  'QueryService.setConfig': (request) => host['QueryService.setConfig'](request),
+  'QueryService.reindex': () => host['QueryService.reindex'](),
+  'QueryService.execQuery': (request) =>
+    host['QueryService.execQuery'](request).pipe(
+      Stream.map((response) => ({ ...response, results: response.results?.filter((result) => !hide(result.id)) })),
+    ),
+});

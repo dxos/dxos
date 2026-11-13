@@ -8,6 +8,7 @@ import { type QueryRequest, type QueryResponse } from '../buf/proto/gen/dxos/ech
 import { type CreateDocumentResponse } from '../DataService.ts';
 import type * as FeedProtocol from '../FeedProtocol.ts';
 import type { SerializedError } from '../index.ts';
+import { type WorkingSetRow } from '../working-set.ts';
 
 /*
 
@@ -98,6 +99,31 @@ export interface DataService {
 
   // TODO(burdon): Update? Return DocumentEntry?
   changeDocument(ctx: TraceContext, spaceId: SpaceId, documentId: string, changes: Uint8Array): Promise<void>;
+}
+
+/**
+ * What the caller that started an invocation holds for the invocation's space: the documents it recently read or
+ * wrote, and the objects it wrote that the index may not hold yet.
+ */
+export type WorkingSet = {
+  rows: WorkingSetRow[];
+  /** Ids of objects the caller wrote; the invocation counts them among its local writes the index has not seen. */
+  unindexed: string[];
+};
+
+/** What an invocation tells the caller's working set when it ends. */
+export type WorkingSetReport = WorkingSet & {
+  /** Per document id, the heads the invocation was seeded with; absent for a document it loaded itself. */
+  base: Record<string, string[]>;
+};
+
+/**
+ * A caller's working set, passed to each invocation it starts so that consecutive invocations read each other's
+ * writes before the index holds them.
+ */
+export interface WorkingSetService {
+  get(): Promise<WorkingSet>;
+  put(report: WorkingSetReport): Promise<void>;
 }
 
 export interface QueueService {

@@ -47,7 +47,14 @@ import {
 import { assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, runServiceEffect, subscribeStream } from '@dxos/protocols';
+import {
+  type ExportWorkingSetOptions,
+  RpcClosedError,
+  type WorkingSetRow,
+  runServiceCall,
+  runServiceEffect,
+  subscribeStream,
+} from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, chunkArray, countWork, deepMapValues } from '@dxos/util';
@@ -80,7 +87,6 @@ import {
 } from './types.ts';
 import { UpdateDispatch } from './update-dispatch.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
-import { type ExportWorkingSetOptions, type WorkingSetRow } from './working-set-row.ts';
 
 const TRACE_LOADING = false;
 
@@ -254,6 +260,8 @@ export class EntityManager implements IDatabaseBinding {
   readonly #objectsForLocalCommit = new Set<string>();
   /** Objects written locally since the last flush that reached the index, with the sequence of their last write. */
   readonly #unindexedWrites = new Map<string, number>();
+  /** Objects another client wrote that the index may not hold; see {@link noteUnindexedWrites}. */
+  readonly #notedUnindexedWrites = new Set<string>();
   #writeSequence = 0;
   private _objectsForNextUpdate = new Set<string>();
   private _updateScheduler!: UpdateScheduler;
@@ -496,6 +504,7 @@ export class EntityManager implements IDatabaseBinding {
     this._objectsForNextDbUpdate.clear();
     this.#objectsForLocalCommit.clear();
     this.#unindexedWrites.clear();
+    this.#notedUnindexedWrites.clear();
     this._objectsForNextUpdate.clear();
     await this._repoProxy.close(ctx);
   }
@@ -535,7 +544,21 @@ export class EntityManager implements IDatabaseBinding {
    * for indexing. Only these can disagree with an index answer, since the index holds everything else this client has.
    */
   unindexedWrites(): Iterable<string> {
-    return this.#unindexedWrites.keys();
+    if (this.#notedUnindexedWrites.size === 0) {
+      return this.#unindexedWrites.keys();
+    }
+    return new Set([...this.#unindexedWrites.keys(), ...this.#notedUnindexedWrites]);
+  }
+
+  /**
+   * Counts objects another client wrote, which the index may not reflect yet, among this client's unindexed writes, so
+   * local evaluation treats them as it treats its own: they enter a windowed query the index has not seen them in.
+   * A flush does not clear them: it waits for the index to take this client's writes, not another client's.
+   */
+  noteUnindexedWrites(ids: Iterable<string>): void {
+    for (const id of ids) {
+      this.#notedUnindexedWrites.add(id);
+    }
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {

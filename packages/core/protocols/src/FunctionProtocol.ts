@@ -96,6 +96,12 @@ export interface Context {
      */
     accessTokenService?: EdgeFunctionEnv.AccessTokenService;
 
+    /**
+     * The working set of the caller that started the invocation.
+     * Available when the caller keeps one; the invocation seeds its database from it and reports to it.
+     */
+    workingSetService?: EdgeFunctionEnv.WorkingSetService;
+
     traceService?: TraceProtocol.TraceService;
   };
 

@@ -24,3 +24,4 @@ export * from './triggers/index.ts';
 export * as TriggerManager from './TriggerManager.ts';
 export * as UnifiedProcessManager from './UnifiedProcessManager.ts';
 export * from './url.ts';
+export * from './working-set-session.ts';

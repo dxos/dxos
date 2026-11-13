@@ -4,7 +4,7 @@
 
 import { afterEach, describe, test } from 'vitest';
 
-import { type WorkingSetRow } from '@dxos/echo-client';
+import { type WorkingSetRow } from '@dxos/protocols';
 
 import { BOOT_CACHE_VERSION, BootCacheStore } from './boot-cache-store.ts';
 

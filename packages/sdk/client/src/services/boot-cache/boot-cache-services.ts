@@ -14,9 +14,9 @@ import {
   makeDeferredClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { type ExportWorkingSetOptions, type WorkingSetRow } from '@dxos/echo-client';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
+import { type ExportWorkingSetOptions, type WorkingSetRow } from '@dxos/protocols';
 import { markMilestone } from '@dxos/util';
 
 import { BootCacheStore, type BootSnapshot, type RecordedStreams } from './boot-cache-store.ts';

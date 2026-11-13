@@ -37,6 +37,7 @@ import {
   createS3Host,
   credentialsLayerFromDatabase,
 } from './services/index.ts';
+import { WorkingSetSession } from './working-set-session.ts';
 
 /** Ceiling on opening a space in a function context; a worker holds a request that long only when the root never arrives. */
 const SPACE_OPEN_TIMEOUT = Duration.seconds(15);
@@ -202,6 +203,8 @@ export const wrapFunctionHandler = (
         if ((Exit.isSuccess(exit) || isRunAgainExit(exit)) && funcContext.db) {
           await funcContext.db.flush({ disk: true, indexes: false });
         }
+        // Reported on failure too: what the handler wrote before failing is what the caller's next invocation reads.
+        await funcContext.reportWorkingSet();
 
         const result = EffectEx.unwrapExit(exit);
 
@@ -246,11 +249,14 @@ export class FunctionContext extends Resource {
   /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
   #unregisterBlobBackends: (() => void)[] = [];
   #unregisterTypeSource: (() => void) | undefined;
+  /** The caller's working set, which the database seeds from and reports to. */
+  readonly workingSet: WorkingSetSession;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
     this.context = context;
     this.opts = opts;
+    this.workingSet = new WorkingSetSession(context.services.workingSetService);
     if (context.services.dataService && context.services.queryService) {
       this.client = new EchoClient().connectToService({
         dataService: context.services.dataService,
@@ -275,6 +281,7 @@ export class FunctionContext extends Resource {
         : undefined;
 
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
+    const seededRows = this.db ? await this.workingSet.seed(this.db) : 0;
     const rootSetAt = Date.now();
     if (this.db) {
       const db = this.db;
@@ -305,11 +312,14 @@ export class FunctionContext extends Resource {
         ),
       );
     }
+    const seededUnindexed = this.db ? await this.workingSet.afterOpen(this.db) : 0;
     log.info('function context open timing', {
       spaceId: this.context.spaceId,
       clientOpenMs: clientOpenedAt - startedAt,
       setRootMs: rootSetAt - clientOpenedAt,
       dbOpenMs: Date.now() - rootSetAt,
+      seededRows,
+      seededUnindexed,
     });
 
     // Registered here rather than only in `wrapHandler` below: a hosted process builds its context
@@ -349,6 +359,23 @@ export class FunctionContext extends Resource {
       for (const { name, backend, default: isDefault } of this.opts.blobBackends ?? []) {
         this.#unregisterBlobBackends.push(this.client.graph.registerBlobBackend(name, backend, { default: isDefault }));
       }
+    }
+  }
+
+  /**
+   * Reports what the database holds to the caller's working set: when an invocation ends, and when a hosted process
+   * is about to invoke an operation that must see the process's own writes.
+   */
+  async reportWorkingSet(): Promise<void> {
+    if (this.db) {
+      await this.workingSet.report(this.db);
+    }
+  }
+
+  /** Takes what the caller's other invocations left in its working set; see {@link WorkingSetSession.absorb}. */
+  async absorbWorkingSet(): Promise<void> {
+    if (this.db) {
+      await this.workingSet.absorb(this.db);
     }
   }
 
