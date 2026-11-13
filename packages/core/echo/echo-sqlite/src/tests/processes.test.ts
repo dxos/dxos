@@ -14,7 +14,7 @@ import { type SpaceId } from '@dxos/keys';
 
 import { SpaceSync } from '../sync/space-sync.ts';
 import { TestBuilder } from '../testing/harness.ts';
-import { type OtherProcessCommand, RESULT } from './testing/other-process-protocol.ts';
+import { type OtherProcessCommand, RESULT } from './testing/database-subprocess-protocol.ts';
 
 //
 // Several processes on one file (F-8). The other process is a real one, since two connections in one
@@ -33,7 +33,7 @@ const VITE_NODE = join(dirname(createRequire(import.meta.url).resolve('vite-node
 const inOtherProcess = async (path: string, spaceId: SpaceId, commands: OtherProcessCommand[]) => {
   const { stdout } = await promisify(execFile)(
     process.execPath,
-    [VITE_NODE, 'src/tests/testing/other-process.ts', path, spaceId, JSON.stringify(commands)],
+    [VITE_NODE, 'src/tests/testing/database-subprocess.ts', path, spaceId, JSON.stringify(commands)],
     { cwd: PACKAGE_DIR },
   );
   const line = stdout.split('\n').find((line) => line.startsWith(RESULT));

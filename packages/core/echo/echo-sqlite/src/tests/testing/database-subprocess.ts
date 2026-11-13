@@ -14,7 +14,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
 import { SqliteDatabase } from '../../database.ts';
-import { type OtherProcessCommand, RESULT } from './other-process-protocol.ts';
+import { type OtherProcessCommand, RESULT } from './database-subprocess-protocol.ts';
 
 /**
  * A second process for the multi-process tests (F-8): opens a space's database on a file and runs
@@ -23,7 +23,7 @@ import { type OtherProcessCommand, RESULT } from './other-process-protocol.ts';
  */
 const [path, spaceId, json] = process.argv.slice(2);
 if (!path || !spaceId || !json || !SpaceId.isValid(spaceId)) {
-  throw new Error('usage: other-process <path> <spaceId> <commands json>');
+  throw new Error('usage: database-subprocess <path> <spaceId> <commands json>');
 }
 const commands: OtherProcessCommand[] = JSON.parse(json);
 

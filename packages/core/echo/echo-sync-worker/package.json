@@ -39,8 +39,6 @@
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
     "@dxos/echo": "workspace:*",
-    "@dxos/protocols": "workspace:*",
-    "@effect/sql-sqlite-node": "catalog:",
     "wrangler": "catalog:"
   },
   "cloudflare": {

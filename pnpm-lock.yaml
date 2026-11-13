@@ -7117,12 +7117,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
-      '@effect/sql-sqlite-node':
-        specifier: 'catalog:'
-        version: 4.0.4(effect@4.0.4)
       wrangler:
         specifier: '>=4.112.0'
         version: 4.112.0(@cloudflare/workers-types@5.20260719.1)
