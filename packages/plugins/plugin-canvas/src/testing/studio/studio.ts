@@ -364,6 +364,37 @@ const promoteCards = (content: ContentMap, model: StudioModel, remap: Readonly<R
   }
 };
 
+/**
+ * Drops and re-aims the slide's links. The deck's own edges are what it drew; a slide re-laid out here sometimes says
+ * the same thing with fewer of them, or says it about another card — the Ontology slide's `event → task` is implied
+ * by what both already say about a person, and a project belongs to the group that owns it rather than to the
+ * organization above it.
+ */
+const rewireLinks = (
+  content: ContentMap,
+  unlink: readonly (readonly [string, string])[],
+  relink: readonly (readonly [string, string, string])[],
+): number => {
+  let rewired = 0;
+  for (const [from, to] of unlink) {
+    const key = findLink(content, from, to);
+    if (key !== undefined) {
+      delete content[key];
+      rewired++;
+    }
+  }
+  for (const [from, to, target] of relink) {
+    const key = findLink(content, from, to);
+    const record = key === undefined ? undefined : content[key];
+    if (key === undefined || !isLinkRecord(record)) {
+      continue;
+    }
+    content[key] = { ...record, link: { ...record.link, target: { ...record.link.target, node: boxOf(target) } } };
+    rewired++;
+  }
+  return rewired;
+};
+
 /** The text width a label of this size needs, which the canvas does not measure for an unframed box. */
 const textWidth = (label: string, fontSize: number) => label.length * fontSize * 0.62 + 16;
 
@@ -1680,6 +1711,8 @@ export const seedStudioSlide =
       balance = false,
       gap,
       columns = [],
+      unlink = [],
+      relink = [],
       links = 'deck',
       ports = 'facing',
       frames = [],
@@ -1710,6 +1743,10 @@ export const seedStudioSlide =
       frames?: readonly string[];
       /** The slide's own columns, each a list of card ids ({@link placeColumns}). */
       columns?: readonly (readonly string[])[];
+      /** Links the slide does not draw, as the pair of cards they join ({@link rewireLinks}). */
+      unlink?: readonly (readonly [string, string])[];
+      /** Links the slide aims at another card: the pair they join, then the card they end on instead. */
+      relink?: readonly (readonly [string, string, string])[];
       /** Every card of the slide is drawn at one size ({@link uniformCards}). */
       uniform?: boolean;
       /** A card the slide draws at a size of its own, by its id: what the deck drew is not always what reads. */
@@ -1729,6 +1766,7 @@ export const seedStudioSlide =
       SceneHandler,
     );
     promoteCards(content, model, remap);
+    rewireLinks(content, unlink, relink);
     styleText(content, model);
     styleFrames(content, model);
     // Before anything is measured: what the slide does not draw is not a column either, and a slide-wide footnote

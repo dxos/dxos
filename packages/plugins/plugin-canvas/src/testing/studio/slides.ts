@@ -58,6 +58,10 @@ export type StudioSlide = {
   frames?: readonly string[];
   /** The slide's own columns, each a list of card ids. */
   columns?: readonly (readonly string[])[];
+  /** Links the slide does not draw, as the pair of cards they join. */
+  unlink?: readonly (readonly [string, string])[];
+  /** Links the slide aims at another card: the pair they join, then the card they end on instead. */
+  relink?: readonly (readonly [string, string, string])[];
   /** How the slide's links are drawn; a slide this import re-lays out takes `ortho`. */
   links?: 'deck' | 'ortho';
   /** Which sides a routed link uses; a slide that fans out downwards takes `vertical`. */
@@ -92,7 +96,11 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     uniform: true,
     links: 'ortho',
     gap: 96,
-    columns: [['organization', 'group', 'transaction'], ['person'], ['project', 'task', 'event', 'message']],
+    columns: [['group', 'organization', 'transaction'], ['person'], ['project', 'task', 'event', 'message']],
+    // What a person attends and what a person is assigned already say how an event and a task meet.
+    unlink: [['event', 'task']],
+    // A project belongs to the group that runs it, not to the organization above it.
+    relink: [['project', 'organization', 'group']],
   }),
   slide('plugins', pluginsSource, pluginsModel, {
     labels: false,
