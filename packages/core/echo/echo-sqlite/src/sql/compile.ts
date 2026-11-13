@@ -72,12 +72,15 @@ export const compileQuery = (
     versions?: ReadonlyMap<string, readonly string[]>;
     /** Every space a scope may name (the databases sharing the file); defaults to the own space. */
     accessible?: readonly SpaceId[];
+    /** What feed options say about reading their items. */
+    feeds?: FeedRules;
   },
 ): CompiledQuery => {
   const compiler = new Compiler(
     options.spaceId,
     options.versions ?? new Map(),
     options.accessible ?? [options.spaceId],
+    options.feeds ?? {},
   );
   const root = compiler.node(query, 'exclude');
   const grouped = compiler.grouped.get(root);
@@ -118,6 +121,7 @@ class Compiler {
     /** The stored versions satisfying each meta version range, by {@link versionRangeKey}. */
     private readonly _versions: ReadonlyMap<string, readonly string[]>,
     private readonly _accessible: readonly SpaceId[],
+    private readonly _feeds: FeedRules,
   ) {
     this.#scope = { spaces: [_spaceId], documents: true, allFeeds: false, feeds: [] };
   }
@@ -315,15 +319,29 @@ FROM ${raw(inner)} w CROSS JOIN objectMeta e ON e.recordId = w.rid`);
     const a = raw(alias);
     const { feeds, allFeeds, documents, within } = this.#scope;
     const narrowed = within ? raw(` AND ${alias}.recordId IN (SELECT rid FROM ${within})`) : raw('');
+    const live = this.#live(alias);
     if (allFeeds) {
-      return sql`${this.#spaceIn(alias)} AND ${a}.queueBranch IS NULL${narrowed}`;
+      return sql`${this.#spaceIn(alias)} AND ${a}.queueBranch IS NULL${live}${narrowed}`;
     }
     const items =
       feeds.length > 0
         ? sql`(${a}.queueId IN (SELECT value FROM json_each(${JSON.stringify(feeds)})) AND ${a}.queueBranch IS NULL)`
         : undefined;
     const rows = [documents ? sql`${a}.queueId = ''` : undefined, items].filter((fragment) => fragment !== undefined);
-    return rows.length === 0 ? raw('0') : sql`${this.#spaceIn(alias)} AND (${join(rows, ' OR ')})${narrowed}`;
+    return rows.length === 0 ? raw('0') : sql`${this.#spaceIn(alias)} AND (${join(rows, ' OR ')})${live}${narrowed}`;
+  }
+
+  /**
+   * Excludes items their feed's `maxAge` has expired, which the index holds until the next trim: in the
+   * read, so a page limit counts only live items.
+   */
+  #live(alias: string): Fragment {
+    const cutoffs = this._feeds.cutoffs ?? {};
+    if (Object.keys(cutoffs).length === 0) {
+      return raw('');
+    }
+    const a = raw(alias);
+    return sql` AND COALESCE(${a}.updatedAt >= (SELECT value FROM json_each(${JSON.stringify(cutoffs)}) WHERE key = ${a}.queueId), 1)`;
   }
 
   /** Rows a traversal may reach: documents, and main-branch feed items when the scope includes feeds. */
@@ -615,13 +633,21 @@ WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(
         if (terms.length === 0) {
           return raw('1');
         }
+        const unindexed = this._feeds.unindexed ?? [];
+        const searchable =
+          unindexed.length > 0
+            ? [sql`${a}.queueId NOT IN (SELECT value FROM json_each(${JSON.stringify(unindexed)}))`]
+            : [];
         return join(
-          terms.map((term) =>
-            // Trigram FTS answers terms of three or more characters; shorter ones fall back to LIKE.
-            term.length >= 3
-              ? sql`${a}.recordId IN (SELECT rowid FROM ftsIndex WHERE ftsIndex MATCH ${`"${term.replaceAll('"', '""')}"`})`
-              : sql`EXISTS (SELECT 1 FROM ftsIndex WHERE ftsIndex.rowid = ${a}.recordId AND ftsIndex.text LIKE ${`%${term.replace(/[\\%_]/g, (char) => `\\${char}`)}%`} ESCAPE '\\')`,
-          ),
+          [
+            ...searchable,
+            ...terms.map((term) =>
+              // Trigram FTS answers terms of three or more characters; shorter ones fall back to LIKE.
+              term.length >= 3
+                ? sql`${a}.recordId IN (SELECT rowid FROM ftsIndex WHERE ftsIndex MATCH ${`"${term.replaceAll('"', '""')}"`})`
+                : sql`EXISTS (SELECT 1 FROM ftsIndex WHERE ftsIndex.rowid = ${a}.recordId AND ftsIndex.text LIKE ${`%${term.replace(/[\\%_]/g, (char) => `\\${char}`)}%`} ESCAPE '\\')`,
+            ),
+          ],
           ' AND ',
         );
       }
@@ -676,11 +702,33 @@ WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(
         // Value predicates only apply to a property; at the entity level they match nothing.
         return raw('0');
 
+      case 'feed-cursor':
+        return this.#feedCursor(filter, alias);
+
       case 'in-query':
       case 'changes':
-      case 'feed-cursor':
         throw new UnsupportedQueryError(`${filter.type} filter`);
     }
+  }
+
+  /**
+   * Bounds feed items by the positions the authority assigned, both ends exclusive; the start sentinel
+   * bounds nothing. Refused over documents, which carry no position, rather than matching everything.
+   */
+  #feedCursor(filter: QueryAST.FilterFeedCursor, alias: string): Fragment {
+    const { documents, feeds, allFeeds } = this.#scope;
+    if (documents || (!allFeeds && feeds.length === 0)) {
+      throw new UnsupportedQueryError('a feed cursor outside a feed scope');
+    }
+    if (filter.positions === 'local') {
+      throw new UnsupportedQueryError('a local feed cursor');
+    }
+    const position = raw(`${alias}.queuePosition`);
+    const bounds = [
+      filter.begin ? sql`${position} > ${Number(filter.begin)}` : undefined,
+      filter.end ? sql`${position} < ${Number(filter.end)}` : undefined,
+    ].filter((bound) => bound !== undefined);
+    return bounds.length === 0 ? raw('1') : sql`(${join(bounds, ' AND ')})`;
   }
 
   /**
@@ -926,6 +974,14 @@ export const versionRanges = (query: QueryAST.Query): { key: string; range: stri
   };
   visitQuery(query);
   return ranges;
+};
+
+/** What feed options say about reading their items. */
+export type FeedRules = {
+  /** Feeds whose indexing is disabled: their items are read, but not text-searched. */
+  readonly unindexed?: readonly string[];
+  /** Per feed with a `maxAge`, the time (unix ms) its items expire before. */
+  readonly cutoffs?: Readonly<Record<string, number>>;
 };
 
 /** One `ORDER BY` term over the row aliased `alias` (and the working-set row `w`). */

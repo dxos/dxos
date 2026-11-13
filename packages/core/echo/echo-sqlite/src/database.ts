@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
@@ -38,15 +39,17 @@ import {
   makeDecodedEntityLive,
   matchMetaKey,
   objectFromJSON,
+  objectStructureToJson,
   setRefResolver,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
 import { type FeedStore } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID, SpaceId, type URI } from '@dxos/keys';
+import { DXN, EID, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
+import { type Doc } from './doc-store.ts';
 import { UnsupportedOperationError } from './errors.ts';
 import { DatabaseRefResolver, type EntitySource, SqliteGraph } from './graph.ts';
 import { ObjectStore, type StoredEntity } from './object-store.ts';
@@ -54,7 +57,14 @@ import { LiveQueryResult, type ResultItem, asItem } from './query-result.ts';
 import { type EntityRecord, localEntityId, toRecord } from './record.ts';
 import { SimpleRegistry, matchRegistry } from './registry.ts';
 import { compileChanges, isChangesQuery } from './sql/changes.ts';
-import { type CompiledQuery, type GroupedShape, compileQuery, versionRangeKey, versionRanges } from './sql/compile.ts';
+import {
+  type CompiledQuery,
+  type FeedRules,
+  type GroupedShape,
+  compileQuery,
+  versionRangeKey,
+  versionRanges,
+} from './sql/compile.ts';
 
 export type OpenOptions = {
   /**
@@ -443,6 +453,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
               spaceId: this.#spaceId,
               versions: ranges.length > 0 ? await this.#satisfying(ranges) : undefined,
               accessible: this.#graph.spaceIds,
+              feeds: await this.#feedRules(),
             })
           : undefined;
         const stored = statement ? await this.#execute(statement) : [];
@@ -456,6 +467,23 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     return result;
     // The overloaded `QueryFn` cannot be satisfied by one generic implementation without a cast.
   }) as Database.QueryFn;
+
+  /** What the space's feed options say about reading their items, as of now. */
+  async #feedRules(): Promise<FeedRules> {
+    const options = await this.#run(this.#store.feedOptions());
+    const now = Date.now();
+    const unindexed: string[] = [];
+    const cutoffs: Record<string, number> = {};
+    for (const [feedId, feedOptions] of options) {
+      if (feedOptions.indexing?.enabled === false) {
+        unindexed.push(feedId);
+      }
+      if (feedOptions.retention?.maxAge !== undefined) {
+        cutoffs[feedId] = now - feedOptions.retention.maxAge;
+      }
+    }
+    return { unindexed, cutoffs };
+  }
 
   /**
    * Indexes every block not indexed yet, including blocks sync pulled, and makes the results visible
@@ -536,7 +564,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       this.#purged.add(id);
     }
     await this.flush();
-    return { unlinkedObjects: ids.length, removedDocuments: 0, removedIndexEntries: ids.length, purgedFeedBlocks: 0 };
+    const purgedFeedBlocks = await this.#run(this.#store.compactDocuments());
+    return { unlinkedObjects: ids.length, removedDocuments: 0, removedIndexEntries: ids.length, purgedFeedBlocks };
   }
 
   retainObjects(_keep: Iterable<string>): string[] {
@@ -624,12 +653,141 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     return ['main'];
   }
 
-  getVersion<T extends Obj.Unknown>(_obj: T, _heads: readonly string[]): Obj.Snapshot<T> {
-    throw new UnsupportedOperationError('getVersion');
+  getVersion<T extends Obj.Unknown>(obj: T, heads: readonly string[]): Obj.Snapshot<T> {
+    const doc = this.#settledDocument(obj);
+    invariant(doc, `No document for object ${obj.id}.`);
+    const snapshot = this.#snapshotAt(obj, doc, heads);
+    invariant(snapshot, `Object ${obj.id} does not exist at the given heads.`);
+    return snapshot;
   }
 
-  getChanges<T extends Obj.Unknown>(_obj: T, _opts?: Obj.GetChangesOptions): Change.ValueChange<unknown>[] {
-    throw new UnsupportedOperationError('getChanges');
+  /**
+   * The object's history, oldest first: one entry per change to its document that touched the object
+   * (or `property`), with the value before and after. Each change is diffed against the frontier of the
+   * changes before it in topological order, so a concurrent change reports only its own effect.
+   */
+  getChanges<T extends Obj.Unknown>(obj: T, opts: Obj.GetChangesOptions = {}): Change.ValueChange<unknown>[] {
+    const doc = this.#settledDocument(obj);
+    if (!doc) {
+      return [];
+    }
+    const { property } = opts;
+    const mount = ['objects', obj.id];
+    const target: (string | number)[] = property === undefined ? mount : [...mount, 'data', property];
+    const readValue = (heads: readonly string[]): unknown => {
+      const snapshot = this.#snapshotAt(obj, doc, heads);
+      return property === undefined || snapshot === undefined ? snapshot : Reflect.get(snapshot, property);
+    };
+
+    const changes: Change.ValueChange<unknown>[] = [];
+    let frontier: string[] = [];
+    for (const meta of A.getChangesMetaSince(doc, [])) {
+      const previous = frontier;
+      frontier = [...previous.filter((hash) => !meta.deps.includes(hash)), meta.hash].sort();
+      if (!A.diff(doc, previous, frontier).some((patch) => overlaps(patch.path, target))) {
+        continue;
+      }
+      const before = readValue(previous);
+      const after = readValue(frontier);
+      // A write to an ancestor (the document's first change) overlaps the target without changing it.
+      if (before === after) {
+        continue;
+      }
+      changes.push(
+        Object.freeze({
+          key: meta.hash,
+          source: 'document',
+          // Automerge stores change time in epoch seconds.
+          time: meta.time * 1000,
+          actor: meta.actor,
+          seq: meta.seq,
+          ops: meta.maxOp - meta.startOp + 1,
+          object: obj.id,
+          ...(property !== undefined && { property }),
+          heads: Object.freeze(frontier),
+          ...(meta.message != null && { message: meta.message }),
+          before,
+          after,
+        }),
+      );
+    }
+    return changes;
+  }
+
+  /**
+   * The object's document with every edit made so far applied, which history reads synchronously: edits
+   * not yet flushed are written into the cached document now, and appended by the next flush.
+   */
+  #settledDocument(entity: Entity.Unknown): Doc | undefined {
+    invariant(Entity.getDatabase(entity) === this, 'Object is not in this database.');
+    if (this.#items.has(entity)) {
+      return undefined;
+    }
+    const versions = [...(this.#versions.get(entity.id) ?? [])];
+    if (this.#dirty.has(entity.id)) {
+      const current = toRecord(entity, this.#spaceId, this.#ownDeleted.has(entity));
+      const last = versions.at(-1);
+      if (!last || JSON.stringify(last.body) !== JSON.stringify(current.body)) {
+        versions.push(current);
+      }
+    }
+    if (versions.length > 0) {
+      const results = this.#store.edit(
+        versions.map((version, index) => ({ ...version, heads: index === 0 ? this.#heads.get(entity) : undefined })),
+      );
+      const result = results?.get(entity.id);
+      if (result) {
+        this.#versions.delete(entity.id);
+        this.#heads.set(entity, result.heads);
+      }
+    }
+    return this.#store.peekDocument(entity.id);
+  }
+
+  /** The object as its document holds it at `heads`, as an immutable snapshot; undefined before it existed. */
+  #snapshotAt<T extends Obj.Unknown>(entity: T, doc: Doc, heads: readonly string[]): Obj.Snapshot<T> | undefined {
+    if (heads.length === 0) {
+      return undefined;
+    }
+    const structure = A.view(doc, [...heads]).objects?.[entity.id];
+    if (structure == null) {
+      return undefined;
+    }
+    const json = objectStructureToJson(entity.id, structure);
+    const data: Record<string | symbol, unknown> = { id: entity.id };
+    for (const [key, value] of Object.entries(json)) {
+      if (key !== 'id' && !key.startsWith('@') && value !== undefined) {
+        data[key] = this.#decodeReferences(value);
+      }
+    }
+    // The live object's snapshot carries the brand, and the type, database and meta symbols a snapshot is
+    // read through.
+    const template = Obj.getSnapshot(entity);
+    for (const symbol of Object.getOwnPropertySymbols(template)) {
+      const descriptor = Object.getOwnPropertyDescriptor(template, symbol);
+      if (descriptor) {
+        Object.defineProperty(data, symbol, descriptor);
+      }
+    }
+    data[Entity.SnapshotKindId] = Reflect.get(template, Entity.SnapshotKindId);
+    Object.freeze(data);
+    return isSnapshotOf(entity, data) ? data : undefined;
+  }
+
+  /** Stored data with its encoded references (`{ '/': uri }`) as refs resolving in this database. */
+  #decodeReferences(value: unknown): unknown {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.#decodeReferences(item));
+    }
+    if (value !== null && typeof value === 'object') {
+      const record: Record<string, unknown> = { ...value };
+      const uri = record['/'];
+      if (typeof uri === 'string' && Object.keys(record).length === 1) {
+        return this.makeRef(URI.make(uri));
+      }
+      return Object.fromEntries(Object.entries(record).map(([key, inner]) => [key, this.#decodeReferences(inner)]));
+    }
+    return value;
   }
 
   async beginMigration(): Promise<Migration.Transaction> {
@@ -1162,6 +1320,9 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     defineHiddenProperty(obj, ObjectDatabaseId, this);
     this.#register(obj);
     this.#adoptReferences(obj);
+    // Creation is its own change in the object's history, as echo-client writes it; an object not edited
+    // before its first flush still takes a single change.
+    this.#versions.set(obj.id, [toRecord(obj, this.#spaceId, false)]);
     this.#markDirty(obj);
   }
 
@@ -1377,7 +1538,11 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
           // their live objects; an object this batch wrote unmerged already shows its document.
           const current = new Set([...results].filter(([, result]) => !result.merged).map(([id]) => id));
           await this.#refreshStale([...indexed].filter((id) => !current.has(id)));
-          this.#graph.notifyCommitted(this, new Set([...indexed, ...results.keys()]));
+          // Appended items and tombstones count too: a sibling's feed queries read them.
+          this.#graph.notifyCommitted(
+            this,
+            new Set([...indexed, ...results.keys(), ...batch.keys(), ...tombstones.map(([id]) => id)]),
+          );
           // An appended item learns its block id and position from the row its block indexed into.
           for (const entity of batch.values()) {
             const target = this.#items.get(entity);
@@ -1530,3 +1695,18 @@ const isLocal = (filter: QueryAST.Filter): boolean =>
 
 const toAst = (queryOrFilter: Query.Any | Filter.Any): QueryAST.Query =>
   (Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter)).ast;
+
+/** Whether a patch at `path` can change the value at `target`: one path is a prefix of the other. */
+const overlaps = (path: readonly (string | number)[], target: readonly (string | number)[]): boolean => {
+  const length = Math.min(path.length, target.length);
+  for (let index = 0; index < length; index++) {
+    if (path[index] !== target[index]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/** A snapshot of `entity`: the snapshot brand, and its id. */
+const isSnapshotOf = <T extends Obj.Unknown>(entity: T, value: unknown): value is Obj.Snapshot<T> =>
+  Obj.isSnapshot(value) && value.id === entity.id;

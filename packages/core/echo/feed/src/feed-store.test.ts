@@ -579,6 +579,39 @@ describe('Feed V2', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('appendReplacing appends a block and deletes the earlier blocks of its feed only, logging them', () =>
+    Effect.gen(function* () {
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* feed.migrate();
+      const spaceId = SpaceId.random();
+      const feedNamespace = WellKnownNamespaces.data;
+      const message = (feedId: string, byte: number) => ({
+        spaceId,
+        feedId,
+        feedNamespace,
+        data: new Uint8Array([byte]),
+      });
+
+      yield* feed.appendLocal([message('target', 1), message('target', 2), message('other', 3)]);
+      const { block, deleted } = yield* feed.appendReplacing(message('target', 4));
+      expect(deleted).toBe(2);
+      expect(block.data[0]).toBe(4);
+
+      const read = (feedId: string) =>
+        feed.query({ spaceId, feedNamespace, query: { feedIds: [feedId] }, position: -1 });
+      expect((yield* read('target')).blocks.map(({ data }) => data[0])).toEqual([4]);
+      expect((yield* read('other')).blocks.map(({ data }) => data[0])).toEqual([3]);
+
+      // Logged for the index, as retention's deletions are.
+      const { blocks } = yield* feed.takeTrimmed();
+      expect(blocks.map(({ feedId }) => feedId)).toEqual(['target', 'target']);
+
+      // A later local block continues the feed.
+      const [next] = yield* feed.appendLocal([message('target', 5)]);
+      expect(next.sequence).toBeGreaterThan(block.sequence);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('countBlocks and deleteOldestBlocks operate per feed within space and namespace', () =>
     Effect.gen(function* () {
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true });

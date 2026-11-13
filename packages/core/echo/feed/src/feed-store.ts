@@ -1564,6 +1564,49 @@ export class FeedStore {
    * @returns How many other blocks were cleared to make room, and how many of the blocks themselves
    * left a different position.
    */
+  /**
+   * Appends one local block and deletes every earlier block of the same feed, in one transaction: a
+   * writer that folded a feed's history into one block (a compacted document) replaces the blocks it
+   * folded, and a reader never sees both or neither. The deleted blocks are logged as retention's are,
+   * so an index purges their rows ({@link takeTrimmed}).
+   *
+   * @returns The appended block and the number of blocks deleted.
+   */
+  appendReplacing = (
+    message: LocalAppendMessage,
+  ): Effect.Effect<{ block: Block; deleted: number }, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const result = yield* sql.withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const [block] = yield* this.appendLocal([message]);
+          invariant(block, 'one block appended');
+          const feed = sql`(
+            SELECT feedPrivateId FROM feeds
+            WHERE spaceId = ${message.spaceId} AND feedId = ${message.feedId} AND feedNamespace = ${message.feedNamespace}
+          )`;
+          // The appended block's row, by its feed-local identity; the returned block carries no insertion id.
+          const scope = sql`
+            blocks.feedPrivateId = ${feed}
+            AND blocks.insertionId < (
+              SELECT insertionId FROM blocks
+              WHERE feedPrivateId = ${feed} AND actorId = ${block.actorId} AND sequence = ${block.sequence}
+            )
+          `;
+          yield* sql`
+            INSERT INTO trimmed_blocks (feedPrivateId, insertionId, position)
+            SELECT feedPrivateId, insertionId, position FROM blocks WHERE ${scope}
+          `;
+          const deleted = yield* sql<{ insertionId: number }>`DELETE FROM blocks WHERE ${scope} RETURNING insertionId`;
+          return { block, deleted: deleted.length };
+        }),
+      );
+      if (result.deleted > 0) {
+        this.#emitBlocksChanged(message.spaceId, message.feedNamespace);
+      }
+      return result;
+    }).pipe(Effect.withSpan('FeedStore.appendReplacing'), SpanAttributes.annotateSpace(message.spaceId));
+
   setPosition = (request: {
     spaceId: string;
     blocks: { feedId: string; feedNamespace: string; actorId: string; sequence: number; position: number }[];

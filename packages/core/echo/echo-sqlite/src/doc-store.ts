@@ -49,6 +49,8 @@ export class DocStore {
   readonly #spaceId: SpaceId;
   /** Least recently used first. */
   readonly #cache = new Map<string, Doc>();
+  /** Documents edited in memory by {@link edit} whose changes no write has appended yet; never evicted. */
+  readonly #unsaved = new Set<string>();
 
   constructor(feedStore: FeedStore, spaceId: SpaceId) {
     this.#feedStore = feedStore;
@@ -110,28 +112,9 @@ export class DocStore {
       const messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[] = [];
       const written = new Map<string, Doc>();
       const results = new Map<string, WriteResult>();
-      for (const { id, structure, heads } of objects) {
-        const stored = written.get(id) ?? docs.get(id);
-        const before = stored ?? A.init<DatabaseDirectory>();
-        const spaceId = this.#spaceId;
-        const edit = (doc: DatabaseDirectory) => {
-          if (!stored) {
-            // A new document's header goes in the object's first change: one change per new object.
-            doc.version = SpaceDocVersion.CURRENT;
-            doc.access = { spaceId };
-          }
-          doc.objects ??= {};
-          const existing = doc.objects[id];
-          // `createdAt` is set once, by the first writer, and survives every later write.
-          const createdAt = existing?.system?.createdAt ?? structure.system?.createdAt ?? Date.now();
-          const next = { ...structure, system: { ...structure.system, createdAt } };
-          applyValue(doc, ['objects'], doc.objects, id, next);
-        };
-        const current = A.getHeads(before);
-        const behind = heads !== undefined && heads.length > 0 && !sameHeads(heads, current);
-        // Stamped with the time, which change history reports; a change without one reads as clockless.
-        const options = { time: Math.floor(Date.now() / 1000) };
-        const after = behind ? A.changeAt(before, [...heads], options, edit).newDoc : A.change(before, options, edit);
+      for (const object of objects) {
+        const { id } = object;
+        const { after, behind } = editDocument(written.get(id) ?? docs.get(id), object, this.#spaceId);
         const chunk = A.saveIncremental(after);
         if (chunk.byteLength > 0) {
           messages.push({
@@ -158,10 +141,57 @@ export class DocStore {
       // Cached only once durable: a failed append leaves the cache at the stored state, so a retry
       // computes the same change again instead of finding nothing new to write.
       for (const [id, doc] of written) {
+        this.#unsaved.delete(id);
         this.#remember(id, doc);
       }
       return results;
     });
+  }
+
+  /**
+   * Applies writes to cached documents now, without appending: the next {@link write} of each object
+   * appends these changes with its own. Undefined, changing nothing, when an object read at some heads
+   * has no cached document to edit.
+   */
+  edit(objects: readonly DocWrite[]): Map<string, WriteResult> | undefined {
+    if (objects.some((object) => !this.#cache.has(object.id) && (object.heads?.length ?? 0) > 0)) {
+      return undefined;
+    }
+    const results = new Map<string, WriteResult>();
+    for (const object of objects) {
+      const { after, behind } = editDocument(this.#cache.get(object.id), object, this.#spaceId);
+      this.#unsaved.add(object.id);
+      this.#remember(object.id, after);
+      results.set(object.id, { heads: A.getHeads(after), merged: behind || (results.get(object.id)?.merged ?? false) });
+    }
+    return results;
+  }
+
+  /**
+   * Replaces each document's chunks with one full save, atomically, when it has more than one: loading
+   * then reads one chunk instead of every write's. Documents with unsaved edits are left for their write.
+   *
+   * @returns The number of chunks deleted.
+   */
+  compact(ids: readonly string[]): Store<number> {
+    return Effect.gen({ self: this }, function* () {
+      const docs = yield* this.load(ids.filter((id) => !this.#unsaved.has(id)));
+      let deleted = 0;
+      for (const [id, doc] of docs) {
+        const key = { spaceId: this.#spaceId, feedNamespace: AUTOMERGE_NAMESPACE, feedId: documentFeedId(id) };
+        if ((yield* this.#feedStore.countBlocks(key)) <= 1) {
+          continue;
+        }
+        const result = yield* this.#feedStore.appendReplacing({ ...key, data: A.save(doc) });
+        deleted += result.deleted;
+      }
+      return deleted;
+    });
+  }
+
+  /** An object's cached document, without reading storage. */
+  peek(id: string): Doc | undefined {
+    return this.#cache.get(id);
   }
 
   /**
@@ -176,8 +206,11 @@ export class DocStore {
     for (const chunk of chunks) {
       doc = A.loadIncremental(doc, chunk);
     }
-    // Marks the absorbed changes saved, so the next local chunk carries only the local edit.
-    A.saveIncremental(doc);
+    // Marks the absorbed changes saved, so the next local chunk carries only the local edit; an unsaved
+    // document keeps them, since marking would drop its own edits from that chunk.
+    if (!this.#unsaved.has(id)) {
+      A.saveIncremental(doc);
+    }
     this.#remember(id, doc);
   }
 
@@ -187,7 +220,10 @@ export class DocStore {
    */
   invalidate(ids: Iterable<string>): void {
     for (const id of ids) {
-      this.#cache.delete(id);
+      // An unsaved document holds the only copy of its edits; its next write merges what was appended.
+      if (!this.#unsaved.has(id)) {
+        this.#cache.delete(id);
+      }
     }
   }
 
@@ -204,13 +240,42 @@ export class DocStore {
     this.#cache.delete(id);
     this.#cache.set(id, doc);
     if (this.#cache.size > MAX_CACHED) {
-      const oldest = this.#cache.keys().next().value;
-      if (oldest !== undefined) {
-        this.#cache.delete(oldest);
+      for (const oldest of this.#cache.keys()) {
+        if (!this.#unsaved.has(oldest)) {
+          this.#cache.delete(oldest);
+          break;
+        }
       }
     }
   }
 }
+
+/**
+ * Writes an object's structure into its document as one change, made at the heads it was read at when
+ * the document has moved past them, so concurrent changes merge with it.
+ */
+const editDocument = (stored: Doc | undefined, write: DocWrite, spaceId: SpaceId): { after: Doc; behind: boolean } => {
+  const { id, structure, heads } = write;
+  const before = stored ?? A.init<DatabaseDirectory>();
+  const edit = (doc: DatabaseDirectory) => {
+    if (!stored) {
+      // A new document's header goes in the object's first change: one change per new object.
+      doc.version = SpaceDocVersion.CURRENT;
+      doc.access = { spaceId };
+    }
+    doc.objects ??= {};
+    const existing = doc.objects[id];
+    // `createdAt` is set once, by the first writer, and survives every later write.
+    const createdAt = existing?.system?.createdAt ?? structure.system?.createdAt ?? Date.now();
+    const next = { ...structure, system: { ...structure.system, createdAt } };
+    applyValue(doc, ['objects'], doc.objects, id, next);
+  };
+  const behind = heads !== undefined && heads.length > 0 && !sameHeads(heads, A.getHeads(before));
+  // Stamped with the time, which change history reports; a change without one reads as clockless.
+  const options = { time: Math.floor(Date.now() / 1000) };
+  const after = behind ? A.changeAt(before, [...heads], options, edit).newDoc : A.change(before, options, edit);
+  return { after, behind };
+};
 
 const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
   left.length === right.length && left.every((head) => right.includes(head));

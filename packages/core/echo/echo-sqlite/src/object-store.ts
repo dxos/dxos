@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
@@ -11,12 +12,20 @@ import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { TypeMetaSchemaDXN, objectStructureFromJson } from '@dxos/echo/internal';
-import { CypherError, FeedStore } from '@dxos/feed';
+import { CypherError, type FeedOptions, FeedStore, type TrimResult } from '@dxos/feed';
 import { IndexEngine } from '@dxos/index-core';
-import { type SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { AutomergeFeedSource } from './automerge-source.ts';
-import { AUTOMERGE_NAMESPACE, DocStore, type WriteResult, documentFeedId } from './doc-store.ts';
+import {
+  AUTOMERGE_NAMESPACE,
+  type Doc,
+  DocStore,
+  type DocWrite,
+  type WriteResult,
+  documentFeedId,
+} from './doc-store.ts';
 import { ItemFeedSource } from './feed-source.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import { type EntityRecord } from './record.ts';
@@ -211,15 +220,7 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
   ): Store<{ results: Map<string, WriteResult>; indexed: Set<string> }> {
     return Effect.gen({ self: this }, function* () {
       const results =
-        records.length > 0
-          ? yield* this.#docs.write(
-              records.map((record) => ({
-                id: record.id,
-                structure: objectStructureFromJson(record.body as Obj.JSON, { createdAt: record.createdAt }),
-                heads: record.heads,
-              })),
-            )
-          : new Map<string, WriteResult>();
+        records.length > 0 ? yield* this.#docs.write(records.map(toDocWrite)) : new Map<string, WriteResult>();
       if (purged.length > 0) {
         yield* this.#purge(purged);
       }
@@ -229,6 +230,21 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
       Effect.catchIf(isCypherError, (error) => Effect.die(error)),
       Effect.withSpan('ObjectStore.write'),
     );
+  }
+
+  /**
+   * Writes entities into their cached documents now; their next {@link write} appends the changes.
+   * Undefined when a document is not cached.
+   */
+  edit(
+    records: readonly (EntityRecord & { readonly heads?: readonly string[] })[],
+  ): Map<string, WriteResult> | undefined {
+    return this.#docs.edit(records.map(toDocWrite));
+  }
+
+  /** An object's cached document, if any. */
+  peekDocument(id: string): Doc | undefined {
+    return this.#docs.peek(id);
   }
 
   /**
@@ -245,10 +261,68 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
           break;
         }
       }
+      // After the object leg, which recorded them, and before the item leg, so it reads under the new options.
+      yield* this.#applyFeedOptions();
       while (!(yield* this.#engine.update(ctx, this.#items, { spaceId: this.#spaceId })).done) {}
+      // An append trims in its own transaction, but a bounded number of blocks; the rest goes here.
+      yield* trimUntilDone(this.#feedStore.trimAll(this.#spaceId, Date.now()));
+      yield* this.#purgeTrimmed();
       while (!(yield* this.#engine.updateSecondaryIndexes(ctx)).done) {}
       return documents;
     });
+  }
+
+  /**
+   * Stores each Feed object's options the last pass recorded on its feed, which trims the feed by them.
+   * An intent stays pending when it cannot be applied, for the next pass.
+   */
+  #applyFeedOptions(): Store<void> {
+    return Effect.gen({ self: this }, function* () {
+      const { maxId, intents } = yield* this.#engine.takeFeedOptionsIntents();
+      for (const { spaceId, feedId, namespace, options } of intents) {
+        const feed = { spaceId, feedId, feedNamespace: namespace };
+        const { trim } = yield* this.#feedStore.setFeedOptions({ ...feed, options });
+        yield* trimUntilDone(this.#feedStore.trim(feed, Date.now()), trim);
+        yield* this.#engine.clearFeedOptionsIntents(spaceId, feedId, maxId);
+      }
+    }).pipe(
+      Effect.catchIf(Schema.isSchemaError, (error) =>
+        Effect.sync(() => log.warn('feed options could not be applied', { error })),
+      ),
+    );
+  }
+
+  /** Removes the index rows of the blocks retention deleted, then forgets them. */
+  #purgeTrimmed(): Store<void> {
+    return Effect.gen({ self: this }, function* () {
+      while (true) {
+        const { maxId, blocks } = yield* this.#feedStore.takeTrimmed({ limit: PURGE_BATCH });
+        if (blocks.length === 0) {
+          return;
+        }
+        const byFeed = new Map<string, { spaceId: SpaceId; queueId: string; blocks: typeof blocks }>();
+        for (const block of blocks) {
+          if (!SpaceId.isValid(block.spaceId)) {
+            continue;
+          }
+          const key = `${block.spaceId}/${block.feedId}`;
+          const entry = byFeed.get(key) ?? { spaceId: block.spaceId, queueId: block.feedId, blocks: [] };
+          entry.blocks.push(block);
+          byFeed.set(key, entry);
+        }
+        for (const feed of byFeed.values()) {
+          yield* this.#engine.purgeFeedBlocks(feed);
+        }
+        yield* this.#feedStore.clearTrimmed(maxId);
+      }
+    });
+  }
+
+  /**
+   * Each feed's stored options, by feed id, which queries read to hide expired and unindexed items.
+   */
+  feedOptions(): Store<Map<string, FeedOptions>> {
+    return this.#feedStore.listFeedOptions(this.#spaceId);
   }
 
   /**
@@ -325,6 +399,23 @@ WHERE m.spaceId = ? AND json_extract(s.snapshot, '$."@meta".key') = ?`,
    * Ids of deleted rows and of everything their deletion hides: descendants through `parentId` and
    * relations with a purged endpoint. Purging only the flagged rows would make those visible again.
    */
+  /**
+   * Folds each stored document of the space into one chunk (see {@link DocStore.compact}).
+   *
+   * @returns The number of chunks deleted.
+   */
+  compactDocuments(): Store<number> {
+    const spaceId = this.#spaceId;
+    return Effect.gen({ self: this }, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql.unsafe<{ id: string }>(
+        `SELECT objectId AS id FROM objectMeta m WHERE m.spaceId = ?1 AND ${DOCUMENT_ROWS}`,
+        [spaceId],
+      );
+      return yield* this.#docs.compact(rows.map((row) => row.id));
+    }).pipe(Effect.catchIf(isCypherError, (error) => Effect.die(error)));
+  }
+
   deletedIds(): Store<string[]> {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
@@ -403,3 +494,24 @@ const parseRow = (row: BodyRow): StoredEntity => ({
       ? { key: row.groupKey, ord: Number(row.groupOrd), aggregates: JSON.parse(row.aggregates ?? '{}') }
       : undefined,
 });
+
+const toDocWrite = (record: EntityRecord & { readonly heads?: readonly string[] }): DocWrite => ({
+  id: record.id,
+  structure: objectStructureFromJson(record.body as Obj.JSON, { createdAt: record.createdAt }),
+  heads: record.heads,
+});
+
+/** Trimmed blocks purged from the index per batch. */
+const PURGE_BATCH = 500;
+
+/** Repeats a bounded trim until it reports nothing left past a limit. */
+const trimUntilDone = <E, R>(
+  trim: Effect.Effect<TrimResult, E, R>,
+  first: TrimResult = { deleted: 0, more: true },
+): Effect.Effect<void, E, R> =>
+  Effect.gen(function* () {
+    let result = first;
+    while (result.more) {
+      result = yield* trim;
+    }
+  });

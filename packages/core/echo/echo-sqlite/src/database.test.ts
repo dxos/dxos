@@ -622,6 +622,35 @@ describe('SqliteDatabase', () => {
     }),
   );
 
+  it.effect('garbage collection folds each document into one chunk, which loads as the object', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const id = yield* session(
+        async (db) => {
+          const person = db.add(Obj.make(TestSchema.Person, { name: 'v0' }));
+          for (let edit = 1; edit <= 3; edit++) {
+            Obj.update(person, (person) => {
+              person.name = `v${edit}`;
+            });
+            await db.flush();
+          }
+          expect((await db.runGarbageCollection()).purgedFeedBlocks).toBeGreaterThan(1);
+          // Nothing left to fold.
+          expect((await db.runGarbageCollection()).purgedFeedBlocks).toBe(0);
+          return person.id;
+        },
+        { spaceId },
+      );
+      yield* session(
+        async (db) => {
+          const [person] = await db.query(Filter.id(id)).run();
+          expect(person).toMatchObject({ name: 'v3' });
+        },
+        { spaceId },
+      );
+    }),
+  );
+
   it.effect('garbage-collects deleted rows with their side-table rows (F-6.3)', () =>
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
@@ -739,7 +768,6 @@ describe('SqliteDatabase', () => {
       expect(db.listBranches('x')).toEqual(['main']);
       await expect(db.createBranch()).rejects.toBeInstanceOf(UnsupportedOperationError);
       expect(() => db.retainObjects([])).toThrow(UnsupportedOperationError);
-      expect(() => db.getChanges(Obj.make(TestSchema.Person, {}))).toThrow(UnsupportedOperationError);
       expect(await db.query(Filter.key('com.example.key', { version: '^1.0.0' })).run()).toEqual([]);
       expect(() => db.query(Filter.key('com.example.key', { version: '1.0.0' }))).not.toThrow();
       await expect(db.query(Filter.text('alice', { type: 'vector' })).run()).rejects.toThrow(UnsupportedQueryError);
