@@ -1166,6 +1166,21 @@ const uniformCards = (content: ContentMap, model: StudioModel, uniform: boolean,
   return sized;
 };
 
+/** Removes the frames the slide names, with the label each carries: a border the drawing reads better without. */
+const dropFrames = (content: ContentMap, frames: readonly string[]): number => {
+  let dropped = 0;
+  for (const id of frames) {
+    for (const part of ['frame', 'title']) {
+      const key = nodeKey(elementId(id, part));
+      if (content[key]) {
+        delete content[key];
+        dropped++;
+      }
+    }
+  }
+  return dropped;
+};
+
 /**
  * Puts one gap between every column of the slide. Where {@link uniformGrid} evens the columns a slide stands on, this
  * takes every column — a component and a frame among them — and spaces the lot left to right, from the leftmost
@@ -1179,16 +1194,20 @@ const evenColumns = (content: ContentMap, gap: number | undefined, grid: number)
   const boxes = Object.entries(content).flatMap(([key, record]) =>
     isNodeRecord(record) ? [{ key, node: record.node }] : [],
   );
-  const columns: { left: number; right: number; members: typeof boxes }[] = [];
+  // Columns by centre, within half a card: a frame drawn around a column joins it, where clustering by overlap would
+  // weld a column to the frame of the one beside it.
+  const widths = boxes.map(({ node }) => node.size.width).sort((first, second) => first - second);
+  const tolerance = Math.max(grid, (widths[Math.floor(widths.length / 2)] ?? 0) / 2);
+  const columns: { center: number; left: number; right: number; members: typeof boxes }[] = [];
   for (const box of [...boxes].sort((first, second) => first.node.center.x - second.node.center.x)) {
     const [left, right] = [box.node.center.x - box.node.size.width / 2, box.node.center.x + box.node.size.width / 2];
     const last = columns.at(-1);
-    // A column holds what overlaps it: a frame around a column is part of it, and so is a shape beside its cards.
-    if (last && left < last.right) {
+    if (last && box.node.center.x - last.center <= tolerance) {
+      last.left = Math.min(last.left, left);
       last.right = Math.max(last.right, right);
       last.members.push(box);
     } else {
-      columns.push({ left, right, members: [box] });
+      columns.push({ center: box.node.center.x, left, right, members: [box] });
     }
   }
   let moved = 0;
@@ -1402,6 +1421,7 @@ export const seedStudioSlide =
       spread = 1,
       balance = false,
       gap,
+      frames = [],
       uniform = false,
       sizes = {},
       kinds = STUDIO_COMPONENT_KINDS,
@@ -1421,6 +1441,8 @@ export const seedStudioSlide =
       balance?: boolean;
       /** One gap between every column of the slide, in scene units ({@link evenColumns}). */
       gap?: number;
+      /** Frames the slide does not draw, by id ({@link dropFrames}). */
+      frames?: readonly string[];
       /** Every card of the slide is drawn at one size ({@link uniformCards}). */
       uniform?: boolean;
       /** A card the slide draws at a size of its own, by its id: what the deck drew is not always what reads. */
@@ -1442,6 +1464,12 @@ export const seedStudioSlide =
     promoteCards(content, model, remap);
     styleText(content, model);
     styleFrames(content, model);
+    // Before anything is measured: what the slide does not draw is not a column either, and a slide-wide footnote
+    // left in would make every column one.
+    dropFrames(content, frames);
+    if (!labels) {
+      dropLabels(content, model);
+    }
     const snapped = snapToGrid(content, grid);
     // After the snap and before the routes: a route is taken from the outlines it meets, so the run has to be laid
     // out while they are still what the links will be measured against.
@@ -1463,9 +1491,6 @@ export const seedStudioSlide =
         : placeComponentKinds(content, model, kinds);
     if (components === 'kind') {
       hideParts(content, model, kinds);
-    }
-    if (!labels) {
-      dropLabels(content, model);
     }
     const shapes = placeShapes(content, model);
     report?.({
