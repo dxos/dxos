@@ -19,6 +19,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { formatRawFact } from '../../model/index.ts';
 import {
   type Group,
   factualityColor,
@@ -28,6 +29,7 @@ import {
   groupFacts,
   termKey,
 } from '../../types.ts';
+import { TurtleSnippet } from '../TurtleSnippet/index.ts';
 import { factViewerTheme } from './FactViewer.theme.ts';
 
 const styles = factViewerTheme.styles();
@@ -48,6 +50,9 @@ type FactViewerContextValue = {
   setFilter: (value: string) => void;
   view: View;
   setView: (view: View) => void;
+  /** Whether each fact row also shows the fact as stored, in TriG. */
+  turtle: boolean;
+  setTurtle: (turtle: boolean) => void;
 };
 
 const FactViewerContext = createContext<FactViewerContextValue | null>(null);
@@ -86,6 +91,7 @@ const FactViewerRoot = forwardRef<HTMLDivElement, FactViewerRootProps>(
   ({ classNames, facts, context, predicate, children }, forwardedRef) => {
     const [filter, setFilter] = useState('');
     const [view, setView] = useState<View>('list');
+    const [turtle, setTurtle] = useState(false);
     const scoped = useMemo(
       () =>
         facts.filter(
@@ -105,8 +111,8 @@ const FactViewerRoot = forwardRef<HTMLDivElement, FactViewerRootProps>(
     );
 
     const value = useMemo<FactViewerContextValue>(
-      () => ({ facts, context, predicate, groups, graph, filter, setFilter, view, setView }),
-      [facts, context, predicate, groups, graph, filter, view],
+      () => ({ facts, context, predicate, groups, graph, filter, setFilter, view, setView, turtle, setTurtle }),
+      [facts, context, predicate, groups, graph, filter, view, turtle],
     );
 
     return (
@@ -133,7 +139,7 @@ FactViewerRoot.displayName = 'FactViewer.Root';
 type FactViewerToolbarProps = Util.ThemedClassName<{}>;
 
 const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
-  const { filter, setFilter, view, setView } = useFactViewerContext('Toolbar');
+  const { filter, setFilter, view, setView, turtle, setTurtle } = useFactViewerContext('Toolbar');
   return (
     <Panel.Header>
       <Toolbar.Root classNames={classNames}>
@@ -146,6 +152,16 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
           />
         </Field.Root>
         <div className={styles.toolbarSpacer()} />
+        <Button.Root
+          icon='ph--brackets-curly--regular'
+          iconOnly
+          label={turtle ? 'Hide Turtle' : 'Show Turtle'}
+          variant={turtle ? 'primary' : 'default'}
+          disabled={view !== 'list'}
+          aria-pressed={turtle}
+          data-testid='fact-viewer-turtle'
+          onClick={() => setTurtle(!turtle)}
+        />
         <Button.Root
           icon='ph--list--regular'
           iconOnly
@@ -231,14 +247,13 @@ const FactViewerGroup = forwardRef<HTMLDivElement, FactViewerGroupProps>(({ clas
         </Tag.Tag>
       )}
     </div>
+    {/* Bare content, so the list's one ScrollArea scrolls every group and each keeps its natural height. */}
     <Listbox.Root items={group.facts.map((fact) => ({ value: fact.id, label: fact.assertion.predicate }))}>
-      <Listbox.Viewport>
-        <Listbox.Content aria-label={group.subject}>
-          {group.facts.map((fact) => (
-            <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
-          ))}
-        </Listbox.Content>
-      </Listbox.Viewport>
+      <Listbox.Content aria-label={group.subject}>
+        {group.facts.map((fact) => (
+          <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   </div>
 ));
@@ -254,6 +269,9 @@ type FactViewerRowProps = Util.ThemedClassName<{ fact: RDF.Fact; conflicting?: b
 const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
   ({ classNames, fact, conflicting }, forwardedRef) => {
     const { assertion, factuality, attribution } = fact;
+    // A row can render outside a Root (composed by hand), where it has no Turtle toggle.
+    const turtle = useContext(FactViewerContext)?.turtle ?? false;
+    const source = useMemo(() => (turtle ? formatRawFact(fact) : undefined), [turtle, fact]);
     return (
       <Listbox.Item id={fact.id} classNames={styles.row({ conflicting, class: mx(classNames) })} ref={forwardedRef}>
         {assertion.quote && <div className={styles.rowQuote()}>"{assertion.quote}"</div>}
@@ -278,6 +296,10 @@ const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
         <div className={styles.rowAttribution()}>
           {[attribution.agent, attribution.source, formatDate(attribution.generatedAtTime)].filter(Boolean).join(' · ')}
         </div>
+
+        {source && (
+          <TurtleSnippet data-testid='fact-viewer-turtle-snippet' className={styles.rowTurtle()} source={source} />
+        )}
       </Listbox.Item>
     );
   },

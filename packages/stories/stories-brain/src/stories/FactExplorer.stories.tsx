@@ -10,9 +10,10 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { type RDF } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
+import { translations as rdfTranslations } from '@dxos/react-ui-rdf/translations';
 import { ModuleContainer, type ModuleLayout, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { FactsStoryContext, StoryRole } from '../modules/index.ts';
+import { FactsStoryContext, type PredicateFilter, StoryRole } from '../modules/index.ts';
 import { StoryModulesPlugin } from '../testing/modules.tsx';
 import { DEFAULT_FACT_SERVER_URL, RemoteFactStorePlugin } from '../testing/remote-fact-store.ts';
 
@@ -28,6 +29,7 @@ const ExplorerRoot = () => {
   const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   const [selected, setSelected] = useState<string | undefined>(undefined);
+  const [predicate, setPredicate] = useState<PredicateFilter | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
 
   // The remote store ignores the space id; any key reaches the server.
@@ -38,7 +40,7 @@ const ExplorerRoot = () => {
   }, [registry]);
 
   return (
-    <FactsStoryContext.Provider value={{ facts, setFacts, selected, setSelected }}>
+    <FactsStoryContext.Provider value={{ facts, setFacts, selected, setSelected, predicate, setPredicate }}>
       {error && (
         <div className='p-2 text-sm text-error-text'>
           {error} — start it with <code>moon run plugin-discord:fact-server</code>.
@@ -58,6 +60,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
+    translations: rdfTranslations,
   },
 } satisfies Meta<typeof ExplorerRoot>;
 

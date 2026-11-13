@@ -15,6 +15,9 @@
       "path": "../../core/compute/pipeline-rdf"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {
@@ -22,6 +25,12 @@
     },
     {
       "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-menu"
+    },
+    {
+      "path": "../ui-editor"
     },
     {
       "path": "../ui-theme"

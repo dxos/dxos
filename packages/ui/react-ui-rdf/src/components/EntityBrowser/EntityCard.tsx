@@ -11,8 +11,9 @@ import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { AgentNamespace } from '../../namespace.ts';
-import { type EntityCardModel, type EntityCardProperty, type EntityCardValue, propertyKey } from './subgraph.ts';
+import { translationKey } from '#translations';
+
+import { type EntityCardModel, type EntityCardProperty, type EntityCardValue, propertyKey } from '../../model/index.ts';
 
 const TYPE_ICON = 'ph--shapes--regular';
 const NAME_ICON = 'ph--identification-card--regular';
@@ -39,6 +40,16 @@ export type EntityCardProps = {
   /** Opens the entity a chip names; `key` is the row it sits in. */
   onSelect?: (id: string, key: string) => void;
   onClose?: () => void;
+};
+
+/** One hue per entity type the brain assigns, chosen rather than hashed so no two types share one. */
+export const ENTITY_HUES: EntityCardProps['hues'] = {
+  Person: 'amber',
+  Organization: 'indigo',
+  Place: 'emerald',
+  Event: 'pink',
+  Concept: 'violet',
+  Thing: 'neutral',
 };
 
 export type EntityCardFieldProps = { label: string; children: React.ReactNode };
@@ -69,7 +80,7 @@ const Values = ({
   hues?: EntityCardProps['hues'];
   onSelect?: (id: string) => void;
 }) => {
-  const { t } = Hooks.useTranslation(AgentNamespace.key);
+  const { t } = Hooks.useTranslation(translationKey);
   const entities = values.filter((value) => value.kind === 'entity');
   // Text values (a memory's claims) are sentences, not links, so the card counts them; choosing the row opens them.
   const statements = values.length - entities.length;
@@ -164,7 +175,7 @@ export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
     { card, icons, hues, selected, currentProperty, onClick, onSelectProperty, onSelect, onClose, ...props },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(AgentNamespace.key);
+    const { t } = Hooks.useTranslation(translationKey);
     const rows = { icons, hues, currentProperty, onSelectProperty, onSelect };
     return (
       <Card.Root
