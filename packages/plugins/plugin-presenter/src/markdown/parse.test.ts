@@ -291,6 +291,15 @@ describe('parseSlide', () => {
     expect(short.frontmatter.code).toBeUndefined();
     expect(short.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('code') }]);
 
+    // Separators cannot be mixed, and only the sRGB and HSL functions take commas at all.
+    const mixed = parseSlide('---\naccent: "rgb(1, 2 3)"\n---\n\n# Title');
+    expect(mixed.frontmatter.accent).toBeUndefined();
+    expect(mixed.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
+    const commas = parseSlide('---\naccent: "oklch(0.5, 0.1, 240)"\n---\n\n# Title');
+    expect(commas.frontmatter.accent).toBeUndefined();
+    expect(commas.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
     // The colors CSS does know still pass.
     const valid = parseSlide('---\naccent: "rebeccapurple"\nseparator: "rgb(1 2 3)"\n---\n\n# Title');
     expect(valid.frontmatter.accent).toBe('rebeccapurple');

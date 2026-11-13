@@ -202,19 +202,25 @@ const NAMED_COLORS = [
   'currentcolor',
 ] as const;
 
-// A number as a color function writes one: optionally signed, optionally a percentage.
-const NUMBER = '[+-]?(?:\\d+\\.?\\d*|\\.\\d+)%?';
+// A number as a color function writes one: optionally signed, optionally a percentage. The decimal point is the
+// only way to split a digit run, so the alternatives cannot both match one — overlapping ones make a failing value
+// retry every split, and `parseSlide` runs on the editor's thread at every keystroke.
+const NUMBER = '[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)%?';
 
-// Components separated by commas or spaces, as both syntaxes are current, with an optional alpha after the third.
-const SEPARATOR = '(?:\\s*,\\s*|\\s+)';
-const COLOR_FUNCTION =
-  `(?:rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\\(\\s*${NUMBER}${SEPARATOR}${NUMBER}${SEPARATOR}${NUMBER}` +
-  `(?:\\s*[,/]\\s*${NUMBER})?\\s*\\)`;
+// The modern syntax every color function takes: three components separated by spaces, with an optional alpha.
+const modern = (functions: string) =>
+  `(?:${functions})\\(\\s*${NUMBER}\\s+${NUMBER}\\s+${NUMBER}(?:\\s*/\\s*${NUMBER})?\\s*\\)`;
+
+// The legacy comma syntax, which only the sRGB and HSL functions take, and never mixed with spaces.
+const legacy = (functions: string) =>
+  `(?:${functions})\\(\\s*${NUMBER}\\s*,\\s*${NUMBER}\\s*,\\s*${NUMBER}(?:\\s*,\\s*${NUMBER})?\\s*\\)`;
+
+const COLOR_FUNCTION = [modern('rgb|rgba|hsl|hsla|oklch|oklab|lab|lch'), legacy('rgb|rgba|hsl|hsla')].join('|');
 
 /**
  * Values reach inline styles, so only plain colors pass: a hex color, one of the named colors, or a color function
- * carrying its three components and an optional alpha. `url(...)`, other functions, and a function whose arguments
- * are missing or malformed are rejected — a value CSS cannot parse would leave the variable invalid, and the
+ * written as CSS writes it. `url(...)`, other functions, and a function whose components are missing, malformed or
+ * separated in two ways at once are rejected — a value CSS cannot parse would leave the variable invalid, and the
  * element would inherit a color rather than fall back to the theme's.
  */
 export const COLOR_PATTERN = new RegExp(
