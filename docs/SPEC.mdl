@@ -5615,6 +5615,14 @@ decision D-288: `/echo` draws its hero from the same ECHO art as the docs heroes
   why: Josiah asked for `/echo` to share assets and inherit colors so it does not diverge from the suite again.
 ```
 
+```mdl
+decision D-289: PLEX's Overview calls PLEX a framework for building apps out of plugins, not an agentic one. What agents get from a plugin, its operations and skills as tools, stays in "How it works".
+  date: 2026-11-13
+  by: user:wittjosiah
+  affects: [app-framework-welcome]
+  why: Josiah asked what makes PLEX agentic; nothing in the framework itself does.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
