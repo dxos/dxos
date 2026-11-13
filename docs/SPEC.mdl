@@ -1116,7 +1116,7 @@ page why-mesh: Why MESH?
   template: narrative
   status: spike
   covers:
-    - Direct links give lower latency between nearby devices, keep sync going if EDGE drops, and carry data that does not pass through a server
+    - Direct links give lower latency between nearby devices and keep sync going if EDGE drops; with EDGE replication on, the same changes also go to EDGE, and WebRTC can fall back to a TURN relay [D-249]
     - EDGE is a transport too: it reaches devices that are rarely online together and peers no direct link reaches
     - Today ECHO replicates each space over both at once, peer links and EDGE (`subductionReplicator`, `feedReplicator`), and the pages say so plainly [D-221]
 ```
@@ -1160,7 +1160,7 @@ page mesh-swarms: Swarms and topology
   status: spike
   covers:
     - A swarm per topic, and the peers in it
-    - The MMST topology: connect enough peers that every device stays reachable, not every pair
+    - The MMST topology: connect enough peers that devices usually stay reachable, not every pair; it does not guarantee a connected swarm, and EDGE covers the gaps [D-249]
     - The fully connected and star topologies, and when each is used
     - The connection limiter
 ```
@@ -5033,7 +5033,7 @@ decision D-248: On `/echo` the four reason cards and the four guarantee cards ea
 ```
 
 ```mdl
-decision D-249: Corrections from review. EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read; Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension, not after it. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key. The TILE learning path's ECHO app configures its client as ECHO's Installation page does, so the sharing exercise works across browser profiles, and its new entry point keeps the stylesheet imports. TILE's samples key rows by id, keep editor text in state across theme changes, and make tooltip triggers focusable. TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, only `Flex`, `Grid` and `Container` take `asChild`, a layout primitive may take a role, `include` keeps schema order, and Save is disabled only while a touched field has an error. The topic picker scrolls on a short screen.
+decision D-249: Corrections from review. EDGE and MESH pages say EDGE holds a copy of each space that replicates through it, that `Space.setEdgeReplication` turns that off, and that EDGE indexes only spaces it can read; Why MESH? no longer says a direct link carries data that never passes through a server. Teleport's other extensions open alongside the auth extension and do not wait for it, so replication can start before a peer authenticates. MMST usually connects a swarm but does not guarantee it. A space's topic is its space ID, the first 20 bytes of the SHA-256 of its space key. The TILE learning path's ECHO app configures its client as ECHO's Installation page does, so the sharing exercise works across browser profiles, and its new entry point keeps the stylesheet imports. TILE's samples key rows by id, keep editor text in state across theme changes, and make tooltip triggers focusable. TILE's reference pages say Popover holds focus only with `modal`, `useTranslation` returns `{ t, … }`, `Menu.Root`'s `onSelect` receives `{ value }`, `modal-surface` is at the `raised` level, only `Flex`, `Grid` and `Container` take `asChild`, a layout primitive may take a role, an icon-only part still needs an accessible name, `include` keeps schema order, and Save is disabled only while a touched field has an error. The topic picker scrolls on a short screen.
   date: 2026-11-13
   by: agent:claude
   for: user:wittjosiah
