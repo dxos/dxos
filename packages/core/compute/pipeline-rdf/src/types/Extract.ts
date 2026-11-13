@@ -18,7 +18,10 @@ export type KnownEntity = {
 export type ExtractDocument = {
   readonly text: string;
   readonly source: string;
+  /** The author as the model reads it, e.g. a display name. */
   readonly author?: string;
+  /** The author's canonical id, stored as `attribution.agent`; defaults to `author` normalized. */
+  readonly agent?: string;
   readonly date?: string;
 };
 

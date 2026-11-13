@@ -8,7 +8,7 @@ import { AgentRegistry, type StateError, type StateStore, type Type, tapStage } 
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Stage } from '@dxos/pipeline';
-import { FactStore, RDF, hashText, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { FactStore, RDF, hashText } from '@dxos/pipeline-rdf';
 import { Person } from '@dxos/types';
 
 import { DISCORD_SOURCE } from '../constants.ts';
@@ -34,7 +34,7 @@ export type AskedQuestion = {
   readonly question: string;
   /** DXN of the message, e.g. `discord:<message id>`. */
   readonly source: string;
-  /** Canonical agent id of the asker (normalized with `normalizeEntityId`). */
+  /** IRI of the asker (`AgentRegistry.iriForUser`), the node their other facts name too. */
   readonly agent: string;
   readonly agentLabel?: string;
   /** ISO time of the message. */
@@ -202,7 +202,7 @@ export const extractQuestionsStage = (
               return questionFacts({
                 question,
                 source: `${namespace}:${event.message.id}`,
-                agent: normalizeEntityId(agent.id),
+                agent: AgentRegistry.iriForUser(author),
                 ...(agent.label ? { agentLabel: agent.label } : {}),
                 ...(event.message.createdAt ? { askedAt: event.message.createdAt } : {}),
                 ...(start >= 0 ? { span: { start, end: start + question.length } } : {}),

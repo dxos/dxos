@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 
 import { type AiService } from '@dxos/ai';
 import { Pipeline } from '@dxos/pipeline';
-import { FactStore, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { FactStore } from '@dxos/pipeline-rdf';
 import { failingAiService } from '@dxos/pipeline-rdf/testing';
 
 import * as Crawler from '../Crawler.ts';
@@ -56,7 +56,8 @@ describe('extractFactsStage', () => {
       yield* crawl();
       expect(prompts).toHaveLength(1);
 
-      const facts = yield* (yield* FactStore).query({});
+      // Profile graphs name users from their metadata and cite no message.
+      const facts = (yield* (yield* FactStore).query({})).filter((fact) => fact.extractor.id !== 'agent-registry');
       expect(facts.length).toBeGreaterThan(0);
       const cited = new Set<string>();
       for (const fact of facts) {
@@ -65,7 +66,7 @@ describe('extractFactsStage', () => {
         cited.add(id);
         // The deterministic extractor's facts are `author mentions noun`, so each must land on the message naming it.
         expect(message.text).toContain(fact.assertion.object.kind === 'entity' ? fact.assertion.object.label : '');
-        expect(fact.attribution.agent).toBe(normalizeEntityId(`discord-user:${message.author}`));
+        expect(fact.attribution.agent).toBe(`https://discord.com/users/${message.author}`);
       }
       expect([...cited].sort()).toEqual(Object.keys(TEXTS).sort());
 
@@ -73,6 +74,42 @@ describe('extractFactsStage', () => {
       const targets = yield* StateStore.listTargets();
       expect(targets.find((target) => target.id === 'chan-1')?.cursor).toBe('1001');
       expect(targets.find((target) => target.id === 'thread-1')?.cursor).toBe('2001');
+    }).pipe(Effect.provide(layer(prompts)));
+  });
+
+  it.effect('names people by their Discord identity, labelled from their profile', () => {
+    const prompts: string[] = [];
+    const target: Type.Target = { id: 'chan-1', channelId: 'chan-1', depth: 0, status: 'active' };
+    const message = (id: string, user: Type.User, text: string): Type.Event => ({
+      _tag: 'Message',
+      target,
+      message: { id, text, author: user },
+    });
+    const alice: Type.User = { id: '111', source: 'discord', displayName: 'Alice', username: 'alice_w' };
+    const bob: Type.User = { id: '222', source: 'discord', displayName: 'Bob' };
+    return Effect.gen(function* () {
+      yield* Stream.fromIterable([
+        message('1', bob, 'Bob maintains Automerge.'),
+        message('2', alice, 'Ask <@222> about OPFS.'),
+      ]).pipe(agentProfileStage(), extractFactsStage(), Stream.runDrain);
+
+      // The model reads names, and a mention reads as the person it names.
+      expect(prompts[0]).toContain('author="Alice"');
+      expect(prompts[0]).toContain('Ask @Bob about OPFS.');
+      expect(prompts[0]).not.toContain('discord-user');
+
+      const store = yield* FactStore;
+      const said = (yield* store.query({ source: 'discord:2' })).filter(
+        (fact) => fact.extractor.id !== 'agent-registry',
+      );
+      expect(said.length).toBeGreaterThan(0);
+      expect(said.every((fact) => fact.attribution.agent === 'https://discord.com/users/111')).toBe(true);
+      expect(said[0].assertion.subject).toMatchObject({ entity: 'https://discord.com/users/111', label: 'Alice' });
+
+      const profile = yield* store.query({ subjectEntity: 'https://discord.com/users/111' });
+      const account = profile.find((fact) => fact.assertion.predicate === 'has account');
+      expect(account?.assertion.object).toEqual({ kind: 'literal', literal: 'alice_w' });
+      expect(account?.assertion.subject).toMatchObject({ label: 'Alice', type: 'person' });
     }).pipe(Effect.provide(layer(prompts)));
   });
 

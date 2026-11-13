@@ -80,9 +80,9 @@ describe('extractQuestionsStage', () => {
       const recorded = questionGraph(yield* facts.query({ source: 'discord:1000' }));
       expect(recorded).toHaveLength(3);
       expect(new Set(recorded.map((fact) => fact.graph)).size).toBe(1);
-      expect(recorded.every((fact) => fact.attribution.agent === 'discord-user-alice')).toBe(true);
+      expect(recorded.every((fact) => fact.attribution.agent === 'https://discord.com/users/Alice')).toBe(true);
       expect(recorded.find((fact) => fact.assertion.predicate === 'asked')?.assertion).toMatchObject({
-        subject: { kind: 'entity', entity: 'discord-user-alice' },
+        subject: { kind: 'entity', entity: 'https://discord.com/users/Alice' },
         object: { kind: 'entity', entity: 'question', label: 'Should Composer use OPFS for local storage?' },
       });
       expect(recorded.find((fact) => fact.assertion.predicate === 'has text')?.assertion.object).toEqual({

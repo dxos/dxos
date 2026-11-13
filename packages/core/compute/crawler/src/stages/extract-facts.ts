@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
 import { Stage } from '@dxos/pipeline';
-import { DEFAULT_INDEX_BATCH_SIZE, type FactStore, type RDF, indexFactsBatch } from '@dxos/pipeline-rdf';
+import { DEFAULT_INDEX_BATCH_SIZE, FactStore, RDF, hashText, indexFactsBatch } from '@dxos/pipeline-rdf';
 
 import * as AgentRegistry from '../AgentRegistry.ts';
 import { type StateError } from '../errors.ts';
@@ -26,6 +26,66 @@ export type ExtractFactsOptions = {
 };
 
 type MessageEvent = Extract<Type.Event, { readonly _tag: 'Message' }>;
+
+/** Every user the registry knows as a known entity, keyed by source user id: their IRI, display name and usernames. */
+const knownUsers = (profiles: readonly AgentRegistry.Profile[]): Map<string, RDF.KnownEntity> =>
+  new Map(
+    profiles.flatMap((profile) => {
+      const user = AgentRegistry.userOf(profile);
+      if (!user) {
+        return [];
+      }
+      const usernames = AgentRegistry.usernamesOf(profile);
+      const entity: RDF.KnownEntity = {
+        iri: AgentRegistry.iriForUser(user),
+        label: profile.label ?? usernames[0] ?? user.id,
+        aliases: usernames,
+        type: 'person',
+      };
+      return [[user.id, entity] as const];
+    }),
+  );
+
+/** Discord's `<@id>` / `<@!id>` mentions as `@name`, so the model reads a person it can link instead of an opaque id. */
+const resolveMentions = (text: string, users: ReadonlyMap<string, RDF.KnownEntity>): string =>
+  text.replace(/<@!?(\d+)>/g, (mention, id: string) => {
+    const user = users.get(id);
+    return user ? `@${user.label}` : mention;
+  });
+
+/** Time on the profile graph, fixed so re-extraction rewrites the same graph rather than minting another. */
+const PROFILE_TIME = new Date(0).toISOString();
+
+/**
+ * The facts naming a user from the source's own metadata, in one graph per user: `user —is a→ schema:Person` and
+ * `user —has account→ "username"`, the subject carrying the display name, so the user's label comes from the source, never from a mention.
+ */
+const profileFacts = (profile: AgentRegistry.Profile): RDF.Fact[] => {
+  const user = AgentRegistry.userOf(profile);
+  if (!user) {
+    return [];
+  }
+  const iri = AgentRegistry.iriForUser(user);
+  const usernames = AgentRegistry.usernamesOf(profile);
+  const label = profile.label ?? usernames[0] ?? user.id;
+  const subject: RDF.EntityTerm = { kind: 'entity', entity: iri, label, type: 'person' };
+  const statement = (predicate: string, object: RDF.Term): RDF.Fact => ({
+    id: '',
+    assertion: { subject, predicate, object },
+    factuality: { value: 'CT+', polarity: '+' },
+    attribution: { agent: iri, agentLabel: label, source: iri, generatedAtTime: PROFILE_TIME },
+    recordedAt: PROFILE_TIME,
+    extractor: { id: 'agent-registry', model: `${user.source}-profile`, version: '1' },
+    sourceHash: hashText(`${label}\n${usernames.join('\n')}`),
+  });
+  return RDF.Graph.assign(
+    [
+      statement('is a', { kind: 'entity', entity: 'https://schema.org/Person', label: 'Person' }),
+      ...usernames.map((username) => statement('has account', { kind: 'literal', literal: username })),
+    ],
+    { name: () => `${iri}#profile` },
+  );
+};
 
 const isExtractable = (event: Type.Event): event is MessageEvent =>
   event._tag === 'Message' && event.message.text.trim().length > 0;
@@ -49,20 +109,29 @@ export const extractFactsStage = (
   const namespace = options?.sourceNamespace ?? 'discord';
   const extractOptions = options?.rules ? { rules: options.rules } : {};
   const extract = Effect.fnUntraced(function* (events: readonly MessageEvent[]) {
-    const docs: RDF.ExtractDocument[] = [];
+    const authors = new Map<string, AgentRegistry.Profile>();
     for (const event of events) {
       const agent = yield* AgentRegistry.resolve(
         AgentRegistry.identifiersForUser(event.message.author),
         AgentRegistry.labelForUser(event.message.author),
       );
-      docs.push({
-        text: event.message.text,
-        source: `${namespace}:${event.message.id}`,
-        author: agent.id,
-        date: event.message.createdAt,
-      });
+      authors.set(event.message.id, agent);
     }
-    yield* indexFactsBatch(docs, extractOptions);
+    const users = knownUsers(yield* AgentRegistry.list());
+    const docs = events.map((event): RDF.ExtractDocument => {
+      const user = event.message.author;
+      return {
+        text: resolveMentions(event.message.text, users),
+        source: `${namespace}:${event.message.id}`,
+        // The model reads people by name; attribution and links use the user's IRI.
+        author: authors.get(event.message.id)?.label ?? AgentRegistry.labelForUser(user) ?? user.id,
+        agent: AgentRegistry.iriForUser(user),
+        date: event.message.createdAt,
+      };
+    });
+    yield* indexFactsBatch(docs, { ...extractOptions, entities: [...users.values()] });
+    const store = yield* FactStore;
+    yield* store.putFacts([...new Set(authors.values())].flatMap((profile) => profileFacts(profile)));
   });
 
   return Stage.batch(
