@@ -1,11 +1,13 @@
-// The echo sync server: one Durable Object per graph, assigning sequence numbers to writes.
-// Deploy: `npm install && npm run deploy` here, or the "Deploy to Cloudflare" button in README.md.
+// The echo sync server: one Durable Object per space, the authority that positions its feed blocks.
+// Deploy from the monorepo: `pnpm build` the workspace, then `pnpm deploy` here.
 {
   "name": "echo-sync-worker",
   "main": "./src/worker.ts",
-  "compatibility_date": "2026-10-01",
-  // One object per slug: single-threaded, so it hands out seqs in a total order with no coordination.
-  // Created on demand by the first request that addresses it, and deleted by its own alarm 24h later.
+  "compatibility_date": "2026-07-01",
+  // `@dxos/*` packages import Node built-ins (`@dxos/log` reads `node:os`).
+  "compatibility_flags": ["nodejs_compat"],
+  // One object per space: single-threaded, so it positions blocks in a total order with no coordination.
+  // Created on demand by the first request that addresses it.
   "durable_objects": {
     "bindings": [{ "name": "SPACE", "class_name": "SpaceObject" }],
   },

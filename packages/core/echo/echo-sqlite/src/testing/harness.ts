@@ -123,7 +123,14 @@ export class TestPeer {
    * Keeps `db` in step with `authority` until the peer closes.
    */
   sync(db: SqliteDatabase, authority: TestAuthority): SpaceSync {
-    const sync = new SpaceSync(db, authority.connect(db.spaceId));
+    return this.syncOver(db, authority.connect(db.spaceId));
+  }
+
+  /**
+   * Keeps `db` in step with whatever authority `transport` reaches, until the peer closes.
+   */
+  syncOver(db: SqliteDatabase, transport: SyncTransport): SpaceSync {
+    const sync = new SpaceSync(db, transport);
     this.#syncs.push(sync);
     return sync;
   }

@@ -26,14 +26,14 @@ Five properties define it:
 - **Queries run on the indexer's tables.** The indexer reifies each changed document and writes its
   objects to SQLite; echo-sqlite's compiler runs every query against those rows [F-5].
 
-The sync protocol is new: Subduction does not run, and neither does the mesh replicator or the
-record protocol of `org.dxos.echo-sync-worker`, which this design replaces.
+The sync protocol is new: Subduction does not run, and neither does the mesh replicator.
 
 ## Packages
 
 - `@dxos/echo-sqlite` holds the database, the indexer wiring and the client sync, the last under its
   `sync` subpath export (`@dxos/echo-sqlite/sync`).
 - `@dxos/echo-sync-worker` is the Cloudflare part: the worker and the SpaceAuthority Durable Object.
+- `@dxos/echo-sqlite/browser` opens a database in the browser over OPFS, behind the one-tab Web Lock.
 
 ## Dependencies
 
@@ -50,11 +50,7 @@ uses org.dxos.index-core: The indexer that turns Automerge documents into the ro
 ```
 
 ```mdl
-uses org.dxos.echo-sync-worker: The record-sync worker this design replaces.
-```
-
-```mdl
-uses org.dxos.echo-sqlite-sync: The browser record-sync client this design replaces.
+uses org.dxos.echo-sync-worker: The worker that hosts the authority on Cloudflare.
 ```
 
 ## Extensions
@@ -867,4 +863,13 @@ decision D-26: The parity tests are copies of the portable echo-client end-to-en
   by: user:dmaretskyi
   supersedes: D-23
   affects: [F-9.1]
+```
+
+```mdl
+decision D-27: Opening a database in the browser, with the one-tab Web Lock, moves into echo-sqlite under a `browser` subpath, so no separate client package remains. Fills in [D-14] and [D-22].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.2]
+  why: With sync in `@dxos/echo-sqlite/sync`, the browser opener was all the old client package still held.
 ```

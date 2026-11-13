@@ -19,4 +19,6 @@ export const AUTHORITY_PEER_ID = 'authority';
 export type SyncTransport = {
   send(message: FeedProtocol.ProtocolMessage): void;
   onMessage(listener: (message: FeedProtocol.ProtocolMessage) => void): () => void;
+  /** Reports the channel opening and closing, for a transport that can lose its connection. */
+  onConnectionChange?(listener: (connected: boolean) => void): () => void;
 };

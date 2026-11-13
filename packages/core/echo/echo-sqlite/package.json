@@ -19,10 +19,20 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./browser": {
+      "source": "./src/browser/index.ts",
+      "types": "./dist/types/src/browser/index.d.ts",
+      "import": "./dist/lib/browser.mjs"
+    },
     "./sync": {
       "source": "./src/sync/index.ts",
       "types": "./dist/types/src/sync/index.d.ts",
       "import": "./dist/lib/sync.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -44,6 +54,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
+    "cbor-x": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

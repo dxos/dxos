@@ -48,6 +48,8 @@ export class SpaceSync {
       }),
       // Local writes; a round's own `applyRemote` commits only when it indexed something new.
       db.onCommit(() => this.#request()),
+      // Requests sent while the channel was down were lost; a round on reconnect sends them again.
+      transport.onConnectionChange?.((connected) => connected && this.#request()) ?? (() => {}),
     );
     this.#request();
   }

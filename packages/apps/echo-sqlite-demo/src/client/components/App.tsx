@@ -8,14 +8,14 @@ import { addEventListener, combine } from '@dxos/async';
 import { Filter, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import type { SqliteDatabase } from '@dxos/echo-sqlite';
-import { type Connection, connect } from '@dxos/echo-sqlite-sync';
+import { SpaceSync, connectSocket, socketPath } from '@dxos/echo-sqlite/sync';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Event, Organization, Person, types } from '../../schema.ts';
+import { Event, Organization, Person } from '../../schema.ts';
 import { OBJECT_LIMIT, generate } from '../generate.ts';
 import { DetailForm } from './DetailForm.tsx';
 import { type MasterTab, MasterView } from './MasterView.tsx';
@@ -30,7 +30,7 @@ const DETAIL_FRACTION = 0.4;
  * master/detail grid: the form stacks under the records on a phone and moves to a fixed right-hand column from `lg`
  * up. There is no app toolbar — the master pane carries its own.
  */
-export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
+export const App = ({ db }: { db: SqliteDatabase }) => {
   const [tab, setTab] = useState<MasterTab>('list');
   const [typename, setTypename] = useState<string>(Type.getTypename(Organization)!);
   const [selected, setSelected] = useState<string>();
@@ -40,7 +40,6 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
     ok: false,
     message: 'Connecting…',
   });
-  const [expiresAt, setExpiresAt] = useState<number>();
   const [online, setOnline] = useState(navigator.onLine);
 
   // Side by side on a laptop, stacked on a phone.
@@ -77,37 +76,27 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   /** Every record, whatever its type: what the views filter and the graph draws whole. */
   const objects = useMemo(() => [...organizations, ...people, ...events], [organizations, people, events]);
 
-  // The socket is the sync: the store pushes a write as it happens, so nothing here asks on a timer.
-  const socket = useRef<Connection>(undefined);
+  // The socket is the sync: every local commit starts a round, and the server announces other peers'
+  // writes as they land, so nothing here asks on a timer.
   useEffect(() => {
-    const active = connect(db, slug, types, {
-      server: import.meta.env.VITE_SYNC_URL,
-      onSync: ({ received, expiresAt: expiry }) => {
-        setExpiresAt(expiry);
-        setConnection({ ok: true, message: received > 0 ? `Received ${received}` : 'Connected' });
-      },
-      onError: (error) => setConnection({ ok: false, message: error.message }),
-    });
-    socket.current = active;
+    const url = new URL(socketPath(db.spaceId), import.meta.env.VITE_SYNC_URL ?? window.location.origin);
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    const transport = connectSocket(url.toString());
+    const sync = new SpaceSync(db, transport);
+    const unsubscribe = transport.onConnectionChange((connected) =>
+      setConnection(connected ? { ok: true, message: 'Connected' } : { ok: false, message: 'Reconnecting…' }),
+    );
     return () => {
-      active.close();
-      socket.current = undefined;
+      unsubscribe();
+      sync.close();
+      transport.close();
     };
-  }, [db, slug]);
-
-  // A local write is what triggers a push: the queries re-execute on commit, so their results changing is the signal.
-  useEffect(() => {
-    void socket.current?.push();
-  }, [objects]);
-
-  /** An edit keeps the same live object, so the query need not notify: the save pushes for itself. */
-  const handleSaved = useCallback(() => {
-    setSelected(undefined);
-    void db.flush().then(() => socket.current?.push());
   }, [db]);
 
+  const handleSaved = useCallback(() => setSelected(undefined), []);
+
   const handleGenerate = useCallback(() => {
-    // The store caps a graph at the same number, so the app says so rather than letting a sync 413.
+    // A demo bound: past it the views stop being readable.
     const budget = OBJECT_LIMIT - objects.length;
     if (budget <= 0) {
       setStatus(`limit reached (${OBJECT_LIMIT} objects)`);
@@ -149,13 +138,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
   }, []);
 
   /** Everything the status light has to say, since it is the only thing in the status bar. */
-  const tooltip = [
-    online ? connection.message : 'Offline',
-    status,
-    expiresAt && `expires ${new Date(expiresAt).toLocaleTimeString()}`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const tooltip = [online ? connection.message : 'Offline', status].filter(Boolean).join(' · ');
 
   return (
     <Panel.Root size='md' classNames='sm:rounded-md sm:border sm:border-separator'>
@@ -204,7 +187,7 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
       <Panel.Footer>
         <Toolbar.Root>
           <Toolbar.Separator variant='gap' />
-          {/* The whole status bar: one light, whose tooltip is the detail. Clicking it syncs now rather than waiting. */}
+          {/* The whole status bar: one light, whose tooltip is the detail. */}
           <Button.Root
             icon='ph--circle--fill'
             iconSize='xs'
@@ -213,7 +196,6 @@ export const App = ({ db, slug }: { db: SqliteDatabase; slug: string }) => {
             iconOnly
             variant='ghost'
             classNames={online && connection.ok ? 'text-success-text' : 'text-error-text'}
-            onClick={() => void socket.current?.push()}
           />
         </Toolbar.Root>
       </Panel.Footer>
