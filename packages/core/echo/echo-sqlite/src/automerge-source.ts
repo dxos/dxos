@@ -14,7 +14,7 @@ import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from 
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { AUTOMERGE_NAMESPACE, type DocStore } from './doc-store.ts';
+import { AUTOMERGE_NAMESPACE, type DocStore, objectOfFeed } from './doc-store.ts';
 
 /**
  * Feeds the indexer the objects whose documents gained blocks since its cursor: one cursor per space
@@ -70,9 +70,10 @@ export class AutomergeFeedSource implements IndexDataSource {
       const updatedAt = new Map<string, number>();
       const chunks = new Map<string, Uint8Array[]>();
       for (const block of result.blocks) {
-        if (block.feedId !== undefined) {
-          updatedAt.set(block.feedId, Math.max(updatedAt.get(block.feedId) ?? 0, block.timestamp));
-          chunks.set(block.feedId, [...(chunks.get(block.feedId) ?? []), block.data]);
+        const id = block.feedId === undefined ? undefined : objectOfFeed(block.feedId);
+        if (id !== undefined) {
+          updatedAt.set(id, Math.max(updatedAt.get(id) ?? 0, block.timestamp));
+          chunks.set(id, [...(chunks.get(id) ?? []), block.data]);
         }
       }
       // Blocks pulled from the authority or written by another process are not in a cached copy yet.

@@ -80,7 +80,7 @@ export const compileQuery = (query: QueryAST.Query, options: { spaceId: SpaceId 
     : raw('');
   const statement = sql`WITH RECURSIVE ${join(compiler.ctes, ',\n')}
 SELECT e.objectId AS id, ${body('e')} AS body, ${versionOf('e')} AS version, e.createdAt AS createdAt, e.updatedAt AS updatedAt,
-NULLIF(e.queueId, '') AS queueId, e.queuePosition AS queuePosition, w.rank AS rank${groupColumns} FROM ${raw(root)} w
+NULLIF(e.queueId, '') AS queueId, NULLIF(e.queueNamespace, '') AS queueNamespace, e.queuePosition AS queuePosition, w.rank AS rank${groupColumns} FROM ${raw(root)} w
 CROSS JOIN objectMeta e ON e.recordId = w.rid
 ORDER BY ${raw(grouped ? 'w.groupOrd, w.ord, w.id' : 'w.ord, w.id, w.rid')}`;
   return {

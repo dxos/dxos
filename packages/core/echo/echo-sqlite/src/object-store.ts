@@ -9,13 +9,15 @@ import type * as SqlError from 'effect/sql/SqlError';
 
 import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
+import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { TypeMetaSchemaDXN, objectStructureFromJson } from '@dxos/echo/internal';
 import { CypherError, FeedStore } from '@dxos/feed';
 import { IndexEngine } from '@dxos/index-core';
 import { type SpaceId } from '@dxos/keys';
 
 import { AutomergeFeedSource } from './automerge-source.ts';
-import { AUTOMERGE_NAMESPACE, DocStore, type WriteResult } from './doc-store.ts';
+import { AUTOMERGE_NAMESPACE, DocStore, type WriteResult, documentFeedId } from './doc-store.ts';
+import { ItemFeedSource } from './feed-source.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import { type EntityRecord } from './record.ts';
 import { type CompiledQuery } from './sql/compile.ts';
@@ -28,6 +30,9 @@ export type StoredEntity = {
   readonly body: Record<string, unknown>;
   /** Heads of the document the body was read at. */
   readonly heads?: readonly string[];
+  /** The feed holding the row, and its namespace, for a feed item. */
+  readonly queueId?: string;
+  readonly queueNamespace?: string;
   /** When the entity was created and last changed, in unix ms, as the index holds them. */
   readonly createdAt?: number;
   readonly updatedAt?: number;
@@ -41,6 +46,8 @@ type BodyRow = {
   version: string | null;
   createdAt?: number | null;
   updatedAt?: number | null;
+  queueId?: string | null;
+  queueNamespace?: string | null;
   groupKey?: string;
   groupOrd?: number;
   aggregates?: string;
@@ -63,6 +70,7 @@ export class ObjectStore {
   readonly #docs: DocStore;
   readonly #engine: IndexEngine;
   readonly #source: AutomergeFeedSource;
+  readonly #items: ItemFeedSource;
 
   private constructor(spaceId: SpaceId, sql: SqlClient.SqlClient, actorId: string) {
     this.#spaceId = spaceId;
@@ -71,6 +79,7 @@ export class ObjectStore {
     this.#docs = new DocStore(this.#feedStore, spaceId);
     this.#engine = new IndexEngine(sql);
     this.#source = new AutomergeFeedSource({ feedStore: this.#feedStore, docs: this.#docs, spaceId, sql });
+    this.#items = new ItemFeedSource({ feedStore: this.#feedStore, spaceId, sql });
   }
 
   /**
@@ -192,8 +201,36 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
           break;
         }
       }
+      while (!(yield* this.#engine.update(ctx, this.#items, { spaceId: this.#spaceId })).done) {}
       while (!(yield* this.#engine.updateSecondaryIndexes(ctx)).done) {}
       return documents;
+    });
+  }
+
+  /**
+   * Appends items to a feed as one block each: an item's whole JSON, or a tombstone for a removed id.
+   */
+  appendItems(feedId: string, namespace: string, items: readonly Record<string, unknown>[]): Store<void> {
+    const spaceId = this.#spaceId;
+    return this.#feedStore
+      .appendLocal(
+        items.map((item) => ({ spaceId, feedId, feedNamespace: namespace, data: EchoFeedCodec.encode(item) })),
+      )
+      .pipe(
+        Effect.asVoid,
+        Effect.catchIf(isCypherError, (error) => Effect.die(error)),
+      );
+  }
+
+  /**
+   * Blocks of a feed's namespace still to push, and in total, for its sync state.
+   */
+  itemCounts(namespace: string): Store<{ blocksToPush: number; totalBlocks: number }> {
+    const spaceId = this.#spaceId;
+    return Effect.gen({ self: this }, function* () {
+      const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({ spaceId, feedNamespace: namespace });
+      const totalBlocks = yield* this.#feedStore.countNamespaceBlocks({ spaceId, feedNamespace: namespace });
+      return { blocksToPush, totalBlocks };
     });
   }
 
@@ -215,7 +252,7 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
         yield* this.#feedStore.deleteOldestBlocks({
           spaceId: this.#spaceId,
           feedNamespace: AUTOMERGE_NAMESPACE,
-          feedId: id,
+          feedId: documentFeedId(id),
           count: Number.MAX_SAFE_INTEGER,
         });
       }
@@ -294,6 +331,8 @@ const parseRow = (row: BodyRow): StoredEntity => ({
   id: row.id,
   body: JSON.parse(row.body),
   heads: row.version ? JSON.parse(row.version) : undefined,
+  queueId: row.queueId ?? undefined,
+  queueNamespace: row.queueNamespace ?? undefined,
   createdAt: row.createdAt ?? undefined,
   updatedAt: row.updatedAt ?? undefined,
   group:

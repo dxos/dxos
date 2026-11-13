@@ -4,10 +4,11 @@
 
 import { FeedProtocol } from '@dxos/protocols';
 
-/** The namespaces a space syncs: objects' Automerge documents, then queue items. */
+/** The namespaces a space syncs: objects' Automerge documents, then feed items of both kinds. */
 export const SYNC_NAMESPACES: readonly string[] = [
   FeedProtocol.WellKnownNamespaces.automerge,
   FeedProtocol.WellKnownNamespaces.data,
+  FeedProtocol.WellKnownNamespaces.trace,
 ];
 
 /** The peer id a client addresses the space's authority by. */

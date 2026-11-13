@@ -19,6 +19,16 @@ export const AUTOMERGE_NAMESPACE = FeedProtocol.WellKnownNamespaces.automerge;
 
 export type Doc = A.Doc<DatabaseDirectory>;
 
+/**
+ * The feed holding an object's document. Prefixed, because the feed store keys feeds by id alone and a
+ * `Feed` object's items already live in a feed named by the object's id.
+ */
+export const documentFeedId = (objectId: string): string => `doc:${objectId}`;
+
+/** The object whose document a feed holds, or undefined for any other feed. */
+export const objectOfFeed = (feedId: string): string | undefined =>
+  feedId.startsWith('doc:') ? feedId.slice('doc:'.length) : undefined;
+
 /** One object to write: its structure, and the heads of the document it was read at, if any. */
 export type DocWrite = { id: string; structure: EntityStructure; heads?: readonly string[] };
 
@@ -66,14 +76,15 @@ export class DocStore {
       const { blocks } = yield* this.#feedStore.query({
         spaceId: this.#spaceId,
         feedNamespace: AUTOMERGE_NAMESPACE,
-        query: { feedIds: missing },
+        query: { feedIds: missing.map(documentFeedId) },
       });
       const chunks = new Map<string, Uint8Array[]>();
       for (const block of blocks) {
-        if (block.feedId !== undefined) {
-          const list = chunks.get(block.feedId) ?? [];
+        const id = block.feedId === undefined ? undefined : objectOfFeed(block.feedId);
+        if (id !== undefined) {
+          const list = chunks.get(id) ?? [];
           list.push(block.data);
-          chunks.set(block.feedId, list);
+          chunks.set(id, list);
         }
       }
       for (const [id, list] of chunks) {
@@ -114,7 +125,12 @@ export class DocStore {
         const after = behind ? A.changeAt(before, [...heads], edit).newDoc : A.change(before, edit);
         const chunk = A.saveIncremental(after);
         if (chunk.byteLength > 0) {
-          messages.push({ spaceId: this.#spaceId, feedId: id, feedNamespace: AUTOMERGE_NAMESPACE, data: chunk });
+          messages.push({
+            spaceId: this.#spaceId,
+            feedId: documentFeedId(id),
+            feedNamespace: AUTOMERGE_NAMESPACE,
+            data: chunk,
+          });
         }
         written.set(id, after);
         results.set(id, { heads: A.getHeads(after), merged: behind });
@@ -122,7 +138,8 @@ export class DocStore {
       if (messages.length > 0) {
         const blocks = yield* this.#feedStore.appendLocal(messages);
         for (const block of blocks) {
-          const result = block.feedId === undefined ? undefined : results.get(block.feedId);
+          const id = block.feedId === undefined ? undefined : objectOfFeed(block.feedId);
+          const result = id === undefined ? undefined : results.get(id);
           if (result) {
             result.updatedAt = block.timestamp;
           }

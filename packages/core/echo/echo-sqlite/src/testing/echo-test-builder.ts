@@ -59,7 +59,7 @@ export class EchoTestBuilder implements AsyncDisposable {
 /**
  * A device: its database file, reopened across {@link reload}.
  */
-export class EchoTestPeer {
+export class EchoTestPeer implements AsyncDisposable {
   readonly #peer: TestPeer;
   #lastKey: PublicKey | undefined;
   #lastDb: SqliteDatabase | undefined;
@@ -91,7 +91,11 @@ export class EchoTestPeer {
    * Opens a space's database; `_rootUrl` names echo-client's space root document, which echo-sqlite
    * has none of.
    */
-  async openDatabase(spaceKey: PublicKey, _rootUrl?: string): Promise<SqliteDatabase> {
+  async openDatabase(
+    spaceKey: PublicKey,
+    _rootUrl?: string,
+    _options?: { client?: TestClient },
+  ): Promise<SqliteDatabase> {
     this.#lastKey = spaceKey;
     this.#lastDb = await this.#peer.openDatabase(await createIdFromSpaceKey(spaceKey));
     return this.#lastDb;
@@ -104,6 +108,14 @@ export class EchoTestPeer {
     return this.openDatabase(this.#lastKey);
   }
 
+  /**
+   * Another client of this peer: echo-sqlite has no client/host split, so a second database opened on
+   * the same file is that client.
+   */
+  async createClient(): Promise<TestClient> {
+    return { [Symbol.asyncDispose]: async () => {} };
+  }
+
   async reload(): Promise<void> {
     await this.#peer.reload();
   }
@@ -113,7 +125,14 @@ export class EchoTestPeer {
   async close(): Promise<void> {
     await this.#peer.close();
   }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.close();
+  }
 }
+
+/** echo-client's second client of a peer; here only a token a test disposes. */
+export type TestClient = AsyncDisposable;
 
 /** A database file path for a test that reopens a peer by path. */
 export const createTmpPath = (): string => `/tmp/dxos-echo-sqlite-${PublicKey.random().toHex()}.db`;

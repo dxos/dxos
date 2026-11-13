@@ -286,7 +286,7 @@ feat F-2: Automerge in feeds
   req F-2.1:
     when: an object is created
     then: it gets one Automerge document, whose blocks are one feed of the `automerge` namespace with
-          feedId equal to the object id; the document holds that object only
+          feedId `doc:<object id>`; the document holds that object only
 
   req F-2.2:
     when: an object changes
@@ -872,4 +872,16 @@ decision D-27: Opening a database in the browser, with the one-tab Web Lock, mov
   for: user:dmaretskyi
   affects: [F-6.2]
   why: With sync in `@dxos/echo-sqlite/sync`, the browser opener was all the old client package still held.
+```
+
+```mdl
+decision D-28: An object's document feed is named `doc:<object id>`, not the bare object id. Fills in [D-7].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: |
+    The feed store keys feeds by id alone, across namespaces, and a `Feed` object's items already live
+    in a feed named by its object id, as EDGE expects; the two would be one feed.
+  rejected: Naming item feeds differently, which breaks the item protocol EDGE speaks.
 ```

@@ -31,6 +31,7 @@ import {
   ATTR_DELETED,
   ObjectDatabaseId,
   ObjectDeletedId,
+  ParentId,
   SelfURIId,
   defineHiddenProperty,
   getRefSavedTarget,
@@ -43,6 +44,7 @@ import { type FeedStore } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { FeedProtocol } from '@dxos/protocols';
 
 import { UnsupportedOperationError } from './errors.ts';
 import { DatabaseRefResolver, type EntitySource, SqliteHypergraph } from './graph.ts';
@@ -90,7 +92,7 @@ type Run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>) => Promise<A
  * is garbage-collected; mutations are observed with `Entity.subscribe` and written behind, batched per
  * microtask, and held strongly until durable.
  */
-export class SqliteDatabase implements Database.Database, EntitySource {
+export class SqliteDatabase implements Database.Database, EntitySource, AsyncDisposable {
   readonly [Database.TypeId]: Database.TypeId = Database.TypeId;
 
   readonly #spaceId: SpaceId;
@@ -110,6 +112,12 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   /** Keyed by the entity so a subscription never keeps its entity alive. */
   readonly #subscriptions = new WeakMap<Entity.Unknown, CleanupFn>();
   readonly #hydrating = new Map<string, Promise<Entity.Unknown | undefined>>();
+  /** The feed each live feed item is appended to. */
+  readonly #items = new WeakMap<Entity.Unknown, FeedTarget>();
+  /** Items removed from their feed: their edits are not written anywhere. */
+  readonly #detached = new WeakSet<Entity.Unknown>();
+  /** Item ids to tombstone in the next write batch. */
+  readonly #tombstones = new Map<string, FeedTarget>();
   /** Document heads each live entity's state was read at; its next write is an edit made there. */
   readonly #heads = new WeakMap<Entity.Unknown, readonly string[]>();
   /** Persisted type entities; few, and needed to hydrate anything, so held for the database's life. */
@@ -241,6 +249,10 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     return this.#run(this.#store.explain(this.compile(query)));
   }
 
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.close();
+  }
+
   /**
    * Flushes pending writes and releases every subscription. Idempotent.
    */
@@ -280,7 +292,8 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T & Database.RejectTypeEntity<T>, opts?: Database.AddOptions): T {
     if (opts?.to) {
-      throw new UnsupportedOperationError('add to feed');
+      this.#attachItem(obj, opts.to);
+      return obj;
     }
     if (Type.isType(obj)) {
       throw new TypeError('Type entities must be persisted via db.addType(), not db.add().');
@@ -586,35 +599,85 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   }
 
   //
-  // Feeds are out of scope.
+  // Feeds: items are blocks of the feed's own feed in its namespace, one whole item per block.
   //
 
-  async appendToFeed(_feed: Feed.Feed, _entities: Entity.Unknown[]): Promise<void> {
-    throw new UnsupportedOperationError('appendToFeed');
+  async appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+    for (const entity of entities) {
+      this.#attachItem(entity, feed);
+    }
+    await this.flush();
   }
 
   async forkFeed(_feed: Feed.Feed, _base: Entity.Unknown): Promise<Feed.BranchId> {
     throw new UnsupportedOperationError('forkFeed');
   }
 
-  async deleteFromFeed(_feed: Feed.Feed, _entities: Entity.Unknown[]): Promise<void> {
-    throw new UnsupportedOperationError('deleteFromFeed');
+  async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
+    await this.removeFeedItemsByIds(
+      feed,
+      entities.map((entity) => entity.id),
+    );
   }
 
-  async removeFeedItemsByIds(_feed: Feed.Feed, _ids: string[]): Promise<void> {
-    throw new UnsupportedOperationError('removeFeedItemsByIds');
+  async removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
+    const target = feedTarget(feed);
+    for (const id of ids) {
+      this.#tombstones.set(id, target);
+      const resident = this.#live.get(id)?.deref();
+      if (resident && this.#items.has(resident)) {
+        // A later edit of the removed item must not append it again.
+        this.#items.delete(resident);
+        this.#detached.add(resident);
+        this.#dirty.delete(id);
+        defineHiddenProperty(resident, ObjectDeletedId, true);
+      }
+    }
+    this.#deletionChanged = true;
+    this.#schedule();
+    await this.flush();
   }
 
   async syncFeed(_feed: Feed.Feed, _options?: Feed.SyncOptions): Promise<void> {
-    throw new UnsupportedOperationError('syncFeed');
+    // Feeds sync with the rest of the space, through `SpaceSync`; locally there is nothing to wait for.
+    await this.flush();
   }
 
-  async getFeedSyncState(_feed: Feed.Feed): Promise<Feed.SyncState> {
-    throw new UnsupportedOperationError('getFeedSyncState');
+  async getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState> {
+    await this.flush();
+    const { blocksToPush, totalBlocks } = await this.#run(this.#store.itemCounts(feedTarget(feed).namespace));
+    return { blocksToPull: 0, blocksToPush, totalBlocks };
   }
 
   async evictFeedHandle(_feed: Feed.Feed): Promise<void> {
-    throw new UnsupportedOperationError('evictFeedHandle');
+    // Items are held weakly like every other object; there is no per-feed handle to drop.
+  }
+
+  /**
+   * Binds an item to a feed: it lives in this database, its parent is the feed, and it and every later
+   * edit of it are appended to the feed's blocks.
+   */
+  #attachItem(item: Entity.Unknown, feed: Feed.Feed): void {
+    if (!Entity.isEntity(item)) {
+      throw new TypeError('Feed items must be live ECHO objects. Create them with Obj.make(Type, props).');
+    }
+    if (Entity.getDatabase(feed) === undefined) {
+      this.#attach(feed);
+    }
+    this.#detached.delete(item);
+    this.#tombstones.delete(item.id);
+    if (Entity.isDeleted(item)) {
+      defineHiddenProperty(item, ObjectDeletedId, false);
+    }
+    defineHiddenProperty(item, SelfURIId, EID.make({ spaceId: this.#spaceId, entityId: item.id }));
+    defineHiddenProperty(item, ObjectDatabaseId, this);
+    defineHiddenProperty(item, ParentId, feed);
+    this.#items.set(item, feedTarget(feed));
+    if (this.#live.get(item.id)?.deref() !== item) {
+      this.#register(item);
+    }
+    this.#adoptReferences(item);
+    this.#markDirty(item);
   }
 
   //
@@ -728,6 +791,17 @@ export class SqliteDatabase implements Database.Database, EntitySource {
           const raced = this.#live.get(stored.id)?.deref();
           if (raced) {
             return raced;
+          }
+          if (stored.queueId) {
+            // An item's parent is its feed, and its edits go back to the feed.
+            const feed = await this.load(EID.make({ entityId: stored.queueId }));
+            if (feed) {
+              defineHiddenProperty(entity, ParentId, feed);
+            }
+            this.#items.set(entity, {
+              feedId: stored.queueId,
+              namespace: stored.queueNamespace ?? FeedProtocol.WellKnownNamespaces.data,
+            });
           }
           this.#register(entity);
           if (stored.heads) {
@@ -898,7 +972,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   }
 
   #markDirty(entity: Entity.Unknown): void {
-    if (this.#closed) {
+    if (this.#closed || this.#detached.has(entity)) {
       return;
     }
     this.#dirty.set(entity.id, entity);
@@ -925,12 +999,38 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       if (batch.size === 0 && purged.length === 0) {
         return;
       }
-      const records = [...batch.values()].map((entity) => ({
+      const tombstones = [...this.#tombstones];
+      this.#tombstones.clear();
+      // Items go to their feeds as whole JSON; everything else into its document.
+      const items = new Map<string, { target: FeedTarget; json: Record<string, unknown>[] }>();
+      const documents: Entity.Unknown[] = [];
+      for (const entity of batch.values()) {
+        const target = this.#items.get(entity);
+        if (target) {
+          const entry = items.get(target.feedId) ?? { target, json: [] };
+          entry.json.push({ ...Entity.toJSON(entity) });
+          items.set(target.feedId, entry);
+        } else {
+          documents.push(entity);
+        }
+      }
+      for (const [id, target] of tombstones) {
+        const entry = items.get(target.feedId) ?? { target, json: [] };
+        entry.json.push({ id, '@deleted': true });
+        items.set(target.feedId, entry);
+      }
+      const records = documents.map((entity) => ({
         ...toRecord(entity, this.#spaceId),
         heads: this.#heads.get(entity),
       }));
+      const itemTypes = [...batch.values()]
+        .filter((entity) => this.#items.has(entity))
+        .map((entity) => Entity.getTypeURI(entity) ?? '');
       this.#writes = this.#writes.then(async () => {
         try {
+          for (const { target, json } of items.values()) {
+            await this.#run(this.#store.appendItems(target.feedId, target.namespace, json));
+          }
           const { results, indexed } = await this.#run(this.#store.write(records, purged));
           for (const [id, result] of results) {
             const entity = batch.get(id);
@@ -949,7 +1049,13 @@ export class SqliteDatabase implements Database.Database, EntitySource {
           await this.#refreshStale(indexed);
           // Deletion cascades and purges reach rows of any type, so they invalidate every query.
           const everything = deletionChanged || purged.length > 0;
-          this.#committed.emit(new Set(everything ? [ANY_TYPE] : records.map((record) => record.typeDxn)));
+          this.#committed.emit(
+            new Set(
+              everything || tombstones.length > 0
+                ? [ANY_TYPE]
+                : [...records.map((record) => record.typeDxn), ...itemTypes],
+            ),
+          );
         } catch (err) {
           log.error('failed to persist entities', { count: records.length, error: err });
           this.#writeError = err;
@@ -960,6 +1066,11 @@ export class SqliteDatabase implements Database.Database, EntitySource {
             }
           }
           purged.forEach((id) => this.#purged.add(id));
+          for (const [id, target] of tombstones) {
+            if (!this.#tombstones.has(id)) {
+              this.#tombstones.set(id, target);
+            }
+          }
           this.#deletionChanged ||= deletionChanged;
         }
       });
@@ -969,6 +1080,14 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
 const sameHeads = (left: readonly string[], right: readonly string[]): boolean =>
   left.length === right.length && left.every((head) => right.includes(head));
+
+/** The feed an item's blocks go to: the feed object's id, in its namespace. */
+type FeedTarget = { readonly feedId: string; readonly namespace: string };
+
+const feedTarget = (feed: Feed.Feed): FeedTarget => ({
+  feedId: feed.id,
+  namespace: feed.namespace ?? FeedProtocol.WellKnownNamespaces.data,
+});
 
 /** A stored body with the creation and last-change times the index holds, as the meta reads them. */
 const withTimestamps = (stored: StoredEntity): Record<string, unknown> => {
