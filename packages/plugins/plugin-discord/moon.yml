@@ -51,6 +51,14 @@ tasks:
       cache: false
       persistent: true
 
+  # Replay the cached messages (no token) through question and fact extraction into DISCORD_FACTS_DB, to rebuild the
+  # fact store after the extractors change. Needs DX_ANTHROPIC_API_KEY.
+  reextract:
+    command: 'pnpm exec vitest run src/testing/reextract.test.ts'
+    options:
+      runInCI: false
+      cache: false
+
   # Replay the stored SQLite messages (no token) through question extraction, print the tuples and write each
   # question to DISCORD_FACTS_DB as an `asked` fact graph (backfills earlier crawls).
   questions-demo:
