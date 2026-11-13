@@ -7,6 +7,8 @@
 import * as AiError from 'effect/ai/AiError';
 import type * as Duration from 'effect/Duration';
 
+import { BaseError } from '@dxos/errors';
+
 import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 
 /**
@@ -131,7 +133,10 @@ const compile = (pattern: Pattern): Matcher => {
   };
 };
 
-class UnboundPlaceholder extends Error {}
+class UnboundPlaceholder extends BaseError.extend(
+  'UnboundPlaceholder',
+  'A placeholder is used before any turn captured it',
+) {}
 
 /** Writes captured values over the placeholders in a string, failing on one never captured. */
 const fill = (value: string, bindings: ReadonlyMap<string, string>): string =>
@@ -139,7 +144,7 @@ const fill = (value: string, bindings: ReadonlyMap<string, string>): string =>
     const { name } = parsePlaceholder(body);
     const bound = bindings.get(name);
     if (bound === undefined) {
-      throw new UnboundPlaceholder(`"${name}" is used before any turn captured it`);
+      throw new UnboundPlaceholder({ message: `"${name}" is used before any turn captured it` });
     }
     return bound;
   });

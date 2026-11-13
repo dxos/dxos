@@ -319,26 +319,25 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
     // order, not the per-route cursor.
     const calls = yield* Ref.make(0);
 
-    const nextTurn = (options: LanguageModel.ProviderOptions) =>
-      Effect.gen(function* () {
-        const request = flattenRequest(options);
-        if (generator) {
-          const index = yield* Ref.getAndUpdate(calls, (value) => value + 1);
-          return { index, request, turn: generator(request, index) };
-        }
-        const routeIndex = routes.findIndex((route) => route.match(request));
-        if (routeIndex < 0) {
-          return yield* Effect.fail(unmatched(request));
-        }
-        const route = routes[routeIndex];
-        const turnIndex = yield* Ref.getAndUpdate(cursors[routeIndex], (value) => value + 1);
-        const turn = route.turns[turnIndex];
-        if (turn === undefined) {
-          return yield* Effect.fail(exhausted(turnIndex, route.turns.length, route.name ?? `#${routeIndex}`));
-        }
+    const nextTurn = Effect.fnUntraced(function* (options: LanguageModel.ProviderOptions) {
+      const request = flattenRequest(options);
+      if (generator) {
         const index = yield* Ref.getAndUpdate(calls, (value) => value + 1);
-        return { index, request, turn };
-      });
+        return { index, request, turn: generator(request, index) };
+      }
+      const routeIndex = routes.findIndex((route) => route.match(request));
+      if (routeIndex < 0) {
+        return yield* Effect.fail(unmatched(request));
+      }
+      const route = routes[routeIndex];
+      const turnIndex = yield* Ref.getAndUpdate(cursors[routeIndex], (value) => value + 1);
+      const turn = route.turns[turnIndex];
+      if (turn === undefined) {
+        return yield* Effect.fail(exhausted(turnIndex, route.turns.length, route.name ?? `#${routeIndex}`));
+      }
+      const index = yield* Ref.getAndUpdate(calls, (value) => value + 1);
+      return { index, request, turn };
+    });
 
     return yield* LanguageModel.make({
       generateText: (options) =>
