@@ -919,6 +919,11 @@ export const studioComponentData = (
     data,
     width: frame.w,
     height: frame.h,
+    ...(component.parts
+      ? {
+          parts: component.parts.map(({ id: part, x, y, w, h }) => ({ id: part, x, y, width: w, height: h })),
+        }
+      : {}),
   };
 };
 

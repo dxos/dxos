@@ -24,19 +24,21 @@ export type SlideCard = {
   icon: string;
   /** An object type's colour, by the deck's own name (`event`, `message`, `file`, `trip`, `sheet`). */
   tone?: string;
+  /** The glyph's colour alone, with no outline on the card. */
+  iconTone?: string;
   /** What the card says under its title. A card that has one is drawn at the slide's `bodyCardHeight`. */
   body?: string;
   /** The mono line under the body: where the thing lives, what it costs, how many there are. */
   footer?: string;
   /** `simple` is the deck's one-row card: glyph, title, and the footer indented under the title with no rule. */
-  variant?: 'simple';
+  variant?: 'full' | 'compact' | 'simple';
   /** The card kind that draws it; `card` unless the slide says otherwise (the Agents slide's `feed-card`). */
   kind?: string;
   /** A feed card's strip: how many blocks it has, what the strip is called, and which blocks are marked. */
   feed?: { blocks: number; label?: string; marks?: readonly number[] };
   /** A row of pills in place of a body, as the ECHO slide's types banner holds. */
   chips?: {
-    items: readonly { icon: string; label: string; note?: string }[];
+    items: readonly { icon: string; label: string; note?: string; tone?: string; ghost?: boolean }[];
     cols?: number;
     flat?: boolean;
   };
@@ -50,6 +52,11 @@ export type SlideComponent = {
   id: string;
   /** The element kind the host has registered (`plank`, `substrate`, `space-graph`, `app-frame`). */
   component: string;
+  /**
+   * The panes the kind draws, as offsets inside its box: a link may end on one (`frame/r-nav`), so each is kept in
+   * the scene as geometry while the kind paints what is seen.
+   */
+  parts?: readonly { id: string; x: number; y: number; width: number; height: number }[];
   /** The kind's own fields, written under `data` (decision 21). */
   data?: Record<string, unknown>;
   /** The heading a plank draws, which is the core base's `label` rather than one of the kind's fields. */
@@ -62,7 +69,14 @@ export type SlideComponent = {
  * A plain shape where a card would stand: the deck's fat arrows, which say there are more services above and below
  * the ten the slide has room for.
  */
-export type SlideShape = { id: string; shape: 'fat-arrow'; up?: boolean; width?: number; height?: number };
+export type SlideShape = {
+  id: string;
+  /** `region` is a component's own pane, drawn by the kind: an invisible box for a link to end on. */
+  shape: 'fat-arrow' | 'region';
+  up?: boolean;
+  width?: number;
+  height?: number;
+};
 
 export type SlideCell = SlideCard | SlideComponent | SlideShape;
 
@@ -83,6 +97,8 @@ export type SlideGroup = {
   heading?: string;
   /** The group is drawn with a box around its columns. */
   box?: boolean;
+  /** The width its cards take, where the slide's own is wrong for them. */
+  cardWidth?: number;
   /**
    * A card above the columns that all of them hang from: one trunk leaves its bottom middle port and lands on the
    * top middle of each column's first card. It is drawn larger than a card, since it is their parent rather than one
@@ -91,6 +107,11 @@ export type SlideGroup = {
   header?: SlideCard;
   /** A card the width of the group above its columns, with no trunks: what the columns under it are all about. */
   banner?: SlideCard;
+  /**
+   * A box around a run of one column's cards, named: what the Architecture slide draws around the half of each side
+   * that runs in a worker.
+   */
+  bracket?: { label: string; from: string; to: string };
   columns: readonly SlideColumn[];
 };
 
@@ -128,11 +149,15 @@ export type SlideMetrics = {
   bandLabelGap: number;
   /** A card that carries a body is this tall rather than `cardHeight`; a banner takes `bannerHeight`. */
   bodyCardHeight: number;
+  /** A card whose body is a grid of chips, which needs the room the grid takes. */
+  chipsCardHeight: number;
   bannerHeight: number;
   bannerGap: number;
   /** The slide's own footnote: how far under the content it sits, and how large. */
   noteGap: number;
   noteSize: number;
+  /** A bracket's own label, smaller than a group's heading since it names a part of one. */
+  bracketSize: number;
 };
 
 export const SLIDE_METRICS: SlideMetrics = {
@@ -154,10 +179,12 @@ export const SLIDE_METRICS: SlideMetrics = {
   bandLabelWidth: 288,
   bandLabelGap: 48,
   bodyCardHeight: 200,
+  chipsCardHeight: 208,
   bannerHeight: 176,
   bannerGap: 64,
   noteGap: 64,
   noteSize: 18,
+  bracketSize: 20,
 };
 
 /**
@@ -196,14 +223,18 @@ export type SlideLayout = {
   headings: readonly (Box & { text: string; align?: 'center' | 'right' | 'left'; size?: number })[];
 };
 
-const heightOf = (cell: SlideCell, { cardHeight, bodyCardHeight }: SlideMetrics): number => {
+const heightOf = (cell: SlideCell, { cardHeight, bodyCardHeight, chipsCardHeight }: SlideMetrics): number => {
   if (isComponent(cell) || isShape(cell)) {
     return cell.height ?? cardHeight;
   }
   // A `simple` card is one row whatever it carries; a body or a block of chips is what needs the room.
-  return cell.variant !== 'simple' && (cell.body !== undefined || cell.chips !== undefined)
-    ? bodyCardHeight
-    : cardHeight;
+  if (cell.variant === 'simple') {
+    return cardHeight;
+  }
+  if (cell.chips !== undefined) {
+    return chipsCardHeight;
+  }
+  return cell.body !== undefined ? bodyCardHeight : cardHeight;
 };
 
 const widthOf = (cell: SlideCell, { cardWidth }: SlideMetrics): number =>
@@ -216,8 +247,11 @@ const columnHeight = (column: SlideColumn, metrics: SlideMetrics) =>
 const columnWidth = (column: SlideColumn, metrics: SlideMetrics) =>
   Math.max(metrics.cardWidth, ...column.map((cell) => widthOf(cell, metrics)));
 
+const groupMetrics = (group: SlideGroup, metrics: SlideMetrics): SlideMetrics =>
+  group.cardWidth === undefined ? metrics : { ...metrics, cardWidth: group.cardWidth };
+
 const groupWidth = (group: SlideGroup, metrics: SlideMetrics) =>
-  group.columns.reduce((total, column) => total + columnWidth(column, metrics), 0) +
+  group.columns.reduce((total, column) => total + columnWidth(column, groupMetrics(group, metrics)), 0) +
   (group.columns.length - 1) * metrics.columnGap;
 
 /**
@@ -282,7 +316,7 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
   }
   const groups = spec.groups ?? [];
   const { cardWidth, cardHeight, rowGap, columnGap, groupGap, boxPadding, headingGap, headingSize } = metrics;
-  const { headerWidth, headerHeight, headerGap, bannerHeight, bannerGap, noteGap, noteSize } = metrics;
+  const { headerWidth, headerHeight, headerGap, bannerHeight, bannerGap, noteGap, noteSize, bracketSize } = metrics;
   const cards = new Map<string, Box & { card: SlideCell }>();
   const trunks: { from: string; to: string }[] = [];
   const boxes: (Box & { id: string })[] = [];
@@ -295,15 +329,29 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
   let left = 0;
   for (const group of groups) {
     const width = groupWidth(group, metrics);
+    const own = groupMetrics(group, metrics);
     let lane = left;
     for (const column of group.columns) {
-      const laneWidth = columnWidth(column, metrics);
+      const laneWidth = columnWidth(column, own);
       // Centred on the axis, so a short column sits in the middle of the height every box shares.
       let y = axis - columnHeight(column, metrics) / 2;
       for (const card of column) {
-        const [cellWidth, height] = [widthOf(card, metrics), heightOf(card, metrics)];
+        const [cellWidth, height] = [widthOf(card, own), heightOf(card, own)];
         // Centred in its lane, so a card still lines up with the column a wider component stands in.
-        cards.set(card.id, { x: lane + (laneWidth - cellWidth) / 2, y, width: cellWidth, height, card });
+        const x = lane + (laneWidth - cellWidth) / 2;
+        cards.set(card.id, { x, y, width: cellWidth, height, card });
+        if (isComponent(card)) {
+          // Each pane as a box of its own, so a link can end on `frame/r-nav` rather than on the whole frame.
+          for (const part of card.parts ?? []) {
+            cards.set(`${card.id}/${part.id}`, {
+              x: x + part.x,
+              y: y + part.y,
+              width: part.width,
+              height: part.height,
+              card: { id: `${card.id}/${part.id}`, shape: 'region' },
+            });
+          }
+        }
         y += height + rowGap;
       }
       lane += laneWidth + columnGap;
@@ -331,6 +379,27 @@ export const layoutSlide = (spec: SlideSpec): SlideLayout => {
         if (first) {
           trunks.push({ from: group.header.id, to: first.id });
         }
+      }
+    }
+    if (group.bracket) {
+      const first = cards.get(group.bracket.from);
+      const last = cards.get(group.bracket.to);
+      if (first && last) {
+        boxes.push({
+          x: first.x - boxPadding / 2,
+          y: first.y - boxPadding / 2,
+          width: Math.max(first.width, last.width) + boxPadding,
+          height: last.y + last.height - first.y + boxPadding,
+          id: `${group.id}-bracket`,
+        });
+        headings.push({
+          x: first.x,
+          y: first.y - boxPadding / 2 - headingGap / 2 - bracketSize,
+          width: Math.max(first.width, last.width),
+          height: bracketSize,
+          text: group.bracket.label,
+          size: bracketSize,
+        });
       }
     }
     if (group.box) {
@@ -450,6 +519,23 @@ export const seedSlideSpec =
     for (const [id, { card, ...box }] of cards) {
       const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
       const size = { width: box.width, height: box.height };
+      if (isShape(card) && card.shape === 'region') {
+        // Geometry only: the component's own kind draws the pane, and a second box over it would be the same box
+        // twice. It is here so a link has something to end on.
+        content[nodeKey(boxId(id))] = {
+          kind: 'node',
+          scene: root,
+          node: {
+            type: 'rect',
+            id: boxId(id),
+            z: 'a0',
+            center,
+            size,
+            style: { fill: false, border: false },
+          },
+        };
+        continue;
+      }
       if (isShape(card)) {
         // Muted and half transparent, as the deck draws it: a hint that the column runs on, not a connector.
         content[nodeKey(boxId(id))] = {
@@ -501,6 +587,7 @@ export const seedSlideSpec =
           ...(card.footer !== undefined ? { footer: card.footer } : {}),
           data: {
             ...(card.tone ? { tone: TONES[card.tone] ?? card.tone } : {}),
+            ...(card.iconTone ? { iconTone: TONES[card.iconTone] ?? card.iconTone } : {}),
             ...(card.variant ? { variant: card.variant } : {}),
             ...(card.feed
               ? {
@@ -512,10 +599,12 @@ export const seedSlideSpec =
             ...(card.chips
               ? {
                   chips: {
-                    items: card.chips.items.map(({ icon, label, note }) => ({
+                    items: card.chips.items.map(({ icon, label, note, tone, ghost }) => ({
                       icon,
                       label,
                       ...(note ? { note } : {}),
+                      ...(tone ? { tone: TONES[tone] ?? tone } : {}),
+                      ...(ghost ? { ghost } : {}),
                     })),
                     ...(card.chips.cols !== undefined ? { cols: card.chips.cols } : {}),
                     ...(card.chips.flat !== undefined ? { flat: card.chips.flat } : {}),

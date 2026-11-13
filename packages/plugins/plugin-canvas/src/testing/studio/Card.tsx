@@ -39,6 +39,8 @@ import { type Styled, toneValue } from './FeedCard.tsx';
 export const CardData = Schema.Struct({
   /** An accent, drawn as the card's outline (`#2d6fff`). */
   tone: Schema.optional(Schema.String.annotate({ title: 'Tone' })),
+  /** The glyph's own colour, with no outline on the card: what the Composer slide gives its plugin cards. */
+  iconTone: Schema.optional(Schema.String.annotate({ title: 'Icon tone' })),
   /**
    * The deck's card variants: `full` (the default) and `compact` draw through the shared card frame, `simple` is the
    * one-line row of an EDGE service — icon, title, and the footer under the title with no rule over it.
@@ -67,9 +69,11 @@ const CardNodeView = ({ node, editing }: NodeViewProps) => {
   const footer = 'footer' in node && typeof node.footer === 'string' ? node.footer : undefined;
   const body = 'body' in node && typeof node.body === 'string' ? node.body : undefined;
   const tone = toneValue(data.tone);
+  // The glyph takes the card's tone where it has one, its own where the slide colours only the glyph.
+  const glyph = tone ?? toneValue(data.iconTone);
   const symbol = iconSymbol(iconOf(node) ?? {});
   // A variable rather than a literal in the prop: a style that sets custom properties is not a fresh `CSSProperties`.
-  const style: Styled = tone ? { '--sd-tone': tone } : {};
+  const style: Styled = glyph ? { '--sd-tone': glyph } : {};
 
   // The deck's `.d-card.simple`: one row of icon and title, with the footer under the title and no rule over it.
   if (data.variant === 'simple') {

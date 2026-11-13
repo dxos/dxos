@@ -19,11 +19,13 @@ import agentsSource from './agents.diagram?raw';
 import agentsModel from './agents.json?raw';
 import architectureSource from './architecture.diagram?raw';
 import architectureModel from './architecture.json?raw';
+import { ARCHITECTURE } from './architecture.spec.ts';
 import chatSource from './chat.diagram?raw';
 import chatModel from './chat.json?raw';
 import { CHAT } from './chat.spec.ts';
 import composerSource from './composer.diagram?raw';
 import composerModel from './composer.json?raw';
+import { composerSpec } from './composer.spec.ts';
 import echoLayersSource from './echo-layers.diagram?raw';
 import echoLayersModel from './echo-layers.json?raw';
 import { ECHO_LAYERS } from './echo-layers.spec.ts';
@@ -126,26 +128,8 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   slide('ontology', ontologySource, ontologyModel, { spec: ONTOLOGY, title: ONTOLOGY.title }),
   slide('plugins', pluginsSource, pluginsModel, { spec: PLUGINS, title: PLUGINS.title }),
   // The deck placed each side column where its content ended; balanced, the window sits in the middle of the two.
-  slide('composer', composerSource, composerModel, { balance: true, gap: 96, links: 'ortho' }),
-  slide('architecture', architectureSource, architectureModel, {
-    labels: false,
-    gap: 96,
-    links: 'ortho',
-    // The deck sized each card to its own text at a smaller body; at the deck's reading size they need the room,
-    // and the slide has it.
-    sizes: {
-      ...Object.fromEntries(
-        ['c-plugins', 'e-plugins', 'c-halo', 'e-halo', 'c-runtime', 'e-runtime', 'c-spaces', 'e-spaces'].map((id) => [
-          id,
-          { height: 136 },
-        ]),
-      ),
-      // Two rows of chips and a footer under them.
-      'c-services': { height: 208 },
-      'e-services': { height: 208 },
-    },
-  }),
-  // Four columns the deck fitted to a page: one gap between them, which is also what widens the drawing.
+  slide('composer', composerSource, composerModel, { spec: composerSpec }),
+  slide('architecture', architectureSource, architectureModel, { spec: ARCHITECTURE }),
   slide('agents', agentsSource, agentsModel, { spec: agentsSpec, spaceGraph: true }),
   slide('chat', chatSource, chatModel, { spec: CHAT, title: CHAT.title }),
   slide('agent', agentSource, agentModel, { spec: AGENT, title: AGENT.title }),
