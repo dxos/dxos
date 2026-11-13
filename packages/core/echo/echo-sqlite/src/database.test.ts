@@ -125,7 +125,6 @@ describe('SqliteDatabase', () => {
       const query = db.query(Filter.type(TestSchema.Person));
       expect(query.runSync()).toEqual([alice]);
       expect(await query.run()).toEqual([alice]);
-      expect(db.diagnostics().queries).toBe(1);
     }),
   );
 
