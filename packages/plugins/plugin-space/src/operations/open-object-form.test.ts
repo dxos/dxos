@@ -115,6 +115,9 @@ const ephemeralState = () =>
     peerDecks: {},
     mergePreview: undefined,
     following: undefined,
+    sessionId: 'local-session',
+    followedSpaces: [],
+    peerFollowing: {},
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);
 

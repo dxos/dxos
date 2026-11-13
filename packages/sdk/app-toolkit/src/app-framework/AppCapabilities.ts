@@ -90,6 +90,11 @@ export type Layout = Readonly<{
    * independent of its width. Unset while the layout has not yet measured the items it now shows.
    */
   front?: string;
+  /**
+   * The items the layout shows whose companion is open, and the companion tab it shows them in (a linked variant such
+   * as `comments`), so another view of the layout can open the same ones.
+   */
+  companions?: Readonly<{ items: readonly string[]; variant?: string }>;
 }>;
 
 /**
@@ -97,6 +102,15 @@ export type Layout = Readonly<{
  * @category Capability
  */
 export const Layout = Capability$.makeSingleton<Atom.Atom<Layout>>()(LAYOUT_CAPABILITY_ID);
+
+/**
+ * A palette hue (e.g. `indigo`) every plank heading takes while it is set, such as while the session takes part in a
+ * follow; the layout uses the first contribution that holds one.
+ * @category Capability
+ */
+export const HeadingAccent = Capability$.make<Atom.Atom<string | undefined>>()(
+  'org.dxos.app-framework.capability.headingAccent',
+);
 
 /**
  * @category Capability

@@ -194,6 +194,7 @@ export const translations = [
         'presence-follow.label': 'Follow',
         'presence-follow-paused.label': 'Paused',
         'presence-stop-following.label': 'Stop',
+        'presence-following-you.heading': 'Following you',
         'presence-go-to.label': 'Go to',
         'presence-jump.label': 'Jump',
         'presence-in-object.heading': 'Viewers · {{count}}',

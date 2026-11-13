@@ -106,6 +106,16 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       () => import('./src/capabilities/follow.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
+      'FollowAccent',
+      {
+        environments: ['browser', 'tauri'],
+        requires: [SpaceCapabilities.EphemeralState, AppCapabilities.Layout],
+        provides: [AppCapabilities.HeadingAccent],
+        activatesOn: ClientEvents.SpacesAvailable,
+      },
+      () => import('./src/capabilities/follow-accent.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
       'IdentityCreated',
       {
         // `SchemaRegistered` pulls the idle-gated schema registration into this wave; the root

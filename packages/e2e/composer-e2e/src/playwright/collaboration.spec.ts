@@ -62,9 +62,6 @@ const getShownPlanks = (app: AppManager) =>
 /** The plank a sliding deck is scrolled to: the first one shown. */
 const getFrontPlank = async (app: AppManager) => (await getShownPlanks(app))[0] ?? undefined;
 
-// Two-peer WebRTC runs on all browsers in CI. The Claude cloud sandbox is the exception — webkit peers
-// there time out waiting for transport, so cross-browser results come from CI, not local runs. Ignore
-// webkit's `'allow-presentation'` console flood here, from MediaPlayer's iframe sandbox.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
@@ -491,6 +488,49 @@ test.describe('Collaboration tests', () => {
       await host.expandSection('spacePlugin.collectionsSection');
       await host.getObjectLinks().first().click();
       await expect(badge).not.toHaveAttribute('data-badge');
+    },
+  );
+
+  test(
+    'a follow shows on both sides, in Members and on every plank heading, until it stops',
+    { tag: ['@space:QA-7'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await navigateToNewDocument(guest);
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      const rows = sidebar.getByTestId('spacePlugin.presence.row');
+      await host.openCompanion('members');
+      await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
+
+      // The follower's row for the leader rises to the top in the follow's hue, with Stop in place of its actions.
+      const hostFollow = sidebar.locator('[data-member][data-follow]');
+      await expect(hostFollow).toHaveCount(1);
+      await expect(hostFollow.getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
+      const hostHeadings = host.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(hostHeadings.first()).toHaveAttribute('data-accent', 'indigo');
+
+      // The leader sees it too: the Members dot, its follower under "Following you", and the same heading.
+      await expect(guest.getCompanionTab('members')).toHaveAttribute('data-badge', '', { timeout: 30_000 });
+      await guest.openCompanion('members');
+      const guestFollowers = guest.page.getByTestId('spacePlugin.presence.followers');
+      await expect(guestFollowers).toContainText('Following you');
+      await expect(guestFollowers.locator('[data-member][data-follow]')).toHaveCount(1);
+      const guestHeadings = guest.page.locator('[data-testid="deck.plank"] [data-accent]');
+      await expect(guestHeadings.first()).toHaveAttribute('data-accent', 'indigo');
+
+      await hostFollow.getByTestId('spacePlugin.presence.stopFollowing').click();
+      await expect(hostFollow).toHaveCount(0);
+      await expect(hostHeadings).toHaveCount(0);
+      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
+      await expect(guestFollowers).toHaveCount(0, { timeout: 30_000 });
+      await expect(guestHeadings).toHaveCount(0);
+      await expect(guest.getCompanionTab('members')).not.toHaveAttribute('data-badge', { timeout: 30_000 });
     },
   );
 });

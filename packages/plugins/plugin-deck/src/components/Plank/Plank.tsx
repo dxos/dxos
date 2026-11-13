@@ -81,6 +81,8 @@ export type PlankProps = Util.ThemedClassName<{
   fallback?: SurfaceProps['fallback'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
+  /** A palette hue the heading washes in; see `Pane.Toolbar`. */
+  accent?: string;
   // TODO(burdon): Why is this required?
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 }>;
@@ -139,6 +141,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       articleData,
       fallback,
       headless,
+      accent,
       onKeyDown,
     },
     forwardedRef,
@@ -181,7 +184,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
         data-testid='deck.plank'
       >
         {!headless && (
-          <Pane.Toolbar>
+          <Pane.Toolbar accent={accent}>
             <ActionRoot>
               {actions && actions.length > 0 ? (
                 <AttentionSigil.Root

@@ -13,7 +13,10 @@ import {
   PRESENCE_EXPIRY,
   PRESENCE_RETENTION,
   applyPeerDeck,
+  applyPeerFollowing,
   applyViewingMessage,
+  getFollowGroup,
+  getFollowGroupMembers,
   getPeerFocus,
   getPeerNodeId,
   getPeerNodeIds,
@@ -25,7 +28,7 @@ import {
   isFollowTargetOf,
   makeLocationScheduler,
   parseViewingMessage,
-  prunePeerDecks,
+  prunePeerSessions,
 } from './presence.ts';
 
 const spaceId = Key.SpaceId.random();
@@ -290,7 +293,7 @@ describe('getPeerNodeIds', () => {
   });
 });
 
-describe('prunePeerDecks', () => {
+describe('prunePeerSessions', () => {
   test("keeps only the decks of sessions still listed on an object in the deck's space", ({ expect }) => {
     const key = EID.make({ spaceId, entityId: objectId });
     const message = { identityKey: 'peer', sessionId: 's1', added: [key], removed: [], attended: [key], locations: {} };
@@ -301,8 +304,117 @@ describe('prunePeerDecks', () => {
       deck,
     });
     const viewers = applyViewingMessage({}, 'peer', message, 1);
-    expect(prunePeerDecks(decks, viewers)).toEqual({ [spaceId]: { peer: { s1: deck } } });
-    expect(prunePeerDecks(decks, {})).toEqual({});
+    expect(prunePeerSessions(decks, viewers)).toEqual({ [spaceId]: { peer: { s1: deck } } });
+    expect(prunePeerSessions(decks, {})).toEqual({});
+  });
+});
+
+describe('applyPeerFollowing', () => {
+  const key = EID.make({ spaceId, entityId: objectId });
+  const message = { identityKey: 'peer', sessionId: 's1', added: [key], removed: [], attended: [key], locations: {} };
+
+  test('records whom a session follows and forgets it once the session names nobody', ({ expect }) => {
+    const following = applyPeerFollowing({}, spaceId, 'peer', { ...message, following: { identityKey: 'leader' } });
+    expect(following).toEqual({ [spaceId]: { peer: { s1: { identityKey: 'leader' } } } });
+    expect(applyPeerFollowing(following, spaceId, 'peer', message)).toEqual({});
+  });
+
+  test('leaves other sessions of the peer alone', ({ expect }) => {
+    const both = applyPeerFollowing(
+      applyPeerFollowing({}, spaceId, 'peer', { ...message, following: { identityKey: 'leader' } }),
+      spaceId,
+      'peer',
+      { ...message, sessionId: 's2', following: { identityKey: 'leader' } },
+    );
+    expect(applyPeerFollowing(both, spaceId, 'peer', message)).toEqual({
+      [spaceId]: { peer: { s2: { identityKey: 'leader' } } },
+    });
+  });
+});
+
+describe('getFollowGroup', () => {
+  const key = EID.make({ spaceId, entityId: objectId });
+  const now = 1_000_000;
+  const view = (viewers: Parameters<typeof applyViewingMessage>[0], peer: string, sessionId: string, lastSeen = now) =>
+    applyViewingMessage(
+      viewers,
+      peer,
+      { identityKey: peer, sessionId, added: [key], removed: [], attended: [key], locations: {} },
+      lastSeen,
+    );
+  const viewersByObject = [
+    ['leader', 'l1'],
+    ['bob', 'b1'],
+    ['carol', 'c1'],
+  ].reduce((viewers, [peer, sessionId]) => view(viewers, peer, sessionId), {});
+  const peerFollowing = {
+    [spaceId]: { bob: { b1: { identityKey: 'leader' } }, carol: { c1: { identityKey: 'leader', sessionId: 'l1' } } },
+  };
+
+  test('a leader sees every session that follows it', ({ expect }) => {
+    const group = getFollowGroup({
+      spaceId,
+      identityKey: 'leader',
+      sessionId: 'l1',
+      peerFollowing,
+      viewersByObject,
+      now,
+    });
+    expect(group).toEqual({
+      spaceId,
+      leader: 'leader',
+      leaderSessionId: 'l1',
+      leading: true,
+      followers: [
+        { identityKey: 'bob', sessionId: 'b1' },
+        { identityKey: 'carol', sessionId: 'c1' },
+      ],
+    });
+    expect(group && [...getFollowGroupMembers(group, 'leader')]).toEqual(['bob', 'carol']);
+  });
+
+  test('a follower sees its leader and the other followers', ({ expect }) => {
+    const group = getFollowGroup({
+      spaceId,
+      identityKey: 'bob',
+      sessionId: 'b1',
+      following: { spaceId, identityKey: 'leader' },
+      peerFollowing,
+      viewersByObject,
+      now,
+    });
+    expect(group).toMatchObject({ leader: 'leader', leaderSessionId: 'l1', leading: false });
+    expect(group?.followers).toEqual([{ identityKey: 'carol', sessionId: 'c1' }]);
+    expect(group && [...getFollowGroupMembers(group, 'bob')]).toEqual(['leader', 'carol']);
+  });
+
+  test('a follower whose presence lapsed drops out of the group', ({ expect }) => {
+    const lapsed = view(viewersByObject, 'carol', 'c1', now - PRESENCE_EXPIRY);
+    const group = getFollowGroup({
+      spaceId,
+      identityKey: 'leader',
+      sessionId: 'l1',
+      peerFollowing,
+      viewersByObject: lapsed,
+      now,
+    });
+    expect(group?.followers).toEqual([{ identityKey: 'bob', sessionId: 'b1' }]);
+  });
+
+  test('a session in no follow has no group', ({ expect }) => {
+    expect(
+      getFollowGroup({ spaceId, identityKey: 'dan', sessionId: 'd1', peerFollowing, viewersByObject, now }),
+    ).toBeUndefined();
+    expect(
+      getFollowGroup({
+        spaceId: otherSpaceId,
+        identityKey: 'leader',
+        sessionId: 'l1',
+        peerFollowing,
+        viewersByObject,
+        now,
+      }),
+    ).toBeUndefined();
   });
 });
 

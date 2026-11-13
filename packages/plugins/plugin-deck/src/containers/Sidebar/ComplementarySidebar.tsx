@@ -4,7 +4,15 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type MouseEvent, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  type CSSProperties,
+  type MouseEvent,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -178,6 +186,10 @@ const ComplementarySidebarTrigger = ({ companion, variant, onClick }: Complement
   const { t } = UiHooks.useTranslation(DeckNamespace.key);
   const value = Attention.getLinkedVariant(companion.id);
   const badge = getBadgeText(useAtomValue(companion.properties.badge ?? NO_BADGE));
+  const badgeHue = companion.properties.badgeHue;
+  const badgeStyle: (CSSProperties & Record<'--dx-badge-bg', string>) | undefined = badgeHue
+    ? { '--dx-badge-bg': `var(--color-${badgeHue}-border)` }
+    : undefined;
 
   return (
     <Tabs.Trigger
@@ -185,7 +197,8 @@ const ComplementarySidebarTrigger = ({ companion, variant, onClick }: Complement
       classNames={[
         'w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0',
         // A pseudo-element rather than a child, since an icon-only button renders no children.
-        badge !== undefined && 'relative after:absolute after:rounded-full after:bg-accent-bg',
+        badge !== undefined && 'relative after:absolute after:rounded-full',
+        badge !== undefined && (badgeHue ? 'after:bg-(--dx-badge-bg)' : 'after:bg-accent-bg'),
         badge === ''
           ? 'after:top-1 after:end-1 after:size-2'
           : badge !== undefined &&
@@ -197,6 +210,7 @@ const ComplementarySidebarTrigger = ({ companion, variant, onClick }: Complement
       tooltipSide='left'
       data-value={value}
       data-badge={badge}
+      style={badgeStyle}
       {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
       variant={variant}
       onClick={onClick}
