@@ -9,6 +9,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/effect"
     },
     {
@@ -24,10 +27,19 @@
       "path": "../../../common/sql-sqlite"
     },
     {
+      "path": "../../protocols"
+    },
+    {
       "path": "../echo"
     },
     {
       "path": "../echo-protocol"
+    },
+    {
+      "path": "../feed"
+    },
+    {
+      "path": "../index-core"
     }
   ]
 }

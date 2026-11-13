@@ -7,8 +7,15 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
+import { Context } from '@dxos/context';
+import { type Obj } from '@dxos/echo';
+import { TypeMetaSchemaDXN, objectStructureFromJson } from '@dxos/echo/internal';
+import { CypherError, FeedStore } from '@dxos/feed';
+import { IndexEngine } from '@dxos/index-core';
 import { type SpaceId } from '@dxos/keys';
 
+import { AutomergeFeedSource } from './automerge-source.ts';
+import { AUTOMERGE_NAMESPACE, DocStore } from './doc-store.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import { type EntityRecord } from './record.ts';
 import { type CompiledQuery } from './sql/compile.ts';
@@ -22,27 +29,48 @@ type BodyRow = { id: string; body: string };
 
 type Store<A> = Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>;
 
+/** Rows of document objects (not feed items) of one space; `m` is the `objectMeta` alias. */
+const DOCUMENT_ROWS = `m.queueId = ''`;
+
 /**
- * SQLite I/O for the entities of one space. Every statement is constrained to the space, and every
- * read is either by id, by a compiled query, or of the (small) set of persisted types.
+ * SQLite I/O for the entities of one space. Each object is an Automerge document whose chunks are
+ * blocks of the feed store; the indexer turns those documents into the `objectMeta` /
+ * `objectSnapshot` / `reverseRef` / `ftsIndex` rows every read comes from. Every read is by id, by a
+ * compiled query, or of the (small) set of persisted types.
  */
 export class ObjectStore {
   readonly #spaceId: SpaceId;
+  readonly #feedStore: FeedStore;
+  readonly #docs: DocStore;
+  readonly #engine: IndexEngine;
+  readonly #source: AutomergeFeedSource;
 
-  constructor(spaceId: SpaceId) {
+  private constructor(spaceId: SpaceId, sql: SqlClient.SqlClient, actorId: string) {
     this.#spaceId = spaceId;
+    // A replica: positions come from the space's authority, never from this file.
+    this.#feedStore = new FeedStore({ localActorId: actorId, assignPositions: false });
+    this.#docs = new DocStore(this.#feedStore, spaceId);
+    this.#engine = new IndexEngine(sql);
+    this.#source = new AutomergeFeedSource({ feedStore: this.#feedStore, docs: this.#docs, spaceId, sql });
   }
 
   /**
-   * Applies pending schema migrations.
+   * Applies pending migrations (feed store, indexer, then this store's) and opens the store.
    */
-  migrate(): Store<void> {
-    return Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      // A malformed bundled manifest is a defect, not something a caller recovers from.
-      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
-      Effect.asVoid,
-      Effect.withSpan('ObjectStore.migrate'),
-    );
+  static open(spaceId: SpaceId): Store<ObjectStore> {
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // The feed store and the indexer share the file; their migrations come first, ours build on them.
+      yield* new FeedStore({ localActorId: 'migrate', assignPositions: false }).migrate();
+      yield* new IndexEngine(sql).migrate();
+      yield* migrate();
+      const actorId = yield* deviceActorId();
+      return new ObjectStore(spaceId, sql, actorId);
+    }).pipe(Effect.withSpan('ObjectStore.open'));
+  }
+
+  get feedStore(): FeedStore {
+    return this.#feedStore;
   }
 
   /**
@@ -52,10 +80,12 @@ export class ObjectStore {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<BodyRow>`
-        SELECT id, body FROM echo_entities INDEXED BY echo_entities_kind
-        WHERE space_id = ${spaceId} AND kind = 'type' AND deleted = 0
-      `;
+      const rows = yield* sql.unsafe<BodyRow>(
+        `SELECT m.objectId AS id, s.snapshot AS body FROM objectMeta m
+CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND m.typeDXN = ? AND m.deleted = 0 AND ${DOCUMENT_ROWS}`,
+        [spaceId, TypeMetaSchemaDXN.toString()],
+      );
       return rows.map(parseRow);
     }).pipe(Effect.withSpan('ObjectStore.loadTypes'));
   }
@@ -67,7 +97,12 @@ export class ObjectStore {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<BodyRow>`SELECT id, body FROM echo_entities WHERE space_id = ${spaceId} AND id = ${id}`;
+      const rows = yield* sql.unsafe<BodyRow>(
+        `SELECT m.objectId AS id, s.snapshot AS body FROM objectMeta m
+CROSS JOIN objectSnapshot s ON s.recordId = m.recordId
+WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
+        [spaceId, id],
+      );
       return rows.length > 0 ? parseRow(rows[0]) : undefined;
     }).pipe(Effect.withSpan('ObjectStore.load'));
   }
@@ -95,51 +130,58 @@ export class ObjectStore {
   }
 
   /**
-   * Upserts entities (row, reference rows and text) and permanently removes `purged` ids, in one
-   * transaction.
+   * Writes each entity into its Automerge document (one chunk per changed document), permanently
+   * removes `purged` ids, and indexes what changed, so the next read sees it.
    */
-  write(records: readonly EntityRecord[], purged: readonly string[] = [], now = Date.now()): Store<void> {
-    const spaceId = this.#spaceId;
-    return Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const writeOne = (record: EntityRecord) =>
-        Effect.gen(function* () {
-          const [{ seq }] = yield* sql<{ seq: number }>`
-            INSERT INTO echo_entities
-              (space_id, id, kind, type_dxn, deleted, parent_id, source_id, target_id, created_at, updated_at, body)
-            VALUES (${spaceId}, ${record.id}, ${record.kind}, ${record.typeDxn}, ${record.deleted ? 1 : 0},
-              ${record.parentId}, ${record.sourceId}, ${record.targetId}, ${now}, ${now}, ${JSON.stringify(record.body)})
-            ON CONFLICT (space_id, id) DO UPDATE SET
-              kind = excluded.kind, type_dxn = excluded.type_dxn, deleted = excluded.deleted,
-              parent_id = excluded.parent_id, source_id = excluded.source_id, target_id = excluded.target_id,
-              updated_at = excluded.updated_at, body = excluded.body
-            RETURNING seq
-          `;
-          yield* sql`DELETE FROM echo_refs WHERE space_id = ${spaceId} AND source_id = ${record.id}`;
-          for (const ref of record.refs) {
-            yield* sql`INSERT OR IGNORE INTO echo_refs (space_id, source_id, prop_path, target_id)
-              VALUES (${spaceId}, ${record.id}, ${ref.path}, ${ref.targetId})`;
-          }
-          yield* sql`DELETE FROM echo_fts WHERE rowid = ${seq}`;
-          yield* sql`INSERT INTO echo_fts (rowid, text) VALUES (${seq}, ${record.text})`;
-        });
-      yield* sql.withTransaction(
-        Effect.gen(function* () {
-          yield* Effect.forEach(records, writeOne, { discard: true });
-          if (purged.length > 0) {
-            const ids = JSON.stringify(purged);
-            yield* sql`DELETE FROM echo_fts WHERE rowid IN (SELECT seq FROM echo_entities
-              WHERE space_id = ${spaceId} AND id IN (SELECT value FROM json_each(${ids})))`;
-            yield* sql`DELETE FROM echo_refs WHERE space_id = ${spaceId} AND source_id IN (SELECT value FROM json_each(${ids}))`;
-            yield* sql`DELETE FROM echo_entities WHERE space_id = ${spaceId} AND id IN (SELECT value FROM json_each(${ids}))`;
-          }
-        }),
-      );
-    }).pipe(Effect.withSpan('ObjectStore.write'));
+  write(records: readonly EntityRecord[], purged: readonly string[] = []): Store<void> {
+    return Effect.gen({ self: this }, function* () {
+      if (records.length > 0) {
+        yield* this.#docs.write(
+          records.map((record) => ({ id: record.id, structure: objectStructureFromJson(record.body as Obj.JSON) })),
+        );
+      }
+      if (purged.length > 0) {
+        yield* this.#purge(purged);
+      }
+      yield* this.index();
+    }).pipe(
+      Effect.catchIf(isCypherError, (error) => Effect.die(error)),
+      Effect.withSpan('ObjectStore.write'),
+    );
   }
 
   /**
-   * Ids of deleted rows and of everything their deletion hides: descendants through `parent_id` and
+   * Indexes every block the indexer has not seen yet, then the text index.
+   */
+  index(): Store<void> {
+    return Effect.gen({ self: this }, function* () {
+      const ctx = Context.default();
+      while (!(yield* this.#engine.update(ctx, this.#source, { spaceId: this.#spaceId })).done) {}
+      while (!(yield* this.#engine.updateSecondaryIndexes(ctx)).done) {}
+    });
+  }
+
+  #purge(ids: readonly string[]): Effect.Effect<void, SqlError.SqlError | CypherError, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      yield* this.#engine.deleteObjects({
+        spaceId: this.#spaceId,
+        documentIds: ids,
+        objects: ids.map((id) => ({ documentId: id, objectId: id })),
+      });
+      for (const id of ids) {
+        yield* this.#feedStore.deleteOldestBlocks({
+          spaceId: this.#spaceId,
+          feedNamespace: AUTOMERGE_NAMESPACE,
+          feedId: id,
+          count: Number.MAX_SAFE_INTEGER,
+        });
+      }
+      this.#docs.invalidate(ids);
+    });
+  }
+
+  /**
+   * Ids of deleted rows and of everything their deletion hides: descendants through `parentId` and
    * relations with a purged endpoint. Purging only the flagged rows would make those visible again.
    */
   deletedIds(): Store<string[]> {
@@ -147,18 +189,19 @@ export class ObjectStore {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // One recursive branch per indexed column: an OR across them would scan the space.
-      const rows = yield* sql<{ id: string }>`
-        WITH RECURSIVE gone(id) AS (
-          SELECT id FROM echo_entities WHERE space_id = ${spaceId} AND deleted = 1
-          UNION
-          SELECT e.id FROM gone g CROSS JOIN echo_entities e ON e.space_id = ${spaceId} AND e.parent_id = g.id
-          UNION
-          SELECT e.id FROM gone g CROSS JOIN echo_entities e ON e.space_id = ${spaceId} AND e.source_id = g.id
-          UNION
-          SELECT e.id FROM gone g CROSS JOIN echo_entities e ON e.space_id = ${spaceId} AND e.target_id = g.id
-        )
-        SELECT id FROM gone
-      `;
+      const rows = yield* sql.unsafe<{ id: string }>(
+        `WITH RECURSIVE gone(id) AS (
+  SELECT m.objectId FROM objectMeta m WHERE m.spaceId = ?1 AND m.deleted = 1 AND ${DOCUMENT_ROWS}
+  UNION
+  SELECT m.objectId FROM gone g CROSS JOIN objectMeta m ON m.spaceId = ?1 AND m.parentId = g.id WHERE ${DOCUMENT_ROWS}
+  UNION
+  SELECT m.objectId FROM gone g CROSS JOIN objectMeta m ON m.spaceId = ?1 AND m.sourceId = g.id WHERE ${DOCUMENT_ROWS}
+  UNION
+  SELECT m.objectId FROM gone g CROSS JOIN objectMeta m ON m.spaceId = ?1 AND m.targetId = g.id WHERE ${DOCUMENT_ROWS}
+)
+SELECT id FROM gone`,
+        [spaceId],
+      );
       return rows.map((row) => row.id);
     });
   }
@@ -170,13 +213,38 @@ export class ObjectStore {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const [row] = yield* sql<{ alive: number; deleted: number }>`
-        SELECT COALESCE(SUM(deleted = 0), 0) AS alive, COALESCE(SUM(deleted = 1), 0) AS deleted
-        FROM echo_entities WHERE space_id = ${spaceId}
-      `;
+      const [row] = yield* sql.unsafe<{ alive: number; deleted: number }>(
+        `SELECT COALESCE(SUM(m.deleted = 0), 0) AS alive, COALESCE(SUM(m.deleted = 1), 0) AS deleted
+FROM objectMeta m WHERE m.spaceId = ? AND ${DOCUMENT_ROWS}`,
+        [spaceId],
+      );
       return { alive: Number(row.alive), deleted: Number(row.deleted) };
     });
   }
 }
+
+/**
+ * Applies this store's own migrations.
+ */
+export const migrate = (): Store<void> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    // A malformed bundled manifest is a defect, not something a caller recovers from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('ObjectStore.migrate'),
+  );
+
+/**
+ * The actor id this file writes blocks as, minted on first use.
+ */
+const deviceActorId = (): Store<string> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    yield* sql`INSERT OR IGNORE INTO echo_sqlite_device (id, actorId) VALUES (0, ${crypto.randomUUID()})`;
+    const [{ actorId }] = yield* sql<{ actorId: string }>`SELECT actorId FROM echo_sqlite_device WHERE id = 0`;
+    return actorId;
+  });
+
+const isCypherError = (error: unknown): error is CypherError => error instanceof CypherError;
 
 const parseRow = (row: BodyRow): StoredEntity => ({ id: row.id, body: JSON.parse(row.body) });

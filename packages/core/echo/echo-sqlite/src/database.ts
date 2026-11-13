@@ -125,9 +125,9 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   readonly #committed = new Event<ReadonlySet<string>>();
   readonly #counters = { hydrated: 0, queries: 0, loads: 0 };
 
-  private constructor(spaceId: SpaceId, run: Run, types: readonly Type.AnyEntity[]) {
+  private constructor(spaceId: SpaceId, store: ObjectStore, run: Run, types: readonly Type.AnyEntity[]) {
     this.#spaceId = spaceId;
-    this.#store = new ObjectStore(spaceId);
+    this.#store = store;
     this.#run = run;
     // The meta-type is registered so persisted `Type.Type` rows decode.
     this.#registry = new SimpleRegistry([Type.Type, ...types]);
@@ -145,13 +145,12 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     return Effect.acquireRelease(
       Effect.gen(function* () {
         const context = yield* Effect.context<SqlClient.SqlClient>();
-        const db = new SqliteDatabase(
-          options.spaceId ?? SpaceId.random(),
-          Effect.runPromiseWith(context),
-          options.types ?? [],
-        );
-        yield* db.#store.migrate();
-        const types = yield* db.#store.loadTypes();
+        const spaceId = options.spaceId ?? SpaceId.random();
+        const store = yield* ObjectStore.open(spaceId);
+        // Blocks a previous session appended but did not index (it stopped between the two) are indexed now.
+        yield* store.index();
+        const db = new SqliteDatabase(spaceId, store, Effect.runPromiseWith(context), options.types ?? []);
+        const types = yield* store.loadTypes();
         yield* Effect.promise(() => db.#registerTypes(types));
         return db;
       }),

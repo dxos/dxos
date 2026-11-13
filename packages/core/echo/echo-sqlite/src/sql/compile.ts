@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import { EscapedPropPath, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
 
 import { UnsupportedQueryError } from '../errors.ts';
@@ -22,22 +22,24 @@ type DeletedMode = NonNullable<QueryAST.QueryOptions['deleted']>;
 const MAX_DEPTH = 10;
 
 /**
- * Compiles a query AST to one `WITH RECURSIVE` statement: each AST node is a CTE of `(id, rank, ord)`
- * rows, and the final SELECT joins the result ids back to their bodies.
+ * Compiles a query AST to one `WITH RECURSIVE` statement over the indexer's tables (`objectMeta`,
+ * `objectSnapshot`, `reverseRef`, `ftsIndex`): each AST node is a CTE of `(id, rank, ord)` rows, and the
+ * final SELECT joins the result ids back to their snapshots. Only document rows are read; feed items
+ * share `objectMeta` with a non-empty `queueId`.
  *
  * Compilation is pure — it never reads the store — so any clause that would need a read to express
  * (feeds, aggregates, semver ranges) throws {@link UnsupportedQueryError} instead of degrading to an
  * in-memory evaluation.
  *
  * Joins are `CROSS JOIN` throughout: SQLite keeps their written order, so each step walks its input
- * working set and seeks the entity/ref indexes instead of the unanalyzed planner scanning a space.
+ * working set and seeks the metadata/reference indexes instead of the unanalyzed planner scanning a space.
  */
 export const compileQuery = (query: QueryAST.Query, options: { spaceId: SpaceId }): CompiledQuery => {
   const compiler = new Compiler(options.spaceId);
   const root = compiler.node(query, 'exclude');
   const statement = sql`WITH RECURSIVE ${join(compiler.ctes, ',\n')}
-SELECT e.id AS id, e.body AS body FROM ${raw(root)} w
-CROSS JOIN echo_entities e ON e.space_id = ${options.spaceId} AND e.id = w.id
+SELECT e.objectId AS id, ${body('e')} AS body FROM ${raw(root)} w
+CROSS JOIN objectMeta e ON ${row('e', options.spaceId, raw('w.id'))}
 ORDER BY w.ord, w.id`;
   return { sql: statement.sql, params: statement.params };
 };
@@ -56,10 +58,10 @@ class Compiler {
         // A typed select walks the type index, which also yields id order for paging.
         const index =
           query.filter.type === 'object' && query.filter.typename !== null
-            ? raw(' INDEXED BY echo_entities_type')
+            ? raw(' INDEXED BY echo_sqlite_object_type')
             : raw('');
-        const name = this.#cte(sql`SELECT e.id AS id, 0 AS rank, 0 AS ord FROM echo_entities e${index}
-WHERE e.space_id = ${this._spaceId} AND ${this.#visible('e', deleted)} AND ${this.#filter(query.filter, 'e')}`);
+        const name = this.#cte(sql`SELECT e.objectId AS id, 0 AS rank, 0 AS ord FROM objectMeta e${index}
+WHERE e.spaceId = ${this._spaceId} AND e.queueId = '' AND ${this.#visible('e', deleted)} AND ${this.#filter(query.filter, 'e')}`);
         this.#unordered.add(name);
         return name;
       }
@@ -67,7 +69,7 @@ WHERE e.space_id = ${this._spaceId} AND ${this.#visible('e', deleted)} AND ${thi
       case 'filter': {
         const selection = this.node(query.selection, deleted);
         return this.#cte(sql`SELECT w.id, w.rank, w.ord FROM ${raw(selection)} w
-CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId} AND e.id = w.id
+CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w.id'))}
 WHERE ${this.#filter(query.filter, 'e')}`);
       }
 
@@ -79,20 +81,23 @@ WHERE ${this.#filter(query.filter, 'e')}`);
 
       case 'reference-traversal': {
         const anchor = this.node(query.anchor, deleted);
-        return this.#cte(sql`SELECT t.id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN echo_refs r ON r.space_id = ${this._spaceId} AND r.source_id = a.id AND r.prop_path = ${query.property}
-CROSS JOIN echo_entities t ON t.space_id = ${this._spaceId} AND t.id = r.target_id
-WHERE ${this.#visible('t', deleted)} GROUP BY t.id`);
+        return this.#cte(sql`SELECT t.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta s ON ${row('s', this._spaceId, raw('a.id'))}
+CROSS JOIN reverseRef r ON r.recordId = s.recordId AND r.propPathNormalized = ${propPath(query.property)}
+CROSS JOIN objectMeta t ON ${row('t', this._spaceId, raw(`substr(r.targetDXN, ${LOCAL_REF.length + 1})`))}
+WHERE r.targetDXN LIKE ${`${LOCAL_REF}%`} AND ${this.#visible('t', deleted)} GROUP BY t.objectId`);
       }
 
       case 'incoming-references': {
         const anchor = this.node(query.anchor, deleted);
-        const property = query.property === null ? raw('') : sql` AND r.prop_path = ${query.property}`;
+        const property =
+          query.property === null ? raw('') : sql` AND r.propPathNormalized = ${propPath(query.property)}`;
         const typename = query.typename === null ? raw('') : sql` AND ${this.#typename('s', query.typename)}`;
-        return this.#cte(sql`SELECT s.id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN echo_refs r INDEXED BY echo_refs_target ON r.space_id = ${this._spaceId} AND r.target_id = a.id${property}
-CROSS JOIN echo_entities s ON s.space_id = ${this._spaceId} AND s.id = r.source_id
-WHERE ${this.#visible('s', deleted)}${typename} GROUP BY s.id`);
+        // `reverseRef` keys targets by their space-less form, so the referrer's space is checked on its row.
+        return this.#cte(sql`SELECT s.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+CROSS JOIN reverseRef r INDEXED BY idx_reverse_ref_target ON r.targetDXN = ${LOCAL_REF} || a.id${property}
+CROSS JOIN objectMeta s ON s.recordId = r.recordId
+WHERE s.spaceId = ${this._spaceId} AND s.queueId = '' AND ${this.#visible('s', deleted)}${typename} GROUP BY s.objectId`);
       }
 
       case 'relation': {
@@ -101,13 +106,13 @@ WHERE ${this.#visible('s', deleted)}${typename} GROUP BY s.id`);
         // Separate seeks per endpoint column: an OR across two indexed columns makes SQLite scan.
         const columns =
           query.direction === 'outgoing'
-            ? ['source_id']
+            ? ['sourceId']
             : query.direction === 'incoming'
-              ? ['target_id']
-              : ['source_id', 'target_id'];
+              ? ['targetId']
+              : ['sourceId', 'targetId'];
         const branches = columns.map(
-          (column) => sql`SELECT rel.id AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
-CROSS JOIN echo_entities rel ON rel.space_id = ${this._spaceId} AND rel.${raw(column)} = a.id AND rel.kind = 'relation'
+          (column) => sql`SELECT rel.objectId AS id, a.rank AS rank, a.ord AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta rel ON rel.spaceId = ${this._spaceId} AND rel.${raw(column)} = a.id AND rel.entityKind = 'relation' AND rel.queueId = ''
 WHERE ${this.#visible('rel', deleted)}${filter}`,
         );
         return this.#cte(
@@ -119,27 +124,27 @@ WHERE ${this.#visible('rel', deleted)}${filter}`,
         const anchor = this.node(query.anchor, deleted);
         const endpoint =
           query.direction === 'source'
-            ? raw('t.id = rel.source_id')
+            ? raw('t.objectId = rel.sourceId')
             : query.direction === 'target'
-              ? raw('t.id = rel.target_id')
-              : raw('t.id IN (rel.source_id, rel.target_id)');
-        return this.#cte(sql`SELECT t.id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN echo_entities rel ON rel.space_id = ${this._spaceId} AND rel.id = a.id AND rel.kind = 'relation'
-CROSS JOIN echo_entities t ON t.space_id = ${this._spaceId} AND ${endpoint}
-WHERE ${this.#visible('t', deleted)} GROUP BY t.id`);
+              ? raw('t.objectId = rel.targetId')
+              : raw('t.objectId IN (rel.sourceId, rel.targetId)');
+        return this.#cte(sql`SELECT t.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta rel ON ${row('rel', this._spaceId, raw('a.id'))} AND rel.entityKind = 'relation'
+CROSS JOIN objectMeta t ON t.spaceId = ${this._spaceId} AND t.queueId = '' AND ${endpoint}
+WHERE ${this.#visible('t', deleted)} GROUP BY t.objectId`);
       }
 
       case 'hierarchy-traversal': {
         const anchor = this.node(query.anchor, deleted);
         if (query.direction === 'to-parent') {
-          return this.#cte(sql`SELECT p.id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN echo_entities c ON c.space_id = ${this._spaceId} AND c.id = a.id
-CROSS JOIN echo_entities p ON p.space_id = ${this._spaceId} AND p.id = c.parent_id
-WHERE ${this.#visible('p', deleted)} GROUP BY p.id`);
+          return this.#cte(sql`SELECT p.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta c ON ${row('c', this._spaceId, raw('a.id'))}
+CROSS JOIN objectMeta p ON ${row('p', this._spaceId, raw('c.parentId'))}
+WHERE ${this.#visible('p', deleted)} GROUP BY p.objectId`);
         }
-        return this.#cte(sql`SELECT c.id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
-CROSS JOIN echo_entities c ON c.space_id = ${this._spaceId} AND c.parent_id = a.id
-WHERE ${this.#visible('c', deleted)} GROUP BY c.id`);
+        return this.#cte(sql`SELECT c.objectId AS id, MAX(a.rank) AS rank, MIN(a.ord) AS ord FROM ${raw(anchor)} a
+CROSS JOIN objectMeta c ON c.spaceId = ${this._spaceId} AND c.parentId = a.id AND c.queueId = ''
+WHERE ${this.#visible('c', deleted)} GROUP BY c.objectId`);
       }
 
       case 'union': {
@@ -165,22 +170,22 @@ WHERE ${this.#visible('c', deleted)} GROUP BY c.id`);
             case 'rank':
               return sql`w.rank ${direction}`;
             case 'timestamp':
-              return sql`e.${raw(order.field === 'createdAt' ? 'created_at' : 'updated_at')} ${direction}`;
+              return sql`e.${raw(order.field === 'createdAt' ? 'createdAt' : 'updatedAt')} ${direction}`;
             case 'property': {
               const path = jsonPath(order.property.split('.'));
-              return sql`CASE WHEN json_type(e.body, ${path}) IN ('integer', 'real', 'text')
-  THEN json_extract(e.body, ${path}) END ${direction} NULLS LAST`;
+              return sql`CASE WHEN json_type(${body('e')}, ${path}) IN ('integer', 'real', 'text')
+  THEN json_extract(${body('e')}, ${path}) END ${direction} NULLS LAST`;
             }
             case 'annotation': {
               const path = jsonPath(['@meta', 'annotations', order.key, ...(order.path ?? [])]);
               // Booleans order as the 0/1 `json_extract` returns, as the host executors sort them.
-              return sql`CASE WHEN json_type(e.body, ${path}) IN ('integer', 'real', 'text', 'true', 'false')
-  THEN json_extract(e.body, ${path}) END ${direction} NULLS LAST`;
+              return sql`CASE WHEN json_type(${body('e')}, ${path}) IN ('integer', 'real', 'text', 'true', 'false')
+  THEN json_extract(${body('e')}, ${path}) END ${direction} NULLS LAST`;
             }
           }
         });
         return this.#cte(sql`SELECT w.id, w.rank, ROW_NUMBER() OVER (ORDER BY ${join([...terms, raw('w.id')], ', ')}) AS ord
-FROM ${raw(inner)} w CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId} AND e.id = w.id`);
+FROM ${raw(inner)} w CROSS JOIN objectMeta e ON ${row('e', this._spaceId, raw('w.id'))}`);
       }
 
       case 'limit': {
@@ -242,15 +247,15 @@ FROM ${raw(inner)} w CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId}
     const a = raw(alias);
     // The parent / endpoint guards short-circuit, so a row with neither costs one column test.
     const isDeleted = sql`(${a}.deleted = 1
- OR (${a}.parent_id IS NOT NULL AND EXISTS (
+ OR (${a}.parentId IS NOT NULL AND EXISTS (
   WITH RECURSIVE up(id, depth) AS (
-    SELECT ${a}.parent_id, 1
+    SELECT ${a}.parentId, 1
     UNION ALL
-    SELECT p.parent_id, up.depth + 1 FROM up CROSS JOIN echo_entities p ON p.space_id = ${a}.space_id AND p.id = up.id
-    WHERE p.parent_id IS NOT NULL AND up.depth < ${MAX_DEPTH})
-  SELECT 1 FROM up CROSS JOIN echo_entities d ON d.space_id = ${a}.space_id AND d.id = up.id WHERE d.deleted = 1))
- OR ((${a}.source_id IS NOT NULL OR ${a}.target_id IS NOT NULL) AND EXISTS (SELECT 1 FROM echo_entities d
-  WHERE d.space_id = ${a}.space_id AND d.id IN (${a}.source_id, ${a}.target_id) AND d.deleted = 1)))`;
+    SELECT p.parentId, up.depth + 1 FROM up CROSS JOIN objectMeta p ON p.spaceId = ${a}.spaceId AND p.objectId = up.id AND p.queueId = ''
+    WHERE p.parentId IS NOT NULL AND up.depth < ${MAX_DEPTH})
+  SELECT 1 FROM up CROSS JOIN objectMeta d ON d.spaceId = ${a}.spaceId AND d.objectId = up.id AND d.queueId = '' WHERE d.deleted = 1))
+ OR ((${a}.sourceId IS NOT NULL OR ${a}.targetId IS NOT NULL) AND EXISTS (SELECT 1 FROM objectMeta d
+  WHERE d.spaceId = ${a}.spaceId AND d.objectId IN (${a}.sourceId, ${a}.targetId) AND d.queueId = '' AND d.deleted = 1)))`;
     return deleted === 'only' ? isDeleted : sql`NOT ${isDeleted}`;
   }
 
@@ -266,12 +271,12 @@ FROM ${raw(inner)} w CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId}
           conditions.push(this.#typename(alias, filter.typename));
         }
         if (filter.id && filter.id.length > 0) {
-          conditions.push(sql`${a}.id IN (SELECT value FROM json_each(${JSON.stringify(filter.id)}))`);
+          conditions.push(sql`${a}.objectId IN (SELECT value FROM json_each(${JSON.stringify(filter.id)}))`);
         }
         for (const [key, valueFilter] of Object.entries(filter.props)) {
           // `@`-prefixed keys address annotations (`@type`, `@meta`), never data.
           if (!key.startsWith('@')) {
-            conditions.push(this.#value(valueFilter, sql`${a}.body`, [key]));
+            conditions.push(this.#value(valueFilter, body(alias), [key]));
           }
         }
         if (filter.foreignKeys && filter.foreignKeys.length > 0) {
@@ -280,17 +285,17 @@ FROM ${raw(inner)} w CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId}
               sql`(json_extract(k.value, '$.source') = ${fk.source} AND json_extract(k.value, '$.id') = ${fk.id})`,
           );
           conditions.push(
-            sql`EXISTS (SELECT 1 FROM json_each(${a}.body, '$."@meta".keys') k WHERE ${join(keys, ' OR ')})`,
+            sql`EXISTS (SELECT 1 FROM json_each(${body(alias)}, '$."@meta".keys') k WHERE ${join(keys, ' OR ')})`,
           );
         }
         if (filter.metaKey !== undefined) {
-          conditions.push(sql`json_extract(${a}.body, '$."@meta".key') = ${filter.metaKey}`);
+          conditions.push(sql`json_extract(${body(alias)}, '$."@meta".key') = ${filter.metaKey}`);
           if (filter.metaVersion !== undefined) {
             // Only an exact version is expressible without reading which versions exist.
             if (!/^\d+\.\d+\.\d+$/.test(filter.metaVersion)) {
               throw new UnsupportedQueryError(`metaVersion range ${filter.metaVersion}`);
             }
-            conditions.push(sql`json_extract(${a}.body, '$."@meta".version') = ${filter.metaVersion}`);
+            conditions.push(sql`json_extract(${body(alias)}, '$."@meta".version') = ${filter.metaVersion}`);
           }
         }
         return conditions.length === 0 ? raw('1') : sql`(${join(conditions, ' AND ')})`;
@@ -299,8 +304,8 @@ FROM ${raw(inner)} w CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId}
       case 'annotation': {
         const keys = ['@meta', 'annotations', filter.key];
         return filter.value === undefined
-          ? sql`(json_type(${a}.body, ${jsonPath(keys)}) IS NOT NULL)`
-          : strictEquals(sql`${a}.body`, keys, filter.value);
+          ? sql`(json_type(${body(alias)}, ${jsonPath(keys)}) IS NOT NULL)`
+          : strictEquals(body(alias), keys, filter.value);
       }
 
       case 'tag': {
@@ -308,7 +313,7 @@ FROM ${raw(inner)} w CROSS JOIN echo_entities e ON e.space_id = ${this._spaceId}
         const target = (eid && EID.getEntityId(eid)) || filter.tag;
         // Tags are encoded refs (or legacy bare URIs); both compare by their entity id.
         const uri = raw(`CASE t.type WHEN 'object' THEN json_extract(t.value, '$."/"') ELSE t.value END`);
-        return sql`EXISTS (SELECT 1 FROM json_each(${a}.body, '$."@meta".tags') t
+        return sql`EXISTS (SELECT 1 FROM json_each(${body(alias)}, '$."@meta".tags') t
 WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(${uri}, '/', '')), '') ELSE ${uri} END = ${target})`;
       }
 
@@ -327,15 +332,15 @@ WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(
           terms.map((term) =>
             // Trigram FTS answers terms of three or more characters; shorter ones fall back to LIKE.
             term.length >= 3
-              ? sql`${a}.rowid IN (SELECT rowid FROM echo_fts WHERE echo_fts MATCH ${`"${term.replaceAll('"', '""')}"`})`
-              : sql`EXISTS (SELECT 1 FROM echo_fts WHERE echo_fts.rowid = ${a}.rowid AND echo_fts.text LIKE ${`%${term.replace(/[\\%_]/g, (char) => `\\${char}`)}%`} ESCAPE '\\')`,
+              ? sql`${a}.recordId IN (SELECT rowid FROM ftsIndex WHERE ftsIndex MATCH ${`"${term.replaceAll('"', '""')}"`})`
+              : sql`EXISTS (SELECT 1 FROM ftsIndex WHERE ftsIndex.rowid = ${a}.recordId AND ftsIndex.text LIKE ${`%${term.replace(/[\\%_]/g, (char) => `\\${char}`)}%`} ESCAPE '\\')`,
           ),
           ' AND ',
         );
       }
 
       case 'timestamp': {
-        const column = raw(`${alias}.${filter.field === 'createdAt' ? 'created_at' : 'updated_at'}`);
+        const column = raw(`${alias}.${filter.field === 'createdAt' ? 'createdAt' : 'updatedAt'}`);
         const operator = raw({ gt: '>', gte: '>=', lt: '<', lte: '<=' }[filter.operator]);
         return sql`${column} ${operator} ${filter.value}`;
       }
@@ -345,18 +350,18 @@ WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(
         const depth = filter.transitive ? MAX_DEPTH : 1;
         return sql`EXISTS (
   WITH RECURSIVE up(id, depth) AS (
-    SELECT ${a}.parent_id, 1 WHERE ${a}.parent_id IS NOT NULL
+    SELECT ${a}.parentId, 1 WHERE ${a}.parentId IS NOT NULL
     UNION ALL
-    SELECT p.parent_id, up.depth + 1 FROM up CROSS JOIN echo_entities p ON p.space_id = ${a}.space_id AND p.id = up.id
-    WHERE p.parent_id IS NOT NULL AND up.depth < ${depth})
+    SELECT p.parentId, up.depth + 1 FROM up CROSS JOIN objectMeta p ON p.spaceId = ${a}.spaceId AND p.objectId = up.id AND p.queueId = ''
+    WHERE p.parentId IS NOT NULL AND up.depth < ${depth})
   SELECT 1 FROM up WHERE up.id IN (SELECT value FROM json_each(${JSON.stringify(parents)})))`;
       }
 
       case 'has-parent':
-        return raw(`${alias}.parent_id IS ${filter.value ? 'NOT NULL' : 'NULL'}`);
+        return raw(`${alias}.parentId IS ${filter.value ? 'NOT NULL' : 'NULL'}`);
 
       case 'mnemonic':
-        return sql`upper(substr(${a}.id, ${-filter.mnemonic.length})) = ${filter.mnemonic}`;
+        return sql`upper(substr(${a}.objectId, ${-filter.mnemonic.length})) = ${filter.mnemonic}`;
 
       case 'not':
         return sql`NOT ${this.#filter(filter.filter, alias)}`;
@@ -397,7 +402,7 @@ WHERE CASE WHEN ${uri} LIKE 'echo:%' THEN replace(${uri}, rtrim(${uri}, replace(
    * exact match, since stored type DXNs (`Entity.getTypeURI`) always carry their version.
    */
   #typename(alias: string, typename: string): Fragment {
-    const column = raw(`${alias}.type_dxn`);
+    const column = raw(`${alias}.typeDXN`);
     const dxn = DXN.tryMake(typename);
     if (!dxn) {
       return sql`${column} = ${typename}`;
@@ -456,9 +461,9 @@ WHERE ${normalizedType(raw('j.type'))} = ${storedType(body, keys)} AND j.value I
 
       case 'in-query': {
         const subquery = this.node(filter.subquery, 'exclude');
-        const projected = normalizedValue(raw('s.body'), filter.property.split('.'));
+        const projected = normalizedValue(snapshotOf('s'), filter.property.split('.'));
         return sql`COALESCE(${normalizedValue(body, keys)} IN (SELECT ${projected} FROM ${raw(subquery)} q
-CROSS JOIN echo_entities s ON s.space_id = ${this._spaceId} AND s.id = q.id), 0)`;
+CROSS JOIN objectMeta s ON ${row('s', this._spaceId, raw('q.id'))}), 0)`;
       }
 
       case 'not':
@@ -486,6 +491,23 @@ CROSS JOIN echo_entities s ON s.space_id = ${this._spaceId} AND s.id = q.id), 0)
     }
   }
 }
+
+/** The local reference prefix `reverseRef.targetDXN` carries for an entity of the same space. */
+const LOCAL_REF = 'echo:///';
+
+/** The `objectMeta` row (aliased `alias`) of the document object `id` of the space. */
+const row = (alias: string, spaceId: SpaceId, id: Fragment): Fragment =>
+  sql`${raw(alias)}.spaceId = ${spaceId} AND ${raw(alias)}.objectId = ${id} AND ${raw(alias)}.queueId = ''`;
+
+/** The JSON snapshot of the `objectMeta` row aliased `alias`, read by its primary key. */
+const snapshotOf = (alias: string): Fragment =>
+  raw(`(SELECT snapshot FROM objectSnapshot WHERE objectSnapshot.recordId = ${alias}.recordId)`);
+
+const body = snapshotOf;
+
+/** A dotted property path as the reverse-reference index stores it: escaped, without array indexes. */
+const propPath = (property: string): string =>
+  EscapedPropPath.escape(property.split('.').filter((segment) => !/^[0-9]+$/.test(segment)));
 
 /** `===` against a JS operand, with an encoded ref compared by URI. */
 const strictEquals = (body: Fragment, keys: readonly string[], operand: unknown): Fragment => {

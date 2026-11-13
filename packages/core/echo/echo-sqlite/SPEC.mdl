@@ -5,9 +5,11 @@ version: 0.1.0
 ---
 
 `@dxos/echo-sqlite` is the smallest backend that implements the ECHO `Database` interface from
-`@dxos/echo` without `@dxos/echo-client` / `@dxos/echo-host`: no Automerge, no feeds, no replication,
-no client/host split. Entities are stored as JSON rows in SQLite and surface to callers as ordinary
-in-memory live objects (`Obj.make` proxies).
+`@dxos/echo` without `@dxos/echo-client` / `@dxos/echo-host`: no client/host split. Each object is an
+Automerge document whose chunks are blocks of the feed store (`org.dxos.feed`), the indexer
+(`org.dxos.index-core`) writes the rows queries read, and objects surface to callers as ordinary
+in-memory live objects (`Obj.make` proxies). Sync with a server is designed in
+`org.dxos.echo-sqlite.server-authority`.
 
 Two properties define it and outrank simplicity:
 
@@ -23,6 +25,20 @@ Tests map to the acceptance scenarios: `src/memory.test.ts` (T-1, T-2), `src/dif
 (T-3), `src/sql/explain.test.ts` (T-4, T-5), `src/database.test.ts` (T-6 to T-9). Benchmarks are in
 `src/testing/database.bench.ts` and `src/memory.report.test.ts`; results are recorded in `BENCHMARKS.md`.
 
+## Dependencies
+
+```mdl
+uses org.dxos.feed: The store whose `automerge` namespace holds each object's document.
+```
+
+```mdl
+uses org.dxos.index-core: The indexer that writes the rows every query reads.
+```
+
+```mdl
+uses org.dxos.echo-sqlite.server-authority: The design this storage implements.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -32,6 +48,8 @@ The following extension dialects are used in this document.
 | `feat`     | `org.dxos.mdl.feat@1.0`     |
 | `scenario` | `org.dxos.mdl.scenario@1.0` |
 | `rule`     | `org.dxos.mdl.rule@1.0`     |
+| `uses`     | `dxos.spec.core/uses`       |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Features
 
@@ -66,21 +84,20 @@ feat F-2: Storage layout
 
   req F-2.1:
     when: an entity is stored
-    then: it is one row of the entity table, keyed by (spaceId, id), holding the full ECHO JSON
-          (Obj.toJSON plus @parent, @meta included) as the body
+    then: it is one Automerge document holding that entity only (the DatabaseDirectory layout, under
+          objects[id]), and each write appends the document's incremental chunk as one block of the
+          entity's feed (feedId = entity id) in the feed store's `automerge` namespace
 
   req F-2.2:
     when: the compiler needs a field to select, join or order on
-    then: that field is a denormalized, indexed column written in the same transaction as the body —
-          kind, typeDXN, deleted, createdAt, updatedAt, the raw parent/source/target URIs, and the
-          normalized parentId/sourceId/targetId (the bare entity id when local to the row's space,
-          NULL otherwise)
+    then: it reads the indexer's objectMeta columns (entityKind, typeDXN, deleted, createdAt,
+          updatedAt, and the normalized parentId/sourceId/targetId) and the JSON snapshot in
+          objectSnapshot, restricted to document rows (queueId = '')
 
   req F-2.3:
-    when: an entity holding references or text is written
-    then: its outgoing references (target id, normalized property path) and its extracted string
-          values are written to a reverse-reference side table and an FTS5 (trigram) side table in
-          the same transaction, so incoming-reference and text queries never read bodies
+    when: entities are written
+    then: an index pass over the new blocks writes their objectMeta, objectSnapshot, reverseRef and
+          ftsIndex rows before flush() resolves, so a query after flush sees every write
 
   req F-2.4:
     when: the schema changes
@@ -234,8 +251,9 @@ feat F-6: Writes and durability
 
   req F-6.1:
     when: an entity is added, mutated (Obj.update, nested or meta changes) or removed
-    then: only that entity's row (and its side-table rows) is rewritten, batched per microtask into
-          one transaction; db.flush() resolves once the batch is durable
+    then: only that entity's document gains a chunk (the smallest edit, with strings edited as text),
+          batched per microtask into one feed-store append; db.flush() resolves once the batch is
+          durable and indexed
 
   req F-6.2:
     when: an object added to the database references (Ref.make) or relates to entities not yet stored
@@ -243,8 +261,8 @@ feat F-6: Writes and durability
 
   req F-6.3:
     when: db.remove(obj) is called
-    then: the row is soft-deleted (deleted = 1), re-adding the object restores it, and
-          runGarbageCollection hard-deletes soft-deleted rows and their side-table rows
+    then: the object is soft-deleted (system.deleted), re-adding the object restores it, and
+          runGarbageCollection hard-deletes soft-deleted objects: their index rows and their feed's blocks
 
   req F-6.4:
     when: a write batch fails
@@ -418,6 +436,36 @@ rule echo-sqlite-ddl-in-migrations: Schema lives only in numbered migrations
     - src/migrations/*.sql
   grep: CREATE|ALTER|DROP
   severity: error
+```
+
+## Changelog
+
+```mdl
+decision D-1: Objects are Automerge documents stored as blocks of the feed store, and the indexer writes the rows queries read; everything runs over SQLite.
+  date: 2026-11-13
+  by: user:dmaretskyi
+  affects: [F-2]
+```
+
+```mdl
+decision D-2: The compiler targets the indexer's tables, and a write runs the index pass before flush resolves. Fills in [D-1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-2.3, F-4]
+  why: |
+    Read-your-writes (F-4.9) needs the rows of a write before the next query. The indexer's tables hold
+    the same columns the old entity table did, so the compiler changed tables, not semantics.
+  rejected: Keeping the old entity table as a second index beside the indexer's, which writes every object twice.
+```
+
+```mdl
+decision D-3: Each database file has its own actor id for the blocks it writes. Fills in [D-1].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: The authority treats a repeated (feed, actor, sequence) as the same block, so two files sharing an actor would drop each other's writes.
 ```
 
 ---

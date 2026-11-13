@@ -18,11 +18,9 @@ import { Annotation, Blob, Database, Entity, Filter, Obj, Order, Query, Ref, Rel
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
-import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import { type OpenOptions, SqliteDatabase } from './database.ts';
 import { UnsupportedOperationError, UnsupportedQueryError } from './errors.ts';
-import init from './migrations/0001_init.sql?raw';
 
 const TYPES = [
   TestSchema.Person,
@@ -641,13 +639,15 @@ describe('SqliteDatabase', () => {
       const counts = yield* rawSql(
         Effect.gen(function* () {
           const sql = yield* SqlClient.SqlClient;
-          const [entities] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM echo_entities`;
-          const [refs] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM echo_refs`;
-          const [text] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM echo_fts`;
-          return [entities.count, refs.count, text.count].map(Number);
+          const [entities] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM objectMeta WHERE queueId = ''`;
+          const [refs] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM reverseRef`;
+          const [text] = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM ftsIndex`;
+          const [feeds] = yield* sql<{ count: number }>`SELECT COUNT(DISTINCT feedPrivateId) AS count FROM blocks`;
+          return [entities.count, refs.count, text.count, feeds.count].map(Number);
         }),
       );
-      expect(counts).toEqual([1, 0, 1]);
+      // The kept object's row, text and document; nothing of the purged one.
+      expect(counts).toEqual([1, 0, 1, 1]);
     }),
   );
 
@@ -687,7 +687,7 @@ describe('SqliteDatabase', () => {
             rawSql(
               Effect.gen(function* () {
                 const sql = yield* SqlClient.SqlClient;
-                yield* sql`DROP TABLE echo_entities`;
+                yield* sql`ALTER TABLE blocks RENAME TO blocks_unavailable`;
               }),
             ),
           );
@@ -695,7 +695,14 @@ describe('SqliteDatabase', () => {
           db.remove(doomed);
           await expect(db.flush()).rejects.toBeDefined();
 
-          await EffectEx.runPromise(rawSql(SqlMigrations.apply(init)));
+          await EffectEx.runPromise(
+            rawSql(
+              Effect.gen(function* () {
+                const sql = yield* SqlClient.SqlClient;
+                yield* sql`ALTER TABLE blocks_unavailable RENAME TO blocks`;
+              }),
+            ),
+          );
           await db.flush();
         },
         { spaceId },

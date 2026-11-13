@@ -5,6 +5,7 @@
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import init from './0001_init.sql?raw';
+import feedStorage from './0002_feed_storage.sql?raw';
 
 /**
  * Store migrations, keyed `<id>_<name>` as `@effect/sql`'s `Migrator.fromRecord` expects.
@@ -12,6 +13,7 @@ import init from './0001_init.sql?raw';
  */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
+  '0002_feed_storage': SqlMigrations.apply(feedStorage),
 };
 
 /**
