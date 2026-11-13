@@ -105,7 +105,7 @@ const midpoints = (source: Point, points: readonly Point[], target: Point) => {
   }));
 };
 
-/** A port's radius at 100%, in scene px. */
+/** A port's radius on screen, in px. */
 const PORT_RADIUS = 5;
 
 export const ControlFrame = memo(
@@ -137,9 +137,9 @@ export const ControlFrame = memo(
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
     const handleSize = 8 * unit;
-    // A port is part of the node, so it scales with the zoom like the node does, but stays big enough to hit zoomed out.
-    const portRadius = Math.max(PORT_RADIUS, 3 * unit);
-    const portStroke = portRadius / PORT_RADIUS;
+    // A port is a control, as a handle is: the same size on screen at any zoom, so it never covers a zoomed-in shape.
+    const portRadius = PORT_RADIUS * unit;
+    const portStroke = unit;
     const midpointRadius = 4 * unit;
     // A move in flight shows the shapes themselves: no outlines or handles, just where they will land.
     const chrome = isMoving(drag) ? [] : [...selection];

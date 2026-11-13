@@ -130,6 +130,10 @@ port by half a major cell, and lanes sharing a gutter are a cell apart, where ea
 grid. `linkGeometry`, `viewLinkGeometry`, `linkPath`, `smartPoints` and `splinePath` take the grid as a last
 argument (the default grid when left out), and `ControlFrame` a `grid` prop.
 
+A port is the same size on screen at any zoom, as a resize handle is; it grew with the drawing, and covered a
+zoomed-in shape. The Properties panel shows a part selected inside an Object that is being edited in place, where it
+showed nothing selected.
+
 A form field with no value shows the default its schema declares (Effect's `default` annotation,
 `Schema.Number.annotate({ default: 26 })`) as its value. Showing it writes nothing: the form holds no value for the
 field until it is edited. The space graph declares its defaults this way, so the Properties panel and the drawing
