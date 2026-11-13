@@ -72,6 +72,13 @@ describe('SlideTheme.Settings', () => {
     expect(['#ab', '#abcde', '#abcdefa', '#abcdefabc'].some(SlideTheme.isColor)).toBe(false);
   });
 
+  test('the code and separator colors are overridable too', () => {
+    expect(Result.isSuccess(decode({ code: '#111', separator: '#222' }))).toBe(true);
+    const style = slideThemeStyle({ code: '#111', separator: '#222' });
+    expect(style['--slide-code']).toBe('#111');
+    expect(style['--slide-separator']).toBe('#222');
+  });
+
   test('rejects unknown base themes and unsafe values', () => {
     expect(Result.isSuccess(decode({ base: 'neon' }))).toBe(false);
     expect(Result.isSuccess(decode({ background: 'url(x)' }))).toBe(false);

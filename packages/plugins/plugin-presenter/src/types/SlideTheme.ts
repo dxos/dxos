@@ -48,13 +48,24 @@ export const isFont = (value: unknown): value is Font => FONTS.some((font) => fo
 export const isMonoFont = (value: unknown): value is MonoFont => MONO_FONTS.some((font) => font === value);
 
 // Values reach inline styles, so only plain colors pass; `url(...)` and other functions are rejected.
-const COLOR_PATTERN =
+export const COLOR_PATTERN =
   /^(#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|[a-z]+|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([\d\s.,%/+-]*\))$/i;
 
 /** True for a hex color (3, 4, 6 or 8 digits), a color name, or an `rgb`/`hsl`/`oklch`-style function of numbers. */
 export const isColor = (value: unknown): value is string => typeof value === 'string' && COLOR_PATTERN.test(value);
 
 const Color = Schema.String.pipe(Schema.check(Schema.isPattern(COLOR_PATTERN)));
+
+/**
+ * Tones a slide element may take, which repaint the accent parts of a variant (`<List tone="warning">`); the first
+ * is the theme's own accent.
+ */
+export const TONES = ['accent', 'info', 'success', 'warning', 'error', 'neutral'] as const;
+
+export type Tone = (typeof TONES)[number];
+
+/** True for a tone name. */
+export const isTone = (value: unknown): value is Tone => TONES.some((tone) => tone === value);
 
 /**
  * A deck's theme: a built-in base theme plus optional overrides of its colors and its text and code fonts.
@@ -64,6 +75,10 @@ export const Settings = Schema.Struct({
   accent: Schema.optional(Color).annotate({ title: 'Accent color' }),
   background: Schema.optional(Color).annotate({ title: 'Background color' }),
   foreground: Schema.optional(Color).annotate({ title: 'Text color' }),
+  /** The fill behind code and the filled list and table variants. */
+  code: Schema.optional(Color).annotate({ title: 'Code background' }),
+  /** Table rules and other hairlines. */
+  separator: Schema.optional(Color).annotate({ title: 'Separator color' }),
   font: Schema.optional(Schema.Literals(FONTS)).annotate({ title: 'Font' }),
   monoFont: Schema.optional(Schema.Literals(MONO_FONTS)).annotate({ title: 'Code font' }),
 });

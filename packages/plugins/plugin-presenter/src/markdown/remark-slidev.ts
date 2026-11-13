@@ -7,6 +7,8 @@ import type { Data, Html, Paragraph, Parent, Root, RootContent, Text } from 'mda
 
 import { EID } from '@dxos/keys';
 
+import { SlideTheme } from '#types';
+
 import { type SlideIssue } from './frontmatter.ts';
 
 /** Content regions of a slide, selected by `::name::` markers. */
@@ -87,6 +89,18 @@ const STYLE_TAGS = {
 type StyleTag = keyof typeof STYLE_TAGS;
 
 const isStyleTag = (tag: ContainerTag): tag is StyleTag => Object.hasOwn(STYLE_TAGS, tag);
+
+/** The tone a style tag asks for; an unknown name falls back to the theme's own accent. */
+const toneName = (tag: ContainerTag, value: string | undefined, issues: SlideIssue[]): SlideTheme.Tone => {
+  if (value === undefined || SlideTheme.isTone(value)) {
+    return value ?? SlideTheme.TONES[0];
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} tone "${value}"; using "${SlideTheme.TONES[0]}".`,
+  });
+  return SlideTheme.TONES[0];
+};
 
 /** A tag's name as it is written, for an issue message. */
 const tagLabel = (tag: ContainerTag): string => `<${tag[0].toUpperCase()}${tag.slice(1)}>`;
@@ -413,17 +427,18 @@ const positiveInteger = (value: string | undefined, name: string, issues: SlideI
 const styleBlocks = (
   tag: StyleTag,
   children: RootContent[],
-  value: string | undefined,
+  attributes: Record<string, string>,
   issues: SlideIssue[],
 ): RootContent[] => {
   const { node, variants } = STYLE_TAGS[tag];
-  const variant = variantName(tag, value, variants, issues);
+  const variant = variantName(tag, attributes.variant, variants, issues);
+  const tone = toneName(tag, attributes.tone, issues);
   const blocks = children.filter((child) => child.type === node);
   if (blocks.length === 0) {
     issues.push({ kind: 'html', message: `${tagLabel(tag)} has no ${node} to style.` });
   }
   for (const block of blocks) {
-    block.data = { ...block.data, hProperties: { ...block.data?.hProperties, variant } };
+    block.data = { ...block.data, hProperties: { ...block.data?.hProperties, variant, tone } };
   }
   return children;
 };
@@ -435,10 +450,11 @@ const containerNodes = (
 ): RootContent[] => {
   if (open.tag === 'box') {
     const variant = variantName(open.tag, open.attributes.variant, BOX_VARIANTS, issues);
-    return [slideElement(CONTAINER_TAGS.box, { variant }, children)];
+    const tone = toneName(open.tag, open.attributes.tone, issues);
+    return [slideElement(CONTAINER_TAGS.box, { variant, tone }, children)];
   }
   if (isStyleTag(open.tag)) {
-    return styleBlocks(open.tag, children, open.attributes.variant, issues);
+    return styleBlocks(open.tag, children, open.attributes, issues);
   }
   const hName = CONTAINER_TAGS[open.tag];
   if (open.tag !== 'v-clicks') {

@@ -12,6 +12,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type LayoutName } from '#markdown';
 
 import { Slide } from '../Slide/index.ts';
+import { SlideThemeProvider } from '../SlideTheme/index.ts';
 import { MarkdownSlide, type MarkdownSlideProps } from './MarkdownSlide.tsx';
 
 // A one-second 32×18 WebM, inlined so the story needs no network.
@@ -511,5 +512,50 @@ export const BoxVariants: Story = {
     await expect(card.textContent).toContain('Today');
     const outline = await query(canvasElement, '[data-slot="right"] div[data-variant="outline"]');
     await expect(outline.querySelector('ol[data-variant="steps"]')).not.toBeNull();
+  },
+};
+
+/**
+ * The three ways a deck repaints a variant: the deck's theme (the `SlideThemeProvider` around the story), the slide's
+ * own frontmatter, and a `tone` on one block.
+ */
+export const ThemeOverrides: Story = {
+  render: (props: MarkdownSlideProps) => (
+    <SlideThemeProvider settings={{ code: '#15202b', separator: '#2b3a4a' }}>
+      <SourceStory {...props} />
+    </SlideThemeProvider>
+  ),
+  args: {
+    content: slide(
+      { layout: 'two-cols-header', accent: '#ff7a1a' },
+      '# Overrides',
+      '',
+      '::left::',
+      '',
+      "#### The slide's accent",
+      '',
+      '<List variant="steps">',
+      '',
+      '1. ECHO',
+      '2. Agents',
+      '',
+      '</List>',
+      '',
+      '::right::',
+      '',
+      '#### One block, another tone',
+      '',
+      '<Box variant="outline" tone="info">',
+      '',
+      'Replaces the accent for this box only.',
+      '',
+      '</Box>',
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const steps = await query(canvasElement, 'ol[data-variant="steps"]');
+    await expect(getComputedStyle(steps).getPropertyValue('--slide-accent').trim()).toBe('#ff7a1a');
+    const box = await query(canvasElement, 'div[data-tone="info"]');
+    await expect(getComputedStyle(box).getPropertyValue('--slide-accent').trim()).not.toBe('#ff7a1a');
   },
 };

@@ -19,9 +19,24 @@ import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxo
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { LAYOUT_SLOTS, type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide, parseSourceRange } from '#markdown';
+import {
+  LAYOUT_SLOTS,
+  SLIDE_COLORS,
+  type SlideFrontmatter,
+  type SlotName,
+  SURFACE_ROLES,
+  type SurfaceRole,
+  parseSlide,
+  parseSourceRange,
+} from '#markdown';
+import { SlideTheme } from '#types';
 
-import { slideThemeClasses, useSlideColorScheme, useSlideThemeStyle } from '../SlideTheme/index.ts';
+import {
+  type SlideThemeStyle,
+  slideThemeClasses,
+  useSlideColorScheme,
+  useSlideThemeStyle,
+} from '../SlideTheme/index.ts';
 import { ActiveSlotContext, layouts } from './layouts.tsx';
 import { SlideBackground } from './SlideBackground.tsx';
 import { theme } from './theme.ts';
@@ -78,7 +93,8 @@ export const MarkdownSlide = ({
     };
   }, [parsed, step]);
 
-  const themeStyle = useSlideThemeStyle();
+  const deckStyle = useSlideThemeStyle();
+  const themeStyle = useMemo(() => slideStyle(deckStyle, parsed.frontmatter), [deckStyle, parsed.frontmatter]);
   const Layout = layouts[parsed.layout];
   // Layouts without a `left` slot render `::left::` content inside the first region.
   const outlinedSlot = activeSlot === 'left' && !LAYOUT_SLOTS[parsed.layout]?.includes('left') ? 'default' : activeSlot;
@@ -122,6 +138,36 @@ export const MarkdownSlide = ({
       </div>
     </div>
   );
+};
+
+/** The deck's theme with this slide's own color overrides applied, as inline `--slide-*` variables. */
+const slideStyle = (style: SlideThemeStyle, frontmatter: SlideFrontmatter): SlideThemeStyle => {
+  const overrides = SLIDE_COLORS.filter((color) => frontmatter[color] !== undefined);
+  if (overrides.length === 0) {
+    return style;
+  }
+  return overrides.reduce<SlideThemeStyle>(
+    (style, color) => ({ ...style, [`--slide-${VARIABLES[color]}`]: frontmatter[color]! }),
+    style,
+  );
+};
+
+/** The `--slide-*` variable each overridable color writes to. */
+const VARIABLES: Record<(typeof SLIDE_COLORS)[number], string> = {
+  accent: 'accent',
+  foreground: 'fg',
+  code: 'code',
+  separator: 'separator',
+};
+
+/** A tone repaints the accent the variant's classes already read, so one attribute recolors the whole block. */
+const TONE_COLORS: Record<SlideTheme.Tone, string> = {
+  accent: 'var(--color-accent-text)',
+  info: 'var(--color-info-text)',
+  success: 'var(--color-success-text)',
+  warning: 'var(--color-warning-text)',
+  error: 'var(--color-error-text)',
+  neutral: 'var(--color-neutral-text)',
 };
 
 //
@@ -353,6 +399,14 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
   const variantClass = active && theme.variants[active.kind]?.[active.name]?.[VARIANT_PARTS[element.tagName]];
   if (block && variantClass) {
     properties.dataVariant = name;
+  }
+
+  // A tone rebinds `--slide-accent` for this element and everything under it, so the variant's own classes follow it.
+  const tone = block ? asVariant(properties.tone) : undefined;
+  delete properties.tone;
+  if (SlideTheme.isTone(tone) && tone !== 'accent') {
+    properties.dataTone = tone;
+    properties.style = `--slide-accent: ${TONE_COLORS[tone]}`;
   }
 
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);

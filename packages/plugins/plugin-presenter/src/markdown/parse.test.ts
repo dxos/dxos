@@ -239,6 +239,31 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([]);
   });
 
+  test('<List tone> travels with the variant', () => {
+    const slide = parseSlide('<List variant="outline" tone="warning">\n\n- a\n\n</List>');
+    expect(elements(slide.slots.default, 'ul')[0].properties.tone).toBe('warning');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('an unknown tone falls back to the accent and is reported', () => {
+    const slide = parseSlide('<Box tone="neon">\n\nBoxed\n\n</Box>');
+    expect(elements(slide.slots.default, 'slide-box')[0].properties.tone).toBe('accent');
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('Invalid <Box> tone') }]);
+  });
+
+  test('a slide overrides theme colors in its own frontmatter', () => {
+    const slide = parseSlide('---\naccent: "#ff7a1a"\nseparator: "oklch(0.5 0 0)"\n---\n\n# Title');
+    expect(slide.frontmatter.accent).toBe('#ff7a1a');
+    expect(slide.frontmatter.separator).toBe('oklch(0.5 0 0)');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('a color that is not a plain color is rejected', () => {
+    const slide = parseSlide('---\naccent: "url(https://example.com/x.png)"\n---\n\n# Title');
+    expect(slide.frontmatter.accent).toBeUndefined();
+    expect(slide.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+  });
+
   test('<Surface> with an invalid ref keeps the element and reports it', () => {
     const slide = parseSlide('<Surface ref="javascript:alert(1)" />');
     expect(elements(slide.slots.default, 'slide-surface')).toHaveLength(1);
