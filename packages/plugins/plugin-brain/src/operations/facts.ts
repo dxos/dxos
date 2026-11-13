@@ -72,7 +72,8 @@ export const resolveEntityKeys = (name: string): Effect.Effect<string[], Semanti
 
 /**
  * Runs a structured query with its entity names resolved through {@link resolveEntityKeys}: one store query per
- * combination of the keys they resolve to, merged by fact id in first-seen order.
+ * combination of the keys they resolve to, merged by fact id in first-seen order, without the graphs another result
+ * supersedes or retracts.
  */
 export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<RDF.Fact[], SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
@@ -95,5 +96,8 @@ export const queryResolvedFacts = (query: SemanticQuery): Effect.Effect<RDF.Fact
         }
       }
     }
-    return [...byId.values()];
+    // The store keeps every version of a graph; only the current ones answer, so a replaced profile is not read twice.
+    const merged = [...byId.values()];
+    const statuses = RDF.Graph.status(merged);
+    return merged.filter((fact) => statuses.get(RDF.Mapping.graphOf(fact)) === 'active');
   });

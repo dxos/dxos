@@ -10,8 +10,9 @@ import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive, RDF } from '@dxos/pipeline-rdf';
 
+import { queryResolvedFacts } from './facts.ts';
 import { queryCompactFacts } from './query-facts.ts';
 import { summarizeSubject } from './summarize-subject.ts';
 
@@ -150,6 +151,36 @@ describe('entity names', () => {
       }).pipe(Effect.provide(FactStoreLive.layerMemory)),
     );
     expect(facts.map((fact) => fact.id)).toEqual(['k-1']);
+  });
+
+  test('leaves out a graph another result supersedes', async ({ expect }) => {
+    const [old] = RDF.Graph.assign([
+      {
+        ...makeFact({ id: '', subject: 'x', predicate: 'has account', object: 'x' }),
+        assertion: {
+          subject: { kind: 'entity', entity: DISCORD_USER, label: 'dmaretskyi' },
+          predicate: 'has account',
+          object: { kind: 'literal', literal: 'old_name' },
+        },
+      },
+    ]);
+    const [current] = RDF.Graph.assign([
+      {
+        ...old,
+        id: '',
+        graph: undefined,
+        supersedes: [RDF.Mapping.graphOf(old)],
+        assertion: { ...old.assertion, object: { kind: 'literal', literal: 'new_name' } },
+      },
+    ]);
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* FactStore;
+        yield* store.putFacts([old, current]);
+        return yield* queryResolvedFacts({ entity: DISCORD_USER });
+      }).pipe(Effect.provide(FactStoreLive.layerMemory)),
+    );
+    expect(facts.map((fact) => fact.assertion.object)).toEqual([{ kind: 'literal', literal: 'new_name' }]);
   });
 
   test('summarizes a subject named by its label', async ({ expect }) => {
