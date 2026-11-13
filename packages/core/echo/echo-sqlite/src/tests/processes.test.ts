@@ -2,123 +2,136 @@
 // Copyright 2026 DXOS.org
 //
 
+import { execFile } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+import { promisify } from 'node:util';
 import { describe, expect, test } from 'vitest';
 
 import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { type SpaceId } from '@dxos/keys';
 
 import { SpaceSync } from '../sync/space-sync.ts';
 import { TestBuilder } from '../testing/harness.ts';
+import { type OtherProcessCommand, RESULT } from './testing/other-process-protocol.ts';
+
+//
+// Several processes on one file (F-8). The other process is a real one, since two connections in one
+// thread cannot hold transactions at once: `node:sqlite` busy-waits synchronously, blocking the thread
+// that would release the lock.
+//
 
 const TYPES = [TestSchema.Person];
 
-//
-// Several processes on one file (F-8). Each `TestPeer` opened on the same path holds its own SQLite
-// connection, which is all SQLite can tell of a process: they share nothing but the file.
-//
+const PACKAGE_DIR = join(import.meta.dirname, '../..');
+
+/** vite-node's CLI, run by this node binary: it loads the same sources, `?raw` imports included, as the tests. */
+const VITE_NODE = join(dirname(createRequire(import.meta.url).resolve('vite-node/package.json')), 'dist/cli.mjs');
+
+/** Runs commands in another process against the space's database on `path`; resolves with its results. */
+const inOtherProcess = async (path: string, spaceId: SpaceId, commands: OtherProcessCommand[]) => {
+  const { stdout } = await promisify(execFile)(
+    process.execPath,
+    [VITE_NODE, 'src/tests/testing/other-process.ts', path, spaceId, JSON.stringify(commands)],
+    { cwd: PACKAGE_DIR },
+  );
+  const line = stdout.split('\n').find((line) => line.startsWith(RESULT));
+  if (!line) {
+    throw new Error(`The other process returned no results:\n${stdout}`);
+  }
+  return JSON.parse(line.slice(RESULT.length));
+};
 
 const names = (people: readonly TestSchema.Person[]) => people.map((person) => person.name).sort();
 
-describe('several connections to one file', () => {
-  test("a query in one connection sees another connection's commit", async () => {
+describe('several processes on one file', { timeout: 60_000 }, () => {
+  test("a query in one process sees another process's commit", async () => {
     await using builder = new TestBuilder();
-    const first = builder.createPeer({ types: TYPES });
-    const second = builder.createPeer({ types: TYPES, path: first.path });
-    const db1 = await first.createDatabase();
-    const db2 = await second.openDatabase(db1.spaceId);
+    const peer = builder.createPeer({ types: TYPES });
+    const db = await peer.createDatabase();
 
-    const query = db2.query(Filter.type(TestSchema.Person));
+    const query = db.query(Filter.type(TestSchema.Person));
     const unsubscribe = query.subscribe(() => {}, { fire: true });
-    db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
-    await db1.flush();
+    await inOtherProcess(peer.path, db.spaceId, [{ op: 'add', names: ['Alice'] }]);
     await expect.poll(() => names(query.results)).toEqual(['Alice']);
     unsubscribe();
   });
 
-  test("an object held in one connection takes another connection's edit", async () => {
+  test("an object held in one process takes another process's edit, and the edits merge", async () => {
     await using builder = new TestBuilder();
-    const first = builder.createPeer({ types: TYPES });
-    const second = builder.createPeer({ types: TYPES, path: first.path });
-    const db1 = await first.createDatabase();
-    const db2 = await second.openDatabase(db1.spaceId);
+    const peer = builder.createPeer({ types: TYPES });
+    const db = await peer.createDatabase();
 
-    const person = db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
-    await db1.flush();
-    const [held] = await db2.query(Filter.id(person.id)).run();
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    await db.flush();
+    await inOtherProcess(peer.path, db.spaceId, [{ op: 'edit', id: person.id, name: 'Alice Smith' }]);
+    await expect.poll(() => person.name).toBe('Alice Smith');
+
     Obj.update(person, (person) => {
-      person.name = 'Alice Smith';
+      person.email = 'alice@example.com';
     });
-    await db1.flush();
-    await expect.poll(() => held.name).toBe('Alice Smith');
-
-    // And the other way: an edit of the refreshed copy merges with the first connection's.
-    Obj.update(held, (held) => {
-      held.email = 'alice@example.com';
-    });
-    await db2.flush();
-    await expect.poll(() => person.email).toBe('alice@example.com');
-    expect(person.name).toBe('Alice Smith');
+    await db.flush();
+    const [read] = await inOtherProcess(peer.path, db.spaceId, [{ op: 'read', id: person.id }]);
+    expect(read).toMatchObject({ name: 'Alice Smith', email: 'alice@example.com' });
   });
 
-  // Interleaved rather than overlapped: two connections in one thread cannot overlap transactions, since
-  // `node:sqlite` busy-waits synchronously and would block the thread that holds the lock.
-  test('connections writing in turn never take the same block sequence', async () => {
+  test('processes writing at once never take the same block sequence', async () => {
+    await using builder = new TestBuilder();
+    const peer = builder.createPeer({ types: TYPES });
+    const db = await peer.createDatabase();
+
+    const other = inOtherProcess(peer.path, db.spaceId, [
+      { op: 'add', names: Array.from({ length: 20 }, (_, index) => `two ${index}`) },
+    ]);
+    for (let index = 0; index < 20; index++) {
+      db.add(Obj.make(TestSchema.Person, { name: `one ${index}` }));
+      await db.flush();
+    }
+    await other;
+    await db.updateIndexes();
+    expect(await db.query(Filter.type(TestSchema.Person)).run()).toHaveLength(40);
+  });
+
+  test('one connection holds the sync lease, and another takes it when it is released or lapses', async () => {
     await using builder = new TestBuilder();
     const first = builder.createPeer({ types: TYPES });
     const second = builder.createPeer({ types: TYPES, path: first.path });
     const db1 = await first.createDatabase();
     const db2 = await second.openDatabase(db1.spaceId);
 
-    for (let round = 0; round < 10; round++) {
-      db1.add(Obj.make(TestSchema.Person, { name: `one ${round}` }));
-      db2.add(Obj.make(TestSchema.Person, { name: `two ${round}` }));
-      await db1.flush();
-      await db2.flush();
-    }
-    await db1.updateIndexes();
-    expect(await db1.query(Filter.type(TestSchema.Person)).run()).toHaveLength(20);
+    expect(await db1.holdSyncLease('one', 200)).toBe(true);
+    expect(await db2.holdSyncLease('two', 200)).toBe(false);
+    expect(await db1.holdSyncLease('one', 200)).toBe(true);
+    await db1.releaseSyncLease('one');
+    expect(await db2.holdSyncLease('two', 200)).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(await db1.holdSyncLease('one', 200)).toBe(true);
   });
 
-  test('one connection syncs for all: it pushes the others’ writes, and another takes over when it stops', async () => {
+  test("the lease holder pushes another process's writes to the authority", async () => {
     await using builder = new TestBuilder();
     const authority = builder.createAuthority();
-    const first = builder.createPeer({ types: TYPES });
-    const second = builder.createPeer({ types: TYPES, path: first.path });
+    const local = builder.createPeer({ types: TYPES });
     const remote = builder.createPeer({ types: TYPES });
-    const db1 = await first.createDatabase();
-    const db2 = await second.openDatabase(db1.spaceId);
-    const dbRemote = await remote.openDatabase(db1.spaceId);
-
-    const options = { leaseTtl: 300, leaseRenew: 50 };
-    const sync1 = new SpaceSync(db1, authority.connect(db1.spaceId), options);
-    await sync1.synced();
-    const sync2 = new SpaceSync(db2, authority.connect(db2.spaceId), options);
-    await sync2.synced();
+    const db = await local.createDatabase();
+    const dbRemote = await remote.openDatabase(db.spaceId);
+    const sync = new SpaceSync(db, authority.connect(db.spaceId), { leaseRenew: 100 });
     const syncRemote = remote.sync(dbRemote, authority);
-    expect([sync1.leading, sync2.leading]).toEqual([true, false]);
+    await sync.synced();
+    expect(sync.leading).toBe(true);
 
-    // Written by the connection that does not sync; the leader pushes it.
-    db2.add(Obj.make(TestSchema.Person, { name: 'from the follower' }));
-    await db2.flush();
+    // Written by a process that does not sync; this one pushes it.
+    await inOtherProcess(local.path, db.spaceId, [{ op: 'add', names: ['from the other process'] }]);
     await expect
       .poll(
         async () => {
-          await dbRemote.updateIndexes();
+          await syncRemote.synced();
           return names(await dbRemote.query(Filter.type(TestSchema.Person)).run());
         },
-        { timeout: 5_000 },
+        { timeout: 10_000 },
       )
-      .toEqual(['from the follower']);
-
-    // The leader stops; the other connection takes the lease and syncs from then on.
-    sync1.close();
-    await expect.poll(() => sync2.leading, { timeout: 5_000 }).toBe(true);
-    dbRemote.add(Obj.make(TestSchema.Person, { name: 'from elsewhere' }));
-    await dbRemote.flush();
-    await syncRemote.synced();
-    await expect
-      .poll(async () => names(await db2.query(Filter.type(TestSchema.Person)).run()), { timeout: 5_000 })
-      .toEqual(['from elsewhere', 'from the follower']);
-    sync2.close();
+      .toEqual(['from the other process']);
+    sync.close();
   });
 });

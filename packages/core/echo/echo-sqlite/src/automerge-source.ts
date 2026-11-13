@@ -92,6 +92,11 @@ export class AutomergeFeedSource implements IndexDataSource {
           }
         }
         for (const [objectId, structure] of Object.entries(doc.objects ?? {})) {
+          const mergedInto = structure.system?.mergedInto;
+          if (mergedInto !== undefined) {
+            yield* sql`INSERT OR REPLACE INTO echo_sqlite_redirects (spaceId, fromId, toId)
+              VALUES (${spaceId}, ${objectId}, ${mergedInto})`;
+          }
           objects.push({
             spaceId,
             documentId,

@@ -555,9 +555,9 @@ FROM ${raw(inner)} w`);
     UNION ALL
     SELECT p.parentId, up.depth + 1 FROM up CROSS JOIN objectMeta p ON p.spaceId = ${a}.spaceId AND p.objectId = up.id AND p.queueId = ''
     WHERE p.parentId IS NOT NULL AND up.depth < ${MAX_DEPTH})
-  SELECT 1 FROM up CROSS JOIN objectMeta d ON d.spaceId = ${a}.spaceId AND d.objectId = up.id AND d.queueId = '' WHERE d.deleted = 1))
+  SELECT 1 FROM up CROSS JOIN objectMeta d ON d.spaceId = ${a}.spaceId AND d.objectId = up.id AND d.queueId = '' WHERE ${DEPENDENCY_DELETED}))
  OR ((${a}.sourceId IS NOT NULL OR ${a}.targetId IS NOT NULL) AND EXISTS (SELECT 1 FROM objectMeta d
-  WHERE d.spaceId = ${a}.spaceId AND d.objectId IN (${a}.sourceId, ${a}.targetId) AND d.queueId = '' AND d.deleted = 1)))`;
+  WHERE d.spaceId = ${a}.spaceId AND d.objectId IN (${a}.sourceId, ${a}.targetId) AND d.queueId = '' AND ${DEPENDENCY_DELETED})))`;
     return deleted === 'only' ? isDeleted : sql`NOT ${isDeleted}`;
   }
 
@@ -975,6 +975,14 @@ export const versionRanges = (query: QueryAST.Query): { key: string; range: stri
   visitQuery(query);
   return ranges;
 };
+
+/**
+ * Whether the dependency row `d` (a parent or relation endpoint) is deleted: a merged-away one is renamed,
+ * not removed, so it counts as deleted only when the object it merged into is.
+ */
+const DEPENDENCY_DELETED = raw(`(d.deleted = 1 AND NOT EXISTS (SELECT 1 FROM echo_sqlite_redirects x
+  CROSS JOIN objectMeta w ON w.spaceId = x.spaceId AND w.objectId = x.toId AND w.queueId = ''
+  WHERE x.spaceId = d.spaceId AND x.fromId = d.objectId AND w.deleted = 0))`);
 
 /** What feed options say about reading their items. */
 export type FeedRules = {

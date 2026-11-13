@@ -8,6 +8,7 @@ import init from './0001_init.sql?raw';
 import feedStorage from './0002_feed_storage.sql?raw';
 import changes from './0003_changes.sql?raw';
 import processes from './0004_processes.sql?raw';
+import redirects from './0005_redirects.sql?raw';
 
 /**
  * Store migrations, keyed `<id>_<name>` as `@effect/sql`'s `Migrator.fromRecord` expects.
@@ -18,6 +19,7 @@ export const MIGRATIONS = {
   '0002_feed_storage': SqlMigrations.apply(feedStorage),
   '0003_changes': SqlMigrations.apply(changes),
   '0004_processes': SqlMigrations.apply(processes),
+  '0005_redirects': SqlMigrations.apply(redirects),
 };
 
 /**

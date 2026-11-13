@@ -161,6 +161,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   #changeCursor: number | undefined;
   #dataVersion: number | undefined;
   #polling = false;
+  /** Convergence-key merge redirects: each merged-away object and the object it merged into. */
+  #redirects = new Map<string, string>();
   #scheduled = false;
   /** Set while the database writes a derived meta field, whose change notification is not an edit. */
   #stamping = false;
@@ -270,6 +272,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
         const types = yield* store.loadTypes();
         yield* Effect.promise(() => db.#registerTypes(types));
         // Commits before now are in what this database reads; it follows the ones after.
+        db.#redirects = yield* store.redirects();
         db.#dataVersion = yield* store.dataVersion();
         db.#changeCursor = (yield* store.readChanges()).lastId;
         return db;
@@ -974,11 +977,13 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
 
   peek(uri: string): Entity.Unknown | undefined {
     const id = this.#entityIdOf(uri);
-    return id ? this.#live.get(id)?.deref() : undefined;
+    return id ? this.#live.get(this.#redirected(id))?.deref() : undefined;
   }
 
   async load(uri: string): Promise<Entity.Unknown | undefined> {
-    const id = this.#entityIdOf(uri);
+    const named = this.#entityIdOf(uri);
+    // A reference to a merged-away object reaches the object it merged into.
+    const id = named === undefined ? undefined : this.#redirected(named);
     if (!id) {
       return undefined;
     }
@@ -993,6 +998,46 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     this.#counters.loads++;
     const stored = await this.#run(this.#store.load(id));
     return stored ? this.#hydrate(stored) : undefined;
+  }
+
+  /** The live end of an object's merge redirects; ids decrease along a chain, which bounds the walk. */
+  #redirected(id: string): string {
+    let current = id;
+    for (
+      let next = this.#redirects.get(current);
+      next !== undefined && next < current;
+      next = this.#redirects.get(current)
+    ) {
+      current = next;
+    }
+    return current;
+  }
+
+  /**
+   * Brings resident objects up to what convergence-key merges wrote, and re-reads the redirects.
+   */
+  async #applyMerges(): Promise<void> {
+    const merged = this.#store.takeMerged();
+    const redirects = await this.#run(this.#store.redirects());
+    const changed =
+      redirects.size !== this.#redirects.size || [...redirects].some(([from, to]) => this.#redirects.get(from) !== to);
+    this.#redirects = redirects;
+    if (merged.size > 0) {
+      await this.#refreshStale(merged);
+    }
+    if (changed) {
+      this.#refreshDeletion();
+    }
+  }
+
+  /**
+   * An object's convergence-key merge record, as its document holds it: the object it merged into, and
+   * the objects that merged into it. Merges run on the index pass; this reads their outcome.
+   */
+  async getMergeRecord(obj: Entity.Unknown): Promise<{ mergedInto?: string; mergedFrom: string[] }> {
+    // Pending writes are not flushed: a flush indexes, and so may merge, which is what a caller reads.
+    await this.#writes;
+    return this.#run(this.#store.mergeRecord(obj.id));
   }
 
   #entityIdOf(uri: string): string | undefined {
@@ -1187,6 +1232,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     const done = this.#writes.then(async () => {
       const indexed = await this.#run(this.#store.index());
       await this.#refreshStale(indexed);
+      await this.#applyMerges();
       if (indexed.size > 0) {
         this.#committed.emit(new Set([ANY_TYPE]));
         await this.#announce(indexed);
@@ -1205,6 +1251,8 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
     const done = this.#writes.then(async () => {
       this.#store.invalidate(ids);
       await this.#refreshStale(ids);
+      // Another writer's index pass may have merged; its redirects are in the shared table.
+      await this.#applyMerges();
       this.#committed.emit(new Set([ANY_TYPE]));
     });
     this.#writes = done.catch((err) => {
@@ -1424,6 +1472,16 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
   }
 
   #dependencies(entity: Entity.Unknown): Entity.Unknown[] {
+    // A merged-away dependency is renamed, not removed: it is judged at the object it merged into.
+    // One whose survivor is not resident is treated as live, as an unresolved dependency is.
+    return this.#directDependencies(entity).flatMap((dependency) => {
+      const id = this.#redirected(dependency.id);
+      const survivor = id === dependency.id ? dependency : this.#live.get(id)?.deref();
+      return survivor ? [survivor] : [];
+    });
+  }
+
+  #directDependencies(entity: Entity.Unknown): Entity.Unknown[] {
     const dependencies: Entity.Unknown[] = [];
     const parent = Obj.isObject(entity) ? Obj.getParent(entity) : undefined;
     if (parent && Entity.isEntity(parent)) {
@@ -1479,12 +1537,14 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
    */
   #adoptReferences(entity: Entity.Unknown): void {
     setRefResolverOnData(entity, this.#resolver);
+    let redirected = false;
     const visit = (value: unknown): void => {
       if (Ref.isRef(value)) {
         const target = getRefSavedTarget(value);
         if (Entity.isEntity(target) && Entity.getDatabase(target) === undefined) {
           this.#attach(target);
         }
+        redirected ||= Entity.isEntity(target) && this.#redirects.has(target.id);
       } else if (Array.isArray(value)) {
         value.forEach(visit);
       } else if (value !== null && typeof value === 'object') {
@@ -1492,6 +1552,9 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       }
     };
     visit(Object.values(entity));
+    if (redirected && Obj.isObject(entity)) {
+      this.#rebindRedirected(entity);
+    }
     // Tagging an object adds its tags (held in its meta as entities or refs) to the database with it.
     for (const tag of Entity.getMeta(entity).tags ?? []) {
       if (Entity.isEntity(tag) && Entity.getDatabase(tag) === undefined) {
@@ -1499,6 +1562,29 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
       } else {
         visit(tag);
       }
+    }
+  }
+
+  /**
+   * Replaces refs that hold a merged-away object with refs resolved through this database, which follow
+   * the redirect to the survivor; the stored reference is unchanged, so this is not an edit.
+   */
+  #rebindRedirected(entity: Obj.Unknown): void {
+    const rebind = (container: Record<string | number, unknown>): void => {
+      for (const [key, value] of Object.entries(container)) {
+        const target = Ref.isRef(value) ? getRefSavedTarget(value) : undefined;
+        if (Ref.isRef(value) && Entity.isEntity(target) && this.#redirects.has(target.id)) {
+          container[key] = this.makeRef(value.uri);
+        } else if (isContainer(value)) {
+          rebind(value);
+        }
+      }
+    };
+    this.#stamping = true;
+    try {
+      Obj.update(entity, (entity) => rebind(entity));
+    } finally {
+      this.#stamping = false;
     }
   }
 
@@ -1595,6 +1681,7 @@ export class SqliteDatabase implements Database.Database, EntitySource, AsyncDis
           // their live objects; an object this batch wrote unmerged already shows its document.
           const current = new Set([...results].filter(([, result]) => !result.merged).map(([id]) => id));
           await this.#refreshStale([...indexed].filter((id) => !current.has(id)));
+          await this.#applyMerges();
           // Appended items and tombstones count too: a sibling's feed queries read them.
           await this.#announce(
             new Set([...indexed, ...results.keys(), ...batch.keys(), ...tombstones.map(([id]) => id)]),
@@ -1769,3 +1856,7 @@ const overlaps = (path: readonly (string | number)[], target: readonly (string |
 /** A snapshot of `entity`: the snapshot brand, and its id. */
 const isSnapshotOf = <T extends Obj.Unknown>(entity: T, value: unknown): value is Obj.Snapshot<T> =>
   Obj.isSnapshot(value) && value.id === entity.id;
+
+/** A record or array a walk over an object's data steps into. */
+const isContainer = (value: unknown): value is Record<string | number, unknown> =>
+  value !== null && typeof value === 'object' && !Ref.isRef(value);

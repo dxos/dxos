@@ -37,6 +37,9 @@ export type WriteResult = { heads: string[]; merged: boolean; updatedAt?: number
 
 type Store<T> = Effect.Effect<T, SqlError.SqlError | CypherError, SqlClient.SqlClient>;
 
+/** Documents read per feed-store query, below the 100 bound variables Durable Object SQLite allows. */
+const LOAD_BATCH = 80;
+
 /** Upper bound on resident documents; a document is only needed to write its object, so the cache is small. */
 const MAX_CACHED = 256;
 
@@ -75,11 +78,16 @@ export class DocStore {
       if (missing.length === 0) {
         return docs;
       }
-      const { blocks } = yield* this.#feedStore.query({
-        spaceId: this.#spaceId,
-        feedNamespace: AUTOMERGE_NAMESPACE,
-        query: { feedIds: missing.map(documentFeedId) },
-      });
+      // Durable Object SQLite binds at most 100 variables per statement, so the feed ids go in batches.
+      const blocks: FeedProtocol.Block[] = [];
+      for (let start = 0; start < missing.length; start += LOAD_BATCH) {
+        const result = yield* this.#feedStore.query({
+          spaceId: this.#spaceId,
+          feedNamespace: AUTOMERGE_NAMESPACE,
+          query: { feedIds: missing.slice(start, start + LOAD_BATCH).map(documentFeedId) },
+        });
+        blocks.push(...result.blocks);
+      }
       const chunks = new Map<string, Uint8Array[]>();
       for (const block of blocks) {
         const id = block.feedId === undefined ? undefined : objectOfFeed(block.feedId);
@@ -189,6 +197,45 @@ export class DocStore {
     });
   }
 
+  /**
+   * Changes a cached document's raw structure now, as one change the next {@link persist} (or write)
+   * appends. False, changing nothing, when the document is not cached or the callback changed nothing.
+   */
+  change(id: string, callback: A.ChangeFn<DatabaseDirectory>): boolean {
+    const before = this.#cache.get(id);
+    if (!before) {
+      return false;
+    }
+    const after = A.change(before, { time: Math.floor(Date.now() / 1000) }, callback);
+    if (sameHeads(A.getHeads(before), A.getHeads(after))) {
+      return false;
+    }
+    this.#unsaved.add(id);
+    this.#remember(id, after);
+    return true;
+  }
+
+  /**
+   * Appends the changes made to documents in memory and not appended yet, one chunk per document.
+   */
+  persist(ids: readonly string[]): Store<void> {
+    return Effect.gen({ self: this }, function* () {
+      const messages = [...ids].flatMap((id) => {
+        const doc = this.#unsaved.has(id) ? this.#cache.get(id) : undefined;
+        const chunk = doc ? A.saveIncremental(doc) : undefined;
+        return chunk && chunk.byteLength > 0
+          ? [{ spaceId: this.#spaceId, feedId: documentFeedId(id), feedNamespace: AUTOMERGE_NAMESPACE, data: chunk }]
+          : [];
+      });
+      if (messages.length > 0) {
+        yield* this.#feedStore.appendLocal(messages);
+      }
+      for (const id of ids) {
+        this.#unsaved.delete(id);
+      }
+    });
+  }
+
   /** An object's cached document, without reading storage. */
   peek(id: string): Doc | undefined {
     return this.#cache.get(id);
@@ -267,7 +314,13 @@ const editDocument = (stored: Doc | undefined, write: DocWrite, spaceId: SpaceId
     const existing = doc.objects[id];
     // `createdAt` is set once, by the first writer, and survives every later write.
     const createdAt = existing?.system?.createdAt ?? structure.system?.createdAt ?? Date.now();
-    const next = { ...structure, system: { ...structure.system, createdAt } };
+    // The merge records are written by the convergence-key merge, not by objects, so a write keeps them.
+    const merge = {
+      ...(existing?.system?.mergedInto !== undefined && { mergedInto: existing.system.mergedInto }),
+      ...(existing?.system?.mergedAtHeads !== undefined && { mergedAtHeads: [...existing.system.mergedAtHeads] }),
+      ...(existing?.system?.mergedFrom !== undefined && { mergedFrom: [...existing.system.mergedFrom] }),
+    };
+    const next = { ...structure, system: { ...merge, ...structure.system, createdAt } };
     applyValue(doc, ['objects'], doc.objects, id, next);
   };
   const behind = heads !== undefined && heads.length > 0 && !sameHeads(heads, A.getHeads(before));

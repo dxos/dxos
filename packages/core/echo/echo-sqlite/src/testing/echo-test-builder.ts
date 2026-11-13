@@ -81,6 +81,18 @@ export class EchoTestPeer implements AsyncDisposable {
     return { graph: this.#peer.graph };
   }
 
+  /**
+   * echo-client's host, whose index passes echo-sqlite runs in each database: updating indexes indexes
+   * the databases this peer opened.
+   */
+  get host(): { updateIndexes: () => Promise<void> } {
+    return {
+      updateIndexes: async () => {
+        await this.#lastDb?.updateIndexes();
+      },
+    };
+  }
+
   /** The underlying peer, for syncing it through an authority. */
   get peer(): TestPeer {
     return this.#peer;

@@ -12,9 +12,10 @@ import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { TypeMetaSchemaDXN, objectStructureFromJson } from '@dxos/echo/internal';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { CypherError, type FeedOptions, FeedStore, type TrimResult } from '@dxos/feed';
 import { IndexEngine } from '@dxos/index-core';
-import { SpaceId } from '@dxos/keys';
+import { EID, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { AutomergeFeedSource } from './automerge-source.ts';
@@ -27,6 +28,7 @@ import {
   documentFeedId,
 } from './doc-store.ts';
 import { ItemFeedSource } from './feed-source.ts';
+import { ConvergenceKeyMerger, type MergeDocumentRef } from './merge.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import { type EntityRecord } from './record.ts';
 import { type CompiledChanges } from './sql/changes.ts';
@@ -84,6 +86,10 @@ export class ObjectStore {
   readonly #spaceId: SpaceId;
   readonly #feedStore: FeedStore;
   readonly #docs: DocStore;
+  /** Objects convergence-key merges changed since {@link takeMerged}. */
+  #merged = new Set<string>();
+  /** For the merge, whose document callbacks run effects from promises. */
+  readonly #sql: SqlClient.SqlClient;
   /** Names this store's commits in the change log, so it skips its own. */
   readonly #writer = crypto.randomUUID();
   readonly #engine: IndexEngine;
@@ -92,6 +98,7 @@ export class ObjectStore {
 
   private constructor(spaceId: SpaceId, sql: SqlClient.SqlClient, actorId: string, assignPositions: boolean) {
     this.#spaceId = spaceId;
+    this.#sql = sql;
     // A replica, whose positions come from the space's authority, unless this file is the authority.
     this.#feedStore = new FeedStore({ localActorId: actorId, assignPositions });
     this.#docs = new DocStore(this.#feedStore, spaceId);
@@ -256,10 +263,22 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
     return Effect.gen({ self: this }, function* () {
       const ctx = Context.default();
       const documents = new Set<string>();
-      while (true) {
-        const result = yield* this.#engine.update(ctx, this.#source, { spaceId: this.#spaceId });
-        result.documents.forEach((id) => documents.add(id));
-        if (result.done) {
+      // A merge's writes are indexed in turn, which removes the losers from queries; a merge is
+      // idempotent, so the pass after it finds nothing more to do.
+      for (let round = 0; round < MAX_MERGE_ROUNDS; round++) {
+        while (true) {
+          const result = yield* this.#engine.update(ctx, this.#source, { spaceId: this.#spaceId });
+          result.documents.forEach((id) => documents.add(id));
+          if (result.done) {
+            break;
+          }
+        }
+        const merged = yield* this.#mergeConvergent();
+        merged.forEach((id) => {
+          documents.add(id);
+          this.#merged.add(id);
+        });
+        if (merged.size === 0) {
           break;
         }
       }
@@ -272,6 +291,92 @@ WHERE m.spaceId = ? AND m.objectId = ? AND ${DOCUMENT_ROWS}`,
       while (!(yield* this.#engine.updateSecondaryIndexes(ctx)).done) {}
       return documents;
     });
+  }
+
+  /**
+   * Merges the duplicates among the convergence keys the last pass recorded (see {@link ConvergenceKeyMerger}),
+   * and appends what the merge changed.
+   *
+   * @returns The objects whose documents the merge changed.
+   */
+  #mergeConvergent(): Store<Set<string>> {
+    return Effect.gen({ self: this }, function* () {
+      const { maxId, intents } = yield* this.#engine.takeConvergenceKeyIntents();
+      if (intents.size === 0) {
+        return new Set<string>();
+      }
+      const changed = new Set<string>();
+      const run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>): Promise<A> =>
+        EffectEx.runPromise(effect.pipe(Effect.provideService(SqlClient.SqlClient, this.#sql)));
+      const docs = this.#docs;
+      const documentRef = (id: string): MergeDocumentRef | null => {
+        const doc = docs.peek(id);
+        return doc
+          ? {
+              documentId: id,
+              doc: () => docs.peek(id) ?? doc,
+              change: (callback) => {
+                if (docs.change(id, callback)) {
+                  changed.add(id);
+                }
+              },
+            }
+          : null;
+      };
+      const merger = new ConvergenceKeyMerger({
+        loadDoc: async (id) => {
+          await run(docs.load([id]));
+          return documentRef(id);
+        },
+        flushDoc: (id) => run(docs.persist([id])),
+        queryByConvergenceKeys: (spaceId, keys) => run(this.#engine.queryByConvergenceKeys(spaceId, keys)),
+        queryReferrers: (spaceId, targetId) =>
+          run(this.#engine.queryReferrers(spaceId, EID.make({ entityId: targetId }))),
+      });
+      const { serviced } = yield* Effect.promise(() => merger.mergeDuplicates(intents));
+      for (const [spaceId, keys] of serviced) {
+        for (const key of keys) {
+          yield* this.#engine.clearConvergenceKeyIntents(spaceId, key, maxId);
+        }
+      }
+      // Reference rewrites are not flushed by the merge, which treats them as best effort.
+      yield* docs.persist([...changed]);
+      return changed;
+    }).pipe(Effect.catchIf(isCypherError, (error) => Effect.die(error)));
+  }
+
+  /** The objects convergence-key merges changed since the last call, which resident copies lag. */
+  takeMerged(): Set<string> {
+    const merged = this.#merged;
+    this.#merged = new Set();
+    return merged;
+  }
+
+  /**
+   * The space's convergence-key merge redirects: each merged-away object and the object it merged into.
+   */
+  redirects(): Store<Map<string, string>> {
+    const spaceId = this.#spaceId;
+    return Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ fromId: string; toId: string }>`
+        SELECT fromId, toId FROM echo_sqlite_redirects WHERE spaceId = ${spaceId}`;
+      return new Map(rows.map((row) => [row.fromId, row.toId]));
+    });
+  }
+
+  /**
+   * An object's merge record as its document holds it: what it merged into, and what merged into it.
+   */
+  mergeRecord(id: string): Store<{ mergedInto?: string; mergedFrom: string[] }> {
+    return Effect.gen({ self: this }, function* () {
+      const docs = yield* this.#docs.load([id]);
+      const system = docs.get(id)?.objects?.[id]?.system;
+      return {
+        ...(system?.mergedInto !== undefined && { mergedInto: system.mergedInto }),
+        mergedFrom: [...new Set(system?.mergedFrom ?? [])].sort(),
+      };
+    }).pipe(Effect.catchIf(isCypherError, (error) => Effect.die(error)));
   }
 
   /**
@@ -509,9 +614,11 @@ SELECT ?1, value, ?2, ?3 FROM json_each(?4)`,
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // One recursive branch per indexed column: an OR across them would scan the space.
+      // A merged-away object is not garbage: it stays resolvable as a redirect to its winner.
       const rows = yield* sql.unsafe<{ id: string }>(
         `WITH RECURSIVE gone(id) AS (
   SELECT m.objectId FROM objectMeta m WHERE m.spaceId = ?1 AND m.deleted = 1 AND ${DOCUMENT_ROWS}
+    AND NOT EXISTS (SELECT 1 FROM echo_sqlite_redirects x WHERE x.spaceId = ?1 AND x.fromId = m.objectId)
   UNION
   SELECT m.objectId FROM gone g CROSS JOIN objectMeta m ON m.spaceId = ?1 AND m.parentId = g.id WHERE ${DOCUMENT_ROWS}
   UNION
@@ -589,8 +696,11 @@ const toDocWrite = (record: EntityRecord & { readonly heads?: readonly string[] 
   heads: record.heads,
 });
 
-/** How long change-log records are kept; far beyond any connection's poll interval. */
-const CHANGE_LOG_RETENTION_MS = 60_000;
+/** How long change-log records are kept (an hour), far beyond any connection's poll interval. */
+const CHANGE_LOG_RETENTION_MS = 60 * 60 * 1000;
+
+/** Index rounds a pass runs while convergence-key merges keep writing. */
+const MAX_MERGE_ROUNDS = 4;
 
 /** Trimmed blocks purged from the index per batch. */
 const PURGE_BATCH = 500;

@@ -311,9 +311,9 @@ feat F-2: Automerge in feeds
 
   req F-2.6:
     when: a feed is compacted
-    then: the feed store replaces some of the feed's blocks with one new block in one transaction
-          (FeedStore.appendReplacing); when and where compaction runs, and how it reaches other
-          stores, is not decided yet
+    then: the feed store replaces the feed's blocks with one new block in one transaction
+          (FeedStore.appendReplacing); garbage collection compacts each document of more than one
+          block into one full save, and the new block syncs like any other
 ```
 
 ```mdl
@@ -468,10 +468,9 @@ feat F-8: Several processes on one device
 
   req F-8.5:
     when: another process commits
-    then: each process sees PRAGMA data_version change (checked every QUERY_POLL, 100 ms, while it
-          has subscriptions), reads table:change_log above its last id, and re-runs only the
-          subscribed queries those changes can affect, by echo-sqlite's rules in
-          org.dxos.echo-sqlite#F-5.3
+    then: each process sees PRAGMA data_version change (checked every QUERY_POLL, 100 ms, while the
+          database is open), reads table:change_log above its last id, refreshes the resident objects
+          it names, and re-runs its subscribed queries
 
   req F-8.6:
     when: change_log rows are older than every open process's last id, or older than one hour
@@ -486,7 +485,7 @@ feat F-8: Several processes on one device
 
 ```mdl
 table sync_leases: Which process syncs a space.
-  store: client database (space_authority_client_migrations)
+  store: client database (echo_sqlite_sync_leases)
   columns:
     spaceId: TEXT PRIMARY KEY
     holder: TEXT               # random id of the holding process
@@ -496,13 +495,13 @@ table sync_leases: Which process syncs a space.
 
 ```mdl
 table change_log: One committed change, so that other processes can invalidate their queries.
-  store: client database (space_authority_client_migrations)
+  store: client database (echo_sqlite_change_log)
   columns:
     id: INTEGER PRIMARY KEY AUTOINCREMENT
     spaceId: TEXT
     objectId: TEXT
-    typename: TEXT
-    kind: TEXT                 # write | delete | restore | purge
+    writer: TEXT               # random id of the writing store, which skips its own rows
+    at: INTEGER                # epoch ms; rows older than an hour are deleted
   key: id
 ```
 
@@ -884,4 +883,68 @@ decision D-28: An object's document feed is named `doc:<object id>`, not the bar
     The feed store keys feeds by id alone, across namespaces, and a `Feed` object's items already live
     in a feed named by its object id, as EDGE expects; the two would be one feed.
   rejected: Naming item feeds differently, which breaks the item protocol EDGE speaks.
+```
+
+```mdl
+decision D-29: A feed whose indexing is disabled keeps its index rows, and its items leave text search only; feed reads and space queries still return them.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1]
+  why: |
+    It gives the behaviour the feed-options parity tests check without a second, scanning read path
+    beside the index.
+  rejected: Deleting the rows and scanning the feed store for a disabled feed, as echo-host does.
+```
+
+```mdl
+decision D-30: Convergence-key merging runs on echo-sqlite's index pass, as a port of echo-host's merger over echo-sqlite's documents. Merge records survive object writes, and a redirect table lets queries judge a merged-away parent or endpoint at its survivor.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-9.3]
+  why: |
+    Convergence keys are in the parity scope, and F-9.3 rules out depending on the echo-client stack.
+    Every peer merges the same way (the winner is the minimum id), so merges by different peers converge.
+  rejected: Depending on echo-host for the merger, which brings its Automerge-repo host along.
+```
+
+```mdl
+decision D-31: A connection follows other connections' commits by polling data_version while the database is open. The lease holder pushes on every commit it learns of, and FeedStore.appendLocal runs in one transaction. Fills in [F-8.3], [F-8.4] and [F-8.5].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.3, F-8.4, F-8.5]
+  why: |
+    Reading the last sequence and inserting outside a transaction let two connections take the same
+    sequence. Polling only with subscriptions would leave resident objects stale.
+```
+
+```mdl
+decision D-32: Obj.getChanges and Obj.getVersion read the object's document. Edits not flushed yet are first written into the cached document, which the next flush appends, and an object's creation is its own change.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1]
+  why: Both APIs are synchronous, and echo-client's history starts with the creation change.
+```
+
+```mdl
+decision D-33: Garbage collection compacts each document of more than one block into one block with FeedStore.appendReplacing. Fills in [D-20].
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.6]
+  why: It is the one point where the app asks for storage to be reclaimed, and the replacing block syncs as an ordinary block.
+```
+
+```mdl
+decision D-34: Parity tests that drive echo-client internals (object cores, the space root, branches, retainObjects) are cut from the copies, and the rest run as written; multi-process tests run the other process as a real child process.
+  date: 2026-11-13
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.1, F-8.1]
+  why: |
+    Those tests check echo-client's object model, not behaviour an app sees. Two connections in one
+    thread cannot hold transactions at once, because node:sqlite busy-waits synchronously.
 ```
