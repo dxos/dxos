@@ -145,7 +145,7 @@ const AgentColumn = ({ db, chat, chatModel, suggestions = [] }: AgentColumnProps
   );
 };
 
-/** Narrows the columns as more open, so all of them fit across the plane (static classes, which Tailwind can see). */
+/** Narrows the columns as more open, so all of them fit and the plane centers them as a group (static classes, which Tailwind can see). */
 const columnWidth = (count: number) =>
   count <= 2
     ? undefined
@@ -183,16 +183,14 @@ const ThreadPlane = ({ db, chat, chatModel, suggestions }: AgentColumnProps) => 
   );
   const events = useQuery(db, query);
 
-  // Centres the middle column as threads open: the plane centres its selection, so that is what keeps every column,
-  // the agent's included, on screen at once.
+  // Follows the newest thread as it opens, so the reader watches each column arrive.
   const countRef = useRef(0);
   useEffect(() => {
     if (lanes.length > countRef.current) {
-      const ids = [chat.id, ...lanes.filter(({ id }) => !closed.has(id)).map(({ id }) => id)];
-      setCurrent(ids[Math.floor(ids.length / 2)]);
+      setCurrent(lanes[lanes.length - 1].id);
     }
     countRef.current = lanes.length;
-  }, [lanes, chat.id, closed]);
+  }, [lanes]);
 
   // A finished thread's column closes once the reader has had a moment with its result.
   const done = useMemo(

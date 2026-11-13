@@ -117,11 +117,6 @@ export const steps = [
         .first()
         .waitFor({ state: 'visible', timeout: 90_000 });
       await demo.sleep({ ms: 2_000 });
-      // Selecting the middle column centres it, which brings all three back on screen.
-      if (await page.locator(`${COLUMN}:has-text("Diagram ·")`).first().isVisible()) {
-        await demo.click({ selector: `${COLUMN}:has-text("Diagram ·") >> nth=0`, label: 'Diagram' });
-        await demo.sleep({ ms: 3_000 });
-      }
     },
   },
   {

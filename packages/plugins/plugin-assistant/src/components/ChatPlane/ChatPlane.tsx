@@ -50,6 +50,19 @@ const SCROLL_TIME_CONSTANT = 90;
 
 type ChatPlaneSide = 'start' | 'end';
 
+/** The center of the span every column covers, when that span fits in the viewport; otherwise undefined. */
+const groupCenter = (viewport: HTMLElement): number | undefined => {
+  const rects = Array.from(viewport.querySelectorAll<HTMLElement>(COLUMN_SELECTOR), (column) =>
+    column.getBoundingClientRect(),
+  );
+  if (rects.length === 0) {
+    return undefined;
+  }
+  const left = Math.min(...rects.map((rect) => rect.left));
+  const right = Math.max(...rects.map((rect) => rect.right));
+  return right - left <= viewport.getBoundingClientRect().width ? (left + right) / 2 : undefined;
+};
+
 type ChatPlaneContextValue = {
   value?: string;
   footer: HTMLElement | null;
@@ -60,7 +73,11 @@ type ChatPlaneContextValue = {
   selection: UseListSelectionReturn;
   select: (id: string) => void;
   scrollToColumn: (column: HTMLElement) => void;
+  /** Re-centers on the selected column, e.g. once a column is added or removed. */
+  recenter: () => void;
   scrolling: boolean;
+  /** Every column fits in the viewport, so the strip centers them as a group. */
+  fits: boolean;
   dragging: boolean;
   onAdd?: (side: ChatPlaneSide) => void;
   onMove?: (id: string, index: number) => void;
@@ -153,6 +170,8 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
   // One animation that only ever changes its target: a browser smooth scroll restarts from rest when it is called again,
   // so each key press would stall the strip. Snapping would also pull every frame back to a column.
   const [scrolling, setScrolling] = useState(false);
+  // Snapping would pull a centered group back onto one column.
+  const [fits, setFits] = useState(false);
   const scrollFrameRef = useRef<number | undefined>(undefined);
   const scrollColumnRef = useRef<HTMLElement | undefined>(undefined);
   const stopScroll = useCallback(() => {
@@ -181,7 +200,11 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
         }
         const frame = viewport.getBoundingClientRect();
         const rect = target.getBoundingClientRect();
-        const destination = viewport.scrollLeft + rect.left + rect.width / 2 - (frame.left + frame.width / 2);
+        // While every column fits, the strip centers all of them rather than the selection, so none is cut off.
+        const group = groupCenter(viewport);
+        const destination =
+          viewport.scrollLeft + (group ?? rect.left + rect.width / 2) - (frame.left + frame.width / 2);
+        setFits(group !== undefined);
         const elapsed = now - previous;
         previous = now;
         if (reduced || Math.abs(destination - position) < 1) {
@@ -206,7 +229,8 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       return;
     }
     const handleScrollEnd = () => {
-      if (draggingRef.current || scrollFrameRef.current !== undefined) {
+      // A centered group puts no column at the center, so where the strip rests says nothing about the selection.
+      if (draggingRef.current || scrollFrameRef.current !== undefined || groupCenter(viewport) !== undefined) {
         return;
       }
       const { left, width } = viewport.getBoundingClientRect();
@@ -246,6 +270,21 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
     };
   }, [viewport, report, stopScroll]);
 
+  const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+  const recenter = useCallback(() => {
+    requestAnimationFrame(() => {
+      const id = valueRef.current;
+      const column =
+        id !== undefined ? viewport?.querySelector<HTMLElement>(`[data-column-id="${CSS.escape(id)}"]`) : null;
+      if (column) {
+        scrollToColumn(column);
+      }
+    });
+  }, [viewport, scrollToColumn]);
+
   const navigation = useListNavigation({ mode: 'listbox', axis: 'horizontal' });
   const selection = useListSelection({
     mode: 'single',
@@ -268,7 +307,9 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       selection={selection}
       select={select}
       scrollToColumn={scrollToColumn}
+      recenter={recenter}
       scrolling={scrolling}
+      fits={fits}
       dragging={dragging}
       onAdd={onAdd}
       onMove={onMove}
@@ -291,7 +332,7 @@ type ChatPlaneViewportProps = PropsWithChildren;
 
 /** The scrolling strip, and the footer the selected column's prompt floats in. */
 const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
-  const { setFooter, viewport, setViewport, selection, select, scrolling, dragging, onMove } =
+  const { setFooter, viewport, setViewport, selection, select, scrolling, fits, dragging, onMove } =
     useChatPlaneContext('ChatPlane.Viewport');
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -362,7 +403,7 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
         itemProps={itemProps}
       >
         {/* The dragged column stops being a snap point, and the strip would jump to its neighbor under the pointer. */}
-        <ScrollArea.Root orientation='horizontal' snap={!dragging && !scrolling} scrollbars={false}>
+        <ScrollArea.Root orientation='horizontal' snap={!dragging && !scrolling && !fits} scrollbars={false}>
           <ScrollArea.Viewport ref={setViewport}>
             {/* Half the frame less half a column each side, so even the first and last column can reach the center. */}
             <div
@@ -487,9 +528,15 @@ type ChatPlaneColumnProps = PropsWithChildren<{
  */
 const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   const { event } = useChatContext('ChatPlane.Column');
-  const { value: selected, dragging, scrollToColumn } = useChatPlaneContext('ChatPlane.Column');
+  const { value: selected, dragging, scrollToColumn, recenter } = useChatPlaneContext('ChatPlane.Column');
   const current = value === selected;
   const columnRef = useRef<HTMLDivElement>(null);
+
+  // A column arriving or leaving moves the others, and a centered group must be centered again.
+  useEffect(() => {
+    recenter();
+    return recenter;
+  }, [recenter]);
 
   // Also once a drag ends: the column may have landed anywhere, and the drag may have scrolled the strip.
   useEffect(() => {
