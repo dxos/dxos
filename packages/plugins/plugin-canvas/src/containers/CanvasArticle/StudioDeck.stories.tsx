@@ -66,7 +66,7 @@ const decorators = (slides: readonly StudioSlide[] = STUDIO_SLIDES) =>
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), StudioKindsPlugin()],
     onInit: async ({ space }) => {
       const drawings = slides.map(
-        ({ id, source, model, labels, remap, spread, balance, gap, frames, links, ports, uniform, sizes }) => {
+        ({ id, source, model, labels, remap, spread, balance, gap, frames, links, ports, ring, uniform, sizes }) => {
           // Every component is drawn as a kind: the space graph's Generator is exercised by `StudioAgents`, and nine
           // compiled generators on one page would say nothing the one story does not.
           // Read-only, so each cell is the slide rather than nine editors: the rail, the actions and the inspectors
@@ -82,6 +82,7 @@ const decorators = (slides: readonly StudioSlide[] = STUDIO_SLIDES) =>
               frames,
               links,
               ports,
+              ring,
               uniform,
               sizes,
             }),

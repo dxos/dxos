@@ -372,9 +372,24 @@ const textWidth = (label: string, fontSize: number) => label.length * fontSize *
  * because the scene language has no notion of a heading: every size here comes from the sidecar's `role`.
  */
 const styleText = (content: ContentMap, model: StudioModel): void => {
-  // Where each column's last line ended, so a caption follows its heading rather than sitting where the deck put it:
-  // the deck set these against its own type sizes, and a heading drawn larger here would run over the line under it.
-  const after = new Map<number, number>();
+  // A column's lines as one block, laid out UPWARDS from the last one's own place: the deck set its text against its
+  // own type sizes, so a heading drawn larger here would run over the line under it — and pushing that line down
+  // instead would run it into the frame the deck left room above.
+  const lines = new Map<number, { text: StudioText; height: number }[]>();
+  for (const text of model.texts ?? []) {
+    const height = TEXT_SIZES[text.role] * 1.9;
+    lines.set(text.x, [...(lines.get(text.x) ?? []), { text, height }]);
+  }
+  const tops = new Map<string, number>();
+  for (const column of lines.values()) {
+    const last = column[column.length - 1];
+    let bottom = last.text.y + last.height;
+    for (const { text, height } of [...column].reverse()) {
+      tops.set(text.id, bottom - height);
+      bottom -= height;
+    }
+  }
+
   for (const text of model.texts ?? []) {
     const id = elementId(text.id, 'label');
     const record = content[nodeKey(id)];
@@ -390,9 +405,7 @@ const styleText = (content: ContentMap, model: StudioModel): void => {
     const width = text.w ?? (label ? textWidth(label, fontSize) : node.size.width);
     const align = text.align ?? 'left';
     const height = fontSize * 1.9;
-    const previous = after.get(text.x) ?? -Infinity;
-    const top = Math.max(text.y, previous);
-    after.set(text.x, top + height);
+    const top = tops.get(text.id) ?? text.y;
     content[nodeKey(id)] = {
       ...record,
       node: {
@@ -1083,7 +1096,9 @@ const isStack = (ordered: { node: Node }[]): boolean => {
     return node.center.y - node.size.height / 2 - (previous.center.y + previous.size.height / 2);
   });
   const tallest = Math.max(...ordered.map(({ node }) => node.size.height));
-  return gaps.length > 0 && gaps.every((gap) => gap >= 0 && gap <= tallest);
+  // A gap may be negative: a card the slide sized itself has grown into the one below it, and re-spacing the stack is
+  // exactly what fixes that. What makes it a stack is that the cards sit one under the other rather than spread out.
+  return gaps.length > 0 && gaps.every((gap) => gap <= tallest);
 };
 
 /**
@@ -1098,7 +1113,12 @@ const isStack = (ordered: { node: Node }[]): boolean => {
  *
  * Only the cards move: a frame, a component or a label keeps the box it was given.
  */
-const uniformGrid = (content: ContentMap, model: StudioModel, grid: number): number => {
+const uniformGrid = (
+  content: ContentMap,
+  model: StudioModel,
+  grid: number,
+  sized: ReadonlySet<string> = new Set(),
+): number => {
   let changed = 0;
   const write = (
     key: string,
@@ -1133,25 +1153,38 @@ const uniformGrid = (content: ContentMap, model: StudioModel, grid: number): num
       ),
     }))
     .filter(({ members }) => members.length > 1);
+  // One gap down every stack of the slide, from the middle of the gaps the deck left in all of them: two columns of
+  // the same thing read as two columns, and the deck's own 16 and 8 did not.
+  const allGaps = columns
+    .filter(({ members }) => isStack(members))
+    .flatMap(({ members }) =>
+      members.slice(1).map(({ node }, index) => {
+        const previous = members[index].node;
+        return node.center.y - node.size.height / 2 - (previous.center.y + previous.size.height / 2);
+      }),
+    )
+    .sort((first, second) => first - second);
+  // The positive ones: a stack whose cards have grown into each other says nothing about the gap the slide wants.
+  const spacing = allGaps.filter((gap) => gap > 0);
+  const stackGap =
+    spacing.length > 0 ? Math.max(grid, onGrid(spacing[Math.floor(spacing.length / 2)], grid)) : 2 * grid;
+
   for (const { center, members: column } of columns) {
     const width = Math.max(grid, Math.min(...column.map(({ node }) => onGrid(node.size.width, grid))));
     const left = onGrid(center - width / 2, grid);
+    // A card the slide sized itself keeps the width it asked for; the column still spaces it.
+    const widthOf = (key: string, node: Node) => (sized.has(key) ? node.size.width : width);
+    const leftOf = (key: string, node: Node) => (sized.has(key) ? onGrid(center - node.size.width / 2, grid) : left);
     const ordered = [...column].sort((first, second) => first.node.center.y - second.node.center.y);
     // One gap down the column, from the gaps the deck left: the cards keep their own heights and their first top, and
     // what was 16, 16 and 24 between them becomes 16, 16 and 16.
-    const gaps = ordered
-      .slice(1)
-      .map(({ node }, index) => {
-        const previous = ordered[index].node;
-        return node.center.y - node.size.height / 2 - (previous.center.y + previous.size.height / 2);
-      })
-      .sort((first, second) => first - second);
-    const gap = gaps.length > 0 ? Math.max(0, onGrid(gaps[Math.floor(gaps.length / 2)], grid)) : 0;
+    const gap = stackGap;
     const stacked = isStack(ordered);
     let top = onGrid(ordered[0].node.center.y - ordered[0].node.size.height / 2, grid);
     for (const { key, node } of ordered) {
       const y = stacked ? top + node.size.height / 2 : node.center.y;
-      write(key, node, { x: left + width / 2, y }, { ...node.size, width });
+      const own = widthOf(key, node);
+      write(key, node, { x: leftOf(key, node) + own / 2, y }, { ...node.size, width: own });
       top += node.size.height + gap;
     }
   }
@@ -1230,6 +1263,9 @@ const dropFrames = (content: ContentMap, frames: readonly string[]): number => {
   return dropped;
 };
 
+/** The least space a ring leaves between two of its cards, in scene units. */
+const RING_GAP = 32;
+
 /** The space a frame keeps around what it holds, in scene units: the deck's own inset. */
 const FRAME_PADDING = 24;
 
@@ -1282,6 +1318,77 @@ const fitFrames = (content: ContentMap, model: StudioModel, grid: number): numbe
     fitted++;
   }
   return fitted;
+};
+
+/**
+ * Arranges the slide's free cards in a circle around one of them. The deck drew its entities as a graph it laid out
+ * by hand; a hub and a ring says the same thing and says it evenly — every card the same distance from the one they
+ * all relate to. Only the cards outside a frame take part, so a slide's lists (the Ontology slide's types and
+ * containers) stay the columns they are.
+ */
+const ringCards = (content: ContentMap, model: StudioModel, hub: string | undefined, grid: number): number => {
+  if (hub === undefined) {
+    return 0;
+  }
+  const framed = model.frames.flatMap((frame) => {
+    const record = content[nodeKey(elementId(frame.id, 'frame'))];
+    return isNodeRecord(record) ? [record.node] : [];
+  });
+  const inside = (node: Node) =>
+    framed.some(
+      (frame) =>
+        Math.abs(node.center.x - frame.center.x) < frame.size.width / 2 &&
+        Math.abs(node.center.y - frame.center.y) < frame.size.height / 2,
+    );
+  const free = cardsOf(content, model).filter(({ node }) => !inside(node));
+  const centre = free.find(({ key }) => key === nodeKey(boxOf(hub)));
+  const ring = free.filter((card) => card !== centre);
+  if (!centre || ring.length < 2) {
+    return 0;
+  }
+  // The box the cards already cover is the room the ring has; the radius clears the widest card in it.
+  const edges = free.flatMap(({ node }) => [
+    { x: node.center.x - node.size.width / 2, y: node.center.y - node.size.height / 2 },
+    { x: node.center.x + node.size.width / 2, y: node.center.y + node.size.height / 2 },
+  ]);
+  const box = {
+    left: Math.min(...edges.map(({ x }) => x)),
+    right: Math.max(...edges.map(({ x }) => x)),
+    top: Math.min(...edges.map(({ y }) => y)),
+    bottom: Math.max(...edges.map(({ y }) => y)),
+  };
+  const middle = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 };
+  const widest = Math.max(...free.map(({ node }) => node.size.width));
+  const tallest = Math.max(...free.map(({ node }) => node.size.height));
+  // The chord between two neighbours has to clear the wider of them: a ring of n sits on a circle of
+  // (card + gap) / 2 sin(pi / n), which is what stops the cards crowding each other at the top and bottom.
+  const chord = 2 * Math.sin(Math.PI / ring.length);
+  const radius = Math.max(
+    (Math.max(widest, tallest) + RING_GAP) / chord,
+    (tallest + RING_GAP) / chord,
+    widest / 2 + RING_GAP,
+  );
+  let moved = 0;
+  const place = ({ key, node }: { key: string; node: Node }, x: number, y: number) => {
+    const record = content[key];
+    if (!isNodeRecord(record)) {
+      return;
+    }
+    const left = onGrid(x - node.size.width / 2, grid);
+    const top = onGrid(y - node.size.height / 2, grid);
+    content[key] = {
+      ...record,
+      node: { ...node, center: { x: left + node.size.width / 2, y: top + node.size.height / 2 } },
+    };
+    moved++;
+  };
+  place(centre, middle.x, middle.y);
+  // From the top, clockwise, in the order the sidecar lists them.
+  ring.forEach((card, index) => {
+    const angle = (index / ring.length) * 2 * Math.PI - Math.PI / 2;
+    place(card, middle.x + radius * Math.cos(angle), middle.y + radius * Math.sin(angle));
+  });
+  return moved;
 };
 
 /**
@@ -1580,6 +1687,7 @@ export const seedStudioSlide =
       spread = 1,
       balance = false,
       gap,
+      ring,
       links = 'deck',
       ports = 'facing',
       frames = [],
@@ -1608,6 +1716,8 @@ export const seedStudioSlide =
       ports?: PortMode;
       /** Frames the slide does not draw, by id ({@link dropFrames}). */
       frames?: readonly string[];
+      /** The card the slide's free cards are arranged around, by id ({@link ringCards}). */
+      ring?: string;
       /** Every card of the slide is drawn at one size ({@link uniformCards}). */
       uniform?: boolean;
       /** A card the slide draws at a size of its own, by its id: what the deck drew is not always what reads. */
@@ -1648,10 +1758,12 @@ export const seedStudioSlide =
     const laid =
       layoutRuns(content, model, grid) +
       uniformCards(content, model, uniform, grid) +
-      uniformGrid(content, model, grid) +
-      // After the grid: a size the slide asks for is the slide's, not its column's.
+      // Before the grid, so the column it is in is spaced around the size it ends up: a card resized afterwards grows
+      // into the one below it.
       resizeCards(content, sizes, grid) +
+      uniformGrid(content, model, grid, new Set(Object.keys(sizes).map((id) => nodeKey(boxOf(id))))) +
       balanceColumns(content, balance, grid) +
+      ringCards(content, model, ring, grid) +
       evenColumns(content, gap, grid) +
       fitFrames(content, model, grid) +
       spreadColumns(content, model, spread, grid);

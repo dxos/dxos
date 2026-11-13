@@ -56,6 +56,8 @@ export type StudioSlide = {
   gap?: number;
   /** Frames the slide does not draw, by id. */
   frames?: readonly string[];
+  /** The card the slide's free cards are arranged around, by id. */
+  ring?: string;
   /** How the slide's links are drawn; a slide this import re-lays out takes `ortho`. */
   links?: 'deck' | 'ortho';
   /** Which sides a routed link uses; a slide that fans out downwards takes `vertical`. */
@@ -84,7 +86,7 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
   slide('hyperspace', hyperspaceSource, hyperspaceModel, { balance: true, spread: 1.12, links: 'ortho' }),
   slide('echo-layers', echoLayersSource, echoLayersModel, { links: 'ortho' }),
   // Every card is a type, so every card is one box; the deck sized each to its own label.
-  slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'ortho' }),
+  slide('ontology', ontologySource, ontologyModel, { uniform: true, links: 'ortho', ring: 'person' }),
   slide('plugins', pluginsSource, pluginsModel, {
     labels: false,
     remap: { chip: 'card' },
@@ -103,12 +105,17 @@ export const STUDIO_SLIDES: readonly StudioSlide[] = [
     links: 'ortho',
     // The deck sized each card to its own text at a smaller body; at the deck's reading size they need the room,
     // and the slide has it.
-    sizes: Object.fromEntries(
-      ['c-plugins', 'e-plugins', 'c-halo', 'e-halo', 'c-runtime', 'e-runtime', 'c-spaces', 'e-spaces'].map((id) => [
-        id,
-        { height: 136 },
-      ]),
-    ),
+    sizes: {
+      ...Object.fromEntries(
+        ['c-plugins', 'e-plugins', 'c-halo', 'e-halo', 'c-runtime', 'e-runtime', 'c-spaces', 'e-spaces'].map((id) => [
+          id,
+          { height: 136 },
+        ]),
+      ),
+      // Two rows of chips and a footer under them.
+      'c-services': { height: 208 },
+      'e-services': { height: 208 },
+    },
   }),
   // Four columns the deck fitted to a page: one gap between them, which is also what widens the drawing.
   slide('agents', agentsSource, agentsModel, {
