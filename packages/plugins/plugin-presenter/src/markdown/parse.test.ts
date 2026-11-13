@@ -225,6 +225,20 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([{ kind: 'html', message: '<List> has no list to style.' }]);
   });
 
+  test('<Table variant> styles the table it wraps', () => {
+    const slide = parseSlide('<Table variant="rows">\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n</Table>');
+    expect(elements(slide.slots.default, 'table')[0].properties.variant).toBe('rows');
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<Box variant> wraps its content in an element of its own', () => {
+    const slide = parseSlide('<Box variant="card">\n\nBoxed\n\n</Box>');
+    const [box] = elements(slide.slots.default, 'slide-box');
+    expect(box.properties.variant).toBe('card');
+    expect(textOf(box)).toContain('Boxed');
+    expect(slide.issues).toEqual([]);
+  });
+
   test('<Surface> with an invalid ref keeps the element and reports it', () => {
     const slide = parseSlide('<Surface ref="javascript:alert(1)" />');
     expect(elements(slide.slots.default, 'slide-surface')).toHaveLength(1);

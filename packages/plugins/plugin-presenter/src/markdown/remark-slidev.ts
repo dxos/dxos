@@ -19,6 +19,16 @@ export const LIST_VARIANTS = ['default', 'cards', 'steps', 'outline'] as const;
 
 export type ListVariant = (typeof LIST_VARIANTS)[number];
 
+/** Named box styles a `<Box>` may request; the first is an undecorated container. */
+export const BOX_VARIANTS = ['default', 'card', 'outline'] as const;
+
+export type BoxVariant = (typeof BOX_VARIANTS)[number];
+
+/** Named table styles a `<Table>` may request; the first is the plain markdown table. */
+export const TABLE_VARIANTS = ['default', 'rows', 'cards', 'outline'] as const;
+
+export type TableVariant = (typeof TABLE_VARIANTS)[number];
+
 /** Roles a `<Surface>` may request; the first is the default. */
 export const SURFACE_ROLES = ['slide', 'section', 'card'] as const;
 
@@ -59,11 +69,45 @@ const CONTAINER_TAGS = {
   'v-click': 'slide-click',
   'v-clicks': 'slide-clicks',
   'v-after': 'slide-after',
-  // `<List>` leaves no element of its own; it names a style for the list it wraps.
+  // A style tag leaves no element of its own; it names a style for the block it wraps (see `STYLE_TAGS`).
   'list': '',
+  'table': '',
+  // `<Box>` is the one style tag with an element of its own: it wraps whatever it holds.
+  'box': 'slide-box',
 } as const;
 
 type ContainerTag = keyof typeof CONTAINER_TAGS;
+
+/** The tags that style the block they wrap: the mdast node each one looks for, and the variants it takes. */
+const STYLE_TAGS = {
+  list: { node: 'list', variants: LIST_VARIANTS as readonly string[] },
+  table: { node: 'table', variants: TABLE_VARIANTS as readonly string[] },
+} as const;
+
+type StyleTag = keyof typeof STYLE_TAGS;
+
+const isStyleTag = (tag: ContainerTag): tag is StyleTag => Object.hasOwn(STYLE_TAGS, tag);
+
+/** A tag's name as it is written, for an issue message. */
+const tagLabel = (tag: ContainerTag): string => `<${tag[0].toUpperCase()}${tag.slice(1)}>`;
+
+/** The requested variant, or the first (plain) one when it is not a name this tag knows. */
+const variantName = (
+  tag: ContainerTag,
+  value: string | undefined,
+  variants: readonly string[],
+  issues: SlideIssue[],
+): string => {
+  const variant = value ?? variants[0];
+  if (variants.includes(variant)) {
+    return variant;
+  }
+  issues.push({
+    kind: 'html',
+    message: `Invalid ${tagLabel(tag)} variant "${variant}"; using "${variants[0]}".`,
+  });
+  return variants[0];
+};
 
 // Parents whose children are inline, so escaped HTML stays a bare text node instead of a paragraph.
 const PHRASING_PARENTS = new Set([
@@ -95,8 +139,6 @@ const isContainerTag = (name: string): name is ContainerTag => Object.hasOwn(CON
 export const isSlotName = (name: string): name is SlotName => SLOTS.some((slot) => slot === name);
 
 const isSurfaceRole = (role: string): role is SurfaceRole => SURFACE_ROLES.some((value) => value === role);
-
-const isListVariant = (variant: string): variant is ListVariant => LIST_VARIANTS.some((value) => value === variant);
 
 const isSlideElement = (node: RootContent): node is SlideElement => node.type === 'slideElement';
 
@@ -364,22 +406,24 @@ const positiveInteger = (value: string | undefined, name: string, issues: SlideI
   return 1;
 };
 
-const listVariant = (value: string | undefined, issues: SlideIssue[]): ListVariant => {
-  if (value === undefined || isListVariant(value)) {
-    return value ?? LIST_VARIANTS[0];
+/**
+ * `<List>` and `<Table>` style the block they wrap and contribute no element, so a styled list is still a `<ul>` and
+ * a styled table still a `<table>`; the variant travels on the node for the renderer to turn into classes.
+ */
+const styleBlocks = (
+  tag: StyleTag,
+  children: RootContent[],
+  value: string | undefined,
+  issues: SlideIssue[],
+): RootContent[] => {
+  const { node, variants } = STYLE_TAGS[tag];
+  const variant = variantName(tag, value, variants, issues);
+  const blocks = children.filter((child) => child.type === node);
+  if (blocks.length === 0) {
+    issues.push({ kind: 'html', message: `${tagLabel(tag)} has no ${node} to style.` });
   }
-  issues.push({ kind: 'html', message: `Invalid <List> variant "${value}"; using "${LIST_VARIANTS[0]}".` });
-  return LIST_VARIANTS[0];
-};
-
-/** `<List variant>` styles the lists it wraps and contributes no element, so a plain list stays a plain `<ul>`. */
-const styleLists = (children: RootContent[], variant: ListVariant, issues: SlideIssue[]): RootContent[] => {
-  const lists = children.filter((child) => child.type === 'list');
-  if (lists.length === 0) {
-    issues.push({ kind: 'html', message: '<List> has no list to style.' });
-  }
-  for (const list of lists) {
-    list.data = { ...list.data, hProperties: { ...list.data?.hProperties, variant } };
+  for (const block of blocks) {
+    block.data = { ...block.data, hProperties: { ...block.data?.hProperties, variant } };
   }
   return children;
 };
@@ -389,8 +433,12 @@ const containerNodes = (
   children: RootContent[],
   issues: SlideIssue[],
 ): RootContent[] => {
-  if (open.tag === 'list') {
-    return styleLists(children, listVariant(open.attributes.variant, issues), issues);
+  if (open.tag === 'box') {
+    const variant = variantName(open.tag, open.attributes.variant, BOX_VARIANTS, issues);
+    return [slideElement(CONTAINER_TAGS.box, { variant }, children)];
+  }
+  if (isStyleTag(open.tag)) {
+    return styleBlocks(open.tag, children, open.attributes.variant, issues);
   }
   const hName = CONTAINER_TAGS[open.tag];
   if (open.tag !== 'v-clicks') {

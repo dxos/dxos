@@ -268,11 +268,27 @@ const BLOCK_TAGS = new Set([
   'slide-clicks',
   'slide-after',
   'slide-surface',
+  'slide-box',
 ]);
 
 const NODE_CLASSES: Record<string, string> = theme.nodes;
 
-const LIST_TAGS = new Set(['ul', 'ol']);
+/** The element a `<List>`/`<Table>` variant lands on, and the kind of block it belongs to. */
+const VARIANT_BLOCKS: Record<string, string> = { 'ul': 'list', 'ol': 'list', 'table': 'table', 'slide-box': 'box' };
+
+/** The key a styled block's descendants take their classes under; `list` covers both `ul` and `ol`. */
+const VARIANT_PARTS: Record<string, string> = {
+  'ul': 'list',
+  'ol': 'list',
+  'li': 'li',
+  'table': 'table',
+  'th': 'th',
+  'td': 'td',
+  'slide-box': 'box',
+};
+
+/** A variant in force: the kind of block that set it and the name it carries. */
+type ActiveVariant = { kind: string; name: string };
 
 const classList = (value: Properties[string]): string[] =>
   Array.isArray(value) ? value.map(String) : typeof value === 'string' ? value.split(/\s+/) : [];
@@ -288,8 +304,8 @@ const prepareRoot = (root: Root, step: number): Root => ({
   children: root.children.map((child) => (child.type === 'element' ? prepareElement(child, step, false) : child)),
 });
 
-/** `variant` is the style of the `<List>` this element's parent list carries, which only its items read. */
-const prepareElement = (element: Element, step: number, inPre: boolean, variant?: string): Element => {
+/** `variant` is the style of the `<List>`/`<Table>` this element sits in, which its parts take their classes from. */
+const prepareElement = (element: Element, step: number, inPre: boolean, variant?: ActiveVariant): Element => {
   const properties: Properties = { ...element.properties };
   const ownStep = properties.step ?? undefined;
   delete properties.step;
@@ -312,6 +328,8 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName = element.children.some((child) => child.type === 'element' && BLOCK_TAGS.has(child.tagName))
       ? 'div'
       : 'span';
+  } else if (tagName === 'slide-box') {
+    tagName = 'div';
   } else if (tagName === 'slide-surface') {
     // `ref` is reserved by React, so the object URI travels under another name.
     properties.uri = properties.ref;
@@ -326,14 +344,16 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     }
   }
 
-  // `<List variant>` restyles the list and each of its items, so neither takes the plain markdown classes.
-  const ownVariant = LIST_TAGS.has(tagName) ? asVariant(properties.variant) : undefined;
+  // A style tag restyles the whole block, so neither it nor the parts inside it take the plain markdown classes.
+  const block = VARIANT_BLOCKS[element.tagName];
+  const name = block ? asVariant(properties.variant) : undefined;
   delete properties.variant;
-  const listStyle = ownVariant ? theme.list[ownVariant] : undefined;
-  if (listStyle) {
-    properties.dataVariant = ownVariant;
+  // A nested list or table with no variant of its own starts clean rather than inheriting the one around it.
+  const active: ActiveVariant | undefined = block ? (name ? { kind: block, name } : undefined) : variant;
+  const variantClass = active && theme.variants[active.kind]?.[active.name]?.[VARIANT_PARTS[element.tagName]];
+  if (block && variantClass) {
+    properties.dataVariant = name;
   }
-  const variantClass = listStyle?.list ?? (tagName === 'li' ? theme.list[variant ?? '']?.item : undefined);
 
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : (variantClass ?? NODE_CLASSES[tagName]);
   if (themed) {
@@ -345,7 +365,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean, variant?
     tagName,
     properties: withStep(properties),
     children: element.children.map((child) =>
-      child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', ownVariant) : child,
+      child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre', active) : child,
     ),
   };
 };
