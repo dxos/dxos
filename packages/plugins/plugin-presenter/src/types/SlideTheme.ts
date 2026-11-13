@@ -209,10 +209,9 @@ const PLAIN = '[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)';
 const PERCENT = `${PLAIN}%`;
 const NUMBER = `${PLAIN}%?`;
 
-// The modern syntax every color function takes: three components separated by spaces, each a number or a
-// percentage, with an optional alpha.
-const modern = (functions: string) =>
-  `(?:${functions})\\(\\s*${NUMBER}\\s+${NUMBER}\\s+${NUMBER}(?:\\s*/\\s*${NUMBER})?\\s*\\)`;
+// The modern syntax every color function takes: three components separated by spaces, with an optional alpha.
+const modern = (functions: string, [first, second, third]: readonly [string, string, string]) =>
+  `(?:${functions})\\(\\s*${first}\\s+${second}\\s+${third}(?:\\s*/\\s*${NUMBER})?\\s*\\)`;
 
 // The legacy comma syntax, which only the sRGB and HSL functions take, and never mixed with spaces. Its component
 // types are fixed: all three numbers or all three percentages for `rgb()`, and a hue with two percentages for
@@ -221,7 +220,10 @@ const commas = (first: string, second: string, third: string) =>
   `\\(\\s*${first}\\s*,\\s*${second}\\s*,\\s*${third}(?:\\s*,\\s*${NUMBER})?\\s*\\)`;
 
 const COLOR_FUNCTION = [
-  modern('rgb|rgba|hsl|hsla|oklch|oklab|lab|lch'),
+  modern('rgb|rgba|lab|oklab', [NUMBER, NUMBER, NUMBER]),
+  // A hue is a number, never a percentage: it comes first in `hsl()` and last in `lch()`.
+  modern('hsl|hsla', [PLAIN, NUMBER, NUMBER]),
+  modern('lch|oklch', [NUMBER, NUMBER, PLAIN]),
   `(?:rgb|rgba)(?:${commas(PLAIN, PLAIN, PLAIN)}|${commas(PERCENT, PERCENT, PERCENT)})`,
   `(?:hsl|hsla)${commas(PLAIN, PERCENT, PERCENT)}`,
 ].join('|');

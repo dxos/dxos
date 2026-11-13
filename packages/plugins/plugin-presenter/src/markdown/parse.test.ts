@@ -306,6 +306,11 @@ describe('parseSlide', () => {
     expect(mixedTypes.frontmatter.code).toBeUndefined();
     expect(mixedTypes.issues).toHaveLength(2);
 
+    // A hue is a number, so a percentage in its place is not a color.
+    const hue = parseSlide('---\naccent: "hsl(10% 20% 30%)"\n---\n\n# Title');
+    expect(hue.frontmatter.accent).toBeUndefined();
+    expect(hue.issues).toEqual([{ kind: 'frontmatter', message: expect.stringContaining('accent') }]);
+
     // The colors CSS does know still pass.
     const valid = parseSlide('---\naccent: "rebeccapurple"\nseparator: "rgb(1 2 3)"\n---\n\n# Title');
     expect(valid.frontmatter.accent).toBe('rebeccapurple');

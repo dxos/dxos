@@ -108,6 +108,12 @@ describe('SlideTheme.Settings', () => {
     expect(['rgb(1, 2 3)', 'rgb(1 2, 3)', 'oklch(0.5, 0.1, 240)', 'lab(1,2,3)'].some(SlideTheme.isColor)).toBe(false);
   });
 
+  test('a hue is a number, wherever the function puts it', () => {
+    expect(['hsl(210 10% 20%)', 'oklch(44.3% 0.11 240.79)', 'lch(50% 40 60)'].every(SlideTheme.isColor)).toBe(true);
+    // First in `hsl()`, last in `lch()`; a percentage is not a hue in either.
+    expect(['hsl(10% 20% 30%)', 'oklch(50% 0.1 20%)', 'lch(50% 40 60%)'].some(SlideTheme.isColor)).toBe(false);
+  });
+
   test('the legacy syntax takes its own component types', () => {
     expect(['rgb(10%, 20%, 30%)', 'rgba(10%,20%,30%,50%)', 'hsl(210, 10%, 20%)'].every(SlideTheme.isColor)).toBe(true);
     // `rgb()` takes three numbers or three percentages, never a mix; `hsl()` takes a hue and two percentages.
@@ -118,6 +124,7 @@ describe('SlideTheme.Settings', () => {
 
   test("a legacy color CSS rejects leaves the theme's own", () => {
     expect(slideThemeStyle({ accent: 'rgb(1, 2%, 3)' })['--slide-accent']).toBe('var(--color-accent-text)');
+    expect(slideThemeStyle({ accent: 'hsl(10% 20% 30%)' })['--slide-accent']).toBe('var(--color-accent-text)');
   });
 
   test('a malformed color is rejected without retrying every split of its digits', () => {
