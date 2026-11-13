@@ -14,6 +14,7 @@ from the Composer Plugin project template, built in a sandbox and published to i
 | `type`      | `org.dxos.mdl.type@1.0`      |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 

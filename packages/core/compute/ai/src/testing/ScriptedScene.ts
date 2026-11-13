@@ -110,9 +110,10 @@ type Matcher = (value: string) => Record<string, string> | undefined;
 /** Compiles a pattern into a test that returns what it captured, or nothing when it does not match. */
 const compile = (pattern: Pattern): Matcher => {
   if (pattern instanceof RegExp) {
-    // A global or sticky expression keeps `lastIndex` between calls, so a copy without those flags matches every call.
-    const regex = new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, ''));
+    // A global or sticky expression keeps `lastIndex` between calls, so each match starts it from 0 again.
+    const regex = new RegExp(pattern.source, pattern.flags);
     return (value) => {
+      regex.lastIndex = 0;
       const match = regex.exec(value);
       return match ? { ...match.groups } : undefined;
     };

@@ -122,6 +122,16 @@ describe('ScriptedScene', () => {
     );
     expect(echo(request('echo one'), 0)).toMatchObject({ parts: [{ _tag: 'text', text: 'again' }] });
     expect(echo(request('echo one'), 1)).toMatchObject({ parts: [{ _tag: 'text', text: 'again' }] });
+
+    // A sticky expression still anchors at the start: it matches every call, and never a later offset.
+    const sticky = ScriptedScene.play(
+      ScriptedScene.make([
+        ScriptedScene.generated('sticky', /echo/y, () => ({ parts: [ScriptedScene.text('stuck')] })),
+      ]),
+    );
+    expect(sticky(request('echo one'), 0)).toMatchObject({ parts: [{ _tag: 'text', text: 'stuck' }] });
+    expect(sticky(request('echo one'), 1)).toMatchObject({ parts: [{ _tag: 'text', text: 'stuck' }] });
+    expect(sticky(request('prefix echo'), 2)).toHaveProperty('fail');
   });
 
   it.effect(
