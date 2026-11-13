@@ -18,8 +18,13 @@ everything on this page.
 | Model calls                                                                      | edge `ai-service` (holds `ANTHROPIC_API_KEY`)          | EDGE                                             |
 | Discord sign-in, Google OAuth (`/oauth/*`)                                       | edge `kms-service`                                     | EDGE                                             |
 
-EDGE runs the `@dxos/*` build its catalog pins, so Composer-only changes need nothing on the EDGE side. To run local
-changes to dxos code that runs on EDGE, see [Link local dxos into edge](#link-local-dxos-into-edge).
+Composer-only changes need nothing on the EDGE side. On EDGE, operations run in two places:
+
+- Local EDGE runs every operation on operation-service, at the `@dxos/*` build edge's catalog pins.
+- Deployed EDGE (dev, preview, production) runs each plugin's operations from the plugin bundle published to that
+  environment's registry. Only plugin-agent and plugin-assistant stay on operation-service, at the catalog's build.
+
+To run local changes to dxos code that runs on EDGE, see [Link local dxos into edge](#link-local-dxos-into-edge).
 
 ## Environments
 
@@ -58,8 +63,19 @@ From `<edge>`:
    pnpm dev:setup
    ```
 
-   It installs, builds, wipes the local state dir, runs the D1 migrations and seeds plans and invitation codes.
-   Running it again wipes every local identity, space and agent, for every worktree.
+   It installs, builds, wipes the local state dir, runs the D1 migrations (the plugin registry's among them) and seeds
+   plans and invitation codes. It also builds the first-party plugin bundles at the dxos commit edge's catalog pins, in
+   a dxos clone beside the local state, then starts the stack once to upload them to the local registry and stops it.
+   The first build takes a while; a commit already built is reused. To build an existing checkout instead, set
+   `DX_DXOS_CHECKOUT=<dxos>`. Running it again wipes every local identity, space and agent, for every worktree.
+
+   On a machine set up before, don't re-run it. Bring the local state up to date and build the bundles instead; the
+   next `pnpm stack:start` uploads them:
+
+   ```bash
+   node scripts/stack.mjs migrate
+   node scripts/plugin-bundles.mjs build
+   ```
 
 2. Write each worker's `.env` from its `secrets.jsonc`:
 
@@ -79,7 +95,9 @@ From `<edge>`:
    ```
 
    `node scripts/stack.mjs start` is the same command. `pnpm stack status`, `pnpm stack:stop` and
-   `pnpm stack:doctor` manage it. Logs are in `packages/services/edge/edge-dev-stack.log`.
+   `pnpm stack:doctor` manage it. Logs are in `packages/services/edge/edge-dev-stack.log`. Each start uploads the
+   newest plugin bundle build to the local registry (`http://localhost:8787/registry/edge/plugins` lists them);
+   `DX_PLUGIN_BUNDLE_SOURCE=<dir>` uploads another build instead.
 
 Agent work touches these workers:
 
