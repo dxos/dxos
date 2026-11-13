@@ -266,6 +266,19 @@ export const makeMemory = (): FactStoreApi => {
   };
 };
 
+/**
+ * Layer of a FactStore over a SQLite file (created when absent), closed with the layer's scope; reopening the same
+ * path sees the facts and cursors written before.
+ */
+export const layerFile = (path: string): Layer.Layer<FactStore> =>
+  Layer.effect(
+    FactStore,
+    Effect.acquireRelease(SqliteStorage.makeFile(path), (database) => Effect.sync(() => database.close())).pipe(
+      Effect.orDie,
+      Effect.flatMap((database) => make(database)),
+    ),
+  );
+
 /** Layer of a FactStore over a private in-memory SQLite database, closed with the layer's scope. */
 export const layerMemory: Layer.Layer<FactStore> = Layer.effect(
   FactStore,

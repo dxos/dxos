@@ -16,6 +16,7 @@ import { buildSparql } from '../internal/sparql/query-builder.ts';
 import { type Fact } from '../types/index.ts';
 import * as Mapping from '../types/Mapping.ts';
 import * as FactStoreLive from './fact-store-live.ts';
+import { FactStore } from './fact-store.ts';
 
 const fact = (id: string, over: Partial<Fact> = {}): Fact => ({
   id,
@@ -81,6 +82,23 @@ describe('FactStoreLive', () => {
           expect(facts.map((found) => found.id).sort()).toEqual(['f1', 'f2']);
           expect(facts.find((found) => found.id === 'f1')).toEqual(stored(fact('f1')));
           expect(cursor).toBe('hashA');
+        }),
+      );
+    }),
+  );
+
+  it.effect(
+    'layerFile persists facts across layer lifetimes',
+    Effect.fnUntraced(function* () {
+      yield* withFile((path) =>
+        Effect.gen(function* () {
+          yield* Effect.flatMap(FactStore, (store) => store.putFacts([fact('f1')])).pipe(
+            Effect.provide(FactStoreLive.layerFile(path)),
+          );
+          const facts = yield* Effect.flatMap(FactStore, (store) => store.query({})).pipe(
+            Effect.provide(FactStoreLive.layerFile(path)),
+          );
+          expect(facts.map((found) => found.id)).toEqual(['f1']);
         }),
       );
     }),
